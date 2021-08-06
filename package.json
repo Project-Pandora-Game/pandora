@@ -3,6 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"repository": "git@github.com:Project-Pandora-Game/tooling-template.git",
+	"license": "MIT",
 	"scripts": {
 		"build": "tsc -p .",
 		"lint": "eslint --max-warnings 0 ./src",

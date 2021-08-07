@@ -102,8 +102,26 @@
 			},
 			{
 				"selector": "variable",
-				"format": ["camelCase", "UPPER_CASE"],
-				"leadingUnderscore": "allow"
+				"format": ["camelCase"],
+				"leadingUnderscore": "forbid"
+			},
+			{
+				"selector": "variable",
+				"format": null,
+				"modifiers": ["destructured"]
+			},
+			{
+				"selector": "variable",
+				"format": ["camelCase"],
+				"modifiers": ["unused"],
+				"leadingUnderscore": "require"
+			},
+			{
+				"selector": "variable",
+				"format": ["UPPER_CASE"],
+				"leadingUnderscore": "allow",
+				"modifiers": ["const", "global"],
+				"types": ["boolean", "string", "number"]
 			},
 			{
 				"selector": "function",
@@ -137,9 +155,9 @@
 		"@typescript-eslint/keyword-spacing": "warn",
 		"linebreak-style": ["warn", "unix"],
 		"no-whitespace-before-property": "warn",
-		"object-curly-newline": ["warn", { "multiline": true }],
+		"object-curly-newline": ["warn", { "multiline": true, "consistent": true }],
 		"object-curly-spacing": "off",
-		"@typescript-eslint/object-curly-spacing": "warn",
+		"@typescript-eslint/object-curly-spacing": ["warn", "always"],
 		"quote-props": ["warn", "consistent"],
 		"semi-spacing": "warn",
 		"semi-style": "warn",

@@ -7,6 +7,7 @@
 	"env": {
 		"es6": true
 	},
+	"ignorePatterns": [".git", "node_modules", "dist"],
 	"plugins": ["@typescript-eslint"],
 	"overrides": [
 		{
@@ -131,6 +132,10 @@
 			{
 				"selector": "typeLike",
 				"format": ["PascalCase"]
+			},
+			{
+				"selector": "enumMember",
+				"format": ["UPPER_CASE"]
 			}
 		],
 		"brace-style": "off",

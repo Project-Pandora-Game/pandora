@@ -1,0 +1,19 @@
+{
+	"debug.onTaskErrors": "showErrors",
+	"npm.packageManager": "yarn",
+	"editor.insertSpaces": false,
+	"files.insertFinalNewline": true,
+	"files.trimTrailingWhitespace": true,
+	"files.eol": "\n",
+	"files.encoding": "utf8",
+	"git.rebaseWhenSync": true,
+	"[typescript]": {
+		"editor.defaultFormatter": "vscode.typescript-language-features",
+		"editor.formatOnSave": true
+	},
+	"typescript.updateImportsOnFileMove.enabled": "always",
+	"typescript.preferences.importModuleSpecifier": "relative",
+	"typescript.preferences.importModuleSpecifierEnding": "minimal",
+	"typescript.format.enable": true,
+	"typescript.format.semicolons": "insert"
+}

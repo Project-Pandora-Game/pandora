@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"target": "ES6",
+		"lib": ["ESNext"],
+		"moduleResolution": "Node",
+		"experimentalDecorators": true,
+		"esModuleInterop": true,
+		"removeComments": true,
+		"strict": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"noUncheckedIndexedAccess": true,
+		"resolveJsonModule": true
+	},
+	"include": [
+		"webpack.config.ts"
+	]
+}

@@ -1,7 +1,5 @@
 # Pandora Web Client
 
-[Current deployed version](https://pandora.3146969.xyz/)
-
 ## Development
 
 ### Developer setup

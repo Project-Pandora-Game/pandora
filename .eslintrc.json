@@ -103,7 +103,7 @@
 			},
 			{
 				"selector": "variable",
-				"format": ["camelCase"],
+				"format": ["camelCase", "UPPER_CASE"],
 				"leadingUnderscore": "forbid"
 			},
 			{
@@ -113,7 +113,7 @@
 			},
 			{
 				"selector": "variable",
-				"format": ["camelCase"],
+				"format": ["camelCase", "UPPER_CASE"],
 				"modifiers": ["unused"],
 				"leadingUnderscore": "require"
 			},

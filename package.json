@@ -9,6 +9,7 @@
 	},
 	"scripts": {
 		"build": "tsc -p .",
+		"dev": "nodemon -e ts --ignore dist --exec \"yarn build && yarn start\"",
 		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
@@ -19,6 +20,7 @@
 		"@typescript-eslint/eslint-plugin": "^4.29.0",
 		"@typescript-eslint/parser": "^4.29.0",
 		"eslint": "^7.32.0",
+		"nodemon": "^2.0.15",
 		"tslib": "^2.3.0",
 		"typescript": "^4.3.5"
 	},

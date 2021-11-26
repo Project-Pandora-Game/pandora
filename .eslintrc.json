@@ -4,7 +4,8 @@
 		"plugin:@typescript-eslint/recommended"
 	],
 	"env": {
-		"es6": true
+		"es6": true,
+		"node": true
 	},
 	"ignorePatterns": [".git", "node_modules", "dist"],
 	"parserOptions": {

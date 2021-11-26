@@ -4,12 +4,16 @@
 	"private": true,
 	"repository": "git@github.com:Project-Pandora-Game/tooling-template.git",
 	"license": "MIT",
+	"engines": {
+		"node": "16.x"
+	},
 	"scripts": {
 		"build": "tsc -p .",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix ."
 	},
 	"devDependencies": {
+		"@types/node": "^16.6.1",
 		"@typescript-eslint/eslint-plugin": "^4.29.0",
 		"@typescript-eslint/parser": "^4.29.0",
 		"eslint": "^7.32.0",

@@ -1167,6 +1167,14 @@ package-json@^6.3.0:
     registry-url "^5.0.0"
     semver "^6.2.0"
 
+"pandora-common@github:Project-Pandora-Game/pandora-common":
+  version "0.1.0"
+  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#6a2ed1a796abe7c322dfecf857c7eec3eae1648a"
+  dependencies:
+    "@types/node" "^16.6.1"
+    tslib "^2.3.0"
+    typescript "^4.3.5"
+
 parent-module@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/parent-module/-/parent-module-1.0.1.tgz#691d2709e78c79fae3a156622452d00762caaaa2"

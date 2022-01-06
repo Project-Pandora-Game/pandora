@@ -2,7 +2,6 @@
 	"extends": [
 		"eslint:recommended",
 		"plugin:@typescript-eslint/recommended",
-		"plugin:@typescript-eslint/recommended-requiring-type-checking",
 		"plugin:react/recommended",
 		"plugin:react-hooks/recommended"
 	],
@@ -10,14 +9,73 @@
 		"es6": true
 	},
 	"ignorePatterns": [".git", "node_modules", "dist"],
+	"parserOptions": {
+		"ecmaVersion": 2021
+	},
 	"plugins": ["@typescript-eslint", "react", "react-hooks"],
 	"overrides": [
 		{
+			"extends": ["plugin:@typescript-eslint/recommended-requiring-type-checking"],
 			"files": ["*.ts", "*.tsx"],
 			"parser": "@typescript-eslint/parser",
 			"parserOptions": {
 				"project": ["./tsconfig.json", "./webpack.tsconfig.json"],
 				"sourceType": "module"
+			},
+			"rules": {
+				// NOs
+				"no-throw-literal": "off",
+				"@typescript-eslint/no-throw-literal": "error",
+				// Warnings
+				"@typescript-eslint/no-unnecessary-boolean-literal-compare": "warn",
+				// Style rules
+				"dot-notation": "off",
+				"@typescript-eslint/dot-notation": "warn",
+				"@typescript-eslint/naming-convention": [
+					"warn",
+					{
+						"selector": "default",
+						"format": ["camelCase"],
+						"leadingUnderscore": "allow",
+						"trailingUnderscore": "allow"
+					},
+					{
+						"selector": "variable",
+						"format": ["camelCase", "UPPER_CASE"],
+						"leadingUnderscore": "forbid"
+					},
+					{
+						"selector": "variable",
+						"format": null,
+						"modifiers": ["destructured"]
+					},
+					{
+						"selector": "variable",
+						"format": ["camelCase", "UPPER_CASE"],
+						"modifiers": ["unused"],
+						"leadingUnderscore": "require"
+					},
+					{
+						"selector": "variable",
+						"format": ["UPPER_CASE"],
+						"leadingUnderscore": "allow",
+						"modifiers": ["const", "global"],
+						"types": ["boolean", "string", "number"]
+					},
+					{
+						"selector": "function",
+						"modifiers": ["global", "exported"],
+						"format": ["PascalCase"]
+					},
+					{
+						"selector": "typeLike",
+						"format": ["PascalCase"]
+					},
+					{
+						"selector": "enumMember",
+						"format": ["UPPER_CASE"]
+					}
+				]
 			}
 		}
 	],
@@ -55,8 +113,7 @@
 				"hoist": "all"
 			}
 		],
-		"no-throw-literal": "off",
-		"@typescript-eslint/no-throw-literal": "error",
+		"no-throw-literal": "error",
 		"no-var": "error",
 		"unicode-bom": "error",
 		"react/no-unsafe": ["error", { "checkAliases": true }],
@@ -67,7 +124,6 @@
 		"no-unused-expressions": "off",
 		"@typescript-eslint/no-unused-expressions": "warn",
 		"@typescript-eslint/prefer-for-of": "warn",
-		"@typescript-eslint/no-unnecessary-boolean-literal-compare": "warn",
 		"prefer-const": "warn",
 		"no-undef-init": "warn",
 		"object-shorthand": "warn",
@@ -82,8 +138,7 @@
 		"react/jsx-no-constructed-context-values": "warn",
 		"react/jsx-no-useless-fragment": "warn",
 		// Style rules
-		"dot-notation": "off",
-		"@typescript-eslint/dot-notation": "warn",
+		"dot-notation": "warn",
 		"semi": "off",
 		"@typescript-eslint/semi": ["warn", "always"],
 		"indent": "off",
@@ -110,51 +165,6 @@
 		],
 		"@typescript-eslint/prefer-function-type": "warn",
 		"one-var": ["warn", "never"],
-		"@typescript-eslint/naming-convention": [
-			"warn",
-			{
-				"selector": "default",
-				"format": ["camelCase"],
-				"leadingUnderscore": "allow",
-				"trailingUnderscore": "allow"
-			},
-			{
-				"selector": "variable",
-				"format": ["camelCase"],
-				"leadingUnderscore": "forbid"
-			},
-			{
-				"selector": "variable",
-				"format": null,
-				"modifiers": ["destructured"]
-			},
-			{
-				"selector": "variable",
-				"format": ["camelCase"],
-				"modifiers": ["unused"],
-				"leadingUnderscore": "require"
-			},
-			{
-				"selector": "variable",
-				"format": ["UPPER_CASE"],
-				"leadingUnderscore": "allow",
-				"modifiers": ["const", "global"],
-				"types": ["boolean", "string", "number"]
-			},
-			{
-				"selector": "function",
-				"modifiers": ["global", "exported"],
-				"format": ["PascalCase"]
-			},
-			{
-				"selector": "typeLike",
-				"format": ["PascalCase"]
-			},
-			{
-				"selector": "enumMember",
-				"format": ["UPPER_CASE"]
-			}
-		],
 		"brace-style": "off",
 		"@typescript-eslint/brace-style": ["warn", "1tbs"],
 		"space-before-function-paren": [

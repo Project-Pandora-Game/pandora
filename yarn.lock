@@ -167,20 +167,6 @@
   dependencies:
     "@types/node" "*"
 
-"@types/copy-webpack-plugin@^10.1.0":
-  version "10.1.0"
-  resolved "https://registry.yarnpkg.com/@types/copy-webpack-plugin/-/copy-webpack-plugin-10.1.0.tgz#5e7e5d44f58530bbb0e39cc01f83fc91aa484387"
-  integrity sha512-Dk0NUW3X6hVQdkH2n9R7NejjPNCocZBiv8XF8Ac5su2d6EKzCcG/yWDwnWGrEsAWvogoADJyUKULwncx0G9Jkg==
-  dependencies:
-    copy-webpack-plugin "*"
-
-"@types/css-minimizer-webpack-plugin@^3.2.1":
-  version "3.2.1"
-  resolved "https://registry.yarnpkg.com/@types/css-minimizer-webpack-plugin/-/css-minimizer-webpack-plugin-3.2.1.tgz#bacbef5d8217074b599bd8a0771ec60ebd46dd16"
-  integrity sha512-MIlnEVQDTX0Y1/ZBY0RyD+F6+ZHlG42qCeSoCVhxI5N1atm+RnmDLQWUCWrdNqebFozUTRLDZJ04v5aYzGG5CA==
-  dependencies:
-    css-minimizer-webpack-plugin "*"
-
 "@types/eslint-scope@^3.7.0":
   version "3.7.2"
   resolved "https://registry.yarnpkg.com/@types/eslint-scope/-/eslint-scope-3.7.2.tgz#11e96a868c67acf65bf6f11d10bb89ea71d5e473"
@@ -374,13 +360,6 @@
   integrity sha512-f0KEEe05NvUnat+boPTZ0dgaLZ4SfSouXUgv5noUiefG2ajgKjmETo9ZJyuqsl7dfl2aHlLJUiki6B4ZYldiiw==
   dependencies:
     "@types/node" "*"
-
-"@types/webpack-dev-server@4.7.2":
-  version "4.7.2"
-  resolved "https://registry.yarnpkg.com/@types/webpack-dev-server/-/webpack-dev-server-4.7.2.tgz#a12d9881aa23cdd4cecbb2d31fa784a45c4967e0"
-  integrity sha512-Y3p0Fmfvp0MHBDoCzo+xFJaWTw0/z37mWIo6P15j+OtmUDLvznJWdZNeD7Q004R+MpQlys12oXbXsrXRmxwg4Q==
-  dependencies:
-    webpack-dev-server "*"
 
 "@types/webpack@^5.28.0":
   version "5.28.0"
@@ -1135,7 +1114,7 @@ cookie@0.4.1:
   resolved "https://registry.yarnpkg.com/cookie/-/cookie-0.4.1.tgz#afd713fe26ebd21ba95ceb61f9a8116e50a537d1"
   integrity sha512-ZwrFkGJxUR3EIoXtO+yVE69Eb7KlixbaeAWfBQB9vVsNn/o+Yw69gBWSSDK825hQNdN+wF8zELf3dFNl/kxkUA==
 
-copy-webpack-plugin@*, copy-webpack-plugin@^10.2.0:
+copy-webpack-plugin@^10.2.0:
   version "10.2.0"
   resolved "https://registry.yarnpkg.com/copy-webpack-plugin/-/copy-webpack-plugin-10.2.0.tgz#24c2d256953a55400a1ec66be4e0eccd1c4ae958"
   integrity sha512-my6iXII95c78w14HzYCNya5TlJYa44lOppAge5GSTMM1SyDxNsVGCJvhP4/ld6snm8lzjn3XOonMZD6s1L86Og==
@@ -1219,7 +1198,7 @@ css-loader@^6.5.1:
     postcss-value-parser "^4.1.0"
     semver "^7.3.5"
 
-css-minimizer-webpack-plugin@*, css-minimizer-webpack-plugin@^3.3.1:
+css-minimizer-webpack-plugin@^3.3.1:
   version "3.3.1"
   resolved "https://registry.yarnpkg.com/css-minimizer-webpack-plugin/-/css-minimizer-webpack-plugin-3.3.1.tgz#5afc4507a4ec13dd223f043cda8953ee0bf6ecfa"
   integrity sha512-SHA7Hu/EiF0dOwdmV2+agvqYpG+ljlUa7Dvn1AVOmSH3N8KOERoaM9lGpstz9nGsoTjANGyUXdrxl/EwdMScRg==
@@ -4510,7 +4489,7 @@ webpack-dev-middleware@^5.3.0:
     range-parser "^1.2.1"
     schema-utils "^4.0.0"
 
-webpack-dev-server@*, webpack-dev-server@^4.7.2:
+webpack-dev-server@^4.7.2:
   version "4.7.2"
   resolved "https://registry.yarnpkg.com/webpack-dev-server/-/webpack-dev-server-4.7.2.tgz#324b79046491f2cf0b9d9e275381198c8246b380"
   integrity sha512-s6yEOSfPpB6g1T2+C5ZOUt5cQOMhjI98IVmmvMNb5cdiqHoxSUfACISHqU/wZy+q4ar/A9jW0pbNj7sa50XRVA==

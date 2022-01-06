@@ -5,8 +5,10 @@ import './index.scss';
 import { PandoraRoutes } from './Routes';
 
 render(
-	<BrowserRouter>
-		<PandoraRoutes />
-	</BrowserRouter>,
+	<React.StrictMode>
+		<BrowserRouter>
+			<PandoraRoutes />
+		</BrowserRouter>
+	</React.StrictMode>,
 	document.querySelector('#pandora-root'),
 );

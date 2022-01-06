@@ -1,5 +1,6 @@
 import { join } from 'path';
 import { Configuration, DefinePlugin, RuleSetRule, RuleSetUseItem, WebpackPluginInstance } from 'webpack';
+import 'webpack-dev-server';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import packageJson from './package.json';
 import HtmlWebpackPlugin from 'html-webpack-plugin';

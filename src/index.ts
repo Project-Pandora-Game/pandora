@@ -1,19 +1,23 @@
 import { mkdirSync } from 'fs';
 import { APP_NAME } from './config';
 import { AddFileOutput, GetLogger, LogLevel, SetConsoleOutput } from './logging';
+import { StartHttpServer } from './networking/httpServer';
 
 const LOG_DIR = './logs';
 const logger = GetLogger('init');
 
-// eslint-disable-next-line @typescript-eslint/no-floating-promises
-start();
+start().catch((error) => {
+	logger.fatal('Init failed:', error);
+});
 
 /**
  * Starts the application.
  */
-function start(): void {
+async function start(): Promise<void> {
 	setupLogging();
 	logger.info(`${APP_NAME} starting...`);
+	logger.debug('Starting HTTP server...');
+	await StartHttpServer();
 }
 
 /**

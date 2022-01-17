@@ -26,6 +26,7 @@
 	},
 	"dependencies": {
 		"dotenv": "^10.0.0",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common"
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#b21d88f",
+		"socket.io": "^4.4.0"
 	}
 }

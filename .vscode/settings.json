@@ -15,5 +15,6 @@
 	"typescript.preferences.importModuleSpecifier": "relative",
 	"typescript.preferences.importModuleSpecifierEnding": "minimal",
 	"typescript.format.enable": true,
-	"typescript.format.semicolons": "insert"
+	"typescript.format.semicolons": "insert",
+	"typescript.preferences.quoteStyle": "single"
 }

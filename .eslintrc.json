@@ -6,7 +6,8 @@
 		"plugin:react-hooks/recommended"
 	],
 	"env": {
-		"es6": true
+		"es6": true,
+		"node": true
 	},
 	"ignorePatterns": [".git", "node_modules", "dist"],
 	"parserOptions": {
@@ -19,7 +20,7 @@
 			"files": ["*.ts", "*.tsx"],
 			"parser": "@typescript-eslint/parser",
 			"parserOptions": {
-				"project": ["./tsconfig.json", "./webpack.tsconfig.json"],
+				"project": ["./tsconfig.json", "./tsconfig.dev.json", "./webpack.tsconfig.json"],
 				"sourceType": "module"
 			},
 			"rules": {

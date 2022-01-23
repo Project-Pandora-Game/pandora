@@ -1,5 +1,5 @@
 
-name: Build CI
+name: Test CI
 
 on:
   # Triggers the workflow on push but only for the master branch
@@ -20,4 +20,4 @@ jobs:
         with:
           node-version: '16'
       - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: yarn test

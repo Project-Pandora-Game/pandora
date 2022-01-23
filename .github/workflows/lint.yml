@@ -1,5 +1,5 @@
 
-name: Build CI
+name: Lint CI
 
 on:
   # Triggers the workflow on push but only for the master branch
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  lint:
     runs-on: self-hosted
 
     steps:
@@ -20,4 +20,4 @@ jobs:
         with:
           node-version: '16'
       - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: yarn lint

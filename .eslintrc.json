@@ -4,7 +4,8 @@
 		"plugin:@typescript-eslint/recommended"
 	],
 	"env": {
-		"es6": true
+		"es6": true,
+		"node": true
 	},
 	"ignorePatterns": [".git", "node_modules", "dist"],
 	"parserOptions": {
@@ -17,7 +18,7 @@
 			"files": ["*.ts"],
 			"parser": "@typescript-eslint/parser",
 			"parserOptions": {
-				"project": ["./tsconfig.json"],
+				"project": ["./tsconfig.json", "./tsconfig.dev.json"],
 				"sourceType": "module"
 			},
 			"rules": {

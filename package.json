@@ -7,12 +7,21 @@
 	"scripts": {
 		"build": "tsc -p .",
 		"lint": "eslint --max-warnings 0 .",
-		"lint:fix": "eslint --fix ."
+		"lint:fix": "eslint --fix .",
+		"test": "jest",
+		"test:coverage": "jest --coverage",
+		"test:watch": "jest --watch"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.16.10",
+		"@babel/preset-env": "^7.16.11",
+		"@babel/preset-typescript": "^7.16.7",
+		"@types/jest": "^27.4.0",
 		"@typescript-eslint/eslint-plugin": "^4.29.0",
 		"@typescript-eslint/parser": "^4.29.0",
+		"babel-jest": "^27.4.6",
 		"eslint": "^7.32.0",
+		"jest": "^27.4.7",
 		"tslib": "^2.3.0",
 		"typescript": "^4.3.5"
 	}

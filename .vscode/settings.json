@@ -16,5 +16,8 @@
 	"typescript.preferences.importModuleSpecifierEnding": "minimal",
 	"typescript.format.enable": true,
 	"typescript.format.semicolons": "insert",
-	"typescript.preferences.quoteStyle": "single"
+	"typescript.preferences.quoteStyle": "single",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": true
+	}
 }

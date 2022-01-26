@@ -10,3 +10,6 @@ export const SERVER_HTTPS_KEY = process.env.SERVER_HTTPS_KEY ?? '';
 /** Secret key used to authenticate Shards connecting to Directory */
 export const SHARD_SHARED_SECRET = process.env.SHARD_SHARED_SECRET ?? '';
 //#endregion
+
+/** Time (in ms) for how long is a account login token valid */
+export const LOGIN_TOKEN_EXPIRATION = 24 * 60 * 60_000;

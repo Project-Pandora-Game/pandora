@@ -23,6 +23,7 @@
 		"@babel/preset-env": "^7.16.11",
 		"@babel/preset-typescript": "^7.16.7",
 		"@types/jest": "^27.4.0",
+		"@types/lodash": "^4.14.178",
 		"@types/node": "^16.6.1",
 		"@typescript-eslint/eslint-plugin": "^4.29.0",
 		"@typescript-eslint/parser": "^4.29.0",
@@ -35,7 +36,9 @@
 	},
 	"dependencies": {
 		"dotenv": "^10.0.0",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#b21d88f",
+		"lodash": "^4.17.21",
+		"nanoid": "^3.1.30",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#9105128",
 		"socket.io": "^4.4.0"
 	}
 }

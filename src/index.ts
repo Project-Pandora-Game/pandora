@@ -1,6 +1,9 @@
 import { mkdirSync } from 'fs';
+import { InitAccountManager } from './account/accountManager';
 import { APP_NAME } from './config';
-import { AddFileOutput, GetLogger, LogLevel, SetConsoleOutput } from './logging';
+import { InitDatabase } from './database/databaseProvider';
+import { AddFileOutput } from './logging';
+import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common/dist/logging';
 import { StartHttpServer } from './networking/httpServer';
 
 const LOG_DIR = './logs';
@@ -16,6 +19,10 @@ start().catch((error) => {
 async function start(): Promise<void> {
 	setupLogging();
 	logger.info(`${APP_NAME} starting...`);
+	logger.debug('Initializing database...');
+	await InitDatabase();
+	logger.debug('Initializing managers...');
+	InitAccountManager();
 	logger.debug('Starting HTTP server...');
 	await StartHttpServer();
 }

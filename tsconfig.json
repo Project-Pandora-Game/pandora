@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2021",
 		"lib": ["ESNext"],
+		"types": [],
 		"module": "CommonJS",
 		"moduleResolution": "Node",
 		"experimentalDecorators": true,

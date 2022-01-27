@@ -44,15 +44,19 @@
 						"leadingUnderscore": "forbid"
 					},
 					{
-						"selector": "variable",
-						"format": null,
-						"modifiers": ["destructured"]
+						"selector": "function",
+						"modifiers": ["global"],
+						"format": ["PascalCase"]
 					},
 					{
 						"selector": "variable",
-						"format": ["camelCase", "UPPER_CASE"],
-						"modifiers": ["unused"],
-						"leadingUnderscore": "require"
+						"modifiers": ["global"],
+						"format": ["camelCase", "PascalCase"]
+					},
+					{
+						"selector": "variable",
+						"modifiers": ["const", "global"],
+						"format": ["camelCase", "PascalCase", "UPPER_CASE"]
 					},
 					{
 						"selector": "variable",
@@ -62,9 +66,15 @@
 						"types": ["boolean", "string", "number"]
 					},
 					{
-						"selector": "function",
-						"modifiers": ["global", "exported"],
-						"format": ["PascalCase"]
+						"selector": ["variable", "parameter"],
+						"format": null,
+						"modifiers": ["destructured"]
+					},
+					{
+						"selector": "parameter",
+						"format": ["camelCase"],
+						"modifiers": ["unused"],
+						"leadingUnderscore": "require"
 					},
 					{
 						"selector": "typeLike",

@@ -13,7 +13,6 @@
 		"strict": true,
 		"noImplicitOverride": true,
 		"noImplicitReturns": true,
-		"noUncheckedIndexedAccess": true,
 		"jsx": "react",
 		"resolveJsonModule": true
 	},

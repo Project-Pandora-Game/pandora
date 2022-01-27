@@ -14,8 +14,7 @@
 		"declaration": true,
 		"strict": true,
 		"noImplicitOverride": true,
-		"noImplicitReturns": true,
-		"noUncheckedIndexedAccess": true
+		"noImplicitReturns": true
 	},
 	"include": ["./src/**/*"]
 }

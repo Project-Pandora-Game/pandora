@@ -1,55 +1,14 @@
-import { CharacterConnection } from './characterConnection';
-import { GetLogger, logConfig } from '../logging';
+import { GetLogger, logConfig } from 'pandora-common/dist/logging';
 import { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT } from '../config';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
-import { Server, Socket } from 'socket.io';
 import * as fs from 'fs';
+import { SocketIOServerClient } from './socketio_client_server';
 
 const logger = GetLogger('Server');
 
-export class SocketIOServer {
-	/** List of all currently connected connections */
-	private connectedConnections: Set<CharacterConnection> = new Set();
-
-	/** Socket.IO server */
-	private readonly socketServer: Server;
-
-	/** HTTP(S) server */
-	private readonly httpServer: HttpServer;
-
-	constructor(httpServer: HttpServer) {
-		this.httpServer = httpServer;
-		this.socketServer = new Server(httpServer, {
-			cors: {
-				origin: /./,
-			},
-			serveClient: false,
-		});
-		this.socketServer.on('connect', this.onConnect.bind(this));
-	}
-
-	/**
-	 * Handle new incoming connections
-	 * @param socket - The newly connected socket
-	 */
-	private onConnect(socket: Socket): void {
-		logger.debug(`New character connected; id: ${socket.id}`);
-		const connection = new CharacterConnection(socket);
-		if (!connection.isConnected()) {
-			logger.fatal('Asserting failed: client disconnect before onConnect finished');
-			return;
-		}
-		this.connectedConnections.add(connection);
-		socket.once('disconnect', () => {
-			this.connectedConnections.delete(connection);
-			logger.debug(`Character disconnected; id: ${socket.id}`);
-		});
-	}
-}
-
 /** Setup HTTP server and everything related to it */
-export function StartHttpServer(): Promise<SocketIOServer> {
+export function StartHttpServer(): Promise<void> {
 	const port = Number.parseInt(SERVER_PORT);
 	if (!Number.isInteger(port)) {
 		throw new Error('Invalid SERVER_PORT');
@@ -83,7 +42,7 @@ export function StartHttpServer(): Promise<SocketIOServer> {
 		server = new HttpServer();
 	}
 	// Attach socket.io server
-	const socketServer = new SocketIOServer(server);
+	new SocketIOServerClient(server);
 	// Start listening
 	return new Promise((resolve, reject) => {
 		// Catch error during port open
@@ -108,7 +67,7 @@ export function StartHttpServer(): Promise<SocketIOServer> {
 			});
 			// Finalize start
 			logger.info(`HTTP server started on port ${port}`);
-			resolve(socketServer);
+			resolve();
 		});
 	});
 }

@@ -1,6 +1,6 @@
 import { DIRECTORY_ADDRESS, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig } from '../logging';
-import { HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH } from 'pandora-common';
+import { GetLogger, logConfig } from 'pandora-common/dist/logging';
+import { HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, Connection, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMassageHandlerOnAny } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
@@ -22,10 +22,25 @@ export enum DirectoryConnectionState {
 	DISCONNECTED,
 }
 
+function CreateConnection(uri: string, secret: string = ''): Socket {
+	// Build headers for connection
+	const extraHeaders: Record<string, string> = {};
+	if (secret) {
+		extraHeaders[HTTP_HEADER_SHARD_SECRET] = secret;
+	}
+	// Create the connection without connecting
+	return connect(uri, {
+		autoConnect: false,
+		extraHeaders,
+		path: HTTP_SOCKET_IO_SHARD_PATH,
+		transports: ['websocket'],
+		rejectUnauthorized: true,
+		withCredentials: true,
+	});
+}
+
 /** Class housing connection from Shard to Directory */
-export class DirectoryConnection {
-	/** The socket for connection */
-	private readonly connection: Socket;
+export class SocketIODirectoryConnector extends Connection<Socket, IShardDirectoryBase> {
 
 	/** Current state of the connection */
 	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;
@@ -35,24 +50,16 @@ export class DirectoryConnection {
 	}
 
 	constructor(uri: string, secret: string = '') {
-		// Build headers for connection
-		const extraHeaders: Record<string, string> = {};
-		if (secret) {
-			extraHeaders[HTTP_HEADER_SHARD_SECRET] = secret;
-		}
-		// Create the connection without connecting
-		this.connection = connect(uri, {
-			autoConnect: false,
-			extraHeaders,
-			path: HTTP_SOCKET_IO_SHARD_PATH,
-			transports: ['websocket'],
-			rejectUnauthorized: true,
-			withCredentials: true,
-		});
+		super(CreateConnection(uri, secret), logger);
+
 		// Setup event handlers
-		this.connection.on('connect', this.onConnect.bind(this));
-		this.connection.on('disconnect', this.onDisconnect.bind(this));
-		this.connection.on('connect_error', this.onConnectError.bind(this));
+		this.socket.on('connect', this.onConnect.bind(this));
+		this.socket.on('disconnect', this.onDisconnect.bind(this));
+		this.socket.on('connect_error', this.onConnectError.bind(this));
+
+		// Setup message handler
+		const handler = new MessageHandler<IDirectoryShardBase>({}, {});
+		this.socket.onAny(CreateMassageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
 
 	/**
@@ -72,12 +79,12 @@ export class DirectoryConnection {
 				this.disconnect();
 				reject('Connection timed out');
 			}, INITIAL_CONNECT_TIMEOUT).unref();
-			this.connection.once('connect', () => {
+			this.socket.once('connect', () => {
 				clearTimeout(timeout);
 				resolve(this);
 			});
 			// Attempt to connect
-			this.connection.connect();
+			this.socket.connect();
 		});
 	}
 
@@ -89,7 +96,7 @@ export class DirectoryConnection {
 		}
 		if (this._state === DirectoryConnectionState.DISCONNECTED)
 			return;
-		this.connection.close();
+		this.socket.close();
 		this._state = DirectoryConnectionState.DISCONNECTED;
 		logger.info('Disconnected from Directory');
 	}
@@ -126,16 +133,23 @@ export class DirectoryConnection {
 	}
 }
 
-export function ConnectToDirectory(): Promise<DirectoryConnection> {
+export let DirectoryConnector: SocketIODirectoryConnector | undefined;
+
+export function ConnectToDirectory(): Promise<SocketIODirectoryConnector> {
 	if (!DIRECTORY_ADDRESS) {
 		throw new Error('Missing DIRECTORY_ADDRESS');
 	}
+	if (DirectoryConnector) {
+		throw new Error('Connector already exists');
+	}
 	// Create the connection
-	const connection = new DirectoryConnection(DIRECTORY_ADDRESS, SHARD_SHARED_SECRET);
+	DirectoryConnector = new SocketIODirectoryConnector(DIRECTORY_ADDRESS, SHARD_SHARED_SECRET);
 	// Setup shutdown handlers
 	logConfig.onFatal.push(() => {
-		connection.disconnect();
+		if (DirectoryConnector) {
+			DirectoryConnector.disconnect();
+		}
 	});
 	// Start
-	return connection.connect();
+	return DirectoryConnector.connect();
 }

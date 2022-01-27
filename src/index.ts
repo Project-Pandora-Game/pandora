@@ -1,8 +1,9 @@
 import { mkdirSync } from 'fs';
 import { APP_NAME } from './config';
-import { AddFileOutput, GetLogger, LogLevel, SetConsoleOutput } from './logging';
-import { ConnectToDirectory } from './networking/directoryConnection';
-import { StartHttpServer } from './networking/server';
+import { AddFileOutput } from './logging';
+import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common/dist/logging';
+import { ConnectToDirectory } from './networking/socketio_directory_connector';
+import { StartHttpServer } from './networking/httpServer';
 
 const LOG_DIR = './logs';
 const logger = GetLogger('init');

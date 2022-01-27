@@ -60,7 +60,7 @@ export default new class ConnectionManagerClient {
 		if (!account || !await account.verifyPassword(message.password)) {
 			return {
 				result: 'unknownCredentials',
-				update: makeClientStateUpdate(connection),
+				update: MakeClientStateUpdate(connection),
 			};
 		}
 		// Generate new auth token for new login
@@ -71,7 +71,7 @@ export default new class ConnectionManagerClient {
 		return {
 			result: 'ok',
 			token,
-			update: makeClientStateUpdate(connection),
+			update: MakeClientStateUpdate(connection),
 		};
 	}
 
@@ -90,12 +90,12 @@ export default new class ConnectionManagerClient {
 			connection.setAccount(account);
 		}
 		// Make connection aware of the result
-		connection.sendMessage('connectionState', makeClientStateUpdate(connection));
+		connection.sendMessage('connectionState', MakeClientStateUpdate(connection));
 	}
 };
 
 /** Build `connectionState` update message for connection */
-function makeClientStateUpdate(connection: IConnectionClient): IDirectoryClientConnectionStateUpdate {
+function MakeClientStateUpdate(connection: IConnectionClient): IDirectoryClientConnectionStateUpdate {
 	return {
 		account: connection.account ? connection.account.data.username : null,
 	};

@@ -28,7 +28,7 @@ export abstract class SocketIOServer {
 	 * @param req - The request to check
 	 * @param next - Callback for accept/reject
 	 */
-	protected allowRequest(req: IncomingMessage, next: (err: string | null | undefined, success: boolean) => void): void {
+	protected allowRequest(_req: IncomingMessage, next: (err: string | null | undefined, success: boolean) => void): void {
 		// Default is to allow everything
 		next(undefined, true);
 	}

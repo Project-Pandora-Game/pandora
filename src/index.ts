@@ -7,15 +7,15 @@ import { StartHttpServer } from './networking/server';
 const LOG_DIR = './logs';
 const logger = GetLogger('init');
 
-start().catch((error) => {
+Start().catch((error) => {
 	logger.fatal('Init failed:', error);
 });
 
 /**
  * Starts the application.
  */
-async function start(): Promise<void> {
-	setupLogging();
+async function Start(): Promise<void> {
+	SetupLogging();
 	logger.info(`${APP_NAME} starting...`);
 	logger.debug('Connecting to Directory...');
 	await ConnectToDirectory();
@@ -26,7 +26,7 @@ async function start(): Promise<void> {
 /**
  * Configures logging for the application.
  */
-function setupLogging(): void {
+function SetupLogging(): void {
 	mkdirSync(LOG_DIR, { recursive: true });
 	SetConsoleOutput(LogLevel.DEBUG);
 	AddFileOutput(`${LOG_DIR}/debug.log`, false, LogLevel.DEBUG);

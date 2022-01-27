@@ -47,7 +47,7 @@ interface LogOutputDefinition {
 }
 
 /** Custom function for stringifying data when logging into file */
-function anyToString(data: unknown): string {
+function AnyToString(data: unknown): string {
 	if (typeof data === 'string') {
 		return data;
 	}
@@ -63,7 +63,7 @@ function anyToString(data: unknown): string {
 	}
 
 	return (
-		JSON.stringify(data, (k, v) => {
+		JSON.stringify(data, (_k, v) => {
 			if (typeof v === 'object' && v !== null && v !== data) {
 				return Array.isArray(v) ? '[object Array]' : String(v);
 			}
@@ -125,7 +125,7 @@ export function AddFileOutput(fileName: string, append: boolean, logLevel: LogLe
 		logLevelOverrides,
 		supportsColor: false,
 		onMessage: (prefix, message) => {
-			const line = [prefix, ...message.map((v) => anyToString(v))].join(' ') + '\n';
+			const line = [prefix, ...message.map((v) => AnyToString(v))].join(' ') + '\n';
 			fs.writeSync(fd, line, undefined, 'utf8');
 		},
 	});

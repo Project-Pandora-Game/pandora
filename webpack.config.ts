@@ -35,23 +35,23 @@ export default function (env: WebpackEnv): Configuration {
 		},
 		mode,
 		module: {
-			rules: generateRules(env),
+			rules: GenerateRules(env),
 		},
 		optimization: {
-			minimizer: generateMinimizer(env),
+			minimizer: GenerateMinimizer(env),
 		},
 		output: {
 			path: DIST_DIR,
 			filename: `[name]${env.prod ? '.[chunkhash]' : ''}.js`,
 		},
-		plugins: generatePlugins(env),
+		plugins: GeneratePlugins(env),
 		resolve: {
 			extensions: ['.ts', '.tsx', '.js'],
 		},
 	};
 }
 
-function generatePlugins(env: WebpackEnv): WebpackPluginInstance[] {
+function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 	const plugins: WebpackPluginInstance[] = [
 		new CleanWebpackPlugin({ verbose: true }),
 		new DefinePlugin({
@@ -85,7 +85,7 @@ function generatePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 	return plugins;
 }
 
-function generateRules(env: WebpackEnv): RuleSetRule[] {
+function GenerateRules(env: WebpackEnv): RuleSetRule[] {
 	const moduleRules: RuleSetRule[] = [
 		{
 			test: /\.tsx?$/i,
@@ -103,7 +103,7 @@ function generateRules(env: WebpackEnv): RuleSetRule[] {
 		},
 		{
 			test: /\.s?css$/i,
-			use: generateStyleLoaders(env),
+			use: GenerateStyleLoaders(env),
 		},
 	];
 
@@ -119,7 +119,7 @@ function generateRules(env: WebpackEnv): RuleSetRule[] {
 	return moduleRules;
 }
 
-function generateMinimizer(env: WebpackEnv): WebpackMinimizer[] {
+function GenerateMinimizer(env: WebpackEnv): WebpackMinimizer[] {
 	const minimizer: WebpackMinimizer[] = ['...'];
 	if (env.prod) {
 		minimizer.push(new CssMinimizerPlugin());
@@ -127,7 +127,7 @@ function generateMinimizer(env: WebpackEnv): WebpackMinimizer[] {
 	return minimizer;
 }
 
-function generateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
+function GenerateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
 	const styleLoaders: RuleSetUseItem[] = [
 		{ loader: 'css-loader' },
 		{

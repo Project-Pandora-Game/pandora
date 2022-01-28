@@ -55,7 +55,7 @@ export const logConfig: {
 	printTime: boolean;
 	/** Sets which locale should be used for time, if it is being displayed */
 	timeLocale: string;
-	/** Handlers for when fatal error occures */
+	/** Handlers for when fatal error occurs */
 	onFatal: (() => void)[];
 	/** List of places log outputs to */
 	logOutputs: LogOutputDefinition[];
@@ -78,7 +78,7 @@ logConfig.logOutputs.push(consoleOutput);
 
 /**
  * Creates console output for log. There is no output to console by default
- * @param logLevel - Lowest loglevel, which should be outputed to console
+ * @param logLevel - Lowest loglevel, which should be outputted to console
  * @param logLevelOverrides - Category specific overrides for loglevel
  */
 export function SetConsoleOutput(logLevel: LogLevel, logLevelOverrides: Record<string, LogLevel> = {}): void {
@@ -149,7 +149,7 @@ export class Logger {
 
 	/**
 	 * Logs a message with `FATAL` loglevel.
-	 * Fatal mesessages notify about error which can't be recovered from.
+	 * Fatal messages notify about error which can't be recovered from.
 	 *
 	 * Any fatal message will trigger `onFatal` handlers, stopping the application
 	 */

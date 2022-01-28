@@ -4,10 +4,27 @@ import { MessageHandler } from './message_handler';
 
 /** Client->Directory handlers */
 interface ClientDirectory {
-	login(arg: { username: string; password: string; }): {
+	//#region Before Login
+	login(arg: { username: string; passwordSha512: string; }): {
 		result: 'ok' | 'unknownCredentials',
 		token?: string,
 		update: IDirectoryClientConnectionStateUpdate;
+	};
+	register(arg: { username: string; passwordSha512: string; email: string; }): {
+		result: 'ok' | 'usernameTaken' | 'emailTaken',
+	};
+	verifyEmail(args: { username: string; token: string; }): {
+		result: 'ok' | 'unknownCredentials' | 'invalidToken',
+	};
+	passwordReset(arg: { email: string; }): {
+		result: 'maybeSent',
+	};
+	passwordResetConfirm(arg: { username: string; passwordSha512: string; token: string; }): {
+		result: 'ok' | 'unknownCredentials',
+	};
+	//#endregion Before Login
+	passwordChange(arg: { passwordSha512Old: string; passwordSha512New: string; }): {
+		result: 'ok' | 'invalidPassword',
 	};
 }
 

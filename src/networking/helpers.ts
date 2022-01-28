@@ -7,18 +7,18 @@ type Promisify<T> = {
 
 /**
 
-Define a SocketInterface for type 'TestIntenal' as 'Test':
+Define a SocketInterface for type 'TestInternal' as 'Test':
 
-export type Test = SocketInterface<TestIntenal>;
-export type TestArgument = RecordOnly<SocketInterfaceArgs<TestIntenal>>;
-export type TestUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<TestIntenal>;
-export type TestResult = SocketInterfaceResult<TestIntenal>;
-export type TestPromiseResult = SocketInterfacePromiseResult<TestIntenal>;
-export type TestNormalResult = SocketInterfaceNormalResult<TestIntenal>;
-export type TestResponseHandler = SocketInterfaceResponseHandler<TestIntenal>;
-export type TestOneshotHandler = SocketInterfaceOneshotHandler<TestIntenal>;
-export type TestMessageHandler<Context> = MessageHandler<TestIntenal, Context>;
-export type TestBase = TestIntenal; // required for new MessageHandler<TestBase>
+export type Test = SocketInterface<TestInternal>;
+export type TestArgument = RecordOnly<SocketInterfaceArgs<TestInternal>>;
+export type TestUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<TestInternal>;
+export type TestResult = SocketInterfaceResult<TestInternal>;
+export type TestPromiseResult = SocketInterfacePromiseResult<TestInternal>;
+export type TestNormalResult = SocketInterfaceNormalResult<TestInternal>;
+export type TestResponseHandler = SocketInterfaceResponseHandler<TestInternal>;
+export type TestOneshotHandler = SocketInterfaceOneshotHandler<TestInternal>;
+export type TestMessageHandler<Context> = MessageHandler<TestInternal, Context>;
+export type TestBase = TestInternal; // required for new MessageHandler<TestBase>
 
  */
 
@@ -32,14 +32,13 @@ export type SocketInterfaceDefinition<T extends {
 	};
 
 /** Defines the arguments for a SocketInterface */
-export type SocketInterfaceArgs<T extends Record<keyof T, unknown>> =
-	{
-		[K in keyof T]: T[K] extends ((arg: infer U) => unknown) ? U : never;
-	};
+export type SocketInterfaceArgs<T extends Record<keyof T, unknown>> = {
+	[K in keyof T]: T[K] extends ((arg: infer U) => unknown) ? U : never;
+};
 
-/** Defines the unconfiremed arguments for a SocketInterface */
+/** Defines the unconfirmed arguments for a SocketInterface */
 export type SocketInterfaceUnconfirmedArgs<T extends Record<keyof T, unknown>> = {
-	[K in keyof T]: Record<string, unknown>;
+	[K in keyof T]: T[K] extends ((arg: infer U) => unknown) ? Record<keyof U, unknown> : never;
 };
 
 /**

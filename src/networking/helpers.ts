@@ -23,7 +23,7 @@ export type TestBase = TestIntenal; // required for new MessageHandler<TestBase>
  */
 
 /** */
-type SocketInterfaceDefinition<T extends {
+export type SocketInterfaceDefinition<T extends {
 	[K in keyof T]: (args: Record<string, unknown>) => void | Record<string, unknown>
 }> =
 	{

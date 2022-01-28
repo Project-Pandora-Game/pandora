@@ -1,8 +1,8 @@
 import { IsObject } from '../validation';
 import { DEFAULT_ACK_TIMEOUT } from './config';
 import type { Logger } from '../logging';
-import type { BoolSelect, MemberReturnType, MembersFirstArg } from '../utility';
-import type { SocketInterfaceOneshotHandler, SocketInterfaceResponseHandler } from './helpers';
+import type { BoolSelect, MembersFirstArg } from '../utility';
+import type { SocketInterfaceDefinition, SocketInterfaceOneshotHandler, SocketInterfaceResponseHandler } from './helpers';
 
 interface Emitter {
 	emit(event: string, arg: unknown): void;
@@ -23,14 +23,18 @@ export interface IConnectionBase<T> {
 	sendMessage<K extends keyof SocketInterfaceOneshotHandler<T> & string>(messageType: K, message: MembersFirstArg<T>[K]): void;
 }
 
-export interface IConnection<T, Undetermined extends boolean> extends IConnectionBase<T> {
+export interface IConnection<T extends SocketInterfaceDefinition<T>, Undetermined extends boolean> extends IConnectionBase<T> {
 	/**
 	 * Send a message to the client and wait for a response
 	 * @param messageType - Type of message to send
 	 * @param message - Message data
 	 * @param timeout - Timeout in seconds
 	 */
-	awaitResponse<K extends keyof SocketInterfaceResponseHandler<T> & string>(messageType: K, message: MembersFirstArg<T>[K], timeout?: number): Promise<BoolSelect<Undetermined, Record<string, unknown>, MemberReturnType<T>[K]>>;
+	awaitResponse<K extends keyof SocketInterfaceResponseHandler<T> & string>(
+		messageType: K,
+		message: MembersFirstArg<T>[K],
+		timeout?: number
+	): Promise<BoolSelect<Undetermined, Record<string, unknown>, ReturnType<T[K]>>>;
 }
 
 export class ConnectionBase<EmitterT extends Emitter, T> implements IConnectionBase<T> {
@@ -46,11 +50,15 @@ export class ConnectionBase<EmitterT extends Emitter, T> implements IConnectionB
 	}
 }
 
-export class Connection<EmitterT extends EmitterWithAck, T, Undetermined extends boolean = false> extends ConnectionBase<EmitterT, T> implements IConnection<T, Undetermined> {
+export class Connection<EmitterT extends EmitterWithAck, T extends SocketInterfaceDefinition<T>, Undetermined extends boolean = false> extends ConnectionBase<EmitterT, T> implements IConnection<T, Undetermined> {
 	constructor(socket: EmitterT, logger: Logger) {
 		super(socket, logger);
 	}
-	awaitResponse<K extends keyof SocketInterfaceResponseHandler<T> & string>(messageType: K, message: MembersFirstArg<T>[K], timeout: number = DEFAULT_ACK_TIMEOUT): Promise<BoolSelect<Undetermined, Record<string, unknown>, MemberReturnType<T>[K]>> {
+	awaitResponse<K extends keyof SocketInterfaceResponseHandler<T> & string>(
+		messageType: K,
+		message: MembersFirstArg<T>[K],
+		timeout: number = DEFAULT_ACK_TIMEOUT,
+	): Promise<BoolSelect<Undetermined, Record<string, unknown>, ReturnType<T[K]>>> {
 		this.logger.debug(`\u25B2 message '${messageType}':`, message);
 		return new Promise((resolve, reject) => {
 			this.socket.timeout(timeout).emit(messageType, message, (response: unknown) => {
@@ -59,7 +67,7 @@ export class Connection<EmitterT extends EmitterWithAck, T, Undetermined extends
 				} else if (!IsObject(response)) {
 					reject(new Error(`Invalid response type: ${typeof response}`));
 				} else {
-					resolve(response as BoolSelect<Undetermined, Record<string, unknown>, MemberReturnType<T>[K]>);
+					resolve(response as BoolSelect<Undetermined, Record<string, unknown>, ReturnType<T[K]>>);
 				}
 			});
 		});

@@ -4,11 +4,13 @@ export type Equals<X, Y> =
 	(<T>() => T extends Y ? 1 : 2) ? true : false;
 
 export type MembersFirstArg<T> = {
-	[K in keyof T]: T[K] extends ((arg: infer U, ...rest: unknown[]) => unknown) ? U : never;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	[K in keyof T]: T[K] extends ((arg: infer U, ...rest: any[]) => unknown) ? U : never;
 };
 
 export type MemberReturnType<T> = {
-	[K in keyof T]: T[K] extends ((...arg: unknown[]) => infer U) ? U : never;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	[K in keyof T]: T[K] extends ((...arg: any[]) => infer U) ? U : never;
 };
 
 export type BoolSelect<T extends boolean, TrueType, FalseType> = T extends true ? TrueType : FalseType;

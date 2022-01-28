@@ -13,6 +13,7 @@ import CopyPlugin from 'copy-webpack-plugin';
 const SRC_DIR = join(__dirname, 'src');
 const DIST_DIR = join(__dirname, 'dist');
 const GAME_NAME = 'Pandora';
+const DIRECTORY_ADDRESS = 'http://127.0.0.1:25560';
 
 type WebpackMinimizer = WebpackPluginInstance | '...';
 
@@ -60,6 +61,7 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 				NODE_ENV: env.prod ? 'production' : 'development',
 				VERSION: packageJson.version,
 				GAME_NAME,
+				DIRECTORY_ADDRESS,
 				/* eslint-enable @typescript-eslint/naming-convention */
 			}),
 		}),

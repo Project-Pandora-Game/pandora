@@ -45,7 +45,7 @@ export class MessageHandler<T, Context = void> implements IMessageHandler<Contex
 
 export const MESSAGE_HANDLER_DEBUG_MESSAGES = new Set<string>();
 
-export function CreateMassageHandlerOnAny(
+export function CreateMessageHandlerOnAny(
 	logger: Logger,
 	handler: (messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void) => Promise<boolean>,
 ): (messageType: unknown, message: unknown, callback: ((arg: Record<string, unknown>) => void) | undefined) => void {

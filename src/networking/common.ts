@@ -14,6 +14,7 @@ export interface IConnectionClient extends IConnectionBase<IDirectoryClientBase>
 	readonly id: string;
 
 	isConnected(): boolean;
+	isLoggedIn(): boolean;
 
 	/**
 	 * Set or clear the account this connection is logged in as

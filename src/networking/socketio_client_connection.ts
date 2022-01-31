@@ -19,6 +19,10 @@ export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClien
 		return this.socket.id;
 	}
 
+	isLoggedIn(): boolean {
+		return this.account !== null;
+	}
+
 	constructor(socket: Socket) {
 		super(socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
 		ConnectionManagerClient.onConnect(this, socket.handshake.auth);

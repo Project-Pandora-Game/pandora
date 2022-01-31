@@ -1,6 +1,6 @@
 import { GetDatabase } from '../database/databaseProvider';
 import { GetLogger } from 'pandora-common/dist/logging';
-import { Account } from './account';
+import { Account, CreateAccountData } from './account';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
@@ -30,7 +30,7 @@ export class AccountManager {
 	}
 
 	/** Create account from received data, adding it to loaded accounts */
-	private loadAccount(data: DatabaseAccount): Account {
+	private loadAccount(data: DatabaseAccountWithSecure): Account {
 		const account = new Account(data);
 		this.onlineAccounts.add(account);
 		logger.debug(`Loaded account ${account.data.username}`);
@@ -111,6 +111,19 @@ export class AccountManager {
 		if (!data)
 			return null;
 		return this.loadAccount(data);
+	}
+
+	public async createAccount(username: string, password: string, email: string): Promise<Account | 'usernameTaken' | 'emailTaken'> {
+		const data = await GetDatabase().createAccount(await CreateAccountData(username, password, email));
+		if (typeof data === 'string')
+			return data;
+
+		logger.info(`Registered new account ${username}`);
+		const account = this.loadAccount(data);
+
+		await account.secure.sendActivation(email);
+
+		return account;
 	}
 }
 

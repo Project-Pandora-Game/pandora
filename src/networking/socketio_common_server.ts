@@ -16,6 +16,7 @@ export abstract class SocketIOServer {
 			...socketIoSettings,
 			cors: {
 				origin: /./,
+				credentials: true,
 			},
 			serveClient: false,
 			allowRequest: this.allowRequest.bind(this),

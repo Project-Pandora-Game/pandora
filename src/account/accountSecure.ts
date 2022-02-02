@@ -155,7 +155,7 @@ export async function AccountSecurePasswordReset(email: string): Promise<void> {
  * @param email - The email to hash
  * @returns - base64 encoded hash
  */
-function GenerateEmailHash(email: string): string {
+export function GenerateEmailHash(email: string): string {
 	return createHash('sha256').update(EMAIL_SALT).update(email.toLowerCase()).digest('base64');
 }
 

@@ -5,6 +5,7 @@ import { InitDatabase } from './database/databaseProvider';
 import { AddFileOutput } from './logging';
 import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common/dist/logging';
 import { StartHttpServer } from './networking/httpServer';
+import GetEmailSender from './services/email';
 
 const LOG_DIR = './logs';
 const logger = GetLogger('init');
@@ -19,6 +20,7 @@ Start().catch((error) => {
 async function Start(): Promise<void> {
 	SetupLogging();
 	logger.info(`${APP_NAME} starting...`);
+	await GetEmailSender().init();
 	logger.debug('Initializing database...');
 	await InitDatabase();
 	logger.debug('Initializing managers...');

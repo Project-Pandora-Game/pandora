@@ -72,6 +72,20 @@ export class AccountManager {
 	}
 
 	/**
+	 * Find an account between **currently loaded accounts**
+	 * @returns The account or `null` if not found
+	 */
+	public getAccountByEmailHash(emailHash: string): Account | null {
+		for (const account of this.onlineAccounts) {
+			if (account.secure.verifyEmailHash(emailHash)) {
+				account.touch();
+				return account;
+			}
+		}
+		return null;
+	}
+
+	/**
 	 * Find an account between loaded ones or try to load it from database
 	 * @returns The account or `null` if not found even in database
 	 */
@@ -105,6 +119,27 @@ export class AccountManager {
 		const data = await GetDatabase().getAccountByUsername(username);
 		// Check if we didn't load it while we were querying data from DB and use already loaded if we did
 		account = this.getAccountByUsername(username);
+		if (account)
+			return account;
+		// Use the acquired DB data to load character
+		if (!data)
+			return null;
+		return this.loadAccount(data);
+	}
+
+	/**
+	 * Find an account between loaded ones or try to load it from database
+	 * @returns The account or `null` if not found even in database
+	 */
+	public async loadAccountByEmailHash(emailHash: string): Promise<Account | null> {
+		// Check if account is loaded and return it if it is
+		let account = this.getAccountByEmailHash(emailHash);
+		if (account)
+			return account;
+		// Get it from database
+		const data = await GetDatabase().getAccountByEmailHash(emailHash);
+		// Check if we didn't load it while we were querying data from DB and use already loaded if we did
+		account = this.getAccountByEmailHash(emailHash);
 		if (account)
 			return account;
 		// Use the acquired DB data to load character

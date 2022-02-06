@@ -61,6 +61,10 @@ export default class AccountSecure {
 		return this.#secure.emailHash === hash;
 	}
 
+	public verifyEmailHash(emailHash: string): boolean {
+		return this.#secure.emailHash === emailHash;
+	}
+
 	public verifyPassword(password: string): Promise<boolean> {
 		return argon2.verify(this.#secure.password, password);
 	}
@@ -78,7 +82,7 @@ export default class AccountSecure {
 	}
 
 	public async resetPassword(email: string): Promise<boolean> {
-		if (!this.isActivated() || !this.verifyEmail(email))
+		if (!this.verifyEmail(email))
 			return false;
 
 		this.#secure.token = GenerateToken(AccountTokenReason.PASSWORD_RESET);
@@ -90,10 +94,11 @@ export default class AccountSecure {
 	}
 
 	public async finishPasswordReset(token: string, password: string): Promise<boolean> {
-		if (!this.isActivated() || !this.#validateToken(token, AccountTokenReason.PASSWORD_RESET))
+		if (!this.#validateToken(token, AccountTokenReason.PASSWORD_RESET))
 			return false;
 
 		this.#secure.token = undefined;
+		this.#secure.activated = true;
 		this.#secure.password = await GeneratePasswordHash(password);
 
 		await this.#updateDatabase();
@@ -104,10 +109,16 @@ export default class AccountSecure {
 	public async generateNewLoginToken(): Promise<string> {
 		const newToken = GenerateTokenBase('secure', LOGIN_TOKEN_EXPIRATION);
 		this.#secure.loginTokens.push(newToken);
-		this.#secure.loginTokens = this.#secure.loginTokens.filter((t) => t.expiration < Date.now());
+		this.#secure.loginTokens = this.#secure.loginTokens.filter((t) => t.expiration > Date.now());
 
 		await this.#updateDatabase();
 		return newToken.token;
+	}
+
+	public async invalidateLoginToken(token: string): Promise<void> {
+		this.#secure.loginTokens = this.#secure.loginTokens.filter((t) => t.token !== token);
+
+		await this.#updateDatabase();
 	}
 
 	public verifyLoginToken(token: string): boolean {
@@ -131,23 +142,13 @@ export default class AccountSecure {
 	}
 }
 
-export async function GenerateAccountSecureData(password: string, email: string): Promise<DatabaseAccountSecure> {
+export async function GenerateAccountSecureData(password: string, email: string, activated: boolean = false): Promise<DatabaseAccountSecure> {
 	return {
 		password: await GeneratePasswordHash(password),
 		emailHash: GenerateEmailHash(email),
 		loginTokens: [],
-		activated: false,
+		activated,
 	};
-}
-
-export async function AccountSecurePasswordReset(email: string): Promise<void> {
-	const hash = GenerateEmailHash(email);
-	const account = await GetDatabase().getAccountSecure(hash);
-	if (!account)
-		return;
-
-	const secure = new AccountSecure({ id: account.id, username: account.username }, account.secure);
-	await secure.resetPassword(email);
 }
 
 /**

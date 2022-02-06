@@ -1,7 +1,18 @@
 import { GetLogger } from 'pandora-common/dist/logging';
 import type { PandoraDatabase } from './databaseProvider';
+import { CreateAccountData } from '../account/account';
+import { PASSWORD_PREHASH_SALT } from 'pandora-common';
 
 import _ from 'lodash';
+import { createHash } from 'crypto';
+
+function HashSHA512Base64(text: string): string {
+	return createHash('sha512').update(text, 'utf-8').digest('base64');
+}
+
+export function PrehashPassword(password: string): string {
+	return HashSHA512Base64(PASSWORD_PREHASH_SALT + password);
+}
 
 const logger = GetLogger('db');
 
@@ -16,8 +27,20 @@ export class MockDatabase implements PandoraDatabase {
 		logger.info('Initialized mock database');
 	}
 
-	public init(): Promise<this> {
-		return Promise.resolve(this);
+	public async init(): Promise<this> {
+		this.accountDb.add(await CreateAccountData(
+			'test',
+			PrehashPassword('test'),
+			'test@project-pandora.com',
+			true,
+		));
+		this.accountDb.add(await CreateAccountData(
+			'testinactive',
+			PrehashPassword('test'),
+			'testinactive@project-pandora.com',
+			false,
+		));
+		return this;
 	}
 
 	/**
@@ -40,17 +63,12 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	/**
-	 * Update account's auth tokens
-	 * @param id - Id of account to update
-	 * @param tokens - Array of tokens to replace current ones with
+	 * Get account by email hash
+	 * @param emailHash - Email hash to search for
 	 */
-	public setAccountLoginTokens(id: number, tokens: DatabaseLoginToken[]): Promise<void> {
-		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
-		if (acc) {
-			acc.secure.loginTokens = _.cloneDeep(tokens);
-			return Promise.resolve();
-		}
-		return Promise.reject('Account not found in DB');
+	public getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.secure.emailHash === emailHash);
+		return Promise.resolve(_.cloneDeep(acc ?? null));
 	}
 
 	public createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'> {
@@ -75,10 +93,5 @@ export class MockDatabase implements PandoraDatabase {
 
 		acc.secure = _.cloneDeep(data);
 		return Promise.resolve();
-	}
-
-	public getAccountSecure(email: string): Promise<DatabaseAccountWithSecure | null> {
-		const acc = this.accountDbView.find((dbAccount) => dbAccount.secure.emailHash === email);
-		return Promise.resolve(_.cloneDeep(acc ?? null));
 	}
 }

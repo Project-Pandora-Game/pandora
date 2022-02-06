@@ -1,8 +1,8 @@
 import { GetLogger } from 'pandora-common/dist/logging';
 import { IConnectionClient } from './common';
-import { IsObject, IDirectoryClientConnectionStateUpdate, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator } from 'pandora-common';
+import { IsObject, IDirectoryClientConnectionStateUpdate, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
-import { AccountSecurePasswordReset } from '../account/accountSecure';
+import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -16,11 +16,13 @@ export default new class ConnectionManagerClient {
 		this.messageHandler = new MessageHandler<IClientDirectoryBase, IConnectionClient>({
 			login: this.handleLogin.bind(this),
 			register: this.handleRegister.bind(this),
-			verifyEmail: this.handleVerifyEmail.bind(this),
+			resendVerificationEmail: this.handleResendVerificationEmail.bind(this),
 			passwordReset: this.handlePasswordReset.bind(this),
 			passwordResetConfirm: this.handlePasswordResetConfirm.bind(this),
 			passwordChange: this.handlerPasswordChange.bind(this),
-		}, {});
+		}, {
+			logout: this.handleLogout.bind(this),
+		});
 	}
 
 	/** Handle new incoming connection */
@@ -51,10 +53,14 @@ export default new class ConnectionManagerClient {
 	 * @param connection - The connection that this message comes from
 	 * @returns Result of the login
 	 */
-	private async handleLogin({ username, passwordSha512 }: IClientDirectoryUnconfirmedArgument['login'], connection: IConnectionClient): IClientDirectoryPromiseResult['login'] {
+	private async handleLogin({ username, passwordSha512, verificationToken }: IClientDirectoryUnconfirmedArgument['login'], connection: IConnectionClient): IClientDirectoryPromiseResult['login'] {
 		// Verify content of the message
-		if (connection.isLoggedIn() || !IsUsername(username) || !IsPasswordSha512(passwordSha512)) {
-			return RejectWithLog(connection, 'login', { username, passwordSha512 });
+		if (connection.isLoggedIn() ||
+			!IsUsername(username) ||
+			!IsPasswordSha512(passwordSha512) ||
+			(verificationToken !== undefined && !IsSimpleToken(verificationToken))
+		) {
+			return RejectWithLog(connection, 'login', { username, passwordSha512, verificationToken });
 		}
 
 		// Find account by username
@@ -66,6 +72,21 @@ export default new class ConnectionManagerClient {
 				update: MakeClientStateUpdate(connection),
 			};
 		}
+		// Verify account is activated or activate it
+		if (!account.secure.isActivated()) {
+			if (verificationToken === undefined) {
+				return {
+					result: 'verificationRequired',
+					update: MakeClientStateUpdate(connection),
+				};
+			}
+			if (!await account.secure.activateAccount(verificationToken)) {
+				return {
+					result: 'invalidToken',
+					update: MakeClientStateUpdate(connection),
+				};
+			}
+		}
 		// Generate new auth token for new login
 		const token = await account.secure.generateNewLoginToken();
 		// Set the account for the connection and return result
@@ -76,6 +97,24 @@ export default new class ConnectionManagerClient {
 			token,
 			update: MakeClientStateUpdate(connection),
 		};
+	}
+
+	private async handleLogout({ invalidateToken }: IClientDirectoryUnconfirmedArgument['logout'], connection: IConnectionClient): IClientDirectoryPromiseResult['logout'] {
+		// Verify content of the message
+		if (!connection.isLoggedIn() ||
+			(invalidateToken !== undefined && typeof invalidateToken !== 'string')
+		) {
+			return RejectWithLog(connection, 'logout', { invalidateToken });
+		}
+
+		const account = connection.account;
+
+		connection.setAccount(null);
+		logger.info(`${connection.id} logged out`);
+
+		if (account && invalidateToken) {
+			await account.secure.invalidateLoginToken(invalidateToken);
+		}
 	}
 
 	private async handleRegister({ username, email, passwordSha512 }: IClientDirectoryUnconfirmedArgument['register'], connection: IConnectionClient): IClientDirectoryPromiseResult['register'] {
@@ -90,19 +129,14 @@ export default new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private async handleVerifyEmail({ username, token }: IClientDirectoryUnconfirmedArgument['verifyEmail'], connection: IConnectionClient): IClientDirectoryPromiseResult['verifyEmail'] {
+	private async handleResendVerificationEmail({ email }: IClientDirectoryUnconfirmedArgument['resendVerificationEmail'], connection: IConnectionClient): IClientDirectoryPromiseResult['resendVerificationEmail'] {
 		// Verify content of the message
-		if (connection.isLoggedIn() || !IsUsername(username) || typeof token !== 'string')
-			return RejectWithLog(connection, 'verifyEmail', { username, token });
+		if (connection.isLoggedIn() || !IsEmail(email))
+			return RejectWithLog(connection, 'resendVerificationEmail', { email });
 
-		const account = await accountManager.loadAccountByUsername(username);
-		if (!account || account.isActivated())
-			return { result: 'unknownCredentials' };
+		await AccountProcedureResendVerifyEmail(email);
 
-		if (!await account.secure.activateAccount(token))
-			return { result: 'invalidToken' };
-
-		return { result: 'ok' };
+		return { result: 'maybeSent' };
 	}
 
 	private async handlePasswordReset({ email }: IClientDirectoryUnconfirmedArgument['passwordReset'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordReset'] {
@@ -110,18 +144,18 @@ export default new class ConnectionManagerClient {
 		if (connection.isLoggedIn() || !IsEmail(email))
 			return RejectWithLog(connection, 'passwordReset', { email });
 
-		await AccountSecurePasswordReset(email);
+		await AccountProcedurePasswordReset(email);
 
 		return { result: 'maybeSent' };
 	}
 
 	private async handlePasswordResetConfirm({ username, token, passwordSha512 }: IClientDirectoryUnconfirmedArgument['passwordResetConfirm'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordResetConfirm'] {
 		// Verify content of the message
-		if (connection.isLoggedIn() || !IsUsername(username) || typeof token !== 'string' || !IsPasswordSha512(passwordSha512))
+		if (connection.isLoggedIn() || !IsUsername(username) || !IsSimpleToken(token) || !IsPasswordSha512(passwordSha512))
 			return RejectWithLog(connection, 'passwordResetConfirm', { username, token, passwordSha512 });
 
 		const account = await accountManager.loadAccountByUsername(username);
-		if (!account?.isActivated() || !await account.secure.finishPasswordReset(token, passwordSha512))
+		if (!await account?.secure.finishPasswordReset(token, passwordSha512))
 			return { result: 'unknownCredentials' };
 
 		return { result: 'ok' };

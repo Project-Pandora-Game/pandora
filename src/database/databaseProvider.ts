@@ -12,11 +12,10 @@ export interface PandoraDatabase {
 	 */
 	getAccountByUsername(username: string): Promise<DatabaseAccountWithSecure | null>;
 	/**
-	 * Update account's auth tokens
-	 * @param id - Id of account to update
-	 * @param tokens - Array of tokens to replace current ones with
+	 * Get account by email hash
+	 * @param emailHash - Email hash to search for
 	 */
-	setAccountLoginTokens(id: number, tokens: DatabaseLoginToken[]): Promise<void>;
+	getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null>;
 
 	/**
 	 * Create account
@@ -32,12 +31,6 @@ export interface PandoraDatabase {
 	 * @param id - Id of account to update
 	 */
 	setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void>;
-
-	/**
-	 * Get account by email hash should only be used in AccountSecure
-	 * @param email - Email hash to search for
-	 */
-	getAccountSecure(email: string): Promise<DatabaseAccountWithSecure | null>;
 }
 
 /** Current database connection */

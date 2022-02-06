@@ -1,12 +1,23 @@
 html, body {
-	margin: 0;
-	padding: 0;
 	height: 100%;
 	width: 100%;
+	margin: 0;
 	font-family: Arial, 'sans-serif';
 	background-color: #eee;
 }
 
 #pandora-root {
-	min-height: 100%;
+	margin: 0;
+	height: 100%;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	background-color: #bbb;
+	user-select: none;
+}
+
+div.main {
+	background-color: #bbb;
+	flex: 1;
+	padding: 1em;
 }

@@ -1,6 +1,9 @@
 import React from 'react';
 import { render } from 'react-dom';
 import { BrowserRouter } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { Header } from './components/header/Header';
 import './index.scss';
 import { PandoraRoutes } from './Routes';
 import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common/dist/logging';
@@ -20,9 +23,13 @@ async function Start(): Promise<void> {
 	logger.info('Starting...');
 	render(
 		<React.StrictMode>
-			<BrowserRouter>
-				<PandoraRoutes />
-			</BrowserRouter>
+			<Header />
+			<div className="main">
+				<ToastContainer theme='dark' />
+				<BrowserRouter>
+					<PandoraRoutes />
+				</BrowserRouter>
+			</div>
 		</React.StrictMode>,
 		document.querySelector('#pandora-root'),
 	);

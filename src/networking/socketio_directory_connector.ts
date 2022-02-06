@@ -1,13 +1,15 @@
+import { toast, ToastOptions } from 'react-toastify';
 import { DIRECTORY_ADDRESS } from '../config/Environment';
 import { GetLogger } from 'pandora-common';
-import { Connection, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMassageHandlerOnAny } from 'pandora-common';
+import { Connection, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
+import { GetAuthData, HandleDirectoryConnectionState } from './account_manager';
 import { connect, Socket } from 'socket.io-client';
 
 const logger = GetLogger('DirConn');
 
 // Setup message handler
 const handler = new MessageHandler<IDirectoryClientBase>({}, {
-	connectionState: () => { /* TODO */ },
+	connectionState: HandleDirectoryConnectionState,
 });
 
 /** State of connection to Directory */
@@ -28,6 +30,7 @@ function CreateConnection(uri: string): Socket {
 	// Create the connection without connecting
 	return connect(uri, {
 		autoConnect: false,
+		auth: GetAuthData,
 		withCredentials: true,
 	});
 }
@@ -42,6 +45,8 @@ export class SocketIODirectoryConnector extends Connection<Socket, IClientDirect
 		return this._state;
 	}
 
+	private toastId: string | number | null = null;
+
 	constructor(uri: string) {
 		super(CreateConnection(uri), logger);
 
@@ -50,7 +55,7 @@ export class SocketIODirectoryConnector extends Connection<Socket, IClientDirect
 		this.socket.on('disconnect', this.onDisconnect.bind(this));
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
-		this.socket.onAny(CreateMassageHandlerOnAny(logger, handler.onMessage.bind(handler)));
+		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
 
 	/**
@@ -92,7 +97,55 @@ export class SocketIODirectoryConnector extends Connection<Socket, IClientDirect
 	 * @param newState The state to set
 	 */
 	private setState(newState: DirectoryConnectionState): void {
+		const initial = this._state === DirectoryConnectionState.INITIAL_CONNECTION_PENDING;
 		this._state = newState;
+
+		let options: ToastOptions = {
+			isLoading: false,
+			autoClose: 2_000,
+			hideProgressBar: true,
+			closeOnClick: true,
+			closeButton: true,
+			draggable: true,
+		};
+		const optionsPending: ToastOptions = {
+			type: 'default',
+			isLoading: true,
+			autoClose: false,
+			closeOnClick: false,
+			closeButton: false,
+			draggable: false,
+		};
+		let render = '';
+		if (newState === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
+			options = optionsPending;
+			render = 'Connecting to Directory...';
+		} else if (newState === DirectoryConnectionState.CONNECTED) {
+			options.type = 'success';
+			render = initial ? 'Connected to Directory' : 'Reconnected to Directory';
+		} else if (newState === DirectoryConnectionState.CONNECTION_LOST) {
+			options = optionsPending;
+			render = 'Directory connection lost\nReconnecting...';
+		}
+
+		if (this.toastId !== null) {
+			if (render) {
+				toast.update(this.toastId, {
+					...options,
+					render,
+				});
+			} else {
+				toast.dismiss(this.toastId);
+				this.toastId = null;
+			}
+		} else if (render) {
+			this.toastId = toast(render, {
+				...options,
+				onClose: () => {
+					this.toastId = null;
+				},
+			});
+		}
 	}
 
 	/** Handle successful connection to Directory */

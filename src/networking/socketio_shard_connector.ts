@@ -1,5 +1,5 @@
 import { GetLogger } from 'pandora-common';
-import { Connection, IClientShardBase, MessageHandler, IShardClientBase, CreateMassageHandlerOnAny } from 'pandora-common';
+import { Connection, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 
 const logger = GetLogger('ShardConn');
@@ -47,7 +47,7 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 		this.socket.on('disconnect', this.onDisconnect.bind(this));
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
-		this.socket.onAny(CreateMassageHandlerOnAny(logger, handler.onMessage.bind(handler)));
+		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
 
 	/**

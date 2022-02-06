@@ -14,6 +14,7 @@
 	],
 	"scripts": {
 		"build": "tsc -p .",
+		"dev": "tsc -p . -w",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
 		"test": "jest",

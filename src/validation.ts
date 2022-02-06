@@ -28,6 +28,8 @@ export function CreateStringValidator({ regex, minLength, maxLength }: IStringVa
 	};
 }
 
+export const IsString = CreateStringValidator();
+
 /**
  * Tests if the parameter is a valid username
  *
@@ -51,4 +53,13 @@ export const IsEmail = CreateStringValidator({
 	regex: /^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/,
 	minLength: 5,
 	maxLength: 256,
+});
+
+/**
+ * Tests if string is a 'simple' token format - 6 digits
+ */
+export const IsSimpleToken = CreateStringValidator({
+	regex: /^[0-9]*$/,
+	minLength: 6,
+	maxLength: 6,
 });

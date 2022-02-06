@@ -5,16 +5,16 @@ import { MessageHandler } from './message_handler';
 /** Client->Directory handlers */
 interface ClientDirectory {
 	//#region Before Login
-	login(arg: { username: string; passwordSha512: string; }): {
-		result: 'ok' | 'unknownCredentials',
+	login(arg: { username: string; passwordSha512: string; verificationToken?: string; }): {
+		result: 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials',
 		token?: string,
 		update: IDirectoryClientConnectionStateUpdate;
 	};
 	register(arg: { username: string; passwordSha512: string; email: string; }): {
 		result: 'ok' | 'usernameTaken' | 'emailTaken',
 	};
-	verifyEmail(args: { username: string; token: string; }): {
-		result: 'ok' | 'unknownCredentials' | 'invalidToken',
+	resendVerificationEmail(arg: { email: string; }): {
+		result: 'maybeSent',
 	};
 	passwordReset(arg: { email: string; }): {
 		result: 'maybeSent',
@@ -26,6 +26,7 @@ interface ClientDirectory {
 	passwordChange(arg: { passwordSha512Old: string; passwordSha512New: string; }): {
 		result: 'ok' | 'invalidPassword',
 	};
+	logout(arg: { invalidateToken?: string; }): void;
 }
 
 export type IClientDirectory = SocketInterface<ClientDirectory>;

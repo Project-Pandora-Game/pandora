@@ -9,7 +9,9 @@ interface Emitter {
 }
 
 interface EmitterWithAck extends Emitter {
-	timeout(seconds: number): EmitterWithAck;
+	timeout(seconds: number): {
+		emit(event: string, arg: unknown, callback: (error: unknown, arg: unknown) => void): void;
+	};
 	emit(event: string, arg: unknown): void;
 	emit(event: string, arg: unknown, callback: (arg: unknown) => void): void;
 }
@@ -61,9 +63,9 @@ export class Connection<EmitterT extends EmitterWithAck, T extends SocketInterfa
 	): Promise<BoolSelect<Undetermined, Record<string, unknown>, ReturnType<T[K]>>> {
 		this.logger.debug(`\u25B2 message '${messageType}':`, message);
 		return new Promise((resolve, reject) => {
-			this.socket.timeout(timeout).emit(messageType, message, (response: unknown) => {
-				if (response instanceof Error) {
-					reject(response);
+			this.socket.timeout(timeout).emit(messageType, message, (error: unknown, response: unknown) => {
+				if (error != null) {
+					reject(error);
 				} else if (!IsObject(response)) {
 					reject(new Error(`Invalid response type: ${typeof response}`));
 				} else {

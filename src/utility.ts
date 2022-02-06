@@ -23,3 +23,12 @@ declare const process: Record<string, Record<string, unknown>>;
 export const IS_BROWSER = typeof window === 'object' && typeof document === 'object' && document.nodeType === 9 && !(typeof process === 'object' && !!process.versions && !!process.versions.node);
 /** True if the environment is a node */
 export const IS_NODE = !IS_BROWSER;
+
+/**
+ * Assert all arguments are `never`
+ *
+ * Useful for checking all possible outcomes are handled
+ */
+export function AssertNever(...args: never[]): never {
+	throw new Error(`Never assertion failed with arguments: ${args.join(', ')}`);
+}

@@ -38,7 +38,7 @@ export type SocketInterfaceArgs<T extends Record<keyof T, unknown>> = {
 
 /** Defines the unconfirmed arguments for a SocketInterface */
 export type SocketInterfaceUnconfirmedArgs<T extends Record<keyof T, unknown>> = {
-	[K in keyof T]: T[K] extends ((arg: infer U) => unknown) ? Record<keyof U, unknown> : never;
+	[K in keyof T]: T[K] extends ((arg: infer U) => unknown) ? Partial<Record<keyof U, unknown>> : never;
 };
 
 /**

@@ -12,7 +12,8 @@
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
-		"start": "yarn dev"
+		"start": "yarn dev",
+		"postinstall": "node scripts/postinstall.js"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.16.12",
@@ -35,6 +36,7 @@
 		"cross-env": "^7.0.3",
 		"css-loader": "^6.5.1",
 		"css-minimizer-webpack-plugin": "^3.4.1",
+		"dotenv": "^16.0.0",
 		"eslint": "^8.7.0",
 		"eslint-plugin-react": "^7.28.0",
 		"eslint-plugin-react-hooks": "^4.3.0",

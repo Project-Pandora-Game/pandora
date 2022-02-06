@@ -9,11 +9,15 @@ import MiniCssExtractPlugin, { loader as miniCssExtractLoader } from 'mini-css-e
 import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
 import CopyPlugin from 'copy-webpack-plugin';
+import { config } from 'dotenv';
+
+const {
+	DIRECTORY_ADDRESS = 'http://127.0.0.1:25560',
+} = config().parsed ?? {};
 
 const SRC_DIR = join(__dirname, 'src');
 const DIST_DIR = join(__dirname, 'dist');
 const GAME_NAME = 'Pandora';
-const DIRECTORY_ADDRESS = 'http://127.0.0.1:25560';
 
 type WebpackMinimizer = WebpackPluginInstance | '...';
 

@@ -36,3 +36,14 @@ export const EMAIL_SMTP_CONFIG = process.env.EMAIL_SMTP_CONFIG ?? '';
 export const EMAIL_SMTP_PASSWORD = process.env.EMAIL_SMTP_PASSWORD ?? '';
 
 //#endregion
+
+//#region Database
+
+/** Database type, possible values: mock, mongodb */
+export const DATABASE_TYPE = process.env.DATABASE_TYPE ?? 'mock';
+/** MongoDB connection string */
+export const DATABASE_URL = process.env.DATABASE_URL ?? 'mongodb://localhost:27017';
+/** Name of the db to connect to */
+export const DATABASE_NAME = process.env.DATABASE_NAME ?? 'pandora-test';
+
+//#endregion

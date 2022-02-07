@@ -1,4 +1,6 @@
 import { MockDatabase } from './mockDb';
+import MongoDatabase from './mongoDb';
+import { DATABASE_TYPE } from '../config';
 
 export interface PandoraDatabase {
 	/**
@@ -38,7 +40,11 @@ let database: PandoraDatabase | undefined;
 
 /** Init database connection based on configuration */
 export async function InitDatabase(): Promise<void> {
-	database = await new MockDatabase().init();
+	if (DATABASE_TYPE === 'mongodb') {
+		database = await new MongoDatabase().init();
+	} else {
+		database = await new MockDatabase().init();
+	}
 }
 
 /** Get currently active database connection */

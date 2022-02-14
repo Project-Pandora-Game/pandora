@@ -15,7 +15,7 @@ describe('Validation', () => {
 		});
 
 		it('should return false for arrays', () => {
-			const obj = [];
+			const obj: unknown[] = [];
 			expect(IsObject(obj)).toBeFalsy();
 		});
 
@@ -94,7 +94,7 @@ describe('Validation', () => {
 		});
 
 		it('should return false for arrays', () => {
-			const str = [];
+			const str: unknown[] = [];
 			expect(stringValidation(str)).toBeFalsy();
 		});
 

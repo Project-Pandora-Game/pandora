@@ -13,10 +13,13 @@
 		"/dist/**/*"
 	],
 	"scripts": {
-		"build": "tsc -p .",
-		"dev": "tsc -p . -w",
+		"build": "tsc -p ./tsconfig.src.json",
+		"dev": "tsc -p ./tsconfig.src.json -w",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
+		"type-check": "tsc -p . --noEmit",
+		"type-check:test": "tsc -p ./tsconfig.test.json --noEmit",
+		"type-check:src": "tsc -p ./tsconfig.src.json --noEmit",
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
@@ -32,6 +35,7 @@
 		"@babel/core": "^7.16.12",
 		"@babel/preset-env": "^7.16.11",
 		"@babel/preset-typescript": "^7.16.7",
+		"@travellocal/babel-plugin-declare-const-enum": "^0.0.4",
 		"@types/jest": "^27.4.0",
 		"@typescript-eslint/eslint-plugin": "^5.10.1",
 		"@typescript-eslint/parser": "^5.10.1",

@@ -20,4 +20,5 @@ jobs:
         with:
           node-version: '16'
       - run: yarn install --frozen-lockfile
+      - run: yarn type-check:test
       - run: yarn test

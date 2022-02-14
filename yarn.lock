@@ -1207,6 +1207,11 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-1.1.2.tgz#ccb91445360179a04e7fe6aff78c00ffc1eeaf82"
   integrity sha512-RbzJvlNzmRq5c3O09UipeuXno4tA1FE6ikOjxZK0tuxVv3412l64l5t1W5pj4+rJq9vpkm/kwiR07aZXnsKPxw==
 
+"@travellocal/babel-plugin-declare-const-enum@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@travellocal/babel-plugin-declare-const-enum/-/babel-plugin-declare-const-enum-0.0.4.tgz#6c3f7e6a6cf207894061a6a5f8a71478cc61dd0f"
+  integrity sha512-AgT/Lh00eN2UdaSmgTp3SO5HS8PCiPMpipr70Brpt/poI4ddZuiXnqFK3gHXaUFrMdGC6PhFnc6qmH4pzel2MA==
+
 "@types/babel__core@^7.0.0", "@types/babel__core@^7.1.14":
   version "7.1.18"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.1.18.tgz#1a29abcc411a9c05e2094c98f9a1b7da6cdf49f8"

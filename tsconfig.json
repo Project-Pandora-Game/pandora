@@ -1,18 +1,4 @@
 {
-	"compilerOptions": {
-		"target": "ES2021",
-		"lib": ["ESNext"],
-		"module": "CommonJS",
-		"moduleResolution": "Node",
-		"experimentalDecorators": true,
-		"esModuleInterop": true,
-		"baseUrl": "./src",
-		"outDir": "./dist",
-		"sourceMap": true,
-		"removeComments": true,
-		"strict": true,
-		"noImplicitOverride": true,
-		"noImplicitReturns": true
-	},
-	"include": ["./src/**/*"]
+	"extends": "./tsconfig.base.json",
+	"include": ["./src/**/*", "./test/**/*"]
 }

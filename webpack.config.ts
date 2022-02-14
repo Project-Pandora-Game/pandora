@@ -96,7 +96,12 @@ function GenerateRules(env: WebpackEnv): RuleSetRule[] {
 		{
 			test: /\.tsx?$/i,
 			exclude: /node_modules/,
-			use: 'ts-loader',
+			use: [{
+				loader: 'ts-loader',
+				options: {
+					configFile: 'tsconfig.src.json',
+				},
+			}],
 		},
 		{
 			test: /\.(png|jpe?g|gif|svg|eot|ttf|woff2?)$/i,

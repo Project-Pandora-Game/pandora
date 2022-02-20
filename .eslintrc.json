@@ -149,6 +149,7 @@
 		"no-trailing-spaces": "warn",
 		"quotes": "off",
 		"@typescript-eslint/quotes": ["warn", "single"],
+		"jsx-quotes": ["warn", "prefer-single"],
 		"@typescript-eslint/array-type": ["warn"],
 		"@typescript-eslint/consistent-type-assertions": [
 			"warn",

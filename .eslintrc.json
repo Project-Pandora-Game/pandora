@@ -148,7 +148,7 @@
 		"@typescript-eslint/comma-dangle": ["warn", "always-multiline"],
 		"no-trailing-spaces": "warn",
 		"quotes": "off",
-		"@typescript-eslint/quotes": ["warn", "single"],
+		"@typescript-eslint/quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],
 		"jsx-quotes": ["warn", "prefer-single"],
 		"@typescript-eslint/array-type": ["warn"],
 		"@typescript-eslint/consistent-type-assertions": [

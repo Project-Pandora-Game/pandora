@@ -1,7 +1,8 @@
 import { AssertNever, IsEmail } from 'pandora-common';
-import React, { ReactElement, useState  } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { DirectoryPasswordReset } from '../../networking/account_manager';
+import { Button } from '../common/Button/Button';
 import './login.scss';
 
 export function ForgotPassword(): ReactElement {
@@ -37,31 +38,26 @@ export function ForgotPassword(): ReactElement {
 	const contents = (
 		<form onSubmit={ handleSubmit }>
 			<div className="input-container">
-				<label htmlFor='forgot-password-email'>Enter your used email</label>
-				<input autoComplete='email' type="email" id='forgot-password-email' value={ mail } onChange={ (event) => setMail(event.target.value) } required />
+				<label htmlFor="forgot-password-email">Enter your email</label>
+				<input autoComplete="email" type="email" id="forgot-password-email" value={ mail }
+					onChange={ (event) => setMail(event.target.value) } required />
 			</div>
-			{errorMessage && <div className="error">{errorMessage}</div>}
-			<div className="center">
-				<input type="submit" value='Send reset email' />
-			</div>
-			<Link to="/reset_password">
-				<div className="login-links">
-					Already have a reset code?
-				</div>
-			</Link>
-			<Link to="/login">
-				<div className="login-links">
-					◄ Back
-				</div>
-			</Link>
+			{ errorMessage && <div className="error">{ errorMessage }</div> }
+			<Button type="submit">Send reset email</Button>
 		</form>
 	);
 
 	return (
 		<div className="forgotPassword">
-			<div className="forgotPassword-form">
-				<div className="title">Forgot Password</div>
-				{contents}
+			<div id="forgotPassword-form" className="auth-form">
+				<h1 className="title">Forgot Password</h1>
+				{ contents }
+				<Link className="login-links" to="/reset_password">
+					Already have a reset code?
+				</Link>
+				<Link className="login-links" to="/login">
+					◄ Back
+				</Link>
 			</div>
 		</div>
 	);

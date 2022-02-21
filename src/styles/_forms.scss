@@ -1,0 +1,32 @@
+@import 'constants';
+
+//#region Inputs
+
+input, textarea {
+	font-size: 1em;
+	padding: 0.5em;
+	border: 0.1em solid;
+	background-color: $grey-lighter;
+
+	&:focus, &:active {
+		outline: 0.15em solid $black-secondary;
+	}
+}
+
+//#endregion
+
+//#region Buttons
+
+button {
+	outline: 0;
+	border: 0;
+	font-size: 1em;
+	transition: all 150ms linear;
+
+	&:hover {
+		cursor: pointer;
+	}
+}
+
+//#endregion
+

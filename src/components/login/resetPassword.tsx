@@ -1,9 +1,10 @@
 import { AssertNever, CreateStringValidator, IsObject } from 'pandora-common';
-import React, { ReactElement, useState  } from 'react';
+import React, { ReactElement, ReactNode, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Link, useLocation } from 'react-router-dom';
 import { DirectoryPasswordResetConfirm } from '../../networking/account_manager';
 import './login.scss';
+import { Button } from '../common/Button/Button';
 
 const IsToken = CreateStringValidator({
 	regex: /^\d+$/,
@@ -54,6 +55,7 @@ export function ResetPassword(): ReactElement {
 	};
 
 	let contents: ReactElement;
+	let links: ReactNode = null;
 
 	if (!globalThis.crypto.subtle) {
 		contents = (
@@ -67,45 +69,51 @@ export function ResetPassword(): ReactElement {
 		contents = (
 			<form onSubmit={ handleSubmit }>
 				<div className="input-container">
-					<label htmlFor='reset-uname'>Username</label>
-					<input autoComplete='username' type='text' id='reset-uname' value={ username } onChange={ (event) => setUsername(event.target.value) } required />
+					<label htmlFor="reset-uname">Username</label>
+					<input autoComplete="username" type="text" id="reset-uname" value={ username }
+						onChange={ (event) => setUsername(event.target.value) } required />
 				</div>
 				<div className="input-container">
-					<label htmlFor='reset-token'>Reset code</label>
-					<input autoComplete='one-time-code' type='text' id='reset-token' maxLength={ 6 } value={ token } onChange={ (event) => setToken(event.target.value) } required />
+					<label htmlFor="reset-token">Reset code</label>
+					<input autoComplete="one-time-code" type="text" id="reset-token" maxLength={ 6 } value={ token }
+						onChange={ (event) => setToken(event.target.value) } required />
 				</div>
 				<div className="input-container">
-					<label htmlFor='reset-password'>New password</label>
-					<input autoComplete='new-password' type='password' id='reset-password' value={ newPassword } onChange={ (event) => setNewPassword(event.target.value) } required />
+					<label htmlFor="reset-password">New password</label>
+					<input autoComplete="new-password" type="password" id="reset-password" value={ newPassword }
+						onChange={ (event) => setNewPassword(event.target.value) } required />
 				</div>
-				<div className='input-container'>
-					<label htmlFor='reset-password-confirm'>Confirm new password</label>
-					<input autoComplete='new-password' type='password' id='reset-password-confirm' value={ newPasswordRetyped } onChange={ (event) => setNewPasswordRetyped(event.target.value) } required />
+				<div className="input-container">
+					<label htmlFor="reset-password-confirm">Confirm new password</label>
+					<input autoComplete="new-password" type="password" id="reset-password-confirm"
+						value={ newPasswordRetyped } onChange={ (event) => setNewPasswordRetyped(event.target.value) }
+						required />
 				</div>
-				{errorMessage && <div className="error">{errorMessage}</div>}
-				<div className="center">
-					<input type="submit" value='Reset password' />
-				</div>
-				<Link to="/forgot_password">
-					<div className="login-links">
-						Don&apos;t have a reset code?
-					</div>
-				</Link>
-				<Link to="/login">
-					<div className="login-links">
-						◄ Back
-					</div>
-				</Link>
+				{ errorMessage && <div className="error">{ errorMessage }</div> }
+				<Button type="submit">Reset password</Button>
 			</form>
+		);
+		links = (
+			<Link to="/forgot_password">
+				<div className="login-links">
+					Don&apos;t have a reset code?
+				</div>
+			</Link>
 		);
 	}
 
 	return (
 		<div className="forgotPassword">
-			<div className="forgotPassword-form">
+			<div id="forgotPassword-form" className="auth-form">
 				<div className="title">Reset Password</div>
-				{message && <div className="message">{message}</div>}
-				{contents}
+				{ message && <div className="message">{ message }</div> }
+				{ contents }
+				{ links }
+				<Link to="/login">
+					<div className="login-links">
+						◄ Back
+					</div>
+				</Link>
 			</div>
 		</div>
 	);

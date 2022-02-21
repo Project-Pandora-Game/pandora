@@ -1,0 +1,62 @@
+//#region Centering
+
+@mixin center-common {
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+
+@mixin center-absolute {
+	position: absolute;
+	@include center-common;
+}
+
+@mixin center-fixed {
+	position: fixed;
+	@include center-common;
+}
+
+.center-absolute {
+	@include center-absolute;
+}
+
+.center-fixed {
+	@include center-fixed;
+}
+
+//#endregion
+
+//#region Flexbox
+
+@mixin flex($direction: row, $wrap: nowrap) {
+	display: flex;
+	flex-flow: $direction $wrap;
+}
+
+.flex-row-nowrap {
+	@include flex;
+}
+
+.flex-row-wrap {
+	@include flex($wrap: wrap);
+}
+
+.flex-col-nowrap {
+	@include flex($direction: column);
+}
+
+.flex-col-wrap {
+	@include flex(column, wrap);
+}
+
+@for $weight from 1 through 12 {
+	.flex-#{$weight} {
+		flex: $weight;
+	}
+}
+
+.flex {
+	flex: 1;
+}
+
+//#endregion

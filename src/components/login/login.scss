@@ -1,104 +1,60 @@
+@import '../../styles/constants';
+@import '../../styles/utils';
+
 .login, .registration, .forgotPassword {
-	display: flex;
+	@include flex(column);
 	align-items: center;
 	justify-content: center;
-	flex-direction: column;
-	height: 100%;
-	font-family: Arial, Helvetica, sans-serif;
 
-	input[type="text"],
-	input[type="email"],
-	input[type="password"] {
-		height: 1.8em;
-		width: 14em;
-		border: 0.1em solid #000;
-		color: #000;
-		background-color: #bbb;
-	}
-
-	input[type="submit"] {
-		border-radius: 0.2em;
-		margin-top: 1em;
-		cursor: pointer;
-		font-size: 0.9em;
-		background: #000;
-		border: none;
-		color: #fff;
-		padding: 0.8em 1.8em;
-	}
-
-	input[type="submit"]:hover {
-		background: #fff;
-		color: #000;
-	}
-
-	.center {
-		display: flex;
-		flex-direction: column;
+	.auth-form {
+		@include flex(column);
+		width: 360px;
+		max-width: 90vw;
 		align-items: center;
-	}
-
-	.login-form, .registration-form, .forgotPassword-form {
 		border-radius: 0.2em;
-		background-color: #999;
+		background-color: $grey-light;
 		padding: 2em 3em;
-		box-shadow: 0 0.2em 0.4em 0 rgba(0, 0, 0, 0.2), 0 0.3em 1em 0 rgba(0, 0, 0, 0.19);
+		box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
 
-		& a {
-			text-decoration: none;
+		form {
+			@include flex(column);
+			width: 100%;
+			align-items: center;
+			gap: 0.9em;
+			margin-top: 1em;
 		}
 	}
 
-	.list-container {
-		display: flex;
-	}
-
-	.message {
-		max-width: 16em;
-		font-size: 0.9em;
-		word-wrap: normal;
-	}
-
-	.error {
-		@extend .message;
-		color: rgb(182, 0, 0);
-		font-weight: bold;
-	}
-
 	.title {
-		font-size: 1.5em;
+		font-size: 1.8rem;
 		margin-bottom: 1em;
 		text-align: center;
 	}
 
-	form {
-		display: flex;
-		flex-direction: column;
-		gap: 0.9em;
-		margin-top: 1em;
-		align-items: center;
-		.login-links {
-			margin-top: 0;
-		}
+	.input-container {
+		@include flex(column);
+		gap: 0.5em;
+		width: 100%;
 	}
 
-	.input-container {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5em;
+	button[type="submit"] {
+		margin: 2em 0 1em;
+	}
+
+	.message {
+		font-size: 0.9em;
+		text-align: center;
+		margin: 0.5em 0;
+	}
+
+	.error {
+		@extend .message;
+		color: $theme-error;
+		font-weight: 600;
 	}
 
 	.login-links {
-		display: block;
-		margin-top: 1em;
-		padding: 0.5em;
 		font-size: 0.95em;
-		text-align: center;
-		cursor: pointer;
-		color: rgb(3, 42, 100);
-
-		&:hover {
-			color: #fff;
-		}
+		margin-top: 1em;
 	}
 }

@@ -1,15 +1,14 @@
-import { join } from 'path';
-import { Configuration, DefinePlugin, RuleSetRule, RuleSetUseItem, WebpackPluginInstance } from 'webpack';
-import 'webpack-dev-server';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
-import packageJson from './package.json';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
+import { config } from 'dotenv';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin, { loader as miniCssExtractLoader } from 'mini-css-extract-plugin';
+import { join } from 'path';
 import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
-import CopyPlugin from 'copy-webpack-plugin';
-import { config } from 'dotenv';
+import { Configuration, DefinePlugin, RuleSetRule, RuleSetUseItem, WebpackPluginInstance } from 'webpack';
+import 'webpack-dev-server';
+import packageJson from './package.json';
 
 const {
 	DIRECTORY_ADDRESS = 'http://127.0.0.1:25560',
@@ -34,7 +33,7 @@ export default function (env: WebpackEnv): Configuration {
 			open: true,
 			port: 6969,
 		},
-		devtool: env.prod ? false : 'eval',
+		devtool: env.prod ? false : 'eval-source-map',
 		entry: {
 			index: join(SRC_DIR, 'index.tsx'),
 		},
@@ -47,7 +46,7 @@ export default function (env: WebpackEnv): Configuration {
 		},
 		output: {
 			path: DIST_DIR,
-			filename: `[name]${env.prod ? '.[chunkhash]' : ''}.js`,
+			filename: `[name]${ env.prod ? '.[chunkhash]' : '' }.js`,
 		},
 		plugins: GeneratePlugins(env),
 		resolve: {
@@ -74,11 +73,6 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 			title: GAME_NAME,
 			favicon: join(SRC_DIR, 'assets/favicon.png'),
 		}),
-		new CopyPlugin({
-			patterns: [
-				{ from: join(SRC_DIR, 'assets'), to: DIST_DIR },
-			],
-		}) as unknown as WebpackPluginInstance,
 	];
 
 	if (env.prod) {

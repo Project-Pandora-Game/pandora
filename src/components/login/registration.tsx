@@ -1,7 +1,8 @@
-import { IsUsername, IsEmail, IsObject, AssertNever } from 'pandora-common';
-import React, { ReactElement, useState  } from 'react';
+import { AssertNever, IsEmail, IsObject, IsUsername } from 'pandora-common';
+import React, { ReactElement, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DirectoryRegister } from '../../networking/account_manager';
+import { Button } from '../common/Button/Button';
 import './login.scss';
 
 export function Registration(): ReactElement {
@@ -65,7 +66,7 @@ export function Registration(): ReactElement {
 
 	// Generate JSX code for error message
 	const renderErrorMessage = (name: string) => (
-		errorMessage.element === name ? <div className='error'>{errorMessage.message}</div> : null
+		errorMessage.element === name ? <div className="error">{ errorMessage.message }</div> : null
 	);
 
 	let contents: ReactElement;
@@ -80,46 +81,46 @@ export function Registration(): ReactElement {
 		);
 	} else {
 		contents = (
-			<div className='form'>
+			<div className="form">
 				<form onSubmit={ handleSubmit }>
-					<div className='input-container'>
+					<div className="input-container">
 						<label>Username </label>
-						<input autoComplete='username' type='text' name='uname' value={ username } onChange={ (event) => setUsername(event.target.value) } required />
-						{renderErrorMessage('uname')}
+						<input autoComplete="username" type="text" name="uname" value={ username }
+							onChange={ (event) => setUsername(event.target.value) } required />
+						{ renderErrorMessage('uname') }
 					</div>
-					<div className='input-container'>
+					<div className="input-container">
 						<label>Mail </label>
-						<input autoComplete='email' type='email' name='mail' value={ mail } onChange={ (event) => setMail(event.target.value) } required />
-						{renderErrorMessage('mail')}
+						<input autoComplete="email" type="email" name="mail" value={ mail }
+							onChange={ (event) => setMail(event.target.value) } required />
+						{ renderErrorMessage('mail') }
 					</div>
-					<div className='input-container'>
+					<div className="input-container">
 						<label>Password </label>
-						<input autoComplete='new-password' type='password' name='pass1' value={ password } onChange={ (event) => setPassword(event.target.value) } required />
-						{renderErrorMessage('pass')}
+						<input autoComplete="new-password" type="password" name="pass1" value={ password }
+							onChange={ (event) => setPassword(event.target.value) } required />
+						{ renderErrorMessage('pass') }
 					</div>
-					<div className='input-container'>
+					<div className="input-container">
 						<label>Confirm password </label>
-						<input autoComplete='new-password' type='password' name='pass2' value={ passwordRetyped } onChange={ (event) => setPasswordRetyped(event.target.value) } required />
-						{renderErrorMessage('pass2')}
+						<input autoComplete="new-password" type="password" name="pass2" value={ passwordRetyped }
+							onChange={ (event) => setPasswordRetyped(event.target.value) } required />
+						{ renderErrorMessage('pass2') }
 					</div>
-					<div className='center'>
-						<input type='submit' value='Register' />
-					</div>
+					<Button type="submit">Register</Button>
 				</form>
 			</div>
 		);
 	}
 
 	return (
-		<div className='registration'>
-			<div className='registration-form'>
-				<div className='title'>Sign Up</div>
-				{message && <div className="message">{message}</div>}
-				{contents}
-				<Link to="/login">
-					<div className="login-links">
-						◄ Back
-					</div>
+		<div className="registration">
+			<div id="registration-form" className="auth-form">
+				<h1 className="title">Sign Up</h1>
+				{ message && <div className="message">{ message }</div> }
+				{ contents }
+				<Link className="login-links" to="/login">
+					◄ Back
 				</Link>
 			</div>
 		</div>

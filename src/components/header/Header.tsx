@@ -1,50 +1,48 @@
 import React, { ReactElement } from 'react';
-import './header.scss';
+import friendsIcon from '../../assets/icons/friends.svg';
+import logoutIcon from '../../assets/icons/logout.svg';
+import notificationsIcon from '../../assets/icons/notification.svg';
+import settingsIcon from '../../assets/icons/setting.svg';
 import { currentAccount, Logout } from '../../networking/account_manager';
+import './header.scss';
+import { HeaderButton } from './HeaderButton';
 
 function LeftHeader(): ReactElement {
 	return (
-		<div className="leftHeader">
+		<div className="leftHeader flex">
 			{/*
 			<div className="headerButton"><img className='avatar' src='/iconClare.png' />Clare</div>
 			<div className="headerButton">Inventory</div>
 			<div className="headerButton">Room</div>
-			*/}
+			*/ }
 		</div>
 	);
 }
 
 function RightHeader(): ReactElement {
 	const account = currentAccount.useHook();
-	const elements: ReactElement[] = [];
-	if (account != null) {
-		elements.push(
-			<div className="headerButton" onClick={ Logout }><img src="/logout.svg" /></div>,
-			<div className="headerButton">{ account }</div>,
-			<div className="headerButton"><img src="/setting.svg" /></div>,
-			<div className="headerButton"><img src="/friends.svg" /></div>,
-			<div className="headerButton">
-				<span className="notificationContainer">
-					<img src="/notification.svg" />
-					<div className="counter">5</div>
-				</span>
-			</div>,
-		);
-	} else {
-		elements.push(
-			<div className="headerButton">[not logged in]</div>,
-		);
-	}
+	const loggedIn = account != null;
+	const notificationCount = 5;
 	return (
 		<div className="rightHeader">
-			{...elements}
+			{ loggedIn && (
+				<>
+					<HeaderButton icon={ notificationsIcon } iconAlt={ `${ notificationCount } notifications` }
+						badge={ notificationCount } title="Notifications" />
+					<HeaderButton icon={ friendsIcon } iconAlt="Friends icon" title="Friends" />
+					<HeaderButton icon={ settingsIcon } iconAlt="Settings icon" title="Settings" />
+					<span>{ account }</span>
+					<HeaderButton icon={ logoutIcon } iconAlt="Logout icon" onClick={ Logout } title="Logout" />
+				</>
+			) }
+			{ !loggedIn && <span>[not logged in]</span> }
 		</div>
 	);
 }
 
 export function Header(): ReactElement {
 	return (
-		<header>
+		<header className="Header">
 			<LeftHeader />
 			<RightHeader />
 		</header>

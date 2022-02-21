@@ -1,8 +1,9 @@
 import { AssertNever, IsObject, IsSimpleToken, IsUsername } from 'pandora-common';
-import React, { ReactElement, useState  } from 'react';
+import React, { FormEvent, ReactElement, ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { currentAccount, DirectoryLogin } from '../../networking/account_manager';
 import './login.scss';
+import { Button } from '../common/Button/Button';
 
 export function Login(): ReactElement {
 	// React States
@@ -17,7 +18,7 @@ export function Login(): ReactElement {
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';
 	const navigate = useNavigate();
 
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 		//Prevent page reload
 		event.preventDefault();
 
@@ -55,6 +56,7 @@ export function Login(): ReactElement {
 	};
 
 	let contents: ReactElement;
+	let links: ReactNode = null;
 
 	if (!globalThis.crypto.subtle) {
 		contents = (
@@ -70,55 +72,55 @@ export function Login(): ReactElement {
 		contents = (
 			<form onSubmit={ handleSubmit }>
 				<div className="input-container">
-					<label htmlFor='verify-token'>Verification code</label>
-					<input autoComplete='one-time-code' type='text' id='verify-token' maxLength={ 6 } value={ token } onChange={ (event) => setToken(event.target.value) } required />
+					<label htmlFor="verify-token">Verification code</label>
+					<input autoComplete="one-time-code" type="text" id="verify-token" maxLength={ 6 } value={ token }
+						onChange={ (event) => setToken(event.target.value) } required />
 				</div>
-				{errorMessage && <div className="error">{errorMessage}</div>}
-				<div className="center">
-					<input type="submit" value='Sign in' />
-				</div>
-				<Link to="/resend_verification_email">
-					<div className="login-links">
-						Didn&apos;t receive a code by email?
-					</div>
-				</Link>
+				{ errorMessage && <div className="error">{ errorMessage }</div> }
+				<Button type="submit">Sign in</Button>
 			</form>
+		);
+		links = (
+			<Link className="login-links" to="/resend_verification_email">
+				Didn&apos;t receive a code by email?
+			</Link>
 		);
 	} else {
 		contents = (
 			<form onSubmit={ handleSubmit }>
 				<div className="input-container">
-					<label htmlFor='login-uname'>Username</label>
-					<input autoComplete='username' type="text" id='login-uname' value={ username } onChange={ (event) => setUsername(event.target.value) } required />
+					<label htmlFor="login-uname">Username</label>
+					<input autoComplete="username" type="text" id="login-uname" value={ username }
+						onChange={ (event) => setUsername(event.target.value) } required />
 				</div>
 				<div className="input-container">
-					<label htmlFor='login-password'>Password</label>
-					<input autoComplete='current-password' type="password" id='login-password' value={ password } onChange={ (event) => setPassword(event.target.value) } required />
+					<label htmlFor="login-password">Password</label>
+					<input autoComplete="current-password" type="password" id="login-password" value={ password }
+						onChange={ (event) => setPassword(event.target.value) } required />
 				</div>
-				{errorMessage && <div className="error">{errorMessage}</div>}
-				<div className="center">
-					<input type="submit" value='Sign in' />
-				</div>
-				<Link to="/forgot_password">
-					<div className="login-links">
-						Forgot your password?
-					</div>
-				</Link>
-				<Link to="/register">
-					<div className="login-links">
-						Not a member? <b>Sign up</b>
-					</div>
-				</Link>
+				{ errorMessage && <div className="error">{ errorMessage }</div> }
+				<Button type="submit">Sign in</Button>
 			</form>
+		);
+		links = (
+			<>
+				<Link className="login-links" to="/forgot_password">
+					Forgot your password?
+				</Link>
+				<Link className="login-links" to="/register">
+					Not a member? <strong>Sign up</strong>
+				</Link>
+			</>
 		);
 	}
 
 	return (
 		<div className="login">
-			<div className="login-form">
-				<div className="title">Club Check-in</div>
-				{message && <div className="message">{message}</div>}
-				{contents}
+			<div id="login-form" className="auth-form">
+				<h1 className="title">Club Check-in</h1>
+				{ message && <div className="message">{ message }</div> }
+				{ contents }
+				{ links }
 			</div>
 		</div>
 	);

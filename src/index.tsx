@@ -24,8 +24,8 @@ async function Start(): Promise<void> {
 	render(
 		<React.StrictMode>
 			<Header />
+			<ToastContainer theme="dark" />
 			<div className="main">
-				<ToastContainer theme='dark' />
 				<BrowserRouter>
 					<PandoraRoutes />
 				</BrowserRouter>

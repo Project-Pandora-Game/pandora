@@ -36,7 +36,6 @@
 		"@typescript-eslint/parser": "^5.10.1",
 		"babel-jest": "^27.4.6",
 		"clean-webpack-plugin": "^4.0.0",
-		"copy-webpack-plugin": "^10.2.1",
 		"cross-env": "^7.0.3",
 		"css-loader": "^6.5.1",
 		"css-minimizer-webpack-plugin": "^3.4.1",
@@ -66,6 +65,7 @@
 		"webpack-dev-server": "^4.7.3"
 	},
 	"dependencies": {
+		"classnames": "^2.3.1",
 		"pandora-common": "github:Project-Pandora-Game/pandora-common#5a2fcd5",
 		"react": "^17.0.2",
 		"react-dom": "^17.0.2",

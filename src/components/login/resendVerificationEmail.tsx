@@ -1,8 +1,9 @@
 import { AssertNever, IsEmail, IsObject } from 'pandora-common';
-import React, { ReactElement, useState  } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DirectoryResendVerificationMail } from '../../networking/account_manager';
 import './login.scss';
+import { Button } from '../common/Button/Button';
 
 export function ResendVerificationEmail(): ReactElement {
 	// React States
@@ -40,27 +41,28 @@ export function ResendVerificationEmail(): ReactElement {
 	const contents = (
 		<form onSubmit={ handleSubmit }>
 			<div className="input-container">
-				<label>Enter your used email</label>
-				<input autoComplete='email' type="email" value={ mail } onChange={ (event) => setMail(event.target.value) } required />
+				<label>Enter your email</label>
+				<input autoComplete="email" type="email" value={ mail }
+					onChange={ (event) => setMail(event.target.value) } required />
 			</div>
-			{errorMessage && <div className="error">{errorMessage}</div>}
+			{ errorMessage && <div className="error">{ errorMessage }</div> }
 			<div className="center">
-				<input type="submit" value='Send verification email' />
+				<Button type="submit">Send verification email</Button>
 			</div>
-			<Link to="/login">
-				<div className="login-links">
-					◄ Back
-				</div>
-			</Link>
 		</form>
 	);
 
 	return (
 		<div className="forgotPassword">
-			<div className="forgotPassword-form">
+			<div id="forgotPassword-form" className="auth-form">
 				<div className="title">Resend Email</div>
-				{message && <div className="message">{message}</div>}
-				{contents}
+				{ message && <div className="message">{ message }</div> }
+				{ contents }
+				<Link to="/login">
+					<div className="login-links">
+						◄ Back
+					</div>
+				</Link>
 			</div>
 		</div>
 	);

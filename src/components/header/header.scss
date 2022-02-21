@@ -1,76 +1,27 @@
-#pandora-root > header {
-	background-color: #999;
+@import '../../styles/constants';
+@import '../../styles/utils';
+@import 'HeaderButton';
+
+.Header {
+	@include flex(row, wrap);
+	background-color: $grey-mid;
 	width: 100%;
-	display: flex;
-	flex-wrap: wrap;
 
 	& > div {
-		display: flex;
-		flex-wrap: wrap;
+		@include flex;
 		align-items: flex-start;
 
-		&.leftHeader {
-			flex: 1;
-		}
-
 		&.rightHeader {
-			flex-direction: row-reverse;
-		}
-	}
-}
+			align-items: stretch;
 
-span.notificationContainer {
-	position: relative;
-	& img {
-		width: 1.5em;
-		height: 1.5em;
-	}
-
-	.counter {
-		position: absolute;
-		right: -35%;
-		bottom: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		height: 1em;
-		width: 1em;
-		padding: .2em;
-		border-radius: 50%;
-		font-size: x-small;
-		font-weight: bold;
-		color: white;
-		background-color: #d00;
-	}
-}
-
-.headerButton {
-	color: #000;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	min-height: 2em;
-	min-width: 6em;
-	padding: 0.1em 0.2em;
-	background-color: #999;
-	cursor: pointer;
-
-	&:hover {
-		color: #fff;
-		background-color: #222;
-		img:first-of-type {
-			filter: invert(100%);
-		}
-	}
-
-	& > img {
-		width: 1.5em;
-		height: 1.5em;
-		&.avatar {
-			width: 2em;
-			height: 1.9em;
-			padding-right: 0.3em;
-			filter: none !important;
+			& > span {
+				@include flex;
+				align-items: center;
+				justify-content: space-around;
+				min-width: 6em;
+				min-height: $header-button-height;
+				padding: 0 1em;
+			}
 		}
 	}
 }

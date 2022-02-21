@@ -4,6 +4,7 @@ import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import { currentAccount, Logout } from '../../networking/account_manager';
+import { useObservable } from '../../observable';
 import './header.scss';
 import { HeaderButton } from './HeaderButton';
 
@@ -20,7 +21,7 @@ function LeftHeader(): ReactElement {
 }
 
 function RightHeader(): ReactElement {
-	const account = currentAccount.useHook();
+	const account = useObservable(currentAccount);
 	const loggedIn = account != null;
 	const notificationCount = 5;
 	return (

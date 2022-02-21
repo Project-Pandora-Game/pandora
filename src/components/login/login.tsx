@@ -2,6 +2,7 @@ import { AssertNever, IsObject, IsSimpleToken, IsUsername } from 'pandora-common
 import React, { FormEvent, ReactElement, ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { currentAccount, DirectoryLogin } from '../../networking/account_manager';
+import { useObservable } from '../../observable';
 import './login.scss';
 import { Button } from '../common/Button/Button';
 
@@ -12,7 +13,7 @@ export function Login(): ReactElement {
 	const [token, setToken] = useState('');
 	const [needsVerification, setNeedsVerification] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
-	const isLoggedIn = currentAccount.useHook() != null;
+	const isLoggedIn = useObservable(currentAccount) != null;
 
 	const locationState = useLocation().state;
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';

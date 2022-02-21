@@ -1,10 +1,10 @@
 import { IDirectoryClientArgument, IsObject, PASSWORD_PREHASH_SALT } from 'pandora-common';
 import { BrowserStorage } from '../browserStorage';
-import { ObservableState } from '../observableState';
+import { Observable } from '../observable';
 import { DirectoryConnector } from './socketio_directory_connector';
 
 /** Current username or `null` if not logged in */
-export const currentAccount = new ObservableState<string | null>(null);
+export const currentAccount = new Observable<string | null>(null);
 
 /** Storage of login authentication token */
 const authToken = new BrowserStorage<{ username: string; token: string; } | null>('authToken', null, IsObject);
@@ -15,7 +15,7 @@ const authToken = new BrowserStorage<{ username: string; token: string; } | null
  */
 export function HandleDirectoryConnectionState(message: IDirectoryClientArgument['connectionState']): void {
 	// Update current account
-	currentAccount.set(message.account);
+	currentAccount.value = message.account;
 	// Clear saved token if login using it failed
 	if (!message.account) {
 		authToken.set(null);
@@ -49,7 +49,7 @@ export function Logout() {
 	const currentToken = authToken.get();
 	DirectoryConnector.sendMessage('logout', { invalidateToken: currentToken ? currentToken.token : undefined });
 	authToken.set(null);
-	currentAccount.set(null);
+	currentAccount.value = null;
 	window.location.reload();
 }
 

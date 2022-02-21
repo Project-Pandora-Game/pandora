@@ -4,5 +4,5 @@
 		"declaration": false,
 		"removeComments": true,
 	},
-	"include": ["./test/**/*"]
+	"include": ["./test/**/*", "./src/**/*.d.ts"]
 }

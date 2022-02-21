@@ -60,7 +60,7 @@ export function Login(): ReactElement {
 
 	if (!globalThis.crypto.subtle) {
 		contents = (
-			<div className="error">
+			<div className='error'>
 				Cryptography service is not available.<br />
 				Please check your browser is up to date and<br />
 				that you are using HTTPS to connect to this site.
@@ -71,43 +71,43 @@ export function Login(): ReactElement {
 	} else if (needsVerification) {
 		contents = (
 			<form onSubmit={ handleSubmit }>
-				<div className="input-container">
-					<label htmlFor="verify-token">Verification code</label>
-					<input autoComplete="one-time-code" type="text" id="verify-token" maxLength={ 6 } value={ token }
+				<div className='input-container'>
+					<label htmlFor='verify-token'>Verification code</label>
+					<input autoComplete='one-time-code' type='text' id='verify-token' maxLength={ 6 } value={ token }
 						onChange={ (event) => setToken(event.target.value) } required />
 				</div>
-				{ errorMessage && <div className="error">{ errorMessage }</div> }
-				<Button type="submit">Sign in</Button>
+				{ errorMessage && <div className='error'>{ errorMessage }</div> }
+				<Button type='submit'>Sign in</Button>
 			</form>
 		);
 		links = (
-			<Link className="login-links" to="/resend_verification_email">
+			<Link className='login-links' to='/resend_verification_email'>
 				Didn&apos;t receive a code by email?
 			</Link>
 		);
 	} else {
 		contents = (
 			<form onSubmit={ handleSubmit }>
-				<div className="input-container">
-					<label htmlFor="login-uname">Username</label>
-					<input autoComplete="username" type="text" id="login-uname" value={ username }
+				<div className='input-container'>
+					<label htmlFor='login-uname'>Username</label>
+					<input autoComplete='username' type='text' id='login-uname' value={ username }
 						onChange={ (event) => setUsername(event.target.value) } required />
 				</div>
-				<div className="input-container">
-					<label htmlFor="login-password">Password</label>
-					<input autoComplete="current-password" type="password" id="login-password" value={ password }
+				<div className='input-container'>
+					<label htmlFor='login-password'>Password</label>
+					<input autoComplete='current-password' type='password' id='login-password' value={ password }
 						onChange={ (event) => setPassword(event.target.value) } required />
 				</div>
-				{ errorMessage && <div className="error">{ errorMessage }</div> }
-				<Button type="submit">Sign in</Button>
+				{ errorMessage && <div className='error'>{ errorMessage }</div> }
+				<Button type='submit'>Sign in</Button>
 			</form>
 		);
 		links = (
 			<>
-				<Link className="login-links" to="/forgot_password">
+				<Link className='login-links' to='/forgot_password'>
 					Forgot your password?
 				</Link>
-				<Link className="login-links" to="/register">
+				<Link className='login-links' to='/register'>
 					Not a member? <strong>Sign up</strong>
 				</Link>
 			</>
@@ -115,10 +115,10 @@ export function Login(): ReactElement {
 	}
 
 	return (
-		<div className="login">
-			<div id="login-form" className="auth-form">
-				<h1 className="title">Club Check-in</h1>
-				{ message && <div className="message">{ message }</div> }
+		<div className='login'>
+			<div id='login-form' className='auth-form'>
+				<h1 className='title'>Club Check-in</h1>
+				{ message && <div className='message'>{ message }</div> }
 				{ contents }
 				{ links }
 			</div>

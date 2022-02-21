@@ -37,25 +37,25 @@ export function ForgotPassword(): ReactElement {
 
 	const contents = (
 		<form onSubmit={ handleSubmit }>
-			<div className="input-container">
-				<label htmlFor="forgot-password-email">Enter your email</label>
-				<input autoComplete="email" type="email" id="forgot-password-email" value={ mail }
+			<div className='input-container'>
+				<label htmlFor='forgot-password-email'>Enter your email</label>
+				<input autoComplete='email' type='email' id='forgot-password-email' value={ mail }
 					onChange={ (event) => setMail(event.target.value) } required />
 			</div>
-			{ errorMessage && <div className="error">{ errorMessage }</div> }
-			<Button type="submit">Send reset email</Button>
+			{ errorMessage && <div className='error'>{ errorMessage }</div> }
+			<Button type='submit'>Send reset email</Button>
 		</form>
 	);
 
 	return (
-		<div className="forgotPassword">
-			<div id="forgotPassword-form" className="auth-form">
-				<h1 className="title">Forgot Password</h1>
+		<div className='forgotPassword'>
+			<div id='forgotPassword-form' className='auth-form'>
+				<h1 className='title'>Forgot Password</h1>
 				{ contents }
-				<Link className="login-links" to="/reset_password">
+				<Link className='login-links' to='/reset_password'>
 					Already have a reset code?
 				</Link>
-				<Link className="login-links" to="/login">
+				<Link className='login-links' to='/login'>
 					◄ Back
 				</Link>
 			</div>

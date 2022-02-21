@@ -66,14 +66,14 @@ export function Registration(): ReactElement {
 
 	// Generate JSX code for error message
 	const renderErrorMessage = (name: string) => (
-		errorMessage.element === name ? <div className="error">{ errorMessage.message }</div> : null
+		errorMessage.element === name ? <div className='error'>{ errorMessage.message }</div> : null
 	);
 
 	let contents: ReactElement;
 
 	if (!globalThis.crypto.subtle) {
 		contents = (
-			<div className="error">
+			<div className='error'>
 				Cryptography service is not available.<br />
 				Please check your browser is up to date and<br />
 				that you are using HTTPS to connect to this site.
@@ -81,45 +81,45 @@ export function Registration(): ReactElement {
 		);
 	} else {
 		contents = (
-			<div className="form">
+			<div className='form'>
 				<form onSubmit={ handleSubmit }>
-					<div className="input-container">
+					<div className='input-container'>
 						<label>Username </label>
-						<input autoComplete="username" type="text" name="uname" value={ username }
+						<input autoComplete='username' type='text' name='uname' value={ username }
 							onChange={ (event) => setUsername(event.target.value) } required />
 						{ renderErrorMessage('uname') }
 					</div>
-					<div className="input-container">
+					<div className='input-container'>
 						<label>Mail </label>
-						<input autoComplete="email" type="email" name="mail" value={ mail }
+						<input autoComplete='email' type='email' name='mail' value={ mail }
 							onChange={ (event) => setMail(event.target.value) } required />
 						{ renderErrorMessage('mail') }
 					</div>
-					<div className="input-container">
+					<div className='input-container'>
 						<label>Password </label>
-						<input autoComplete="new-password" type="password" name="pass1" value={ password }
+						<input autoComplete='new-password' type='password' name='pass1' value={ password }
 							onChange={ (event) => setPassword(event.target.value) } required />
 						{ renderErrorMessage('pass') }
 					</div>
-					<div className="input-container">
+					<div className='input-container'>
 						<label>Confirm password </label>
-						<input autoComplete="new-password" type="password" name="pass2" value={ passwordRetyped }
+						<input autoComplete='new-password' type='password' name='pass2' value={ passwordRetyped }
 							onChange={ (event) => setPasswordRetyped(event.target.value) } required />
 						{ renderErrorMessage('pass2') }
 					</div>
-					<Button type="submit">Register</Button>
+					<Button type='submit'>Register</Button>
 				</form>
 			</div>
 		);
 	}
 
 	return (
-		<div className="registration">
-			<div id="registration-form" className="auth-form">
-				<h1 className="title">Sign Up</h1>
-				{ message && <div className="message">{ message }</div> }
+		<div className='registration'>
+			<div id='registration-form' className='auth-form'>
+				<h1 className='title'>Sign Up</h1>
+				{ message && <div className='message'>{ message }</div> }
 				{ contents }
-				<Link className="login-links" to="/login">
+				<Link className='login-links' to='/login'>
 					◄ Back
 				</Link>
 			</div>

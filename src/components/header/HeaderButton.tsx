@@ -13,9 +13,9 @@ export function HeaderButton({
 }: HeaderButtonProps): ReactElement {
 	return (
 		<button { ...buttonProps } className={ classNames('HeaderButton', className) }>
-			<div className="icon-container">
+			<div className='icon-container'>
 				<img src={ icon } alt={ iconAlt } />
-				{ badge && <span className="badge">{ badge > 99 ? '99+' : badge }</span> }
+				{ badge && <span className='badge'>{ badge > 99 ? '99+' : badge }</span> }
 			</div>
 			{ children }
 		</button>

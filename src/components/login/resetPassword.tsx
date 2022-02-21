@@ -59,7 +59,7 @@ export function ResetPassword(): ReactElement {
 
 	if (!globalThis.crypto.subtle) {
 		contents = (
-			<div className="error">
+			<div className='error'>
 				Cryptography service is not available.<br />
 				Please check your browser is up to date and<br />
 				that you are using HTTPS to connect to this site.
@@ -68,34 +68,34 @@ export function ResetPassword(): ReactElement {
 	} else {
 		contents = (
 			<form onSubmit={ handleSubmit }>
-				<div className="input-container">
-					<label htmlFor="reset-uname">Username</label>
-					<input autoComplete="username" type="text" id="reset-uname" value={ username }
+				<div className='input-container'>
+					<label htmlFor='reset-uname'>Username</label>
+					<input autoComplete='username' type='text' id='reset-uname' value={ username }
 						onChange={ (event) => setUsername(event.target.value) } required />
 				</div>
-				<div className="input-container">
-					<label htmlFor="reset-token">Reset code</label>
-					<input autoComplete="one-time-code" type="text" id="reset-token" maxLength={ 6 } value={ token }
+				<div className='input-container'>
+					<label htmlFor='reset-token'>Reset code</label>
+					<input autoComplete='one-time-code' type='text' id='reset-token' maxLength={ 6 } value={ token }
 						onChange={ (event) => setToken(event.target.value) } required />
 				</div>
-				<div className="input-container">
-					<label htmlFor="reset-password">New password</label>
-					<input autoComplete="new-password" type="password" id="reset-password" value={ newPassword }
+				<div className='input-container'>
+					<label htmlFor='reset-password'>New password</label>
+					<input autoComplete='new-password' type='password' id='reset-password' value={ newPassword }
 						onChange={ (event) => setNewPassword(event.target.value) } required />
 				</div>
-				<div className="input-container">
-					<label htmlFor="reset-password-confirm">Confirm new password</label>
-					<input autoComplete="new-password" type="password" id="reset-password-confirm"
+				<div className='input-container'>
+					<label htmlFor='reset-password-confirm'>Confirm new password</label>
+					<input autoComplete='new-password' type='password' id='reset-password-confirm'
 						value={ newPasswordRetyped } onChange={ (event) => setNewPasswordRetyped(event.target.value) }
 						required />
 				</div>
-				{ errorMessage && <div className="error">{ errorMessage }</div> }
-				<Button type="submit">Reset password</Button>
+				{ errorMessage && <div className='error'>{ errorMessage }</div> }
+				<Button type='submit'>Reset password</Button>
 			</form>
 		);
 		links = (
-			<Link to="/forgot_password">
-				<div className="login-links">
+			<Link to='/forgot_password'>
+				<div className='login-links'>
 					Don&apos;t have a reset code?
 				</div>
 			</Link>
@@ -103,14 +103,14 @@ export function ResetPassword(): ReactElement {
 	}
 
 	return (
-		<div className="forgotPassword">
-			<div id="forgotPassword-form" className="auth-form">
-				<div className="title">Reset Password</div>
-				{ message && <div className="message">{ message }</div> }
+		<div className='forgotPassword'>
+			<div id='forgotPassword-form' className='auth-form'>
+				<div className='title'>Reset Password</div>
+				{ message && <div className='message'>{ message }</div> }
 				{ contents }
 				{ links }
-				<Link to="/login">
-					<div className="login-links">
+				<Link to='/login'>
+					<div className='login-links'>
 						◄ Back
 					</div>
 				</Link>

@@ -9,7 +9,7 @@ import { HeaderButton } from './HeaderButton';
 
 function LeftHeader(): ReactElement {
 	return (
-		<div className="leftHeader flex">
+		<div className='leftHeader flex'>
 			{/*
 			<div className="headerButton"><img className='avatar' src='/iconClare.png' />Clare</div>
 			<div className="headerButton">Inventory</div>
@@ -24,15 +24,15 @@ function RightHeader(): ReactElement {
 	const loggedIn = account != null;
 	const notificationCount = 5;
 	return (
-		<div className="rightHeader">
+		<div className='rightHeader'>
 			{ loggedIn && (
 				<>
 					<HeaderButton icon={ notificationsIcon } iconAlt={ `${ notificationCount } notifications` }
-						badge={ notificationCount } title="Notifications" />
-					<HeaderButton icon={ friendsIcon } iconAlt="Friends icon" title="Friends" />
-					<HeaderButton icon={ settingsIcon } iconAlt="Settings icon" title="Settings" />
+						badge={ notificationCount } title='Notifications' />
+					<HeaderButton icon={ friendsIcon } iconAlt='Friends icon' title='Friends' />
+					<HeaderButton icon={ settingsIcon } iconAlt='Settings icon' title='Settings' />
 					<span>{ account }</span>
-					<HeaderButton icon={ logoutIcon } iconAlt="Logout icon" onClick={ Logout } title="Logout" />
+					<HeaderButton icon={ logoutIcon } iconAlt='Logout icon' onClick={ Logout } title='Logout' />
 				</>
 			) }
 			{ !loggedIn && <span>[not logged in]</span> }
@@ -42,7 +42,7 @@ function RightHeader(): ReactElement {
 
 export function Header(): ReactElement {
 	return (
-		<header className="Header">
+		<header className='Header'>
 			<LeftHeader />
 			<RightHeader />
 		</header>

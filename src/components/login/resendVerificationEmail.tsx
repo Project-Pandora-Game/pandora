@@ -40,26 +40,26 @@ export function ResendVerificationEmail(): ReactElement {
 
 	const contents = (
 		<form onSubmit={ handleSubmit }>
-			<div className="input-container">
+			<div className='input-container'>
 				<label>Enter your email</label>
-				<input autoComplete="email" type="email" value={ mail }
+				<input autoComplete='email' type='email' value={ mail }
 					onChange={ (event) => setMail(event.target.value) } required />
 			</div>
-			{ errorMessage && <div className="error">{ errorMessage }</div> }
-			<div className="center">
-				<Button type="submit">Send verification email</Button>
+			{ errorMessage && <div className='error'>{ errorMessage }</div> }
+			<div className='center'>
+				<Button type='submit'>Send verification email</Button>
 			</div>
 		</form>
 	);
 
 	return (
-		<div className="forgotPassword">
-			<div id="forgotPassword-form" className="auth-form">
-				<div className="title">Resend Email</div>
-				{ message && <div className="message">{ message }</div> }
+		<div className='forgotPassword'>
+			<div id='forgotPassword-form' className='auth-form'>
+				<div className='title'>Resend Email</div>
+				{ message && <div className='message'>{ message }</div> }
 				{ contents }
-				<Link to="/login">
-					<div className="login-links">
+				<Link to='/login'>
+					<div className='login-links'>
 						◄ Back
 					</div>
 				</Link>

@@ -1,13 +1,15 @@
-import { IDirectoryClientArgument, IsObject, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { IDirectoryAccountInfo, IDirectoryClientArgument, IsObject, IsString, PASSWORD_PREHASH_SALT } from 'pandora-common';
 import { BrowserStorage } from '../browserStorage';
 import { Observable } from '../observable';
 import { DirectoryConnector } from './socketio_directory_connector';
 
 /** Current username or `null` if not logged in */
-export const currentAccount = new Observable<string | null>(null);
+export const currentAccount = new Observable<IDirectoryAccountInfo | undefined>(undefined);
 
 /** Storage of login authentication token */
-const authToken = new BrowserStorage<{ username: string; token: string; } | null>('authToken', null, IsObject);
+export const authToken = BrowserStorage.create<{ value: string, expires: number; username: string; } | undefined>('authToken', undefined, (value) => {
+	return IsObject(value) && IsString(value.value) && typeof value.expires === 'number' && value.expires > Date.now();
+});
 
 /**
  * Handle incoming `connectionState` message from Directory server
@@ -18,7 +20,7 @@ export function HandleDirectoryConnectionState(message: IDirectoryClientArgument
 	currentAccount.value = message.account;
 	// Clear saved token if login using it failed
 	if (!message.account) {
-		authToken.set(null);
+		authToken.value = undefined;
 	}
 }
 
@@ -26,8 +28,8 @@ export function HandleDirectoryConnectionState(message: IDirectoryClientArgument
  * Get data to use to authenticate to Directory using socket.io auth mechanism
  */
 export function GetAuthData(callback: (data: unknown) => void): void {
-	const token = authToken.get();
-	if (token) {
+	const token = authToken.value;
+	if (token && token.expires > Date.now()) {
 		callback(token);
 	} else {
 		callback({});
@@ -46,10 +48,8 @@ function PrehashPassword(password: string): Promise<string> {
 }
 
 export function Logout() {
-	const currentToken = authToken.get();
-	DirectoryConnector.sendMessage('logout', { invalidateToken: currentToken ? currentToken.token : undefined });
-	authToken.set(null);
-	currentAccount.value = null;
+	DirectoryConnector.sendMessage('logout', { invalidateToken: authToken.value?.value });
+	HandleDirectoryConnectionState({ account: undefined });
 	window.location.reload();
 }
 
@@ -63,15 +63,13 @@ export function Logout() {
 export async function DirectoryLogin(username: string, password: string, verificationToken?: string): Promise<'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials'> {
 	const passwordSha512 = await PrehashPassword(password);
 	const result = await DirectoryConnector.awaitResponse('login', { username, passwordSha512, verificationToken });
-	// On success
-	if (result.result === 'ok' && result.token && result.update.account) {
-		authToken.set({
-			username: result.update.account,
-			token: result.token,
-		});
+
+	if (result.result === 'ok') {
+		authToken.value = { ...result.token, username: result.account.username };
+		HandleDirectoryConnectionState(result);
+	} else {
+		HandleDirectoryConnectionState({ account: undefined });
 	}
-	// Handle the current login state
-	HandleDirectoryConnectionState(result.update);
 	return result.result;
 }
 

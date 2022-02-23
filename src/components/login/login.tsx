@@ -1,19 +1,20 @@
 import { AssertNever, IsObject, IsSimpleToken, IsUsername } from 'pandora-common';
 import React, { FormEvent, ReactElement, ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { currentAccount, DirectoryLogin } from '../../networking/account_manager';
+import { authToken, currentAccount, DirectoryLogin } from '../../networking/account_manager';
 import { useObservable } from '../../observable';
 import './login.scss';
 import { Button } from '../common/Button/Button';
 
 export function Login(): ReactElement {
 	// React States
+	const auth = useObservable(authToken);
 	const [username, setUsername] = useState('');
 	const [password, setPassword] = useState('');
 	const [token, setToken] = useState('');
 	const [needsVerification, setNeedsVerification] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
-	const isLoggedIn = useObservable(currentAccount) != null;
+	const isLoggedIn = useObservable(currentAccount) !== undefined;
 
 	const locationState = useLocation().state;
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';
@@ -85,6 +86,18 @@ export function Login(): ReactElement {
 			<Link className='login-links' to='/resend_verification_email'>
 				Didn&apos;t receive a code by email?
 			</Link>
+		);
+	} else if (auth && auth.expires >= Date.now()) {
+		contents = (
+			<form>
+				<div className='input-container'>
+					<label htmlFor='login-uname'>Username</label>
+					<input autoComplete='username' type='text' id='login-uname' value={ auth.username } disabled={ true } />
+				</div>
+				<div className='message'>
+					Awaiting automatic login...
+				</div>
+			</form>
 		);
 	} else {
 		contents = (

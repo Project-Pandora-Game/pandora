@@ -1,14 +1,17 @@
 import { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import { MessageHandler } from './message_handler';
 
-/** Directory->Client message about current status of the client/account */
-export type IDirectoryClientConnectionStateUpdate = {
-	account: string | null;
+export type IDirectoryAccountInfo = {
+	id: number;
+	username: string;
+	created: number;
 };
 
 /** Directory->Client handlers */
 interface DirectoryClient {
-	connectionState(arg: IDirectoryClientConnectionStateUpdate): void;
+	connectionState(arg: {
+		account?: IDirectoryAccountInfo,
+	}): void;
 }
 
 export type IDirectoryClient = SocketInterface<DirectoryClient>;

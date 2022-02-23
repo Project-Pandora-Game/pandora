@@ -1,14 +1,16 @@
 import { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import { IDirectoryClientConnectionStateUpdate } from './directory_client';
+import { IDirectoryAccountInfo } from './directory_client';
 import { MessageHandler } from './message_handler';
 
 /** Client->Directory handlers */
 interface ClientDirectory {
 	//#region Before Login
 	login(arg: { username: string; passwordSha512: string; verificationToken?: string; }): {
-		result: 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials',
-		token?: string,
-		update: IDirectoryClientConnectionStateUpdate;
+		result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials',
+	} | {
+		result: 'ok',
+		token: { value: string; expires: number; },
+		account: IDirectoryAccountInfo,
 	};
 	register(arg: { username: string; passwordSha512: string; email: string; }): {
 		result: 'ok' | 'usernameTaken' | 'emailTaken',

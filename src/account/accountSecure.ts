@@ -27,10 +27,7 @@ export default class AccountSecure {
 		this.#account = account;
 		this.#secure = secure;
 
-		if (this.#secure.token && this.#secure.token.expiration < Date.now())
-			this.#secure.token = undefined;
-
-		this.#secure.loginTokens = this.#secure.loginTokens.filter((t) => t.expiration > Date.now());
+		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
 	}
 
 	public isActivated(): boolean {
@@ -41,15 +38,15 @@ export default class AccountSecure {
 		if (this.isActivated() || !this.verifyEmail(email))
 			return;
 
-		const token = this.#secure.token = GenerateToken(AccountTokenReason.ACTIVATION);
-		await this.email.sendRegistrationConfirmation(email, this.#account.username, token.token);
+		const { value } = await this.#generateToken(AccountTokenReason.ACTIVATION);
+		await this.email.sendRegistrationConfirmation(email, this.#account.username, value);
 	}
 
 	public async activateAccount(token: string): Promise<boolean> {
 		if (this.isActivated() || !this.#validateToken(token, AccountTokenReason.ACTIVATION))
 			return false;
 
-		this.#secure.token = undefined;
+		this.#invalidateToken({ reason: AccountTokenReason.ACTIVATION });
 		this.#secure.activated = true;
 
 		await this.#updateDatabase();
@@ -73,7 +70,7 @@ export default class AccountSecure {
 		if (!this.isActivated() || !await this.verifyPassword(passwordOld))
 			return false;
 
-		this.#secure.token = undefined;
+		this.#invalidateToken({ reason: AccountTokenReason.PASSWORD_RESET });
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
 
 		await this.#updateDatabase();
@@ -85,10 +82,8 @@ export default class AccountSecure {
 		if (!this.verifyEmail(email))
 			return false;
 
-		this.#secure.token = GenerateToken(AccountTokenReason.PASSWORD_RESET);
-
-		await this.#updateDatabase();
-		await this.email.sendPasswordReset(email, this.#account.username, this.#secure.token.token);
+		const { value } = await this.#generateToken(AccountTokenReason.PASSWORD_RESET);
+		await this.email.sendPasswordReset(email, this.#account.username, value);
 
 		return true;
 	}
@@ -97,7 +92,7 @@ export default class AccountSecure {
 		if (!this.#validateToken(token, AccountTokenReason.PASSWORD_RESET))
 			return false;
 
-		this.#secure.token = undefined;
+		this.#invalidateToken({ reason: AccountTokenReason.PASSWORD_RESET });
 		this.#secure.activated = true;
 		this.#secure.password = await GeneratePasswordHash(password);
 
@@ -106,35 +101,53 @@ export default class AccountSecure {
 		return true;
 	}
 
-	public async generateNewLoginToken(): Promise<string> {
-		const newToken = GenerateTokenBase('secure', LOGIN_TOKEN_EXPIRATION);
-		this.#secure.loginTokens.push(newToken);
-		this.#secure.loginTokens = this.#secure.loginTokens.filter((t) => t.expiration > Date.now());
-
-		await this.#updateDatabase();
-		return newToken.token;
+	public generateNewLoginToken(): Promise<DatabaseAccountToken> {
+		return this.#generateToken(AccountTokenReason.LOGIN);
 	}
 
 	public async invalidateLoginToken(token: string): Promise<void> {
-		this.#secure.loginTokens = this.#secure.loginTokens.filter((t) => t.token !== token);
+		const length = this.#secure.tokens;
+		this.#invalidateToken({ value: token, reason: AccountTokenReason.LOGIN });
 
-		await this.#updateDatabase();
+		if (length !== this.#secure.tokens)
+			await this.#updateDatabase();
 	}
 
 	public verifyLoginToken(token: string): boolean {
-		return this.#secure.loginTokens.some((t) => t.token === token && t.expiration > Date.now());
+		return this.#validateToken(token, AccountTokenReason.LOGIN);
 	}
 
-	#validateToken(token: string, reason: AccountTokenReason): boolean {
-		if (!this.#secure.token)
-			return false;
+	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {
+		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
+		if (TOKEN_LIMITS[reason] >= this.#secure.tokens.filter((t) => t.reason === reason).length) {
+			const index = this.#secure.tokens.findIndex((t) => t.reason === reason);
+			if (index !== -1)
+				this.#secure.tokens.splice(index, 1);
+		}
 
-		const { token: currentToken, expiration, reason: currentReason } = this.#secure.token;
-		return (
-			currentToken === token &&
-			currentReason === reason &&
-			expiration > Date.now()
-		);
+		const token = {
+			value: TOKEN_TYPES[reason] === 'simple' ? GenerateSimpleToken() : nanoid(32),
+			expires: Date.now() + TOKEN_EXPIRATION[reason],
+			reason,
+		};
+
+		this.#secure.tokens.push(token);
+		await this.#updateDatabase();
+		return token;
+	}
+
+	#validateToken(tokenSecret: string, reason: AccountTokenReason): boolean {
+		const token = this.#secure.tokens.find((t) => t.value === tokenSecret && t.reason === reason);
+		return !!token && token.expires > Date.now();
+	}
+
+	#invalidateToken({ value, reason }: { value?: string; reason?: AccountTokenReason; }): void {
+		if (reason === undefined)
+			this.#secure.tokens = this.#secure.tokens.filter((t) => t.value !== value);
+		else if (value === undefined)
+			this.#secure.tokens = this.#secure.tokens.filter((t) => t.reason !== reason);
+		else
+			this.#secure.tokens = this.#secure.tokens.filter((t) => t.value !== value && t.reason !== reason);
 	}
 
 	async #updateDatabase(): Promise<void> {
@@ -146,7 +159,7 @@ export async function GenerateAccountSecureData(password: string, email: string,
 	return {
 		password: await GeneratePasswordHash(password),
 		emailHash: GenerateEmailHash(email),
-		loginTokens: [],
+		tokens: [],
 		activated,
 	};
 }
@@ -183,26 +196,20 @@ function GenerateSimpleToken(): string {
 	return randomInt(0, 1000000).toString(10).padStart(6, '0');
 }
 
-function GenerateTokenBase(type: 'secure' | 'simple', timeout: number): DatabaseLoginToken {
-	return {
-		token: type === 'simple' ? GenerateSimpleToken() : nanoid(32),
-		expiration: Date.now() + timeout,
-	};
-}
-
 const TOKEN_TYPES: Record<AccountTokenReason, 'secure' | 'simple'> = {
 	[AccountTokenReason.ACTIVATION]: 'simple',
 	[AccountTokenReason.PASSWORD_RESET]: 'simple',
+	[AccountTokenReason.LOGIN]: 'secure',
 };
 
-const TOKEN_TIMEOUTS: Record<AccountTokenReason, number> = {
+const TOKEN_EXPIRATION: Record<AccountTokenReason, number> = {
 	[AccountTokenReason.ACTIVATION]: ACTIVATION_TOKEN_EXPIRATION,
 	[AccountTokenReason.PASSWORD_RESET]: PASSWORD_RESET_TOKEN_EXPIRATION,
+	[AccountTokenReason.LOGIN]: LOGIN_TOKEN_EXPIRATION,
 };
 
-function GenerateToken(reason: AccountTokenReason): DatabaseAccountToken {
-	return {
-		...GenerateTokenBase(TOKEN_TYPES[reason], TOKEN_TIMEOUTS[reason]),
-		reason,
-	};
-}
+const TOKEN_LIMITS: Record<AccountTokenReason, number> = {
+	[AccountTokenReason.ACTIVATION]: 1,
+	[AccountTokenReason.PASSWORD_RESET]: 1,
+	[AccountTokenReason.LOGIN]: 5,
+};

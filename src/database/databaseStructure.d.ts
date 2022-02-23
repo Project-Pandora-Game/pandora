@@ -1,19 +1,17 @@
-/** Definition of an auth token for account login */
-interface DatabaseLoginToken {
-	/** The token secret */
-	token: string;
-	/** Time when will this token expire (timestamp from `Date.now()`) */
-	expiration: number;
-}
-
 declare const enum AccountTokenReason {
 	/** Account activation token */
 	ACTIVATION = 1,
 	/** Account password reset token */
 	PASSWORD_RESET = 2,
+	/** Account login token */
+	LOGIN = 3,
 }
 
-interface DatabaseAccountToken extends DatabaseLoginToken {
+interface DatabaseAccountToken {
+	/** The token secret */
+	value: string;
+	/** Time when will this token expire (timestamp from `Date.now()`) */
+	expires: number;
 	/** The reason for this token */
 	reason: AccountTokenReason;
 }
@@ -22,9 +20,7 @@ interface DatabaseAccountSecure {
 	activated: boolean;
 	password: string;
 	emailHash: string;
-	token?: DatabaseAccountToken;
-	/** List of auth tokens usable instead of password */
-	loginTokens: DatabaseLoginToken[];
+	tokens: DatabaseAccountToken[];
 }
 
 /** Representation of account stored in database */

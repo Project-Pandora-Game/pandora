@@ -119,8 +119,13 @@ describe('AccountSecure', () => {
 
 	describe('generateNewLoginToken()', () => {
 		it('should return a string', async () => {
-			expect(typeof await active.generateNewLoginToken()).toBe('string');
-			expect(typeof await inactive.generateNewLoginToken()).toBe('string');
+			let token = await active.generateNewLoginToken();
+			expect(token.expires).toBeGreaterThan(Date.now());
+			expect(token.reason).toBe(AccountTokenReason.LOGIN);
+
+			token = await inactive.generateNewLoginToken();
+			expect(token.expires).toBeGreaterThan(Date.now());
+			expect(token.reason).toBe(AccountTokenReason.LOGIN);
 		});
 	});
 
@@ -166,8 +171,8 @@ describe('AccountSecure', () => {
 		it('should return true with correct login token', async () => {
 			const token1 = await active.generateNewLoginToken();
 			const token2 = await inactive.generateNewLoginToken();
-			expect(active.verifyLoginToken(token1)).toBe(true);
-			expect(inactive.verifyLoginToken(token2)).toBe(true);
+			expect(active.verifyLoginToken(token1.value)).toBe(true);
+			expect(inactive.verifyLoginToken(token2.value)).toBe(true);
 		});
 	});
 });

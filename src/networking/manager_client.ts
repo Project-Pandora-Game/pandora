@@ -1,8 +1,9 @@
 import { GetLogger } from 'pandora-common/dist/logging';
 import { IConnectionClient } from './common';
-import { IsObject, IDirectoryClientConnectionStateUpdate, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken } from 'pandora-common';
+import { IsObject, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, IsString, IDirectoryAccountInfo } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
+import { Account } from '../account/account';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -29,7 +30,7 @@ export default new class ConnectionManagerClient {
 	public onConnect(connection: IConnectionClient, auth: unknown): void {
 		this.connectedClients.add(connection);
 		// Check if connect-time authentication is valid and process it
-		if (IsObject(auth) && typeof auth.username === 'string' && typeof auth.token === 'string') {
+		if (IsObject(auth) && IsUsername(auth.username) && IsString(auth.token)) {
 			this.handleAuth(connection, auth.username, auth.token)
 				.catch((error) => {
 					logger.error(`Error processing connect auth from ${connection.id}`, error);
@@ -67,24 +68,15 @@ export default new class ConnectionManagerClient {
 		const account = await accountManager.loadAccountByUsername(username);
 		// Verify the password
 		if (!account || !await account.secure.verifyPassword(passwordSha512)) {
-			return {
-				result: 'unknownCredentials',
-				update: MakeClientStateUpdate(connection),
-			};
+			return { result: 'unknownCredentials' };
 		}
 		// Verify account is activated or activate it
 		if (!account.secure.isActivated()) {
 			if (verificationToken === undefined) {
-				return {
-					result: 'verificationRequired',
-					update: MakeClientStateUpdate(connection),
-				};
+				return { result: 'verificationRequired' };
 			}
 			if (!await account.secure.activateAccount(verificationToken)) {
-				return {
-					result: 'invalidToken',
-					update: MakeClientStateUpdate(connection),
-				};
+				return { result: 'invalidToken' };
 			}
 		}
 		// Generate new auth token for new login
@@ -94,8 +86,8 @@ export default new class ConnectionManagerClient {
 		connection.setAccount(account);
 		return {
 			result: 'ok',
-			token,
-			update: MakeClientStateUpdate(connection),
+			token: { value: token.value, expires: token.expires },
+			account: GetAccountInfo(account),
 		};
 	}
 
@@ -185,16 +177,24 @@ export default new class ConnectionManagerClient {
 		if (account && account.secure.verifyLoginToken(token)) {
 			logger.info(`${connection.id} logged in as ${account.data.username} using token`);
 			connection.setAccount(account);
+
+			connection.sendMessage('connectionState', {
+				account: GetAccountInfo(account),
+			});
+
+			return;
 		}
-		// Make connection aware of the result
-		connection.sendMessage('connectionState', MakeClientStateUpdate(connection));
+		// Notify the client that the token is invalid
+		connection.sendMessage('connectionState', {});
 	}
 };
 
 /** Build `connectionState` update message for connection */
-function MakeClientStateUpdate(connection: IConnectionClient): IDirectoryClientConnectionStateUpdate {
+function GetAccountInfo(account: Account): IDirectoryAccountInfo {
 	return {
-		account: connection.account ? connection.account.data.username : null,
+		id: account.data.id,
+		username: account.data.username,
+		created: account.data.created,
 	};
 }
 

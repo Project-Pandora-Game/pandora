@@ -21,6 +21,7 @@
 	"devDependencies": {
 		"@babel/core": "^7.16.12",
 		"@babel/preset-env": "^7.16.11",
+		"@babel/preset-react": "^7.16.7",
 		"@babel/preset-typescript": "^7.16.7",
 		"@travellocal/babel-plugin-declare-const-enum": "^0.0.4",
 		"@types/jest": "^27.4.0",

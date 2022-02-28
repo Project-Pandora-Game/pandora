@@ -4,3 +4,4 @@
 /coverage
 /.env
 /logs
+/globalConfig.json

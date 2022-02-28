@@ -27,7 +27,10 @@ export class MockDatabase implements PandoraDatabase {
 		logger.info('Initialized mock database');
 	}
 
-	public async init(): Promise<this> {
+	public async init(addTestAccounts?: false): Promise<this> {
+		if (addTestAccounts === false)
+			return this;
+
 		this.accountDb.add(await CreateAccountData(
 			'test',
 			PrehashPassword('test'),

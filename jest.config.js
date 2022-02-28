@@ -8,4 +8,6 @@ module.exports = {
 	coverageDirectory: 'coverage',
 	coverageProvider: 'babel',
 	errorOnDeprecated: true,
+	preset: '@shelf/jest-mongodb',
+	watchPathIgnorePatterns: ['globalConfig'],
 };

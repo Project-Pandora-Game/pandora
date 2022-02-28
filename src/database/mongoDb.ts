@@ -1,28 +1,38 @@
 import { GetLogger } from 'pandora-common/dist/logging';
-import { DATABASE_URL, DATABASE_NAME } from '../config';
+import { DATABASE_URL, DATABASE_NAME, DATABASE_TYPE } from '../config';
 import type { PandoraDatabase } from './databaseProvider';
 
 import AsyncLock from 'async-lock';
 import { MongoClient } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
+import type { MongoMemoryServer } from 'mongodb-memory-server';
 
 const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 
 export default class MongoDatabase implements PandoraDatabase {
-	private readonly _client: MongoClient;
 	private readonly _lock: AsyncLock;
+	private readonly _url: string;
+	private _client!: MongoClient;
+	private _inMemoryServer!: MongoMemoryServer;
 	private _db!: Db;
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _nextId = 1;
 
-	constructor() {
-		this._client = new MongoClient(DATABASE_URL);
+	constructor(url: string = DATABASE_URL) {
 		this._lock = new AsyncLock();
+		this._url = url;
 	}
 
 	public async init(): Promise<this> {
+		if (DATABASE_TYPE === 'mongodb-in-memory') {
+			this._inMemoryServer = await CreateInMemoryMongo();
+			this._client = new MongoClient(this._inMemoryServer.getUri());
+		} else {
+			this._client = new MongoClient(this._url);
+		}
+
 		if (this._db) {
 			logger.error('Database already initialized');
 			return this;
@@ -43,7 +53,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		const [maxId] = await this._accounts.find().sort({ id: -1 }).limit(1).toArray();
 		this._nextId = maxId ? maxId.id + 1 : 1;
 
-		logger.info('Initialized MongoDB database');
+		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);
 
 		return this;
 	}
@@ -77,4 +87,14 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void> {
 		await this._accounts.updateOne({ id }, { $set: { secure: data } });
 	}
+}
+
+async function CreateInMemoryMongo(): Promise<MongoMemoryServer> {
+	const { MongoMemoryServer } = await import('mongodb-memory-server');
+	return await MongoMemoryServer.create({
+		binary: {
+			version: '5.0.6',
+			checkMD5: false,
+		},
+	});
 }

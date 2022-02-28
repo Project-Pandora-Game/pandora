@@ -40,10 +40,14 @@ let database: PandoraDatabase | undefined;
 
 /** Init database connection based on configuration */
 export async function InitDatabase(): Promise<void> {
-	if (DATABASE_TYPE === 'mongodb') {
-		database = await new MongoDatabase().init();
-	} else {
-		database = await new MockDatabase().init();
+	switch (DATABASE_TYPE) {
+		case 'mongodb':
+		case 'mongodb-in-memory':
+			database = await new MongoDatabase().init();
+			break;
+		case 'mock':
+		default:
+			database = new MockDatabase();
 	}
 }
 

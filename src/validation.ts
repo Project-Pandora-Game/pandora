@@ -1,3 +1,5 @@
+import { CharacterId } from '.';
+
 /** Checks if the `obj` is an object (not null, not array) */
 export function IsObject(obj: unknown): obj is Record<string, unknown> {
 	return !!obj && typeof obj === 'object' && !Array.isArray(obj);
@@ -7,10 +9,17 @@ export interface IStringValidationOptions {
 	regex?: RegExp;
 	minLength?: number;
 	maxLength?: number;
+	trimCheck?: true;
+}
+
+export interface IArrayValidationOptions<T = unknown> {
+	validator?: (value: T, index: number) => boolean;
+	minLength?: number;
+	maxLength?: number;
 }
 
 /** Checks if the `str` is a string and validates it to the given parameters */
-export function CreateStringValidator({ regex, minLength, maxLength }: IStringValidationOptions = {}): (str: unknown) => str is string {
+export function CreateStringValidator({ regex, minLength, maxLength, trimCheck }: IStringValidationOptions = {}): (str: unknown) => str is string {
 	return (str: unknown): str is string => {
 		if (typeof str !== 'string') {
 			return false;
@@ -21,6 +30,9 @@ export function CreateStringValidator({ regex, minLength, maxLength }: IStringVa
 		if (minLength !== undefined && str.length < minLength) {
 			return false;
 		}
+		if (trimCheck && str.trim() !== str) {
+			return false;
+		}
 		if (regex !== undefined && !regex.test(str)) {
 			return false;
 		}
@@ -28,7 +40,68 @@ export function CreateStringValidator({ regex, minLength, maxLength }: IStringVa
 	};
 }
 
+export const CreateBase64Validator = (args: Omit<IStringValidationOptions, 'regex'> = {}) => CreateStringValidator({
+	...args,
+	regex: /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
+});
+
+export function CreateArrayValidator<T = unknown>({ validator, minLength, maxLength }: IArrayValidationOptions<T> = {}): (arr: unknown) => arr is T[] {
+	return (arr: unknown): arr is T[] => {
+		if (!Array.isArray(arr))
+			return false;
+		if (maxLength !== undefined && arr.length > maxLength)
+			return false;
+		if (minLength !== undefined && arr.length < minLength)
+			return false;
+		if (validator !== undefined && !arr.every(validator))
+			return false;
+
+		return true;
+	};
+}
+
+export function CreateObjectValidator<T extends Record<string, unknown>>(validatorObject: { [K in keyof T]: (value: unknown) => value is T[K] }, noExtraKey: boolean): (obj: unknown) => obj is T {
+	return (obj: unknown): obj is T => {
+		if (!IsObject(obj))
+			return false;
+
+		if (noExtraKey) {
+			const requiredKeys = Object.keys(validatorObject);
+			const keys = new Set(Object.keys(obj));
+
+			if (keys.size !== requiredKeys.length)
+				return false;
+
+			for (const key of requiredKeys) {
+				if (!validatorObject[key](obj[key]))
+					return false;
+				if (!keys.delete(key) && obj[key] !== undefined)
+					return false;
+			}
+
+			if (keys.size !== 0)
+				return false;
+		} else {
+			for (const key in validatorObject)
+				if (!validatorObject[key](obj[key]))
+					return false;
+		}
+
+		return true;
+	};
+}
+
+export function CreateMaybeValidator<T>(validator: (value: unknown) => value is T): (value: unknown) => value is (T | undefined) {
+	return (value: unknown): value is (T | undefined) => IsUndefined(value) || validator(value);
+}
+
 export const IsString = CreateStringValidator();
+
+export const IsNumber = (value: unknown): value is number => typeof value === 'number';
+
+export const IsBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
+
+export const IsUndefined = (value: unknown): value is undefined => value === undefined;
 
 /**
  * Tests if the parameter is a valid username
@@ -39,6 +112,18 @@ export const IsUsername = CreateStringValidator({
 	regex: /^[a-zA-Z0-9_-]+$/,
 	minLength: 3,
 	maxLength: 32,
+});
+
+/**
+ * Tests if the parameter is a valid character name
+ *
+ * TODO - finalize this to what we want
+ */
+export const IsCharacterName = CreateStringValidator({
+	regex: /^[a-zA-Z0-9_\- ]+$/,
+	minLength: 3,
+	maxLength: 32,
+	trimCheck: true,
 });
 
 /**
@@ -63,3 +148,10 @@ export const IsSimpleToken = CreateStringValidator({
 	minLength: 6,
 	maxLength: 6,
 });
+
+/**
+ * Test if a given value is a valid CharacterId - `'c{number}'`
+ */
+export const IsCharacterId = CreateStringValidator({
+	regex: /^c[1-9][0-9]{0,15}$/,
+}) as (str: unknown) => str is CharacterId;

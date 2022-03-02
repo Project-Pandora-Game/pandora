@@ -1,3 +1,4 @@
+export * from './character';
 export * from './logging';
 export * from './networking';
 export * from './security';

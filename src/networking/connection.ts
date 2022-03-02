@@ -16,7 +16,7 @@ interface EmitterWithAck extends Emitter {
 	emit(event: string, arg: unknown, callback: (arg: unknown) => void): void;
 }
 
-export interface IConnectionBase<T> {
+export interface IConnectionBase<T extends SocketInterfaceDefinition<T>> {
 	/**
 	 * Send a oneshot message to the client
 	 * @param messageType - Type of message to send
@@ -36,10 +36,10 @@ export interface IConnection<T extends SocketInterfaceDefinition<T>, Undetermine
 		messageType: K,
 		message: MembersFirstArg<T>[K],
 		timeout?: number
-	): Promise<BoolSelect<Undetermined, Record<string, unknown>, ReturnType<T[K]>>>;
+	): Promise<BoolSelect<Undetermined, Partial<Record<keyof ReturnType<T[K]>, unknown>>, ReturnType<T[K]>>>;
 }
 
-export class ConnectionBase<EmitterT extends Emitter, T> implements IConnectionBase<T> {
+export class ConnectionBase<EmitterT extends Emitter, T extends SocketInterfaceDefinition<T>> implements IConnectionBase<T> {
 	protected readonly socket: EmitterT;
 	protected readonly logger: Logger;
 	constructor(socket: EmitterT, logger: Logger) {
@@ -60,7 +60,7 @@ export class Connection<EmitterT extends EmitterWithAck, T extends SocketInterfa
 		messageType: K,
 		message: MembersFirstArg<T>[K],
 		timeout: number = DEFAULT_ACK_TIMEOUT,
-	): Promise<BoolSelect<Undetermined, Record<string, unknown>, ReturnType<T[K]>>> {
+	): Promise<BoolSelect<Undetermined, Partial<Record<keyof ReturnType<T[K]>, unknown>>, ReturnType<T[K]>>> {
 		this.logger.debug(`\u25B2 message '${messageType}':`, message);
 		return new Promise((resolve, reject) => {
 			this.socket.timeout(timeout).emit(messageType, message, (error: unknown, response: unknown) => {
@@ -69,7 +69,7 @@ export class Connection<EmitterT extends EmitterWithAck, T extends SocketInterfa
 				} else if (!IsObject(response)) {
 					reject(new Error(`Invalid response type: ${typeof response}`));
 				} else {
-					resolve(response as BoolSelect<Undetermined, Record<string, unknown>, ReturnType<T[K]>>);
+					resolve(response as BoolSelect<Undetermined, Partial<Record<keyof ReturnType<T[K]>, unknown>>, ReturnType<T[K]>>);
 				}
 			});
 		});

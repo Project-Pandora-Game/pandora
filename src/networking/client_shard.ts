@@ -1,9 +1,14 @@
-import { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import { MessageHandler } from './message_handler';
+import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
+import type { MessageHandler } from './message_handler';
+import type { IEmpty } from './empty';
+import type { ICharacterDataCreate } from '../character';
 
 /** Client->Shard handlers */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface ClientShard { }
+interface ClientShard {
+	disconnectCharacter: (_: IEmpty) => void;
+
+	finishCharacterCreation: (args: ICharacterDataCreate) => void;
+}
 
 export type IClientShard = SocketInterface<ClientShard>;
 export type IClientShardArgument = RecordOnly<SocketInterfaceArgs<ClientShard>>;

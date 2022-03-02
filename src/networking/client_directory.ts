@@ -1,6 +1,25 @@
-import { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import { IDirectoryAccountInfo } from './directory_client';
-import { MessageHandler } from './message_handler';
+import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
+import type { IDirectoryAccountInfo } from './directory_client';
+import type { ShardFeature } from './shard_directory';
+import type { MessageHandler } from './message_handler';
+import type { IEmpty } from './empty';
+import type { CharacterId, ICharacterDataId, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from '../character';
+
+export type ShardInfo = {
+	id: string;
+	publicURL: string;
+	features: ShardFeature[];
+	version: string;
+	secret: string;
+};
+
+type ShardError = 'noShardFound';
+
+type ShardConnection<T = ShardError, Extra = IEmpty> = {
+	result: T;
+} | ({
+	result: 'ok';
+} & ShardInfo & Extra);
 
 /** Client->Directory handlers */
 interface ClientDirectory {
@@ -29,6 +48,15 @@ interface ClientDirectory {
 		result: 'ok' | 'invalidPassword',
 	};
 	logout(arg: { invalidateToken?: string; }): void;
+
+	listCharacters(_: IEmpty): {
+		characters: ICharacterSelfInfo[];
+		limit: number;
+	};
+	createCharacter(_: IEmpty): ShardConnection<ShardError | 'maxCharactersReached', { characterId: CharacterId; }>;
+	updateCharacter(arg: ICharacterSelfInfoUpdate): ICharacterSelfInfo;
+	deleteCharacter(arg: ICharacterDataId): { result: 'ok' | 'characterInUse'; };
+	connectCharacter(arg: ICharacterDataId): ShardConnection;
 }
 
 export type IClientDirectory = SocketInterface<ClientDirectory>;

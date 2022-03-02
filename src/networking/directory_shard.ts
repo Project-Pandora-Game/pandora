@@ -1,9 +1,17 @@
-import { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import { MessageHandler } from './message_handler';
+import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
+import type { CharacterId } from '../character';
+import type { MessageHandler } from './message_handler';
 
 /** Directory->Shard handlers */
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface DirectoryShard { }
+interface DirectoryShard {
+	prepareClient: (arg: {
+		characterId: CharacterId;
+		connectionSecret: string;
+		accessId: string;
+	}) => {
+		result: 'accepted' | 'rejected';
+	};
+}
 
 export type IDirectoryShard = SocketInterface<DirectoryShard>;
 export type IDirectoryShardArgument = RecordOnly<SocketInterfaceArgs<DirectoryShard>>;

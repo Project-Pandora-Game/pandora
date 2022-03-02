@@ -12,6 +12,20 @@ type AddContext<T, Context> = {
 	[K in keyof T]: true extends Equals<Context, void> ? T[K] : T[K] extends (arg: infer A) => infer R ? (arg: A, context: Context) => R : never;
 };
 
+export class BadMessageError extends Error {
+	private readonly _extra: unknown[];
+
+	constructor(...extra: unknown[]) {
+		super();
+		this.name = 'BadMessage';
+		this._extra = extra;
+	}
+
+	public log(logger: Logger, messageType: string, message: unknown): void {
+		logger.warning(`Bad message content for '${messageType}' `, message, ...this._extra);
+	}
+}
+
 export interface IMessageHandler<Context = void> {
 	onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void, ...[context]: true extends Equals<Context, void> ? [] : [Context]): Promise<boolean>;
 }
@@ -79,7 +93,12 @@ export function CreateMessageHandlerOnAny(
 				}
 			})
 			.catch((error) => {
-				if (error !== false) {
+				if (error === false)
+					return;
+
+				if (error instanceof BadMessageError) {
+					error.log(logger, messageType, message);
+				} else {
 					logger.error('Error processing message:', error, `\nMessage type: '${messageType}', message:`, message);
 				}
 			});

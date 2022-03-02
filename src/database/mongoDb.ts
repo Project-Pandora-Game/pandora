@@ -1,15 +1,18 @@
 import { GetLogger } from 'pandora-common/dist/logging';
+import type { CharacterId, ICharacterData, ICharacterSelfInfoUpdate } from 'pandora-common';
+import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME, DATABASE_TYPE } from '../config';
-import type { PandoraDatabase } from './databaseProvider';
 
 import AsyncLock from 'async-lock';
 import { MongoClient } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server';
+import { nanoid } from 'nanoid';
 
 const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
+const CHARACTERS_COLLECTION_NAME = 'characters';
 
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
@@ -18,7 +21,9 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _inMemoryServer!: MongoMemoryServer;
 	private _db!: Db;
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
-	private _nextId = 1;
+	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
+	private _nextAccountId = 1;
+	private _nextCharacterId = 1;
 
 	constructor(url: string = DATABASE_URL) {
 		this._lock = new AsyncLock();
@@ -42,6 +47,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		await this._client.connect();
 
 		this._db = this._client.db(DATABASE_NAME);
+
+		//#region Accounts
 		this._accounts = this._db.collection(ACCOUNTS_COLLECTION_NAME);
 
 		await this._accounts.createIndexes([
@@ -50,8 +57,20 @@ export default class MongoDatabase implements PandoraDatabase {
 			{ key: { 'secure.emailHash': 1 } },
 		], { unique: true });
 
-		const [maxId] = await this._accounts.find().sort({ id: -1 }).limit(1).toArray();
-		this._nextId = maxId ? maxId.id + 1 : 1;
+		const [maxAccountId] = await this._accounts.find().sort({ id: -1 }).limit(1).toArray();
+		this._nextAccountId = maxAccountId ? maxAccountId.id + 1 : 1;
+		//#endregion
+
+		//#region Characters
+		this._characters = this._db.collection(CHARACTERS_COLLECTION_NAME);
+
+		await this._characters.createIndexes([
+			{ key: { id: 1 } },
+		], { unique: true });
+
+		const [maxCharId] = await this._characters.find().sort({ id: -1 }).limit(1).toArray();
+		this._nextCharacterId = maxCharId ? maxCharId.id : 1;
+		//#endregion
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);
 
@@ -77,7 +96,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			if (existingAccount)
 				return existingAccount.username === data.username ? 'usernameTaken' : 'emailTaken';
 
-			data.id = this._nextId++;
+			data.id = this._nextAccountId++;
 			await this._accounts.insertOne(data);
 
 			return await this.getAccountById(data.id) as DatabaseAccountWithSecure;
@@ -86,6 +105,87 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void> {
 		await this._accounts.updateOne({ id }, { $set: { secure: data } });
+	}
+
+	public async createCharacter(accountId: number): Promise<{ info: ICharacterSelfInfoDb, char: ICharacterData; }> {
+		return await this._lock.acquire('createCharacter', async () => {
+			if (!await this.getAccountById(accountId))
+				throw new Error('Account not found');
+
+			const id = this._nextCharacterId++;
+			const infoId: CharacterId = `c${id}`;
+			const info = {
+				inCreation: true as const,
+				id: infoId,
+				name: '',
+				preview: '',
+			};
+			const char = {
+				inCreation: true as const,
+				id,
+				accountId,
+				name: info.name,
+				created: -1,
+				accessId: nanoid(8),
+			};
+
+			await this._accounts.updateOne({ id }, { $push: { characters: info } });
+			await this._characters.insertOne(char);
+
+			return ({ info, char: Id(char) });
+		});
+	}
+
+	public async finalizeCharacter(accountId: number): Promise<ICharacterData | null> {
+		const acc = await this.getAccountById(accountId);
+		if (!acc)
+			return null;
+
+		const info = acc.characters[acc.characters.length - 1];
+		if (!info)
+			return null;
+
+		const result = await this._characters.findOneAndUpdate({ id: PlainId(info.id), inCreation: true }, { $set: { created: Date.now() }, $unset: { inCreation: '' } });
+		if (!result.value || result.value.inCreation !== undefined)
+			return null;
+
+		await this._accounts.updateOne({ 'id': accountId, 'characters.id': info.id }, { $set: { 'characters.$.name': result.value.name }, $unset: { 'characters.$.inCreation': '' } });
+
+		return Id(result.value);
+	}
+
+	public async updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
+		const result = await this._accounts.findOneAndUpdate({ 'id': accountId, 'characters.id': id }, { $set: { 'characters.$': data } });
+		return result.value as ICharacterSelfInfoDb | null;
+	}
+
+	public async deleteCharacter(accountId: number, characterId: CharacterId): Promise<void> {
+		await this._characters.deleteOne({ id: PlainId(characterId) });
+		await this._accounts.updateOne({ id: accountId }, { $pull: { characters: { id: characterId } } });
+	}
+
+	public async setCharacterAccess(id: CharacterId): Promise<string | null> {
+		const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId: nanoid(8) } });
+		return result.value?.accessId as string | null;
+	}
+
+	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
+		if (accessId === false) {
+			accessId = nanoid(8);
+			const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId } });
+			return result.value ? Id(result.value) : null;
+		}
+
+		const character = await this._characters.findOne({ id: PlainId(id), accessId });
+		if (!character)
+			return null;
+
+		return Id(character);
+	}
+
+	public async setCharacter({ id, accessId, ...data }: Partial<ICharacterData> & Pick<ICharacterData, 'id'>): Promise<boolean> {
+		const { acknowledged, modifiedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
+		return acknowledged && modifiedCount === 1;
 	}
 }
 
@@ -97,4 +197,15 @@ async function CreateInMemoryMongo(): Promise<MongoMemoryServer> {
 			checkMD5: false,
 		},
 	});
+}
+
+function Id(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
+	return {
+		...obj,
+		id: `c${obj.id}`,
+	};
+}
+
+function PlainId(id: CharacterId): number {
+	return parseInt(id.slice(1));
 }

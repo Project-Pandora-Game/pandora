@@ -18,7 +18,7 @@ export class AccountManager {
 		const now = Date.now();
 		// Go through accounts and prune old ones
 		for (const account of this.onlineAccounts) {
-			if (account.associatedConnections.size === 0 && account.lastActivity + ACCOUNT_INACTIVITY_THRESHOLD < now) {
+			if (!account.isInUse() && account.lastActivity + ACCOUNT_INACTIVITY_THRESHOLD < now) {
 				this.unloadAccount(account);
 			}
 		}

@@ -1,9 +1,13 @@
 import { GetLogger } from 'pandora-common/dist/logging';
 import { IConnectionClient } from './common';
-import { IsObject, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, IsString, IDirectoryAccountInfo } from 'pandora-common';
+import { IsObject, IDirectoryAccountInfo, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, CreateObjectValidator, CreateBase64Validator, IsCharacterId, BadMessageError, IClientDirectoryNormalResult, IsString } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { Account } from '../account/account';
+import ConnectionManagerShard from './manager_shard';
+import { CHARACTER_LIMIT_NORMAL } from '../config';
+
+import { nanoid } from 'nanoid';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -20,7 +24,13 @@ export default new class ConnectionManagerClient {
 			resendVerificationEmail: this.handleResendVerificationEmail.bind(this),
 			passwordReset: this.handlePasswordReset.bind(this),
 			passwordResetConfirm: this.handlePasswordResetConfirm.bind(this),
-			passwordChange: this.handlerPasswordChange.bind(this),
+			passwordChange: this.handlePasswordChange.bind(this),
+
+			listCharacters: this.handleListCharacters.bind(this),
+			createCharacter: this.handleCreateCharacter.bind(this),
+			updateCharacter: this.handleUpdateCharacter.bind(this),
+			deleteCharacter: this.handleDeleteCharacter.bind(this),
+			connectCharacter: this.handleConnectCharacter.bind(this),
 		}, {
 			logout: this.handleLogout.bind(this),
 		});
@@ -30,8 +40,8 @@ export default new class ConnectionManagerClient {
 	public onConnect(connection: IConnectionClient, auth: unknown): void {
 		this.connectedClients.add(connection);
 		// Check if connect-time authentication is valid and process it
-		if (IsObject(auth) && IsUsername(auth.username) && IsString(auth.token)) {
-			this.handleAuth(connection, auth.username, auth.token)
+		if (IsObject(auth) && IsUsername(auth.username) && IsString(auth.value)) {
+			this.handleAuth(connection, auth.username, auth.value)
 				.catch((error) => {
 					logger.error(`Error processing connect auth from ${connection.id}`, error);
 				});
@@ -61,7 +71,7 @@ export default new class ConnectionManagerClient {
 			!IsPasswordSha512(passwordSha512) ||
 			(verificationToken !== undefined && !IsSimpleToken(verificationToken))
 		) {
-			return RejectWithLog(connection, 'login', { username, passwordSha512, verificationToken });
+			throw new BadMessageError();
 		}
 
 		// Find account by username
@@ -96,7 +106,7 @@ export default new class ConnectionManagerClient {
 		if (!connection.isLoggedIn() ||
 			(invalidateToken !== undefined && typeof invalidateToken !== 'string')
 		) {
-			return RejectWithLog(connection, 'logout', { invalidateToken });
+			throw new BadMessageError();
 		}
 
 		const account = connection.account;
@@ -104,7 +114,7 @@ export default new class ConnectionManagerClient {
 		connection.setAccount(null);
 		logger.info(`${connection.id} logged out`);
 
-		if (account && invalidateToken) {
+		if (invalidateToken) {
 			await account.secure.invalidateLoginToken(invalidateToken);
 		}
 	}
@@ -112,7 +122,7 @@ export default new class ConnectionManagerClient {
 	private async handleRegister({ username, email, passwordSha512 }: IClientDirectoryUnconfirmedArgument['register'], connection: IConnectionClient): IClientDirectoryPromiseResult['register'] {
 		// Verify content of the message
 		if (connection.isLoggedIn() || !IsUsername(username) || !IsEmail(email) || !IsPasswordSha512(passwordSha512))
-			return RejectWithLog(connection, 'register', { username, email, passwordSha512 });
+			throw new BadMessageError();
 
 		const result = await accountManager.createAccount(username, passwordSha512, email);
 		if (typeof result === 'string')
@@ -124,7 +134,7 @@ export default new class ConnectionManagerClient {
 	private async handleResendVerificationEmail({ email }: IClientDirectoryUnconfirmedArgument['resendVerificationEmail'], connection: IConnectionClient): IClientDirectoryPromiseResult['resendVerificationEmail'] {
 		// Verify content of the message
 		if (connection.isLoggedIn() || !IsEmail(email))
-			return RejectWithLog(connection, 'resendVerificationEmail', { email });
+			throw new BadMessageError();
 
 		await AccountProcedureResendVerifyEmail(email);
 
@@ -134,7 +144,7 @@ export default new class ConnectionManagerClient {
 	private async handlePasswordReset({ email }: IClientDirectoryUnconfirmedArgument['passwordReset'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordReset'] {
 		// Verify content of the message
 		if (connection.isLoggedIn() || !IsEmail(email))
-			return RejectWithLog(connection, 'passwordReset', { email });
+			throw new BadMessageError();
 
 		await AccountProcedurePasswordReset(email);
 
@@ -144,7 +154,7 @@ export default new class ConnectionManagerClient {
 	private async handlePasswordResetConfirm({ username, token, passwordSha512 }: IClientDirectoryUnconfirmedArgument['passwordResetConfirm'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordResetConfirm'] {
 		// Verify content of the message
 		if (connection.isLoggedIn() || !IsUsername(username) || !IsSimpleToken(token) || !IsPasswordSha512(passwordSha512))
-			return RejectWithLog(connection, 'passwordResetConfirm', { username, token, passwordSha512 });
+			throw new BadMessageError();
 
 		const account = await accountManager.loadAccountByUsername(username);
 		if (!await account?.secure.finishPasswordReset(token, passwordSha512))
@@ -153,15 +163,121 @@ export default new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private async handlerPasswordChange({ passwordSha512Old, passwordSha512New }: IClientDirectoryUnconfirmedArgument['passwordChange'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordChange'] {
+	private async handlePasswordChange({ passwordSha512Old, passwordSha512New }: IClientDirectoryUnconfirmedArgument['passwordChange'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordChange'] {
 		// Verify content of the message
 		if (!connection.isLoggedIn() || !IsPasswordSha512(passwordSha512Old) || !IsPasswordSha512(passwordSha512New))
-			return RejectWithLog(connection, 'passwordChange', { passwordSha512Old, passwordSha512New });
+			throw new BadMessageError();
 
-		if (!connection.account || !await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New))
+		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New))
 			return { result: 'invalidPassword' };
 
 		return { result: 'ok' };
+	}
+
+	private handleListCharacters(_: IClientDirectoryUnconfirmedArgument['listCharacters'], connection: IConnectionClient): IClientDirectoryNormalResult['listCharacters'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		return {
+			characters: connection.account.listCharacters(),
+			limit: CHARACTER_LIMIT_NORMAL,
+		};
+	}
+
+	private async handleCreateCharacter(_: IClientDirectoryUnconfirmedArgument['createCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['createCharacter'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const shard = ConnectionManagerShard.getRandomShard();
+		if (!shard)
+			return { result: 'noShardFound' };
+
+		const char = await connection.account.createCharacter();
+		if (!char)
+			return { result: 'maxCharactersReached' };
+
+		const secret = nanoid();
+
+		shard.addAccountCharacter(connection.account, char.id, char.accessId);
+
+		const { result } = await shard.awaitResponse('prepareClient', {
+			characterId: char.id,
+			connectionSecret: secret,
+			accessId: char.accessId,
+		});
+
+		if (result !== 'accepted') {
+			logger.error(`Failed to prepare client for character ${char.id}, shard: ${shard.id}, result: `, result);
+			shard.removeCharacter(char.id);
+			return { result: 'noShardFound' };
+		}
+
+		return ({
+			...shard.getInfo(),
+			characterId: char.id,
+			secret,
+			result: 'ok',
+		});
+	}
+
+	private async handleUpdateCharacter(arg: IClientDirectoryUnconfirmedArgument['updateCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['updateCharacter'] {
+		if (!connection.isLoggedIn() || !IsUpdateCharacter(arg) || !connection.account.hasCharacter(arg.id))
+			throw new BadMessageError();
+
+		const info = await connection.account.updateCharacter(arg);
+		if (!info)
+			throw new Error(`Failed to update character ${arg.id}`);
+
+		return info;
+	}
+
+	private async handleDeleteCharacter({ id }: IClientDirectoryUnconfirmedArgument['deleteCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['deleteCharacter'] {
+		if (!connection.isLoggedIn() || !IsCharacterId(id) || !connection.account.hasCharacter(id))
+			throw new BadMessageError();
+
+		const success = await connection.account.deleteCharacter(id);
+		if (!success)
+			return { result: 'characterInUse' };
+
+		return { result: 'ok' };
+	}
+
+	private async handleConnectCharacter({ id }: IClientDirectoryUnconfirmedArgument['connectCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['connectCharacter'] {
+		// TODO: move character, allow connecting to an already connected character
+		if (!connection.isLoggedIn() || !IsCharacterId(id) || !connection.account.hasCharacter(id))
+			throw new BadMessageError();
+
+		const accessId = await connection.account.generateAccessId(id);
+		if (!accessId) {
+			logger.error(`Failed to generate accessId for character ${id}`);
+			return { result: 'noShardFound' };
+		}
+
+		const shard = ConnectionManagerShard.getRandomShard();
+		if (!shard)
+			return { result: 'noShardFound' };
+
+		const secret = nanoid();
+
+		shard.addAccountCharacter(connection.account, id, accessId);
+
+		const { result } = await shard.awaitResponse('prepareClient', {
+			characterId: id,
+			connectionSecret: secret,
+			accessId,
+		});
+
+		if (result !== 'accepted') {
+			logger.error(`Failed to prepare client for character ${id}, shard: ${shard.id}, result: `, result);
+			shard.removeCharacter(id);
+			return { result: 'noShardFound' };
+		}
+
+		return ({
+			...shard.getInfo(),
+			secret,
+			result: 'ok',
+		});
 	}
 
 	/**
@@ -198,12 +314,14 @@ function GetAccountInfo(account: Account): IDirectoryAccountInfo {
 	};
 }
 
-function RejectWithLog<T extends keyof IClientDirectoryBase & string>(connection: IConnectionClient, messageType: T, message: IClientDirectoryUnconfirmedArgument[T]): Promise<never> {
-	logger.warning(`Bad message from ${connection.id} content for message '${messageType}' `, message);
-	return Promise.reject(false);
-}
-
 /** Checks if the given password is a base64 encode SHA-512 hash */
 const IsPasswordSha512 = CreateStringValidator({
 	regex: /^[a-zA-Z0-9+/]{86}==$/,
 });
+
+// TODO: Add length check for preview
+
+const IsUpdateCharacter = CreateObjectValidator({
+	id: IsCharacterId,
+	preview: CreateBase64Validator(),
+}, true);

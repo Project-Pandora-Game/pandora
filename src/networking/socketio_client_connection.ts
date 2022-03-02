@@ -1,4 +1,4 @@
-import { IDirectoryClient, GetLogger } from 'pandora-common';
+import { IDirectoryClientBase, GetLogger } from 'pandora-common';
 import type { Socket } from 'socket.io';
 import type { Account } from '../account/account';
 import { ConnectionType, IConnectionClient } from './common';
@@ -6,7 +6,7 @@ import ConnectionManagerClient from './manager_client';
 import { SocketIOConnection } from './socketio_common_connection';
 
 /** Class housing connection from a client */
-export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClient> implements IConnectionClient {
+export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClientBase> implements IConnectionClient {
 	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
 	/** The current account this connection is logged in as or `null` if it isn't */
@@ -19,7 +19,7 @@ export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClien
 		return this.socket.id;
 	}
 
-	isLoggedIn(): boolean {
+	isLoggedIn(): this is { readonly account: Account; } {
 		return this.account !== null;
 	}
 
@@ -57,5 +57,9 @@ export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClien
 			account.associatedConnections.add(this);
 			account.touch();
 		}
+	}
+
+	public override awaitResponse(_messageType: unknown, _message: unknown, _timeout?: unknown): Promise<never> {
+		throw new Error('Invalid operation');
 	}
 }

@@ -1,4 +1,5 @@
-import { ConnectionBase, Logger, CreateMessageHandlerOnAny } from 'pandora-common';
+import { Connection, Logger, CreateMessageHandlerOnAny } from 'pandora-common';
+import type { SocketInterfaceDefinition } from 'pandora-common/dist/networking/helpers';
 import type { Socket } from 'socket.io';
 import type { ConnectionType } from './common';
 
@@ -8,7 +9,7 @@ export interface ISocketIOConnection {
 }
 
 /** Class housing any incoming connection */
-export abstract class SocketIOConnection<T> extends ConnectionBase<Socket, T> implements ISocketIOConnection {
+export abstract class SocketIOConnection<T extends SocketInterfaceDefinition<T>> extends Connection<Socket, T, true> implements ISocketIOConnection {
 
 	abstract readonly type: ConnectionType;
 

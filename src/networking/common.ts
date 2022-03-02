@@ -1,4 +1,4 @@
-import type { IConnectionBase, IDirectoryClientBase } from 'pandora-common';
+import type { CharacterId, IConnection, IConnectionBase, IDirectoryClientBase, IDirectoryShardBase, IShardDirectoryArgument, ShardInfo } from 'pandora-common';
 import type { Account } from '../account/account';
 
 export enum ConnectionType {
@@ -14,11 +14,26 @@ export interface IConnectionClient extends IConnectionBase<IDirectoryClientBase>
 	readonly id: string;
 
 	isConnected(): boolean;
-	isLoggedIn(): boolean;
+	isLoggedIn(): this is { readonly account: Account; };
 
 	/**
 	 * Set or clear the account this connection is logged in as
 	 * @param account - The account to set or `null` to clear
 	 */
 	setAccount(account: Account | null): void;
+}
+
+export interface IConnectionShard extends IConnection<IDirectoryShardBase, true> {
+	readonly type: ConnectionType.SHARD;
+	readonly id: string;
+	/** Map of character ids to account id */
+	readonly characters: Map<CharacterId, number>;
+
+	updateInfo(info: IShardDirectoryArgument['sendInfo'], connecting: boolean): Promise<{ invalidate: CharacterId[]; }>;
+
+	removeCharacter(characterId: CharacterId): void;
+
+	getInfo(): Omit<ShardInfo, 'secret'>;
+
+	addAccountCharacter(acc: Account, id: CharacterId, accessId: string): void;
 }

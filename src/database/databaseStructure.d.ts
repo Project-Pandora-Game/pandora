@@ -30,6 +30,7 @@ interface DatabaseAccount {
 	created: number;
 	/** Secure account data - should never leave this server; all related to account security */
 	secure?: DatabaseAccountSecure;
+	characters: import('./databaseProvider').ICharacterSelfInfoDb[];
 }
 
 /** Representation of account stored in database */

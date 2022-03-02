@@ -1,10 +1,12 @@
 import { GetLogger } from 'pandora-common/dist/logging';
-import type { PandoraDatabase } from './databaseProvider';
+import type { CharacterId, ICharacterData, ICharacterSelfInfoUpdate } from 'pandora-common/dist/character';
+import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
 import { PASSWORD_PREHASH_SALT } from 'pandora-common';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
+import { nanoid } from 'nanoid';
 
 function HashSHA512Base64(text: string): string {
 	return createHash('sha512').update(text, 'utf-8').digest('base64');
@@ -18,7 +20,9 @@ const logger = GetLogger('db');
 
 export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
+	private characterDb: Map<CharacterId, ICharacterData> = new Map();
 	private _nextAccountId = 1;
+	private _nextCharacterId = 1;
 	private get accountDbView(): DatabaseAccountWithSecure[] {
 		return Array.from(this.accountDb.values());
 	}
@@ -31,13 +35,13 @@ export class MockDatabase implements PandoraDatabase {
 		if (addTestAccounts === false)
 			return this;
 
-		this.accountDb.add(await CreateAccountData(
+		await this.createAccount(await CreateAccountData(
 			'test',
 			PrehashPassword('test'),
 			'test@project-pandora.com',
 			true,
 		));
-		this.accountDb.add(await CreateAccountData(
+		await this.createAccount(await CreateAccountData(
 			'testinactive',
 			PrehashPassword('test'),
 			'testinactive@project-pandora.com',
@@ -96,5 +100,112 @@ export class MockDatabase implements PandoraDatabase {
 
 		acc.secure = _.cloneDeep(data);
 		return Promise.resolve();
+	}
+
+	public createCharacter(accountId: number): Promise<{ info: ICharacterSelfInfoDb, char: ICharacterData; }> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
+		if (!acc)
+			return Promise.reject(new Error('Account not found'));
+
+		const charId: CharacterId = `c${this._nextCharacterId++}`;
+		const info = {
+			inCreation: true as const,
+			id: charId,
+			name: '',
+			preview: '',
+		};
+		const char = {
+			inCreation: true as const,
+			id: charId,
+			accountId: acc.id,
+			name: info.name,
+			created: -1,
+			accessId: nanoid(8),
+		};
+
+		acc.characters.push(info);
+		this.characterDb.set(char.id, char);
+		return Promise.resolve({ info, char });
+	}
+
+	public finalizeCharacter(accountId: number): Promise<ICharacterData | null> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
+		if (!acc)
+			return Promise.resolve(null);
+
+		if (acc.characters.length === 0)
+			return Promise.resolve(null);
+
+		const info = acc.characters[acc.characters.length - 1];
+		const char = this.characterDb.get(info.id);
+		if (!char?.inCreation)
+			return Promise.resolve(null);
+
+		char.inCreation = undefined;
+		char.created = Date.now();
+
+		info.name = char.name;
+
+		return Promise.resolve(char);
+	}
+
+	public updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
+		if (!acc)
+			return Promise.resolve(null);
+
+		const info = acc.characters.find((dbChar) => dbChar.id === id);
+		if (!info)
+			return Promise.resolve(null);
+
+		if (data.preview)
+			info.preview = data.preview;
+
+		return Promise.resolve(info);
+	}
+
+	public deleteCharacter(accountId: number, characterId: CharacterId): Promise<void> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
+		if (!acc)
+			return Promise.resolve();
+
+		const info = acc.characters.find((char) => char.id === characterId);
+		if (!info)
+			return Promise.resolve();
+
+		acc.characters = acc.characters.filter((char) => char.id !== characterId);
+		this.characterDb.delete(characterId);
+		return Promise.resolve();
+	}
+
+	public setCharacterAccess(id: CharacterId): Promise<string | null> {
+		const char = this.characterDb.get(id);
+		if (!char)
+			return Promise.resolve(null);
+
+		char.accessId = nanoid(8);
+		return Promise.resolve(char.accessId);
+	}
+
+	public getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
+		const char = this.characterDb.get(id);
+		if (!char)
+			return Promise.resolve(null);
+
+		if (accessId === false)
+			char.accessId = accessId = nanoid(8);
+		else if (accessId !== char.accessId)
+			return Promise.resolve(null);
+
+		return Promise.resolve(_.cloneDeep(char));
+	}
+
+	public setCharacter({ id, accessId, ...data }: Partial<ICharacterData> & Pick<ICharacterData, 'id'>): Promise<boolean> {
+		const char = this.characterDb.get(id);
+		if (char?.accessId !== accessId)
+			return Promise.resolve(false);
+
+		_.assign(char, _.cloneDeep(data));
+		return Promise.resolve(true);
 	}
 }

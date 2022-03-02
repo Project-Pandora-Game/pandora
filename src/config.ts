@@ -47,3 +47,10 @@ export const DATABASE_URL = process.env.DATABASE_URL ?? 'mongodb://localhost:270
 export const DATABASE_NAME = process.env.DATABASE_NAME ?? 'pandora-test';
 
 //#endregion
+
+//#region Character
+
+/** Character limit for normal account */
+export const CHARACTER_LIMIT_NORMAL = 5;
+
+//#endregion

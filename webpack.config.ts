@@ -12,6 +12,7 @@ import packageJson from './package.json';
 
 const {
 	DIRECTORY_ADDRESS = 'http://127.0.0.1:25560',
+	WEBPACK_DEV_SERVER_PORT = '6969',
 } = config().parsed ?? {};
 
 const SRC_DIR = join(__dirname, 'src');
@@ -31,7 +32,7 @@ export default function (env: WebpackEnv): Configuration {
 			historyApiFallback: true,
 			hot: true,
 			open: true,
-			port: 6969,
+			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),
 		},
 		devtool: env.prod ? false : 'eval-source-map',
 		entry: {

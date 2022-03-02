@@ -1,9 +1,10 @@
 import { toast, ToastOptions } from 'react-toastify';
 import { DIRECTORY_ADDRESS } from '../config/Environment';
-import { GetLogger } from 'pandora-common';
+import { EMPTY, GetLogger, ICharacterSelfInfo } from 'pandora-common';
 import { Connection, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
 import { GetAuthData, HandleDirectoryConnectionState } from './account_manager';
 import { connect, Socket } from 'socket.io-client';
+import { ConnectToShard } from './socketio_shard_connector';
 
 const logger = GetLogger('DirConn');
 
@@ -177,6 +178,26 @@ export class SocketIODirectoryConnector extends Connection<Socket, IClientDirect
 	/** Handle failed connection attempt */
 	private onConnectError(err: Error) {
 		logger.warning('Connection to Directory failed:', err.message);
+	}
+
+	public async createNewCharacter(): Promise<boolean> {
+		const data = await this.awaitResponse('createCharacter', EMPTY);
+		if (data.result !== 'ok') {
+			logger.error('Failed to create character:', data);
+			return false;
+		}
+		await ConnectToShard(data.characterId, data);
+		return true;
+	}
+
+	public async connectToCharacter(id: ICharacterSelfInfo['id']): Promise<boolean> {
+		const data = await this.awaitResponse('connectCharacter', { id });
+		if (data.result !== 'ok') {
+			logger.error('Failed to connect to character:', data);
+			return false;
+		}
+		await ConnectToShard(id, data);
+		return true;
 	}
 }
 

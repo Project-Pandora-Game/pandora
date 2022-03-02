@@ -1,11 +1,15 @@
-import { GetLogger } from 'pandora-common';
+import { CharacterId, GetLogger, ShardInfo } from 'pandora-common';
 import { Connection, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
+import Player from '../character/player';
 
 const logger = GetLogger('ShardConn');
 
 // Setup message handler
-const handler = new MessageHandler<IShardClientBase>({}, {});
+const handler = new MessageHandler<IShardClientBase>({}, {
+	loadCharacter: Player.load.bind(Player),
+	updateCharacter: Player.update.bind(Player),
+});
 
 /** State of connection to Shard */
 export enum ShardConnectionState {
@@ -21,11 +25,14 @@ export enum ShardConnectionState {
 	DISCONNECTED,
 }
 
-function CreateConnection(uri: string): Socket {
+function CreateConnection(characterId: CharacterId, { publicURL, secret }: ShardInfo): Socket {
 	// Create the connection without connecting
-	return connect(uri, {
+	return connect(publicURL, {
 		autoConnect: false,
 		withCredentials: true,
+		extraHeaders: {
+			authorization: `${characterId} ${secret}`,
+		},
 	});
 }
 
@@ -39,8 +46,8 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 		return this._state;
 	}
 
-	constructor(uri: string) {
-		super(CreateConnection(uri), logger);
+	constructor(characterId: CharacterId, info: ShardInfo) {
+		super(CreateConnection(characterId, info), logger);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -124,8 +131,8 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 	}
 }
 
-export function ConnectToShard(address: string): Promise<SocketIOShardConnector> {
-	const connector = new SocketIOShardConnector(address);
+export function ConnectToShard(characterId: CharacterId, info: ShardInfo): Promise<SocketIOShardConnector> {
+	const connector = new SocketIOShardConnector(characterId, info);
 	// Start
 	return connector.connect();
 }

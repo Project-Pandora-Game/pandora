@@ -22,7 +22,7 @@ function LeftHeader(): ReactElement {
 
 function RightHeader(): ReactElement {
 	const account = useObservable(currentAccount);
-	const loggedIn = account != null;
+	const loggedIn = account !== undefined;
 	const notificationCount = 5;
 	return (
 		<div className='rightHeader'>
@@ -32,7 +32,7 @@ function RightHeader(): ReactElement {
 						badge={ notificationCount } title='Notifications' />
 					<HeaderButton icon={ friendsIcon } iconAlt='Friends icon' title='Friends' />
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings icon' title='Settings' />
-					<span>{ account }</span>
+					<span>{ account.username }</span>
 					<HeaderButton icon={ logoutIcon } iconAlt='Logout icon' onClick={ Logout } title='Logout' />
 				</>
 			) }

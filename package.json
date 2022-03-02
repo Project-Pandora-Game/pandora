@@ -67,7 +67,7 @@
 	},
 	"dependencies": {
 		"classnames": "^2.3.1",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#6059af1",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#7e64ea9",
 		"react": "^17.0.2",
 		"react-dom": "^17.0.2",
 		"react-router-dom": "^6.2.1",

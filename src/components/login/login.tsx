@@ -1,10 +1,12 @@
 import { AssertNever, IsObject, IsSimpleToken, IsUsername } from 'pandora-common';
-import React, { FormEvent, ReactElement, ReactNode, useState } from 'react';
+import React, { FormEvent, ReactElement, ReactNode, useState, useEffect, useReducer } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { authToken, currentAccount, DirectoryLogin } from '../../networking/account_manager';
 import { useObservable } from '../../observable';
+import { GAME_NAME, GAME_VERSION } from '../../config/Environment';
 import './login.scss';
 import { Button } from '../common/Button/Button';
+import pandoraEntranceImage from '../../assets/pandora_entrance.png';
 
 export function Login(): ReactElement {
 	// React States
@@ -130,11 +132,69 @@ export function Login(): ReactElement {
 
 	return (
 		<div className='login'>
-			<div id='login-form' className='auth-form'>
-				<h1 className='title'>Club Check-in</h1>
-				{ message && <div className='message'>{ message }</div> }
-				{ contents }
-				{ links }
+			<div className='stretcher'>
+				<TeaserBox />
+				<div id='login-form' className='auth-form'>
+					<h1 className='title'>Club Check-in</h1>
+					{ message && <div className='message'>{ message }</div> }
+					{ contents }
+					{ links }
+				</div>
+			</div>
+		</div>
+	);
+}
+
+export function TeaserBox(): ReactElement {
+	const teaserContents: [string, string][] = [
+		[`Welcome to ${ GAME_NAME } (version ${ GAME_VERSION })`, pandoraEntranceImage],
+		['The content is age 18+', pandoraEntranceImage],
+		['This part will show screenshots of the club', pandoraEntranceImage],
+	];
+
+	const navElements: ReactElement[] = [];
+
+	const [autoTransitions, setAutoTransitions] = useState(true);
+
+	const [index, setIndex] = useReducer((oldState: number, action: 'next' | number) => {
+		if (action === 'next') {
+			return (oldState + 1) % teaserContents.length;
+		}
+		setAutoTransitions(false);
+		return action;
+	}, 0);
+
+	useEffect(() => {
+		if (!autoTransitions)
+			return;
+
+		const interval = setInterval(() => {
+			setIndex('next');
+		}, 5000);
+
+		return () => {
+			clearInterval(interval);
+		};
+	}, [autoTransitions]);
+
+	for (let i = 0; i < teaserContents.length; i++) {
+		if (i === index) {
+			navElements.push(
+				<div key={ i } className='dot' style={ { backgroundColor: 'rgb(3, 42, 100)' } } />,
+			);
+		} else {
+			navElements.push(
+				<div key={ i } className='dot' onClick={ () => setIndex(i) } />,
+			);
+		}
+	}
+
+	return (
+		<div className='login-teaser'>
+			<div className='teaser-text'>{ teaserContents[index][0] }</div>
+			<img className='teaser-image' src={ teaserContents[index][1] } />
+			<div className='teaser-navigation'>
+				{ ...navElements }
 			</div>
 		</div>
 	);

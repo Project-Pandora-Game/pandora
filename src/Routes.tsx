@@ -9,6 +9,8 @@ import { useBrowserStorage } from './browserStorage';
 import Eula from './components/Eula';
 import { useObservable } from './observable';
 import { currentAccount } from './networking/account_manager';
+import { CharacterSelect } from './components/characterSelect/characterSelect';
+import { CharacterCreate } from './components/characterCreate/characterCreate';
 
 export function PandoraRoutes(): ReactElement {
 	const isLoggedIn = useObservable(currentAccount) !== undefined;
@@ -20,13 +22,16 @@ export function PandoraRoutes(): ReactElement {
 
 	return (
 		<Routes>
-			<Route path='*' element={ <Fallback element={ Login } render={ true } /> } />
+			<Route path='*' element={ <DefaultFallback /> } />
 
 			<Route path='/login' element={ <Fallback element={ Login } render={ !isLoggedIn }  /> } />
 			<Route path='/register' element={ <Fallback element={ Registration } render={ !isLoggedIn }  /> } />
 			<Route path='/forgot_password' element={ <Fallback element={ ForgotPassword } render={ !isLoggedIn }  /> } />
 			<Route path='/reset_password' element={ <Fallback element={ ResetPassword } render={ !isLoggedIn }  /> } />
 			<Route path='/resend_verification_email' element={ <Fallback element={ ResendVerificationEmail } render={ !isLoggedIn } /> } />
+
+			<Route path='/character_select' element={ <Fallback element={ CharacterSelect } render={ isLoggedIn } /> } />
+			<Route path='/character_create' element={ <Fallback element={ CharacterCreate } render={ isLoggedIn } /> } />
 		</Routes>
 	);
 }
@@ -42,4 +47,12 @@ function Fallback({ element: Element, render }: { element: () => ReactElement, r
 	}
 
 	return <Element />;
+}
+
+function DefaultFallback(): ReactElement {
+	const isLoggedIn = currentAccount.value !== undefined;
+	if (isLoggedIn)
+		return <Navigate to={ '/character_select' } />;
+
+	return <Navigate to={ '/login' } />;
 }

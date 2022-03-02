@@ -8,8 +8,8 @@
 		"node": "16.x"
 	},
 	"scripts": {
-		"build": "tsc -p ./tsconfig.src.json",
-		"dev": "nodemon -e ts --ignore dist --exec \"yarn build && yarn start\"",
+		"build": "node scripts/setVersion.js && tsc -p ./tsconfig.src.json",
+		"dev": "node scripts/setVersion.js && nodemon -e ts --ignore dist --exec \"yarn build && yarn start\"",
 		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
@@ -39,7 +39,8 @@
 	},
 	"dependencies": {
 		"dotenv": "^14.3.0",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#9105128",
+		"mongodb": "^4.3.1",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#7e64ea9",
 		"socket.io": "^4.4.1",
 		"socket.io-client": "^4.4.1"
 	}

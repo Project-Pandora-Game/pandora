@@ -1,25 +1,62 @@
-import { GetLogger, IShardClient } from 'pandora-common';
+import type { IncomingHttpHeaders } from 'http';
+import { CharacterId, GetLogger, IShardClientBase } from 'pandora-common';
 import type { Socket } from 'socket.io';
+import Character from '../character/character';
+import characterManager from '../character/characterManager';
 import { ConnectionType, IConnectionClient } from './common';
 import ConnectionManagerClient from './manager_client';
 import { SocketIOConnection } from './socketio_common_connection';
 
 /** Class housing connection from a client */
-export class SocketIOConnectionClient extends SocketIOConnection<IShardClient> implements IConnectionClient {
+export class SocketIOConnectionClient extends SocketIOConnection<IShardClientBase> implements IConnectionClient {
 	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
-	get id(): string {
+	public get id(): string {
 		return this.socket.id;
+	}
+
+	private _aborted: boolean = false;
+	public get aborted(): boolean {
+		return this._aborted;
+	}
+
+	private _character: Character | undefined;
+	public get character(): Character {
+		return this._character as Character;
+	}
+
+	public get headers(): IncomingHttpHeaders {
+		return this.socket.handshake.headers;
 	}
 
 	constructor(socket: Socket) {
 		super(socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
-		ConnectionManagerClient.onConnect(this, socket.handshake.auth);
+		ConnectionManagerClient.onConnect(this);
 	}
 
 	/** Handler for when client disconnects */
 	protected override onDisconnect(_reason: string): void {
 		ConnectionManagerClient.onDisconnect(this);
+	}
+
+	public abortConnection(): void {
+		this._aborted = true;
+		if (this._character?.connection === this) {
+			this._character.connection = undefined;
+			this._character = undefined;
+		}
+		this.socket.disconnect(true);
+	}
+
+	public loadCharacter(id: CharacterId): boolean {
+		this._character = characterManager.getCharacter(id) as Character;
+		if (!this._character) {
+			this.logger.error(`Character ${id} not found`);
+			this.abortConnection();
+			return false;
+		}
+		this._character.connection = this;
+		return true;
 	}
 
 	/**

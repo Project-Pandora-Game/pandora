@@ -15,7 +15,8 @@ export abstract class SocketIOServer {
 		this.socketServer = new Server(httpServer, {
 			...socketIoSettings,
 			cors: {
-				origin: /./,
+				origin: [/.*/],
+				credentials: true,
 			},
 			serveClient: false,
 			allowRequest: this.allowRequest.bind(this),
@@ -29,7 +30,6 @@ export abstract class SocketIOServer {
 	 * @param next - Callback for accept/reject
 	 */
 	protected allowRequest(_req: IncomingMessage, next: (err: string | null | undefined, success: boolean) => void): void {
-		// Default is to allow everything
 		next(undefined, true);
 	}
 

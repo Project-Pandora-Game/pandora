@@ -1,4 +1,5 @@
-import { ConnectionBase, Logger, CreateMassageHandlerOnAny } from 'pandora-common';
+import { ConnectionBase, Logger, CreateMessageHandlerOnAny } from 'pandora-common';
+import type { SocketInterfaceDefinition } from 'pandora-common/dist/networking/helpers';
 import type { Socket } from 'socket.io';
 import type { ConnectionType } from './common';
 
@@ -8,7 +9,7 @@ export interface ISocketIOConnection {
 }
 
 /** Class housing any incoming connection */
-export abstract class SocketIOConnection<T> extends ConnectionBase<Socket, T> implements ISocketIOConnection {
+export abstract class SocketIOConnection<T extends SocketInterfaceDefinition<T>> extends ConnectionBase<Socket, T> implements ISocketIOConnection {
 
 	abstract readonly type: ConnectionType;
 
@@ -18,7 +19,7 @@ export abstract class SocketIOConnection<T> extends ConnectionBase<Socket, T> im
 			this.logger.verbose('Disconnected, reason:', reason);
 			this.onDisconnect(reason);
 		});
-		this.socket.onAny(CreateMassageHandlerOnAny(logger, (messageType, message, callback) => this.onMessage(messageType, message, callback)));
+		this.socket.onAny(CreateMessageHandlerOnAny(logger, (messageType, message, callback) => this.onMessage(messageType, message, callback)));
 		this.logger.verbose('Connected');
 	}
 

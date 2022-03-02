@@ -1,7 +1,9 @@
-import { DIRECTORY_ADDRESS, SHARD_SHARED_SECRET } from '../config';
+import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_SHARED_SECRET } from '../config';
 import { GetLogger, logConfig } from 'pandora-common/dist/logging';
-import { HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, Connection, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMassageHandlerOnAny } from 'pandora-common';
+import { HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, Connection, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IDirectoryShardPromiseResult } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
+import CharacterManager from '../character/characterManager';
+import ConnectionManagerClient from './manager_client';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 10_000;
@@ -49,6 +51,8 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 		return this._state;
 	}
 
+	public shardId: string | undefined;
+
 	constructor(uri: string, secret: string = '') {
 		super(CreateConnection(uri, secret), logger);
 
@@ -58,8 +62,10 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		// Setup message handler
-		const handler = new MessageHandler<IDirectoryShardBase>({}, {});
-		this.socket.onAny(CreateMassageHandlerOnAny(logger, handler.onMessage.bind(handler)));
+		const handler = new MessageHandler<IDirectoryShardBase>({
+			prepareClient: this.handlePrepareClient.bind(this),
+		}, {});
+		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
 
 	/**
@@ -102,12 +108,15 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 	}
 
 	/** Handle successful connection to Directory */
-	private onConnect(): void {
+	private async onConnect(): Promise<void> {
 		if (this._state === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
+			await this.sendInfo();
 			this._state = DirectoryConnectionState.CONNECTED;
 			logger.info('Connected to Directory');
 		} else if (this._state === DirectoryConnectionState.CONNECTION_LOST) {
 			this._state = DirectoryConnectionState.CONNECTED;
+			await new Promise((resolve) => setTimeout(resolve, 1000 * Math.floor(Math.random() * 10 + 5)))
+				.then(() => this.sendInfo());
 			logger.alert('Re-Connected to Directory');
 		} else {
 			logger.fatal('Assertion failed: received \'connect\' event when in state:', DirectoryConnectionState[this._state]);
@@ -131,9 +140,35 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 	private onConnectError(err: Error) {
 		logger.warning('Connection to Directory failed:', err.message);
 	}
+
+	private async handlePrepareClient({ characterId, connectionSecret, accessId }: IDirectoryShardArgument['prepareClient']): IDirectoryShardPromiseResult['prepareClient'] {
+		const char = await CharacterManager.loadCharacter(characterId, accessId);
+		if (!char) {
+			logger.error(`Failed to load character ${characterId} for access ${accessId}`);
+			return { result: 'rejected' };
+		}
+
+		ConnectionManagerClient.addSecret(characterId, connectionSecret);
+
+		return { result: 'accepted' };
+	}
+
+	private async sendInfo(): Promise<void> {
+		//  TODO: error handling and retry, better random class, timeout
+		const { shardId, invalidate } = await this.awaitResponse('sendInfo', {
+			publicURL: SERVER_PUBLIC_ADDRESS,
+			features: [],
+			version: APP_VERSION,
+			characters: CharacterManager.listUsedCharacters(),
+		}, 1000 * 30);
+
+		CharacterManager.invalidateCharacters(...invalidate);
+
+		this.shardId = shardId;
+	}
 }
 
-export let DirectoryConnector: SocketIODirectoryConnector | undefined;
+export let DirectoryConnector!: SocketIODirectoryConnector;
 
 export function ConnectToDirectory(): Promise<SocketIODirectoryConnector> {
 	if (!DIRECTORY_ADDRESS) {

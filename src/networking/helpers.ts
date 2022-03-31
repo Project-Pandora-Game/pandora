@@ -32,7 +32,8 @@ export type SocketInterfaceDefinition<T extends {
 	};
 
 /** Defines the arguments for a SocketInterface */
-export type SocketInterfaceArgs<T extends Record<keyof T, unknown>> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type SocketInterfaceArgs<T extends Record<keyof T, any>> = {
 	[K in keyof T]: T[K] extends ((arg: infer U) => unknown) ? U : never;
 };
 
@@ -84,5 +85,15 @@ export type SocketInterface<T extends Record<keyof T, unknown>> = {
 
 /** Only accept records with string keys as members */
 export type RecordOnly<T extends {
-	[K in keyof T]: Record<string, unknown>;
+	[K in keyof T]: K extends string ? RecordOnlyElement<T[K]> : never;
 }> = T;
+
+type RecordOnlyElement<T> =
+	T extends symbol ? never :
+	T extends boolean ? never :
+	T extends number ? never :
+	T extends string ? never :
+	T extends unknown[] ? never :
+	T extends (...args: unknown[]) => unknown ? never :
+	T extends object ? T :
+	never;

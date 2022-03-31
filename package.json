@@ -5,7 +5,7 @@
 	"repository": "git@github.com:Project-Pandora-Game/pandora-common.git",
 	"license": "MIT",
 	"engines": {
-		"node": "16.x"
+		"node": ">=16.x"
 	},
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",

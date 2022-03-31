@@ -1,3 +1,5 @@
+import type { AssetState, BoneStateCompressed } from './asset/state';
+
 export type CharacterId = `c${number}`;
 
 export type ICharacterData = {
@@ -7,6 +9,8 @@ export type ICharacterData = {
 	name: string;
 	created: number;
 	accessId: string;
+	bones: BoneStateCompressed[],
+	assets: AssetState[],
 };
 
 export type ICharacterDataCreate = Pick<ICharacterData, 'name'>;

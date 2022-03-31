@@ -4,7 +4,7 @@ import { GAME_NAME, GAME_VERSION } from '../../config/Environment';
 /**
  * Display the end user license agreement, with the option to accept it.
  */
-export default function Eula({ accept }: EulaProps): React.ReactElement {
+export function Eula({ accept }: EulaProps): React.ReactElement {
 	return (
 		<div className='eula'>
 			<h1>Welcome to { GAME_NAME }</h1>

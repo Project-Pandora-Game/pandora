@@ -11,7 +11,7 @@ export function ForgotPassword(): ReactElement {
 	const [errorMessage, setErrorMessage] = useState('');
 	const navigate = useNavigate();
 
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		//Prevent page reload
 		event.preventDefault();
 
@@ -20,19 +20,21 @@ export function ForgotPassword(): ReactElement {
 			setErrorMessage('Invalid email format');
 			return;
 		}
+		void (async () => {
+			const result = await DirectoryPasswordReset(mail);
 
-		const result = await DirectoryPasswordReset(mail);
+			if (result === 'maybeSent') {
+				navigate('/reset_password', {
+					state: {
+						message: 'An email with a reset code has been sent to the submitted email address, if there is an account registered using it.',
+					},
+				});
+				return;
+			} else {
+				AssertNever(result);
+			}
+		})();
 
-		if (result === 'maybeSent') {
-			navigate('/reset_password', {
-				state: {
-					message: 'An email with a reset code has been sent to the submitted email address, if there is an account registered using it.',
-				},
-			});
-			return;
-		} else {
-			AssertNever(result);
-		}
 	};
 
 	const contents = (

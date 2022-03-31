@@ -6,7 +6,7 @@ import { ForgotPassword } from './components/login/forgotPassword';
 import { ResetPassword } from './components/login/resetPassword';
 import { ResendVerificationEmail } from './components/login/resendVerificationEmail';
 import { useBrowserStorage } from './browserStorage';
-import Eula from './components/Eula';
+import { Eula } from './components/Eula';
 import { useObservable } from './observable';
 import { currentAccount } from './networking/account_manager';
 import { CharacterSelect } from './components/characterSelect/characterSelect';

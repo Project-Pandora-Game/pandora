@@ -24,7 +24,7 @@ export function ResetPassword(): ReactElement {
 	const locationState = useLocation().state;
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';
 
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		//Prevent page reload
 		event.preventDefault();
 
@@ -33,25 +33,27 @@ export function ResetPassword(): ReactElement {
 			setErrorMessage('Invalid code format');
 			return;
 		}
+		void (async () => {
+			const result = await DirectoryPasswordResetConfirm(username, token, newPassword);
 
-		const result = await DirectoryPasswordResetConfirm(username, token, newPassword);
+			if (result === 'ok') {
+				setErrorMessage('');
+				navigate('/login', {
+					state: {
+						message: 'Your password has been changed and can now be used to log in.',
+					},
+				});
+				return;
+			} else if (newPassword !== newPasswordRetyped) {
+				setErrorMessage('Passwords do not match');
+			} else if (result === 'unknownCredentials') {
+				// Invalid user data
+				setErrorMessage('Invalid username or token');
+			} else {
+				AssertNever(result);
+			}
+		})();
 
-		if (result === 'ok') {
-			setErrorMessage('');
-			navigate('/login', {
-				state: {
-					message: 'Your password has been changed and can now be used to log in.',
-				},
-			});
-			return;
-		} else if (newPassword !== newPasswordRetyped) {
-			setErrorMessage('Passwords do not match');
-		} else if (result === 'unknownCredentials') {
-			// Invalid user data
-			setErrorMessage('Invalid username or token');
-		} else {
-			AssertNever(result);
-		}
 	};
 
 	let contents: ReactElement;

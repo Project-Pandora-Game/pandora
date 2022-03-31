@@ -17,7 +17,7 @@ export function Registration(): ReactElement {
 	const locationState = useLocation().state;
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';
 
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		//Prevent page reload
 		event.preventDefault();
 
@@ -44,24 +44,26 @@ export function Registration(): ReactElement {
 			setErrorMessage({ element: 'pass2', message: 'Passwords do not match' });
 			return;
 		}
+		void (async () => {
+			const result = await DirectoryRegister(username, password, mail);
 
-		const result = await DirectoryRegister(username, password, mail);
+			if (result === 'ok') {
+				setErrorMessage({ element: '', message: '' });
+				navigate('/login', {
+					state: {
+						message: 'Account successfully created, please check your email for verification.',
+					},
+				});
+				return;
+			} else if (result === 'usernameTaken') {
+				setErrorMessage({ element: 'uname', message: 'Username already taken' });
+			} else if (result === 'emailTaken') {
+				setErrorMessage({ element: 'mail', message: 'Email already in use' });
+			} else {
+				AssertNever(result);
+			}
+		})();
 
-		if (result === 'ok') {
-			setErrorMessage({ element: '', message: '' });
-			navigate('/login', {
-				state: {
-					message: 'Account successfully created, please check your email for verification.',
-				},
-			});
-			return;
-		} else if (result === 'usernameTaken') {
-			setErrorMessage({ element: 'uname', message: 'Username already taken' });
-		} else if (result === 'emailTaken') {
-			setErrorMessage({ element: 'mail', message: 'Email already in use' });
-		} else {
-			AssertNever(result);
-		}
 	};
 
 	// Generate JSX code for error message

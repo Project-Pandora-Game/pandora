@@ -1,23 +1,18 @@
 import type { ICharacterData } from 'pandora-common';
 import { GetLogger } from 'pandora-common/dist/logging';
+import { Character } from './character';
 
 const logger = GetLogger('Player');
 
-export default new class Player extends EventTarget {
-	private _data!: ICharacterData;
-	public get data(): Readonly<ICharacterData> {
-		return this._data;
-	}
+export const Player = new class Player extends Character {
 
-	public load(data: ICharacterData): void {
-		this._data = data;
+	public override load(data: ICharacterData): void {
+		super.load(data);
 		logger.debug('Loaded player data', data);
-		this.dispatchEvent(new CustomEvent('load', { detail: data }));
 	}
 
-	public update(data: Partial<ICharacterData>): void {
-		this._data = { ...this._data, ...data };
+	public override update(data: Partial<ICharacterData>): void {
+		super.update(data);
 		logger.debug('Updated player data', data);
-		this.dispatchEvent(new CustomEvent('update', { detail: data }));
 	}
 };

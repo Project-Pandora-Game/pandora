@@ -2,8 +2,8 @@ import { AssertNever, IsEmail, IsObject } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DirectoryResendVerificationMail } from '../../networking/account_manager';
-import './login.scss';
 import { Button } from '../common/Button/Button';
+import './login.scss';
 
 export function ResendVerificationEmail(): ReactElement {
 	// React States
@@ -14,7 +14,7 @@ export function ResendVerificationEmail(): ReactElement {
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';
 	const navigate = useNavigate();
 
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		//Prevent page reload
 		event.preventDefault();
 
@@ -23,19 +23,21 @@ export function ResendVerificationEmail(): ReactElement {
 			setErrorMessage('Invalid username format');
 			return;
 		}
+		void (async () => {
+			const result = await DirectoryResendVerificationMail(mail);
 
-		const result = await DirectoryResendVerificationMail(mail);
+			if (result === 'maybeSent') {
+				navigate('/login', {
+					state: {
+						message: 'An email with a verification code has been sent to the submitted email address, if there is an account registered using it.',
+					},
+				});
+				return;
+			} else {
+				AssertNever(result);
+			}
+		})();
 
-		if (result === 'maybeSent') {
-			navigate('/login', {
-				state: {
-					message: 'An email with a verification code has been sent to the submitted email address, if there is an account registered using it.',
-				},
-			});
-			return;
-		} else {
-			AssertNever(result);
-		}
 	};
 
 	const contents = (

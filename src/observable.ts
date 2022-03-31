@@ -34,3 +34,46 @@ export function useObservable<T>(observable: Observable<T>): T {
 	}, [observable]);
 	return value;
 }
+
+export class ObservableSet<T> {
+	private _observers: Map<keyof T, Set<(value: T[keyof T]) => void>> = new Map();
+	private _allObservers: Set<(value: Partial<T>) => void> = new Set();
+
+	protected dispatch<K extends keyof T>(key: K, value: T[K]) {
+		this._observers.get(key)?.forEach((observer) => observer(value));
+		const obj: Partial<T> = { [key]: value } as unknown as Partial<T>;
+		this._allObservers.forEach((observer) => observer(obj));
+	}
+
+	public subscribe<K extends keyof T>(key: K, observer: (value: T[K]) => void): () => void {
+		let observers = this._observers.get(key) as Set<(value: T[K]) => void>;
+		if (!observers) {
+			observers = new Set<(value: T[K]) => void>();
+			this._observers.set(key, observers as Set<(value: T[keyof T]) => void>);
+		}
+		observers.add(observer);
+		return () => {
+			observers.delete(observer);
+			if (observers.size === 0) {
+				this._observers.delete(key);
+			}
+		};
+	}
+
+	public subscribeAll(observer: (value: Partial<T>) => void): () => void {
+		this._allObservers.add(observer);
+		return () => this._allObservers.delete(observer);
+	}
+}
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export function useObservableSet<T, K extends keyof T>(
+	observable: ObservableSet<T> & { [key in K]: T[K] },
+	key: K,
+): T[K] {
+	const [value, setValue] = useState<T[K]>(observable[key]);
+	useEffect(() => {
+		return observable.subscribe(key, setValue);
+	}, [observable, key]);
+	return value;
+}

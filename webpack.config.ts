@@ -36,7 +36,9 @@ export default function (env: WebpackEnv): Configuration {
 		},
 		devtool: env.prod ? false : 'eval-source-map',
 		entry: {
-			index: join(SRC_DIR, 'index.tsx'),
+			'index': join(SRC_DIR, 'index.tsx'),
+			// eslint-disable-next-line @typescript-eslint/naming-convention
+			'editor/index': join(SRC_DIR, 'editor', 'index.tsx'),
 		},
 		mode,
 		module: {
@@ -47,7 +49,7 @@ export default function (env: WebpackEnv): Configuration {
 		},
 		output: {
 			path: DIST_DIR,
-			filename: `[name]${ env.prod ? '.[chunkhash]' : '' }.js`,
+			filename: `[name]${env.prod ? '.[chunkhash]' : ''}.js`,
 		},
 		plugins: GeneratePlugins(env),
 		resolve: {
@@ -60,19 +62,27 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 	const plugins: WebpackPluginInstance[] = [
 		new CleanWebpackPlugin({ verbose: true }),
 		new DefinePlugin({
+			/* eslint-disable @typescript-eslint/naming-convention */
 			'process.env': JSON.stringify({
-				/* eslint-disable @typescript-eslint/naming-convention */
 				NODE_ENV: env.prod ? 'production' : 'development',
 				VERSION: packageJson.version,
 				GAME_NAME,
 				DIRECTORY_ADDRESS,
-				/* eslint-enable @typescript-eslint/naming-convention */
 			}),
+			/* eslint-enable @typescript-eslint/naming-convention */
 		}),
 		new HtmlWebpackPlugin({
 			template: join(SRC_DIR, 'index.ejs'),
 			title: GAME_NAME,
 			favicon: join(SRC_DIR, 'assets/favicon.png'),
+			chunks: ['index'],
+		}),
+		new HtmlWebpackPlugin({
+			template: join(SRC_DIR, 'editor', 'index.ejs'),
+			title: `${GAME_NAME} Editor`,
+			filename: 'editor/index.html',
+			favicon: join(SRC_DIR, 'assets/favicon.png'),
+			chunks: ['editor/index'],
 		}),
 	];
 

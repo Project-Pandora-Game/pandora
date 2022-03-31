@@ -22,7 +22,7 @@ export function Login(): ReactElement {
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';
 	const navigate = useNavigate();
 
-	const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+	const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 		//Prevent page reload
 		event.preventDefault();
 
@@ -37,26 +37,27 @@ export function Login(): ReactElement {
 			setErrorMessage('Invalid code format');
 			return;
 		}
+		void (async () => {
+			// Compare user info
+			const result = await DirectoryLogin(username, password, needsVerification ? token : undefined);
 
-		// Compare user info
-		const result = await DirectoryLogin(username, password, needsVerification ? token : undefined);
+			setNeedsVerification(result === 'verificationRequired' || result === 'invalidToken');
 
-		setNeedsVerification(result === 'verificationRequired' || result === 'invalidToken');
-
-		if (result === 'ok') {
-			setErrorMessage('');
-			navigate('/');
-			return;
-		} else if (result === 'unknownCredentials') {
+			if (result === 'ok') {
+				setErrorMessage('');
+				navigate('/');
+				return;
+			} else if (result === 'unknownCredentials') {
 			// Invalid user data
-			setErrorMessage('Invalid username or password');
-		} else if (result === 'verificationRequired') {
-			setErrorMessage('Account verification needed');
-		} else if (result === 'invalidToken') {
-			setErrorMessage('Invalid verification code');
-		} else {
-			AssertNever(result);
-		}
+				setErrorMessage('Invalid username or password');
+			} else if (result === 'verificationRequired') {
+				setErrorMessage('Account verification needed');
+			} else if (result === 'invalidToken') {
+				setErrorMessage('Invalid verification code');
+			} else {
+				AssertNever(result);
+			}
+		})();
 	};
 
 	let contents: ReactElement;

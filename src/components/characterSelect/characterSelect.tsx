@@ -3,7 +3,7 @@ import { EMPTY, IClientDirectoryNormalResult } from 'pandora-common/dist/network
 import React, { ReactElement, useEffect, useState } from 'react';
 import { NavigateFunction, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../networking/socketio_directory_connector';
-import Player from '../../character/player';
+import { Player } from '../../character/player';
 import './characterSelect.scss';
 
 /**
@@ -61,7 +61,7 @@ function Character({ id, name, preview, state }: ICharacterSelfInfo | (Partial<I
 
 	return (
 		<div className='card'>
-			<div className='border' onClick={ () => ConnectToCharacter(navigate, id) }>
+			<div className='border' onClick={ () => void ConnectToCharacter(navigate, id) }>
 				<State state={ state } />
 				<div className='title'>{ name }</div>
 				<Preview preview={ preview } />
@@ -95,13 +95,12 @@ function Preview({ preview }: { preview?: string }): ReactElement | null {
 
 async function ConnectToCharacter(navigate: NavigateFunction, id?: CharacterId): Promise<boolean> {
 	let connected = false;
-	const handler = () => navigate('/character_create');
-	Player.addEventListener('load', handler, { once: true });
+	const cleanup = Player.subscribe('load', () => navigate('/character_create'));
 	if (id) {
 		connected = await DirectoryConnector.connectToCharacter(id);
 	} else {
 		connected = await DirectoryConnector.createNewCharacter();
 	}
-	Player.removeEventListener('load', handler);
+	cleanup();
 	return connected;
 }

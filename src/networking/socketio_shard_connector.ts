@@ -1,7 +1,7 @@
 import { CharacterId, GetLogger, ShardInfo } from 'pandora-common';
 import { Connection, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
-import Player from '../character/player';
+import { Player } from '../character/player';
 
 const logger = GetLogger('ShardConn');
 

@@ -1,9 +1,8 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_SHARED_SECRET } from '../config';
 import { GetLogger, logConfig } from 'pandora-common/dist/logging';
-import { HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, Connection, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IDirectoryShardPromiseResult } from 'pandora-common';
+import { HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, Connection, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IShardCharacterDefinition, CharacterId, IsCharacterId } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
-import CharacterManager from '../character/characterManager';
-import ConnectionManagerClient from './manager_client';
+import { CharacterManager } from '../character/characterManager';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 10_000;
@@ -16,6 +15,8 @@ export enum DirectoryConnectionState {
 	NONE,
 	/** Attempting to connect to Directory for the first time */
 	INITIAL_CONNECTION_PENDING,
+	/** Attempting to register with directory (both on connect and reconnect) */
+	REGISTRATION_PENDING,
 	/** Connection to Directory is currently established */
 	CONNECTED,
 	/** Connection to Directory lost, attempting to reconnect */
@@ -63,8 +64,9 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 
 		// Setup message handler
 		const handler = new MessageHandler<IDirectoryShardBase>({
-			prepareClient: this.handlePrepareClient.bind(this),
-		}, {});
+		}, {
+			prepareCharacters: this.handlePrepareCharacters.bind(this),
+		});
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
 
@@ -108,19 +110,23 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 	}
 
 	/** Handle successful connection to Directory */
-	private async onConnect(): Promise<void> {
+	private onConnect(): void {
 		if (this._state === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
-			await this.sendInfo();
-			this._state = DirectoryConnectionState.CONNECTED;
 			logger.info('Connected to Directory');
 		} else if (this._state === DirectoryConnectionState.CONNECTION_LOST) {
-			this._state = DirectoryConnectionState.CONNECTED;
-			await new Promise((resolve) => setTimeout(resolve, 1000 * Math.floor(Math.random() * 10 + 5)))
-				.then(() => this.sendInfo());
 			logger.alert('Re-Connected to Directory');
 		} else {
 			logger.fatal('Assertion failed: received \'connect\' event when in state:', DirectoryConnectionState[this._state]);
+			return;
 		}
+		this._state = DirectoryConnectionState.REGISTRATION_PENDING;
+		this.register()
+			.catch((err) => {
+				// Ignore if the error comes after we no longer expect the registration to happen (e.g. DC during registration)
+				if (this._state !== DirectoryConnectionState.REGISTRATION_PENDING)
+					return;
+				logger.fatal('Failed to register to Directory:', err);
+			});
 	}
 
 	/** Handle loss of connection to Directory */
@@ -128,7 +134,7 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 		// If the disconnect was requested, just ignore this
 		if (this._state === DirectoryConnectionState.DISCONNECTED)
 			return;
-		if (this._state === DirectoryConnectionState.CONNECTED) {
+		if (this._state === DirectoryConnectionState.CONNECTED || this._state === DirectoryConnectionState.REGISTRATION_PENDING) {
 			this._state = DirectoryConnectionState.CONNECTION_LOST;
 			logger.alert('Lost connection to Directory:', reason);
 		} else {
@@ -141,30 +147,55 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 		logger.warning('Connection to Directory failed:', err.message);
 	}
 
-	private async handlePrepareClient({ characterId, connectionSecret, accessId }: IDirectoryShardArgument['prepareClient']): IDirectoryShardPromiseResult['prepareClient'] {
-		const char = await CharacterManager.loadCharacter(characterId, accessId);
-		if (!char) {
-			logger.error(`Failed to load character ${characterId} for access ${accessId}`);
-			return { result: 'rejected' };
-		}
-
-		ConnectionManagerClient.addSecret(characterId, connectionSecret);
-
-		return { result: 'accepted' };
+	private handlePrepareCharacters({ characters }: IDirectoryShardArgument['prepareCharacters']): void {
+		this.prepareCharacters(characters).catch((err) => {
+			logger.fatal('Error processing prepareCharacters message', err);
+		});
 	}
 
-	private async sendInfo(): Promise<void> {
-		//  TODO: error handling and retry, better random class, timeout
-		const { shardId, invalidate } = await this.awaitResponse('sendInfo', {
+	private async prepareCharacters(characters: IShardCharacterDefinition[]): Promise<void> {
+		const success: CharacterId[] = (await Promise.all(
+			characters.map(
+				async (character) => {
+					const result = await CharacterManager.loadCharacter(character);
+					if (!result) {
+						logger.error(`Failed to load character ${character.id} for access ${character.accessId}`);
+						// Report back character that failed load
+						this.sendMessage('characterDisconnected', { id: character.id });
+						return undefined;
+					}
+					return result.data.id;
+				},
+			),
+		)).filter<CharacterId>(IsCharacterId);
+
+		// Invalidate old characters
+		CharacterManager
+			.listUsedCharacters()
+			.map((c) => c.id)
+			.filter((id) => !success.includes(id))
+			.forEach((id) => CharacterManager.invalidateCharacter(id));
+	}
+
+	private async register(): Promise<void> {
+		const { shardId, characters } = await this.awaitResponse('shardRegister', {
+			shardId: this.shardId ?? null,
 			publicURL: SERVER_PUBLIC_ADDRESS,
 			features: [],
 			version: APP_VERSION,
 			characters: CharacterManager.listUsedCharacters(),
-		}, 1000 * 30);
+		}, 10_000);
 
-		CharacterManager.invalidateCharacters(...invalidate);
+		if (this._state !== DirectoryConnectionState.REGISTRATION_PENDING) {
+			logger.warning('Ignoring finished registration when in state:', DirectoryConnectionState[this._state]);
+			return;
+		}
 
 		this.shardId = shardId;
+		await this.prepareCharacters(characters);
+
+		this._state = DirectoryConnectionState.CONNECTED;
+		logger.info('Registered with Directory');
 	}
 }
 

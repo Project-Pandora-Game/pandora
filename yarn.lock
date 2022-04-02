@@ -3738,9 +3738,9 @@ package-json@^6.3.0:
     registry-url "^5.0.0"
     semver "^6.2.0"
 
-"pandora-common@github:Project-Pandora-Game/pandora-common#7e64ea9":
+"pandora-common@github:Project-Pandora-Game/pandora-common#2558c66":
   version "0.1.0"
-  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#7e64ea979f01b88fc15373b629e32bce11d6ff7c"
+  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#2558c66290193940b3a02144bf9cdd041446dd0e"
   dependencies:
     "@types/node" "^17.0.12"
     tslib "^2.3.1"

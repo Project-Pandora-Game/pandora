@@ -2,9 +2,9 @@ import type { IncomingHttpHeaders } from 'http';
 import { CharacterId, GetLogger, IShardClientBase } from 'pandora-common';
 import type { Socket } from 'socket.io';
 import Character from '../character/character';
-import characterManager from '../character/characterManager';
+import { CharacterManager } from '../character/characterManager';
 import { ConnectionType, IConnectionClient } from './common';
-import ConnectionManagerClient from './manager_client';
+import { ConnectionManagerClient } from './manager_client';
 import { SocketIOConnection } from './socketio_common_connection';
 
 /** Class housing connection from a client */
@@ -49,7 +49,7 @@ export class SocketIOConnectionClient extends SocketIOConnection<IShardClientBas
 	}
 
 	public loadCharacter(id: CharacterId): boolean {
-		this._character = characterManager.getCharacter(id) as Character;
+		this._character = CharacterManager.getCharacter(id) as Character;
 		if (!this._character) {
 			this.logger.error(`Character ${id} not found`);
 			this.abortConnection();

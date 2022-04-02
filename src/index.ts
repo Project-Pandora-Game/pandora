@@ -5,7 +5,7 @@ import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common/dist/loggi
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
 import { StartHttpServer } from './networking/httpServer';
 import { InitDatabase } from './database/databaseProvider';
-import CharacterManager from './character/characterManager';
+import { CharacterManager } from './character/characterManager';
 // get version from package.json
 
 const LOG_DIR = './logs';

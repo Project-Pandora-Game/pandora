@@ -1,11 +1,11 @@
-import type { CharacterId, ICharacterData, ICharacterDataUpdate } from 'pandora-common';
+import type { CharacterId, ICharacterData, ICharacterDataUpdate, IShardCharacterDefinition } from 'pandora-common';
 import { GetLogger } from 'pandora-common/dist/logging';
 import { GetDatabase, ShardDatabase } from '../database/databaseProvider';
 import Character, { CharacterModification } from './character';
 
 const logger = GetLogger('CharacterManager');
 
-export default new class CharacterManager {
+export const CharacterManager = new class CharacterManager {
 	private readonly _characters: Map<CharacterId, Character> = new Map();
 	private _db!: ShardDatabase;
 
@@ -14,22 +14,24 @@ export default new class CharacterManager {
 		return this;
 	}
 
-	public listUsedCharacters(): { accountId: number; characterId: CharacterId; accessId: string; inUse: boolean; }[] {
+	public listUsedCharacters(): IShardCharacterDefinition[] {
 		return [...this._characters.values()]
 			.map((char) => ({
-				accountId: char.data.accountId,
-				characterId: char.data.id,
+				id: char.data.id,
+				account: char.data.accountId,
 				accessId: char.data.accessId,
-				inUse: char.isInUse(),
+				connectSecret: char.connectSecret,
 			}));
 	}
 
-	public async loadCharacter(id: CharacterId, accessId: string): Promise<Character | null> {
+	public async loadCharacter(character: IShardCharacterDefinition): Promise<Character | null> {
+		const id = character.id;
+
 		let char = this._characters.get(id);
 		if (char)
 			return char;
 
-		const data = await this.getCharacterData(id, accessId);
+		const data = await this.getCharacterData(id, character.accessId);
 		if (!data)
 			return null;
 
@@ -37,7 +39,7 @@ export default new class CharacterManager {
 		if (char)
 			return char;
 
-		char = new Character(data);
+		char = new Character(data, character.connectSecret);
 		this._characters.set(id, char);
 		return char;
 	}
@@ -60,7 +62,7 @@ export default new class CharacterManager {
 		};
 
 		for (const key of keys) {
-			data[key] = char.data[key];
+			(data as Record<string, unknown>)[key] = char.data[key];
 		}
 
 		if (await this.setCharacterData(char.data)) {
@@ -76,11 +78,9 @@ export default new class CharacterManager {
 		}
 	}
 
-	public invalidateCharacters(...accountIds: CharacterId[]): void {
-		for (const id of accountIds) {
-			this._characters.get(id)?.invalidate();
-			this._characters.delete(id);
-		}
+	public invalidateCharacter(id: CharacterId): void {
+		this._characters.get(id)?.invalidate();
+		this._characters.delete(id);
 	}
 
 	private async getCharacterData(id: CharacterId, accessId: string): Promise<ICharacterData | null> {

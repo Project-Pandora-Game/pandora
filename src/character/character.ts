@@ -1,6 +1,6 @@
 import type { CharacterId, ICharacterData, ICharacterDataUpdate } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
-import CharacterManager from './characterManager';
+import { CharacterManager } from './characterManager';
 import { SocketIOConnectionClient } from '../networking/socketio_client_connection';
 
 export const enum CharacterModification {
@@ -13,6 +13,7 @@ type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id'>;
 
 export default class Character {
 	public readonly data: ICharacterData;
+	public readonly connectSecret: string;
 
 	public state = CharacterModification.NONE;
 	public modified: Set<keyof ICharacterDataChange> = new Set();
@@ -24,8 +25,9 @@ export default class Character {
 		return this.data.id;
 	}
 
-	constructor(data: ICharacterData) {
+	constructor(data: ICharacterData, connectSecret: string) {
 		this.data = data;
+		this.connectSecret = connectSecret;
 	}
 
 	public isInUse(): boolean {

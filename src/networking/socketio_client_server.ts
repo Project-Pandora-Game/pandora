@@ -4,7 +4,7 @@ import { GetLogger } from 'pandora-common/dist/logging';
 import { IsCharacterId } from 'pandora-common/dist/validation';
 import { SocketIOServer } from './socketio_common_server';
 import { SocketIOConnectionClient } from './socketio_client_connection';
-import ConnectionManagerClient from './manager_client';
+import { ConnectionManagerClient } from './manager_client';
 
 const logger = GetLogger('SIO-Server-Client');
 

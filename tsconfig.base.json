@@ -4,6 +4,7 @@
 		"lib": ["ESNext"],
 		"module": "CommonJS",
 		"moduleResolution": "Node",
+		"resolveJsonModule": true,
 		"experimentalDecorators": true,
 		"esModuleInterop": true,
 		"baseUrl": "./src",

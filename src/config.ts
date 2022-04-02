@@ -1,5 +1,13 @@
+import { IsObject } from 'pandora-common';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const PACKAGE_JSON = require('../package.json') as unknown;
+if (!IsObject(PACKAGE_JSON) || typeof PACKAGE_JSON.version !== 'string') {
+	throw new Error('Failed to read package.json');
+}
+
 export const APP_NAME = process.env.APP_NAME ?? 'Pandora Shard Server';
-export const APP_VERSION = '0.1.0';
+export const APP_VERSION: string = PACKAGE_JSON.version;
 
 //#region Networking
 /** Port on which will HTTP server listen */

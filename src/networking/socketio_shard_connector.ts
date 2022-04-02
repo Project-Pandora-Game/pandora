@@ -1,7 +1,8 @@
-import { CharacterId, GetLogger, ShardInfo } from 'pandora-common';
+import { GetLogger, IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import { Connection, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { Player } from '../character/player';
+import { Observable } from '../observable';
 
 const logger = GetLogger('ShardConn');
 
@@ -11,12 +12,16 @@ const handler = new MessageHandler<IShardClientBase>({}, {
 	updateCharacter: Player.update.bind(Player),
 });
 
+export const ShardConnector = new Observable<SocketIOShardConnector | null>(null);
+
 /** State of connection to Shard */
 export enum ShardConnectionState {
 	/** The connection has not been attempted yet */
 	NONE,
 	/** Attempting to connect to Shard for the first time */
 	INITIAL_CONNECTION_PENDING,
+	/** Connection is waiting for shard to send initial data */
+	WAIT_FOR_DATA,
 	/** Connection to Shard is currently established */
 	CONNECTED,
 	/** Connection to Shard lost, attempting to reconnect */
@@ -25,7 +30,7 @@ export enum ShardConnectionState {
 	DISCONNECTED,
 }
 
-function CreateConnection(characterId: CharacterId, { publicURL, secret }: ShardInfo): Socket {
+function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacterConnectionInfo): Socket {
 	// Create the connection without connecting
 	return connect(publicURL, {
 		autoConnect: false,
@@ -46,8 +51,14 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 		return this._state;
 	}
 
-	constructor(characterId: CharacterId, info: ShardInfo) {
-		super(CreateConnection(characterId, info), logger);
+	readonly connectionInfo: Readonly<IDirectoryCharacterConnectionInfo>;
+
+	private readonly playerListenerCleanup: () => void;
+	private loadResolver: ((arg: this) => void) | null = null;
+
+	constructor(info: IDirectoryCharacterConnectionInfo) {
+		super(CreateConnection(info), logger);
+		this.connectionInfo = info;
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -55,6 +66,28 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
+
+		this.playerListenerCleanup = Player.subscribe('load', () => {
+			if (this._state === ShardConnectionState.WAIT_FOR_DATA) {
+				this.setState(ShardConnectionState.CONNECTED);
+				if (this.loadResolver) {
+					this.loadResolver(this);
+					this.loadResolver = null;
+				}
+				logger.info('Received initial character data');
+			} else {
+				logger.fatal('Assertion failed: received Player \'load\' event when in state:', ShardConnectionState[this._state]);
+			}
+		});
+	}
+
+	public connectionInfoMatches(info: IDirectoryCharacterConnectionInfo): boolean {
+		return this.connectionInfo.id === info.id &&
+			this.connectionInfo.publicURL === info.publicURL &&
+			// this.connectionInfo.features === info.features &&
+			this.connectionInfo.version === info.version &&
+			this.connectionInfo.characterId === info.characterId &&
+			this.connectionInfo.secret === info.secret;
 	}
 
 	/**
@@ -69,10 +102,7 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 		}
 		return new Promise((resolve) => {
 			this.setState(ShardConnectionState.INITIAL_CONNECTION_PENDING);
-			// Initial connection has shorter timeout
-			this.socket.once('connect', () => {
-				resolve(this);
-			});
+			this.loadResolver = resolve;
 			// Attempt to connect
 			this.socket.connect();
 		});
@@ -87,6 +117,7 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 		if (this._state === ShardConnectionState.DISCONNECTED)
 			return;
 		this.socket.close();
+		this.playerListenerCleanup();
 		this.setState(ShardConnectionState.DISCONNECTED);
 		logger.info('Disconnected from Shard');
 	}
@@ -102,10 +133,10 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 	/** Handle successful connection to Shard */
 	private onConnect(): void {
 		if (this._state === ShardConnectionState.INITIAL_CONNECTION_PENDING) {
-			this.setState(ShardConnectionState.CONNECTED);
+			this.setState(ShardConnectionState.WAIT_FOR_DATA);
 			logger.info('Connected to Shard');
 		} else if (this._state === ShardConnectionState.CONNECTION_LOST) {
-			this.setState(ShardConnectionState.CONNECTED);
+			this.setState(ShardConnectionState.WAIT_FOR_DATA);
 			logger.alert('Re-Connected to Shard');
 		} else {
 			logger.fatal('Assertion failed: received \'connect\' event when in state:', ShardConnectionState[this._state]);
@@ -131,8 +162,19 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 	}
 }
 
-export function ConnectToShard(characterId: CharacterId, info: ShardInfo): Promise<SocketIOShardConnector> {
-	const connector = new SocketIOShardConnector(characterId, info);
+export function DisconnectFromShard(): void {
+	if (ShardConnector.value) {
+		ShardConnector.value.disconnect();
+		ShardConnector.value = null;
+	}
+}
+
+export function ConnectToShard(info: IDirectoryCharacterConnectionInfo): Promise<SocketIOShardConnector> {
+	if (ShardConnector.value?.connectionInfoMatches(info))
+		return Promise.resolve(ShardConnector.value);
+	DisconnectFromShard();
+	const connector = new SocketIOShardConnector(info);
+	ShardConnector.value = connector;
 	// Start
 	return connector.connect();
 }

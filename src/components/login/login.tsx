@@ -16,7 +16,7 @@ export function Login(): ReactElement {
 	const [token, setToken] = useState('');
 	const [needsVerification, setNeedsVerification] = useState(false);
 	const [errorMessage, setErrorMessage] = useState('');
-	const isLoggedIn = useObservable(currentAccount) !== undefined;
+	const isLoggedIn = useObservable(currentAccount) != null;
 
 	const locationState = useLocation().state;
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';

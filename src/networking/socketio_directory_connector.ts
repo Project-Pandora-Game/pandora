@@ -184,9 +184,16 @@ export class SocketIODirectoryConnector extends Connection<Socket, IClientDirect
 		const data = await this.awaitResponse('createCharacter', EMPTY);
 		if (data.result !== 'ok') {
 			logger.error('Failed to create character:', data);
+			toast(`Failed to create character:\n${data.result}`, {
+				type: 'error',
+				autoClose: 10_000,
+				closeOnClick: true,
+				closeButton: true,
+				draggable: true,
+			});
 			return false;
 		}
-		await ConnectToShard(data.characterId, data);
+		await ConnectToShard(data);
 		return true;
 	}
 
@@ -194,9 +201,16 @@ export class SocketIODirectoryConnector extends Connection<Socket, IClientDirect
 		const data = await this.awaitResponse('connectCharacter', { id });
 		if (data.result !== 'ok') {
 			logger.error('Failed to connect to character:', data);
+			toast(`Failed to connect to character:\n${data.result}`, {
+				type: 'error',
+				autoClose: 10_000,
+				closeOnClick: true,
+				closeButton: true,
+				draggable: true,
+			});
 			return false;
 		}
-		await ConnectToShard(id, data);
+		await ConnectToShard(data);
 		return true;
 	}
 }

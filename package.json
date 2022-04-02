@@ -70,7 +70,7 @@
 	"dependencies": {
 		"classnames": "^2.3.1",
 		"delaunator": "^5.0.0",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#86b5231",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#2558c66",
 		"pixi.js": "^6.2.2",
 		"react": "^17.0.2",
 		"react-dom": "^17.0.2",

@@ -1,10 +1,11 @@
-import { IDirectoryAccountInfo, IDirectoryClientArgument, IsObject, IsString, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { GetLogger, IClientDirectoryAuthMessage, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryClientArgument, IsObject, IsString, PASSWORD_PREHASH_SALT } from 'pandora-common';
 import { BrowserStorage } from '../browserStorage';
 import { Observable } from '../observable';
 import { DirectoryConnector } from './socketio_directory_connector';
+import { ConnectToShard, DisconnectFromShard, ShardConnector } from './socketio_shard_connector';
 
 /** Current username or `null` if not logged in */
-export const currentAccount = new Observable<IDirectoryAccountInfo | undefined>(undefined);
+export const currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
 
 /** Storage of login authentication token */
 export const authToken = BrowserStorage.create<{ value: string, expires: number; username: string; } | undefined>('authToken', undefined, (value) => {
@@ -16,23 +17,47 @@ export const authToken = BrowserStorage.create<{ value: string, expires: number;
  * @param message - The received message
  */
 export function HandleDirectoryConnectionState(message: IDirectoryClientArgument['connectionState']): void {
+	HandleDirectoryAccountChange(message.account);
+	HandleDirectoryCharacterChange(message.character);
+}
+
+export function HandleDirectoryAccountChange(account: IDirectoryAccountInfo | null): void {
 	// Update current account
-	currentAccount.value = message.account;
+	currentAccount.value = account;
 	// Clear saved token if login using it failed
-	if (!message.account) {
+	if (!account) {
 		authToken.value = undefined;
+	}
+}
+
+export function HandleDirectoryCharacterChange(character: IDirectoryCharacterConnectionInfo | null): void {
+	if (character) {
+		ConnectToShard(character)
+			.catch((err) => {
+				GetLogger('ConnectionState').fatal('Error while connecting to shard', err);
+			});
+	} else {
+		DisconnectFromShard();
 	}
 }
 
 /**
  * Get data to use to authenticate to Directory using socket.io auth mechanism
  */
-export function GetAuthData(callback: (data: unknown) => void): void {
+export function GetAuthData(callback: (data: IClientDirectoryAuthMessage | undefined) => void): void {
 	const token = authToken.value;
 	if (token && token.expires > Date.now()) {
-		callback(token);
+		const connector = ShardConnector.value;
+		callback({
+			username: token.username,
+			token: token.value,
+			character: connector ? {
+				id: connector.connectionInfo.characterId,
+				secret: connector.connectionInfo.secret,
+			} : null,
+		});
 	} else {
-		callback({});
+		callback(undefined);
 	}
 }
 
@@ -49,7 +74,10 @@ function PrehashPassword(password: string): Promise<string> {
 
 export function Logout() {
 	DirectoryConnector.sendMessage('logout', { invalidateToken: authToken.value?.value });
-	HandleDirectoryConnectionState({ account: undefined });
+	HandleDirectoryConnectionState({
+		account: null,
+		character: null,
+	});
 	window.location.reload();
 }
 
@@ -66,9 +94,9 @@ export async function DirectoryLogin(username: string, password: string, verific
 
 	if (result.result === 'ok') {
 		authToken.value = { ...result.token, username: result.account.username };
-		HandleDirectoryConnectionState(result);
+		HandleDirectoryAccountChange(result.account);
 	} else {
-		HandleDirectoryConnectionState({ account: undefined });
+		HandleDirectoryAccountChange(null);
 	}
 	return result.result;
 }

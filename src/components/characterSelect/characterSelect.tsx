@@ -13,6 +13,11 @@ import './characterSelect.scss';
  *  - connect should block UI until connected
  */
 
+let DoUpdateCharacters: (() => Promise<void>) | null = null;
+
+/** Prevents automatic selection of character if it failed last time */
+let AutoSelectErrored = false;
+
 export function CharacterSelect(): ReactElement {
 	const [info, setInfo] = useState<IClientDirectoryNormalResult['listCharacters'] | undefined>(undefined);
 	const [state, setState] = useState('Loading...');
@@ -26,19 +31,24 @@ export function CharacterSelect(): ReactElement {
 				return;
 			}
 			const { characters } = result;
-			if (characters.length === 0) {
+			if (!AutoSelectErrored && characters.length === 0) {
 				setState('No characters found. Creating a new one...');
-				await ConnectToCharacter(navigate, undefined);
-			} else if (characters.length === 1 && characters[0].inCreation) {
+				if (await ConnectToCharacter(navigate, undefined))
+					return;
+				AutoSelectErrored = true;
+			} else if (!AutoSelectErrored && characters.length === 1 && characters[0].inCreation) {
 				setState('Character creation in progress...');
-				await ConnectToCharacter(navigate, characters[0].id);
-			} else {
-				setInfo(result);
+				if (await ConnectToCharacter(navigate, characters[0].id))
+					return;
+				AutoSelectErrored = true;
 			}
+			setInfo(result);
 		}
+		DoUpdateCharacters = awaitCharacters;
 		awaitCharacters().catch(() => { /** NOOP */ });
 		return () => {
 			mounted = false;
+			DoUpdateCharacters = null;
 		};
 	}, [navigate]);
 
@@ -48,7 +58,7 @@ export function CharacterSelect(): ReactElement {
 				{ info === undefined ? <div className='loading'>{ state }</div> : (
 					<>{ info.characters.map((character) => <Character key={ character.id } { ...character } />) }</>
 				) }
-				{ info !== undefined && info.characters.length < info.limit && (
+				{ info !== undefined && info.characters.length < info.limit && !info.characters.some((i) => i.inCreation) && (
 					<Character key='create' name={ 'Create new character' } />
 				) }
 			</div>
@@ -95,11 +105,18 @@ function Preview({ preview }: { preview?: string }): ReactElement | null {
 
 async function ConnectToCharacter(navigate: NavigateFunction, id?: CharacterId): Promise<boolean> {
 	let connected = false;
-	const cleanup = Player.subscribe('load', () => navigate('/character_create'));
+	const cleanup = Player.subscribe('load', () => {
+		if (Player.data.inCreation) {
+			navigate('/character_create');
+		} else {
+			navigate('/pandora_lobby');
+		}
+	});
 	if (id) {
 		connected = await DirectoryConnector.connectToCharacter(id);
 	} else {
 		connected = await DirectoryConnector.createNewCharacter();
+		DoUpdateCharacters?.().catch(() => { /* NOOP */ });
 	}
 	cleanup();
 	return connected;

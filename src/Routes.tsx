@@ -11,9 +11,11 @@ import { useObservable } from './observable';
 import { currentAccount } from './networking/account_manager';
 import { CharacterSelect } from './components/characterSelect/characterSelect';
 import { CharacterCreate } from './components/characterCreate/characterCreate';
+import { PandoraLobby } from './components/pandoraLobby/pandoraLobby';
+import { ShardConnector } from './networking/socketio_shard_connector';
 
 export function PandoraRoutes(): ReactElement {
-	const isLoggedIn = useObservable(currentAccount) !== undefined;
+	const isLoggedIn = useObservable(currentAccount) != null;
 
 	const [eula, setEula] = useBrowserStorage('eula', false);
 
@@ -30,19 +32,43 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/reset_password' element={ <Fallback element={ ResetPassword } render={ !isLoggedIn }  /> } />
 			<Route path='/resend_verification_email' element={ <Fallback element={ ResendVerificationEmail } render={ !isLoggedIn } /> } />
 
-			<Route path='/character_select' element={ <Fallback element={ CharacterSelect } render={ isLoggedIn } /> } />
-			<Route path='/character_create' element={ <Fallback element={ CharacterCreate } render={ isLoggedIn } /> } />
+			<Route path='/character_select' element={ <RequiresLogin element={ CharacterSelect } /> } />
+			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } /> } />
+			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
 		</Routes>
 	);
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
+function RequiresLogin({ element: Element }: { element: () => ReactElement }): ReactElement {
+	const isLoggedIn = useObservable(currentAccount) != null;
+
+	if (!isLoggedIn) {
+		return <Login />;
+	}
+
+	return <Element />;
+}
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+function RequiresCharacter({ element: Element }: { element: () => ReactElement }): ReactElement {
+	const isLoggedIn = useObservable(currentAccount) != null;
+	const hasCharacter = useObservable(ShardConnector) != null;
+
+	if (!isLoggedIn) {
+		return <Login />;
+	}
+
+	if (!hasCharacter) {
+		return <CharacterSelect />;
+	}
+
+	return <Element />;
+}
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
 function Fallback({ element: Element, render }: { element: () => ReactElement, render: boolean }): ReactElement {
 	if (!render) {
-		const isLoggedIn = currentAccount.value !== undefined;
-		if (!isLoggedIn)
-			return <Navigate to={ '/login' } />;
-
 		return <Navigate to={ '/' } />;
 	}
 
@@ -50,7 +76,7 @@ function Fallback({ element: Element, render }: { element: () => ReactElement, r
 }
 
 function DefaultFallback(): ReactElement {
-	const isLoggedIn = currentAccount.value !== undefined;
+	const isLoggedIn = currentAccount.value != null;
 	if (isLoggedIn)
 		return <Navigate to={ '/character_select' } />;
 

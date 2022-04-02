@@ -22,7 +22,7 @@ function LeftHeader(): ReactElement {
 
 function RightHeader(): ReactElement {
 	const account = useObservable(currentAccount);
-	const loggedIn = account !== undefined;
+	const loggedIn = account != null;
 	const notificationCount = 5;
 	return (
 		<div className='rightHeader'>

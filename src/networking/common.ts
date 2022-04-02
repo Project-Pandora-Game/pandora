@@ -1,5 +1,7 @@
-import type { CharacterId, IConnection, IConnectionBase, IDirectoryClientBase, IDirectoryShardBase, IShardDirectoryArgument, ShardInfo } from 'pandora-common';
+import type { IConnection, IConnectionBase, IDirectoryClientBase, IDirectoryShardBase } from 'pandora-common';
 import type { Account } from '../account/account';
+import type { Character } from '../account/character';
+import type { Shard } from '../shard/shard';
 
 export enum ConnectionType {
 	SHARD,
@@ -10,6 +12,8 @@ export interface IConnectionClient extends IConnectionBase<IDirectoryClientBase>
 	readonly type: ConnectionType.CLIENT;
 	/** The current account this connection is logged in as or `null` if it isn't */
 	readonly account: Account | null;
+	/** The current character this connection is using or `null` if none */
+	readonly character: Character | null;
 	/** ID of the client, primarily used for logging */
 	readonly id: string;
 
@@ -21,19 +25,19 @@ export interface IConnectionClient extends IConnectionBase<IDirectoryClientBase>
 	 * @param account - The account to set or `null` to clear
 	 */
 	setAccount(account: Account | null): void;
+
+	/**
+	 * Set or clear the character this connection is using
+	 * @param character - The character to set or `null` to clear
+	 */
+	setCharacter(character: Character | null): void;
+
+	sendConnectionStateUpdate(): void;
 }
 
 export interface IConnectionShard extends IConnection<IDirectoryShardBase, true> {
 	readonly type: ConnectionType.SHARD;
 	readonly id: string;
-	/** Map of character ids to account id */
-	readonly characters: Map<CharacterId, number>;
-
-	updateInfo(info: IShardDirectoryArgument['sendInfo'], connecting: boolean): Promise<{ invalidate: CharacterId[]; }>;
-
-	removeCharacter(characterId: CharacterId): void;
-
-	getInfo(): Omit<ShardInfo, 'secret'>;
-
-	addAccountCharacter(acc: Account, id: CharacterId, accessId: string): void;
+	/** The associated shard */
+	shard: Shard | null;
 }

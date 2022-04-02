@@ -107,7 +107,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		await this._accounts.updateOne({ id }, { $set: { secure: data } });
 	}
 
-	public async createCharacter(accountId: number): Promise<{ info: ICharacterSelfInfoDb, char: ICharacterData; }> {
+	public async createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
 		return await this._lock.acquire('createCharacter', async () => {
 			if (!await this.getAccountById(accountId))
 				throw new Error('Account not found');
@@ -120,19 +120,21 @@ export default class MongoDatabase implements PandoraDatabase {
 				name: '',
 				preview: '',
 			};
-			const char = {
+			const char: Omit<ICharacterData, 'id'> & { id: number; } = {
 				inCreation: true as const,
 				id,
 				accountId,
 				name: info.name,
 				created: -1,
 				accessId: nanoid(8),
+				bones: [],
+				assets: [],
 			};
 
 			await this._accounts.updateOne({ id }, { $push: { characters: info } });
 			await this._characters.insertOne(char);
 
-			return ({ info, char: Id(char) });
+			return info;
 		});
 	}
 

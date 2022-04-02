@@ -90,7 +90,7 @@ export class MockDatabase implements PandoraDatabase {
 		}
 		acc.id = this._nextAccountId++;
 		this.accountDb.add(acc);
-		return Promise.resolve(acc);
+		return Promise.resolve(_.cloneDeep(acc));
 	}
 
 	public setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void> {
@@ -102,7 +102,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve();
 	}
 
-	public createCharacter(accountId: number): Promise<{ info: ICharacterSelfInfoDb, char: ICharacterData; }> {
+	public createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.reject(new Error('Account not found'));
@@ -114,18 +114,20 @@ export class MockDatabase implements PandoraDatabase {
 			name: '',
 			preview: '',
 		};
-		const char = {
+		const char: ICharacterData = {
 			inCreation: true as const,
 			id: charId,
 			accountId: acc.id,
 			name: info.name,
 			created: -1,
 			accessId: nanoid(8),
+			bones: [],
+			assets: [],
 		};
 
 		acc.characters.push(info);
 		this.characterDb.set(char.id, char);
-		return Promise.resolve({ info, char });
+		return Promise.resolve(info);
 	}
 
 	public finalizeCharacter(accountId: number): Promise<ICharacterData | null> {

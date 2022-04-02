@@ -42,7 +42,7 @@ export interface PandoraDatabase {
 	 * @param accountId - Id of account to create character for
 	 * @param data - Character data
 	 */
-	createCharacter(accountId: number): Promise<{ info: ICharacterSelfInfoDb, char: ICharacterData; }>;
+	createCharacter(accountId: number): Promise<ICharacterSelfInfoDb>;
 
 	/**
 	 * Finish the character creation process

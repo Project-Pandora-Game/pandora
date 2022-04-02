@@ -2,88 +2,77 @@ import { IShardDirectoryMessageHandler, IShardDirectoryBase, MessageHandler, ISh
 import { Shard as Validation } from 'pandora-common/dist/networking/validation/directory';
 import type { IConnectionShard } from './common';
 import { GetDatabase } from '../database/databaseProvider';
-import { accountManager } from '../account/accountManager';
+import { ShardManager } from '../shard/shardManager';
 
-export default new class ConnectionManagerShard {
-	private readonly _shards: Map<string, IConnectionShard> = new Map();
+export const ConnectionManagerShard = new class ConnectionManagerShard {
 	readonly messageHandler: IShardDirectoryMessageHandler<IConnectionShard>;
 
 	constructor() {
 		this.messageHandler = new MessageHandler<IShardDirectoryBase, IConnectionShard>({
 			getCharacter: this.handleGetCharacter.bind(this),
 			setCharacter: this.handleSetCharacter.bind(this),
-			sendInfo: this.handleSendInfo.bind(this),
+			shardRegister: this.handleShardRegister.bind(this),
 			createCharacter: this.createCharacter.bind(this),
 		}, {
 			characterDisconnected: this.handleCharacterDisconnected.bind(this),
 		});
 	}
 
-	public getShard(id: string): IConnectionShard | null {
-		return this._shards.get(id) || null;
+	public onDisconnect(connection: IConnectionShard): void {
+		const shard = connection.shard;
+		if (shard) {
+			shard.setConnection(null);
+		}
 	}
 
-	public getRandomShard(): IConnectionShard | null {
-		if (this._shards.size === 0)
-			return null;
-
-		const shards = [...this._shards.values()];
-		return shards[Math.floor(Math.random() * shards.length)];
-	}
-
-	public onDisconnect(shard: IConnectionShard): void {
-		this._shards.delete(shard.id);
-	}
-
-	private async handleSendInfo(args: IShardDirectoryUnconfirmedArgument['sendInfo'], shard: IConnectionShard): IShardDirectoryPromiseResult['sendInfo'] {
-		if (!Validation.sendInfo(args))
+	private async handleShardRegister(args: IShardDirectoryUnconfirmedArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRegister'] {
+		if (!Validation.shardRegister(args) || connection.shard)
 			throw new BadMessageError();
 
-		const known = this._shards.has(shard.id);
+		const shard = ShardManager.getOrCreateShard(args.shardId);
 
-		const { invalidate } = await shard.updateInfo(args, !known);
-		this._shards.set(shard.id, shard);
+		const result = shard.registered ? shard.handleReconnect(args, connection) : await shard.register(args, connection);
 
-		return ({
-			shardId: shard.id,
-			invalidate,
-		});
+		return result;
 	}
 
-	private handleCharacterDisconnected({ id }: IShardDirectoryUnconfirmedArgument['characterDisconnected'], shard: IConnectionShard): IShardDirectoryPromiseResult['characterDisconnected'] {
-		if (!IsCharacterId(id) || !shard.characters.has(id))
+	private handleCharacterDisconnected({ id }: IShardDirectoryUnconfirmedArgument['characterDisconnected'], connection: IConnectionShard): IShardDirectoryPromiseResult['characterDisconnected'] {
+		const shard = connection.shard;
+		if (!IsCharacterId(id) || !shard || !shard.characters.has(id))
 			throw new BadMessageError();
 
-		shard.removeCharacter(id);
+		shard.disconnectCharacter(id, false);
 
 		return Promise.resolve();
 	}
 
-	private async createCharacter({ id }: IShardDirectoryUnconfirmedArgument['createCharacter'], shard: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {
-		const accountId = IsCharacterId(id) && shard.characters.get(id);
-		if (!accountId)
+	private async createCharacter({ id }: IShardDirectoryUnconfirmedArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {
+		const shard = connection.shard;
+		if (!IsCharacterId(id) || !shard)
 			throw new BadMessageError();
 
-		const account = await accountManager.loadAccountById(accountId);
-		if (!account)
+		const character = shard.characters.get(id);
+		if (!character)
 			throw new BadMessageError();
 
-		const char = await account.finishCharacterCreation(id);
+		const char = await character.account.finishCharacterCreation(id);
 		if (!char)
 			throw new BadMessageError();
 
 		return char;
 	}
 
-	private async handleGetCharacter({ id, accessId }: IShardDirectoryUnconfirmedArgument['getCharacter'], shard: IConnectionShard): IShardDirectoryPromiseResult['getCharacter'] {
-		if (!IsCharacterId(id) || !IsString(accessId) || !shard.characters.has(id))
+	private async handleGetCharacter({ id, accessId }: IShardDirectoryUnconfirmedArgument['getCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['getCharacter'] {
+		const shard = connection.shard;
+		if (!IsCharacterId(id) || !IsString(accessId) || !shard || !shard.characters.has(id))
 			throw new BadMessageError();
 
 		return await GetDatabase().getCharacter(id, accessId) as IShardDirectoryNormalResult['getCharacter'];
 	}
 
-	private async handleSetCharacter(args: IShardDirectoryUnconfirmedArgument['setCharacter'], shard: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
-		if (!Validation.setCharacter(args) || CheckSetCharacterKeys(args) || !shard.characters.has(args.id))
+	private async handleSetCharacter(args: IShardDirectoryUnconfirmedArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
+		const shard = connection.shard;
+		if (!Validation.setCharacter(args) || CheckSetCharacterKeys(args) || !shard || !shard.characters.has(args.id))
 			throw new BadMessageError();
 
 		if (Object.keys(args).length > 2 && !await GetDatabase().setCharacter(args))

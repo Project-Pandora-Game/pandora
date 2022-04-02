@@ -1,8 +1,9 @@
-import { IDirectoryClientBase, GetLogger } from 'pandora-common';
+import { IDirectoryClientBase, GetLogger, IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import type { Socket } from 'socket.io';
 import type { Account } from '../account/account';
+import type { Character } from '../account/character';
 import { ConnectionType, IConnectionClient } from './common';
-import ConnectionManagerClient from './manager_client';
+import { ConnectionManagerClient } from './manager_client';
 import { SocketIOConnection } from './socketio_common_connection';
 
 /** Class housing connection from a client */
@@ -13,6 +14,12 @@ export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClien
 	private _account: Account | null = null;
 	get account(): Account | null {
 		return this._account;
+	}
+
+	/** The current character this connection is using or `null` if none */
+	private _character: Character | null = null;
+	get character(): Character | null {
+		return this._character;
 	}
 
 	get id(): string {
@@ -59,7 +66,43 @@ export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClien
 		}
 	}
 
+	/**
+	 * Set or clear the character this connection is using
+	 * @param character - The character to set or `null` to clear
+	 */
+	public setCharacter(character: Character | null): void {
+		if (this._character?.assignedConnection === this) {
+			this._character.assignedConnection = null;
+			this._character.account.touch();
+		}
+		this._character = character;
+		if (character) {
+			character.assignedConnection?.setCharacter(null);
+			character.assignedConnection = this;
+			character.account.touch();
+		}
+	}
+
 	public override awaitResponse(_messageType: unknown, _message: unknown, _timeout?: unknown): Promise<never> {
 		throw new Error('Invalid operation');
 	}
+
+	public sendConnectionStateUpdate(): void {
+		this.sendMessage('connectionState', {
+			account: this.account ? this.account.getAccountInfo() : null,
+			character: this.character ? GetCharacterConnectionInfo(this.character) : null,
+		});
+	}
+}
+
+/** Build shard part of `connectionState` update message for connection */
+function GetCharacterConnectionInfo(character: Character): IDirectoryCharacterConnectionInfo | null {
+	const shard = character.assignedShard;
+	if (!shard)
+		return null;
+	return {
+		...shard.getInfo(),
+		characterId: character.id,
+		secret: character.connectSecret,
+	};
 }

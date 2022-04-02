@@ -1,9 +1,11 @@
 import type { CharacterId, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from 'pandora-common/dist/character';
 import { GetDatabase } from '../database/databaseProvider';
-import type { IConnectionClient, IConnectionShard } from '../networking/common';
+import type { IConnectionClient } from '../networking/common';
+import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL } from '../config';
 
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
+import { IDirectoryAccountInfo } from 'pandora-common';
 
 /** Currently logged in or recently used account */
 export class Account {
@@ -14,7 +16,7 @@ export class Account {
 	/** List of connections logged in as this account */
 	public associatedConnections: Set<IConnectionClient> = new Set();
 
-	public characterConnections: Map<CharacterId, IConnectionShard> = new Map();
+	readonly characters: Map<CharacterId, Character> = new Map();
 
 	public readonly secure: AccountSecure;
 
@@ -38,7 +40,16 @@ export class Account {
 	}
 
 	public isInUse(): boolean {
-		return this.associatedConnections.size > 0 || this.characterConnections.size > 0;
+		return this.associatedConnections.size > 0 || Array.from(this.characters.values()).some((c) => c.isInUse());
+	}
+
+	/** Build account part of `connectionState` update message for connection */
+	public getAccountInfo(): IDirectoryAccountInfo {
+		return {
+			id: this.data.id,
+			username: this.data.username,
+			created: this.data.created,
+		};
 	}
 
 	//#region Character
@@ -50,21 +61,16 @@ export class Account {
 		}));
 	}
 
-	public async generateAccessId(id: CharacterId): Promise<string | null> {
-		if (!this.data.characters.some((info) => info.id === id))
-			return null;
-
-		return await GetDatabase().setCharacterAccess(id);
-	}
-
-	public async createCharacter(): Promise<ICharacterData | null> {
+	public async createCharacter(): Promise<Character | null> {
 		if (this.data.characters.length > CHARACTER_LIMIT_NORMAL || this.data.characters.some((i) => i.inCreation))
 			return null;
 
-		const { info, char } = await GetDatabase().createCharacter(this.data.id);
+		const info = await GetDatabase().createCharacter(this.data.id);
 		this.data.characters.push(info);
+		const character = new Character(info, this);
+		this.characters.set(info.id, character);
 
-		return char;
+		return character;
 	}
 
 	public async finishCharacterCreation(id: CharacterId): Promise<ICharacterData | null> {
@@ -100,35 +106,33 @@ export class Account {
 	}
 
 	public async deleteCharacter(id: CharacterId): Promise<boolean> {
-		if (this.characterConnections.has(id))
+		const character = this.characters.get(id);
+		if (!character || character.isInUse())
 			return false;
 
-		this.data.characters = this.data.characters.filter((char) => char.id !== id);
+		this.data.characters.splice(character.accountCharacterIndex, 1);
+		this.characters.delete(id);
 		await GetDatabase().deleteCharacter(this.data.id, id);
 
 		return true;
 	}
 
 	public hasCharacter(id: CharacterId, checkNotConnected?: true): boolean {
-		if (checkNotConnected && this.characterConnections.has(id))
-			return false;
+		const character = this.characters.get(id);
 
-		return this.data.characters.some((char) => char.id === id);
-	}
-
-	public disconnectCharacter(id: CharacterId): void {
-		this.characterConnections.delete(id);
-		this.touch();
-	}
-
-	public connectCharacter(id: CharacterId, shard: IConnectionShard): void {
-		this.characterConnections.set(id, shard);
-		this.touch();
+		return character != null && (!checkNotConnected || !character.isInUse());
 	}
 
 	private getCharacterInfoState(id: CharacterId): string {
-		if (this.characterConnections.has(id))
+		const character = this.characters.get(id);
+		if (!character)
+			return '';
+
+		if (character.isInUse())
 			return 'connected';
+
+		if (this.data.characters[character.accountCharacterIndex].inCreation)
+			return 'inCreation';
 
 		return '';
 	}

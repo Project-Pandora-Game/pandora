@@ -95,6 +95,12 @@ export function CreateMaybeValidator<T>(validator: (value: unknown) => value is 
 	return (value: unknown): value is (T | undefined) => IsUndefined(value) || validator(value);
 }
 
+export type Nullable<T> = T | null;
+export type NonNullable<T> = Exclude<T, null>;
+export function CreateNullableValidator<T>(validator: (value: unknown) => value is T): (value: unknown) => value is Nullable<T> {
+	return (value: unknown): value is Nullable<T> => value === null || validator(value);
+}
+
 export const IsString = CreateStringValidator();
 
 export const IsNumber = (value: unknown): value is number => typeof value === 'number';

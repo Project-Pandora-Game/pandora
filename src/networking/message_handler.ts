@@ -57,6 +57,7 @@ export class MessageHandler<T, Context = void> implements IMessageHandler<Contex
 	}
 }
 
+export const MESSAGE_HANDLER_DEBUG_ALL: boolean = false;
 export const MESSAGE_HANDLER_DEBUG_MESSAGES = new Set<string>();
 
 export function CreateMessageHandlerOnAny(
@@ -76,7 +77,7 @@ export function CreateMessageHandlerOnAny(
 			logger.error(`Message '${messageType}' callback is not a function: ${typeof callback}`);
 			return;
 		}
-		if (MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
+		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 			logger.debug(`\u25BC message '${messageType}'${callback ? ' with callback' : ''}`, message);
 			if (callback) {
 				const outerCallback = callback;

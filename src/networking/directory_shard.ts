@@ -2,15 +2,18 @@ import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceU
 import type { CharacterId } from '../character';
 import type { MessageHandler } from './message_handler';
 
+export type IShardCharacterDefinition = {
+	id: CharacterId;
+	account: number;
+	accessId: string;
+	connectSecret: string;
+};
+
 /** Directory->Shard handlers */
 interface DirectoryShard {
-	prepareClient: (arg: {
-		characterId: CharacterId;
-		connectionSecret: string;
-		accessId: string;
-	}) => {
-		result: 'accepted' | 'rejected';
-	};
+	prepareCharacters(arg: {
+		characters: IShardCharacterDefinition[];
+	}): void;
 }
 
 export type IDirectoryShard = SocketInterface<DirectoryShard>;

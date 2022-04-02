@@ -1,3 +1,4 @@
+import { MESSAGE_HANDLER_DEBUG_MESSAGES } from '../../src';
 import { GetLogger, LogLevel } from '../../src/logging';
 import { Connection, ConnectionBase } from '../../src/networking/connection';
 
@@ -18,6 +19,7 @@ const mockEmitterCB = {
 const mockLogMessage = jest.fn((_level: LogLevel, _message: unknown[]) => {/**nothing */ });
 const mockLogger = GetLogger('mock');
 mockLogger.logMessage = mockLogMessage;
+MESSAGE_HANDLER_DEBUG_MESSAGES.add('debuggedType');
 
 describe('ConnectionBase', () => {
 	const mock = new ConnectionBase(mockEmitter, mockLogger);
@@ -35,8 +37,8 @@ describe('ConnectionBase', () => {
 			expect(emit[0][1]).toBe('message');
 		});
 
-		it('should debug each message', () => {
-			mock.sendMessage('type' as never, 'message' as never);
+		it('should debug messages in debug set', () => {
+			mock.sendMessage('debuggedType' as never, 'message' as never);
 			const msg = mockLogMessage.mock.calls;
 			expect(msg.length).toBe(1);
 			expect(msg[0][0]).toBe(LogLevel.DEBUG);
@@ -62,8 +64,8 @@ describe('Connection', () => {
 			expect(mockTimeout.mock.calls.length).toBe(1);
 		});
 
-		it('should debug each message', () => {
-			void mock.awaitResponse('type' as never, 'message' as never, 1 as never);
+		it('should debug messages in debug set', () => {
+			void mock.awaitResponse('debuggedType' as never, 'message' as never, 1 as never);
 			expect(mockLogMessage.mock.calls.length).toBe(1);
 		});
 	});

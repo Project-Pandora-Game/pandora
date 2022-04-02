@@ -3,6 +3,7 @@ import { DEFAULT_ACK_TIMEOUT } from './config';
 import type { Logger } from '../logging';
 import type { BoolSelect, MembersFirstArg } from '../utility';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotHandler, SocketInterfaceResponseHandler } from './helpers';
+import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './message_handler';
 
 interface Emitter {
 	emit(event: string, arg: unknown): void;
@@ -47,7 +48,9 @@ export class ConnectionBase<EmitterT extends Emitter, T extends SocketInterfaceD
 		this.logger = logger;
 	}
 	sendMessage<K extends keyof SocketInterfaceOneshotHandler<T> & string>(messageType: K, message: MembersFirstArg<T>[K]): void {
-		this.logger.debug(`\u25B2 message '${messageType}':`, message);
+		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
+			this.logger.debug(`\u25B2 message '${messageType}':`, message);
+		}
 		this.socket.emit(messageType as string, message);
 	}
 }
@@ -61,14 +64,22 @@ export class Connection<EmitterT extends EmitterWithAck, T extends SocketInterfa
 		message: MembersFirstArg<T>[K],
 		timeout: number = DEFAULT_ACK_TIMEOUT,
 	): Promise<BoolSelect<Undetermined, Partial<Record<keyof ReturnType<T[K]>, unknown>>, ReturnType<T[K]>>> {
-		this.logger.debug(`\u25B2 message '${messageType}':`, message);
+		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
+			this.logger.debug(`\u25B2 message '${messageType}':`, message);
+		}
 		return new Promise((resolve, reject) => {
 			this.socket.timeout(timeout).emit(messageType, message, (error: unknown, response: unknown) => {
 				if (error != null) {
+					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
+						this.logger.warning(`\u25BC message '${messageType}' error:`, error);
+					}
 					reject(error);
 				} else if (!IsObject(response)) {
 					reject(new Error(`Invalid response type: ${typeof response}`));
 				} else {
+					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
+						this.logger.debug(`\u25BC message '${messageType}' response:`, response);
+					}
 					resolve(response as BoolSelect<Undetermined, Partial<Record<keyof ReturnType<T[K]>, unknown>>, ReturnType<T[K]>>);
 				}
 			});

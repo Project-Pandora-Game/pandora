@@ -1,25 +1,25 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import type { IDirectoryAccountInfo } from './directory_client';
-import type { ShardFeature } from './shard_directory';
+import type { IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo } from './directory_client';
 import type { MessageHandler } from './message_handler';
 import type { IEmpty } from './empty';
 import type { CharacterId, ICharacterDataId, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from '../character';
 
-export type ShardInfo = {
-	id: string;
-	publicURL: string;
-	features: ShardFeature[];
-	version: string;
-	secret: string;
-};
+type ShardError = 'noShardFound' | 'failed';
 
-type ShardError = 'noShardFound';
-
-type ShardConnection<T = ShardError, Extra = IEmpty> = {
+type ShardConnection<T = ShardError> = {
 	result: T;
 } | ({
 	result: 'ok';
-} & ShardInfo & Extra);
+} & IDirectoryCharacterConnectionInfo);
+
+export type IClientDirectoryAuthMessage = {
+	username: string;
+	token: string;
+	character: null | {
+		id: CharacterId;
+		secret: string;
+	};
+};
 
 /** Client->Directory handlers */
 interface ClientDirectory {
@@ -53,7 +53,7 @@ interface ClientDirectory {
 		characters: ICharacterSelfInfo[];
 		limit: number;
 	};
-	createCharacter(_: IEmpty): ShardConnection<ShardError | 'maxCharactersReached', { characterId: CharacterId; }>;
+	createCharacter(_: IEmpty): ShardConnection<ShardError | 'maxCharactersReached'>;
 	updateCharacter(arg: ICharacterSelfInfoUpdate): ICharacterSelfInfo;
 	deleteCharacter(arg: ICharacterDataId): { result: 'ok' | 'characterInUse'; };
 	connectCharacter(arg: ICharacterDataId): ShardConnection;

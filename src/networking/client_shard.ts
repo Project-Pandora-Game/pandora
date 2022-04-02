@@ -7,7 +7,7 @@ import type { ICharacterDataCreate } from '../character';
 interface ClientShard {
 	disconnectCharacter: (_: IEmpty) => void;
 
-	finishCharacterCreation: (args: ICharacterDataCreate) => void;
+	finishCharacterCreation: (args: ICharacterDataCreate) => { result: 'ok' | 'failed'; };
 }
 
 export type IClientShard = SocketInterface<ClientShard>;

@@ -1,5 +1,7 @@
+import type { CharacterId } from '../character';
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
+import type { ShardFeature } from './shard_directory';
 
 export type IDirectoryAccountInfo = {
 	id: number;
@@ -7,10 +9,23 @@ export type IDirectoryAccountInfo = {
 	created: number;
 };
 
+export type IDirectoryShardInfo = {
+	id: string;
+	publicURL: string;
+	features: ShardFeature[];
+	version: string;
+};
+
+export type IDirectoryCharacterConnectionInfo = {
+	characterId: CharacterId;
+	secret: string;
+} & IDirectoryShardInfo;
+
 /** Directory->Client handlers */
 interface DirectoryClient {
 	connectionState(arg: {
-		account?: IDirectoryAccountInfo,
+		account: IDirectoryAccountInfo | null,
+		character: IDirectoryCharacterConnectionInfo | null,
 	}): void;
 }
 

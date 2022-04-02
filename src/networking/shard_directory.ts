@@ -1,23 +1,22 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterDataId, ICharacterDataUpdate } from '../character';
+import type { ICharacterData, ICharacterDataAccess, ICharacterDataId, ICharacterDataUpdate } from '../character';
+import { IShardCharacterDefinition } from './directory_shard';
 
 export type ShardFeature = 'development';
 
 /** Shard->Directory handlers */
 interface ShardDirectory {
-	sendInfo: (args: {
+	shardRegister: (args: {
+		/** ID of the shard when re-connecting, null if new connection */
+		shardId: string | null;
 		publicURL: string;
 		features: ShardFeature[];
 		version: string;
-		characters: {
-			accountId: number;
-			characterId: CharacterId;
-			accessId: string;
-		}[];
+		characters: IShardCharacterDefinition[];
 	}) => {
 		shardId: string;
-		invalidate: CharacterId[];
+		characters: IShardCharacterDefinition[];
 	};
 	characterDisconnected: (args: ICharacterDataId) => void;
 

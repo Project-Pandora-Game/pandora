@@ -1,11 +1,13 @@
 import type { PointDefinition, LayerDefinition, LayerPriority, LayerImageOverride } from 'pandora-common/dist/character/asset/definition';
-import { ObservableSet } from '../../../observable';
+import { observable, ObservableClass } from '../../../observable';
 
 export const AllLayers: ObservableLayer[] = [];
 
-export class ObservableLayer extends ObservableSet<{ points: PointDefinition[]; selected: boolean }> implements LayerDefinition {
+export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]; selected: boolean; }> implements LayerDefinition {
 	private readonly _layer: LayerDefinition;
-	private _selected: boolean = false;
+
+	@observable()
+	public selected: boolean = false;
 
 	constructor(layer: LayerDefinition) {
 		super();
@@ -14,7 +16,7 @@ export class ObservableLayer extends ObservableSet<{ points: PointDefinition[]; 
 	}
 
 	dispatchPointUpdate() {
-		this.dispatch('points', this._layer.points);
+		this.emit('points', this._layer.points);
 	}
 
 	get image(): string {
@@ -28,15 +30,5 @@ export class ObservableLayer extends ObservableSet<{ points: PointDefinition[]; 
 	}
 	get imageOverrides(): LayerImageOverride[] {
 		return this._layer.imageOverrides;
-	}
-
-	get selected(): boolean {
-		return this._selected;
-	}
-	set selected(value: boolean) {
-		if (this._selected !== value) {
-			this._selected = value;
-			this.dispatch('selected', value);
-		}
 	}
 }

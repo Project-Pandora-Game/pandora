@@ -67,7 +67,7 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 
-		this.playerListenerCleanup = Player.subscribe('load', () => {
+		this.playerListenerCleanup = Player.on('load', () => {
 			if (this._state === ShardConnectionState.WAIT_FOR_DATA) {
 				this.setState(ShardConnectionState.CONNECTED);
 				if (this.loadResolver) {

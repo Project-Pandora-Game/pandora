@@ -9,10 +9,10 @@ export abstract class EditorLayer extends GraphicsLayer {
 	protected constructor(props: GraphicsLayerProps) {
 		super(props);
 		this.observableLayer = props.layer as ObservableLayer;
-		this.observableLayer.subscribe('points', this._pointUpdate.bind(this));
+		this.observableLayer.on('points', this._pointUpdate.bind(this));
 		this.editorCharacter = props.character as EditorCharacter;
 
-		this.observableLayer.subscribe('selected', (selected: boolean) => this.show(selected));
+		this.observableLayer.on('selected', (selected: boolean) => this.show(selected));
 		if (this.observableLayer.selected) {
 			this.show(true);
 		}

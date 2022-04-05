@@ -1,8 +1,8 @@
 import { Application, Container, Sprite, Texture } from 'pixi.js';
 import { useRef, useEffect } from 'react';
-import { ObservableSet } from '../observable';
+import { TypedEventEmitter } from '../event';
 
-export class GraphicsScene extends ObservableSet<{ resize: void; }> {
+export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	private readonly _app: Application;
 	private readonly _container: Container;
 
@@ -38,7 +38,7 @@ export class GraphicsScene extends ObservableSet<{ resize: void; }> {
 
 	resize(): void {
 		this._app.resize();
-		this.dispatch('resize', undefined);
+		this.emit('resize', undefined);
 	}
 
 	add<T extends Container>(container: T, zIndex: number = 0): T {

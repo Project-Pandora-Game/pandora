@@ -105,7 +105,7 @@ function Preview({ preview }: { preview?: string }): ReactElement | null {
 
 async function ConnectToCharacter(navigate: NavigateFunction, id?: CharacterId): Promise<boolean> {
 	let connected = false;
-	const cleanup = Player.subscribe('load', () => {
+	const cleanup = Player.on('load', () => {
 		if (Player.data.inCreation) {
 			navigate('/character_create');
 		} else {

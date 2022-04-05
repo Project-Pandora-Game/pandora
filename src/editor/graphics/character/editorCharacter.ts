@@ -20,14 +20,14 @@ export class EditorCharacter extends GraphicsCharacter {
 			this.boneLayer.visible = show;
 		}));
 		this.observableBones.forEach((bone) => {
-			bone.subscribeAll(() => {
+			bone.onAny(() => {
 				this.layerUpdate(new Set([bone.name]));
 			});
 		});
 		const onresize = () => this.onWindowResize();
 		window.addEventListener('resize', onresize);
 		cleanup.push(() => window.removeEventListener('resize', onresize));
-		cleanup.push(editor.subscribe('resize', onresize));
+		cleanup.push(editor.on('resize', onresize));
 		this.on('destroy', () => cleanup.forEach((c) => c()));
 	}
 

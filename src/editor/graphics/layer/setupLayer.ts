@@ -93,7 +93,7 @@ export class SetupLayer extends EditorLayer {
 
 		const dots = this.layer.points.map(createDraggable);
 
-		const cleanup = this.observableLayer.subscribe('points', (points) => {
+		const cleanup = this.observableLayer.on('points', (points) => {
 			if (points.length < dots.length) {
 				for (let i = dots.length - 1; i >= points.length; i--) {
 					container.removeChild(dots[i]);

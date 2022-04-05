@@ -24,7 +24,7 @@ export class GraphicsCharacter extends Container {
 		this.sortableChildren = true;
 		this._character = character;
 
-		const cleanup = this._character.subscribe('update', (data) => this.update(data));
+		const cleanup = this._character.on('update', (data) => this.update(data));
 		this.on('destroy', () => cleanup);
 
 		this.update(this._character.data);

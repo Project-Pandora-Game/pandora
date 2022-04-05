@@ -1,7 +1,7 @@
 import type { ICharacterData } from 'pandora-common';
-import { ObservableSet } from '../observable';
+import { TypedEventEmitter } from '../event';
 
-export class Character extends ObservableSet<CharacterEvents> {
+export class Character extends TypedEventEmitter<CharacterEvents> {
 	private _data!: ICharacterData;
 	public get data(): Readonly<ICharacterData> {
 		return this._data;
@@ -9,12 +9,12 @@ export class Character extends ObservableSet<CharacterEvents> {
 
 	public load(data: ICharacterData): void {
 		this._data = { ...data };
-		this.dispatch('load', data);
+		this.emit('load', data);
 	}
 
 	public update(data: Partial<ICharacterData>): void {
 		this._data = { ...this._data, ...data };
-		this.dispatch('update', data);
+		this.emit('update', data);
 	}
 }
 

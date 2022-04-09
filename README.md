@@ -57,6 +57,25 @@ export function IconComponent(): ReactElement {
 When using JSX (inline HTML) syntax inside a file (i.e. React components), the file should be given a `.tsx` extension.
 Elsewhere, `.ts` extensions are sufficient.
 
+### Testing
+The repository uses [Jest][jest] with [Babel][babel] to run tests on `Typescript` & `React`.
+To run the tests:
+```
+yarn test
+```
+To run test on file changes (good for test-first TTD):
+```
+yarn test:watch
+```
+To generate code coverage report in `./coverage`:
+```
+yarn test:coverage
+```
+Conventions:
+- Testfiles are located in `./test`; located to mirror `.src`.
+- Named as `###.test.ts` depending on file to test.
+- Unit tests should be concise and focused.
+
 ### Linting
 
 The repository uses [ESLint][eslint] for linting.
@@ -72,7 +91,6 @@ To run ESLint over the repository and automatically fix linting errors (where po
 ```
 yarn lint:fix
 ```
-
 ## License
 
 All code in this repository is licensed under [GPL v3](LICENSE) or later.
@@ -94,3 +112,5 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 [node]: https://nodejs.org/en/ "Node.js website"
 [eslint]: https://eslint.org/ "ESLint website"
+[jest]: https://jestjs.io/ "Jest website"
+[babel]: https://babeljs.io/ "Babel website"

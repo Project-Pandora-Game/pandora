@@ -8,4 +8,5 @@ module.exports = {
 	coverageDirectory: 'coverage',
 	coverageProvider: 'babel',
 	errorOnDeprecated: true,
+	testEnvironment: 'jsdom',
 };

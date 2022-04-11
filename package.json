@@ -23,6 +23,7 @@
 		"@babel/preset-env": "^7.16.11",
 		"@babel/preset-react": "^7.16.7",
 		"@babel/preset-typescript": "^7.16.7",
+		"@testing-library/react-hooks": "^7.0.2",
 		"@travellocal/babel-plugin-declare-const-enum": "^0.0.4",
 		"@types/delaunator": "^5.0.0",
 		"@types/jest": "^27.4.0",

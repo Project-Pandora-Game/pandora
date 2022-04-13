@@ -178,6 +178,7 @@
 		"eol-last": "warn",
 		"func-call-spacing": "warn",
 		"key-spacing": "warn",
+		"@typescript-eslint/type-annotation-spacing": "warn",
 		"keyword-spacing": "off",
 		"@typescript-eslint/keyword-spacing": "warn",
 		"linebreak-style": ["warn", "unix"],

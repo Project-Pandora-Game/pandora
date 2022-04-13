@@ -24,7 +24,8 @@
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
 		"prepack": "yarn run build",
-		"install": "yarn run build"
+		"install": "yarn run build",
+		"postinstall": "node scripts/postinstall.js"
 	},
 	"dependencies": {
 		"@types/node": "^17.0.12",

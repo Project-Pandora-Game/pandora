@@ -148,7 +148,8 @@
 		"@typescript-eslint/comma-dangle": ["warn", "always-multiline"],
 		"no-trailing-spaces": "warn",
 		"quotes": "off",
-		"@typescript-eslint/quotes": ["warn", "single"],
+		"@typescript-eslint/quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],
+		"jsx-quotes": ["warn", "prefer-single"],
 		"@typescript-eslint/array-type": ["warn"],
 		"@typescript-eslint/consistent-type-assertions": [
 			"warn",
@@ -177,6 +178,7 @@
 		"eol-last": "warn",
 		"func-call-spacing": "warn",
 		"key-spacing": "warn",
+		"@typescript-eslint/type-annotation-spacing": "warn",
 		"keyword-spacing": "off",
 		"@typescript-eslint/keyword-spacing": "warn",
 		"linebreak-style": ["warn", "unix"],

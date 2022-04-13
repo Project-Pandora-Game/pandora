@@ -13,7 +13,8 @@
 		"type-check:src": "tsc -p ./tsconfig.src.json --noEmit",
 		"test": "jest",
 		"test:coverage": "jest --coverage",
-		"test:watch": "jest --watch"
+		"test:watch": "jest --watch",
+		"postinstall": "node scripts/postinstall.js"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.16.10",

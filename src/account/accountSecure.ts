@@ -1,6 +1,6 @@
 import { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } from '../config';
-import { GetDatabase, PandoraDatabase } from '../database/databaseProvider';
-import GetEmailSender, { IEmailSender } from '../services/email';
+import { GetDatabase } from '../database/databaseProvider';
+import GetEmailSender from '../services/email';
 
 import { createHash, randomInt } from 'crypto';
 import { nanoid } from 'nanoid';
@@ -15,13 +15,6 @@ import _ from 'lodash';
 export default class AccountSecure {
 	readonly #account: { id: number, username: string; };
 	readonly #secure: DatabaseAccountSecure;
-
-	private get database(): PandoraDatabase {
-		return GetDatabase();
-	}
-	private get email(): IEmailSender {
-		return GetEmailSender();
-	}
 
 	constructor(account: { id: number, username: string; }, secure: DatabaseAccountSecure) {
 		this.#account = account;
@@ -39,14 +32,14 @@ export default class AccountSecure {
 			return;
 
 		const { value } = await this.#generateToken(AccountTokenReason.ACTIVATION);
-		await this.email.sendRegistrationConfirmation(email, this.#account.username, value);
+		await GetEmailSender().sendRegistrationConfirmation(email, this.#account.username, value);
 	}
 
 	public async activateAccount(token: string): Promise<boolean> {
-		if (this.isActivated() || !this.#validateToken(token, AccountTokenReason.ACTIVATION))
+		if (this.isActivated() || !this.#validateToken(AccountTokenReason.ACTIVATION, token))
 			return false;
 
-		this.#invalidateToken({ reason: AccountTokenReason.ACTIVATION });
+		this.#invalidateToken(AccountTokenReason.ACTIVATION);
 		this.#secure.activated = true;
 
 		await this.#updateDatabase();
@@ -70,7 +63,7 @@ export default class AccountSecure {
 		if (!this.isActivated() || !await this.verifyPassword(passwordOld))
 			return false;
 
-		this.#invalidateToken({ reason: AccountTokenReason.PASSWORD_RESET });
+		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
 
 		await this.#updateDatabase();
@@ -83,16 +76,16 @@ export default class AccountSecure {
 			return false;
 
 		const { value } = await this.#generateToken(AccountTokenReason.PASSWORD_RESET);
-		await this.email.sendPasswordReset(email, this.#account.username, value);
+		await GetEmailSender().sendPasswordReset(email, this.#account.username, value);
 
 		return true;
 	}
 
 	public async finishPasswordReset(token: string, password: string): Promise<boolean> {
-		if (!this.#validateToken(token, AccountTokenReason.PASSWORD_RESET))
+		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, token))
 			return false;
 
-		this.#invalidateToken({ reason: AccountTokenReason.PASSWORD_RESET });
+		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.activated = true;
 		this.#secure.password = await GeneratePasswordHash(password);
 
@@ -106,20 +99,20 @@ export default class AccountSecure {
 	}
 
 	public async invalidateLoginToken(token: string): Promise<void> {
-		const length = this.#secure.tokens;
-		this.#invalidateToken({ value: token, reason: AccountTokenReason.LOGIN });
+		const length = this.#secure.tokens.length;
+		this.#invalidateToken(AccountTokenReason.LOGIN, token);
 
-		if (length !== this.#secure.tokens)
+		if (length !== this.#secure.tokens.length)
 			await this.#updateDatabase();
 	}
 
 	public verifyLoginToken(token: string): boolean {
-		return this.#validateToken(token, AccountTokenReason.LOGIN);
+		return this.#validateToken(AccountTokenReason.LOGIN, token);
 	}
 
 	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {
 		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
-		if (TOKEN_LIMITS[reason] >= this.#secure.tokens.filter((t) => t.reason === reason).length) {
+		if (TOKEN_LIMITS[reason] <= this.#secure.tokens.filter((t) => t.reason === reason).length) {
 			const index = this.#secure.tokens.findIndex((t) => t.reason === reason);
 			if (index !== -1)
 				this.#secure.tokens.splice(index, 1);
@@ -136,22 +129,20 @@ export default class AccountSecure {
 		return token;
 	}
 
-	#validateToken(tokenSecret: string, reason: AccountTokenReason): boolean {
+	#validateToken(reason: AccountTokenReason, tokenSecret: string): boolean {
 		const token = this.#secure.tokens.find((t) => t.value === tokenSecret && t.reason === reason);
 		return !!token && token.expires > Date.now();
 	}
 
-	#invalidateToken({ value, reason }: { value?: string; reason?: AccountTokenReason; }): void {
-		if (reason === undefined)
-			this.#secure.tokens = this.#secure.tokens.filter((t) => t.value !== value);
-		else if (value === undefined)
+	#invalidateToken(reason: AccountTokenReason, tokenSecret?: string): void {
+		if (tokenSecret === undefined)
 			this.#secure.tokens = this.#secure.tokens.filter((t) => t.reason !== reason);
 		else
-			this.#secure.tokens = this.#secure.tokens.filter((t) => t.value !== value && t.reason !== reason);
+			this.#secure.tokens = this.#secure.tokens.filter((t) => t.value !== tokenSecret || t.reason !== reason);
 	}
 
 	async #updateDatabase(): Promise<void> {
-		await this.database.setAccountSecure(this.#account.id, _.cloneDeep(this.#secure));
+		await GetDatabase().setAccountSecure(this.#account.id, _.cloneDeep(this.#secure));
 	}
 }
 

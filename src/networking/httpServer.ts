@@ -1,4 +1,4 @@
-import { GetLogger, logConfig } from 'pandora-common/dist/logging';
+import { GetLogger, logConfig } from 'pandora-common';
 import { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT } from '../config';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';

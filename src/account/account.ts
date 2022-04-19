@@ -1,11 +1,9 @@
-import type { CharacterId, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from 'pandora-common/dist/character';
+import type { CharacterId, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { IConnectionClient } from '../networking/common';
 import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL } from '../config';
-
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
-import { IDirectoryAccountInfo } from 'pandora-common';
 
 /** Currently logged in or recently used account */
 export class Account {
@@ -27,6 +25,9 @@ export class Account {
 		const cleanData: DatabaseAccount = { ...data };
 		delete cleanData.secure;
 		this.data = cleanData;
+		for (const characterData of this.data.characters) {
+			this.characters.set(characterData.id, new Character(characterData, this));
+		}
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -70,6 +71,8 @@ export class Account {
 		const character = new Character(info, this);
 		this.characters.set(info.id, character);
 
+		this.onCharacterListChange();
+
 		return character;
 	}
 
@@ -84,6 +87,8 @@ export class Account {
 
 		info.name = char.name;
 		info.inCreation = undefined;
+
+		this.onCharacterListChange();
 
 		return char;
 	}
@@ -114,7 +119,18 @@ export class Account {
 		this.characters.delete(id);
 		await GetDatabase().deleteCharacter(this.data.id, id);
 
+		this.onCharacterListChange();
+
 		return true;
+	}
+
+	public onCharacterListChange(): void {
+		for (const connection of this.associatedConnections.values()) {
+			// Only send updates to connections that can see the list (don't have character selected)
+			if (!connection.character) {
+				connection.sendMessage('somethingChanged', { changes: ['characterList'] });
+			}
+		}
 	}
 
 	public hasCharacter(id: CharacterId, checkNotConnected?: true): boolean {

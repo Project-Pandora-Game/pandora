@@ -1,4 +1,4 @@
-import { IDirectoryClientBase, GetLogger, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import { IDirectoryClientBase, GetLogger } from 'pandora-common';
 import type { Socket } from 'socket.io';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
@@ -77,7 +77,11 @@ export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClien
 		}
 		this._character = character;
 		if (character) {
-			character.assignedConnection?.setCharacter(null);
+			const otherCharacter = character.assignedConnection;
+			if (otherCharacter && otherCharacter !== this) {
+				otherCharacter.setCharacter(null);
+				otherCharacter.sendConnectionStateUpdate();
+			}
 			character.assignedConnection = this;
 			character.account.touch();
 		}
@@ -90,19 +94,7 @@ export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClien
 	public sendConnectionStateUpdate(): void {
 		this.sendMessage('connectionState', {
 			account: this.account ? this.account.getAccountInfo() : null,
-			character: this.character ? GetCharacterConnectionInfo(this.character) : null,
+			character: this.character ? this.character.getShardConnectionInfo() : null,
 		});
 	}
-}
-
-/** Build shard part of `connectionState` update message for connection */
-function GetCharacterConnectionInfo(character: Character): IDirectoryCharacterConnectionInfo | null {
-	const shard = character.assignedShard;
-	if (!shard)
-		return null;
-	return {
-		...shard.getInfo(),
-		characterId: character.id,
-		secret: character.connectSecret,
-	};
 }

@@ -1,5 +1,4 @@
-import { GetLogger } from 'pandora-common/dist/logging';
-import type { CharacterId, ICharacterData, ICharacterSelfInfoUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME, DATABASE_TYPE } from '../config';
 

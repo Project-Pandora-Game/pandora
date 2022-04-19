@@ -1,5 +1,5 @@
 import { GetDatabase } from '../database/databaseProvider';
-import { GetLogger } from 'pandora-common/dist/logging';
+import { GetLogger } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 
 /** Time (in ms) after which manager prunes account without any active connection */

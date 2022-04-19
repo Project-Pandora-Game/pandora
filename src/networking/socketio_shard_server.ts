@@ -1,9 +1,8 @@
 import type { Socket } from 'socket.io';
 import type { IncomingMessage, Server as HttpServer } from 'http';
 import { SHARD_SHARED_SECRET } from '../config';
-import { GetLogger } from 'pandora-common/dist/logging';
+import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH } from 'pandora-common';
 import { SocketIOServer } from './socketio_common_server';
-import { HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH } from 'pandora-common';
 import { SocketIOConnectionShard } from './socketio_shard_connection';
 
 const logger = GetLogger('SIO-Server-Shard');

@@ -1,9 +1,11 @@
 import { nanoid } from 'nanoid';
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardDirectoryNormalResult, IShardCharacterDefinition, IShardDirectoryPromiseResult } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardDirectoryNormalResult, IShardCharacterDefinition, IShardDirectoryPromiseResult, IChatRoomFullInfo, AssertNever, IDirectoryShardArgument } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
+import type { Room } from './room';
+import { ConnectionManagerClient } from '../networking/manager_client';
 
 export class Shard {
 	public readonly id = nanoid();
@@ -21,12 +23,18 @@ export class Shard {
 
 	private logger: Logger;
 
+	public rooms: Set<Room> = new Set();
+
 	constructor() {
 		this.logger = GetLogger('Shard', `[Shard ${this.id}]`);
 	}
 
 	/** Map of character ids to account id */
-	readonly characters: Map<CharacterId, Character> = new Map();
+	private readonly characters: Map<CharacterId, Character> = new Map();
+
+	public getConnectedCharacter(id: CharacterId): Character | undefined {
+		return this.characters.get(id);
+	}
 
 	public handleReconnect(data: IShardDirectoryArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryNormalResult['shardRegister'] {
 		// Invalidate current connection (when shard reconnects quicker than old connection times out)
@@ -36,21 +44,22 @@ export class Shard {
 
 		this.updateInfo(data);
 
-		// Characters from shard are ignored, Directory is source of truth on reconnect
+		// Characters and rooms from shard are ignored, Directory is source of truth on reconnect
 
 		// Remove characters that should be connected but are not anymore
-		for (const id of this.characters.keys()) {
-			if (!data.characters.some((c) => c.id === id)) {
-				this.disconnectCharacter(id, false);
-			}
+		for (const id of data.disconnectCharacters) {
+			this.disconnectCharacter(id);
 		}
 
 		this.setConnection(connection);
 		this.logger.info('Reconnected');
+		ConnectionManagerClient.onShardListChange();
 
 		return {
 			shardId: this.id,
 			characters: this.makeCharacterSetupList(),
+			rooms: this.makeRoomSetupList(),
+			roomLeaveReasons: this.makeRoomLeaveReasons(),
 		};
 	}
 
@@ -60,9 +69,15 @@ export class Shard {
 		}
 
 		this.updateInfo(data);
-		this.setConnection(connection);
+
+		for (const roomData of data.rooms) {
+			ShardManager.createRoom(roomData, this, roomData.id);
+		}
 
 		for (const characterData of data.characters) {
+			// Skip characters that should be disconnected anyway
+			if (data.disconnectCharacters.includes(characterData.id))
+				continue;
 			const account = await accountManager.loadAccountById(characterData.account);
 			const character = account?.characters.get(characterData.id);
 
@@ -70,25 +85,36 @@ export class Shard {
 				character.isInUse() ||
 				(character.accessId && character.accessId !== characterData.accessId)
 			) {
-				this.disconnectCharacter(characterData.id, false);
+				// Do not load in character that loaded elsewhere meanwhile
 				continue;
 			}
 
-			character.assignedShard = this;
+			const room = characterData.room ? ShardManager.getRoom(characterData.room) : undefined;
+
 			character.accessId = characterData.accessId;
-			character.connectSecret = characterData.connectSecret;
-			this.characters.set(character.id, character);
+			this.connectCharacter(character, characterData.connectSecret);
+			room?.addCharacter(character);
+
+			character.assignedConnection?.sendConnectionStateUpdate();
+			character.account.onCharacterListChange();
 
 			this.logger.debug('Added character during registration', character.id);
 		}
 
-		this._registered = true;
+		for (const room of this.rooms.values()) {
+			room.cleanupIfEmpty();
+		}
 
+		this._registered = true;
+		this.setConnection(connection);
 		this.logger.info('Registered');
+		ConnectionManagerClient.onShardListChange();
 
 		return {
 			shardId: this.id,
 			characters: this.makeCharacterSetupList(),
+			rooms: this.makeRoomSetupList(),
+			roomLeaveReasons: this.makeRoomLeaveReasons(),
 		};
 	}
 
@@ -108,6 +134,10 @@ export class Shard {
 			this.shardConnection = connection;
 		} else {
 			this.timeout = setTimeout(this.handleTimeout.bind(this), SHARD_TIMEOUT);
+			if (this.characterListTimeout) {
+				clearTimeout(this.characterListTimeout);
+				this.characterListTimeout = null;
+			}
 		}
 	}
 
@@ -116,22 +146,21 @@ export class Shard {
 	}
 
 	public onDelete(): void {
+		this.setConnection(null);
 		[...this.characters.values()].forEach((character) => {
-			this.disconnectCharacter(character.id, false);
-			character.connectToShard().then(() => {
+			this.disconnectCharacter(character.id);
+			character.connect().then(() => {
 				character.assignedConnection?.sendConnectionStateUpdate();
 			}, (err) => {
 				this.logger.fatal('Error reconnecting character to different shard', err);
 			});
 		});
-		this.updateCharacterList();
-		if (this.shardConnection) {
-			// TODO
-			// this.shardConnection.disconnect();
-			this.shardConnection.shard = null;
-			this.shardConnection = null;
+		if (this.timeout !== null) {
+			clearTimeout(this.timeout);
+			this.timeout = null;
 		}
 		this.logger.info('Deleted');
+		ConnectionManagerClient.onShardListChange();
 	}
 
 	public updateInfo(info: IShardDirectoryArgument['shardRegister']): void {
@@ -149,20 +178,23 @@ export class Shard {
 		});
 	}
 
-	public connectCharacter(character: Character): string {
-		if (character.assignedShard !== null) {
+	public connectCharacter(character: Character, connectSecret?: string): void {
+		if (character.assignedShard !== null && character.assignedShard !== this) {
 			throw new Error('Character already in use');
 		}
 
-		character.assignedShard = this;
-		const secret = character.generateConnectSecret();
-
 		this.characters.set(character.id, character);
+		character.assignedShard = this;
+		if (connectSecret) {
+			character.connectSecret = connectSecret;
+		} else {
+			character.generateConnectSecret();
+		}
 		this.updateCharacterList();
 
-		this.logger.debug('Connected character', character.id);
+		character.account.onCharacterListChange();
 
-		return secret;
+		this.logger.debug('Connected character', character.id);
 	}
 
 	/**
@@ -170,30 +202,41 @@ export class Shard {
 	 * @param id - Id of the character to disconnect
 	 * @param push - If changes should be pushed to the shard
 	 */
-	public disconnectCharacter(id: CharacterId, push: boolean = true): void {
+	public disconnectCharacter(id: CharacterId): void {
 		const character = this.characters.get(id);
 		if (!character)
 			return;
+		if (character.assignedShard !== this) {
+			AssertNever();
+		}
+
+		if (character.room?.shard === this) {
+			character.room.removeCharacter(character, 'disconnect');
+		}
 
 		this.characters.delete(id);
-		if (push) {
-			this.updateCharacterList();
-		}
+		character.assignedShard = null;
+		this.updateCharacterList();
 
-		if (character.assignedShard === this) {
-			character.assignedShard = null;
-		}
+		character.account.onCharacterListChange();
 
 		this.logger.debug('Disconnected character', character.id);
 	}
 
-	private updateCharacterList(): void {
-		if (!this.shardConnection)
+	private characterListTimeout: NodeJS.Timeout | null = null;
+
+	public updateCharacterList(): void {
+		if (!this.shardConnection || this.characterListTimeout != null)
 			return;
 
-		this.shardConnection.sendMessage('prepareCharacters', {
-			characters: this.makeCharacterSetupList(),
-		});
+		this.characterListTimeout = setTimeout(() => {
+			this.characterListTimeout = null;
+			this.shardConnection?.sendMessage('prepareCharacters', {
+				characters: this.makeCharacterSetupList(),
+				rooms: this.makeRoomSetupList(),
+				roomLeaveReasons: this.makeRoomLeaveReasons(),
+			});
+		}, 100).unref();
 	}
 
 	private makeCharacterSetupList(): IShardCharacterDefinition[] {
@@ -204,7 +247,20 @@ export class Shard {
 				account: character.account.data.id,
 				accessId: character.accessId,
 				connectSecret: character.connectSecret,
+				room: character.room ? character.room.id : null,
 			});
+		}
+		return result;
+	}
+
+	private makeRoomSetupList(): IChatRoomFullInfo[] {
+		return Array.from(this.rooms.values()).map((r) => r.getFullInfo());
+	}
+
+	private makeRoomLeaveReasons(): IDirectoryShardArgument['prepareCharacters']['roomLeaveReasons'] {
+		const result: IDirectoryShardArgument['prepareCharacters']['roomLeaveReasons'] = {};
+		for (const room of this.rooms) {
+			result[room.id] = room.getAndClearLeaveReasons();
 		}
 		return result;
 	}

@@ -1,8 +1,6 @@
-import { GetLogger } from 'pandora-common/dist/logging';
-import type { CharacterId, ICharacterData, ICharacterSelfInfoUpdate } from 'pandora-common/dist/character';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, PASSWORD_PREHASH_SALT } from 'pandora-common';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';

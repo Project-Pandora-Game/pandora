@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { LogLevel, SetConsoleOutput } from 'pandora-common/dist/logging';
+import { LogLevel, SetConsoleOutput } from 'pandora-common';
 import { CreateAccountData } from '../../src/account/account';
 import { PandoraDatabase } from '../../src/database/databaseProvider';
 import { PrehashPassword } from '../../src/database/mockDb';

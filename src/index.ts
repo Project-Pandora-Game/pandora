@@ -3,7 +3,7 @@ import { InitAccountManager } from './account/accountManager';
 import { APP_NAME } from './config';
 import { InitDatabase } from './database/databaseProvider';
 import { AddFileOutput } from './logging';
-import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common/dist/logging';
+import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { StartHttpServer } from './networking/httpServer';
 import GetEmailSender from './services/email';
 

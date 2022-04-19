@@ -1,4 +1,4 @@
-import { GetLogger } from 'pandora-common/dist/logging';
+import { GetLogger } from 'pandora-common';
 import { EMAIL_SMTP_CONFIG, EMAIL_SMTP_PASSWORD } from '../../config';
 import type { IEmailSender } from '.';
 

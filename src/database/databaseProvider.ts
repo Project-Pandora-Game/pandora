@@ -1,7 +1,7 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from 'pandora-common/dist/character';
+import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from 'pandora-common';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 

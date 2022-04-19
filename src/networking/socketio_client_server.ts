@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io';
 import type { Server as HttpServer } from 'http';
-import { GetLogger } from 'pandora-common/dist/logging';
+import { GetLogger } from 'pandora-common';
 import { SocketIOServer } from './socketio_common_server';
 import { SocketIOConnectionClient } from './socketio_client_connection';
 

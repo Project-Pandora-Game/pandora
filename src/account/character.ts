@@ -5,6 +5,7 @@ import { Shard } from '../shard/shard';
 import { nanoid } from 'nanoid';
 import { ShardManager } from '../shard/shardManager';
 import { IConnectionClient } from '../networking/common';
+import type { Room } from '../shard/room';
 
 export class Character {
 	public readonly id: CharacterId;
@@ -25,6 +26,8 @@ export class Character {
 
 	public assignedConnection: IConnectionClient | null = null;
 
+	public room: Room | null = null;
+
 	constructor(characterData: ICharacterSelfInfoDb, account: Account) {
 		this.id = characterData.id;
 		this.account = account;
@@ -40,9 +43,8 @@ export class Character {
 
 	public disconnect(): void {
 		this.account.touch();
-		if (!this.isInUse())
-			return;
-		this.assignedShard.disconnectCharacter(this.id);
+		this.room?.removeCharacter(this, 'disconnect');
+		this.assignedShard?.disconnectCharacter(this.id);
 	}
 
 	public async generateAccessId(): Promise<string | null> {
@@ -59,32 +61,89 @@ export class Character {
 		return this.connectSecret = nanoid(8);
 	}
 
+	public getShardConnectionInfo(): IDirectoryCharacterConnectionInfo | null {
+		if (!this.assignedShard)
+			return null;
+		return {
+			...this.assignedShard.getInfo(),
+			characterId: this.id,
+			secret: this.connectSecret,
+		};
+	}
+
+	private getShardConnectionInfoAssert(): IDirectoryCharacterConnectionInfo {
+		const info = this.getShardConnectionInfo();
+		if (!info) {
+			throw new Error('No shard connection info when expected');
+		}
+		return info;
+	}
+
+	public async connect(): Promise<'noShardFound' | 'failed' | IDirectoryCharacterConnectionInfo> {
+		if (this.room) {
+			return this.connectToShard({ room: this.room });
+		}
+
+		let shard: Shard | null = this.assignedShard;
+		if (!shard) {
+			shard = ShardManager.getRandomShard();
+		}
+		// If there is still no shard found, then we disconnect
+		if (!shard) {
+			this.disconnect();
+			return 'noShardFound';
+		}
+		return this.connectToShard({ shard });
+	}
+
+	public async connectToShard(args: {
+		room: Room;
+		refreshSecret?: boolean;
+	}): Promise<'failed' | IDirectoryCharacterConnectionInfo>;
+	public async connectToShard(args: {
+		shard: Shard;
+		refreshSecret?: boolean;
+	}): Promise<'failed' | IDirectoryCharacterConnectionInfo>;
 	public async connectToShard({
 		shard,
+		room,
+		refreshSecret = true,
 	}: {
 		shard?: Shard;
-	} = {}): Promise<'noShardFound' | 'failed' | IDirectoryCharacterConnectionInfo> {
+		room?: Room;
+		refreshSecret?: boolean;
+	}): Promise<'failed' | IDirectoryCharacterConnectionInfo> {
 		this.account.touch();
-		if (this.isInUse()) {
-			this.disconnect();
+
+		if (room) {
+			// If in a room, the room always chooses shard
+			shard = room.shard;
+		} else if (!shard) {
+			throw new Error('Neither room nor shard passed');
 		}
 
-		// Generate new access id for new shard
-		const accessId = await this.generateAccessId();
-		if (accessId == null)
-			return 'failed';
-
-		// Choose new shard if not defined
-		if (!shard) {
-			shard = ShardManager.getRandomShard() ?? undefined;
+		// If we were in a wrong room, we leave it
+		if (this.room && this.room !== room) {
+			this.room.removeCharacter(this, 'leave');
 		}
-		if (!shard)
-			return 'noShardFound';
 
-		return {
-			...shard.getInfo(),
-			characterId: this.id,
-			secret: shard.connectCharacter(this),
-		};
+		// If we are on a wrong shard, we leave it
+		if (this.assignedShard !== shard) {
+			this.assignedShard?.disconnectCharacter(this.id);
+			// Generate new access id for new shard
+			const accessId = await this.generateAccessId();
+			if (accessId == null)
+				return 'failed';
+		}
+
+		if (this.assignedShard !== shard || refreshSecret) {
+			shard.connectCharacter(this);
+		}
+
+		if (room) {
+			room.addCharacter(this);
+		}
+
+		return this.getShardConnectionInfoAssert();
 	}
 }

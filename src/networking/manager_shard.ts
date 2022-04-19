@@ -1,5 +1,4 @@
-import { IShardDirectoryMessageHandler, IShardDirectoryBase, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryUnconfirmedArgument, IShardDirectoryNormalResult, IsString, IsCharacterId, BadMessageError } from 'pandora-common';
-import { Shard as Validation } from 'pandora-common/dist/networking/validation/directory';
+import { IShardDirectoryMessageHandler, IShardDirectoryBase, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryUnconfirmedArgument, IShardDirectoryNormalResult, IsString, IsCharacterId, BadMessageError, Shard as Validation } from 'pandora-common';
 import type { IConnectionShard } from './common';
 import { GetDatabase } from '../database/databaseProvider';
 import { ShardManager } from '../shard/shardManager';
@@ -14,7 +13,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 			shardRegister: this.handleShardRegister.bind(this),
 			createCharacter: this.createCharacter.bind(this),
 		}, {
-			characterDisconnected: this.handleCharacterDisconnected.bind(this),
+			characterDisconnect: this.handleCharacterDisconnect.bind(this),
 		});
 	}
 
@@ -36,14 +35,12 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		return result;
 	}
 
-	private handleCharacterDisconnected({ id }: IShardDirectoryUnconfirmedArgument['characterDisconnected'], connection: IConnectionShard): IShardDirectoryPromiseResult['characterDisconnected'] {
+	private handleCharacterDisconnect({ id, reason }: IShardDirectoryUnconfirmedArgument['characterDisconnect'], connection: IConnectionShard): void {
 		const shard = connection.shard;
-		if (!IsCharacterId(id) || !shard || !shard.characters.has(id))
+		if (!IsCharacterId(id) || !shard || !shard.getConnectedCharacter(id) || !IsString(reason))
 			throw new BadMessageError();
 
-		shard.disconnectCharacter(id, false);
-
-		return Promise.resolve();
+		shard.disconnectCharacter(id);
 	}
 
 	private async createCharacter({ id }: IShardDirectoryUnconfirmedArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {
@@ -51,7 +48,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		if (!IsCharacterId(id) || !shard)
 			throw new BadMessageError();
 
-		const character = shard.characters.get(id);
+		const character = shard.getConnectedCharacter(id);
 		if (!character)
 			throw new BadMessageError();
 
@@ -64,7 +61,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 
 	private async handleGetCharacter({ id, accessId }: IShardDirectoryUnconfirmedArgument['getCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['getCharacter'] {
 		const shard = connection.shard;
-		if (!IsCharacterId(id) || !IsString(accessId) || !shard || !shard.characters.has(id))
+		if (!IsCharacterId(id) || !IsString(accessId) || !shard || !shard.getConnectedCharacter(id))
 			throw new BadMessageError();
 
 		return await GetDatabase().getCharacter(id, accessId) as IShardDirectoryNormalResult['getCharacter'];
@@ -72,7 +69,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 
 	private async handleSetCharacter(args: IShardDirectoryUnconfirmedArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
 		const shard = connection.shard;
-		if (!Validation.setCharacter(args) || CheckSetCharacterKeys(args) || !shard || !shard.characters.has(args.id))
+		if (!Validation.setCharacter(args) || !CheckSetCharacterKeys(args) || !shard || !shard.getConnectedCharacter(args.id))
 			throw new BadMessageError();
 
 		if (Object.keys(args).length > 2 && !await GetDatabase().setCharacter(args))

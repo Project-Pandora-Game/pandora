@@ -1,3 +1,6 @@
+import { IChatRoomDirectoryConfig, IDirectoryShardInfo, RoomId } from 'pandora-common';
+import { ConnectionManagerClient } from '../networking/manager_client';
+import { Room } from './room';
 import { Shard } from './shard';
 
 /** Time (in ms) after which manager prunes account without any active connection */
@@ -5,6 +8,7 @@ export const SHARD_TIMEOUT = 10_000;
 
 export const ShardManager = new class ShardManager {
 	private readonly shards: Map<string, Shard> = new Map();
+	private readonly rooms: Map<RoomId, Room> = new Map();
 
 	public deleteShard(id: string): void {
 		const shard = this.shards.get(id);
@@ -23,6 +27,16 @@ export const ShardManager = new class ShardManager {
 		return shard;
 	}
 
+	public listShads(): IDirectoryShardInfo[] {
+		const result: IDirectoryShardInfo[] = [];
+		for (const shard of this.shards.values()) {
+			if (!shard.registered)
+				continue;
+			result.push(shard.getInfo());
+		}
+		return result;
+	}
+
 	public getShard(id: string): Shard | null {
 		return this.shards.get(id) || null;
 	}
@@ -33,5 +47,56 @@ export const ShardManager = new class ShardManager {
 
 		const shards = [...this.shards.values()];
 		return shards[Math.floor(Math.random() * shards.length)];
+	}
+
+	public listRooms(): Room[] {
+		return Array.from(this.rooms.values());
+	}
+
+	public getRoom(id: RoomId): Room | undefined {
+		return this.rooms.get(id);
+	}
+
+	public getRoomByName(name: string): Room | undefined {
+		name = name.toLowerCase();
+		return Array.from(this.rooms.values()).find((r) => r.name.toLowerCase() === name);
+	}
+
+	public createRoom(config: IChatRoomDirectoryConfig, shard?: Shard, id?: RoomId): Room | 'nameTaken' | 'noShardFound' {
+		if (id != null && this.rooms.has(id)) {
+			throw new Error(`Attempt to create room while room with id already exists (${id})`);
+		}
+
+		if (this.getRoomByName(config.name))
+			return 'nameTaken';
+
+		if (!shard) {
+			if (config.features.includes('development') && config?.development?.shardId) {
+				shard = this.getShard(config.development.shardId) ?? undefined;
+			} else {
+				shard = this.getRandomShard() ?? undefined;
+			}
+		}
+
+		if (!shard)
+			return 'noShardFound';
+
+		const room = new Room(config, shard, id);
+		this.rooms.set(room.id, room);
+
+		ConnectionManagerClient.onRoomListChange();
+
+		return room;
+	}
+
+	/**
+	 * Destroy a room
+	 * @param room - The room to destroy
+	 */
+	public destroyRoom(room: Room): void {
+		this.rooms.delete(room.id);
+		room.onDestroy();
+
+		ConnectionManagerClient.onRoomListChange();
 	}
 };

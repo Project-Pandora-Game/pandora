@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { logConfig, LogLevel } from 'pandora-common/dist/logging';
+import { logConfig, LogLevel } from 'pandora-common';
 
 /** Custom function for stringifying data when logging into file */
 function AnyToString(data: unknown): string {

@@ -1,10 +1,9 @@
-import { GetLogger } from 'pandora-common/dist/logging';
 import { IConnectionClient } from './common';
-import { MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, CreateObjectValidator, CreateBase64Validator, IsCharacterId, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage } from 'pandora-common';
+import { GetLogger, IsClientDirectoryAuthMessage, IsIChatRoomDirectoryConfig, IsRoomId, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, CreateObjectValidator, CreateBase64Validator, IsCharacterId, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IsString, IsPartialIChatRoomDirectoryConfig } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { CHARACTER_LIMIT_NORMAL } from '../config';
-import { IsClientDirectoryAuthMessage } from 'pandora-common/dist/networking/validation/directory';
+import { ShardManager } from '../shard/shardManager';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -28,8 +27,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			updateCharacter: this.handleUpdateCharacter.bind(this),
 			deleteCharacter: this.handleDeleteCharacter.bind(this),
 			connectCharacter: this.handleConnectCharacter.bind(this),
+
+			shardInfo: this.handleShardInfo.bind(this),
+
+			listRooms: this.handleListRooms.bind(this),
+			chatRoomCreate: this.handleChatRoomCreate.bind(this),
+			chatRoomEnter: this.handleChatRoomEnter.bind(this),
+			chatRoomUpdate: this.handleChatRoomUpdate.bind(this),
 		}, {
 			logout: this.handleLogout.bind(this),
+			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
+			chatRoomLeave: this.handleChatRoomLeave.bind(this),
 		});
 	}
 
@@ -110,6 +118,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		const account = connection.account;
 
 		connection.setAccount(null);
+		connection.character?.disconnect();
 		connection.setCharacter(null);
 		logger.info(`${connection.id} logged out`);
 
@@ -191,7 +200,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		if (!char)
 			return { result: 'maxCharactersReached' };
 
-		const result = await char.connectToShard();
+		const result = await char.connect();
 
 		if (typeof result === 'string') {
 			connection.setCharacter(null);
@@ -238,7 +247,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			throw new Error('Assertion failed');
 		}
 
-		const result = await char.connectToShard();
+		const result = await char.connect();
 
 		if (typeof result === 'string') {
 			connection.setCharacter(null);
@@ -250,6 +259,106 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			...result,
 			result: 'ok',
 		});
+	}
+
+	private handleDisconnectCharacter(_: IClientDirectoryUnconfirmedArgument['disconnectCharacter'], connection: IConnectionClient): void {
+		if (!connection.isLoggedIn()) {
+			throw new BadMessageError();
+		}
+
+		connection.character?.disconnect();
+		connection.setCharacter(null);
+		connection.sendConnectionStateUpdate();
+	}
+
+	private handleShardInfo(_: IClientDirectoryUnconfirmedArgument['shardInfo'], _connection: IConnectionClient): IClientDirectoryNormalResult['shardInfo'] {
+		return {
+			shards: ShardManager.listShads(),
+		};
+	}
+
+	private handleListRooms(_: IClientDirectoryUnconfirmedArgument['listRooms'], connection: IConnectionClient): IClientDirectoryNormalResult['listRooms'] {
+		if (!connection.isLoggedIn() || !connection.character)
+			throw new BadMessageError();
+
+		return {
+			rooms: ShardManager.listRooms().map((r) => r.getDirectoryInfo()),
+		};
+	}
+
+	private async handleChatRoomCreate(roomConfig: IClientDirectoryUnconfirmedArgument['chatRoomCreate'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomCreate'] {
+		if (!connection.isLoggedIn() || !connection.character || !IsIChatRoomDirectoryConfig(roomConfig))
+			throw new BadMessageError();
+
+		const room = ShardManager.createRoom(roomConfig);
+
+		if (typeof room === 'string') {
+			return { result: room };
+		}
+
+		const result = await connection.character.connectToShard({ room, refreshSecret: false });
+
+		if (typeof result === 'string') {
+			connection.setCharacter(null);
+			return { result };
+		}
+
+		return ({
+			...result,
+			result: 'ok',
+		});
+	}
+
+	private async handleChatRoomEnter({ id, password }: IClientDirectoryUnconfirmedArgument['chatRoomEnter'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomEnter'] {
+		if (!connection.isLoggedIn() || !connection.character || !IsRoomId(id) || (password !== undefined && !IsString(password)))
+			throw new BadMessageError();
+
+		const room = ShardManager.getRoom(id);
+
+		if (!room) {
+			return { result: 'notFound' };
+		}
+
+		const allowResult = room.checkAllowEnter(connection.character, password);
+
+		if (allowResult !== 'ok') {
+			return { result: allowResult };
+		}
+
+		const result = await connection.character.connectToShard({ room, refreshSecret: false });
+
+		if (typeof result === 'string') {
+			connection.setCharacter(null);
+			return { result };
+		}
+
+		return ({
+			...result,
+			result: 'ok',
+		});
+	}
+
+	private handleChatRoomUpdate(roomConfig: IClientDirectoryUnconfirmedArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryNormalResult['chatRoomUpdate'] {
+		if (!connection.isLoggedIn() || !connection.character || !IsPartialIChatRoomDirectoryConfig(roomConfig))
+			throw new BadMessageError();
+
+		if (!connection.character.room) {
+			return { result: 'notInRoom' };
+		}
+
+		if (!connection.character.room.isAdmin(connection.character)) {
+			return { result: 'noAccess' };
+		}
+
+		const result = connection.character.room.update(roomConfig);
+
+		return { result };
+	}
+
+	private handleChatRoomLeave(_: IClientDirectoryUnconfirmedArgument['chatRoomLeave'], connection: IConnectionClient): void {
+		if (!connection.isLoggedIn() || !connection.character)
+			throw new BadMessageError();
+		connection.character.room?.removeCharacter(connection.character, 'leave');
 	}
 
 	/**
@@ -275,6 +384,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		// Notify the client of the result
 		connection.sendConnectionStateUpdate();
 	}
+
+	public onRoomListChange(): void {
+		for (const connection of this.connectedClients) {
+			// Only send updates to connections that can see the list (have character, but aren't in room)
+			if (connection.character && !connection.character.room) {
+				connection.sendMessage('somethingChanged', { changes: ['roomList'] });
+			}
+		}
+	}
+
+	public onShardListChange(): void {
+		for (const connection of this.connectedClients) {
+			connection.sendMessage('somethingChanged', { changes: ['shardList'] });
+		}
+	}
 };
 
 /** Checks if the given password is a base64 encode SHA-512 hash */
@@ -287,4 +411,4 @@ const IsPasswordSha512 = CreateStringValidator({
 const IsUpdateCharacter = CreateObjectValidator({
 	id: IsCharacterId,
 	preview: CreateBase64Validator(),
-}, true);
+}, { noExtraKey: true });

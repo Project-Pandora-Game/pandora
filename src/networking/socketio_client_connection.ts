@@ -1,7 +1,7 @@
 import type { IncomingHttpHeaders } from 'http';
 import { CharacterId, GetLogger, IShardClientBase } from 'pandora-common';
 import type { Socket } from 'socket.io';
-import Character from '../character/character';
+import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
 import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
@@ -20,10 +20,8 @@ export class SocketIOConnectionClient extends SocketIOConnection<IShardClientBas
 		return this._aborted;
 	}
 
-	private _character: Character | undefined;
-	public get character(): Character {
-		return this._character as Character;
-	}
+	/** Character of the connection, always set by `Character` class */
+	public character: Character | null = null;
 
 	public get headers(): IncomingHttpHeaders {
 		return this.socket.handshake.headers;
@@ -36,26 +34,26 @@ export class SocketIOConnectionClient extends SocketIOConnection<IShardClientBas
 
 	/** Handler for when client disconnects */
 	protected override onDisconnect(_reason: string): void {
+		this.character?.setConnection(null);
 		ConnectionManagerClient.onDisconnect(this);
 	}
 
 	public abortConnection(): void {
+		if (this._aborted)
+			return;
 		this._aborted = true;
-		if (this._character?.connection === this) {
-			this._character.connection = undefined;
-			this._character = undefined;
-		}
+		this.character?.setConnection(null);
 		this.socket.disconnect(true);
 	}
 
 	public loadCharacter(id: CharacterId): boolean {
-		this._character = CharacterManager.getCharacter(id) as Character;
-		if (!this._character) {
+		const character = CharacterManager.getCharacter(id);
+		if (!character) {
 			this.logger.error(`Character ${id} not found`);
 			this.abortConnection();
 			return false;
 		}
-		this._character.connection = this;
+		character.setConnection(this);
 		return true;
 	}
 

@@ -1,11 +1,10 @@
 import { mkdirSync } from 'fs';
 import { APP_NAME, APP_VERSION } from './config';
 import { AddFileOutput } from './logging';
-import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common/dist/logging';
+import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
 import { StartHttpServer } from './networking/httpServer';
 import { InitDatabase } from './database/databaseProvider';
-import { CharacterManager } from './character/characterManager';
 // get version from package.json
 
 const LOG_DIR = './logs';
@@ -25,8 +24,6 @@ async function Start(): Promise<void> {
 	await ConnectToDirectory();
 	logger.debug('Initializing database...');
 	await InitDatabase();
-	logger.debug('Initializing managers...');
-	CharacterManager.init();
 	logger.debug('Starting HTTP server...');
 	await StartHttpServer();
 }

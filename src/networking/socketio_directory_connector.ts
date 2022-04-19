@@ -1,8 +1,8 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig } from 'pandora-common/dist/logging';
-import { HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, Connection, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IShardCharacterDefinition, CharacterId, IsCharacterId } from 'pandora-common';
+import { GetLogger, logConfig, IChatRoomFullInfo, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, Connection, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IShardCharacterDefinition } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
+import { RoomManager } from '../room/roomManager';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 10_000;
@@ -147,43 +147,57 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 		logger.warning('Connection to Directory failed:', err.message);
 	}
 
-	private handlePrepareCharacters({ characters }: IDirectoryShardArgument['prepareCharacters']): void {
-		this.prepareCharacters(characters).catch((err) => {
-			logger.fatal('Error processing prepareCharacters message', err);
-		});
+	private handlePrepareCharacters({ characters, rooms, roomLeaveReasons }: IDirectoryShardArgument['prepareCharacters']): void {
+		RoomManager.leaveReasons = roomLeaveReasons;
+		this.updateFromDirectory(rooms, characters);
 	}
 
-	private async prepareCharacters(characters: IShardCharacterDefinition[]): Promise<void> {
-		const success: CharacterId[] = (await Promise.all(
-			characters.map(
-				async (character) => {
-					const result = await CharacterManager.loadCharacter(character);
-					if (!result) {
-						logger.error(`Failed to load character ${character.id} for access ${character.accessId}`);
-						// Report back character that failed load
-						this.sendMessage('characterDisconnected', { id: character.id });
-						return undefined;
-					}
-					return result.data.id;
-				},
-			),
-		)).filter<CharacterId>(IsCharacterId);
-
+	private updateFromDirectory(rooms: IChatRoomFullInfo[], characters: IShardCharacterDefinition[]): void {
+		const characterIds = characters.map((c) => c.id);
 		// Invalidate old characters
 		CharacterManager
-			.listUsedCharacters()
+			.listCharacters()
 			.map((c) => c.id)
-			.filter((id) => !success.includes(id))
-			.forEach((id) => CharacterManager.invalidateCharacter(id));
+			.filter((id) => !characterIds.includes(id))
+			.forEach((id) => CharacterManager.removeCharacter(id));
+
+		// Load and update existing rooms
+		for (const room of rooms) {
+			RoomManager.loadRoom(room);
+		}
+
+		// Load and update existing characters
+		for (const character of characters) {
+			CharacterManager.loadCharacter(character)
+				.then((result) => {
+					if (!result) {
+						logger.error(`Failed to load character ${character.id} for access ${character.accessId}`);
+						// Report back that character load failed
+						this.sendMessage('characterDisconnect', { id: character.id, reason: 'error' });
+					}
+				})
+				.catch((err) => {
+					logger.fatal('Error processing prepareCharacters message', err);
+				});
+		}
+
+		const roomIds = rooms.map((r) => r.id);
+		// Invalidate old rooms
+		RoomManager
+			.listRoomIds()
+			.filter((id) => !roomIds.includes(id))
+			.forEach((id) => RoomManager.removeRoom(id));
 	}
 
 	private async register(): Promise<void> {
-		const { shardId, characters } = await this.awaitResponse('shardRegister', {
+		const { shardId, characters, rooms, roomLeaveReasons } = await this.awaitResponse('shardRegister', {
 			shardId: this.shardId ?? null,
 			publicURL: SERVER_PUBLIC_ADDRESS,
 			features: [],
 			version: APP_VERSION,
-			characters: CharacterManager.listUsedCharacters(),
+			characters: CharacterManager.listCharacters(),
+			disconnectCharacters: CharacterManager.listInvalidCharacters(),
+			rooms: RoomManager.listRooms(),
 		}, 10_000);
 
 		if (this._state !== DirectoryConnectionState.REGISTRATION_PENDING) {
@@ -192,7 +206,8 @@ export class SocketIODirectoryConnector extends Connection<Socket, IShardDirecto
 		}
 
 		this.shardId = shardId;
-		await this.prepareCharacters(characters);
+		RoomManager.leaveReasons = roomLeaveReasons;
+		this.updateFromDirectory(rooms, characters);
 
 		this._state = DirectoryConnectionState.CONNECTED;
 		logger.info('Registered with Directory');

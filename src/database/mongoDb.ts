@@ -1,6 +1,5 @@
-import type { CharacterId, ICharacterData, ICharacterDataUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterDataUpdate, GetLogger } from 'pandora-common';
 import type { ShardDatabase } from './databaseProvider';
-import { GetLogger } from 'pandora-common/dist/logging';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 
 import { MongoClient } from 'mongodb';

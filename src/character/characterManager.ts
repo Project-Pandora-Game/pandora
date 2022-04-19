@@ -1,98 +1,66 @@
-import type { CharacterId, ICharacterData, ICharacterDataUpdate, IShardCharacterDefinition } from 'pandora-common';
-import { GetLogger } from 'pandora-common/dist/logging';
-import { GetDatabase, ShardDatabase } from '../database/databaseProvider';
-import Character, { CharacterModification } from './character';
+import { CharacterId, IShardCharacterDefinition, GetLogger } from 'pandora-common';
+import { Character } from './character';
+
+/** Time (in ms) after which manager prunes character without any active connection */
+export const CHARACTER_TIMEOUT = 30_000;
 
 const logger = GetLogger('CharacterManager');
 
 export const CharacterManager = new class CharacterManager {
 	private readonly _characters: Map<CharacterId, Character> = new Map();
-	private _db!: ShardDatabase;
 
-	public init(): this {
-		this._db = GetDatabase();
-		return this;
+	public getCharacter(id: CharacterId): Character | undefined {
+		return this._characters.get(id);
 	}
 
-	public listUsedCharacters(): IShardCharacterDefinition[] {
+	public listCharacters(): IShardCharacterDefinition[] {
 		return [...this._characters.values()]
 			.map((char) => ({
 				id: char.data.id,
 				account: char.data.accountId,
 				accessId: char.data.accessId,
 				connectSecret: char.connectSecret,
+				room: char.room ? char.room.id : null,
 			}));
+	}
+
+	public listInvalidCharacters(): CharacterId[] {
+		return [...this._characters.values()]
+			.filter((char) => !char.isValid)
+			.map((char) => char.id);
 	}
 
 	public async loadCharacter(character: IShardCharacterDefinition): Promise<Character | null> {
 		const id = character.id;
 
 		let char = this._characters.get(id);
-		if (char)
+		if (char) {
+			char.update(character);
 			return char;
+		}
 
-		const data = await this.getCharacterData(id, character.accessId);
+		const data = await Character.load(id, character.accessId);
 		if (!data)
 			return null;
 
 		char = this._characters.get(id);
-		if (char)
+		if (char) {
+			char.update(character);
 			return char;
+		}
 
-		char = new Character(data, character.connectSecret);
+		logger.debug(`Adding character ${data.id}`);
+		char = new Character(data, character.connectSecret, character.room);
 		this._characters.set(id, char);
 		return char;
 	}
 
-	public getCharacter(id: CharacterId): Character | undefined {
-		return this._characters.get(id);
-	}
-
-	public async saveCharacter(char: Character): Promise<void> {
-		if (char.state !== CharacterModification.MODIFIED)
+	public removeCharacter(id: CharacterId): void {
+		const character = this._characters.get(id);
+		if (!character)
 			return;
-
-		char.state = CharacterModification.PENDING;
-		const keys: (keyof Omit<ICharacterDataUpdate, 'id'>)[] = [...char.modified];
-		char.modified.clear();
-
-		const data: ICharacterDataUpdate = {
-			id: char.data.id,
-			accessId: char.data.accessId,
-		};
-
-		for (const key of keys) {
-			(data as Record<string, unknown>)[key] = char.data[key];
-		}
-
-		if (await this.setCharacterData(char.data)) {
-			if (char.state === CharacterModification.PENDING)
-				char.state = CharacterModification.NONE;
-
-			char.lastModified = Date.now();
-		} else {
-			for (const key of keys) {
-				char.modified.add(key);
-			}
-			char.state = CharacterModification.MODIFIED;
-		}
-	}
-
-	public invalidateCharacter(id: CharacterId): void {
-		this._characters.get(id)?.invalidate();
+		logger.debug(`Removing character ${id}`);
+		character.onRemove();
 		this._characters.delete(id);
-	}
-
-	private async getCharacterData(id: CharacterId, accessId: string): Promise<ICharacterData | null> {
-		const character = await this._db.getCharacter(id, accessId);
-		if (character === false) {
-			logger.warning(`Character ${id} could not be loaded`);
-			return null;
-		}
-		return character;
-	}
-
-	private async setCharacterData(data: ICharacterDataUpdate): Promise<boolean> {
-		return await this._db.setCharacter(data);
 	}
 };

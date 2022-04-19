@@ -1,7 +1,6 @@
 import type { Socket } from 'socket.io';
 import type { IncomingMessage, Server as HttpServer } from 'http';
-import { GetLogger } from 'pandora-common/dist/logging';
-import { IsCharacterId } from 'pandora-common/dist/validation';
+import { GetLogger, IsCharacterId } from 'pandora-common';
 import { SocketIOServer } from './socketio_common_server';
 import { SocketIOConnectionClient } from './socketio_client_connection';
 import { ConnectionManagerClient } from './manager_client';

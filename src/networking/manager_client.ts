@@ -1,7 +1,5 @@
-import { GetLogger } from 'pandora-common/dist/logging';
+import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsString, IsCharacterIdArray } from 'pandora-common';
 import { IConnectionClient } from './common';
-import { MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult } from 'pandora-common';
-import { DirectoryConnector } from './socketio_directory_connector';
 import { CharacterManager } from '../character/characterManager';
 
 const logger = GetLogger('ConnectionManager-Client');
@@ -16,16 +14,20 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		this.messageHandler = new MessageHandler<IClientShardBase, IConnectionClient>({
 			finishCharacterCreation: this.handleFinishCharacterCreation.bind(this),
 		}, {
-			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
+			chatRoomMessage: this.handleChatRoomMessage.bind(this),
 		});
 	}
 
 	/** Handle new incoming connection */
 	public onConnect(connection: IConnectionClient): void {
 		const [characterId] = (connection.headers.authorization || '').split(' ');
-		connection.loadCharacter(characterId as CharacterId);
 		this._connectedClients.add(connection);
-		connection.sendMessage('loadCharacter', connection.character.data);
+		if (!connection.loadCharacter(characterId as CharacterId) || !connection.character)
+			return;
+		connection.sendMessage('load', {
+			character: connection.character.data,
+			room: connection.character.room ? connection.character.room.getClientData() : null,
+		});
 
 		logger.info(`Client ${connection.id} connected to character ${connection.character.id}`);
 	}
@@ -41,18 +43,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 
 	public isAuthorized(id: CharacterId, secret: string): boolean {
 		const character = CharacterManager.getCharacter(id);
-		return character != null && character.connectSecret === secret;
-	}
-
-	private handleDisconnectCharacter(_: IClientShardUnconfirmedArgument['disconnectCharacter'], client: IConnectionClient): void {
-		CharacterManager.invalidateCharacter(client.character.id);
-
-		DirectoryConnector.sendMessage('characterDisconnected', { id: client.character.id });
-
-		client.abortConnection();
+		return character != null && character.isValid && character.connectSecret === secret;
 	}
 
 	private async handleFinishCharacterCreation({ name }: IClientShardUnconfirmedArgument['finishCharacterCreation'], client: IConnectionClient): IClientShardPromiseResult['finishCharacterCreation'] {
+		if (!client.character)
+			throw new BadMessageError();
+
 		if (!IsCharacterName(name) || !client.character.data.inCreation)
 			throw new BadMessageError();
 
@@ -61,5 +58,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		}
 
 		return { result: 'ok' };
+	}
+
+	private handleChatRoomMessage({ message, targets }: IClientShardUnconfirmedArgument['chatRoomMessage'], client: IConnectionClient): void {
+		if (!client.character?.room || !IsString(message) || (targets !== undefined && !IsCharacterIdArray(targets)))
+			throw new BadMessageError();
+
+		client.character.room.sendMessage(client.character.id, message, targets);
 	}
 };

@@ -1,7 +1,9 @@
 import { CreateObjectValidator, IsString, CreateArrayValidator, IsNumber, IsCharacterId, CreateMaybeValidator, IsUsername, CreateNullableValidator, NonNullable } from '../../validation';
-import { IShardDirectoryArgument, ShardFeature } from '..';
-import { IShardCharacterDefinition } from '../directory_shard';
-import { IClientDirectoryAuthMessage } from '../client_directory';
+import type { IShardDirectoryArgument, ShardFeature } from '../shard_directory';
+import type { IShardCharacterDefinition } from '../directory_shard';
+import type { IClientDirectoryAuthMessage } from '../client_directory';
+import { IChatRoomFullInfo, IsIChatRoomDirectoryConfig, IsRoomId } from '../../chatroom';
+import { CharacterId } from '../../character';
 
 /** TODO set this to true, we keep it false to make things simple in early development */
 const SHARD_NO_EXTRA_OBJECT_KEY = false;
@@ -12,7 +14,8 @@ export const IsIShardCharacterDefinition = CreateObjectValidator<IShardCharacter
 	account: IsNumber,
 	accessId: IsString,
 	connectSecret: IsString,
-}, SHARD_NO_EXTRA_OBJECT_KEY);
+	room: CreateNullableValidator(IsRoomId),
+}, { noExtraKey: SHARD_NO_EXTRA_OBJECT_KEY });
 
 export const Shard = {
 	shardRegister: CreateObjectValidator<IShardDirectoryArgument['shardRegister']>({
@@ -23,13 +26,15 @@ export const Shard = {
 		characters: CreateArrayValidator<IShardDirectoryArgument['shardRegister']['characters'][0]>({
 			validator: IsIShardCharacterDefinition,
 		}),
-	}, SHARD_NO_EXTRA_OBJECT_KEY),
+		disconnectCharacters: CreateArrayValidator<CharacterId>({ validator: IsCharacterId }),
+		rooms: CreateArrayValidator<IChatRoomFullInfo>({ validator: IsIChatRoomDirectoryConfig }),
+	}, { noExtraKey: SHARD_NO_EXTRA_OBJECT_KEY }),
 	setCharacter: CreateObjectValidator<IShardDirectoryArgument['setCharacter']>({
 		id: IsCharacterId,
 		accessId: IsString,
 
 		name: CreateMaybeValidator(IsString),
-	}, SHARD_NO_EXTRA_OBJECT_KEY),
+	}, { noExtraKey: SHARD_NO_EXTRA_OBJECT_KEY }),
 };
 
 /**
@@ -41,5 +46,5 @@ export const IsClientDirectoryAuthMessage = CreateObjectValidator<IClientDirecto
 	character: CreateNullableValidator(CreateObjectValidator<NonNullable<IClientDirectoryAuthMessage['character']>>({
 		id: IsCharacterId,
 		secret: IsString,
-	}, CLIENT_NO_EXTRA_OBJECT_KEY)),
-}, CLIENT_NO_EXTRA_OBJECT_KEY);
+	}, { noExtraKey: CLIENT_NO_EXTRA_OBJECT_KEY })),
+}, { noExtraKey: CLIENT_NO_EXTRA_OBJECT_KEY });

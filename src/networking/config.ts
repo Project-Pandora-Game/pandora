@@ -4,3 +4,8 @@ export const HTTP_SOCKET_IO_SHARD_PATH: string = '/pandora_shard_socket.io';
 export const HTTP_HEADER_SHARD_SECRET: string = 'Pandora-Shard-Secret';
 /** Default acknowledgment timeout in seconds */
 export const DEFAULT_ACK_TIMEOUT: number = 5000;
+
+/** Toggle, if all messages should be logged. Should ALWAYS be `false` in production! */
+export const MESSAGE_HANDLER_DEBUG_ALL: boolean = false;
+/** Set of message types that should be logged */
+export const MESSAGE_HANDLER_DEBUG_MESSAGES = new Set<string>();

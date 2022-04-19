@@ -1,18 +1,22 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { CharacterId } from '../character';
 import type { MessageHandler } from './message_handler';
+import type { IChatRoomFullInfo, IChatroomsLeaveReasonRecord, RoomId } from '../chatroom';
 
 export type IShardCharacterDefinition = {
 	id: CharacterId;
 	account: number;
 	accessId: string;
 	connectSecret: string;
+	room: RoomId | null;
 };
 
 /** Directory->Shard handlers */
 interface DirectoryShard {
 	prepareCharacters(arg: {
 		characters: IShardCharacterDefinition[];
+		rooms: IChatRoomFullInfo[];
+		roomLeaveReasons: IChatroomsLeaveReasonRecord;
 	}): void;
 }
 

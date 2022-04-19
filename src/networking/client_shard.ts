@@ -1,13 +1,14 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { IEmpty } from './empty';
-import type { ICharacterDataCreate } from '../character';
+import type { CharacterId, ICharacterDataCreate } from '../character';
 
 /** Client->Shard handlers */
 interface ClientShard {
-	disconnectCharacter: (_: IEmpty) => void;
-
 	finishCharacterCreation: (args: ICharacterDataCreate) => { result: 'ok' | 'failed'; };
+	chatRoomMessage(arg: {
+		message: string,
+		targets?: CharacterId[],
+	}): void;
 }
 
 export type IClientShard = SocketInterface<ClientShard>;

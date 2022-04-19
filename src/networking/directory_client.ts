@@ -21,11 +21,16 @@ export type IDirectoryCharacterConnectionInfo = {
 	secret: string;
 } & IDirectoryShardInfo;
 
+export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'roomList';
+
 /** Directory->Client handlers */
 interface DirectoryClient {
 	connectionState(arg: {
 		account: IDirectoryAccountInfo | null,
 		character: IDirectoryCharacterConnectionInfo | null,
+	}): void;
+	somethingChanged(arg: {
+		changes: IDirectoryClientChangeEvents[];
 	}): void;
 }
 

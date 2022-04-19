@@ -60,7 +60,23 @@ export function CreateArrayValidator<T = unknown>({ validator, minLength, maxLen
 	};
 }
 
-export function CreateObjectValidator<T extends Record<string, unknown>>(validatorObject: { [K in keyof T]: (value: unknown) => value is T[K] }, noExtraKey: boolean): (obj: unknown) => obj is T {
+export type ObjectValidatorConfig<T extends Record<string, unknown>> = { [K in keyof T]: (value: unknown) => value is T[K] };
+
+export function CreateObjectValidator<T extends Record<string, unknown>>(validatorObject: ObjectValidatorConfig<T>, args?: {
+	noExtraKey?: boolean;
+	partial?: false;
+}): (obj: unknown) => obj is T;
+export function CreateObjectValidator<T extends Record<string, unknown>>(validatorObject: ObjectValidatorConfig<T>, args: {
+	noExtraKey?: boolean;
+	partial: true;
+}): (obj: unknown) => obj is Partial<T>;
+export function CreateObjectValidator<T extends Record<string, unknown>>(validatorObject: ObjectValidatorConfig<T>, {
+	noExtraKey = false,
+	partial = false,
+}: {
+	noExtraKey?: boolean;
+	partial?: boolean;
+} = {}): (obj: unknown) => obj is T {
 	return (obj: unknown): obj is T => {
 		if (!IsObject(obj))
 			return false;
@@ -69,10 +85,9 @@ export function CreateObjectValidator<T extends Record<string, unknown>>(validat
 			const requiredKeys = Object.keys(validatorObject);
 			const keys = new Set(Object.keys(obj));
 
-			if (keys.size !== requiredKeys.length)
-				return false;
-
 			for (const key of requiredKeys) {
+				if (partial && obj[key] === undefined)
+					continue;
 				if (!validatorObject[key](obj[key]))
 					return false;
 				if (!keys.delete(key) && obj[key] !== undefined)
@@ -82,9 +97,12 @@ export function CreateObjectValidator<T extends Record<string, unknown>>(validat
 			if (keys.size !== 0)
 				return false;
 		} else {
-			for (const key in validatorObject)
+			for (const key in validatorObject) {
+				if (partial && obj[key] === undefined)
+					continue;
 				if (!validatorObject[key](obj[key]))
 					return false;
+			}
 		}
 
 		return true;
@@ -161,3 +179,5 @@ export const IsSimpleToken = CreateStringValidator({
 export const IsCharacterId = CreateStringValidator({
 	regex: /^c[1-9][0-9]{0,15}$/,
 }) as (str: unknown) => str is CharacterId;
+
+export const IsCharacterIdArray = CreateArrayValidator<CharacterId>({ validator: IsCharacterId });

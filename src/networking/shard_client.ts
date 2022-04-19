@@ -1,11 +1,34 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { ICharacterData } from '../character';
+import type { CharacterId, ICharacterData } from '../character';
+import { IChatRoomFullInfo } from '../chatroom';
+
+export type IChatRoomClientData = IChatRoomFullInfo & {
+	characters: {
+		id: CharacterId;
+		accountId: number;
+		name: string;
+	}[];
+};
+
+export type IChatRoomMessage = {
+	id: number;
+	from: CharacterId | 'server';
+	message: string;
+	private?: true;
+};
 
 /** Shard->Client handlers */
 interface ShardClient {
-	loadCharacter: (args: ICharacterData) => void;
+	load: (args: {
+		character: ICharacterData,
+		room: null | IChatRoomClientData,
+	}) => void;
 	updateCharacter: (args: Partial<ICharacterData>) => void;
+	chatRoomUpdate(args: {
+		room: null | IChatRoomClientData;
+	}): void;
+	chatRoomMessage(arg: IChatRoomMessage): void;
 }
 
 export type IShardClient = SocketInterface<ShardClient>;

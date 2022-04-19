@@ -1,8 +1,9 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import type { IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo } from './directory_client';
+import type { IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryShardInfo } from './directory_client';
 import type { MessageHandler } from './message_handler';
 import type { IEmpty } from './empty';
 import type { CharacterId, ICharacterDataId, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from '../character';
+import { IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomDirectoryUpdate, RoomId } from '../chatroom';
 
 type ShardError = 'noShardFound' | 'failed';
 
@@ -57,6 +58,23 @@ interface ClientDirectory {
 	updateCharacter(arg: ICharacterSelfInfoUpdate): ICharacterSelfInfo;
 	deleteCharacter(arg: ICharacterDataId): { result: 'ok' | 'characterInUse'; };
 	connectCharacter(arg: ICharacterDataId): ShardConnection;
+	disconnectCharacter: (_: IEmpty) => void;
+
+	shardInfo(_: IEmpty): {
+		shards: IDirectoryShardInfo[],
+	};
+	listRooms(_: IEmpty): {
+		rooms: IChatRoomDirectoryInfo[];
+	};
+	chatRoomCreate(arg: IChatRoomDirectoryConfig): ShardConnection<ShardError | 'nameTaken'>;
+	chatRoomEnter(arg: {
+		id: RoomId,
+		password?: string,
+	}): ShardConnection<'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'>;
+	chatRoomLeave(_: IEmpty): void;
+	chatRoomUpdate(arg: IChatRoomDirectoryUpdate): {
+		result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess',
+	};
 }
 
 export type IClientDirectory = SocketInterface<ClientDirectory>;

@@ -2,6 +2,7 @@ import { SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler } from '.
 import { Logger } from '../logging';
 import type { Equals } from '../utility';
 import { IsObject } from '../validation';
+import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ResponseHandler<Context> = true extends Equals<Context, void> ? (arg: any) => Record<string, unknown> | Promise<Record<string, unknown>> : (arg: any, context: Context) => Record<string, unknown> | Promise<Record<string, unknown>>;
@@ -56,9 +57,6 @@ export class MessageHandler<T, Context = void> implements IMessageHandler<Contex
 		return true;
 	}
 }
-
-export const MESSAGE_HANDLER_DEBUG_ALL: boolean = false;
-export const MESSAGE_HANDLER_DEBUG_MESSAGES = new Set<string>();
 
 export function CreateMessageHandlerOnAny(
 	logger: Logger,

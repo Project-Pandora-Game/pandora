@@ -3,7 +3,7 @@ import { DEFAULT_ACK_TIMEOUT } from './config';
 import type { Logger } from '../logging';
 import type { BoolSelect, MembersFirstArg } from '../utility';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotHandler, SocketInterfaceResponseHandler } from './helpers';
-import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './message_handler';
+import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config';
 
 interface Emitter {
 	emit(event: string, arg: unknown): void;

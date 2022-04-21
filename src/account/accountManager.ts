@@ -3,9 +3,9 @@ import { GetLogger } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 
 /** Time (in ms) after which manager prunes account without any active connection */
-const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
+export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
 /** Time (in ms) of how often manager checks for accounts to prune */
-const ACCOUNTMANAGER_TICK_INTERVAL = 15_000;
+export const ACCOUNTMANAGER_TICK_INTERVAL = 15_000;
 
 const logger = GetLogger('AccountManager');
 
@@ -24,9 +24,24 @@ export class AccountManager {
 		}
 	}
 
-	/** Init the manager; **can only be used once** */
+	private interval: NodeJS.Timeout | undefined;
+
+	/** Init the manager */
 	public init(): void {
-		setInterval(this.tick.bind(this), ACCOUNTMANAGER_TICK_INTERVAL).unref();
+		if (this.interval === undefined) {
+			this.interval = setInterval(this.tick.bind(this), ACCOUNTMANAGER_TICK_INTERVAL).unref();
+		}
+	}
+
+	public onDestroy(): void {
+		if (this.interval !== undefined) {
+			clearInterval(this.interval);
+			this.interval = undefined;
+		}
+		// Go through accounts and remove all of them
+		for (const account of this.onlineAccounts) {
+			this.unloadAccount(account);
+		}
 	}
 
 	/** Create account from received data, adding it to loaded accounts */
@@ -164,7 +179,3 @@ export class AccountManager {
 
 /** Manager of all currently logged in or recently used accounts */
 export const accountManager = new AccountManager();
-
-export function InitAccountManager(): void {
-	accountManager.init();
-}

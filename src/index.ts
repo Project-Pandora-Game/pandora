@@ -1,5 +1,5 @@
 import { mkdirSync } from 'fs';
-import { InitAccountManager } from './account/accountManager';
+import { accountManager } from './account/accountManager';
 import { APP_NAME } from './config';
 import { InitDatabase } from './database/databaseProvider';
 import { AddFileOutput } from './logging';
@@ -24,7 +24,7 @@ async function Start(): Promise<void> {
 	logger.debug('Initializing database...');
 	await InitDatabase();
 	logger.debug('Initializing managers...');
-	InitAccountManager();
+	accountManager.init();
 	logger.debug('Starting HTTP server...');
 	await StartHttpServer();
 }

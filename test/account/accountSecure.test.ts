@@ -1,16 +1,30 @@
+import { LogLevel, SetConsoleOutput } from 'pandora-common';
 import AccountSecure, { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
-import { InitDatabase } from '../../src/database/databaseProvider';
+import * as databaseProvider from '../../src/database/databaseProvider';
+import { MockDatabase } from '../../src/database/mockDb';
 import GetEmailSender from '../../src/services/email';
+
+const TEST_USERNAME = 'testuser';
+const TEST_EMAIL = 'test@project-pandora.com';
+const TEST_EMAIL_HASH = GenerateEmailHash(TEST_EMAIL);
 
 describe('GenerateEmailHash()', () => {
 	it('should return a string', () => {
-		expect(typeof GenerateEmailHash('blabla')).toBe('string');
+		expect(typeof GenerateEmailHash(TEST_EMAIL)).toBe('string');
 	});
 });
 
 describe('GenerateAccountSecureData()', () => {
-	it('should return an object', async () => {
-		expect(typeof await GenerateAccountSecureData('pass', 'email', true)).toBe('object');
+	it('Should return account data', async () => {
+		const result = await GenerateAccountSecureData('password', TEST_EMAIL);
+		expect(typeof result).toBe('object');
+		// Not activated by default
+		expect(result.activated).toBe(false);
+	});
+	it('Allows creating activated account', async () => {
+		const result = await GenerateAccountSecureData('password', TEST_EMAIL, true);
+		expect(typeof result).toBe('object');
+		expect(result.activated).toBe(true);
 	});
 });
 
@@ -22,157 +36,382 @@ describe('AccountSecure', () => {
 	const mockRegistration = jest.spyOn(email, 'sendRegistrationConfirmation').mockImplementation((_email: string, _username: string, _token: string): Promise<void> => {
 		return Promise.resolve();
 	});
+	const mockSaving = jest.spyOn(MockDatabase.prototype, 'setAccountSecure');
 
-	let active: AccountSecure;
-	let inactive: AccountSecure;
+	let mockDb: MockDatabase;
 	beforeAll(async () => {
-		await InitDatabase();
-		active = new AccountSecure({
-			id: 0,
-			username: 'active',
-		}, await GenerateAccountSecureData('pass', 'email@example.com', true));
-		inactive = new AccountSecure({
-			id: 1,
-			username: 'inactive',
-		}, await GenerateAccountSecureData('pass', 'email@example.com', false));
+		SetConsoleOutput(LogLevel.FATAL);
+		mockDb = await new MockDatabase().init(false);
+		jest.spyOn(databaseProvider, 'GetDatabase').mockReturnValue(mockDb);
 	});
 
 	describe('isActivated()', () => {
-		it('should return true for activated account', () => {
-			expect(active.isActivated()).toBe(true);
-		});
-
-		it('should return false for inactivated account', () => {
+		it('should return false for inactivated account', async () => {
+			const inactive = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
 			expect(inactive.isActivated()).toBe(false);
 		});
-	});
 
-	describe('sendActivation()', () => {
-		//skips verifyEmail check
-		const mockVerify = jest.spyOn(AccountSecure.prototype, 'verifyEmail').mockReturnValue(true);
-		afterAll(() => {
-			mockVerify.mockRestore();
-		});
-
-		it('should not call send email if account is activated', async () => {
-			await active.sendActivation('example@example.com');
-			expect(mockRegistration.mock.calls.length).toBe(0);
-		});
-		it('should call email send if account is not activated', async () => {
-			await inactive.sendActivation('example@example.com');
-			expect(mockRegistration.mock.calls.length).toBe(1);
+		it('should return true for activated account', async () => {
+			const active = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+			expect(active.isActivated()).toBe(true);
 		});
 	});
 
-	describe('activateAccount()', () => {
-		it('should return false if activated', async () => {
-			expect(await active.activateAccount('anything really')).toBe(false);
-		});
-	});
+	describe('Account activation', () => {
+		let account: AccountSecure;
+		let activationToken1: string;
+		let activationToken2: string;
 
-	describe('changePassword()', () => {
-		it('should false if old password is incorrect', async () => {
-			expect(await active.changePassword('meh', 'meh2')).toBe(false);
-			expect(await inactive.changePassword('meh', 'meh2')).toBe(false);
-		});
-		it('should false if account is not activated', async () => {
-			expect(await inactive.changePassword('pass', 'pass')).toBe(false);
-		});
-		it('should true if old password is correct & account is activated', async () => {
-			expect(await active.changePassword('pass', 'pass')).toBe(true);
-		});
-	});
-
-	describe('resetPassword()', () => {
-		it('should return false if email is incorrect', async () => {
-			expect(await active.resetPassword('wrong@gmail.com')).toBe(false);
-			expect(await inactive.resetPassword('wrong@gmail.com')).toBe(false);
-		});
-		it('should return true if email is correct', async () => {
-			expect(await active.resetPassword('email@example.com')).toBe(true);
-			expect(await inactive.resetPassword('email@example.com')).toBe(true);
+		beforeAll(async () => {
+			account = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL));
 		});
 
-		it('should call email sender for password reset if true', async () => {
-			expect(await active.resetPassword('email@example.com')).toBe(true);
-			expect(mockReset.mock.calls.length).toBe(1);
-			expect(await inactive.resetPassword('email@example.com')).toBe(true);
-			expect(mockReset.mock.calls.length).toBe(2);
+		describe('sendActivation()', () => {
+			it('Does nothing on active account', async () => {
+				const activeAccount = new AccountSecure({
+					id: 0,
+					username: TEST_USERNAME,
+				}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+				await activeAccount.sendActivation(TEST_EMAIL);
+				expect(mockRegistration).not.toHaveBeenCalled();
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
+
+			it('Does nothing when email is wrong', async () => {
+				await account.sendActivation('nonexistent@project-pandora.com');
+				expect(mockRegistration).not.toHaveBeenCalled();
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
+
+			it('Sends email with token', async () => {
+				await account.sendActivation(TEST_EMAIL);
+				expect(mockRegistration).toHaveBeenCalledTimes(1);
+				// Email, Username and Token
+				expect(mockRegistration).toHaveBeenNthCalledWith(1, TEST_EMAIL, TEST_USERNAME, expect.any(String));
+				// Save token for later use
+				activationToken1 = mockRegistration.mock.calls[0][2];
+				expect(activationToken1).toBeTruthy();
+				// Saves data
+				expect(mockSaving).toHaveBeenCalledTimes(1);
+			});
+
+			it('Sends email with token, again', async () => {
+				await account.sendActivation(TEST_EMAIL);
+				expect(mockRegistration).toHaveBeenCalledTimes(1);
+				// Email, Username and Token
+				expect(mockRegistration).toHaveBeenNthCalledWith(1, TEST_EMAIL, TEST_USERNAME, expect.any(String));
+				// Save token for later use
+				activationToken2 = mockRegistration.mock.calls[0][2];
+				expect(activationToken2).toBeTruthy();
+				// Saves data
+				expect(mockSaving).toHaveBeenCalledTimes(1);
+			});
 		});
-	});
 
-	describe('finishPasswordReset()', () => {
-		it('should return false if token is invalid', async () => {
-			expect(await active.finishPasswordReset('invalid token', 'meh')).toBe(false);
-			expect(await inactive.finishPasswordReset('invalid token', 'meh')).toBe(false);
-		});
+		describe('activateAccount()', () => {
+			it('Fails on active account', async () => {
+				const activeAccount = new AccountSecure({
+					id: 0,
+					username: TEST_USERNAME,
+				}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+				expect(await activeAccount.activateAccount('token')).toBe(false);
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
 
-		it('should return true if token is valid', async () => {
-			await active.resetPassword('email@example.com');
-			const token = mockReset.mock.calls[0][2];
-			await inactive.resetPassword('email@example.com');
-			const token2 = mockReset.mock.calls[1][2];
-			expect(await active.finishPasswordReset(token, 'pass')).toBe(true);
-			expect(await inactive.finishPasswordReset(token2, 'pass')).toBe(true);
-		});
-	});
+			it('Fails with wrong token', async () => {
+				expect(await account.activateAccount('wrongToken')).toBe(false);
+				expect(account.isActivated()).toBe(false);
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
 
-	describe('generateNewLoginToken()', () => {
-		it('should return a string', async () => {
-			let token = await active.generateNewLoginToken();
-			expect(token.expires).toBeGreaterThan(Date.now());
-			expect(token.reason).toBe(AccountTokenReason.LOGIN);
+			it('Fails with wrong token type', async () => {
+				const token = await account.generateNewLoginToken();
+				mockSaving.mockClear();
+				expect(await account.activateAccount(token.value)).toBe(false);
+				expect(account.isActivated()).toBe(false);
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
 
-			token = await inactive.generateNewLoginToken();
-			expect(token.expires).toBeGreaterThan(Date.now());
-			expect(token.reason).toBe(AccountTokenReason.LOGIN);
+			it('Fails with replaced token', async () => {
+				expect(await account.activateAccount(activationToken1)).toBe(false);
+				expect(account.isActivated()).toBe(false);
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
+
+			it('Activates account with correct token', async () => {
+				expect(await account.activateAccount(activationToken2)).toBe(true);
+				expect(account.isActivated()).toBe(true);
+				// Saves data
+				expect(mockSaving).toHaveBeenCalledTimes(1);
+			});
 		});
 	});
 
 	describe('verifyEmail()', () => {
-		it('should return false with wrong email', () => {
-			expect(active.verifyEmail('wrong@email.com')).toBe(false);
-			expect(inactive.verifyEmail('wrong@email.com')).toBe(false);
+		let active: AccountSecure;
+		let inactive: AccountSecure;
+
+		beforeAll(async () => {
+			active = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+			inactive = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
 		});
 
-		it('should return true with correct email', () => {
-			expect(active.verifyEmail('email@example.com')).toBe(true);
-			expect(inactive.verifyEmail('email@example.com')).toBe(true);
+		it('Returns false with wrong email', () => {
+			expect(active.verifyEmail('nonexistent@project-pandora.com')).toBe(false);
+			expect(inactive.verifyEmail('nonexistent@project-pandora.com')).toBe(false);
+		});
+
+		it('Returns true with correct email', () => {
+			expect(active.verifyEmail(TEST_EMAIL)).toBe(true);
+			expect(inactive.verifyEmail(TEST_EMAIL)).toBe(true);
+		});
+
+		it('Ignores email case', () => {
+			expect(active.verifyEmail(TEST_EMAIL.toLowerCase())).toBe(true);
+			expect(active.verifyEmail(TEST_EMAIL.toUpperCase())).toBe(true);
+			expect(inactive.verifyEmail(TEST_EMAIL.toLowerCase())).toBe(true);
+			expect(inactive.verifyEmail(TEST_EMAIL.toUpperCase())).toBe(true);
 		});
 	});
 
 	describe('verifyEmailHash()', () => {
-		it('should return false with wrong email hash', () => {
-			expect(active.verifyEmailHash('wronghaha')).toBe(false);
-			expect(inactive.verifyEmailHash('wronghaha')).toBe(false);
+		let active: AccountSecure;
+		let inactive: AccountSecure;
+
+		beforeAll(async () => {
+			active = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+			inactive = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
 		});
-		it('should return true with correct email hash', () => {
-			expect(active.verifyEmailHash(GenerateEmailHash('email@example.com'))).toBe(true);
-			expect(inactive.verifyEmailHash(GenerateEmailHash('email@example.com'))).toBe(true);
+
+		it('Returns false with wrong email hash', () => {
+			expect(active.verifyEmailHash('wrongHash')).toBe(false);
+			expect(inactive.verifyEmailHash('wrongHash')).toBe(false);
+		});
+
+		it('Returns true with correct email hash', () => {
+			expect(active.verifyEmailHash(TEST_EMAIL_HASH)).toBe(true);
+			expect(inactive.verifyEmailHash(TEST_EMAIL_HASH)).toBe(true);
 		});
 	});
 
 	describe('verifyPassword()', () => {
-		it('should return false with wrong pasword', async () => {
-			expect(await active.verifyPassword('wronghaha')).toBe(false);
-			expect(await inactive.verifyPassword('wronghaha')).toBe(false);
+		let active: AccountSecure;
+		let inactive: AccountSecure;
+
+		beforeAll(async () => {
+			active = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+			inactive = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
 		});
-		it('should return true with correct password', async () => {
-			expect(await active.verifyPassword('pass')).toBe(true);
-			expect(await inactive.verifyPassword('pass')).toBe(true);
+
+		it('Returns false with wrong password', async () => {
+			await expect(active.verifyPassword('wrongPassword')).resolves.toBe(false);
+			await expect(active.verifyPassword('Password')).resolves.toBe(false);
+			await expect(inactive.verifyPassword('wrongPassword')).resolves.toBe(false);
+			await expect(inactive.verifyPassword('Password')).resolves.toBe(false);
+		});
+
+		it('Returns true with correct password', async () => {
+			await expect(active.verifyPassword('password')).resolves.toBe(true);
+			await expect(inactive.verifyPassword('password')).resolves.toBe(true);
 		});
 	});
 
-	describe('verifyLoginToken()', () => {
-		it('should return false with wrong login token', () => {
-			expect(active.verifyLoginToken('wronghaha')).toBe(false);
-			expect(inactive.verifyLoginToken('wronghaha')).toBe(false);
+	describe('changePassword()', () => {
+		let account: AccountSecure;
+
+		beforeAll(async () => {
+			account = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
 		});
-		it('should return true with correct login token', async () => {
-			const token1 = await active.generateNewLoginToken();
-			const token2 = await inactive.generateNewLoginToken();
-			expect(active.verifyLoginToken(token1.value)).toBe(true);
-			expect(inactive.verifyLoginToken(token2.value)).toBe(true);
+
+		it('Fails on inactive account', async () => {
+			const inactiveAccount = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
+			await expect(inactiveAccount.changePassword('password', 'newPassword')).resolves.toBe(false);
+			await expect(inactiveAccount.verifyPassword('password')).resolves.toBe(true);
+			await expect(inactiveAccount.verifyPassword('newPassword')).resolves.toBe(false);
+			expect(mockSaving).not.toHaveBeenCalled();
+		});
+
+		it('Fails if old password is incorrect', async () => {
+			await expect(account.changePassword('wrongPassword', 'newPassword')).resolves.toBe(false);
+			await expect(account.verifyPassword('password')).resolves.toBe(true);
+			await expect(account.verifyPassword('newPassword')).resolves.toBe(false);
+			expect(mockSaving).not.toHaveBeenCalled();
+		});
+
+		it('Changes password', async () => {
+			await expect(account.changePassword('password', 'newPassword')).resolves.toBe(true);
+			// Old password is no longer valid
+			await expect(account.verifyPassword('password')).resolves.toBe(false);
+			// New password is valid
+			await expect(account.verifyPassword('newPassword')).resolves.toBe(true);
+			// Saves data
+			expect(mockSaving).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe('Password reset', () => {
+		let account: AccountSecure;
+		let resetToken: string;
+
+		beforeAll(async () => {
+			account = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
+		});
+
+		describe('resetPassword()', () => {
+			it('Does nothing when email is wrong', async () => {
+				await expect(account.resetPassword('nonexistent@project-pandora.com')).resolves.toBe(false);
+				expect(mockReset).not.toHaveBeenCalled();
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
+
+			it('Sends email with token', async () => {
+				await expect(account.resetPassword(TEST_EMAIL)).resolves.toBe(true);
+				expect(mockReset).toHaveBeenCalledTimes(1);
+				// Email, Username and Token
+				expect(mockReset).toHaveBeenNthCalledWith(1, TEST_EMAIL, TEST_USERNAME, expect.any(String));
+				// Save token for later use
+				resetToken = mockReset.mock.calls[0][2];
+				expect(resetToken).toBeTruthy();
+				// Saves data
+				expect(mockSaving).toHaveBeenCalledTimes(1);
+			});
+		});
+
+		describe('finishPasswordReset()', () => {
+			it('Fails with wrong token', async () => {
+				expect(await account.finishPasswordReset('wrongToken', 'newPassword')).toBe(false);
+				await expect(account.verifyPassword('password')).resolves.toBe(true);
+				await expect(account.verifyPassword('newPassword')).resolves.toBe(false);
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
+
+			it('Changes password with correct token', async () => {
+				// Assertion: Not active before this test
+				expect(account.isActivated()).toBe(false);
+
+				await expect(account.finishPasswordReset(resetToken, 'newPassword')).resolves.toBe(true);
+				// Old password is no longer valid
+				await expect(account.verifyPassword('password')).resolves.toBe(false);
+				// New password is valid
+				await expect(account.verifyPassword('newPassword')).resolves.toBe(true);
+				// Activates account
+				expect(account.isActivated()).toBe(true);
+				// Saves data
+				expect(mockSaving).toHaveBeenCalledTimes(1);
+			});
+
+			it('Invalidates token after use', async () => {
+				expect(await account.finishPasswordReset(resetToken, 'thirdPassword')).toBe(false);
+				await expect(account.verifyPassword('newPassword')).resolves.toBe(true);
+				await expect(account.verifyPassword('thirdPassword')).resolves.toBe(false);
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
+		});
+	});
+
+	describe('Login tokens', () => {
+		let account: AccountSecure;
+		let token1: DatabaseAccountToken;
+		let token2: DatabaseAccountToken;
+
+		beforeAll(async () => {
+			jest.useFakeTimers();
+			account = new AccountSecure({
+				id: 0,
+				username: TEST_USERNAME,
+			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+		});
+		afterAll(() => {
+			jest.useRealTimers();
+		});
+
+		describe('generateNewLoginToken()', () => {
+			it('Generates new tokens', async () => {
+				token1 = await account.generateNewLoginToken();
+				token2 = await account.generateNewLoginToken();
+				// Reason is login
+				expect(token1.reason).toBe(AccountTokenReason.LOGIN);
+				expect(token2.reason).toBe(AccountTokenReason.LOGIN);
+				// Tokens expire in future
+				expect(token1.expires).toBeGreaterThan(Date.now());
+				expect(token2.expires).toBeGreaterThan(Date.now());
+				// Tokens are different
+				expect(token1.value).not.toBe(token2.value);
+				// Saves data
+				expect(mockSaving).toHaveBeenCalledTimes(2);
+			});
+		});
+
+		describe('verifyLoginToken()', () => {
+			it('Returns false with wrong token', () => {
+				expect(account.verifyLoginToken('wrongToken')).toBe(false);
+			});
+
+			it('Returns true with valid token', () => {
+				expect(account.verifyLoginToken(token1.value)).toBe(true);
+				expect(account.verifyLoginToken(token2.value)).toBe(true);
+			});
+		});
+
+		describe('invalidateLoginToken()', () => {
+			it('Does nothing with unknown token', async () => {
+				await account.invalidateLoginToken('wrongToken');
+				expect(mockSaving).not.toHaveBeenCalled();
+			});
+
+			it('Invalidates valid token', async () => {
+				expect(account.verifyLoginToken(token1.value)).toBe(true);
+
+				await account.invalidateLoginToken(token1.value);
+
+				expect(account.verifyLoginToken(token1.value)).toBe(false);
+				// Other tokens are unaffected
+				expect(account.verifyLoginToken(token2.value)).toBe(true);
+				// Saves data
+				expect(mockSaving).toHaveBeenCalledTimes(1);
+			});
+		});
+
+		test('Tokens timeout', () => {
+			expect(account.verifyLoginToken(token2.value)).toBe(true);
+			jest.setSystemTime(token2.expires + 1);
+			expect(account.verifyLoginToken(token2.value)).toBe(false);
 		});
 	});
 });

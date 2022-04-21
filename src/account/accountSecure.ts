@@ -114,6 +114,7 @@ export default class AccountSecure {
 		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
 		if (TOKEN_LIMITS[reason] <= this.#secure.tokens.filter((t) => t.reason === reason).length) {
 			const index = this.#secure.tokens.findIndex((t) => t.reason === reason);
+			/* istanbul ignore else - should never happen because of positive TOKEN_LIMITS */
 			if (index !== -1)
 				this.#secure.tokens.splice(index, 1);
 		}

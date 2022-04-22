@@ -1,5 +1,4 @@
-
-name: Test CI
+name: CI
 
 on:
   # Triggers the workflow on push but only for the master branch
@@ -11,7 +10,32 @@ on:
   workflow_dispatch:
 
 jobs:
+  build:
+    name: Build
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+
+  lint:
+    name: Lint
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - run: yarn install --frozen-lockfile
+      - run: yarn lint
+
   test:
+    name: Test
     runs-on: self-hosted
 
     steps:

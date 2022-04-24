@@ -1,10 +1,10 @@
-import type { CharacterId, ICharacterSelfInfo } from 'pandora-common/dist/character';
-import { EMPTY, IClientDirectoryNormalResult } from 'pandora-common/dist/networking';
+import { CharacterId, ICharacterSelfInfo, EMPTY, IClientDirectoryNormalResult } from 'pandora-common';
 import React, { ReactElement, useEffect, useState } from 'react';
-import { NavigateFunction, useNavigate } from 'react-router-dom';
-import { DirectoryConnector } from '../../networking/socketio_directory_connector';
+import { Navigate } from 'react-router-dom';
+import { ChangeEventEmmiter, DirectoryConnector } from '../../networking/socketio_directory_connector';
 import { Player } from '../../character/player';
 import './characterSelect.scss';
+import { useCharacterData } from '../../character/character';
 
 /**
  * @todo
@@ -15,13 +15,14 @@ import './characterSelect.scss';
 
 let DoUpdateCharacters: (() => Promise<void>) | null = null;
 
-/** Prevents automatic selection of character if it failed last time */
-let AutoSelectErrored = false;
+/** Prevents automatic selection of character if it has been attempted already to prevent loops */
+let AutoSelectDone = false;
 
 export function CharacterSelect(): ReactElement {
 	const [info, setInfo] = useState<IClientDirectoryNormalResult['listCharacters'] | undefined>(undefined);
 	const [state, setState] = useState('Loading...');
-	const navigate = useNavigate();
+
+	const playerData = useCharacterData(Player);
 
 	useEffect(() => {
 		let mounted = true;
@@ -31,26 +32,38 @@ export function CharacterSelect(): ReactElement {
 				return;
 			}
 			const { characters } = result;
-			if (!AutoSelectErrored && characters.length === 0) {
+			if (!AutoSelectDone && characters.length === 0) {
+				AutoSelectDone = true;
 				setState('No characters found. Creating a new one...');
-				if (await ConnectToCharacter(navigate, undefined))
+				if (await ConnectToCharacter(null))
 					return;
-				AutoSelectErrored = true;
-			} else if (!AutoSelectErrored && characters.length === 1 && characters[0].inCreation) {
+			} else if (!AutoSelectDone && characters.length === 1 && characters[0].inCreation) {
+				AutoSelectDone = true;
 				setState('Character creation in progress...');
-				if (await ConnectToCharacter(navigate, characters[0].id))
+				if (await ConnectToCharacter(characters[0].id))
 					return;
-				AutoSelectErrored = true;
 			}
 			setInfo(result);
 		}
 		DoUpdateCharacters = awaitCharacters;
 		awaitCharacters().catch(() => { /** NOOP */ });
+		const changeEventEmmiterCleanup = ChangeEventEmmiter.on('characterList', () => {
+			awaitCharacters().catch(() => { /** NOOP */ });
+		});
 		return () => {
 			mounted = false;
 			DoUpdateCharacters = null;
+			changeEventEmmiterCleanup();
 		};
-	}, [navigate]);
+	});
+
+	if (playerData) {
+		if (playerData.inCreation) {
+			return <Navigate to='/character_create' />;
+		} else {
+			return <Navigate to='/pandora_lobby' />;
+		}
+	}
 
 	return (
 		<div className='centerbox'>
@@ -67,11 +80,9 @@ export function CharacterSelect(): ReactElement {
 }
 
 function Character({ id, name, preview, state }: ICharacterSelfInfo | (Partial<ICharacterSelfInfo> & { name: string })): ReactElement {
-	const navigate = useNavigate();
-
 	return (
 		<div className='card'>
-			<div className='border' onClick={ () => void ConnectToCharacter(navigate, id) }>
+			<div className='border' onClick={ () => void ConnectToCharacter(id ?? null) }>
 				<State state={ state } />
 				<div className='title'>{ name }</div>
 				<Preview preview={ preview } />
@@ -103,21 +114,13 @@ function Preview({ preview }: { preview?: string }): ReactElement | null {
 	);
 }
 
-async function ConnectToCharacter(navigate: NavigateFunction, id?: CharacterId): Promise<boolean> {
+async function ConnectToCharacter(id: CharacterId | null): Promise<boolean> {
 	let connected = false;
-	const cleanup = Player.on('load', () => {
-		if (Player.data.inCreation) {
-			navigate('/character_create');
-		} else {
-			navigate('/pandora_lobby');
-		}
-	});
 	if (id) {
 		connected = await DirectoryConnector.connectToCharacter(id);
 	} else {
 		connected = await DirectoryConnector.createNewCharacter();
 		DoUpdateCharacters?.().catch(() => { /* NOOP */ });
 	}
-	cleanup();
 	return connected;
 }

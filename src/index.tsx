@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { Header } from './components/header/Header';
 import './index.scss';
 import { PandoraRoutes } from './Routes';
-import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common/dist/logging';
+import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
 
 const logger = GetLogger('init');

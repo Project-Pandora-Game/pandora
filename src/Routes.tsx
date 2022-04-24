@@ -13,6 +13,11 @@ import { CharacterSelect } from './components/characterSelect/characterSelect';
 import { CharacterCreate } from './components/characterCreate/characterCreate';
 import { PandoraLobby } from './components/pandoraLobby/pandoraLobby';
 import { ShardConnector } from './networking/socketio_shard_connector';
+import { ChatroomSelect } from './components/chatroomSelect/chatroomSelect';
+import { Chatroom } from './components/chatroom/chatroom';
+import { ChatroomAdmin, ChatroomCreate } from './components/chatroomAdmin/chatroomAdmin';
+import { useCharacterData } from './character/character';
+import { Player } from './character/player';
 
 export function PandoraRoutes(): ReactElement {
 	const isLoggedIn = useObservable(currentAccount) != null;
@@ -33,14 +38,18 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/resend_verification_email' element={ <Fallback element={ ResendVerificationEmail } render={ !isLoggedIn } /> } />
 
 			<Route path='/character_select' element={ <RequiresLogin element={ CharacterSelect } /> } />
-			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } /> } />
+			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
 			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
+			<Route path='/chatroom_select' element={ <RequiresCharacter element={ ChatroomSelect } /> } />
+			<Route path='/chatroom_create' element={ <RequiresCharacter element={ ChatroomCreate } /> } />
+			<Route path='/chatroom' element={ <RequiresCharacter element={ Chatroom } /> } />
+			<Route path='/chatroom_admin' element={ <RequiresCharacter element={ ChatroomAdmin } /> } />
 		</Routes>
 	);
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-function RequiresLogin({ element: Element }: { element: () => ReactElement }): ReactElement {
+function RequiresLogin({ element: Element }: { element: () => ReactElement | null }): ReactElement {
 	const isLoggedIn = useObservable(currentAccount) != null;
 
 	if (!isLoggedIn) {
@@ -51,9 +60,11 @@ function RequiresLogin({ element: Element }: { element: () => ReactElement }): R
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-function RequiresCharacter({ element: Element }: { element: () => ReactElement }): ReactElement {
+function RequiresCharacter({ element: Element, allowUnfinished }: { element: () => ReactElement | null; allowUnfinished?: boolean; }): ReactElement {
 	const isLoggedIn = useObservable(currentAccount) != null;
-	const hasCharacter = useObservable(ShardConnector) != null;
+	const shardConnector = useObservable(ShardConnector);
+	const playerData = useCharacterData(Player);
+	const hasCharacter = shardConnector != null && playerData != null;
 
 	if (!isLoggedIn) {
 		return <Login />;
@@ -63,11 +74,15 @@ function RequiresCharacter({ element: Element }: { element: () => ReactElement }
 		return <CharacterSelect />;
 	}
 
+	if (playerData.inCreation && !allowUnfinished) {
+		return <CharacterCreate />;
+	}
+
 	return <Element />;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-function Fallback({ element: Element, render }: { element: () => ReactElement, render: boolean }): ReactElement {
+function Fallback({ element: Element, render }: { element: () => ReactElement | null, render: boolean }): ReactElement {
 	if (!render) {
 		return <Navigate to={ '/' } />;
 	}

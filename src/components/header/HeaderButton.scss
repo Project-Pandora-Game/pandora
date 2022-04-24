@@ -36,7 +36,7 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 		height: $header-button-img-height;
 	}
 
-	&:hover, &:focus {
+	&:hover, &:focus, &.active {
 		background-color: $grey-darkest;
 		color: $white-primary;
 

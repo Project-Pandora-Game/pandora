@@ -1,17 +1,12 @@
 import { toast, ToastOptions } from 'react-toastify';
 import { DIRECTORY_ADDRESS } from '../config/Environment';
-import { EMPTY, GetLogger, ICharacterSelfInfo } from 'pandora-common';
-import { Connection, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
+import { EMPTY, GetLogger, ICharacterSelfInfo, IDirectoryClientChangeEvents, ConnectionBase, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
 import { GetAuthData, HandleDirectoryConnectionState } from './account_manager';
 import { connect, Socket } from 'socket.io-client';
 import { ConnectToShard } from './socketio_shard_connector';
+import { TypedEventEmitter } from '../event';
 
 const logger = GetLogger('DirConn');
-
-// Setup message handler
-const handler = new MessageHandler<IDirectoryClientBase>({}, {
-	connectionState: HandleDirectoryConnectionState,
-});
 
 /** State of connection to Directory */
 export enum DirectoryConnectionState {
@@ -27,6 +22,12 @@ export enum DirectoryConnectionState {
 	DISCONNECTED,
 }
 
+export const ChangeEventEmmiter = new class ChangeEventEmmiter extends TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
+	onSomethingChanged(changes: IDirectoryClientChangeEvents[]): void {
+		changes.forEach((change) => this.emit(change, true));
+	}
+};
+
 function CreateConnection(uri: string): Socket {
 	// Create the connection without connecting
 	return connect(uri, {
@@ -37,7 +38,7 @@ function CreateConnection(uri: string): Socket {
 }
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends Connection<Socket, IClientDirectoryBase> {
+export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> {
 
 	/** Current state of the connection */
 	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;
@@ -56,6 +57,11 @@ export class SocketIODirectoryConnector extends Connection<Socket, IClientDirect
 		this.socket.on('disconnect', this.onDisconnect.bind(this));
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
+		// Setup message handler
+		const handler = new MessageHandler<IDirectoryClientBase>({}, {
+			connectionState: HandleDirectoryConnectionState,
+			somethingChanged: ({ changes }) => ChangeEventEmmiter.onSomethingChanged(changes),
+		});
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
 

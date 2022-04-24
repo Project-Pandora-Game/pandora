@@ -1,14 +1,27 @@
-import React, { ReactElement } from 'react';
+import classNames from 'classnames';
+import { EMPTY } from 'pandora-common';
+import React, { ReactElement, useState } from 'react';
 import friendsIcon from '../../assets/icons/friends.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
+import { useCharacterData } from '../../character/character';
+import { Player } from '../../character/player';
 import { currentAccount, Logout } from '../../networking/account_manager';
+import { DirectoryConnector } from '../../networking/socketio_directory_connector';
+import { ShardConnector } from '../../networking/socketio_shard_connector';
 import { useObservable } from '../../observable';
 import './header.scss';
 import { HeaderButton } from './HeaderButton';
 
 function LeftHeader(): ReactElement {
+	const shardConnector = useObservable(ShardConnector);
+
+	const characterData = useCharacterData(Player);
+	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
+
+	const [showCharacterMenu, setShowCharacterMenu] = useState<boolean>(false);
+
 	return (
 		<div className='leftHeader flex'>
 			{/*
@@ -16,6 +29,31 @@ function LeftHeader(): ReactElement {
 			<div className="headerButton">Inventory</div>
 			<div className="headerButton">Room</div>
 			*/ }
+			{ shardConnector && (
+				<button className={ classNames('HeaderButton', showCharacterMenu && 'active') } onClick={ (ev) => {
+					ev.currentTarget.focus();
+					setShowCharacterMenu(!showCharacterMenu);
+				} }>
+					{ characterName ?? `[Character ${shardConnector.connectionInfo.characterId}]` }
+				</button>
+			) }
+			{ !shardConnector && <span>[no character selected]</span> }
+			{ shardConnector && showCharacterMenu && <CharacterMenu close={ () => setShowCharacterMenu(false) } /> }
+		</div>
+	);
+}
+
+function CharacterMenu({ close }: { close: () => void }): ReactElement {
+	return (
+		<div className='characterMenu'>
+			<header>Character menu</header>
+			<a onClick={ (ev) => {
+				close();
+				ev.preventDefault();
+				DirectoryConnector.sendMessage('disconnectCharacter', EMPTY);
+			} }>
+				Change character
+			</a>
 		</div>
 	);
 }

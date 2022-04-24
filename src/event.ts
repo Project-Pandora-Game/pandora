@@ -1,20 +1,22 @@
 export type TypedEvent = Record<string | symbol | number, unknown>;
 
 interface ITypedEventEmitter<T extends TypedEvent> {
-	on<K extends keyof T>(s: K, listener: (v: T[K]) => void): void;
-	onAny(listener: (value: Partial<T>) => void): void;
+	on<K extends keyof T>(s: K, listener: (v: T[K]) => void): () => void;
+	onAny(listener: (value: Partial<T>) => void): () => void;
 }
 
 export abstract class TypedEventEmitter<T extends TypedEvent> implements ITypedEventEmitter<T> {
 	private _listeners: Map<keyof T, Set<(value: T[keyof T]) => void>> = new Map();
 	private _allListeners: Set<(value: Partial<T>) => void> = new Set();
 
-	onAny(listener: (value: Partial<T>) => void) {
+	onAny(listener: (value: Partial<T>) => void): () => void {
 		this._allListeners.add(listener);
-		return () => this._allListeners.delete(listener);
+		return () => {
+			this._allListeners.delete(listener);
+		};
 	}
 
-	on<K extends keyof T>(event: K, listener: (value: T[K]) => void) {
+	on<K extends keyof T>(event: K, listener: (value: T[K]) => void): () => void {
 		let listeners = this._listeners.get(event) as Set<(value: T[K]) => void>;
 		if (!listeners) {
 			listeners = new Set<(value: T[K]) => void>();
@@ -29,7 +31,7 @@ export abstract class TypedEventEmitter<T extends TypedEvent> implements ITypedE
 		};
 	}
 
-	protected emit<K extends keyof T>(event: K, value: T[K]) {
+	protected emit<K extends keyof T>(event: K, value: T[K]): void {
 		this._listeners.get(event)?.forEach((observer) => observer(value));
 		const obj: Partial<T> = { [event]: value } as unknown as Partial<T>;
 		this._allListeners.forEach((observer) => observer(obj));

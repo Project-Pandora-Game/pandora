@@ -34,6 +34,7 @@ export class Observable<T> {
 export function useObservable<T>(obs: Observable<T>): T {
 	const [value, setValue] = useState<T>(obs.value);
 	useEffect(() => {
+		setValue(obs.value);
 		return obs.subscribe(setValue);
 	}, [obs]);
 	return value;

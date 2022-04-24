@@ -1,7 +1,7 @@
 import React from 'react';
 import { ToastContainer } from 'react-toastify';
 import { render } from 'react-dom';
-import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common/dist/logging';
+import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
 import { BrowserRouter } from 'react-router-dom';
 import { EditorRoutes } from './routes';
 import '../index.scss';

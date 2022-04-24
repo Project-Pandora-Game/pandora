@@ -1,16 +1,11 @@
-import { GetLogger, IDirectoryCharacterConnectionInfo } from 'pandora-common';
-import { Connection, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
+import { GetLogger, IDirectoryCharacterConnectionInfo, IShardClientArgument, ConnectionBase, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
+import { toast, ToastOptions } from 'react-toastify';
 import { connect, Socket } from 'socket.io-client';
 import { Player } from '../character/player';
+import { Room } from '../character/room';
 import { Observable } from '../observable';
 
 const logger = GetLogger('ShardConn');
-
-// Setup message handler
-const handler = new MessageHandler<IShardClientBase>({}, {
-	loadCharacter: Player.load.bind(Player),
-	updateCharacter: Player.update.bind(Player),
-});
 
 export const ShardConnector = new Observable<SocketIOShardConnector | null>(null);
 
@@ -42,7 +37,7 @@ function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacte
 }
 
 /** Class housing connection from Shard to Shard */
-export class SocketIOShardConnector extends Connection<Socket, IClientShardBase> {
+export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardBase> {
 
 	/** Current state of the connection */
 	private _state: ShardConnectionState = ShardConnectionState.NONE;
@@ -53,7 +48,6 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 
 	readonly connectionInfo: Readonly<IDirectoryCharacterConnectionInfo>;
 
-	private readonly playerListenerCleanup: () => void;
 	private loadResolver: ((arg: this) => void) | null = null;
 
 	constructor(info: IDirectoryCharacterConnectionInfo) {
@@ -65,20 +59,16 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 		this.socket.on('disconnect', this.onDisconnect.bind(this));
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
-		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
-
-		this.playerListenerCleanup = Player.on('load', () => {
-			if (this._state === ShardConnectionState.WAIT_FOR_DATA) {
-				this.setState(ShardConnectionState.CONNECTED);
-				if (this.loadResolver) {
-					this.loadResolver(this);
-					this.loadResolver = null;
-				}
-				logger.info('Received initial character data');
-			} else {
-				logger.fatal('Assertion failed: received Player \'load\' event when in state:', ShardConnectionState[this._state]);
-			}
+		// Setup message handler
+		const handler = new MessageHandler<IShardClientBase>({}, {
+			load: this.onLoad.bind(this),
+			updateCharacter: Player.update.bind(Player),
+			chatRoomUpdate: this.onChatRoomUpdate.bind(this),
+			chatRoomMessage: (message: IShardClientArgument['chatRoomMessage']) => {
+				Room.onMessage(message);
+			},
 		});
+		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
 
 	public connectionInfoMatches(info: IDirectoryCharacterConnectionInfo): boolean {
@@ -117,10 +107,11 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 		if (this._state === ShardConnectionState.DISCONNECTED)
 			return;
 		this.socket.close();
-		this.playerListenerCleanup();
 		this.setState(ShardConnectionState.DISCONNECTED);
 		logger.info('Disconnected from Shard');
 	}
+
+	private toastId: string | number | null = null;
 
 	/**
 	 * Sets a new state, updating all dependent things
@@ -128,6 +119,56 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 	 */
 	private setState(newState: ShardConnectionState): void {
 		this._state = newState;
+
+		let options: ToastOptions = {
+			isLoading: false,
+			autoClose: 2_000,
+			hideProgressBar: true,
+			closeOnClick: true,
+			closeButton: true,
+			draggable: true,
+		};
+		const optionsPending: ToastOptions = {
+			type: 'default',
+			isLoading: true,
+			autoClose: false,
+			closeOnClick: false,
+			closeButton: false,
+			draggable: false,
+		};
+		let render = '';
+		if (newState === ShardConnectionState.INITIAL_CONNECTION_PENDING) {
+			options = optionsPending;
+			render = 'Connecting to Shard...';
+		} else if (newState === ShardConnectionState.WAIT_FOR_DATA) {
+			options = optionsPending;
+			render = 'Loading Shard data...';
+		} else if (newState === ShardConnectionState.CONNECTED) {
+			options.type = 'success';
+			render = 'Connected to Shard';
+		} else if (newState === ShardConnectionState.CONNECTION_LOST) {
+			options = optionsPending;
+			render = 'Shard connection lost\nReconnecting...';
+		}
+
+		if (this.toastId !== null) {
+			if (render) {
+				toast.update(this.toastId, {
+					...options,
+					render,
+				});
+			} else {
+				toast.dismiss(this.toastId);
+				this.toastId = null;
+			}
+		} else if (render) {
+			this.toastId = toast(render, {
+				...options,
+				onClose: () => {
+					this.toastId = null;
+				},
+			});
+		}
 	}
 
 	/** Handle successful connection to Shard */
@@ -160,12 +201,32 @@ export class SocketIOShardConnector extends Connection<Socket, IClientShardBase>
 	private onConnectError(err: Error) {
 		logger.warning('Connection to Shard failed:', err.message);
 	}
+
+	private onLoad({ character, room }: IShardClientArgument['load']): void {
+		Player.load(character);
+		Room.update(room);
+		if (this._state === ShardConnectionState.WAIT_FOR_DATA) {
+			this.setState(ShardConnectionState.CONNECTED);
+			if (this.loadResolver) {
+				this.loadResolver(this);
+				this.loadResolver = null;
+			}
+			logger.info('Received initial character data');
+		} else {
+			logger.fatal('Assertion failed: received \'load\' event when in state:', ShardConnectionState[this._state]);
+		}
+	}
+
+	private onChatRoomUpdate({ room }: IShardClientArgument['chatRoomUpdate']): void {
+		Room.update(room);
+	}
 }
 
 export function DisconnectFromShard(): void {
 	if (ShardConnector.value) {
 		ShardConnector.value.disconnect();
 		ShardConnector.value = null;
+		Player.unload();
 	}
 }
 

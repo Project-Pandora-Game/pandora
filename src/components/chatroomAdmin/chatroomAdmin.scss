@@ -1,0 +1,32 @@
+@import '../../styles/constants';
+@import '../../styles/utils';
+
+.roomAdminScreen {
+	width: 50vw;
+
+	& > * {
+		margin-top: 0.5em;
+	}
+
+	.input-container {
+		@include flex(column);
+		margin-top: 1em;
+		gap: 0.5em;
+		width: 100%;
+
+		ul {
+			margin-top: 0;
+		}
+	}
+
+	.message {
+		font-size: 0.9em;
+		margin: 0.5em 0;
+	}
+
+	.error {
+		@extend .message;
+		color: $theme-error;
+		font-weight: 600;
+	}
+}

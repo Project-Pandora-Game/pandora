@@ -1,5 +1,4 @@
-import type { ICharacterData } from 'pandora-common';
-import { GetLogger } from 'pandora-common/dist/logging';
+import { ICharacterData, GetLogger } from 'pandora-common';
 import { ShardConnector } from '../networking/socketio_shard_connector';
 import { Character } from './character';
 
@@ -17,12 +16,22 @@ export const Player = new class Player extends Character {
 		logger.debug('Updated player data', data);
 	}
 
+	public unload(): void {
+		this._data = undefined;
+		this.emit('unload', undefined);
+	}
+
 	public async finishCreation(name: string): Promise<'ok' | 'failed'> {
 		const connector = ShardConnector.value;
-		if (!connector)
+		if (!connector || !this.loaded || !this._data)
 			return 'failed';
-		return (await connector.awaitResponse('finishCharacterCreation', {
+		const result = (await connector.awaitResponse('finishCharacterCreation', {
 			name,
 		})).result;
+		if (result === 'ok') {
+			delete this._data.inCreation;
+			this.emit('update', this._data);
+		}
+		return result;
 	}
 };

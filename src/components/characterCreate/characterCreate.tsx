@@ -1,6 +1,7 @@
 import { IsCharacterName } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { useCharacterData } from '../../character/character';
 import { Player } from '../../character/player';
 import { Button } from '../common/Button/Button';
 
@@ -10,6 +11,12 @@ export function CharacterCreate(): ReactElement {
 	const [errorMessage, setErrorMessage] = useState('');
 
 	const navigate = useNavigate();
+
+	const playerData = useCharacterData(Player);
+
+	if (playerData && !playerData.inCreation) {
+		return <Navigate to='/pandora_lobby' />;
+	}
 
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
 		//Prevent page reload

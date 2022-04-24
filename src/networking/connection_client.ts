@@ -1,13 +1,11 @@
-import { IDirectoryClientBase, GetLogger } from 'pandora-common';
-import type { Socket } from 'socket.io';
+import { IDirectoryClientBase, GetLogger, Connection, IncomingSocket } from 'pandora-common';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
 import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
-import { SocketIOConnection } from './socketio_common_connection';
 
 /** Class housing connection from a client */
-export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClientBase> implements IConnectionClient {
+export class ClientConnection extends Connection<IncomingSocket, IDirectoryClientBase, true> implements IConnectionClient {
 	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
 	/** The current account this connection is logged in as or `null` if it isn't */
@@ -22,21 +20,19 @@ export class SocketIOConnectionClient extends SocketIOConnection<IDirectoryClien
 		return this._character;
 	}
 
-	get id(): string {
-		return this.socket.id;
-	}
-
 	isLoggedIn(): this is { readonly account: Account; } {
 		return this.account !== null;
 	}
 
-	constructor(socket: Socket) {
+	constructor(socket: IncomingSocket, auth: unknown) {
 		super(socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
-		ConnectionManagerClient.onConnect(this, socket.handshake.auth);
+		this.logger.verbose('Connected');
+		ConnectionManagerClient.onConnect(this, auth);
 	}
 
 	/** Handler for when client disconnects */
-	protected override onDisconnect(_reason: string): void {
+	protected override onDisconnect(reason: string): void {
+		this.logger.verbose('Disconnected, reason:', reason);
 		ConnectionManagerClient.onDisconnect(this);
 	}
 

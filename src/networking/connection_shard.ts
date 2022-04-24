@@ -1,28 +1,21 @@
-import type { Socket } from 'socket.io';
-import { GetLogger } from 'pandora-common';
+import { Connection, GetLogger, IDirectoryShardBase, IncomingSocket } from 'pandora-common';
 import { ConnectionType, IConnectionShard } from './common';
-import { SocketIOConnection } from './socketio_common_connection';
 import { ConnectionManagerShard } from './manager_shard';
 import { Shard } from '../shard/shard';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-interface IDirectoryShard { } // TODO Implement this in panda-common
-
 /** Class housing connection from a shard */
-export class SocketIOConnectionShard extends SocketIOConnection<IDirectoryShard> implements IConnectionShard {
+export class ShardConnection extends Connection<IncomingSocket, IDirectoryShardBase, true> implements IConnectionShard {
 	readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
 
 	public shard: Shard | null = null;
 
-	get id() {
-		return this.socket.id;
-	}
-
-	constructor(socket: Socket) {
+	constructor(socket: IncomingSocket) {
 		super(socket, GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`));
+		this.logger.verbose('Connected');
 	}
 
-	protected override onDisconnect(_reason: string): void {
+	protected override onDisconnect(reason: string): void {
+		this.logger.verbose('Disconnected, reason:', reason);
 		ConnectionManagerShard.onDisconnect(this);
 	}
 

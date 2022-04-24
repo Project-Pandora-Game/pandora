@@ -50,7 +50,7 @@
 		"mongodb-memory-server": "^8.4.0",
 		"nanoid": "^3.2.0",
 		"nodemailer": "^6.7.2",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#994f45a",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#16226a6",
 		"socket.io": "^4.4.1"
 	}
 }

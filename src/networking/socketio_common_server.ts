@@ -1,4 +1,3 @@
-import type { ISocketIOConnection } from './socketio_common_connection';
 import type { IncomingMessage, Server as HttpServer } from 'http';
 import { Server, Socket, ServerOptions as SocketIoOptions } from 'socket.io';
 
@@ -38,5 +37,5 @@ export abstract class SocketIOServer {
 	 * Handle new incoming connections
 	 * @param socket - The newly connected socket
 	 */
-	protected abstract onConnect(socket: Socket): ISocketIOConnection;
+	protected abstract onConnect(socket: Socket): void;
 }

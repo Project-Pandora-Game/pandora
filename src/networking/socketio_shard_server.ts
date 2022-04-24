@@ -3,7 +3,8 @@ import type { IncomingMessage, Server as HttpServer } from 'http';
 import { SHARD_SHARED_SECRET } from '../config';
 import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH } from 'pandora-common';
 import { SocketIOServer } from './socketio_common_server';
-import { SocketIOConnectionShard } from './socketio_shard_connection';
+import { ShardConnection } from './connection_shard';
+import { SocketIOSocket } from './socketio_common_socket';
 
 const logger = GetLogger('SIO-Server-Shard');
 
@@ -39,15 +40,14 @@ export class SocketIOServerShard extends SocketIOServer {
 	 * Handle new incoming connections
 	 * @param socket - The newly connected socket
 	 */
-	protected override onConnect(socket: Socket): SocketIOConnectionShard {
+	protected override onConnect(socket: Socket): void {
 		logger.debug(`New shard connected; id: ${socket.id}, remoteAddress: ${socket.request.socket.remoteAddress ?? '[unknown]'}`);
 		socket.once('disconnect', () => {
 			logger.debug(`Shard disconnected; id: ${socket.id}`);
 		});
-		const connection = new SocketIOConnectionShard(socket);
+		const connection = new ShardConnection(new SocketIOSocket(socket));
 		if (!connection.isConnected()) {
 			logger.fatal('Asserting failed: client disconnect before onConnect finished');
 		}
-		return connection;
 	}
 }

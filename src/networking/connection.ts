@@ -1,32 +1,20 @@
 import { IsObject } from '../validation';
 import { DEFAULT_ACK_TIMEOUT } from './config';
-import type { Logger } from '../logging';
+import { GetLogger, Logger } from '../logging';
 import type { BoolSelect, MembersFirstArg } from '../utility';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotHandler, SocketInterfaceResponseHandler } from './helpers';
 import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config';
+import { EmitterWithAck, IncomingSocket, MockConnectionSocket } from './socket';
+import { CreateMessageHandlerOnAny, IMessageHandler } from './message_handler';
 
-interface Emitter {
-	emit(event: string, arg: unknown): void;
-}
-
-interface EmitterWithAck extends Emitter {
-	timeout(seconds: number): {
-		emit(event: string, arg: unknown, callback: (error: unknown, arg: unknown) => void): void;
-	};
-	emit(event: string, arg: unknown): void;
-	emit(event: string, arg: unknown, callback: (arg: unknown) => void): void;
-}
-
-export interface IConnectionBase<T extends SocketInterfaceDefinition<T>> {
+export interface IConnectionBase<T extends SocketInterfaceDefinition<T>, Undetermined extends boolean> {
 	/**
 	 * Send a oneshot message to the client
 	 * @param messageType - Type of message to send
 	 * @param message - Message data
 	 */
 	sendMessage<K extends keyof SocketInterfaceOneshotHandler<T> & string>(messageType: K, message: MembersFirstArg<T>[K]): void;
-}
 
-export interface IConnection<T extends SocketInterfaceDefinition<T>, Undetermined extends boolean> extends IConnectionBase<T> {
 	/**
 	 * Send a message to the client and wait for a response
 	 * @param messageType - Type of message to send
@@ -40,25 +28,29 @@ export interface IConnection<T extends SocketInterfaceDefinition<T>, Undetermine
 	): Promise<BoolSelect<Undetermined, Partial<Record<keyof ReturnType<T[K]>, unknown>>, ReturnType<T[K]>>>;
 }
 
-export class ConnectionBase<EmitterT extends Emitter, T extends SocketInterfaceDefinition<T>> implements IConnectionBase<T> {
+export interface IConnection<T extends SocketInterfaceDefinition<T>, Undetermined extends boolean> extends IConnectionBase<T, Undetermined> {
+	readonly id: string;
+	/** Check if this connection is still connected */
+	isConnected(): boolean;
+}
+
+/** Allows sending messages */
+export class ConnectionBase<EmitterT extends EmitterWithAck, T extends SocketInterfaceDefinition<T>, Undetermined extends boolean = false> implements IConnectionBase<T, Undetermined> {
 	protected readonly socket: EmitterT;
 	protected readonly logger: Logger;
+
 	constructor(socket: EmitterT, logger: Logger) {
 		this.socket = socket;
 		this.logger = logger;
 	}
+
 	sendMessage<K extends keyof SocketInterfaceOneshotHandler<T> & string>(messageType: K, message: MembersFirstArg<T>[K]): void {
 		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 			this.logger.debug(`\u25B2 message '${messageType}':`, message);
 		}
 		this.socket.emit(messageType as string, message);
 	}
-}
 
-export class Connection<EmitterT extends EmitterWithAck, T extends SocketInterfaceDefinition<T>, Undetermined extends boolean = false> extends ConnectionBase<EmitterT, T> implements IConnection<T, Undetermined> {
-	constructor(socket: EmitterT, logger: Logger) {
-		super(socket, logger);
-	}
 	awaitResponse<K extends keyof SocketInterfaceResponseHandler<T> & string>(
 		messageType: K,
 		message: MembersFirstArg<T>[K],
@@ -84,5 +76,59 @@ export class Connection<EmitterT extends EmitterWithAck, T extends SocketInterfa
 				}
 			});
 		});
+	}
+}
+
+/** Allows sending and receiving messages */
+export abstract class Connection<EmitterT extends IncomingSocket, T extends SocketInterfaceDefinition<T>, Undetermined extends boolean = false> extends ConnectionBase<EmitterT, T, Undetermined> implements IConnection<T, Undetermined> {
+	constructor(socket: EmitterT, logger: Logger) {
+		super(socket, logger);
+		socket.onDisconnect = this.onDisconnect.bind(this);
+		socket.onMessage = CreateMessageHandlerOnAny(logger, (messageType, message, callback) => this.onMessage(messageType, message, callback));
+	}
+
+	get id(): string {
+		return this.socket.id;
+	}
+
+	/** Check if this connection is still connected */
+	isConnected(): boolean {
+		return this.socket.isConnected();
+	}
+
+	/** Handler for when client disconnects */
+	protected abstract onDisconnect(reason: string): void;
+
+	/**
+	 * Handle incoming message from client
+	 * @param messageType - The type of incoming message
+	 * @param message - The message
+	 * @returns Promise of resolution of the message, for some messages also response data
+	 */
+	protected abstract onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean>;
+}
+
+export class MockConnection<T extends SocketInterfaceDefinition<T>> extends Connection<MockConnectionSocket, T, false> {
+	readonly messageHandler: IMessageHandler<MockConnection<T>>;
+
+	constructor(messageHandler: IMessageHandler<MockConnection<T>>, id: string, logger?: Logger) {
+		super(new MockConnectionSocket(id), logger ?? GetLogger('MockConnection', `[MockConnection, ${id}]`));
+		this.messageHandler = messageHandler;
+	}
+
+	onDisconnect(_reason: string): void {
+		// NOOP, to be hooked
+	}
+
+	onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
+		return this.messageHandler.onMessage(messageType, message, callback, this);
+	}
+
+	connect(): IncomingSocket {
+		return this.socket.remote;
+	}
+
+	disconnect(): void {
+		this.socket.disconnect();
 	}
 }

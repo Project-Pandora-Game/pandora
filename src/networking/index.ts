@@ -8,4 +8,5 @@ export * from './empty';
 export * from './message_handler';
 export * from './shard_client';
 export * from './shard_directory';
+export * from './socket';
 export * from './validation';

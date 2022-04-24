@@ -40,7 +40,7 @@
 	"dependencies": {
 		"dotenv": "^14.3.0",
 		"mongodb": "^4.3.1",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#994f45a",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#16226a6",
 		"socket.io": "^4.4.1",
 		"socket.io-client": "^4.4.1"
 	}

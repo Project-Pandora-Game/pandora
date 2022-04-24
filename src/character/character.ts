@@ -1,10 +1,10 @@
 import { AssertNever, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, IShardCharacterDefinition, Logger, RoomId } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import { CHARACTER_TIMEOUT } from './characterManager';
-import { SocketIOConnectionClient } from '../networking/socketio_client_connection';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
 import { GetDatabase } from '../database/databaseProvider';
+import { IConnectionClient } from '../networking/common';
 
 export const enum CharacterModification {
 	NONE = 0,
@@ -21,7 +21,7 @@ export class Character {
 	private state = CharacterModification.NONE;
 	private modified: Set<keyof ICharacterDataChange> = new Set();
 
-	public connection: SocketIOConnectionClient | null = null;
+	public connection: IConnectionClient | null = null;
 	private invalid: null | 'timeout' | 'error' | 'remove' = null;
 	private timeout: NodeJS.Timeout | null = null;
 
@@ -84,7 +84,7 @@ export class Character {
 		return this.connection !== undefined;
 	}
 
-	public setConnection(connection: SocketIOConnectionClient | null): void {
+	public setConnection(connection: IConnectionClient | null): void {
 		if (this.invalid) {
 			AssertNever();
 		}

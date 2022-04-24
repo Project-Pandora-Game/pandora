@@ -1,5 +1,5 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig, IChatRoomFullInfo, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, Connection, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IShardCharacterDefinition } from 'pandora-common';
+import { GetLogger, logConfig, IChatRoomFullInfo, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IShardCharacterDefinition, ConnectionBase } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
@@ -43,7 +43,7 @@ function CreateConnection(uri: string, secret: string = ''): Socket {
 }
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends Connection<Socket, IShardDirectoryBase> {
+export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDirectoryBase> {
 
 	/** Current state of the connection */
 	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;

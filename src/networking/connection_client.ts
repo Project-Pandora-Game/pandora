@@ -1,19 +1,12 @@
-import type { IncomingHttpHeaders } from 'http';
-import { CharacterId, GetLogger, IShardClientBase } from 'pandora-common';
-import type { Socket } from 'socket.io';
+import { CharacterId, GetLogger, IShardClientBase, Connection, IncomingSocket } from 'pandora-common';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
 import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
-import { SocketIOConnection } from './socketio_common_connection';
 
 /** Class housing connection from a client */
-export class SocketIOConnectionClient extends SocketIOConnection<IShardClientBase> implements IConnectionClient {
+export class ClientConnection extends Connection<IncomingSocket, IShardClientBase, true> implements IConnectionClient {
 	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
-
-	public get id(): string {
-		return this.socket.id;
-	}
 
 	private _aborted: boolean = false;
 	public get aborted(): boolean {
@@ -23,18 +16,19 @@ export class SocketIOConnectionClient extends SocketIOConnection<IShardClientBas
 	/** Character of the connection, always set by `Character` class */
 	public character: Character | null = null;
 
-	public get headers(): IncomingHttpHeaders {
-		return this.socket.handshake.headers;
-	}
+	public readonly headers: Record<string, undefined | string | string[]>;
 
-	constructor(socket: Socket) {
+	constructor(socket: IncomingSocket, headers: Record<string, undefined | string | string[]>) {
 		super(socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
+		this.headers = headers;
+		this.logger.verbose('Connected');
 		ConnectionManagerClient.onConnect(this);
 	}
 
 	/** Handler for when client disconnects */
-	protected override onDisconnect(_reason: string): void {
+	protected override onDisconnect(reason: string): void {
 		this.character?.setConnection(null);
+		this.logger.verbose('Disconnected, reason:', reason);
 		ConnectionManagerClient.onDisconnect(this);
 	}
 
@@ -43,7 +37,7 @@ export class SocketIOConnectionClient extends SocketIOConnection<IShardClientBas
 			return;
 		this._aborted = true;
 		this.character?.setConnection(null);
-		this.socket.disconnect(true);
+		this.socket.disconnect();
 	}
 
 	public loadCharacter(id: CharacterId): boolean {

@@ -6,7 +6,7 @@ export const AllLayers: ObservableLayer[] = [];
 export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]; selected: boolean; }> implements LayerDefinition {
 	private readonly _layer: LayerDefinition;
 
-	@observable()
+	@observable
 	public selected: boolean = false;
 
 	constructor(layer: LayerDefinition) {

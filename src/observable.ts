@@ -44,24 +44,28 @@ export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEm
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export function observable() {
-	return <T extends TypedEvent>(target: ObservableClass<T> & T, key: keyof T) => {
-		let value = target[key];
-		const getter = function () {
-			return value;
-		};
-		const setter = function (newValue: typeof value) {
-			if (value !== newValue) {
-				value = newValue;
-				// @ts-expect-error: call protected method
-				target.emit.apply(this, [key, value]);
-			}
-		};
-		Object.defineProperty(target, key, {
-			get: getter,
-			set: setter,
-			enumerable: true,
-			configurable: true,
-		});
-	};
+export function observable<T extends TypedEvent>(target: ObservableClass<T> & T, key: keyof T) {
+	const symbol: unique symbol = Symbol(key as string);
+	const value = target[key];
+	const typebase = { [symbol]: value };
+	Object.defineProperty(target, symbol, {
+		value,
+		writable: true,
+		enumerable: false,
+		configurable: false,
+	});
+	Object.defineProperty(target, key, {
+		get() {
+			const accessor = this as unknown as typeof typebase;
+			return accessor[symbol];
+		},
+		set(newValue: typeof value) {
+			const accessor = this as unknown as typeof typebase;
+			accessor[symbol] = newValue;
+			// @ts-expect-error: call protected method
+			target.emit.apply(this, [key, accessor[symbol]]);
+		},
+		enumerable: true,
+		configurable: true,
+	});
 }

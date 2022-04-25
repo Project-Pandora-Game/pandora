@@ -11,11 +11,11 @@ type IObservableBone = {
 export class ObservableBone extends ObservableClass<IObservableBone> implements BoneState {
 	private _name: string;
 
-	@observable()
+	@observable
 	public x: number;
-	@observable()
+	@observable
 	public y: number;
-	@observable()
+	@observable
 	public rotation: number = 0;
 
 	private _baseRotation: number;

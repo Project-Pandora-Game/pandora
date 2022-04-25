@@ -73,13 +73,13 @@ describe('@observable()', () => {
 	it.todo('decorator use case isn\'t tested due to TS & babel not working the same');
 
 	it('should return decorator factory function', () => {
-		expect(typeof observable()).toBe('function');
+		expect(typeof observable).toBe('function');
 		const mock = {
 			test: 'one',
 			test2: 2,
 			emit: jest.fn(),
 		};
-		const decorator = observable();
+		const decorator = observable;
 		// @ts-expect-error: mock is not an ObservableClass
 		decorator(mock, 'test');
 		mock.test = 'updated';

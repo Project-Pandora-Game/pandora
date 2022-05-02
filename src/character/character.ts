@@ -1,6 +1,6 @@
 import { AssertNever, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, IShardCharacterDefinition, Logger, RoomId } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
-import { CHARACTER_TIMEOUT } from './characterManager';
+import { CharacterManager, CHARACTER_TIMEOUT } from './characterManager';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
 import { GetDatabase } from '../database/databaseProvider';
@@ -134,6 +134,15 @@ export class Character {
 		}
 
 		return false;
+	}
+
+	public async saveAndDisconnect(): Promise<void> {
+		this.invalidate('remove');
+		try {
+			await this.save();
+		} finally {
+			CharacterManager.removeCharacter(this.id);
+		}
 	}
 
 	public onRemove(): void {

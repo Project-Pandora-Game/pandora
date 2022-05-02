@@ -5,6 +5,7 @@ import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
 import { StartHttpServer } from './networking/httpServer';
 import { InitDatabase } from './database/databaseProvider';
+import { SetupSignalHandling } from './lifecycle';
 // get version from package.json
 
 const LOG_DIR = './logs';
@@ -18,6 +19,7 @@ Start().catch((error) => {
  * Starts the application.
  */
 async function Start(): Promise<void> {
+	SetupSignalHandling();
 	SetupLogging();
 	logger.info(`${APP_NAME} v${APP_VERSION} starting...`);
 	logger.debug('Connecting to Directory...');

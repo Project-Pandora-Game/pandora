@@ -3,6 +3,7 @@ import { GetLogger, logConfig, IChatRoomFullInfo, HTTP_HEADER_SHARD_SECRET, HTTP
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
+import { Stop } from '../lifecycle';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 10_000;
@@ -64,6 +65,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 
 		// Setup message handler
 		const handler = new MessageHandler<IDirectoryShardBase>({
+			stop: Stop,
 		}, {
 			prepareCharacters: this.handlePrepareCharacters.bind(this),
 		});

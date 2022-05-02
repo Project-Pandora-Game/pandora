@@ -13,6 +13,10 @@ export const CharacterManager = new class CharacterManager {
 		return this._characters.get(id);
 	}
 
+	public getValidCharacters(): Character[] {
+		return [...this._characters.values()].filter((c) => c.isValid);
+	}
+
 	public listCharacters(): IShardCharacterDefinition[] {
 		return [...this._characters.values()]
 			.map((char) => ({

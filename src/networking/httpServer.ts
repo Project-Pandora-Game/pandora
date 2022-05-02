@@ -7,6 +7,8 @@ import { SocketIOServerClient } from './socketio_client_server';
 
 const logger = GetLogger('Server');
 
+let server: HttpServer;
+
 /** Setup HTTP server and everything related to it */
 export function StartHttpServer(): Promise<void> {
 	const port = Number.parseInt(SERVER_PORT);
@@ -15,7 +17,6 @@ export function StartHttpServer(): Promise<void> {
 	}
 
 	// Setup HTTP(S) server
-	let server: HttpServer;
 	if (SERVER_HTTPS_CERT || SERVER_HTTPS_KEY) {
 		// Read cert+key files in case of HTTPS
 		if (!SERVER_HTTPS_CERT || !SERVER_HTTPS_KEY) {
@@ -70,4 +71,11 @@ export function StartHttpServer(): Promise<void> {
 			resolve();
 		});
 	});
+}
+
+export function StopHttpServer(): void {
+	if (server) {
+		server.unref();
+		server.close();
+	}
 }

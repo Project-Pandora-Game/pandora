@@ -2,6 +2,7 @@ import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceU
 import type { MessageHandler } from './message_handler';
 import type { CharacterId, ICharacterData } from '../character';
 import { IChatRoomFullInfo } from '../chatroom';
+import { AssetsDefinitionFile } from '../assets/definitions';
 
 export type IChatRoomClientData = IChatRoomFullInfo & {
 	characters: {
@@ -21,8 +22,11 @@ export type IChatRoomMessage = {
 /** Shard->Client handlers */
 interface ShardClient {
 	load: (args: {
-		character: ICharacterData,
-		room: null | IChatRoomClientData,
+		character: ICharacterData;
+		room: null | IChatRoomClientData;
+		assetsDefinition: AssetsDefinitionFile;
+		assetsDefinitionHash: string;
+		assetsSource: string;
 	}) => void;
 	updateCharacter: (args: Partial<ICharacterData>) => void;
 	chatRoomUpdate(args: {

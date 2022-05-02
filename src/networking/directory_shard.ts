@@ -2,6 +2,7 @@ import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceU
 import type { CharacterId } from '../character';
 import type { MessageHandler } from './message_handler';
 import type { IChatRoomFullInfo, IChatroomsLeaveReasonRecord, RoomId } from '../chatroom';
+import { IEmpty } from './empty';
 
 export type IShardCharacterDefinition = {
 	id: CharacterId;
@@ -18,6 +19,7 @@ interface DirectoryShard {
 		rooms: IChatRoomFullInfo[];
 		roomLeaveReasons: IChatroomsLeaveReasonRecord;
 	}): void;
+	stop(arg: IEmpty): IEmpty;
 }
 
 export type IDirectoryShard = SocketInterface<DirectoryShard>;

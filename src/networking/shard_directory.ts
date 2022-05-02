@@ -3,6 +3,7 @@ import type { MessageHandler } from './message_handler';
 import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterDataId, ICharacterDataUpdate } from '../character';
 import { IShardCharacterDefinition } from './directory_shard';
 import { IChatRoomFullInfo, IChatroomsLeaveReasonRecord } from '../chatroom';
+import { IEmpty } from './empty';
 
 export type ShardFeature = 'development';
 const ShardFeatures: Record<ShardFeature, true> = {
@@ -30,6 +31,7 @@ interface ShardDirectory {
 		/** Dictionary of reasons why character was removed from room. Used to display specific messages (left, disconnected, kicked, ...) */
 		roomLeaveReasons: IChatroomsLeaveReasonRecord;
 	};
+	shardRequestStop: (args: IEmpty) => void;
 	characterDisconnect: (args: { id: CharacterId; reason: 'timeout' | 'error'; }) => void;
 
 	createCharacter: (args: ICharacterDataId) => ICharacterData;

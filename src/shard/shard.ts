@@ -6,6 +6,7 @@ import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
 import type { Room } from './room';
 import { ConnectionManagerClient } from '../networking/manager_client';
+import { Sleep } from '../utility';
 
 export class Shard {
 	public readonly id = nanoid();
@@ -16,6 +17,7 @@ export class Shard {
 	public get registered(): boolean {
 		return this._registered;
 	}
+	private stopping: boolean = false;
 
 	private publicURL = '';
 	private features: IDirectoryShardInfo['features'] = [];
@@ -27,6 +29,10 @@ export class Shard {
 
 	constructor() {
 		this.logger = GetLogger('Shard', `[Shard ${this.id}]`);
+	}
+
+	public allowConnect(): boolean {
+		return this.registered && !this.stopping;
 	}
 
 	/** Map of character ids to account id */
@@ -132,7 +138,8 @@ export class Shard {
 		if (connection) {
 			connection.shard = this;
 			this.shardConnection = connection;
-		} else {
+		} else if (!this.stopping) {
+			// Do not trigger timeout if we are already stopping
 			this.timeout = setTimeout(this.handleTimeout.bind(this), SHARD_TIMEOUT);
 			if (this.characterListTimeout) {
 				clearTimeout(this.characterListTimeout);
@@ -145,7 +152,21 @@ export class Shard {
 		ShardManager.deleteShard(this.id);
 	}
 
+	public async stop(): Promise<void> {
+		this.logger.verbose('Stop issued');
+		this.stopping = true;
+		ConnectionManagerClient.onShardListChange();
+		if (this.shardConnection) {
+			await this.shardConnection.awaitResponse('stop', {});
+		}
+		if (this.features.includes('development')) {
+			await Sleep(5_000);
+		}
+		ShardManager.deleteShard(this.id);
+	}
+
 	public onDelete(): void {
+		this.stopping = true;
 		this.setConnection(null);
 		[...this.characters.values()].forEach((character) => {
 			this.disconnectCharacter(character.id);
@@ -155,10 +176,6 @@ export class Shard {
 				this.logger.fatal('Error reconnecting character to different shard', err);
 			});
 		});
-		if (this.timeout !== null) {
-			clearTimeout(this.timeout);
-			this.timeout = null;
-		}
 		this.logger.info('Deleted');
 		ConnectionManagerClient.onShardListChange();
 	}
@@ -181,6 +198,9 @@ export class Shard {
 	public connectCharacter(character: Character, connectSecret?: string): void {
 		if (character.assignedShard !== null && character.assignedShard !== this) {
 			throw new Error('Character already in use');
+		}
+		if (!this.allowConnect()) {
+			throw new Error('Connecting to this shard is not allowed');
 		}
 
 		this.characters.set(character.id, character);
@@ -231,6 +251,8 @@ export class Shard {
 
 		this.characterListTimeout = setTimeout(() => {
 			this.characterListTimeout = null;
+			if (this.stopping)
+				return;
 			this.shardConnection?.sendMessage('prepareCharacters', {
 				characters: this.makeCharacterSetupList(),
 				rooms: this.makeRoomSetupList(),

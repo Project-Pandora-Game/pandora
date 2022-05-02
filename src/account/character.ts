@@ -136,6 +136,11 @@ export class Character {
 				return 'failed';
 		}
 
+		// Check that we can actually join the shard (prevent race condition on shard shutdown)
+		if (!shard.allowConnect()) {
+			return 'failed';
+		}
+
 		if (this.assignedShard !== shard || refreshSecret) {
 			shard.connectCharacter(this);
 		}

@@ -30,7 +30,7 @@ export const ShardManager = new class ShardManager {
 	public listShads(): IDirectoryShardInfo[] {
 		const result: IDirectoryShardInfo[] = [];
 		for (const shard of this.shards.values()) {
-			if (!shard.registered)
+			if (!shard.allowConnect())
 				continue;
 			result.push(shard.getInfo());
 		}
@@ -42,10 +42,10 @@ export const ShardManager = new class ShardManager {
 	}
 
 	public getRandomShard(): Shard | null {
-		if (this.shards.size === 0)
+		const shards = [...this.shards.values()].filter((s) => s.allowConnect());
+		if (shards.length === 0)
 			return null;
 
-		const shards = [...this.shards.values()];
 		return shards[Math.floor(Math.random() * shards.length)];
 	}
 

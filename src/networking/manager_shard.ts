@@ -14,6 +14,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 			createCharacter: this.createCharacter.bind(this),
 		}, {
 			characterDisconnect: this.handleCharacterDisconnect.bind(this),
+			shardRequestStop: this.handleShardRequestStop.bind(this),
 		});
 	}
 
@@ -33,6 +34,14 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		const result = shard.registered ? shard.handleReconnect(args, connection) : await shard.register(args, connection);
 
 		return result;
+	}
+
+	private handleShardRequestStop(_args: IShardDirectoryUnconfirmedArgument['shardRequestStop'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRequestStop'] {
+		const shard = connection.shard;
+		if (!shard)
+			throw new BadMessageError();
+
+		return shard.stop();
 	}
 
 	private handleCharacterDisconnect({ id, reason }: IShardDirectoryUnconfirmedArgument['characterDisconnect'], connection: IConnectionShard): void {

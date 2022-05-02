@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"build": "tsc -p ./tsconfig.src.json",
-		"dev": "tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess 'nodemon --watch dist --watch .env --signal SIGTERM --enable-source-maps -r dotenv/config dist/index.js'",
+		"dev": "tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess 'nodemon --watch dist --watch .env --signal SIGTERM --enable-source-maps -r dotenv/config dist/index.js --development'",
 		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
@@ -26,6 +26,7 @@
 		"@babel/preset-env": "^7.16.11",
 		"@babel/preset-typescript": "^7.16.7",
 		"@travellocal/babel-plugin-declare-const-enum": "^0.0.4",
+		"@types/express": "^4.17.13",
 		"@types/jest": "^27.4.0",
 		"@types/node": "^17.0.12",
 		"@typescript-eslint/eslint-plugin": "^5.10.1",
@@ -40,8 +41,9 @@
 	},
 	"dependencies": {
 		"dotenv": "^14.3.0",
+		"express": "^4.18.1",
 		"mongodb": "^4.3.1",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#e75d15a",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#0886e04",
 		"socket.io": "^4.4.1",
 		"socket.io-client": "^4.4.1"
 	}

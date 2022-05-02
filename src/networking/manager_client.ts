@@ -1,6 +1,8 @@
 import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsString, IsCharacterIdArray } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
+import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
+import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -27,6 +29,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		connection.sendMessage('load', {
 			character: connection.character.data,
 			room: connection.character.room ? connection.character.room.getClientData() : null,
+			assetsDefinition: RawAssetsDefinitions,
+			assetsDefinitionHash: assetManager.definitionsHash,
+			assetsSource: ASSETS_SOURCE || SERVER_PUBLIC_ADDRESS,
 		});
 
 		logger.info(`Client ${connection.id} connected to character ${connection.character.id}`);
@@ -65,5 +70,20 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			throw new BadMessageError();
 
 		client.character.room.sendMessage(client.character.id, message, targets);
+	}
+
+	public onAssetDefinitionsChanged(): void {
+		// Send load event to all currently connected clients, giving them new definitions
+		for (const connection of this._connectedClients.values()) {
+			if (!connection.character)
+				continue;
+			connection.sendMessage('load', {
+				character: connection.character.data,
+				room: connection.character.room ? connection.character.room.getClientData() : null,
+				assetsDefinition: RawAssetsDefinitions,
+				assetsDefinitionHash: assetManager.definitionsHash,
+				assetsSource: ASSETS_SOURCE || SERVER_PUBLIC_ADDRESS,
+			});
+		}
 	}
 };

@@ -6,6 +6,7 @@ import { ConnectToDirectory } from './networking/socketio_directory_connector';
 import { StartHttpServer } from './networking/httpServer';
 import { InitDatabase } from './database/databaseProvider';
 import { SetupSignalHandling } from './lifecycle';
+import { LoadAssetDefinitions } from './assets/assetManager';
 // get version from package.json
 
 const LOG_DIR = './logs';
@@ -22,6 +23,8 @@ async function Start(): Promise<void> {
 	SetupSignalHandling();
 	SetupLogging();
 	logger.info(`${APP_NAME} v${APP_VERSION} starting...`);
+	logger.debug('Loading asset definitions...');
+	LoadAssetDefinitions();
 	logger.debug('Connecting to Directory...');
 	await ConnectToDirectory();
 	logger.debug('Initializing database...');

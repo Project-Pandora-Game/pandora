@@ -1,9 +1,11 @@
 import { GetLogger, logConfig } from 'pandora-common';
-import { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT } from '../config';
+import { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT } from '../config';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
 import * as fs from 'fs';
 import { SocketIOServerClient } from './socketio_client_server';
+import express from 'express';
+import { AssetsServe } from '../assets/assetManager';
 
 const logger = GetLogger('Server');
 
@@ -15,6 +17,9 @@ export function StartHttpServer(): Promise<void> {
 	if (!Number.isInteger(port)) {
 		throw new Error('Invalid SERVER_PORT');
 	}
+
+	// Setup Express application
+	const expressApp = express();
 
 	// Setup HTTP(S) server
 	if (SERVER_HTTPS_CERT || SERVER_HTTPS_KEY) {
@@ -37,10 +42,14 @@ export function StartHttpServer(): Promise<void> {
 		server = new HttpsServer({
 			cert: certData,
 			key: keyData,
-		});
+		}, expressApp);
 	} else {
 		logger.warning('Starting in HTTP-only mode');
-		server = new HttpServer();
+		server = new HttpServer(expressApp);
+	}
+	// Host assets (only if we are supposed to)
+	if (!ASSETS_SOURCE) {
+		expressApp.use('/assets', AssetsServe());
 	}
 	// Attach socket.io server
 	new SocketIOServerClient(server);

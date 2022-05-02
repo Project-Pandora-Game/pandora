@@ -1,5 +1,5 @@
-import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig, IChatRoomFullInfo, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IShardCharacterDefinition, ConnectionBase } from 'pandora-common';
+import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } from '../config';
+import { GetLogger, logConfig, IChatRoomFullInfo, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IShardCharacterDefinition, ConnectionBase, ShardFeature } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
@@ -192,10 +192,15 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 	}
 
 	private async register(): Promise<void> {
+		const features: ShardFeature[] = [];
+		if (SHARD_DEVELOPMENT_MODE) {
+			features.push('development');
+		}
+
 		const { shardId, characters, rooms, roomLeaveReasons } = await this.awaitResponse('shardRegister', {
 			shardId: this.shardId ?? null,
 			publicURL: SERVER_PUBLIC_ADDRESS,
-			features: [],
+			features,
 			version: APP_VERSION,
 			characters: CharacterManager.listCharacters(),
 			disconnectCharacters: CharacterManager.listInvalidCharacters(),

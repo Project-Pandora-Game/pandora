@@ -1,6 +1,7 @@
 import { GetLogger, IDirectoryCharacterConnectionInfo, IShardClientArgument, ConnectionBase, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
 import { toast, ToastOptions } from 'react-toastify';
 import { connect, Socket } from 'socket.io-client';
+import { LoadAssetDefinitions } from '../assets/assetManager';
 import { Player } from '../character/player';
 import { Room } from '../character/room';
 import { Observable } from '../observable';
@@ -202,10 +203,13 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		logger.warning('Connection to Shard failed:', err.message);
 	}
 
-	private onLoad({ character, room }: IShardClientArgument['load']): void {
+	private onLoad({ character, room, assetsDefinition, assetsDefinitionHash }: IShardClientArgument['load']): void {
+		LoadAssetDefinitions(assetsDefinitionHash, assetsDefinition);
 		Player.load(character);
 		Room.update(room);
-		if (this._state === ShardConnectionState.WAIT_FOR_DATA) {
+		if (this._state === ShardConnectionState.CONNECTED) {
+			// Ignore reloads from shard
+		} else if (this._state === ShardConnectionState.WAIT_FOR_DATA) {
 			this.setState(ShardConnectionState.CONNECTED);
 			if (this.loadResolver) {
 				this.loadResolver(this);

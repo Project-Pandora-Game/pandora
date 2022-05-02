@@ -4,16 +4,16 @@ import { EditorLayer } from './editorLayer';
 import dotTexture from '../../../assets/editor/dotTexture.png';
 
 export class ResultLayer extends EditorLayer {
-	private _points?: Container;
-	protected get points(): Container {
-		if (!this._points) {
-			const points = this._points = new Container();
+	private _allPoints?: Container;
+	protected get allPoints(): Container {
+		if (!this._allPoints) {
+			const points = this._allPoints = new Container();
 			points.x = this.x;
 			points.y = this.y;
-			this._drawPoints(points);
-			points.on('destroy', () => this._points = undefined);
+			this._drawAllPoints(points);
+			points.on('destroy', () => this._allPoints = undefined);
 		}
-		return this._points;
+		return this._allPoints;
 	}
 
 	protected constructor(props: GraphicsLayerProps) {
@@ -24,22 +24,22 @@ export class ResultLayer extends EditorLayer {
 
 	protected override calculateVertices(): boolean {
 		super.calculateVertices();
-		if (this._points) {
-			this._drawPoints(this._points);
+		if (this._allPoints) {
+			this._drawAllPoints(this._allPoints);
 		}
 		return true;
 	}
 
 	protected show(value: boolean): void {
 		if (value) {
-			this.editorCharacter.addChild(this.points);
+			this.editorCharacter.addChild(this.allPoints);
 		} else {
-			this.editorCharacter.removeChild(this.points);
-			this.points.destroy();
+			this.editorCharacter.removeChild(this.allPoints);
+			this.allPoints.destroy();
 		}
 	}
 
-	private _drawPoints(container: Container) {
+	private _drawAllPoints(container: Container) {
 		container.removeChildren();
 
 		const createPoint = (x: number, y: number) => {

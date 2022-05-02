@@ -1,13 +1,14 @@
 import type { PointDefinition } from 'pandora-common/dist/character/asset/definition';
 import type { GraphicsLayerProps } from '../../../graphics/graphicsLayer';
-import { Graphics, Container, Sprite, Texture } from 'pixi.js';
+import { Graphics, Container, Texture } from 'pixi.js';
 import { Draggable } from '../draggable';
 import { EditorLayer } from './editorLayer';
 import dotTexture from '../../../assets/editor/dotTexture.png';
+import { MirrorPointDefinition } from '../editorStore';
 
 export class SetupLayer extends EditorLayer {
 	private _wireFrame?: Graphics;
-	private _points?: Container;
+	private _allPoints?: Container;
 
 	private get wireFrame(): Graphics {
 		if (!this._wireFrame) {
@@ -20,12 +21,12 @@ export class SetupLayer extends EditorLayer {
 		return this._wireFrame;
 	}
 
-	private get points(): Container {
-		if (!this._points) {
-			this._points = new Container();
-			this._drawPoints(this._points);
+	private get allPoints(): Container {
+		if (!this._allPoints) {
+			this._allPoints = new Container();
+			this._drawAllPoints(this._allPoints);
 		}
-		return this._points;
+		return this._allPoints;
 	}
 
 	protected constructor(props: GraphicsLayerProps) {
@@ -34,14 +35,11 @@ export class SetupLayer extends EditorLayer {
 
 	public static override create = (props: GraphicsLayerProps) => new SetupLayer(props);
 
-	protected override updateChild(): void {
-		this.result = new Sprite(this.texture);
-		this.result.zIndex = 1;
-	}
-
 	protected override calculateVertices(): boolean {
-		// vertices are not used
-		return false;
+		this.vertices = new Float64Array(this.points
+			.flatMap((point) => this.mirrorPoint(point.pos)));
+
+		return true;
 	}
 
 	protected override calculateTriangles() {
@@ -54,44 +52,49 @@ export class SetupLayer extends EditorLayer {
 	protected show(value: boolean): void {
 		if (value) {
 			this.editorCharacter.addChild(this.wireFrame);
-			this.editorCharacter.addChild(this.points);
+			this.editorCharacter.addChild(this.allPoints);
 		} else {
 			this.editorCharacter.removeChild(this.wireFrame);
-			this.editorCharacter.removeChild(this.points);
+			this.editorCharacter.removeChild(this.allPoints);
 			this.wireFrame.destroy();
-			this.points.destroy();
+			this.allPoints.destroy();
 		}
 	}
 
 	private _drawWireFrame(graphics: Graphics) {
 		graphics.clear();
 		graphics.lineStyle(2, 0x333333, 0.3);
-		const coords = this.layer.points.map((point) => point.pos);
+		const coords = this.points.map((point) => point.pos);
 		for (let i = 0; i < this.triangles.length; i += 3) {
 			const poly = [0, 1, 2].map((p) => coords[this.triangles[i + p]]);
 			graphics.drawPolygon(poly.flat());
 		}
 	}
 
-	private _drawPoints(container: Container) {
+	private _drawAllPoints(container: Container) {
 		const createDraggable = (point: PointDefinition, _index: number) => {
+			const full = (point as MirrorPointDefinition);
 			const draggable = new Draggable({
 				createTexture: () => Texture.from(dotTexture),
 				setPos: (_, x, y) => {
 					point.pos = [x, y];
+					full.updatePair(['pos']);
 					this.observableLayer.dispatchPointUpdate();
 				},
 			});
 
 			draggable.x = point.pos[0];
 			draggable.y = point.pos[1];
+			if (full.isMirrored()) {
+				draggable.tint = 0x00ff00;
+			}
 
 			container.addChild(draggable);
 
 			return draggable;
 		};
 
-		const dots = this.layer.points.map(createDraggable);
+		const dots = this.points.map(createDraggable);
 
 		const cleanup = this.observableLayer.on('points', (points) => {
 			if (points.length < dots.length) {
@@ -114,7 +117,7 @@ export class SetupLayer extends EditorLayer {
 
 		container.on('destroy', () => {
 			cleanup();
-			this._points = undefined;
+			this._allPoints = undefined;
 		});
 	}
 }

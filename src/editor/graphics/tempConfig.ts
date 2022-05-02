@@ -1,18 +1,17 @@
-import { BoneDefinitionCompressed, Condition, PointDefinitionCompressed, AssetDefinitionCompressed, LayerPriority, ConditionCompressed } from 'pandora-common/dist/character/asset/definition';
+import { BoneDefinitionCompressed, Condition, PointDefinitionCompressed, AssetDefinitionCompressed, LayerPriority, ConditionCompressed, LayerMirror } from 'pandora-common/dist/character/asset/definition';
+import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 
 export const boneDefinition: Readonly<BoneDefinitionCompressed>[] = [
 	{
 		name: 'arm_r',
 		pos: [578, 432],
 		mirror: 'arm_l',
-		rotation: 75,
 	},
 	{
 		name: 'elbow_r',
 		pos: [728, 434],
 		mirror: 'elbow_l',
 		parent: 'arm_r',
-		rotation: 5,
 	},
 	{
 		name: 'leg_r',
@@ -60,13 +59,13 @@ type PointDefinitionOld = {
 	transforms?: TransformDefinitionOld[];
 };
 
-const bodyPointsOld: PointDefinitionOld[] = [
+export const bodyPointsOld: PointDefinitionOld[] = [
 	// Head helpers
 	{ pos: [546, 365], mirror: true, pointType: 'body' },
 	{ pos: [583, 325], mirror: true, pointType: 'body' },
 	{ pos: [557, 187], mirror: true, pointType: 'body' },
+	{ pos: [530, 387], mirror: true, pointType: 'body' },
 	// Right arm
-	{ pos: [530, 387], mirror: true },
 	{
 		pos: [559, 403],
 		transforms: [
@@ -484,10 +483,11 @@ function CompressCondition(conditions?: Condition): ConditionCompressed | undefi
 }
 
 const bodyPoints: PointDefinitionCompressed[] = bodyPointsOld.map((p) => {
-	const { pos, transforms, mirror } = p;
+	const { pos, transforms, mirror, pointType } = p;
 	const point: PointDefinitionCompressed = {
 		pos,
 		mirror,
+		pointType,
 	};
 	if (transforms) {
 		point.transforms = transforms.map((t) => {
@@ -501,15 +501,32 @@ const bodyPoints: PointDefinitionCompressed[] = bodyPointsOld.map((p) => {
 	return point;
 });
 
+const IMAGE_PREFIX = 'https://demos.project-pandora.com/img/';
+
 export const assetDefinition: AssetDefinitionCompressed[] = [
 	{
 		id: 'asset-body',
 		description: 'Body',
 		layers: [
 			{
-				image: 'https://demos.project-pandora.com/img/body.png',
+				rect: [0, 0, GraphicsCharacter.WIDTH, GraphicsCharacter.HEIGHT],
+				image: IMAGE_PREFIX + 'body.png',
 				priority: LayerPriority.BODY,
 				points: bodyPoints,
+				mirror: LayerMirror.NONE,
+				pointType: ['body', 'bodyarm'],
+			},
+			{
+				rect: [0, 0, GraphicsCharacter.WIDTH, GraphicsCharacter.HEIGHT],
+				image: IMAGE_PREFIX + 'body.png',
+				priority: LayerPriority.ARMS,
+				points: '0',
+				mirror: LayerMirror.SELECT,
+				pointType: ['bodyarm', 'arm'],
+				imageOverrides: [
+					[IMAGE_PREFIX + 'body_armsdown.png', [[['elbow_r', '>=', 10]]]],
+					[IMAGE_PREFIX + 'body_armsup.png', [[['elbow_r', '<=', -5]]]],
+				],
 			},
 		],
 	},

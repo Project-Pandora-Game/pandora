@@ -6,8 +6,8 @@ interface ITypedEventEmitter<T extends TypedEvent> {
 }
 
 export abstract class TypedEventEmitter<T extends TypedEvent> implements ITypedEventEmitter<T> {
-	private _listeners: Map<keyof T, Set<(value: T[keyof T]) => void>> = new Map();
-	private _allListeners: Set<(value: Partial<T>) => void> = new Set();
+	private readonly _listeners: Map<keyof T, Set<(value: T[keyof T]) => void>> = new Map();
+	private readonly _allListeners: Set<(value: Partial<T>) => void> = new Set();
 
 	onAny(listener: (value: Partial<T>) => void): () => void {
 		this._allListeners.add(listener);

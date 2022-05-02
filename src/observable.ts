@@ -4,7 +4,7 @@ import { TypedEvent, TypedEventEmitter } from './event';
 /** Class that stores value of type T, while allowing subscribers to observe reference changes */
 export class Observable<T> {
 	private _value: T;
-	private _observers: Set<(value: T) => void> = new Set();
+	private readonly _observers: Set<(value: T) => void> = new Set();
 
 	constructor(defaultValue: T) {
 		this._value = defaultValue;
@@ -44,26 +44,27 @@ export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEm
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-export function observable<T extends TypedEvent>(target: ObservableClass<T> & T, key: keyof T) {
+export function observable<T extends TypedEvent, K extends keyof T>(target: ObservableClass<T> & T, key: K) {
 	const symbol: unique symbol = Symbol(key as string);
-	const value = target[key];
-	const typebase = { [symbol]: value };
+	type Accessor = { [S in typeof symbol]: T[K] };
 	Object.defineProperty(target, symbol, {
-		value,
+		value: target[key],
 		writable: true,
 		enumerable: false,
 		configurable: false,
 	});
 	Object.defineProperty(target, key, {
 		get() {
-			const accessor = this as unknown as typeof typebase;
+			const accessor = this as Accessor;
 			return accessor[symbol];
 		},
-		set(newValue: typeof value) {
-			const accessor = this as unknown as typeof typebase;
-			accessor[symbol] = newValue;
-			// @ts-expect-error: call protected method
-			target.emit.apply(this, [key, accessor[symbol]]);
+		set(newValue: T[K]) {
+			const accessor = this as Accessor;
+			if (accessor[symbol] !== newValue) {
+				accessor[symbol] = newValue;
+				// @ts-expect-error: call protected method
+				target.emit.apply(this, [key, accessor[symbol]]);
+			}
 		},
 		enumerable: true,
 		configurable: true,

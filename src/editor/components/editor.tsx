@@ -24,7 +24,12 @@ function Load() {
 		name: 'Editor',
 		created: -1,
 		accessId: '------',
-		bones: [],
+		bones: [
+			['arm_r', 75],
+			['arm_l', -75],
+			['elbow_r', 100],
+			['elbow_l', -10],
+		],
 		assets: [],
 	});
 	const setupCharacter = new SetupCharacter(editorScene, editorCharacter);

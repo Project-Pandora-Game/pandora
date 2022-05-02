@@ -1,7 +1,7 @@
-import type { BoneDefinition, LayerDefinition, BoneDefinitionCompressed } from 'pandora-common/dist/character/asset/definition';
+import { BoneDefinition, LayerDefinition, BoneDefinitionCompressed, LayerImageOverride, LayerMirror, LayerSide } from 'pandora-common/dist/character/asset/definition';
 import type { BoneState, AssetDefinition } from '../def';
 import { GraphicsCharacter } from '../graphicsCharacter';
-import { AssetStoreBase } from './assetStoreBase';
+import { AssetStoreBase, MirrorCondition, MirrorPoint } from './assetStoreBase';
 
 export class AssetStore extends AssetStoreBase<BoneDefinition, BoneState, LayerDefinition, AssetDefinition> {
 
@@ -11,8 +11,24 @@ export class AssetStore extends AssetStoreBase<BoneDefinition, BoneState, LayerD
 
 	//#region Assets & Layers
 
-	protected createLayer(data: LayerDefinition): LayerDefinition {
-		return data;
+	protected createLayer(data: LayerDefinition): [LayerDefinition] | [LayerDefinition, LayerDefinition] {
+		if (data.mirror === LayerMirror.NONE)
+			return [data];
+
+		const mirrored = {
+			...data,
+			imageOverrides: data.imageOverrides.map(({ image, condition }): LayerImageOverride => ({ image, condition: MirrorCondition(condition) })),
+		};
+
+		if (data.mirror === LayerMirror.FULL) {
+			mirrored.x = GraphicsCharacter.WIDTH - data.x;
+			mirrored.points = data.points.map(MirrorPoint);
+		} else {
+			data.side = LayerSide.LEFT;
+			mirrored.side = LayerSide.RIGHT;
+		}
+
+		return [data, mirrored];
 	}
 
 	protected createAsset(data: AssetDefinition): AssetDefinition {

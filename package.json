@@ -13,7 +13,9 @@
 		"/dist/**/*"
 	],
 	"scripts": {
+		"prebuild": "rimraf dist",
 		"build": "tsc -p ./tsconfig.src.json",
+		"predev": "rimraf dist",
 		"dev": "tsc -p ./tsconfig.src.json -w",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
@@ -42,6 +44,7 @@
 		"@typescript-eslint/parser": "^5.10.1",
 		"babel-jest": "^27.4.6",
 		"eslint": "^8.7.0",
-		"jest": "^27.4.7"
+		"jest": "^27.4.7",
+		"rimraf": "^3.0.2"
 	}
 }

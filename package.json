@@ -5,7 +5,10 @@
 	"repository": "git@github.com:Project-Pandora-Game/tooling-template.git",
 	"license": "MIT",
 	"scripts": {
+		"prebuild": "rimraf dist",
 		"build": "tsc -p ./tsconfig.src.json",
+		"predev": "rimraf dist",
+		"dev": "echo \"Error: no dev command specified\" && exit 1",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "tsc -p . --noEmit",
@@ -27,6 +30,7 @@
 		"babel-jest": "^27.4.6",
 		"eslint": "^7.32.0",
 		"jest": "^27.4.7",
+		"rimraf": "^3.0.2",
 		"tslib": "^2.3.0",
 		"typescript": "^4.3.5"
 	}

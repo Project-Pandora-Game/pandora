@@ -8,6 +8,7 @@
 		"esModuleInterop": true,
 		"baseUrl": "./src",
 		"outDir": "./dist",
+		"noEmitOnError": true,
 		"sourceMap": true,
 		"removeComments": true,
 		"strict": true,

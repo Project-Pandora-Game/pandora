@@ -5,7 +5,9 @@
 	"repository": "git@github.com:Project-Pandora-Game/pandora-client-web.git",
 	"license": "GPL-3.0-or-later",
 	"scripts": {
+		"prebuild": "rimraf dist",
 		"build": "cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack --env prod",
+		"predev": "rimraf dist",
 		"dev": "cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack serve",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
@@ -55,6 +57,7 @@
 		"postcss-flexbugs-fixes": "^5.0.2",
 		"postcss-loader": "^6.2.1",
 		"postcss-preset-env": "^7.2.3",
+		"rimraf": "^3.0.2",
 		"sass": "^1.49.0",
 		"sass-loader": "^12.4.0",
 		"source-map-loader": "^3.0.1",

@@ -96,8 +96,10 @@ let database: PandoraDatabase | undefined;
 export async function InitDatabase(): Promise<void> {
 	switch (DATABASE_TYPE) {
 		case 'mongodb':
-		case 'mongodb-in-memory':
 			database = await new MongoDatabase().init();
+			break;
+		case 'mongodb-in-memory':
+			database = await new MongoDatabase().init({ inMemory: true });
 			break;
 		case 'mock':
 		default:

@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/naming-convention */ // MongoDB
 import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
-import { DATABASE_URL, DATABASE_NAME, DATABASE_TYPE } from '../config';
+import { DATABASE_URL, DATABASE_NAME } from '../config';
 
 import AsyncLock from 'async-lock';
 import { MongoClient } from 'mongodb';
@@ -29,8 +30,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._url = url;
 	}
 
-	public async init(): Promise<this> {
-		if (DATABASE_TYPE === 'mongodb-in-memory') {
+	public async init({ inMemory }: { inMemory?: true; } = {}): Promise<this> {
+		if (inMemory) {
 			this._inMemoryServer = await CreateInMemoryMongo();
 			this._client = new MongoClient(this._inMemoryServer.getUri());
 		} else {

@@ -1,5 +1,5 @@
 import { LogLevel, SetConsoleOutput } from 'pandora-common';
-import AccountSecure, { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
+import AccountSecure, { AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import * as databaseProvider from '../../src/database/databaseProvider';
 import { MockDatabase } from '../../src/database/mockDb';
 import GetEmailSender from '../../src/services/email';

@@ -7,6 +7,15 @@ import { nanoid } from 'nanoid';
 import * as argon2 from 'argon2';
 import _ from 'lodash';
 
+export enum AccountTokenReason {
+	/** Account activation token */
+	ACTIVATION = 1,
+	/** Account password reset token */
+	PASSWORD_RESET = 2,
+	/** Account login token */
+	LOGIN = 3,
+}
+
 /**
  * Handles account security data
  *

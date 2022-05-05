@@ -6,8 +6,9 @@ module.exports = {
 	clearMocks: true,
 	collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 	coverageDirectory: 'coverage',
-	coverageProvider: 'babel',
 	errorOnDeprecated: true,
-	preset: '@shelf/jest-mongodb',
 	watchPathIgnorePatterns: ['globalConfig'],
+	transform: {
+		'^.+\\.(t|j)sx?$': ['@swc/jest'],
+	},
 };

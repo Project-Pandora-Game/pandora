@@ -2,13 +2,14 @@
 import MongoDatabase from '../../src/database/mongoDb';
 import RunDbTests from './db';
 
+// @jest
+
 let db: MongoDatabase | null = null;
 
 describe('MongoDatabase', () => {
 	RunDbTests(async () => {
 		db = null;
-		// @ts-expect-error
-		db = await new MongoDatabase(global.__MONGO_URI__ as string).init();
+		db = await new MongoDatabase().init({ inMemory: true });
 
 		// @ts-expect-error
 		if (await db._accounts.countDocuments() !== 0) {

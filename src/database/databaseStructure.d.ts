@@ -1,19 +1,10 @@
-declare const enum AccountTokenReason {
-	/** Account activation token */
-	ACTIVATION = 1,
-	/** Account password reset token */
-	PASSWORD_RESET = 2,
-	/** Account login token */
-	LOGIN = 3,
-}
-
 interface DatabaseAccountToken {
 	/** The token secret */
 	value: string;
 	/** Time when will this token expire (timestamp from `Date.now()`) */
 	expires: number;
 	/** The reason for this token */
-	reason: AccountTokenReason;
+	reason: import('../account/accountSecure').AccountTokenReason;
 }
 
 interface DatabaseAccountSecure {

@@ -48,6 +48,8 @@ export class BrowserStorage<T> extends Observable<T> {
 export function useBrowserStorage<T>(name: string, defaultValue: T, validate?: (value: unknown) => boolean): [T, (value: T) => void] {
 	const storage = useMemo(() => BrowserStorage.create(name, defaultValue, validate), [name, defaultValue, validate]);
 	const value = useObservable(storage);
-	const setValue = useMemo(() => (newValue: T) => storage.value = newValue, [storage]);
+	const setValue = useMemo(() => (newValue: T): void => {
+		storage.value = newValue;
+	}, [storage]);
 	return [value, setValue];
 }

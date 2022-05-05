@@ -6,7 +6,9 @@ module.exports = {
 	clearMocks: true,
 	collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 	coverageDirectory: 'coverage',
-	coverageProvider: 'babel',
 	errorOnDeprecated: true,
 	testEnvironment: 'jsdom',
+	transform: {
+		'^.+\\.(t|j)sx?$': ['@swc/jest'],
+	},
 };

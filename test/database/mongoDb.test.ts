@@ -10,20 +10,13 @@ describe('MongoDatabase', () => {
 	RunDbTests(async () => {
 		db = null;
 		db = await new MongoDatabase().init({ inMemory: true });
-
-		// @ts-expect-error
-		if (await db._accounts.countDocuments() !== 0) {
-			db = null;
-			expect(true).toBe(false);
-		}
-
-		return db as MongoDatabase;
+		return db;
 	}, async () => {
 		if (db) {
 			// @ts-expect-error
-			await db._accounts.deleteMany({});
-			// @ts-expect-error
 			await db._client.close();
+			// @ts-expect-error
+			await db._inMemoryServer?.stop();
 		}
 	});
 });

@@ -4,7 +4,11 @@
  */
 module.exports = {
 	clearMocks: true,
-	collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
+	collectCoverageFrom: [
+		'src/**/*.ts',
+		'src/**/*.tsx',
+		'!src/index.ts',
+	],
 	coverageDirectory: 'coverage',
 	errorOnDeprecated: true,
 	watchPathIgnorePatterns: ['globalConfig'],

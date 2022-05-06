@@ -1,12 +1,17 @@
+import { AppearanceBundle } from '../assets';
 import type { AssetState, BoneStateCompressed } from './asset/state';
 
 export type CharacterId = `c${number}`;
 
-export type ICharacterData = {
-	inCreation?: true;
+export type ICharacterPublicData = {
 	id: CharacterId;
 	accountId: number;
 	name: string;
+	appearance?: AppearanceBundle;
+};
+
+export type ICharacterData = ICharacterPublicData & {
+	inCreation?: true;
 	created: number;
 	accessId: string;
 	bones: BoneStateCompressed[],

@@ -1,15 +1,11 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { CharacterId, ICharacterData } from '../character';
+import type { CharacterId, ICharacterData, ICharacterPublicData } from '../character';
 import { IChatRoomFullInfo } from '../chatroom';
 import { AssetsDefinitionFile } from '../assets/definitions';
 
 export type IChatRoomClientData = IChatRoomFullInfo & {
-	characters: {
-		id: CharacterId;
-		accountId: number;
-		name: string;
-	}[];
+	characters: ICharacterPublicData[];
 };
 
 export type IChatRoomMessage = {

@@ -19,8 +19,8 @@ export interface IArrayValidationOptions<T = unknown> {
 }
 
 /** Checks if the `str` is a string and validates it to the given parameters */
-export function CreateStringValidator({ regex, minLength, maxLength, trimCheck }: IStringValidationOptions = {}): (str: unknown) => str is string {
-	return (str: unknown): str is string => {
+export function CreateStringValidator<T extends string = string>({ regex, minLength, maxLength, trimCheck }: IStringValidationOptions = {}): (str: unknown) => str is T {
+	return (str: unknown): str is T => {
 		if (typeof str !== 'string') {
 			return false;
 		}
@@ -62,15 +62,15 @@ export function CreateArrayValidator<T = unknown>({ validator, minLength, maxLen
 
 export type ObjectValidatorConfig<T extends Record<string, unknown>> = { [K in keyof T]: (value: unknown) => value is T[K] };
 
-export function CreateObjectValidator<T extends Record<string, unknown>>(validatorObject: ObjectValidatorConfig<T>, args?: {
+export function CreateObjectValidator<T extends Partial<Record<keyof T, unknown>>>(validatorObject: ObjectValidatorConfig<T>, args?: {
 	noExtraKey?: boolean;
 	partial?: false;
 }): (obj: unknown) => obj is T;
-export function CreateObjectValidator<T extends Record<string, unknown>>(validatorObject: ObjectValidatorConfig<T>, args: {
+export function CreateObjectValidator<T extends Partial<Record<keyof T, unknown>>>(validatorObject: ObjectValidatorConfig<T>, args: {
 	noExtraKey?: boolean;
 	partial: true;
 }): (obj: unknown) => obj is Partial<T>;
-export function CreateObjectValidator<T extends Record<string, unknown>>(validatorObject: ObjectValidatorConfig<T>, {
+export function CreateObjectValidator<T extends Partial<Record<keyof T, unknown>>>(validatorObject: ObjectValidatorConfig<T>, {
 	noExtraKey = false,
 	partial = false,
 }: {
@@ -88,7 +88,7 @@ export function CreateObjectValidator<T extends Record<string, unknown>>(validat
 			for (const key of requiredKeys) {
 				if (partial && obj[key] === undefined)
 					continue;
-				if (!validatorObject[key](obj[key]))
+				if (!validatorObject[key as keyof T](obj[key]))
 					return false;
 				if (!keys.delete(key) && obj[key] !== undefined)
 					return false;
@@ -117,6 +117,10 @@ export type Nullable<T> = T | null;
 export type NonNullable<T> = Exclude<T, null>;
 export function CreateNullableValidator<T>(validator: (value: unknown) => value is T): (value: unknown) => value is Nullable<T> {
 	return (value: unknown): value is Nullable<T> => value === null || validator(value);
+}
+
+export function CreateOneOfValidator<T extends string | number>(...accepted: T[]): (value: unknown) => value is T {
+	return (value: unknown): value is T => accepted.includes(value as T);
 }
 
 export const IsString = CreateStringValidator();

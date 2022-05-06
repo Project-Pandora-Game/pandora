@@ -9,6 +9,14 @@ export class AssetManager {
 		return this._definitionsHash;
 	}
 
+	public getAllAssets(): Asset[] {
+		return [...this.assets.values()];
+	}
+
+	public getAssetById(id: AssetId): Asset | undefined {
+		return this.assets.get(id);
+	}
+
 	public load(definitionsHash: string, data: AssetsDefinitionFile): void {
 		this._definitionsHash = definitionsHash;
 		// First unload no-longer existing assets

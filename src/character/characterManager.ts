@@ -1,4 +1,5 @@
 import { CharacterId, IShardCharacterDefinition, GetLogger } from 'pandora-common';
+import { assetManager } from '../assets/assetManager';
 import { Character } from './character';
 
 /** Time (in ms) after which manager prunes character without any active connection */
@@ -20,9 +21,9 @@ export const CharacterManager = new class CharacterManager {
 	public listCharacters(): IShardCharacterDefinition[] {
 		return [...this._characters.values()]
 			.map((char) => ({
-				id: char.data.id,
-				account: char.data.accountId,
-				accessId: char.data.accessId,
+				id: char.id,
+				account: char.accountId,
+				accessId: char.accessId,
 				connectSecret: char.connectSecret,
 				room: char.room ? char.room.id : null,
 			}));
@@ -66,5 +67,11 @@ export const CharacterManager = new class CharacterManager {
 		logger.debug(`Removing character ${id}`);
 		character.onRemove();
 		this._characters.delete(id);
+	}
+
+	public onAssetDefinitionsChanged() {
+		for (const character of this._characters.values()) {
+			character.reloadAssetManager(assetManager);
+		}
 	}
 };

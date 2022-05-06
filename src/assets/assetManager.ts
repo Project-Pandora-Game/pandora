@@ -4,6 +4,7 @@ import { readFileSync, statSync } from 'fs';
 import { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } from '../config';
 import express from 'express';
 import { ConnectionManagerClient } from '../networking/manager_client';
+import { CharacterManager } from '../character/characterManager';
 
 const logger = GetLogger('AssetManager');
 
@@ -53,6 +54,7 @@ function WatchAssetDefinitionsTick(): void {
 		if (currentHash !== assetManager.definitionsHash) {
 			logger.verbose('Detected asset definitions change, reloading...');
 			LoadAssetDefinitions();
+			CharacterManager.onAssetDefinitionsChanged();
 			ConnectionManagerClient.onAssetDefinitionsChanged();
 			logger.debug('Done sending new definitions');
 		}

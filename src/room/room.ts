@@ -25,9 +25,7 @@ export class Room {
 		for (const key of Object.keys(data) as (keyof IChatRoomFullInfo)[]) {
 			(this.data as Record<string, unknown>)[key] = data[key];
 		}
-		for (const character of this.characters) {
-			character.connection?.sendMessage('chatRoomUpdate', { room: this.getClientData() });
-		}
+		this.sendUpdateToAllInRoom();
 	}
 
 	getInfo(): IChatRoomFullInfo {
@@ -38,11 +36,16 @@ export class Room {
 		return {
 			...this.getInfo(),
 			characters: Array.from(this.characters).map((c) => ({
-				name: c.data.name,
+				name: c.name,
 				id: c.id,
-				accountId: c.data.accountId,
+				accountId: c.accountId,
+				appearance: c.appearance.exportToBundle(),
 			})),
 		};
+	}
+
+	getAllCharacters(): Character[] {
+		return [...this.characters.values()];
 	}
 
 	getCharacterById(id: CharacterId): Character | null {
@@ -54,7 +57,7 @@ export class Room {
 		character.room = this;
 		this.sendUpdateToAllInRoom();
 		this.logger.verbose(`Character ${character.id} entered`);
-		this.sendMessage('server', `(${character.data.name} (${character.data.id}) entered.)`);
+		this.sendMessage('server', `(${character.name} (${character.id}) entered.)`);
 	}
 
 	public characterLeave(character: Character, reason: IChatRoomLeaveReason): void {
@@ -66,21 +69,26 @@ export class Room {
 		// Report the leave
 		this.logger.verbose(`Character ${character.id} left (${reason})`);
 		if (reason === 'leave') {
-			this.sendMessage('server', `(${character.data.name} (${character.data.id}) left.)`);
+			this.sendMessage('server', `(${character.name} (${character.id}) left.)`);
 		} else if (reason === 'disconnect' || reason === 'destroy') {
-			this.sendMessage('server', `(${character.data.name} (${character.data.id}) disconnected.)`);
+			this.sendMessage('server', `(${character.name} (${character.id}) disconnected.)`);
 		} else if (reason === 'kick') {
-			this.sendMessage('server', `(${character.data.name} (${character.data.id}) has been kicked.)`);
+			this.sendMessage('server', `(${character.name} (${character.id}) has been kicked.)`);
 		} else if (reason === 'ban') {
-			this.sendMessage('server', `(${character.data.name} (${character.data.id}) has been banned.)`);
+			this.sendMessage('server', `(${character.name} (${character.id}) has been banned.)`);
 		} else {
 			AssertNever(reason);
 		}
 	}
 
-	private sendUpdateToAllInRoom(): void {
+	public sendUpdateTo(character: Character): void {
+		character.connection?.sendMessage('chatRoomUpdate', { room: this.getClientData() });
+	}
+
+	public sendUpdateToAllInRoom(): void {
+		const room = this.getClientData();
 		for (const character of this.characters) {
-			character.connection?.sendMessage('chatRoomUpdate', { room: this.getClientData() });
+			character.connection?.sendMessage('chatRoomUpdate', { room });
 		}
 	}
 

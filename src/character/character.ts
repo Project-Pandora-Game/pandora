@@ -1,10 +1,11 @@
-import { AssertNever, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, IShardCharacterDefinition, Logger, RoomId } from 'pandora-common';
+import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, IShardCharacterDefinition, Logger, RoomId } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import { CharacterManager, CHARACTER_TIMEOUT } from './characterManager';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { IConnectionClient } from '../networking/common';
+import { assetManager } from '../assets/assetManager';
 
 export const enum CharacterModification {
 	NONE = 0,
@@ -12,14 +13,16 @@ export const enum CharacterModification {
 	PENDING = 2,
 }
 
-type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id'>;
+type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id' | 'appearance'>;
 
 export class Character {
-	public readonly data: ICharacterData;
+	private readonly data: Omit<ICharacterData, 'appearance'>;
 	public connectSecret: string;
 
+	public readonly appearance: Appearance = new Appearance(assetManager);
+
 	private state = CharacterModification.NONE;
-	private modified: Set<keyof ICharacterDataChange> = new Set();
+	private modified: Set<keyof ICharacterDataChange | 'appearance'> = new Set();
 
 	public connection: IConnectionClient | null = null;
 	private invalid: null | 'timeout' | 'error' | 'remove' = null;
@@ -29,6 +32,22 @@ export class Character {
 
 	public get id(): CharacterId {
 		return this.data.id;
+	}
+
+	public get name(): string {
+		return this.data.name;
+	}
+
+	public get accountId(): number {
+		return this.data.accountId;
+	}
+
+	public get accessId(): string {
+		return this.data.accessId;
+	}
+
+	public get isInCreation(): boolean {
+		return this.data.inCreation === true;
 	}
 
 	public get isValid(): boolean {
@@ -43,6 +62,13 @@ export class Character {
 		this.connectSecret = connectSecret;
 		this.setConnection(null);
 		this.linkRoom(room);
+
+		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
+		this.appearance.onChangeHandler = this.onAppearanceChanged.bind(this);
+	}
+
+	public reloadAssetManager(manager: AssetManager) {
+		this.appearance.reloadAssetManager(manager, this.logger.prefixMessages('Appearance manager reload:'));
 	}
 
 	public update(data: IShardCharacterDefinition) {
@@ -180,6 +206,28 @@ export class Character {
 		return character;
 	}
 
+	public getData(): ICharacterData {
+		return {
+			...this.data,
+			appearance: this.appearance.exportToBundle(),
+		};
+	}
+
+	public getAppearanceActionContext(): AppearanceActionContext {
+		const characters = new Map<CharacterId, Appearance>();
+		if (this.room) {
+			for (const char of this.room.getAllCharacters()) {
+				characters.set(char.id, char.appearance);
+			}
+		}
+		characters.set(this.id, this.appearance);
+		return {
+			player: this.id,
+			characters,
+			roomInventory: null,
+		};
+	}
+
 	public async save(): Promise<void> {
 		if (this.state !== CharacterModification.MODIFIED)
 			return;
@@ -194,7 +242,11 @@ export class Character {
 		};
 
 		for (const key of keys) {
-			(data as Record<string, unknown>)[key] = this.data[key];
+			if (key === 'appearance') {
+				data.appearance = this.appearance.exportToBundle();
+			} else {
+				(data as Record<string, unknown>)[key] = this.data[key];
+			}
 		}
 
 		if (await GetDatabase().setCharacter(data)) {
@@ -217,5 +269,24 @@ export class Character {
 		this.state = CharacterModification.MODIFIED;
 
 		this.connection?.sendMessage('updateCharacter', { [key]: value });
+	}
+
+	private onAppearanceChanged(): void {
+		this.modified.add('appearance');
+		this.state = CharacterModification.MODIFIED;
+
+		if (this.room) {
+			this.room.sendUpdateToAllInRoom();
+		} else {
+			this.connection?.sendMessage('updateCharacter', { appearance: this.appearance.exportToBundle() });
+		}
+	}
+
+	public sendUpdate(): void {
+		if (this.room) {
+			this.room.sendUpdateTo(this);
+		} else {
+			this.connection?.sendMessage('updateCharacter', { appearance: this.appearance.exportToBundle() });
+		}
 	}
 }

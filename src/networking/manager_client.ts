@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsString, IsCharacterIdArray } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsString, IsCharacterIdArray, IsAppearanceAction, DoAppearanceAction } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
@@ -17,6 +17,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			finishCharacterCreation: this.handleFinishCharacterCreation.bind(this),
 		}, {
 			chatRoomMessage: this.handleChatRoomMessage.bind(this),
+			appearanceAction: this.handleAppearanceAction.bind(this),
 		});
 	}
 
@@ -27,7 +28,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		if (!connection.loadCharacter(characterId as CharacterId) || !connection.character)
 			return;
 		connection.sendMessage('load', {
-			character: connection.character.data,
+			character: connection.character.getData(),
 			room: connection.character.room ? connection.character.room.getClientData() : null,
 			assetsDefinition: RawAssetsDefinitions,
 			assetsDefinitionHash: assetManager.definitionsHash,
@@ -55,7 +56,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		if (!client.character)
 			throw new BadMessageError();
 
-		if (!IsCharacterName(name) || !client.character.data.inCreation)
+		if (!IsCharacterName(name) || !client.character.isInCreation)
 			throw new BadMessageError();
 
 		if (!await client.character.finishCreation(name)) {
@@ -72,13 +73,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		client.character.room.sendMessage(client.character.id, message, targets);
 	}
 
+	private handleAppearanceAction(action: IClientShardUnconfirmedArgument['appearanceAction'], client: IConnectionClient): void {
+		if (!client.character || !IsAppearanceAction(action))
+			throw new BadMessageError();
+
+		if (!DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager)) {
+			client.character.sendUpdate();
+		}
+	}
+
 	public onAssetDefinitionsChanged(): void {
 		// Send load event to all currently connected clients, giving them new definitions
 		for (const connection of this._connectedClients.values()) {
 			if (!connection.character)
 				continue;
 			connection.sendMessage('load', {
-				character: connection.character.data,
+				character: connection.character.getData(),
 				room: connection.character.room ? connection.character.room.getClientData() : null,
 				assetsDefinition: RawAssetsDefinitions,
 				assetsDefinitionHash: assetManager.definitionsHash,

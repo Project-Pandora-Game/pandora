@@ -1,5 +1,5 @@
 import React, { KeyboardEvent, ReactElement, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../common/Button/Button';
 import { useObservable } from '../../observable';
 import { IChatRoomMessageSaved, Room } from '../../character/room';
@@ -24,7 +24,12 @@ export function Chatroom(): ReactElement {
 			<div>
 				Characters in this room:<br />
 				<ul>
-					{ roomData.characters.map((c) => <li key={ c.id }>{`${c.name} (${c.id}/${c.accountId})`}</li>) }
+					{ roomData.characters.map((c) => (
+						<li key={ c.id }>
+							{`${c.name} (${c.id}/${c.accountId})`}
+							<Link to='/wardrobe' state={ { character: c.id } }>Wardrobe</Link>
+						</li>
+					)) }
 				</ul>
 			</div>
 			Actual chat:<br />

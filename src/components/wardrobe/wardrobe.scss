@@ -1,0 +1,122 @@
+.wardrobe {
+	display: grid;
+	grid-template:
+		"characterPreview currentInventory otherInventory" auto
+		/ auto 33% 33%;
+
+	.characterPreview {
+		grid-area: characterPreview;
+	}
+
+	.currentInventory {
+		grid-area: currentInventory;
+		padding: 1em;
+	}
+
+	.otherInventory {
+		grid-area: otherInventory;
+		padding: 1em;
+
+	}
+}
+
+.inventoryView {
+	width: 100%;
+	height: 100%;
+	background-color: #ddd;
+	border: solid black 2px;
+	display: grid;
+	grid-template:
+		"toolbar" 3em
+		"list" auto
+		/ auto;
+
+	.toolbar {
+		grid-area: toolbar;
+		display: flex;
+		flex-direction: row;
+
+		span {
+			flex: 1;
+			display: flex;
+			align-items: center;
+			padding: 0.2em;
+		}
+
+		button {
+			border: solid black 1px;
+			margin: 2px;
+			&.active {
+				background-color: #999;
+			}
+		}
+	}
+
+	.list {
+		grid-area: list;
+		display: flex;
+		flex-direction: column;
+		padding: 3px;
+		gap: 3px;
+	}
+
+	.grid {
+		grid-area: list;
+		display: flex;
+		flex-direction: row;
+		flex-wrap: wrap;
+		align-items: flex-start;
+		align-content: flex-start;
+		padding: 3px;
+		gap: 3px;
+	}
+}
+
+.inventoryViewItem {
+	border: solid black 1px;
+	background-color: #ccc;
+	display: flex;
+
+	&.allowed:hover {
+		cursor: pointer;
+		background-color: #aaa;
+	}
+
+	&.blocked {
+		background-color: #977;
+	}
+
+	&.listMode {
+		padding: 0 0.5em;
+		height: 2em;
+		align-items: center;
+		gap: 0.5em;
+
+		.itemPreview {
+			height: 1.5em;
+			width: 1.5em;
+			border: solid black 1px;
+		}
+	}
+
+	&.gridMode {
+		padding: 0.5em;
+		width: 32%;
+		flex-direction: column;
+		row-gap: 0.5em;
+
+		.itemPreview {
+			width: 100%;
+			aspect-ratio: 1;
+			border: solid black 1px;
+		}
+
+		.itemName {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 2em;
+			width: 100%;
+		}
+	}
+}

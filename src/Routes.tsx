@@ -16,8 +16,8 @@ import { ShardConnector } from './networking/socketio_shard_connector';
 import { ChatroomSelect } from './components/chatroomSelect/chatroomSelect';
 import { Chatroom } from './components/chatroom/chatroom';
 import { ChatroomAdmin, ChatroomCreate } from './components/chatroomAdmin/chatroomAdmin';
-import { useCharacterData } from './character/character';
-import { Player } from './character/player';
+import { usePlayerData } from './character/player';
+import { WardrobeScreen } from './components/wardrobe/wardrobe';
 
 export function PandoraRoutes(): ReactElement {
 	const isLoggedIn = useObservable(currentAccount) != null;
@@ -44,6 +44,7 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/chatroom_create' element={ <RequiresCharacter element={ ChatroomCreate } /> } />
 			<Route path='/chatroom' element={ <RequiresCharacter element={ Chatroom } /> } />
 			<Route path='/chatroom_admin' element={ <RequiresCharacter element={ ChatroomAdmin } /> } />
+			<Route path='/wardrobe' element={ <RequiresCharacter element={ WardrobeScreen } /> } />
 		</Routes>
 	);
 }
@@ -63,7 +64,7 @@ function RequiresLogin({ element: Element }: { element: () => ReactElement | nul
 function RequiresCharacter({ element: Element, allowUnfinished }: { element: () => ReactElement | null; allowUnfinished?: boolean; }): ReactElement {
 	const isLoggedIn = useObservable(currentAccount) != null;
 	const shardConnector = useObservable(ShardConnector);
-	const playerData = useCharacterData(Player);
+	const playerData = usePlayerData();
 	const hasCharacter = shardConnector != null && playerData != null;
 
 	if (!isLoggedIn) {

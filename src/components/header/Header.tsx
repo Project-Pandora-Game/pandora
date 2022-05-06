@@ -5,8 +5,7 @@ import friendsIcon from '../../assets/icons/friends.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
-import { useCharacterData } from '../../character/character';
-import { Player } from '../../character/player';
+import { usePlayerData } from '../../character/player';
 import { currentAccount, Logout } from '../../networking/account_manager';
 import { DirectoryConnector } from '../../networking/socketio_directory_connector';
 import { ShardConnector } from '../../networking/socketio_shard_connector';
@@ -17,7 +16,7 @@ import { HeaderButton } from './HeaderButton';
 function LeftHeader(): ReactElement {
 	const shardConnector = useObservable(ShardConnector);
 
-	const characterData = useCharacterData(Player);
+	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
 
 	const [showCharacterMenu, setShowCharacterMenu] = useState<boolean>(false);

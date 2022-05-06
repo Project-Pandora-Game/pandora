@@ -2,9 +2,10 @@ import { CharacterId, ICharacterSelfInfo, EMPTY, IClientDirectoryNormalResult } 
 import React, { ReactElement, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { ChangeEventEmmiter, DirectoryConnector } from '../../networking/socketio_directory_connector';
-import { Player } from '../../character/player';
+import { usePlayerData } from '../../character/player';
 import './characterSelect.scss';
-import { useCharacterData } from '../../character/character';
+import { NODE_ENV } from '../../config/Environment';
+import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
 
 /**
  * @todo
@@ -22,7 +23,7 @@ export function CharacterSelect(): ReactElement {
 	const [info, setInfo] = useState<IClientDirectoryNormalResult['listCharacters'] | undefined>(undefined);
 	const [state, setState] = useState('Loading...');
 
-	const playerData = useCharacterData(Player);
+	const playerData = usePlayerData();
 
 	useEffect(() => {
 		let mounted = true;
@@ -32,7 +33,12 @@ export function CharacterSelect(): ReactElement {
 				return;
 			}
 			const { characters } = result;
-			if (!AutoSelectDone && characters.length === 0) {
+			if (!AutoSelectDone && NODE_ENV === 'development' && LastSelectedCharacter.value !== undefined && characters.some((c) => c.id === LastSelectedCharacter.value)) {
+				AutoSelectDone = true;
+				setState('Reconnecting to last character...');
+				if (await ConnectToCharacter(LastSelectedCharacter.value))
+					return;
+			} else if (!AutoSelectDone && characters.length === 0) {
 				AutoSelectDone = true;
 				setState('No characters found. Creating a new one...');
 				if (await ConnectToCharacter(null))
@@ -55,7 +61,7 @@ export function CharacterSelect(): ReactElement {
 			DoUpdateCharacters = null;
 			changeEventEmmiterCleanup();
 		};
-	});
+	}, [setInfo, setState]);
 
 	if (playerData) {
 		if (playerData.inCreation) {

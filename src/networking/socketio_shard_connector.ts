@@ -1,14 +1,18 @@
-import { GetLogger, IDirectoryCharacterConnectionInfo, IShardClientArgument, ConnectionBase, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
+import { GetLogger, IDirectoryCharacterConnectionInfo, IShardClientArgument, ConnectionBase, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny, CharacterId } from 'pandora-common';
 import { toast, ToastOptions } from 'react-toastify';
 import { connect, Socket } from 'socket.io-client';
 import { LoadAssetDefinitions } from '../assets/assetManager';
-import { Player } from '../character/player';
+import { BrowserStorage } from '../browserStorage';
+import { Player, PlayerCharacter } from '../character/player';
 import { Room } from '../character/room';
 import { Observable } from '../observable';
 
 const logger = GetLogger('ShardConn');
 
 export const ShardConnector = new Observable<SocketIOShardConnector | null>(null);
+
+/** Used for auto-reconnect to character after window refresh */
+export const LastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined);
 
 /** State of connection to Shard */
 export enum ShardConnectionState {
@@ -63,7 +67,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		// Setup message handler
 		const handler = new MessageHandler<IShardClientBase>({}, {
 			load: this.onLoad.bind(this),
-			updateCharacter: Player.update.bind(Player),
+			updateCharacter: this.onUpdateCharacter.bind(this),
 			chatRoomUpdate: this.onChatRoomUpdate.bind(this),
 			chatRoomMessage: (message: IShardClientArgument['chatRoomMessage']) => {
 				Room.onMessage(message);
@@ -205,7 +209,11 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 
 	private onLoad({ character, room, assetsDefinition, assetsDefinitionHash }: IShardClientArgument['load']): void {
 		LoadAssetDefinitions(assetsDefinitionHash, assetsDefinition);
-		Player.load(character);
+		if (Player.value?.data.id === character.id) {
+			Player.value.update(character);
+		} else {
+			Player.value = new PlayerCharacter(character);
+		}
 		Room.update(room);
 		if (this._state === ShardConnectionState.CONNECTED) {
 			// Ignore reloads from shard
@@ -221,6 +229,13 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		}
 	}
 
+	private onUpdateCharacter(data: IShardClientArgument['updateCharacter']): void {
+		if (!Player.value) {
+			throw new Error('Received update data without player');
+		}
+		Player.value.update(data);
+	}
+
 	private onChatRoomUpdate({ room }: IShardClientArgument['chatRoomUpdate']): void {
 		Room.update(room);
 	}
@@ -230,7 +245,8 @@ export function DisconnectFromShard(): void {
 	if (ShardConnector.value) {
 		ShardConnector.value.disconnect();
 		ShardConnector.value = null;
-		Player.unload();
+		Player.value = null;
+		LastSelectedCharacter.value = undefined;
 	}
 }
 
@@ -240,6 +256,7 @@ export function ConnectToShard(info: IDirectoryCharacterConnectionInfo): Promise
 	DisconnectFromShard();
 	const connector = new SocketIOShardConnector(info);
 	ShardConnector.value = connector;
+	LastSelectedCharacter.value = info.characterId;
 	// Start
 	return connector.connect();
 }

@@ -82,7 +82,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 			mounted = false;
 			changeEventEmmiterCleanup();
 		};
-	});
+	}, [setShardInfo]);
 
 	if (!creation && !roomData) {
 		return <Navigate to='/chatroom_select' />;

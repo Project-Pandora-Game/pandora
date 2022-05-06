@@ -14,6 +14,9 @@ export function PandoraLobby(): ReactElement {
 			<p>
 				<Link to='/chatroom_select'>List of chatrooms</Link>
 			</p>
+			<p>
+				<Link to='/wardrobe'>Wardrobe</Link>
+			</p>
 		</div>
 	);
 }

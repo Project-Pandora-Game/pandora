@@ -1,3 +1,4 @@
+import { ICharacterData } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { Character } from '../../character/character';
 import { useGraphicsScene } from '../../graphics/graphicsScene';
@@ -15,9 +16,7 @@ function Load() {
 
 	loaded = true;
 
-	const editorCharacter = new Character();
-
-	editorCharacter.load({
+	const editorCharacter = new Character<ICharacterData>({
 		inCreation: true,
 		id: 'c1',
 		accountId: 1,

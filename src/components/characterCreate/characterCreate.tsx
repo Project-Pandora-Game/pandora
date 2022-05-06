@@ -1,18 +1,22 @@
 import { IsCharacterName } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useCharacterData } from '../../character/character';
-import { Player } from '../../character/player';
+import { Player, usePlayerData } from '../../character/player';
+import { useObservable } from '../../observable';
 import { Button } from '../common/Button/Button';
 
-export function CharacterCreate(): ReactElement {
+export function CharacterCreate(): ReactElement | null {
 	// React States
 	const [characterName, setCharacterName] = useState('');
 	const [errorMessage, setErrorMessage] = useState('');
 
 	const navigate = useNavigate();
 
-	const playerData = useCharacterData(Player);
+	const player = useObservable(Player);
+	const playerData = usePlayerData();
+
+	if (!player)
+		return null;
 
 	if (playerData && !playerData.inCreation) {
 		return <Navigate to='/pandora_lobby' />;
@@ -29,7 +33,7 @@ export function CharacterCreate(): ReactElement {
 		}
 
 		void (async () => {
-			const result = await Player.finishCreation(characterName);
+			const result = await player.finishCreation(characterName);
 
 			if (result === 'ok') {
 				setErrorMessage('');

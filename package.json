@@ -71,7 +71,8 @@
 	"dependencies": {
 		"classnames": "^2.3.1",
 		"delaunator": "^5.0.0",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#5b06b9e",
+		"nanoid": "^3.3.4",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#70d072f",
 		"pixi.js": "^6.2.2",
 		"react": "^17.0.2",
 		"react-dom": "^17.0.2",

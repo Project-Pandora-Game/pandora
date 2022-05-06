@@ -13,19 +13,15 @@ describe('Character', () => {
 	};
 	let mock: Character;
 	beforeEach(() => {
-		mock = new Character();
+		mock = new Character(mockData);
 	});
-	describe('load()', () => {
-		it('should define Character.data object', () => {
-			expect(mock.data).toBeUndefined();
-			mock.load(mockData);
+	describe('constructor', () => {
+		it('should save character data', () => {
 			expect(mock.data).toStrictEqual(mockData);
 		});
 	});
 	describe('update()', () => {
 		it('should partially update Character.data object', () => {
-			mock.load(mockData);
-
 			const update: Partial<ICharacterData> = {
 				id: 'c321',
 				accessId: 'updatedId',

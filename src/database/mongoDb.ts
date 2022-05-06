@@ -31,16 +31,15 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async init({ inMemory }: { inMemory?: true; } = {}): Promise<this> {
+		if (this._db) {
+			throw new Error('Database already initialized');
+		}
+
 		if (inMemory) {
 			this._inMemoryServer = await CreateInMemoryMongo();
 			this._client = new MongoClient(this._inMemoryServer.getUri());
 		} else {
 			this._client = new MongoClient(this._url);
-		}
-
-		if (this._db) {
-			logger.error('Database already initialized');
-			return this;
 		}
 
 		// if connection fails, error is thrown, application will exit
@@ -69,7 +68,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		], { unique: true });
 
 		const [maxCharId] = await this._characters.find().sort({ id: -1 }).limit(1).toArray();
-		this._nextCharacterId = maxCharId ? maxCharId.id : 1;
+		this._nextCharacterId = maxCharId ? maxCharId.id + 1 : 1;
 		//#endregion
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);
@@ -114,14 +113,14 @@ export default class MongoDatabase implements PandoraDatabase {
 
 			const id = this._nextCharacterId++;
 			const infoId: CharacterId = `c${id}`;
-			const info = {
-				inCreation: true as const,
+			const info: ICharacterSelfInfoDb = {
+				inCreation: true,
 				id: infoId,
 				name: '',
 				preview: '',
 			};
 			const char: Omit<ICharacterData, 'id'> & { id: number; } = {
-				inCreation: true as const,
+				inCreation: true,
 				id,
 				accountId,
 				name: info.name,
@@ -131,7 +130,7 @@ export default class MongoDatabase implements PandoraDatabase {
 				assets: [],
 			};
 
-			await this._accounts.updateOne({ id }, { $push: { characters: info } });
+			await this._accounts.updateOne({ id: accountId }, { $push: { characters: info } });
 			await this._characters.insertOne(char);
 
 			return info;
@@ -147,7 +146,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (!info)
 			return null;
 
-		const result = await this._characters.findOneAndUpdate({ id: PlainId(info.id), inCreation: true }, { $set: { created: Date.now() }, $unset: { inCreation: '' } });
+		const result = await this._characters.findOneAndUpdate({ id: PlainId(info.id), inCreation: true }, { $set: { created: Date.now() }, $unset: { inCreation: '' } }, { returnDocument: 'after' });
 		if (!result.value || result.value.inCreation !== undefined)
 			return null;
 
@@ -157,24 +156,29 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
-		const result = await this._accounts.findOneAndUpdate({ 'id': accountId, 'characters.id': id }, { $set: { 'characters.$': data } });
-		return result.value as ICharacterSelfInfoDb | null;
+		// Transform the request
+		const update: Record<string, unknown> = {};
+		for (const [k, v] of Object.entries(data)) {
+			update[`characters.$.${k}`] = v;
+		}
+		const result = await this._accounts.findOneAndUpdate({ 'id': accountId, 'characters.id': id }, { $set: update }, { returnDocument: 'after' });
+		return result.value?.characters.find((c) => c.id === id) ?? null;
 	}
 
 	public async deleteCharacter(accountId: number, characterId: CharacterId): Promise<void> {
-		await this._characters.deleteOne({ id: PlainId(characterId) });
+		await this._characters.deleteOne({ id: PlainId(characterId), accountId });
 		await this._accounts.updateOne({ id: accountId }, { $pull: { characters: { id: characterId } } });
 	}
 
 	public async setCharacterAccess(id: CharacterId): Promise<string | null> {
-		const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId: nanoid(8) } });
-		return result.value?.accessId as string | null;
+		const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
+		return result.value?.accessId ?? null;
 	}
 
 	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
 		if (accessId === false) {
 			accessId = nanoid(8);
-			const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId } });
+			const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId } }, { returnDocument: 'after' });
 			return result.value ? Id(result.value) : null;
 		}
 

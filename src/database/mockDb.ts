@@ -125,7 +125,7 @@ export class MockDatabase implements PandoraDatabase {
 
 		acc.characters.push(info);
 		this.characterDb.set(char.id, char);
-		return Promise.resolve(info);
+		return Promise.resolve(_.cloneDeep(info));
 	}
 
 	public finalizeCharacter(accountId: number): Promise<ICharacterData | null> {
@@ -144,9 +144,10 @@ export class MockDatabase implements PandoraDatabase {
 		char.inCreation = undefined;
 		char.created = Date.now();
 
+		info.inCreation = undefined;
 		info.name = char.name;
 
-		return Promise.resolve(char);
+		return Promise.resolve(_.cloneDeep(char));
 	}
 
 	public updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
@@ -161,7 +162,7 @@ export class MockDatabase implements PandoraDatabase {
 		if (data.preview)
 			info.preview = data.preview;
 
-		return Promise.resolve(info);
+		return Promise.resolve(_.cloneDeep(info));
 	}
 
 	public deleteCharacter(accountId: number, characterId: CharacterId): Promise<void> {

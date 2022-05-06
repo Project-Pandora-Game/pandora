@@ -1,5 +1,6 @@
 import { InitDatabase, GetDatabase } from '../../src/database/databaseProvider';
 import { MockDatabase } from '../../src/database/mockDb';
+import { TestSetupLogging } from '../utils';
 
 describe('GetDatabase()', () => {
 	it('should throw error if DB is not initialized', () => {
@@ -7,11 +8,12 @@ describe('GetDatabase()', () => {
 	});
 });
 
-describe('InitDatabse()', () => {
-	//disable console.info for this test suit
-	jest.spyOn(console, 'info').mockImplementation(() => { /*empty*/ });
+describe('InitDatabase()', () => {
+	beforeAll(() => {
+		TestSetupLogging();
+	});
 
-	it('should initialze async the database', async () => {
+	it('inits mock database', async () => {
 		await InitDatabase();
 		expect(() => GetDatabase()).not.toThrowError();
 		expect(GetDatabase()).toBeInstanceOf(MockDatabase);

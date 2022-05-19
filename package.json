@@ -12,7 +12,7 @@
 		"build": "tsc -p ./tsconfig.src.json",
 		"build:swc": "swc src -d dist",
 		"predev": "rimraf dist",
-		"dev": "tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess 'nodemon --watch dist --watch .env --signal SIGTERM --enable-source-maps -r dotenv/config dist/index.js --development'",
+		"dev": "tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess \"nodemon --watch dist --watch .env --signal SIGTERM --enable-source-maps -r dotenv/config dist/index.js --development\"",
 		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",

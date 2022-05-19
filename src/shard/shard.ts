@@ -165,16 +165,18 @@ export class Shard {
 		ShardManager.deleteShard(this.id);
 	}
 
-	public onDelete(): void {
+	public onDelete(attemptReassign: boolean): void {
 		this.stopping = true;
 		this.setConnection(null);
 		[...this.characters.values()].forEach((character) => {
 			this.disconnectCharacter(character.id);
-			character.connect().then(() => {
-				character.assignedConnection?.sendConnectionStateUpdate();
-			}, (err) => {
-				this.logger.fatal('Error reconnecting character to different shard', err);
-			});
+			if (attemptReassign) {
+				character.connect().then(() => {
+					character.assignedConnection?.sendConnectionStateUpdate();
+				}, (err) => {
+					this.logger.fatal('Error reconnecting character to different shard', err);
+				});
+			}
 		});
 		this.logger.info('Deleted');
 		ConnectionManagerClient.onShardListChange();

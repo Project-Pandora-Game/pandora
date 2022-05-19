@@ -90,7 +90,7 @@ export interface PandoraDatabase {
 }
 
 /** Current database connection */
-let database: PandoraDatabase | undefined;
+let database: MongoDatabase | MockDatabase | undefined;
 
 /** Init database connection based on configuration */
 export async function InitDatabase(): Promise<void> {
@@ -104,6 +104,12 @@ export async function InitDatabase(): Promise<void> {
 		case 'mock':
 		default:
 			database = await new MockDatabase().init();
+	}
+}
+
+export async function CloseDatabase(): Promise<void> {
+	if (database instanceof MongoDatabase) {
+		await database.close();
 	}
 }
 

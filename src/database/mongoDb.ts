@@ -76,6 +76,13 @@ export default class MongoDatabase implements PandoraDatabase {
 		return this;
 	}
 
+	public async close(): Promise<void> {
+		await this._client.close();
+		if (this._inMemoryServer) {
+			await this._inMemoryServer.stop();
+		}
+	}
+
 	public async getAccountById(id: number): Promise<DatabaseAccountWithSecure | null> {
 		return await this._accounts.findOne({ id });
 	}

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { CreateAccountData } from '../../src/account/account';
 import { PrehashPassword } from '../../src/database/mockDb';
@@ -12,14 +11,13 @@ let db: MongoDatabase | null = null;
 describe('MongoDatabase', () => {
 	RunDbTests(async () => {
 		db = null;
+		// Wait up to a minute; the MongoDB server might need to be downloaded
+		jest.setTimeout(60_000);
 		db = await new MongoDatabase().init({ inMemory: true });
 		return db;
 	}, async () => {
 		if (db) {
-			// @ts-expect-error
-			await db._client.close();
-			// @ts-expect-error
-			await db._inMemoryServer?.stop();
+			await db.close();
 		}
 	});
 });
@@ -40,8 +38,7 @@ describe('MongoDatabase extra tests', () => {
 
 	it('Can connect to normal MongoDB', async () => {
 		const testDb = await new MongoDatabase(server.getUri()).init();
-		// @ts-expect-error
-		await testDb._client.close();
+		await testDb.close();
 	});
 
 	it('fails on double init', async () => {
@@ -49,8 +46,7 @@ describe('MongoDatabase extra tests', () => {
 
 		await expect(testDb.init()).rejects.toThrowError('Database already initialized');
 
-		// @ts-expect-error
-		await testDb._client.close();
+		await testDb.close();
 	});
 
 	it('Correctly finds id after reconnect', async () => {
@@ -59,8 +55,7 @@ describe('MongoDatabase extra tests', () => {
 		const acc = await testDb.createAccount(await CreateAccountData('testuser1', PrehashPassword('password1'), 'test1@project-pandora.com')) as DatabaseAccountWithSecure;
 		const char = await testDb.createCharacter(acc.id);
 
-		// @ts-expect-error
-		await testDb._client.close();
+		await testDb.close();
 
 		const testDb2 = await new MongoDatabase(server.getUri()).init();
 
@@ -70,7 +65,6 @@ describe('MongoDatabase extra tests', () => {
 		expect(acc2.id).not.toBe(acc.id);
 		expect(char2.id).not.toBe(char.id);
 
-		// @ts-expect-error
-		await testDb2._client.close();
+		await testDb2.close();
 	});
 });

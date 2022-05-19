@@ -15,7 +15,7 @@ export const ShardManager = new class ShardManager {
 		if (!shard)
 			return;
 		this.shards.delete(id);
-		shard.onDelete();
+		shard.onDelete(true);
 	}
 
 	public getOrCreateShard(id: string | null): Shard {
@@ -98,5 +98,16 @@ export const ShardManager = new class ShardManager {
 		room.onDestroy();
 
 		ConnectionManagerClient.onRoomListChange();
+	}
+
+	/**
+	 * When server is stopping, drop all shards
+	 */
+	public onDestroy(): void {
+		const shards = [...this.shards.values()];
+		this.shards.clear();
+		for (const shard of shards) {
+			shard.onDelete(false);
+		}
 	}
 };

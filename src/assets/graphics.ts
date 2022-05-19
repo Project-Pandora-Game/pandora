@@ -1,10 +1,17 @@
-import type { ArrayCompressType } from '../../utility';
+import type { ArrayCompressType } from '../utility';
 
 export type Coordinates = { x: number, y: number; };
 export type CoordinatesCompressed = ArrayCompressType<Coordinates, ['x', 'y']>;
 
 export type Size = { width: number, height: number; };
 export type SizeCompressed = ArrayCompressType<Size, ['width', 'height']>;
+
+export const CharacterSize = {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	WIDTH: 1000,
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	HEIGHT: 1500,
+} as const;
 
 export type Rectangle = Coordinates & Size;
 export type RectangleCompressed = [...CoordinatesCompressed, ...SizeCompressed];
@@ -33,18 +40,14 @@ export type TransformDefinitionCompressed =
 
 export interface BoneDefinition {
 	name: string;
-	x: number;
-	y: number;
-	rotation: number;
 	mirror?: BoneDefinition;
 	parent?: BoneDefinition;
 }
+
 export interface BoneDefinitionCompressed {
-	name: string;
 	pos?: CoordinatesCompressed;
 	mirror?: string;
 	parent?: string;
-	rotation?: number;
 }
 
 export interface PointDefinition {
@@ -99,11 +102,4 @@ export type LayerDefinitionCompressed = {
 	imageOverrides?: LayerImageOverrideCompressed[];
 	pointType?: string[];
 	mirror: LayerMirror;
-};
-export type AssetSourceType = 'asset';
-export type AssetId = `${AssetSourceType}-${string}`;
-export type AssetDefinitionCompressed = {
-	id: AssetId;
-	layers: LayerDefinitionCompressed[];
-	description: string;
 };

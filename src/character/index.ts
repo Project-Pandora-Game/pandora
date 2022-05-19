@@ -1,5 +1,5 @@
 import { AppearanceBundle } from '../assets';
-import type { AssetState, BoneStateCompressed } from './asset/state';
+import type { AssetState, BoneStateCompressed } from '../assets';
 
 export type CharacterId = `c${number}`;
 

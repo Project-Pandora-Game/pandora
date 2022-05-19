@@ -1,5 +1,5 @@
-import type { ArrayCompressType } from '../../utility';
-import type { AssetId } from './definition';
+import type { ArrayCompressType } from '../utility';
+import type { AssetId } from '.';
 
 export type AssetState = {
 	id: AssetId;

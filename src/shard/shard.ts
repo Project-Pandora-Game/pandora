@@ -75,6 +75,7 @@ export class Shard {
 		}
 
 		this.updateInfo(data);
+		this._registered = true;
 
 		for (const roomData of data.rooms) {
 			ShardManager.createRoom(roomData, this, roomData.id);
@@ -111,7 +112,6 @@ export class Shard {
 			room.cleanupIfEmpty();
 		}
 
-		this._registered = true;
 		this.setConnection(connection);
 		this.logger.info('Registered');
 		ConnectionManagerClient.onShardListChange();

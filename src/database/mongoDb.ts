@@ -30,13 +30,20 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._url = url;
 	}
 
-	public async init({ inMemory }: { inMemory?: true; } = {}): Promise<this> {
+	public async init({
+		inMemory,
+		dbPath,
+	}: {
+		inMemory?: true;
+		/** Requires `inMemory`, saves data into persistent directory */
+		dbPath?: string;
+	} = {}): Promise<this> {
 		if (this._db) {
 			throw new Error('Database already initialized');
 		}
 
 		if (inMemory) {
-			this._inMemoryServer = await CreateInMemoryMongo();
+			this._inMemoryServer = await CreateInMemoryMongo({ dbPath });
 			this._client = new MongoClient(this._inMemoryServer.getUri());
 		} else {
 			this._client = new MongoClient(this._url);
@@ -202,12 +209,24 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 }
 
-async function CreateInMemoryMongo(): Promise<MongoMemoryServer> {
+async function CreateInMemoryMongo({
+	dbPath,
+}: {
+	dbPath?: string;
+} = {}): Promise<MongoMemoryServer> {
 	const { MongoMemoryServer } = await import('mongodb-memory-server');
+	if (dbPath) {
+		const { mkdir } = await import('fs/promises');
+		await mkdir(dbPath, { recursive: true });
+	}
 	return await MongoMemoryServer.create({
 		binary: {
 			version: '5.0.6',
 			checkMD5: false,
+		},
+		instance: {
+			dbPath,
+			storageEngine: dbPath ? 'wiredTiger' : 'ephemeralForTest',
 		},
 	});
 }

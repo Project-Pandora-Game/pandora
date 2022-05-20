@@ -101,6 +101,9 @@ export async function InitDatabase(): Promise<void> {
 		case 'mongodb-in-memory':
 			database = await new MongoDatabase().init({ inMemory: true });
 			break;
+		case 'mongodb-local':
+			database = await new MongoDatabase().init({ inMemory: true, dbPath: './localDb' });
+			break;
 		case 'mock':
 		default:
 			database = await new MockDatabase().init();

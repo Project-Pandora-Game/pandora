@@ -1,4 +1,4 @@
-import type { Size, Rectangle } from 'pandora-common/dist/character/asset/definition';
+import type { Size, Rectangle } from 'pandora-common/dist/assets';
 import { Application, Container, Extract, Texture, Mesh, MeshGeometry, MeshMaterial } from 'pixi.js';
 import Delaunator from 'delaunator';
 import { GraphicsCharacter } from '../../../graphics/graphicsCharacter';

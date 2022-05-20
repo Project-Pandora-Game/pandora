@@ -1,3 +1,4 @@
+import { CharacterSize } from 'pandora-common';
 import { Container } from 'pixi.js';
 import { Character } from '../../../character/character';
 import { GraphicsCharacter } from '../../../graphics/graphicsCharacter';
@@ -32,10 +33,10 @@ export class EditorCharacter extends GraphicsCharacter {
 	}
 
 	protected onWindowResize(): void {
-		const xscale = (this.editor.width / 2) / GraphicsCharacter.WIDTH;
-		const yscale = this.editor.height / GraphicsCharacter.HEIGHT;
+		const xscale = (this.editor.width / 2) / CharacterSize.WIDTH;
+		const yscale = this.editor.height / CharacterSize.HEIGHT;
 		const scale = Math.min(xscale, yscale);
 		this.scale.set(scale);
-		this.y = this.editor.height / 2 - GraphicsCharacter.HEIGHT * scale / 2;
+		this.y = this.editor.height / 2 - CharacterSize.HEIGHT * scale / 2;
 	}
 }

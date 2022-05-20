@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import { Appearance, AppearanceAction, AppearanceActionContext, CharacterId, DoAppearanceAction, IsCharacterId, IsObject } from 'pandora-common';
 import React, { ReactElement, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { assetManager } from '../../assets/assetManager';
+import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearance, useCharacterData } from '../../character/character';
 import { Player } from '../../character/player';
 import { ShardConnector } from '../../networking/socketio_shard_connector';
@@ -44,7 +44,7 @@ export function WardrobeScreen(): ReactElement | null {
 function Wardrobe({ character }: { character: Character }): ReactElement | null {
 	const player = useObservable(Player);
 	const characterData = useCharacterData(character);
-	const assetList = useObservable(assetManager.assetList);
+	const assetList = useObservable(GetAssetManager().assetList);
 	const appearance = useCharacterAppearance(character);
 
 	if (!player || !characterData || !appearance)
@@ -122,7 +122,7 @@ function InventoryView({ title, items, context }: {
 
 function InventoryItemViewList({ item, listMode, context }: { item: InventoryItemDefinition; listMode: boolean; context: AppearanceActionContext; }): ReactElement {
 	const shardConnector = useObservable(ShardConnector);
-	const possible = DoAppearanceAction(item.action, context, assetManager, { dryRun: true });
+	const possible = DoAppearanceAction(item.action, context, GetAssetManager(), { dryRun: true });
 	return (
 		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
 			if (shardConnector && possible) {

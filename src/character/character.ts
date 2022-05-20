@@ -1,10 +1,10 @@
 import { Appearance, APPEARANCE_BUNDLE_DEFAULT, GetLogger, ICharacterPublicData, Logger } from 'pandora-common';
 import { useEffect, useState } from 'react';
-import { assetManager } from '../assets/assetManager';
+import { GetAssetManager } from '../assets/assetManager';
 import { TypedEventEmitter } from '../event';
 
 export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> {
-	public appearance: Appearance = new Appearance(assetManager);
+	public appearance: Appearance = new Appearance(GetAssetManager());
 
 	protected readonly logger: Logger;
 
@@ -17,7 +17,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
-		this.appearance = new Appearance(assetManager);
+		this.appearance = new Appearance(GetAssetManager());
 		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
 		this.logger.verbose('Loaded');
 	}
@@ -25,7 +25,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 	public update(data: Partial<T>): void {
 		this._data = { ...this.data, ...data };
 		if (data.appearance) {
-			this.appearance = new Appearance(assetManager);
+			this.appearance = new Appearance(GetAssetManager());
 			this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
 		}
 		this.logger.debug('Updated', data);

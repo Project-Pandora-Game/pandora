@@ -1,10 +1,10 @@
-import { CoordinatesCompressed, LayerDefinition, LayerMirror, LayerSide, PointDefinition } from 'pandora-common/dist/character/asset/definition';
-import type { AssetState, LayerStateCompressed } from 'pandora-common/dist/character/asset/state';
+import { CoordinatesCompressed, LayerDefinition, LayerMirror, LayerSide, PointDefinition, AssetState, LayerStateCompressed } from 'pandora-common/dist/assets';
 import type { GraphicsTransform, GraphicsEvaluate } from './def';
 import { Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
 import { Conjunction, EvaluateCondition } from './utility';
 import Delaunator from 'delaunator';
+import { GetTextureLoader } from './textureLoader';
 
 Mesh.BATCHABLE_SIZE = 1000000;
 
@@ -23,7 +23,7 @@ export class GraphicsLayer extends Container {
 	private _imageBones = new Set<string>();
 	private _triangles = new Uint32Array();
 	private _uv!: Float64Array;
-	private _texture!: Texture;
+	private _texture: Texture = Texture.EMPTY;
 	private _image!: string;
 	private _result!: Mesh | Sprite;
 	private _state?: LayerStateCompressed;
@@ -123,7 +123,11 @@ export class GraphicsLayer extends Container {
 		const image = this.layer.imageOverrides.find((img) => EvaluateCondition(img.condition, this._evaluate))?.image ?? this.layer.image;
 		if (image !== this._image) {
 			this._image = image;
-			this._texture = LoadTexture(image);
+			GetTextureLoader().loadTexture(image).then((texture) => {
+				if (this._image === image) {
+					this.result.texture = this._texture = texture;
+				}
+			}).catch(() => { /** NOOP */ });
 			return true;
 		}
 		return false;
@@ -184,10 +188,6 @@ function SelectPoints({ pointType }: PointDefinition, pointTypes?: string[], sid
 	}
 
 	return pointTypes.some((sel) => flt(pointType, sel));
-}
-
-function LoadTexture(image: string) {
-	return Texture.from(image);
 }
 
 type LayerState = {

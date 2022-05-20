@@ -1,6 +1,5 @@
-import { PointDefinition, LayerDefinition, LayerPriority, LayerImageOverride, LayerMirror, LayerSide } from 'pandora-common/dist/character/asset/definition';
-import { GraphicsCharacter } from '../../../graphics/graphicsCharacter';
-import { MirrorCondition, MirrorPoint } from '../../../graphics/store';
+import { PointDefinition, LayerDefinition, LayerPriority, LayerImageOverride, LayerMirror, LayerSide, CharacterSize } from 'pandora-common';
+import { MirrorCondition, MirrorPoint } from '../../../assets/assetManager';
 import { observable, ObservableClass } from '../../../observable';
 
 export const AllLayers: ObservableLayer[] = [];
@@ -34,7 +33,7 @@ export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]
 				imageOverrides: layer.imageOverrides.map(({ image, condition }): LayerImageOverride => ({ image, condition: MirrorCondition(condition) })),
 			};
 			if (this.mirror === LayerMirror.FULL) {
-				this.x = GraphicsCharacter.WIDTH - layer.x;
+				this.x = CharacterSize.WIDTH - layer.x;
 				this._layer.points = this.points.map(MirrorPoint);
 			} else {
 				this.x = layer.x;
@@ -45,9 +44,9 @@ export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]
 			this.y = layer.y;
 			this._mirror = layer;
 
-			this.on('x', (value) => layer.x = this.mirror === LayerMirror.FULL ? GraphicsCharacter.WIDTH - value : value);
+			this.on('x', (value) => layer.x = this.mirror === LayerMirror.FULL ? CharacterSize.WIDTH - value : value);
 			this.on('y', (value) => layer.y = value);
-			layer.on('x', (value) => this.x = this.mirror === LayerMirror.FULL ? GraphicsCharacter.WIDTH - value : value);
+			layer.on('x', (value) => this.x = this.mirror === LayerMirror.FULL ? CharacterSize.WIDTH - value : value);
 			layer.on('y', (value) => this.y = value);
 		} else {
 			this._layer = layer;

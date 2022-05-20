@@ -1,4 +1,4 @@
-import type { PointDefinition } from 'pandora-common/dist/character/asset/definition';
+import type { PointDefinition } from 'pandora-common/dist/assets';
 import type { GraphicsLayerProps } from '../../../graphics/graphicsLayer';
 import { Graphics, Container, Texture } from 'pixi.js';
 import { Draggable } from '../draggable';

@@ -1,22 +1,16 @@
 import type { ICharacterData } from 'pandora-common';
 import type { BoneState, LayerState } from './def';
-import type { AssetState } from 'pandora-common/dist/character/asset/state';
+import { AssetState, AtomicCondition, TransformDefinition } from 'pandora-common/dist/assets';
 import { Container } from 'pixi.js';
 import { Character } from '../character/character';
-import { AssetStore } from './store';
 import { GraphicsLayer } from './graphicsLayer';
-import { AtomicCondition, TransformDefinition } from 'pandora-common/dist/character/asset/definition';
 import { EvaluateCondition, RotateVector } from './utility';
+import { GetAssetStateManager } from './stateManager';
 
 export class GraphicsCharacter extends Container {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	static readonly WIDTH = 1000;
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	static readonly HEIGHT = 1500;
-
 	private readonly _character: Character;
 	private _layers: LayerState[] = [];
-	protected bones: BoneState[] = AssetStore.getInstance().getInitialBoneStates();
+	protected bones: BoneState[] = GetAssetStateManager().getInitialBoneStates();
 
 	constructor(character: Character) {
 		super();
@@ -33,7 +27,7 @@ export class GraphicsCharacter extends Container {
 	protected update(data: Partial<ICharacterData>): void {
 		let update = false;
 		if (data.assets) {
-			const create = (asset: AssetState) => AssetStore.getInstance().getLayers(asset);
+			const create = (asset: AssetState) => GetAssetStateManager().getLayers(asset);
 			this._layers = data.assets.flatMap(create);
 			update = true;
 		}
@@ -42,7 +36,8 @@ export class GraphicsCharacter extends Container {
 			const bones = data.bones;
 			this.bones.forEach((bone) => {
 				const rotation = bones.find((b) => b[0] === bone.name)?.[1] ?? 0;
-				if (bone.updateRotation(rotation)) {
+				if (bone.rotation !== rotation) {
+					bone.rotation = rotation;
 					updatedBones.add(bone.name);
 					update = true;
 				}

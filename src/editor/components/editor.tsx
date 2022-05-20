@@ -37,7 +37,7 @@ function Load() {
 	editorScene.add(resultCharacter);
 
 	editorCharacter.update({
-		assets: [{ id: 'asset-body' }],
+		assets: [{ id: 'a/base/body' }],
 	});
 
 	AllLayers[0].selected = true;

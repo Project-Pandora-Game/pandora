@@ -1,5 +1,5 @@
 import { Texture, Sprite, InteractionEvent, DisplayObject } from 'pixi.js';
-import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { CharacterSize } from 'pandora-common';
 import { Clamp } from '../../graphics/utility';
 
 type DraggableProps = {
@@ -49,8 +49,8 @@ export class Draggable extends Sprite {
 
 		this._setPos(
 			this,
-			Clamp(Math.round(dragPointerEnd.x), 0, GraphicsCharacter.WIDTH),
-			Clamp(Math.round(dragPointerEnd.y), 0, GraphicsCharacter.HEIGHT),
+			Clamp(Math.round(dragPointerEnd.x), 0, CharacterSize.WIDTH),
+			Clamp(Math.round(dragPointerEnd.y), 0, CharacterSize.HEIGHT),
 		);
 	}
 }

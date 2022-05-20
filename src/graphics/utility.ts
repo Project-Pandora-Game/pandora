@@ -1,4 +1,4 @@
-import type { Condition } from 'pandora-common/dist/character/asset/definition';
+import type { Condition } from 'pandora-common/dist/assets';
 import type { GraphicsEvaluate } from './def';
 
 export function GetAngle(x: number, y: number): number {

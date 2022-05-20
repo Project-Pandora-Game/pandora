@@ -33,6 +33,11 @@ export default function (env: WebpackEnv): Configuration {
 			hot: true,
 			open: true,
 			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),
+			static: {
+				directory: join(__dirname, '..', 'pandora-assets', 'out'),
+				publicPath: '/pandora-assets',
+				serveIndex: true,
+			},
 		},
 		devtool: env.prod ? false : 'eval-source-map',
 		entry: {

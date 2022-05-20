@@ -1,12 +1,11 @@
-import type { LayerDefinition, AssetId, AtomicCondition, TransformDefinition } from 'pandora-common/dist/character/asset/definition';
-import type { LayerStateCompressed } from 'pandora-common/dist/character/asset/state';
+import type { LayerDefinition, AtomicCondition, TransformDefinition, LayerStateCompressed } from 'pandora-common/dist/assets';
+import { AssetDefinitionClient } from '../assets/assetManager';
 
 export interface BoneState {
 	name: string;
 	x: number;
 	y: number;
-	get rotation(): number;
-	updateRotation(value: number): boolean;
+	rotation: number;
 	parent?: BoneState;
 	mirror?: BoneState;
 }
@@ -16,17 +15,11 @@ export type BoneDefinitionBase = {
 	mirror?: BoneDefinitionBase;
 };
 
-export type LayerState<LayerDefinitionType = LayerDefinition> = {
-	asset: AssetDefinition<LayerDefinitionType>;
-	layer: LayerDefinitionType,
+export type LayerState = {
+	asset: AssetDefinitionClient;
+	layer: LayerDefinition,
 	state?: LayerStateCompressed;
 	index: number;
-};
-
-export type AssetDefinition<LayerDefinitionType = LayerDefinition> = {
-	id: AssetId;
-	layers: LayerDefinitionType[];
-	description: string;
 };
 
 export type GraphicsEvaluate = (condition: AtomicCondition) => boolean;

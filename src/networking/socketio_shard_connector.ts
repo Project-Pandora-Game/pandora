@@ -6,6 +6,7 @@ import { BrowserStorage } from '../browserStorage';
 import { Player, PlayerCharacter } from '../character/player';
 import { Room } from '../character/room';
 import { Observable } from '../observable';
+import { DirectoryConnector } from './socketio_directory_connector';
 
 const logger = GetLogger('ShardConn');
 
@@ -254,6 +255,7 @@ export function ConnectToShard(info: IDirectoryCharacterConnectionInfo): Promise
 	if (ShardConnector.value?.connectionInfoMatches(info))
 		return Promise.resolve(ShardConnector.value);
 	DisconnectFromShard();
+	DirectoryConnector?.setActiveShardId(info.id);
 	const connector = new SocketIOShardConnector(info);
 	ShardConnector.value = connector;
 	LastSelectedCharacter.value = info.characterId;

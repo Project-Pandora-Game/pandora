@@ -1,6 +1,6 @@
 import { toast, ToastOptions } from 'react-toastify';
 import { DIRECTORY_ADDRESS } from '../config/Environment';
-import { EMPTY, GetLogger, ICharacterSelfInfo, IDirectoryClientChangeEvents, ConnectionBase, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny } from 'pandora-common';
+import { EMPTY, GetLogger, ICharacterSelfInfo, IDirectoryClientChangeEvents, ConnectionBase, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny, HTTP_HEADER_CLIENT_REQUEST_SHARD } from 'pandora-common';
 import { GetAuthData, HandleDirectoryConnectionState } from './account_manager';
 import { connect, Socket } from 'socket.io-client';
 import { ConnectToShard } from './socketio_shard_connector';
@@ -218,6 +218,16 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		}
 		await ConnectToShard(data);
 		return true;
+	}
+
+	public setActiveShardId(id: string | undefined): void {
+		const extraHeaders = this.socket.io.opts.extraHeaders ?? {};
+		if (id) {
+			extraHeaders[HTTP_HEADER_CLIENT_REQUEST_SHARD] = id;
+		} else {
+			delete extraHeaders[HTTP_HEADER_CLIENT_REQUEST_SHARD];
+		}
+		this.socket.io.opts.extraHeaders = extraHeaders;
 	}
 }
 

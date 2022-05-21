@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid';
 import { IConnectionShard } from '../networking/common';
 import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardDirectoryNormalResult, IShardCharacterDefinition, IShardDirectoryPromiseResult, IChatRoomFullInfo, AssertNever, IDirectoryShardArgument } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
@@ -7,9 +6,11 @@ import { Character } from '../account/character';
 import type { Room } from './room';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Sleep } from '../utility';
+import { Account } from '../account/account';
+import { uniq } from 'lodash';
 
 export class Shard {
-	public readonly id = nanoid();
+	public readonly id;
 	public shardConnection: IConnectionShard | null = null;
 	private timeout: NodeJS.Timeout | null = null;
 
@@ -27,7 +28,8 @@ export class Shard {
 
 	public rooms: Set<Room> = new Set();
 
-	constructor() {
+	constructor(id: string) {
+		this.id = id;
 		this.logger = GetLogger('Shard', `[Shard ${this.id}]`);
 	}
 
@@ -75,6 +77,20 @@ export class Shard {
 		}
 
 		this.updateInfo(data);
+
+		const accounts = new Map<number, Account>();
+		await Promise.all(
+			uniq(data.characters.map((c) => c.account))
+				.map((id) => accountManager
+					.loadAccountById(id)
+					.then((account) => {
+						if (account) {
+							accounts.set(account.data.id, account);
+						}
+					}),
+				),
+		);
+
 		this._registered = true;
 
 		for (const roomData of data.rooms) {
@@ -85,7 +101,7 @@ export class Shard {
 			// Skip characters that should be disconnected anyway
 			if (data.disconnectCharacters.includes(characterData.id))
 				continue;
-			const account = await accountManager.loadAccountById(characterData.account);
+			const account = accounts.get(characterData.account);
 			const character = account?.characters.get(characterData.id);
 
 			if (!character ||

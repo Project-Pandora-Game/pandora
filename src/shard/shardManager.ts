@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid';
 import { IChatRoomDirectoryConfig, IDirectoryShardInfo, RoomId } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from './room';
@@ -5,6 +6,8 @@ import { Shard } from './shard';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const SHARD_TIMEOUT = 10_000;
+
+export const SHARD_WAIT_STOP = Date.now() + SHARD_TIMEOUT;
 
 export const ShardManager = new class ShardManager {
 	private readonly shards: Map<string, Shard> = new Map();
@@ -21,7 +24,7 @@ export const ShardManager = new class ShardManager {
 	public getOrCreateShard(id: string | null): Shard {
 		let shard = id && this.shards.get(id);
 		if (!shard) {
-			shard = new Shard();
+			shard = new Shard(id ?? nanoid());
 			this.shards.set(shard.id, shard);
 		}
 		return shard;

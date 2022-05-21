@@ -11,8 +11,6 @@ let db: MongoDatabase | null = null;
 describe('MongoDatabase', () => {
 	RunDbTests(async () => {
 		db = null;
-		// Wait up to a minute; the MongoDB server might need to be downloaded
-		jest.setTimeout(60_000);
 		db = await new MongoDatabase().init({ inMemory: true });
 		return db;
 	}, async () => {

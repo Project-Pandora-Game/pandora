@@ -48,7 +48,8 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		accountId2 = result2.id;
 
 		expect(accountId1).not.toBe(accountId2);
-	});
+	// Wait up to a minute; the MongoDB server might need to be downloaded
+	}, 60_000);
 
 	afterEach(async () => {
 		await closeDb();

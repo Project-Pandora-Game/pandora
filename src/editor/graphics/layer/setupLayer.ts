@@ -16,7 +16,6 @@ export class SetupLayer extends EditorLayer {
 			wireframe.x = this.x;
 			wireframe.y = this.y;
 			this._drawWireFrame(wireframe);
-			this._wireFrame.on('destroy', () => this._wireFrame = undefined);
 		}
 		return this._wireFrame;
 	}
@@ -58,6 +57,8 @@ export class SetupLayer extends EditorLayer {
 			this.editorCharacter.removeChild(this.allPoints);
 			this.wireFrame.destroy();
 			this.allPoints.destroy();
+			this._wireFrame = undefined;
+			this._allPoints = undefined;
 		}
 	}
 
@@ -117,7 +118,6 @@ export class SetupLayer extends EditorLayer {
 
 		container.on('destroy', () => {
 			cleanup();
-			this._allPoints = undefined;
 		});
 	}
 }

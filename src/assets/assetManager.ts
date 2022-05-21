@@ -195,7 +195,7 @@ export class AssetManagerClient extends AssetManager {
 			pos: [CharacterSize.WIDTH - pos[0], pos[1]],
 			transforms: transforms.map((trans) => MirrorTransform(trans)),
 			mirror: true,
-			pointType: MirrorPointType(type),
+			pointType: MirrorBoneLike(type),
 		}];
 	}
 }
@@ -215,31 +215,26 @@ export function LoadAssetDefinitions(definitionsHash: string, data: AssetsDefini
 	logger.info(`Loaded asset definitions, version: ${GetAssetManager().definitionsHash}`);
 }
 
-export function MirrorBone(bone: string): string {
-	if (bone.endsWith('_l'))
-		return bone.replace(/_l$/, '_r');
-	if (bone.endsWith('_r'))
-		return bone.replace(/_r$/, '_l');
-
-	return bone;
-}
-
 /** formatting for `<T extends (...)>` is different for ESLint and VS Code */
 type Maybe<T> = T | undefined;
+export function MirrorBoneLike<T extends Maybe<string>>(bone: T): T {
+	return bone?.replace(/_[lr]$/, (_, l) => l === '_l' ? '_r' : '_l') as T;
+}
+
 export function MirrorCondition<T extends Maybe<Condition>>(condition: T): T {
 	if (!condition)
 		return condition;
 
 	return condition.map((cause) => cause.map(({ bone, ...rest }) => ({
 		...rest,
-		bone: MirrorBone(bone),
+		bone: MirrorBoneLike(bone),
 	}))) as T;
 }
 
 export function MirrorTransform(transform: TransformDefinition): TransformDefinition {
 	const { type, bone, condition } = transform;
 	const trans = {
-		bone: MirrorBone(bone),
+		bone: MirrorBoneLike(bone),
 		condition: MirrorCondition(condition),
 	};
 	switch (type) {
@@ -249,13 +244,12 @@ export function MirrorTransform(transform: TransformDefinition): TransformDefini
 		}
 		case 'shift': {
 			const { x, y } = transform.value;
-			return { ...trans, type, value: { x: x * -1, y: y * -1 } };
+			if (/_[rl]$/.test(bone))
+				return { ...trans, type, value: { x: x * -1, y: y * -1 } };
+			else
+				return { ...trans, type, value: { x: x * -1, y } };
 		}
 	}
-}
-
-export function MirrorPointType(type?: string): string | undefined {
-	return type && type.replace(/_r$/, '_l').replace(/_l$/, '_r');
 }
 
 export function MirrorPoint(point: PointDefinition): PointDefinition {
@@ -263,6 +257,6 @@ export function MirrorPoint(point: PointDefinition): PointDefinition {
 		pos: point.pos,
 		mirror: point.mirror,
 		transforms: point.transforms.map(MirrorTransform),
-		pointType: MirrorPointType(point.pointType),
+		pointType: MirrorBoneLike(point.pointType),
 	};
 }

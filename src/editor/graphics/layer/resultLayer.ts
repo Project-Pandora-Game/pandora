@@ -11,7 +11,6 @@ export class ResultLayer extends EditorLayer {
 			points.x = this.x;
 			points.y = this.y;
 			this._drawAllPoints(points);
-			points.on('destroy', () => this._allPoints = undefined);
 		}
 		return this._allPoints;
 	}
@@ -36,6 +35,7 @@ export class ResultLayer extends EditorLayer {
 		} else {
 			this.editorCharacter.removeChild(this.allPoints);
 			this.allPoints.destroy();
+			this._allPoints = undefined;
 		}
 	}
 

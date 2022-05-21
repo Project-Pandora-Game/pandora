@@ -1,8 +1,10 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import type { CharacterId } from '../character';
+import { CharacterId, IsCharacterId } from '../character';
 import type { MessageHandler } from './message_handler';
-import type { IChatRoomFullInfo, IChatroomsLeaveReasonRecord, RoomId } from '../chatroom';
+import type { IChatRoomFullInfo, IChatroomsLeaveReasonRecord, RoomId } from '../chatroom/room';
+import { IsRoomId } from '../chatroom/validation';
 import { IEmpty } from './empty';
+import { CreateNullableValidator, CreateObjectValidator, IsNumber, IsString } from '../validation';
 
 export type IShardCharacterDefinition = {
 	id: CharacterId;
@@ -11,6 +13,14 @@ export type IShardCharacterDefinition = {
 	connectSecret: string;
 	room: RoomId | null;
 };
+
+export const IsIShardCharacterDefinition = CreateObjectValidator<IShardCharacterDefinition>({
+	id: IsCharacterId,
+	account: IsNumber,
+	accessId: IsString,
+	connectSecret: IsString,
+	room: CreateNullableValidator(IsRoomId),
+});
 
 /** Directory->Shard handlers */
 interface DirectoryShard {

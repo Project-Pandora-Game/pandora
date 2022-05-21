@@ -1,7 +1,17 @@
 import { AppearanceBundle } from '../assets';
 import type { AssetState, BoneStateCompressed } from '../assets';
+import { CreateArrayValidator, CreateStringValidator } from '../validation';
 
 export type CharacterId = `c${number}`;
+
+/**
+ * Test if a given value is a valid CharacterId - `'c{number}'`
+ */
+export const IsCharacterId = CreateStringValidator({
+	regex: /^c[1-9][0-9]{0,15}$/,
+}) as (str: unknown) => str is CharacterId;
+
+export const IsCharacterIdArray = CreateArrayValidator<CharacterId>({ validator: IsCharacterId });
 
 export type ICharacterPublicData = {
 	id: CharacterId;

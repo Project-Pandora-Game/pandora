@@ -1,5 +1,5 @@
-import { IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomFullInfo, RoomId } from './room';
-import { ShardFeature, ShardFeatureList } from '../networking';
+import type { IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomFullInfo, RoomId } from './room';
+import { ShardFeature, ShardFeatureList } from '../networking/shard_directory';
 import { CreateArrayValidator, CreateMaybeValidator, CreateNullableValidator, CreateObjectValidator, CreateStringValidator, IsBoolean, IsNumber, IsString, ObjectValidatorConfig } from '../validation';
 
 /**

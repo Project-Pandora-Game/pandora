@@ -1,5 +1,3 @@
-import { CharacterId } from '.';
-
 /** Checks if the `obj` is an object (not null, not array) */
 export function IsObject(obj: unknown): obj is Record<string, unknown> {
 	return !!obj && typeof obj === 'object' && !Array.isArray(obj);
@@ -110,12 +108,18 @@ export function CreateObjectValidator<T extends Partial<Record<keyof T, unknown>
 }
 
 export function CreateMaybeValidator<T>(validator: (value: unknown) => value is T): (value: unknown) => value is (T | undefined) {
+	if (typeof validator !== 'function') {
+		throw new Error('Expected validator function');
+	}
 	return (value: unknown): value is (T | undefined) => IsUndefined(value) || validator(value);
 }
 
 export type Nullable<T> = T | null;
 export type NonNullable<T> = Exclude<T, null>;
 export function CreateNullableValidator<T>(validator: (value: unknown) => value is T): (value: unknown) => value is Nullable<T> {
+	if (typeof validator !== 'function') {
+		throw new Error('Expected validator function');
+	}
 	return (value: unknown): value is Nullable<T> => value === null || validator(value);
 }
 
@@ -176,12 +180,3 @@ export const IsSimpleToken = CreateStringValidator({
 	minLength: 6,
 	maxLength: 6,
 });
-
-/**
- * Test if a given value is a valid CharacterId - `'c{number}'`
- */
-export const IsCharacterId = CreateStringValidator({
-	regex: /^c[1-9][0-9]{0,15}$/,
-}) as (str: unknown) => str is CharacterId;
-
-export const IsCharacterIdArray = CreateArrayValidator<CharacterId>({ validator: IsCharacterId });

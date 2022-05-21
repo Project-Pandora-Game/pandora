@@ -1,21 +1,13 @@
-import { CreateObjectValidator, IsString, CreateArrayValidator, IsNumber, IsCharacterId, CreateMaybeValidator, IsUsername, CreateNullableValidator, NonNullable } from '../../validation';
+import { CreateObjectValidator, IsString, CreateArrayValidator, CreateMaybeValidator, IsUsername, CreateNullableValidator, NonNullable } from '../../validation';
 import type { IShardDirectoryArgument, ShardFeature } from '../shard_directory';
-import type { IShardCharacterDefinition } from '../directory_shard';
+import { IsIShardCharacterDefinition } from '../directory_shard';
 import type { IClientDirectoryAuthMessage } from '../client_directory';
-import { IChatRoomFullInfo, IsIChatRoomDirectoryConfig, IsRoomId } from '../../chatroom';
-import { CharacterId } from '../../character';
+import { IChatRoomFullInfo, IsIChatRoomDirectoryConfig } from '../../chatroom';
+import { CharacterId, IsCharacterId } from '../../character';
 
 /** TODO set this to true, we keep it false to make things simple in early development */
 const SHARD_NO_EXTRA_OBJECT_KEY = false;
 const CLIENT_NO_EXTRA_OBJECT_KEY = false;
-
-export const IsIShardCharacterDefinition = CreateObjectValidator<IShardCharacterDefinition>({
-	id: IsCharacterId,
-	account: IsNumber,
-	accessId: IsString,
-	connectSecret: IsString,
-	room: CreateNullableValidator(IsRoomId),
-}, { noExtraKey: SHARD_NO_EXTRA_OBJECT_KEY });
 
 export const Shard = {
 	shardRegister: CreateObjectValidator<IShardDirectoryArgument['shardRegister']>({

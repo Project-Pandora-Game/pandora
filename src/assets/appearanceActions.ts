@@ -1,6 +1,6 @@
-import { CharacterId } from '../character';
+import { CharacterId, IsCharacterId } from '../character';
 import { AssertNever } from '../utility';
-import { CreateObjectValidator, CreateOneOfValidator, IsCharacterId } from '../validation';
+import { CreateObjectValidator, CreateOneOfValidator } from '../validation';
 import { Appearance } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetId, IsAssetId } from './definitions';

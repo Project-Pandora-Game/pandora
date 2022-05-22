@@ -1,10 +1,13 @@
-#!/bin/sh
+#!/bin/bash
+
+set -eou pipefail
+source "./.hooks/include.sh"
 
 PREV_COMMIT=$1
 POST_COMMIT=$2
 
 if [ -f yarn.lock ]; then
 	if [ "$(git diff --shortstat $PREV_COMMIT..$POST_COMMIT yarn.lock)" != "" ]; then
-		./.hooks/helpers/yarn
+		yarn_helper
 	fi
 fi

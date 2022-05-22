@@ -1,5 +1,6 @@
 import { GetLogger, IClientDirectoryAuthMessage, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryClientArgument, IsObject, IsString, PASSWORD_PREHASH_SALT } from 'pandora-common';
 import { BrowserStorage } from '../browserStorage';
+import { HashSHA512Base64 } from '../crypto/helpers';
 import { Observable } from '../observable';
 import { DirectoryConnector } from './socketio_directory_connector';
 import { ConnectToShard, DisconnectFromShard, ShardConnector } from './socketio_shard_connector';
@@ -59,13 +60,6 @@ export function GetAuthData(callback: (data: IClientDirectoryAuthMessage | undef
 	} else {
 		callback(undefined);
 	}
-}
-
-async function HashSHA512Base64(text: string): Promise<string> {
-	const msgUint8 = new TextEncoder().encode(text);
-	const hashBuffer = await globalThis.crypto.subtle.digest('SHA-512', msgUint8);
-	const hashArray = new Uint8Array(hashBuffer);
-	return btoa(String.fromCharCode.apply(null, Array.from(hashArray)));
 }
 
 function PrehashPassword(password: string): Promise<string> {

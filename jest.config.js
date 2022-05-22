@@ -8,6 +8,7 @@ module.exports = {
 	coverageDirectory: 'coverage',
 	errorOnDeprecated: true,
 	testEnvironment: 'jsdom',
+	setupFiles: ['<rootDir>/test/setup.js'],
 	transform: {
 		'^.+\\.(t|j)sx?$': ['@swc/jest'],
 	},

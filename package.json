@@ -18,7 +18,7 @@
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
-		"postinstall": "node scripts/postinstall.js"
+		"postinstall": "node scripts/postinstall.cjs"
 	},
 	"devDependencies": {
 		"@swc/cli": "^0.1.57",

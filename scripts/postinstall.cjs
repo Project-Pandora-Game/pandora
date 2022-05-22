@@ -8,8 +8,11 @@ const { spawnSync } = require('child_process');
 postinstall();
 
 async function postinstall() {
+	const isCI = process.env.CI === 'true';
 	await copyDotenv();
-	configureGitHooks();
+	if (!isCI) {
+		configureGitHooks();
+	}
 }
 
 async function copyDotenv() {

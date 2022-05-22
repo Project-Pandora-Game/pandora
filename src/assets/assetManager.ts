@@ -218,7 +218,7 @@ export function LoadAssetDefinitions(definitionsHash: string, data: AssetsDefini
 /** formatting for `<T extends (...)>` is different for ESLint and VS Code */
 type Maybe<T> = T | undefined;
 export function MirrorBoneLike<T extends Maybe<string>>(bone: T): T {
-	return bone?.replace(/_[lr]$/, (_, l) => l === '_l' ? '_r' : '_l') as T;
+	return bone?.replace(/_[lr]$/, (m) => m === '_l' ? '_r' : '_l') as T;
 }
 
 export function MirrorCondition<T extends Maybe<Condition>>(condition: T): T {

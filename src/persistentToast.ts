@@ -42,8 +42,25 @@ export class PersistentToast {
 			AssertNever(style);
 		}
 
+		let id = this.id;
+
+		options.onOpen = () => {
+			if (id === null)
+				return;
+			if (this.id === null) {
+				this.id = id;
+			} else if (this.id !== id) {
+				// Toast already replaced by newer one, close this one
+				toast.dismiss(id);
+			}
+		};
+
 		options.onClose = () => {
-			this.id = null;
+			if (id === null)
+				return;
+			if (this.id === id) {
+				this.id = null;
+			}
 		};
 
 		if (this.id !== null) {
@@ -52,7 +69,7 @@ export class PersistentToast {
 				render: content,
 			});
 		} else {
-			this.id = toast(content, options);
+			this.id = id = toast(content, options);
 		}
 	}
 

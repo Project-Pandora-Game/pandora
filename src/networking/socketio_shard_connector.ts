@@ -1,11 +1,11 @@
 import { GetLogger, IDirectoryCharacterConnectionInfo, IShardClientArgument, ConnectionBase, IClientShardBase, MessageHandler, IShardClientBase, CreateMessageHandlerOnAny, CharacterId } from 'pandora-common';
-import { toast, ToastOptions } from 'react-toastify';
 import { connect, Socket } from 'socket.io-client';
 import { LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
 import { Player, PlayerCharacter } from '../character/player';
 import { Room } from '../character/room';
 import { Observable } from '../observable';
+import { PersistentToast } from '../persistentToast';
 import { DirectoryConnector } from './socketio_directory_connector';
 
 const logger = GetLogger('ShardConn');
@@ -41,6 +41,8 @@ function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacte
 		},
 	});
 }
+
+const ShardConnectionProgress = new PersistentToast();
 
 /** Class housing connection from Shard to Shard */
 export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardBase> {
@@ -117,8 +119,6 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		logger.info('Disconnected from Shard');
 	}
 
-	private toastId: string | number | null = null;
-
 	/**
 	 * Sets a new state, updating all dependent things
 	 * @param newState The state to set
@@ -126,54 +126,16 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 	private setState(newState: ShardConnectionState): void {
 		this._state = newState;
 
-		let options: ToastOptions = {
-			isLoading: false,
-			autoClose: 2_000,
-			hideProgressBar: true,
-			closeOnClick: true,
-			closeButton: true,
-			draggable: true,
-		};
-		const optionsPending: ToastOptions = {
-			type: 'default',
-			isLoading: true,
-			autoClose: false,
-			closeOnClick: false,
-			closeButton: false,
-			draggable: false,
-		};
-		let render = '';
 		if (newState === ShardConnectionState.INITIAL_CONNECTION_PENDING) {
-			options = optionsPending;
-			render = 'Connecting to Shard...';
+			ShardConnectionProgress.show('progress', 'Connecting to Shard...');
 		} else if (newState === ShardConnectionState.WAIT_FOR_DATA) {
-			options = optionsPending;
-			render = 'Loading Shard data...';
+			ShardConnectionProgress.show('progress', 'Loading Shard data...');
 		} else if (newState === ShardConnectionState.CONNECTED) {
-			options.type = 'success';
-			render = 'Connected to Shard';
+			ShardConnectionProgress.show('success', 'Connected to Shard');
 		} else if (newState === ShardConnectionState.CONNECTION_LOST) {
-			options = optionsPending;
-			render = 'Shard connection lost\nReconnecting...';
-		}
-
-		if (this.toastId !== null) {
-			if (render) {
-				toast.update(this.toastId, {
-					...options,
-					render,
-				});
-			} else {
-				toast.dismiss(this.toastId);
-				this.toastId = null;
-			}
-		} else if (render) {
-			this.toastId = toast(render, {
-				...options,
-				onClose: () => {
-					this.toastId = null;
-				},
-			});
+			ShardConnectionProgress.show('progress', 'Shard connection lost\nReconnecting...');
+		} else if (newState === ShardConnectionState.DISCONNECTED) {
+			ShardConnectionProgress.hide();
 		}
 	}
 

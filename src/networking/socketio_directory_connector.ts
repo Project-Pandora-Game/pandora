@@ -1,10 +1,11 @@
-import { toast, ToastOptions } from 'react-toastify';
+import { toast } from 'react-toastify';
 import { DIRECTORY_ADDRESS } from '../config/Environment';
 import { EMPTY, GetLogger, ICharacterSelfInfo, IDirectoryClientChangeEvents, ConnectionBase, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny, HTTP_HEADER_CLIENT_REQUEST_SHARD } from 'pandora-common';
 import { GetAuthData, HandleDirectoryConnectionState } from './account_manager';
 import { connect, Socket } from 'socket.io-client';
 import { ConnectToShard } from './socketio_shard_connector';
 import { TypedEventEmitter } from '../event';
+import { PersistentToast } from '../persistentToast';
 
 const logger = GetLogger('DirConn');
 
@@ -37,6 +38,8 @@ function CreateConnection(uri: string): Socket {
 	});
 }
 
+const DirectoryConnectionProgress = new PersistentToast();
+
 /** Class housing connection from Shard to Directory */
 export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> {
 
@@ -46,8 +49,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 	get state(): DirectoryConnectionState {
 		return this._state;
 	}
-
-	private toastId: string | number | null = null;
 
 	constructor(uri: string) {
 		super(CreateConnection(uri), logger);
@@ -107,51 +108,14 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		const initial = this._state === DirectoryConnectionState.INITIAL_CONNECTION_PENDING;
 		this._state = newState;
 
-		let options: ToastOptions = {
-			isLoading: false,
-			autoClose: 2_000,
-			hideProgressBar: true,
-			closeOnClick: true,
-			closeButton: true,
-			draggable: true,
-		};
-		const optionsPending: ToastOptions = {
-			type: 'default',
-			isLoading: true,
-			autoClose: false,
-			closeOnClick: false,
-			closeButton: false,
-			draggable: false,
-		};
-		let render = '';
 		if (newState === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
-			options = optionsPending;
-			render = 'Connecting to Directory...';
+			DirectoryConnectionProgress.show('progress', 'Connecting to Directory...');
 		} else if (newState === DirectoryConnectionState.CONNECTED) {
-			options.type = 'success';
-			render = initial ? 'Connected to Directory' : 'Reconnected to Directory';
+			DirectoryConnectionProgress.show('success', initial ? 'Connected to Directory' : 'Reconnected to Directory');
 		} else if (newState === DirectoryConnectionState.CONNECTION_LOST) {
-			options = optionsPending;
-			render = 'Directory connection lost\nReconnecting...';
-		}
-
-		if (this.toastId !== null) {
-			if (render) {
-				toast.update(this.toastId, {
-					...options,
-					render,
-				});
-			} else {
-				toast.dismiss(this.toastId);
-				this.toastId = null;
-			}
-		} else if (render) {
-			this.toastId = toast(render, {
-				...options,
-				onClose: () => {
-					this.toastId = null;
-				},
-			});
+			DirectoryConnectionProgress.show('progress', 'Directory connection lost\nReconnecting...');
+		} else if (newState === DirectoryConnectionState.DISCONNECTED) {
+			DirectoryConnectionProgress.hide();
 		}
 	}
 

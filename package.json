@@ -28,7 +28,7 @@
 		"test:watch": "jest --watch",
 		"prepack": "yarn run build",
 		"install": "yarn run build",
-		"postinstall": "node scripts/postinstall.js"
+		"postinstall": "node scripts/postinstall.cjs"
 	},
 	"dependencies": {
 		"@types/node": "^17.0.31",

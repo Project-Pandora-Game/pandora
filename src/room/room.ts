@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger,  IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageBase } from 'pandora-common';
 import type { Character } from '../character/character';
 
 export class Room {
@@ -57,28 +57,59 @@ export class Room {
 		character.room = this;
 		this.sendUpdateToAllInRoom();
 		this.logger.verbose(`Character ${character.id} entered`);
-		this.sendMessage('server', `(${character.name} (${character.id}) entered.)`);
+		this.sendMessage({
+			type: 'action',
+			id: 'characterEntered',
+			data: {
+				character: character.id,
+			},
+		});
 	}
 
 	public characterLeave(character: Character, reason: IChatRoomLeaveReason): void {
 		this.characters.delete(character);
 		character.room = null;
 		character.connection?.sendMessage('chatRoomUpdate', { room: null });
-		this.sendUpdateToAllInRoom();
 
 		// Report the leave
 		this.logger.verbose(`Character ${character.id} left (${reason})`);
 		if (reason === 'leave') {
-			this.sendMessage('server', `(${character.name} (${character.id}) left.)`);
+			this.sendMessage({
+				type: 'action',
+				id: 'characterLeft',
+				data: {
+					character: character.id,
+				},
+			});
 		} else if (reason === 'disconnect' || reason === 'destroy') {
-			this.sendMessage('server', `(${character.name} (${character.id}) disconnected.)`);
+			this.sendMessage({
+				type: 'action',
+				id: 'characterDisconnected',
+				data: {
+					character: character.id,
+				},
+			});
 		} else if (reason === 'kick') {
-			this.sendMessage('server', `(${character.name} (${character.id}) has been kicked.)`);
+			this.sendMessage({
+				type: 'action',
+				id: 'characterKicked',
+				data: {
+					character: character.id,
+				},
+			});
 		} else if (reason === 'ban') {
-			this.sendMessage('server', `(${character.name} (${character.id}) has been banned.)`);
+			this.sendMessage({
+				type: 'action',
+				id: 'characterBanned',
+				data: {
+					character: character.id,
+				},
+			});
 		} else {
 			AssertNever(reason);
 		}
+
+		this.sendUpdateToAllInRoom();
 	}
 
 	public sendUpdateTo(character: Character): void {
@@ -92,26 +123,35 @@ export class Room {
 		}
 	}
 
-	private lastMessageId: number = 0;
+	private lastMessageTime: number = 0;
 
-	public sendMessage(from: CharacterId | 'server', message: string, targets?: CharacterId[]): void {
-		let id = Date.now();
-		if (id <= this.lastMessageId) {
-			id = this.lastMessageId + 1;
+	private nextMessageTime(): number {
+		let time = Date.now();
+		// Make sure the time is unique
+		if (time <= this.lastMessageTime) {
+			time = this.lastMessageTime + 1;
 		}
-		this.lastMessageId = id;
-		const msg: IChatRoomMessage = {
-			id,
-			from,
-			message,
-		};
-		if (targets) {
-			msg.private = true;
-		}
+		return this.lastMessageTime = time;
+	}
+
+	public sendMessage(...messages: IChatRoomMessageBase[]): void {
+		const processedMessages = messages.map<IChatRoomMessage>(
+			(msg) => ({
+				time: this.nextMessageTime(),
+				...msg,
+			}),
+		);
 		for (const character of this.characters) {
-			if (!targets || targets.includes(character.id)) {
-				character.connection?.sendMessage('chatRoomMessage', msg);
-			}
+			character.queueMessages(processedMessages.filter((msg) => {
+				if (msg.type === 'chat') {
+					return msg.to === undefined || character.id === msg.from || character.id === msg.to;
+				} else if (msg.type === 'emote' || msg.type === 'me') {
+					return true;
+				} else if (msg.type === 'action') {
+					return true;
+				}
+				AssertNever(msg.type);
+			}));
 		}
 	}
 }

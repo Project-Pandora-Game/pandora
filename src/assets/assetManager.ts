@@ -25,7 +25,7 @@ export function LoadAssetDefinitions(): void {
 		throw new Error('ASSETS_DEFINITION_PATH is not a directory');
 	}
 
-	const currentFilePath = join(ASSETS_DEFINITION_PATH, '.current');
+	const currentFilePath = join(ASSETS_DEFINITION_PATH, 'current');
 	const currentHash = readFileSync(currentFilePath, { encoding: 'utf8' }).trim();
 
 	const definitionsFilePath = join(ASSETS_DEFINITION_PATH, `assets_${currentHash}.json`);
@@ -46,7 +46,7 @@ export function LoadAssetDefinitions(): void {
 }
 
 function WatchAssetDefinitionsTick(): void {
-	const currentFilePath = join(ASSETS_DEFINITION_PATH, '.current');
+	const currentFilePath = join(ASSETS_DEFINITION_PATH, 'current');
 	try {
 		if (!statSync(currentFilePath).isFile())
 			return;

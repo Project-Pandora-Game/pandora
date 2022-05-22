@@ -1,4 +1,4 @@
-import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, IShardCharacterDefinition, Logger, RoomId } from 'pandora-common';
+import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import { CharacterManager, CHARACTER_TIMEOUT } from './characterManager';
 import type { Room } from '../room/room';
@@ -289,4 +289,34 @@ export class Character {
 			this.connection?.sendMessage('updateCharacter', { appearance: this.appearance.exportToBundle() });
 		}
 	}
+
+	//#region Chat messages
+
+	private messageQueue: IChatRoomMessage[] = [];
+
+	public queueMessages(messages: IChatRoomMessage[]): void {
+		if (messages.length === 0)
+			return;
+		this.messageQueue.push(...messages);
+		this.connection?.sendMessage('chatRoomMessage', {
+			messages,
+		});
+	}
+
+	public onMessageAck(time: number): void {
+		const nextIndex = this.messageQueue.findIndex((m) => m.time > time);
+		if (nextIndex < 0) {
+			this.messageQueue = [];
+		} else {
+			this.messageQueue.splice(0, nextIndex);
+		}
+	}
+
+	public sendAllPendingMessages(): void {
+		this.connection?.sendMessage('chatRoomMessage', {
+			messages: this.messageQueue,
+		});
+	}
+
+	//#endregion
 }

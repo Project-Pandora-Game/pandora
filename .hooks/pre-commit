@@ -1,8 +1,11 @@
-#!/bin/sh
+#!/bin/bash
+
+set -eou pipefail
+source "./.hooks/include.sh"
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
-if [ "${BRANCH}" = "master" ]; then
+if [ "${BRANCH}" = "master" ] && [ "${ALLOW_MASTER_COMMIT:-}" != "true" ]; then
 	echo "You can't commit directly to master branch"
 	exit 1
 fi

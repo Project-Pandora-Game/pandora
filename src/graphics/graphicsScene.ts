@@ -88,7 +88,6 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export function useGraphicsScene<T extends HTMLElement>(scene: GraphicsScene): React.RefObject<T> {
 	const ref = useRef<T>(null);
 	useEffect(() => {

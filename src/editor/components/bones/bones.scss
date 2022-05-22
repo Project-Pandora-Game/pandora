@@ -1,0 +1,42 @@
+.bone-ui {
+	&>h3 {
+		margin-left: 2rem;
+	}
+
+	&>.bone-row {
+		display: flex;
+		flex-flow: column;
+		margin: 0 1rem .2rem 1rem;
+		border: 0.1em solid;
+		border-radius: 0.2em;
+		font-weight: bold;
+
+		&>legend {
+			margin-left: 1rem;
+			cursor: pointer;
+		}
+
+		&>.bone-rotation {
+			display: flex;
+			flex-flow: row;
+			width: 100%;
+			gap: 0 0.5rem;
+
+			&>input[type='range'] {
+				width: 100%;
+				border-radius: 0.2em;
+			}
+
+			&>input[type='number'] {
+				text-align: right;
+				width: 5rem;
+				border: 0.1em solid;
+				border-radius: 0.2em;
+			}
+		}
+
+		&>.bone-rotation.closed {
+			display: none;
+		}
+	}
+}

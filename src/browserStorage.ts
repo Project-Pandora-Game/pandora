@@ -55,7 +55,6 @@ export class BrowserStorage<T> extends Observable<T> {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export function useBrowserStorage<T>(name: string, defaultValue: T, validate?: (value: unknown) => boolean): [T, (value: T) => void] {
 	const storage = useMemo(() => BrowserStorage.create(name, defaultValue, validate), [name, defaultValue, validate]);
 	const value = useObservable(storage);

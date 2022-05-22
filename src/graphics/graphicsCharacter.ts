@@ -71,6 +71,7 @@ export class GraphicsCharacter extends Container {
 				graphics.destroy();
 			}
 		}
+		this.sortChildren();
 	}
 
 	//#region Point transform

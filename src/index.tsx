@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,7 +21,7 @@ Start().catch((error) => {
 async function Start(): Promise<void> {
 	SetupLogging();
 	logger.info('Starting...');
-	render(
+	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
 			<Header />
 			<ToastContainer theme='dark' />
@@ -31,7 +31,6 @@ async function Start(): Promise<void> {
 				</BrowserRouter>
 			</div>
 		</React.StrictMode>,
-		document.querySelector('#pandora-root'),
 	);
 	await ConnectToDirectory();
 }

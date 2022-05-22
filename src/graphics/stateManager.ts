@@ -1,6 +1,7 @@
-import { Asset, AssetState, BoneDefinition, LayerStateCompressed } from 'pandora-common';
+import { Asset, AssetState, BoneDefinition } from 'pandora-common';
 import { AssetDefinitionClient, BoneDefinitionClient, GetAssetManager } from '../assets/assetManager';
 import { BoneState, LayerState } from './def';
+import { GetLayerState } from './graphicsLayer';
 
 export class AssetStateManager {
 
@@ -11,17 +12,11 @@ export class AssetStateManager {
 			return [];
 		}
 		const definition = AssetGetClientDefinition(asset);
-		const layers = definition.layers.map((layer, index) => {
-			let state: LayerStateCompressed | undefined;
-			if (data.layers) {
-				if (typeof data.layers[0] === 'number') {
-					state = data.layers as LayerStateCompressed;
-				} else {
-					state = data.layers[index] as LayerStateCompressed;
-				}
-			}
-			return { asset: definition, layer, index, state };
-		});
+		const layers = definition.layers.map((layer, index) => ({
+			asset: definition,
+			state: GetLayerState(data.layers, index),
+			layer, index,
+		}));
 		return layers;
 	}
 

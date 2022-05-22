@@ -1,0 +1,27 @@
+.editor {
+	height: 100%;
+	display: flex;
+	flex-flow: row;
+
+	.editor-ui,
+	.editor-scene {
+		height: 100%;
+		width: 100%;
+	}
+
+	.editor-ui {
+		flex-basis: 30%;
+		min-width: 400px;
+	}
+
+	.editor-scene {
+		flex-basis: 70%;
+	}
+
+	.ui-selector {
+		display: flex;
+		flex-flow: row;
+		justify-content: center;
+		gap: 1rem;
+	}
+}

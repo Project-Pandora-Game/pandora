@@ -48,7 +48,11 @@
 					{
 						"selector": "function",
 						"modifiers": ["global"],
-						"format": ["PascalCase"]
+						"format": null,
+						"custom": {
+							"regex": "^(use)?[A-Z][a-zA-Z0-9]*$",
+							"match": true
+						}
 					},
 					{
 						"selector": "variable",

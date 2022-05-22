@@ -68,9 +68,7 @@ export class GraphicsLayer extends Container {
 	public static create = (props: GraphicsLayerProps) => new GraphicsLayer(props);
 
 	public static getState(data: AssetState, index: number): LayerState | undefined {
-		const layer = typeof data.layers?.[0] === 'number'
-			? data.layers as LayerStateCompressed
-			: data.layers?.[index] as LayerStateCompressed | undefined;
+		const layer = GetLayerState(data.layers, index);
 		if (!layer) {
 			return undefined;
 		}
@@ -195,3 +193,14 @@ type LayerState = {
 	alpha?: number;
 	pointTypes?: Set<string>;
 };
+
+export function GetLayerState(layers: AssetState['layers'] | undefined, index: number): LayerStateCompressed | undefined {
+	return layers && (layers[index.toString() as `${number}`] || layers.base);
+}
+
+export function SetLayerState(layers: AssetState['layers'] | undefined, index: number, state: LayerStateCompressed): AssetState['layers'] {
+	return {
+		...(layers || {}),
+		[index.toString() as `${number}`]: state,
+	};
+}

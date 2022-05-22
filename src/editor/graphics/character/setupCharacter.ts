@@ -1,12 +1,11 @@
 import { Character } from '../../../character/character';
 import { Draggable } from '../draggable';
-import { EditorScene } from '../editorScene';
 import { SetupLayer } from '../layer';
 import { EditorCharacter } from './editorCharacter';
 
 export class SetupCharacter extends EditorCharacter {
-	constructor(editor: EditorScene, character: Character) {
-		super(editor, character);
+	constructor(character: Character) {
+		super(character);
 		this._addBones();
 		this.onWindowResize();
 	}

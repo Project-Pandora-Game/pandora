@@ -1,8 +1,9 @@
 import React, { useCallback, useReducer, useState } from 'react';
-import { ToastContainer } from 'react-toastify';
-import { render } from 'react-dom';
-import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
+import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
 import { EditorRoutes } from './routes';
 import { LoadAssetsFromDirectLink, LoadAssetsFromFileSystem } from './assetLoader';
 import { Button } from '../components/common/Button/Button';
@@ -20,7 +21,7 @@ Start().catch((error) => {
 async function Start(): Promise<void> {
 	SetupLogging();
 	logger.info('Starting...');
-	render(
+	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
 			<div className='Header' />
 			<ToastContainer theme='dark' />
@@ -28,9 +29,7 @@ async function Start(): Promise<void> {
 				<AssetLoaderElement />
 			</div>
 		</React.StrictMode>,
-		document.querySelector('#editor-root'),
 	);
-
 	return Promise.resolve();
 }
 

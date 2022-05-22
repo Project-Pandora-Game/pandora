@@ -4,11 +4,13 @@ import { observable, ObservableClass } from '../../../observable';
 
 export const AllLayers: ObservableLayer[] = [];
 
-export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]; selected: boolean; x: number; y: number; }> implements LayerDefinition {
+export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]; selected: boolean; open: boolean; x: number; y: number; }> implements LayerDefinition {
 	private readonly _layer: LayerDefinition;
 	private _mirror: ObservableLayer | undefined;
 	private _side?: LayerSide;
 
+	@observable
+	public open: boolean = true;
 	@observable
 	public selected: boolean = false;
 	@observable

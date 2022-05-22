@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { TypedEvent, TypedEventEmitter } from './event';
 
 /** Class that stores value of type T, while allowing subscribers to observe reference changes */
@@ -28,16 +28,14 @@ export class Observable<T> {
 		this._observers.add(observer);
 		return () => this._observers.delete(observer);
 	}
+
+	public getSubscriber(): (onStoreChange: () => void) => () => void {
+		return (onStoreChange) => this.subscribe(() => onStoreChange());
+	}
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export function useObservable<T>(obs: Observable<T>): T {
-	const [value, setValue] = useState<T>(obs.value);
-	useEffect(() => {
-		setValue(obs.value);
-		return obs.subscribe(setValue);
-	}, [obs]);
-	return value;
+	return useSyncExternalStore(obs.getSubscriber(), () => obs.value);
 }
 
 export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEmitter<T> {
@@ -69,4 +67,13 @@ export function observable<T extends TypedEvent, K extends keyof T>(target: Obse
 		enumerable: true,
 		configurable: true,
 	});
+}
+
+export type IObservableClass<T extends TypedEvent> = TypedEventEmitter<T> & {
+	[K in keyof T]: T[K];
+};
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useObservableProperty<O extends IObservableClass<any>, K extends O extends IObservableClass<infer R> ? keyof R : never>(obs: O, key: K): O extends IObservableClass<infer R> ? R[K] : never {
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+	return useSyncExternalStore(obs.getSubscriber(key), () => obs[key]);
 }

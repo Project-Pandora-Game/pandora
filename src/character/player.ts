@@ -28,7 +28,6 @@ export class PlayerCharacter extends Character<ICharacterData> {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 export function usePlayerData(): Readonly<ICharacterData> | null {
 	const player = useObservable(Player);
 	const [data, setData] = useState<Readonly<ICharacterData> | null>(player ? player.data : null);

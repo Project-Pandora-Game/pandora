@@ -50,15 +50,20 @@ export class SetupLayer extends EditorLayer {
 
 	protected show(value: boolean): void {
 		if (value) {
-			this.editorCharacter.addChild(this.wireFrame);
-			this.editorCharacter.addChild(this.allPoints);
+			this.editorCharacter.addChild(this.wireFrame).zIndex = EditorLayer.Z_INDEX_EXTRA;
+			this.editorCharacter.addChild(this.allPoints).zIndex = EditorLayer.Z_INDEX_EXTRA;
+			this.editorCharacter.sortChildren();
 		} else {
-			this.editorCharacter.removeChild(this.wireFrame);
-			this.editorCharacter.removeChild(this.allPoints);
-			this.wireFrame.destroy();
-			this.allPoints.destroy();
-			this._wireFrame = undefined;
-			this._allPoints = undefined;
+			if (this._wireFrame) {
+				this.editorCharacter.removeChild(this.wireFrame);
+				this.wireFrame.destroy();
+				this._wireFrame = undefined;
+			}
+			if (this._allPoints) {
+				this.editorCharacter.removeChild(this.allPoints);
+				this.allPoints.destroy();
+				this._allPoints = undefined;
+			}
 		}
 	}
 
@@ -119,5 +124,10 @@ export class SetupLayer extends EditorLayer {
 		container.on('destroy', () => {
 			cleanup();
 		});
+	}
+
+	override destroy() {
+		this.show(false);
+		super.destroy();
 	}
 }

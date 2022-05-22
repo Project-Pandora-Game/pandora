@@ -31,10 +31,11 @@ export class ResultLayer extends EditorLayer {
 
 	protected show(value: boolean): void {
 		if (value) {
-			this.editorCharacter.addChild(this.allPoints);
-		} else {
-			this.editorCharacter.removeChild(this.allPoints);
-			this.allPoints.destroy();
+			this.editorCharacter.addChild(this.allPoints).zIndex = EditorLayer.Z_INDEX_EXTRA;
+			this.editorCharacter.sortChildren();
+		} else if (this._allPoints) {
+			this.editorCharacter.removeChild(this._allPoints);
+			this._allPoints.destroy();
 			this._allPoints = undefined;
 		}
 	}
@@ -57,5 +58,10 @@ export class ResultLayer extends EditorLayer {
 		for (let i = 0; i < this.vertices.length; i += 2) {
 			createPoint(this.vertices[i], this.vertices[i + 1]);
 		}
+	}
+
+	override destroy() {
+		this.show(false);
+		super.destroy();
 	}
 }

@@ -4,8 +4,8 @@ import { ResultLayer } from '../layer';
 import { EditorCharacter } from './editorCharacter';
 
 export class ResultCharacter extends EditorCharacter {
-	constructor(editor: EditorScene, character: Character) {
-		super(editor, character);
+	constructor(character: Character) {
+		super(character);
 		this._addBones();
 		this.onWindowResize();
 	}
@@ -23,6 +23,6 @@ export class ResultCharacter extends EditorCharacter {
 
 	protected override onWindowResize(): void {
 		super.onWindowResize();
-		this.x = this.editor.width / 2;
+		this.x = EditorScene.width / 2;
 	}
 }

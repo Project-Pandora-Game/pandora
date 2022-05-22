@@ -31,6 +31,10 @@ export abstract class TypedEventEmitter<T extends TypedEvent> implements ITypedE
 		};
 	}
 
+	getSubscriber(key: keyof T): (onStoreChange: () => void) => () => void {
+		return (onStoreChange) => this.on(key, () => onStoreChange());
+	}
+
 	protected emit<K extends keyof T>(event: K, value: T[K]): void {
 		this._listeners.get(event)?.forEach((observer) => observer(value));
 		const obj: Partial<T> = { [event]: value } as unknown as Partial<T>;

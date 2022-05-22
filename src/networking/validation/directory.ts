@@ -2,7 +2,7 @@ import { CreateObjectValidator, IsString, CreateArrayValidator, CreateMaybeValid
 import type { IShardDirectoryArgument, ShardFeature } from '../shard_directory';
 import { IsIShardCharacterDefinition } from '../directory_shard';
 import type { IClientDirectoryAuthMessage } from '../client_directory';
-import { IChatRoomFullInfo, IsIChatRoomDirectoryConfig } from '../../chatroom';
+import { IChatRoomFullInfo, IsIChatRoomFullInfo, IsShardFeature } from '../../chatroom';
 import { CharacterId, IsCharacterId } from '../../character';
 
 /** TODO set this to true, we keep it false to make things simple in early development */
@@ -13,13 +13,13 @@ export const Shard = {
 	shardRegister: CreateObjectValidator<IShardDirectoryArgument['shardRegister']>({
 		shardId: CreateNullableValidator(IsString),
 		publicURL: IsString,
-		features: CreateArrayValidator<ShardFeature>({ validator: IsString }),
+		features: CreateArrayValidator<ShardFeature>({ validator: IsShardFeature }),
 		version: IsString,
 		characters: CreateArrayValidator<IShardDirectoryArgument['shardRegister']['characters'][0]>({
 			validator: IsIShardCharacterDefinition,
 		}),
 		disconnectCharacters: CreateArrayValidator<CharacterId>({ validator: IsCharacterId }),
-		rooms: CreateArrayValidator<IChatRoomFullInfo>({ validator: IsIChatRoomDirectoryConfig }),
+		rooms: CreateArrayValidator<IChatRoomFullInfo>({ validator: IsIChatRoomFullInfo }),
 	}, { noExtraKey: SHARD_NO_EXTRA_OBJECT_KEY }),
 	setCharacter: CreateObjectValidator<IShardDirectoryArgument['setCharacter']>({
 		id: IsCharacterId,

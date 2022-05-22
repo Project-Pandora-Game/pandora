@@ -11,7 +11,7 @@ export interface IStringValidationOptions {
 }
 
 export interface IArrayValidationOptions<T = unknown> {
-	validator?: (value: T, index: number) => boolean;
+	validator?: (value: unknown, index: number) => value is T;
 	minLength?: number;
 	maxLength?: number;
 }
@@ -53,6 +53,25 @@ export function CreateArrayValidator<T = unknown>({ validator, minLength, maxLen
 			return false;
 		if (validator !== undefined && !arr.every(validator))
 			return false;
+
+		return true;
+	};
+}
+
+type TupleToValidator<T extends unknown[]> = {
+	[K in keyof T]: (value: unknown) => value is T[K];
+};
+
+export function CreateTupleValidator<T extends unknown[]>(...parts: TupleToValidator<T>): (arr: unknown) => arr is T {
+	return (arr: unknown): arr is T => {
+		if (!Array.isArray(arr))
+			return false;
+		if (arr.length > parts.length)
+			return false;
+		for (let i = 0; i < parts.length; i++) {
+			if (!parts[i](arr[i]))
+				return false;
+		}
 
 		return true;
 	};
@@ -125,6 +144,17 @@ export function CreateNullableValidator<T>(validator: (value: unknown) => value 
 
 export function CreateOneOfValidator<T extends string | number>(...accepted: T[]): (value: unknown) => value is T {
 	return (value: unknown): value is T => accepted.includes(value as T);
+}
+
+/**
+ * Creates a validator for TypeScript union (`|`) type.
+ *
+ * @example
+ * type ResultType = TypePart1 | TypePart2;
+ * const IsResultType = CreateUnionValidator<ResultType>(IsTypePart1, IsTypePart2);
+ */
+export function CreateUnionValidator<T>(...validators: ((value: unknown) => value is T)[]): (value: unknown) => value is T {
+	return (value: unknown): value is T => validators.some((validator) => validator(value));
 }
 
 export const IsString = CreateStringValidator();

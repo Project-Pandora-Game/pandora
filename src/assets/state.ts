@@ -3,11 +3,11 @@ import type { AssetId } from '.';
 
 export type AssetState = {
 	id: AssetId;
-	layers?: LayerStateCompressed | LayerStateCompressed[];
+	layers?: Partial<Record<'base' | `${number}`, LayerStateCompressed>>;
 };
 
 type LayerState = {
-	color: number;
+	color?: number;
 	alpha?: number;
 };
 export type LayerStateCompressed = ArrayCompressType<LayerState, ['color', 'alpha']>;

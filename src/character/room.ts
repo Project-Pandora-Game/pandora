@@ -1,14 +1,82 @@
-import { IChatRoomClientData, IChatRoomMessage, GetLogger, CharacterId, ICharacterPublicData } from 'pandora-common';
+import { IChatRoomClientData, IChatRoomMessage, GetLogger, CharacterId, ICharacterPublicData, IChatroomMessageChat, IChatroomMessageAction, IChatroomMessageEmote, AssertNever } from 'pandora-common';
+import { ChatActionDictionaryMetaEntry } from 'pandora-common/dist/chatroom/chatActions';
 import { NODE_ENV } from '../config/Environment';
 import { TypedEventEmitter } from '../event';
+import type { SocketIOShardConnector } from '../networking/socketio_shard_connector';
 import { Observable } from '../observable';
 import { Character } from './character';
 import { Player } from './player';
 
 const logger = GetLogger('Room');
 
-export interface IChatRoomMessageSaved extends IChatRoomMessage {
+export type IChatroomMessageChatProcessed = IChatroomMessageChat & {
 	fromName: string;
+	toName?: string;
+};
+export type IChatroomMessageEmoteProcessed = IChatroomMessageEmote & {
+	fromName: string;
+};
+export type IChatroomMessageActionProcessed = IChatroomMessageAction;
+
+export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatroomMessageEmoteProcessed | IChatroomMessageActionProcessed) & {
+	/** Time the message was sent, guaranteed to be unique */
+	time: number;
+};
+
+function ProcessMessage(message: IChatRoomMessage): IChatroomMessageProcessed {
+	if (message.type === 'chat') {
+		return {
+			...message,
+			fromName: Room.getCharacterName(message.from),
+			toName: message.to !== undefined ? Room.getCharacterName(message.to) : undefined,
+		};
+	} else if (message.type === 'emote' || message.type === 'me') {
+		return {
+			...message,
+			fromName: Room.getCharacterName(message.from),
+		};
+	} else if (message.type === 'action') {
+		const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
+
+		const sourceId = message.data?.character;
+		const targetId = message.data?.targetCharacter ?? sourceId;
+
+		if (sourceId != null) {
+			const sourceName = Room.getCharacterName(sourceId);
+			const sourcePronoun = Room.getCharacterPronoun(sourceId);
+			metaDictionary.SOURCE_CHARACTER_NAME = sourceName;
+			metaDictionary.SOURCE_CHARACTER_ID = sourceId;
+			metaDictionary.SOURCE_CHARACTER_PRONOUN = sourcePronoun;
+			metaDictionary.SOURCE_CHARACTER_PRONOUN_SELF = `${sourcePronoun}self`;
+			metaDictionary.SOURCE_CHARACTER = `${sourceName} (${sourceId})`;
+		}
+
+		if (targetId != null) {
+			const targetName = Room.getCharacterName(targetId);
+			const targetPronoun = Room.getCharacterPronoun(targetId);
+			metaDictionary.TARGET_CHARACTER_NAME = targetName;
+			metaDictionary.TARGET_CHARACTER_ID = targetId;
+			metaDictionary.TARGET_CHARACTER_PRONOUN = targetPronoun;
+			metaDictionary.TARGET_CHARACTER_PRONOUN_SELF = `${targetPronoun}self`;
+			metaDictionary.TARGET_CHARACTER = `${targetName} (${targetId})`;
+			if (targetId === sourceId) {
+				metaDictionary.TARGET_CHARACTER_DYNAMIC = targetPronoun;
+				metaDictionary.TARGET_CHARACTER_DYNAMIC_SELF = `${targetPronoun}self`;
+			} else {
+				metaDictionary.TARGET_CHARACTER_DYNAMIC = `${targetName}'s (${targetId})`;
+				metaDictionary.TARGET_CHARACTER_DYNAMIC_SELF = `${targetName} (${targetId})`;
+			}
+		}
+
+		return {
+			...message,
+			dictionary: {
+				...metaDictionary,
+				...message.dictionary,
+			},
+		};
+	}
+	AssertNever(message.type);
 }
 
 export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
@@ -20,7 +88,8 @@ export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 
 	public characters: Character[] = [];
 
-	public readonly messages = new Observable<IChatRoomMessageSaved[]>([]);
+	public readonly messages = new Observable<IChatroomMessageProcessed[]>([]);
+	private lastMessageTime: number = 0;
 
 	public update(data: IChatRoomClientData | null): void {
 		const player = Player.value;
@@ -61,22 +130,33 @@ export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 		});
 	}
 
-	public getCharacterName(id: CharacterId | 'server'): string {
-		if (id === 'server')
-			return '[SERVER]';
+	public getCharacterName(id: CharacterId): string {
 		const character = this.data.value?.characters.find((c) => c.id === id);
 		return character?.name ?? '[UNKNOWN]';
 	}
 
-	public onMessage(message: IChatRoomMessage): void {
+	public getCharacterPronoun(_id: CharacterId): string {
+		// TODO
+		return 'her';
+	}
+
+	public onMessage(messages: IChatRoomMessage[], connector?: SocketIOShardConnector): void {
+		messages = messages.filter((m) => m.time > this.lastMessageTime);
+		for (const message of messages) {
+			this.lastMessageTime = Math.max(this.lastMessageTime, message.time);
+		}
+		connector?.sendMessage('chatRoomMessageAck', {
+			lastTime: this.lastMessageTime,
+		});
+		const processedMessages = messages.map(ProcessMessage);
 		this.messages.value = [
 			...this.messages.value,
-			{
-				...message,
-				fromName: this.getCharacterName(message.from),
-			},
+			...processedMessages,
 		];
-		this.emit('message', message);
+
+		processedMessages.forEach((message) => {
+			this.emit('message', message);
+		});
 	}
 
 	private onLeave() {
@@ -89,7 +169,7 @@ export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 type RoomEvents = {
 	'load': IChatRoomClientData;
 	'leave': undefined;
-	'message': IChatRoomMessage;
+	'message': IChatroomMessageProcessed;
 };
 
 // Debug helper

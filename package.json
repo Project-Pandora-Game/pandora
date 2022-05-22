@@ -72,7 +72,7 @@
 		"classnames": "^2.3.1",
 		"delaunator": "^5.0.0",
 		"nanoid": "^3.3.4",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#07efedc",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#cac525e",
 		"pixi.js": "^6.2.2",
 		"react": "^18.1.0",
 		"react-dom": "^18.1.0",

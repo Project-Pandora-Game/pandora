@@ -71,7 +71,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 			updateCharacter: this.onUpdateCharacter.bind(this),
 			chatRoomUpdate: this.onChatRoomUpdate.bind(this),
 			chatRoomMessage: (message: IShardClientArgument['chatRoomMessage']) => {
-				Room.onMessage(message);
+				Room.onMessage(message.messages, this);
 			},
 		});
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));

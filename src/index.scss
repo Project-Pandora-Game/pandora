@@ -12,7 +12,7 @@ html, body {
 	background-color: $grey-lightest;
 }
 
-#pandora-root {
+#pandora-root, #editor-root {
 	@include flex(column);
 	margin: 0;
 	height: 100%;

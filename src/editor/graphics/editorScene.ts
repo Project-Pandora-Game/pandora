@@ -4,30 +4,27 @@ import { GraphicsScene } from '../../graphics/graphicsScene';
 import { Observable } from '../../observable';
 import { ResultCharacter, SetupCharacter } from './character';
 
-export const EditorScene = new class EditorScene extends GraphicsScene {
-	private _setupCharacter!: SetupCharacter;
-	private _resultCharacter!: ResultCharacter;
-	readonly showBones = new Observable<boolean>(true);
+export const EditorShowBones = new Observable<boolean>(true);
 
-	get setupCharacter(): SetupCharacter {
-		return this._setupCharacter;
+export class EditorSetupScene extends GraphicsScene {
+	public readonly setupCharacter: SetupCharacter;
+
+	constructor() {
+		super();
+		this.setupCharacter = new SetupCharacter(EditorCharacter);
+		this.add(this.setupCharacter);
 	}
+}
 
-	get resultCharacter(): ResultCharacter {
-		return this._resultCharacter;
+export class EditorResultScene extends GraphicsScene {
+	public readonly resultCharacter!: ResultCharacter;
+
+	constructor() {
+		super();
+		this.resultCharacter = new ResultCharacter(EditorCharacter);
+		this.add(this.resultCharacter);
 	}
-
-	init() {
-		this._setupCharacter = new SetupCharacter(EditorCharacter);
-		this.add(this._setupCharacter);
-		this._resultCharacter = new ResultCharacter(EditorCharacter);
-		this.add(this._resultCharacter);
-
-		EditorCharacter.update({
-			assets: [{ id: 'a/base/body' }],
-		});
-	}
-};
+}
 
 export const EditorCharacter = new Character<ICharacterData>({
 	inCreation: true,

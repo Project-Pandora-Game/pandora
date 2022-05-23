@@ -1,5 +1,4 @@
 import { Character } from '../../../character/character';
-import { EditorScene } from '../editorScene';
 import { ResultLayer } from '../layer';
 import { EditorCharacter } from './editorCharacter';
 
@@ -7,7 +6,6 @@ export class ResultCharacter extends EditorCharacter {
 	constructor(character: Character) {
 		super(character);
 		this._addBones();
-		this.onWindowResize();
 	}
 
 	protected override createLayer = ResultLayer.create;
@@ -19,10 +17,5 @@ export class ResultCharacter extends EditorCharacter {
 
 			// TODO: implement draggable rotation
 		}
-	}
-
-	protected override onWindowResize(): void {
-		super.onWindowResize();
-		this.x = EditorScene.width / 2;
 	}
 }

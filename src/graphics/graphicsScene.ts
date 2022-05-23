@@ -1,10 +1,17 @@
-import { Application, Container, Sprite, Texture } from 'pixi.js';
+import { Application, Container, Graphics, InteractionManager, Rectangle, Sprite, Texture } from 'pixi.js';
+import * as PixiViewport from 'pixi-viewport';
 import { useRef, useEffect } from 'react';
 import { TypedEventEmitter } from '../event';
+import { CharacterSize } from 'pandora-common';
+
+const GRAPHICS_HEIGHT = CharacterSize.HEIGHT;
+const GRAPHICS_WIDTH = CharacterSize.WIDTH;
 
 export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	private readonly _app: Application;
-	private readonly _container: Container;
+	private readonly _container: PixiViewport.Viewport;
+	private element: HTMLElement | undefined;
+	private readonly resizeObserver: ResizeObserver;
 
 	get width(): number {
 		return this._app.renderer.width;
@@ -16,28 +23,68 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 
 	constructor() {
 		super();
+		this.resizeObserver = new ResizeObserver(() => this.resize());
 		this._app = new Application({
 			backgroundColor: 0x1099bb,
 			resolution: window.devicePixelRatio || 1,
 			antialias: true,
 		});
-		this._container = new Container();
+		this._container = new PixiViewport.Viewport({
+			worldHeight: GRAPHICS_HEIGHT,
+			worldWidth: GRAPHICS_WIDTH,
+			interaction: this._app.renderer.plugins.interaction as InteractionManager,
+		});
+		this._container
+			.drag({ clampWheel: true })
+			.wheel({ smooth: 10, percent: 0.1 })
+			.bounce({
+				ease: 'easeOutQuad',
+				friction: 0,
+				sides: 'all',
+				time: 500,
+				underflow: 'center',
+				bounceBox: new Rectangle(-20, -20, GRAPHICS_WIDTH + 20, GRAPHICS_HEIGHT + 20),
+			})
+			.pinch({ noDrag: false, percent: 2 })
+			.decelerate({ friction: 0.7 });
 		this._container.sortableChildren = true;
+		const border = this._container.addChild(new Graphics());
+		border.zIndex = 2;
+		border.clear().lineStyle(2, 0x404040).drawRect(0, 0, GRAPHICS_WIDTH, GRAPHICS_HEIGHT);
 		this._app.stage.addChild(this._container);
 	}
 
 	renderTo(element: HTMLElement): () => void {
-		this._app.view.parentNode?.removeChild(this._app.view);
-		this._app.resizeTo = element;
+		if (this.element !== undefined) {
+			this.resizeObserver.unobserve(this.element);
+			this._app.resizeTo = window;
+			this.element.removeChild(this._app.view);
+			this.element = undefined;
+		}
 		element.appendChild(this._app.view);
+		this._app.resizeTo = element;
+		this.resizeObserver.observe(element);
 		this.resize();
 		return () => {
-			this._app.resizeTo = window;
+			if (this.element === element) {
+				this.resizeObserver.unobserve(element);
+				this._app.resizeTo = window;
+				element.removeChild(this._app.view);
+				this.element = undefined;
+			}
 		};
 	}
 
 	resize(): void {
 		this._app.resize();
+		const width = this._app.screen.width;
+		const height = this._app.screen.height;
+		this._container.resize(width, height);
+		this._container.clampZoom({
+			minScale: Math.min(height / GRAPHICS_HEIGHT, width / GRAPHICS_WIDTH) * 0.9,
+			maxScale: 2,
+		});
+		this._container.fit();
 		this.emit('resize', undefined);
 	}
 
@@ -91,11 +138,10 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 export function useGraphicsScene<T extends HTMLElement>(scene: GraphicsScene): React.RefObject<T> {
 	const ref = useRef<T>(null);
 	useEffect(() => {
-		let cleanup: undefined | (() => void);
 		if (ref.current) {
-			cleanup = scene.renderTo(ref.current);
+			return scene.renderTo(ref.current);
 		}
-		return cleanup;
+		return undefined;
 	}, [scene, ref]);
 	return ref;
 }

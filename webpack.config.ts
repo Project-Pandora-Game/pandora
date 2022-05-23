@@ -29,7 +29,12 @@ export default function (env: WebpackEnv): Configuration {
 	const mode = env.prod ? 'production' : 'development';
 	return {
 		devServer: {
-			historyApiFallback: true,
+			historyApiFallback: {
+				rewrites: [
+					{ from: /^\/editor/, to: '/editor/index.html' },
+					{ from: /./, to: '/index.html' },
+				],
+			},
 			hot: true,
 			open: true,
 			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),

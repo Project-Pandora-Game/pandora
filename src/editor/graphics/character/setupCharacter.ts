@@ -7,7 +7,6 @@ export class SetupCharacter extends EditorCharacter {
 	constructor(character: Character) {
 		super(character);
 		this._addBones();
-		this.onWindowResize();
 	}
 
 	protected override createLayer = SetupLayer.create;

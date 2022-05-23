@@ -1,0 +1,35 @@
+.editor {
+	display: flex;
+	flex-flow: row;
+
+	.editor-ui {
+		flex-basis: 20%;
+		min-width: 20em;
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		overflow-y: auto;
+		padding: 0.5em;
+		textarea {
+			resize: none;
+			width: 100%;
+			height: 80%;
+		}
+	}
+
+	.editor-scene {
+		flex-basis: 40%;
+		display: flex;
+		padding: 0;
+		height: 100vh;
+		border-left: 2px solid black;
+		overflow: hidden;
+	}
+
+	.ui-selector {
+		display: flex;
+		flex-flow: row;
+		justify-content: center;
+		gap: 1rem;
+	}
+}

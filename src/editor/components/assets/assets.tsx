@@ -1,11 +1,14 @@
 import classNames from 'classnames';
 import { AssetId, AssetState } from 'pandora-common';
 import React, { ReactElement, useSyncExternalStore } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '../../../components/common/Button/Button';
 import { GetLayerState, SetLayerState } from '../../../graphics/graphicsLayer';
 import { IObservableClass, useObservableProperty } from '../../../observable';
 import { AssetDefinitionEditor, AssetTreeViewCategory, GetAssetManagerEditor } from '../../assets/assetManager';
 import { EditorCharacter } from '../../graphics/editorScene';
 import { ObservableLayer } from '../../graphics/observable';
+import { SelectedAsset } from '../layers';
 import './assets.scss';
 
 export function AssetUI(): ReactElement {
@@ -39,6 +42,11 @@ function useAssetState(id: AssetId) {
 
 function AssetElement({ asset }: { asset: AssetDefinitionEditor; }): ReactElement {
 	const state = useAssetState(asset.id);
+	const navigate = useNavigate();
+
+	function beforeEdit() {
+		SelectedAsset.value = asset;
+	}
 
 	function toggleAdded() {
 		if (state) {
@@ -55,6 +63,12 @@ function AssetElement({ asset }: { asset: AssetDefinitionEditor; }): ReactElemen
 	return (
 		<ToggleLi name={ asset.name } state={ asset }>
 			<div className='controls'>
+				<Button onClick={ () => {
+					beforeEdit();
+					navigate('/layers');
+				} }>
+					E
+				</Button>
 				<button type='button' onClick={ toggleAdded }>{ state ? ' - ' : ' + ' }</button>
 			</div>
 			<ul>

@@ -1,13 +1,13 @@
-import React, { useCallback, useReducer, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
-import { EditorRoutes } from './routes';
 import { LoadAssetsFromDirectLink, LoadAssetsFromFileSystem } from './assetLoader';
 import { Button } from '../components/common/Button/Button';
 import '../index.scss';
+import { Editor, EditorView } from './editor';
+import { Observable, useObservable } from '../observable';
 
 const logger = GetLogger('init');
 
@@ -23,11 +23,8 @@ async function Start(): Promise<void> {
 	logger.info('Starting...');
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
-			<div className='Header' />
 			<ToastContainer theme='dark' />
-			<div className='main' style={ { height: '100vh' } }>
-				<AssetLoaderElement />
-			</div>
+			<AssetLoaderElement />
 		</React.StrictMode>,
 	);
 	return Promise.resolve();
@@ -40,71 +37,69 @@ function SetupLogging(): void {
 	SetConsoleOutput(LogLevel.DEBUG);
 }
 
-function AssetLoaderElement() {
-	const supported = 'showDirectoryPicker' in window;
-	const [ok, loaded] = useReducer(() => true, false);
-	const [pending, togglePending] = useReducer((p) => !p, !supported);
+const EditorInstance = new Observable<Editor | null>(null);
 
-	if (ok) {
+function AssetLoaderElement() {
+	const editor = useObservable(EditorInstance);
+	const [pending, setPending] = useState(false);
+
+	if (editor) {
 		return (
-			<BrowserRouter>
-				<EditorRoutes />
-			</BrowserRouter>
+			<EditorView editor={ editor } />
 		);
 	}
 
 	return (
 		<div style={ { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexFlow: 'column', gap: '1rem' } }>
-			<ButtonLoadFromFileSystem loaded={ loaded } pending={ pending } togglePending={ togglePending } />
-			<ButtonLoadDirectLink loaded={ loaded } pending={ pending } togglePending={ togglePending } />
+			<ButtonLoadFromFileSystem pending={ pending } setPending={ setPending } />
+			<ButtonLoadDirectLink pending={ pending } setPending={ setPending } />
 		</div>
 	);
 }
 
-function ButtonLoadFromFileSystem({ loaded, pending, togglePending }: { loaded: () => void, pending: boolean, togglePending: () => void, }) {
+function ButtonLoadFromFileSystem({ pending, setPending }: { pending: boolean, setPending: (value: boolean) => void, }) {
 	const supported = 'showDirectoryPicker' in window;
-	pending = pending || !supported;
 	const [text, setText] = useState(supported ? 'Load Assets From File System' : 'Browser does not support File System Access API');
 
 	const loadFileSystem = useCallback(async () => {
-		if (pending)
+		if (pending || !supported)
 			return;
 
-		togglePending();
+		setPending(true);
 		setText('Loading');
 		try {
 			await LoadAssetsFromFileSystem();
-			loaded();
+			EditorInstance.value = new Editor();
 		} catch (e) {
 			logger.error('Failed to load assets:', e);
-			togglePending();
+			setPending(false);
 			setText('Load Assets From File System');
 		}
-	}, [pending, togglePending, loaded]);
+	}, [pending, setPending, supported]);
 
 	return (
-		<Button onClick={ () => void loadFileSystem() } disabled={ pending }>{text}</Button>
+		<Button onClick={ () => void loadFileSystem() } disabled={ pending || !supported }>{text}</Button>
 	);
 }
 
-function ButtonLoadDirectLink({ loaded, pending, togglePending }: { loaded: () => void, pending: boolean, togglePending: () => void, }) {
+function ButtonLoadDirectLink({ pending, setPending }: { pending: boolean, setPending: (value: boolean) => void, }) {
 	const [text, setText] = useState('Load Assets From Direct Link');
 
 	const loadDirectLink = useCallback(async () => {
 		if (pending)
 			return;
 
-		togglePending();
+		setPending(true);
 		setText('Loading');
 		try {
 			await LoadAssetsFromDirectLink();
-			loaded();
+			EditorInstance.value = new Editor();
 		} catch (e) {
 			logger.error('Failed to load assets:', e);
-			togglePending();
+			setPending(false);
 			setText('Load Assets From Direct Link');
 		}
-	}, [pending, togglePending, loaded]);
+	}, [pending, setPending]);
 
 	return (
 		<Button onClick={ () => void loadDirectLink() } disabled={ pending }>{text}</Button>

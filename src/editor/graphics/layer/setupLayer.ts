@@ -9,6 +9,7 @@ import { MirrorPointDefinition } from '../editorStore';
 export class SetupLayer extends EditorLayer {
 	private _wireFrame?: Graphics;
 	private _allPoints?: Container;
+	private _allPointsCleanup: (() => void)[] = [];
 
 	private get wireFrame(): Graphics {
 		if (!this._wireFrame) {
@@ -61,6 +62,7 @@ export class SetupLayer extends EditorLayer {
 			}
 			if (this._allPoints) {
 				this.editorCharacter.removeChild(this.allPoints);
+				this._allPointsCleanup.forEach((cleanup) => cleanup());
 				this.allPoints.destroy();
 				this._allPoints = undefined;
 			}
@@ -102,7 +104,8 @@ export class SetupLayer extends EditorLayer {
 
 		const dots = this.points.map(createDraggable);
 
-		const cleanup = this.observableLayer.on('points', (points) => {
+		this._allPointsCleanup.push(this.observableLayer.on('points', () => {
+			const points = this.points;
 			if (points.length < dots.length) {
 				for (let i = dots.length - 1; i >= points.length; i--) {
 					container.removeChild(dots[i]);
@@ -119,11 +122,7 @@ export class SetupLayer extends EditorLayer {
 					dots.push(createDraggable(points[i], i));
 				}
 			}
-		});
-
-		container.on('destroy', () => {
-			cleanup();
-		});
+		}));
 	}
 
 	override destroy() {

@@ -1,7 +1,20 @@
 @import '../../../styles/constants';
 
 $button-themes: (
-	default: (background: $grey-darkest, color: $white-primary, background-hover: $grey-lightest, color-hover: $black-primary, focus-outline: $black-secondary)
+	default: (
+		background: $grey-darkest,
+		color: $white-primary,
+		background-hover: $grey-lightest,
+		color-hover: $black-primary,
+		focus-outline: $black-secondary
+	),
+	defaultActive: (
+		background: $grey-lightest,
+		color: $black-primary,
+		background-hover: $grey-lightest,
+		color-hover: $black-primary,
+		focus-outline: $black-secondary
+	),
 );
 
 .Button {
@@ -28,5 +41,9 @@ $button-themes: (
 				border-color: map-get($theme-data, "focus-outline");
 			}
 		}
+	}
+
+	&.slim {
+		padding: 0.1em 0.2em;
 	}
 }

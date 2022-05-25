@@ -9,7 +9,7 @@
 		"build": "cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack --env prod",
 		"predev": "rimraf dist",
 		"dev": "cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack serve",
-		"lint": "eslint --max-warnings 0 .",
+		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "tsc -p . --noEmit",
 		"type-check:test": "tsc -p ./tsconfig.test.json --noEmit",
@@ -19,6 +19,20 @@
 		"test:watch": "jest --watch",
 		"start": "yarn dev",
 		"postinstall": "node scripts/postinstall.cjs"
+	},
+	"dependencies": {
+		"classnames": "^2.3.1",
+		"delaunator": "^5.0.0",
+		"lodash": "^4.17.21",
+		"nanoid": "^3.3.4",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#cac525e",
+		"pixi-viewport": "^4.34.4",
+		"pixi.js": "^6.2.2",
+		"react": "^18.1.0",
+		"react-dom": "^18.1.0",
+		"react-router-dom": "^6.3.0",
+		"react-toastify": "^9.0.1",
+		"socket.io-client": "^4.4.1"
 	},
 	"devDependencies": {
 		"@swc/cli": "^0.1.57",
@@ -60,6 +74,7 @@
 		"source-map-loader": "^3.0.1",
 		"style-loader": "^3.3.1",
 		"ts-loader": "^9.2.6",
+		"ts-mockito": "^2.6.1",
 		"ts-node": "^10.4.0",
 		"tslib": "^2.4.0",
 		"typescript": "^4.6.4",
@@ -67,18 +82,5 @@
 		"webpack": "^5.67.0",
 		"webpack-cli": "^4.9.2",
 		"webpack-dev-server": "^4.7.3"
-	},
-	"dependencies": {
-		"classnames": "^2.3.1",
-		"delaunator": "^5.0.0",
-		"nanoid": "^3.3.4",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#cac525e",
-		"pixi-viewport": "^4.34.4",
-		"pixi.js": "^6.2.2",
-		"react": "^18.1.0",
-		"react-dom": "^18.1.0",
-		"react-router-dom": "^6.3.0",
-		"react-toastify": "^9.0.1",
-		"socket.io-client": "^4.4.1"
 	}
 }

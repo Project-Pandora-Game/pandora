@@ -1,5 +1,4 @@
 import { AppearanceBundle } from '../assets';
-import type { AssetState, BoneStateCompressed } from '../assets';
 import { CreateArrayValidator, CreateStringValidator } from '../validation';
 
 export type CharacterId = `c${number}`;
@@ -24,8 +23,6 @@ export type ICharacterData = ICharacterPublicData & {
 	inCreation?: true;
 	created: number;
 	accessId: string;
-	bones: BoneStateCompressed[],
-	assets: AssetState[],
 };
 
 export type ICharacterDataCreate = Pick<ICharacterData, 'name'>;

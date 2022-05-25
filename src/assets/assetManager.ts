@@ -1,6 +1,6 @@
 import { Asset } from './asset';
-import { AssetDefinition, AssetId, AssetsDefinitionFile, AssetDefinitionCompressed } from './definitions';
-import { BoneDefinition, BoneDefinitionCompressed } from './graphics';
+import { AssetDefinition, AssetId, AssetsDefinitionFile } from './definitions';
+import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 
 export class AssetManager {
 	private readonly _assets: Map<AssetId, Asset> = new Map();
@@ -9,6 +9,11 @@ export class AssetManager {
 
 	get definitionsHash(): string {
 		return this._definitionsHash;
+	}
+
+	private _graphicsId: string = '';
+	get graphicsId(): string {
+		return this._graphicsId;
 	}
 
 	public getAllAssets(): Asset[] {
@@ -39,6 +44,7 @@ export class AssetManager {
 
 	public load(definitionsHash: string, data: AssetsDefinitionFile): void {
 		this._definitionsHash = definitionsHash;
+		this._graphicsId = data.graphicsId;
 
 		this._bones.clear();
 		this.loadBones(data.bones);
@@ -46,7 +52,7 @@ export class AssetManager {
 		this.loadAssets(data.assets);
 	}
 
-	public loadAssets(assets: Record<AssetId, AssetDefinitionCompressed>): void {
+	private loadAssets(assets: Record<AssetId, AssetDefinition>): void {
 		// First unload no-longer existing assets
 		for (const id of this._assets.keys()) {
 			if (assets[id] === undefined) {
@@ -60,19 +66,16 @@ export class AssetManager {
 			}
 			let asset = this._assets.get(id as AssetId);
 			if (asset) {
-				asset.load(this.createAsset(id as AssetId, definition));
+				asset.load(definition);
 			} else {
-				asset = new Asset(id as AssetId, this.createAsset(id as AssetId, definition));
+				asset = this.createAsset(id as AssetId, definition);
 				this._assets.set(id as AssetId, asset);
 			}
 		}
 	}
 
-	protected createAsset(id: AssetId, data: AssetDefinitionCompressed): AssetDefinition {
-		return {
-			id,
-			name: data.name,
-		};
+	protected createAsset(id: AssetId, data: AssetDefinition): Asset {
+		return new Asset(id, data);
 	}
 
 	protected loadBones(bones: Record<string, BoneDefinitionCompressed>): void {
@@ -111,9 +114,12 @@ export class AssetManager {
 		}
 	}
 
-	protected createBone(name: string, _bone: BoneDefinitionCompressed, parent?: BoneDefinition, mirror?: BoneDefinition): BoneDefinition {
-		const res = {
+	protected createBone(name: string, bone: BoneDefinitionCompressed, parent?: BoneDefinition, mirror?: BoneDefinition): BoneDefinition {
+		const [x, y] = bone.pos ?? [0, 0];
+		const res: BoneDefinition = {
 			name,
+			x: mirror ? CharacterSize.WIDTH - x : x,
+			y,
 			mirror,
 			parent,
 		};

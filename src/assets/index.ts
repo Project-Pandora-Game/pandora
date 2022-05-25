@@ -5,4 +5,3 @@ export * from './assetManager';
 export * from './definitions';
 export * from './item';
 export * from './graphics';
-export * from './state';

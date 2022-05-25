@@ -10,7 +10,7 @@
 		"build:swc": "swc src -d dist",
 		"predev": "rimraf dist",
 		"dev": "echo \"Error: no dev command specified\" && exit 1",
-		"lint": "eslint --max-warnings 0 .",
+		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "tsc -p . --noEmit",
 		"type-check:test": "tsc -p ./tsconfig.test.json --noEmit",

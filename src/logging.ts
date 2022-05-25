@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-
 import { IS_NODE } from './utility';
 
 declare const console: { info: (...args: unknown[]) => void; };

@@ -49,7 +49,6 @@ describe('ConnectionBase', () => {
 		});
 		it('should call timeout', () => {
 			void mock.awaitResponse('type' as never, 'message' as never, 1 as never);
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
 			expect(mockTimeout.mock.calls.length).toBe(1);
 		});
 

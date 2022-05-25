@@ -79,7 +79,6 @@ export type SocketInterfaceOneshotHandler<T extends Record<keyof T, unknown>> = 
 
 /** Defines SocketInterface for type T */
 export type SocketInterface<T extends Record<keyof T, unknown>> = {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	[K in keyof T]: T[K] extends (arg: infer A) => infer R ? (arg: A) => R | Promise<R> : never;
 };
 

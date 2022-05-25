@@ -1,6 +1,8 @@
 @import '../../styles/constants';
 @import '../../styles/utils';
 
+$login-box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+
 .login, .registration, .forgotPassword {
 	@include flex(row);
 	align-items: center;
@@ -14,7 +16,7 @@
 		border-radius: 0.2em;
 		background-color: $grey-light;
 		padding: 2em 3em;
-		box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+		box-shadow: $login-box-shadow;
 
 		form {
 			@include flex(column);
@@ -64,31 +66,29 @@
 		gap: 1.5em;
 
 		.login-teaser {
-			display: flex;
-			flex-direction: column;
+			@include flex(column);
 			align-items: center;
-			background-color: #999;
+			background-color: $grey-light;
 			border-radius: 0.2em;
 			padding: 2em 2.5em 0.8em 2.5em;
-			box-shadow: 0 0.2em 0.4em 0 rgba(0, 0, 0, 0.2), 0 0.3em 1em 0 rgba(0, 0, 0, 0.19);
-			width: 32em;
+			box-shadow: $login-box-shadow;
+			width: 42em;
 
 			.teaser-text {
-				display: flex;
+				@include flex;
 				justify-content: center;
 				align-items: center;
-				width: 31.2em;
-				height: 100%;
+				flex: 1;
+				width: 100%;
+				background-color: $grey-mid;
 				border-top-left-radius: 0.3em;
 				border-top-right-radius: 0.3em;
-				background-color: #888;
 				padding: 0.4em;
 			}
 
 			.teaser-image {
-				width: 32em;
-				height: 18em;
-				box-shadow: 0 0.2em 0.4em 0 rgba(0, 0, 0, 0.2), 0 0.3em 0.2em 0 rgba(0, 0, 0, 0.19);
+				max-width: 100%;
+				box-shadow: $login-box-shadow;
 			}
 
 			.teaser-navigation {
@@ -100,14 +100,14 @@
 		}
 
 		.dot {
-			background-color: #555;
+			background-color: $grey-dark;
 			border-radius: 50%;
 			width: 1em;
 			height: 1em;
 			margin-left: 1em;
 
 			&:hover {
-				background-color: #fff;
+				background-color: $grey-lightest;
 			}
 		}
 	}

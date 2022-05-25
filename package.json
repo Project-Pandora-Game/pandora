@@ -14,7 +14,7 @@
 		"predev": "rimraf dist",
 		"dev": "tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess \"nodemon --watch dist --watch .env --signal SIGTERM --enable-source-maps -r dotenv/config dist/index.js --development\"",
 		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
-		"lint": "eslint --max-warnings 0 .",
+		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "tsc -p . --noEmit",
 		"type-check:test": "tsc -p ./tsconfig.test.json --noEmit",
@@ -23,6 +23,16 @@
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
 		"postinstall": "node scripts/postinstall.cjs"
+	},
+	"dependencies": {
+		"dotenv": "^14.3.0",
+		"express": "^4.18.1",
+		"lodash": "^4.17.21",
+		"mongodb": "^4.3.1",
+		"nanoid": "^3.3.4",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#cac525e",
+		"socket.io": "^4.4.1",
+		"socket.io-client": "^4.4.1"
 	},
 	"devDependencies": {
 		"@swc/cli": "^0.1.57",
@@ -37,17 +47,9 @@
 		"jest": "^28.0.3",
 		"nodemon": "^2.0.16",
 		"rimraf": "^3.0.2",
+		"ts-mockito": "^2.6.1",
 		"tsc-watch": "^5.0.3",
 		"tslib": "^2.4.0",
 		"typescript": "^4.6.4"
-	},
-	"dependencies": {
-		"dotenv": "^14.3.0",
-		"express": "^4.18.1",
-		"mongodb": "^4.3.1",
-		"nanoid": "^3.3.4",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#cac525e",
-		"socket.io": "^4.4.1",
-		"socket.io-client": "^4.4.1"
 	}
 }

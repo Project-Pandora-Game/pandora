@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { nanoid } from 'nanoid';
 import { IClientDirectoryBase, MockConnection } from 'pandora-common';
 import { ClientConnection } from '../../src/networking/connection_client';

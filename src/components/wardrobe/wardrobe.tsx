@@ -4,7 +4,7 @@ import { Appearance, AppearanceAction, AppearanceActionContext, CharacterId, DoA
 import React, { ReactElement, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearance, useCharacterData } from '../../character/character';
+import { Character, useCharacterAppearanceItems, useCharacterData } from '../../character/character';
 import { Player } from '../../character/player';
 import { ShardConnector } from '../../networking/socketio_shard_connector';
 import { useObservable } from '../../observable';
@@ -45,12 +45,12 @@ function Wardrobe({ character }: { character: Character }): ReactElement | null 
 	const player = useObservable(Player);
 	const characterData = useCharacterData(character);
 	const assetList = useObservable(GetAssetManager().assetList);
-	const appearance = useCharacterAppearance(character);
+	const appearance = useCharacterAppearanceItems(character);
 
-	if (!player || !characterData || !appearance)
+	if (!player || !characterData)
 		return null;
 
-	const items: InventoryItemDefinition[] = appearance.items.map((item) => ({
+	const items: InventoryItemDefinition[] = appearance.map((item) => ({
 		id: item.id,
 		name: item.asset.definition.name,
 		action: {

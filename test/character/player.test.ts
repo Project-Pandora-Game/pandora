@@ -9,8 +9,6 @@ const mockData: ICharacterData = {
 	name: 'mock',
 	created: 0,
 	accessId: 'mockID',
-	bones: [],
-	assets: [],
 };
 describe('PlayerCharacter', () => {
 	let mock: PlayerCharacter;

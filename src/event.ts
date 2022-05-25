@@ -1,6 +1,6 @@
 export type TypedEvent = Record<string | symbol | number, unknown>;
 
-interface ITypedEventEmitter<T extends TypedEvent> {
+export interface ITypedEventEmitter<T extends TypedEvent> {
 	on<K extends keyof T>(s: K, listener: (v: T[K]) => void): () => void;
 	onAny(listener: (value: Partial<T>) => void): () => void;
 }

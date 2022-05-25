@@ -1,36 +1,38 @@
-import { AssetsDefinitionFile } from 'pandora-common';
-import { GetTextureLoader, OverrideTextureLoader, TextureLoader } from '../graphics/textureLoader';
-import { GetAssetManagerEditor } from './assets/assetManager';
-import { GetAssetStateManagerEditor } from './graphics/stateManager';
+import { AssetsDefinitionFile, AssetsGraphicsDefinitionFile } from 'pandora-common';
 import { Texture } from 'pixi.js';
+import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager';
+import { GraphicsLoaderBase, URLGraphicsLoader } from '../assets/graphicsLoader';
+import { GetAssetManagerEditor } from './assets/assetManager';
 
-export async function LoadAssetsFromFileSystem(): Promise<void> {
+export async function LoadAssetsFromFileSystem(): Promise<GraphicsManager> {
 	const dirHandle = await showDirectoryPicker();
 	if (!dirHandle) {
 		throw new Error('No directory selected');
 	}
-	const hash = (await ReadFile(dirHandle, 'current', true)).trim();
-	const json = await ReadFile(dirHandle, `assets_${hash}.json`, true);
 
-	OverrideTextureLoader(new FileSystemTextureLoader(dirHandle));
-
-	Load(hash, json);
+	return Load(new FileSystemGraphicsLoader(dirHandle));
 }
 
-export async function LoadAssetsFromDirectLink(): Promise<void> {
+export async function LoadAssetsFromDirectLink(): Promise<GraphicsManager> {
 	const prefix = `${location.origin}/pandora-assets`;
-	const hash = await fetch(`${prefix}/current`).then((r) => r.text());
-	const json = await fetch(`${prefix}/assets_${hash}.json`).then((r) => r.text());
 
-	GetTextureLoader().prefix = prefix + '/';
-
-	Load(hash, json);
+	return Load(new URLGraphicsLoader(prefix + '/'));
 }
 
-function Load(hash: string, json: string) {
-	const store = GetAssetManagerEditor();
-	GetAssetStateManagerEditor();
-	store.load(hash, JSON.parse(json) as AssetsDefinitionFile);
+async function Load(loader: IGraphicsLoader): Promise<GraphicsManager> {
+	const hash = (await loader.loadTextFile('current')).trim();
+	const assetDefinitions = JSON.parse(await loader.loadTextFile(`assets_${hash}.json`)) as AssetsDefinitionFile;
+
+	const assetManager = GetAssetManagerEditor();
+	assetManager.load(hash, assetDefinitions);
+
+	const graphicsHash = assetManager.graphicsId;
+	const graphicsDefinitions = JSON.parse(await loader.loadTextFile(`graphics_${graphicsHash}.json`)) as AssetsGraphicsDefinitionFile;
+
+	const graphicsManager = new GraphicsManager(loader, graphicsHash, graphicsDefinitions);
+	GraphicsManagerInstance.value = graphicsManager;
+
+	return graphicsManager;
 }
 
 async function ReadFile<T extends boolean>(dir: FileSystemDirectoryHandle, path: string, asText: T): Promise<T extends true ? string : ArrayBuffer> {
@@ -39,32 +41,29 @@ async function ReadFile<T extends boolean>(dir: FileSystemDirectoryHandle, path:
 	return await (asText ? file.text() : file.arrayBuffer()) as T extends true ? string : ArrayBuffer;
 }
 
-class FileSystemTextureLoader extends TextureLoader {
+class FileSystemGraphicsLoader extends GraphicsLoaderBase {
 	private readonly _handle: FileSystemDirectoryHandle;
-	private readonly _cache = new Map<string, Texture>();
 
 	constructor(handle: FileSystemDirectoryHandle) {
 		super();
 		this._handle = handle;
 	}
 
-	override async loadTexture(path: string): Promise<Texture> {
-		path = this.prefix + path;
-		const cached = this._cache.get(path);
-		if (cached) {
-			return cached;
-		}
+	protected override async loadTexture(path: string): Promise<Texture> {
 		const blob = new Blob([await ReadFile(this._handle, path, false)], { type: 'image/png' });
-		return await new Promise((resolve, reject) => {
+		return new Promise((resolve, reject) => {
 			const image = new Image();
 			image.onload = () => {
 				const texture = Texture.from(image);
-				this._cache.set(path, texture);
 				URL.revokeObjectURL(image.src);
 				resolve(texture);
 			};
 			image.onerror = reject;
 			image.src = URL.createObjectURL(blob);
 		});
+	}
+
+	public loadTextFile(path: string): Promise<string> {
+		return ReadFile(this._handle, path, true);
 	}
 }

@@ -1,5 +1,5 @@
 import { Appearance, ICharacterData } from 'pandora-common';
-import { Character, useCharacterAppearance, useCharacterData } from '../../src/character/character';
+import { Character, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterData } from '../../src/character/character';
 import { renderHook, act } from '@testing-library/react-hooks';
 
 const mockData: ICharacterData = {
@@ -8,8 +8,6 @@ const mockData: ICharacterData = {
 	name: 'mock',
 	created: 0,
 	accessId: 'mockID',
-	bones: [],
-	assets: [],
 };
 describe('Character', () => {
 	let mock: Character;
@@ -37,12 +35,13 @@ describe('Character', () => {
 				accessId: 'updatedId',
 				appearance: {
 					items: [],
+					pose: {},
 				},
 			};
 			const mockImport = jest.spyOn(Appearance.prototype, 'importFromBundle');
 			mock.update(update);
 			expect(mock.data).toStrictEqual({ ...mockData, ...update });
-			expect(mockImport).nthCalledWith(1, update.appearance, expect.anything());
+			expect(mockImport).nthCalledWith(1, update.appearance, expect.anything(), expect.anything());
 		});
 	});
 });
@@ -70,29 +69,58 @@ describe('useCharacterData()', () => {
 	});
 });
 
-describe('useCharacterAppearance()', () => {
+describe('useCharacterAppearanceItems()', () => {
 	let mock: Character;
 	beforeEach(() => {
 		mock = new Character(mockData);
 	});
 	it('should return character appearance', () => {
-		const { result } = renderHook(() => useCharacterAppearance(mock));
+		const { result } = renderHook(() => useCharacterAppearanceItems(mock));
 
-		expect(result.current).toStrictEqual(mock.appearance);
+		expect(result.current).toBe(mock.appearance.getAllItems());
 
 	});
 	it('should update on character update event', () => {
-		const { result } = renderHook(() => useCharacterAppearance(mock));
+		const { result } = renderHook(() => useCharacterAppearanceItems(mock));
 		const update: Partial<ICharacterData> = {
 			id: 'c321',
 			accessId: 'updatedId',
 			appearance: {
 				items: [],
+				pose: {},
 			},
 		};
 		act(() => {
 			mock.update(update);
 		});
-		expect(result.current).toStrictEqual(mock.appearance);
+		expect(result.current).toBe(mock.appearance.getAllItems());
+	});
+});
+
+describe('useCharacterAppearancePose()', () => {
+	let mock: Character;
+	beforeEach(() => {
+		mock = new Character(mockData);
+	});
+	it('should return character appearance', () => {
+		const { result } = renderHook(() => useCharacterAppearancePose(mock));
+
+		expect(result.current).toBe(mock.appearance.getFullPose());
+
+	});
+	it('should update on character update event', () => {
+		const { result } = renderHook(() => useCharacterAppearancePose(mock));
+		const update: Partial<ICharacterData> = {
+			id: 'c321',
+			accessId: 'updatedId',
+			appearance: {
+				items: [],
+				pose: {},
+			},
+		};
+		act(() => {
+			mock.update(update);
+		});
+		expect(result.current).toBe(mock.appearance.getFullPose());
 	});
 });

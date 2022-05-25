@@ -1,22 +1,23 @@
-import { CoordinatesCompressed, LayerDefinition, LayerMirror, LayerSide, PointDefinition, AssetState, LayerStateCompressed } from 'pandora-common/dist/assets';
-import type { GraphicsTransform, GraphicsEvaluate } from './def';
+import { CoordinatesCompressed, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import type { GraphicsTransform, GraphicsEvaluate, LayerStateOverrides } from './def';
 import { Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
 import { Conjunction, EvaluateCondition } from './utility';
 import Delaunator from 'delaunator';
-import { GetTextureLoader } from './textureLoader';
+import { AssetGraphicsLayer } from '../assets/assetGraphics';
+import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
 Mesh.BATCHABLE_SIZE = 1000000;
 
 export type GraphicsLayerProps = {
-	layer: LayerDefinition;
-	state?: LayerStateCompressed;
+	layer: AssetGraphicsLayer;
+	state?: LayerStateOverrides;
 	transform: GraphicsTransform,
 	evaluate: GraphicsEvaluate;
 	character: GraphicsCharacter;
 };
 export class GraphicsLayer extends Container {
-	protected readonly layer: LayerDefinition;
+	protected readonly layer: AssetGraphicsLayer;
 	private readonly _transform: GraphicsTransform;
 	private readonly _evaluate: GraphicsEvaluate;
 	private _bones = new Set<string>();
@@ -26,7 +27,7 @@ export class GraphicsLayer extends Container {
 	private _texture: Texture = Texture.EMPTY;
 	private _image!: string;
 	private _result!: Mesh | Sprite;
-	private _state?: LayerStateCompressed;
+	private _state?: LayerStateOverrides;
 
 	protected points: PointDefinition[] = [];
 	protected vertices = new Float64Array();
@@ -54,8 +55,8 @@ export class GraphicsLayer extends Container {
 
 	protected constructor({ layer, state, transform, evaluate }: GraphicsLayerProps) {
 		super();
-		this.x = layer.x;
-		this.y = layer.y;
+		this.x = layer.definition.x;
+		this.y = layer.definition.y;
 		this.layer = layer;
 		this._transform = transform;
 		this._evaluate = evaluate;
@@ -67,22 +68,7 @@ export class GraphicsLayer extends Container {
 
 	public static create = (props: GraphicsLayerProps) => new GraphicsLayer(props);
 
-	public static getState(data: AssetState, index: number): LayerState | undefined {
-		const layer = GetLayerState(data.layers, index);
-		if (!layer) {
-			return undefined;
-		}
-		const state: LayerState = {};
-		if (layer[0] !== undefined) {
-			state.color = layer[0];
-		}
-		if (layer[1] !== undefined) {
-			state.alpha = layer[1];
-		}
-		return state;
-	}
-
-	public update({ bones = new Set(), state, force }: { bones?: Set<string>, state?: LayerStateCompressed, force?: boolean; }): void {
+	public update({ bones = new Set(), state, force }: { bones?: Set<string>, state?: LayerStateOverrides, force?: boolean; }): void {
 		let update = false;
 		if (Conjunction(this._bones, bones) || force) {
 			update = this.calculateVertices();
@@ -107,8 +93,8 @@ export class GraphicsLayer extends Container {
 		this.result = new Mesh(geometry, new MeshMaterial(this._texture));
 	}
 
-	protected updateState(state?: LayerStateCompressed): void {
-		const [color = 0xffffff, alpha = 1] = state ?? [];
+	protected updateState(state?: LayerStateOverrides): void {
+		const { color = 0xffffff, alpha = 1 } = state ?? {};
 		if (color !== this._result.tint) {
 			this._result.tint = color;
 		}
@@ -118,10 +104,13 @@ export class GraphicsLayer extends Container {
 	}
 
 	protected calculateTexture(): boolean {
-		const image = this.layer.imageOverrides.find((img) => EvaluateCondition(img.condition, this._evaluate))?.image ?? this.layer.image;
+		const manager = GraphicsManagerInstance.value;
+		if (!manager)
+			return false;
+		const image = this.layer.definition.imageOverrides.find((img) => EvaluateCondition(img.condition, this._evaluate))?.image ?? this.layer.definition.image;
 		if (image !== this._image) {
 			this._image = image;
-			GetTextureLoader().loadTexture(image).then((texture) => {
+			manager.loader.getTexture(image).then((texture) => {
 				if (this._image === image) {
 					this.result.texture = this._texture = texture;
 				}
@@ -133,8 +122,8 @@ export class GraphicsLayer extends Container {
 
 	protected calculateTriangles() {
 		this._uv = new Float64Array(this.points.flatMap((point) => ([
-			point.pos[0] / this.layer.width,
-			point.pos[1] / this.layer.height,
+			point.pos[0] / this.layer.definition.width,
+			point.pos[1] / this.layer.definition.height,
 		])));
 		const triangles: number[] = [];
 		const delaunator = new Delaunator(this.points.flatMap((point) => point.pos));
@@ -152,19 +141,19 @@ export class GraphicsLayer extends Container {
 	}
 
 	private _calculatePoints() {
-		this.points = this.layer.points.filter((point) => SelectPoints(point, this.layer.pointType, this.layer.side));
+		this.points = this.layer.finalPoints.filter((point) => SelectPoints(point, this.layer.definition.pointType, this.layer.side));
 
 		this._bones = new Set(this.points.flatMap((point) => point.transforms.map((trans) => trans.bone)));
-		this._imageBones = new Set(this.layer.imageOverrides.flatMap((override) => override.condition).flat().map((condition) => condition.bone));
+		this._imageBones = new Set(this.layer.definition.imageOverrides.flatMap((override) => override.condition).flat().map((condition) => condition.bone));
 
 		this.calculateTriangles();
 	}
 
 	protected mirrorPoint([x, y]: CoordinatesCompressed): CoordinatesCompressed {
-		if (this.layer.mirror !== LayerMirror.FULL)
-			return [x, y];
+		if (this.layer.definition.mirror === LayerMirror.FULL)
+			return [x - this.layer.definition.width, y];
 
-		return [x - this.layer.width, y];
+		return [x, y];
 	}
 }
 
@@ -186,21 +175,4 @@ function SelectPoints({ pointType }: PointDefinition, pointTypes?: string[], sid
 	}
 
 	return pointTypes.some((sel) => flt(pointType, sel));
-}
-
-type LayerState = {
-	color?: number;
-	alpha?: number;
-	pointTypes?: Set<string>;
-};
-
-export function GetLayerState(layers: AssetState['layers'] | undefined, index: number): LayerStateCompressed | undefined {
-	return layers && (layers[index.toString() as `${number}`] || layers.base);
-}
-
-export function SetLayerState(layers: AssetState['layers'] | undefined, index: number, state: LayerStateCompressed): AssetState['layers'] {
-	return {
-		...(layers || {}),
-		[index.toString() as `${number}`]: state,
-	};
 }

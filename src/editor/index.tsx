@@ -68,8 +68,8 @@ function ButtonLoadFromFileSystem({ pending, setPending }: { pending: boolean, s
 		setPending(true);
 		setText('Loading');
 		try {
-			await LoadAssetsFromFileSystem();
-			EditorInstance.value = new Editor();
+			const manager = await LoadAssetsFromFileSystem();
+			EditorInstance.value = new Editor(manager);
 		} catch (e) {
 			logger.error('Failed to load assets:', e);
 			setPending(false);
@@ -92,8 +92,8 @@ function ButtonLoadDirectLink({ pending, setPending }: { pending: boolean, setPe
 		setPending(true);
 		setText('Loading');
 		try {
-			await LoadAssetsFromDirectLink();
-			EditorInstance.value = new Editor();
+			const manager = await LoadAssetsFromDirectLink();
+			EditorInstance.value = new Editor(manager);
 		} catch (e) {
 			logger.error('Failed to load assets:', e);
 			setPending(false);

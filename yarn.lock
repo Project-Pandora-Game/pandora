@@ -4861,11 +4861,12 @@ p-try@^2.0.0:
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==
 
-"pandora-common@github:Project-Pandora-Game/pandora-common#cac525e":
+"pandora-common@github:Project-Pandora-Game/pandora-common#a49f099":
   version "0.1.0"
-  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#cac525e14b503e9f0b7d6c6bbacefada576b34b1"
+  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#a49f099070e7f81f612f170337576d0707b28dce"
   dependencies:
     "@types/node" "^17.0.31"
+    lodash "^4.17.21"
     rimraf "^3.0.2"
     tslib "^2.4.0"
     typescript "^4.6.4"

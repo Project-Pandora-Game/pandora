@@ -87,7 +87,7 @@ export class SetupLayer extends EditorLayer {
 				setPos: (_, x, y) => {
 					point.pos = [x, y];
 					full.updatePair(['pos']);
-					this.observableLayer.dispatchPointUpdate();
+					this.layer.buildPoints();
 				},
 			});
 
@@ -104,7 +104,7 @@ export class SetupLayer extends EditorLayer {
 
 		const dots = this.points.map(createDraggable);
 
-		this._allPointsCleanup.push(this.observableLayer.on('points', () => {
+		this._allPointsCleanup.push(this.layer.on('change', () => {
 			const points = this.points;
 			if (points.length < dots.length) {
 				for (let i = dots.length - 1; i >= points.length; i--) {

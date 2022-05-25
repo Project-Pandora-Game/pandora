@@ -1,51 +1,79 @@
-import type { ICharacterData } from 'pandora-common';
-import type { BoneState, LayerState } from './def';
-import { AssetState, AtomicCondition, TransformDefinition } from 'pandora-common/dist/assets';
+import { AppearanceChangeType, BoneName, BoneState, GetLogger } from 'pandora-common';
+import type { LayerState } from './def';
+import { AtomicCondition, TransformDefinition } from 'pandora-common/dist/assets';
 import { Container } from 'pixi.js';
-import { Character } from '../character/character';
+import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
-import { GetAssetStateManager } from './stateManager';
+import { GraphicsManager } from '../assets/graphicsManager';
 
-export class GraphicsCharacter extends Container {
-	private readonly _character: Character;
+const logger = GetLogger('GraphicsCharacter');
+
+export class GraphicsCharacter<ContainerType extends AppearanceContainer = AppearanceContainer> extends Container {
+	public graphicsManager: GraphicsManager | undefined;
+	protected readonly appearanceContainer: ContainerType;
 	private _layers: LayerState[] = [];
-	protected bones: BoneState[] = GetAssetStateManager().getInitialBoneStates();
+	private _pose: Record<BoneName, number> = {};
 
-	constructor(character: Character) {
+	constructor(appearanceContainer: ContainerType) {
 		super();
 
 		this.sortableChildren = true;
-		this._character = character;
 
-		const cleanup = this._character.on('update', (data) => this.update(data));
-		this.on('destroy', () => cleanup);
+		this.appearanceContainer = appearanceContainer;
 
-		this.update(this._character.data);
+		const cleanup = this.appearanceContainer.on('appearanceUpdate', (changes) => this.update(changes));
+		this.on('destroy', cleanup);
 	}
 
-	protected update(data: Partial<ICharacterData>): void {
+	public setManager(graphicsManager: GraphicsManager) {
+		this.graphicsManager = graphicsManager;
+		this.update(['items', 'pose']);
+	}
+
+	protected update(changes: AppearanceChangeType[]): void {
 		let update = false;
-		if (data.assets) {
-			const create = (asset: AssetState) => GetAssetStateManager().getLayers(asset);
-			this._layers = data.assets.flatMap(create);
+		if (changes.includes('items')) {
+			this._layers = this.buildLayers();
 			update = true;
 		}
 		const updatedBones = new Set<string>();
-		if (data.bones) {
-			const bones = data.bones;
-			this.bones.forEach((bone) => {
-				const rotation = bones.find((b) => b[0] === bone.name)?.[1] ?? 0;
-				if (bone.rotation !== rotation) {
-					bone.rotation = rotation;
-					updatedBones.add(bone.name);
+		if (changes.includes('pose')) {
+			const newPose = this.appearanceContainer.appearance.getFullPose();
+			for (const bone of newPose) {
+				if (this._pose[bone.definition.name] !== bone.rotation) {
+					updatedBones.add(bone.definition.name);
 					update = true;
+					this._pose[bone.definition.name] = bone.rotation;
 				}
-			});
+			}
 		}
 		if (update) {
 			this.layerUpdate(updatedBones);
 		}
+	}
+
+	protected buildLayers(): LayerState[] {
+		if (!this.graphicsManager)
+			return [];
+		const result: LayerState[] = [];
+		for (const item of this.appearanceContainer.appearance.getAllItems()) {
+			if (!item.asset.definition.hasGraphics)
+				continue;
+			const graphics = this.graphicsManager.getAssetGraphicsById(item.asset.id);
+			if (!graphics) {
+				logger.warning(`Asset ${item.asset.id} hasGraphics, but no graphics found`);
+				continue;
+			}
+			graphics.allLayers.forEach((layer, index) => {
+				result.push({
+					asset: graphics,
+					layer,
+					index,
+				});
+			});
+		}
+		return result;
 	}
 
 	protected createLayer = GraphicsLayer.create;
@@ -115,12 +143,12 @@ export class GraphicsCharacter extends Container {
 			}
 			switch (type) {
 				case 'rotate': {
-					let vecX = resX - bone.x;
-					let vecY = resY - bone.y;
+					let vecX = resX - bone.definition.x;
+					let vecY = resY - bone.definition.y;
 					const value = transform.value * bone.rotation;
 					[vecX, vecY] = RotateVector(vecX, vecY, value);
-					resX = bone.x + vecX;
-					resY = bone.y + vecY;
+					resX = bone.definition.x + vecX;
+					resY = bone.definition.y + vecY;
 					break;
 				}
 				case 'shift': {
@@ -136,10 +164,6 @@ export class GraphicsCharacter extends Container {
 	//#endregion
 
 	private getBone(name: string): BoneState {
-		const bone = this.bones.find((b) => b.name === name);
-		if (!bone) {
-			throw new Error(`Bone ${name} not found in: [${this.bones.map((b) => b.name).join(', ')}]`);
-		}
-		return bone;
+		return this.appearanceContainer.appearance.getPose(name);
 	}
 }

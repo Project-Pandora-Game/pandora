@@ -1,12 +1,11 @@
-import { PointDefinition, LayerDefinition, LayerPriority, LayerImageOverride, LayerMirror, LayerSide, CharacterSize } from 'pandora-common';
-import { MirrorCondition, MirrorPoint } from '../../../assets/assetManager';
+import { PointDefinition, LayerPriority, LayerImageOverride, LayerMirror, LayerSide, CharacterSize } from 'pandora-common';
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { observable, ObservableClass } from '../../../observable';
 
-export const AllLayers: ObservableLayer[] = [];
-
-export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]; selected: boolean; open: boolean; x: number; y: number; }> implements LayerDefinition {
-	private readonly _layer: LayerDefinition;
-	private _mirror: ObservableLayer | undefined;
+export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]; selected: boolean; open: boolean; x: number; y: number; }> {
+	private readonly _layer: AssetGraphicsLayer;
+	public readonly mirror: ObservableLayer | undefined;
+	public readonly isMirror: boolean;
 	private _side?: LayerSide;
 
 	@observable
@@ -18,76 +17,56 @@ export class ObservableLayer extends ObservableClass<{ points: PointDefinition[]
 	@observable
 	public y: number;
 
-	public readonly mirror: LayerMirror;
 	public get side(): LayerSide | undefined {
 		return this._side;
 	}
 	public get pointType(): string[] | undefined {
-		return this._layer.pointType;
+		return this._layer.definition.pointType;
 	}
 
-	constructor(layer: LayerDefinition) {
+	constructor(layer: AssetGraphicsLayer, mirrorOf?: ObservableLayer) {
 		super();
-		this.mirror = layer.mirror;
-		if (layer instanceof ObservableLayer) {
-			this._layer = {
-				...layer._layer,
-				imageOverrides: layer.imageOverrides.map(({ image, condition }): LayerImageOverride => ({ image, condition: MirrorCondition(condition) })),
-			};
-			if (this.mirror === LayerMirror.FULL) {
-				this.x = CharacterSize.WIDTH - layer.x;
-				this._layer.points = this.points.map(MirrorPoint);
+		this.isMirror = mirrorOf !== undefined;
+		this._layer = layer;
+		this.x = layer.definition.x;
+		this.y = layer.definition.y;
+		if (mirrorOf) {
+			if (layer.definition.mirror === LayerMirror.FULL) {
+				this.x = CharacterSize.WIDTH - mirrorOf.x;
+				mirrorOf.on('x', (value) => this.x = CharacterSize.WIDTH - value);
 			} else {
-				this.x = layer.x;
-				layer._side = LayerSide.LEFT;
+				this.x = mirrorOf.x;
+				mirrorOf.on('x', (value) => this.x = value);
+				mirrorOf._side = LayerSide.LEFT;
 				this._side = LayerSide.RIGHT;
 			}
 
-			this.y = layer.y;
-			this._mirror = layer;
-
-			this.on('x', (value) => layer.x = this.mirror === LayerMirror.FULL ? CharacterSize.WIDTH - value : value);
-			this.on('y', (value) => layer.y = value);
-			layer.on('x', (value) => this.x = this.mirror === LayerMirror.FULL ? CharacterSize.WIDTH - value : value);
-			layer.on('y', (value) => this.y = value);
-		} else {
-			this._layer = layer;
-			this.x = layer.x;
-			this.y = layer.y;
+			this.y = mirrorOf.y;
+			mirrorOf.on('y', (value) => this.y = value);
+			this.mirror = mirrorOf;
 		}
-		AllLayers.push(this);
-	}
-
-	dispatchPointUpdate() {
-		if (this._mirror) {
-			if (this.mirror === LayerMirror.FULL)
-				this._mirror._layer.points = this.points.map(MirrorPoint);
-			this._mirror.emit('points', this._mirror.points);
+		if (layer.mirror && !this.isMirror) {
+			this.mirror = new ObservableLayer(layer.mirror, this);
 		}
-		this.emit('points', this.points);
-	}
-
-	getMirrored(): ObservableLayer {
-		return this._mirror ??= new ObservableLayer(this);
 	}
 
 	get width(): number {
-		return this._layer.width;
+		return this._layer.definition.width;
 	}
 	get height(): number {
-		return this._layer.height;
+		return this._layer.definition.height;
 	}
 
 	get image(): string {
-		return this._layer.image;
+		return this._layer.definition.image;
 	}
 	get priority(): LayerPriority {
-		return this._layer.priority;
+		return this._layer.definition.priority;
 	}
 	get points(): PointDefinition[] {
-		return this._layer.points;
+		return this._layer.finalPoints;
 	}
 	get imageOverrides(): LayerImageOverride[] {
-		return this._layer.imageOverrides;
+		return this._layer.definition.imageOverrides;
 	}
 }

@@ -1,7 +1,7 @@
-import { ICharacterData } from 'pandora-common';
-import { Character } from '../../character/character';
+import { GraphicsManager } from '../../assets/graphicsManager';
 import { GraphicsScene } from '../../graphics/graphicsScene';
 import { Observable } from '../../observable';
+import { Editor } from '../editor';
 import { ResultCharacter, SetupCharacter } from './character';
 
 export const EditorShowBones = new Observable<boolean>(true);
@@ -9,9 +9,10 @@ export const EditorShowBones = new Observable<boolean>(true);
 export class EditorSetupScene extends GraphicsScene {
 	public readonly setupCharacter: SetupCharacter;
 
-	constructor() {
+	constructor(editor: Editor, graphicsManager: GraphicsManager) {
 		super();
-		this.setupCharacter = new SetupCharacter(EditorCharacter);
+		this.setupCharacter = new SetupCharacter(editor);
+		this.setupCharacter.setManager(graphicsManager);
 		this.add(this.setupCharacter);
 	}
 }
@@ -19,25 +20,11 @@ export class EditorSetupScene extends GraphicsScene {
 export class EditorResultScene extends GraphicsScene {
 	public readonly resultCharacter!: ResultCharacter;
 
-	constructor() {
+	constructor(editor: Editor, graphicsManager: GraphicsManager) {
 		super();
-		this.resultCharacter = new ResultCharacter(EditorCharacter);
+		this.resultCharacter = new ResultCharacter(editor);
+		this.resultCharacter.setManager(graphicsManager);
 		this.add(this.resultCharacter);
 	}
 }
 
-export const EditorCharacter = new Character<ICharacterData>({
-	inCreation: true,
-	id: 'c1',
-	accountId: 1,
-	name: 'Editor',
-	created: -1,
-	accessId: '------',
-	bones: [
-		['arm_r', 75],
-		['arm_l', -75],
-		['elbow_r', 100],
-		['elbow_l', -10],
-	],
-	assets: [],
-});

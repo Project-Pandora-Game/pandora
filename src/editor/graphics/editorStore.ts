@@ -1,5 +1,5 @@
 import { PointDefinition, TransformDefinition, CharacterSize } from 'pandora-common';
-import { MirrorTransform } from '../../assets/assetManager';
+import { MirrorTransform } from '../../graphics/mirroring';
 
 export class MirrorPointDefinition implements PointDefinition {
 	private _pair: MirrorPointDefinition | undefined;

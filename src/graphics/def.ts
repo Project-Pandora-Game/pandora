@@ -1,24 +1,15 @@
-import type { LayerDefinition, AtomicCondition, TransformDefinition, LayerStateCompressed } from 'pandora-common/dist/assets';
-import { AssetDefinitionClient } from '../assets/assetManager';
+import type { AtomicCondition, TransformDefinition } from 'pandora-common';
+import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 
-export interface BoneState {
-	name: string;
-	x: number;
-	y: number;
-	rotation: number;
-	parent?: BoneState;
-	mirror?: BoneState;
-}
-
-export type BoneDefinitionBase = {
-	name: string;
-	mirror?: BoneDefinitionBase;
+export type LayerStateOverrides = {
+	color?: number;
+	alpha?: number;
 };
 
 export type LayerState = {
-	asset: AssetDefinitionClient;
-	layer: LayerDefinition,
-	state?: LayerStateCompressed;
+	asset: AssetGraphics;
+	layer: AssetGraphicsLayer,
+	state?: LayerStateOverrides;
 	index: number;
 };
 

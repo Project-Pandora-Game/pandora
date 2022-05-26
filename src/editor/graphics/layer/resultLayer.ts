@@ -1,25 +1,9 @@
-import type { GraphicsLayerProps } from '../../../graphics/graphicsLayer';
 import { Container, Sprite, Texture } from 'pixi.js';
 import { EditorLayer } from './editorLayer';
 import dotTexture from '../../../assets/editor/dotTexture.png';
 
 export class ResultLayer extends EditorLayer {
 	private _allPoints?: Container;
-	protected get allPoints(): Container {
-		if (!this._allPoints) {
-			const points = this._allPoints = new Container();
-			points.x = this.x;
-			points.y = this.y;
-			this._drawAllPoints(points);
-		}
-		return this._allPoints;
-	}
-
-	protected constructor(props: GraphicsLayerProps) {
-		super(props);
-	}
-
-	public static override create = (props: GraphicsLayerProps) => new ResultLayer(props);
 
 	protected override calculateVertices(): boolean {
 		super.calculateVertices();
@@ -31,13 +15,24 @@ export class ResultLayer extends EditorLayer {
 
 	protected show(value: boolean): void {
 		if (value) {
-			this.editorCharacter.addChild(this.allPoints).zIndex = EditorLayer.Z_INDEX_EXTRA;
-			this.editorCharacter.sortChildren();
+			if (!this._allPoints) {
+				this._allPoints = this.makeAllPoints();
+				this.character.addChild(this._allPoints).zIndex = EditorLayer.Z_INDEX_EXTRA;
+				this.character.sortChildren();
+			}
 		} else if (this._allPoints) {
-			this.editorCharacter.removeChild(this._allPoints);
+			this.character.removeChild(this._allPoints);
 			this._allPoints.destroy();
 			this._allPoints = undefined;
 		}
+	}
+
+	protected makeAllPoints(): Container {
+		const points = new Container();
+		points.x = this.x;
+		points.y = this.y;
+		this._drawAllPoints(points);
+		return points;
 	}
 
 	private _drawAllPoints(container: Container) {

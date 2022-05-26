@@ -1,16 +1,18 @@
-import { AppearanceChangeType, BoneName, BoneState, GetLogger } from 'pandora-common';
+import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId } from 'pandora-common';
 import type { LayerState } from './def';
 import { AtomicCondition, TransformDefinition } from 'pandora-common/dist/assets';
 import { Container } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
-import { GraphicsManager } from '../assets/graphicsManager';
+import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 
 const logger = GetLogger('GraphicsCharacter');
 
+export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
+
 export class GraphicsCharacter<ContainerType extends AppearanceContainer = AppearanceContainer> extends Container {
-	public graphicsManager: GraphicsManager | undefined;
+	protected graphicsGetter: GraphicsGetterFunction | undefined;
 	protected readonly appearanceContainer: ContainerType;
 	private _layers: LayerState[] = [];
 	private _pose: Record<BoneName, number> = {};
@@ -26,8 +28,8 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		this.on('destroy', cleanup);
 	}
 
-	public setManager(graphicsManager: GraphicsManager) {
-		this.graphicsManager = graphicsManager;
+	public useGraphics(graphicsGetter: GraphicsGetterFunction) {
+		this.graphicsGetter = graphicsGetter;
 		this.update(['items', 'pose']);
 	}
 
@@ -54,49 +56,49 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	}
 
 	protected buildLayers(): LayerState[] {
-		if (!this.graphicsManager)
+		if (!this.graphicsGetter)
 			return [];
 		const result: LayerState[] = [];
 		for (const item of this.appearanceContainer.appearance.getAllItems()) {
 			if (!item.asset.definition.hasGraphics)
 				continue;
-			const graphics = this.graphicsManager.getAssetGraphicsById(item.asset.id);
+			const graphics = this.graphicsGetter(item.asset.id);
 			if (!graphics) {
 				logger.warning(`Asset ${item.asset.id} hasGraphics, but no graphics found`);
 				continue;
 			}
-			graphics.allLayers.forEach((layer, index) => {
-				result.push({
-					asset: graphics,
+			result.push(
+				...graphics.allLayers.map((layer) => ({
 					layer,
-					index,
-				});
-			});
+				})),
+			);
 		}
 		return result;
 	}
 
-	protected createLayer = GraphicsLayer.create;
-	private _graphicsLayers = new Map<string, GraphicsLayer>();
+	protected createLayer(layer: AssetGraphicsLayer): GraphicsLayer {
+		return new GraphicsLayer(layer, this);
+	}
+
+	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
 	protected layerUpdate(bones: Set<string>): void {
-		this._evalCacheClear();
-		const keys = new Set<string>();
-		for (const { asset, layer, state, index } of this._layers) {
-			const key = `${asset.id}-${index}`;
-			keys.add(key);
-			let graphics = this._graphicsLayers.get(key);
-			if (!graphics) {
-				this._graphicsLayers.set(key, graphics = this.createLayer({ layer, state, character: this, transform: this.evalTransform, evaluate: this.evalCondition }));
-				this.addChild(graphics);
-			} else {
-				graphics.update({ bones, state });
-			}
-		}
+		this._evalCache.clear();
 		for (const [key, graphics] of this._graphicsLayers) {
-			if (!keys.has(key)) {
+			if (!this._layers.includes(key)) {
 				this._graphicsLayers.delete(key);
 				this.removeChild(graphics);
 				graphics.destroy();
+			}
+		}
+		for (const layerState of this._layers) {
+			let graphics = this._graphicsLayers.get(layerState);
+			if (!graphics) {
+				graphics = this.createLayer(layerState.layer);
+				this._graphicsLayers.set(layerState, graphics);
+				this.addChild(graphics);
+				graphics.update({ state: layerState.state, force: true });
+			} else {
+				graphics.update({ state: layerState.state, bones });
 			}
 		}
 		this.sortChildren();
@@ -104,8 +106,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 	//#region Point transform
 	private readonly _evalCache = new Map<string, boolean>();
-	protected evalCondition = this._evalCondition.bind(this);
-	private _evalCondition(condition: AtomicCondition): boolean {
+	public evalCondition(condition: AtomicCondition): boolean {
 		const key = `${condition.bone}-${condition.operator}-${condition.value}`;
 		let result = this._evalCache.get(key);
 		if (result === undefined) {
@@ -114,7 +115,6 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		}
 		return result;
 	}
-	private _evalCacheClear = (): void => this._evalCache.clear();
 	private _evalConditionCore({ operator, value }: AtomicCondition, { rotation }: BoneState): boolean {
 		switch (operator) {
 			case '>':
@@ -132,13 +132,12 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		}
 		throw new Error(`_evalConditionCore invalid operator: ${operator as string}`);
 	}
-	protected evalTransform = this._evalTransform.bind(this);
-	private _evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[]): [number, number] {
+	public evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[], _mirror: boolean): [number, number] {
 		let [resX, resY] = [x, y];
 		for (const transform of transforms) {
 			const { type, bone: boneName, condition } = transform;
 			const bone = this.getBone(boneName);
-			if (condition && !EvaluateCondition(condition, this.evalCondition)) {
+			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c))) {
 				continue;
 			}
 			switch (type) {

@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useSyncExternalStore } from 'react';
 import { useGraphicsScene } from '../graphics/graphicsScene';
 import { EditorSetupScene, EditorResultScene } from './graphics/editorScene';
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
@@ -10,23 +10,51 @@ import { Button } from '../components/common/Button/Button';
 import { EditorCharacter } from './graphics/character/editorCharacter';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { LayerStateOverrides } from '../graphics/def';
-import { AssetGraphicsLayer } from '../assets/assetGraphics';
+import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
+import { Observable } from '../observable';
+import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
+import { AssetId, GetLogger } from 'pandora-common';
+
+const logger = GetLogger('Editor');
+
+export const EDITOR_ALPHAS = [1, 0.6, 0];
+export const EDITOR_ALPHA_ICONS = ['🌕', '🌓', '🌑'];
 
 export class Editor extends TypedEventEmitter<{
 	layerOverrideChange: AssetGraphicsLayer;
+	modifiedAssetsChange: undefined;
 }> {
 	public readonly manager: GraphicsManager;
 	public readonly character: EditorCharacter;
 	public readonly setupScene: EditorSetupScene;
 	public readonly resultScene: EditorResultScene;
 
+	public readonly showBones = new Observable<boolean>(true);
+
+	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
+	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
+
 	constructor(manager: GraphicsManager) {
 		super();
+
+		this.targetAsset.subscribe((asset) => {
+			if (this.targetLayer.value?.asset !== asset) {
+				this.targetLayer.value = null;
+			}
+		});
+
+		this.targetLayer.subscribe((layer) => {
+			if (layer && this.targetAsset.value !== layer.asset) {
+				logger.error('Set target layer with non-matching target asset', layer, this.targetAsset.value);
+				this.targetLayer.value = null;
+			}
+		});
+
 		this.manager = manager;
 		this.character = new EditorCharacter();
-		this.setupScene = new EditorSetupScene(this, manager);
-		this.resultScene = new EditorResultScene(this, manager);
+		this.setupScene = new EditorSetupScene(this);
+		this.resultScene = new EditorResultScene(this);
 
 		/* eslint-disable @typescript-eslint/naming-convention */
 		this.character.appearance.importFromBundle({
@@ -43,6 +71,17 @@ export class Editor extends TypedEventEmitter<{
 		/* eslint-enable @typescript-eslint/naming-convention */
 	}
 
+	private readonly editorGraphics = new Map<AssetId, EditorAssetGraphics>();
+	private editorGraphicsKeys: readonly AssetId[] = [];
+
+	public getModifiedAssetsList(): readonly AssetId[] {
+		return this.editorGraphicsKeys;
+	}
+
+	public getAssetGraphicsById(id: AssetId): AssetGraphics | undefined {
+		return this.editorGraphics.get(id) ?? this.manager.getAssetGraphicsById(id);
+	}
+
 	private readonly layerStateOverrides = new WeakMap<AssetGraphicsLayer, LayerStateOverrides>();
 
 	public getLayerStateOverride(layer: AssetGraphicsLayer): LayerStateOverrides | undefined {
@@ -57,6 +96,50 @@ export class Editor extends TypedEventEmitter<{
 		}
 		this.emit('layerOverrideChange', layer);
 	}
+
+	public getLayersAlphaOverrideIndex(...layers: AssetGraphicsLayer[]): number {
+		return layers.reduce<number | undefined>((prev, layer) => {
+			const alpha = this.getLayerStateOverride(layer)?.alpha ?? 1;
+			const index = EDITOR_ALPHAS.indexOf(alpha);
+			if (index >= 0 && (prev === undefined || index < prev))
+				return index;
+			return prev;
+		}, undefined) ?? 0;
+	}
+
+	public setLayerAlphaOverride(layers: readonly AssetGraphicsLayer[], index: number): void {
+		const newAlpha = EDITOR_ALPHAS[index % EDITOR_ALPHAS.length];
+		for (const layer of layers) {
+			this.setLayerStateOverride(layer, {
+				...this.getLayerStateOverride(layer),
+				alpha: newAlpha,
+			});
+		}
+	}
+
+	public startEditAsset(asset: AssetId): void {
+		let graphics = this.editorGraphics.get(asset);
+		if (!graphics) {
+			const originalGraphics = this.manager.getAssetGraphicsById(asset);
+			graphics = new EditorAssetGraphics(
+				this,
+				asset,
+				originalGraphics?.export(),
+				() => {
+					this.emit('modifiedAssetsChange', undefined);
+				},
+			);
+			this.editorGraphics.set(asset, graphics);
+			this.editorGraphicsKeys = Array.from(this.editorGraphics.keys());
+			this.emit('modifiedAssetsChange', undefined);
+		}
+		this.targetAsset.value = graphics;
+	}
+}
+
+export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: boolean): readonly AssetGraphicsLayer[] {
+	const layers = useSyncExternalStore((change) => asset.editor.on('modifiedAssetsChange', change), () => asset.layers);
+	return includeMirror ? layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]) : layers;
 }
 
 function TabSelector(): ReactElement {
@@ -89,9 +172,9 @@ export function EditorView({ editor }: { editor: Editor }): ReactElement {
 					<Routes>
 						<Route path='*' element={ <AssetsUI editor={ editor } /> } />
 						<Route path='/bones' element={ <BoneUI character={ editor.character } /> } />
-						<Route path='/asset' element={ <AssetUI /> } />
-						<Route path='/layer' element={ <AssetUI /> } />
-						<Route path='/points' element={ <AssetUI /> } />
+						<Route path='/asset' element={ <AssetUI editor={ editor } /> } />
+						<Route path='/layer' element={ <AssetUI editor={ editor } /> } />
+						<Route path='/points' element={ <AssetUI editor={ editor } /> } />
 					</Routes>
 				</div>
 				<div ref={ refSetup } className='editor-scene' />

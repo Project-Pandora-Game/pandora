@@ -1,30 +1,34 @@
 import classNames from 'classnames';
 import { nanoid } from 'nanoid';
-import { Asset, Item } from 'pandora-common';
-import React, { ReactElement, useMemo, useSyncExternalStore } from 'react';
+import { Asset, AssetId, Item } from 'pandora-common';
+import React, { ReactElement, useSyncExternalStore } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useCharacterAppearanceItems } from '../../../character/character';
 import { Button } from '../../../components/common/Button/Button';
-import { LayerStateOverrides } from '../../../graphics/def';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
 import { AssetTreeViewCategory, GetAssetManagerEditor } from '../../assets/assetManager';
-import { Editor } from '../../editor';
+import { Editor, EDITOR_ALPHA_ICONS } from '../../editor';
 import './assets.scss';
 
 export function AssetsUI({ editor }: { editor: Editor; }): ReactElement {
 	const view = GetAssetManagerEditor().assetTreeView;
 	const items = useCharacterAppearanceItems(editor.character);
+	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
 
 	return (
 		<div className='asset-ui'>
-			<h3>Assets</h3>
-			<ul>
-				{view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } editor={ editor } />)}
-			</ul>
 			<h3>Equipped</h3>
 			<ul>
 				{items.map((item) => <ItemElement key={ item.id } item={ item } editor={ editor } />)}
+			</ul>
+			<h3>Editor assets</h3>
+			<ul>
+				{ editorAssets.map((assetId) => <EditedAssetElement key={ assetId } editor={ editor } assetId={ assetId } />) }
+			</ul>
+			<h3>All assets</h3>
+			<ul>
+				{view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } editor={ editor } />)}
 			</ul>
 		</div>
 	);
@@ -52,7 +56,8 @@ function AssetElement({ asset, editor }: { asset: Asset; editor: Editor; }): Rea
 			<span>{asset.definition.name}</span>
 			<div className='controls'>
 				<Button onClick={ () => {
-					navigate('/layers');
+					editor.startEditAsset(asset.id);
+					navigate('/asset');
 				} }>
 					E
 				</Button>
@@ -64,11 +69,52 @@ function AssetElement({ asset, editor }: { asset: Asset; editor: Editor; }): Rea
 	);
 }
 
+function EditedAssetElement({ assetId, editor }: { assetId: AssetId; editor: Editor; }): ReactElement {
+	const navigate = useNavigate();
+
+	function add() {
+		alert('Not yet implemented');
+	}
+
+	return (
+		<li>
+			<span>{assetId}</span>
+			<div className='controls'>
+				<Button onClick={ () => {
+					editor.startEditAsset(assetId);
+					navigate('/asset');
+				} }>
+					E
+				</Button>
+				<Button onClick={ add }>
+					+
+				</Button>
+			</div>
+		</li>
+	);
+}
+
+const itemOpenState = new WeakMap<Item, ToggleLiState>();
 function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactElement {
-	const toggleState = useMemo(() => new ToggleLiState(true), []);
+	const navigate = useNavigate();
+
+	let toggleState = itemOpenState.get(item);
+	if (!toggleState) {
+		toggleState = new ToggleLiState(false);
+		itemOpenState.set(item, toggleState);
+	}
 
 	const asset = item.asset;
-	const graphics = asset.definition.hasGraphics ? editor.manager.getAssetGraphicsById(asset.id) : undefined;
+	const graphics = asset.definition.hasGraphics ? editor.getAssetGraphicsById(asset.id) : undefined;
+
+	const alphaIndex = useSyncExternalStore<number>(editor.getSubscriber('layerOverrideChange'), () => editor.getLayersAlphaOverrideIndex(...(graphics?.allLayers ?? [])));
+
+	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
+		event.stopPropagation();
+		if (graphics) {
+			editor.setLayerAlphaOverride(graphics.allLayers, alphaIndex+1);
+		}
+	};
 
 	function remove() {
 		editor.character.appearance.removeItem(item.id);
@@ -77,7 +123,14 @@ function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactEl
 	return (
 		<ToggleLi name={ asset.definition.name } state={ toggleState } nameExtra={
 			<div className='controls'>
+				<Button onClick={ () => {
+					editor.startEditAsset(asset.id);
+					navigate('/asset');
+				} }>
+					E
+				</Button>
 				<Button onClick={ remove }>-</Button>
+				<button type='button' onClick={ toggleAlpha }>{EDITOR_ALPHA_ICONS[alphaIndex]}</button>
 			</div>
 		}>
 			<ul>
@@ -87,37 +140,25 @@ function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactEl
 	);
 }
 
-const ALPHAS = [1, 0.6, 0];
-const ALPHA_ICONS = ['🌕', '🌓', '🌑'];
 function AssetLayerElement({ layer, editor }: { layer: AssetGraphicsLayer; editor: Editor }): ReactElement {
-	const stateOverrides = useSyncExternalStore<LayerStateOverrides | undefined>((changed) => {
+	const alphaIndex = useSyncExternalStore<number>((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {
 			if (changedLayer === layer) {
 				changed();
 			}
 		});
-	}, () => editor.getLayerStateOverride(layer));
-
-	let alphaIndex = ALPHAS.indexOf(stateOverrides?.alpha ?? 1);
-	if (alphaIndex < 0) {
-		alphaIndex = 0;
-	}
+	}, () => editor.getLayersAlphaOverrideIndex(layer));
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
-
-		const newAlpha = ALPHAS[(alphaIndex + 1) % ALPHAS.length] ?? 1;
-		editor.setLayerStateOverride(layer, {
-			...stateOverrides,
-			alpha: newAlpha,
-		});
+		editor.setLayerAlphaOverride([layer], alphaIndex+1);
 	};
 
 	return (
 		<li>
 			<span>{layer.name}</span>
 			<div className='controls'>
-				<button type='button' onClick={ toggleAlpha }>{ALPHA_ICONS[alphaIndex]}</button>
+				<button type='button' onClick={ toggleAlpha }>{EDITOR_ALPHA_ICONS[alphaIndex]}</button>
 			</div>
 		</li>
 	);

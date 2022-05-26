@@ -1,5 +1,5 @@
 import { CoordinatesCompressed, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
-import type { GraphicsTransform, GraphicsEvaluate, LayerStateOverrides } from './def';
+import type { LayerStateOverrides } from './def';
 import { Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
 import { Conjunction, EvaluateCondition } from './utility';
@@ -9,17 +9,9 @@ import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
 Mesh.BATCHABLE_SIZE = 1000000;
 
-export type GraphicsLayerProps = {
-	layer: AssetGraphicsLayer;
-	state?: LayerStateOverrides;
-	transform: GraphicsTransform,
-	evaluate: GraphicsEvaluate;
-	character: GraphicsCharacter;
-};
-export class GraphicsLayer extends Container {
+export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharacter> extends Container {
+	protected readonly character: Character;
 	protected readonly layer: AssetGraphicsLayer;
-	private readonly _transform: GraphicsTransform;
-	private readonly _evaluate: GraphicsEvaluate;
 	private _bones = new Set<string>();
 	private _imageBones = new Set<string>();
 	private _triangles = new Uint32Array();
@@ -53,20 +45,15 @@ export class GraphicsLayer extends Container {
 		this.addChild(this._result);
 	}
 
-	protected constructor({ layer, state, transform, evaluate }: GraphicsLayerProps) {
+	constructor(layer: AssetGraphicsLayer, character: Character) {
 		super();
 		this.x = layer.definition.x;
 		this.y = layer.definition.y;
 		this.layer = layer;
-		this._transform = transform;
-		this._evaluate = evaluate;
+		this.character = character;
 
 		this._calculatePoints();
-
-		this.update({ state, force: true });
 	}
-
-	public static create = (props: GraphicsLayerProps) => new GraphicsLayer(props);
 
 	public update({ bones = new Set(), state, force }: { bones?: Set<string>, state?: LayerStateOverrides, force?: boolean; }): void {
 		let update = false;
@@ -107,7 +94,7 @@ export class GraphicsLayer extends Container {
 		const manager = GraphicsManagerInstance.value;
 		if (!manager)
 			return false;
-		const image = this.layer.definition.imageOverrides.find((img) => EvaluateCondition(img.condition, this._evaluate))?.image ?? this.layer.definition.image;
+		const image = this.layer.definition.imageOverrides.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c)))?.image ?? this.layer.definition.image;
 		if (image !== this._image) {
 			this._image = image;
 			manager.loader.getTexture(image).then((texture) => {
@@ -120,7 +107,26 @@ export class GraphicsLayer extends Container {
 		return false;
 	}
 
-	protected calculateTriangles() {
+	protected _calculatePoints() {
+		// Note: The points should NOT be filtered before Delaunator step!
+		// Doing so would cause body and arms not to have exactly matching triangles,
+		// causing (most likely) overlap, which would result in clipping.
+		// In some other cases this could lead to gaps or other visual artifacts
+		// Any optimization of unused points needs to be done *after* triangles are calculated
+		this.points = this.layer.finalPoints;
+
+		this._bones = new Set(
+			this.points
+				.filter((point) => SelectPoints(point, this.layer.definition.pointType, this.layer.side))
+				.flatMap((point) => point.transforms.map((trans) => trans.bone)),
+		);
+		this._imageBones = new Set(
+			this.layer.definition.imageOverrides
+				.flatMap((override) => override.condition)
+				.flat()
+				.map((condition) => condition.bone),
+		);
+
 		this._uv = new Float64Array(this.points.flatMap((point) => ([
 			point.pos[0] / this.layer.definition.width,
 			point.pos[1] / this.layer.definition.height,
@@ -128,25 +134,19 @@ export class GraphicsLayer extends Container {
 		const triangles: number[] = [];
 		const delaunator = new Delaunator(this.points.flatMap((point) => point.pos));
 		for (let i = 0; i < delaunator.triangles.length; i += 3) {
-			triangles.push(...[0, 1, 2].map((tp) => delaunator.triangles[tp + i]));
+			const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
+			if (t.every((tp) => SelectPoints(this.points[tp], this.layer.definition.pointType, this.layer.side))) {
+				triangles.push(...t);
+			}
 		}
 		this._triangles = new Uint32Array(triangles);
 	}
 
 	protected calculateVertices(): boolean {
 		this.vertices = new Float64Array(this.points
-			.flatMap((point) => this._transform(this.mirrorPoint(point.pos), point.transforms, point.mirror)));
+			.flatMap((point) => this.character.evalTransform(this.mirrorPoint(point.pos), point.transforms, point.mirror)));
 
 		return true;
-	}
-
-	private _calculatePoints() {
-		this.points = this.layer.finalPoints.filter((point) => SelectPoints(point, this.layer.definition.pointType, this.layer.side));
-
-		this._bones = new Set(this.points.flatMap((point) => point.transforms.map((trans) => trans.bone)));
-		this._imageBones = new Set(this.layer.definition.imageOverrides.flatMap((override) => override.condition).flat().map((condition) => condition.bone));
-
-		this.calculateTriangles();
 	}
 
 	protected mirrorPoint([x, y]: CoordinatesCompressed): CoordinatesCompressed {

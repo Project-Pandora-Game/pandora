@@ -1,3 +1,5 @@
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { GraphicsLayer } from '../../../graphics/graphicsLayer';
 import { Editor } from '../../editor';
 import { Draggable } from '../draggable';
 import { SetupLayer } from '../layer';
@@ -9,7 +11,9 @@ export class SetupCharacter extends GraphicsCharacterEditor {
 		this._addBones();
 	}
 
-	protected override createLayer = SetupLayer.create;
+	protected override createLayer(layer: AssetGraphicsLayer): GraphicsLayer {
+		return new SetupLayer(layer, this);
+	}
 
 	private _addBones(): void {
 		for (const bone of this.appearanceContainer.appearance.getFullPose()) {

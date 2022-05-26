@@ -19,33 +19,46 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 		if (promise !== undefined)
 			return promise;
 
-		promise = this.loadTexture(path);
+		promise = this.monitorProgress(this.loadTexture(path));
 		this.pending.set(path, promise);
-		this.updateLoadingProgressToast();
 
 		try {
 			texture = await promise;
 		} finally {
 			this.pending.delete(path);
-			this.updateLoadingProgressToast();
 		}
 
 		this.cache.set(path, texture);
 		return texture;
 	}
 
-	protected updateLoadingProgressToast(): void {
-		const inProgress = this.pending.size;
-		if (inProgress > 0) {
-			this.textureLoadingProgress.show('progress', `Loading ${inProgress} asset${inProgress > 1 ? 's' : ''}...`);
-		} else {
-			this.textureLoadingProgress.hide();
-		}
+	private readonly _pendingPromises = new Set<Promise<unknown>>();
+	protected monitorProgress<T extends Promise<unknown>>(promise: T): T {
+		this._pendingPromises.add(promise);
+		promise.finally(() => {
+			this._pendingPromises.delete(promise);
+			this.updateLoadingProgressToast();
+		});
+		this.updateLoadingProgressToast();
+		return promise;
+	}
+
+	private updateLoadingProgressToast(): void {
+		setTimeout(() => {
+			const inProgress = this._pendingPromises.size;
+			if (inProgress > 0) {
+				this.textureLoadingProgress.show('progress', `Loading ${inProgress} asset${inProgress > 1 ? 's' : ''}...`);
+			} else {
+				this.textureLoadingProgress.hide();
+			}
+		}, 100);
 	}
 
 	protected abstract loadTexture(path: string): Promise<Texture>;
 
 	public abstract loadTextFile(path: string): Promise<string>;
+
+	public abstract loadFileArrayBuffer(path: string): Promise<ArrayBuffer>;
 }
 
 export class URLGraphicsLoader extends GraphicsLoaderBase {
@@ -61,6 +74,10 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 	}
 
 	public loadTextFile(path: string): Promise<string> {
-		return fetch(this.prefix + path).then((r) => r.text());
+		return this.monitorProgress(fetch(this.prefix + path).then((r) => r.text()));
+	}
+
+	public loadFileArrayBuffer(path: string): Promise<ArrayBuffer> {
+		return this.monitorProgress(fetch(this.prefix + path).then((r) => r.arrayBuffer()));
 	}
 }

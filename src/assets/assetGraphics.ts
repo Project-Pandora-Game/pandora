@@ -27,9 +27,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		this.definition = definition;
 		this.mirror = mirror;
 		this.isMirror = mirror !== undefined;
-		if (!this.isMirror) {
-			this.makeMirror();
-		}
+		this.updateMirror();
 	}
 
 	public buildPoints(): void {
@@ -50,7 +48,10 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		this.emit('change', undefined);
 	}
 
-	protected makeMirror(): void {
+	public updateMirror(): void {
+		if (this.isMirror)
+			return;
+
 		if (this.definition.mirror === LayerMirror.NONE) {
 			this.mirror = undefined;
 			return;
@@ -76,7 +77,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 
 export class AssetGraphics {
 	public readonly id: AssetId;
-	public layers!: AssetGraphicsLayer[];
+	public layers!: readonly AssetGraphicsLayer[];
 
 	public get allLayers(): AssetGraphicsLayer[] {
 		return this.layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]);
@@ -90,6 +91,12 @@ export class AssetGraphics {
 	load(definition: AssetGraphicsDefinition) {
 		this.layers = definition.layers.map(this.createLayer.bind(this));
 		this.layers.forEach((l) => l.buildPoints());
+	}
+
+	export(): AssetGraphicsDefinition {
+		return {
+			layers: this.layers.map((l) => l.definition),
+		};
 	}
 
 	protected createLayer(definition: LayerDefinition): AssetGraphicsLayer {

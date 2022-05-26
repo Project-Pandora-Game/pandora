@@ -56,7 +56,7 @@ class AssetTreeViewCategoryClass extends ObservableClass<{ open: boolean; }> {
 	readonly name: string;
 
 	@observable
-	public open: boolean = true;
+	public open: boolean = false;
 
 	constructor(name: string) {
 		super();

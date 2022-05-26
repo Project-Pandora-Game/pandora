@@ -6,7 +6,6 @@ import { TypedEventEmitter } from '../../../event';
 import { LayerState } from '../../../graphics/def';
 import { GraphicsCharacter } from '../../../graphics/graphicsCharacter';
 import { Editor } from '../../editor';
-import { EditorShowBones } from '../editorScene';
 import { AppearanceEditor } from './appearanceEditor';
 
 export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
@@ -20,20 +19,24 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 
 export class GraphicsCharacterEditor extends GraphicsCharacter<EditorCharacter> {
 	protected readonly boneLayer = new Container;
-	protected readonly editor: Editor;
+	readonly editor: Editor;
 
 	protected constructor(editor: Editor) {
 		super(editor.character);
 		this.editor = editor;
 		this.addChild(this.boneLayer).zIndex = 11;
 		const cleanup: (() => void)[] = [];
-		cleanup.push(EditorShowBones.subscribe((show) => {
+		cleanup.push(editor.showBones.subscribe((show) => {
 			this.boneLayer.visible = show;
 		}));
+		this.boneLayer.visible = editor.showBones.value;
 		cleanup.push(editor.on('layerOverrideChange', (layer) => {
 			if (this._activeLayers.has(layer)) {
 				this.update(['items']);
 			}
+		}));
+		cleanup.push(editor.on('modifiedAssetsChange', () => {
+			this.update(['items']);
 		}));
 		this.on('destroy', () => cleanup.forEach((c) => c()));
 	}

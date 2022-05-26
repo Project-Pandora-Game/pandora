@@ -1,7 +1,7 @@
 import { AssertNever } from 'pandora-common';
 import { toast, ToastContent, ToastOptions } from 'react-toastify';
 
-const TOAST_OPTIONS_SUCCESS: ToastOptions = {
+export const TOAST_OPTIONS_SUCCESS: ToastOptions = {
 	type: 'success',
 	isLoading: false,
 	autoClose: 2_000,
@@ -10,7 +10,7 @@ const TOAST_OPTIONS_SUCCESS: ToastOptions = {
 	closeButton: true,
 	draggable: true,
 };
-const TOAST_OPTIONS_ERROR: ToastOptions = {
+export const TOAST_OPTIONS_ERROR: ToastOptions = {
 	type: 'error',
 	isLoading: false,
 	autoClose: 10_000,
@@ -18,7 +18,7 @@ const TOAST_OPTIONS_ERROR: ToastOptions = {
 	closeButton: true,
 	draggable: true,
 };
-const TOAST_OPTIONS_PENDING: ToastOptions = {
+export const TOAST_OPTIONS_PENDING: ToastOptions = {
 	type: 'default',
 	isLoading: true,
 	autoClose: false,

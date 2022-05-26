@@ -64,6 +64,10 @@ class FileSystemGraphicsLoader extends GraphicsLoaderBase {
 	}
 
 	public loadTextFile(path: string): Promise<string> {
-		return ReadFile(this._handle, path, true);
+		return this.monitorProgress(ReadFile(this._handle, path, true));
+	}
+
+	public loadFileArrayBuffer(path: string): Promise<ArrayBuffer> {
+		return this.monitorProgress(ReadFile(this._handle, path, false));
 	}
 }

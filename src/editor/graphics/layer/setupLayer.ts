@@ -1,39 +1,13 @@
 import type { PointDefinition } from 'pandora-common/dist/assets';
-import type { GraphicsLayerProps } from '../../../graphics/graphicsLayer';
 import { Graphics, Container, Texture } from 'pixi.js';
 import { Draggable } from '../draggable';
 import { EditorLayer } from './editorLayer';
 import dotTexture from '../../../assets/editor/dotTexture.png';
-import { MirrorPointDefinition } from '../editorStore';
 
 export class SetupLayer extends EditorLayer {
 	private _wireFrame?: Graphics;
 	private _allPoints?: Container;
 	private _allPointsCleanup: (() => void)[] = [];
-
-	private get wireFrame(): Graphics {
-		if (!this._wireFrame) {
-			const wireframe = this._wireFrame = new Graphics();
-			wireframe.x = this.x;
-			wireframe.y = this.y;
-			this._drawWireFrame(wireframe);
-		}
-		return this._wireFrame;
-	}
-
-	private get allPoints(): Container {
-		if (!this._allPoints) {
-			this._allPoints = new Container();
-			this._drawAllPoints(this._allPoints);
-		}
-		return this._allPoints;
-	}
-
-	protected constructor(props: GraphicsLayerProps) {
-		super(props);
-	}
-
-	public static override create = (props: GraphicsLayerProps) => new SetupLayer(props);
 
 	protected override calculateVertices(): boolean {
 		this.vertices = new Float64Array(this.points
@@ -42,8 +16,8 @@ export class SetupLayer extends EditorLayer {
 		return true;
 	}
 
-	protected override calculateTriangles() {
-		super.calculateTriangles();
+	protected override _calculatePoints() {
+		super._calculatePoints();
 		if (this._wireFrame) {
 			this._drawWireFrame(this._wireFrame);
 		}
@@ -51,22 +25,38 @@ export class SetupLayer extends EditorLayer {
 
 	protected show(value: boolean): void {
 		if (value) {
-			this.editorCharacter.addChild(this.wireFrame).zIndex = EditorLayer.Z_INDEX_EXTRA;
-			this.editorCharacter.addChild(this.allPoints).zIndex = EditorLayer.Z_INDEX_EXTRA;
-			this.editorCharacter.sortChildren();
+			if (!this._wireFrame) {
+				this._wireFrame = this.makeWireFrame();
+				this.character.addChild(this._wireFrame).zIndex = EditorLayer.Z_INDEX_EXTRA;
+				this.character.sortChildren();
+			}
+			if (!this._allPoints) {
+				this._allPoints = this.makeAllPoints();
+				this.character.addChild(this._allPoints).zIndex = EditorLayer.Z_INDEX_EXTRA;
+				this.character.sortChildren();
+			}
 		} else {
 			if (this._wireFrame) {
-				this.editorCharacter.removeChild(this.wireFrame);
-				this.wireFrame.destroy();
+				this.character.removeChild(this._wireFrame);
+				this._wireFrame.destroy();
 				this._wireFrame = undefined;
 			}
 			if (this._allPoints) {
-				this.editorCharacter.removeChild(this.allPoints);
+				this.character.removeChild(this._allPoints);
 				this._allPointsCleanup.forEach((cleanup) => cleanup());
-				this.allPoints.destroy();
+				this._allPointsCleanup = [];
+				this._allPoints.destroy();
 				this._allPoints = undefined;
 			}
 		}
+	}
+
+	private makeWireFrame(): Graphics {
+		const wireframe = this._wireFrame = new Graphics();
+		wireframe.x = this.x;
+		wireframe.y = this.y;
+		this._drawWireFrame(wireframe);
+		return wireframe;
 	}
 
 	private _drawWireFrame(graphics: Graphics) {
@@ -79,23 +69,24 @@ export class SetupLayer extends EditorLayer {
 		}
 	}
 
-	private _drawAllPoints(container: Container) {
+	private makeAllPoints(): Container {
+		const container = new Container();
+
 		const createDraggable = (point: PointDefinition, _index: number) => {
-			const full = (point as MirrorPointDefinition);
 			const draggable = new Draggable({
 				createTexture: () => Texture.from(dotTexture),
 				setPos: (_, x, y) => {
 					point.pos = [x, y];
-					full.updatePair(['pos']);
+					// point.updatePair(['pos']);
 					this.layer.buildPoints();
 				},
 			});
 
 			draggable.x = point.pos[0];
 			draggable.y = point.pos[1];
-			if (full.isMirrored()) {
-				draggable.tint = 0x00ff00;
-			}
+			// if (point.isMirrored()) {
+			// 	draggable.tint = 0x00ff00;
+			// }
 
 			container.addChild(draggable);
 
@@ -123,6 +114,8 @@ export class SetupLayer extends EditorLayer {
 				}
 			}
 		}));
+
+		return container;
 	}
 
 	override destroy() {

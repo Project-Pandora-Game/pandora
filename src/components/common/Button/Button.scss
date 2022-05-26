@@ -46,4 +46,8 @@ $button-themes: (
 	&.slim {
 		padding: 0.1em 0.2em;
 	}
+
+	&.hideDisabled:disabled {
+		visibility: hidden !important;
+	}
 }

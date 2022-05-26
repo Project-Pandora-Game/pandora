@@ -1,5 +1,4 @@
-import type { Condition } from 'pandora-common/dist/assets';
-import type { GraphicsEvaluate } from './def';
+import type { Condition, AtomicCondition } from 'pandora-common';
 
 export function GetAngle(x: number, y: number): number {
 	const angle = Math.atan2(y, x);
@@ -14,7 +13,7 @@ export function RotateVector(x: number, y: number, angle: number): [number, numb
 	return [x * cos - y * sin, x * sin + y * cos];
 }
 
-export function EvaluateCondition(condition: Condition, evaluate: GraphicsEvaluate): boolean {
+export function EvaluateCondition(condition: Condition, evaluate: (condition: AtomicCondition) => boolean): boolean {
 	return condition.some((clause) => clause.every(evaluate));
 }
 

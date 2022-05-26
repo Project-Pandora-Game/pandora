@@ -1,3 +1,5 @@
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { GraphicsLayer } from '../../../graphics/graphicsLayer';
 import { Editor } from '../../editor';
 import { ResultLayer } from '../layer';
 import { GraphicsCharacterEditor } from './editorCharacter';
@@ -8,7 +10,9 @@ export class ResultCharacter extends GraphicsCharacterEditor {
 		this._addBones();
 	}
 
-	protected override createLayer = ResultLayer.create;
+	protected override createLayer(layer: AssetGraphicsLayer): GraphicsLayer {
+		return new ResultLayer(layer, this);
+	}
 
 	private _addBones(): void {
 		for (const bone of this.appearanceContainer.appearance.getFullPose()) {

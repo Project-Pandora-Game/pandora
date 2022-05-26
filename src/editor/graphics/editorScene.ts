@@ -1,18 +1,14 @@
-import { GraphicsManager } from '../../assets/graphicsManager';
 import { GraphicsScene } from '../../graphics/graphicsScene';
-import { Observable } from '../../observable';
 import { Editor } from '../editor';
 import { ResultCharacter, SetupCharacter } from './character';
-
-export const EditorShowBones = new Observable<boolean>(true);
 
 export class EditorSetupScene extends GraphicsScene {
 	public readonly setupCharacter: SetupCharacter;
 
-	constructor(editor: Editor, graphicsManager: GraphicsManager) {
+	constructor(editor: Editor) {
 		super();
 		this.setupCharacter = new SetupCharacter(editor);
-		this.setupCharacter.setManager(graphicsManager);
+		this.setupCharacter.useGraphics(editor.getAssetGraphicsById.bind(editor));
 		this.add(this.setupCharacter);
 	}
 }
@@ -20,10 +16,10 @@ export class EditorSetupScene extends GraphicsScene {
 export class EditorResultScene extends GraphicsScene {
 	public readonly resultCharacter!: ResultCharacter;
 
-	constructor(editor: Editor, graphicsManager: GraphicsManager) {
+	constructor(editor: Editor) {
 		super();
 		this.resultCharacter = new ResultCharacter(editor);
-		this.resultCharacter.setManager(graphicsManager);
+		this.resultCharacter.useGraphics(editor.getAssetGraphicsById.bind(editor));
 		this.add(this.resultCharacter);
 	}
 }

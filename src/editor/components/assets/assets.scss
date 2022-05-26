@@ -23,8 +23,10 @@
 		margin-bottom: 0.5rem;
 		position: relative;
 
-		&>span {
+		&.toggle-li > span {
 			margin-bottom: 0.5rem;
+
+			cursor: pointer;
 
 			&::before {
 				content: ' ';

@@ -3,6 +3,7 @@ import { Texture } from 'pixi.js';
 import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager';
 import { GraphicsLoaderBase, URLGraphicsLoader } from '../assets/graphicsLoader';
 import { GetAssetManagerEditor } from './assets/assetManager';
+import { LoadArrayBufferTexture } from '../graphics/utility';
 
 export async function LoadAssetsFromFileSystem(): Promise<GraphicsManager> {
 	const dirHandle = await showDirectoryPicker();
@@ -50,17 +51,7 @@ class FileSystemGraphicsLoader extends GraphicsLoaderBase {
 	}
 
 	protected override async loadTexture(path: string): Promise<Texture> {
-		const blob = new Blob([await ReadFile(this._handle, path, false)], { type: 'image/png' });
-		return new Promise((resolve, reject) => {
-			const image = new Image();
-			image.onload = () => {
-				const texture = Texture.from(image);
-				URL.revokeObjectURL(image.src);
-				resolve(texture);
-			};
-			image.onerror = reject;
-			image.src = URL.createObjectURL(blob);
-		});
+		return LoadArrayBufferTexture(await ReadFile(this._handle, path, false));
 	}
 
 	public loadTextFile(path: string): Promise<string> {

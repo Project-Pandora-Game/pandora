@@ -73,6 +73,16 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 			this.mirror.side = LayerSide.RIGHT;
 		}
 	}
+
+	public getAllImages(): string[] {
+		const result = new Set<string>();
+		result.add(this.definition.image);
+		for (const override of this.definition.imageOverrides) {
+			result.add(override.image);
+		}
+		result.delete('');
+		return Array.from(result.values());
+	}
 }
 
 export class AssetGraphics {
@@ -101,5 +111,16 @@ export class AssetGraphics {
 
 	protected createLayer(definition: LayerDefinition): AssetGraphicsLayer {
 		return new AssetGraphicsLayer(this, definition);
+	}
+
+	public getAllImages(): string[] {
+		const result = new Set<string>();
+		for (const layer of this.layers) {
+			for (const image of layer.getAllImages()) {
+				result.add(image);
+			}
+		}
+		result.delete('');
+		return Array.from(result.values());
 	}
 }

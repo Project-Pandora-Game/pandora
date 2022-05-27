@@ -70,7 +70,7 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 	}
 
 	protected override loadTexture(path: string): Promise<Texture> {
-		return Promise.resolve(Texture.fromURL(this.prefix + path));
+		return Texture.fromURL(this.prefix + path);
 	}
 
 	public loadTextFile(path: string): Promise<string> {

@@ -97,14 +97,23 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		const image = this.layer.definition.imageOverrides.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c)))?.image ?? this.layer.definition.image;
 		if (image !== this._image) {
 			this._image = image;
-			manager.loader.getTexture(image).then((texture) => {
+			this.getTexture(image).then((texture) => {
 				if (this._image === image) {
 					this.result.texture = this._texture = texture;
 				}
-			}).catch(() => { /** NOOP */ });
+			}).catch(() => {
+				this.result.texture = this._texture = Texture.EMPTY;
+			});
 			return true;
 		}
 		return false;
+	}
+
+	protected getTexture(image: string): Promise<Texture> {
+		const manager = GraphicsManagerInstance.value;
+		if (!manager)
+			return Promise.reject();
+		return manager.loader.getTexture(image);
 	}
 
 	protected _calculatePoints() {

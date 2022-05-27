@@ -1,6 +1,8 @@
+import { Texture } from 'pixi.js';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { LayerStateOverrides } from '../../../graphics/def';
 import { GraphicsLayer } from '../../../graphics/graphicsLayer';
+import { EditorAssetGraphics } from '../character/appearanceEditor';
 import { GraphicsCharacterEditor } from '../character/editorCharacter';
 
 export abstract class EditorLayer extends GraphicsLayer<GraphicsCharacterEditor> {
@@ -13,6 +15,10 @@ export abstract class EditorLayer extends GraphicsLayer<GraphicsCharacterEditor>
 		super(layer, character);
 		this._cleanups.push(this.layer.on('change', this._pointUpdate.bind(this)));
 		this._cleanups.push(this.character.editor.targetLayer.subscribe(() => this.update({})));
+	}
+
+	protected override getTexture(image: string): Promise<Texture> {
+		return this.layer.asset instanceof EditorAssetGraphics ? this.layer.asset.getTexture(image) : super.getTexture(image);
 	}
 
 	protected abstract show(value: boolean): void;

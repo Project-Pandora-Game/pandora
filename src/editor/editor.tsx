@@ -15,6 +15,8 @@ import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
 import { AssetId, GetLogger } from 'pandora-common';
+import { LayerUI } from './components/layer/layer';
+import { PointsUI } from './components/points/points';
 
 const logger = GetLogger('Editor');
 
@@ -132,6 +134,8 @@ export class Editor extends TypedEventEmitter<{
 			this.editorGraphics.set(asset, graphics);
 			this.editorGraphicsKeys = Array.from(this.editorGraphics.keys());
 			this.emit('modifiedAssetsChange', undefined);
+			graphics.loadAllUsedImages(this.manager.loader)
+				.catch((err) => logger.error('Error importing asset for editing', err));
 		}
 		this.targetAsset.value = graphics;
 	}
@@ -173,8 +177,8 @@ export function EditorView({ editor }: { editor: Editor }): ReactElement {
 						<Route path='*' element={ <AssetsUI editor={ editor } /> } />
 						<Route path='/bones' element={ <BoneUI character={ editor.character } /> } />
 						<Route path='/asset' element={ <AssetUI editor={ editor } /> } />
-						<Route path='/layer' element={ <AssetUI editor={ editor } /> } />
-						<Route path='/points' element={ <AssetUI editor={ editor } /> } />
+						<Route path='/layer' element={ <LayerUI editor={ editor } /> } />
+						<Route path='/points' element={ <PointsUI editor={ editor } /> } />
 					</Routes>
 				</div>
 				<div ref={ refSetup } className='editor-scene' />

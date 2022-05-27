@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useCharacterAppearanceItems } from '../../../character/character';
 import { Button } from '../../../components/common/Button/Button';
+import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
 import { AssetTreeViewCategory, GetAssetManagerEditor } from '../../assets/assetManager';
 import { Editor, EDITOR_ALPHA_ICONS } from '../../editor';
@@ -22,7 +23,7 @@ export function AssetsUI({ editor }: { editor: Editor; }): ReactElement {
 			<ul>
 				{items.map((item) => <ItemElement key={ item.id } item={ item } editor={ editor } />)}
 			</ul>
-			<h3>Editor assets</h3>
+			<h3>Edited assets</h3>
 			<ul>
 				{ editorAssets.map((assetId) => <EditedAssetElement key={ assetId } editor={ editor } assetId={ assetId } />) }
 			</ul>
@@ -53,15 +54,15 @@ function AssetElement({ asset, editor }: { asset: Asset; editor: Editor; }): Rea
 
 	return (
 		<li>
-			<span>{asset.definition.name}</span>
+			<span>{StripAssetIdPrefix(asset.id)}</span>
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
 					navigate('/asset');
-				} }>
+				} } title='Edit this asset'>
 					E
 				</Button>
-				<Button onClick={ add }>
+				<Button onClick={ add } title='Equip'>
 					+
 				</Button>
 			</div>
@@ -78,15 +79,15 @@ function EditedAssetElement({ assetId, editor }: { assetId: AssetId; editor: Edi
 
 	return (
 		<li>
-			<span>{assetId}</span>
+			<span>{StripAssetIdPrefix(assetId)}</span>
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(assetId);
 					navigate('/asset');
-				} }>
+				} } title='Edit this asset'>
 					E
 				</Button>
-				<Button onClick={ add }>
+				<Button onClick={ add } title='Equip'>
 					+
 				</Button>
 			</div>
@@ -121,16 +122,16 @@ function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactEl
 	}
 
 	return (
-		<ToggleLi name={ asset.definition.name } state={ toggleState } nameExtra={
+		<ToggleLi name={ StripAssetIdPrefix(asset.id) } state={ toggleState } nameExtra={
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
 					navigate('/asset');
-				} }>
+				} } title="Edit this item's asset">
 					E
 				</Button>
-				<Button onClick={ remove }>-</Button>
-				<button type='button' onClick={ toggleAlpha }>{EDITOR_ALPHA_ICONS[alphaIndex]}</button>
+				<Button onClick={ remove } title='Unequip item'>-</Button>
+				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 			</div>
 		}>
 			<ul>
@@ -158,7 +159,7 @@ function AssetLayerElement({ layer, editor }: { layer: AssetGraphicsLayer; edito
 		<li>
 			<span>{layer.name}</span>
 			<div className='controls'>
-				<button type='button' onClick={ toggleAlpha }>{EDITOR_ALPHA_ICONS[alphaIndex]}</button>
+				<Button className='slim' onClick={ toggleAlpha } title="Cycle layers's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 			</div>
 		</li>
 	);

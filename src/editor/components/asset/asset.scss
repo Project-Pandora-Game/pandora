@@ -2,7 +2,7 @@
 	display: flex;
 	flex-flow: column;
 
-	.layerList {
+	.layerList, .assetImageList {
 		display: flex;
 		flex-flow: column;
 
@@ -14,11 +14,16 @@
 				display: flex;
 				gap: 0.3em;
 
-				.layerName {
+				.layerName, .imageName {
 					flex: 1;
 					display: flex;
 					align-items: center;
 					background: #bbb;
+					min-width: 0;
+					padding: 0.4em;
+				}
+
+				.layerName {
 					cursor: pointer;
 
 					&:hover {
@@ -30,6 +35,12 @@
 					.layerName, .layerName:hover {
 						background: #999;
 					}
+				}
+
+				.imageName {
+					user-select: all;
+					word-break: break-all;
+					overflow-wrap: anywhere;
 				}
 			}
 		}

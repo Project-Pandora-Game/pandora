@@ -119,8 +119,6 @@ export class MockDatabase implements PandoraDatabase {
 			name: info.name,
 			created: -1,
 			accessId: nanoid(8),
-			bones: [],
-			assets: [],
 		};
 
 		acc.characters.push(info);

@@ -140,8 +140,6 @@ export default class MongoDatabase implements PandoraDatabase {
 				name: info.name,
 				created: -1,
 				accessId: nanoid(8),
-				bones: [],
-				assets: [],
 			};
 
 			await this._accounts.updateOne({ id: accountId }, { $push: { characters: info } });

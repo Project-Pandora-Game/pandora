@@ -16,6 +16,7 @@ export const CharacterSize = {
 export type Rectangle = Coordinates & Size;
 
 export type ConditionOperator = '=' | '<' | '<=' | '>' | '>=' | '!=';
+export const CONDITION_OPERATORS: readonly ConditionOperator[] = ['=', '<', '<=', '>', '>=', '!='];
 export interface AtomicCondition {
 	bone: string;
 	operator: ConditionOperator;
@@ -53,7 +54,7 @@ export interface PointDefinition {
 }
 
 export type LayerImageOverride = { image: string; condition: Condition; };
-export const enum LayerPriority {
+export enum LayerPriority {
 	BACKGROUND,
 	BELOW_BODY,
 	BODY,

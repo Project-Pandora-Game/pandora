@@ -17,6 +17,7 @@ import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
 import { AssetId, GetLogger } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
+import { DraggablePoint } from './graphics/draggable';
 
 const logger = GetLogger('Editor');
 
@@ -36,6 +37,7 @@ export class Editor extends TypedEventEmitter<{
 
 	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
 	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
+	public readonly targetPoint = new Observable<DraggablePoint | null>(null);
 
 	constructor(manager: GraphicsManager) {
 		super();
@@ -50,6 +52,10 @@ export class Editor extends TypedEventEmitter<{
 			if (layer && this.targetAsset.value !== layer.asset) {
 				logger.error('Set target layer with non-matching target asset', layer, this.targetAsset.value);
 				this.targetLayer.value = null;
+				layer = null;
+			}
+			if (this.targetPoint.value?.layer !== layer) {
+				this.targetPoint.value = null;
 			}
 		});
 
@@ -117,6 +123,17 @@ export class Editor extends TypedEventEmitter<{
 				alpha: newAlpha,
 			});
 		}
+	}
+
+	public getLayerTint(layer: AssetGraphicsLayer): number {
+		return this.getLayerStateOverride(layer)?.color ?? 0xffffff;
+	}
+
+	public setLayerTint(layer: AssetGraphicsLayer, tint: number): void {
+		this.setLayerStateOverride(layer, {
+			...this.getLayerStateOverride(layer),
+			color: tint,
+		});
 	}
 
 	public startEditAsset(asset: AssetId): void {

@@ -6,6 +6,7 @@ import { IGraphicsLoader } from '../../../assets/graphicsManager';
 import { LoadArrayBufferTexture, StripAssetHash } from '../../../graphics/utility';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Editor } from '../../editor';
+import { cloneDeep } from 'lodash';
 
 export class AppearanceEditor extends Appearance {
 
@@ -48,7 +49,6 @@ export class EditorAssetGraphics extends AssetGraphics {
 			imageOverrides: [],
 		});
 		this.layers = [...this.layers, newLayer];
-		newLayer.buildPoints();
 		this.onChange();
 	}
 
@@ -95,6 +95,50 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
+	setLayerPriority(layer: AssetGraphicsLayer, priority: LayerPriority): void {
+		if (layer.mirror && layer.isMirror) {
+			layer = layer.mirror;
+		}
+
+		layer.definition.priority = priority;
+
+		layer.onChange();
+		this.onChange();
+	}
+
+	public layerMirrorFrom(layer: AssetGraphicsLayer, source: number | null): void {
+		if (layer.mirror && layer.isMirror)
+			return this.layerMirrorFrom(layer.mirror, source);
+
+		if (!this.layers.includes(layer)) {
+			throw new Error('Cannot configure unknown layer');
+		}
+
+		if (source === layer.index) {
+			throw new Error('Cannot mirror layer from itself');
+		}
+
+		if (source === null) {
+			if (typeof layer.definition.points === 'number') {
+				const points = this.layers[layer.definition.points].definition.points;
+				if (!Array.isArray(points)) {
+					throw new Error('More than one jump in points reference');
+				}
+				layer.definition.points = cloneDeep(points);
+				layer.onChange();
+			}
+			return;
+		}
+
+		const sourceLayer = this.layers[source];
+		if (!Array.isArray(sourceLayer?.definition.points)) {
+			throw new Error('Cannot mirror from layer that doesn\'t have own points');
+		}
+
+		layer.definition.points = source;
+		layer.onChange();
+	}
+
 	private makePointDependenciesMap(): Map<AssetGraphicsLayer, AssetGraphicsLayer> {
 		const result = new Map<AssetGraphicsLayer, AssetGraphicsLayer>();
 		for (const layer of this.layers) {
@@ -119,13 +163,12 @@ export class EditorAssetGraphics extends AssetGraphics {
 				}
 				if (layer.definition.points !== sourceIndex) {
 					layer.definition.points = sourceIndex;
-					layer.updateMirror();
 					changed.push(layer);
 				}
 			}
 		}
 		for (const layer of changed) {
-			layer.buildPoints();
+			layer.onChange();
 		}
 	}
 
@@ -190,8 +233,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 				}
 			}
 			if (shouldUpdate) {
-				layer.updateMirror();
-				layer.buildPoints();
+				layer.onChange();
 			}
 		}
 		return Promise.allSettled(

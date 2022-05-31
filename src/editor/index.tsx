@@ -70,6 +70,8 @@ function ButtonLoadFromFileSystem({ pending, setPending }: { pending: boolean, s
 		try {
 			const manager = await LoadAssetsFromFileSystem();
 			EditorInstance.value = new Editor(manager);
+			// @ts-expect-error: Expose editor instance to console
+			window.editor = EditorInstance.value;
 		} catch (e) {
 			logger.error('Failed to load assets:', e);
 			setPending(false);
@@ -94,6 +96,8 @@ function ButtonLoadDirectLink({ pending, setPending }: { pending: boolean, setPe
 		try {
 			const manager = await LoadAssetsFromDirectLink();
 			EditorInstance.value = new Editor(manager);
+			// @ts-expect-error: Expose editor instance to console
+			window.editor = EditorInstance.value;
 		} catch (e) {
 			logger.error('Failed to load assets:', e);
 			setPending(false);

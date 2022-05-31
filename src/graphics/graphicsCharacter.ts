@@ -1,5 +1,5 @@
-import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId } from 'pandora-common';
-import type { LayerState } from './def';
+import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority } from 'pandora-common';
+import { LayerState, PRIORITY_ORDER_ARMS_FRONT } from './def';
 import { AtomicCondition, TransformDefinition } from 'pandora-common/dist/assets';
 import { Container } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
@@ -76,6 +76,19 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		return result;
 	}
 
+	public getSortOrder(): readonly LayerPriority[] {
+		return PRIORITY_ORDER_ARMS_FRONT;
+	}
+
+	protected sortLayers(toSort: LayerState[]): LayerState[] {
+		const sortOrder = this.getSortOrder();
+		return toSort.sort((a, b) => {
+			const aPriority = sortOrder.indexOf(a.layer.definition.priority);
+			const bPriority = sortOrder.indexOf(b.layer.definition.priority);
+			return aPriority - bPriority;
+		});
+	}
+
 	protected createLayer(layer: AssetGraphicsLayer): GraphicsLayer {
 		return new GraphicsLayer(layer, this);
 	}
@@ -90,7 +103,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 				graphics.destroy();
 			}
 		}
-		for (const layerState of this._layers) {
+		this.sortLayers(this._layers.slice()).forEach((layerState, index) => {
 			let graphics = this._graphicsLayers.get(layerState);
 			if (!graphics) {
 				graphics = this.createLayer(layerState.layer);
@@ -100,7 +113,8 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			} else {
 				graphics.update({ state: layerState.state, bones });
 			}
-		}
+			graphics.zIndex = index;
+		});
 		this.sortChildren();
 	}
 

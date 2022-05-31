@@ -117,7 +117,7 @@ function AssetImageList({ editor, asset }: { editor: Editor; asset: EditorAssetG
 	for (const image of imageList) {
 		elements.push(
 			<li key={ image }>
-				<span className='imageName'>{image.replace(/\.png$/i, '')}</span>
+				<span className='imageName'>{ image }</span>
 				<Button className='slim' aria-label='delete' onClick={ () => {
 					if (!confirm(`Delete image '${image}'?`))
 						return;

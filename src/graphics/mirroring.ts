@@ -1,4 +1,5 @@
-import { CharacterSize, Condition, PointDefinition, TransformDefinition } from 'pandora-common';
+import { CharacterSize, Condition, LayerImageOverride, PointDefinition, TransformDefinition } from 'pandora-common';
+import { PointDefinitionCalculated } from '../assets/assetGraphics';
 
 /** formatting for `<T extends (...)>` is different for ESLint and VS Code */
 type Maybe<T> = T | undefined;
@@ -37,6 +38,10 @@ export function MirrorTransform(transform: TransformDefinition): TransformDefini
 	}
 }
 
+export function MirrorImageOverride({ image, condition }: LayerImageOverride): LayerImageOverride {
+	return { image, condition: MirrorCondition(condition) };
+}
+
 export function MirrorPoint(point: PointDefinition): PointDefinition {
 	return {
 		pos: point.pos,
@@ -46,17 +51,28 @@ export function MirrorPoint(point: PointDefinition): PointDefinition {
 	};
 }
 
-export function MakeMirroredPoints(point: PointDefinition): [PointDefinition] | [PointDefinition, PointDefinition] {
+export function MakeMirroredPoints(point: PointDefinitionCalculated): [PointDefinitionCalculated] | [PointDefinitionCalculated, PointDefinitionCalculated] {
 	if (!point.mirror)
 		return [point];
 
 	const { pos, transforms, pointType } = point;
 	const type = pointType && (pos[0] < CharacterSize.WIDTH / 2 ? `${pointType}_r` : `${pointType}_l`);
 
-	return [{ ...point, mirror: false, pointType: type }, {
+	const point1: PointDefinitionCalculated = {
+		...point,
+		pointType: type,
+	};
+
+	const point2: PointDefinitionCalculated = {
+		...point,
 		pos: [CharacterSize.WIDTH - pos[0], pos[1]],
 		transforms: transforms.map(MirrorTransform),
-		mirror: true,
 		pointType: MirrorBoneLike(type),
-	}];
+		isMirror: true,
+	};
+
+	point1.mirrorPoint = point2;
+	point2.mirrorPoint = point1;
+
+	return [point1, point2];
 }

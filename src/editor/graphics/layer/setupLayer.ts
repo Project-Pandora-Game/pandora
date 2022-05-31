@@ -1,13 +1,11 @@
-import type { PointDefinition } from 'pandora-common/dist/assets';
-import { Graphics, Container, Texture } from 'pixi.js';
-import { Draggable } from '../draggable';
+import { Graphics, Container } from 'pixi.js';
+import { DraggablePoint } from '../draggable';
 import { EditorLayer } from './editorLayer';
-import dotTexture from '../../../assets/editor/dotTexture.png';
+import Delaunator from 'delaunator';
+import { SelectPoints } from '../../../graphics/graphicsLayer';
 
 export class SetupLayer extends EditorLayer {
 	private _wireFrame?: Graphics;
-	private _allPoints?: Container;
-	private _allPointsCleanup: (() => void)[] = [];
 
 	protected override calculateVertices(): boolean {
 		this.vertices = new Float64Array(this.points
@@ -21,6 +19,9 @@ export class SetupLayer extends EditorLayer {
 		if (this._wireFrame) {
 			this._drawWireFrame(this._wireFrame);
 		}
+		if (this._allPoints) {
+			this.updateAllPoints();
+		}
 	}
 
 	protected show(value: boolean): void {
@@ -30,24 +31,14 @@ export class SetupLayer extends EditorLayer {
 				this.character.addChild(this._wireFrame).zIndex = EditorLayer.Z_INDEX_EXTRA;
 				this.character.sortChildren();
 			}
-			if (!this._allPoints) {
-				this._allPoints = this.makeAllPoints();
-				this.character.addChild(this._allPoints).zIndex = EditorLayer.Z_INDEX_EXTRA;
-				this.character.sortChildren();
-			}
+			this.updateAllPoints();
 		} else {
 			if (this._wireFrame) {
 				this.character.removeChild(this._wireFrame);
 				this._wireFrame.destroy();
 				this._wireFrame = undefined;
 			}
-			if (this._allPoints) {
-				this.character.removeChild(this._allPoints);
-				this._allPointsCleanup.forEach((cleanup) => cleanup());
-				this._allPointsCleanup = [];
-				this._allPoints.destroy();
-				this._allPoints = undefined;
-			}
+			this.removeAllPoints();
 		}
 	}
 
@@ -61,61 +52,62 @@ export class SetupLayer extends EditorLayer {
 
 	private _drawWireFrame(graphics: Graphics) {
 		graphics.clear();
-		graphics.lineStyle(2, 0x333333, 0.3);
+
 		const coords = this.points.map((point) => point.pos);
+		graphics.lineStyle(1, 0x555555, 0.1);
+
+		const delaunator = new Delaunator(this.points.flatMap((point) => point.pos));
+		const triangles: number[] = [];
+		for (let i = 0; i < delaunator.triangles.length; i += 3) {
+			const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
+			graphics.drawPolygon(t.flatMap((p) => coords[p]));
+			if (t.every((tp) => SelectPoints(this.points[tp], this.layer.definition.pointType, this.layer.side))) {
+				triangles.push(...t);
+			}
+		}
+
+		graphics.lineStyle(2, 0x333333, 0.3);
 		for (let i = 0; i < this.triangles.length; i += 3) {
 			const poly = [0, 1, 2].map((p) => coords[this.triangles[i + p]]);
 			graphics.drawPolygon(poly.flat());
 		}
 	}
 
-	private makeAllPoints(): Container {
-		const container = new Container();
+	private _allPoints?: Container;
+	private _draggablePoints: DraggablePoint[] = [];
 
-		const createDraggable = (point: PointDefinition, _index: number) => {
-			const draggable = new Draggable({
-				createTexture: () => Texture.from(dotTexture),
-				setPos: (_, x, y) => {
-					point.pos = [x, y];
-					// point.updatePair(['pos']);
-					this.layer.buildPoints();
-				},
-			});
-
-			draggable.x = point.pos[0];
-			draggable.y = point.pos[1];
-			// if (point.isMirrored()) {
-			// 	draggable.tint = 0x00ff00;
-			// }
-
-			container.addChild(draggable);
-
-			return draggable;
-		};
-
-		const dots = this.points.map(createDraggable);
-
-		this._allPointsCleanup.push(this.layer.on('change', () => {
-			const points = this.points;
-			if (points.length < dots.length) {
-				for (let i = dots.length - 1; i >= points.length; i--) {
-					container.removeChild(dots[i]);
-					dots[i].destroy();
-				}
-				dots.splice(points.length);
+	private removeAllPoints(): void {
+		if (this._allPoints) {
+			this.character.removeChild(this._allPoints);
+			this._allPoints.destroy();
+			this._allPoints = undefined;
+			const editor = this.character.editor;
+			if (editor.targetPoint.value && this._draggablePoints.includes(editor.targetPoint.value)) {
+				editor.targetPoint.value = null;
 			}
-			for (let i = 0; i < points.length; i++) {
-				dots[i].x = points[i].pos[0];
-				dots[i].y = points[i].pos[1];
-			}
-			if (points.length > dots.length) {
-				for (let i = dots.length; i < points.length; i++) {
-					dots.push(createDraggable(points[i], i));
-				}
-			}
-		}));
+			this._draggablePoints = [];
+		}
+	}
 
-		return container;
+	private updateAllPoints(): void {
+		if (this._allPoints && this._draggablePoints.length === this.points.length) {
+			for (let i = 0; i < this.points.length; i++) {
+				this._draggablePoints[i].updatePoint(this.points[i]);
+			}
+			return;
+		}
+
+		this.removeAllPoints();
+		this._allPoints = new Container();
+
+		this._draggablePoints = this.points.map((definition) => {
+			const point = new DraggablePoint(this.character.editor, this.layer, definition);
+			this._allPoints?.addChild(point.draggable);
+			return point;
+		});
+
+		this.character.addChild(this._allPoints).zIndex = EditorLayer.Z_INDEX_EXTRA;
+		this.character.sortChildren();
 	}
 
 	override destroy() {

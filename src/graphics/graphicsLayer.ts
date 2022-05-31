@@ -4,7 +4,7 @@ import { Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pi
 import { GraphicsCharacter } from './graphicsCharacter';
 import { Conjunction, EvaluateCondition } from './utility';
 import Delaunator from 'delaunator';
-import { AssetGraphicsLayer } from '../assets/assetGraphics';
+import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
 Mesh.BATCHABLE_SIZE = 1000000;
@@ -21,7 +21,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	private _result!: Mesh | Sprite;
 	private _state?: LayerStateOverrides;
 
-	protected points: PointDefinition[] = [];
+	protected points: PointDefinitionCalculated[] = [];
 	protected vertices = new Float64Array();
 
 	protected get texture(): Texture {
@@ -81,6 +81,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	}
 
 	protected updateState(state?: LayerStateOverrides): void {
+		this._state = state;
 		const { color = 0xffffff, alpha = 1 } = state ?? {};
 		if (color !== this._result.tint) {
 			this._result.tint = color;
@@ -122,7 +123,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		// causing (most likely) overlap, which would result in clipping.
 		// In some other cases this could lead to gaps or other visual artifacts
 		// Any optimization of unused points needs to be done *after* triangles are calculated
-		this.points = this.layer.finalPoints;
+		this.points = this.layer.calculatePoints();
 
 		this._bones = new Set(
 			this.points
@@ -166,7 +167,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	}
 }
 
-function SelectPoints({ pointType }: PointDefinition, pointTypes?: string[], side?: LayerSide): boolean {
+export function SelectPoints({ pointType }: PointDefinition, pointTypes?: string[], side?: LayerSide): boolean {
 	if (!pointType || !pointTypes)
 		return true;
 

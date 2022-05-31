@@ -1,4 +1,6 @@
+import { LayerPriority } from 'pandora-common';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { PRIORITY_ORDER_SPRITES } from '../../../graphics/def';
 import { GraphicsLayer } from '../../../graphics/graphicsLayer';
 import { Editor } from '../../editor';
 import { Draggable } from '../draggable';
@@ -9,6 +11,10 @@ export class SetupCharacter extends GraphicsCharacterEditor {
 	constructor(editor: Editor) {
 		super(editor);
 		this._addBones();
+	}
+
+	public override getSortOrder(): readonly LayerPriority[] {
+		return PRIORITY_ORDER_SPRITES;
 	}
 
 	protected override createLayer(layer: AssetGraphicsLayer): GraphicsLayer {

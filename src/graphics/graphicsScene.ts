@@ -9,7 +9,7 @@ const GRAPHICS_WIDTH = CharacterSize.WIDTH;
 
 export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	private readonly _app: Application;
-	private readonly _container: PixiViewport.Viewport;
+	readonly container: PixiViewport.Viewport;
 	private element: HTMLElement | undefined;
 	private readonly resizeObserver: ResizeObserver;
 
@@ -29,12 +29,12 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 			resolution: window.devicePixelRatio || 1,
 			antialias: true,
 		});
-		this._container = new PixiViewport.Viewport({
+		this.container = new PixiViewport.Viewport({
 			worldHeight: GRAPHICS_HEIGHT,
 			worldWidth: GRAPHICS_WIDTH,
 			interaction: this._app.renderer.plugins.interaction as InteractionManager,
 		});
-		this._container
+		this.container
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
 			.bounce({
@@ -47,11 +47,11 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 			})
 			.pinch({ noDrag: false, percent: 2 })
 			.decelerate({ friction: 0.7 });
-		this._container.sortableChildren = true;
-		const border = this._container.addChild(new Graphics());
+		this.container.sortableChildren = true;
+		const border = this.container.addChild(new Graphics());
 		border.zIndex = 2;
 		border.clear().lineStyle(2, 0x404040).drawRect(0, 0, GRAPHICS_WIDTH, GRAPHICS_HEIGHT);
-		this._app.stage.addChild(this._container);
+		this._app.stage.addChild(this.container);
 	}
 
 	renderTo(element: HTMLElement): () => void {
@@ -79,23 +79,23 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		this._app.resize();
 		const width = this._app.screen.width;
 		const height = this._app.screen.height;
-		this._container.resize(width, height);
-		this._container.clampZoom({
+		this.container.resize(width, height);
+		this.container.clampZoom({
 			minScale: Math.min(height / GRAPHICS_HEIGHT, width / GRAPHICS_WIDTH) * 0.9,
 			maxScale: 2,
 		});
-		this._container.fit();
+		this.container.fit();
 		this.emit('resize', undefined);
 	}
 
 	add<T extends Container>(container: T, zIndex: number = 0): T {
-		const result = this._container.addChild(container);
+		const result = this.container.addChild(container);
 		result.zIndex = zIndex;
 		return result;
 	}
 
 	remove(container: Container): void {
-		this._container.removeChild(container);
+		this.container.removeChild(container);
 	}
 
 	private _background = '';

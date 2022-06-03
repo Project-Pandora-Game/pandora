@@ -3,6 +3,11 @@ import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceU
 import type { MessageHandler } from './message_handler';
 import type { ShardFeature } from './shard_directory';
 
+export type IDirectoryStatus = {
+	time: number;
+	betaKeyRequired?: true;
+};
+
 export type IDirectoryAccountInfo = {
 	id: number;
 	username: string;
@@ -25,6 +30,9 @@ export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'room
 
 /** Directory->Client handlers */
 interface DirectoryClient {
+	/** Generic message for Directory's current status */
+	serverStatus(arg: IDirectoryStatus): void;
+
 	connectionState(arg: {
 		account: IDirectoryAccountInfo | null,
 		character: IDirectoryCharacterConnectionInfo | null,

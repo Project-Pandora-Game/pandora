@@ -32,8 +32,8 @@ interface ClientDirectory {
 		token: { value: string; expires: number; },
 		account: IDirectoryAccountInfo,
 	};
-	register(arg: { username: string; passwordSha512: string; email: string; }): {
-		result: 'ok' | 'usernameTaken' | 'emailTaken',
+	register(arg: { username: string; passwordSha512: string; email: string; betaKey?: string }): {
+		result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey',
 	};
 	resendVerificationEmail(arg: { email: string; }): {
 		result: 'maybeSent',

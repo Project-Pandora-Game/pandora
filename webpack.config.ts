@@ -45,7 +45,7 @@ export default function (env: WebpackEnv): Configuration {
 				serveIndex: true,
 			},
 		},
-		devtool: env.prod ? false : 'eval-source-map',
+		devtool: env.prod ? 'source-map' : 'eval-source-map',
 		entry: {
 			'index': join(SRC_DIR, 'index.tsx'),
 			// eslint-disable-next-line @typescript-eslint/naming-convention

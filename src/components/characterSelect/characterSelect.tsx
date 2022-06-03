@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { ChangeEventEmmiter, DirectoryConnector } from '../../networking/socketio_directory_connector';
 import { usePlayerData } from '../../character/player';
 import './characterSelect.scss';
-import { NODE_ENV } from '../../config/Environment';
+import { USER_DEBUG } from '../../config/Environment';
 import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
 
 /**
@@ -33,7 +33,7 @@ export function CharacterSelect(): ReactElement {
 				return;
 			}
 			const { characters } = result;
-			if (!AutoSelectDone && NODE_ENV === 'development' && LastSelectedCharacter.value !== undefined && characters.some((c) => c.id === LastSelectedCharacter.value)) {
+			if (!AutoSelectDone && USER_DEBUG && LastSelectedCharacter.value !== undefined && characters.some((c) => c.id === LastSelectedCharacter.value)) {
 				AutoSelectDone = true;
 				setState('Reconnecting to last character...');
 				if (await ConnectToCharacter(LastSelectedCharacter.value))

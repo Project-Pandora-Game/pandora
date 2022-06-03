@@ -8,6 +8,7 @@ import './index.scss';
 import { PandoraRoutes } from './Routes';
 import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
+import { NODE_ENV, USER_DEBUG } from './config/Environment';
 
 const logger = GetLogger('init');
 
@@ -21,6 +22,7 @@ Start().catch((error) => {
 async function Start(): Promise<void> {
 	SetupLogging();
 	logger.info('Starting...');
+	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
 			<Header />

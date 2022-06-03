@@ -1,11 +1,12 @@
 import { toast } from 'react-toastify';
 import { DIRECTORY_ADDRESS } from '../config/Environment';
-import { EMPTY, GetLogger, ICharacterSelfInfo, IDirectoryClientChangeEvents, ConnectionBase, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny, HTTP_HEADER_CLIENT_REQUEST_SHARD } from 'pandora-common';
+import { EMPTY, GetLogger, ICharacterSelfInfo, IDirectoryClientChangeEvents, ConnectionBase, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny, HTTP_HEADER_CLIENT_REQUEST_SHARD, IDirectoryStatus } from 'pandora-common';
 import { GetAuthData, HandleDirectoryConnectionState } from './account_manager';
 import { connect, Socket } from 'socket.io-client';
 import { ConnectToShard } from './socketio_shard_connector';
 import { TypedEventEmitter } from '../event';
 import { PersistentToast } from '../persistentToast';
+import { Observable } from '../observable';
 
 const logger = GetLogger('DirConn');
 
@@ -40,6 +41,10 @@ function CreateConnection(uri: string): Socket {
 
 const DirectoryConnectionProgress = new PersistentToast();
 
+export const DirectoryStatus = new Observable<IDirectoryStatus>({
+	time: Date.now(),
+});
+
 /** Class housing connection from Shard to Directory */
 export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> {
 
@@ -60,6 +65,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 
 		// Setup message handler
 		const handler = new MessageHandler<IDirectoryClientBase>({}, {
+			serverStatus: (status) => {
+				DirectoryStatus.value = status;
+			},
 			connectionState: HandleDirectoryConnectionState,
 			somethingChanged: ({ changes }) => ChangeEventEmmiter.onSomethingChanged(changes),
 		});

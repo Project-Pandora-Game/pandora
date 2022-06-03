@@ -1,6 +1,7 @@
-import { IChatRoomClientData, IChatRoomMessage, GetLogger, CharacterId, ICharacterPublicData, IChatroomMessageChat, IChatroomMessageAction, IChatroomMessageEmote, AssertNever } from 'pandora-common';
+import { IChatRoomClientData, IChatRoomMessage, GetLogger, CharacterId, ICharacterPublicData, IChatroomMessageChat, IChatroomMessageAction, AssertNever, RoomId, IChatroomMessageEmote } from 'pandora-common';
 import { ChatActionDictionaryMetaEntry } from 'pandora-common/dist/chatroom/chatActions';
-import { NODE_ENV } from '../config/Environment';
+import { BrowserStorage } from '../browserStorage';
+import { USER_DEBUG } from '../config/Environment';
 import { TypedEventEmitter } from '../event';
 import type { SocketIOShardConnector } from '../networking/socketio_shard_connector';
 import { Observable } from '../observable';
@@ -79,6 +80,12 @@ function ProcessMessage(message: IChatRoomMessage): IChatroomMessageProcessed {
 	AssertNever(message.type);
 }
 
+/** Used for restoring chat contents on window reload */
+export const LastRoomChat = BrowserStorage.createSession<undefined | {
+	roomId: RoomId;
+	messages: IChatroomMessageProcessed[];
+}>('lastRoomChat', undefined);
+
 export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 
 	public readonly data = new Observable<IChatRoomClientData | null>(null);
@@ -102,6 +109,9 @@ export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 			if (oldData && oldData.id !== data.id) {
 				logger.debug('Changed room');
 				this.onLeave();
+			}
+			if (USER_DEBUG && oldData?.id !== data.id && LastRoomChat.value?.roomId === data.id) {
+				this.messages.value = LastRoomChat.value.messages;
 			}
 			this.updateCharacters(data.characters);
 			this.emit('load', data);
@@ -153,6 +163,12 @@ export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 			...this.messages.value,
 			...processedMessages,
 		];
+		if (USER_DEBUG && this.data.value) {
+			LastRoomChat.value = {
+				roomId: this.data.value.id,
+				messages: this.messages.value,
+			};
+		}
 
 		processedMessages.forEach((message) => {
 			this.emit('message', message);
@@ -173,7 +189,10 @@ type RoomEvents = {
 };
 
 // Debug helper
-if (NODE_ENV === 'development') {
+if (USER_DEBUG) {
 	//@ts-expect-error: Development link
 	window.Room = Room;
+} else {
+	// Clear the info that should be saved only in debug mode
+	LastRoomChat.value = undefined;
 }

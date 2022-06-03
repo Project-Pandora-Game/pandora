@@ -1,6 +1,6 @@
 import { ICharacterData, GetLogger } from 'pandora-common';
 import { useEffect, useState } from 'react';
-import { NODE_ENV } from '../config/Environment';
+import { USER_DEBUG } from '../config/Environment';
 import { ShardConnector } from '../networking/socketio_shard_connector';
 import { Observable, useObservable } from '../observable';
 import { Character } from './character';
@@ -43,7 +43,7 @@ export function usePlayerData(): Readonly<ICharacterData> | null {
 }
 
 // Debug helper
-if (NODE_ENV === 'development') {
+if (USER_DEBUG) {
 	//@ts-expect-error: Development link
 	window.Player = Player;
 }

@@ -2,16 +2,22 @@ import { AssertNever, IsEmail, IsObject, IsUsername } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { DirectoryRegister } from '../../networking/account_manager';
+import { DirectoryStatus } from '../../networking/socketio_directory_connector';
+import { useObservable } from '../../observable';
 import { Button } from '../common/Button/Button';
 import './login.scss';
 
 export function Registration(): ReactElement {
+	const directoryStatus = useObservable(DirectoryStatus);
 	// React States
 	const [username, setUsername] = useState('');
 	const [mail, setMail] = useState('');
 	const [password, setPassword] = useState('');
 	const [passwordRetyped, setPasswordRetyped] = useState('');
+	const [betaKey, setBetaKey] = useState('');
 	const [errorMessage, setErrorMessage] = useState({ element: '', message: '' });
+
+	const betaKeyRequired = !!directoryStatus.betaKeyRequired;
 
 	const navigate = useNavigate();
 	const locationState = useLocation().state;
@@ -45,7 +51,7 @@ export function Registration(): ReactElement {
 			return;
 		}
 		void (async () => {
-			const result = await DirectoryRegister(username, password, mail);
+			const result = await DirectoryRegister(username, password, mail, betaKey || undefined);
 
 			if (result === 'ok') {
 				setErrorMessage({ element: '', message: '' });
@@ -59,6 +65,8 @@ export function Registration(): ReactElement {
 				setErrorMessage({ element: 'uname', message: 'Username already taken' });
 			} else if (result === 'emailTaken') {
 				setErrorMessage({ element: 'mail', message: 'Email already in use' });
+			} else if (result === 'invalidBetaKey') {
+				setErrorMessage({ element: 'beta', message: 'Invalid beta key provided' });
 			} else {
 				AssertNever(result);
 			}
@@ -109,6 +117,15 @@ export function Registration(): ReactElement {
 							onChange={ (event) => setPasswordRetyped(event.target.value) } required />
 						{ renderErrorMessage('pass2') }
 					</div>
+					{
+						betaKeyRequired &&
+						<div className='input-container'>
+							<label>Beta Key </label>
+							<input autoComplete='off' type='text' name='beta' value={ betaKey }
+								onChange={ (event) => setBetaKey(event.target.value) } />
+							{ renderErrorMessage('beta') }
+						</div>
+					}
 					<Button type='submit'>Register</Button>
 				</form>
 			</div>

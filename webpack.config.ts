@@ -13,6 +13,7 @@ import packageJson from './package.json';
 const {
 	DIRECTORY_ADDRESS = 'http://127.0.0.1:25560',
 	WEBPACK_DEV_SERVER_PORT = '6969',
+	USER_DEBUG = 'false',
 } = config().parsed ?? {};
 
 const SRC_DIR = join(__dirname, 'src');
@@ -78,6 +79,7 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 				VERSION: packageJson.version,
 				GAME_NAME,
 				DIRECTORY_ADDRESS,
+				USER_DEBUG,
 			}),
 			/* eslint-enable @typescript-eslint/naming-convention */
 		}),

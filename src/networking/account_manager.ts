@@ -102,9 +102,9 @@ export async function DirectoryLogin(username: string, password: string, verific
  * @param email - A plaintext email
  * @returns Promise of response from Directory
  */
-export async function DirectoryRegister(username: string, password: string, email: string): Promise<'ok' | 'usernameTaken' | 'emailTaken'> {
+export async function DirectoryRegister(username: string, password: string, email: string, betaKey?: string): Promise<'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey'> {
 	const passwordSha512 = await PrehashPassword(password);
-	const result = await DirectoryConnector.awaitResponse('register', { username, passwordSha512, email });
+	const result = await DirectoryConnector.awaitResponse('register', { username, passwordSha512, email, betaKey });
 	return result.result;
 }
 

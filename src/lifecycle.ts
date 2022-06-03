@@ -2,6 +2,7 @@ import { GetLogger } from 'pandora-common';
 import { accountManager } from './account/accountManager';
 import { CloseDatabase } from './database/databaseProvider';
 import { StopHttpServer } from './networking/httpServer';
+import { ConnectionManagerClient } from './networking/manager_client';
 import { ShardManager } from './shard/shardManager';
 
 const logger = GetLogger('Lifecycle');
@@ -12,6 +13,8 @@ const STOP_TIMEOUT = 10_000;
 async function StopGracefully(): Promise<void> {
 	// Stop HTTP server
 	StopHttpServer();
+	// Stop sending status updates
+	ConnectionManagerClient.onDestroy();
 	// Unload all shards
 	ShardManager.onDestroy();
 	// Unload all accounts

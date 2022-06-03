@@ -193,6 +193,7 @@ describe('ClientConnection', () => {
 			const client2 = new ClientConnection(connection2.connect(), {});
 			client.setAccount(account);
 			client2.setAccount(account);
+			connectionOnMessage.mockClear();
 
 			// Set to first connection
 			client.setCharacter(character);
@@ -241,6 +242,7 @@ describe('ClientConnection', () => {
 	describe('sendConnectionStateUpdate()', () => {
 		it('Sends empty state message', () => {
 			const client = new ClientConnection(connection.connect(), {});
+			connectionOnMessage.mockClear();
 
 			client.sendConnectionStateUpdate();
 
@@ -254,6 +256,7 @@ describe('ClientConnection', () => {
 		it('Sends state message with account', async () => {
 			const account = await TestMockAccount();
 			const client = new ClientConnection(connection.connect(), {});
+			connectionOnMessage.mockClear();
 
 			client.setAccount(account);
 
@@ -271,6 +274,7 @@ describe('ClientConnection', () => {
 			const character = await TestMockCharacter(account);
 			const client = new ClientConnection(connection.connect(), {});
 			client.setAccount(account);
+			connectionOnMessage.mockClear();
 
 			client.setCharacter(character);
 			client.sendConnectionStateUpdate();

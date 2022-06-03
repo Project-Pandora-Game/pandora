@@ -54,3 +54,10 @@ export const DATABASE_NAME = process.env.DATABASE_NAME ?? 'pandora-test';
 export const CHARACTER_LIMIT_NORMAL = 5;
 
 //#endregion
+
+//#region Development
+
+/** Key needed to register, if set */
+export const BETA_KEY = process.env.BETA_KEY ?? '';
+
+//#endregion

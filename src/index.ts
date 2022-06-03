@@ -7,6 +7,7 @@ import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { StartHttpServer } from './networking/httpServer';
 import GetEmailSender from './services/email';
 import { SetupSignalHandling } from './lifecycle';
+import { ConnectionManagerClient } from './networking/manager_client';
 
 const LOG_DIR = './logs';
 const logger = GetLogger('init');
@@ -27,6 +28,7 @@ async function Start(): Promise<void> {
 	await InitDatabase();
 	logger.debug('Initializing managers...');
 	accountManager.init();
+	ConnectionManagerClient.init();
 	logger.debug('Starting HTTP server...');
 	await StartHttpServer();
 }

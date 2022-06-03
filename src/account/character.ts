@@ -1,11 +1,11 @@
-import { CharacterId, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import type { CharacterId, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import type { Account } from './account';
+import type { Shard } from '../shard/shard';
+import type { Room } from '../shard/room';
+import type { IConnectionClient } from '../networking/common';
 import { GetDatabase, ICharacterSelfInfoDb } from '../database/databaseProvider';
-import { Account } from './account';
-import { Shard } from '../shard/shard';
 import { nanoid } from 'nanoid';
 import { ShardManager } from '../shard/shardManager';
-import { IConnectionClient } from '../networking/common';
-import type { Room } from '../shard/room';
 
 export class Character {
 	public readonly id: CharacterId;

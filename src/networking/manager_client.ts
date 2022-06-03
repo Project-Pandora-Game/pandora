@@ -1,9 +1,12 @@
 import { IConnectionClient } from './common';
-import { GetLogger, IsClientDirectoryAuthMessage, IsIChatRoomDirectoryConfig, IsRoomId, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, CreateObjectValidator, CreateBase64Validator, IsCharacterId, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IsString, IsPartialIChatRoomDirectoryConfig } from 'pandora-common';
+import { GetLogger, IsClientDirectoryAuthMessage, IsIChatRoomDirectoryConfig, IsRoomId, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, CreateObjectValidator, CreateBase64Validator, IsCharacterId, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IsString, IsPartialIChatRoomDirectoryConfig, IDirectoryStatus } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
-import { CHARACTER_LIMIT_NORMAL } from '../config';
+import { BETA_KEY, CHARACTER_LIMIT_NORMAL } from '../config';
 import { ShardManager } from '../shard/shardManager';
+
+/** Time (in ms) of how often the directory should send status updates */
+export const STATUS_UPDATE_INTERVAL = 60_000;
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -12,6 +15,28 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	private connectedClients: Set<IConnectionClient> = new Set();
 
 	readonly messageHandler: IClientDirectoryMessageHandler<IConnectionClient>;
+
+	/** Init the manager */
+	public init(): void {
+		if (this.statusUpdateInterval === undefined) {
+			this.statusUpdateInterval = setInterval(this.broadcastStatusUpdate.bind(this), STATUS_UPDATE_INTERVAL).unref();
+		}
+	}
+
+	public onDestroy(): void {
+		if (this.statusUpdateInterval !== undefined) {
+			clearInterval(this.statusUpdateInterval);
+			this.statusUpdateInterval = undefined;
+		}
+	}
+
+	private statusUpdateInterval: NodeJS.Timeout | undefined;
+	private broadcastStatusUpdate() {
+		const status = MakeStatus();
+		for (const connection of this.connectedClients) {
+			connection.sendMessage('serverStatus', status);
+		}
+	}
 
 	constructor() {
 		this.messageHandler = new MessageHandler<IClientDirectoryBase, IConnectionClient>({
@@ -44,6 +69,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	/** Handle new incoming connection */
 	public onConnect(connection: IConnectionClient, auth: unknown): void {
 		this.connectedClients.add(connection);
+		// Send current server status to the client
+		connection.sendMessage('serverStatus', MakeStatus());
 		// Check if connect-time authentication is valid and process it
 		if (IsClientDirectoryAuthMessage(auth)) {
 			this.handleAuth(connection, auth)
@@ -127,10 +154,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		}
 	}
 
-	private async handleRegister({ username, email, passwordSha512 }: IClientDirectoryUnconfirmedArgument['register'], connection: IConnectionClient): IClientDirectoryPromiseResult['register'] {
+	private async handleRegister({ username, email, passwordSha512, betaKey }: IClientDirectoryUnconfirmedArgument['register'], connection: IConnectionClient): IClientDirectoryPromiseResult['register'] {
 		// Verify content of the message
 		if (connection.isLoggedIn() || !IsUsername(username) || !IsEmail(email) || !IsPasswordSha512(passwordSha512))
 			throw new BadMessageError();
+
+		if (BETA_KEY && betaKey !== BETA_KEY)
+			return { result: 'invalidBetaKey' };
 
 		const result = await accountManager.createAccount(username, passwordSha512, email);
 		if (typeof result === 'string')
@@ -412,3 +442,14 @@ const IsUpdateCharacter = CreateObjectValidator({
 	id: IsCharacterId,
 	preview: CreateBase64Validator(),
 }, { noExtraKey: true });
+
+/** Create a server status object to be sent to clients */
+function MakeStatus(): IDirectoryStatus {
+	const result: IDirectoryStatus = {
+		time: Date.now(),
+	};
+	if (BETA_KEY) {
+		result.betaKeyRequired = true;
+	}
+	return result;
+}

@@ -1,6 +1,7 @@
-import { Appearance, ICharacterData } from 'pandora-common';
+import { Appearance, APPEARANCE_BUNDLE_DEFAULT, ICharacterData } from 'pandora-common';
 import { Character, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterData } from '../../src/character/character';
 import { renderHook, act } from '@testing-library/react-hooks';
+import { cloneDeep } from 'lodash';
 
 const mockData: ICharacterData = {
 	id: 'c123',
@@ -33,10 +34,7 @@ describe('Character', () => {
 			const update: Partial<ICharacterData> = {
 				id: 'c321',
 				accessId: 'updatedId',
-				appearance: {
-					items: [],
-					pose: {},
-				},
+				appearance: cloneDeep(APPEARANCE_BUNDLE_DEFAULT),
 			};
 			const mockImport = jest.spyOn(Appearance.prototype, 'importFromBundle');
 			mock.update(update);
@@ -85,10 +83,7 @@ describe('useCharacterAppearanceItems()', () => {
 		const update: Partial<ICharacterData> = {
 			id: 'c321',
 			accessId: 'updatedId',
-			appearance: {
-				items: [],
-				pose: {},
-			},
+			appearance: cloneDeep(APPEARANCE_BUNDLE_DEFAULT),
 		};
 		act(() => {
 			mock.update(update);
@@ -113,10 +108,7 @@ describe('useCharacterAppearancePose()', () => {
 		const update: Partial<ICharacterData> = {
 			id: 'c321',
 			accessId: 'updatedId',
-			appearance: {
-				items: [],
-				pose: {},
-			},
+			appearance: cloneDeep(APPEARANCE_BUNDLE_DEFAULT),
 		};
 		act(() => {
 			mock.update(update);

@@ -106,16 +106,12 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	public layerMirrorFrom(layer: AssetGraphicsLayer, source: number | null): void {
+	public layerMirrorFrom(layer: AssetGraphicsLayer, source: number | string | null): void {
 		if (layer.mirror && layer.isMirror)
 			return this.layerMirrorFrom(layer.mirror, source);
 
 		if (!this.layers.includes(layer)) {
 			throw new Error('Cannot configure unknown layer');
-		}
-
-		if (source === layer.index) {
-			throw new Error('Cannot mirror layer from itself');
 		}
 
 		if (source === null) {
@@ -128,6 +124,20 @@ export class EditorAssetGraphics extends AssetGraphics {
 				layer.onChange();
 			}
 			return;
+		}
+
+		if (typeof source === 'string') {
+			const template = this.editor.pointTemplates.get(source);
+			if (!template) {
+				throw new Error('Unknown point template');
+			}
+			layer.definition.points = cloneDeep(template);
+			layer.onChange();
+			return;
+		}
+
+		if (source === layer.index) {
+			throw new Error('Cannot mirror layer from itself');
 		}
 
 		const sourceLayer = this.layers[source];

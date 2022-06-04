@@ -58,7 +58,8 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	public update({ bones = new Set(), state, force }: { bones?: Set<string>, state?: LayerStateOverrides, force?: boolean; }): void {
 		let update = false;
 		if (Conjunction(this._bones, bones) || force) {
-			update = this.calculateVertices();
+			this.calculateVertices();
+			update = true;
 		}
 		if (Conjunction(this._imageBones, bones) || force) {
 			update = this.calculateTexture() || update;
@@ -152,11 +153,9 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		this._triangles = new Uint32Array(triangles);
 	}
 
-	protected calculateVertices(): boolean {
+	protected calculateVertices(): void {
 		this.vertices = new Float64Array(this.points
 			.flatMap((point) => this.character.evalTransform(this.mirrorPoint(point.pos), point.transforms, point.mirror)));
-
-		return true;
 	}
 
 	protected mirrorPoint([x, y]: CoordinatesCompressed): CoordinatesCompressed {

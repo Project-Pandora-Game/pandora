@@ -15,6 +15,7 @@ export abstract class EditorLayer extends GraphicsLayer<GraphicsCharacterEditor>
 		super(layer, character);
 		this._cleanups.push(this.layer.on('change', this._pointUpdate.bind(this)));
 		this._cleanups.push(this.character.editor.targetLayer.subscribe(() => this.update({})));
+		this._cleanups.push(this.character.editor.targetPoint.subscribe(() => this.update({})));
 	}
 
 	protected override getTexture(image: string): Promise<Texture> {

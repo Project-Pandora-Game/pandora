@@ -55,6 +55,13 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 			);
 		}
 	}
+	// Add point template options
+	for (const t of asset.editor.pointTemplates.keys()) {
+		const id = `t/${t}`;
+		elements.push(
+			<option value={ id } key={ id }>Template: { t }</option>,
+		);
+	}
 	return (
 		<>
 			<div>
@@ -64,7 +71,13 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 					id='mirror-points-from-layer'
 					value={ typeof points === 'number' ? `${points}` : '' }
 					onChange={ (event) => {
-						asset.layerMirrorFrom(layer, event.target.value ? Number.parseInt(event.target.value) : null);
+						let source: number | string | null = null;
+						if (event.target.value.startsWith('t/')) {
+							source = event.target.value.substring(2);
+						} else if (event.target.value) {
+							source = Number.parseInt(event.target.value);
+						}
+						asset.layerMirrorFrom(layer, source);
 					} }
 				>
 					{ elements }

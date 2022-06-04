@@ -1,4 +1,4 @@
-import { Graphics, Container } from 'pixi.js';
+import { Graphics, Container, Sprite } from 'pixi.js';
 import { DraggablePoint } from '../draggable';
 import { EditorLayer } from './editorLayer';
 import Delaunator from 'delaunator';
@@ -24,7 +24,12 @@ export class SetupLayer extends EditorLayer {
 		}
 	}
 
+	private _showSprite: boolean = false;
 	protected show(value: boolean): void {
+		if (value !== this._showSprite) {
+			this._showSprite = value;
+			this.update({ force: true });
+		}
 		if (value) {
 			if (!this._wireFrame) {
 				this._wireFrame = this.makeWireFrame();
@@ -39,6 +44,14 @@ export class SetupLayer extends EditorLayer {
 				this._wireFrame = undefined;
 			}
 			this.removeAllPoints();
+		}
+	}
+
+	protected override updateChild(): void {
+		if (this._showSprite) {
+			this.result = new Sprite(this.texture);
+		} else {
+			super.updateChild();
 		}
 	}
 
@@ -67,8 +80,8 @@ export class SetupLayer extends EditorLayer {
 		}
 
 		graphics.lineStyle(2, 0x333333, 0.3);
-		for (let i = 0; i < this.triangles.length; i += 3) {
-			const poly = [0, 1, 2].map((p) => coords[this.triangles[i + p]]);
+		for (let i = 0; i < triangles.length; i += 3) {
+			const poly = [0, 1, 2].map((p) => coords[triangles[i + p]]);
 			graphics.drawPolygon(poly.flat());
 		}
 	}
@@ -90,9 +103,10 @@ export class SetupLayer extends EditorLayer {
 	}
 
 	private updateAllPoints(): void {
+		const targetPoint = this.character.editor.targetPoint.value;
 		if (this._allPoints && this._draggablePoints.length === this.points.length) {
 			for (let i = 0; i < this.points.length; i++) {
-				this._draggablePoints[i].updatePoint(this.points[i]);
+				this._draggablePoints[i].updatePoint(this.points[i], this._draggablePoints[i] === targetPoint);
 			}
 			return;
 		}

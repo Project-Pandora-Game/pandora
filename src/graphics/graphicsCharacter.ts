@@ -1,5 +1,5 @@
-import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority } from 'pandora-common';
-import { LayerState, PRIORITY_ORDER_ARMS_FRONT } from './def';
+import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
+import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT } from './def';
 import { AtomicCondition, TransformDefinition } from 'pandora-common/dist/assets';
 import { Container } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
@@ -13,7 +13,7 @@ export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefin
 
 export class GraphicsCharacter<ContainerType extends AppearanceContainer = AppearanceContainer> extends Container {
 	protected graphicsGetter: GraphicsGetterFunction | undefined;
-	protected readonly appearanceContainer: ContainerType;
+	readonly appearanceContainer: ContainerType;
 	private _layers: LayerState[] = [];
 	private _pose: Record<BoneName, number> = {};
 
@@ -34,10 +34,10 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	}
 
 	protected update(changes: AppearanceChangeType[]): void {
-		let update = false;
+		if (changes.length === 0)
+			return;
 		if (changes.includes('items')) {
 			this._layers = this.buildLayers();
-			update = true;
 		}
 		const updatedBones = new Set<string>();
 		if (changes.includes('pose')) {
@@ -45,14 +45,11 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			for (const bone of newPose) {
 				if (this._pose[bone.definition.name] !== bone.rotation) {
 					updatedBones.add(bone.definition.name);
-					update = true;
 					this._pose[bone.definition.name] = bone.rotation;
 				}
 			}
 		}
-		if (update) {
-			this.layerUpdate(updatedBones);
-		}
+		this.layerUpdate(updatedBones);
 	}
 
 	protected buildLayers(): LayerState[] {
@@ -60,11 +57,11 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			return [];
 		const result: LayerState[] = [];
 		for (const item of this.appearanceContainer.appearance.getAllItems()) {
-			if (!item.asset.definition.hasGraphics)
-				continue;
 			const graphics = this.graphicsGetter(item.asset.id);
 			if (!graphics) {
-				logger.warning(`Asset ${item.asset.id} hasGraphics, but no graphics found`);
+				if (item.asset.definition.hasGraphics) {
+					logger.warning(`Asset ${item.asset.id} hasGraphics, but no graphics found`);
+				}
 				continue;
 			}
 			result.push(
@@ -77,7 +74,13 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	}
 
 	public getSortOrder(): readonly LayerPriority[] {
-		return PRIORITY_ORDER_ARMS_FRONT;
+		const armsPose = this.appearanceContainer.appearance.getArmsPose();
+		if (armsPose === ArmsPose.FRONT) {
+			return PRIORITY_ORDER_ARMS_FRONT;
+		} else if (armsPose === ArmsPose.BACK) {
+			return PRIORITY_ORDER_ARMS_BACK;
+		}
+		AssertNever(armsPose);
 	}
 
 	protected sortLayers(toSort: LayerState[]): LayerState[] {
@@ -176,7 +179,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	}
 	//#endregion
 
-	private getBone(name: string): BoneState {
+	public getBone(name: string): BoneState {
 		return this.appearanceContainer.appearance.getPose(name);
 	}
 }

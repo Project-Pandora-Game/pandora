@@ -1,10 +1,11 @@
 import { Texture, Sprite, InteractionEvent, DisplayObject } from 'pixi.js';
-import { CharacterSize, PointDefinition } from 'pandora-common';
-import { Clamp } from '../../graphics/utility';
+import { BoneDefinition, CharacterSize, PointDefinition } from 'pandora-common';
+import { Clamp, GetAngle, RotateVector } from '../../graphics/utility';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../../assets/assetGraphics';
 import dotTexture from '../../assets/editor/dotTexture.png';
 import { Editor } from '../editor';
 import { TypedEventEmitter } from '../../event';
+import type { GraphicsCharacterEditor } from './character/editorCharacter';
 
 type DraggableProps = {
 	createTexture?: () => Texture;
@@ -80,14 +81,18 @@ export class DraggablePoint extends TypedEventEmitter<{
 			setPos: (_, x, y) => this.setPos(x, y),
 		});
 		this.layer = layer;
-		this.updatePoint(point);
+		this.updatePoint(point, false);
 	}
 
-	public updatePoint(point: PointDefinitionCalculated) {
+	public updatePoint(point: PointDefinitionCalculated, isSelected: boolean) {
 		this.point = point;
 		this.draggable.x = point.pos[0];
 		this.draggable.y = point.pos[1];
-		this.draggable.tint = point.isMirror ? 0x00ff00 : 0xffffff;
+		if (isSelected) {
+			this.draggable.tint = point.isMirror ? 0xaaff00 : 0xffff00;
+		} else {
+			this.draggable.tint = point.isMirror ? 0x00ff00 : 0xffffff;
+		}
 		this.emit('change', undefined);
 	}
 
@@ -149,7 +154,7 @@ export class DraggablePoint extends TypedEventEmitter<{
 		return this._getDefinitionLocation()[1].transforms;
 	}
 
-	public setTransforms(value:  PointDefinition['transforms']): void {
+	public setTransforms(value: PointDefinition['transforms']): void {
 		const [layer, point] = this._getDefinitionLocation();
 		point.transforms = value;
 		layer.onChange();
@@ -165,3 +170,81 @@ export class DraggablePoint extends TypedEventEmitter<{
 		layer.onChange();
 	}
 }
+
+export class DraggableBone {
+	readonly draggable: Draggable;
+
+	readonly character: GraphicsCharacterEditor;
+	readonly definition: BoneDefinition;
+	readonly isResult: boolean;
+
+	constructor(character: GraphicsCharacterEditor, definition: BoneDefinition, isResult: boolean) {
+		this.draggable = new Draggable({
+			createTexture: () => Texture.from(dotTexture),
+			setPos: (_, x, y) => this.setPos(x, y),
+		});
+		this.draggable.tint = 0xff00ff;
+		this.draggable.alpha = 0.8;
+
+		this.character = character;
+		this.definition = definition;
+		this.isResult = isResult;
+
+		this.update();
+	}
+
+	private _rotation: number = 0;
+
+	private setPos(x: number, y: number): void {
+		if (this.isResult) {
+			let bx = this.definition.x;
+			let by = this.definition.y;
+			if (this.definition.parent) {
+				[bx, by] = this.character.evalTransform([bx, by], [{ type: 'rotate', bone: this.definition.parent.name, value: this.definition.isMirror ? -1 : 1 }], this.definition.isMirror);
+			}
+			let angle = GetAngle(x - bx, y - by);
+			if (this.definition.isMirror) {
+				angle = ((180 + 360) - angle) % 360;
+			}
+			if (this.definition.parent) {
+				const parentBone = this.character.getBone(this.definition.parent.name);
+				angle -= parentBone.rotation;
+			}
+			let rotation = angle - (this.definition.baseRotation ?? 0);
+			rotation = (Math.round(rotation)) % 360;
+			if (rotation > 180) {
+				rotation -= 360;
+			}
+			this.character.appearanceContainer.appearance.setPose(this.definition.name, rotation);
+		}
+	}
+
+	setRotation(rotation: number): void {
+		this._rotation = (Math.round(rotation)) % 360;
+		if (this._rotation > 180) {
+			this._rotation -= 360;
+		}
+		this.update();
+	}
+
+	private update(): void {
+		if (this.isResult) {
+			let angle = this._rotation + (this.definition.baseRotation ?? 0);
+			let x = this.definition.x;
+			let y = this.definition.y;
+			if (this.definition.parent) {
+				const parentBone = this.character.getBone(this.definition.parent.name);
+				angle += parentBone.rotation;
+				[x, y] = this.character.evalTransform([x, y], [{ type: 'rotate', bone: this.definition.parent.name, value: this.definition.isMirror ? -1 : 1 }], this.definition.isMirror);
+			}
+			if (this.definition.isMirror) {
+				angle = 180 - angle;
+			}
+			const [shiftX, shiftY] = RotateVector(20, 0, angle);
+			this.draggable.position.set(x + shiftX, y + shiftY);
+		} else {
+			this.draggable.position.set(this.definition.x, this.definition.y);
+		}
+	}
+}
+

@@ -106,7 +106,7 @@ function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactEl
 	}
 
 	const asset = item.asset;
-	const graphics = asset.definition.hasGraphics ? editor.getAssetGraphicsById(asset.id) : undefined;
+	const graphics = editor.getAssetGraphicsById(asset.id);
 
 	const alphaIndex = useSyncExternalStore<number>(editor.getSubscriber('layerOverrideChange'), () => editor.getLayersAlphaOverrideIndex(...(graphics?.allLayers ?? [])));
 

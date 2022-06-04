@@ -14,10 +14,11 @@ import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger } from 'pandora-common';
+import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, PointDefinition } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
+import { cloneDeep } from 'lodash';
 
 const logger = GetLogger('Editor');
 
@@ -33,7 +34,7 @@ export class Editor extends TypedEventEmitter<{
 	public readonly setupScene: EditorSetupScene;
 	public readonly resultScene: EditorResultScene;
 
-	public readonly showBones = new Observable<boolean>(true);
+	public readonly showBones = new Observable<boolean>(false);
 
 	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
 	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
@@ -64,8 +65,19 @@ export class Editor extends TypedEventEmitter<{
 		this.setupScene = new EditorSetupScene(this);
 		this.resultScene = new EditorResultScene(this);
 
+		// Load some point templates
+		const body = manager.getAssetGraphicsById('a/base/body');
+		if (body) {
+			for (const layer of body.layers) {
+				if (Array.isArray(layer.definition.points)) {
+					this.pointTemplates.set(layer.name, cloneDeep(layer.definition.points));
+				}
+			}
+		}
+
 		/* eslint-disable @typescript-eslint/naming-convention */
 		this.character.appearance.importFromBundle({
+			...APPEARANCE_BUNDLE_DEFAULT,
 			items: [
 				{ id: 'i/body', asset: 'a/base/body' },
 			],
@@ -156,6 +168,8 @@ export class Editor extends TypedEventEmitter<{
 		}
 		this.targetAsset.value = graphics;
 	}
+
+	public readonly pointTemplates = new Map<string, PointDefinition[]>();
 }
 
 export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: boolean): readonly AssetGraphicsLayer[] {
@@ -192,7 +206,7 @@ export function EditorView({ editor }: { editor: Editor }): ReactElement {
 					<TabSelector />
 					<Routes>
 						<Route path='*' element={ <AssetsUI editor={ editor } /> } />
-						<Route path='/bones' element={ <BoneUI character={ editor.character } /> } />
+						<Route path='/bones' element={ <BoneUI editor={ editor } /> } />
 						<Route path='/asset' element={ <AssetUI editor={ editor } /> } />
 						<Route path='/layer' element={ <LayerUI editor={ editor } /> } />
 						<Route path='/points' element={ <PointsUI editor={ editor } /> } />

@@ -1,9 +1,10 @@
-import { LayerPriority } from 'pandora-common';
+import { AppearanceChangeType, LayerPriority } from 'pandora-common';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { GetAssetManager } from '../../../assets/assetManager';
 import { PRIORITY_ORDER_SPRITES } from '../../../graphics/def';
 import { GraphicsLayer } from '../../../graphics/graphicsLayer';
 import { Editor } from '../../editor';
-import { Draggable } from '../draggable';
+import { DraggableBone } from '../draggable';
 import { SetupLayer } from '../layer';
 import { GraphicsCharacterEditor } from './editorCharacter';
 
@@ -21,21 +22,24 @@ export class SetupCharacter extends GraphicsCharacterEditor {
 		return new SetupLayer(layer, this);
 	}
 
+	protected override update(changes: AppearanceChangeType[]): void {
+		super.update(changes);
+		if (changes.includes('pose')) {
+			for (const bone of this._draggableBones) {
+				bone.setRotation(this.getBone(bone.definition.name).rotation);
+			}
+		}
+	}
+
+	private _draggableBones: DraggableBone[] = [];
 	private _addBones(): void {
-		for (const bone of this.appearanceContainer.appearance.getFullPose()) {
-			if (bone.definition.x === 0 && bone.definition.y === 0)
+		for (const bone of GetAssetManager().getAllBones()) {
+			if (bone.x === 0 || bone.y === 0)
 				continue;
 
-			const draggable = new Draggable({
-				setPos: (sprite, x, y) => {
-					sprite.x = bone.definition.x = x;
-					sprite.y = bone.definition.y = y;
-				},
-			});
-
-			draggable.x = bone.definition.x;
-			draggable.y = bone.definition.y;
-			this.boneLayer.addChild(draggable);
+			const draggableBone = new DraggableBone(this, bone, false);
+			this._draggableBones.push(draggableBone);
+			this.boneLayer.addChild(draggableBone.draggable);
 		}
 	}
 }

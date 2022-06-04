@@ -1,15 +1,45 @@
-import { BoneState } from 'pandora-common';
-import React, { ReactElement } from 'react';
-import { AppearanceContainer, useCharacterAppearancePose } from '../../../character/character';
+import { BoneState, ArmsPose } from 'pandora-common';
+import React, { ReactElement, useSyncExternalStore } from 'react';
+import { useCharacterAppearancePose } from '../../../character/character';
 import { Button } from '../../../components/common/Button/Button';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { useObservable } from '../../../observable';
+import { Editor } from '../../editor';
 import './bones.scss';
 
-export function BoneUI({ character }: { character: AppearanceContainer }): ReactElement {
+export function BoneUI({ editor }: { editor: Editor }): ReactElement {
+	const character = editor.character;
+
 	const bones = useCharacterAppearancePose(character);
+	const armsPose = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
+		if (change.includes('pose')) {
+			onChange();
+		}
+	}), () => character.appearance.getArmsPose());
+	const showBones = useObservable(editor.showBones);
 
 	return (
 		<div className='bone-ui'>
+			<div>
+				<label>Show bone points</label>
+				<input
+					type='checkbox'
+					checked={ showBones }
+					onChange={ (e) => {
+						editor.showBones.value = e.target.checked;
+					} }
+				/>
+			</div>
+			<div>
+				<label>Arms are in front of the body</label>
+				<input
+					type='checkbox'
+					checked={ armsPose === ArmsPose.FRONT }
+					onChange={ (e) => {
+						character.appearance.setArmsPose(e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK);
+					} }
+				/>
+			</div>
 			<h3>Bones</h3>
 			{bones.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } />)}
 		</div>

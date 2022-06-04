@@ -103,7 +103,7 @@ export class AssetManager {
 
 			this._bones.set(bone.mirror, this.createBone(bone.mirror, {
 				...bone,
-			}, parent, newBone));
+			}, parent?.mirror ?? parent, newBone));
 
 		}
 		if (allNext && hasNext) {
@@ -120,7 +120,9 @@ export class AssetManager {
 			name,
 			x: mirror ? CharacterSize.WIDTH - x : x,
 			y,
+			baseRotation: bone.baseRotation,
 			mirror,
+			isMirror: mirror !== undefined,
 			parent,
 		};
 		if (mirror) {

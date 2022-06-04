@@ -7,14 +7,21 @@ import { Item, ItemBundle, ItemId } from './item';
 
 export type BoneName = string;
 
+export enum ArmsPose {
+	FRONT,
+	BACK,
+}
+
 export interface AppearanceBundle {
 	items: ItemBundle[];
 	pose: Record<BoneName, number>;
+	handsPose: ArmsPose;
 }
 
 export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
 	items: [],
 	pose: {},
+	handsPose: ArmsPose.FRONT,
 };
 
 export type AppearanceChangeType = 'items' | 'pose';
@@ -27,11 +34,12 @@ export class Appearance {
 	private items: readonly Item[] = [];
 	private readonly pose = new Map<BoneName, BoneState>();
 	private fullPose: readonly BoneState[] = [];
+	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
 
 	constructor(assetMananger: AssetManager, onChange?: (changes: AppearanceChangeType[]) => void) {
 		this.assetMananger = assetMananger;
+		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;
-		this.reloadAssetManager(assetMananger);
 	}
 
 	protected makeItem(id: ItemId, asset: Asset): Item {
@@ -48,10 +56,16 @@ export class Appearance {
 		return {
 			items: this.items.map((item) => item.exportToBundle()),
 			pose,
+			handsPose: this._armsPose,
 		};
 	}
 
 	public importFromBundle(bundle: AppearanceBundle, logger?: Logger, assetManager?: AssetManager): void {
+		// Simple migration
+		bundle = {
+			...APPEARANCE_BUNDLE_DEFAULT,
+			...bundle,
+		};
 		if (assetManager && this.assetMananger !== assetManager) {
 			this.assetMananger = assetManager;
 		}
@@ -69,13 +83,13 @@ export class Appearance {
 		}
 		this.items = newItems;
 		this.pose.clear();
-		bundle.pose ??= {};
 		for (const bone of this.assetMananger.getAllBones()) {
 			this.pose.set(bone.name, {
 				definition: bone,
 				rotation: Number.isInteger(bundle.pose[bone.name]) ? bundle.pose[bone.name] : 0,
 			});
 		}
+		this._armsPose = bundle.handsPose;
 		this.fullPose = Array.from(this.pose.values());
 		if (logger) {
 			for (const k of Object.keys(bundle.pose)) {
@@ -171,5 +185,16 @@ export class Appearance {
 
 	public getFullPose(): readonly BoneState[] {
 		return this.fullPose;
+	}
+
+	public getArmsPose(): ArmsPose {
+		return this._armsPose;
+	}
+
+	public setArmsPose(value: ArmsPose): void {
+		if (this._armsPose !== value) {
+			this._armsPose = value;
+			this.onChange(['pose']);
+		}
 	}
 }

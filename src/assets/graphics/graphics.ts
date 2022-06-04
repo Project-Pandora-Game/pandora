@@ -37,7 +37,9 @@ export interface BoneDefinition {
 	name: string;
 	x: number;
 	y: number;
+	baseRotation?: number;
 	mirror?: BoneDefinition;
+	isMirror: boolean;
 	parent?: BoneDefinition;
 }
 

@@ -36,6 +36,7 @@ export interface BoneDefinitionCompressed {
 	pos?: CoordinatesCompressed;
 	mirror?: string;
 	parent?: string;
+	baseRotation?: number;
 }
 
 export type PointDefinitionCompressed = {

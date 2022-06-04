@@ -1,3 +1,5 @@
+@import '../styles/utils';
+
 .editor {
 	display: flex;
 	flex-flow: row;
@@ -28,8 +30,7 @@
 	}
 
 	.ui-selector {
-		display: flex;
-		flex-flow: row wrap;
+		@include flex($wrap: wrap);
 		justify-content: center;
 		gap: 1rem;
 	}

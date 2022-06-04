@@ -39,9 +39,7 @@ div.main {
 }
 
 .centerbox {
-	display: flex;
-	justify-content: center;
-	align-items: center;
+	@include center-flex;
 	min-width: 100%;
 	min-height: 100%;
 }

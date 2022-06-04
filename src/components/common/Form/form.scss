@@ -1,0 +1,54 @@
+@import '../../../styles/constants';
+@import '../../../styles/utils';
+
+.Form {
+	@include flex(column);
+	align-items: center;
+	width: 100%;
+	margin: 1rem 0;
+
+	h1 {
+		font-size: 1.8rem;
+		margin-bottom: 1em;
+		text-align: center;
+	}
+
+	p {
+		font-size: 0.9em;
+		margin: 0 0 2em;
+	}
+
+	.FormField {
+		@include flex(column);
+		gap: 0.25em;
+		width: 100%;
+	}
+
+	&.dirty {
+		input:invalid {
+			border-color: $theme-error;
+			outline-color: $theme-error;
+		}
+	}
+
+	.FormErrorMessage {
+		font-size: 0.75em;
+		color: $theme-error;
+		font-weight: 600;
+	}
+
+	.FormFieldError {
+		font-size: 0.85em;
+		color: $theme-error;
+		margin-bottom: 0.8em;
+
+		&.empty:before {
+			content: '\200b';
+		}
+	}
+
+	.FormLink {
+		font-size: 0.95rem;
+		margin-top: 1em;
+	}
+}

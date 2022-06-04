@@ -1,0 +1,16 @@
+@import '../../styles/constants';
+@import '../../styles/utils';
+
+.CharacterCreate {
+	#registration-form {
+		@include center-absolute;
+		padding: 2rem;
+		background-color: $grey-light;
+		box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+		border-radius: 0.2em;
+
+		.Button {
+			margin-top: 2em;
+		}
+	}
+}

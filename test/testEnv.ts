@@ -1,0 +1,4 @@
+export const TEST_DIRECTORY_HOST = 'localhost';
+export const TEST_DIRECTORY_PORT = 25560;
+export const TEST_DIRECTORY_ADDRESS = `http://${ TEST_DIRECTORY_HOST }:${ TEST_DIRECTORY_PORT }`;
+export const TEST_DIRECTORY_WS_ADDRESS = `ws://${ TEST_DIRECTORY_HOST }:${ TEST_DIRECTORY_PORT }`;

@@ -5,7 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Header } from './components/header/Header';
 import './index.scss';
-import { PandoraRoutes } from './Routes';
+import { PandoraRoutes } from './routing/Routes';
 import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
 import { NODE_ENV, USER_DEBUG } from './config/Environment';

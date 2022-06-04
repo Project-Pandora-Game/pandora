@@ -4,6 +4,8 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { Player, usePlayerData } from '../../character/player';
 import { useObservable } from '../../observable';
 import { Button } from '../common/Button/Button';
+import './characterCreate.scss';
+import { Form, FormErrorMessage, FormField } from '../common/Form/form';
 
 export function CharacterCreate(): ReactElement | null {
 	// React States
@@ -50,20 +52,18 @@ export function CharacterCreate(): ReactElement | null {
 	};
 
 	return (
-		<div className='registration'>
-			<div id='registration-form' className='auth-form'>
+		<div className='CharacterCreate'>
+			<div id='registration-form'>
 				<h1 className='title'>Name your character</h1>
-				<div className='form'>
-					<form onSubmit={ handleSubmit }>
-						<div className='input-container'>
-							<label htmlFor='characterName'>Name</label>
-							<input autoComplete='off' type='text' id='characterName' name='characterName' value={ characterName }
-								onChange={ (event) => setCharacterName(event.target.value) } required />
-						</div>
-						{ errorMessage && <div className='error'>{ errorMessage }</div> }
-						<Button type='submit'>Submit</Button>
-					</form>
-				</div>
+				<Form onSubmit={ handleSubmit }>
+					<FormField className='input-container'>
+						<label htmlFor='characterName'>Name</label>
+						<input autoComplete='off' type='text' id='characterName' name='characterName' value={ characterName }
+							onChange={ (event) => setCharacterName(event.target.value) } required />
+					</FormField>
+					{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
+					<Button type='submit'>Submit</Button>
+				</Form>
 			</div>
 		</div>
 	);

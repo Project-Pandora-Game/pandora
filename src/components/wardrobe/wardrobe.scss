@@ -1,3 +1,5 @@
+@import '../../styles/utils';
+
 .wardrobe {
 	display: grid;
 	grid-template:
@@ -112,9 +114,7 @@
 		}
 
 		.itemName {
-			display: flex;
-			align-items: center;
-			justify-content: center;
+			@include center-flex;
 			height: 2em;
 			width: 100%;
 		}

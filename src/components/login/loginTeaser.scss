@@ -1,0 +1,49 @@
+@import '../../styles/constants';
+@import '../../styles/utils';
+
+.LoginTeaser {
+	@include flex(column);
+	background-color: $grey-light;
+	border-radius: 0.2em;
+	padding: 2em 2.5em 1em;
+	box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;;
+
+	.teaser-text {
+		@include center-flex;
+		flex: 1;
+		width: 100%;
+		background-color: $grey-mid;
+		border-top-left-radius: 0.3em;
+		border-top-right-radius: 0.3em;
+		padding: 0.8em;
+	}
+
+	.teaser-image {
+		max-width: 100%;
+		box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+	}
+
+	.teaser-navigation {
+		display: inline-block;
+		text-align: center;
+		padding-top: 1em;
+	}
+
+	.dot {
+		display: inline-block;
+		background-color: $grey-dark;
+		border-radius: 50%;
+		width: 1em;
+		height: 1em;
+		margin-left: 1em;
+
+		&.active {
+			background-color: $theme-link;
+		}
+
+		&:hover {
+			background-color: $grey-lightest;
+			cursor: pointer;
+		}
+	}
+}

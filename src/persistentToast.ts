@@ -29,6 +29,7 @@ export const TOAST_OPTIONS_PENDING: ToastOptions = {
 
 export class PersistentToast {
 	private id: string | number | null = null;
+	private shouldShow: boolean = false;
 
 	public show(style: 'progress' | 'success' | 'error', content: ToastContent): void {
 		let options: ToastOptions;
@@ -42,12 +43,14 @@ export class PersistentToast {
 			AssertNever(style);
 		}
 
+		this.shouldShow = true;
+
 		let id = this.id;
 
 		options.onOpen = () => {
 			if (id === null)
 				return;
-			if (this.id === null) {
+			if (this.id === null && this.shouldShow) {
 				this.id = id;
 			} else if (this.id !== id) {
 				// Toast already replaced by newer one, close this one
@@ -74,6 +77,7 @@ export class PersistentToast {
 	}
 
 	public hide(): void {
+		this.shouldShow = false;
 		if (this.id !== null) {
 			toast.dismiss(this.id);
 			this.id = null;

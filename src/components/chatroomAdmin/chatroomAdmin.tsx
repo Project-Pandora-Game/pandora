@@ -1,14 +1,24 @@
-import React, { ReactElement, useEffect, useReducer, useState } from 'react';
-import { useObservable } from '../../observable';
-import { Room } from '../../character/room';
-import './chatroomAdmin.scss';
-import { ChatRoomFeature, EMPTY, GetLogger, IChatRoomDirectoryConfig, IChatRoomFullInfo, IClientDirectoryNormalResult, IsChatroomName } from 'pandora-common';
+import { noop } from 'lodash';
+import {
+	ChatRoomFeature,
+	EMPTY,
+	GetLogger,
+	IChatRoomDirectoryConfig,
+	IChatRoomFullInfo,
+	IDirectoryShardInfo,
+	IsChatroomName,
+} from 'pandora-common';
+import React, { ReactElement, useCallback, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Button } from '../common/Button/Button';
-import { ChangeEventEmmiter, DirectoryConnector } from '../../networking/socketio_directory_connector';
-import { ConnectToShard } from '../../networking/socketio_shard_connector';
-import { PersistentToast } from '../../persistentToast';
+import { Room } from '../../character/room';
 import { currentAccount } from '../../networking/account_manager';
+import { IDirectoryConnector } from '../../networking/directoryConnector';
+import { ConnectToShard } from '../../networking/socketio_shard_connector';
+import { useObservable } from '../../observable';
+import { PersistentToast } from '../../persistentToast';
+import { Button } from '../common/Button/Button';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/gameContextProvider';
+import './chatroomAdmin.scss';
 
 const DEFAULT_ROOM_DATA: () => IChatRoomDirectoryConfig = () => ({
 	name: '',
@@ -62,27 +72,8 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 		}
 		return result;
 	}, {});
-
-	const [shardInfo, setShardInfo] = useState<IClientDirectoryNormalResult['shardInfo']['shards'] | undefined>(undefined);
-
-	useEffect(() => {
-		let mounted = true;
-		async function listShards() {
-			const result = await DirectoryConnector.awaitResponse('shardInfo', EMPTY);
-			if (!mounted) {
-				return;
-			}
-			setShardInfo(result.shards);
-		}
-		listShards().catch(() => { /** NOOP */ });
-		const changeEventEmmiterCleanup = ChangeEventEmmiter.on('shardList', () => {
-			listShards().catch(() => { /** NOOP */ });
-		});
-		return () => {
-			mounted = false;
-			changeEventEmmiterCleanup();
-		};
-	}, [setShardInfo]);
+	const directoryConnector = useDirectoryConnector();
+	const shards = useShards();
 
 	if (!creation && !roomData) {
 		return <Navigate to='/chatroom_select' />;
@@ -95,7 +86,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 		...roomModifiedData,
 	};
 
-	if (shardInfo && currentConfig.development?.shardId && !shardInfo.some((s) => s.id === currentConfig.development?.shardId)) {
+	if (shards && currentConfig.development?.shardId && !shards.some((s) => s.id === currentConfig.development?.shardId)) {
 		delete currentConfig.development.shardId;
 	}
 
@@ -172,7 +163,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 					<div className='input-container'>
 						<h3>Development settings</h3>
 						<label>Shard for room</label>
-						<select disabled={ !shardInfo } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+						<select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
 							(event) => {
 								const value = event.target.value;
 								setRoomModifiedData({
@@ -184,19 +175,19 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 							}
 						}>
 							{
-								!shardInfo ?
+								!shards ?
 									<option>Loading...</option> :
 									<>
 										<option key='[Auto]' value='[Auto]' >[Auto]</option>
 										{
-											shardInfo.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
+											shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
 										}
 									</>
 							}
 						</select>
 					</div>
 				}
-				<Button onClick={ () => CreateRoom(currentConfig) }>Create room</Button>
+				<Button onClick={ () => CreateRoom(directoryConnector, currentConfig) }>Create room</Button>
 			</div>
 		);
 	}
@@ -218,17 +209,17 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 					}
 				</ul>
 			</div>
-			<Button onClick={ () => UpdateRoom(currentConfig, () => navigate('/chatroom')) }>Update room</Button>
+			<Button onClick={ () => UpdateRoom(directoryConnector, currentConfig, () => navigate('/chatroom')) }>Update room</Button>
 		</div>
 	);
 }
 
 const RoomAdminProgress = new PersistentToast();
 
-function CreateRoom(config: IChatRoomDirectoryConfig): void {
+function CreateRoom(directoryConnector: IDirectoryConnector, config: IChatRoomDirectoryConfig): void {
 	(async () => {
 		RoomAdminProgress.show('progress', 'Creating room...');
-		const result = await DirectoryConnector.awaitResponse('chatRoomCreate', config);
+		const result = await directoryConnector.awaitResponse('chatRoomCreate', config);
 		if (result.result === 'ok') {
 			RoomAdminProgress.show('progress', 'Joining room...');
 			await ConnectToShard(result);
@@ -243,10 +234,10 @@ function CreateRoom(config: IChatRoomDirectoryConfig): void {
 		});
 }
 
-function UpdateRoom(config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () => void): void {
+function UpdateRoom(directoryConnector: IDirectoryConnector, config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () => void): void {
 	(async () => {
 		RoomAdminProgress.show('progress', 'Updating room...');
-		const result = await DirectoryConnector.awaitResponse('chatRoomUpdate', config);
+		const result = await directoryConnector.awaitResponse('chatRoomUpdate', config);
 		if (result.result === 'ok') {
 			RoomAdminProgress.show('success', 'Room updated!');
 			onSuccess?.();
@@ -258,4 +249,22 @@ function UpdateRoom(config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () =>
 			GetLogger('CreateRoom').warning('Error during room update', err);
 			RoomAdminProgress.show('error', `Error during room update:\n${err instanceof Error ? err.message : String(err)}`);
 		});
+}
+
+function useShards(): IDirectoryShardInfo[] | undefined {
+	const [shards, setShards] = useState<IDirectoryShardInfo[]>();
+	const directoryConnector = useDirectoryConnector();
+
+	const fetchShardInfo = useCallback(async () => {
+		const result = await directoryConnector.awaitResponse('shardInfo', EMPTY);
+		if (result && result.shards) {
+			setShards(result.shards);
+		}
+	}, [directoryConnector]);
+
+	useDirectoryChangeListener('shardList', () => {
+		fetchShardInfo().catch(noop);
+	});
+
+	return shards;
 }

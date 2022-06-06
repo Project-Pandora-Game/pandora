@@ -1,13 +1,13 @@
-import React, { KeyboardEvent, ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Button } from '../common/Button/Button';
-import { useObservable } from '../../observable';
-import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, Room } from '../../character/room';
-import { DirectoryConnector } from '../../networking/socketio_directory_connector';
-import './chatroom.scss';
-import { ShardConnector, SocketIOShardConnector } from '../../networking/socketio_shard_connector';
 import { AssertNever, IChatPart, IChatroomMessageEmote, IEmotePart } from 'pandora-common';
 import { CHAT_ACTIONS } from 'pandora-common/dist/chatroom/chatActions';
+import React, { KeyboardEvent, ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, Room } from '../../character/room';
+import { ShardConnector, SocketIOShardConnector } from '../../networking/socketio_shard_connector';
+import { useObservable } from '../../observable';
+import { Button } from '../common/Button/Button';
+import { useDirectoryConnector } from '../gameContext/gameContextProvider';
+import './chatroom.scss';
 
 function MessageSend(connector: SocketIOShardConnector, message: string): void {
 	if (!message.trim())
@@ -48,6 +48,7 @@ function MessageSend(connector: SocketIOShardConnector, message: string): void {
 export function Chatroom(): ReactElement {
 	const roomData = useObservable(Room.data);
 	const navigate = useNavigate();
+	const directoryConnector = useDirectoryConnector();
 
 	if (!roomData) {
 		return <Navigate to='/chatroom_select' />;
@@ -55,7 +56,7 @@ export function Chatroom(): ReactElement {
 
 	return (
 		<div>
-			<Button onClick={ ChatroomLeave }>Leave room</Button>
+			<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
 			<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
 			<br />
 			<p>You are in room { roomData.name }</p>
@@ -191,8 +192,4 @@ function Message({ message }: { message: IChatroomMessageProcessed }): ReactElem
 		);
 	}
 	AssertNever(message.type);
-}
-
-function ChatroomLeave(): void {
-	DirectoryConnector.sendMessage('chatRoomLeave', {});
 }

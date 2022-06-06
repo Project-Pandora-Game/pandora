@@ -1,58 +1,57 @@
+import {
+	CharacterId,
+	ConnectionBase,
+	CreateMessageHandlerOnAny,
+	EMPTY,
+	GetLogger,
+	HTTP_HEADER_CLIENT_REQUEST_SHARD,
+	IClientDirectoryBase,
+	IDirectoryClientBase,
+	IDirectoryClientChangeEvents,
+	IDirectoryStatus,
+	MessageHandler,
+} from 'pandora-common';
 import { toast } from 'react-toastify';
-import { DIRECTORY_ADDRESS } from '../config/Environment';
-import { EMPTY, GetLogger, ICharacterSelfInfo, IDirectoryClientChangeEvents, ConnectionBase, IClientDirectoryBase, MessageHandler, IDirectoryClientBase, CreateMessageHandlerOnAny, HTTP_HEADER_CLIENT_REQUEST_SHARD, IDirectoryStatus } from 'pandora-common';
-import { GetAuthData, HandleDirectoryConnectionState } from './account_manager';
 import { connect, Socket } from 'socket.io-client';
-import { ConnectToShard } from './socketio_shard_connector';
+import { DIRECTORY_ADDRESS } from '../config/Environment';
 import { TypedEventEmitter } from '../event';
+import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
-import { Observable } from '../observable';
+import { GetAuthData, HandleDirectoryConnectionState } from './account_manager';
+import { DirectoryConnectionState, IDirectoryConnector } from './directoryConnector';
+import { ConnectToShard } from './socketio_shard_connector';
 
 const logger = GetLogger('DirConn');
 
-/** State of connection to Directory */
-export enum DirectoryConnectionState {
-	/** The connection has not been attempted yet */
-	NONE,
-	/** Attempting to connect to Directory for the first time */
-	INITIAL_CONNECTION_PENDING,
-	/** Connection to Directory is currently established */
-	CONNECTED,
-	/** Connection to Directory lost, attempting to reconnect */
-	CONNECTION_LOST,
-	/** Connection intentionally closed, cannot be established again */
-	DISCONNECTED,
-}
-
-export const ChangeEventEmmiter = new class ChangeEventEmmiter extends TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
+class DirectoryChangeEventEmitter extends TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
 	onSomethingChanged(changes: IDirectoryClientChangeEvents[]): void {
 		changes.forEach((change) => this.emit(change, true));
 	}
-};
-
-function CreateConnection(uri: string): Socket {
-	// Create the connection without connecting
-	return connect(uri, {
-		autoConnect: false,
-		auth: GetAuthData,
-		withCredentials: true,
-	});
 }
 
-const DirectoryConnectionProgress = new PersistentToast();
-
-export const DirectoryStatus = new Observable<IDirectoryStatus>({
-	time: Date.now(),
-});
-
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> {
+export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> implements IDirectoryConnector {
+
+	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
+	private readonly _directoryStatus = new Observable<IDirectoryStatus>({
+		time: Date.now(),
+	});
+	private readonly _changeEventEmitter = new DirectoryChangeEventEmitter();
+	private readonly _directoryConnectionProgress = new PersistentToast();
 
 	/** Current state of the connection */
-	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;
-	/** Current state of the connection */
-	get state(): DirectoryConnectionState {
+	get state(): ReadonlyObservable<DirectoryConnectionState> {
 		return this._state;
+	}
+
+	/** Directory status data */
+	get directoryStatus(): ReadonlyObservable<IDirectoryStatus> {
+		return this._directoryStatus;
+	}
+
+	/** Event emitter for directory change events */
+	get changeEventEmitter(): TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
+		return this._changeEventEmitter;
 	}
 
 	constructor(uri: string) {
@@ -66,10 +65,10 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		// Setup message handler
 		const handler = new MessageHandler<IDirectoryClientBase>({}, {
 			serverStatus: (status) => {
-				DirectoryStatus.value = status;
+				this._directoryStatus.value = status;
 			},
 			connectionState: HandleDirectoryConnectionState,
-			somethingChanged: ({ changes }) => ChangeEventEmmiter.onSomethingChanged(changes),
+			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
 		});
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
@@ -81,10 +80,15 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 	 * @returns Promise of the connection
 	 */
 	public connect(): Promise<this> {
-		if (this._state !== DirectoryConnectionState.NONE) {
-			throw new Error('connect can only be called once');
-		}
 		return new Promise((resolve) => {
+			if (!DIRECTORY_ADDRESS) {
+				throw new Error('Missing DIRECTORY_ADDRESS');
+			}
+
+			if (this._state.value !== DirectoryConnectionState.NONE) {
+				throw new Error('connect can only be called once');
+			}
+
 			this.setState(DirectoryConnectionState.INITIAL_CONNECTION_PENDING);
 			// Initial connection has shorter timeout
 			this.socket.once('connect', () => {
@@ -97,11 +101,11 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 
 	/** Disconnect from Directory */
 	public disconnect(): void {
-		if (this._state === DirectoryConnectionState.NONE) {
+		if (this._state.value === DirectoryConnectionState.NONE) {
 			this.setState(DirectoryConnectionState.DISCONNECTED);
 			return;
 		}
-		if (this._state === DirectoryConnectionState.DISCONNECTED)
+		if (this._state.value === DirectoryConnectionState.DISCONNECTED)
 			return;
 		this.socket.close();
 		this.setState(DirectoryConnectionState.DISCONNECTED);
@@ -113,43 +117,45 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 	 * @param newState The state to set
 	 */
 	private setState(newState: DirectoryConnectionState): void {
-		const initial = this._state === DirectoryConnectionState.INITIAL_CONNECTION_PENDING;
-		this._state = newState;
+		const initial = this._state.value === DirectoryConnectionState.INITIAL_CONNECTION_PENDING;
+		this._state.value = newState;
 
 		if (newState === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
-			DirectoryConnectionProgress.show('progress', 'Connecting to Directory...');
+			this._directoryConnectionProgress.show('progress', 'Connecting to Directory...');
 		} else if (newState === DirectoryConnectionState.CONNECTED) {
-			DirectoryConnectionProgress.show('success', initial ? 'Connected to Directory' : 'Reconnected to Directory');
+			this._directoryConnectionProgress.show('success', initial ? 'Connected to Directory' : 'Reconnected to Directory');
 		} else if (newState === DirectoryConnectionState.CONNECTION_LOST) {
-			DirectoryConnectionProgress.show('progress', 'Directory connection lost\nReconnecting...');
+			this._directoryConnectionProgress.show('progress', 'Directory connection lost\nReconnecting...');
 		} else if (newState === DirectoryConnectionState.DISCONNECTED) {
-			DirectoryConnectionProgress.hide();
+			this._directoryConnectionProgress.hide();
 		}
 	}
 
 	/** Handle successful connection to Directory */
 	private onConnect(): void {
-		if (this._state === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
+		const currentState = this._state.value;
+		if (currentState === DirectoryConnectionState.INITIAL_CONNECTION_PENDING) {
 			this.setState(DirectoryConnectionState.CONNECTED);
 			logger.info('Connected to Directory');
-		} else if (this._state === DirectoryConnectionState.CONNECTION_LOST) {
+		} else if (currentState === DirectoryConnectionState.CONNECTION_LOST) {
 			this.setState(DirectoryConnectionState.CONNECTED);
 			logger.alert('Re-Connected to Directory');
 		} else {
-			logger.fatal('Assertion failed: received \'connect\' event when in state:', DirectoryConnectionState[this._state]);
+			logger.fatal('Assertion failed: received \'connect\' event when in state:', DirectoryConnectionState[currentState]);
 		}
 	}
 
 	/** Handle loss of connection to Directory */
 	private onDisconnect(reason: Socket.DisconnectReason) {
+		const currentState = this._state.value;
 		// If the disconnect was requested, just ignore this
-		if (this._state === DirectoryConnectionState.DISCONNECTED)
+		if (currentState === DirectoryConnectionState.DISCONNECTED)
 			return;
-		if (this._state === DirectoryConnectionState.CONNECTED) {
+		if (currentState === DirectoryConnectionState.CONNECTED) {
 			this.setState(DirectoryConnectionState.CONNECTION_LOST);
 			logger.alert('Lost connection to Directory:', reason);
 		} else {
-			logger.fatal('Assertion failed: received \'disconnect\' event when in state:', DirectoryConnectionState[this._state]);
+			logger.fatal('Assertion failed: received \'disconnect\' event when in state:', DirectoryConnectionState[currentState]);
 		}
 	}
 
@@ -175,7 +181,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		return true;
 	}
 
-	public async connectToCharacter(id: ICharacterSelfInfo['id']): Promise<boolean> {
+	public async connectToCharacter(id: CharacterId): Promise<boolean> {
 		const data = await this.awaitResponse('connectCharacter', { id });
 		if (data.result !== 'ok') {
 			logger.error('Failed to connect to character:', data);
@@ -192,7 +198,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		return true;
 	}
 
-	public setActiveShardId(id: string | undefined): void {
+	public setActiveShardId(id?: string): void {
 		const extraHeaders = this.socket.io.opts.extraHeaders ?? {};
 		if (id) {
 			extraHeaders[HTTP_HEADER_CLIENT_REQUEST_SHARD] = id;
@@ -205,10 +211,11 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 
 export const DirectoryConnector = new SocketIODirectoryConnector(DIRECTORY_ADDRESS);
 
-export function ConnectToDirectory(): Promise<SocketIODirectoryConnector> {
-	if (!DIRECTORY_ADDRESS) {
-		throw new Error('Missing DIRECTORY_ADDRESS');
-	}
-	// Start
-	return DirectoryConnector.connect();
+function CreateConnection(uri: string): Socket {
+	// Create the connection without connecting
+	return connect(uri, {
+		autoConnect: false,
+		auth: GetAuthData,
+		withCredentials: true,
+	});
 }

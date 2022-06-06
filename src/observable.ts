@@ -1,8 +1,16 @@
 import { useSyncExternalStore } from 'react';
 import { TypedEvent, TypedEventEmitter } from './event';
 
+export type Observer<T> = (value: T) => void;
+export type UnsubscribeCallback = () => void;
+
+export interface ReadonlyObservable<T> {
+	readonly value: T;
+	subscribe(observer: Observer<T>): UnsubscribeCallback;
+}
+
 /** Class that stores value of type T, while allowing subscribers to observe reference changes */
-export class Observable<T> {
+export class Observable<T> implements ReadonlyObservable<T> {
 	private _value: T;
 	private readonly _observers: Set<(value: T) => void> = new Set();
 
@@ -21,21 +29,16 @@ export class Observable<T> {
 			this._value = value;
 			this._observers.forEach((observer) => observer(value));
 		}
-
 	}
 
 	public subscribe(observer: (value: T) => void): () => void {
 		this._observers.add(observer);
 		return () => this._observers.delete(observer);
 	}
-
-	public getSubscriber(): (onStoreChange: () => void) => () => void {
-		return (onStoreChange) => this.subscribe(() => onStoreChange());
-	}
 }
 
-export function useObservable<T>(obs: Observable<T>): T {
-	return useSyncExternalStore(obs.getSubscriber(), () => obs.value);
+export function useObservable<T>(obs: ReadonlyObservable<T>): T {
+	return useSyncExternalStore((cb) => obs.subscribe(cb), () => obs.value);
 }
 
 export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEmitter<T> {

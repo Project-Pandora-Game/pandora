@@ -7,9 +7,9 @@ import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import { usePlayerData } from '../../character/player';
 import { currentAccount, Logout } from '../../networking/account_manager';
-import { DirectoryConnector } from '../../networking/socketio_directory_connector';
 import { ShardConnector } from '../../networking/socketio_shard_connector';
 import { useObservable } from '../../observable';
+import { useDirectoryConnector } from '../gameContext/gameContextProvider';
 import './header.scss';
 import { HeaderButton } from './HeaderButton';
 
@@ -43,13 +43,14 @@ function LeftHeader(): ReactElement {
 }
 
 function CharacterMenu({ close }: { close: () => void }): ReactElement {
+	const directoryConnector = useDirectoryConnector();
 	return (
 		<div className='characterMenu'>
 			<header>Character menu</header>
 			<a onClick={ (ev) => {
 				close();
 				ev.preventDefault();
-				DirectoryConnector.sendMessage('disconnectCharacter', EMPTY);
+				directoryConnector.sendMessage('disconnectCharacter', EMPTY);
 			} }>
 				Change character
 			</a>

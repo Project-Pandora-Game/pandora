@@ -3,10 +3,10 @@ import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { DirectoryRegister } from '../../../networking/account_manager';
-import { DirectoryStatus } from '../../../networking/socketio_directory_connector';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/Button/Button';
 import { Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
+import { useDirectoryConnector } from '../../gameContext/gameContextProvider';
 import { useAuthFormData } from '../authFormDataProvider';
 
 export interface RegistrationFormData {
@@ -18,7 +18,8 @@ export interface RegistrationFormData {
 }
 
 export function RegistrationForm(): ReactElement {
-	const directoryStatus = useObservable(DirectoryStatus);
+	const directoryConnector = useDirectoryConnector();
+	const directoryStatus = useObservable(directoryConnector.directoryStatus);
 	const [usernameTaken, setUsernameTaken] = useState('');
 	const [emailTaken, setEmailTaken] = useState('');
 	const [invalidBetaKey, setInvalidBetaKey] = useState('');

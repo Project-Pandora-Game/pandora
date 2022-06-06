@@ -1,36 +1,19 @@
-import { EMPTY, IClientDirectoryNormalResult, IChatRoomDirectoryInfo, RoomId, GetLogger } from 'pandora-common';
-import React, { ReactElement, useEffect, useState } from 'react';
+import { noop } from 'lodash';
+import { EMPTY, GetLogger, IChatRoomDirectoryInfo, IClientDirectoryNormalResult, RoomId } from 'pandora-common';
+import React, { ReactElement, useCallback, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { ChangeEventEmmiter, DirectoryConnector } from '../../networking/socketio_directory_connector';
-import { ConnectToShard } from '../../networking/socketio_shard_connector';
-import { Button } from '../common/Button/Button';
 import { Room } from '../../character/room';
+import { IDirectoryConnector } from '../../networking/directoryConnector';
+import { ConnectToShard } from '../../networking/socketio_shard_connector';
 import { useObservable } from '../../observable';
 import { PersistentToast } from '../../persistentToast';
+import { Button } from '../common/Button/Button';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/gameContextProvider';
 
 export function ChatroomSelect(): ReactElement {
-	const [info, setInfo] = useState<IClientDirectoryNormalResult['listRooms'] | undefined>(undefined);
 	const navigate = useNavigate();
 	const roomData = useObservable(Room.data);
-
-	useEffect(() => {
-		let mounted = true;
-		async function awaitRooms() {
-			const result = await DirectoryConnector.awaitResponse('listRooms', EMPTY);
-			if (!mounted) {
-				return;
-			}
-			setInfo(result);
-		}
-		awaitRooms().catch(() => { /** NOOP */ });
-		const changeEventEmmiterCleanup = ChangeEventEmmiter.on('roomList', () => {
-			awaitRooms().catch(() => { /** NOOP */ });
-		});
-		return () => {
-			mounted = false;
-			changeEventEmmiterCleanup();
-		};
-	}, [navigate]);
+	const roomList = useRoomList();
 
 	if (roomData) {
 		return <Navigate to='/chatroom' />;
@@ -42,8 +25,8 @@ export function ChatroomSelect(): ReactElement {
 			<Button onClick={ () => navigate('/chatroom_create') }>Create room</Button><br />
 			Existing rooms:<br />
 			<ul>
-				{ info === undefined ? <div className='loading'>Loading...</div> : (
-					info.rooms.map((room) => <RoomEntry key={ room.id } { ...room } />)
+				{ !roomList ? <div className='loading'>Loading...</div> : (
+					roomList.map((room) => <RoomEntry key={ room.id } { ...room } />)
 				) }
 			</ul>
 		</div>
@@ -51,9 +34,10 @@ export function ChatroomSelect(): ReactElement {
 }
 
 function RoomEntry({ id, name, description: _description, hasPassword: _hasPassword, maxUsers, users, protected: _roomIsProtected }: IChatRoomDirectoryInfo): ReactElement {
+	const directoryConnector = useDirectoryConnector();
 	return (
 		<li>
-			<a onClick={ () => void JoinRoom(id) }>{`${name} (${users}/${maxUsers})` }</a>
+			<a onClick={ () => void JoinRoom(directoryConnector, id) }>{`${name} (${users}/${maxUsers})` }</a>
 		</li>
 	);
 }
@@ -62,22 +46,41 @@ const RoomJoinProgress = new PersistentToast();
 
 type ChatRoomEnterResult = IClientDirectoryNormalResult['chatRoomEnter']['result'];
 
-function JoinRoom(id: RoomId): Promise<ChatRoomEnterResult> {
+function JoinRoom(directoryConnector: IDirectoryConnector, id: RoomId): Promise<ChatRoomEnterResult> {
 	return (async (): Promise<ChatRoomEnterResult> => {
 		RoomJoinProgress.show('progress', 'Joining room...');
-		const result = await DirectoryConnector.awaitResponse('chatRoomEnter', {
+		const result = await directoryConnector.awaitResponse('chatRoomEnter', {
 			id,
 		});
 		if (result.result === 'ok') {
 			await ConnectToShard(result);
 			RoomJoinProgress.show('success', 'Room joined!');
 		} else {
-			RoomJoinProgress.show('error', `Failed to join room:\n${result.result}`);
+			RoomJoinProgress.show('error', `Failed to join room:\n${ result.result }`);
 		}
 		return result.result;
 	})().catch<never>((err) => {
 		GetLogger('CreateRoom').warning('Error during room creation', err);
-		RoomJoinProgress.show('error', `Error during room creation:\n${err instanceof Error ? err.message : String(err)}`);
+		RoomJoinProgress.show('error',
+			`Error during room creation:\n${ err instanceof Error ? err.message : String(err) }`);
 		throw err;
 	});
+}
+
+function useRoomList(): IChatRoomDirectoryInfo[] | undefined {
+	const [roomList, setRoomList] = useState<IChatRoomDirectoryInfo[]>();
+	const directoryConnector = useDirectoryConnector();
+
+	const fetchRoomList = useCallback(async () => {
+		const result = await directoryConnector.awaitResponse('listRooms', EMPTY);
+		if (result && result.rooms) {
+			setRoomList(result.rooms);
+		}
+	}, [directoryConnector]);
+
+	useDirectoryChangeListener('roomList', () => {
+		fetchRoomList().catch(noop);
+	});
+
+	return roomList;
 }

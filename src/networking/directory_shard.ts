@@ -1,10 +1,11 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import { CharacterId, IsCharacterId } from '../character';
 import type { MessageHandler } from './message_handler';
-import type { IChatRoomFullInfo, IChatroomsLeaveReasonRecord, RoomId } from '../chatroom/room';
+import type { IChatRoomFullInfo, RoomId } from '../chatroom/room';
 import { IsRoomId } from '../chatroom/validation';
 import { IEmpty } from './empty';
 import { CreateNullableValidator, CreateObjectValidator, IsNumber, IsString } from '../validation';
+import type { IChatroomMessageDirectoryAction } from '../chatroom';
 
 export type IShardCharacterDefinition = {
 	id: CharacterId;
@@ -22,13 +23,17 @@ export const IsIShardCharacterDefinition = CreateObjectValidator<IShardCharacter
 	room: CreateNullableValidator(IsRoomId),
 });
 
+export type IDirectoryShardUpdate = {
+	/** List of characters connected to this shard (both outside and in room) */
+	characters: IShardCharacterDefinition[];
+	/** List of rooms which exist on this shard */
+	rooms: IChatRoomFullInfo[];
+	messages: Record<RoomId, IChatroomMessageDirectoryAction[]>;
+};
+
 /** Directory->Shard handlers */
 interface DirectoryShard {
-	prepareCharacters(arg: {
-		characters: IShardCharacterDefinition[];
-		rooms: IChatRoomFullInfo[];
-		roomLeaveReasons: IChatroomsLeaveReasonRecord;
-	}): void;
+	update(arg: Partial<IDirectoryShardUpdate>): Promise<IEmpty>;
 	stop(arg: IEmpty): IEmpty;
 }
 

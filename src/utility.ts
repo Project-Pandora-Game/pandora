@@ -43,3 +43,11 @@ export function AssertNever(...args: never[]): never {
 export type ArrayCompressType<T, K extends readonly (keyof T)[], Transform extends Partial<Record<keyof T, any>> = { /* empty */ }> = {
 	[N in keyof K]: K[N] extends keyof Transform ? Transform[K[N]] : K[N] extends keyof T ? T[K[N]] : never;
 };
+
+export function NaturalListJoin(list: string[]): string {
+	let res = list.pop() ?? '';
+	if (list.length > 0) {
+		res = `${list.join(', ')} and ${res}`;
+	}
+	return res;
+}

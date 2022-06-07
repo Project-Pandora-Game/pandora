@@ -59,7 +59,7 @@ export type IChatroomMessageEmote = IClientMessageEmote & {
 };
 
 export type IChatroomMessageAction = {
-	type: 'action';
+	type: 'action' | 'serverMessage';
 	/** id to be looked up in message translation database */
 	id: ChatActionId;
 	data?: {
@@ -75,4 +75,9 @@ export type IChatRoomMessageBase = IChatroomMessageChat | IChatroomMessageEmote 
 export type IChatRoomMessage = IChatRoomMessageBase & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+};
+
+export type IChatroomMessageDirectoryAction = IChatroomMessageAction & {
+	/** Time the message was sent, guaranteed to be unique from Directory; not necessarily the final one */
+	directoryTime: number;
 };

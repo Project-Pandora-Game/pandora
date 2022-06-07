@@ -4,6 +4,13 @@ const CHAT_ACTIONS_DEF = {
 	characterDisconnected: 'SOURCE_CHARACTER disconnected.',
 	characterKicked: 'TARGET_CHARACTER has been kicked.',
 	characterBanned: 'TARGET_CHARACTER has been banned.',
+
+	roomUpdatedSingle: `SOURCE_CHARACTER changed the room's CHANGE.`,
+	roomUpdatedMultiple: `SOURCE_CHARACTER changed COUNT room settings:`,
+};
+
+const CHAT_ACTIONS_DEF_FOLDED_EXTRA: Partial<Record<keyof typeof CHAT_ACTIONS_DEF, string>> = {
+	roomUpdatedMultiple: `CHANGES`,
 };
 
 /**
@@ -53,4 +60,8 @@ export type ChatActionId = keyof typeof CHAT_ACTIONS_DEF;
 
 export const CHAT_ACTIONS = new Map<ChatActionId, string>(
 	Array.from(Object.entries<string>(CHAT_ACTIONS_DEF)) as [ChatActionId, string][],
+);
+
+export const CHAT_ACTIONS_FOLDED_EXTRA = new Map<ChatActionId, string>(
+	Array.from(Object.entries<string>(CHAT_ACTIONS_DEF_FOLDED_EXTRA)) as [ChatActionId, string][],
 );

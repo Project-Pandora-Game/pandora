@@ -1,9 +1,9 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
 import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterDataId, ICharacterDataUpdate } from '../character';
-import { IShardCharacterDefinition } from './directory_shard';
-import { IChatRoomFullInfo, IChatroomsLeaveReasonRecord } from '../chatroom';
-import { IEmpty } from './empty';
+import type { IDirectoryShardUpdate, IShardCharacterDefinition } from './directory_shard';
+import type { IChatRoomFullInfo } from '../chatroom';
+import type { IEmpty } from './empty';
 
 export type ShardFeature = 'development';
 const ShardFeatures: Record<ShardFeature, true> = {
@@ -22,14 +22,8 @@ interface ShardDirectory {
 		characters: IShardCharacterDefinition[];
 		disconnectCharacters: CharacterId[];
 		rooms: IChatRoomFullInfo[];
-	}) => {
+	}) => IDirectoryShardUpdate & {
 		shardId: string;
-		/** List of characters connected to this shard (both outside and in room) */
-		characters: IShardCharacterDefinition[];
-		/** List of rooms which exist on this shard */
-		rooms: IChatRoomFullInfo[];
-		/** Dictionary of reasons why character was removed from room. Used to display specific messages (left, disconnected, kicked, ...) */
-		roomLeaveReasons: IChatroomsLeaveReasonRecord;
 	};
 	shardRequestStop: (args: IEmpty) => void;
 	characterDisconnect: (args: { id: CharacterId; reason: 'timeout' | 'error'; }) => void;

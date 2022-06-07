@@ -1,4 +1,3 @@
-import { CharacterId } from '../character';
 import type { ShardFeature } from '../networking/shard_directory';
 
 export type RoomId = `r${string}`;
@@ -61,4 +60,3 @@ export type IChatRoomFullInfo = IChatRoomDirectoryConfig & {
 };
 
 export type IChatRoomLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'kick' | 'ban';
-export type IChatroomsLeaveReasonRecord = Record<RoomId, undefined | Record<CharacterId, undefined | IChatRoomLeaveReason>>;

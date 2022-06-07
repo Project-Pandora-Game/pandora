@@ -1,5 +1,5 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardDirectoryNormalResult, IShardCharacterDefinition, IShardDirectoryPromiseResult, IChatRoomFullInfo, AssertNever, IDirectoryShardArgument } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardDirectoryNormalResult, IShardCharacterDefinition, IShardDirectoryPromiseResult, IChatRoomFullInfo, AssertNever, IDirectoryShardUpdate, RoomId, IChatroomMessageDirectoryAction } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
@@ -7,7 +7,7 @@ import type { Room } from './room';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Sleep } from '../utility';
 import { Account } from '../account/account';
-import { uniq } from 'lodash';
+import { last, uniq } from 'lodash';
 
 export class Shard {
 	public readonly id;
@@ -67,7 +67,7 @@ export class Shard {
 			shardId: this.id,
 			characters: this.makeCharacterSetupList(),
 			rooms: this.makeRoomSetupList(),
-			roomLeaveReasons: this.makeRoomLeaveReasons(),
+			messages: this.makeDirectoryActionMessages(),
 		};
 	}
 
@@ -116,7 +116,7 @@ export class Shard {
 
 			character.accessId = characterData.accessId;
 			this.connectCharacter(character, characterData.connectSecret);
-			room?.addCharacter(character);
+			room?.addCharacter(character, false);
 
 			character.assignedConnection?.sendConnectionStateUpdate();
 			character.account.onCharacterListChange();
@@ -136,7 +136,7 @@ export class Shard {
 			shardId: this.id,
 			characters: this.makeCharacterSetupList(),
 			rooms: this.makeRoomSetupList(),
-			roomLeaveReasons: this.makeRoomLeaveReasons(),
+			messages: this.makeDirectoryActionMessages(),
 		};
 	}
 
@@ -157,9 +157,9 @@ export class Shard {
 		} else if (!this.stopping) {
 			// Do not trigger timeout if we are already stopping
 			this.timeout = setTimeout(this.handleTimeout.bind(this), SHARD_TIMEOUT);
-			if (this.characterListTimeout) {
-				clearTimeout(this.characterListTimeout);
-				this.characterListTimeout = null;
+			if (this.updateTimeout) {
+				clearTimeout(this.updateTimeout);
+				this.updateTimeout = null;
 			}
 		}
 	}
@@ -184,6 +184,15 @@ export class Shard {
 	public onDelete(attemptReassign: boolean): void {
 		this.stopping = true;
 		this.setConnection(null);
+		if (attemptReassign) {
+			[...this.rooms.values()].forEach((room) => {
+				ShardManager
+					.migrateRoom(room)
+					.catch((error) => {
+						this.logger.warning('Room migration failed', error);
+					});
+			});
+		}
 		[...this.characters.values()].forEach((character) => {
 			this.disconnectCharacter(character.id);
 			if (attemptReassign) {
@@ -228,7 +237,7 @@ export class Shard {
 		} else {
 			character.generateConnectSecret();
 		}
-		this.updateCharacterList();
+		this.update('characters');
 
 		character.account.onCharacterListChange();
 
@@ -254,29 +263,69 @@ export class Shard {
 
 		this.characters.delete(id);
 		character.assignedShard = null;
-		this.updateCharacterList();
+		this.update('characters');
 
 		character.account.onCharacterListChange();
 
 		this.logger.debug('Disconnected character', character.id);
 	}
 
-	private characterListTimeout: NodeJS.Timeout | null = null;
+	private updateTimeout: NodeJS.Timeout | null = null;
+	private updateReasons = new Set<keyof IDirectoryShardUpdate>();
 
-	public updateCharacterList(): void {
-		if (!this.shardConnection || this.characterListTimeout != null)
+	public update(...reasons: (keyof IDirectoryShardUpdate)[]): void {
+		reasons.forEach((r) => this.updateReasons.add(r));
+		if (!this.shardConnection || this.updateTimeout != null)
 			return;
 
-		this.characterListTimeout = setTimeout(() => {
-			this.characterListTimeout = null;
-			if (this.stopping)
-				return;
-			this.shardConnection?.sendMessage('prepareCharacters', {
-				characters: this.makeCharacterSetupList(),
-				rooms: this.makeRoomSetupList(),
-				roomLeaveReasons: this.makeRoomLeaveReasons(),
-			});
+		this.updateTimeout = setTimeout(() => {
+			this.updateTimeout = null;
+			void this.sendUpdate();
 		}, 100).unref();
+	}
+
+	private sendUpdate(): Promise<void> {
+		if (this.stopping || !this.shardConnection || this.updateReasons.size === 0)
+			return Promise.resolve();
+
+		const update: Partial<IDirectoryShardUpdate> = {};
+		const updateReasons = Array.from(this.updateReasons);
+		this.updateReasons.clear();
+
+		if (updateReasons.includes('characters')) {
+			update.characters = this.makeCharacterSetupList();
+		}
+		if (updateReasons.includes('rooms')) {
+			update.rooms = this.makeRoomSetupList();
+		}
+		if (updateReasons.includes('messages')) {
+			update.messages = this.makeDirectoryActionMessages();
+		}
+
+		return this.shardConnection
+			.awaitResponse('update', update)
+			.then(
+				() => {
+					// Cleanup pending messages
+					if (update.messages) {
+						for (const room of this.rooms) {
+							if (!update.messages[room.id])
+								continue;
+							const lastMessage = last(update.messages[room.id]);
+							if (lastMessage !== undefined) {
+								const index = room.pendingMessages.indexOf(lastMessage);
+								if (index >= 0) {
+									room.pendingMessages.splice(0, index + 1);
+								}
+							}
+						}
+					}
+				},
+				(err) => {
+					this.logger.warning('Failed to update shard:', err);
+					updateReasons.forEach((r) => this.updateReasons.add(r));
+				},
+			);
 	}
 
 	private makeCharacterSetupList(): IShardCharacterDefinition[] {
@@ -297,10 +346,12 @@ export class Shard {
 		return Array.from(this.rooms.values()).map((r) => r.getFullInfo());
 	}
 
-	private makeRoomLeaveReasons(): IDirectoryShardArgument['prepareCharacters']['roomLeaveReasons'] {
-		const result: IDirectoryShardArgument['prepareCharacters']['roomLeaveReasons'] = {};
+	private makeDirectoryActionMessages(): Record<RoomId, IChatroomMessageDirectoryAction[]> {
+		const result: Record<RoomId, IChatroomMessageDirectoryAction[]> = {};
 		for (const room of this.rooms) {
-			result[room.id] = room.getAndClearLeaveReasons();
+			if (room.pendingMessages.length > 0) {
+				result[room.id] = room.pendingMessages.slice();
+			}
 		}
 		return result;
 	}

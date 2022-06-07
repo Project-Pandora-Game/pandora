@@ -380,7 +380,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			return { result: 'noAccess' };
 		}
 
-		const result = connection.character.room.update(roomConfig);
+		const result = connection.character.room.update(roomConfig, connection.character);
 
 		return { result };
 	}

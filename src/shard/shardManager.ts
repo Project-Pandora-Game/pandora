@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { IChatRoomDirectoryConfig, IDirectoryShardInfo, RoomId } from 'pandora-common';
+import { IChatRoomDirectoryConfig, IChatRoomFullInfo, IDirectoryShardInfo, RoomId } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from './room';
 import { Shard } from './shard';
@@ -90,6 +90,24 @@ export const ShardManager = new class ShardManager {
 		ConnectionManagerClient.onRoomListChange();
 
 		return room;
+	}
+
+	public async migrateRoom(room: Room): Promise<void> {
+		const info: IChatRoomDirectoryConfig & Partial<IChatRoomFullInfo> = {
+			...room.getFullInfo(),
+		};
+		delete info.id;
+
+		this.rooms.delete(room.id);
+
+		const newRoom = this.createRoom(info, undefined, room.id);
+		if (typeof newRoom === 'string') {
+			return Promise.reject(newRoom);
+		}
+
+		await room.migrateTo(newRoom);
+
+		this.destroyRoom(room);
 	}
 
 	/**

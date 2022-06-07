@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatroomMessageAction, IChatroomMessageDirectoryAction } from 'pandora-common';
+import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from './shard';
 import { ShardManager } from './shardManager';
@@ -31,7 +32,7 @@ export class Room {
 		this.shard = shard;
 		shard.rooms.add(this);
 		this.logger.info('Created');
-		shard.updateCharacterList();
+		shard.update('rooms');
 	}
 
 	/** Map of character ids to account id */
@@ -39,19 +40,6 @@ export class Room {
 
 	public get characterCount(): number {
 		return this.characters.size;
-	}
-
-	private readonly leaveReasons: Map<CharacterId, IChatRoomLeaveReason> = new Map();
-	public getAndClearLeaveReasons(): Record<CharacterId, undefined | IChatRoomLeaveReason> | undefined {
-		if (this.leaveReasons.size === 0) {
-			return undefined;
-		}
-		const result: Record<CharacterId, undefined | IChatRoomLeaveReason> = {};
-		for (const [k, v] of this.leaveReasons.entries()) {
-			result[k] = v;
-		}
-		this.leaveReasons.clear();
-		return result;
 	}
 
 	public getJoinedCharacter(id: CharacterId): Character | null {
@@ -87,7 +75,7 @@ export class Room {
 		});
 	}
 
-	public update(changes: Partial<IChatRoomDirectoryConfig>): 'ok' | 'nameTaken' {
+	public update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): 'ok' | 'nameTaken' {
 		if (changes.name) {
 			const otherRoom = ShardManager.getRoomByName(changes.name);
 			if (otherRoom && otherRoom !== this)
@@ -121,9 +109,72 @@ export class Room {
 
 		// Features and development fields are intentionally ignored
 
-		this.shard.updateCharacterList();
+		// Send message about room being updated
+		if (source) {
+			const changeList: string[] = [];
+			if (changes.name)
+				changeList.push(`name to '${changes.name}'`);
+			if (changes.maxUsers !== undefined)
+				changeList.push(`limit to '${changes.maxUsers}'`);
+			if (changes.protected !== undefined)
+				changeList.push(`access to '${this.config.protected ? (this.config.password ? 'protected with password' : 'protected') : 'public'}'`);
+			if (changes.description !== undefined)
+				changeList.push('description');
+			if (changes.admin)
+				changeList.push('admins');
+			if (changes.banned)
+				changeList.push('ban list');
+
+			if (changeList.length >= 2) {
+				this.sendMessage({
+					type: 'serverMessage',
+					id: 'roomUpdatedMultiple',
+					data: {
+						character: source.id,
+					},
+					dictionary: {
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						COUNT: `${changeList.length}`,
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						CHANGES: changeList.map((l) => ` \u2022 ${l}`).join('\n'),
+					},
+				});
+			} else if (changeList.length === 1) {
+				this.sendMessage({
+					type: 'serverMessage',
+					id: 'roomUpdatedSingle',
+					data: {
+						character: source.id,
+					},
+					dictionary: {
+						// eslint-disable-next-line @typescript-eslint/naming-convention
+						CHANGE: changeList[0],
+					},
+				});
+			}
+		}
+
+		this.shard.update('rooms');
 		ConnectionManagerClient.onRoomListChange();
 		return 'ok';
+	}
+
+	public migrateTo(room: Room): Promise<void> {
+		this.logger.info('Migrating to room', room.id);
+		const promises: Promise<unknown>[] = [];
+		for (const character of Array.from(this.characters.values())) {
+			this.removeCharacter(character, 'destroy');
+			promises.push(
+				character
+					.connectToShard({ room, sendEnterMessage: false })
+					.then(() => {
+						character.assignedConnection?.sendConnectionStateUpdate();
+					}, (err) => {
+						this.logger.fatal('Error reconnecting character to different room', err);
+					}),
+			);
+		}
+		return Promise.all(promises).then(() => undefined);
 	}
 
 	public onDestroy(): void {
@@ -132,7 +183,7 @@ export class Room {
 		}
 		this.shard.rooms.delete(this);
 		this.logger.info('Destroyed');
-		this.shard.updateCharacterList();
+		this.shard.update('rooms');
 	}
 
 	public checkAllowEnter(character: Character, password?: string): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
@@ -159,7 +210,7 @@ export class Room {
 		return this.config.admin.includes(character.account.data.id);
 	}
 
-	public addCharacter(character: Character): void {
+	public addCharacter(character: Character, sendEnterMessage: boolean = true): void {
 		if (character.room === this)
 			return;
 		if (this.config.banned.includes(character.account.data.id)) {
@@ -172,7 +223,19 @@ export class Room {
 		this.logger.verbose(`Character ${character.id} entered`);
 		this.characters.add(character);
 		character.room = this;
-		this.shard.updateCharacterList();
+
+		// Report the enter
+		if (sendEnterMessage) {
+			this.sendMessage({
+				type: 'serverMessage',
+				id: 'characterEntered',
+				data: {
+					character: character.id,
+				},
+			});
+		}
+
+		this.shard.update('characters');
 		ConnectionManagerClient.onRoomListChange();
 	}
 
@@ -180,9 +243,33 @@ export class Room {
 		if (character.room !== this)
 			return;
 		this.logger.verbose(`Character ${character.id} removed (${reason})`);
-		this.leaveReasons.set(character.id, reason);
 		this.characters.delete(character);
 		character.room = null;
+
+		// Report the leave
+		let action: ChatActionId | undefined;
+		if (reason === 'leave') {
+			action = 'characterLeft';
+		} else if (reason === 'disconnect') {
+			action = 'characterDisconnected';
+		} else if (reason === 'kick') {
+			action = 'characterKicked';
+		} else if (reason === 'ban') {
+			action = 'characterBanned';
+		} else if (reason === 'destroy') {
+			// Do not report room being destroyed, everyone is removed anyway
+		} else {
+			AssertNever(reason);
+		}
+		if (action) {
+			this.sendMessage({
+				type: 'serverMessage',
+				id: action,
+				data: {
+					character: character.id,
+				},
+			});
+		}
 
 		// If the reason is ban, also actually ban the account and kick any other characters of that account
 		if (reason === 'ban' && !this.config.banned.includes(character.account.data.id)) {
@@ -191,7 +278,7 @@ export class Room {
 		}
 
 		this.cleanupIfEmpty();
-		this.shard.updateCharacterList();
+		this.shard.update('characters');
 		ConnectionManagerClient.onRoomListChange();
 	}
 
@@ -207,5 +294,28 @@ export class Room {
 		if (this.characters.size === 0) {
 			ShardManager.destroyRoom(this);
 		}
+	}
+
+	public readonly pendingMessages: IChatroomMessageDirectoryAction[] = [];
+	private lastMessageTime: number = 0;
+
+	private nextMessageTime(): number {
+		let time = Date.now();
+		// Make sure the time is unique
+		if (time <= this.lastMessageTime) {
+			time = this.lastMessageTime + 1;
+		}
+		return this.lastMessageTime = time;
+	}
+
+	public sendMessage(...messages: IChatroomMessageAction[]): void {
+		const processedMessages = messages.map<IChatroomMessageDirectoryAction>(
+			(msg) => ({
+				directoryTime: this.nextMessageTime(),
+				...msg,
+			}),
+		);
+		this.pendingMessages.push(...processedMessages);
+		this.shard.update('messages');
 	}
 }

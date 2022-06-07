@@ -98,6 +98,7 @@ export class Character {
 
 	public async connectToShard(args: {
 		room: Room;
+		sendEnterMessage?: false;
 		refreshSecret?: boolean;
 	}): Promise<'failed' | IDirectoryCharacterConnectionInfo>;
 	public async connectToShard(args: {
@@ -107,10 +108,12 @@ export class Character {
 	public async connectToShard({
 		shard,
 		room,
+		sendEnterMessage,
 		refreshSecret = true,
 	}: {
 		shard?: Shard;
 		room?: Room;
+		sendEnterMessage?: false;
 		refreshSecret?: boolean;
 	}): Promise<'failed' | IDirectoryCharacterConnectionInfo> {
 		this.account.touch();
@@ -146,7 +149,7 @@ export class Character {
 		}
 
 		if (room) {
-			room.addCharacter(this);
+			room.addCharacter(this, sendEnterMessage !== false);
 		}
 
 		return this.getShardConnectionInfoAssert();

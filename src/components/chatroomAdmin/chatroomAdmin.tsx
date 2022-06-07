@@ -127,7 +127,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 				<div className='input-container'>
 					<label>Password (optional)</label>
 					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' }
-						onChange={ (event) => setRoomModifiedData({ password: event.target.value || null }) } />
+						onChange={ (event) => setRoomModifiedData({ protected: true, password: event.target.value || null }) } />
 				</div>
 			}
 		</>
@@ -209,7 +209,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 					}
 				</ul>
 			</div>
-			<Button onClick={ () => UpdateRoom(directoryConnector, currentConfig, () => navigate('/chatroom')) }>Update room</Button>
+			<Button onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button>
 		</div>
 	);
 }

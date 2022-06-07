@@ -15,7 +15,7 @@ export function HeaderButton({
 		<button { ...buttonProps } className={ classNames('HeaderButton', className) }>
 			<div className='icon-container'>
 				<img src={ icon } alt={ iconAlt } />
-				{ badge && <span className='badge'>{ badge > 99 ? '99+' : badge }</span> }
+				{ badge ? <span className='badge'>{ badge > 99 ? '99+' : badge }</span> : undefined }
 			</div>
 			{ children }
 		</button>

@@ -1,5 +1,6 @@
+import classNames from 'classnames';
 import { AssertNever, IChatPart, IChatroomMessageEmote, IEmotePart } from 'pandora-common';
-import { CHAT_ACTIONS } from 'pandora-common/dist/chatroom/chatActions';
+import { CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
 import React, { KeyboardEvent, ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, Room } from '../../character/room';
@@ -151,20 +152,28 @@ function RenderEmotePart([type, contents]: IEmotePart, index: number): string | 
 	AssertNever(type);
 }
 
-function RenderActionContent(action: IChatroomMessageActionProcessed): string {
+function RenderActionContent(action: IChatroomMessageActionProcessed): [string, string | null] {
 	let actionText = CHAT_ACTIONS.get(action.id);
 	if (actionText === undefined) {
-		return `ERROR UNKNOWN ACTION '${action.id}'`;
+		return [`( ERROR UNKNOWN ACTION '${action.id}' )`, null];
 	}
+	// Server messages can have extra info
+	let actionExtraText = action.type === 'serverMessage' ? CHAT_ACTIONS_FOLDED_EXTRA.get(action.id) : undefined;
 	if (action.dictionary) {
 		const substitutions = Array.from(Object.entries(action.dictionary))
 			// Do the longest substitutions first to avoid small one replacing part of large one
 			.sort((a, b) => b[0].length - a[0].length);
 		for (const [k, v] of substitutions) {
 			actionText = actionText.replaceAll(k, v);
+			if (actionExtraText !== undefined) {
+				actionExtraText = actionExtraText.replaceAll(k, v);
+			}
 		}
 	}
-	return actionText;
+	if (action.type === 'action') {
+		actionText = `(${actionText})`;
+	}
+	return [actionText, actionExtraText ?? null];
 }
 
 function Message({ message }: { message: IChatroomMessageProcessed }): ReactElement {
@@ -184,12 +193,31 @@ function Message({ message }: { message: IChatroomMessageProcessed }): ReactElem
 				*
 			</div>
 		);
-	} else if (message.type === 'action') {
-		return (
-			<div className={ `message action` }>
-				({RenderActionContent(message)})
-			</div>
-		);
+	} else if (message.type === 'action' || message.type === 'serverMessage') {
+		return <ActionMessage message={ message } />;
+
 	}
 	AssertNever(message.type);
+}
+
+function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }): ReactElement {
+	const [folded, setFolded] = useState(true);
+
+	const [content, extraContent] = RenderActionContent(message);
+
+	return (
+		<div className={ classNames('message', message.type, extraContent !== null ? 'foldable' : null) } onClick={ () => setFolded(!folded) }>
+			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
+			{ content }
+			{ extraContent != null && folded ? ' ( ... )' : null }
+			{
+				!folded && extraContent != null && (
+					<>
+						<br />
+						{ extraContent }
+					</>
+				)
+			}
+		</div>
+	);
 }

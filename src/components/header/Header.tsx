@@ -61,17 +61,17 @@ function CharacterMenu({ close }: { close: () => void }): ReactElement {
 function RightHeader(): ReactElement {
 	const account = useObservable(currentAccount);
 	const loggedIn = account != null;
-	const notificationCount = 5;
+	const notificationCount = 0;
 	return (
 		<div className='rightHeader'>
 			{ loggedIn && (
 				<>
 					<HeaderButton icon={ notificationsIcon } iconAlt={ `${ notificationCount } notifications` }
-						badge={ notificationCount } title='Notifications' />
-					<HeaderButton icon={ friendsIcon } iconAlt='Friends icon' title='Friends' />
-					<HeaderButton icon={ settingsIcon } iconAlt='Settings icon' title='Settings' />
+						badge={ notificationCount } onClick={ () => alert('Not yet implemented') } title='Notifications' />
+					<HeaderButton icon={ friendsIcon } iconAlt='Friends' onClick={ () => alert('Not yet implemented') } title='Friends' />
+					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => alert('Not yet implemented') } title='Settings' />
 					<span>{ account.username }</span>
-					<HeaderButton icon={ logoutIcon } iconAlt='Logout icon' onClick={ Logout } title='Logout' />
+					<HeaderButton icon={ logoutIcon } iconAlt='Logout' onClick={ Logout } title='Logout' />
 				</>
 			) }
 			{ !loggedIn && <span>[not logged in]</span> }

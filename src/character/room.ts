@@ -17,7 +17,10 @@ export type IChatroomMessageChatProcessed = IChatroomMessageChat & {
 export type IChatroomMessageEmoteProcessed = IChatroomMessageEmote & {
 	fromName: string;
 };
-export type IChatroomMessageActionProcessed = IChatroomMessageAction;
+export type IChatroomMessageActionProcessed = IChatroomMessageAction & {
+	/** Time the message was sent, guaranteed to be unique */
+	time: number;
+};
 
 export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatroomMessageEmoteProcessed | IChatroomMessageActionProcessed) & {
 	/** Time the message was sent, guaranteed to be unique */
@@ -36,7 +39,7 @@ function ProcessMessage(message: IChatRoomMessage): IChatroomMessageProcessed {
 			...message,
 			fromName: Room.getCharacterName(message.from),
 		};
-	} else if (message.type === 'action') {
+	} else if (message.type === 'action' || message.type === 'serverMessage') {
 		const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
 
 		const sourceId = message.data?.character;
@@ -138,11 +141,15 @@ export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 			}
 			return char;
 		});
+		for (const character of this.characters) {
+			this.characterNameMap.set(character.data.id, character.data.name);
+		}
 	}
 
+	private readonly characterNameMap = new Map<CharacterId, string>();
+
 	public getCharacterName(id: CharacterId): string {
-		const character = this.data.value?.characters.find((c) => c.id === id);
-		return character?.name ?? '[UNKNOWN]';
+		return this.characterNameMap.get(id) ?? '[UNKNOWN]';
 	}
 
 	public getCharacterPronoun(_id: CharacterId): string {

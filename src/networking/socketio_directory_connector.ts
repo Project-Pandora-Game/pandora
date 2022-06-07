@@ -1,5 +1,5 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig, IChatRoomFullInfo, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, IDirectoryShardArgument, IShardCharacterDefinition, ConnectionBase, ShardFeature } from 'pandora-common';
+import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
@@ -66,8 +66,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 		// Setup message handler
 		const handler = new MessageHandler<IDirectoryShardBase>({
 			stop: Stop,
+			update: (update) => this.updateFromDirectory(update).then(() => ({})),
 		}, {
-			prepareCharacters: this.handlePrepareCharacters.bind(this),
 		});
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
@@ -149,46 +149,63 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 		logger.warning('Connection to Directory failed:', err.message);
 	}
 
-	private handlePrepareCharacters({ characters, rooms, roomLeaveReasons }: IDirectoryShardArgument['prepareCharacters']): void {
-		RoomManager.leaveReasons = roomLeaveReasons;
-		this.updateFromDirectory(rooms, characters);
-	}
-
-	private updateFromDirectory(rooms: IChatRoomFullInfo[], characters: IShardCharacterDefinition[]): void {
-		const characterIds = characters.map((c) => c.id);
+	private async updateFromDirectory({ rooms, characters, messages }: Partial<IDirectoryShardUpdate>): Promise<void> {
 		// Invalidate old characters
-		CharacterManager
-			.listCharacters()
-			.map((c) => c.id)
-			.filter((id) => !characterIds.includes(id))
-			.forEach((id) => CharacterManager.removeCharacter(id));
+		if (characters) {
+			const characterIds = characters.map((c) => c.id);
+			CharacterManager
+				.listCharacters()
+				.map((c) => c.id)
+				.filter((id) => !characterIds.includes(id))
+				.forEach((id) => CharacterManager.removeCharacter(id));
+		}
 
 		// Load and update existing rooms
-		for (const room of rooms) {
-			RoomManager.loadRoom(room);
+		if (rooms) {
+			for (const room of rooms) {
+				RoomManager.loadRoom(room);
+			}
 		}
 
 		// Load and update existing characters
-		for (const character of characters) {
-			CharacterManager.loadCharacter(character)
-				.then((result) => {
-					if (!result) {
-						logger.error(`Failed to load character ${character.id} for access ${character.accessId}`);
-						// Report back that character load failed
-						this.sendMessage('characterDisconnect', { id: character.id, reason: 'error' });
-					}
-				})
-				.catch((err) => {
-					logger.fatal('Error processing prepareCharacters message', err);
-				});
+		if (characters) {
+			await Promise.all(
+				characters.map((character) =>
+					CharacterManager
+						.loadCharacter(character)
+						.then((result) => {
+							if (!result) {
+								logger.error(`Failed to load character ${character.id} for access ${character.accessId}`);
+								// Report back that character load failed
+								this.sendMessage('characterDisconnect', { id: character.id, reason: 'error' });
+							}
+						})
+						.catch((err) => {
+							logger.fatal('Error processing prepareCharacters message', err);
+						}),
+				),
+			);
 		}
 
-		const roomIds = rooms.map((r) => r.id);
 		// Invalidate old rooms
-		RoomManager
-			.listRoomIds()
-			.filter((id) => !roomIds.includes(id))
-			.forEach((id) => RoomManager.removeRoom(id));
+		if (rooms) {
+			const roomIds = rooms.map((r) => r.id);
+			RoomManager
+				.listRoomIds()
+				.filter((id) => !roomIds.includes(id))
+				.forEach((id) => RoomManager.removeRoom(id));
+		}
+
+		if (messages) {
+			for (const [roomId, messageList] of Object.entries(messages)) {
+				const room = RoomManager.getRoom(roomId as RoomId);
+				if (!room) {
+					logger.warning('Ignoring messages to non-existing room', roomId);
+					continue;
+				}
+				room.processDirectoryMessages(messageList);
+			}
+		}
 	}
 
 	private async register(): Promise<void> {
@@ -197,7 +214,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 			features.push('development');
 		}
 
-		const { shardId, characters, rooms, roomLeaveReasons } = await this.awaitResponse('shardRegister', {
+		const { shardId, ...update } = await this.awaitResponse('shardRegister', {
 			shardId: this.shardId ?? null,
 			publicURL: SERVER_PUBLIC_ADDRESS,
 			features,
@@ -213,8 +230,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 		}
 
 		this.shardId = shardId;
-		RoomManager.leaveReasons = roomLeaveReasons;
-		this.updateFromDirectory(rooms, characters);
+		await this.updateFromDirectory(update);
 
 		this._state = DirectoryConnectionState.CONNECTED;
 		logger.info('Registered with Directory');

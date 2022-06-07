@@ -1,12 +1,10 @@
-import { IChatRoomFullInfo, RoomId, GetLogger, IChatroomsLeaveReasonRecord } from 'pandora-common';
+import { IChatRoomFullInfo, RoomId, GetLogger } from 'pandora-common';
 import { Room } from './room';
 
 const logger = GetLogger('RoomManager');
 
 export const RoomManager = new class RoomManager {
 	private readonly _rooms: Map<RoomId, Room> = new Map();
-
-	public leaveReasons: IChatroomsLeaveReasonRecord = {};
 
 	public getRoom(id: RoomId): Room | undefined {
 		return this._rooms.get(id);

@@ -101,7 +101,7 @@ export class Character {
 			}
 		}
 		if (this.room !== room) {
-			this.room?.characterLeave(this, RoomManager.leaveReasons[this.room.id]?.[this.id] ?? 'disconnect');
+			this.room?.characterLeave(this);
 			room?.characterEnter(this);
 		}
 	}
@@ -172,7 +172,7 @@ export class Character {
 	}
 
 	public onRemove(): void {
-		this.room?.characterLeave(this, RoomManager.leaveReasons[this.room.id]?.[this.id] ?? 'disconnect');
+		this.room?.characterLeave(this);
 		this.state = CharacterModification.NONE;
 		this.modified.clear();
 		this.invalidate('remove');

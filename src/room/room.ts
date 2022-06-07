@@ -1,5 +1,6 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageBase } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageBase, IChatroomMessageDirectoryAction } from 'pandora-common';
 import type { Character } from '../character/character';
+import _, { omit } from 'lodash';
 
 export class Room {
 
@@ -57,58 +58,13 @@ export class Room {
 		character.room = this;
 		this.sendUpdateToAllInRoom();
 		this.logger.verbose(`Character ${character.id} entered`);
-		this.sendMessage({
-			type: 'action',
-			id: 'characterEntered',
-			data: {
-				character: character.id,
-			},
-		});
 	}
 
-	public characterLeave(character: Character, reason: IChatRoomLeaveReason): void {
+	public characterLeave(character: Character): void {
 		this.characters.delete(character);
 		character.room = null;
 		character.connection?.sendMessage('chatRoomUpdate', { room: null });
-
-		// Report the leave
-		this.logger.verbose(`Character ${character.id} left (${reason})`);
-		if (reason === 'leave') {
-			this.sendMessage({
-				type: 'action',
-				id: 'characterLeft',
-				data: {
-					character: character.id,
-				},
-			});
-		} else if (reason === 'disconnect' || reason === 'destroy') {
-			this.sendMessage({
-				type: 'action',
-				id: 'characterDisconnected',
-				data: {
-					character: character.id,
-				},
-			});
-		} else if (reason === 'kick') {
-			this.sendMessage({
-				type: 'action',
-				id: 'characterKicked',
-				data: {
-					character: character.id,
-				},
-			});
-		} else if (reason === 'ban') {
-			this.sendMessage({
-				type: 'action',
-				id: 'characterBanned',
-				data: {
-					character: character.id,
-				},
-			});
-		} else {
-			AssertNever(reason);
-		}
-
+		this.logger.verbose(`Character ${character.id} left`);
 		this.sendUpdateToAllInRoom();
 	}
 
@@ -124,6 +80,7 @@ export class Room {
 	}
 
 	private lastMessageTime: number = 0;
+	private lastDirectoryMessageTime: number = 0;
 
 	private nextMessageTime(): number {
 		let time = Date.now();
@@ -147,11 +104,23 @@ export class Room {
 					return msg.to === undefined || character.id === msg.from || character.id === msg.to;
 				} else if (msg.type === 'emote' || msg.type === 'me') {
 					return true;
-				} else if (msg.type === 'action') {
+				} else if (msg.type === 'action' || msg.type === 'serverMessage') {
 					return true;
 				}
 				AssertNever(msg.type);
 			}));
 		}
+	}
+
+	public processDirectoryMessages(messages: IChatroomMessageDirectoryAction[]): void {
+		this.sendMessage(
+			...messages
+				.filter((m) => m.directoryTime > this.lastDirectoryMessageTime)
+				.map((m) => omit(m, ['directoryTime'])),
+		);
+		this.lastDirectoryMessageTime = _(messages)
+			.map((m) => m.directoryTime)
+			.concat(this.lastDirectoryMessageTime)
+			.max() ?? this.lastDirectoryMessageTime;
 	}
 }

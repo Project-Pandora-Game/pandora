@@ -41,6 +41,7 @@ export class Room {
 				id: c.id,
 				accountId: c.accountId,
 				appearance: c.appearance.exportToBundle(),
+				settings: c.settings,
 			})),
 		};
 	}
@@ -100,7 +101,7 @@ export class Room {
 		);
 		for (const character of this.characters) {
 			character.queueMessages(processedMessages.filter((msg) => {
-				if (msg.type === 'chat') {
+				if (msg.type === 'chat' || msg.type === 'ooc') {
 					return msg.to === undefined || character.id === msg.from || character.id === msg.to;
 				} else if (msg.type === 'emote' || msg.type === 'me') {
 					return true;

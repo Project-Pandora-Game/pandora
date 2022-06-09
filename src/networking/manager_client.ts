@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsAppearanceAction, DoAppearanceAction, IsIClientMessageArray, AssertNever, IsNumber, IChatRoomMessageBase } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsAppearanceAction, DoAppearanceAction, IsIClientMessageArray, AssertNever, IsNumber, IChatRoomMessageBase, IsCharacterPublicSettings } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
@@ -19,6 +19,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			chatRoomMessage: this.handleChatRoomMessage.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			chatRoomMessageAck: this.handleChatRoomMessageAck.bind(this),
+			updateSettings: this.handleUpdateSettings.bind(this),
 		});
 	}
 
@@ -80,9 +81,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 
 		room.sendMessage(
 			...messages.map<IChatRoomMessageBase>((message) => {
-				if (message.type === 'chat') {
+				if (message.type === 'chat' || message.type === 'ooc') {
 					return {
-						type: 'chat',
+						type: message.type,
 						from: character.id,
 						parts: message.parts,
 						to: message.to,
@@ -113,6 +114,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		if (!DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager)) {
 			client.character.sendUpdate();
 		}
+	}
+
+	private handleUpdateSettings(settings: IClientShardUnconfirmedArgument['updateSettings'], client: IConnectionClient): void {
+		if (!client.character || !IsCharacterPublicSettings(settings))
+			throw new BadMessageError();
+
+		client.character.setPublicSettings(settings);
 	}
 
 	public onAssetDefinitionsChanged(): void {

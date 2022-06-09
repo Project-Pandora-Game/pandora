@@ -1,4 +1,4 @@
-import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId } from 'pandora-common';
+import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import { CharacterManager, CHARACTER_TIMEOUT } from './characterManager';
 import type { Room } from '../room/room';
@@ -6,6 +6,7 @@ import { RoomManager } from '../room/roomManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { IConnectionClient } from '../networking/common';
 import { assetManager } from '../assets/assetManager';
+import _ from 'lodash';
 
 export const enum CharacterModification {
 	NONE = 0,
@@ -14,6 +15,8 @@ export const enum CharacterModification {
 }
 
 type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id' | 'appearance'>;
+type ICharacterPublicDataChange = Omit<ICharacterPublicData, 'id' | 'appearance'>;
+type ICharacterPrivateDataChange = Omit<ICharacterDataUpdate, keyof ICharacterPublicData>;
 
 export class Character {
 	private readonly data: Omit<ICharacterData, 'appearance'>;
@@ -54,11 +57,22 @@ export class Character {
 		return this.invalid === null;
 	}
 
+	public get settings(): Readonly<ICharacterPublicSettings> {
+		return this.data.settings;
+	}
+
 	private logger: Logger;
 
 	constructor(data: ICharacterData, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
+
+		// TODO: remove this, this allow easier development so no need for DB migration
+		this.data.settings = {
+			..._.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+			...(this.data.settings ?? {}),
+		};
+
 		this.connectSecret = connectSecret;
 		this.setConnection(null);
 		this.linkRoom(room);
@@ -146,7 +160,7 @@ export class Character {
 		if (!this.data.inCreation)
 			return false;
 
-		this.setValue('name', name);
+		this.setValue('name', name, true);
 		await this.save();
 
 		if (!this.modified.has('name')) {
@@ -260,7 +274,9 @@ export class Character {
 		}
 	}
 
-	private setValue<Key extends keyof ICharacterDataChange>(key: Key, value: ICharacterData[Key]): void {
+	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterData[Key], room: true): void;
+	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterData[Key], room: false): void;
+	private setValue<Key extends keyof ICharacterDataChange>(key: Key, value: ICharacterData[Key], room: boolean): void {
 		if (this.data[key] === value)
 			return;
 
@@ -268,7 +284,11 @@ export class Character {
 		this.modified.add(key);
 		this.state = CharacterModification.MODIFIED;
 
-		this.connection?.sendMessage('updateCharacter', { [key]: value });
+		if (room && this.room) {
+			this.room.sendUpdateToAllInRoom();
+		} else {
+			this.connection?.sendMessage('updateCharacter', { [key]: value });
+		}
 	}
 
 	private onAppearanceChanged(): void {
@@ -288,6 +308,13 @@ export class Character {
 		} else {
 			this.connection?.sendMessage('updateCharacter', { appearance: this.appearance.exportToBundle() });
 		}
+	}
+
+	public setPublicSettings(settings: Partial<ICharacterPublicSettings>): void {
+		this.setValue('settings', {
+			...this.settings,
+			...settings,
+		}, true);
 	}
 
 	//#region Chat messages

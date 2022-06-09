@@ -30,7 +30,7 @@
 		"lodash": "^4.17.21",
 		"mongodb": "^4.3.1",
 		"nanoid": "^3.3.4",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#4dfb563",
+		"pandora-common": "github:Project-Pandora-Game/pandora-common#cb3732a",
 		"socket.io": "^4.4.1",
 		"socket.io-client": "^4.4.1"
 	},

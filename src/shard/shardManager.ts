@@ -1,8 +1,9 @@
 import { nanoid } from 'nanoid';
-import { IChatRoomDirectoryConfig, IChatRoomFullInfo, IDirectoryShardInfo, RoomId } from 'pandora-common';
+import { IChatRoomDirectoryConfig, IDirectoryShardInfo, RoomId } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from './room';
 import { Shard } from './shard';
+import { omit } from 'lodash';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const SHARD_TIMEOUT = 10_000;
@@ -93,12 +94,11 @@ export const ShardManager = new class ShardManager {
 	}
 
 	public async migrateRoom(room: Room): Promise<void> {
-		const info: IChatRoomDirectoryConfig & Partial<IChatRoomFullInfo> = {
-			...room.getFullInfo(),
-		};
-		delete info.id;
+		const info = omit(room.getFullInfo(), 'id');
 
-		this.rooms.delete(room.id);
+		if (this.rooms.get(room.id) === room) {
+			this.rooms.delete(room.id);
+		}
 
 		const newRoom = this.createRoom(info, undefined, room.id);
 		if (typeof newRoom === 'string') {
@@ -115,7 +115,9 @@ export const ShardManager = new class ShardManager {
 	 * @param room - The room to destroy
 	 */
 	public destroyRoom(room: Room): void {
-		this.rooms.delete(room.id);
+		if (this.rooms.get(room.id) === room) {
+			this.rooms.delete(room.id);
+		}
 		room.onDestroy();
 
 		ConnectionManagerClient.onRoomListChange();

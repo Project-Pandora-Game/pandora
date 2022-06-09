@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */ // MongoDB
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 
+import _ from 'lodash';
 import AsyncLock from 'async-lock';
 import { MongoClient } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
@@ -80,6 +81,10 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);
 
+		if (!inMemory || dbPath) {
+			await this._doMigrations();
+		}
+
 		return this;
 	}
 
@@ -140,6 +145,7 @@ export default class MongoDatabase implements PandoraDatabase {
 				name: info.name,
 				created: -1,
 				accessId: nanoid(8),
+				settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 			};
 
 			await this._accounts.updateOne({ id: accountId }, { $push: { characters: info } });
@@ -204,6 +210,10 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async setCharacter({ id, accessId, ...data }: Partial<ICharacterData> & Pick<ICharacterData, 'id'>): Promise<boolean> {
 		const { acknowledged, modifiedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
 		return acknowledged && modifiedCount === 1;
+	}
+
+	private async _doMigrations(): Promise<void> {
+		// await this._characters.updateMany({ settings: { $exists: false } }, { $set: { settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS) } });
 	}
 }
 

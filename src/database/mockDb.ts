@@ -1,6 +1,6 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, PASSWORD_PREHASH_SALT, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
@@ -119,6 +119,7 @@ export class MockDatabase implements PandoraDatabase {
 			name: info.name,
 			created: -1,
 			accessId: nanoid(8),
+			settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 		};
 
 		acc.characters.push(info);

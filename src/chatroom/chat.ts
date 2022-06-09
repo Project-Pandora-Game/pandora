@@ -2,59 +2,40 @@ import { CharacterId, IsCharacterId } from '../character';
 import { CreateArrayValidator, CreateMaybeValidator, CreateObjectValidator, CreateOneOfValidator, CreateTupleValidator, CreateUnionValidator, IsString } from '../validation';
 import { ChatActionId } from './chatActions';
 
-export type IChatPart = [
-	'contents',
-	string,
-];
+export type IChatModifier = 'normal' | 'bold' | 'italic';
 
-export const IsIChatPart = CreateTupleValidator<IChatPart>(
-	CreateOneOfValidator('contents'),
-	IsString,
-);
+export const IsChatModifier = CreateOneOfValidator<IChatModifier>('normal', 'bold', 'italic');
 
-export type IClientMessageChat = {
-	type: 'chat';
-	parts: IChatPart[];
-	/** Presence of to makes message a whisper */
+export type IChatSegment = [IChatModifier, string];
+
+export const IsChatSegment = CreateTupleValidator<IChatSegment>(IsChatModifier, IsString);
+
+export type IChatType = 'chat' | 'me' | 'emote' | 'ooc';
+
+export type IClientMessage = {
+	type: 'me' | 'emote';
+	parts: IChatSegment[];
+} | {
+	type: 'chat' | 'ooc';
+	parts: IChatSegment[];
 	to?: CharacterId;
 };
 
-export const IsIClientMessageChat = CreateObjectValidator<IClientMessageChat>({
-	type: CreateOneOfValidator('chat'),
-	parts: CreateArrayValidator<IChatPart>({ validator: IsIChatPart }),
-	to: CreateMaybeValidator(IsCharacterId),
-});
-
-export type IEmotePart = [
-	'contents',
-	string,
-];
-
-export const IsIEmotePart = CreateTupleValidator<IEmotePart>(
-	CreateOneOfValidator('contents'),
-	IsString,
+export const IsIClientMessage = CreateUnionValidator<IClientMessage>(
+	CreateObjectValidator({
+		type: CreateOneOfValidator('me', 'emote'),
+		parts: CreateArrayValidator({ validator: IsChatSegment }),
+	}),
+	CreateObjectValidator({
+		type: CreateOneOfValidator('ooc', 'chat'),
+		parts: CreateArrayValidator({ validator: IsChatSegment }),
+		to: CreateMaybeValidator(IsCharacterId),
+	}),
 );
 
-export type IClientMessageEmote = {
-	type: 'emote' | 'me';
-	parts: IEmotePart[];
-};
-
-export const IsIClientMessageEmote = CreateObjectValidator<IClientMessageEmote>({
-	type: CreateOneOfValidator('emote', 'me'),
-	parts: CreateArrayValidator<IEmotePart>({ validator: IsIEmotePart }),
-});
-
-export type IClientMessage = IClientMessageChat | IClientMessageEmote;
-
-export const IsIClientMessage = CreateUnionValidator<IClientMessage>(IsIClientMessageChat, IsIClientMessageEmote);
 export const IsIClientMessageArray = CreateArrayValidator<IClientMessage>({ validator: IsIClientMessage });
 
-export type IChatroomMessageChat = IClientMessageChat & {
-	from: CharacterId;
-};
-
-export type IChatroomMessageEmote = IClientMessageEmote & {
+export type IChatroomMessageChat = IClientMessage & {
 	from: CharacterId;
 };
 
@@ -71,7 +52,7 @@ export type IChatroomMessageAction = {
 	dictionary?: Record<string, string>;
 };
 
-export type IChatRoomMessageBase = IChatroomMessageChat | IChatroomMessageEmote | IChatroomMessageAction;
+export type IChatRoomMessageBase = IChatroomMessageChat | IChatroomMessageAction;
 export type IChatRoomMessage = IChatRoomMessageBase & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;

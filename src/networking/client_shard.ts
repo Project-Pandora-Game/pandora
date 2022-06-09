@@ -1,6 +1,6 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { ICharacterDataCreate } from '../character';
+import type { ICharacterDataCreate, ICharacterPublicSettings } from '../character';
 import type { AppearanceAction } from '../assets';
 import type { IClientMessage } from '../chatroom/chat';
 
@@ -14,6 +14,7 @@ interface ClientShard {
 		lastTime: number;
 	}): void;
 	appearanceAction(action: AppearanceAction): void;
+	updateSettings(settings: Partial<ICharacterPublicSettings>): void;
 }
 
 export type IClientShard = SocketInterface<ClientShard>;

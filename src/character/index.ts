@@ -1,5 +1,5 @@
 import { AppearanceBundle } from '../assets';
-import { CreateArrayValidator, CreateStringValidator } from '../validation';
+import { CreateArrayValidator, CreateObjectValidator, CreateStringValidator } from '../validation';
 
 export type CharacterId = `c${number}`;
 
@@ -12,11 +12,24 @@ export const IsCharacterId = CreateStringValidator({
 
 export const IsCharacterIdArray = CreateArrayValidator<CharacterId>({ validator: IsCharacterId });
 
+export type ICharacterPublicSettings = {
+	labelColor: string;
+};
+
+export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSettings> = {
+	labelColor: '#ffffff',
+};
+
+export const IsCharacterPublicSettings = CreateObjectValidator<Partial<ICharacterPublicSettings>>({
+	labelColor: CreateStringValidator({ regex: /^#[0-9a-f]{6}$/i }),
+}, { partial: true });
+
 export type ICharacterPublicData = {
 	id: CharacterId;
 	accountId: number;
 	name: string;
 	appearance?: AppearanceBundle;
+	settings: ICharacterPublicSettings;
 };
 
 export type ICharacterData = ICharacterPublicData & {

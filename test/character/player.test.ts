@@ -1,7 +1,8 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { ICharacterData } from 'pandora-common';
+import { ICharacterData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 import { Player, PlayerCharacter, usePlayerData } from '../../src/character/player';
 import { ShardConnector } from '../../src/networking/socketio_shard_connector';
+import _ from 'lodash';
 
 const mockData: ICharacterData = {
 	id: 'c123',
@@ -9,6 +10,7 @@ const mockData: ICharacterData = {
 	name: 'mock',
 	created: 0,
 	accessId: 'mockID',
+	settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 };
 describe('PlayerCharacter', () => {
 	let mock: PlayerCharacter;

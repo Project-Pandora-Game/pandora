@@ -9,7 +9,7 @@
 	position: relative;
 
 	& > div {
-		@include flex;
+		@include flex(row, wrap);
 		align-items: flex-start;
 
 		&.rightHeader, &.leftHeader {

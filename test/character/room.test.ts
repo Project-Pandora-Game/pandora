@@ -1,6 +1,7 @@
-import { ICharacterData, ICharacterPublicData, IChatRoomClientData } from 'pandora-common';
+import { ICharacterData, ICharacterPublicData, IChatRoomClientData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 import { Player, PlayerCharacter } from '../../src/character/player';
 import { Room } from '../../src/character/room';
+import _ from 'lodash';
 
 const mockPlayerData: ICharacterData = {
 	id: 'c123',
@@ -8,6 +9,7 @@ const mockPlayerData: ICharacterData = {
 	name: 'mock',
 	created: 0,
 	accessId: 'mockID',
+	settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 };
 
 describe('Room', () => {
@@ -86,11 +88,13 @@ describe('Room', () => {
 				id: 'c123',
 				accountId: 0,
 				name: 'test',
+				settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 			};
 			const char2: ICharacterPublicData = {
 				id: 'c321',
 				accountId: 0,
 				name: 'tech',
+				settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 			};
 			Room.update({ id: 'c321', characters: [char1, char2] } as unknown as IChatRoomClientData);
 			expect(Room.getCharacterName('c123')).toBe('test');

@@ -10,6 +10,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { usePlayerData } from '../../character/player';
 import { Room } from '../../character/room';
 import { currentAccount } from '../../networking/account_manager';
 import { IDirectoryConnector } from '../../networking/directoryConnector';
@@ -42,13 +43,6 @@ export function ChatroomCreate(): ReactElement {
 	return <ChatroomAdmin creation={ true } />;
 }
 
-function ParseNumberListString(value: string): number[] {
-	return value
-		.split(',')
-		.map((i) => Number.parseInt(i.trim(), 10))
-		.filter((i) => Number.isInteger(i));
-}
-
 export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {}): ReactElement | null {
 	const navigate = useNavigate();
 	const roomData: IChatRoomFullInfo | null = useObservable(Room.data);
@@ -74,12 +68,15 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	}, {});
 	const directoryConnector = useDirectoryConnector();
 	const shards = useShards();
+	const accountId = usePlayerData()?.accountId;
 
 	if (!creation && !roomData) {
 		return <Navigate to='/chatroom_select' />;
 	} else if (creation && roomData) {
 		return <Navigate to='/chatroom' />;
 	}
+
+	const isPlayerAdmin = creation || accountId && roomData?.admin.includes(accountId);
 
 	const currentConfig: IChatRoomDirectoryConfig = {
 		...(roomData ?? DEFAULT_ROOM_DATA()),
@@ -94,39 +91,37 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 		<>
 			<div className='input-container'>
 				<label>Room name</label>
-				<input autoComplete='none' type='text' value={ currentConfig.name }
+				<input autoComplete='none' type='text' value={ currentConfig.name } readOnly={ !isPlayerAdmin }
 					onChange={ (event) => setRoomModifiedData({ name: event.target.value }) } />
 				{ !IsChatroomName(currentConfig.name) && <div className='error'>Invalid room name</div> }
 			</div>
 			<div className='input-container'>
 				<label>Room description</label>
-				<textarea value={ currentConfig.description }
+				<textarea value={ currentConfig.description } readOnly={ !isPlayerAdmin }
 					onChange={ (event) => setRoomModifiedData({ description: event.target.value }) } />
 			</div>
 			<div className='input-container'>
-				<label>Limit</label>
-				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 }
+				<label>Room size</label>
+				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !isPlayerAdmin }
 					onChange={ (event) => setRoomModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
 			</div>
 			<div className='input-container'>
 				<label>Admins</label>
-				<textarea value={ currentConfig.admin.join(',') }
-					onChange={ (event) => setRoomModifiedData({ admin: ParseNumberListString(event.target.value) }) } />
+				<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setRoomModifiedData({ admin }) } readOnly={ !isPlayerAdmin } />
 			</div>
 			<div className='input-container'>
-				<label>Banned</label>
-				<textarea value={ currentConfig.banned.join(',') }
-					onChange={ (event) => setRoomModifiedData({ banned: ParseNumberListString(event.target.value) }) } />
+				<label>Ban list</label>
+				<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !isPlayerAdmin } />
 			</div>
 			<div className='input-container'>
 				<label>Protected</label>
-				<Button onClick={ () => setRoomModifiedData({ protected: !currentConfig.protected }) } >{ currentConfig.protected ? 'Yes' : 'No' }</Button>
+				<Button onClick={ () => setRoomModifiedData({ protected: !currentConfig.protected }) } disabled={ !isPlayerAdmin }>{ currentConfig.protected ? 'Yes' : 'No' }</Button>
 			</div>
 			{
 				currentConfig.protected &&
 				<div className='input-container'>
 					<label>Password (optional)</label>
-					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' }
+					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !isPlayerAdmin }
 						onChange={ (event) => setRoomModifiedData({ protected: true, password: event.target.value || null }) } />
 				</div>
 			}
@@ -209,8 +204,50 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 					}
 				</ul>
 			</div>
-			<Button onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button>
+			{ isPlayerAdmin && <Button onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button> }
+			{ !isPlayerAdmin && <Button onClick={ () => navigate('/chatroom') }>Back</Button> }
 		</div>
+	);
+}
+
+function NumberListArea({ values, setValues, readOnly }: { values: number[], setValues: (_: number[]) => void, readOnly: boolean }): ReactElement {
+	const [text, setText] = useState(values.join(', '));
+
+	const onChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
+		const value = event.target.value;
+		const split = value.split(',');
+		const last = split[split.length - 1];
+		const unique = new Set<number>();
+		const rest = split
+			.slice(0, split.length - 1)
+			.map((str) => Number.parseInt(str.trim(), 10))
+			.filter((n) => Number.isInteger(n))
+			.filter((n) => n > 0)
+			.filter((n) => !unique.has(n) && unique.add(n));
+
+		const lastNumber = Number.parseInt(last.trim(), 10);
+		if (Number.isInteger(lastNumber) && lastNumber > 0) {
+			if (!unique.has(lastNumber)) {
+				rest.push(lastNumber);
+				setText(rest.join(', '));
+			} else {
+				setText(rest.join(', ') + ', ' + lastNumber.toString());
+			}
+			setValues(rest);
+		} else if (last === '' && value[value.length - 1] === ',') {
+			setText(rest.join(', ') + ',');
+			setValues(rest);
+		} else if (last === '') {
+			setText(rest.join(','));
+			setValues(rest);
+		} else {
+			setText(rest.join(', ') + ',' + last);
+			setValues(rest);
+		}
+	}, [setValues]);
+
+	return (
+		<textarea value={ text } onChange={ onChange } readOnly={ readOnly } />
 	);
 }
 

@@ -1,10 +1,23 @@
-.chatArea {
-	width: 50vw;
-	background-color: #333;
+.chatroom {
+	display: flex;
+	flex-flow: row wrap;
+	gap: 1em;
+	height: 100%;
+}
 
-	& > div {
-		height: 50vh;
-		width: 100%;
+.chatArea {
+	background-color: #333;
+	display: flex;
+	flex-flow: column;
+	height: 100%;
+	min-width: 50%;
+	max-width: max(50em, 50vw);
+	flex-grow: 1;
+
+	&>div.messages {
+		display: flex;
+		flex-flow: column;
+		flex: 1;
 		overflow-x: hidden;
 		overflow-y: scroll;
 		user-select: text;
@@ -14,6 +27,7 @@
 		color: white;
 		padding: 0.1em;
 		white-space: pre-wrap;
+		overflow-wrap: break-word;
 
 		&.serverMessage {
 			border-left: solid 5px white;
@@ -26,12 +40,38 @@
 				cursor: pointer;
 			}
 		}
+
+		&.emote .name {
+			display: none;
+		}
+
+		&.private {
+			opacity: 0.7;
+		}
+
+		&> time {
+			float: right;
+			color: gray;
+			font-style: italic;
+			font-size: 0.6em;
+			margin-right: 0.2em;
+		}
 	}
 
 	textarea {
-		width: 100%;
-		height: 10em;
+		height: min(10em, 35%);
 		resize: none;
 		margin: 0;
+	}
+
+	.input-line {
+		display: flex;
+		flex-flow: row;
+		justify-content: left;
+		align-items: center;
+		height: 2em;
+		width: 100%;
+		color: white;
+		gap: 1em;
 	}
 }

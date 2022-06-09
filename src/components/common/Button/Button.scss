@@ -40,6 +40,15 @@ $button-themes: (
 			&:focus, &:active {
 				border-color: map-get($theme-data, "focus-outline");
 			}
+
+			&:disabled {
+				cursor: unset;
+				&:hover, &:focus, &:active {
+					background-color: map-get($theme-data, "background");
+					border-color: map-get($theme-data, "background");
+					color: map-get($theme-data, "color");
+				}
+			}
 		}
 	}
 

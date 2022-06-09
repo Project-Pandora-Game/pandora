@@ -2,7 +2,7 @@
 @import '../../styles/utils';
 
 .roomAdminScreen {
-	width: 50vw;
+	width: min(100%, 50em);
 
 	& > * {
 		margin-top: 0.5em;

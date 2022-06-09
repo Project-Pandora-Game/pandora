@@ -1,4 +1,4 @@
-import { IChatRoomClientData, IChatRoomMessage, GetLogger, CharacterId, ICharacterPublicData, IChatroomMessageChat, IChatroomMessageAction, AssertNever, RoomId, IChatroomMessageEmote } from 'pandora-common';
+import { IChatRoomClientData, IChatRoomMessage, GetLogger, CharacterId, ICharacterPublicData, IChatroomMessageChat, IChatroomMessageAction, AssertNever, RoomId, ICharacterPublicSettings } from 'pandora-common';
 import { ChatActionDictionaryMetaEntry } from 'pandora-common/dist/chatroom/chatActions';
 import { BrowserStorage } from '../browserStorage';
 import { USER_DEBUG } from '../config/Environment';
@@ -14,21 +14,23 @@ export type IChatroomMessageChatProcessed = IChatroomMessageChat & {
 	fromName: string;
 	toName?: string;
 };
-export type IChatroomMessageEmoteProcessed = IChatroomMessageEmote & {
-	fromName: string;
-};
+
 export type IChatroomMessageActionProcessed = IChatroomMessageAction & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
 };
 
-export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatroomMessageEmoteProcessed | IChatroomMessageActionProcessed) & {
+export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatroomMessageActionProcessed) & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
 };
 
+export function IsUserMessage(message: IChatroomMessageProcessed): message is IChatroomMessageChatProcessed & { time: number } {
+	return message.type !== 'action' && message.type !== 'serverMessage';
+}
+
 function ProcessMessage(message: IChatRoomMessage): IChatroomMessageProcessed {
-	if (message.type === 'chat') {
+	if (message.type === 'chat' || message.type === 'ooc') {
 		return {
 			...message,
 			fromName: Room.getCharacterName(message.from),
@@ -147,6 +149,10 @@ export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 	}
 
 	private readonly characterNameMap = new Map<CharacterId, string>();
+
+	public getCharacterSettings(characterId: CharacterId): Readonly<ICharacterPublicSettings> | undefined {
+		return this.characters.find((c) => c.data.id === characterId)?.data.settings;
+	}
 
 	public getCharacterName(id: CharacterId): string {
 		return this.characterNameMap.get(id) ?? '[UNKNOWN]';

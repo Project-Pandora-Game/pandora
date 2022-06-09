@@ -1,4 +1,4 @@
-import { Appearance, APPEARANCE_BUNDLE_DEFAULT, ICharacterData } from 'pandora-common';
+import { Appearance, APPEARANCE_BUNDLE_DEFAULT, ICharacterData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 import { Character, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterData } from '../../src/character/character';
 import { renderHook, act } from '@testing-library/react-hooks';
 import { cloneDeep } from 'lodash';
@@ -9,6 +9,7 @@ const mockData: ICharacterData = {
 	name: 'mock',
 	created: 0,
 	accessId: 'mockID',
+	settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 };
 describe('Character', () => {
 	let mock: Character;

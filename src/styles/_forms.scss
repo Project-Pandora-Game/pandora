@@ -11,6 +11,13 @@ input, textarea {
 	&:focus, &:active {
 		outline: 0.15em solid $black-secondary;
 	}
+
+	&:read-only {
+		&:focus, &:active {
+			outline: 0 none;
+		}
+		background-color: $grey-light;
+	}
 }
 
 input[type=color] {

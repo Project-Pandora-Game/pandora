@@ -115,7 +115,7 @@ export class Room {
 			if (changes.name)
 				changeList.push(`name to '${changes.name}'`);
 			if (changes.maxUsers !== undefined)
-				changeList.push(`limit to '${changes.maxUsers}'`);
+				changeList.push(`room size to '${changes.maxUsers}'`);
 			if (changes.protected !== undefined)
 				changeList.push(`access to '${this.config.protected ? (this.config.password ? 'protected with password' : 'protected') : 'public'}'`);
 			if (changes.description !== undefined)

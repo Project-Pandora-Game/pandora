@@ -48,6 +48,14 @@ export class MockDatabase implements PandoraDatabase {
 		return this;
 	}
 
+	public get nextAccountId(): number {
+		return this._nextAccountId;
+	}
+
+	public get nextCharacterId(): number {
+		return this._nextCharacterId;
+	}
+
 	/**
 	 * Find and get account with matching `id`
 	 * @returns The account data or `null` if not found

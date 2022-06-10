@@ -6,6 +6,12 @@ import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfI
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
 export interface PandoraDatabase {
+	/** The id in numeric form that will be assigned to next created account */
+	readonly nextAccountId: number;
+
+	/** The id in numeric form that will be assigned to next created character */
+	readonly nextCharacterId: number;
+
 	/**
 	 * Find and get account with matching `id`
 	 * @returns The account data or `null` if not found

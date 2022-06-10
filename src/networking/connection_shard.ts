@@ -20,6 +20,6 @@ export class ShardConnection extends Connection<IncomingSocket, IDirectoryShardB
 	}
 
 	protected override onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return ConnectionManagerShard.messageHandler.onMessage(messageType, message, callback, this);
+		return ConnectionManagerShard.onMessage(messageType, message, callback, this);
 	}
 }

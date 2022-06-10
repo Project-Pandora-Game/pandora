@@ -4,17 +4,40 @@ import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY, CHARACTER_LIMIT_NORMAL } from '../config';
 import { ShardManager } from '../shard/shardManager';
+import promClient from 'prom-client';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
 
 const logger = GetLogger('ConnectionManager-Client');
 
+const connectedClientsMetric = new promClient.Gauge({
+	name: 'pandora_directory_client_connections',
+	help: 'Current count of connections from clients',
+	labelNames: ['messageType'],
+});
+
+const messagesMetric = new promClient.Counter({
+	name: 'pandora_directory_client_messages',
+	help: 'Count of received messages from clients',
+	labelNames: ['messageType'],
+});
+
 /** Class that stores all currently connected clients */
 export const ConnectionManagerClient = new class ConnectionManagerClient {
 	private connectedClients: Set<IConnectionClient> = new Set();
 
-	readonly messageHandler: IClientDirectoryMessageHandler<IConnectionClient>;
+	private readonly messageHandler: IClientDirectoryMessageHandler<IConnectionClient>;
+
+	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionClient): Promise<boolean> {
+		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
+			// Only count valid messages
+			if (result) {
+				messagesMetric.inc({ messageType });
+			}
+			return result;
+		});
+	}
 
 	/** Init the manager */
 	public init(): void {
@@ -69,6 +92,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	/** Handle new incoming connection */
 	public onConnect(connection: IConnectionClient, auth: unknown): void {
 		this.connectedClients.add(connection);
+		connectedClientsMetric.set(this.connectedClients.size);
 		// Send current server status to the client
 		connection.sendMessage('serverStatus', MakeStatus());
 		// Check if connect-time authentication is valid and process it
@@ -87,6 +111,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			return;
 		}
 		this.connectedClients.delete(connection);
+		connectedClientsMetric.set(this.connectedClients.size);
 		connection.setAccount(null);
 		connection.setCharacter(null);
 	}

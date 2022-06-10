@@ -6,6 +6,8 @@ import * as fs from 'fs';
 import { SocketIOServerShard } from './socketio_shard_server';
 import { SocketIOServerClient } from './socketio_client_server';
 import { Socket } from 'net';
+import express from 'express';
+import { MetricsServe } from '../metrics';
 
 const logger = GetLogger('Server');
 
@@ -19,6 +21,9 @@ export function StartHttpServer(): Promise<void> {
 	if (!Number.isInteger(port)) {
 		throw new Error('Invalid SERVER_PORT');
 	}
+
+	// Setup Express application
+	const expressApp = express();
 
 	// Setup HTTP(S) server
 	if (SERVER_HTTPS_CERT || SERVER_HTTPS_KEY) {
@@ -41,11 +46,13 @@ export function StartHttpServer(): Promise<void> {
 		server = new HttpsServer({
 			cert: certData,
 			key: keyData,
-		});
+		}, expressApp);
 	} else {
 		logger.warning('Starting in HTTP-only mode');
-		server = new HttpServer();
+		server = new HttpServer(expressApp);
 	}
+	// Host metrics
+	expressApp.use('/metrics', MetricsServe());
 	// Attach socket.io servers
 	new SocketIOServerClient(server);
 	new SocketIOServerShard(server);

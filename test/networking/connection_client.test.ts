@@ -56,7 +56,7 @@ describe('ClientConnection', () => {
 
 	describe('Receiving messages', () => {
 		it('Passes message without callback to manager message handler', () => {
-			const onMessageSpy = jest.spyOn(ConnectionManagerClient.messageHandler, 'onMessage');
+			const onMessageSpy = jest.spyOn(ConnectionManagerClient, 'onMessage');
 
 			const client = new ClientConnection(connection.connect(), {});
 
@@ -67,7 +67,7 @@ describe('ClientConnection', () => {
 		});
 
 		it('Passes message with callback to manager message handler', async () => {
-			const onMessageSpy = jest.spyOn(ConnectionManagerClient.messageHandler, 'onMessage');
+			const onMessageSpy = jest.spyOn(ConnectionManagerClient, 'onMessage');
 
 			const client = new ClientConnection(connection.connect(), {});
 

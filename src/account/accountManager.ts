@@ -1,6 +1,7 @@
 import { GetDatabase } from '../database/databaseProvider';
 import { GetLogger } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
+import promClient from 'prom-client';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
@@ -9,6 +10,31 @@ export const ACCOUNTMANAGER_TICK_INTERVAL = 15_000;
 
 const logger = GetLogger('AccountManager');
 
+const totalAccountsMetric = new promClient.Gauge({
+	name: 'pandora_directory_accounts',
+	help: 'Total count of accounts ever created',
+});
+
+const totalCharactersMetric = new promClient.Gauge({
+	name: 'pandora_directory_characters',
+	help: 'Total count of characters ever created',
+});
+
+const loadedAccountsMetric = new promClient.Gauge({
+	name: 'pandora_directory_accounts_loaded',
+	help: 'Current count of accounts loaded into memory',
+});
+
+const inUseAccountsMetric = new promClient.Gauge({
+	name: 'pandora_directory_accounts_in_use',
+	help: 'Current count of accounts in use',
+});
+
+const inUseCharactersMetric = new promClient.Gauge({
+	name: 'pandora_directory_characters_in_use',
+	help: 'Current count of characters in use',
+});
+
 /** Class that stores all currently logged in or recently used accounts, removing them when needed */
 export class AccountManager {
 	private onlineAccounts: Set<Account> = new Set();
@@ -16,12 +42,27 @@ export class AccountManager {
 	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms */
 	private tick(): void {
 		const now = Date.now();
+		let inUseAccountCount = 0;
+		let inUseCharacterCount = 0;
 		// Go through accounts and prune old ones
 		for (const account of this.onlineAccounts) {
-			if (!account.isInUse() && account.lastActivity + ACCOUNT_INACTIVITY_THRESHOLD < now) {
+			if (account.isInUse()) {
+				inUseAccountCount++;
+				account.characters.forEach((c) => {
+					if (c.isInUse()) {
+						inUseCharacterCount++;
+					}
+				});
+			} else if (account.lastActivity + ACCOUNT_INACTIVITY_THRESHOLD < now) {
 				this.unloadAccount(account);
 			}
 		}
+		inUseAccountsMetric.set(inUseAccountCount);
+		inUseCharactersMetric.set(inUseCharacterCount);
+
+		const db = GetDatabase();
+		totalAccountsMetric.set(db.nextAccountId - 1);
+		totalCharactersMetric.set(db.nextCharacterId - 1);
 	}
 
 	private interval: NodeJS.Timeout | undefined;
@@ -42,12 +83,14 @@ export class AccountManager {
 		for (const account of this.onlineAccounts) {
 			this.unloadAccount(account);
 		}
+		inUseAccountsMetric.set(0);
 	}
 
 	/** Create account from received data, adding it to loaded accounts */
 	private loadAccount(data: DatabaseAccountWithSecure): Account {
 		const account = new Account(data);
 		this.onlineAccounts.add(account);
+		loadedAccountsMetric.set(this.onlineAccounts.size);
 		logger.debug(`Loaded account ${account.data.username}`);
 		return account;
 	}
@@ -56,6 +99,7 @@ export class AccountManager {
 	private unloadAccount(account: Account): void {
 		logger.debug(`Unloading account ${account.data.username}`);
 		this.onlineAccounts.delete(account);
+		loadedAccountsMetric.set(this.onlineAccounts.size);
 	}
 
 	/**

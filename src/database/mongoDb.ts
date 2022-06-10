@@ -95,6 +95,14 @@ export default class MongoDatabase implements PandoraDatabase {
 		}
 	}
 
+	public get nextAccountId(): number {
+		return this._nextAccountId;
+	}
+
+	public get nextCharacterId(): number {
+		return this._nextCharacterId;
+	}
+
 	public async getAccountById(id: number): Promise<DatabaseAccountWithSecure | null> {
 		return await this._accounts.findOne({ id });
 	}

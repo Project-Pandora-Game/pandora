@@ -2,9 +2,26 @@ import { IShardDirectoryMessageHandler, IShardDirectoryBase, MessageHandler, ISh
 import type { IConnectionShard } from './common';
 import { GetDatabase } from '../database/databaseProvider';
 import { ShardManager } from '../shard/shardManager';
+import promClient from 'prom-client';
+
+const messagesMetric = new promClient.Counter({
+	name: 'pandora_directory_shard_messages',
+	help: 'Count of received messages from shards',
+	labelNames: ['messageType'],
+});
 
 export const ConnectionManagerShard = new class ConnectionManagerShard {
-	readonly messageHandler: IShardDirectoryMessageHandler<IConnectionShard>;
+	private readonly messageHandler: IShardDirectoryMessageHandler<IConnectionShard>;
+
+	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionShard): Promise<boolean> {
+		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
+			// Only count valid messages
+			if (result) {
+				messagesMetric.inc({ messageType });
+			}
+			return result;
+		});
+	}
 
 	constructor() {
 		this.messageHandler = new MessageHandler<IShardDirectoryBase, IConnectionShard>({

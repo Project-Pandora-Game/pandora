@@ -4,11 +4,22 @@ import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from './room';
 import { Shard } from './shard';
 import { omit } from 'lodash';
+import promClient from 'prom-client';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const SHARD_TIMEOUT = 10_000;
 
 export const SHARD_WAIT_STOP = Date.now() + SHARD_TIMEOUT;
+
+const shardsMetric = new promClient.Gauge({
+	name: 'pandora_directory_shards',
+	help: 'Current count of shards',
+});
+
+const roomsMetric = new promClient.Gauge({
+	name: 'pandora_directory_rooms',
+	help: 'Current count of rooms',
+});
 
 export const ShardManager = new class ShardManager {
 	private readonly shards: Map<string, Shard> = new Map();
@@ -19,6 +30,7 @@ export const ShardManager = new class ShardManager {
 		if (!shard)
 			return;
 		this.shards.delete(id);
+		shardsMetric.set(this.shards.size);
 		shard.onDelete(true);
 	}
 
@@ -27,6 +39,7 @@ export const ShardManager = new class ShardManager {
 		if (!shard) {
 			shard = new Shard(id ?? nanoid());
 			this.shards.set(shard.id, shard);
+			shardsMetric.set(this.shards.size);
 		}
 		return shard;
 	}
@@ -87,6 +100,7 @@ export const ShardManager = new class ShardManager {
 
 		const room = new Room(config, shard, id);
 		this.rooms.set(room.id, room);
+		roomsMetric.set(this.rooms.size);
 
 		ConnectionManagerClient.onRoomListChange();
 
@@ -98,6 +112,7 @@ export const ShardManager = new class ShardManager {
 
 		if (this.rooms.get(room.id) === room) {
 			this.rooms.delete(room.id);
+			roomsMetric.set(this.rooms.size);
 		}
 
 		const newRoom = this.createRoom(info, undefined, room.id);
@@ -117,6 +132,7 @@ export const ShardManager = new class ShardManager {
 	public destroyRoom(room: Room): void {
 		if (this.rooms.get(room.id) === room) {
 			this.rooms.delete(room.id);
+			roomsMetric.set(this.rooms.size);
 		}
 		room.onDestroy();
 
@@ -129,6 +145,7 @@ export const ShardManager = new class ShardManager {
 	public onDestroy(): void {
 		const shards = [...this.shards.values()];
 		this.shards.clear();
+		shardsMetric.set(this.shards.size);
 		for (const shard of shards) {
 			shard.onDelete(false);
 		}

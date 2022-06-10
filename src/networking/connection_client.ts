@@ -43,7 +43,7 @@ export class ClientConnection extends Connection<IncomingSocket, IDirectoryClien
 	 * @returns Promise of resolution of the message, for some messages also response data
 	 */
 	protected override onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return ConnectionManagerClient.messageHandler.onMessage(messageType, message, callback, this);
+		return ConnectionManagerClient.onMessage(messageType, message, callback, this);
 	}
 
 	/**

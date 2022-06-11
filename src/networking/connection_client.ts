@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IShardClientBase, Connection, IncomingSocket } from 'pandora-common';
+import { CharacterId, GetLogger, IShardClientBase, Connection, IncomingSocket, IServerSocket } from 'pandora-common';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
 import { ConnectionType, IConnectionClient } from './common';
@@ -18,8 +18,8 @@ export class ClientConnection extends Connection<IncomingSocket, IShardClientBas
 
 	public readonly headers: Record<string, undefined | string | string[]>;
 
-	constructor(socket: IncomingSocket, headers: Record<string, undefined | string | string[]>) {
-		super(socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
+	constructor(server: IServerSocket<IShardClientBase>, socket: IncomingSocket, headers: Record<string, undefined | string | string[]>) {
+		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
 		this.headers = headers;
 		this.logger.verbose('Connected');
 		ConnectionManagerClient.onConnect(this);

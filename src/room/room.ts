@@ -1,8 +1,8 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageBase, IChatroomMessageDirectoryAction } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageBase, IChatroomMessageDirectoryAction, IChatRoomUpdate, ICharacterPublicData, ServerRoom, IShardClientBase } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 
-export class Room {
+export class Room extends ServerRoom<IShardClientBase> {
 
 	private readonly data: IChatRoomFullInfo;
 	private readonly characters: Set<Character> = new Set();
@@ -14,6 +14,7 @@ export class Room {
 	private logger: Logger;
 
 	constructor(data: IChatRoomFullInfo) {
+		super();
 		this.data = data;
 		this.logger = GetLogger('Room', `[Room ${data.id}]`);
 		this.logger.verbose('Created');
@@ -26,7 +27,7 @@ export class Room {
 		for (const key of Object.keys(data) as (keyof IChatRoomFullInfo)[]) {
 			(this.data as Record<string, unknown>)[key] = data[key];
 		}
-		this.sendUpdateToAllInRoom();
+		this.sendUpdateToAllInRoom({ info: this.getClientData() });
 	}
 
 	getInfo(): IChatRoomFullInfo {
@@ -36,13 +37,17 @@ export class Room {
 	getClientData(): IChatRoomClientData {
 		return {
 			...this.getInfo(),
-			characters: Array.from(this.characters).map((c) => ({
-				name: c.name,
-				id: c.id,
-				accountId: c.accountId,
-				appearance: c.appearance.exportToBundle(),
-				settings: c.settings,
-			})),
+			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
+		};
+	}
+
+	getCharacterData(c: Character): ICharacterPublicData {
+		return {
+			name: c.name,
+			id: c.id,
+			accountId: c.accountId,
+			appearance: c.appearance.exportToBundle(),
+			settings: c.settings,
 		};
 	}
 
@@ -56,28 +61,25 @@ export class Room {
 
 	public characterEnter(character: Character): void {
 		this.characters.add(character);
-		character.room = this;
-		this.sendUpdateToAllInRoom();
+		this.sendUpdateTo(character, { room: this.getClientData() });
+		this.sendUpdateToAllInRoom({ join: this.getCharacterData(character) });
 		this.logger.verbose(`Character ${character.id} entered`);
 	}
 
 	public characterLeave(character: Character): void {
 		this.characters.delete(character);
-		character.room = null;
+		character.setRoom(null);
 		character.connection?.sendMessage('chatRoomUpdate', { room: null });
 		this.logger.verbose(`Character ${character.id} left`);
-		this.sendUpdateToAllInRoom();
+		this.sendUpdateToAllInRoom({ leave: character.id });
 	}
 
-	public sendUpdateTo(character: Character): void {
-		character.connection?.sendMessage('chatRoomUpdate', { room: this.getClientData() });
+	public sendUpdateTo(character: Character, data: IChatRoomUpdate): void {
+		character.connection?.sendMessage('chatRoomUpdate', data);
 	}
 
-	public sendUpdateToAllInRoom(): void {
-		const room = this.getClientData();
-		for (const character of this.characters) {
-			character.connection?.sendMessage('chatRoomUpdate', { room });
-		}
+	public sendUpdateToAllInRoom(data: IChatRoomUpdate): void {
+		this.sendMessage('chatRoomUpdate', data);
 	}
 
 	private lastMessageTime: number = 0;
@@ -92,7 +94,7 @@ export class Room {
 		return this.lastMessageTime = time;
 	}
 
-	public sendMessage(...messages: IChatRoomMessageBase[]): void {
+	public sendChatMessage(...messages: IChatRoomMessageBase[]): void {
 		const processedMessages = messages.map<IChatRoomMessage>(
 			(msg) => ({
 				time: this.nextMessageTime(),
@@ -101,20 +103,24 @@ export class Room {
 		);
 		for (const character of this.characters) {
 			character.queueMessages(processedMessages.filter((msg) => {
-				if (msg.type === 'chat' || msg.type === 'ooc') {
-					return msg.to === undefined || character.id === msg.from || character.id === msg.to;
-				} else if (msg.type === 'emote' || msg.type === 'me') {
-					return true;
-				} else if (msg.type === 'action' || msg.type === 'serverMessage') {
-					return true;
+				switch (msg.type) {
+					case 'chat':
+					case 'ooc':
+						return msg.to === undefined || character.id === msg.from || character.id === msg.to;
+					case 'emote':
+					case 'me':
+					case 'action':
+					case 'serverMessage':
+						return true;
+					default:
+						AssertNever(msg);
 				}
-				AssertNever(msg.type);
 			}));
 		}
 	}
 
 	public processDirectoryMessages(messages: IChatroomMessageDirectoryAction[]): void {
-		this.sendMessage(
+		this.sendChatMessage(
 			...messages
 				.filter((m) => m.directoryTime > this.lastDirectoryMessageTime)
 				.map((m) => omit(m, ['directoryTime'])),

@@ -27,11 +27,29 @@ export class Character {
 	private state = CharacterModification.NONE;
 	private modified: Set<keyof ICharacterDataChange | 'appearance'> = new Set();
 
-	public connection: IConnectionClient | null = null;
 	private invalid: null | 'timeout' | 'error' | 'remove' = null;
 	private timeout: NodeJS.Timeout | null = null;
 
-	public room: Room | null = null;
+	private _connection: IConnectionClient | null = null;
+	public get connection(): IConnectionClient | null {
+		return this._connection;
+	}
+
+	public _room: Room | null = null;
+	public get room(): Room | null {
+		return this._room;
+	}
+	public setRoom(room: Room | null): void {
+		if (this.connection) {
+			if (this.room) {
+				this.connection.leaveRoom(this.room);
+			}
+			if (room) {
+				this.connection.joinRoom(room);
+			}
+		}
+		this._room = room;
+	}
 
 	public get id(): CharacterId {
 		return this.data.id;
@@ -78,7 +96,7 @@ export class Character {
 		this.linkRoom(room);
 
 		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
-		this.appearance.onChangeHandler = this.onAppearanceChanged.bind(this);
+		this.appearance.onChangeHandler = this.onAppearanceChanged.bind(this, true);
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
@@ -132,8 +150,8 @@ export class Character {
 			clearTimeout(this.timeout);
 			this.timeout = null;
 		}
-		const oldConnection = this.connection;
-		this.connection = null;
+		const oldConnection = this._connection;
+		this._connection = null;
 		if (oldConnection && oldConnection !== connection) {
 			this.logger.debug(`Disconnected (${oldConnection.id})`);
 			oldConnection.character = null;
@@ -142,7 +160,10 @@ export class Character {
 		if (connection) {
 			this.logger.debug(`Connected (${connection.id})`);
 			connection.character = this;
-			this.connection = connection;
+			if (this.room) {
+				connection.joinRoom(this.room);
+			}
+			this._connection = connection;
 		} else if (this.isValid) {
 			this.timeout = setTimeout(this.handleTimeout.bind(this), CHARACTER_TIMEOUT);
 		}
@@ -197,7 +218,7 @@ export class Character {
 			return;
 		this.invalid = reason;
 		const oldConnection = this.connection;
-		this.connection = null;
+		this._connection = null;
 		if (oldConnection) {
 			this.logger.debug(`Disconnected during invalidation (${oldConnection.id})`);
 			oldConnection.character = null;
@@ -285,26 +306,24 @@ export class Character {
 		this.state = CharacterModification.MODIFIED;
 
 		if (room && this.room) {
-			this.room.sendUpdateToAllInRoom();
+			this.room.sendUpdateToAllInRoom({ update: { id: this.id, [key]: value } });
 		} else {
 			this.connection?.sendMessage('updateCharacter', { [key]: value });
 		}
 	}
 
-	private onAppearanceChanged(): void {
-		this.modified.add('appearance');
-		this.state = CharacterModification.MODIFIED;
-
-		if (this.room) {
-			this.room.sendUpdateToAllInRoom();
-		} else {
-			this.connection?.sendMessage('updateCharacter', { appearance: this.appearance.exportToBundle() });
+	public onAppearanceChanged(changed = true): void {
+		if (changed) {
+			this.modified.add('appearance');
+			this.state = CharacterModification.MODIFIED;
 		}
-	}
 
-	public sendUpdate(): void {
 		if (this.room) {
-			this.room.sendUpdateTo(this);
+			if (changed) {
+				this.room.sendUpdateToAllInRoom({ update: { id: this.id, appearance: this.appearance.exportToBundle() } });
+			} else {
+				this.room.sendUpdateTo(this, { update: { id: this.id, appearance: this.appearance.exportToBundle() } });
+			}
 		} else {
 			this.connection?.sendMessage('updateCharacter', { appearance: this.appearance.exportToBundle() });
 		}

@@ -79,7 +79,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		const room = client.character.room;
 		const character = client.character;
 
-		room.sendMessage(
+		room.sendChatMessage(
 			...messages.map<IChatRoomMessageBase>((message) => {
 				if (message.type === 'chat' || message.type === 'ooc') {
 					return {
@@ -112,7 +112,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			throw new BadMessageError();
 
 		if (!DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager)) {
-			client.character.sendUpdate();
+			client.character.onAppearanceChanged(false);
 		}
 	}
 

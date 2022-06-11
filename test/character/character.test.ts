@@ -1,7 +1,17 @@
-import { Appearance, APPEARANCE_BUNDLE_DEFAULT, ICharacterData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
-import { Character, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterData } from '../../src/character/character';
-import { renderHook, act } from '@testing-library/react-hooks';
+import { act, renderHook } from '@testing-library/react';
 import { cloneDeep } from 'lodash';
+import {
+	Appearance,
+	APPEARANCE_BUNDLE_DEFAULT,
+	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
+	ICharacterData,
+} from 'pandora-common';
+import {
+	Character,
+	useCharacterAppearanceItems,
+	useCharacterAppearancePose,
+	useCharacterData,
+} from '../../src/character/character';
 
 const mockData: ICharacterData = {
 	id: 'c123',

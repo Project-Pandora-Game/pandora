@@ -1,10 +1,10 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { act, renderHook, RenderHookResult } from '@testing-library/react';
 import { observable, Observable, useObservable } from '../src/observable';
 
 describe('Observable', () => {
 	type T = { mockValue: string; };
-	const defValue: T = { mockValue: 'mock' };
-	const updated: T = { mockValue: 'updated' };
+	const defValue: T = Object.freeze({ mockValue: 'mock' });
+	const updated: T = Object.freeze({ mockValue: 'updated' });
 	let mockObservable: Observable<T>;
 
 	beforeEach(() => mockObservable = new Observable<T>(defValue));
@@ -49,14 +49,17 @@ describe('Observable', () => {
 
 describe('useObservable()', () => {
 	type T = { mockValue: string; };
-	const defValue: T = { mockValue: 'mock' };
-	const updated: T = { mockValue: 'updated' };
-	const mockObservable = new Observable<T>(defValue);
-	const { result, rerender } = renderHook(() => useObservable(mockObservable));
-	beforeEach(() => rerender());
+	const defValue: T = Object.freeze({ mockValue: 'mock' });
+	const updated: T = Object.freeze({ mockValue: 'updated' });
+	let mockObservable: Observable<T>;
+	let result: RenderHookResult<T, unknown>['result'];
+
+	beforeEach(() => {
+		mockObservable = new Observable<T>(defValue);
+		result = renderHook(() => useObservable(mockObservable)).result;
+	});
 
 	it('should return observable\'s default value', () => {
-
 		expect(result.current).toBe(defValue);
 	});
 

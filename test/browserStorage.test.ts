@@ -1,10 +1,10 @@
-import { renderHook, act } from '@testing-library/react-hooks';
+import { act, renderHook, RenderHookResult } from '@testing-library/react';
 import { BrowserStorage, useBrowserStorage } from '../src/browserStorage';
 
 type T = { mockValue: string; };
-const mockDefault: T = { mockValue: 'mockValue' };
-const mockUpdate: T = { mockValue: 'sth-different' };
-const mockValidate = jest.fn(() => true);
+const mockDefault: T = Object.freeze({ mockValue: 'mockValue' });
+const mockUpdate: T = Object.freeze({ mockValue: 'sth-different' });
+const mockValidate = jest.fn().mockReturnValue(true);
 const NAME = 'mockname';
 
 let mockStorage: BrowserStorage<T>;
@@ -27,8 +27,11 @@ describe('BrowserStorage', () => {
 });
 
 describe('useBrowserStorage()', () => {
-	const { result, rerender } = renderHook(() => useBrowserStorage<T>(NAME, mockDefault, mockValidate));
-	beforeEach(() => rerender());
+	let result: RenderHookResult<[T, (t: T) => void], unknown>['result'];
+
+	beforeEach(() => {
+		result = renderHook(() => useBrowserStorage<T>(NAME, mockDefault, mockValidate)).result;
+	});
 
 	it('should return an array with two value', () => {
 		expect(result.current.length).toBe(2);

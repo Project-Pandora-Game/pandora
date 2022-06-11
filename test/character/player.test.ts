@@ -1,8 +1,8 @@
-import { renderHook } from '@testing-library/react-hooks';
-import { ICharacterData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
+import { renderHook } from '@testing-library/react';
+import _ from 'lodash';
+import { CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData } from 'pandora-common';
 import { Player, PlayerCharacter, usePlayerData } from '../../src/character/player';
 import { ShardConnector } from '../../src/networking/socketio_shard_connector';
-import _ from 'lodash';
 
 const mockData: ICharacterData = {
 	id: 'c123',

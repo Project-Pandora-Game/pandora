@@ -3,6 +3,7 @@ import {
 	ConnectionBase,
 	CreateMessageHandlerOnAny,
 	GetLogger,
+	IChatRoomUpdate,
 	IClientShardBase,
 	IDirectoryCharacterConnectionInfo,
 	IShardClientArgument,
@@ -176,7 +177,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		} else {
 			Player.value = new PlayerCharacter(character);
 		}
-		Room.update(room);
+		Room.update({ room });
 		if (currentState === ShardConnectionState.CONNECTED) {
 			// Ignore reloads from shard
 		} else if (currentState === ShardConnectionState.WAIT_FOR_DATA) {
@@ -198,8 +199,8 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		Player.value.update(data);
 	}
 
-	private onChatRoomUpdate({ room }: IShardClientArgument['chatRoomUpdate']): void {
-		Room.update(room);
+	private onChatRoomUpdate(data: IChatRoomUpdate): void {
+		Room.update(data);
 	}
 }
 

@@ -1,4 +1,4 @@
-import { IChatRoomClientData, IChatRoomMessage, GetLogger, CharacterId, ICharacterPublicData, IChatroomMessageChat, IChatroomMessageAction, AssertNever, RoomId, ICharacterPublicSettings } from 'pandora-common';
+import { IChatRoomClientData, IChatRoomMessage, GetLogger, CharacterId, ICharacterPublicData, IChatroomMessageChat, IChatroomMessageAction, AssertNever, RoomId, ICharacterPublicSettings, IChatRoomUpdate } from 'pandora-common';
 import { ChatActionDictionaryMetaEntry } from 'pandora-common/dist/chatroom/chatActions';
 import { BrowserStorage } from '../browserStorage';
 import { USER_DEBUG } from '../config/Environment';
@@ -25,7 +25,7 @@ export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatro
 	time: number;
 };
 
-export function IsUserMessage(message: IChatroomMessageProcessed): message is IChatroomMessageChatProcessed & { time: number } {
+export function IsUserMessage(message: IChatroomMessageProcessed): message is IChatroomMessageChatProcessed & { time: number; } {
 	return message.type !== 'action' && message.type !== 'serverMessage';
 }
 
@@ -98,33 +98,77 @@ export const Room = new class Room extends TypedEventEmitter<RoomEvents> {
 		return this.data.value != null;
 	}
 
-	public characters: Character[] = [];
+	public characters: readonly Character[] = [];
 
 	public readonly messages = new Observable<IChatroomMessageProcessed[]>([]);
 	private lastMessageTime: number = 0;
 
-	public update(data: IChatRoomClientData | null): void {
+	public update(data: IChatRoomUpdate): void {
 		const player = Player.value;
 		if (!player) {
 			throw new Error('Cannot update room when player is not loaded');
 		}
 		const oldData = this.data.value;
-		this.data.value = data;
-		if (data) {
-			if (oldData && oldData.id !== data.id) {
-				logger.debug('Changed room');
+		if ('room' in data) {
+			const room = data.room;
+			this.data.value = room;
+			if (room) {
+				if (oldData && oldData.id !== room.id) {
+					logger.debug('Changed room');
+					this.onLeave();
+				}
+				if (USER_DEBUG && oldData?.id !== room.id && LastRoomChat.value?.roomId === room.id) {
+					this.messages.value = LastRoomChat.value.messages;
+				}
+				this.updateCharacters(room.characters);
+				this.emit('load', room);
+				logger.debug('Loaded room data', data);
+			} else {
+				logger.debug('Left room');
 				this.onLeave();
 			}
-			if (USER_DEBUG && oldData?.id !== data.id && LastRoomChat.value?.roomId === data.id) {
-				this.messages.value = LastRoomChat.value.messages;
-			}
-			this.updateCharacters(data.characters);
-			this.emit('load', data);
-			logger.debug('Loaded room data', data);
-		} else {
-			logger.debug('Left room');
-			this.onLeave();
+			return;
 		}
+		const { info, join, leave, update } = data;
+		if (join?.id === player.data.id) {
+			return; // Ignore self-join
+		}
+		if (!this.data.value) {
+			logger.error('Cannot update room when it is not loaded');
+			return;
+		}
+		let next = this.data.value;
+
+		if (info) {
+			next = { ...next, ...info };
+		}
+		if (join) {
+			const char = this.characters.find((oc) => oc.data.id === join.id);
+			if (!char) {
+				this.characters = [...this.characters, new Character(join)];
+				next.characters.push(join);
+				this.characterNameMap.set(join.id, join.name);
+			} else {
+				char.update(join);
+				next.characters = next.characters.map((c) => c.id === join.id ? join : c);
+			}
+		}
+		if (leave) {
+			next.characters = next.characters.filter((c) => c.id !== leave);
+			this.characters = this.characters.filter((oc) => oc.data.id !== leave);
+		}
+		if (update) {
+			const char = this.characters.find((oc) => oc.data.id === update.id);
+			if (!char) {
+				logger.error('Character not found', update);
+			} else {
+				char.update(update);
+				next.characters = next.characters.map((c) => c.id === update.id ? { ...c, ...update } : c);
+			}
+		}
+		this.data.value = { ...next };
+		this.emit('load', this.data.value);
+		logger.debug('Updated room data', data);
 	}
 
 	private updateCharacters(characters: ICharacterPublicData[]): void {

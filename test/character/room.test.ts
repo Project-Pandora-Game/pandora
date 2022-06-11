@@ -34,7 +34,7 @@ describe('Room', () => {
 		describe('When player is not loaded', () => {
 			it('should throw error when player is not loaded', () => {
 				expect(Player.value).toBeNull();
-				expect(() => Room.update(null))
+				expect(() => Room.update({ room: null }))
 					.toThrowError();
 			});
 		});
@@ -47,20 +47,20 @@ describe('Room', () => {
 
 			it('should leave room when data is null', () => {
 
-				Room.update(null);
+				Room.update({ room: null });
 				expect(spyLeave).toBeCalledTimes(1);
 			});
 
 			it('should leave room if data.id does not match', () => {
 				Room.data.value = { id: 'c123' } as unknown as IChatRoomClientData;
-				Room.update({ id: 'c321', characters: [] } as unknown as IChatRoomClientData);
+				Room.update({ room: { id: 'c321', characters: [] } as unknown as IChatRoomClientData });
 				expect(spyLeave).toBeCalledTimes(1);
 			});
 
 			it('should emit load event if id matches', () => {
 				const load = jest.fn();
 				Room.on('load', load);
-				Room.update({ id: 'c321', characters: [] } as unknown as IChatRoomClientData);
+				Room.update({ room: { id: 'c321', characters: [] } as unknown as IChatRoomClientData });
 				expect(load).nthCalledWith(1, expect.objectContaining({ id: 'c321' }));
 			});
 		});
@@ -79,7 +79,7 @@ describe('Room', () => {
 		});
 
 		it('should return "[UNKNOWN] when character is not found"', () => {
-			Room.update({ id: 'c321', characters: [] } as unknown as IChatRoomClientData);
+			Room.update({ room: { id: 'c321', characters: [] } as unknown as IChatRoomClientData });
 			expect(Room.getCharacterName('c213129311')).toBe('[UNKNOWN]');
 		});
 
@@ -96,7 +96,7 @@ describe('Room', () => {
 				name: 'tech',
 				settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 			};
-			Room.update({ id: 'c321', characters: [char1, char2] } as unknown as IChatRoomClientData);
+			Room.update({ room: { id: 'c321', characters: [char1, char2] } as unknown as IChatRoomClientData });
 			expect(Room.getCharacterName('c123')).toBe('test');
 			expect(Room.getCharacterName('c321')).toBe('tech');
 		});

@@ -1,4 +1,4 @@
-import { IDirectoryClientBase, GetLogger, Connection, IncomingSocket } from 'pandora-common';
+import { IDirectoryClientBase, GetLogger, Connection, IncomingSocket, IServerSocket } from 'pandora-common';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
 import { ConnectionType, IConnectionClient } from './common';
@@ -24,8 +24,8 @@ export class ClientConnection extends Connection<IncomingSocket, IDirectoryClien
 		return this.account !== null;
 	}
 
-	constructor(socket: IncomingSocket, auth: unknown) {
-		super(socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
+	constructor(server: IServerSocket<IDirectoryClientBase>, socket: IncomingSocket, auth: unknown) {
+		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
 		this.logger.verbose('Connected');
 		ConnectionManagerClient.onConnect(this, auth);
 	}

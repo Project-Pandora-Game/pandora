@@ -1,15 +1,17 @@
 import type { Socket } from 'socket.io';
 import type { IncomingMessage, Server as HttpServer } from 'http';
 import { SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH } from 'pandora-common';
+import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IConnectionSender, IDirectoryShard, IDirectoryShardBase, MembersFirstArg } from 'pandora-common';
 import { SocketIOServer } from './socketio_common_server';
 import { ShardConnection } from './connection_shard';
 import { SocketIOSocket } from './socketio_common_socket';
+import { SocketInterfaceOneshotHandler } from 'pandora-common/dist/networking/helpers';
+import { IServerSocket } from 'pandora-common/dist/networking/room';
 
 const logger = GetLogger('SIO-Server-Shard');
 
 /** Class housing socket.io endpoint for shards */
-export class SocketIOServerShard extends SocketIOServer {
+export class SocketIOServerShard extends SocketIOServer implements IServerSocket<IDirectoryShardBase> {
 
 	constructor(httpServer: HttpServer) {
 		super(httpServer, {
@@ -45,9 +47,14 @@ export class SocketIOServerShard extends SocketIOServer {
 		socket.once('disconnect', () => {
 			logger.debug(`Shard disconnected; id: ${socket.id}`);
 		});
-		const connection = new ShardConnection(new SocketIOSocket(socket));
+		const connection = new ShardConnection(this, new SocketIOSocket(socket));
 		if (!connection.isConnected()) {
 			logger.fatal('Asserting failed: client disconnect before onConnect finished');
 		}
+	}
+
+	sendToAll<K extends keyof SocketInterfaceOneshotHandler<IDirectoryShard> & string>(client: ReadonlySet<IConnectionSender<IDirectoryShardBase>>, messageType: K, message: MembersFirstArg<IDirectoryShardBase>[K]): void {
+		const rooms = [...client].map((c) => c.id);
+		this.socketServer.to(rooms).emit(messageType, message);
 	}
 }

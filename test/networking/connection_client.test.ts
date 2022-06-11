@@ -1,11 +1,12 @@
 import { nanoid } from 'nanoid';
-import { IClientDirectoryBase, MockConnection } from 'pandora-common';
+import { IClientDirectoryBase, IDirectoryClientBase, MockConnection, MockServerSocket } from 'pandora-common';
 import { ClientConnection } from '../../src/networking/connection_client';
 import { ConnectionManagerClient } from '../../src/networking/manager_client';
 import { TestMockAccount, TestMockCharacter, TestMockDb, TestSetupLogging } from '../utils';
 
 describe('ClientConnection', () => {
 	let connection: MockConnection<IClientDirectoryBase>;
+	let server: MockServerSocket<IDirectoryClientBase>;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let connectionOnMessage: jest.Mock<any, any>;
 
@@ -18,7 +19,8 @@ describe('ClientConnection', () => {
 		connectionOnMessage = jest.fn(() => {
 			return Promise.resolve(true);
 		});
-		connection = new MockConnection({ onMessage: connectionOnMessage }, nanoid());
+		server = new MockServerSocket<IDirectoryClientBase>();
+		connection = new MockConnection(new MockServerSocket<IClientDirectoryBase>(), { onMessage: connectionOnMessage }, nanoid());
 	});
 	afterEach(() => {
 		connection.disconnect();
@@ -29,7 +31,7 @@ describe('ClientConnection', () => {
 		// Check, that this exact data is passed
 		const authData = {};
 
-		const client = new ClientConnection(connection.connect(), authData);
+		const client = new ClientConnection(server, connection.connect(), authData);
 
 		expect(onConnectSpy).toHaveBeenCalledTimes(1);
 		expect(onConnectSpy).toHaveBeenNthCalledWith(1, client, authData);
@@ -38,7 +40,7 @@ describe('ClientConnection', () => {
 	it('Calls manager onDisconnect after connection disconnects', () => {
 		const onDisconnectSpy = jest.spyOn(ConnectionManagerClient, 'onDisconnect');
 
-		const client = new ClientConnection(connection.connect(), {});
+		const client = new ClientConnection(server, connection.connect(), {});
 
 		expect(onDisconnectSpy).not.toHaveBeenCalled();
 		connection.disconnect();
@@ -47,7 +49,7 @@ describe('ClientConnection', () => {
 	});
 
 	it('Refuses awaitResponse request', () => {
-		const client = new ClientConnection(connection.connect(), {});
+		const client = new ClientConnection(server, connection.connect(), {});
 
 		expect(() => {
 			return client.awaitResponse('test', {});
@@ -58,7 +60,7 @@ describe('ClientConnection', () => {
 		it('Passes message without callback to manager message handler', () => {
 			const onMessageSpy = jest.spyOn(ConnectionManagerClient, 'onMessage');
 
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 
 			connection.sendMessage('logout', {});
 
@@ -69,7 +71,7 @@ describe('ClientConnection', () => {
 		it('Passes message with callback to manager message handler', async () => {
 			const onMessageSpy = jest.spyOn(ConnectionManagerClient, 'onMessage');
 
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 
 			await connection.awaitResponse('shardInfo', {});
 
@@ -80,13 +82,13 @@ describe('ClientConnection', () => {
 
 	describe('Account management', () => {
 		it('Starts with empty account', () => {
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 			expect(client.account).toBe(null);
 		});
 
 		it('Sets and removes account and associated connections', async () => {
 			const account = await TestMockAccount();
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 
 			// Set
 			client.setAccount(account);
@@ -104,7 +106,7 @@ describe('ClientConnection', () => {
 		it('Swaps accounts', async () => {
 			const account1 = await TestMockAccount();
 			const account2 = await TestMockAccount();
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 
 			// Set first
 			client.setAccount(account1);
@@ -121,7 +123,7 @@ describe('ClientConnection', () => {
 
 		it('Removes account after disconnect', async () => {
 			const account = await TestMockAccount();
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 
 			// Set
 			client.setAccount(account);
@@ -136,14 +138,14 @@ describe('ClientConnection', () => {
 
 	describe('Character management', () => {
 		it('Starts with empty character', () => {
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 			expect(client.character).toBe(null);
 		});
 
 		it('Sets and removes character and associated connection', async () => {
 			const account = await TestMockAccount();
 			const character = await TestMockCharacter(account);
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account);
 
 			// Set
@@ -164,7 +166,7 @@ describe('ClientConnection', () => {
 			const account = await TestMockAccount();
 			const character1 = await TestMockCharacter(account);
 			const character2 = await TestMockCharacter(account);
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account);
 
 			// Set first
@@ -188,9 +190,9 @@ describe('ClientConnection', () => {
 		it('Takes character over', async () => {
 			const account = await TestMockAccount();
 			const character = await TestMockCharacter(account);
-			const client = new ClientConnection(connection.connect(), {});
-			const connection2 = new MockConnection({ onMessage: connectionOnMessage }, nanoid());
-			const client2 = new ClientConnection(connection2.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
+			const connection2 = new MockConnection(server, { onMessage: connectionOnMessage }, nanoid());
+			const client2 = new ClientConnection(server, connection2.connect(), {});
 			client.setAccount(account);
 			client2.setAccount(account);
 			connectionOnMessage.mockClear();
@@ -223,7 +225,7 @@ describe('ClientConnection', () => {
 		it('Removes character after disconnect', async () => {
 			const account = await TestMockAccount();
 			const character = await TestMockCharacter(account);
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account);
 
 			// Set
@@ -241,7 +243,7 @@ describe('ClientConnection', () => {
 
 	describe('sendConnectionStateUpdate()', () => {
 		it('Sends empty state message', () => {
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 			connectionOnMessage.mockClear();
 
 			client.sendConnectionStateUpdate();
@@ -255,7 +257,7 @@ describe('ClientConnection', () => {
 
 		it('Sends state message with account', async () => {
 			const account = await TestMockAccount();
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 			connectionOnMessage.mockClear();
 
 			client.setAccount(account);
@@ -272,7 +274,7 @@ describe('ClientConnection', () => {
 		it('Sends state message with character', async () => {
 			const account = await TestMockAccount();
 			const character = await TestMockCharacter(account);
-			const client = new ClientConnection(connection.connect(), {});
+			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account);
 			connectionOnMessage.mockClear();
 

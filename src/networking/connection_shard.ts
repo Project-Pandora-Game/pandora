@@ -1,4 +1,4 @@
-import { Connection, GetLogger, IDirectoryShardBase, IncomingSocket } from 'pandora-common';
+import { Connection, GetLogger, IDirectoryShardBase, IncomingSocket, IServerSocket } from 'pandora-common';
 import { ConnectionType, IConnectionShard } from './common';
 import { ConnectionManagerShard } from './manager_shard';
 import { Shard } from '../shard/shard';
@@ -9,8 +9,8 @@ export class ShardConnection extends Connection<IncomingSocket, IDirectoryShardB
 
 	public shard: Shard | null = null;
 
-	constructor(socket: IncomingSocket) {
-		super(socket, GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`));
+	constructor(server: IServerSocket<IDirectoryShardBase>, socket: IncomingSocket) {
+		super(server, socket, GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`));
 		this.logger.verbose('Connected');
 	}
 

@@ -61,6 +61,7 @@ export class Room extends ServerRoom<IShardClientBase> {
 
 	public characterEnter(character: Character): void {
 		this.characters.add(character);
+		character.setRoom(this);
 		this.sendUpdateTo(character, { room: this.getClientData() });
 		this.sendUpdateToAllInRoom({ join: this.getCharacterData(character) });
 		this.logger.verbose(`Character ${character.id} entered`);

@@ -2,7 +2,7 @@ import { AssertNever, IsEmail } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { DirectoryPasswordReset } from '../../../networking/account_manager';
+import { useDirectoryPasswordReset } from '../../../networking/account_manager';
 import { Button } from '../../common/Button/Button';
 import { Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
 
@@ -12,6 +12,7 @@ export interface ForgotPasswordFormData {
 
 export function ForgotPasswordForm(): ReactElement {
 	const navigate = useNavigate();
+	const passwordReset = useDirectoryPasswordReset();
 
 	const {
 		formState: { errors, submitCount },
@@ -21,7 +22,7 @@ export function ForgotPasswordForm(): ReactElement {
 
 	const onSubmit = handleSubmit(({ email }) => {
 		void (async () => {
-			const result = await DirectoryPasswordReset(email);
+			const result = await passwordReset(email);
 
 			if (result === 'maybeSent') {
 				navigate('/reset_password', {

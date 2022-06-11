@@ -2,7 +2,7 @@ import { AssertNever, IsEmail } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { DirectoryResendVerificationMail } from '../../../networking/account_manager';
+import { useDirectoryResendVerification } from '../../../networking/account_manager';
 import { Button } from '../../common/Button/Button';
 import { Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
 
@@ -12,6 +12,7 @@ export interface ResendVerificationFormData {
 
 export function ResendVerificationForm(): ReactElement {
 	const navigate = useNavigate();
+	const resendVerification = useDirectoryResendVerification();
 
 	const {
 		formState: { errors, submitCount },
@@ -21,7 +22,7 @@ export function ResendVerificationForm(): ReactElement {
 
 	const onSubmit = handleSubmit(({ email }) => {
 		void (async () => {
-			const result = await DirectoryResendVerificationMail(email);
+			const result = await resendVerification(email);
 
 			if (result === 'maybeSent') {
 				navigate('/login', {

@@ -2,7 +2,7 @@ import { AssertNever, IsEmail, IsUsername } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import { DirectoryRegister } from '../../../networking/account_manager';
+import { useDirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/Button/Button';
 import { Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
@@ -20,6 +20,7 @@ export interface RegistrationFormData {
 export function RegistrationForm(): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
+	const directoryRegister = useDirectoryRegister();
 	const [usernameTaken, setUsernameTaken] = useState('');
 	const [emailTaken, setEmailTaken] = useState('');
 	const [invalidBetaKey, setInvalidBetaKey] = useState('');
@@ -63,7 +64,7 @@ export function RegistrationForm(): ReactElement {
 		void (async () => {
 			setUsernameTaken('');
 			setEmailTaken('');
-			const result = await DirectoryRegister(username, password, email, betaKey || undefined);
+			const result = await directoryRegister(username, password, email, betaKey || undefined);
 
 			if (result === 'ok') {
 				setAuthData({ username, password, justRegistered: true });

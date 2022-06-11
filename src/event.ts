@@ -41,3 +41,6 @@ export abstract class TypedEventEmitter<T extends TypedEvent> implements ITypedE
 		this._allListeners.forEach((observer) => observer(obj));
 	}
 }
+
+export class NoopEventEmitter<T extends TypedEvent> extends TypedEventEmitter<T> {
+}

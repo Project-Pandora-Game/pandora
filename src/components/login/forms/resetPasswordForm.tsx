@@ -1,12 +1,11 @@
 import { AssertNever, IsSimpleToken, IsUsername } from 'pandora-common';
-import React, { useState } from 'react';
-import { ReactElement } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import { DirectoryPasswordResetConfirm } from '../../../networking/account_manager';
+import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager';
 import { Button } from '../../common/Button/Button';
+import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/Form/form';
 import { LocationStateMessage } from '../../common/LocationStateMessage/locationStateMessage';
-import { FormErrorMessage, Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
 
 const RESET_CODE_LENGTH = 6;
 
@@ -20,6 +19,7 @@ export interface ResetPasswordFormData {
 export function ResetPasswordForm(): ReactElement {
 	const navigate = useNavigate();
 	const [errorMessage, setErrorMessage] = useState('');
+	const passwordResetConfirm = useDirectoryPasswordResetConfirm();
 	const {
 		formState: { errors, submitCount },
 		getValues,
@@ -29,7 +29,7 @@ export function ResetPasswordForm(): ReactElement {
 
 	const onSubmit = handleSubmit(({ username, token, password }) => {
 		void (async () => {
-			const result = await DirectoryPasswordResetConfirm(username, token, password);
+			const result = await passwordResetConfirm(username, token, password);
 
 			if (result === 'ok') {
 				setErrorMessage('');

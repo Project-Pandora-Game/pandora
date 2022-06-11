@@ -17,18 +17,11 @@ import {
 } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
-import { DIRECTORY_ADDRESS } from '../config/Environment';
+import { PrehashPassword } from '../crypto/helpers';
 import { TypedEventEmitter } from '../event';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
-import { PrehashPassword } from './account_manager';
-import { DirectoryConnectionState, IDirectoryConnector, LoginResponse } from './directoryConnector';
-
-export interface AuthToken {
-	value: string;
-	expires: number;
-	username: string;
-}
+import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
 
 type SocketAuthCallback = (data?: IClientDirectoryAuthMessage) => void;
 
@@ -47,7 +40,7 @@ class ConnectionStateEventEmitter extends TypedEventEmitter<Pick<IDirectoryClien
 }
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> implements IDirectoryConnector {
+export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> implements DirectoryConnector {
 
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>({
@@ -137,10 +130,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 	 */
 	public connect(): Promise<this> {
 		return new Promise((resolve) => {
-			if (!DIRECTORY_ADDRESS) {
-				throw new Error('Missing DIRECTORY_ADDRESS');
-			}
-
 			if (this._state.value !== DirectoryConnectionState.NONE) {
 				throw new Error('connect can only be called once');
 			}
@@ -282,5 +271,3 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		}
 	}
 }
-
-export const DirectoryConnector = SocketIODirectoryConnector.create(DIRECTORY_ADDRESS);

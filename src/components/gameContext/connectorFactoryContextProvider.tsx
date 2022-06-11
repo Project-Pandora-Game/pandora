@@ -1,7 +1,10 @@
 import { IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useMemo } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
+import { DIRECTORY_ADDRESS } from '../../config/Environment';
+import { DirectoryConnector } from '../../networking/directoryConnector';
 import { ShardConnector } from '../../networking/shardConnector';
+import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
 import { SocketIOShardConnector } from '../../networking/socketio_shard_connector';
 
 export type ShardConnectorFactory = (info: IDirectoryCharacterConnectionInfo) => ShardConnector;
@@ -16,7 +19,7 @@ export const connectorFactoryContext = createContext<ConnectorFactoryContext>({
 	},
 });
 
-/** Context provider responsible for providing concrete connector implementations to the application */
+/** Context provider responsible for providing concrete shard connector implementations to the application */
 export function ConnectorFactoryContextProvider({ children }: ChildrenProps): ReactElement {
 	const context = useMemo<ConnectorFactoryContext>(() => ({
 		shardConnectorFactory: (info) => new SocketIOShardConnector(info),
@@ -31,4 +34,13 @@ export function ConnectorFactoryContextProvider({ children }: ChildrenProps): Re
 
 export function useShardConnectorFactory(): ShardConnectorFactory {
 	return useContext(connectorFactoryContext).shardConnectorFactory;
+}
+
+/** Factory function responsible for providing the concrete directory connector implementation to the application */
+export function CreateDirectoryConnector(): DirectoryConnector {
+	if (!DIRECTORY_ADDRESS) {
+		throw new Error('Unable to create directory connector: missing DIRECTORY_ADDRESS');
+	}
+
+	return SocketIODirectoryConnector.create(DIRECTORY_ADDRESS);
 }

@@ -4,13 +4,12 @@ import {
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 } from 'pandora-common';
-import { DirectoryConnectionState, IDirectoryConnector } from '../../../src/networking/directoryConnector';
-import { AuthToken } from '../../../src/networking/socketio_directory_connector';
+import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../../src/networking/directoryConnector';
 import { Observable } from '../../../src/observable';
 import { TestEventEmitter } from '../testEventEmitter';
 
 /** Mock directory connector implementation for testing */
-export class MockDirectoryConnector implements IDirectoryConnector {
+export class MockDirectoryConnector implements DirectoryConnector {
 	public readonly authToken = new Observable<AuthToken | undefined>(MockAuthToken());
 	public readonly currentAccount = new Observable<IDirectoryAccountInfo | null>(MockAccountInfo());
 	public readonly directoryStatus = new Observable<IDirectoryStatus>({ time: 0 });

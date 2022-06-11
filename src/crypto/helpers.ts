@@ -1,3 +1,5 @@
+import { PASSWORD_PREHASH_SALT } from 'pandora-common';
+
 const crypto = globalThis.crypto;
 const subtle = globalThis.crypto.subtle;
 
@@ -24,4 +26,8 @@ export function GenerateIV(base64?: string): { iv: string; alg: { name: 'AES-GCM
 	} else {
 		return { iv: base64, alg: { name: 'AES-GCM', iv: Base64ToArray(base64) } };
 	}
+}
+
+export function PrehashPassword(password: string): Promise<string> {
+	return HashSHA512Base64(PASSWORD_PREHASH_SALT + password);
 }

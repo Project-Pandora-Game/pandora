@@ -1,3 +1,4 @@
+import { noop } from 'lodash';
 import { useSyncExternalStore } from 'react';
 import { TypedEvent, TypedEventEmitter } from './event';
 
@@ -37,7 +38,19 @@ export class Observable<T> implements ReadonlyObservable<T> {
 	}
 }
 
-export const NULL_OBSERVABLE: ReadonlyObservable<null> = new Observable(null);
+export class StaticObservable<T> implements ReadonlyObservable<T> {
+	public readonly value: T;
+
+	constructor(value: T) {
+		this.value = value;
+	}
+
+	subscribe(_observer: Observer<T>): UnsubscribeCallback {
+		return noop;
+	}
+}
+
+export const NULL_OBSERVABLE: ReadonlyObservable<null> = new StaticObservable(null);
 
 export function useObservable<T>(obs: ReadonlyObservable<T>): T {
 	return useSyncExternalStore((cb) => obs.subscribe(cb), () => obs.value);

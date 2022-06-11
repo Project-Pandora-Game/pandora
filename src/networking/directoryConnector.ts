@@ -9,7 +9,6 @@ import {
 } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
 import { ReadonlyObservable } from '../observable';
-import { AuthToken } from './socketio_directory_connector';
 
 export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials';
 
@@ -27,7 +26,13 @@ export enum DirectoryConnectionState {
 	DISCONNECTED,
 }
 
-export interface IDirectoryConnector extends IConnectionBase<IClientDirectoryBase, false> {
+export interface AuthToken {
+	value: string;
+	expires: number;
+	username: string;
+}
+
+export interface DirectoryConnector extends IConnectionBase<IClientDirectoryBase, false> {
 	/** Current state of the connection */
 	readonly state: ReadonlyObservable<DirectoryConnectionState>;
 

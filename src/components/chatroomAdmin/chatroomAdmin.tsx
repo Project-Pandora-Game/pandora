@@ -13,7 +13,7 @@ import React, { ReactElement, useCallback, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { usePlayerData } from '../../character/player';
 import { Room } from '../../character/room';
-import { IDirectoryConnector } from '../../networking/directoryConnector';
+import { DirectoryConnector } from '../../networking/directoryConnector';
 import { useObservable } from '../../observable';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
@@ -282,7 +282,7 @@ function useCreateRoom(): (config: IChatRoomDirectoryConfig) => Promise<void> {
 	}, [directoryConnector, connectToShard]);
 }
 
-function UpdateRoom(directoryConnector: IDirectoryConnector, config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () => void): void {
+function UpdateRoom(directoryConnector: DirectoryConnector, config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () => void): void {
 	(async () => {
 		RoomAdminProgress.show('progress', 'Updating room...');
 		const result = await directoryConnector.awaitResponse('chatRoomUpdate', config);

@@ -3,15 +3,25 @@ import { GetLogger, IDirectoryAccountInfo, IDirectoryClientChangeEvents } from '
 import React, { createContext, ReactElement, useContext, useEffect, useRef } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useErrorHandler } from '../../common/useErrorHandler';
-import { IDirectoryConnector } from '../../networking/directoryConnector';
-import { AuthToken, DirectoryConnector } from '../../networking/socketio_directory_connector';
+import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
+import { UnimplementedDirectoryConnector } from '../../networking/unimplementedDirectoryConnector';
 import { useObservable } from '../../observable';
+import { CreateDirectoryConnector } from './connectorFactoryContextProvider';
 
-export const directoryConnectorContext = createContext<IDirectoryConnector>(DirectoryConnector);
+let directoryConnectorInstance: DirectoryConnector;
+let connectionPromise: Promise<DirectoryConnector>;
+
+try {
+	directoryConnectorInstance = CreateDirectoryConnector();
+	connectionPromise = directoryConnectorInstance.connect();
+} catch (err) { // Catch errors in connector creation so that they can be handled by an error boundary
+	directoryConnectorInstance = new UnimplementedDirectoryConnector();
+	connectionPromise = Promise.reject(err);
+}
+
+export const directoryConnectorContext = createContext<DirectoryConnector>(new UnimplementedDirectoryConnector());
 
 const logger = GetLogger('DirectoryConnectorContextProvider');
-
-const connectionPromise = DirectoryConnector.connect();
 
 export function DirectoryConnectorContextProvider({ children }: ChildrenProps): ReactElement {
 	const errorHandler = useErrorHandler();
@@ -28,13 +38,13 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 	}, [errorHandler]);
 
 	return (
-		<directoryConnectorContext.Provider value={ DirectoryConnector }>
+		<directoryConnectorContext.Provider value={ directoryConnectorInstance }>
 			{ children }
 		</directoryConnectorContext.Provider>
 	);
 }
 
-export function useDirectoryConnector(): IDirectoryConnector {
+export function useDirectoryConnector(): DirectoryConnector {
 	return useContext(directoryConnectorContext);
 }
 

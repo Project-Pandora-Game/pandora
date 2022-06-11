@@ -1,17 +1,80 @@
-import { CharacterId, EMPTY, GetLogger, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { CharacterId, EMPTY, GetLogger } from 'pandora-common';
 import { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../components/gameContext/shardConnectorContextProvider';
-import { HashSHA512Base64 } from '../crypto/helpers';
+import { PrehashPassword } from '../crypto/helpers';
 import { LoginResponse } from './directoryConnector';
-import { DirectoryConnector } from './socketio_directory_connector';
 
-export function PrehashPassword(password: string): Promise<string> {
-	return HashSHA512Base64(PASSWORD_PREHASH_SALT + password);
-}
+//#region Callback type definitions
 
-export function useLogin(): (username: string, password: string, verificationToken?: string) => Promise<LoginResponse> {
+/**
+ * Attempt to login to the directory with a username & password
+ * @param username - The username to use
+ * @param password - The plaintext password
+ * @param verificationToken - The account verification token, if required
+ * @returns Promise of the response from the directory
+ */
+type LoginCallback = (username: string, password: string, verificationToken?: string) => Promise<LoginResponse>;
+
+/**
+ * Attempt to create and connect to a new character
+ * @returns Promise resolving to a boolean indicating whether or not the creation was successful
+ */
+type CreateNewCharacterCallback = () => Promise<boolean>;
+
+/**
+ * Attempt to connect to a character by character ID
+ * @param id - The ID of the character to connect to
+ * @returns Promise resolving to a boolean indicating whether or not the connection was successful
+ */
+type ConnectToCharacterCallback = (id: CharacterId) => Promise<boolean>;
+
+export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey';
+
+/**
+ * Attempt to register a new account with the directory
+ * @param username - The username to use
+ * @param password - The plaintext password
+ * @param email - A plaintext email
+ * @param betaKey - Beta key string, if required
+ * @returns Promise of the response from the directory
+ */
+type RegisterCallback = (
+	username: string,
+	password: string,
+	email: string,
+	betaKey?: string,
+) => Promise<RegisterResponse>;
+
+/**
+ * Attempt to request a new verification email
+ * @param email - A plaintext email
+ * @returns Promise of response from the directory
+ */
+type ResendVerificationCallback = (email: string) => Promise<'maybeSent'>;
+
+/**
+ * Attempt to request a password reset
+ * @param email - A plaintext email
+ * @returns Promise of response from the directory
+ */
+type PasswordResetCallback = (email: string) => Promise<'maybeSent'>;
+
+/**
+ * Reset a password using a token
+ * @param username - The username to use
+ * @param token - The verification token
+ * @param password - The plaintext password
+ * @returns Promise of response from the directory
+ */
+type PasswordResetConfirmCallback = (username: string,
+	token: string,
+	password: string) => Promise<'ok' | 'unknownCredentials'>;
+
+//#endregion
+
+export function useLogin(): LoginCallback {
 	const directoryConnector = useDirectoryConnector();
 	return useCallback((username, password, verificationToken) => {
 		return directoryConnector.login(username, password, verificationToken);
@@ -26,7 +89,7 @@ export function useLogout(): () => void {
 	}, [directoryConnector]);
 }
 
-export function useCreateNewCharacter(): () => Promise<boolean> {
+export function useCreateNewCharacter(): CreateNewCharacterCallback {
 	const directoryConnector = useDirectoryConnector();
 	const connectToShard = useConnectToShard();
 
@@ -34,7 +97,7 @@ export function useCreateNewCharacter(): () => Promise<boolean> {
 		const data = await directoryConnector.awaitResponse('createCharacter', EMPTY);
 		if (data.result !== 'ok') {
 			GetLogger('useCreateNewCharacter').error('Failed to create character:', data);
-			toast(`Failed to create character:\n${data.result}`, {
+			toast(`Failed to create character:\n${ data.result }`, {
 				type: 'error',
 				autoClose: 10_000,
 				closeOnClick: true,
@@ -48,7 +111,7 @@ export function useCreateNewCharacter(): () => Promise<boolean> {
 	}, [directoryConnector, connectToShard]);
 }
 
-export function useConnectToCharacter(): (id: CharacterId) => Promise<boolean> {
+export function useConnectToCharacter(): ConnectToCharacterCallback {
 	const directoryConnector = useDirectoryConnector();
 	const connectToShard = useConnectToShard();
 
@@ -56,7 +119,7 @@ export function useConnectToCharacter(): (id: CharacterId) => Promise<boolean> {
 		const data = await directoryConnector.awaitResponse('connectCharacter', { id });
 		if (data.result !== 'ok') {
 			GetLogger('useConnectToCharacter').error('Failed to connect to character:', data);
-			toast(`Failed to connect to character:\n${data.result}`, {
+			toast(`Failed to connect to character:\n${ data.result }`, {
 				type: 'error',
 				autoClose: 10_000,
 				closeOnClick: true,
@@ -70,48 +133,37 @@ export function useConnectToCharacter(): (id: CharacterId) => Promise<boolean> {
 	}, [directoryConnector, connectToShard]);
 }
 
-/**
- * Attempt to register a new account with Directory
- * @param username - The username to use
- * @param password - The plaintext password
- * @param email - A plaintext email
- * @returns Promise of response from Directory
- */
-export async function DirectoryRegister(username: string, password: string, email: string, betaKey?: string): Promise<'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey'> {
-	const passwordSha512 = await PrehashPassword(password);
-	const result = await DirectoryConnector.awaitResponse('register', { username, passwordSha512, email, betaKey });
-	return result.result;
+export function useDirectoryRegister(): RegisterCallback {
+	const directoryConnector = useDirectoryConnector();
+	return useCallback(async (username, password, email, betaKey) => {
+		const passwordSha512 = await PrehashPassword(password);
+		const result = await directoryConnector.awaitResponse('register', { username, passwordSha512, email, betaKey });
+		return result.result;
+	}, [directoryConnector]);
 }
 
-/**
- * Attempt to request a new verification email
- * @param email - A plaintext email
- * @returns Promise of response from Directory
- */
-export async function DirectoryResendVerificationMail(email: string): Promise<'maybeSent'> {
-	const result = await DirectoryConnector.awaitResponse('resendVerificationEmail', { email });
-	return result.result;
+export function useDirectoryResendVerification(): ResendVerificationCallback {
+	const directoryConnector = useDirectoryConnector();
+	return useCallback(async (email) => {
+		const result = await directoryConnector.awaitResponse('resendVerificationEmail', { email });
+		return result.result;
+	}, [directoryConnector]);
 }
 
-/**
- * Attempt to request a password reset
- * @param email - A plaintext email
- * @returns Promise of response from Directory
- */
-export async function DirectoryPasswordReset(email: string): Promise<'maybeSent'> {
-	const result = await DirectoryConnector.awaitResponse('passwordReset', { email });
-	return result.result;
+export function useDirectoryPasswordReset(): PasswordResetCallback {
+	const directoryConnector = useDirectoryConnector();
+	return useCallback(async (email) => {
+		const result = await directoryConnector.awaitResponse('passwordReset', { email });
+		return result.result;
+	}, [directoryConnector]);
 }
 
-/**
- * Reset a password using a token
- * @param username - The username to use
- * @param token - The verification token
- * @param password - The plaintext password
- * @returns Promise of response from Directory
- */
-export async function DirectoryPasswordResetConfirm(username: string, token: string, password: string): Promise<'ok' | 'unknownCredentials'> {
-	const passwordSha512 = await PrehashPassword(password);
-	const result = await DirectoryConnector.awaitResponse('passwordResetConfirm', { username, token, passwordSha512 });
-	return result.result;
+export function useDirectoryPasswordResetConfirm(): PasswordResetConfirmCallback {
+	const directoryConnector = useDirectoryConnector();
+	return useCallback(async (username, token, password) => {
+		const passwordSha512 = await PrehashPassword(password);
+		const result = await directoryConnector.awaitResponse('passwordResetConfirm',
+			{ username, token, passwordSha512 });
+		return result.result;
+	}, [directoryConnector]);
 }

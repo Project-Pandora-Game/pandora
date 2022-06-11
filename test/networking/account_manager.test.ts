@@ -1,15 +1,16 @@
 import { RenderHookResult } from '@testing-library/react';
 import { EMPTY, IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import {
-	DirectoryPasswordReset,
-	DirectoryPasswordResetConfirm,
-	DirectoryRegister,
-	DirectoryResendVerificationMail, useConnectToCharacter,
+	RegisterResponse,
+	useConnectToCharacter,
 	useCreateNewCharacter,
+	useDirectoryPasswordReset,
+	useDirectoryPasswordResetConfirm,
+	useDirectoryRegister,
+	useDirectoryResendVerification,
 	useLogin,
 	useLogout,
 } from '../../src/networking/account_manager';
-import { DirectoryConnector } from '../../src/networking/socketio_directory_connector';
 import { MockDirectoryConnector } from '../mocks/networking/mockDirectoryConnector';
 import { MockConnectionInfo, MockShardConnector } from '../mocks/networking/mockShardConnector';
 import { ProvidersProps, RenderHookWithProviders } from '../testUtils';
@@ -98,6 +99,110 @@ describe('Account Manager', () => {
 		});
 	});
 
+	describe('useDirectoryRegister', () => {
+		const registerResponses: RegisterResponse[] = [
+			'ok',
+			'usernameTaken',
+			'emailTaken',
+			'invalidBetaKey',
+		];
+
+		it.each(registerResponses)(
+			'should make a register request to the directory with the provided username, password and email [%p]',
+			async (response) => {
+				await testRegister(
+					'test-user',
+					'123456',
+					'TyVsAI5QPt44dp/57gYlN1U0BhgLBVV6B3rLlRoyXNmD2eL8XlC74qTa9AdNaEcI4k7pA7zYbv38ahQkT3aqQQ==',
+					'test@test.com',
+					response,
+				);
+			},
+		);
+
+		it.each(registerResponses)(
+			'should make a register request to the directory with the provided username, password and email [%p]',
+			async (response) => {
+				await testRegister(
+					'test-user',
+					'123456789',
+					'i67CRYOrMlOjOcZHXI+hJSbNNnboweM2Ku2utFasNC35HRX4bghzXFS1RHR7BMmaX0CrHn7v6gfrAbEHe4vFPw==',
+					'test@test.com',
+					response,
+					'test-beta-key',
+				);
+			},
+		);
+
+		async function testRegister(
+			username: string,
+			password: string,
+			passwordSha512: string,
+			email: string,
+			expectedResponse: RegisterResponse,
+			betaKey?: string,
+		): Promise<void> {
+			directoryConnector.awaitResponse.mockResolvedValue({ result: expectedResponse });
+			const { result } = renderHookWithTestProviders(useDirectoryRegister);
+
+			const response = await result.current(username, password, email, betaKey);
+			expect(response).toBe(expectedResponse);
+			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
+			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('register', {
+				username, passwordSha512, email, betaKey,
+			});
+		}
+	});
+
+	describe('useDirectoryResendVerification', () => {
+		it('should make a request to the directory to resend a verification email', async () => {
+			directoryConnector.awaitResponse.mockResolvedValue({ result: 'maybeSent' });
+			const { result } = renderHookWithTestProviders(useDirectoryResendVerification);
+
+			const response = await result.current('test@test.com');
+			expect(response).toBe('maybeSent');
+			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
+			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith(
+				'resendVerificationEmail',
+				{ email: 'test@test.com' },
+			);
+		});
+	});
+
+	describe('useDirectoryPasswordReset', () => {
+		it('should make a password reset request to the directory', async () => {
+			directoryConnector.awaitResponse.mockResolvedValue({ result: 'maybeSent' });
+			const { result } = renderHookWithTestProviders(useDirectoryPasswordReset);
+
+			const response = await result.current('test@test.com');
+			expect(response).toBe('maybeSent');
+			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
+			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith(
+				'passwordReset',
+				{ email: 'test@test.com' },
+			);
+		});
+	});
+
+	describe('useDirectoryPasswordResetConfirm', () => {
+		it.each(['ok', 'unknownCredentials'])(
+			'should make a password reset confirmation request to the directory',
+			async (directoryResponse) => {
+				directoryConnector.awaitResponse.mockResolvedValue({ result: directoryResponse });
+				const { result } = renderHookWithTestProviders(useDirectoryPasswordResetConfirm);
+
+				const response = await result.current('test-user', '123456', 'qwerty');
+				expect(response).toBe(directoryResponse);
+				expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
+				expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('passwordResetConfirm', {
+					username: 'test-user',
+					token: '123456',
+					passwordSha512: '3pxNDzPgVbuz9CUcrKZkup3gCVgXvECda7tiSrTHaoUiDf7E7hjtAtJEFm4tdnlgGV17x+Gm6AxkisMHP3iNrA==',
+				});
+			},
+		);
+	});
+
 	function renderHookWithTestProviders<Result, Props>(
 		hook: (initialProps?: Props) => Result,
 		providerPropOverrides?: Partial<Omit<ProvidersProps, 'children'>>,
@@ -117,57 +222,5 @@ describe('Account Manager', () => {
 		expect(newShardConnector.connectionInfo.value).toBe(connectionInfo);
 		expect(newShardConnector.connect).toHaveBeenCalledTimes(1);
 	}
-});
-
-describe('Directory Authentication', () => {
-	const mockDirectory = jest.spyOn(DirectoryConnector, 'awaitResponse')
-		.mockImplementation(() => Promise.resolve({ result: 'invalidToken' }));
-
-	afterAll(() => {
-		mockDirectory.mockRestore();
-	});
-
-	describe('DirectoryRegister()', () => {
-		it('should emit "register" event to DirectoryConnector.awaitResponse', async () => {
-
-			expect(await DirectoryRegister('tech', 'test', 'test@email.com')).toBe('invalidToken');
-
-			expect(mockDirectory).toBeCalledTimes(1);
-			expect(mockDirectory).nthCalledWith(1, 'register', expect.anything());
-		});
-	});
-
-	describe('DirectoryResendVerificationMail()', () => {
-		it('should emit "resendVerificationEmail" event to DirectoryConnector.awaitResponse', async () => {
-
-			expect(await DirectoryResendVerificationMail('test@email.com')).toBe('invalidToken');
-
-			expect(mockDirectory).toBeCalledTimes(1);
-
-			expect(mockDirectory).nthCalledWith(1, 'resendVerificationEmail', expect.anything());
-		});
-	});
-
-	describe('DirectoryPasswordReset()', () => {
-		it('should emit "passwordReset" event to DirectoryConnector.awaitResponse', async () => {
-
-			expect(await DirectoryPasswordReset('test@email.com')).toBe('invalidToken');
-
-			expect(mockDirectory).toBeCalledTimes(1);
-
-			expect(mockDirectory).nthCalledWith(1, 'passwordReset', expect.anything());
-		});
-	});
-
-	describe('DirectoryPasswordResetConfirm()', () => {
-		it('should emit "passwordResetConfirm" event to DirectoryConnector.awaitResponse', async () => {
-
-			expect(await DirectoryPasswordResetConfirm('tech', 'token', 'pass')).toBe('invalidToken');
-
-			expect(mockDirectory).toBeCalledTimes(1);
-
-			expect(mockDirectory).nthCalledWith(1, 'passwordResetConfirm', expect.anything());
-		});
-	});
 });
 

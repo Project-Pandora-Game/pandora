@@ -13,7 +13,7 @@ import {
 	shardConnectorContext,
 	ShardConnectorContextData,
 } from '../src/components/gameContext/shardConnectorContextProvider';
-import { IDirectoryConnector } from '../src/networking/directoryConnector';
+import { DirectoryConnector } from '../src/networking/directoryConnector';
 import { ShardConnector } from '../src/networking/shardConnector';
 import { MockDirectoryConnector } from './mocks/networking/mockDirectoryConnector';
 import { MockShardConnector } from './mocks/networking/mockShardConnector';
@@ -114,7 +114,7 @@ function LocationTracker({ onPathnameUpdate = noop }: LocationTrackerProps = {})
 }
 
 export interface ProvidersProps extends ChildrenProps {
-	directoryConnector: IDirectoryConnector;
+	directoryConnector: DirectoryConnector;
 	shardConnector: ShardConnector | null;
 	setShardConnector: Dispatch<SetStateAction<ShardConnector | null>>;
 }

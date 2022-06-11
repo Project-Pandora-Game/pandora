@@ -37,8 +37,14 @@ export class Observable<T> implements ReadonlyObservable<T> {
 	}
 }
 
+export const NULL_OBSERVABLE: ReadonlyObservable<null> = new Observable(null);
+
 export function useObservable<T>(obs: ReadonlyObservable<T>): T {
 	return useSyncExternalStore((cb) => obs.subscribe(cb), () => obs.value);
+}
+
+export function useNullableObservable<T>(obs: ReadonlyObservable<T> | null | undefined): T | null {
+	return useObservable(obs ?? NULL_OBSERVABLE);
 }
 
 export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEmitter<T> {

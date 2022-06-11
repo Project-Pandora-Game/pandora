@@ -151,7 +151,7 @@
 		"react/style-prop-object": "warn",
 		"react/void-dom-elements-no-children": "warn",
 		"react/jsx-no-constructed-context-values": "warn",
-		"react/jsx-no-useless-fragment": "warn",
+		"react/jsx-no-useless-fragment": ["warn", { "allowExpressions": true }],
 		// Style rules
 		"dot-notation": "warn",
 		"semi": "off",

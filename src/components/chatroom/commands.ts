@@ -1,7 +1,7 @@
 import { IChatType } from 'pandora-common';
 import { Player } from '../../character/player';
 import { Room } from '../../character/room';
-import { ShardConnector } from '../../networking/socketio_shard_connector';
+import { ShardConnector } from '../../networking/shardConnector';
 import { ChatParser } from './chatParser';
 
 export const COMMAND_KEY = '/';
@@ -20,10 +20,10 @@ type ICommandArgs = {
 
 type ICommand = ICommandBase & ({
 	requreMessage: true;
-	handler: (args: ICommandArgs, message: string) => boolean;
+	handler: (shardConnector: ShardConnector | null, args: ICommandArgs, message: string) => boolean;
 } | {
 	requreMessage: false;
-	handler: (args: ICommandArgs) => boolean;
+	handler: (shardConnector: ShardConnector | null, args: ICommandArgs) => boolean;
 });
 
 const CreateMessageTypeParser = (name: string, type: IChatType): ICommand => ({
@@ -32,13 +32,13 @@ const CreateMessageTypeParser = (name: string, type: IChatType): ICommand => ({
 	usage: '...message',
 	argCount: 0,
 	requreMessage: true,
-	handler: ({ key }: ICommandArgs, message: string): boolean => {
+	handler: (shardConnector: ShardConnector | null, { key }: ICommandArgs, message: string): boolean => {
 		message = message.trim();
-		if (!ShardConnector.value || !message) {
+		if (!shardConnector || !message) {
 			return false; // TODO: prevent chat clearing
 		}
 
-		ShardConnector.value.sendMessage('chatRoomMessage', {
+		shardConnector.sendMessage('chatRoomMessage', {
 			messages: [{
 				type,
 				parts: key.startsWith('/raw') ? [['normal', message]] : ChatParser.parseStyle(message),
@@ -56,8 +56,8 @@ const COMMANDS: ICommand[] = [
 		usage: '[characterId] ...message',
 		argCount: 1,
 		requreMessage: true,
-		handler: ({ args }: ICommandArgs, message: string): boolean => {
-			if (!ShardConnector.value) {
+		handler: (shardConnector: ShardConnector | null, { args }: ICommandArgs, message: string): boolean => {
+			if (!shardConnector) {
 				return false; // TODO: prevent chat clearing
 			}
 
@@ -82,7 +82,7 @@ const COMMANDS: ICommand[] = [
 				return false; // TODO: prevent chat clearing
 			}
 
-			ShardConnector.value.sendMessage('chatRoomMessage', { messages });
+			shardConnector.sendMessage('chatRoomMessage', { messages });
 			return true;
 		},
 	},
@@ -92,7 +92,7 @@ const COMMANDS: ICommand[] = [
 	CreateMessageTypeParser('emote', 'emote'),
 ];
 
-export function ParseCommands(text: string): string | boolean {
+export function ParseCommands(shardConnector: ShardConnector, text: string): string | boolean {
 	text = text.trimStart();
 	if (!text.startsWith(COMMAND_KEY)) {
 		return text;
@@ -110,14 +110,14 @@ export function ParseCommands(text: string): string | boolean {
 			return false; // TODO: error message
 		}
 		if (!commandInfo.requreMessage) {
-			return commandInfo.handler({ args, key: command });
+			return commandInfo.handler(shardConnector, { args, key: command });
 		}
 		let message = text.substring(command.length).trimStart();
 		for (let i = 0; i < commandInfo.argCount; i++) {
 			message = message.substring(args[i].length).trimStart();
 		}
 
-		return commandInfo.handler({ args, key: command }, message);
+		return commandInfo.handler(shardConnector, { args, key: command }, message);
 	}
 	// TODO auto complete, error messages
 	return text;

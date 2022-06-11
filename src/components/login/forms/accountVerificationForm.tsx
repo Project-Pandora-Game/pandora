@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { Button } from '../../common/Button/Button';
 import { FormErrorMessage, Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
 import { useAuthFormData } from '../authFormDataProvider';
-import { useLogin } from './useLogin';
+import { useLoginForm } from './useLoginForm';
 
 const VERIFICATION_CODE_LENGTH = 6;
 
@@ -13,7 +13,7 @@ const logger = GetLogger('AccountVerificationForm');
 export function AccountVerificationForm(): ReactElement {
 	const { state: { username, password, justRegistered } } = useAuthFormData();
 	const navigate = useNavigate();
-	const { dirty, errorMessage, errors, onSubmit, register } = useLogin(true);
+	const { dirty, errorMessage, errors, onSubmit, register } = useLoginForm(true);
 
 	useEffect(() => {
 		if (!IsUsername(username) || !IsString(password) || !password.length) {

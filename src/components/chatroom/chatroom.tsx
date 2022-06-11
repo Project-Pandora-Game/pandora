@@ -1,20 +1,31 @@
 import classNames from 'classnames';
 import { CharacterId, IChatSegment } from 'pandora-common';
 import { CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
-import React, { KeyboardEvent, ReactElement, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+	KeyboardEvent,
+	ReactElement,
+	RefObject,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Player, usePlayerData } from '../../character/player';
 import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, Room } from '../../character/room';
-import { ShardConnector, SocketIOShardConnector } from '../../networking/socketio_shard_connector';
+import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { Button } from '../common/Button/Button';
-import { useDirectoryConnector } from '../gameContext/gameContextProvider';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatParser } from './chatParser';
-import { COMMAND_KEY, ParseCommands } from './commands';
-import { Player, usePlayerData } from '../../character/player';
 import './chatroom.scss';
+import { COMMAND_KEY, ParseCommands } from './commands';
 
-function MessageSend(connector: SocketIOShardConnector, message: string): string {
-	const text = ParseCommands(message);
+function MessageSend(shardConnector: ShardConnector, message: string): string {
+	const text = ParseCommands(shardConnector, message);
 	if (typeof text === 'boolean') {
 		return text ? '' : message;
 	}
@@ -25,7 +36,7 @@ function MessageSend(connector: SocketIOShardConnector, message: string): string
 		return message;
 	}
 
-	connector.sendMessage('chatRoomMessage', { messages });
+	shardConnector.sendMessage('chatRoomMessage', { messages });
 	return '';
 }
 
@@ -69,7 +80,7 @@ const ChatContext = React.createContext<{
 
 function Chat(): ReactElement | null {
 	const messages = useObservable(Room.messages);
-	const connector = useObservable(ShardConnector);
+	const shardConnector = useShardConnector();
 	const [inputValue, setInputValue] = useState('');
 	const [autoScroll, setAutoScroll] = useState(true);
 	const messagesDiv = useRef<HTMLDivElement>(null);
@@ -98,12 +109,12 @@ function Chat(): ReactElement | null {
 	}, [messagesDiv, messages, autoScroll, scrollingMemo]);
 
 	const handleSend = useCallback((ev: KeyboardEvent<HTMLTextAreaElement>) => {
-		if (connector && ev.key === 'Enter' && !ev.shiftKey) {
+		if (shardConnector && ev.key === 'Enter' && !ev.shiftKey) {
 			ev.stopPropagation();
 			ev.preventDefault();
-			setInputValue(MessageSend(connector, inputValue));
+			setInputValue(MessageSend(shardConnector, inputValue));
 		}
-	}, [connector, inputValue]);
+	}, [shardConnector, inputValue]);
 
 	const handleScroll = useCallback((ev: React.UIEvent<HTMLDivElement>) => {
 		if (messagesDiv.current && ev.target === messagesDiv.current) {
@@ -116,7 +127,7 @@ function Chat(): ReactElement | null {
 		}
 	}, [setAutoScroll, messagesDiv, scrollingMemo]);
 
-	if (!connector)
+	if (!shardConnector)
 		return null;
 
 	return (
@@ -325,7 +336,7 @@ function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }
 function PlayerColorEdit() {
 	const data = usePlayerData();
 	const [color, setColor] = useState(data?.settings.labelColor ?? '#ffffff');
-	const connector = useObservable(ShardConnector);
+	const shardConnector = useShardConnector();
 
 	if (!data)
 		return null;
@@ -334,7 +345,7 @@ function PlayerColorEdit() {
 		<div className='input-line'>
 			<label>Color</label>
 			<input type='color' value={ color } onChange={ (event) => setColor(event.target.value) } />
-			<Button className='slim' onClick={ () => connector?.sendMessage('updateSettings', { labelColor: color }) }>Save</Button>
+			<Button className='slim' onClick={ () => shardConnector?.sendMessage('updateSettings', { labelColor: color }) }>Save</Button>
 		</div>
 	);
 }

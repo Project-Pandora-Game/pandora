@@ -2,8 +2,7 @@ import produce from 'immer';
 import { noop } from 'lodash';
 import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
-import { currentAccount } from '../../networking/account_manager';
-import { useObservable } from '../../observable';
+import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 
 export interface AuthFormDataState {
 	username?: string;
@@ -28,7 +27,7 @@ export function useAuthFormData(): AuthFormData {
 }
 
 export function AuthFormDataProvider({ children }: ChildrenProps): ReactElement {
-	const loggedIn = useObservable(currentAccount) != null;
+	const loggedIn = useCurrentAccount() != null;
 	const [state, setStateInternal] = useState<AuthFormDataState>({});
 
 	useEffect(() => {

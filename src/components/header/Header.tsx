@@ -6,15 +6,14 @@ import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import { usePlayerData } from '../../character/player';
-import { currentAccount, Logout } from '../../networking/account_manager';
-import { ShardConnector } from '../../networking/socketio_shard_connector';
-import { useObservable } from '../../observable';
-import { useDirectoryConnector } from '../gameContext/gameContextProvider';
+import { useLogout } from '../../networking/account_manager';
+import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import './header.scss';
 import { HeaderButton } from './HeaderButton';
 
 function LeftHeader(): ReactElement {
-	const shardConnector = useObservable(ShardConnector);
+	const connectionInfo = useShardConnectionInfo();
 
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
@@ -28,16 +27,16 @@ function LeftHeader(): ReactElement {
 			<div className="headerButton">Inventory</div>
 			<div className="headerButton">Room</div>
 			*/ }
-			{ shardConnector && (
+			{ connectionInfo && (
 				<button className={ classNames('HeaderButton', showCharacterMenu && 'active') } onClick={ (ev) => {
 					ev.currentTarget.focus();
 					setShowCharacterMenu(!showCharacterMenu);
 				} }>
-					{ characterName ?? `[Character ${shardConnector.connectionInfo.characterId}]` }
+					{ characterName ?? `[Character ${connectionInfo.characterId}]` }
 				</button>
 			) }
-			{ !shardConnector && <span>[no character selected]</span> }
-			{ shardConnector && showCharacterMenu && <CharacterMenu close={ () => setShowCharacterMenu(false) } /> }
+			{ !connectionInfo && <span>[no character selected]</span> }
+			{ connectionInfo && showCharacterMenu && <CharacterMenu close={ () => setShowCharacterMenu(false) } /> }
 		</div>
 	);
 }
@@ -59,8 +58,9 @@ function CharacterMenu({ close }: { close: () => void }): ReactElement {
 }
 
 function RightHeader(): ReactElement {
-	const account = useObservable(currentAccount);
-	const loggedIn = account != null;
+	const currentAccount = useCurrentAccount();
+	const logout = useLogout();
+	const loggedIn = currentAccount != null;
 	const notificationCount = 0;
 	return (
 		<div className='rightHeader'>
@@ -70,8 +70,8 @@ function RightHeader(): ReactElement {
 						badge={ notificationCount } onClick={ () => alert('Not yet implemented') } title='Notifications' />
 					<HeaderButton icon={ friendsIcon } iconAlt='Friends' onClick={ () => alert('Not yet implemented') } title='Friends' />
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => alert('Not yet implemented') } title='Settings' />
-					<span>{ account.username }</span>
-					<HeaderButton icon={ logoutIcon } iconAlt='Logout' onClick={ Logout } title='Logout' />
+					<span>{ currentAccount.username }</span>
+					<HeaderButton icon={ logoutIcon } iconAlt='Logout' onClick={ logout } title='Logout' />
 				</>
 			) }
 			{ !loggedIn && <span>[not logged in]</span> }

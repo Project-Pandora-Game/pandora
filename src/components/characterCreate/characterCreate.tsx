@@ -1,7 +1,7 @@
 import { IsCharacterName } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Player, usePlayerData } from '../../character/player';
+import { Player, useCreateCharacter, usePlayerData } from '../../character/player';
 import { useObservable } from '../../observable';
 import { Button } from '../common/Button/Button';
 import './characterCreate.scss';
@@ -16,6 +16,7 @@ export function CharacterCreate(): ReactElement | null {
 
 	const player = useObservable(Player);
 	const playerData = usePlayerData();
+	const createCharacter = useCreateCharacter();
 
 	if (!player)
 		return null;
@@ -35,7 +36,7 @@ export function CharacterCreate(): ReactElement | null {
 		}
 
 		void (async () => {
-			const result = await player.finishCreation(characterName);
+			const result = await createCharacter(player, { name: characterName });
 
 			if (result === 'ok') {
 				setErrorMessage('');

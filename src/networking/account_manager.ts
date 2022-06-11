@@ -1,98 +1,73 @@
-import { GetLogger, IClientDirectoryAuthMessage, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryClientArgument, IsObject, IsString, PASSWORD_PREHASH_SALT } from 'pandora-common';
-import { BrowserStorage } from '../browserStorage';
+import { CharacterId, EMPTY, GetLogger, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { useCallback } from 'react';
+import { toast } from 'react-toastify';
+import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
+import { useConnectToShard } from '../components/gameContext/shardConnectorContextProvider';
 import { HashSHA512Base64 } from '../crypto/helpers';
-import { Observable } from '../observable';
+import { LoginResponse } from './directoryConnector';
 import { DirectoryConnector } from './socketio_directory_connector';
-import { ConnectToShard, DisconnectFromShard, ShardConnector } from './socketio_shard_connector';
 
-/** Current username or `null` if not logged in */
-export const currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
-
-/** Storage of login authentication token */
-export const authToken = BrowserStorage.create<{ value: string, expires: number; username: string; } | undefined>('authToken', undefined, (value) => {
-	return IsObject(value) && IsString(value.value) && typeof value.expires === 'number' && value.expires > Date.now();
-});
-
-/**
- * Handle incoming `connectionState` message from Directory server
- * @param message - The received message
- */
-export function HandleDirectoryConnectionState(message: IDirectoryClientArgument['connectionState']): void {
-	HandleDirectoryAccountChange(message.account);
-	HandleDirectoryCharacterChange(message.character);
-}
-
-export function HandleDirectoryAccountChange(account: IDirectoryAccountInfo | null): void {
-	// Update current account
-	currentAccount.value = account;
-	// Clear saved token if login using it failed
-	if (!account) {
-		authToken.value = undefined;
-	}
-}
-
-export function HandleDirectoryCharacterChange(character: IDirectoryCharacterConnectionInfo | null): void {
-	if (character) {
-		ConnectToShard(character)
-			.catch((err) => {
-				GetLogger('ConnectionState').fatal('Error while connecting to shard', err);
-			});
-	} else {
-		DisconnectFromShard();
-	}
-}
-
-/**
- * Get data to use to authenticate to Directory using socket.io auth mechanism
- */
-export function GetAuthData(callback: (data: IClientDirectoryAuthMessage | undefined) => void): void {
-	const token = authToken.value;
-	if (token && token.expires > Date.now()) {
-		const connector = ShardConnector.value;
-		callback({
-			username: token.username,
-			token: token.value,
-			character: connector ? {
-				id: connector.connectionInfo.characterId,
-				secret: connector.connectionInfo.secret,
-			} : null,
-		});
-	} else {
-		callback(undefined);
-	}
-}
-
-function PrehashPassword(password: string): Promise<string> {
+export function PrehashPassword(password: string): Promise<string> {
 	return HashSHA512Base64(PASSWORD_PREHASH_SALT + password);
 }
 
-export function Logout() {
-	DirectoryConnector.sendMessage('logout', { invalidateToken: authToken.value?.value });
-	HandleDirectoryConnectionState({
-		account: null,
-		character: null,
-	});
-	window.location.reload();
+export function useLogin(): (username: string, password: string, verificationToken?: string) => Promise<LoginResponse> {
+	const directoryConnector = useDirectoryConnector();
+	return useCallback((username, password, verificationToken) => {
+		return directoryConnector.login(username, password, verificationToken);
+	}, [directoryConnector]);
 }
 
-/**
- * Attempt to login to Directory and handle response
- * @param username - The username to use for login
- * @param password - The plaintext password to use for login
- * @param verificationToken - Verification token to verify email
- * @returns Promise of response from Directory
- */
-export async function DirectoryLogin(username: string, password: string, verificationToken?: string): Promise<'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials'> {
-	const passwordSha512 = await PrehashPassword(password);
-	const result = await DirectoryConnector.awaitResponse('login', { username, passwordSha512, verificationToken });
+export function useLogout(): () => void {
+	const directoryConnector = useDirectoryConnector();
+	return useCallback(() => {
+		directoryConnector.logout();
+		window.location.reload();
+	}, [directoryConnector]);
+}
 
-	if (result.result === 'ok') {
-		authToken.value = { ...result.token, username: result.account.username };
-		HandleDirectoryAccountChange(result.account);
-	} else {
-		HandleDirectoryAccountChange(null);
-	}
-	return result.result;
+export function useCreateNewCharacter(): () => Promise<boolean> {
+	const directoryConnector = useDirectoryConnector();
+	const connectToShard = useConnectToShard();
+
+	return useCallback(async () => {
+		const data = await directoryConnector.awaitResponse('createCharacter', EMPTY);
+		if (data.result !== 'ok') {
+			GetLogger('useCreateNewCharacter').error('Failed to create character:', data);
+			toast(`Failed to create character:\n${data.result}`, {
+				type: 'error',
+				autoClose: 10_000,
+				closeOnClick: true,
+				closeButton: true,
+				draggable: true,
+			});
+			return false;
+		}
+		await connectToShard(data);
+		return true;
+	}, [directoryConnector, connectToShard]);
+}
+
+export function useConnectToCharacter(): (id: CharacterId) => Promise<boolean> {
+	const directoryConnector = useDirectoryConnector();
+	const connectToShard = useConnectToShard();
+
+	return useCallback(async (id) => {
+		const data = await directoryConnector.awaitResponse('connectCharacter', { id });
+		if (data.result !== 'ok') {
+			GetLogger('useConnectToCharacter').error('Failed to connect to character:', data);
+			toast(`Failed to connect to character:\n${data.result}`, {
+				type: 'error',
+				autoClose: 10_000,
+				closeOnClick: true,
+				closeButton: true,
+				draggable: true,
+			});
+			return false;
+		}
+		await connectToShard(data);
+		return true;
+	}, [directoryConnector, connectToShard]);
 }
 
 /**

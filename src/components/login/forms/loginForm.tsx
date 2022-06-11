@@ -1,16 +1,15 @@
 import { IsUsername } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { authToken, currentAccount } from '../../../networking/account_manager';
-import { useObservable } from '../../../observable';
 import { Button } from '../../common/Button/Button';
+import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/Form/form';
 import { LocationStateMessage } from '../../common/LocationStateMessage/locationStateMessage';
-import { FormErrorMessage, Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
-import { useLogin } from './useLogin';
+import { useAuthToken, useCurrentAccount } from '../../gameContext/directoryConnectorContextProvider';
+import { useLoginForm } from './useLoginForm';
 
 export function LoginForm(): ReactElement {
-	const auth = useObservable(authToken);
-	const loggedIn = useObservable(currentAccount) != null;
-	const { dirty, errorMessage, errors, onSubmit, register } = useLogin();
+	const auth = useAuthToken();
+	const loggedIn = useCurrentAccount() != null;
+	const { dirty, errorMessage, errors, onSubmit, register } = useLoginForm();
 
 	if (loggedIn) {
 		return <div>Club membership was confirmed</div>;

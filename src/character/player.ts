@@ -1,31 +1,41 @@
-import { ICharacterData, GetLogger } from 'pandora-common';
-import { useEffect, useState } from 'react';
+import { GetLogger, ICharacterData, ICharacterDataCreate } from 'pandora-common';
+import { useCallback, useEffect, useState } from 'react';
+import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { USER_DEBUG } from '../config/Environment';
-import { ShardConnector } from '../networking/socketio_shard_connector';
 import { Observable, useObservable } from '../observable';
 import { Character } from './character';
 
 export const Player = new Observable<PlayerCharacter | null>(null);
 
+export type CharacterCreationCallback = (
+	character: PlayerCharacter,
+	creationData: ICharacterDataCreate,
+) => Promise<'ok' | 'failed'>;
+
 export class PlayerCharacter extends Character<ICharacterData> {
 
 	constructor(data: ICharacterData) {
-		super(data, GetLogger('Character', `[Player ${data.id}]`));
+		super(data, GetLogger('Character', `[Player ${ data.id }]`));
 	}
 
-	public async finishCreation(name: string): Promise<'ok' | 'failed'> {
-		const connector = ShardConnector.value;
-		if (!connector || !this._data)
+	public setCreationComplete(): void {
+		delete this._data.inCreation;
+		this.emit('update', this._data);
+	}
+}
+
+export function useCreateCharacter(): CharacterCreationCallback {
+	const shardConnector = useShardConnector();
+	return useCallback(async (character: PlayerCharacter, creationData: ICharacterDataCreate) => {
+		if (!shardConnector || !character.data) {
 			return 'failed';
-		const result = (await connector.awaitResponse('finishCharacterCreation', {
-			name,
-		})).result;
+		}
+		const result = (await shardConnector.awaitResponse('finishCharacterCreation', creationData)).result;
 		if (result === 'ok') {
-			delete this._data.inCreation;
-			this.emit('update', this._data);
+			character.setCreationComplete();
 		}
 		return result;
-	}
+	}, [shardConnector]);
 }
 
 export function usePlayerData(): Readonly<ICharacterData> | null {

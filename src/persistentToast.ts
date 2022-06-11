@@ -66,14 +66,20 @@ export class PersistentToast {
 			}
 		};
 
-		if (this.id !== null) {
-			toast.update(this.id, {
-				...options,
-				render: content,
-			});
-		} else {
-			this.id = id = toast(content, options);
-		}
+		// Wait a tick before showing, in case multiple show/hide calls have been made within the current tick
+		setTimeout(() => {
+			if (!this.shouldShow) {
+				return;
+			}
+			if (this.id !== null) {
+				toast.update(this.id, {
+					...options,
+					render: content,
+				});
+			} else {
+				this.id = id = toast(content, options);
+			}
+		});
 	}
 
 	public hide(): void {

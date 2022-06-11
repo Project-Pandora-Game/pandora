@@ -5,6 +5,7 @@ import {
 	GetLogger,
 	IChatRoomDirectoryConfig,
 	IChatRoomFullInfo,
+	IDirectoryAccountInfo,
 	IDirectoryShardInfo,
 	IsChatroomName,
 } from 'pandora-common';
@@ -12,25 +13,30 @@ import React, { ReactElement, useCallback, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { usePlayerData } from '../../character/player';
 import { Room } from '../../character/room';
-import { currentAccount } from '../../networking/account_manager';
 import { IDirectoryConnector } from '../../networking/directoryConnector';
-import { ConnectToShard } from '../../networking/socketio_shard_connector';
 import { useObservable } from '../../observable';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/gameContextProvider';
+import {
+	useCurrentAccount,
+	useDirectoryChangeListener,
+	useDirectoryConnector,
+} from '../gameContext/directoryConnectorContextProvider';
 import './chatroomAdmin.scss';
+import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 
-const DEFAULT_ROOM_DATA: () => IChatRoomDirectoryConfig = () => ({
-	name: '',
-	description: '',
-	maxUsers: 10,
-	admin: currentAccount.value ? [currentAccount.value.id] : [],
-	banned: [],
-	protected: false,
-	password: null,
-	features: [],
-});
+function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoomDirectoryConfig {
+	return {
+		name: '',
+		description: '',
+		maxUsers: 10,
+		admin: currentAccount ? [currentAccount.id] : [],
+		banned: [],
+		protected: false,
+		password: null,
+		features: [],
+	};
+}
 
 const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; }[] = [
 	{
@@ -45,6 +51,8 @@ export function ChatroomCreate(): ReactElement {
 
 export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {}): ReactElement | null {
 	const navigate = useNavigate();
+	const currentAccount = useCurrentAccount();
+	const createRoom = useCreateRoom();
 	const roomData: IChatRoomFullInfo | null = useObservable(Room.data);
 	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<IChatRoomDirectoryConfig>, action: Partial<IChatRoomDirectoryConfig>) => {
 		const result: Partial<IChatRoomDirectoryConfig> = {
@@ -79,7 +87,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	const isPlayerAdmin = creation || accountId && roomData?.admin.includes(accountId);
 
 	const currentConfig: IChatRoomDirectoryConfig = {
-		...(roomData ?? DEFAULT_ROOM_DATA()),
+		...(roomData ?? DefaultRoomData(currentAccount)),
 		...roomModifiedData,
 	};
 
@@ -182,7 +190,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 						</select>
 					</div>
 				}
-				<Button onClick={ () => CreateRoom(directoryConnector, currentConfig) }>Create room</Button>
+				<Button onClick={ () => void createRoom(currentConfig) }>Create room</Button>
 			</div>
 		);
 	}
@@ -253,22 +261,25 @@ function NumberListArea({ values, setValues, readOnly }: { values: number[], set
 
 const RoomAdminProgress = new PersistentToast();
 
-function CreateRoom(directoryConnector: IDirectoryConnector, config: IChatRoomDirectoryConfig): void {
-	(async () => {
-		RoomAdminProgress.show('progress', 'Creating room...');
-		const result = await directoryConnector.awaitResponse('chatRoomCreate', config);
-		if (result.result === 'ok') {
-			RoomAdminProgress.show('progress', 'Joining room...');
-			await ConnectToShard(result);
-			RoomAdminProgress.show('success', 'Room created!');
-		} else {
-			RoomAdminProgress.show('error', `Failed to create room:\n${result.result}`);
-		}
-	})()
-		.catch((err) => {
+function useCreateRoom(): (config: IChatRoomDirectoryConfig) => Promise<void> {
+	const directoryConnector = useDirectoryConnector();
+	const connectToShard = useConnectToShard();
+	return useCallback(async (config) => {
+		try {
+			RoomAdminProgress.show('progress', 'Creating room...');
+			const result = await directoryConnector.awaitResponse('chatRoomCreate', config);
+			if (result.result === 'ok') {
+				RoomAdminProgress.show('progress', 'Joining room...');
+				await connectToShard(result);
+				RoomAdminProgress.show('success', 'Room created!');
+			} else {
+				RoomAdminProgress.show('error', `Failed to create room:\n${result.result}`);
+			}
+		} catch (err) {
 			GetLogger('CreateRoom').warning('Error during room creation', err);
 			RoomAdminProgress.show('error', `Error during room creation:\n${err instanceof Error ? err.message : String(err)}`);
-		});
+		}
+	}, [directoryConnector, connectToShard]);
 }
 
 function UpdateRoom(directoryConnector: IDirectoryConnector, config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () => void): void {
@@ -283,7 +294,7 @@ function UpdateRoom(directoryConnector: IDirectoryConnector, config: Partial<ICh
 		}
 	})()
 		.catch((err) => {
-			GetLogger('CreateRoom').warning('Error during room update', err);
+			GetLogger('UpdateRoom').warning('Error during room update', err);
 			RoomAdminProgress.show('error', `Error during room update:\n${err instanceof Error ? err.message : String(err)}`);
 		});
 }

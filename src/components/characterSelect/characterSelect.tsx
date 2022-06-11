@@ -1,11 +1,12 @@
 import { noop } from 'lodash';
-import { CharacterId, EMPTY, ICharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
+import { EMPTY, ICharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { usePlayerData } from '../../character/player';
 import { USER_DEBUG } from '../../config/Environment';
+import { useConnectToCharacter, useCreateNewCharacter } from '../../networking/account_manager';
 import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/gameContextProvider';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import './characterSelect.scss';
 
 /**
@@ -25,18 +26,15 @@ let autoSelectDone = false;
 
 export function CharacterSelect(): ReactElement {
 	const [state, setState] = useState('Loading...');
-	const directoryConnector = useDirectoryConnector();
 	const { data, fetchCharacterList } = useCharacterList();
 	const playerData = usePlayerData();
+	const createNewCharacter = useCreateNewCharacter();
+	const connectToCharacter = useConnectToCharacter();
 
-	const connectToCharacter = useCallback(async (id: CharacterId) => {
-		await directoryConnector.connectToCharacter(id);
-	}, [directoryConnector]);
-
-	const createNewCharacter = useCallback(async () => {
-		await directoryConnector.createNewCharacter();
+	const createNewCharacterAndRefreshList = useCallback(async () => {
+		await createNewCharacter();
 		await fetchCharacterList();
-	}, [directoryConnector, fetchCharacterList]);
+	}, [createNewCharacter, fetchCharacterList]);
 
 	useEffect(() => {
 		if (!data || autoSelectDone) {
@@ -53,7 +51,7 @@ export function CharacterSelect(): ReactElement {
 			} else if (characters.length === 0) {
 				autoSelectDone = true;
 				setState('No characters found. Creating a new one...');
-				await createNewCharacter();
+				await createNewCharacterAndRefreshList();
 			} else if (characters.length === 1 && characters[0].inCreation) {
 				autoSelectDone = true;
 				setState('Character creation in progress...');
@@ -61,7 +59,7 @@ export function CharacterSelect(): ReactElement {
 			}
 		})();
 
-	}, [data, connectToCharacter, createNewCharacter]);
+	}, [data, connectToCharacter, createNewCharacterAndRefreshList]);
 
 	if (playerData) {
 		if (playerData.inCreation) {
@@ -89,7 +87,7 @@ export function CharacterSelect(): ReactElement {
 					<CharacterListItem
 						key='create'
 						name={ 'Create new character' }
-						onClick={ () => void createNewCharacter() }
+						onClick={ () => void createNewCharacterAndRefreshList() }
 					/>
 				) }
 			</ul>

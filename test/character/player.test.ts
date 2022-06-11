@@ -2,29 +2,40 @@ import { renderHook } from '@testing-library/react';
 import _ from 'lodash';
 import { CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData } from 'pandora-common';
 import { Player, PlayerCharacter, usePlayerData } from '../../src/character/player';
-import { ShardConnector } from '../../src/networking/socketio_shard_connector';
 
-const mockData: ICharacterData = {
-	id: 'c123',
-	accountId: 0,
-	name: 'mock',
-	created: 0,
-	accessId: 'mockID',
-	settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-};
 describe('PlayerCharacter', () => {
-	let mock: PlayerCharacter;
-	beforeEach(() => {
-		mock = new PlayerCharacter(mockData);
+	const updateListener = jest.fn();
+
+	let player: PlayerCharacter;
+	let onUpdateUnsubscribe: () => void;
+
+	afterEach(() => {
+		if (onUpdateUnsubscribe) {
+			onUpdateUnsubscribe();
+		}
 	});
 
-	describe('finishCreation()', () => {
-		it('should return "failed" if no connection to shard', async () => {
-			const ret = await mock.finishCreation('test');
-			expect(ShardConnector.value).toBeNull();
-			expect(ret).toBe('failed');
+	describe('setCreationComplete', () => {
+		beforeEach(() => createPlayer({ inCreation: true }));
+
+		it('should update the character data', () => {
+			expect(player.data.inCreation).toBe(true);
+			player.setCreationComplete();
+			expect(player.data.inCreation).toBeUndefined();
+		});
+
+		it('should emit a change event', () => {
+			expect(updateListener).not.toHaveBeenCalled();
+			player.setCreationComplete();
+			expect(updateListener).toHaveBeenCalledTimes(1);
+			expect(updateListener).toHaveBeenCalledWith(MockPlayerData());
 		});
 	});
+
+	function createPlayer(overrides?: Partial<ICharacterData>): void {
+		player = new PlayerCharacter(MockPlayerData(overrides));
+		onUpdateUnsubscribe = player.on('update', updateListener);
+	}
 });
 
 describe('usePlayerData()', () => {
@@ -34,3 +45,15 @@ describe('usePlayerData()', () => {
 		expect(result.current).toBeNull();
 	});
 });
+
+function MockPlayerData(overrides?: Partial<ICharacterData>): ICharacterData {
+	return {
+		id: 'c123',
+		accountId: 0,
+		name: 'mock',
+		created: 0,
+		accessId: 'mockID',
+		settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+		...overrides,
+	};
+}

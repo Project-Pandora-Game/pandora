@@ -3,10 +3,10 @@ import { FormEvent, useState } from 'react';
 import { FieldErrors, useForm, UseFormRegister } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { Promisable } from 'type-fest';
-import { DirectoryLogin } from '../../../networking/account_manager';
+import { useLogin } from '../../../networking/account_manager';
 import { useAuthFormData } from '../authFormDataProvider';
 
-const logger = GetLogger('useLogin');
+const logger = GetLogger('useLoginForm');
 
 export interface UseLoginFormData {
 	username: string;
@@ -14,7 +14,7 @@ export interface UseLoginFormData {
 	token: string;
 }
 
-export interface UseLoginReturn {
+export interface UseLoginFormReturn {
 	dirty: boolean;
 	errorMessage: string;
 	errors: FieldErrors<UseLoginFormData>;
@@ -22,8 +22,9 @@ export interface UseLoginReturn {
 	register: UseFormRegister<UseLoginFormData>;
 }
 
-export function useLogin(useAuthData = false): UseLoginReturn {
+export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 	const [errorMessage, setErrorMessage] = useState('');
+	const login = useLogin();
 	const { state: authData, setState: setAuthData } = useAuthFormData();
 	const {
 		formState: { errors, submitCount },
@@ -49,7 +50,7 @@ export function useLogin(useAuthData = false): UseLoginReturn {
 
 		void (async () => {
 			// Compare user info
-			const result = await DirectoryLogin(username, password, token);
+			const result = await login(username, password, token);
 
 			const needsVerification = result === 'verificationRequired' || result === 'invalidToken';
 			if (needsVerification) {

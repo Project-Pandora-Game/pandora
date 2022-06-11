@@ -9,12 +9,11 @@ import { Chatroom } from '../components/chatroom/chatroom';
 import { ChatroomAdmin, ChatroomCreate } from '../components/chatroomAdmin/chatroomAdmin';
 import { ChatroomSelect } from '../components/chatroomSelect/chatroomSelect';
 import { Eula } from '../components/Eula';
+import { useCurrentAccount } from '../components/gameContext/directoryConnectorContextProvider';
+import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { AuthPage } from '../components/login/authPage';
 import { PandoraLobby } from '../components/pandoraLobby/pandoraLobby';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
-import { currentAccount } from '../networking/account_manager';
-import { ShardConnector } from '../networking/socketio_shard_connector';
-import { useObservable } from '../observable';
 import { authPagePathsAndComponents } from './authRoutingData';
 
 export function PandoraRoutes(): ReactElement {
@@ -52,7 +51,7 @@ function RequiresLogin({ element: Element }: { element: ComponentType<Record<str
 // eslint-disable-next-line @typescript-eslint/naming-convention
 function RequiresCharacter({ element: Element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	useLoggedInCheck();
-	const shardConnector = useObservable(ShardConnector);
+	const shardConnector = useShardConnector();
 	const playerData = usePlayerData();
 	const hasCharacter = shardConnector != null && playerData != null;
 
@@ -73,7 +72,7 @@ function DefaultFallback(): ReactElement {
 }
 
 function useLoggedInCheck(preserveLocation = true): void {
-	const isLoggedIn = useObservable(currentAccount) != null;
+	const isLoggedIn = useCurrentAccount() != null;
 	const location = useLocation();
 	const navigate = useNavigate();
 
@@ -89,7 +88,7 @@ function useLoggedInCheck(preserveLocation = true): void {
 }
 
 function AuthPageFallback({ component }: { component: ComponentType<Record<string, never>> }): ReactElement {
-	const isLoggedIn = useObservable(currentAccount) != null;
+	const isLoggedIn = useCurrentAccount() != null;
 	const navigate = useNavigate();
 
 	useEffect(() => {

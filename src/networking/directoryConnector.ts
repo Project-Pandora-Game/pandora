@@ -1,12 +1,17 @@
 import {
-	CharacterId,
 	IClientDirectoryBase,
 	IConnectionBase,
+	IDirectoryAccountInfo,
+	IDirectoryCharacterConnectionInfo,
+	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
 import { ReadonlyObservable } from '../observable';
+import { AuthToken } from './socketio_directory_connector';
+
+export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials';
 
 /** State of connection to Directory */
 export enum DirectoryConnectionState {
@@ -29,16 +34,32 @@ export interface IDirectoryConnector extends IConnectionBase<IClientDirectoryBas
 	/** Directory status data */
 	readonly directoryStatus: ReadonlyObservable<IDirectoryStatus>;
 
+	/** Currently logged in account data or null if not logged in */
+	readonly currentAccount: ReadonlyObservable<IDirectoryAccountInfo | null>;
+
+	/** Current auth token or undefined if not logged in */
+	readonly authToken: ReadonlyObservable<AuthToken | undefined>;
+
 	/** Event emitter for directory change events */
 	readonly changeEventEmitter: TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>>;
+
+	/** Event emitter for directory connection state change events */
+	readonly connectionStateEventEmitter: TypedEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>>;
 
 	connect(): Promise<this>;
 
 	disconnect(): void;
 
-	createNewCharacter(): Promise<boolean>;
+	/**
+	 * Attempt to login to Directory and handle response
+	 * @param username - The username to use for login
+	 * @param password - The plaintext password to use for login
+	 * @param verificationToken - Verification token to verify email
+	 * @returns Promise of response from Directory
+	 */
+	login(username: string, password: string, verificationToken?: string): Promise<LoginResponse>;
 
-	connectToCharacter(id: CharacterId): Promise<boolean>;
+	logout(): void;
 
-	setActiveShardId(id?: string): void;
+	setShardConnectionInfo(info: IDirectoryCharacterConnectionInfo): void;
 }

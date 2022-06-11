@@ -1,15 +1,23 @@
 import classNames from 'classnames';
 import { nanoid } from 'nanoid';
-import { Appearance, AppearanceAction, AppearanceActionContext, CharacterId, DoAppearanceAction, IsCharacterId, IsObject } from 'pandora-common';
+import {
+	Appearance,
+	AppearanceAction,
+	AppearanceActionContext,
+	CharacterId,
+	DoAppearanceAction,
+	IsCharacterId,
+	IsObject,
+} from 'pandora-common';
 import React, { ReactElement, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceItems, useCharacterData } from '../../character/character';
 import { Player } from '../../character/player';
-import { ShardConnector } from '../../networking/socketio_shard_connector';
-import { useObservable } from '../../observable';
 import { Room } from '../../character/room';
+import { useObservable } from '../../observable';
 import './wardrobe.scss';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -121,7 +129,7 @@ function InventoryView({ title, items, context }: {
 }
 
 function InventoryItemViewList({ item, listMode, context }: { item: InventoryItemDefinition; listMode: boolean; context: AppearanceActionContext; }): ReactElement {
-	const shardConnector = useObservable(ShardConnector);
+	const shardConnector = useShardConnector();
 	const possible = DoAppearanceAction(item.action, context, GetAssetManager(), { dryRun: true });
 	return (
 		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
@@ -129,7 +137,7 @@ function InventoryItemViewList({ item, listMode, context }: { item: InventoryIte
 				shardConnector.sendMessage('appearanceAction', item.action);
 			}
 		} }>
-			<div className='itemPreview'></div>
+			<div className='itemPreview' />
 			<span className='itemName'>{item.name}</span>
 		</div>
 	);

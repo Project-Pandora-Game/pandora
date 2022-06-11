@@ -6,7 +6,7 @@ import { DirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/Button/Button';
 import { Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
-import { useDirectoryConnector } from '../../gameContext/gameContextProvider';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { useAuthFormData } from '../authFormDataProvider';
 
 export interface RegistrationFormData {

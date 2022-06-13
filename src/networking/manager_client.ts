@@ -101,6 +101,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 				.catch((error) => {
 					logger.error(`Error processing connect auth from ${connection.id}`, error);
 				});
+		} else {
+			// Notify the client of their new state
+			connection.sendConnectionStateUpdate();
 		}
 	}
 

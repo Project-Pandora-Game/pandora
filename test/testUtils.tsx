@@ -4,6 +4,7 @@ import { noop } from 'lodash';
 import React, { ComponentType, Dispatch, ReactElement, SetStateAction, useEffect, useMemo } from 'react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ChildrenProps } from '../src/common/reactTypes';
+import { DebugContext, debugContext, DebugData } from '../src/components/error/debugContextProvider';
 import {
 	connectorFactoryContext,
 	ConnectorFactoryContext,
@@ -15,6 +16,7 @@ import {
 } from '../src/components/gameContext/shardConnectorContextProvider';
 import { DirectoryConnector } from '../src/networking/directoryConnector';
 import { ShardConnector } from '../src/networking/shardConnector';
+import { MockDebugData } from './mocks/error/errorMocks';
 import { MockDirectoryConnector } from './mocks/networking/mockDirectoryConnector';
 import { MockShardConnector } from './mocks/networking/mockShardConnector';
 
@@ -81,6 +83,8 @@ function CreateCurriedProviders(propOverrides?: Partial<Omit<ProvidersProps, 'ch
 
 function MockProvidersProps(overrides?: Partial<Omit<ProvidersProps, 'children'>>): Omit<ProvidersProps, 'children'> {
 	return {
+		debugData: MockDebugData(),
+		setDebugData: jest.fn(),
 		directoryConnector: new MockDirectoryConnector(),
 		shardConnector: new MockShardConnector(),
 		setShardConnector: jest.fn(),
@@ -114,14 +118,18 @@ function LocationTracker({ onPathnameUpdate = noop }: LocationTrackerProps = {})
 }
 
 export interface ProvidersProps extends ChildrenProps {
+	debugData: DebugData;
+	setDebugData: (debugData: DebugData) => void;
 	directoryConnector: DirectoryConnector;
 	shardConnector: ShardConnector | null;
 	setShardConnector: Dispatch<SetStateAction<ShardConnector | null>>;
 }
 
 export function Providers({
-	children, directoryConnector, shardConnector, setShardConnector,
+	children, debugData, setDebugData, directoryConnector, shardConnector, setShardConnector,
 }: ProvidersProps): ReactElement {
+	const debugContextData = useMemo<DebugContext>(() => ({ debugData, setDebugData }), [debugData, setDebugData]);
+
 	const connectorFactoryContextData = useMemo<ConnectorFactoryContext>(() => ({
 		shardConnectorFactory: (info) => new MockShardConnector(info),
 	}), []);
@@ -132,12 +140,14 @@ export function Providers({
 	}), [shardConnector, setShardConnector]);
 
 	return (
-		<connectorFactoryContext.Provider value={ connectorFactoryContextData }>
-			<directoryConnectorContext.Provider value={ directoryConnector }>
-				<shardConnectorContext.Provider value={ shardConnectorContextData }>
-					{ children }
-				</shardConnectorContext.Provider>
-			</directoryConnectorContext.Provider>
-		</connectorFactoryContext.Provider>
+		<debugContext.Provider value={ debugContextData }>
+			<connectorFactoryContext.Provider value={ connectorFactoryContextData }>
+				<directoryConnectorContext.Provider value={ directoryConnector }>
+					<shardConnectorContext.Provider value={ shardConnectorContextData }>
+						{ children }
+					</shardConnectorContext.Provider>
+				</directoryConnectorContext.Provider>
+			</connectorFactoryContext.Provider>
+		</debugContext.Provider>
 	);
 }

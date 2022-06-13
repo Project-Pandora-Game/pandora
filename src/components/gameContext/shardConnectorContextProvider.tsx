@@ -15,7 +15,8 @@ import { ChildrenProps } from '../../common/reactTypes';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { ShardConnector } from '../../networking/shardConnector';
 import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
-import { useNullableObservable } from '../../observable';
+import { useNullableObservable, useObservable } from '../../observable';
+import { useDebugContext } from '../error/debugContextProvider';
 import { useShardConnectorFactory } from './connectorFactoryContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
 
@@ -50,9 +51,22 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 
 function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const shardConnector = useShardConnector();
 	const connectToShard = useConnectToShard();
 	const handleError = useErrorHandler();
 	const disconnectFromShard = useDisconnectFromShard();
+	const { setDebugData } = useDebugContext();
+	const directoryState = useObservable(directoryConnector.state);
+	const directoryStatus = useObservable(directoryConnector.directoryStatus);
+	const shardState = useNullableObservable(shardConnector?.state);
+
+	useEffect(() => {
+		setDebugData({
+			directoryState,
+			directoryStatus,
+			shardState: shardState ?? undefined,
+		});
+	}, [directoryState, directoryStatus, shardState, setDebugData]);
 
 	useEffect(() => {
 		return directoryConnector.connectionStateEventEmitter.on('connectionState', ({ character }) => {
@@ -89,19 +103,24 @@ export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) =
 	const disconnectFromShard = useDisconnectFromShard();
 	const setShardConnector = useSetShardConnector();
 	const shardConnectorFactory = useShardConnectorFactory();
+	const { setDebugData } = useDebugContext();
 
-	return useCallback(async (info) => {
-		if (shardConnector?.connectionInfoMatches(info)) {
-			return;
-		}
-		disconnectFromShard();
-		directoryConnector.setShardConnectionInfo(info);
+	return useCallback(
+		async (info) => {
+			if (shardConnector?.connectionInfoMatches(info)) {
+				return;
+			}
+			disconnectFromShard();
+			directoryConnector.setShardConnectionInfo(info);
 
-		const newShardConnector = shardConnectorFactory(info);
-		setShardConnector(newShardConnector);
-		LastSelectedCharacter.value = info.characterId;
-		await newShardConnector.connect();
-	}, [directoryConnector, shardConnector, disconnectFromShard, setShardConnector, shardConnectorFactory]);
+			setDebugData({ shardConnectionInfo: info });
+			const newShardConnector = shardConnectorFactory(info);
+			setShardConnector(newShardConnector);
+			LastSelectedCharacter.value = info.characterId;
+			await newShardConnector.connect();
+		},
+		[directoryConnector, shardConnector, disconnectFromShard, setShardConnector, shardConnectorFactory, setDebugData],
+	);
 }
 
 function useDisconnectFromShard(): () => void {

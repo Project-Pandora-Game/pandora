@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsAppearanceAction, DoAppearanceAction, IsIClientMessageArray, AssertNever, IsNumber, IChatRoomMessageBase, IsCharacterPublicSettings } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsAppearanceAction, DoAppearanceAction, IsIClientMessageArray, IsNumber, IsCharacterPublicSettings, IsChatRoomStatus, IsCharacterId } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
@@ -19,6 +19,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			chatRoomMessage: this.handleChatRoomMessage.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			chatRoomMessageAck: this.handleChatRoomMessageAck.bind(this),
+			chatRoomStatus: this.handleChatRoomStatus.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 		});
 	}
@@ -69,35 +70,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private handleChatRoomMessage({ messages }: IClientShardUnconfirmedArgument['chatRoomMessage'], client: IConnectionClient): void {
-		if (!client.character?.room || !IsIClientMessageArray(messages))
+	private handleChatRoomMessage({ messages, id, editId }: IClientShardUnconfirmedArgument['chatRoomMessage'], client: IConnectionClient): void {
+		if (!client.character?.room || !IsIClientMessageArray(messages) || !IsNumber(id) || editId !== undefined && !IsNumber(editId))
 			throw new BadMessageError();
 
-		if (messages.length === 0)
+		if (messages.length === 0 && editId === undefined)
 			return;
 
 		const room = client.character.room;
 		const character = client.character;
 
-		room.sendChatMessage(
-			...messages.map<IChatRoomMessageBase>((message) => {
-				if (message.type === 'chat' || message.type === 'ooc') {
-					return {
-						type: message.type,
-						from: character.id,
-						parts: message.parts,
-						to: message.to,
-					};
-				} else if (message.type === 'emote' || message.type === 'me') {
-					return {
-						type: message.type,
-						from: character.id,
-						parts: message.parts,
-					};
-				}
-				AssertNever(message.type);
-			}),
-		);
+		room.handleMessages(character, messages, id, editId);
 	}
 
 	private handleChatRoomMessageAck({ lastTime }: IClientShardUnconfirmedArgument['chatRoomMessageAck'], client: IConnectionClient): void {
@@ -105,6 +88,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			throw new BadMessageError();
 
 		client.character.onMessageAck(lastTime);
+	}
+
+	private handleChatRoomStatus({ status, target }: IClientShardUnconfirmedArgument['chatRoomStatus'], client: IConnectionClient): void {
+		if (!client.character?.room || !IsChatRoomStatus(status) || target !== undefined && !IsCharacterId(target))
+			throw new BadMessageError();
+
+		const room = client.character.room;
+		const character = client.character;
+
+		room.updateStatus(character, status, target);
 	}
 
 	private handleAppearanceAction(action: IClientShardUnconfirmedArgument['appearanceAction'], client: IConnectionClient): void {

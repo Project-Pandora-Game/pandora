@@ -38,7 +38,7 @@ export const RoomManager = new class RoomManager {
 		if (!this._rooms.has(id))
 			return;
 		logger.debug(`Removing room ${id}`);
-		// this._rooms.get(id)?.onRemove();
+		this._rooms.get(id)?.onRemove();
 		this._rooms.delete(id);
 	}
 };

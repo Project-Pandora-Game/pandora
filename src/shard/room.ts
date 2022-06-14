@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatroomMessageAction, IChatroomMessageDirectoryAction } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from './shard';
@@ -296,7 +296,7 @@ export class Room {
 		}
 	}
 
-	public readonly pendingMessages: IChatroomMessageDirectoryAction[] = [];
+	public readonly pendingMessages: IChatRoomMessageDirectoryAction[] = [];
 	private lastMessageTime: number = 0;
 
 	private nextMessageTime(): number {
@@ -308,8 +308,8 @@ export class Room {
 		return this.lastMessageTime = time;
 	}
 
-	public sendMessage(...messages: IChatroomMessageAction[]): void {
-		const processedMessages = messages.map<IChatroomMessageDirectoryAction>(
+	public sendMessage(...messages: Omit<IChatRoomMessageDirectoryAction, 'directoryTime'>[]): void {
+		const processedMessages = messages.map<IChatRoomMessageDirectoryAction>(
 			(msg) => ({
 				directoryTime: this.nextMessageTime(),
 				...msg,

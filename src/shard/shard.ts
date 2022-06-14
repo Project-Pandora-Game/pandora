@@ -1,5 +1,5 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardDirectoryNormalResult, IShardCharacterDefinition, IShardDirectoryPromiseResult, IChatRoomFullInfo, AssertNever, IDirectoryShardUpdate, RoomId, IChatroomMessageDirectoryAction } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardDirectoryNormalResult, IShardCharacterDefinition, IShardDirectoryPromiseResult, IChatRoomFullInfo, AssertNever, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
@@ -346,8 +346,8 @@ export class Shard {
 		return Array.from(this.rooms.values()).map((r) => r.getFullInfo());
 	}
 
-	private makeDirectoryActionMessages(): Record<RoomId, IChatroomMessageDirectoryAction[]> {
-		const result: Record<RoomId, IChatroomMessageDirectoryAction[]> = {};
+	private makeDirectoryActionMessages(): Record<RoomId, IChatRoomMessageDirectoryAction[]> {
+		const result: Record<RoomId, IChatRoomMessageDirectoryAction[]> = {};
 		for (const room of this.rooms) {
 			if (room.pendingMessages.length > 0) {
 				result[room.id] = room.pendingMessages.slice();

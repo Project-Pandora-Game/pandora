@@ -22,10 +22,10 @@ const LOG_COLORS: Readonly<Record<LogLevel, string>> = {
 	[LogLevel.FATAL]: IS_NODE ? '41m\x1b[97' : 'background-color: red; color: white;',
 	[LogLevel.ERROR]: IS_NODE ? '101m\x1b[30' : 'background-color: red; color: black;',
 	[LogLevel.WARNING]: IS_NODE ? '43m\x1b[30' : 'background-color: yellow; color: black;',
-	[LogLevel.ALERT]: IS_NODE ? '93' : 'color: yellow;',
-	[LogLevel.INFO]: IS_NODE ? '37' : 'color: white;',
-	[LogLevel.VERBOSE]: IS_NODE ? '32' : 'color: green;',
-	[LogLevel.DEBUG]: IS_NODE ? '34' : 'color: blue;',
+	[LogLevel.ALERT]: IS_NODE ? '93' : 'background-color: #222; color: yellow;',
+	[LogLevel.INFO]: IS_NODE ? '37' : 'background-color: #222; color: white;',
+	[LogLevel.VERBOSE]: IS_NODE ? '32' : 'background-color: #222; color: green;',
+	[LogLevel.DEBUG]: IS_NODE ? '34' : 'background-color: #222; color: blue;',
 };
 
 /** Visible names for each loglevel */
@@ -213,7 +213,7 @@ export class Logger {
 		let result = '';
 		// Add time, if we should
 		if (logConfig.printTime) {
-			result += new Date().toLocaleString(logConfig.timeLocale).replace(',', '');
+			result += new Date().toLocaleString(logConfig.timeLocale, { timeZone: 'UTC' }).replace(',', '');
 			if (color) {
 				result = this.wrapColor(result, '90');
 			}

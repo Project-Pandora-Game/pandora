@@ -1,11 +1,17 @@
 import { CharacterId, IShardCharacterDefinition, GetLogger } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import { Character } from './character';
+import promClient from 'prom-client';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;
 
 const logger = GetLogger('CharacterManager');
+
+const charactersMetric = new promClient.Gauge({
+	name: 'pandora_shard_characters',
+	help: 'Current count of characters on this shard',
+});
 
 export const CharacterManager = new class CharacterManager {
 	private readonly _characters: Map<CharacterId, Character> = new Map();
@@ -57,6 +63,7 @@ export const CharacterManager = new class CharacterManager {
 		logger.debug(`Adding character ${data.id}`);
 		char = new Character(data, character.connectSecret, character.room);
 		this._characters.set(id, char);
+		charactersMetric.set(this._characters.size);
 		return char;
 	}
 
@@ -67,6 +74,7 @@ export const CharacterManager = new class CharacterManager {
 		logger.debug(`Removing character ${id}`);
 		character.onRemove();
 		this._characters.delete(id);
+		charactersMetric.set(this._characters.size);
 	}
 
 	public onAssetDefinitionsChanged() {

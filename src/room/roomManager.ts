@@ -1,7 +1,13 @@
 import { IChatRoomFullInfo, RoomId, GetLogger } from 'pandora-common';
 import { Room } from './room';
+import promClient from 'prom-client';
 
 const logger = GetLogger('RoomManager');
+
+const roomsMetric = new promClient.Gauge({
+	name: 'pandora_shard_rooms',
+	help: 'Current count of rooms on this shard',
+});
 
 export const RoomManager = new class RoomManager {
 	private readonly _rooms: Map<RoomId, Room> = new Map();
@@ -31,6 +37,7 @@ export const RoomManager = new class RoomManager {
 		logger.debug(`Creating room ${id}`);
 		room = new Room(roomData);
 		this._rooms.set(id, room);
+		roomsMetric.set(this._rooms.size);
 		return room;
 	}
 
@@ -40,5 +47,6 @@ export const RoomManager = new class RoomManager {
 		logger.debug(`Removing room ${id}`);
 		this._rooms.get(id)?.onRemove();
 		this._rooms.delete(id);
+		roomsMetric.set(this._rooms.size);
 	}
 };

@@ -3,14 +3,37 @@ import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
 import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
+import promClient from 'prom-client';
 
 const logger = GetLogger('ConnectionManager-Client');
+
+const connectedClientsMetric = new promClient.Gauge({
+	name: 'pandora_shard_client_connections',
+	help: 'Current count of connections from clients',
+	labelNames: ['messageType'],
+});
+
+const messagesMetric = new promClient.Counter({
+	name: 'pandora_shard_client_messages',
+	help: 'Count of received messages from clients',
+	labelNames: ['messageType'],
+});
 
 /** Class that stores all currently connected clients */
 export const ConnectionManagerClient = new class ConnectionManagerClient {
 	private readonly _connectedClients: Set<IConnectionClient> = new Set();
 
-	readonly messageHandler: IClientShardMessageHandler<IConnectionClient>;
+	private readonly messageHandler: IClientShardMessageHandler<IConnectionClient>;
+
+	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionClient): Promise<boolean> {
+		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
+			// Only count valid messages
+			if (result) {
+				messagesMetric.inc({ messageType });
+			}
+			return result;
+		});
+	}
 
 	constructor() {
 		this.messageHandler = new MessageHandler<IClientShardBase, IConnectionClient>({
@@ -28,6 +51,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	public onConnect(connection: IConnectionClient): void {
 		const [characterId] = (connection.headers.authorization || '').split(' ');
 		this._connectedClients.add(connection);
+		connectedClientsMetric.set(this._connectedClients.size);
 		if (!connection.loadCharacter(characterId as CharacterId) || !connection.character)
 			return;
 		connection.sendMessage('load', {
@@ -49,6 +73,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			return;
 		}
 		this._connectedClients.delete(connection);
+		connectedClientsMetric.set(this._connectedClients.size);
 	}
 
 	public isAuthorized(id: CharacterId, secret: string): boolean {

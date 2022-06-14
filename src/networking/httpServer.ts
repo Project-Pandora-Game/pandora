@@ -6,6 +6,7 @@ import * as fs from 'fs';
 import { SocketIOServerClient } from './socketio_client_server';
 import express from 'express';
 import { AssetsServe } from '../assets/assetManager';
+import { MetricsServe } from '../metrics';
 
 const logger = GetLogger('Server');
 
@@ -51,6 +52,8 @@ export function StartHttpServer(): Promise<void> {
 	if (!ASSETS_SOURCE) {
 		expressApp.use('/assets', AssetsServe());
 	}
+	// Host metrics
+	expressApp.use('/metrics', MetricsServe());
 	// Attach socket.io server
 	new SocketIOServerClient(server);
 	// Start listening

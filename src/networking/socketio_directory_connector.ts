@@ -4,6 +4,7 @@ import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
 import { Stop } from '../lifecycle';
+import promClient from 'prom-client';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 10_000;
@@ -43,6 +44,12 @@ function CreateConnection(uri: string, secret: string = ''): Socket {
 	});
 }
 
+const messagesMetric = new promClient.Counter({
+	name: 'pandora_shard_directory_messages',
+	help: 'Count of received messages from directory',
+	labelNames: ['messageType'],
+});
+
 /** Class housing connection from Shard to Directory */
 export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDirectoryBase> {
 
@@ -69,7 +76,10 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 			update: (update) => this.updateFromDirectory(update).then(() => ({})),
 		}, {
 		});
-		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
+		this.socket.onAny(CreateMessageHandlerOnAny(logger, (messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> => {
+			messagesMetric.inc({ messageType });
+			return handler.onMessage(messageType, message, callback);
+		}));
 	}
 
 	/**

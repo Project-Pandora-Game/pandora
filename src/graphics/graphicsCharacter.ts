@@ -1,7 +1,7 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
 import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT } from './def';
 import { AtomicCondition, TransformDefinition } from 'pandora-common/dist/assets';
-import { Container } from 'pixi.js';
+import { Container, IDestroyOptions } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
@@ -16,6 +16,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	readonly appearanceContainer: ContainerType;
 	private _layers: LayerState[] = [];
 	private _pose: Record<BoneName, number> = {};
+	private _cleanupUpdate?: () => void;
 
 	constructor(appearanceContainer: ContainerType) {
 		super();
@@ -24,11 +25,16 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 		this.appearanceContainer = appearanceContainer;
 
-		const cleanup = this.appearanceContainer.on('appearanceUpdate', (changes) => this.update(changes));
-		this.on('destroy', cleanup);
+		this._cleanupUpdate = this.appearanceContainer.on('appearanceUpdate', (changes) => this.update(changes));
 	}
 
-	public useGraphics(graphicsGetter: GraphicsGetterFunction) {
+	override destroy(options?: boolean | IDestroyOptions): void {
+		this._cleanupUpdate?.();
+		this._cleanupUpdate = undefined;
+		super.destroy(options);
+	}
+
+	public useGraphics(graphicsGetter: GraphicsGetterFunction): void {
 		this.graphicsGetter = graphicsGetter;
 		this.update(['items', 'pose']);
 	}

@@ -1,8 +1,12 @@
 import { Application, Container, Graphics, InteractionManager, Rectangle, Sprite, Texture } from 'pixi.js';
 import * as PixiViewport from 'pixi-viewport';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useLayoutEffect } from 'react';
 import { TypedEventEmitter } from '../event';
 import { CharacterSize } from 'pandora-common';
+import { Character } from '../character/character';
+import { GraphicsCharacter } from './graphicsCharacter';
+import { useObservable } from '../observable';
+import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
 const GRAPHICS_HEIGHT = CharacterSize.HEIGHT;
 const GRAPHICS_WIDTH = CharacterSize.WIDTH;
@@ -144,4 +148,29 @@ export function useGraphicsScene<T extends HTMLElement>(scene: GraphicsScene): R
 		return undefined;
 	}, [scene, ref]);
 	return ref;
+}
+
+export function useGraphicsSceneCharacter<T extends HTMLElement>(scene: GraphicsScene, character: Character): [React.RefObject<T>] {
+	const ref = useRef<T>(null);
+	const manager = useObservable(GraphicsManagerInstance);
+
+	useLayoutEffect(() => {
+		if (!manager)
+			return;
+		const gCharacter = new GraphicsCharacter(character);
+		gCharacter.useGraphics(manager.getAssetGraphicsById.bind(manager));
+		scene.add(gCharacter);
+		return () => {
+			scene.remove(gCharacter);
+		};
+	}, [scene, character, manager]);
+
+	useEffect(() => {
+		if (ref.current) {
+			return scene.renderTo(ref.current);
+		}
+		return undefined;
+	}, [scene, ref]);
+
+	return [ref];
 }

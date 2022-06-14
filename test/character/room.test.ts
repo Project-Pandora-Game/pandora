@@ -1,4 +1,4 @@
-import { ICharacterData, ICharacterPublicData, IChatRoomClientData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
+import { ICharacterData, IChatRoomClientData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 import { Player, PlayerCharacter } from '../../src/character/player';
 import { Room } from '../../src/character/room';
 import _ from 'lodash';
@@ -65,41 +65,6 @@ describe('Room', () => {
 			});
 		});
 
-	});
-
-	describe('getCharacterName()', () => {
-		// mock loaded player.
-		beforeAll(() => Player.value = new PlayerCharacter(mockPlayerData));
-		// cleanup
-		afterAll(() => Player.value = null);
-
-		it('should return "[UNKNOWN]" when data is null', () => {
-			Room.data.value = null;
-			expect(Room.getCharacterName('c89892')).toBe('[UNKNOWN]');
-		});
-
-		it('should return "[UNKNOWN] when character is not found"', () => {
-			Room.update({ room: { id: 'c321', characters: [] } as unknown as IChatRoomClientData });
-			expect(Room.getCharacterName('c213129311')).toBe('[UNKNOWN]');
-		});
-
-		it('should should return character\'s name if found', () => {
-			const char1: ICharacterPublicData = {
-				id: 'c123',
-				accountId: 0,
-				name: 'test',
-				settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-			};
-			const char2: ICharacterPublicData = {
-				id: 'c321',
-				accountId: 0,
-				name: 'tech',
-				settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-			};
-			Room.update({ room: { id: 'c321', characters: [char1, char2] } as unknown as IChatRoomClientData });
-			expect(Room.getCharacterName('c123')).toBe('test');
-			expect(Room.getCharacterName('c321')).toBe('tech');
-		});
 	});
 
 	describe('getCharacterPronoun()', () => {

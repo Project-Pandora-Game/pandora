@@ -18,6 +18,7 @@ import { Room } from '../../character/room';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphicsScene';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -35,9 +36,8 @@ export function WardrobeScreen(): ReactElement | null {
 		const get = () => Room.characters.find((c) => c.data.id === characterId) ?? null;
 		setCharacter(get());
 		return Room.onAny((ev) => {
-			if (ev.load || ev.leave) {
-				setCharacter(get());
-			}
+			if (ev.exit && characterId !== player?.data.id || ev.leave === characterId)
+				setCharacter(null);
 		});
 	}, [setCharacter, characterId, player]);
 
@@ -49,11 +49,13 @@ export function WardrobeScreen(): ReactElement | null {
 	);
 }
 
+const scene = new GraphicsScene();
 function Wardrobe({ character }: { character: Character }): ReactElement | null {
 	const player = useObservable(Player);
 	const characterData = useCharacterData(character);
 	const assetList = useObservable(GetAssetManager().assetList);
 	const appearance = useCharacterAppearanceItems(character);
+	const [ref] = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
 
 	if (!player || !characterData)
 		return null;
@@ -91,9 +93,8 @@ function Wardrobe({ character }: { character: Character }): ReactElement | null 
 
 	return (
 		<div className='wardrobe'>
-			<div className='characterPreview'>
-				<Link to='/pandora_lobby'>◄ Back</Link><br />
-				Manage items on {characterData.name}
+			<div className='characterPreview'  >
+				<div ref={ ref } />
 			</div>
 			<div className='currentInventory'><InventoryView title='Currently worn items' items={ items } context={ context } /></div>
 			<div className='otherInventory'><InventoryView title='Create and use a new item' items={ assets } context={ context } /></div>

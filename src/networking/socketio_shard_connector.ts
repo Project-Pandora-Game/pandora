@@ -71,6 +71,9 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 			chatRoomMessage: (message: IShardClientArgument['chatRoomMessage']) => {
 				Room.onMessage(message.messages, this);
 			},
+			chatRoomStatus: (status: IShardClientArgument['chatRoomStatus']) => {
+				Room.onStatus(status);
+			},
 		});
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
 	}
@@ -169,9 +172,9 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		logger.warning('Connection to Shard failed:', err.message);
 	}
 
-	private onLoad({ character, room, assetsDefinition, assetsDefinitionHash }: IShardClientArgument['load']): void {
+	private onLoad({ character, room, assetsDefinition, assetsDefinitionHash, assetsSource }: IShardClientArgument['load']): void {
 		const currentState = this._state.value;
-		LoadAssetDefinitions(assetsDefinitionHash, assetsDefinition);
+		LoadAssetDefinitions(assetsDefinitionHash, assetsDefinition, assetsSource);
 		if (Player.value?.data.id === character.id) {
 			Player.value.update(character);
 		} else {

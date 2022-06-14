@@ -8,6 +8,12 @@
 
 	.characterPreview {
 		grid-area: characterPreview;
+
+		&>div {
+			margin-top: 1em;
+			height: calc(100vh - 7em);
+			width: 33.33vw
+		}
 	}
 
 	.currentInventory {

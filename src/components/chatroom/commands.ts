@@ -1,8 +1,9 @@
-import { IChatType } from 'pandora-common';
+import { CharacterId, IChatRoomStatus, IChatType } from 'pandora-common';
 import { Player } from '../../character/player';
 import { Room } from '../../character/room';
 import { ShardConnector } from '../../networking/shardConnector';
 import { ChatParser } from './chatParser';
+import { SentMessages } from './sentMessages';
 
 export const COMMAND_KEY = '/';
 
@@ -16,14 +17,17 @@ type ICommandBase = {
 type ICommandArgs = {
 	args: string[];
 	key: string;
+	shardConnector: ShardConnector | null;
 };
 
 type ICommand = ICommandBase & ({
 	requreMessage: true;
-	handler: (shardConnector: ShardConnector | null, args: ICommandArgs, message: string) => boolean;
+	handler: (args: ICommandArgs, message: string) => boolean;
+	status?: { status: IChatRoomStatus; } | ((args: string[]) => { status: IChatRoomStatus; } | { status: IChatRoomStatus, target: CharacterId; });
 } | {
 	requreMessage: false;
-	handler: (shardConnector: ShardConnector | null, args: ICommandArgs) => boolean;
+	handler: (args: ICommandArgs) => boolean;
+	status?: undefined;
 });
 
 const CreateMessageTypeParser = (name: string, type: IChatType): ICommand => ({
@@ -32,22 +36,38 @@ const CreateMessageTypeParser = (name: string, type: IChatType): ICommand => ({
 	usage: '...message',
 	argCount: 0,
 	requreMessage: true,
-	handler: (shardConnector: ShardConnector | null, { key }: ICommandArgs, message: string): boolean => {
+	status: { status: 'typing' },
+	handler: ({ key, shardConnector }: ICommandArgs, message: string): boolean => {
 		message = message.trim();
-		if (!shardConnector || !message) {
+		if (!message) {
 			return false; // TODO: prevent chat clearing
 		}
 
-		shardConnector.sendMessage('chatRoomMessage', {
-			messages: [{
-				type,
-				parts: key.startsWith('/raw') ? [['normal', message]] : ChatParser.parseStyle(message),
-			}],
-		});
-
-		return true;
+		return SentMessages.send(shardConnector, `${key} ${message}`, [{
+			type,
+			parts: key.startsWith('/raw') ? [['normal', message]] : ChatParser.parseStyle(message),
+		}]);
 	},
 });
+
+function GetWhisperTarget([character]: string[]): CharacterId | undefined {
+	const playerId = Player.value?.data.id;
+	const char = Room.data.value?.characters.find((c) => c.id === character);
+	if (char)
+		return char.id === playerId ? undefined : char.id;
+
+	let chars = Room.data.value?.characters.filter((c) => c.name.localeCompare(character, undefined, { sensitivity: 'base' }) === 0) ?? [];
+	if (chars.length === 1)
+		return chars[0].id === playerId ? undefined : chars[0].id;
+	if (chars.length === 0)
+		return undefined;
+
+	chars = chars.filter((c) => c.name === character);
+	if (chars.length === 1)
+		return chars[0].id === playerId ? undefined : chars[0].id;
+
+	return undefined;
+}
 
 const COMMANDS: ICommand[] = [
 	{
@@ -56,34 +76,16 @@ const COMMANDS: ICommand[] = [
 		usage: '[characterId] ...message',
 		argCount: 1,
 		requreMessage: true,
-		handler: (shardConnector: ShardConnector | null, { args }: ICommandArgs, message: string): boolean => {
-			if (!shardConnector) {
-				return false; // TODO: prevent chat clearing
-			}
+		status: (args) => {
+			const target = GetWhisperTarget(args);
+			return target ? { status: 'whisper', target } : { status: 'none' };
+		},
+		handler: ({ key, args, shardConnector }: ICommandArgs, message: string): boolean => {
+			const target = GetWhisperTarget(args);
+			if (!target)
+				return false;
 
-			const [character] = args;
-			let char = Room.data.value?.characters.find((c) => c.id === character);
-			if (!char) {
-				const chars = Room.data.value?.characters.filter((c) => c.name === character) ?? [];
-				if (chars.length === 1) {
-					char = chars[0];
-				} else {
-					return false; // TODO: error message
-				}
-			}
-
-			if (char.id === Player.value?.data.id) {
-				return false; // TODO: error message
-			}
-
-			const messages = ChatParser.parse(message, char.id);
-
-			if (messages.length === 0) {
-				return false; // TODO: prevent chat clearing
-			}
-
-			shardConnector.sendMessage('chatRoomMessage', { messages });
-			return true;
+			return SentMessages.send(shardConnector, `${key} ${target} ${message}`, ChatParser.parse(message, target));
 		},
 	},
 	CreateMessageTypeParser('say', 'chat'),
@@ -91,6 +93,20 @@ const COMMANDS: ICommand[] = [
 	CreateMessageTypeParser('me', 'me'),
 	CreateMessageTypeParser('emote', 'emote'),
 ];
+
+export function GetCommand(message: string, predicate?: (command: ICommand) => boolean): boolean | ICommand {
+	message = message.trimStart();
+	if (!message.startsWith(COMMAND_KEY)) {
+		return false;
+	}
+	if (message.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+		return true;
+	}
+	const [command] = message.split(/\s+/);
+	const key = command.slice(COMMAND_KEY.length).toLowerCase();
+	const commandMatch = COMMANDS.find((c) => c.key.includes(key));
+	return commandMatch && (!predicate || predicate(commandMatch)) ? commandMatch : true;
+}
 
 export function ParseCommands(shardConnector: ShardConnector, text: string): string | boolean {
 	text = text.trimStart();
@@ -110,14 +126,14 @@ export function ParseCommands(shardConnector: ShardConnector, text: string): str
 			return false; // TODO: error message
 		}
 		if (!commandInfo.requreMessage) {
-			return commandInfo.handler(shardConnector, { args, key: command });
+			return commandInfo.handler({ args, key: command, shardConnector });
 		}
 		let message = text.substring(command.length).trimStart();
 		for (let i = 0; i < commandInfo.argCount; i++) {
 			message = message.substring(args[i].length).trimStart();
 		}
 
-		return commandInfo.handler(shardConnector, { args, key: command }, message);
+		return commandInfo.handler({ args, key: command, shardConnector }, message);
 	}
 	// TODO auto complete, error messages
 	return text;

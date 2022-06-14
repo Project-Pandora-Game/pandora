@@ -1,5 +1,7 @@
-import { Asset, AssetManager, AssetsDefinitionFile, GetLogger } from 'pandora-common';
+import { Asset, AssetManager, AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
 import { Observable } from '../observable';
+import { GraphicsManagerInstance, GraphicsManager } from './graphicsManager';
+import { URLGraphicsLoader } from './graphicsLoader';
 
 const logger = GetLogger('AssetManager');
 
@@ -22,7 +24,24 @@ export function OverrideAssetManager(manager: AssetManagerClient) {
 	assetManager = manager;
 }
 
-export function LoadAssetDefinitions(definitionsHash: string, data: AssetsDefinitionFile): void {
+let lastGraphicsHash: string | undefined;
+let loader!: URLGraphicsLoader;
+
+export function LoadAssetDefinitions(definitionsHash: string, data: AssetsDefinitionFile, source: string): void {
 	GetAssetManager().load(definitionsHash, data);
 	logger.info(`Loaded asset definitions, version: ${GetAssetManager().definitionsHash}`);
+
+	if (lastGraphicsHash === data.graphicsId)
+		return;
+
+	lastGraphicsHash = data.graphicsId;
+
+	loader ??= new URLGraphicsLoader(source);
+	loader.loadTextFile(`graphics_${lastGraphicsHash}.json`).then((json) => {
+		const graphics = JSON.parse(json) as AssetsGraphicsDefinitionFile;
+		GraphicsManagerInstance.value = new GraphicsManager(loader, data.graphicsId, graphics);
+		logger.info(`Loaded graphics, version: ${data.graphicsId}`);
+	}).catch((err) => {
+		logger.error('Failed to load graphics', err);
+	});
 }

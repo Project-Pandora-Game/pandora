@@ -21,7 +21,7 @@ describe('OverrideAssetManager()', () => {
 describe('LoadAssetDefinitions()', () => {
 	it('should load asset definition into manager', () => {
 		const mock = jest.spyOn(GetAssetManager(), 'load').mockImplementation();
-		LoadAssetDefinitions('mock hash', 'mock data' as unknown as AssetsDefinitionFile);
+		LoadAssetDefinitions('mock hash', 'mock data' as unknown as AssetsDefinitionFile, 'mock source');
 		expect(mock).nthCalledWith(1, 'mock hash', 'mock data');
 		mock.mockRestore();
 	});

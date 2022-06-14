@@ -35,30 +35,54 @@ export const IsIClientMessage = CreateUnionValidator<IClientMessage>(
 
 export const IsIClientMessageArray = CreateArrayValidator<IClientMessage>({ validator: IsIClientMessage });
 
-export type IChatroomMessageChat = IClientMessage & {
+export type IChatRoomMessageChatCharacter = { id: CharacterId, name: string; labelColor: string; };
+export type IChatRoomMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
+	id: number;
+	insertId?: number;
+} & ({
+	type: 'me' | 'emote';
+	from: IChatRoomMessageChatCharacter;
+} | {
+	type: 'chat' | 'ooc';
+	from: IChatRoomMessageChatCharacter;
+	to?: IChatRoomMessageChatCharacter;
+});
+
+export type IChatRoomMessageDeleted = {
+	type: 'deleted';
+	id: number;
 	from: CharacterId;
 };
 
-export type IChatroomMessageAction = {
+export type IChatRoomMessageActionCharacter = { id: CharacterId, name: string; pronoun: string; };
+export type IChatRoomMessageAction = {
 	type: 'action' | 'serverMessage';
 	/** id to be looked up in message translation database */
 	id: ChatActionId;
 	data?: {
 		/** Used to generate specific dictionary entries, acts as source */
-		character?: CharacterId;
+		character?: IChatRoomMessageActionCharacter;
 		/** Used to generate specific dictionary entries, defaults to `character` */
-		targetCharacter?: CharacterId;
+		targetCharacter?: IChatRoomMessageActionCharacter;
 	};
 	dictionary?: Record<string, string>;
 };
 
-export type IChatRoomMessageBase = IChatroomMessageChat | IChatroomMessageAction;
+export type IChatRoomMessageBase = IChatRoomMessageChat | IChatRoomMessageAction | IChatRoomMessageDeleted;
 export type IChatRoomMessage = IChatRoomMessageBase & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
 };
 
-export type IChatroomMessageDirectoryAction = IChatroomMessageAction & {
+export type IChatRoomMessageDirectoryAction = Omit<IChatRoomMessageAction, 'data'> & {
 	/** Time the message was sent, guaranteed to be unique from Directory; not necessarily the final one */
 	directoryTime: number;
+	data?: {
+		character?: CharacterId;
+		targetCharacter?: CharacterId;
+	};
 };
+
+export type IChatRoomStatus = 'none' | 'typing' | 'whisper' | 'afk';
+
+export const IsChatRoomStatus = CreateOneOfValidator<IChatRoomStatus>('none', 'typing', 'whisper', 'afk');

@@ -1,14 +1,20 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { ICharacterDataCreate, ICharacterPublicSettings } from '../character';
+import type { CharacterId, ICharacterDataCreate, ICharacterPublicSettings } from '../character';
 import type { AppearanceAction } from '../assets';
-import type { IClientMessage } from '../chatroom/chat';
+import type { IClientMessage, IChatRoomStatus } from '../chatroom/chat';
 
 /** Client->Shard handlers */
 interface ClientShard {
 	finishCharacterCreation(args: ICharacterDataCreate): { result: 'ok' | 'failed'; };
 	chatRoomMessage(arg: {
 		messages: IClientMessage[];
+		id: number;
+		editId?: number;
+	}): void;
+	chatRoomStatus(arg: {
+		status: IChatRoomStatus;
+		target?: CharacterId;
 	}): void;
 	chatRoomMessageAck(arg: {
 		lastTime: number;

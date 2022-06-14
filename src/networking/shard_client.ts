@@ -1,9 +1,9 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
 import type { CharacterId, ICharacterData, ICharacterPublicData } from '../character';
-import { IChatRoomFullInfo } from '../chatroom';
-import { AssetsDefinitionFile } from '../assets/definitions';
-import { IChatRoomMessage } from '../chatroom/chat';
+import type { IChatRoomFullInfo } from '../chatroom';
+import type { AssetsDefinitionFile } from '../assets/definitions';
+import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 
 export type IChatRoomClientData = IChatRoomFullInfo & {
 	characters: ICharacterPublicData[];
@@ -31,6 +31,10 @@ interface ShardClient {
 	chatRoomUpdate(args: IChatRoomUpdate): void;
 	chatRoomMessage(arg: {
 		messages: IChatRoomMessage[];
+	}): void;
+	chatRoomStatus(arg: {
+		id: CharacterId;
+		status: IChatRoomStatus;
 	}): void;
 }
 

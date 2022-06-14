@@ -5,7 +5,7 @@ import type { IChatRoomFullInfo, RoomId } from '../chatroom/room';
 import { IsRoomId } from '../chatroom/validation';
 import { IEmpty } from './empty';
 import { CreateNullableValidator, CreateObjectValidator, IsNumber, IsString } from '../validation';
-import type { IChatroomMessageDirectoryAction } from '../chatroom';
+import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 
 export type IShardCharacterDefinition = {
 	id: CharacterId;
@@ -28,7 +28,7 @@ export type IDirectoryShardUpdate = {
 	characters: IShardCharacterDefinition[];
 	/** List of rooms which exist on this shard */
 	rooms: IChatRoomFullInfo[];
-	messages: Record<RoomId, IChatroomMessageDirectoryAction[]>;
+	messages: Record<RoomId, IChatRoomMessageDirectoryAction[]>;
 };
 
 /** Directory->Shard handlers */

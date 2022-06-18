@@ -1,5 +1,5 @@
 import { GetLogger, logConfig } from 'pandora-common';
-import { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT } from '../config';
+import { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } from '../config';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
 import * as fs from 'fs';
@@ -21,6 +21,18 @@ export function StartHttpServer(): Promise<void> {
 
 	// Setup Express application
 	const expressApp = express();
+	expressApp.use(function (req, res, next) {
+		res.header('Access-Control-Allow-Origin', req.get('Origin') || '*');
+		res.header('Access-Control-Allow-Credentials', 'true');
+		res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE');
+		res.header('Access-Control-Expose-Headers', 'Content-Length');
+		res.header('Access-Control-Allow-Headers', 'Accept, Authorization, Content-Type, X-Requested-With, Range');
+		if (req.method === 'OPTIONS') {
+			return res.send(200);
+		} else {
+			return next();
+		}
+	});
 
 	// Setup HTTP(S) server
 	if (SERVER_HTTPS_CERT || SERVER_HTTPS_KEY) {
@@ -45,7 +57,10 @@ export function StartHttpServer(): Promise<void> {
 			key: keyData,
 		}, expressApp);
 	} else {
-		logger.warning('Starting in HTTP-only mode');
+		// Warn only if we are not behind proxy that handles HTTPS for us
+		if (TRUSTED_REVERSE_PROXY_HOPS === 0) {
+			logger.warning('Starting in HTTP-only mode');
+		}
 		server = new HttpServer(expressApp);
 	}
 	// Host assets (only if we are supposed to)
@@ -69,7 +84,7 @@ export function StartHttpServer(): Promise<void> {
 			});
 			// Setup shutdown handlers
 			logConfig.onFatal.push(() => {
-				logger.info('Stopping HTTP server');
+				logger.verbose('Stopping HTTP server');
 				server.close((err) => {
 					if (err) {
 						logger.error('Failed to close HTTP server', err);

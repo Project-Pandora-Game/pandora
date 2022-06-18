@@ -21,14 +21,14 @@ export class ClientConnection extends Connection<IncomingSocket, IShardClientBas
 	constructor(server: IServerSocket<IShardClientBase>, socket: IncomingSocket, headers: Record<string, undefined | string | string[]>) {
 		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
 		this.headers = headers;
-		this.logger.verbose('Connected');
+		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this);
 	}
 
 	/** Handler for when client disconnects */
 	protected override onDisconnect(reason: string): void {
 		this.character?.setConnection(null);
-		this.logger.verbose('Disconnected, reason:', reason);
+		this.logger.debug('Disconnected, reason:', reason);
 		ConnectionManagerClient.onDisconnect(this);
 	}
 

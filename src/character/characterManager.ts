@@ -60,7 +60,7 @@ export const CharacterManager = new class CharacterManager {
 			return char;
 		}
 
-		logger.debug(`Adding character ${data.id}`);
+		logger.verbose(`Adding character ${data.id}`);
 		char = new Character(data, character.connectSecret, character.room);
 		this._characters.set(id, char);
 		charactersMetric.set(this._characters.size);
@@ -71,7 +71,7 @@ export const CharacterManager = new class CharacterManager {
 		const character = this._characters.get(id);
 		if (!character)
 			return;
-		logger.debug(`Removing character ${id}`);
+		logger.verbose(`Removing character ${id}`);
 		character.onRemove();
 		this._characters.delete(id);
 		charactersMetric.set(this._characters.size);

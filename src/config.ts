@@ -21,10 +21,23 @@ export const SERVER_HTTPS_CERT = process.env.SERVER_HTTPS_CERT ?? '';
 export const SERVER_HTTPS_KEY = process.env.SERVER_HTTPS_KEY ?? '';
 /** Public URL for shard */
 export const SERVER_PUBLIC_ADDRESS = process.env.SERVER_PUBLIC_ADDRESS ?? 'http://127.0.0.1:25561';
+/** How many hops are we after a trusted reverse proxy */
+export const TRUSTED_REVERSE_PROXY_HOPS = Number.parseInt(process.env.TRUSTED_REVERSE_PROXY_HOPS ?? '0') || 0;
 /** Secret key used to authenticate Shards connecting to Directory */
 export const SHARD_SHARED_SECRET = process.env.SHARD_SHARED_SECRET ?? 'pandora-shard-secret';
 /** URL-style address of Directory for Shard to connect to */
 export const DIRECTORY_ADDRESS = process.env.DIRECTORY_ADDRESS ?? 'http://127.0.0.1:25560';
+//#endregion
+
+//#region Logging
+
+/** The directory to store logs into */
+export const LOG_DIR = process.env.LOG_DIR ?? './logs';
+/** If the logging should use "production" preset, reducing verbosity and rotating logs */
+export const LOG_PRODUCTION = (process.env.LOG_PRODUCTION ?? '').toLocaleLowerCase() === 'true';
+/** A webhook URL to log important events */
+export const LOG_DISCORD_WEBHOOK_URL = process.env.LOG_DISCORD_WEBHOOK_URL ?? '';
+
 //#endregion
 
 //#region Database

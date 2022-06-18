@@ -30,6 +30,7 @@ export class Room extends ServerRoom<IShardClientBase> {
 
 	public onRemove(): void {
 		clearInterval(this.cleanInterval);
+		this.logger.verbose('Destroyed');
 	}
 
 	private _clean(): void {
@@ -90,7 +91,7 @@ export class Room extends ServerRoom<IShardClientBase> {
 		character.setRoom(this);
 		this.sendUpdateTo(character, { room: this.getClientData() });
 		this.sendUpdateToAllInRoom({ join: this.getCharacterData(character) });
-		this.logger.verbose(`Character ${character.id} entered`);
+		this.logger.debug(`Character ${character.id} entered`);
 
 		this._getCharacterActionInfo(character.id); // make sure it is added to the cache
 	}
@@ -102,7 +103,7 @@ export class Room extends ServerRoom<IShardClientBase> {
 		this.status.delete(character.id);
 		this._cleanActionCache(character.id);
 		character.connection?.sendMessage('chatRoomUpdate', { room: null });
-		this.logger.verbose(`Character ${character.id} left`);
+		this.logger.debug(`Character ${character.id} left`);
 		this.sendUpdateToAllInRoom({ leave: character.id });
 	}
 

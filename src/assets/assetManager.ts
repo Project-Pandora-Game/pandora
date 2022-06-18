@@ -52,11 +52,11 @@ function WatchAssetDefinitionsTick(): void {
 			return;
 		const currentHash = readFileSync(currentFilePath, { encoding: 'utf8' }).trim();
 		if (currentHash !== assetManager.definitionsHash) {
-			logger.verbose('Detected asset definitions change, reloading...');
+			logger.alert('Detected asset definitions change, reloading...');
 			LoadAssetDefinitions();
 			CharacterManager.onAssetDefinitionsChanged();
 			ConnectionManagerClient.onAssetDefinitionsChanged();
-			logger.debug('Done sending new definitions');
+			logger.info('Done sending new definitions');
 		}
 	} catch (error) {
 		// Ignore

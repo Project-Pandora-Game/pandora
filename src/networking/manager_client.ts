@@ -59,11 +59,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			room: connection.character.room ? connection.character.room.getClientData() : null,
 			assetsDefinition: RawAssetsDefinitions,
 			assetsDefinitionHash: assetManager.definitionsHash,
-			assetsSource: ASSETS_SOURCE || SERVER_PUBLIC_ADDRESS,
+			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
 		});
 		connection.character.sendAllPendingMessages();
 
-		logger.info(`Client ${connection.id} connected to character ${connection.character.id}`);
+		logger.debug(`Client ${connection.id} connected to character ${connection.character.id}`);
 	}
 
 	/** Handle disconnecting client */
@@ -151,7 +151,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 				room: connection.character.room ? connection.character.room.getClientData() : null,
 				assetsDefinition: RawAssetsDefinitions,
 				assetsDefinitionHash: assetManager.definitionsHash,
-				assetsSource: ASSETS_SOURCE || SERVER_PUBLIC_ADDRESS,
+				assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
 			});
 		}
 	}

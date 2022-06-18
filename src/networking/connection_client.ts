@@ -26,13 +26,13 @@ export class ClientConnection extends Connection<IncomingSocket, IDirectoryClien
 
 	constructor(server: IServerSocket<IDirectoryClientBase>, socket: IncomingSocket, auth: unknown) {
 		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
-		this.logger.verbose('Connected');
+		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this, auth);
 	}
 
 	/** Handler for when client disconnects */
 	protected override onDisconnect(reason: string): void {
-		this.logger.verbose('Disconnected, reason:', reason);
+		this.logger.debug('Disconnected, reason:', reason);
 		ConnectionManagerClient.onDisconnect(this);
 	}
 

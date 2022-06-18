@@ -1,5 +1,5 @@
 import { GetLogger, logConfig } from 'pandora-common';
-import { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT } from '../config';
+import { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } from '../config';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
 import * as fs from 'fs';
@@ -48,7 +48,10 @@ export function StartHttpServer(): Promise<void> {
 			key: keyData,
 		}, expressApp);
 	} else {
-		logger.warning('Starting in HTTP-only mode');
+		// Warn only if we are not behind proxy that handles HTTPS for us
+		if (TRUSTED_REVERSE_PROXY_HOPS === 0) {
+			logger.warning('Starting in HTTP-only mode');
+		}
 		server = new HttpServer(expressApp);
 	}
 	// Host metrics
@@ -76,7 +79,7 @@ export function StartHttpServer(): Promise<void> {
 			});
 			// Setup shutdown handlers
 			logConfig.onFatal.push(() => {
-				logger.info('Stopping HTTP server');
+				logger.verbose('Stopping HTTP server');
 				server.close((err) => {
 					if (err) {
 						logger.error('Failed to close HTTP server', err);

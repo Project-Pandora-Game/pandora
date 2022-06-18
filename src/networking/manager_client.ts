@@ -110,7 +110,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	/** Handle disconnecting client */
 	public onDisconnect(connection: IConnectionClient): void {
 		if (!this.connectedClients.has(connection)) {
-			logger.fatal('Asserting failed: client disconnect while not in connectedClients', connection);
+			logger.fatal('Assertion failed: client disconnect while not in connectedClients', connection);
 			return;
 		}
 		this.connectedClients.delete(connection);
@@ -153,7 +153,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		// Generate new auth token for new login
 		const token = await account.secure.generateNewLoginToken();
 		// Set the account for the connection and return result
-		logger.info(`${connection.id} logged in as ${account.data.username}`);
+		logger.verbose(`${connection.id} logged in as ${account.data.username}`);
 		connection.setAccount(account);
 		return {
 			result: 'ok',
@@ -175,7 +175,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		connection.setAccount(null);
 		connection.character?.disconnect();
 		connection.setCharacter(null);
-		logger.info(`${connection.id} logged out`);
+		logger.verbose(`${connection.id} logged out`);
 
 		if (invalidateToken) {
 			await account.secure.invalidateLoginToken(invalidateToken);
@@ -430,7 +430,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		const account = await accountManager.loadAccountByUsername(auth.username);
 		// Verify the token validity
 		if (account && account.secure.verifyLoginToken(auth.token)) {
-			logger.info(`${connection.id} logged in as ${account.data.username} using token`);
+			logger.verbose(`${connection.id} logged in as ${account.data.username} using token`);
 			connection.setAccount(account);
 			if (auth.character) {
 				const char = account.characters.get(auth.character.id);

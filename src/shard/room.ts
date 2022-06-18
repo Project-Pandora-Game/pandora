@@ -31,7 +31,7 @@ export class Room {
 
 		this.shard = shard;
 		shard.rooms.add(this);
-		this.logger.info('Created');
+		this.logger.verbose('Created');
 		shard.update('rooms');
 	}
 
@@ -182,7 +182,7 @@ export class Room {
 			this.removeCharacter(character, 'destroy');
 		}
 		this.shard.rooms.delete(this);
-		this.logger.info('Destroyed');
+		this.logger.verbose('Destroyed');
 		this.shard.update('rooms');
 	}
 
@@ -220,7 +220,7 @@ export class Room {
 		if (character.room !== null) {
 			throw new Error('Attempt to add character that is in different room');
 		}
-		this.logger.verbose(`Character ${character.id} entered`);
+		this.logger.debug(`Character ${character.id} entered`);
 		this.characters.add(character);
 		character.room = this;
 
@@ -242,7 +242,7 @@ export class Room {
 	public removeCharacter(character: Character, reason: IChatRoomLeaveReason): void {
 		if (character.room !== this)
 			return;
-		this.logger.verbose(`Character ${character.id} removed (${reason})`);
+		this.logger.debug(`Character ${character.id} removed (${reason})`);
 		this.characters.delete(character);
 		character.room = null;
 

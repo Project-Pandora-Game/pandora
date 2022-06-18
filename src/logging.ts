@@ -1,5 +1,7 @@
+import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
 import fs from 'fs';
-import { logConfig, LogLevel } from 'pandora-common';
+import { GetLogger, logConfig, LogLevel } from 'pandora-common';
+import axios from 'axios';
 
 /** Custom function for stringifying data when logging into file */
 export function AnyToString(data: unknown): string {
@@ -45,6 +47,47 @@ export function AddFileOutput(fileName: string, append: boolean, logLevel: LogLe
 		onMessage: (prefix, message) => {
 			const line = [prefix, ...message.map((v) => AnyToString(v))].join(' ') + '\n';
 			fs.writeSync(fd, line, undefined, 'utf8');
+		},
+	});
+}
+
+export function AddDiscordLogOutput(name: string, webhookUrl: string, logLevel: LogLevel, logLevelOverrides: Record<string, LogLevel> = {}): void {
+	const LOG_COLORS: Record<LogLevel, number> = {
+		[LogLevel.FATAL]: 0x581845,
+		[LogLevel.ERROR]: 0xC70039,
+		[LogLevel.WARNING]: 0xFF5733,
+		[LogLevel.ALERT]: 0xFFC300,
+		[LogLevel.INFO]: 0xFFFFFF,
+		[LogLevel.VERBOSE]: 0x08C43A,
+		[LogLevel.DEBUG]: 0x0C71C4,
+	};
+	let suspend: boolean = false;
+
+	const logger = GetLogger('Discord');
+
+	logConfig.logOutputs.push({
+		logLevel,
+		logLevelOverrides,
+		supportsColor: false,
+		onMessage: (prefix, message, level) => {
+			if (suspend)
+				return;
+
+			const request: RESTPostAPIWebhookWithTokenJSONBody = {
+				embeds: [{
+					author: {
+						name,
+					},
+					color: LOG_COLORS[level] ?? 0xFFC300,
+					title: prefix,
+					description: `\`\`\`\n${message.map((v) => AnyToString(v)).join(' ')}\n\`\`\``,
+				}],
+			};
+			axios.post(webhookUrl, request).catch((err) => {
+				suspend = true;
+				logger.error('Failed to send discord webhook error', err);
+				suspend = false;
+			});
 		},
 	});
 }

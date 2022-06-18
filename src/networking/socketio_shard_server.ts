@@ -49,7 +49,7 @@ export class SocketIOServerShard extends SocketIOServer implements IServerSocket
 		});
 		const connection = new ShardConnection(this, new SocketIOSocket(socket));
 		if (!connection.isConnected()) {
-			logger.fatal('Asserting failed: client disconnect before onConnect finished');
+			logger.fatal('Assertion failed: client disconnect before onConnect finished');
 		}
 	}
 

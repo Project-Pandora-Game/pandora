@@ -169,7 +169,7 @@ export class Shard {
 	}
 
 	public async stop(): Promise<void> {
-		this.logger.verbose('Stop issued');
+		this.logger.info('Stop issued');
 		this.stopping = true;
 		ConnectionManagerClient.onShardListChange();
 		if (this.shardConnection) {

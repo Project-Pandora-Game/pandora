@@ -25,9 +25,9 @@ async function Start(): Promise<void> {
 	SetupLogging();
 	logger.info(`${APP_NAME} starting...`);
 	await GetEmailSender().init();
-	await ShardTokenStore.init();
 	logger.verbose('Initializing database...');
 	await InitDatabase();
+	await ShardTokenStore.init();
 	logger.verbose('Initializing managers...');
 	accountManager.init();
 	ConnectionManagerClient.init();

@@ -1,3 +1,4 @@
+export * from './account';
 export * from './assets';
 export * from './character';
 export * from './chatroom';

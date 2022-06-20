@@ -14,16 +14,27 @@ type AddContext<T, Context> = {
 };
 
 export class BadMessageError extends Error {
-	private readonly _extra: unknown[];
+	protected readonly extra: unknown[];
 
 	constructor(...extra: unknown[]) {
 		super();
 		this.name = 'BadMessage';
-		this._extra = extra;
+		this.extra = extra;
 	}
 
 	public log(logger: Logger, messageType: string, message: unknown): void {
-		logger.warning(`Bad message content for '${messageType}' `, message, ...this._extra);
+		logger.warning(`Bad message content for '${messageType}' `, message, ...this.extra);
+	}
+}
+
+export class UnauthoriedError extends BadMessageError {
+	constructor(...extra: unknown[]) {
+		super(...extra);
+		this.name = 'Unauthorized';
+	}
+
+	public override log(logger: Logger, messageType: string, message: unknown): void {
+		logger.warning(`Unauthorized message content for '${messageType}' `, message, ...this.extra);
 	}
 }
 

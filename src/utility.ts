@@ -15,6 +15,9 @@ export type MemberReturnType<T> = {
 
 export type BoolSelect<T extends boolean, TrueType, FalseType> = T extends true ? TrueType : FalseType;
 
+/** Returns all keys which have values matching V */
+export type KeysMatching<T, V> = { [K in keyof T]: T[K] extends V ? K : never }[keyof T];
+
 declare const window: unknown;
 declare const document: Record<string, unknown>;
 declare const process: Record<string, Record<string, unknown>>;

@@ -1,3 +1,4 @@
+import type { AccountRole, IAccountRoleInfo } from '../account';
 import type { CharacterId } from '../character';
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
@@ -8,10 +9,17 @@ export type IDirectoryStatus = {
 	betaKeyRequired?: true;
 };
 
+export type IDirectoryAccountSettings = {
+	visibleRoles: AccountRole[];
+};
+
 export type IDirectoryAccountInfo = {
 	id: number;
 	username: string;
 	created: number;
+	github?: { id: number; login: string; };
+	roles?: IAccountRoleInfo;
+	settings: IDirectoryAccountSettings;
 };
 
 export type IDirectoryShardInfo = {

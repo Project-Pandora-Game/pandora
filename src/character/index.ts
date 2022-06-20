@@ -1,4 +1,5 @@
-import { AppearanceBundle } from '../assets';
+import type { IAccountRoleInfo } from '../account';
+import type { AppearanceBundle } from '../assets';
 import { CreateArrayValidator, CreateObjectValidator, CreateStringValidator } from '../validation';
 
 export type CharacterId = `c${number}`;
@@ -36,6 +37,7 @@ export type ICharacterData = ICharacterPublicData & {
 	inCreation?: true;
 	created: number;
 	accessId: string;
+	roles?: IAccountRoleInfo;
 };
 
 export type ICharacterDataCreate = Pick<ICharacterData, 'name'>;

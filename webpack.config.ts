@@ -61,6 +61,7 @@ export default function (env: WebpackEnv): Configuration {
 		output: {
 			path: DIST_DIR,
 			filename: `[name]${env.prod ? '.[chunkhash]' : ''}.js`,
+			publicPath: '/',
 		},
 		plugins: GeneratePlugins(env),
 		resolve: {

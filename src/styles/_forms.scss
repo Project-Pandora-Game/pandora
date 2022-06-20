@@ -24,6 +24,10 @@ input[type=color] {
 	padding: 0;
 }
 
+input[type=checkbox]:read-only {
+	filter: grayscale(100%);
+}
+
 //#endregion
 
 //#region Buttons

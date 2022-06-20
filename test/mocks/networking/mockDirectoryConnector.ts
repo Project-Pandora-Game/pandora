@@ -47,6 +47,10 @@ export function MockAccountInfo(overrides?: Partial<IDirectoryAccountInfo>): IDi
 		id: 1234567890,
 		created: 0,
 		username: 'test-user',
+		roles: {},
+		settings: {
+			visibleRoles: [],
+		},
 		...overrides,
 	};
 }

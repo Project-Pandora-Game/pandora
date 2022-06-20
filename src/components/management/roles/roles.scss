@@ -1,0 +1,47 @@
+.roles {
+	display: flex;
+	flex-flow: column;
+	justify-content: center;
+
+	>table {
+		max-width: 50em;
+		margin: 2em auto;
+		border: 1px solid black;
+		border-collapse: collapse;
+
+		th,
+		td {
+			text-align: center;
+			white-space: nowrap;
+			border: 1px solid black;
+		}
+	}
+
+	>.role-grant {
+		margin: auto;
+	}
+
+	>:first-child {
+		margin: auto;
+	}
+
+	.input-row {
+		display: flex;
+
+		label {
+			width: 8em;
+			height: 2em;
+			margin: auto 0;
+		}
+
+		input[type=checkbox] {
+			margin: auto 0;
+		}
+
+		input[type=text],
+		input[type=date] {
+			margin-left: 0.5em;
+			width: 10em;
+		}
+	}
+}

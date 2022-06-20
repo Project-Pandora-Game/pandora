@@ -1,8 +1,10 @@
-import React, { ComponentType, ReactElement, useEffect } from 'react';
+import { IsAuthorized } from 'pandora-common';
+import React, { ComponentType, ReactElement, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
 import { useBrowserStorage } from '../browserStorage';
 import { usePlayerData } from '../character/player';
+import { AccountSettings } from '../components/accountSettings/accountSettings';
 import { CharacterCreate } from '../components/characterCreate/characterCreate';
 import { CharacterSelect } from '../components/characterSelect/characterSelect';
 import { Chatroom } from '../components/chatroom/chatroom';
@@ -32,12 +34,14 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/character_select' element={ <RequiresLogin element={ CharacterSelect } /> } />
 			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
+			<Route path='/account_settings' element={ <RequiresLogin element={ AccountSettings } /> } />
 			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
 			<Route path='/chatroom_select' element={ <RequiresCharacter element={ ChatroomSelect } /> } />
 			<Route path='/chatroom_create' element={ <RequiresCharacter element={ ChatroomCreate } /> } />
 			<Route path='/chatroom' element={ <RequiresCharacter element={ Chatroom } /> } />
 			<Route path='/chatroom_admin' element={ <RequiresCharacter element={ ChatroomAdmin } /> } />
 			<Route path='/wardrobe' element={ <RequiresCharacter element={ WardrobeScreen } /> } />
+			<Route path='/management/*' element={ <RequiresLogin element={ DeveloperRoutes } /> } />
 		</Routes>
 	);
 }
@@ -98,4 +102,20 @@ function AuthPageFallback({ component }: { component: ComponentType<Record<strin
 	}, [isLoggedIn, navigate]);
 
 	return <AuthPage component={ component } />;
+}
+
+const Management = lazy(() => import('../components/management'));
+function DeveloperRoutes(): ReactElement {
+	const account = useCurrentAccount();
+	const isDeveloper = account?.roles !== undefined && IsAuthorized(account.roles, 'developer');
+
+	if (!isDeveloper) {
+		return <Navigate to='/' />;
+	}
+
+	return (
+		<Suspense fallback={ <div>Loading...</div> }>
+			<Management />
+		</Suspense>
+	);
 }

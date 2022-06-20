@@ -27,15 +27,15 @@ function Start(): void {
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
-			<GameContextProvider>
-				<Header />
-				<ToastContainer theme='dark' />
-				<div className='main'>
-					<BrowserRouter>
+			<BrowserRouter>
+				<GameContextProvider>
+					<Header />
+					<ToastContainer theme='dark' />
+					<div className='main'>
 						<PandoraRoutes />
-					</BrowserRouter>
-				</div>
-			</GameContextProvider>
+					</div>
+				</GameContextProvider>
+			</BrowserRouter>
 		</React.StrictMode>,
 	);
 }

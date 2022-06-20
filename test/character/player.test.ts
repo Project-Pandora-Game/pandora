@@ -54,6 +54,7 @@ function MockPlayerData(overrides?: Partial<ICharacterData>): ICharacterData {
 		created: 0,
 		accessId: 'mockID',
 		settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+		roles: {},
 		...overrides,
 	};
 }

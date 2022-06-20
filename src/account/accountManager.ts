@@ -107,7 +107,7 @@ export class AccountManager {
 	 */
 	public getAccountById(id: number): Account | null {
 		for (const account of this.onlineAccounts) {
-			if (account.data.id === id) {
+			if (account.id === id) {
 				account.touch();
 				return account;
 			}

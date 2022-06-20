@@ -8,6 +8,7 @@ import { SocketIOServerClient } from './socketio_client_server';
 import { Socket } from 'net';
 import express from 'express';
 import { MetricsServe } from '../metrics';
+import { GitHubVerifierAPI } from '../services/github/githubVerify';
 
 const logger = GetLogger('Server');
 
@@ -56,6 +57,8 @@ export function StartHttpServer(): Promise<void> {
 	}
 	// Host metrics
 	expressApp.use('/metrics', MetricsServe());
+	// APIs
+	expressApp.use('/api/github', GitHubVerifierAPI());
 	// Attach socket.io servers
 	new SocketIOServerClient(server);
 	new SocketIOServerShard(server);

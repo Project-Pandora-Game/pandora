@@ -1,9 +1,12 @@
-import type { CharacterId, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountInfo } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountInfo, IDirectoryAccountSettings } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { IConnectionClient } from '../networking/common';
 import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL } from '../config';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
+import { AccountRoles } from './accountRoles';
+
+import _ from 'lodash';
 
 /** Currently logged in or recently used account */
 export class Account {
@@ -17,13 +20,24 @@ export class Account {
 	readonly characters: Map<CharacterId, Character> = new Map();
 
 	public readonly secure: AccountSecure;
+	public readonly roles: AccountRoles;
+
+	public get id(): number {
+		return this.data.id;
+	}
+
+	public get username(): string {
+		return this.data.username;
+	}
 
 	constructor(data: DatabaseAccountWithSecure) {
 		this.lastActivity = Date.now();
-		this.secure = new AccountSecure(data, data.secure);
+		this.secure = new AccountSecure(this, data.secure);
+		this.roles = new AccountRoles(this, data.roles);
 		// Shallow copy to preserve received data when cleaning up secure
 		const cleanData: DatabaseAccount = { ...data };
 		delete cleanData.secure;
+		delete cleanData.roles;
 		this.data = cleanData;
 		for (const characterData of this.data.characters) {
 			this.characters.set(characterData.id, new Character(characterData, this));
@@ -50,7 +64,21 @@ export class Account {
 			id: this.data.id,
 			username: this.data.username,
 			created: this.data.created,
+			github: this.secure.getGitHubStatus(),
+			roles: this.roles.getSelfInfo(),
+			settings: _.cloneDeep(this.data.settings),
 		};
+	}
+
+	public async changeSettings(settings: Partial<IDirectoryAccountSettings>): Promise<void> {
+		if (settings.visibleRoles) {
+			settings.visibleRoles = settings.visibleRoles.filter((role) => this.roles.isAuthorized(role));
+		}
+
+		this.data.settings = { ...this.data.settings, ...settings };
+
+		await GetDatabase().updateAccountSettings(this.data.id, this.data.settings);
+		this.onAccountInfoChange();
 	}
 
 	//#region Character
@@ -133,6 +161,12 @@ export class Account {
 		}
 	}
 
+	public onAccountInfoChange(): void {
+		for (const connection of this.associatedConnections.values()) {
+			connection.sendConnectionStateUpdate();
+		}
+	}
+
 	public hasCharacter(id: CharacterId, checkNotConnected?: true): boolean {
 		const character = this.characters.get(id);
 
@@ -163,5 +197,8 @@ export async function CreateAccountData(username: string, password: string, emai
 		created: Date.now(),
 		secure: await GenerateAccountSecureData(password, email, activated),
 		characters: [],
+		settings: {
+			visibleRoles: [],
+		},
 	};
 }

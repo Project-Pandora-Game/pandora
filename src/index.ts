@@ -8,6 +8,8 @@ import { StartHttpServer } from './networking/httpServer';
 import GetEmailSender from './services/email';
 import { SetupSignalHandling } from './lifecycle';
 import { ConnectionManagerClient } from './networking/manager_client';
+import { GitHubVerifier } from './services/github/githubVerify';
+import { ShardTokenStore } from './shard/shardTokenStore';
 
 const logger = GetLogger('init');
 
@@ -23,11 +25,14 @@ async function Start(): Promise<void> {
 	SetupLogging();
 	logger.info(`${APP_NAME} starting...`);
 	await GetEmailSender().init();
+	await ShardTokenStore.init();
 	logger.verbose('Initializing database...');
 	await InitDatabase();
 	logger.verbose('Initializing managers...');
 	accountManager.init();
 	ConnectionManagerClient.init();
+	logger.verbose('Initializing APIs...');
+	await GitHubVerifier.init();
 	logger.verbose('Starting HTTP server...');
 	await StartHttpServer();
 	logger.alert('Ready!');

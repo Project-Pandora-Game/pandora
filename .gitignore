@@ -6,3 +6,4 @@
 /localDb
 /logs
 /globalConfig.json
+/.persistent

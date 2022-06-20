@@ -193,11 +193,11 @@ export class Room {
 		if (this.characterCount >= this.config.maxUsers)
 			return 'errFull';
 
-		if (this.config.banned.includes(character.account.data.id))
+		if (this.config.banned.includes(character.account.id))
 			return 'noAccess';
 
 		if (this.config.protected &&
-			!this.config.admin.includes(character.account.data.id) &&
+			!this.config.admin.includes(character.account.id) &&
 			(this.config.password === null || password !== this.config.password)
 		) {
 			return this.config.password !== null ? 'invalidPassword' : 'noAccess';
@@ -207,13 +207,13 @@ export class Room {
 	}
 
 	public isAdmin(character: Character): boolean {
-		return this.config.admin.includes(character.account.data.id);
+		return this.config.admin.includes(character.account.id);
 	}
 
 	public addCharacter(character: Character, sendEnterMessage: boolean = true): void {
 		if (character.room === this)
 			return;
-		if (this.config.banned.includes(character.account.data.id)) {
+		if (this.config.banned.includes(character.account.id)) {
 			this.logger.warning(`Refusing to add banned character id ${character.id}`);
 			return;
 		}
@@ -272,8 +272,8 @@ export class Room {
 		}
 
 		// If the reason is ban, also actually ban the account and kick any other characters of that account
-		if (reason === 'ban' && !this.config.banned.includes(character.account.data.id)) {
-			this.config.banned.push(character.account.data.id);
+		if (reason === 'ban' && !this.config.banned.includes(character.account.id)) {
+			this.config.banned.push(character.account.id);
 			this.removeBannedCharacters();
 		}
 
@@ -284,7 +284,7 @@ export class Room {
 
 	private removeBannedCharacters(): void {
 		for (const character of this.characters.values()) {
-			if (this.config.banned.includes(character.account.data.id)) {
+			if (this.config.banned.includes(character.account.id)) {
 				this.removeCharacter(character, 'ban');
 			}
 		}

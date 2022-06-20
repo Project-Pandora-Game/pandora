@@ -1,4 +1,5 @@
 import { LogLevel, SetConsoleOutput } from 'pandora-common';
+import { Account, CreateAccountData } from '../../src/account/account';
 import AccountSecure, { AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import * as databaseProvider from '../../src/database/databaseProvider';
 import { MockDatabase } from '../../src/database/mockDb';
@@ -7,6 +8,14 @@ import GetEmailSender from '../../src/services/email';
 const TEST_USERNAME = 'testuser';
 const TEST_EMAIL = 'test@project-pandora.com';
 const TEST_EMAIL_HASH = GenerateEmailHash(TEST_EMAIL);
+
+async function CreateAccountSecure(password: string, email: string, activated: boolean): Promise<AccountSecure> {
+	const account = new Account({
+		...await CreateAccountData(TEST_USERNAME, password, email, activated),
+		id: 0,
+	});
+	return account.secure;
+}
 
 describe('GenerateEmailHash()', () => {
 	it('should return a string', () => {
@@ -47,18 +56,12 @@ describe('AccountSecure', () => {
 
 	describe('isActivated()', () => {
 		it('should return false for inactivated account', async () => {
-			const inactive = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
+			const inactive = await CreateAccountSecure('password', TEST_EMAIL, false);
 			expect(inactive.isActivated()).toBe(false);
 		});
 
 		it('should return true for activated account', async () => {
-			const active = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+			const active = await CreateAccountSecure('password', TEST_EMAIL, true);
 			expect(active.isActivated()).toBe(true);
 		});
 	});
@@ -69,18 +72,12 @@ describe('AccountSecure', () => {
 		let activationToken2: string;
 
 		beforeAll(async () => {
-			account = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL));
+			account = await CreateAccountSecure('password', TEST_EMAIL, false);
 		});
 
 		describe('sendActivation()', () => {
 			it('Does nothing on active account', async () => {
-				const activeAccount = new AccountSecure({
-					id: 0,
-					username: TEST_USERNAME,
-				}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+				const activeAccount = await CreateAccountSecure('password', TEST_EMAIL, true);
 				await activeAccount.sendActivation(TEST_EMAIL);
 				expect(mockRegistration).not.toHaveBeenCalled();
 				expect(mockSaving).not.toHaveBeenCalled();
@@ -119,10 +116,7 @@ describe('AccountSecure', () => {
 
 		describe('activateAccount()', () => {
 			it('Fails on active account', async () => {
-				const activeAccount = new AccountSecure({
-					id: 0,
-					username: TEST_USERNAME,
-				}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+				const activeAccount = await CreateAccountSecure('password', TEST_EMAIL, true);
 				expect(await activeAccount.activateAccount('token')).toBe(false);
 				expect(mockSaving).not.toHaveBeenCalled();
 			});
@@ -161,14 +155,8 @@ describe('AccountSecure', () => {
 		let inactive: AccountSecure;
 
 		beforeAll(async () => {
-			active = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
-			inactive = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
+			active = await CreateAccountSecure('password', TEST_EMAIL, true);
+			inactive = await CreateAccountSecure('password', TEST_EMAIL, false);
 		});
 
 		it('Returns false with wrong email', () => {
@@ -194,14 +182,8 @@ describe('AccountSecure', () => {
 		let inactive: AccountSecure;
 
 		beforeAll(async () => {
-			active = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
-			inactive = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
+			active = await CreateAccountSecure('password', TEST_EMAIL, true);
+			inactive = await CreateAccountSecure('password', TEST_EMAIL, false);
 		});
 
 		it('Returns false with wrong email hash', () => {
@@ -220,14 +202,8 @@ describe('AccountSecure', () => {
 		let inactive: AccountSecure;
 
 		beforeAll(async () => {
-			active = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
-			inactive = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
+			active = await CreateAccountSecure('password', TEST_EMAIL, true);
+			inactive = await CreateAccountSecure('password', TEST_EMAIL, false);
 		});
 
 		it('Returns false with wrong password', async () => {
@@ -247,17 +223,11 @@ describe('AccountSecure', () => {
 		let account: AccountSecure;
 
 		beforeAll(async () => {
-			account = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+			account = await CreateAccountSecure('password', TEST_EMAIL, true);
 		});
 
 		it('Fails on inactive account', async () => {
-			const inactiveAccount = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
+			const inactiveAccount = await CreateAccountSecure('password', TEST_EMAIL, false);
 			await expect(inactiveAccount.changePassword('password', 'newPassword')).resolves.toBe(false);
 			await expect(inactiveAccount.verifyPassword('password')).resolves.toBe(true);
 			await expect(inactiveAccount.verifyPassword('newPassword')).resolves.toBe(false);
@@ -287,10 +257,7 @@ describe('AccountSecure', () => {
 		let resetToken: string;
 
 		beforeAll(async () => {
-			account = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, false));
+			account = await CreateAccountSecure('password', TEST_EMAIL, false);
 		});
 
 		describe('resetPassword()', () => {
@@ -352,10 +319,7 @@ describe('AccountSecure', () => {
 
 		beforeAll(async () => {
 			jest.useFakeTimers();
-			account = new AccountSecure({
-				id: 0,
-				username: TEST_USERNAME,
-			}, await GenerateAccountSecureData('password', TEST_EMAIL, true));
+			account = await CreateAccountSecure('password', TEST_EMAIL, true);
 		});
 		afterAll(() => {
 			jest.useRealTimers();

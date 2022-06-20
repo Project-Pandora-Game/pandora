@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/naming-convention */ // MongoDB
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
+import { CreateCharacter } from './dbHelper';
 
-import _ from 'lodash';
 import AsyncLock from 'async-lock';
 import { MongoClient } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
@@ -23,6 +23,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _db!: Db;
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
+	private _config!: Collection<DatabaseConfig>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -62,6 +63,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			{ key: { id: 1 } },
 			{ key: { username: 1 } },
 			{ key: { 'secure.emailHash': 1 } },
+			{ key: { 'secure.github.id': 1 } },
 		], { unique: true });
 
 		const [maxAccountId] = await this._accounts.find().sort({ id: -1 }).limit(1).toArray();
@@ -77,6 +79,14 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		const [maxCharId] = await this._characters.find().sort({ id: -1 }).limit(1).toArray();
 		this._nextCharacterId = maxCharId ? maxCharId.id + 1 : 1;
+		//#endregion
+
+		//#region Config
+		this._config = this._db.collection('config');
+
+		await this._config.createIndexes([
+			{ key: { type: 1 } },
+		], { unique: true });
 		//#endregion
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);
@@ -129,8 +139,31 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
+	public async updateAccountSettings(id: number, data: IDirectoryAccountSettings): Promise<void> {
+		await this._accounts.updateOne({ id }, { $set: { settings: data } });
+	}
+
 	public async setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void> {
 		await this._accounts.updateOne({ id }, { $set: { secure: data } });
+	}
+
+	public async setAccountSecureGitHub(id: number, data: DatabaseAccountSecure['github']): Promise<boolean> {
+		const result = await this._accounts.findOneAndUpdate({ id }, { $set: { 'secure.github': data } }, { returnDocument: 'after' });
+		if (!result.value)
+			return false;
+
+		if (data === undefined)
+			return result.value.secure.github === undefined;
+
+		return data.date === result.value.secure.github?.date;
+	}
+
+	public async setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void> {
+		if (data) {
+			await this._accounts.updateOne({ id }, { $set: { roles: data } });
+		} else {
+			await this._accounts.updateOne({ id }, { $unset: { roles: '' } });
+		}
 	}
 
 	public async createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
@@ -138,23 +171,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			if (!await this.getAccountById(accountId))
 				throw new Error('Account not found');
 
-			const id = this._nextCharacterId++;
-			const infoId: CharacterId = `c${id}`;
-			const info: ICharacterSelfInfoDb = {
-				inCreation: true,
-				id: infoId,
-				name: '',
-				preview: '',
-			};
-			const char: Omit<ICharacterData, 'id'> & { id: number; } = {
-				inCreation: true,
-				id,
-				accountId,
-				name: info.name,
-				created: -1,
-				accessId: nanoid(8),
-				settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-			};
+			const [info, char] = CreateCharacter(accountId, this._nextCharacterId++);
 
 			await this._accounts.updateOne({ id: accountId }, { $push: { characters: info } });
 			await this._characters.insertOne(char);
@@ -220,8 +237,20 @@ export default class MongoDatabase implements PandoraDatabase {
 		return acknowledged && modifiedCount === 1;
 	}
 
+	public async getConfig<T extends DatabaseConfig['type']>(type: T): Promise<null | (DatabaseConfig & { type: T; })['data']> {
+		const result = await this._config.findOne({ type });
+		return result?.data ?? null;
+	}
+
+	public async setConfig<T extends DatabaseConfig['type']>(type: T, data: (DatabaseConfig & { type: T; })['data']): Promise<void> {
+		await this._config.updateOne({ type }, { $set: { data } }, { upsert: true });
+	}
+
 	private async _doMigrations(): Promise<void> {
-		// await this._characters.updateMany({ settings: { $exists: false } }, { $set: { settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS) } });
+		// const settings: IDirectoryAccountSettings = {
+		// 	visibleRoles: [],
+		// };
+		// await this._accounts.updateMany({}, { $set: { settings } });
 	}
 }
 

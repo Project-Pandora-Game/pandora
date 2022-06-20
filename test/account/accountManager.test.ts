@@ -53,12 +53,12 @@ describe('AccountManager', () => {
 			expect(result).toBeInstanceOf(Account);
 			const acc = result as Account;
 			// Save ID for other tests
-			testAccountId = acc.data.id;
+			testAccountId = acc.id;
 
 			// The database has the account
-			await expect(mockDb.getAccountById(acc.data.id)).resolves.toEqual(
+			await expect(mockDb.getAccountById(acc.id)).resolves.toEqual(
 				expect.objectContaining<Partial<DatabaseAccountWithSecure>>({
-					id: acc.data.id,
+					id: acc.id,
 					username: TEST_USERNAME,
 				}),
 			);
@@ -68,7 +68,7 @@ describe('AccountManager', () => {
 			expect(sendObserver).toHaveBeenCalledTimes(1);
 			expect(sendObserver).toHaveBeenNthCalledWith(1, TEST_EMAIL);
 			// The account is loaded
-			expect(accountManager.getAccountById(acc.data.id)).toBe(acc);
+			expect(accountManager.getAccountById(acc.id)).toBe(acc);
 		});
 
 		it('Returns same error as database', async () => {
@@ -92,7 +92,7 @@ describe('AccountManager', () => {
 			// Gets loaded by load
 			const account = await accountManager.loadAccountById(testAccountId);
 			expect(account).toBeInstanceOf(Account);
-			expect((account as Account).data.id).toBe(testAccountId);
+			expect((account as Account).id).toBe(testAccountId);
 
 			// Get returns loaded account
 			expect(accountManager.getAccountById(testAccountId)).toBe(account);
@@ -154,7 +154,7 @@ describe('AccountManager', () => {
 			// Gets loaded by load
 			const account = await accountManager.loadAccountByUsername(TEST_USERNAME);
 			expect(account).toBeInstanceOf(Account);
-			expect((account as Account).data.id).toBe(testAccountId);
+			expect((account as Account).id).toBe(testAccountId);
 
 			// Get returns loaded account
 			expect(accountManager.getAccountByUsername(TEST_USERNAME)).toBe(account);
@@ -221,7 +221,7 @@ describe('AccountManager', () => {
 			// Gets loaded by load
 			const account = await accountManager.loadAccountByEmailHash(TEST_EMAIL_HASH);
 			expect(account).toBeInstanceOf(Account);
-			expect((account as Account).data.id).toBe(testAccountId);
+			expect((account as Account).id).toBe(testAccountId);
 
 			// Get returns loaded account
 			expect(accountManager.getAccountByEmailHash(TEST_EMAIL_HASH)).toBe(account);

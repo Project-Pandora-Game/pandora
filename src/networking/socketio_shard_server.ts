@@ -1,12 +1,12 @@
 import type { Socket } from 'socket.io';
 import type { IncomingMessage, Server as HttpServer } from 'http';
-import { SHARD_SHARED_SECRET } from '../config';
 import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IConnectionSender, IDirectoryShard, IDirectoryShardBase, MembersFirstArg } from 'pandora-common';
 import { SocketIOServer } from './socketio_common_server';
 import { ShardConnection } from './connection_shard';
 import { SocketIOSocket } from './socketio_common_socket';
 import { SocketInterfaceOneshotHandler } from 'pandora-common/dist/networking/helpers';
 import { IServerSocket } from 'pandora-common/dist/networking/room';
+import { ShardTokenStore } from '../shard/shardTokenStore';
 
 const logger = GetLogger('SIO-Server-Shard');
 
@@ -26,15 +26,13 @@ export class SocketIOServerShard extends SocketIOServer implements IServerSocket
 	 * @param next - Callback for accept/reject
 	 */
 	protected override allowRequest(req: IncomingMessage, next: (err: string | null | undefined, success: boolean) => void): void {
-		// If there is secret set, it must be verified
-		if (SHARD_SHARED_SECRET) {
-			const receivedSecret = req.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
-			if (receivedSecret !== SHARD_SHARED_SECRET) {
-				next('Unauthorized: invalid secret', false);
-				logger.warning(`Rejecting shard connection from ${req.socket.remoteAddress ?? '[unknown]'}: Bad secret`);
-				return;
-			}
+		const receivedSecret = req.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
+		if (typeof receivedSecret !== 'string' || !ShardTokenStore.has(receivedSecret)) {
+			next('Unauthorized: invalid secret', false);
+			logger.warning(`Rejecting shard connection from ${req.socket.remoteAddress ?? '[unknown]'}: Bad secret`);
+			return;
 		}
+
 		next(undefined, true);
 	}
 

@@ -1,6 +1,7 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, PASSWORD_PREHASH_SALT, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
+import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { CreateCharacter } from './dbHelper';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
@@ -19,6 +20,7 @@ const logger = GetLogger('db');
 export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
+	private configDb: DatabaseConfig[] = [];
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 	private get accountDbView(): DatabaseAccountWithSecure[] {
@@ -99,6 +101,15 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(acc));
 	}
 
+	public updateAccountSettings(id: number, data: IDirectoryAccountSettings): Promise<void> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
+		if (!acc)
+			return Promise.resolve();
+
+		acc.settings = _.cloneDeep(data);
+		return Promise.resolve();
+	}
+
 	public setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
 		if (!acc)
@@ -108,27 +119,33 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve();
 	}
 
+	public setAccountSecureGitHub(id: number, data: DatabaseAccountSecure['github']): Promise<boolean> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
+		if (!acc)
+			return Promise.resolve(false);
+
+		if (data && this.accountDbView.find((dbAccount) => dbAccount.secure.github?.id === data.id))
+			return Promise.resolve(false);
+
+		acc.secure.github = _.cloneDeep(data);
+		return Promise.resolve(true);
+	}
+
+	public setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
+		if (!acc)
+			return Promise.resolve();
+
+		acc.roles = _.cloneDeep(data);
+		return Promise.resolve();
+	}
+
 	public createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.reject(new Error('Account not found'));
 
-		const charId: CharacterId = `c${this._nextCharacterId++}`;
-		const info = {
-			inCreation: true as const,
-			id: charId,
-			name: '',
-			preview: '',
-		};
-		const char: ICharacterData = {
-			inCreation: true as const,
-			id: charId,
-			accountId: acc.id,
-			name: info.name,
-			created: -1,
-			accessId: nanoid(8),
-			settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-		};
+		const [info, char] = CreateCharacter(accountId, `c${this._nextCharacterId++}`);
 
 		acc.characters.push(info);
 		this.characterDb.set(char.id, char);
@@ -215,5 +232,23 @@ export class MockDatabase implements PandoraDatabase {
 
 		_.assign(char, _.cloneDeep(data));
 		return Promise.resolve(true);
+	}
+
+	public getConfig<T extends DatabaseConfig['type']>(type: T): Promise<null | (DatabaseConfig & { type: T; })['data']> {
+		const config = this.configDb.find((dbConfig) => dbConfig.type === type);
+		if (!config)
+			return Promise.resolve(null);
+
+		return Promise.resolve(_.cloneDeep(config.data));
+	}
+
+	public setConfig<T extends DatabaseConfig['type']>(type: T, data: (DatabaseConfig & { type: T; })['data']): Promise<void> {
+		const config = this.configDb.find((dbConfig) => dbConfig.type === type);
+		if (!config) {
+			this.configDb.push({ type, data });
+		} else {
+			config.data = _.cloneDeep(data);
+		}
+		return Promise.resolve();
 	}
 }

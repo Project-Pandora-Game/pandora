@@ -6,7 +6,7 @@ import { Character } from '../account/character';
 import type { Room } from './room';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Sleep } from '../utility';
-import { Account } from '../account/account';
+import type { Account } from '../account/account';
 import { last, uniq } from 'lodash';
 
 export class Shard {
@@ -333,7 +333,7 @@ export class Shard {
 		for (const [id, character] of this.characters) {
 			result.push({
 				id,
-				account: character.account.data.id,
+				account: character.account.id,
 				accessId: character.accessId,
 				connectSecret: character.connectSecret,
 				room: character.room ? character.room.id : null,

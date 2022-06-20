@@ -1,7 +1,7 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from 'pandora-common';
+import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings } from 'pandora-common';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -38,10 +38,29 @@ export interface PandoraDatabase {
 	createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'>;
 
 	/**
+	 * Sets account settings
+	 * @param id - Account id
+	 * @param data - Settings data
+	 */
+	updateAccountSettings(id: number, data: IDirectoryAccountSettings): Promise<void>;
+
+	/**
 	 * Sets account's secure data use should only be used in AccountSecure class
 	 * @param id - Id of account to update
 	 */
 	setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void>;
+
+	/**
+	 * Sets account's secure data use should only be used in AccountSecure class
+	 * @param id - Id of account to update
+	 */
+	setAccountSecureGitHub(id: number, data: DatabaseAccountSecure['github']): Promise<boolean>;
+
+	/**
+	 * Sets account's secure data use should only be used in AccountSecure class
+	 * @param id - Id of account to update
+	 */
+	setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void>;
 
 	/**
 	 * Creates a new character for the account
@@ -93,6 +112,21 @@ export interface PandoraDatabase {
 	setCharacter(data: Partial<ICharacterData> & ICharacterDataAccess): Promise<boolean>;
 
 	//#endregion
+
+	//#region Config
+
+	/**
+	 * Get config data
+	 * @param type
+	 */
+	getConfig<T extends DatabaseConfig['type']>(type: T): Promise<null | (DatabaseConfig & { type: T; })['data']>;
+
+	/**
+	 * Set config data
+	 * @param type
+	 * @param data
+	 */
+	setConfig<T extends DatabaseConfig['type']>(type: T, data: (DatabaseConfig & { type: T; })['data']): Promise<void>;
 }
 
 /** Current database connection */

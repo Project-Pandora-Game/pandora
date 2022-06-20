@@ -1,6 +1,7 @@
 import { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } from '../config';
 import { GetDatabase } from '../database/databaseProvider';
 import GetEmailSender from '../services/email';
+import type { Account } from './account';
 
 import { createHash, randomInt } from 'crypto';
 import { nanoid } from 'nanoid';
@@ -22,10 +23,10 @@ export enum AccountTokenReason {
  * JavaScript's private fields is used to ensure that the data is not exposed to the outside world
  */
 export default class AccountSecure {
-	readonly #account: { id: number, username: string; };
+	readonly #account: Account;
 	readonly #secure: DatabaseAccountSecure;
 
-	constructor(account: { id: number, username: string; }, secure: DatabaseAccountSecure) {
+	constructor(account: Account, secure: DatabaseAccountSecure) {
 		this.#account = account;
 		this.#secure = secure;
 
@@ -117,6 +118,42 @@ export default class AccountSecure {
 
 	public verifyLoginToken(token: string): boolean {
 		return this.#validateToken(AccountTokenReason.LOGIN, token);
+	}
+
+	public getGitHubStatus(): undefined | { id: number; login: string; } {
+		if (!this.#secure.github)
+			return undefined;
+
+		return {
+			id: this.#secure.github.id,
+			login: this.#secure.github.login,
+		};
+	}
+
+	public async setGitHubInfo(info: Omit<GitHubInfo, 'date'> | null): Promise<boolean> {
+		if (!info) {
+			delete this.#secure.github;
+			await this.#account.roles.setGitHubStatus('none');
+			await this.#updateDatabase();
+			return true;
+		}
+		if (this.#secure.github && this.#secure.github.id === info.id) {
+			this.#secure.github.login = info.login;
+			this.#secure.github.role = info.role;
+			this.#secure.github.date = Date.now();
+			await this.#account.roles.setGitHubStatus(info.role);
+			await this.#updateDatabase();
+			return true;
+		}
+
+		const newInfo = { ...info, date: Date.now() };
+		if (!await GetDatabase().setAccountSecureGitHub(this.#account.id, newInfo))
+			return false;
+
+		this.#secure.github = newInfo;
+		await this.#account.roles.setGitHubStatus(newInfo.role);
+
+		return true;
 	}
 
 	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {

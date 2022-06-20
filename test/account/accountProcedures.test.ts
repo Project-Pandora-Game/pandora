@@ -19,7 +19,7 @@ beforeAll(async () => {
 	// Create at least one account
 	const account = await accountManager.createAccount(TEST_USERNAME, 'test', TEST_EMAIL);
 	expect(account).toBeInstanceOf(Account);
-	testAccountId = (account as Account).data.id;
+	testAccountId = (account as Account).id;
 	accountManager.onDestroy();
 });
 

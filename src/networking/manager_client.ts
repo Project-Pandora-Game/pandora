@@ -1,10 +1,13 @@
 import { IConnectionClient } from './common';
-import { GetLogger, IsClientDirectoryAuthMessage, IsIChatRoomDirectoryConfig, IsRoomId, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, CreateObjectValidator, CreateBase64Validator, IsCharacterId, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IsString, IsPartialIChatRoomDirectoryConfig, IDirectoryStatus } from 'pandora-common';
+import { GetLogger, IsClientDirectoryAuthMessage, IsIChatRoomDirectoryConfig, IsRoomId, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, CreateObjectValidator, CreateBase64Validator, IsCharacterId, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IsString, IsPartialIChatRoomDirectoryConfig, IDirectoryStatus, AccountRole, IsNumber, IsConfiguredAccountRole, IsShardTokenType, IsDirectoryAccountSettings } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY, CHARACTER_LIMIT_NORMAL } from '../config';
 import { ShardManager } from '../shard/shardManager';
+import type { Account } from '../account/account';
+import { GitHubVerifier } from '../services/github/githubVerify';
 import promClient from 'prom-client';
+import { ShardTokenStore } from '../shard/shardTokenStore';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -82,10 +85,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			chatRoomCreate: this.handleChatRoomCreate.bind(this),
 			chatRoomEnter: this.handleChatRoomEnter.bind(this),
 			chatRoomUpdate: this.handleChatRoomUpdate.bind(this),
+
+			gitHubBind: this.handleGitHubBind.bind(this),
+
+			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
+			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
+			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
+			manageInvalidateShardToken: Auth('developer', this.handleManageInvalidateShardToken.bind(this)),
+			manageListShardTokens: Auth('developer', this.handleManageListShardTokens.bind(this)),
 		}, {
 			logout: this.handleLogout.bind(this),
 			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
 			chatRoomLeave: this.handleChatRoomLeave.bind(this),
+
+			gitHubUnbind: this.handleGitHubUnbind.bind(this),
+			changeSettings: this.handleChangeSettings.bind(this),
 		});
 	}
 
@@ -443,6 +457,81 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		connection.sendConnectionStateUpdate();
 	}
 
+	private handleGitHubBind({ login }: IClientDirectoryUnconfirmedArgument['gitHubBind'], connection: IConnectionClient): IClientDirectoryNormalResult['gitHubBind'] {
+		if (!connection.isLoggedIn() || !IsString(login))
+			throw new BadMessageError();
+
+		const url = GitHubVerifier.prepareLink(connection.account.id, login) || 'GitHub Verify API Not Supported';
+		return { url };
+	}
+
+	private async handleGitHubUnbind(_: IClientDirectoryUnconfirmedArgument['gitHubUnbind'], connection: IConnectionClient): IClientDirectoryPromiseResult['gitHubUnbind'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		await connection.account.secure.setGitHubInfo(null);
+	}
+
+	private async handleChangeSettings(settings: IClientDirectoryUnconfirmedArgument['changeSettings'], connection: IConnectionClient): IClientDirectoryPromiseResult['changeSettings'] {
+		if (!IsDirectoryAccountSettings(settings) || !connection.isLoggedIn())
+			throw new BadMessageError();
+
+		await connection.account.changeSettings(settings);
+	}
+
+	private async handleManageGetAccountRoles({ id }: IClientDirectoryUnconfirmedArgument['manageGetAccountRoles']): IClientDirectoryPromiseResult['manageGetAccountRoles'] {
+		if (!IsNumber(id))
+			throw new BadMessageError();
+
+		const account = await accountManager.loadAccountById(id);
+		if (!account)
+			return { result: 'notFound' };
+
+		return {
+			result: 'ok',
+			roles: account.roles.getAdminInfo(),
+		};
+	}
+
+	private async handleManageSetAccountRole({ id, role, expires }: IClientDirectoryUnconfirmedArgument['manageSetAccountRole'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageSetAccountRole'] {
+		if (!IsNumber(id) || !IsConfiguredAccountRole(role) || expires !== undefined && !IsNumber(expires))
+			throw new BadMessageError();
+
+		const account = await accountManager.loadAccountById(id);
+		if (!account)
+			return { result: 'notFound' };
+
+		await account.roles.setRole(connection.account, role, expires);
+		return { result: 'ok' };
+	}
+
+	private async handleManageCreateShardToken({ type, expires }: IClientDirectoryUnconfirmedArgument['manageCreateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateShardToken'] {
+		if (!IsShardTokenType(type) || expires !== undefined && !IsNumber(expires))
+			throw new BadMessageError();
+
+		const result = await ShardTokenStore.create(connection.account, { type, expires });
+		if (typeof result === 'string')
+			return { result };
+
+		return {
+			result: 'ok',
+			...result,
+		};
+	}
+
+	private async handleManageInvalidateShardToken({ id }: IClientDirectoryUnconfirmedArgument['manageInvalidateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateShardToken'] {
+		if (!IsString(id))
+			throw new BadMessageError();
+
+		const success = await ShardTokenStore.revoke(connection.account, id);
+		return { result: success ? 'ok' : 'notFound' };
+	}
+
+	private handleManageListShardTokens(_: IClientDirectoryUnconfirmedArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryNormalResult['manageListShardTokens'] {
+		const info = ShardTokenStore.list(connection.account);
+		return { info };
+	}
+
 	public onRoomListChange(): void {
 		for (const connection of this.connectedClients) {
 			// Only send updates to connections that can see the list (have character, but aren't in room)
@@ -458,6 +547,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		}
 	}
 };
+
+function Auth<T, R>(role: AccountRole, handler: (args: T, connection: IConnectionClient & { readonly account: Account; }) => R): (args: T, connection: IConnectionClient) => R {
+	return (args: T, connection: IConnectionClient) => {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+		if (!connection.account.roles.isAuthorized(role))
+			throw new BadMessageError();
+
+		return handler(args, connection);
+	};
+}
 
 /** Checks if the given password is a base64 encode SHA-512 hash */
 const IsPasswordSha512 = CreateStringValidator({

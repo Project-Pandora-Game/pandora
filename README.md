@@ -1,8 +1,18 @@
 # Pandora Web Client
 
+## Outline
+- [Pandora Web Client](#pandora-web-client)
+	- [Outline](#outline)
+	- [Development](#development)
+		- [Quick start](#quick-start)
+		- [File extensions and imports](#file-extensions-and-imports)
+		- [Testing](#testing)
+		- [Linting & typechecking](#linting--typechecking)
+	- [License](#license)
+
 ## Development
 
-### Developer setup
+### Quick start
 
 Firstly, make sure you have [Node.js and npm][node], and then ensure that `yarn` is installed:
 
@@ -28,7 +38,7 @@ To build the application to the `/dist` directory:
 yarn build
 ```
 
-### Development guide: file extensions and imports
+### File extensions and imports
 
 JSON files can be imported into any TypeScript file (and TypeScript will ensure the types are properly interpreted):
 ```ts
@@ -44,7 +54,7 @@ application via TS imports:
 // Import a .png (or .jpg, .gif, .svg) - the resolved file will be built into the /dist directory, and renamed according
 // to its hash, and the myIcon import will reference that file (e.g. 'c627a862d41d9026b5ade2a0fda5b886.png')
 import myIcon from './myIcon.png';
-// Import a Sass (.scss) stylsheet. In development mode, the compiled CSS will be loaded inline with the built JS, but
+// Import a Sass (.scss) stylesheet. In development mode, the compiled CSS will be loaded inline with the built JS, but
 // in production, it will be extracted into a separate CSS file.
 import './myStylesheet.scss';
 
@@ -58,7 +68,7 @@ When using JSX (inline HTML) syntax inside a file (i.e. React components), the f
 Elsewhere, `.ts` extensions are sufficient.
 
 ### Testing
-The repository uses [Jest][jest] with [Babel][babel] to run tests on `Typescript` & `React`.
+The repository uses [Jest][jest] with [SWC][swc] to run tests on `Typescript` & `React`.
 To run the tests:
 ```
 yarn test
@@ -67,16 +77,16 @@ To run test on file changes (good for test-first TTD):
 ```
 yarn test:watch
 ```
-To generate code coverage report in `./coverage`:
+To generate code coverage report in `./coverage` | browser UI at `./coverage/lcov-report/index.html`:
 ```
 yarn test:coverage
 ```
 Conventions:
-- Testfiles are located in `./test`; located to mirror `.src`.
+- Test files are located in `./test`; located to mirror `.src`.
 - Named as `###.test.ts` depending on file to test.
-- Unit tests should be concise and focused.
+- Unit tests should be concise, focused, and strive to avoid coupling with underlying implementation.
 
-### Linting
+### Linting & typechecking
 
 The repository uses [ESLint][eslint] for linting.
 
@@ -90,6 +100,16 @@ To run ESLint over the repository and automatically fix linting errors (where po
 
 ```
 yarn lint:fix
+```
+
+To run typescript type checker:
+```
+yarn type-check
+```
+To run typechecking on respective folders:
+```bash
+yarn type-check:test  # ./test
+yarn type-check:src   # ./src
 ```
 ## License
 
@@ -114,3 +134,4 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 [eslint]: https://eslint.org/ "ESLint website"
 [jest]: https://jestjs.io/ "Jest website"
 [babel]: https://babeljs.io/ "Babel website"
+[swc]: https://swc.rs/ "Swc website"

@@ -12,16 +12,23 @@ export enum ArmsPose {
 	BACK,
 }
 
+export enum CharacterView {
+	FRONT,
+	BACK,
+}
+
 export interface AppearanceBundle {
 	items: ItemBundle[];
 	pose: Record<BoneName, number>;
 	handsPose: ArmsPose;
+	view: CharacterView;
 }
 
 export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
 	items: [],
 	pose: {},
 	handsPose: ArmsPose.FRONT,
+	view: CharacterView.FRONT,
 };
 
 export type AppearanceChangeType = 'items' | 'pose';
@@ -35,6 +42,7 @@ export class Appearance {
 	private readonly pose = new Map<BoneName, BoneState>();
 	private fullPose: readonly BoneState[] = [];
 	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
+	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
 
 	constructor(assetMananger: AssetManager, onChange?: (changes: AppearanceChangeType[]) => void) {
 		this.assetMananger = assetMananger;
@@ -57,6 +65,7 @@ export class Appearance {
 			items: this.items.map((item) => item.exportToBundle()),
 			pose,
 			handsPose: this._armsPose,
+			view: this._view,
 		};
 	}
 
@@ -90,6 +99,7 @@ export class Appearance {
 			});
 		}
 		this._armsPose = bundle.handsPose;
+		this._view = bundle.view;
 		this.fullPose = Array.from(this.pose.values());
 		if (logger) {
 			for (const k of Object.keys(bundle.pose)) {
@@ -160,6 +170,35 @@ export class Appearance {
 		this.onChange(['items']);
 	}
 
+	public allowMoveItem(id: ItemId, shift: number): boolean {
+		const currentPos = this.items.findIndex((item) => item.id === id);
+		const newPos = currentPos + shift;
+
+		if (currentPos < 0 || newPos < 0 || newPos >= this.items.length)
+			return false;
+
+		return true;
+	}
+
+	public moveItem(id: ItemId, shift: number): void {
+		if (!this.allowMoveItem(id, shift)) {
+			throw new Error('Attempt to move item while not allowed');
+		}
+
+		const currentPos = this.items.findIndex((item) => item.id === id);
+		const newPos = currentPos + shift;
+
+		if (currentPos < 0 || newPos < 0 || newPos >= this.items.length)
+			return;
+
+		const newItems = this.items.slice();
+		const moved = newItems.splice(currentPos, 1);
+		newItems.splice(newPos, 0, ...moved);
+
+		this.items = newItems;
+		this.onChange(['items']);
+	}
+
 	public setPose(bone: string, value: number): void {
 		if (!Number.isInteger(value))
 			throw new Error('Attempt to set non-int pose value');
@@ -194,6 +233,17 @@ export class Appearance {
 	public setArmsPose(value: ArmsPose): void {
 		if (this._armsPose !== value) {
 			this._armsPose = value;
+			this.onChange(['pose']);
+		}
+	}
+
+	public getView(): CharacterView {
+		return this._view;
+	}
+
+	public setView(value: CharacterView): void {
+		if (this._view !== value) {
+			this._view = value;
 			this.onChange(['pose']);
 		}
 	}

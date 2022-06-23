@@ -1,37 +1,52 @@
 # Pandora Web Client
 
 ## Outline
-- [Pandora Web Client](#pandora-web-client)
-	- [Outline](#outline)
-	- [Development](#development)
-		- [Quick start](#quick-start)
-		- [File extensions and imports](#file-extensions-and-imports)
-		- [Testing](#testing)
-		- [Linting & typechecking](#linting--typechecking)
-	- [License](#license)
+- [Outline](#outline)
+- [Development](#development)
+	- [Quick start](#quick-start)
+		- [Requirements](#requirements)
+		- [Install dependencies](#install-dependencies)
+		- [Running client](#running-client)
+		- [Building](#building)
+	- [File extensions and imports](#file-extensions-and-imports)
+	- [Testing](#testing)
+	- [Linting & typechecking](#linting-typechecking)
+- [License](#license)
 
 ## Development
-
 ### Quick start
-
-Firstly, make sure you have [Node.js and npm][node], and then ensure that `yarn` is installed:
-
+#### Requirements
+- [Node][node] version 18 or above:
+- Enable Yarn through corepack which is include in node 18:
 ```
-npm install -g yarn
+corepack enable
 ```
-
-Install dependencies using `yarn`:
+#### Install dependencies
+Install dependencies using `yarn` (should only need to run once when cloning):
 
 ```
 yarn
 ```
+
+#### Running client
+
 
 To run the application in development mode (with hot reload):
 
 ```
 yarn dev
 ```
+You'd need both [Server][pandora-server-directory] & [Shard][pandora-server-shard] running in the background to have a functioning client. Or connect directly to the beta server by replacing:
+```
+DIRECTORY_ADDRESS="http://127.0.0.1:25560"
+```
+With:
+```
+DIRECTORY_ADDRESS="https://project-pandora.com"
+```
+In [.env](./.env) file (appears after you finish [quick start](#quick-start))
 
+#### Building
 To build the application to the `/dist` directory:
 
 ```
@@ -135,3 +150,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 [jest]: https://jestjs.io/ "Jest website"
 [babel]: https://babeljs.io/ "Babel website"
 [swc]: https://swc.rs/ "Swc website"
+[pandora-server-directory]: https://github.com/Project-Pandora-Game/pandora-server-directory
+[pandora-server-shard]: https://github.com/Project-Pandora-Game/pandora-server-shard
+

@@ -2230,6 +2230,11 @@ clean-webpack-plugin@^4.0.0:
   dependencies:
     del "^4.1.1"
 
+client-zip@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/client-zip/-/client-zip-2.2.2.tgz#58dcc66f2534954a50b506d2bd864b51ba98370d"
+  integrity sha512-Jh1Sz/iBTfYuLQv6yKzrrXofJy17Q7YRhBfh5HH/6i4Z+ACjTfmRJllWQKoe4eFWwXeUoOjEathqXfuGGX4jhg==
+
 cliui@^7.0.2:
   version "7.0.4"
   resolved "https://registry.yarnpkg.com/cliui/-/cliui-7.0.4.tgz#a0265ee655476fc807aea9df3df8df7783808b4f"
@@ -5006,9 +5011,9 @@ p-try@^2.0.0:
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==
 
-"pandora-common@github:Project-Pandora-Game/pandora-common#2103f98":
+"pandora-common@github:Project-Pandora-Game/pandora-common#be03bac":
   version "0.1.0"
-  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#2103f98e0938c53e3b4c8c33845b85fe02089f8d"
+  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#be03bacd0a61e60f1cb4b40b10d8f8c05f913219"
   dependencies:
     "@types/node" "^17.0.31"
     lodash "^4.17.21"

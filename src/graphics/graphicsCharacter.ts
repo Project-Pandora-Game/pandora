@@ -1,6 +1,6 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
-import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT } from './def';
-import { AtomicCondition, TransformDefinition } from 'pandora-common/dist/assets';
+import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
+import { AtomicCondition, CharacterSize, CharacterView, TransformDefinition } from 'pandora-common/dist/assets';
 import { Container, IDestroyOptions } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
@@ -11,6 +11,8 @@ const logger = GetLogger('GraphicsCharacter');
 
 export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
 
+export const FAKE_BONES: string[] = ['backView'];
+
 export class GraphicsCharacter<ContainerType extends AppearanceContainer = AppearanceContainer> extends Container {
 	protected graphicsGetter: GraphicsGetterFunction | undefined;
 	readonly appearanceContainer: ContainerType;
@@ -20,6 +22,9 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 	constructor(appearanceContainer: ContainerType) {
 		super();
+
+		this.pivot.x = CharacterSize.WIDTH / 2;
+		this.position.x = this.pivot.x;
 
 		this.sortableChildren = true;
 
@@ -54,6 +59,8 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 					this._pose[bone.definition.name] = bone.rotation;
 				}
 			}
+			// Fake bones have more logic, so they can change anytime
+			FAKE_BONES.forEach((b) => updatedBones.add(b));
 		}
 		this.layerUpdate(updatedBones);
 	}
@@ -91,11 +98,19 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 	protected sortLayers(toSort: LayerState[]): LayerState[] {
 		const sortOrder = this.getSortOrder();
-		return toSort.sort((a, b) => {
-			const aPriority = sortOrder.indexOf(a.layer.definition.priority);
-			const bPriority = sortOrder.indexOf(b.layer.definition.priority);
-			return aPriority - bPriority;
-		});
+		const result: LayerState[] = [];
+		for (const priority of sortOrder) {
+			const temp = toSort.filter((l) => l.layer.definition.priority === priority);
+			if (PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority)) {
+				temp.reverse();
+			}
+			result.push(...temp);
+		}
+		const view = this.appearanceContainer.appearance.getView();
+		if (view === CharacterView.BACK) {
+			result.reverse();
+		}
+		return result.concat(toSort.filter((l) => !result.includes(l)));
 	}
 
 	protected createLayer(layer: AssetGraphicsLayer): GraphicsLayer {
@@ -125,6 +140,8 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			graphics.zIndex = index;
 		});
 		this.sortChildren();
+		const backView = this.appearanceContainer.appearance.getView() === CharacterView.BACK;
+		this.scale.x = backView ? -1 : 1;
 	}
 
 	//#region Point transform
@@ -133,28 +150,29 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		const key = `${condition.bone}-${condition.operator}-${condition.value}`;
 		let result = this._evalCache.get(key);
 		if (result === undefined) {
-			const bone = this.getBone(condition.bone);
-			this._evalCache.set(key, result = this._evalConditionCore(condition, bone));
+			const value = this.getBoneLikeValue(condition.bone);
+			this._evalCache.set(key, result = this._evalConditionCore(condition, value));
 		}
 		return result;
 	}
-	private _evalConditionCore({ operator, value }: AtomicCondition, { rotation }: BoneState): boolean {
+	private _evalConditionCore({ operator, value }: AtomicCondition, currentValue: number): boolean {
 		switch (operator) {
 			case '>':
-				return rotation > value;
+				return currentValue > value;
 			case '<':
-				return rotation < value;
+				return currentValue < value;
 			case '=':
-				return rotation === value;
+				return currentValue === value;
 			case '!=':
-				return rotation !== value;
+				return currentValue !== value;
 			case '>=':
-				return rotation >= value;
+				return currentValue >= value;
 			case '<=':
-				return rotation <= value;
+				return currentValue <= value;
 		}
-		throw new Error(`_evalConditionCore invalid operator: ${operator as string}`);
+		AssertNever(operator);
 	}
+
 	public evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[], _mirror: boolean): [number, number] {
 		let [resX, resY] = [x, y];
 		for (const transform of transforms) {
@@ -187,5 +205,12 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 	public getBone(name: string): BoneState {
 		return this.appearanceContainer.appearance.getPose(name);
+	}
+
+	public getBoneLikeValue(name: string): number {
+		if (name === 'backView') {
+			return this.appearanceContainer.appearance.getView() === CharacterView.BACK ? 1 : 0;
+		}
+		return this.getBone(name).rotation;
 	}
 }

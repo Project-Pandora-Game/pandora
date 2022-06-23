@@ -1,4 +1,4 @@
-import { AssertNever, AtomicCondition, Condition, ConditionOperator, CONDITION_OPERATORS, LayerImageOverride, TransformDefinition } from 'pandora-common';
+import { AssertNever, AtomicCondition, Condition, IsConditionOperator, LayerImageOverride, TransformDefinition } from 'pandora-common';
 
 export function SplitAndClean(input: string, separator: string): string[] {
 	return input
@@ -32,13 +32,13 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 	if (!validBones.includes(parsed[1])) {
 		throw new Error(`Unknown bone in condition '${input}'`);
 	}
-	if (!(CONDITION_OPERATORS as string[]).includes(parsed[2])) {
+	if (!IsConditionOperator(parsed[2])) {
 		throw new Error(`Invalid operator in condition '${input}'`);
 	}
 	const value = ParseFloat(parsed[3]);
 	return {
 		bone: parsed[1],
-		operator: parsed[2] as ConditionOperator,
+		operator: parsed[2],
 		value,
 	};
 }

@@ -1,4 +1,4 @@
-import { BoneState, ArmsPose } from 'pandora-common';
+import { BoneState, ArmsPose, CharacterView } from 'pandora-common';
 import React, { ReactElement, useSyncExternalStore } from 'react';
 import { useCharacterAppearancePose } from '../../../character/character';
 import { Button } from '../../../components/common/Button/Button';
@@ -16,13 +16,19 @@ export function BoneUI({ editor }: { editor: Editor }): ReactElement {
 			onChange();
 		}
 	}), () => character.appearance.getArmsPose());
+	const view = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
+		if (change.includes('pose')) {
+			onChange();
+		}
+	}), () => character.appearance.getView());
 	const showBones = useObservable(editor.showBones);
 
 	return (
 		<div className='bone-ui'>
 			<div>
-				<label>Show bone points</label>
+				<label htmlFor='show-bones-toggle'>Show bone points</label>
 				<input
+					id='show-bones-toggle'
 					type='checkbox'
 					checked={ showBones }
 					onChange={ (e) => {
@@ -31,12 +37,24 @@ export function BoneUI({ editor }: { editor: Editor }): ReactElement {
 				/>
 			</div>
 			<div>
-				<label>Arms are in front of the body</label>
+				<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
 				<input
+					id='arms-front-toggle'
 					type='checkbox'
 					checked={ armsPose === ArmsPose.FRONT }
 					onChange={ (e) => {
 						character.appearance.setArmsPose(e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK);
+					} }
+				/>
+			</div>
+			<div>
+				<label htmlFor='back-view-toggle'>Show back view</label>
+				<input
+					id='back-view-toggle'
+					type='checkbox'
+					checked={ view === CharacterView.BACK }
+					onChange={ (e) => {
+						character.appearance.setView(e.target.checked ? CharacterView.BACK : CharacterView.FRONT);
 					} }
 				/>
 			</div>

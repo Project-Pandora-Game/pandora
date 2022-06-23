@@ -1,6 +1,8 @@
-import React, { ReactElement, useSyncExternalStore } from 'react';
+import { AssetGraphicsDefinition, GetLogger, IsAssetGraphicsDefinition } from 'pandora-common';
+import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { useEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/Button/Button';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -23,6 +25,7 @@ export function AssetUI({ editor }: { editor: Editor }) {
 	return (
 		<div className='editor-assetui'>
 			<h3>Editing: { StripAssetIdPrefix(selectedAsset.id) }</h3>
+			<AssetExportImport editor={ editor } asset={ selectedAsset } />
 			<AssetLayerList editor={ editor } asset={ selectedAsset } />
 			<Button onClick={ () => {
 				selectedAsset.addLayer();
@@ -51,6 +54,50 @@ export function AssetUI({ editor }: { editor: Editor }) {
 				</span>
 			</label>
 			<AssetImageList editor={ editor } asset={ selectedAsset } />
+		</div>
+	);
+}
+
+function AssetExportImport({ asset }: { editor: Editor; asset: EditorAssetGraphics; }): ReactElement {
+	return (
+		<div className='exportImport'>
+			<Button onClick={ () => void asset.downloadZip() } className='flex-2' >Export</Button>
+			<label htmlFor='asset-import-button' className='flex-1 hiddenUpload'>
+				<input
+					accept='application/json'
+					id='asset-import-button'
+					type='file'
+					onChange={ (e) => {
+						const files = e.target.files;
+						if (files && files.length === 1) {
+							const file = files.item(0);
+							if (!file || !file.name.endsWith('.json'))
+								return;
+							file
+								.text()
+								.then((content) => {
+									const definition = JSON.parse(
+										content
+											.split('\n')
+											.filter((line) => !line.trimStart().startsWith('//'))
+											.join('\n'),
+									) as AssetGraphicsDefinition;
+									if (!IsAssetGraphicsDefinition(definition)) {
+										throw new Error('Invalid format');
+									}
+									asset.load(definition);
+								})
+								.catch((err) => {
+									toast(`Import failed:\n${String(err)}`, TOAST_OPTIONS_ERROR);
+									GetLogger('AssetImport').error(err);
+								});
+						}
+					} }
+				/>
+				<span className='Button default'>
+					Import
+				</span>
+			</label>
 		</div>
 	);
 }
@@ -115,18 +162,7 @@ function AssetImageList({ editor, asset }: { editor: Editor; asset: EditorAssetG
 	const elements: ReactElement[] = [];
 
 	for (const image of imageList) {
-		elements.push(
-			<li key={ image }>
-				<span className='imageName'>{ image }</span>
-				<Button className='slim' aria-label='delete' onClick={ () => {
-					if (!confirm(`Delete image '${image}'?`))
-						return;
-					asset.deleteTexture(image);
-				} } title='DELETE this image'>
-					🗑️
-				</Button>
-			</li>,
-		);
+		elements.push(<AssetImageLi key={ image } image={ image } asset={ asset } />);
 	}
 	return (
 		<div className='assetImageList'>
@@ -134,5 +170,40 @@ function AssetImageList({ editor, asset }: { editor: Editor; asset: EditorAssetG
 				{ elements }
 			</ul>
 		</div>
+	);
+}
+
+function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraphics; }): ReactElement {
+	const [preview, setPreview] = useState<string>('');
+
+	const onTogglePreview = useEvent(() => {
+		setPreview(preview ? '' : asset.getTextureImageSource(image) ?? '');
+	});
+
+	const onDelete = useEvent((event: React.MouseEvent<HTMLElement>) => {
+		event.stopPropagation();
+		if (!confirm(`Delete image '${image}'?`))
+			return;
+
+		asset.deleteTexture(image);
+	});
+
+	return (
+		<>
+			<li>
+				<Button className='slim' aria-label='delete' onClick={ onTogglePreview } title='Toggle preview'>
+					{ preview ? '-' : '+' }
+				</Button>
+				<span className='imageName'>{ image }</span>
+				<Button className='slim' aria-label='delete' onClick={ onDelete } title='DELETE this image'>
+					🗑️
+				</Button>
+			</li>
+			{ preview && (
+				<li key={ `${image}-preview` } className='preview'>
+					<img src={ preview } alt='' />
+				</li>
+			) }
+		</>
 	);
 }

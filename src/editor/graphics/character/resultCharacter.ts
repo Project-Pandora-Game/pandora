@@ -21,7 +21,7 @@ export class ResultCharacter extends GraphicsCharacterEditor {
 		super.update(changes);
 		if (changes.includes('pose')) {
 			for (const bone of this._draggableBones) {
-				bone.setRotation(this.getBone(bone.definition.name).rotation);
+				bone.setRotation(this.getBoneLikeValue(bone.definition.name));
 			}
 		}
 	}

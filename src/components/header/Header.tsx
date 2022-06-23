@@ -30,7 +30,7 @@ function LeftHeader(): ReactElement {
 			<div className="headerButton">Room</div>
 			*/ }
 			{ connectionInfo && (
-				<button className={ classNames('HeaderButton', showCharacterMenu && 'active') } onClick={ (ev) => {
+				<button className={ classNames('HeaderButton', 'withText', showCharacterMenu && 'active') } onClick={ (ev) => {
 					ev.currentTarget.focus();
 					setShowCharacterMenu(!showCharacterMenu);
 				} }>

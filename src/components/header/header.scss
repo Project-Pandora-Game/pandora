@@ -11,31 +11,31 @@
 	& > div {
 		@include flex(row, wrap);
 		align-items: flex-start;
+		min-height: $header-button-height;
 
 		&.rightHeader, &.leftHeader {
 			align-items: stretch;
-
-			& > span {
-				@include flex;
-				align-items: center;
-				justify-content: space-around;
-				min-width: 6em;
-				min-height: $header-button-height;
-				padding: 0 1em;
-			}
 		}
 
-		.characterMenu {
-			background: #888;
-			position: absolute;
-			top: calc(100% + 0.2em);
-			left: 0.2em;
-			border: 0.2em solid black;
-			header {
-				@include center-flex;
-				background: #777;
-				padding: 0.2em;
-			}
+	}
+
+	span {
+		@include center-flex;
+		min-width: 6em;
+		min-height: $header-button-height;
+		padding: 0 1em;
+	}
+
+	.characterMenu {
+		background: #888;
+		position: absolute;
+		top: calc(100% + 0.2em);
+		left: 0.2em;
+		border: 0.2em solid black;
+		header {
+			@include center-flex;
+			background: #777;
+			padding: 0.2em;
 		}
 	}
 }

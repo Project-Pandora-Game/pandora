@@ -1,8 +1,9 @@
-import { LayerPriority } from 'pandora-common';
+import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { Button } from '../../../components/common/Button/Button';
+import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { Editor } from '../../editor';
@@ -114,29 +115,14 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 	);
 }
 
-// TODO: Actual priority implementation
-const PRIORITY_ORDER: readonly LayerPriority[] = [
-	LayerPriority.BACKGROUND,
-	LayerPriority.BELOW_BODY,
-	LayerPriority.BODY,
-	LayerPriority.ABOVE_BODY,
-	LayerPriority.BELOW_ARMS,
-	LayerPriority.ARMS,
-	LayerPriority.ABOVE_ARMS,
-	LayerPriority.OVERLAY,
-];
-
 function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const layerPriority = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.priority);
 
 	const elements: ReactElement[] = [];
-	const reversePriorities: Record<string, LayerPriority> = { };
 
-	for (const priority of PRIORITY_ORDER) {
-		const name = LayerPriority[priority];
-		reversePriorities[name] = priority;
+	for (const priority of LAYER_PRIORITIES) {
 		elements.push(
-			<option value={ name } key={ name }>{ name }</option>,
+			<option value={ priority } key={ priority }>{ priority }</option>,
 		);
 	}
 
@@ -146,9 +132,9 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 			<select
 				id='layer-priority-select'
 				className='flex'
-				value={ LayerPriority[layerPriority] }
+				value={ layerPriority }
 				onChange={ (event) => {
-					asset.setLayerPriority(layer, reversePriorities[event.target.value] ?? LayerPriority.BODY);
+					asset.setLayerPriority(layer, event.target.value as LayerPriority);
 				} }
 			>
 				{ elements }
@@ -190,7 +176,7 @@ function LayerImageOverridesTextarea({ layer }: { layer: AssetGraphicsLayer }): 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
 		try {
-			const result = ParseLayerImageOverrides(e.target.value, GetAssetManager().getAllBones().map((b) => b.name));
+			const result = ParseLayerImageOverrides(e.target.value, GetAssetManager().getAllBones().map((b) => b.name).concat(FAKE_BONES));
 			setError(null);
 			layer.setImageOverrides(result);
 		} catch (err) {

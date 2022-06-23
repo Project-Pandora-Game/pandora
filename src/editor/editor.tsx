@@ -14,7 +14,7 @@ import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, PointDefinition } from 'pandora-common';
+import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, PointDefinition, CharacterSize } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
@@ -66,7 +66,7 @@ export class Editor extends TypedEventEmitter<{
 		this.resultScene = new EditorResultScene(this);
 
 		// Load some point templates
-		const body = manager.getAssetGraphicsById('a/base/body');
+		const body = manager.getAssetGraphicsById('a/body/base');
 		if (body) {
 			for (const layer of body.layers) {
 				if (Array.isArray(layer.definition.points)) {
@@ -74,12 +74,34 @@ export class Editor extends TypedEventEmitter<{
 				}
 			}
 		}
+		// Static picture template
+		this.pointTemplates.set('Static', [
+			{
+				pos: [0, 0],
+				mirror: true,
+				transforms: [],
+			},
+			{
+				pos: [0, CharacterSize.HEIGHT],
+				mirror: true,
+				transforms: [],
+			},
+		]);
+
+		// Prevent loosing progress
+		window.addEventListener('beforeunload', (event) => {
+			if (this.editorGraphics.size > 0) {
+				event.preventDefault();
+				return event.returnValue = 'Are you sure you want to exit?';
+			}
+			return undefined;
+		}, { capture: true });
 
 		/* eslint-disable @typescript-eslint/naming-convention */
 		this.character.appearance.importFromBundle({
 			...APPEARANCE_BUNDLE_DEFAULT,
 			items: [
-				{ id: 'i/body', asset: 'a/base/body' },
+				{ id: 'i/body', asset: 'a/body/base' },
 			],
 			pose: {
 				arm_r: 75,
@@ -162,6 +184,19 @@ export class Editor extends TypedEventEmitter<{
 			);
 			this.editorGraphics.set(asset, graphics);
 			this.editorGraphicsKeys = Array.from(this.editorGraphics.keys());
+
+			// Copy overrides of old layers onto new asset
+			const originalAllLayers = originalGraphics?.allLayers;
+			const graphicsAllLayers = graphics.allLayers;
+			if (originalAllLayers?.length === graphicsAllLayers.length) {
+				for (let i = 0; i < originalAllLayers.length; i++) {
+					const override = this.layerStateOverrides.get(originalAllLayers[i]);
+					if (override) {
+						this.setLayerStateOverride(graphicsAllLayers[i], override);
+					}
+				}
+			}
+
 			this.emit('modifiedAssetsChange', undefined);
 			graphics.loadAllUsedImages(this.manager.loader)
 				.catch((err) => logger.error('Error importing asset for editing', err));
@@ -170,6 +205,12 @@ export class Editor extends TypedEventEmitter<{
 	}
 
 	public readonly pointTemplates = new Map<string, PointDefinition[]>();
+
+	public setBackgroundColor(color: number): void {
+		this.setupScene.background = `#${color.toString(16)}`;
+		this.resultScene.background = `#${color.toString(16)}`;
+		document.documentElement.style.setProperty('--editor-background-color', `#${color.toString(16)}`);
+	}
 }
 
 export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: boolean): readonly AssetGraphicsLayer[] {

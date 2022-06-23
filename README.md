@@ -17,20 +17,19 @@
 ### Quick start
 #### Requirements
 - [Node][node] version 18 or above:
-- Enable Yarn through corepack which is include in node 18:
+- Enable Yarn through corepack which is included in node 18:
 ```
 corepack enable
 ```
+
 #### Install dependencies
-Install dependencies using `yarn` (should only need to run once when cloning):
+Install dependencies using `yarn` (should only be needed once after cloning):
 
 ```
 yarn
 ```
 
-#### Running client
-
-
+#### Running the client
 To run the application in development mode (with hot reload):
 
 ```

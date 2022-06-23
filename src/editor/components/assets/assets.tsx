@@ -97,6 +97,8 @@ function EditedAssetElement({ assetId, editor }: { assetId: AssetId; editor: Edi
 
 const itemOpenState = new WeakMap<Item, ToggleLiState>();
 function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactElement {
+	const appearance = editor.character.appearance;
+
 	const navigate = useNavigate();
 
 	let toggleState = itemOpenState.get(item);
@@ -117,21 +119,24 @@ function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactEl
 		}
 	};
 
-	function remove() {
-		editor.character.appearance.removeItem(item.id);
-	}
-
 	return (
 		<ToggleLi name={ StripAssetIdPrefix(asset.id) } state={ toggleState } nameExtra={
 			<div className='controls'>
+				{ /* TODO: Button to move down */ }
+				{ appearance.allowMoveItem(item.id, -1) &&
+				<Button onClick={ () => {
+					appearance.moveItem(item.id, -1);
+				} } title='Move item one up' style={ { fontSize: 'x-small' } } >
+					🠉
+				</Button>}
+				<Button onClick={ () => appearance.removeItem(item.id) } title='Unequip item'>-</Button>
+				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
 					navigate('/asset');
 				} } title="Edit this item's asset">
 					E
 				</Button>
-				<Button onClick={ remove } title='Unequip item'>-</Button>
-				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 			</div>
 		}>
 			<ul>
@@ -150,6 +155,14 @@ function AssetLayerElement({ layer, editor }: { layer: AssetGraphicsLayer; edito
 		});
 	}, () => editor.getLayersAlphaOverrideIndex(layer));
 
+	const tint = useSyncExternalStore<number>((changed) => {
+		return editor.on('layerOverrideChange', (changedLayer) => {
+			if (changedLayer === layer) {
+				changed();
+			}
+		});
+	}, () => editor.getLayerTint(layer));
+
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		editor.setLayerAlphaOverride([layer], alphaIndex+1);
@@ -159,6 +172,13 @@ function AssetLayerElement({ layer, editor }: { layer: AssetGraphicsLayer; edito
 		<li>
 			<span>{layer.name}</span>
 			<div className='controls'>
+				<input
+					type='color'
+					value={ '#' + tint.toString(16).padStart(6, '0') }
+					onChange={ (event) => {
+						editor.setLayerTint(layer, Number.parseInt(event.target.value.replace(/^#/, ''), 16));
+					} }
+				/>
 				<Button className='slim' onClick={ toggleAlpha } title="Cycle layers's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 			</div>
 		</li>

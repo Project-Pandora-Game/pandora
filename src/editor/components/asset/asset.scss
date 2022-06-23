@@ -2,6 +2,13 @@
 	display: flex;
 	flex-flow: column;
 
+	.exportImport {
+		display: flex;
+		flex-flow: row;
+		margin-bottom: 1em;
+		gap: 0.5em;
+	}
+
 	.layerList, .assetImageList {
 		display: flex;
 		flex-flow: column;
@@ -41,6 +48,11 @@
 					user-select: all;
 					word-break: break-all;
 					overflow-wrap: anywhere;
+				}
+
+				&.preview img {
+					width: 100%;
+					background-color: var(--editor-background-color #1099bb);
 				}
 			}
 		}

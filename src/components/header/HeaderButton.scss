@@ -8,7 +8,11 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 .HeaderButton {
 	background-color: transparent;
 	border: 0.2em solid transparent;
-	min-width: 6em;
+	min-width: 4em;
+
+	&.withText {
+		min-width: 6em;
+	}
 
 	.icon-container {
 		position: relative;

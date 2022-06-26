@@ -233,8 +233,8 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async setCharacter({ id, accessId, ...data }: Partial<ICharacterData> & Pick<ICharacterData, 'id'>): Promise<boolean> {
-		const { acknowledged, modifiedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
-		return acknowledged && modifiedCount === 1;
+		const { acknowledged, matchedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
+		return acknowledged && matchedCount === 1;
 	}
 
 	public async getConfig<T extends DatabaseConfig['type']>(type: T): Promise<null | (DatabaseConfig & { type: T; })['data']> {

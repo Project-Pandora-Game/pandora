@@ -14,6 +14,11 @@ export interface ItemBundle {
 	asset: AssetId;
 }
 
+/**
+ * Class representing an equipped item
+ *
+ * **THIS CLASS IS IMMUTABLE**
+ */
 export class Item {
 	readonly id: ItemId;
 	readonly asset: Asset;

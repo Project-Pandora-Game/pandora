@@ -1,5 +1,5 @@
 import { Asset } from './asset';
-import { AssetDefinition, AssetId, AssetsDefinitionFile } from './definitions';
+import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 
 export class AssetManager {
@@ -14,6 +14,11 @@ export class AssetManager {
 	private _graphicsId: string = '';
 	get graphicsId(): string {
 		return this._graphicsId;
+	}
+
+	private _bodyparts: readonly AssetBodyPart[] = [];
+	get bodyparts(): readonly AssetBodyPart[] {
+		return this._bodyparts;
 	}
 
 	public getAllAssets(): Asset[] {
@@ -44,6 +49,7 @@ export class AssetManager {
 
 	public load(definitionsHash: string, data: AssetsDefinitionFile): void {
 		this._definitionsHash = definitionsHash;
+		this._bodyparts = data.bodyparts;
 		this._graphicsId = data.graphicsId;
 
 		this._bones.clear();

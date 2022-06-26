@@ -1,4 +1,6 @@
 import { Logger } from '../logging';
+import { ShuffleArray } from '../utility';
+import { AppearanceItems, AppearanceItemsFixBodypartOrder, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
@@ -37,8 +39,7 @@ export class Appearance {
 	private assetMananger: AssetManager;
 	public onChangeHandler: ((changes: AppearanceChangeType[]) => void) | undefined;
 
-	// This array is readonly so it can be used directly by React hooks
-	private items: readonly Item[] = [];
+	private items: AppearanceItems = [];
 	private readonly pose = new Map<BoneName, BoneState>();
 	private fullPose: readonly BoneState[] = [];
 	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
@@ -78,8 +79,11 @@ export class Appearance {
 		if (assetManager && this.assetMananger !== assetManager) {
 			this.assetMananger = assetManager;
 		}
-		const newItems: Item[] = [];
+
+		// Load all items
+		let loadedItems: Item[] = [];
 		for (const itemBundle of bundle.items) {
+			// Load asset and skip if unknown
 			const asset = this.assetMananger.getAssetById(itemBundle.asset);
 			if (asset === undefined) {
 				logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
@@ -87,9 +91,94 @@ export class Appearance {
 			}
 
 			const item = this.makeItem(itemBundle.id, asset);
-			newItems.push(item);
 			item.importFromBundle(itemBundle);
+			loadedItems.push(item);
 		}
+
+		// Validate and add all items
+		loadedItems = AppearanceItemsFixBodypartOrder(this.assetMananger, loadedItems).slice();
+		let newItems: readonly Item[] = [];
+		let currentBodypartIndex: number | null = this.assetMananger.bodyparts.length > 0 ? 0 : null;
+		while (loadedItems.length > 0) {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			const itemToAdd = loadedItems.shift()!;
+			// Check moving to next bodypart
+			while (currentBodypartIndex !== null && itemToAdd.asset.definition.bodypart !== this.assetMananger.bodyparts[currentBodypartIndex].name) {
+				const bodypart = this.assetMananger.bodyparts[currentBodypartIndex];
+
+				// Check if we need to add required bodypart
+				if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
+					// Find matching bodypart assets
+					const possibleAssets = this.assetMananger
+						.getAllAssets()
+						.filter((asset) => asset.definition.bodypart === bodypart.name);
+
+					ShuffleArray(possibleAssets);
+
+					for (const asset of possibleAssets) {
+						const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}`, asset)];
+						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
+							newItems = tryFix;
+							break;
+						}
+					}
+				}
+
+				if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
+					throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
+				}
+
+				// Move to next bodypart or end validation if all are done
+				currentBodypartIndex++;
+				if (currentBodypartIndex >= this.assetMananger.bodyparts.length) {
+					currentBodypartIndex = null;
+				}
+			}
+
+			const tryItem = [...newItems, itemToAdd];
+			if (!ValidateAppearanceItemsPrefix(this.assetMananger, tryItem)) {
+				logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
+			} else {
+				newItems = tryItem;
+			}
+		}
+
+		while (currentBodypartIndex !== null) {
+			const bodypart = this.assetMananger.bodyparts[currentBodypartIndex];
+
+			// Check if we need to add required bodypart
+			if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
+				// Find matching bodypart assets
+				const possibleAssets = this.assetMananger
+					.getAllAssets()
+					.filter((asset) => asset.definition.bodypart === bodypart.name);
+
+				ShuffleArray(possibleAssets);
+
+				for (const asset of possibleAssets) {
+					const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}`, asset)];
+					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
+						newItems = tryFix;
+						break;
+					}
+				}
+			}
+
+			if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
+				throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
+			}
+
+			// Move to next bodypart or end validation if all are done
+			currentBodypartIndex++;
+			if (currentBodypartIndex >= this.assetMananger.bodyparts.length) {
+				currentBodypartIndex = null;
+			}
+		}
+
+		if (!ValidateAppearanceItems(this.assetMananger, newItems)) {
+			throw new Error('Invalid appearance after load');
+		}
+
 		this.items = newItems;
 		this.pose.clear();
 		for (const bone of this.assetMananger.getAllBones()) {
@@ -139,19 +228,36 @@ export class Appearance {
 		// Race condition prevention
 		if (this.getItemById(id))
 			return false;
-		// Each item can only be added once
-		if (this.listItemsByAsset(asset.id).length > 0)
-			return false;
-		return true;
+
+		// Simulate change
+		const item = this.makeItem(id, asset);
+		let newItems = this.items;
+		// if this is a bodypart not allowing multiple do a swap instead
+		if (item.asset.definition.bodypart && this.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
+			newItems = newItems.filter((oldItem) => oldItem.asset === asset || oldItem.asset.definition.bodypart !== item.asset.definition.bodypart);
+		}
+		newItems = AppearanceItemsFixBodypartOrder(this.assetMananger, [...newItems, item]);
+
+		return ValidateAppearanceItems(this.assetMananger, newItems);
 	}
 
 	public createItem(id: ItemId, asset: Asset): Item {
 		if (!this.allowCreateItem(id, asset)) {
 			throw new Error('Attempt to create item while not allowed');
 		}
+
+		// Do change
 		const item = this.makeItem(id, asset);
-		this.items = [...this.items, item];
+		let newItems = this.items;
+		// if this is a bodypart not allowing multiple do a swap instead
+		if (item.asset.definition.bodypart && this.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
+			newItems = newItems.filter((oldItem) => oldItem.asset === asset || oldItem.asset.definition.bodypart !== item.asset.definition.bodypart);
+		}
+		newItems = AppearanceItemsFixBodypartOrder(this.assetMananger, [...newItems, item]);
+
+		this.items = newItems;
 		this.onChange(['items']);
+
 		return item;
 	}
 
@@ -159,14 +265,22 @@ export class Appearance {
 		const item = this.getItemById(id);
 		if (!item)
 			return false;
-		return true;
+
+		// Simulate change
+		const newItems = this.items.filter((i) => i.id !== id);
+
+		return ValidateAppearanceItems(this.assetMananger, newItems);
 	}
 
 	public removeItem(id: ItemId): void {
 		if (!this.allowRemoveItem(id)) {
 			throw new Error('Attempt to remove item while not allowed');
 		}
-		this.items = this.items.filter((i) => i.id !== id);
+
+		// Do change
+		const newItems = this.items.filter((i) => i.id !== id);
+
+		this.items = newItems;
 		this.onChange(['items']);
 	}
 
@@ -177,7 +291,12 @@ export class Appearance {
 		if (currentPos < 0 || newPos < 0 || newPos >= this.items.length)
 			return false;
 
-		return true;
+		// Simulate change
+		const newItems = this.items.slice();
+		const moved = newItems.splice(currentPos, 1);
+		newItems.splice(newPos, 0, ...moved);
+
+		return ValidateAppearanceItems(this.assetMananger, newItems);
 	}
 
 	public moveItem(id: ItemId, shift: number): void {
@@ -189,8 +308,9 @@ export class Appearance {
 		const newPos = currentPos + shift;
 
 		if (currentPos < 0 || newPos < 0 || newPos >= this.items.length)
-			return;
+			throw new Error('Valid move outside of range');
 
+		// Do change
 		const newItems = this.items.slice();
 		const moved = newItems.splice(currentPos, 1);
 		newItems.splice(newPos, 0, ...moved);

@@ -1,18 +1,19 @@
 import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
-import { CharacterManager, CHARACTER_TIMEOUT } from './characterManager';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { IConnectionClient } from '../networking/common';
 import { assetManager } from '../assets/assetManager';
-import _ from 'lodash';
 
-export const enum CharacterModification {
-	NONE = 0,
-	MODIFIED = 1,
-	PENDING = 2,
-}
+import _ from 'lodash';
+import AsyncLock from 'async-lock';
+
+/** Time (in ms) after which manager prunes character without any active connection */
+export const CHARACTER_TIMEOUT = 30_000;
+
+/** Time (in ms) as interval when character's periodic actions (like saving of modified data) happen */
+export const CHARACTER_TICK_INTERVAL = 60_000;
 
 type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id' | 'appearance'>;
 type ICharacterPublicDataChange = Omit<ICharacterPublicData, 'id' | 'appearance'>;
@@ -24,8 +25,10 @@ export class Character {
 
 	public readonly appearance: Appearance = new Appearance(assetManager);
 
-	private state = CharacterModification.NONE;
 	private modified: Set<keyof ICharacterDataChange | 'appearance'> = new Set();
+
+	private readonly _lock = new AsyncLock();
+	private tickInterval: NodeJS.Timeout | null = null;
 
 	private invalid: null | 'timeout' | 'error' | 'remove' = null;
 	private timeout: NodeJS.Timeout | null = null;
@@ -97,6 +100,8 @@ export class Character {
 
 		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
 		this.appearance.onChangeHandler = this.onAppearanceChanged.bind(this, true);
+
+		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
@@ -197,19 +202,8 @@ export class Character {
 		return false;
 	}
 
-	public async saveAndDisconnect(): Promise<void> {
-		this.invalidate('remove');
-		try {
-			await this.save();
-		} finally {
-			CharacterManager.removeCharacter(this.id);
-		}
-	}
-
 	public onRemove(): void {
 		this.room?.characterLeave(this);
-		this.state = CharacterModification.NONE;
-		this.modified.clear();
 		this.invalidate('remove');
 	}
 
@@ -217,6 +211,12 @@ export class Character {
 		if (this.invalid !== null)
 			return;
 		this.invalid = reason;
+
+		if (this.tickInterval !== null) {
+			clearInterval(this.tickInterval);
+			this.tickInterval = null;
+		}
+
 		const oldConnection = this.connection;
 		this._connection = null;
 		if (oldConnection) {
@@ -263,36 +263,40 @@ export class Character {
 		};
 	}
 
-	public async save(): Promise<void> {
-		if (this.state !== CharacterModification.MODIFIED)
-			return;
+	public save(): Promise<void> {
+		return this._lock.acquire('save', async () => {
+			const keys: (keyof Omit<ICharacterDataUpdate, 'id'>)[] = [...this.modified];
+			this.modified.clear();
 
-		this.state = CharacterModification.PENDING;
-		const keys: (keyof Omit<ICharacterDataUpdate, 'id'>)[] = [...this.modified];
-		this.modified.clear();
+			// Nothing to save
+			if (keys.length === 0)
+				return;
 
-		const data: ICharacterDataUpdate = {
-			id: this.data.id,
-			accessId: this.data.accessId,
-		};
+			const data: ICharacterDataUpdate = {
+				id: this.data.id,
+				accessId: this.data.accessId,
+			};
 
-		for (const key of keys) {
-			if (key === 'appearance') {
-				data.appearance = this.appearance.exportToBundle();
-			} else {
-				(data as Record<string, unknown>)[key] = this.data[key];
-			}
-		}
-
-		if (await GetDatabase().setCharacter(data)) {
-			if (this.state === CharacterModification.PENDING)
-				this.state = CharacterModification.NONE;
-		} else {
 			for (const key of keys) {
-				this.modified.add(key);
+				if (key === 'appearance') {
+					data.appearance = this.appearance.exportToBundle();
+				} else {
+					(data as Record<string, unknown>)[key] = this.data[key];
+				}
 			}
-			this.state = CharacterModification.MODIFIED;
-		}
+
+			try {
+				if (!await GetDatabase().setCharacter(data)) {
+					throw new Error('Database returned failure');
+				}
+			} catch (error) {
+				for (const key of keys) {
+					this.modified.add(key);
+				}
+				this.logger.warning(`Failed to save data:`, error);
+			}
+		});
+
 	}
 
 	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterData[Key], room: true): void;
@@ -303,7 +307,6 @@ export class Character {
 
 		this.data[key] = value;
 		this.modified.add(key);
-		this.state = CharacterModification.MODIFIED;
 
 		if (room && this.room) {
 			this.room.sendUpdateToAllInRoom({ update: { id: this.id, [key]: value } });
@@ -315,7 +318,6 @@ export class Character {
 	public onAppearanceChanged(changed = true): void {
 		if (changed) {
 			this.modified.add('appearance');
-			this.state = CharacterModification.MODIFIED;
 		}
 
 		if (this.room) {
@@ -334,6 +336,12 @@ export class Character {
 			...this.settings,
 			...settings,
 		}, true);
+	}
+
+	private tick(): void {
+		this.save().catch((err) => {
+			this.logger.error('Periodic save failed:', err);
+		});
 	}
 
 	//#region Chat messages

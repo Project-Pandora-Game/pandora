@@ -163,11 +163,13 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 		// Invalidate old characters
 		if (characters) {
 			const characterIds = characters.map((c) => c.id);
-			CharacterManager
-				.listCharacters()
-				.map((c) => c.id)
-				.filter((id) => !characterIds.includes(id))
-				.forEach((id) => CharacterManager.removeCharacter(id));
+			await Promise.allSettled(
+				CharacterManager
+					.listCharacters()
+					.map((c) => c.id)
+					.filter((id) => !characterIds.includes(id))
+					.map((id) => CharacterManager.removeCharacter(id)),
+			);
 		}
 
 		// Load and update existing rooms

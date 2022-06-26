@@ -10,11 +10,7 @@ const STOP_TIMEOUT = 10_000;
 
 async function StopGracefully(): Promise<IEmpty> {
 	// Disconnect all characters
-	await Promise.allSettled(
-		CharacterManager
-			.getValidCharacters()
-			.map((c) => c.saveAndDisconnect()),
-	);
+	await CharacterManager.removeAllCharacters();
 	StopHttpServer();
 	// TODO: Disconnect database
 	// The result of promise from graceful stop is used by Directory, disconnect afterwards

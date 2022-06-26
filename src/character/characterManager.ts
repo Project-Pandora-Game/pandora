@@ -3,9 +3,6 @@ import { assetManager } from '../assets/assetManager';
 import { Character } from './character';
 import promClient from 'prom-client';
 
-/** Time (in ms) after which manager prunes character without any active connection */
-export const CHARACTER_TIMEOUT = 30_000;
-
 const logger = GetLogger('CharacterManager');
 
 const charactersMetric = new promClient.Gauge({
@@ -67,14 +64,24 @@ export const CharacterManager = new class CharacterManager {
 		return char;
 	}
 
-	public removeCharacter(id: CharacterId): void {
+	public removeCharacter(id: CharacterId): Promise<void> {
 		const character = this._characters.get(id);
 		if (!character)
-			return;
+			return Promise.resolve();
 		logger.verbose(`Removing character ${id}`);
 		character.onRemove();
 		this._characters.delete(id);
 		charactersMetric.set(this._characters.size);
+
+		// Save all data after removing character
+		return character.save();
+	}
+
+	public removeAllCharacters(): Promise<void> {
+		return Promise.allSettled(
+			Array.from(this._characters.keys())
+				.map((id) => this.removeCharacter(id)),
+		).then(() => undefined);
 	}
 
 	public onAssetDefinitionsChanged() {

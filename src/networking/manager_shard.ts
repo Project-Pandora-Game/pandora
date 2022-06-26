@@ -95,7 +95,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 
 	private async handleSetCharacter(args: IShardDirectoryUnconfirmedArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
 		const shard = connection.shard;
-		if (!Validation.setCharacter(args) || !CheckSetCharacterKeys(args) || !shard || !shard.getConnectedCharacter(args.id))
+		if (!Validation.setCharacter(args) || !CheckSetCharacterKeys(args) || !shard)
 			throw new BadMessageError();
 
 		if (Object.keys(args).length > 2 && !await GetDatabase().setCharacter(args))

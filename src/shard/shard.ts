@@ -303,7 +303,7 @@ export class Shard {
 		}
 
 		return this.shardConnection
-			.awaitResponse('update', update)
+			.awaitResponse('update', update, 10_000)
 			.then(
 				() => {
 					// Cleanup pending messages

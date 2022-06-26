@@ -44,14 +44,13 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 	}
 
 	private updateLoadingProgressToast(): void {
-		setTimeout(() => {
-			const inProgress = this._pendingPromises.size;
-			if (inProgress > 0) {
-				this.textureLoadingProgress.show('progress', `Loading ${inProgress} asset${inProgress > 1 ? 's' : ''}...`);
-			} else {
-				this.textureLoadingProgress.hide();
-			}
-		}, 100);
+		// TODO (FIX ME): The toast is disabled, because it has tendency to get stuck on the screen
+		const inProgress = this._pendingPromises.size;
+		if (inProgress > 0) {
+			// this.textureLoadingProgress.show('progress', `Loading ${inProgress} asset${inProgress > 1 ? 's' : ''}...`);
+		} else {
+			// this.textureLoadingProgress.hide();
+		}
 	}
 
 	protected abstract loadTexture(path: string): Promise<Texture>;

@@ -8,9 +8,13 @@ import ReactRefreshTypeScript from 'react-refresh-typescript';
 import { join } from 'path';
 import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
-import { Configuration, DefinePlugin, RuleSetRule, RuleSetUseItem, WebpackPluginInstance } from 'webpack';
+import { Compilation, Compiler, Configuration, DefinePlugin, RuleSetRule, RuleSetUseItem, WebpackPluginInstance } from 'webpack';
 import 'webpack-dev-server';
 import packageJson from './package.json';
+import { execSync } from 'child_process';
+
+const GIT_COMMIT_HASH = execSync('git rev-parse --short HEAD').toString().trim();
+const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString().trim();
 
 const {
 	DIRECTORY_ADDRESS = 'http://127.0.0.1:25560',
@@ -83,6 +87,8 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 				GAME_NAME,
 				DIRECTORY_ADDRESS,
 				USER_DEBUG,
+				GIT_COMMIT_HASH,
+				GIT_DESCRIBE,
 			}),
 			/* eslint-enable @typescript-eslint/naming-convention */
 		}),
@@ -99,6 +105,11 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 			favicon: join(SRC_DIR, 'assets/favicon.png'),
 			chunks: ['editor/index'],
 		}),
+		new GenerateStringPlugin('version.json', JSON.stringify({
+			gitDescribe: GIT_DESCRIBE,
+			gitCommitHash: GIT_COMMIT_HASH,
+			version: packageJson.version,
+		})),
 	];
 
 	if (env.prod) {
@@ -188,4 +199,35 @@ function GenerateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
 	}
 
 	return styleLoaders;
+}
+
+class GenerateStringPlugin {
+	private readonly _asset: string;
+	private readonly _value: string;
+
+	public readonly name: string = 'GenerateStringPlugin';
+
+	constructor(asset: string, value: string) {
+		this._asset = asset;
+		this._value = value;
+	}
+
+	apply(compiler: Compiler) {
+		compiler.hooks.compilation.tap(this, (compilation) => {
+			compilation.hooks.processAssets.tap(
+				{
+					name: 'GenerateVersionJson',
+					stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+				},
+				(assets) => {
+					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+					assets[this._asset] = {
+						source: () => this._value,
+						size: () => this._value.length,
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					} as unknown as any;
+				},
+			);
+		});
+	}
 }

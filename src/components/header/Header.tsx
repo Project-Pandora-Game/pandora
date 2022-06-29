@@ -13,7 +13,6 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import './header.scss';
 import { HeaderButton } from './HeaderButton';
-import { GIT_DESCRIBE } from '../../config/Environment';
 import { useNotificationHeader } from '../gameContext/notificationContextProvider';
 import { useEvent } from '../../common/useEvent';
 import { toast } from 'react-toastify';
@@ -44,7 +43,6 @@ function LeftHeader(): ReactElement {
 			) }
 			{ !connectionInfo && <span>[no character selected]</span> }
 			{ connectionInfo && showCharacterMenu && <CharacterMenu close={ () => setShowCharacterMenu(false) } /> }
-			<span className='git-describe'>git: { GIT_DESCRIBE }</span>
 		</div>
 	);
 }

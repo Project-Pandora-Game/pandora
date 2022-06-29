@@ -184,7 +184,7 @@ function GenerateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
 				postcssOptions: {
 					plugins: [
 						postcssFlexbugsFixes(),
-						postcssPresetEnv(),
+						postcssPresetEnv({ preserve: true }),
 					],
 				},
 			},

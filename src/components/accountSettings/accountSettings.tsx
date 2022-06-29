@@ -7,6 +7,7 @@ import { useMounted } from '../../common/useMounted';
 import { Button } from '../common/Button/Button';
 import './accountSettings.scss';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { GIT_DESCRIBE } from '../../config/Environment';
 
 export function AccountSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -15,10 +16,13 @@ export function AccountSettings(): ReactElement | null {
 		return null;
 
 	return (
-		<div className='account-settings'>
-			<GitHubIntegration account={ account } />
-			<AccountRoleList account={ account } />
-		</div>
+		<>
+			<div className='account-settings'>
+				<GitHubIntegration account={ account } />
+				<AccountRoleList account={ account } />
+			</div>
+			<footer>Version: { GIT_DESCRIBE }</footer>
+		</>
 	);
 }
 

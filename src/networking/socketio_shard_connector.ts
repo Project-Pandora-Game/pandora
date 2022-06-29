@@ -3,7 +3,6 @@ import {
 	ConnectionBase,
 	CreateMessageHandlerOnAny,
 	GetLogger,
-	IChatRoomUpdate,
 	IClientShardBase,
 	IDirectoryCharacterConnectionInfo,
 	IShardClientArgument,
@@ -13,8 +12,8 @@ import {
 import { connect, Socket } from 'socket.io-client';
 import { LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
-import { Player, PlayerCharacter } from '../character/player';
-import { Room } from '../character/room';
+import { PlayerCharacter } from '../character/player';
+import type { IChatRoomHandler } from '../components/gameContext/chatRoomContextProvider';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
 import { ShardConnector, ShardConnectionState } from './shardConnector';
@@ -42,6 +41,8 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 
 	private readonly _state: Observable<ShardConnectionState> = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
+	private readonly _room: IChatRoomHandler;
+	private readonly _player: { value: PlayerCharacter | null };
 
 	private loadResolver: ((arg: this) => void) | null = null;
 
@@ -54,9 +55,11 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		return this._connectionInfo;
 	}
 
-	constructor(info: IDirectoryCharacterConnectionInfo) {
+	constructor(info: IDirectoryCharacterConnectionInfo, player: { value: PlayerCharacter | null }, room: IChatRoomHandler) {
 		super(CreateConnection(info), logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
+		this._player = player;
+		this._room = room;
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -67,12 +70,17 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		const handler = new MessageHandler<IShardClientBase>({}, {
 			load: this.onLoad.bind(this),
 			updateCharacter: this.onUpdateCharacter.bind(this),
-			chatRoomUpdate: this.onChatRoomUpdate.bind(this),
+			chatRoomUpdate: (data: IShardClientArgument['chatRoomUpdate']) => {
+				this._room.onUpdate(data);
+			},
 			chatRoomMessage: (message: IShardClientArgument['chatRoomMessage']) => {
-				Room.onMessage(message.messages, this);
+				const lastTime = this._room.onMessage(message.messages);
+				if (lastTime > 0) {
+					this.sendMessage('chatRoomMessageAck', { lastTime });
+				}
 			},
 			chatRoomStatus: (status: IShardClientArgument['chatRoomStatus']) => {
-				Room.onStatus(status);
+				this._room.onStatus(status);
 			},
 		});
 		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
@@ -175,12 +183,12 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 	private onLoad({ character, room, assetsDefinition, assetsDefinitionHash, assetsSource }: IShardClientArgument['load']): void {
 		const currentState = this._state.value;
 		LoadAssetDefinitions(assetsDefinitionHash, assetsDefinition, assetsSource);
-		if (Player.value?.data.id === character.id) {
-			Player.value.update(character);
+		if (this._player.value?.data.id === character.id) {
+			this._player.value.update(character);
 		} else {
-			Player.value = new PlayerCharacter(character);
+			this._player.value = new PlayerCharacter(character);
 		}
-		Room.update({ room });
+		this._room.onUpdate({ room });
 		if (currentState === ShardConnectionState.CONNECTED) {
 			// Ignore reloads from shard
 		} else if (currentState === ShardConnectionState.WAIT_FOR_DATA) {
@@ -196,14 +204,10 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 	}
 
 	private onUpdateCharacter(data: IShardClientArgument['updateCharacter']): void {
-		if (!Player.value) {
+		if (!this._player.value) {
 			throw new Error('Received update data without player');
 		}
-		Player.value.update(data);
-	}
-
-	private onChatRoomUpdate(data: IChatRoomUpdate): void {
-		Room.update(data);
+		this._player.value.update(data);
 	}
 }
 

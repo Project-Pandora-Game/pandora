@@ -1,5 +1,5 @@
-import { IClientShardBase, IConnectionBase, IDirectoryCharacterConnectionInfo } from 'pandora-common';
-import { ReadonlyObservable } from '../observable';
+import type { IClientShardBase, IConnectionBase, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import type { ReadonlyObservable } from '../observable';
 
 /** State of connection to Shard */
 export enum ShardConnectionState {

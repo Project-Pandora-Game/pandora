@@ -1,43 +1,29 @@
 import classNames from 'classnames';
-import { CharacterId, ICharacterPublicData, IChatRoomMessageChat, IChatRoomStatus, IChatSegment, IsObject } from 'pandora-common';
+import { CharacterId, ICharacterPublicData, IChatRoomMessageChat, IChatSegment } from 'pandora-common';
 import { CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
 import React, {
-	ForwardedRef,
 	ReactElement,
-	RefObject,
 	useCallback,
-	useContext,
 	useEffect,
 	useMemo,
 	useRef,
 	useState,
 } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Player, usePlayerData } from '../../character/player';
-import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, Room, useChatRoomStatus } from '../../character/room';
 import { useEvent } from '../../common/useEvent';
-import { ShardConnector } from '../../networking/shardConnector';
-import { useObservable } from '../../observable';
 import { Button } from '../common/Button/Button';
 import { ContextMenu, useContextMenu } from '../contextMenu';
+import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatRoomData, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
+import { usePlayerData, usePlayerId } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
 import { ChatParser } from './chatParser';
 import './chatroom.scss';
-import { COMMAND_KEY, GetCommand, ParseCommands } from './commands';
-import { SentMessages } from './sentMessages';
-
-function MessageSend(shardConnector: ShardConnector, message: string): string {
-	const text = ParseCommands(shardConnector, message);
-	if (typeof text === 'boolean') {
-		return text ? '' : message;
-	}
-
-	return SentMessages.send(shardConnector, text, ChatParser.parse(text)) ? '' : message;
-}
 
 export function Chatroom(): ReactElement {
-	const roomData = useObservable(Room.data);
+	const roomData = useChatRoomData();
 	const navigate = useNavigate();
 	const directoryConnector = useDirectoryConnector();
 
@@ -47,51 +33,47 @@ export function Chatroom(): ReactElement {
 
 	return (
 		<div className='chatroom'>
-			<Chat />
-			<div>
-				<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
-				<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
-				<br />
-				<p>You are in room {roomData.name}</p>
+			<ChatInputContextProvider>
+				<Chat />
 				<div>
-					Characters in this room:<br />
-					<ul>
-						{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
-					</ul>
+					<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
+					<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
+					<br />
+					<p>You are in room {roomData.name}</p>
+					<div>
+						Characters in this room:<br />
+						<ul>
+							{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
+						</ul>
+					</div>
 				</div>
-			</div>
+			</ChatInputContextProvider>
 		</div>
 	);
 }
 
 function DisplayCharacter({ char }: { char: ICharacterPublicData }): ReactElement {
-	const status = useChatRoomStatus(char.id);
+	const { setTarget } = useChatInput();
+
 	return (
 		<li className='character-info'>
-			<span>{char.name}</span>
+			<span onClick={ () => setTarget(char.id) }>{char.name}</span>
 			<span>{char.id} / {char.accountId}</span>
 			<Link to='/wardrobe' state={ { character: char.id } }>Wardrobe</Link>
-			<span>{status === 'none' ? '' : status}</span>
 		</li>
 	);
 }
 
-const ChatContext = React.createContext<{
-	textarea: RefObject<HTMLTextAreaElement>;
-// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-}>({} as never);
-
 function Chat(): ReactElement | null {
-	const messages = useObservable(Room.messages);
+	const messages = useChatRoomMessages();
 	const shardConnector = useShardConnector();
 	const [autoScroll, setAutoScroll] = useState(true);
 	const messagesDiv = useRef<HTMLDivElement>(null);
+	const lastMessageCount = useRef(0);
 	// Needs to be object such that changes don't trigger render
 	const scrollingMemo = useMemo(() => ({ isScrolling: false }), []);
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
-	const context = useMemo(() => ({
-		textarea: textareaRef,
-	}), []);
+
+	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);
 
 	// Only add the smooth scrolling effect after mount and first scroll
 	// to make sure there is no visual glitch when switching back into chat screen
@@ -103,12 +85,24 @@ function Chat(): ReactElement | null {
 		}, 0);
 	}, []);
 
-	useEffect(() => {
+	const scroll = useEvent(() => {
 		if (messagesDiv.current && autoScroll) {
 			scrollingMemo.isScrolling = true;
 			messagesDiv.current.scrollTop = messagesDiv.current.scrollHeight;
 		}
-	}, [messagesDiv, messages, autoScroll, scrollingMemo]);
+	});
+
+	useEffect(() => {
+		scroll();
+	}, [messages, scroll]);
+
+	useEffect(() => {
+		if (scrollingMemo.isScrolling && document.visibilityState === 'visible') {
+			supress();
+			clear();
+		}
+		return () => unsupress();
+	}, [messages, scrollingMemo, lastMessageCount, clear, supress, unsupress]);
 
 	const handleScroll = useCallback((ev: React.UIEvent<HTMLDivElement>) => {
 		if (messagesDiv.current && ev.target === messagesDiv.current) {
@@ -126,98 +120,14 @@ function Chat(): ReactElement | null {
 
 	return (
 		<div className='chatArea'>
-			<ChatContext.Provider value={ context }>
-				<div className='messages' ref={ messagesDiv } onScroll={ handleScroll }>
-					{messages.map((m) => <Message key={ m.time } message={ m } />)}
-				</div>
-			</ChatContext.Provider>
-			<TextareaInput ref={ textareaRef } />
+			<div className='messages' ref={ messagesDiv } onScroll={ handleScroll } tabIndex={ 1 }>
+				{messages.map((m) => <Message key={ m.time } message={ m } />)}
+			</div>
+			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } />
 			<PlayerColorEdit />
 		</div>
 	);
 }
-
-function TextareaInputImpl({ ...props }: React.InputHTMLAttributes<HTMLTextAreaElement>, ref: ForwardedRef<HTMLTextAreaElement>): ReactElement {
-	const shardConnector = useShardConnector();
-	const lastInput = useRef('');
-	const currentTarget = useRef<CharacterId | undefined>();
-	const lastStatus = useRef<IChatRoomStatus>('none');
-	const timeout = useRef<number>();
-
-	const sendStatus = useEvent((status: IChatRoomStatus) => {
-		shardConnector?.sendMessage('chatRoomStatus', { status, target: currentTarget.current });
-		lastStatus.current = status;
-		Room.setPlayerStatus(status);
-	});
-
-	const inputEnd = useEvent(() => {
-		if (timeout.current) {
-			clearTimeout(timeout.current);
-			timeout.current = 0;
-		}
-		if (lastStatus.current === 'none') {
-			return;
-		}
-		sendStatus('none');
-	});
-
-	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		if (!shardConnector)
-			return;
-
-		const textarea = ev.currentTarget;
-		if (ev.key === 'Enter' && !ev.shiftKey) {
-			ev.preventDefault();
-			ev.stopPropagation();
-			textarea.value = MessageSend(shardConnector, textarea.value);
-		}
-
-		const value = textarea.value;
-		if (value === lastInput.current)
-			return;
-
-		lastInput.current = value;
-		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
-
-		const command = GetCommand(value, (c) => c.requreMessage && c.status !== undefined);
-		if (command) {
-			if (command === true || !command.status)
-				nextStatus = { status: 'none' };
-			else if (IsObject(command.status))
-				nextStatus = { ...command.status };
-			else
-				nextStatus = command.status(value.split(/\s+/).slice(1));
-		} else if (value.trim().length > 0) {
-			nextStatus = { status: 'typing' };
-		} else {
-			nextStatus = { status: 'none' };
-		}
-
-		if (nextStatus.status === 'none') {
-			inputEnd();
-			return;
-		}
-
-		const lastTarget = currentTarget.current;
-		currentTarget.current = nextStatus.target;
-
-		if (nextStatus.status !== lastStatus.current || nextStatus.target !== lastTarget) {
-			sendStatus(nextStatus.status);
-		}
-
-		if (timeout.current) {
-			clearTimeout(timeout.current);
-			timeout.current = 0;
-		}
-		timeout.current = setTimeout(() => inputEnd(), 3_000);
-	});
-
-	useEffect(() => () => inputEnd(), [inputEnd]);
-
-	return <textarea { ...props } ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } />;
-}
-
-const TextareaInput = React.forwardRef(TextareaInputImpl);
 
 function RenderChatPart([type, contents]: IChatSegment, index: number): ReactElement {
 	switch (type) {
@@ -277,10 +187,11 @@ function DisplayUserMessage({ message }: { message: IChatRoomMessageChat & { tim
 		}
 	}, [message.type]);
 	const [ref, onContextMenu, close] = useContextMenu();
+	const playerId = usePlayerId();
 
 	const style = message.type === 'me' || message.type === 'emote' ? ({ backgroundColor: message.from.labelColor + '44' }) : undefined;
 	const isPrivate = 'to' in message && message.to;
-	const self = message.from.id === Player.value?.data?.id;
+	const self = message.from.id === playerId;
 	return (
 		<div className={ classNames('message', message.type, isPrivate && 'private') } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
 			{ self ? (
@@ -298,10 +209,10 @@ function DisplayUserMessage({ message }: { message: IChatRoomMessageChat & { tim
 }
 
 function DisplayContextMenuItems({ close, id }: { close: () => void; id: number }): ReactElement {
-	const timeout = SentMessages.getEditTimeout(id);
+	const sender = useChatRoomMessageSender();
+	const timeout = sender.getMessageEditTimeout(id);
 	const [edit, setEdit] = useState(timeout !== undefined && timeout > 0);
-	const shardConnector = useShardConnector();
-	const { textarea } = useContext(ChatContext);
+	const { setEditing } = useChatInput();
 
 	useEffect(() => {
 		if (edit) {
@@ -319,26 +230,26 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 
 		return [
 			<span key='edit' onClick={ () => {
-				const message = SentMessages.getMessageForEdit(id);
-				if (!message) {
+				if (!setEditing(id)) {
 					setEdit(false);
-				} else if (textarea.current) {
-					textarea.current.value = message;
-					textarea.current.focus();
 				}
 				close();
 			} }>
 				Edit
 			</span>,
 			<span key='delete' onClick={ () => {
-				SentMessages.delete(shardConnector, id);
+				try {
+					sender.deleteMessage(id);
+				} catch {
+					setEdit(false);
+				}
 				close();
 			} }>
 				Delete
 			</span>,
 			<br key='br' />,
 		];
-	}, [edit, id, textarea, close, shardConnector]);
+	}, [edit, id, close, sender, setEditing]);
 
 	return (
 		<>
@@ -375,7 +286,8 @@ function DisplayInfo({ message }: { message: IChatroomMessageProcessed; }): Reac
 }
 
 function DisplayName({ message, color }: { message: IChatRoomMessageChat; color: string; }): ReactElement | null {
-	const { textarea } = useContext(ChatContext);
+	const { setTarget } = useChatInput();
+	const playerId = usePlayerId();
 
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
@@ -390,26 +302,15 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 		}
 	}, [message.type]);
 
-	const onClick = (event: React.MouseEvent<HTMLSpanElement>) => {
+	const onClick = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
 		event.stopPropagation();
-		if (!textarea.current)
-			return;
 
 		const id = event.currentTarget.getAttribute('data-id');
-		if (!id || id === Player.value?.data.id)
+		if (!id || id === playerId)
 			return;
 
-		const text = textarea.current.value.trimStart();
-		if (!text.startsWith(COMMAND_KEY)) {
-			textarea.current.value = `/w ${id} ${text}`;
-			return;
-		}
-
-		const [, command, next] = /([^\s]+)\s+[^s]+\s+(.*)/s.exec(text) ?? [];
-		if (command === (COMMAND_KEY + 'w') || command === (COMMAND_KEY + 'whisper')) {
-			textarea.current.value = `${command} ${id} ${next}`;
-		}
-	};
+		setTarget(id as CharacterId);
+	}, [setTarget, playerId]);
 
 	const style = message.type !== 'me' && message.type !== 'emote' ? ({ color }) : undefined;
 

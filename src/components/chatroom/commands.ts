@@ -1,9 +1,5 @@
 import { CharacterId, IChatRoomStatus, IChatType } from 'pandora-common';
-import { Player } from '../../character/player';
-import { Room } from '../../character/room';
 import { ShardConnector } from '../../networking/shardConnector';
-import { ChatParser } from './chatParser';
-import { SentMessages } from './sentMessages';
 
 export const COMMAND_KEY = '/';
 
@@ -37,37 +33,20 @@ const CreateMessageTypeParser = (name: string, type: IChatType): ICommand => ({
 	argCount: 0,
 	requreMessage: true,
 	status: { status: 'typing' },
-	handler: ({ key, shardConnector }: ICommandArgs, message: string): boolean => {
+	handler: (_: ICommandArgs, message: string): boolean => {
 		message = message.trim();
 		if (!message) {
 			return false; // TODO: prevent chat clearing
 		}
+		// TODO redo commands with context based on BCX
+		// return SentMessages.send(shardConnector, `${key} ${message}`, [{
+		// 	type,
+		// 	parts: key.startsWith('/raw') ? [['normal', message]] : ChatParser.parseStyle(message),
+		// }]);
 
-		return SentMessages.send(shardConnector, `${key} ${message}`, [{
-			type,
-			parts: key.startsWith('/raw') ? [['normal', message]] : ChatParser.parseStyle(message),
-		}]);
+		return false;
 	},
 });
-
-function GetWhisperTarget([character]: string[]): CharacterId | undefined {
-	const playerId = Player.value?.data.id;
-	const char = Room.data.value?.characters.find((c) => c.id === character);
-	if (char)
-		return char.id === playerId ? undefined : char.id;
-
-	let chars = Room.data.value?.characters.filter((c) => c.name.localeCompare(character, undefined, { sensitivity: 'base' }) === 0) ?? [];
-	if (chars.length === 1)
-		return chars[0].id === playerId ? undefined : chars[0].id;
-	if (chars.length === 0)
-		return undefined;
-
-	chars = chars.filter((c) => c.name === character);
-	if (chars.length === 1)
-		return chars[0].id === playerId ? undefined : chars[0].id;
-
-	return undefined;
-}
 
 const COMMANDS: ICommand[] = [
 	{
@@ -76,16 +55,17 @@ const COMMANDS: ICommand[] = [
 		usage: '[characterId] ...message',
 		argCount: 1,
 		requreMessage: true,
-		status: (args) => {
-			const target = GetWhisperTarget(args);
+		status: () => {
+			const target = undefined; // GetWhisperTarget(args);
 			return target ? { status: 'whisper', target } : { status: 'none' };
 		},
-		handler: ({ key, args, shardConnector }: ICommandArgs, message: string): boolean => {
-			const target = GetWhisperTarget(args);
-			if (!target)
-				return false;
+		handler: (_: ICommandArgs, _message: string): boolean => {
+			return false;
+			// TODO redo commands with context based on BCX
+			// const target = GetWhisperTarget(args);
+			// if (!target)
 
-			return SentMessages.send(shardConnector, `${key} ${target} ${message}`, ChatParser.parse(message, target));
+			// return SentMessages.send(shardConnector, `${key} ${target} ${message}`, ChatParser.parse(message, target));
 		},
 	},
 	CreateMessageTypeParser('say', 'chat'),

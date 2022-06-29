@@ -2,6 +2,7 @@ import { noop } from 'lodash';
 import { GetLogger, IDirectoryAccountInfo, IDirectoryClientChangeEvents } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useEffect, useRef } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
+import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
 import { UnimplementedDirectoryConnector } from '../../networking/unimplementedDirectoryConnector';
@@ -36,6 +37,8 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 			}
 		})();
 	}, [errorHandler]);
+
+	useDebugExpose('directoryConnector', directoryConnectorInstance);
 
 	return (
 		<directoryConnectorContext.Provider value={ directoryConnectorInstance }>

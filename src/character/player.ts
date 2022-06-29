@@ -1,11 +1,7 @@
 import { GetLogger, ICharacterData, ICharacterDataCreate } from 'pandora-common';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
-import { USER_DEBUG } from '../config/Environment';
-import { Observable, useObservable } from '../observable';
 import { Character } from './character';
-
-export const Player = new Observable<PlayerCharacter | null>(null);
 
 export type CharacterCreationCallback = (
 	character: PlayerCharacter,
@@ -38,22 +34,3 @@ export function useCreateCharacter(): CharacterCreationCallback {
 	}, [shardConnector]);
 }
 
-export function usePlayerData(): Readonly<ICharacterData> | null {
-	const player = useObservable(Player);
-	const [data, setData] = useState<Readonly<ICharacterData> | null>(player ? player.data : null);
-	useEffect(() => {
-		setData(player ? player.data : null);
-		return player?.onAny((ev) => {
-			if (ev.update) {
-				setData(player ? player.data : null);
-			}
-		});
-	}, [player]);
-	return data;
-}
-
-// Debug helper
-if (USER_DEBUG) {
-	//@ts-expect-error: Development link
-	window.Player = Player;
-}

@@ -2,7 +2,7 @@ import { noop } from 'lodash';
 import { EMPTY, ICharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { usePlayerData } from '../../character/player';
+import { usePlayerData } from '../gameContext/playerContextProvider';
 import { USER_DEBUG } from '../../config/Environment';
 import { useConnectToCharacter, useCreateNewCharacter } from '../../networking/account_manager';
 import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
@@ -149,8 +149,10 @@ function useCharacterList(): UseCharacterListResult {
 	const directoryConnector = useDirectoryConnector();
 
 	const fetchCharacterList = useCallback(async () => {
-		const result = await directoryConnector.awaitResponse('listCharacters', EMPTY);
-		setData(result);
+		if (directoryConnector.currentAccount.value) {
+			const result = await directoryConnector.awaitResponse('listCharacters', EMPTY);
+			setData(result);
+		}
 	}, [directoryConnector]);
 
 	useDirectoryChangeListener('characterList', () => {

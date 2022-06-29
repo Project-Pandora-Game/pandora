@@ -13,16 +13,17 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceItems, useCharacterData } from '../../character/character';
-import { Player } from '../../character/player';
-import { Room } from '../../character/room';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphicsScene';
+import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { usePlayer } from '../gameContext/playerContextProvider';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
-	const player = useObservable(Player);
+	const player = usePlayer();
+	const chatRoomCharacters = useChatRoomCharacters();
 
 	const characterId = IsObject(locationState) && IsCharacterId(locationState.character) ? locationState.character : null;
 
@@ -33,13 +34,9 @@ export function WardrobeScreen(): ReactElement | null {
 			setCharacter(player);
 			return;
 		}
-		const get = () => Room.characters.find((c) => c.data.id === characterId) ?? null;
+		const get = () => chatRoomCharacters.find((c) => c.data.id === characterId) ?? null;
 		setCharacter(get());
-		return Room.onAny((ev) => {
-			if (ev.exit && characterId !== player?.data.id || ev.leave === characterId)
-				setCharacter(null);
-		});
-	}, [setCharacter, characterId, player]);
+	}, [setCharacter, characterId, player, chatRoomCharacters]);
 
 	if (!character)
 		return <Link to='/pandora_lobby'>◄ Back</Link>;
@@ -51,7 +48,7 @@ export function WardrobeScreen(): ReactElement | null {
 
 const scene = new GraphicsScene();
 function Wardrobe({ character }: { character: Character }): ReactElement | null {
-	const player = useObservable(Player);
+	const player = usePlayer();
 	const characterData = useCharacterData(character);
 	const assetList = useObservable(GetAssetManager().assetList);
 	const appearance = useCharacterAppearanceItems(character);

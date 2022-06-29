@@ -10,15 +10,17 @@ import React, {
 	useMemo,
 	useState,
 } from 'react';
-import { Player } from '../../character/player';
 import { ChildrenProps } from '../../common/reactTypes';
+import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { ShardConnector } from '../../networking/shardConnector';
 import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
+import { useChatRoomSetShard } from './chatRoomContextProvider';
 import { useShardConnectorFactory } from './connectorFactoryContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
+import { usePlayerContext } from './playerContextProvider';
 
 export interface ShardConnectorContextData {
 	shardConnector: ShardConnector | null;
@@ -40,6 +42,8 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 		setShardConnector,
 	}), [shardConnector]);
 
+	useDebugExpose('shardConnector', shardConnector);
+
 	return (
 		<shardConnectorContext.Provider value={ contextData }>
 			<ConnectionStateManager>
@@ -59,6 +63,7 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 	const directoryState = useObservable(directoryConnector.state);
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
 	const shardState = useNullableObservable(shardConnector?.state);
+	const setChatRoomShard = useChatRoomSetShard();
 
 	useEffect(() => {
 		setDebugData({
@@ -67,6 +72,10 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 			shardState: shardState ?? undefined,
 		});
 	}, [directoryState, directoryStatus, shardState, setDebugData]);
+
+	useEffect(() => {
+		setChatRoomShard(shardConnector);
+	}, [shardConnector, setChatRoomShard]);
 
 	useEffect(() => {
 		return directoryConnector.connectionStateEventEmitter.on('connectionState', ({ character }) => {
@@ -126,15 +135,16 @@ export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) =
 function useDisconnectFromShard(): () => void {
 	const shardConnector = useShardConnector();
 	const setShardConnector = useSetShardConnector();
+	const player = usePlayerContext();
 
 	return useCallback(() => {
 		if (shardConnector) {
 			shardConnector.disconnect();
 			setShardConnector(null);
-			Player.value = null;
+			player.value = null;
 			LastSelectedCharacter.value = undefined;
 		}
-	}, [shardConnector, setShardConnector]);
+	}, [shardConnector, setShardConnector, player]);
 }
 
 function useSetShardConnector(): Dispatch<SetStateAction<ShardConnector | null>> {

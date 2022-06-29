@@ -2,17 +2,16 @@ import { noop } from 'lodash';
 import { EMPTY, GetLogger, IChatRoomDirectoryInfo, IClientDirectoryNormalResult, RoomId } from 'pandora-common';
 import React, { ReactElement, useCallback, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { Room } from '../../character/room';
 import { useErrorHandler } from '../../common/useErrorHandler';
-import { useObservable } from '../../observable';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
+import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
-	const roomData = useObservable(Room.data);
+	const roomData = useChatRoomData();
 	const roomList = useRoomList();
 
 	if (roomData) {

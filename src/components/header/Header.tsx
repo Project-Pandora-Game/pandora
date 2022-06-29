@@ -7,13 +7,17 @@ import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import managementIcon from '../../assets/icons/management.svg';
-import { usePlayerData } from '../../character/player';
+import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useLogout } from '../../networking/account_manager';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import './header.scss';
 import { HeaderButton } from './HeaderButton';
 import { GIT_DESCRIBE } from '../../config/Environment';
+import { useNotificationHeader } from '../gameContext/notificationContextProvider';
+import { useEvent } from '../../common/useEvent';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -66,14 +70,20 @@ function RightHeader(): ReactElement {
 	const logout = useLogout();
 	const navigate = useNavigate();
 	const loggedIn = currentAccount != null;
-	const notificationCount = 0;
+	const [notification, clearNotifications] = useNotificationHeader();
 	const isDeveloper = currentAccount?.roles !== undefined && IsAuthorized(currentAccount.roles, 'developer');
+
+	const onNotificationClick = useEvent((_: React.MouseEvent<HTMLButtonElement>) => {
+		clearNotifications();
+		toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR);
+	});
+
 	return (
 		<div className='rightHeader'>
 			{ loggedIn && (
 				<>
-					<HeaderButton icon={ notificationsIcon } iconAlt={ `${ notificationCount } notifications` }
-						badge={ notificationCount } onClick={ () => alert('Not yet implemented') } title='Notifications' />
+					<HeaderButton icon={ notificationsIcon } iconAlt={ `${ notification.length } notifications` }
+						badge={ notification.length } onClick={ onNotificationClick } title='Notifications' />
 					<HeaderButton icon={ friendsIcon } iconAlt='Friends' onClick={ () => alert('Not yet implemented') } title='Friends' />
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/account_settings') } title='Settings' />
 					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }

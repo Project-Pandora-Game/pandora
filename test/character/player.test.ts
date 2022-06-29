@@ -1,7 +1,6 @@
-import { renderHook } from '@testing-library/react';
 import _ from 'lodash';
 import { CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData } from 'pandora-common';
-import { Player, PlayerCharacter, usePlayerData } from '../../src/character/player';
+import { PlayerCharacter } from '../../src/character/player';
 
 describe('PlayerCharacter', () => {
 	const updateListener = jest.fn();
@@ -36,14 +35,6 @@ describe('PlayerCharacter', () => {
 		player = new PlayerCharacter(MockPlayerData(overrides));
 		onUpdateUnsubscribe = player.on('update', updateListener);
 	}
-});
-
-describe('usePlayerData()', () => {
-	it('should return null if player is null', () => {
-		const { result } = renderHook(() => usePlayerData());
-		expect(Player.value).toBeNull();
-		expect(result.current).toBeNull();
-	});
 });
 
 function MockPlayerData(overrides?: Partial<ICharacterData>): ICharacterData {

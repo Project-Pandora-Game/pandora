@@ -6,6 +6,8 @@ import { DirectoryConnector } from '../../networking/directoryConnector';
 import { ShardConnector } from '../../networking/shardConnector';
 import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
 import { SocketIOShardConnector } from '../../networking/socketio_shard_connector';
+import { useChatRoomHandler } from './chatRoomContextProvider';
+import { usePlayerContext } from './playerContextProvider';
 
 export type ShardConnectorFactory = (info: IDirectoryCharacterConnectionInfo) => ShardConnector;
 
@@ -21,9 +23,11 @@ export const connectorFactoryContext = createContext<ConnectorFactoryContext>({
 
 /** Context provider responsible for providing concrete shard connector implementations to the application */
 export function ConnectorFactoryContextProvider({ children }: ChildrenProps): ReactElement {
+	const player = usePlayerContext();
+	const room = useChatRoomHandler();
 	const context = useMemo<ConnectorFactoryContext>(() => ({
-		shardConnectorFactory: (info) => new SocketIOShardConnector(info),
-	}), []);
+		shardConnectorFactory: (info) => new SocketIOShardConnector(info, player, room),
+	}), [player, room]);
 
 	return (
 		<connectorFactoryContext.Provider value={ context }>

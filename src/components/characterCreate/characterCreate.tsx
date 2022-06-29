@@ -1,8 +1,8 @@
 import { IsCharacterName } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Player, useCreateCharacter, usePlayerData } from '../../character/player';
-import { useObservable } from '../../observable';
+import { useCreateCharacter } from '../../character/player';
+import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
 import { Button } from '../common/Button/Button';
 import './characterCreate.scss';
 import { Form, FormErrorMessage, FormField } from '../common/Form/form';
@@ -14,7 +14,7 @@ export function CharacterCreate(): ReactElement | null {
 
 	const navigate = useNavigate();
 
-	const player = useObservable(Player);
+	const player = usePlayer();
 	const playerData = usePlayerData();
 	const createCharacter = useCreateCharacter();
 

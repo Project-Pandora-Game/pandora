@@ -3,7 +3,7 @@ import React, { ComponentType, ReactElement, useEffect, lazy, Suspense } from 'r
 import { useNavigate } from 'react-router';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
 import { useBrowserStorage } from '../browserStorage';
-import { usePlayerData } from '../character/player';
+import { usePlayerData } from '../components/gameContext/playerContextProvider';
 import { AccountSettings } from '../components/accountSettings/accountSettings';
 import { CharacterCreate } from '../components/characterCreate/characterCreate';
 import { CharacterSelect } from '../components/characterSelect/characterSelect';

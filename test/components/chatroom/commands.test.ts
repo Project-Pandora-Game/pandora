@@ -1,9 +1,10 @@
 import { ParseCommands } from '../../../src/components/chatroom/commands';
 import { SocketIOShardConnector } from '../../../src/networking/socketio_shard_connector';
+import { ChatRoomHandlerMock } from '../../gameContext/chatRoomContectProvider';
 import { MockConnectionInfo } from '../../mocks/networking/mockShardConnector';
 
 describe('ParseCommands()', () => {
-	const mockShardConnector = new SocketIOShardConnector(MockConnectionInfo());
+	const mockShardConnector = new SocketIOShardConnector(MockConnectionInfo(), { value: null }, new ChatRoomHandlerMock());
 	it('should return the text if is not a command', () => {
 		expect(ParseCommands(mockShardConnector, 'meh')).toBe('meh');
 	});
@@ -12,7 +13,7 @@ describe('ParseCommands()', () => {
 		expect(ParseCommands(mockShardConnector, '////how is this for yah')).toBe('///how is this for yah');
 	});
 
-	it('should ', () => {
+	it.skip('should ', () => {
 		expect(ParseCommands(mockShardConnector, '/say hi')).toBe(true); // ??
 	});
 });

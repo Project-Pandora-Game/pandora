@@ -4,17 +4,13 @@ import {
 	EMPTY,
 	GetLogger,
 	IChatRoomDirectoryConfig,
-	IChatRoomFullInfo,
 	IDirectoryAccountInfo,
 	IDirectoryShardInfo,
 	IsChatroomName,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { usePlayerData } from '../../character/player';
-import { Room } from '../../character/room';
 import { DirectoryConnector } from '../../networking/directoryConnector';
-import { useObservable } from '../../observable';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
 import {
@@ -24,6 +20,7 @@ import {
 } from '../gameContext/directoryConnectorContextProvider';
 import './chatroomAdmin.scss';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
+import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 
 function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoomDirectoryConfig {
 	return {
@@ -53,7 +50,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	const navigate = useNavigate();
 	const currentAccount = useCurrentAccount();
 	const createRoom = useCreateRoom();
-	const roomData: IChatRoomFullInfo | null = useObservable(Room.data);
+	const roomData = useChatRoomData();
 	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<IChatRoomDirectoryConfig>, action: Partial<IChatRoomDirectoryConfig>) => {
 		const result: Partial<IChatRoomDirectoryConfig> = {
 			...oldState,
@@ -76,7 +73,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	}, {});
 	const directoryConnector = useDirectoryConnector();
 	const shards = useShards();
-	const accountId = usePlayerData()?.accountId;
+	const accountId = currentAccount?.id;
 
 	if (!creation && !roomData) {
 		return <Navigate to='/chatroom_select' />;

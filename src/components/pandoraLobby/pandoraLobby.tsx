@@ -1,10 +1,9 @@
 import React, { ReactElement } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { Room } from '../../character/room';
-import { useObservable } from '../../observable';
+import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 
 export function PandoraLobby(): ReactElement {
-	const roomData = useObservable(Room.data);
+	const roomData = useChatRoomData();
 	if (roomData) {
 		return <Navigate to='/chatroom' />;
 	}

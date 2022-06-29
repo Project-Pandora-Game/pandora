@@ -53,7 +53,12 @@ function SetupLogging(): void {
 	SetConsoleOutput(LogLevel.DEBUG);
 }
 
+let versionCheckRunning = false;
 function CheckVersion() {
+	if (versionCheckRunning) {
+		return;
+	}
+	versionCheckRunning = true;
 	fetch(`/version.json?${Date.now()}`)
 		.then((response) => response.json())
 		.then((data: { gitCommitHash: string }) => {
@@ -66,5 +71,8 @@ function CheckVersion() {
 		})
 		.catch((error) => {
 			logger.error('Failed to check version.json: ', error);
+		})
+		.finally(() => {
+			versionCheckRunning = false;
 		});
 }

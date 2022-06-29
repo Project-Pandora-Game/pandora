@@ -273,6 +273,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		}
 		return Promise.allSettled(
 			Array.from(images.values())
+				.filter((image) => image.trim())
 				.map((image) =>
 					loader
 						.loadFileArrayBuffer(image)

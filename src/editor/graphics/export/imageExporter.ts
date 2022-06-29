@@ -1,5 +1,5 @@
-import type { Size, Rectangle } from 'pandora-common/dist/assets';
-import { Application, Container, Extract, Texture, Mesh, MeshGeometry, MeshMaterial } from 'pixi.js';
+import { Size, Rectangle, CharacterSize } from 'pandora-common/dist/assets';
+import { Application, Container, Extract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture } from 'pixi.js';
 import Delaunator from 'delaunator';
 import { GraphicsCharacter } from '../../../graphics/graphicsCharacter';
 
@@ -35,13 +35,15 @@ export class ImageExorter {
 	}
 
 	characterCut(character: GraphicsCharacter, rect: Rectangle, format: ImageFormat): string {
-		this._app.renderer.resize(rect.width, rect.height);
-		const child = this._app.stage.addChild(character);
-		child.x = -rect.x;
-		child.y = -rect.y;
-		const result = this._extract.base64(child, `image/${format}`);
-		this._app.stage.removeChild(child);
-		return result;
+		const fullSize = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT };
+		const renderTexture = RenderTexture.create(fullSize);
+		this._app.renderer.render(character, { renderTexture });
+		return this.textureCut(renderTexture, fullSize, [
+			[rect.x, rect.y],
+			[rect.x + rect.width, rect.y],
+			[rect.x + rect.width, rect.y + rect.height],
+			[rect.x, rect.y + rect.height],
+		], format);
 	}
 }
 
@@ -61,9 +63,6 @@ class TextureCutter extends Container {
 		);
 		const mesh = new Mesh(geometry, new MeshMaterial(texture));
 		this.addChild(mesh);
-
-		this.width = width;
-		this.height = height;
 
 		mesh.x = points.reduce((x, point) => Math.min(x, point[0]), Infinity) * -1;
 		mesh.y = points.reduce((y, point) => Math.min(y, point[1]), Infinity) * -1;

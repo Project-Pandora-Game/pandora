@@ -54,6 +54,9 @@ function BuildComponentStackSection(errorInfo?: ErrorInfo): ReportSection {
 function BuildDirectoryDataSection(debugData: DebugData): ReportSection {
 	let details = '';
 	if (debugData) {
+		if (debugData.editor) {
+			return { heading: 'Editor', details: 'Editor is running' };
+		}
 		const { directoryState, directoryStatus } = debugData;
 		details += `Directory state: ${ directoryState ? DirectoryConnectionState[directoryState] : 'unknown' }\n`;
 		details += 'Directory status:';

@@ -9,10 +9,12 @@ import { Button } from '../../../components/common/Button/Button';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
 import { AssetTreeViewCategory, GetAssetManagerEditor } from '../../assets/assetManager';
-import { Editor, EDITOR_ALPHA_ICONS } from '../../editor';
+import { EDITOR_ALPHA_ICONS } from '../../editor';
+import { useEditor } from '../../editorContextProvider';
 import './assets.scss';
 
-export function AssetsUI({ editor }: { editor: Editor; }): ReactElement {
+export function AssetsUI(): ReactElement {
+	const editor = useEditor();
 	const view = GetAssetManagerEditor().assetTreeView;
 	const items = useCharacterAppearanceItems(editor.character);
 	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
@@ -21,31 +23,32 @@ export function AssetsUI({ editor }: { editor: Editor; }): ReactElement {
 		<div className='asset-ui'>
 			<h3>Equipped</h3>
 			<ul>
-				{items.map((item) => <ItemElement key={ item.id } item={ item } editor={ editor } />)}
+				{items.map((item) => <ItemElement key={ item.id } item={ item } />)}
 			</ul>
 			<h3>Edited assets</h3>
 			<ul>
-				{ editorAssets.map((assetId) => <EditedAssetElement key={ assetId } editor={ editor } assetId={ assetId } />) }
+				{ editorAssets.map((assetId) => <EditedAssetElement key={ assetId } assetId={ assetId } />) }
 			</ul>
 			<h3>All assets</h3>
 			<ul>
-				{view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } editor={ editor } />)}
+				{view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } />)}
 			</ul>
 		</div>
 	);
 }
 
-function AssetCategoryElement({ category, editor }: { category: AssetTreeViewCategory; editor: Editor; }): ReactElement {
+function AssetCategoryElement({ category }: { category: AssetTreeViewCategory; }): ReactElement {
 	return (
 		<ToggleLi name={ category.name } state={ category }>
 			<ul>
-				{category.assets.map((asset) => <AssetElement key={ asset.id } asset={ asset } editor={ editor } />)}
+				{category.assets.map((asset) => <AssetElement key={ asset.id } asset={ asset } />)}
 			</ul>
 		</ToggleLi>
 	);
 }
 
-function AssetElement({ asset, editor }: { asset: Asset; editor: Editor; }): ReactElement {
+function AssetElement({ asset }: { asset: Asset; }): ReactElement {
+	const editor = useEditor();
 	const navigate = useNavigate();
 
 	function add() {
@@ -70,7 +73,8 @@ function AssetElement({ asset, editor }: { asset: Asset; editor: Editor; }): Rea
 	);
 }
 
-function EditedAssetElement({ assetId, editor }: { assetId: AssetId; editor: Editor; }): ReactElement {
+function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
+	const editor = useEditor();
 	const navigate = useNavigate();
 
 	function add() {
@@ -96,7 +100,8 @@ function EditedAssetElement({ assetId, editor }: { assetId: AssetId; editor: Edi
 }
 
 const itemOpenState = new WeakMap<Item, ToggleLiState>();
-function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactElement {
+function ItemElement({ item }: { item: Item; }): ReactElement {
+	const editor = useEditor();
 	const appearance = editor.character.appearance;
 
 	const navigate = useNavigate();
@@ -140,13 +145,14 @@ function ItemElement({ item, editor }: { item: Item; editor: Editor; }): ReactEl
 			</div>
 		}>
 			<ul>
-				{graphics && graphics.allLayers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } editor={ editor } />)}
+				{graphics && graphics.allLayers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />)}
 			</ul>
 		</ToggleLi>
 	);
 }
 
-function AssetLayerElement({ layer, editor }: { layer: AssetGraphicsLayer; editor: Editor }): ReactElement {
+function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+	const editor = useEditor();
 	const alphaIndex = useSyncExternalStore<number>((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {
 			if (changedLayer === layer) {

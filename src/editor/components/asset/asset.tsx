@@ -7,11 +7,13 @@ import { Button } from '../../../components/common/Button/Button';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { Editor, EDITOR_ALPHA_ICONS, useEditorAssetLayers } from '../../editor';
+import { EDITOR_ALPHA_ICONS, useEditorAssetLayers } from '../../editor';
+import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import './asset.scss';
 
-export function AssetUI({ editor }: { editor: Editor }) {
+export function AssetUI() {
+	const editor = useEditor();
 	const selectedAsset = useObservable(editor.targetAsset);
 
 	if (!selectedAsset) {
@@ -25,8 +27,8 @@ export function AssetUI({ editor }: { editor: Editor }) {
 	return (
 		<div className='editor-assetui'>
 			<h3>Editing: { StripAssetIdPrefix(selectedAsset.id) }</h3>
-			<AssetExportImport editor={ editor } asset={ selectedAsset } />
-			<AssetLayerList editor={ editor } asset={ selectedAsset } />
+			<AssetExportImport asset={ selectedAsset } />
+			<AssetLayerList asset={ selectedAsset } />
 			<Button onClick={ () => {
 				selectedAsset.addLayer();
 			} }>
@@ -53,12 +55,12 @@ export function AssetUI({ editor }: { editor: Editor }) {
 					Add image
 				</span>
 			</label>
-			<AssetImageList editor={ editor } asset={ selectedAsset } />
+			<AssetImageList asset={ selectedAsset } />
 		</div>
 	);
 }
 
-function AssetExportImport({ asset }: { editor: Editor; asset: EditorAssetGraphics; }): ReactElement {
+function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
 	return (
 		<div className='exportImport'>
 			<Button onClick={ () => void asset.downloadZip() } className='flex-2' >Export</Button>
@@ -102,20 +104,22 @@ function AssetExportImport({ asset }: { editor: Editor; asset: EditorAssetGraphi
 	);
 }
 
-function AssetLayerList({ editor, asset }: { editor: Editor; asset: EditorAssetGraphics; }): ReactElement {
+function AssetLayerList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
+	const editor = useEditor();
 	const layers = useEditorAssetLayers(asset, true);
 
 	return (
 		<div className='layerList'>
 			<Button onClick={ () => editor.targetLayer.value = null } className='slim' >Unselect layer</Button>
 			<ul>
-				{ layers.map((layer) => <AssetLayerListLayer key={ `${layer.index}` + (layer.isMirror ? 'm' : '') } editor={ editor } asset={ asset } layer={ layer } />) }
+				{ layers.map((layer) => <AssetLayerListLayer key={ `${layer.index}` + (layer.isMirror ? 'm' : '') } asset={ asset } layer={ layer } />) }
 			</ul>
 		</div>
 	);
 }
 
-function AssetLayerListLayer({ editor, asset, layer }: { editor: Editor; asset: EditorAssetGraphics; layer: AssetGraphicsLayer; }): ReactElement {
+function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: AssetGraphicsLayer; }): ReactElement {
+	const editor = useEditor();
 	const isSelected = useObservable(editor.targetLayer) === layer;
 
 	const alphaIndex = useSyncExternalStore<number>((changed) => {
@@ -156,7 +160,8 @@ function AssetLayerListLayer({ editor, asset, layer }: { editor: Editor; asset: 
 	);
 }
 
-function AssetImageList({ editor, asset }: { editor: Editor; asset: EditorAssetGraphics; }): ReactElement {
+function AssetImageList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
+	const editor = useEditor();
 	const imageList = useSyncExternalStore(editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
 
 	const elements: ReactElement[] = [];

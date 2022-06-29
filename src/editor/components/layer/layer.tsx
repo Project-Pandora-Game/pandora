@@ -6,12 +6,13 @@ import { Button } from '../../../components/common/Button/Button';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
-import { Editor } from '../../editor';
+import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../parsing';
 import './layer.scss';
 
-export function LayerUI({ editor }: { editor: Editor }): ReactElement {
+export function LayerUI(): ReactElement {
+	const editor = useEditor();
 	const selectedLayer = useObservable(editor.targetLayer);
 	const asset = selectedLayer?.asset;
 

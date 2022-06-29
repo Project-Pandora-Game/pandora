@@ -7,6 +7,7 @@ import { DirectoryConnectionState } from '../../networking/directoryConnector';
 import { ShardConnectionState } from '../../networking/shardConnector';
 
 export interface DebugData {
+	editor?: true;
 	directoryState?: DirectoryConnectionState;
 	directoryStatus?: IDirectoryStatus;
 	shardState?: ShardConnectionState;

@@ -4,10 +4,11 @@ import { useCharacterAppearancePose } from '../../../character/character';
 import { Button } from '../../../components/common/Button/Button';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { useObservable } from '../../../observable';
-import { Editor } from '../../editor';
+import { useEditor } from '../../editorContextProvider';
 import './bones.scss';
 
-export function BoneUI({ editor }: { editor: Editor }): ReactElement {
+export function BoneUI(): ReactElement {
+	const editor = useEditor();
 	const character = editor.character;
 
 	const bones = useCharacterAppearancePose(character);

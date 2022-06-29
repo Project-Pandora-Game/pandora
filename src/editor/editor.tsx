@@ -19,6 +19,7 @@ import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
 import { cloneDeep } from 'lodash';
+import { useEditor } from './editorContextProvider';
 
 const logger = GetLogger('Editor');
 
@@ -236,7 +237,8 @@ function TabSelector(): ReactElement {
 	);
 }
 
-export function EditorView({ editor }: { editor: Editor }): ReactElement {
+export function EditorView(): ReactElement {
+	const editor = useEditor();
 	const refSetup = useGraphicsScene<HTMLDivElement>(editor.setupScene);
 	const refResult = useGraphicsScene<HTMLDivElement>(editor.resultScene);
 
@@ -246,11 +248,11 @@ export function EditorView({ editor }: { editor: Editor }): ReactElement {
 				<div className='editor-ui'>
 					<TabSelector />
 					<Routes>
-						<Route path='*' element={ <AssetsUI editor={ editor } /> } />
-						<Route path='/bones' element={ <BoneUI editor={ editor } /> } />
-						<Route path='/asset' element={ <AssetUI editor={ editor } /> } />
-						<Route path='/layer' element={ <LayerUI editor={ editor } /> } />
-						<Route path='/points' element={ <PointsUI editor={ editor } /> } />
+						<Route path='*' element={ <AssetsUI /> } />
+						<Route path='/bones' element={ <BoneUI /> } />
+						<Route path='/asset' element={ <AssetUI /> } />
+						<Route path='/layer' element={ <LayerUI /> } />
+						<Route path='/points' element={ <PointsUI /> } />
 					</Routes>
 				</div>
 				<div ref={ refSetup } className='editor-scene' />

@@ -4,13 +4,15 @@ import { GetAssetManager } from '../../../assets/assetManager';
 import { Button } from '../../../components/common/Button/Button';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
-import { Editor, useEditorAssetLayers } from '../../editor';
+import { useEditorAssetLayers } from '../../editor';
+import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { DraggablePoint } from '../../graphics/draggable';
 import { ParseTransforms, SerializeTransforms } from '../../parsing';
 import './points.scss';
 
-export function PointsUI({ editor }: { editor: Editor }): ReactElement {
+export function PointsUI(): ReactElement {
+	const editor = useEditor();
 	const selectedLayer = useObservable(editor.targetLayer);
 	const selectedPoint = useObservable(editor.targetPoint);
 	const asset = selectedLayer?.asset;

@@ -1,13 +1,16 @@
-import React, { useCallback, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
 import { LoadAssetsFromDirectLink, LoadAssetsFromFileSystem } from './assetLoader';
 import { Button } from '../components/common/Button/Button';
 import '../index.scss';
 import { Editor, EditorView } from './editor';
-import { Observable, useObservable } from '../observable';
+import { EditorContextProvider, useMaybeEditor, useSetEditor } from './editorContextProvider';
+import { TOAST_OPTIONS_ERROR } from '../persistentToast';
+import { useEvent } from '../common/useEvent';
+import { GraphicsManager } from '../assets/graphicsManager';
 
 const logger = GetLogger('init');
 
@@ -23,8 +26,10 @@ async function Start(): Promise<void> {
 	logger.info('Starting...');
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
-			<ToastContainer theme='dark' />
-			<AssetLoaderElement />
+			<EditorContextProvider>
+				<ToastContainer theme='dark' />
+				<AssetLoaderElement />
+			</EditorContextProvider>
 		</React.StrictMode>,
 	);
 	return Promise.resolve();
@@ -37,75 +42,66 @@ function SetupLogging(): void {
 	SetConsoleOutput(LogLevel.DEBUG);
 }
 
-const EditorInstance = new Observable<Editor | null>(null);
-
 function AssetLoaderElement() {
-	const editor = useObservable(EditorInstance);
+	const editor = useMaybeEditor();
+	const setEditor = useSetEditor();
 	const [pending, setPending] = useState(false);
 
-	if (editor) {
-		return (
-			<EditorView editor={ editor } />
-		);
-	}
-
-	return (
-		<div style={ { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexFlow: 'column', gap: '1rem' } }>
-			<ButtonLoadFromFileSystem pending={ pending } setPending={ setPending } />
-			<ButtonLoadDirectLink pending={ pending } setPending={ setPending } />
-		</div>
-	);
-}
-
-function ButtonLoadFromFileSystem({ pending, setPending }: { pending: boolean, setPending: (value: boolean) => void, }) {
-	const supported = 'showDirectoryPicker' in window;
-	const [text, setText] = useState(supported ? 'Load Assets From File System' : 'Browser does not support File System Access API');
-
-	const loadFileSystem = useCallback(async () => {
-		if (pending || !supported)
-			return;
-
-		setPending(true);
-		setText('Loading');
-		try {
-			const manager = await LoadAssetsFromFileSystem();
-			EditorInstance.value = new Editor(manager);
-			// @ts-expect-error: Expose editor instance to console
-			window.editor = EditorInstance.value;
-		} catch (e) {
-			logger.error('Failed to load assets:', e);
-			setPending(false);
-			setText('Load Assets From File System');
-		}
-	}, [pending, setPending, supported]);
-
-	return (
-		<Button onClick={ () => void loadFileSystem() } disabled={ pending || !supported }>{text}</Button>
-	);
-}
-
-function ButtonLoadDirectLink({ pending, setPending }: { pending: boolean, setPending: (value: boolean) => void, }) {
-	const [text, setText] = useState('Load Assets From Direct Link');
-
-	const loadDirectLink = useCallback(async () => {
+	const load = useEvent(async (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => {
 		if (pending)
 			return;
 
 		setPending(true);
-		setText('Loading');
+		setLoading(true);
+
 		try {
-			const manager = await LoadAssetsFromDirectLink();
-			EditorInstance.value = new Editor(manager);
-			// @ts-expect-error: Expose editor instance to console
-			window.editor = EditorInstance.value;
+			const manager = await loadManager();
+			setEditor(new Editor(manager));
 		} catch (e) {
-			logger.error('Failed to load assets:', e);
+			toast.error(`Failed to load: ${e as string}`, TOAST_OPTIONS_ERROR);
+			logger.error('Failed to load:', e);
 			setPending(false);
-			setText('Load Assets From Direct Link');
+			setLoading(false);
 		}
-	}, [pending, setPending]);
+	});
+
+	if (editor) {
+		return (
+			<EditorView />
+		);
+	}
+
+	const supported = 'showDirectoryPicker' in window;
 
 	return (
-		<Button onClick={ () => void loadDirectLink() } disabled={ pending }>{text}</Button>
+		<div style={ { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexFlow: 'column', gap: '1rem' } }>
+			{ supported ? <ButtonLoadFromFileSystem pending={ pending } load={ load } /> : null }
+			<ButtonLoadDirectLink pending={ pending } load={ load } />
+		</div>
+	);
+}
+
+function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }) {
+	const [loading, setLoading] = useState(false);
+
+	return (
+		<Button onClick={ () => void load(setLoading, LoadAssetsFromFileSystem) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From File System' }</Button>
+	);
+}
+
+function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }) {
+	const [loading, setLoading] = useState(false);
+	const editor = useMaybeEditor();
+	const autoloaded = useRef(false);
+
+	useEffect(() => {
+		if (!autoloaded.current && !editor && !pending && !('showDirectoryPicker' in window)) {
+			autoloaded.current = true;
+			void load(setLoading, LoadAssetsFromDirectLink);
+		}
+	}, [editor, load, pending]);
+
+	return (
+		<Button onClick={ () => void load(setLoading, LoadAssetsFromDirectLink) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From Direct Link' }</Button>
 	);
 }

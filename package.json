@@ -38,6 +38,7 @@
 		"socket.io-client": "^4.4.1"
 	},
 	"devDependencies": {
+		"@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
 		"@swc/cli": "^0.1.57",
 		"@swc/core": "^1.2.177",
 		"@swc/jest": "^0.2.20",
@@ -76,6 +77,8 @@
 		"postcss-flexbugs-fixes": "^5.0.2",
 		"postcss-loader": "^6.2.1",
 		"postcss-preset-env": "^7.2.3",
+		"react-refresh": "^0.14.0",
+		"react-refresh-typescript": "^2.0.5",
 		"rimraf": "^3.0.2",
 		"sass": "^1.49.0",
 		"sass-loader": "^12.4.0",

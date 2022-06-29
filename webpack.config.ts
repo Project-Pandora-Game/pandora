@@ -3,6 +3,8 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import { config } from 'dotenv';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin, { loader as miniCssExtractLoader } from 'mini-css-extract-plugin';
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import ReactRefreshTypeScript from 'react-refresh-typescript';
 import { join } from 'path';
 import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
@@ -104,6 +106,8 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 			filename: '[name].[contenthash].css',
 			chunkFilename: '[name].[contenthash].chunk.css',
 		}));
+	} else {
+		plugins.push(new ReactRefreshWebpackPlugin());
 	}
 
 	return plugins;
@@ -118,6 +122,9 @@ function GenerateRules(env: WebpackEnv): RuleSetRule[] {
 				loader: 'ts-loader',
 				options: {
 					configFile: 'tsconfig.src.json',
+					getCustomTransformers: () => ({
+						before: [!env.prod && ReactRefreshTypeScript()].filter(Boolean),
+					}),
 				},
 			}],
 		},

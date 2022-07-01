@@ -5,7 +5,7 @@ import { GetLogger } from 'pandora-common';
 import { useCallback, useContext, useMemo } from 'react';
 import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
-import { Observable, useObservable } from '../../observable';
+import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { ChatParser } from '../chatroom/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
@@ -103,7 +103,10 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 	public readonly characters = new Observable<readonly Character[]>([]);
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
 	private readonly _messageNotify: (data: NotificationData) => void;
-	public player: PlayerCharacter | null = null;
+	private readonly _playerObservable: ReadonlyObservable<PlayerCharacter | null>;
+	public get player(): PlayerCharacter | null {
+		return this._playerObservable.value;
+	}
 
 	get playerId() {
 		return this.player?.data.id;
@@ -139,8 +142,9 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 		return id;
 	}
 
-	constructor(messageNotify: (data: NotificationData) => void) {
+	constructor(messageNotify: (data: NotificationData) => void, player: ReadonlyObservable<PlayerCharacter | null>) {
 		this._messageNotify = messageNotify;
+		this._playerObservable = player;
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMOUT / 2);
 	}
 

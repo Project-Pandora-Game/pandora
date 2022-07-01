@@ -1,36 +1,27 @@
 @import '../../styles/utils';
 
 .wardrobe {
-	display: grid;
-	grid-template:
-		"characterPreview currentInventory otherInventory" auto
-		/ auto 33% 33%;
+	display: flex;
+	flex-flow: row;
+	gap: 1em;
+
+	height: 100%;
 
 	.characterPreview {
-		grid-area: characterPreview;
-
-		&>div {
-			margin-top: 1em;
-			height: calc(100vh - 7em);
-			width: 33.33vw
+		height: 100%;
+		width: max(min(20em, 90vw), 33vw);
+		flex-shrink: 0;
+		canvas {
+			height: 100%;
+			width: 100%;
 		}
 	}
 
-	.currentInventory {
-		grid-area: currentInventory;
-		padding: 1em;
-	}
-
-	.otherInventory {
-		grid-area: otherInventory;
-		padding: 1em;
-
-	}
 }
 
 .inventoryView {
-	width: 100%;
 	height: 100%;
+	flex: 1 1 0px;
 	background-color: #ddd;
 	border: solid black 2px;
 	display: grid;
@@ -38,6 +29,7 @@
 		"toolbar" 3em
 		"list" auto
 		/ auto;
+	min-width: min(20em, 90vw);
 
 	.toolbar {
 		grid-area: toolbar;
@@ -60,23 +52,22 @@
 		}
 	}
 
-	.list {
+	.list,.grid {
 		grid-area: list;
+		overflow: auto;
 		display: flex;
-		flex-direction: column;
 		padding: 3px;
 		gap: 3px;
 	}
 
+	.list {
+		flex-flow: column;
+	}
+
 	.grid {
-		grid-area: list;
-		display: flex;
-		flex-direction: row;
-		flex-wrap: wrap;
+		flex-flow: row wrap;
 		align-items: flex-start;
 		align-content: flex-start;
-		padding: 3px;
-		gap: 3px;
 	}
 }
 
@@ -95,7 +86,7 @@
 	}
 
 	&.listMode {
-		padding: 0 0.5em;
+		padding: 3px 0.5em;
 		height: 2em;
 		align-items: center;
 		gap: 0.5em;

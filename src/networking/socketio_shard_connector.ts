@@ -42,7 +42,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 	private readonly _state: Observable<ShardConnectionState> = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
 	private readonly _room: IChatRoomHandler;
-	private readonly _player: { value: PlayerCharacter | null };
+	private readonly _player: Observable<PlayerCharacter | null>;
 
 	private loadResolver: ((arg: this) => void) | null = null;
 
@@ -55,7 +55,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		return this._connectionInfo;
 	}
 
-	constructor(info: IDirectoryCharacterConnectionInfo, player: { value: PlayerCharacter | null }, room: IChatRoomHandler) {
+	constructor(info: IDirectoryCharacterConnectionInfo, player: Observable<PlayerCharacter | null>, room: IChatRoomHandler) {
 		super(CreateConnection(info), logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
 		this._player = player;
@@ -210,4 +210,3 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		this._player.value.update(data);
 	}
 }
-

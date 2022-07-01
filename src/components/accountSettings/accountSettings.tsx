@@ -8,6 +8,7 @@ import { Button } from '../common/Button/Button';
 import './accountSettings.scss';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { GIT_DESCRIBE } from '../../config/Environment';
+import { uniq } from 'lodash';
 
 export function AccountSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -127,7 +128,6 @@ function AccountRoleList({ account }: { account: IDirectoryAccountInfo }): React
 						<th>Role</th>
 						<th>Visible</th>
 						<th>Expires</th>
-						<th>Save</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -139,22 +139,25 @@ function AccountRoleList({ account }: { account: IDirectoryAccountInfo }): React
 }
 
 function AccountRole({ role, data }: { role: AccountRole, data?: { expires?: number } }): ReactElement {
+	const connector = useDirectoryConnector();
 	const visibleRoles = useCurrentAccount()?.settings.visibleRoles || [];
-	const initialVisible = visibleRoles.includes(role);
-	const [visible, setVisible] = useState(initialVisible);
+	const visible = visibleRoles.includes(role);
+
+	const onSetVisible = (e: React.ChangeEvent<HTMLInputElement>) => {
+		if (e.target.checked) {
+			connector.sendMessage('changeSettings', { visibleRoles: uniq([...visibleRoles, role]) });
+		} else {
+			connector.sendMessage('changeSettings', { visibleRoles: visibleRoles.filter((r) => r !== role) });
+		}
+	};
 
 	return (
 		<tr>
 			<td>{ role }</td>
 			<td>
-				<input type='checkbox' checked={ visible } onChange={ (e) => setVisible(e.target.checked) } />
+				<input type='checkbox' checked={ visible } onChange={ onSetVisible } />
 			</td>
 			<td>{ data ? data.expires ? `${new Date(data.expires).toLocaleString()}` : 'Never' : '-' }</td>
-			<td>
-				{ visible !== initialVisible && (
-					<Button className='slim' onClick={ () => alert('not implemented') }>Save</Button>
-				) }
-			</td>
 		</tr>
 	);
 }

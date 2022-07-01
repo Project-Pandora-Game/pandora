@@ -1,10 +1,12 @@
+import type { PlayerCharacter } from '../../src/character/player';
 import { ShardConnectionState } from '../../src/networking/shardConnector';
 import { SocketIOShardConnector } from '../../src/networking/socketio_shard_connector';
+import { Observable } from '../../src/observable';
 import { ChatRoomHandlerMock } from '../gameContext/chatRoomContectProvider';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
 
 describe('SocketIOShardConnector', () => {
-	const mockShardConnector = new SocketIOShardConnector(MockConnectionInfo(), { value: null }, new ChatRoomHandlerMock());
+	const mockShardConnector = new SocketIOShardConnector(MockConnectionInfo(), new Observable<PlayerCharacter | null>(null), new ChatRoomHandlerMock());
 
 	it('default state should be NONE', () => {
 		expect(mockShardConnector.state.value).toBe(ShardConnectionState.NONE);

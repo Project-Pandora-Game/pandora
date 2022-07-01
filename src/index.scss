@@ -34,13 +34,13 @@ div.main {
 
 	& > * {
 		flex: 1;
-		margin: 1em;
+		padding: 1em;
+		min-width: fit-content;
 	}
 
 	& > footer {
-		flex: initial;
-		margin: 0;
-		width: 100%;
+		flex: none;
+		align-self: stretch;
 		height: 1.5em;
 		padding: 0.2em;
 		font-style: italic;

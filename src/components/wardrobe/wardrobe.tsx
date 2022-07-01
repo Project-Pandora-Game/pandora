@@ -52,7 +52,7 @@ function Wardrobe({ character }: { character: Character }): ReactElement | null 
 	const characterData = useCharacterData(character);
 	const assetList = useObservable(GetAssetManager().assetList);
 	const appearance = useCharacterAppearanceItems(character);
-	const [ref] = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
+	const ref = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
 
 	if (!player || !characterData)
 		return null;
@@ -90,11 +90,9 @@ function Wardrobe({ character }: { character: Character }): ReactElement | null 
 
 	return (
 		<div className='wardrobe'>
-			<div className='characterPreview'  >
-				<div ref={ ref } />
-			</div>
-			<div className='currentInventory'><InventoryView title='Currently worn items' items={ items } context={ context } /></div>
-			<div className='otherInventory'><InventoryView title='Create and use a new item' items={ assets } context={ context } /></div>
+			<div className='characterPreview' ref={ ref } />
+			<InventoryView title='Currently worn items' items={ items } context={ context } />
+			<InventoryView title='Create and use a new item' items={ assets } context={ context } />
 		</div>
 	);
 }

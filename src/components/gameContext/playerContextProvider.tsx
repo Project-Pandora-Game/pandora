@@ -1,22 +1,15 @@
-import { useState, useMemo, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import type { CharacterId, ICharacterData } from 'pandora-common';
 import { PlayerCharacter } from '../../character/player';
 import { playerContext } from './stateContextProvider';
+import { Observable, useObservable } from '../../observable';
 
 export function usePlayer(): PlayerCharacter | null {
-	return useContext(playerContext).player;
+	return useObservable(usePlayerContext());
 }
 
-export function usePlayerContext(): { value: PlayerCharacter | null } {
-	const { player, setPlayer } = useContext(playerContext);
-	return useMemo(() => ({
-		get value() {
-			return player;
-		},
-		set value(p: PlayerCharacter | null) {
-			setPlayer(p);
-		},
-	}), [player, setPlayer]);
+export function usePlayerContext(): Observable<PlayerCharacter | null> {
+	return useContext(playerContext);
 }
 
 export function usePlayerData() {

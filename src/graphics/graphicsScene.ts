@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, InteractionManager, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Application, Container, InteractionManager, Sprite, Texture } from 'pixi.js';
 import * as PixiViewport from 'pixi-viewport';
 import { useRef, useEffect, useLayoutEffect } from 'react';
 import { TypedEventEmitter } from '../event';
@@ -7,9 +7,6 @@ import { Character } from '../character/character';
 import { GraphicsCharacter } from './graphicsCharacter';
 import { useObservable } from '../observable';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
-
-const GRAPHICS_HEIGHT = CharacterSize.HEIGHT;
-const GRAPHICS_WIDTH = CharacterSize.WIDTH;
 
 export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	private readonly _app: Application;
@@ -34,27 +31,11 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 			antialias: true,
 		});
 		this.container = new PixiViewport.Viewport({
-			worldHeight: GRAPHICS_HEIGHT,
-			worldWidth: GRAPHICS_WIDTH,
+			worldHeight: CharacterSize.HEIGHT,
+			worldWidth: CharacterSize.WIDTH,
 			interaction: this._app.renderer.plugins.interaction as InteractionManager,
 		});
-		this.container
-			.drag({ clampWheel: true })
-			.wheel({ smooth: 10, percent: 0.1 })
-			.bounce({
-				ease: 'easeOutQuad',
-				friction: 0,
-				sides: 'all',
-				time: 500,
-				underflow: 'center',
-				bounceBox: new Rectangle(-20, -20, GRAPHICS_WIDTH + 20, GRAPHICS_HEIGHT + 20),
-			})
-			.pinch({ noDrag: false, percent: 2 })
-			.decelerate({ friction: 0.7 });
 		this.container.sortableChildren = true;
-		const border = this.container.addChild(new Graphics());
-		border.zIndex = 2;
-		border.clear().lineStyle(2, 0x404040).drawRect(0, 0, GRAPHICS_WIDTH, GRAPHICS_HEIGHT);
 		this._app.stage.addChild(this.container);
 	}
 
@@ -65,6 +46,7 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 			this.element.removeChild(this._app.view);
 			this.element = undefined;
 		}
+		this.element = element;
 		element.appendChild(this._app.view);
 		this._app.resizeTo = element;
 		this.resizeObserver.observe(element);
@@ -81,14 +63,14 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 
 	resize(): void {
 		this._app.resize();
-		const width = this._app.screen.width;
-		const height = this._app.screen.height;
+		const { width, height } = this._app.screen;
 		this.container.resize(width, height);
 		this.container.clampZoom({
-			minScale: Math.min(height / GRAPHICS_HEIGHT, width / GRAPHICS_WIDTH) * 0.9,
+			minScale: Math.min(height / CharacterSize.HEIGHT, width / CharacterSize.WIDTH) * 0.9,
 			maxScale: 2,
 		});
 		this.container.fit();
+		this.container.moveCenter(CharacterSize.WIDTH / 2, CharacterSize.HEIGHT / 2);
 		this.emit('resize', undefined);
 	}
 
@@ -150,7 +132,7 @@ export function useGraphicsScene<T extends HTMLElement>(scene: GraphicsScene): R
 	return ref;
 }
 
-export function useGraphicsSceneCharacter<T extends HTMLElement>(scene: GraphicsScene, character: Character): [React.RefObject<T>] {
+export function useGraphicsSceneCharacter<T extends HTMLElement>(scene: GraphicsScene, character: Character): React.RefObject<T> {
 	const ref = useRef<T>(null);
 	const manager = useObservable(GraphicsManagerInstance);
 
@@ -172,5 +154,5 @@ export function useGraphicsSceneCharacter<T extends HTMLElement>(scene: Graphics
 		return undefined;
 	}, [scene, ref]);
 
-	return [ref];
+	return ref;
 }

@@ -44,7 +44,7 @@ export function RenderWithProviders(
 
 export function RenderWithRouterAndProviders(
 	element: ReactElement,
-	props: Omit<ProvidersProps & TestRouterProps, 'children'>,
+	props: Omit<Partial<ProvidersProps> & TestRouterProps, 'children'> = {},
 	options?: RenderOptions,
 ): RenderResult {
 	const {
@@ -53,7 +53,7 @@ export function RenderWithRouterAndProviders(
 		...providersProps
 	} = props;
 	return render(
-		<Providers { ...providersProps }>
+		<Providers { ...MockProvidersProps(providersProps) }>
 			<TestRouter initialEntries={ initialEntries } onPathnameUpdate={ onPathnameUpdate }>
 				{ element }
 			</TestRouter>

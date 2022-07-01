@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React from 'react';
 import { ForgotPasswordForm } from '../../../../src/components/login/forms/forgotPasswordForm';
-import { RenderWithRouter } from '../../../testUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
 import { INVALID_EMAILS } from '../loginTestData';
 
@@ -13,7 +13,7 @@ describe('Forgot Password Form', () => {
 
 	beforeEach(() => {
 		user = userEvent.setup();
-		RenderWithRouter(<ForgotPasswordForm />, {
+		RenderWithRouterAndProviders(<ForgotPasswordForm />, {
 			initialEntries: ['/forgot_password'],
 			onPathnameUpdate: (newPathname) => {
 				pathname = newPathname;

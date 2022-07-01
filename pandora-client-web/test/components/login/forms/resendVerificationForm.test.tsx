@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React from 'react';
 import { ResendVerificationForm } from '../../../../src/components/login/forms/resendVerificationForm';
-import { RenderWithRouter } from '../../../testUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
 import { INVALID_EMAILS } from '../loginTestData';
 
@@ -13,7 +13,7 @@ describe('Resend Verification Email Form', () => {
 
 	beforeEach(() => {
 		user = userEvent.setup();
-		RenderWithRouter(<ResendVerificationForm />, {
+		RenderWithRouterAndProviders(<ResendVerificationForm />, {
 			initialEntries: ['/resend_verification_email'],
 			onPathnameUpdate: (newPathname) => {
 				pathname = newPathname;

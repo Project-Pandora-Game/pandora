@@ -7,10 +7,9 @@ import { useErrorHandler } from '../../common/useErrorHandler';
 import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
 import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
-import { UnimplementedDirectoryConnector } from '../../networking/unimplementedDirectoryConnector';
 import { useObservable } from '../../observable';
 
-let directoryConnectorInstance: DirectoryConnector;
+let directoryConnectorInstance: DirectoryConnector | undefined;
 let connectionPromise: Promise<DirectoryConnector>;
 
 /** Factory function responsible for providing the concrete directory connector implementation to the application */
@@ -26,15 +25,15 @@ try {
 	directoryConnectorInstance = CreateDirectoryConnector();
 	connectionPromise = directoryConnectorInstance.connect();
 } catch (err) { // Catch errors in connector creation so that they can be handled by an error boundary
-	directoryConnectorInstance = new UnimplementedDirectoryConnector();
+	directoryConnectorInstance = undefined;
 	connectionPromise = Promise.reject(err);
 }
 
-export const directoryConnectorContext = createContext<DirectoryConnector>(new UnimplementedDirectoryConnector());
+export const directoryConnectorContext = createContext<DirectoryConnector | undefined>(undefined);
 
 const logger = GetLogger('DirectoryConnectorContextProvider');
 
-export function DirectoryConnectorContextProvider({ children }: ChildrenProps): ReactElement {
+export function DirectoryConnectorContextProvider({ children }: ChildrenProps): ReactElement | null {
 	const errorHandler = useErrorHandler();
 
 	useEffect(() => {
@@ -50,6 +49,9 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 
 	useDebugExpose('directoryConnector', directoryConnectorInstance);
 
+	if (!directoryConnectorInstance)
+		return null;
+
 	return (
 		<directoryConnectorContext.Provider value={ directoryConnectorInstance }>
 			{ children }
@@ -58,7 +60,11 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 }
 
 export function useDirectoryConnector(): DirectoryConnector {
-	return useContext(directoryConnectorContext);
+	const connector = useContext(directoryConnectorContext);
+	if (!connector) {
+		throw new Error('Attempt to access DirectoryConnector outside of context');
+	}
+	return connector;
 }
 
 export function useDirectoryChangeListener(

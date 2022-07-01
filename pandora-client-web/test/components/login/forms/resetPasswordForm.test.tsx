@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React from 'react';
 import { ResetPasswordForm } from '../../../../src/components/login/forms/resetPasswordForm';
-import { RenderWithRouter } from '../../../testUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
 import { INVALID_FORMAT_TOKENS, INVALID_LENGTH_TOKENS, INVALID_USERNAMES } from '../loginTestData';
 
@@ -17,7 +17,7 @@ describe('Reset Password Form', () => {
 
 	beforeEach(() => {
 		user = userEvent.setup();
-		RenderWithRouter(<ResetPasswordForm />, {
+		RenderWithRouterAndProviders(<ResetPasswordForm />, {
 			initialEntries: ['/reset_password'],
 			onPathnameUpdate: (newPathname) => {
 				pathname = newPathname;

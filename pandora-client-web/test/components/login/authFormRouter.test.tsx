@@ -10,7 +10,7 @@ import { RegistrationForm } from '../../../src/components/login/forms/registrati
 import { ResendVerificationForm } from '../../../src/components/login/forms/resendVerificationForm';
 import { ResetPasswordForm } from '../../../src/components/login/forms/resetPasswordForm';
 import { authPageComponents } from '../../../src/routing/authRoutingData';
-import { RenderWithRouter } from '../../testUtils';
+import { RenderWithRouterAndProviders } from '../../testUtils';
 
 describe('AuthFormRouter', () => {
 	it.each(authPageComponents)('should render an error message on the path %p if SubtleCrypto is not available', (path) => {
@@ -46,7 +46,7 @@ describe('AuthFormRouter', () => {
 			state: { username: 'username', password: 'password' },
 			setState: noop,
 		});
-		return RenderWithRouter(
+		return RenderWithRouterAndProviders(
 			<authFormDataContext.Provider value={ contextState }>
 				<AuthFormRouter component={ component } />
 			</authFormDataContext.Provider>,

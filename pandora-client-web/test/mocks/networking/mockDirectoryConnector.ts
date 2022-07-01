@@ -10,8 +10,8 @@ import { TestEventEmitter } from '../testEventEmitter';
 
 /** Mock directory connector implementation for testing */
 export class MockDirectoryConnector implements DirectoryConnector {
-	public readonly authToken = new Observable<AuthToken | undefined>(MockAuthToken());
-	public readonly currentAccount = new Observable<IDirectoryAccountInfo | null>(MockAccountInfo());
+	public readonly authToken = new Observable<AuthToken | undefined>(undefined);
+	public readonly currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
 	public readonly directoryStatus = new Observable<IDirectoryStatus>({ time: 0 });
 	public readonly state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 

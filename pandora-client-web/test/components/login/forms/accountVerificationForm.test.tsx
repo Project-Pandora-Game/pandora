@@ -4,7 +4,7 @@ import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React, { ReactElement } from 'react';
 import { authFormDataContext, AuthFormDataState } from '../../../../src/components/login/authFormDataProvider';
 import { AccountVerificationForm } from '../../../../src/components/login/forms/accountVerificationForm';
-import { RenderWithRouter } from '../../../testUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
 import { INVALID_FORMAT_TOKENS, INVALID_LENGTH_TOKENS } from '../loginTestData';
 
@@ -98,7 +98,7 @@ describe('Account Verification Form', () => {
 	}
 
 	function renderForm(element: ReactElement): RenderResult {
-		return RenderWithRouter(element, {
+		return RenderWithRouterAndProviders(element, {
 			initialEntries: ['/login_verify'],
 			onPathnameUpdate: (newPathname) => {
 				pathname = newPathname;

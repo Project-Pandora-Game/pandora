@@ -4,13 +4,23 @@ import React, { createContext, ReactElement, useContext, useEffect, useRef } fro
 import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
+import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
+import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
 import { UnimplementedDirectoryConnector } from '../../networking/unimplementedDirectoryConnector';
 import { useObservable } from '../../observable';
-import { CreateDirectoryConnector } from './connectorFactoryContextProvider';
 
 let directoryConnectorInstance: DirectoryConnector;
 let connectionPromise: Promise<DirectoryConnector>;
+
+/** Factory function responsible for providing the concrete directory connector implementation to the application */
+function CreateDirectoryConnector(): DirectoryConnector {
+	if (!DIRECTORY_ADDRESS) {
+		throw new Error('Unable to create directory connector: missing DIRECTORY_ADDRESS');
+	}
+
+	return SocketIODirectoryConnector.create(DIRECTORY_ADDRESS);
+}
 
 try {
 	directoryConnectorInstance = CreateDirectoryConnector();

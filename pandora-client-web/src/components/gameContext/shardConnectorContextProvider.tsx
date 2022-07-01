@@ -14,17 +14,22 @@ import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { ShardConnector } from '../../networking/shardConnector';
-import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
+import { LastSelectedCharacter, SocketIOShardConnector } from '../../networking/socketio_shard_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
-import { useChatRoomSetShard } from './chatRoomContextProvider';
-import { useShardConnectorFactory } from './connectorFactoryContextProvider';
+import { useChatRoomHandler, useChatRoomSetShard } from './chatRoomContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
 import { usePlayerContext } from './playerContextProvider';
 
 export interface ShardConnectorContextData {
 	shardConnector: ShardConnector | null;
 	setShardConnector: Dispatch<SetStateAction<ShardConnector | null>>;
+}
+
+export type ShardConnectorFactory = (info: IDirectoryCharacterConnectionInfo) => ShardConnector;
+
+export interface ConnectorFactoryContext {
+	shardConnectorFactory: ShardConnectorFactory;
 }
 
 export const shardConnectorContext = createContext<ShardConnectorContextData>({
@@ -34,7 +39,15 @@ export const shardConnectorContext = createContext<ShardConnectorContextData>({
 	},
 });
 
+export const connectorFactoryContext = createContext<ConnectorFactoryContext>({
+	shardConnectorFactory: () => {
+		throw new Error('Cannot create shard connector outside of connector factory context provider');
+	},
+});
+
 export function ShardConnectorContextProvider({ children }: ChildrenProps): ReactElement {
+	const player = usePlayerContext();
+	const room = useChatRoomHandler();
 	const [shardConnector, setShardConnector] = useState<ShardConnector | null>(null);
 
 	const contextData = useMemo<ShardConnectorContextData>(() => ({
@@ -42,14 +55,20 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 		setShardConnector,
 	}), [shardConnector]);
 
+	const context = useMemo<ConnectorFactoryContext>(() => ({
+		shardConnectorFactory: (info) => new SocketIOShardConnector(info, player, room),
+	}), [player, room]);
+
 	useDebugExpose('shardConnector', shardConnector);
 
 	return (
-		<shardConnectorContext.Provider value={ contextData }>
-			<ConnectionStateManager>
-				{ children }
-			</ConnectionStateManager>
-		</shardConnectorContext.Provider>
+		<connectorFactoryContext.Provider value={ context }>
+			<shardConnectorContext.Provider value={ contextData }>
+				<ConnectionStateManager>
+					{ children }
+				</ConnectionStateManager>
+			</shardConnectorContext.Provider>
+		</connectorFactoryContext.Provider>
 	);
 }
 
@@ -104,6 +123,10 @@ export function useShardConnector(): ShardConnector | null {
 export function useShardConnectionInfo(): IDirectoryCharacterConnectionInfo | null {
 	const shardConnector = useShardConnector();
 	return useNullableObservable(shardConnector?.connectionInfo);
+}
+
+function useShardConnectorFactory(): ShardConnectorFactory {
+	return useContext(connectorFactoryContext).shardConnectorFactory;
 }
 
 export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) => Promise<void> {

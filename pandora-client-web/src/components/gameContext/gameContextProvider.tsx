@@ -2,7 +2,6 @@ import React, { ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { DebugContextProvider } from '../error/debugContextProvider';
 import { RootErrorBoundary } from '../error/rootErrorBoundary';
-import { ConnectorFactoryContextProvider } from './connectorFactoryContextProvider';
 import { DirectoryConnectorContextProvider } from './directoryConnectorContextProvider';
 import { NotificationContextProvider } from './notificationContextProvider';
 import { StateContextProvider } from './stateContextProvider';
@@ -16,13 +15,11 @@ export function GameContextProvider({ children }: ChildrenProps): ReactElement {
 				<Dialogs />
 				<NotificationContextProvider>
 					<StateContextProvider>
-						<ConnectorFactoryContextProvider>
-							<DirectoryConnectorContextProvider>
-								<ShardConnectorContextProvider>
-									{ children }
-								</ShardConnectorContextProvider>
-							</DirectoryConnectorContextProvider>
-						</ConnectorFactoryContextProvider>
+						<DirectoryConnectorContextProvider>
+							<ShardConnectorContextProvider>
+								{ children }
+							</ShardConnectorContextProvider>
+						</DirectoryConnectorContextProvider>
 					</StateContextProvider>
 				</NotificationContextProvider>
 			</RootErrorBoundary>

@@ -95,10 +95,12 @@ export class SetupLayer extends EditorLayer {
 			this._allPoints.destroy();
 			this._allPoints = undefined;
 			const editor = this.character.editor;
-			if (editor.targetPoint.value && this._draggablePoints.includes(editor.targetPoint.value)) {
+			const shouldClear = editor.targetPoint.value && this._draggablePoints.includes(editor.targetPoint.value);
+			this._draggablePoints = [];
+			// Only clear the point after doing all cleanup, as it will trigger update
+			if (shouldClear) {
 				editor.targetPoint.value = null;
 			}
-			this._draggablePoints = [];
 		}
 	}
 
@@ -112,6 +114,10 @@ export class SetupLayer extends EditorLayer {
 		}
 
 		this.removeAllPoints();
+		// Don't create the points if they exist after `removeAllPoints`
+		// it might actually not remove the points, because it can cause update which recreates them
+		if (this._allPoints)
+			return;
 		this._allPoints = new Container();
 
 		this._draggablePoints = this.points.map((definition) => {

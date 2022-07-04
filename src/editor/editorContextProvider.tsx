@@ -1,6 +1,7 @@
 import { noop } from 'lodash';
 import React, { createContext, ReactElement, useContext, useEffect, useMemo, useState } from 'react';
 import type { ChildrenProps } from '../common/reactTypes';
+import { useDebugExpose } from '../common/useDebugExpose';
 import { DebugContextProvider, useDebugContext } from '../components/error/debugContextProvider';
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
 import { Editor } from './editor';
@@ -17,7 +18,7 @@ export function EditorContextProvider({ children }: ChildrenProps): ReactElement
 		setEditor,
 	}), [editor]);
 
-	// TODO: useDebugExpose('editor', editor);
+	useDebugExpose('editor', editor);
 
 	return (
 		<DebugContextProvider>

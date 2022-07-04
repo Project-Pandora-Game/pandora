@@ -189,7 +189,12 @@ function GenerateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
 				},
 			},
 		},
-		{ loader: 'sass-loader' },
+		{
+			loader: '@sekkmer/sass-loader',
+			options: {
+				ignoreErrors: !env.prod,
+			},
+		},
 	];
 
 	if (env.prod) {

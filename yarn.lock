@@ -891,6 +891,14 @@
     schema-utils "^3.0.0"
     source-map "^0.7.3"
 
+"@sekkmer/sass-loader@^13.0.2-H1":
+  version "13.0.2-H1"
+  resolved "https://registry.yarnpkg.com/@sekkmer/sass-loader/-/sass-loader-13.0.2-H1.tgz#0297ffd3ce13116ebf906ba79c735df855ab1712"
+  integrity sha512-Fmro1qITZ1iEuZ6Cn1CH7FclY1INasL90MmyBdMs43ez3zyHKr6NIxRP+d6kNSyKLp4TtrECnR3UkaK4+MbI2Q==
+  dependencies:
+    klona "^2.0.4"
+    neo-async "^2.6.2"
+
 "@sinonjs/commons@^1.7.0":
   version "1.8.3"
   resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.8.3.tgz#3802ddd21a50a949b6721ddd72da36e67e7f1b2d"
@@ -6121,14 +6129,6 @@ safe-buffer@5.2.1, safe-buffer@>=5.1.0, safe-buffer@^5.1.0, safe-buffer@~5.2.0:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/safer-buffer/-/safer-buffer-2.1.2.tgz#44fa161b0187b9549dd84bb91802f9bd8385cd6a"
   integrity sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==
-
-sass-loader@^12.4.0:
-  version "12.6.0"
-  resolved "https://registry.yarnpkg.com/sass-loader/-/sass-loader-12.6.0.tgz#5148362c8e2cdd4b950f3c63ac5d16dbfed37bcb"
-  integrity sha512-oLTaH0YCtX4cfnJZxKSLAyglED0naiYfNG1iXfU5w1LNZ+ukoA5DtyDIN5zmKVZwYNJP4KRc5Y3hkWga+7tYfA==
-  dependencies:
-    klona "^2.0.4"
-    neo-async "^2.6.2"
 
 sass@^1.49.0:
   version "1.52.0"

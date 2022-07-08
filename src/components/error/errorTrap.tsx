@@ -1,6 +1,7 @@
 import React, { ReactElement, useCallback, useEffect } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useErrorHandler } from '../../common/useErrorHandler';
+import { NODE_ENV } from '../../config/Environment';
 
 export const ErrorTrap = ({ children }: ChildrenProps): ReactElement => {
 	const handleError = useErrorHandler();
@@ -8,6 +9,8 @@ export const ErrorTrap = ({ children }: ChildrenProps): ReactElement => {
 	const errorListener = useCallback((event: ErrorEvent): void => {
 		if (event.error instanceof Error) {
 			handleError(event.error);
+		} else if (event.error === null && NODE_ENV !== 'production') {
+			return;
 		} else {
 			handleError(new Error(`Uncaught error: ${ String(event.error) }`));
 		}

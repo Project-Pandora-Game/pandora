@@ -1,4 +1,7 @@
 @import '../../styles/utils';
+@import '../../styles/constants';
+
+$header-height: 2em;
 
 .wardrobe {
 	display: flex;
@@ -11,19 +14,74 @@
 		height: 100%;
 		width: max(min(20em, 90vw), 33vw);
 		flex-shrink: 0;
+
 		canvas {
 			height: 100%;
 			width: 100%;
 		}
 	}
+}
 
+.wardrobe-ui {
+	display: flex;
+	flex-flow: row;
+	position: relative;
+	width: 100%;
+	gap: 1em;
+
+	>header {
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: $header-height;
+		display: flex;
+		width: 100%;
+
+		ul {
+			display: flex;
+			justify-content: center;
+			width: 100%;
+			margin: 0;
+			padding: 0;
+		}
+
+		li.tab {
+			display: inline-block;
+			padding: 0 0.5em;
+			border-bottom: $header-height solid;
+			border-bottom-color: $white;
+			border-left: 1em solid transparent;
+			border-right: 1em solid transparent;
+			border-top: 0;
+			line-height: $header-height;
+			color: $black;
+			cursor: pointer;
+			transition: border-bottom-color 0.2s ease-in-out;
+
+			&.active {
+				border-bottom-color: $black-primary;
+				color: $white;
+			}
+
+			&:hover:not(.active) {
+				border-bottom-color: $black-secondary;
+				color: $white;
+			}
+		}
+	}
+
+	> :not(header) {
+		position: relative;
+		top: $header-height;
+		height: calc(100% - $header-height);
+	}
 }
 
 .inventoryView {
 	height: 100%;
 	flex: 1 1 0px;
-	background-color: #ddd;
-	border: solid black 2px;
+	background-color: $grey-lighter;
+	border: solid $black 2px;
 	display: grid;
 	grid-template:
 		"toolbar" 3em
@@ -44,15 +102,24 @@
 		}
 
 		button {
-			border: solid black 1px;
+			border: solid $black 1px;
 			margin: 2px;
+
 			&.active {
-				background-color: #999;
+				background-color: $grey-mid;
 			}
+		}
+
+		input[type=text] {
+			padding: 0.2em;
+			height: 2em;
+			margin: auto;
+			width: 10vw;
 		}
 	}
 
-	.list,.grid {
+	.list,
+	.grid {
 		grid-area: list;
 		overflow: auto;
 		display: flex;
@@ -72,13 +139,13 @@
 }
 
 .inventoryViewItem {
-	border: solid black 1px;
-	background-color: #ccc;
+	border: solid $black 1px;
+	background-color: $grey-lighter;
 	display: flex;
 
 	&.allowed:hover {
 		cursor: pointer;
-		background-color: #aaa;
+		background-color: $grey-light;
 	}
 
 	&.blocked {
@@ -94,7 +161,7 @@
 		.itemPreview {
 			height: 1.5em;
 			width: 1.5em;
-			border: solid black 1px;
+			border: solid $black 1px;
 		}
 	}
 
@@ -107,7 +174,7 @@
 		.itemPreview {
 			width: 100%;
 			aspect-ratio: 1;
-			border: solid black 1px;
+			border: solid $black 1px;
 		}
 
 		.itemName {

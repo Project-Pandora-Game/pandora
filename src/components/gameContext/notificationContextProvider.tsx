@@ -1,10 +1,12 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
+import { VersionCheck } from '../versionCheck/versionCheck';
 
 export enum NotificationSource {
 	CHAT_MESSAGE = 'CHAT_MESSAGE',
 	DIRECT_MESSAGE = 'DIRECT_MESSAGE',
+	VERSION_CHANGED = 'VERSION_CHANGED',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -181,6 +183,7 @@ export function NotificationContextProvider({ children }: { children: React.Reac
 
 	return (
 		<notificationContext.Provider value={ context }>
+			<VersionCheck />
 			{children}
 		</notificationContext.Provider>
 	);

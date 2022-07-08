@@ -7,11 +7,13 @@ import { DirectoryConnectorContextProvider } from './directoryConnectorContextPr
 import { NotificationContextProvider } from './notificationContextProvider';
 import { StateContextProvider } from './stateContextProvider';
 import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
+import { Dialogs } from '../dialog/dialog';
 
 export function GameContextProvider({ children }: ChildrenProps): ReactElement {
 	return (
 		<DebugContextProvider>
 			<RootErrorBoundary>
+				<Dialogs />
 				<NotificationContextProvider>
 					<StateContextProvider>
 						<ConnectorFactoryContextProvider>

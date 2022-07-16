@@ -1,35 +1,42 @@
-import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
+import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult, DefineSocketInterface } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { CharacterId, ICharacterDataCreate, ICharacterPublicSettings } from '../character';
-import type { AppearanceAction } from '../assets';
-import type { IClientMessage, IChatRoomStatus } from '../chatroom/chat';
+import { CharacterDataCreateSchema, CharacterIdSchema, CharacterPublicSettingsSchema } from '../character';
+import { AppearanceActionSchema } from '../assets';
+import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
+import { z } from 'zod';
 
 /** Client->Shard handlers */
-interface ClientShard {
-	finishCharacterCreation(args: ICharacterDataCreate): { result: 'ok' | 'failed'; };
-	chatRoomMessage(arg: {
-		messages: IClientMessage[];
-		id: number;
-		editId?: number;
-	}): void;
-	chatRoomStatus(arg: {
-		status: IChatRoomStatus;
-		target?: CharacterId;
-	}): void;
-	chatRoomMessageAck(arg: {
-		lastTime: number;
-	}): void;
-	appearanceAction(action: AppearanceAction): void;
-	updateSettings(settings: Partial<ICharacterPublicSettings>): void;
-}
+export const ClientShardInSchema = z.object({
+	finishCharacterCreation: CharacterDataCreateSchema,
+	chatRoomMessage: z.object({
+		messages: z.array(ClientMessageSchema),
+		id: z.number().min(0),
+		editId: z.number().min(0).optional(),
+	}),
+	chatRoomStatus: z.object({
+		status: ChatRoomStatusSchema,
+		target: CharacterIdSchema.optional(),
+	}),
+	chatRoomMessageAck: z.object({
+		lastTime: z.number().min(0),
+	}),
+	appearanceAction: AppearanceActionSchema,
+	updateSettings: CharacterPublicSettingsSchema.partial(),
+});
 
-export type IClientShard = SocketInterface<ClientShard>;
-export type IClientShardArgument = RecordOnly<SocketInterfaceArgs<ClientShard>>;
-export type IClientShardUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<ClientShard>;
-export type IClientShardResult = SocketInterfaceResult<ClientShard>;
-export type IClientShardPromiseResult = SocketInterfacePromiseResult<ClientShard>;
-export type IClientShardNormalResult = SocketInterfaceNormalResult<ClientShard>;
-export type IClientShardResponseHandler = SocketInterfaceResponseHandler<ClientShard>;
-export type IClientShardOneshotHandler = SocketInterfaceOneshotHandler<ClientShard>;
-export type IClientShardMessageHandler<Context> = MessageHandler<ClientShard, Context>;
-export type IClientShardBase = ClientShard;
+export type IClientShardIn = z.infer<typeof ClientShardInSchema>;
+
+export type IClientShardOut = {
+	finishCharacterCreation: { result: 'ok' | 'failed'; };
+};
+
+export type IClientShardBase = DefineSocketInterface<IClientShardIn, IClientShardOut>;
+export type IClientShard = SocketInterface<IClientShardBase>;
+export type IClientShardArgument = RecordOnly<SocketInterfaceArgs<IClientShardBase>>;
+export type IClientShardUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<IClientShardBase>;
+export type IClientShardResult = SocketInterfaceResult<IClientShardBase>;
+export type IClientShardPromiseResult = SocketInterfacePromiseResult<IClientShardBase>;
+export type IClientShardNormalResult = SocketInterfaceNormalResult<IClientShardBase>;
+export type IClientShardResponseHandler = SocketInterfaceResponseHandler<IClientShardBase>;
+export type IClientShardOneshotHandler = SocketInterfaceOneshotHandler<IClientShardBase>;
+export type IClientShardMessageHandler<Context> = MessageHandler<IClientShardBase, Context>;

@@ -1,5 +1,5 @@
-import { EmitterWithAck, MESSAGE_HANDLER_DEBUG_MESSAGES } from '../../src';
-import { GetLogger, LogLevel } from '../../src/logging';
+import { EmitterWithAck, IEmpty, MESSAGE_HANDLER_DEBUG_MESSAGES } from '../../src';
+import { GetLogger, Logger, LogLevel } from '../../src/logging';
 import { ConnectionBase } from '../../src/networking/connection';
 
 const mockEmitCB = jest.fn((_event: string, _arg: unknown, _cb?: (arg: unknown) => void) => {/**nothing */ });
@@ -16,8 +16,17 @@ const mockLogger = GetLogger('mock');
 mockLogger.logMessage = mockLogMessage;
 MESSAGE_HANDLER_DEBUG_MESSAGES.add('debuggedType');
 
+class MockConnectionBase extends ConnectionBase<EmitterWithAck, IEmpty> {
+	constructor(socket: EmitterWithAck, logger: Logger) {
+		super(socket, logger);
+	}
+	protected onMessage(_messageType: string, _message: Record<string, unknown>, _callback?: ((arg: Record<string, unknown>) => void) | undefined): Promise<boolean> {
+		throw new Error('Method not implemented.');
+	}
+}
+
 describe('ConnectionBase', () => {
-	const mock = new ConnectionBase(mockEmitter, mockLogger);
+	const mock = new MockConnectionBase(mockEmitter, mockLogger);
 
 	describe('sendMessage()', () => {
 		it('should emit message with type', () => {

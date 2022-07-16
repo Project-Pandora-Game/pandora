@@ -1,12 +1,9 @@
-import { CreateStringValidator } from '../validation';
+import { z } from 'zod';
+import { zTemplateString } from '../validation';
 import { BoneDefinitionCompressed } from './graphics';
 
-export type AssetId = `a/${string}`;
-
-/** Test if a given value is a valid AssetId - `'a/{string}'` */
-export const IsAssetId = CreateStringValidator<AssetId>({
-	regex: /^a\//,
-});
+export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
+export type AssetId = z.infer<typeof AssetIdSchema>;
 
 export interface AssetDefinition {
 	id: AssetId;

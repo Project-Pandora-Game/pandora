@@ -1,5 +1,5 @@
+import { z } from 'zod';
 import type { KeysMatching } from '../utility';
-import { CreateOneOfValidator } from '../validation';
 
 export type IAccountRoleConfig = {
 	/** List of roles that are implied by this one, NOT transitive */
@@ -26,27 +26,25 @@ const ACCOUNT_ROLES_DEFINITION = {
 //#endregion
 
 export type AccountRole = keyof typeof ACCOUNT_ROLES_DEFINITION;
-
-export const IsAccountRole = CreateOneOfValidator<AccountRole>(
-	...(Object.keys(ACCOUNT_ROLES_DEFINITION) as AccountRole[]),
-);
+export const AccountRoleSchema = z.enum(Object.keys(ACCOUNT_ROLES_DEFINITION) as [AccountRole, ...(AccountRole)[]]);
 
 // Both validate and export the config
 export const ACCOUNT_ROLES_CONFIG: Readonly<Record<AccountRole, IAccountRoleConfig>> = ACCOUNT_ROLES_DEFINITION;
 
 export type ConfiguredAccountRole = KeysMatching<typeof ACCOUNT_ROLES_DEFINITION, { assignable: true; }>;
 
-export const IsConfiguredAccountRole = CreateOneOfValidator<ConfiguredAccountRole>(
+export const ConfiguredAccountRoleSchema = z.enum([
 	...Object
 		.entries(ACCOUNT_ROLES_CONFIG)
 		.filter((r): r is [ConfiguredAccountRole, IAccountRoleConfig] => !!r[1].assignable)
 		.map((r) => r[0]),
-);
+] as [ConfiguredAccountRole, ...(ConfiguredAccountRole)[]]);
 
 // Saved data definitions
-export type IRoleSelfInfo = {
-	expires?: number;
-};
+export const RoleSelfInfoSchema = z.object({
+	expires: z.number().optional(),
+});
+export type IRoleSelfInfo = z.infer<typeof RoleSelfInfoSchema>;
 
 export type IRoleManageInfo = IRoleSelfInfo & {
 	grantedBy: 'GitHub' | { id: number; username: string; };
@@ -55,7 +53,8 @@ export type IRoleManageInfo = IRoleSelfInfo & {
 
 type IAccountRoleInfoT<T> = Partial<Record<AccountRole, T>>;
 
-export type IAccountRoleInfo = IAccountRoleInfoT<IRoleSelfInfo>;
+export const AccountRoleInfoSchema = z.record(AccountRoleSchema, RoleSelfInfoSchema);
+export type IAccountRoleInfo = z.infer<typeof AccountRoleInfoSchema>;
 export type IAccountRoleManageInfo = IAccountRoleInfoT<IRoleManageInfo>;
 
 /**

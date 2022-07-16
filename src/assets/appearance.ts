@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
@@ -5,9 +6,10 @@ import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState } from './graphics';
-import { Item, ItemBundle, ItemId } from './item';
+import { Item, ItemBundleSchema, ItemId } from './item';
 
-export type BoneName = string;
+export const BoneNameSchema = z.string();
+export type BoneName = z.infer<typeof BoneNameSchema>;
 
 export enum ArmsPose {
 	FRONT,
@@ -19,12 +21,14 @@ export enum CharacterView {
 	BACK,
 }
 
-export interface AppearanceBundle {
-	items: ItemBundle[];
-	pose: Record<BoneName, number>;
-	handsPose: ArmsPose;
-	view: CharacterView;
-}
+export const AppearanceBundleSchema = z.object({
+	items: z.array(ItemBundleSchema),
+	pose: z.record(BoneNameSchema, z.number()),
+	handsPose: z.nativeEnum(ArmsPose),
+	view: z.nativeEnum(CharacterView),
+});
+
+export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
 
 export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
 	items: [],
@@ -116,7 +120,7 @@ export class Appearance {
 					ShuffleArray(possibleAssets);
 
 					for (const asset of possibleAssets) {
-						const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}`, asset)];
+						const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset)];
 						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
 							newItems = tryFix;
 							break;
@@ -156,7 +160,7 @@ export class Appearance {
 				ShuffleArray(possibleAssets);
 
 				for (const asset of possibleAssets) {
-					const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}`, asset)];
+					const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset)];
 					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
 						newItems = tryFix;
 						break;

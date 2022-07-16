@@ -3,6 +3,10 @@ export type Equals<X, Y> =
 	(<T>() => T extends X ? 1 : 2) extends
 	(<T>() => T extends Y ? 1 : 2) ? true : false;
 
+export type Satisfies<T, U extends T> = T extends U ? true : false;
+
+export type IsTrueType<T extends true> = T;
+
 export type MembersFirstArg<T> = {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	[K in keyof T]: T[K] extends ((arg: infer U, ...rest: any[]) => unknown) ? U : never;

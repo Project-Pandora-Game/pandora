@@ -22,6 +22,11 @@ export type TestBase = TestInternal; // required for new MessageHandler<TestBase
 
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DefineSocketInterface<In extends Record<string, Record<string, any>>, Out extends Partial<Record<keyof In, Record<string, any>>>> = {
+	[K in keyof In]: K extends keyof Out ? (args: In[K]) => Out[K] : (args: In[K]) => void;
+};
+
 /** */
 export type SocketInterfaceDefinition<T extends {
 	[K in keyof T]: (args: Record<string, unknown>) => void | Record<string, unknown>

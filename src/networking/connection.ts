@@ -6,7 +6,8 @@ import type { SocketInterfaceDefinition, SocketInterfaceOneshotHandler, SocketIn
 import type { IServerSocket, ServerRoom } from './room';
 import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config';
 import { EmitterWithAck, IncomingSocket, MockConnectionSocket } from './socket';
-import { CreateMessageHandlerOnAny, IMessageHandler } from './message_handler';
+import { BadMessageError, IMessageHandler } from './message_handler';
+import type { ZodObject, ZodTypeAny } from 'zod';
 
 export interface IConnectionSenderBase<T extends SocketInterfaceDefinition<T>> {
 	/**
@@ -44,7 +45,7 @@ export interface IConnection<T extends SocketInterfaceDefinition<T>, Undetermine
 }
 
 /** Allows sending messages */
-export class ConnectionBase<EmitterT extends EmitterWithAck, T extends SocketInterfaceDefinition<T>, Undetermined extends boolean = false> implements IConnectionBase<T, Undetermined> {
+export abstract class ConnectionBase<EmitterT extends EmitterWithAck, T extends SocketInterfaceDefinition<T>, Undetermined extends boolean = false> implements IConnectionBase<T, Undetermined> {
 	protected readonly socket: EmitterT;
 	protected readonly logger: Logger;
 
@@ -86,6 +87,66 @@ export class ConnectionBase<EmitterT extends EmitterWithAck, T extends SocketInt
 			});
 		});
 	}
+
+	/**
+	 * Handle incoming message from client
+	 * @param messageType - The type of incoming message
+	 * @param message - The message
+	 * @returns Promise of resolution of the message, for some messages also response data
+	 */
+	protected abstract onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean>;
+
+	protected validateMessage(_messageType: string, message: unknown): [true, Record<string, unknown>] | [false, string] {
+		if (!!message && typeof message === 'object' && !Array.isArray(message))
+			return [true, message as Record<string, unknown>];
+
+		return [false, `Invalid message type: ${typeof message}`];
+	}
+
+	protected handleMessage(messageType: unknown, message: unknown, callback: ((arg: Record<string, unknown>) => void) | undefined): void {
+		if (typeof messageType !== 'string') {
+			this.logger.warning(`Invalid messageType: ${typeof messageType}`);
+			return;
+		}
+		if (callback !== undefined && typeof callback !== 'function') {
+			this.logger.warning(`Message '${messageType}' callback is not a function: ${typeof callback}`);
+			return;
+		}
+
+		const [valid, data] = this.validateMessage(messageType, message);
+		if (!valid) {
+			this.logger.warning(`Bad message content for '${messageType}'`, data, message);
+			return;
+		}
+
+		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
+			this.logger.debug(`\u25BC message '${messageType}'${callback ? ' with callback' : ''}`, message);
+			if (callback) {
+				const outerCallback = callback;
+				callback = (cbResult: Record<string, unknown>) => {
+					this.logger.debug(`\u25B2 message '${messageType}' result:`, cbResult);
+					outerCallback(data);
+				};
+			}
+		}
+
+		this.onMessage(messageType, data, callback)
+			.then((success) => {
+				if (!success) {
+					this.logger.error(`Message '${messageType}' has no handler`);
+				}
+			})
+			.catch((error) => {
+				if (error === false)
+					return;
+
+				if (error instanceof BadMessageError) {
+					error.log(this.logger, messageType, message);
+				} else {
+					this.logger.error('Error processing message:', error, `\nMessage type: '${messageType}', message:`, message);
+				}
+			});
+	}
 }
 
 /** Allows sending and receiving messages */
@@ -97,7 +158,7 @@ export abstract class Connection<EmitterT extends IncomingSocket, T extends Sock
 		super(socket, logger);
 		this._server = server;
 		socket.onDisconnect = this.onDisconnect.bind(this);
-		socket.onMessage = CreateMessageHandlerOnAny(logger, (messageType, message, callback) => this.onMessage(messageType, message, callback));
+		socket.onMessage = this.handleMessage.bind(this);
 	}
 
 	get id(): string {
@@ -117,14 +178,6 @@ export abstract class Connection<EmitterT extends IncomingSocket, T extends Sock
 	protected onDisconnect(_reason: string): void {
 		[...this._rooms].forEach((room) => room.leave(this));
 	}
-
-	/**
-	 * Handle incoming message from client
-	 * @param messageType - The type of incoming message
-	 * @param message - The message
-	 * @returns Promise of resolution of the message, for some messages also response data
-	 */
-	protected abstract onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean>;
 
 	public joinRoom(room: ServerRoom<T>): void {
 		room.join(this._server, this);
@@ -162,5 +215,28 @@ export class MockConnection<T extends SocketInterfaceDefinition<T>> extends Conn
 
 	disconnect(): void {
 		this.socket.disconnect();
+	}
+}
+
+export abstract class ZodConnection<EmitterT extends IncomingSocket, Schema extends ZodObject<Record<string, ZodTypeAny>>, T extends SocketInterfaceDefinition<T>> extends Connection<EmitterT, T, true> {
+	private readonly _schema: Schema;
+
+	constructor(server: IServerSocket<T>, socket: EmitterT, logger: Logger, schema: Schema) {
+		super(server, socket, logger);
+		this._schema = schema;
+	}
+
+	protected override validateMessage(messageType: string, message: unknown): [true, Record<string, unknown>] | [false, string] {
+		if (!Object.hasOwn(this._schema.shape, messageType))
+			return [false, 'Invalid message type'];
+
+		const result = this._schema
+			.pick({ [messageType]: true })
+			.safeParse({ [messageType]: message });
+
+		if (result.success)
+			return [true, result.data[messageType] as Record<string, unknown>];
+
+		return [false, result.error.toString()];
 	}
 }

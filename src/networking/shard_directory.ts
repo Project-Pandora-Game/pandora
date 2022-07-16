@@ -1,48 +1,52 @@
-import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
+import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult, DefineSocketInterface } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterDataId, ICharacterDataUpdate } from '../character';
-import type { IDirectoryShardUpdate, IShardCharacterDefinition } from './directory_shard';
-import type { IChatRoomFullInfo } from '../chatroom';
-import type { IEmpty } from './empty';
+import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataUpdateSchema, CharacterIdSchema, ICharacterData } from '../character';
+import { IDirectoryShardUpdate, ShardCharacterDefinitionSchema } from './directory_shard';
+import { ChatRoomFullInfoSchema, ShardFeatureSchema } from '../chatroom';
+import { z } from 'zod';
 
-export type ShardFeature = 'development';
-const ShardFeatures: Record<ShardFeature, true> = {
-	development: true,
-};
-export const ShardFeatureList: readonly ShardFeature[] = Object.keys(ShardFeatures) as ShardFeature[];
+export const ShardDirectoryInSchema = z.object({
+	shardRegister: z.object({
+		shardId: z.string().nullable(),
+		publicURL: z.string(),
+		features: z.array(ShardFeatureSchema),
+		version: z.string(),
+		characters: z.array(ShardCharacterDefinitionSchema),
+		disconnectCharacters: z.array(CharacterIdSchema),
+		rooms: z.array(ChatRoomFullInfoSchema),
+	}),
+	shardRequestStop: z.object({}),
+	characterDisconnect: z.object({
+		id: CharacterIdSchema,
+		reason: z.enum(['timeout', 'error']),
+	}),
 
-/** Shard->Directory handlers */
-interface ShardDirectory {
-	shardRegister: (args: {
-		/** ID of the shard when re-connecting, null if new connection */
-		shardId: string | null;
-		publicURL: string;
-		features: ShardFeature[];
-		version: string;
-		characters: IShardCharacterDefinition[];
-		disconnectCharacters: CharacterId[];
-		rooms: IChatRoomFullInfo[];
-	}) => IDirectoryShardUpdate & {
-		shardId: string;
-	};
-	shardRequestStop: (args: IEmpty) => void;
-	characterDisconnect: (args: { id: CharacterId; reason: 'timeout' | 'error'; }) => void;
-
-	createCharacter: (args: ICharacterDataId) => ICharacterData;
+	createCharacter: CharacterDataIdSchema,
 
 	//#region Database
-	getCharacter: (args: ICharacterDataAccess) => ICharacterData;
-	setCharacter: (args: ICharacterDataUpdate) => { result: 'success' | 'invalidAccessId'; };
+	getCharacter: CharacterDataAccessSchema,
+	setCharacter: CharacterDataUpdateSchema,
 	//#endregion
-}
+});
 
-export type IShardDirectory = SocketInterface<ShardDirectory>;
-export type IShardDirectoryArgument = RecordOnly<SocketInterfaceArgs<ShardDirectory>>;
-export type IShardDirectoryUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<ShardDirectory>;
-export type IShardDirectoryResult = SocketInterfaceResult<ShardDirectory>;
-export type IShardDirectoryPromiseResult = SocketInterfacePromiseResult<ShardDirectory>;
-export type IShardDirectoryNormalResult = SocketInterfaceNormalResult<ShardDirectory>;
-export type IShardDirectoryResponseHandler = SocketInterfaceResponseHandler<ShardDirectory>;
-export type IShardDirectoryOneshotHandler = SocketInterfaceOneshotHandler<ShardDirectory>;
-export type IShardDirectoryMessageHandler<Context> = MessageHandler<ShardDirectory, Context>;
-export type IShardDirectoryBase = ShardDirectory;
+export type ShardDirectoryIn = z.infer<typeof ShardDirectoryInSchema>;
+
+export type ShardDirectoryOut = {
+	shardRegister: IDirectoryShardUpdate & {
+		shardId: string;
+	};
+	createCharacter: ICharacterData;
+	getCharacter: ICharacterData;
+	setCharacter: { result: 'success' | 'invalidAccessId'; };
+};
+
+export type IShardDirectoryBase = DefineSocketInterface<ShardDirectoryIn, ShardDirectoryOut>;
+export type IShardDirectory = SocketInterface<IShardDirectoryBase>;
+export type IShardDirectoryArgument = RecordOnly<SocketInterfaceArgs<IShardDirectoryBase>>;
+export type IShardDirectoryUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<IShardDirectoryBase>;
+export type IShardDirectoryResult = SocketInterfaceResult<IShardDirectoryBase>;
+export type IShardDirectoryPromiseResult = SocketInterfacePromiseResult<IShardDirectoryBase>;
+export type IShardDirectoryNormalResult = SocketInterfaceNormalResult<IShardDirectoryBase>;
+export type IShardDirectoryResponseHandler = SocketInterfaceResponseHandler<IShardDirectoryBase>;
+export type IShardDirectoryOneshotHandler = SocketInterfaceOneshotHandler<IShardDirectoryBase>;
+export type IShardDirectoryMessageHandler<Context> = MessageHandler<IShardDirectoryBase, Context>;

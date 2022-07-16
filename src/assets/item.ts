@@ -1,18 +1,16 @@
-import { CreateStringValidator } from '../validation';
+import { z } from 'zod';
+import { zTemplateString } from '../validation';
 import { Asset } from './asset';
-import { AssetId } from './definitions';
+import { AssetIdSchema } from './definitions';
 
-export type ItemId = `i/${string}`;
+export const ItemIdSchema = zTemplateString<`i/${string}`>(z.string(), /^i\//);
+export type ItemId = z.infer<typeof ItemIdSchema>;
 
-/** Test if a given value is a valid ItemId - `'i/{string}'` */
-export const IsItemId = CreateStringValidator<ItemId>({
-	regex: /^i\//,
+export const ItemBundleSchema = z.object({
+	id: ItemIdSchema,
+	asset: AssetIdSchema,
 });
-
-export interface ItemBundle {
-	id: ItemId;
-	asset: AssetId;
-}
+export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
 /**
  * Class representing an equipped item

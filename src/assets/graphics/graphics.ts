@@ -1,14 +1,17 @@
-import type { ArrayCompressType } from '../../utility';
-import { CreateArrayValidator, CreateMaybeValidator, CreateObjectValidator, CreateOneOfValidator, CreateTupleValidator, CreateUnionValidator, IsBoolean, IsNumber, IsString } from '../../validation';
+import { z } from 'zod';
 import type { AssetId } from '../definitions';
 
-export type Coordinates = { x: number, y: number; };
-export const IsCoordinates = CreateObjectValidator<Coordinates>({ x: IsNumber, y: IsNumber });
+export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
+export type Coordinates = z.infer<typeof CoordinatesSchema>;
 
-export type CoordinatesCompressed = ArrayCompressType<Coordinates, ['x', 'y']>;
-export const IsCoordinatesCompressed = CreateTupleValidator<CoordinatesCompressed>(IsNumber, IsNumber);
+export const CoordinatesCompressedSchema = z.tuple([CoordinatesSchema.shape.x, CoordinatesSchema.shape.y]);
+export type CoordinatesCompressed = z.infer<typeof CoordinatesCompressedSchema>;
 
-export type Size = { width: number, height: number; };
+export const SizeSchema = z.object({
+	width: z.number(),
+	height: z.number(),
+});
+export type Size = z.infer<typeof SizeSchema>;
 
 export const CharacterSize = {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -17,47 +20,39 @@ export const CharacterSize = {
 	HEIGHT: 1500,
 } as const;
 
-export type Rectangle = Coordinates & Size;
+export const RectangleSchema = CoordinatesSchema.merge(SizeSchema);
+export type Rectangle = z.infer<typeof RectangleSchema>;
 
 export const CONDITION_OPERATORS = ['=', '<', '<=', '>', '>=', '!='] as const;
-export type ConditionOperator = string & (typeof CONDITION_OPERATORS)[number];
-export const IsConditionOperator = CreateOneOfValidator<ConditionOperator>(...CONDITION_OPERATORS);
+export const ConditionOperatorSchema = z.enum(CONDITION_OPERATORS);
+export type ConditionOperator = z.infer<typeof ConditionOperatorSchema>;
 
-export interface AtomicCondition {
-	bone: string;
-	operator: ConditionOperator;
-	value: number;
-}
-export const IsAtomicCondition = CreateObjectValidator<AtomicCondition>({
-	bone: IsString,
-	operator: IsConditionOperator,
-	value: IsNumber,
+export const AtomicConditionSchema = z.object({
+	bone: z.string(),
+	operator: ConditionOperatorSchema,
+	value: z.number(),
+});
+export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
+
+export const ConditionSchema = z.array(z.array(AtomicConditionSchema));
+export type Condition = z.infer<typeof ConditionSchema>;
+
+const TransformDefinitionBaseSchema = z.object({
+	bone: z.string(),
+	condition: ConditionSchema.optional(),
 });
 
-export type Condition = AtomicCondition[][];
-export const IsCondition = CreateArrayValidator({ validator: CreateArrayValidator({ validator: IsAtomicCondition }) });
-
-export type TransformDefinition = { bone: string; condition?: Condition; } & ({
-	type: 'rotate';
-	value: number;
-} | {
-	type: 'shift';
-	value: Coordinates;
-});
-export const IsTransformDefinition = CreateUnionValidator<TransformDefinition>(
-	CreateObjectValidator({
-		bone: IsString,
-		condition: CreateMaybeValidator(IsCondition),
-		type: CreateOneOfValidator('rotate'),
-		value: IsNumber,
+export const TransformDefinitionSchema = z.discriminatedUnion('type', [
+	TransformDefinitionBaseSchema.extend({
+		type: z.literal('rotate'),
+		value: z.number(),
 	}),
-	CreateObjectValidator({
-		bone: IsString,
-		condition: CreateMaybeValidator(IsCondition),
-		type: CreateOneOfValidator('shift'),
-		value: IsCoordinates,
+	TransformDefinitionBaseSchema.extend({
+		type: z.literal('shift'),
+		value: CoordinatesSchema,
 	}),
-);
+]);
+export type TransformDefinition = z.infer<typeof TransformDefinitionSchema>;
 
 export interface BoneDefinition {
 	name: string;
@@ -74,24 +69,19 @@ export interface BoneState {
 	readonly rotation: number;
 }
 
-export interface PointDefinition {
-	pos: CoordinatesCompressed;
-	transforms: TransformDefinition[];
-	mirror: boolean;
-	pointType?: string;
-}
-export const IsPointDefinition = CreateObjectValidator<PointDefinition>({
-	pos: IsCoordinatesCompressed,
-	transforms: CreateArrayValidator({ validator: IsTransformDefinition }),
-	mirror: IsBoolean,
-	pointType: CreateMaybeValidator(IsString),
+export const PointDefinitionSchema = z.object({
+	pos: CoordinatesCompressedSchema,
+	transforms: z.array(TransformDefinitionSchema),
+	mirror: z.boolean(),
+	pointType: z.string().optional(),
 });
+export type PointDefinition = z.infer<typeof PointDefinitionSchema>;
 
-export type LayerImageOverride = { image: string; condition: Condition; };
-export const IsLayerImageOverride = CreateObjectValidator<LayerImageOverride>({
-	image: IsString,
-	condition: IsCondition,
+export const LayerImageOverrideSchema = z.object({
+	image: z.string(),
+	condition: ConditionSchema,
 });
+export type LayerImageOverride = z.infer<typeof LayerImageOverrideSchema>;
 
 export const LAYER_PRIORITIES = [
 	'BACKGROUND',
@@ -108,54 +98,38 @@ export const LAYER_PRIORITIES = [
 	'OVERLAY',
 ] as const;
 
-export type LayerPriority = string & (typeof LAYER_PRIORITIES)[number];
-export const IsLayerPriority = CreateOneOfValidator<LayerPriority>(...LAYER_PRIORITIES);
+export const LayerPrioritySchema = z.enum(LAYER_PRIORITIES);
+export type LayerPriority = z.infer<typeof LayerPrioritySchema>;
 
-export const enum LayerMirror {
+export enum LayerMirror {
 	NONE,
 	/** Only imageOverrides are mirrored, points are selected */
 	SELECT,
 	/** Mirrors everything and creates the mirrored image */
 	FULL,
 }
-export const IsLayerMirror = CreateOneOfValidator<LayerMirror>(LayerMirror.NONE, LayerMirror.SELECT, LayerMirror.FULL);
+export const LayerMirrorSchema = z.nativeEnum(LayerMirror);
 
-export const enum LayerSide {
+export enum LayerSide {
 	LEFT,
 	RIGHT,
 }
 
-export type LayerDefinition = Rectangle & {
-	name?: string;
-	image: string;
-	priority: LayerPriority;
-	points: PointDefinition[] | number;
-	imageOverrides: LayerImageOverride[];
-	pointType?: string[];
-	mirror: LayerMirror;
-};
-export const IsLayerDefinition = CreateObjectValidator<LayerDefinition>({
-	// Rectangle
-	x: IsNumber,
-	y: IsNumber,
-	height: IsNumber,
-	width: IsNumber,
-	// LayerDefinition
-	name: CreateMaybeValidator(IsString),
-	image: IsString,
-	priority: IsLayerPriority,
-	points: CreateUnionValidator<PointDefinition[] | number>(CreateArrayValidator({ validator: IsPointDefinition }), IsNumber),
-	imageOverrides: CreateArrayValidator({ validator: IsLayerImageOverride }),
-	pointType: CreateMaybeValidator(CreateArrayValidator({ validator: IsString })),
-	mirror: IsLayerMirror,
+export const LayerDefinitionSchema = RectangleSchema.extend({
+	name: z.string().optional(),
+	image: z.string(),
+	priority: LayerPrioritySchema,
+	points: z.array(PointDefinitionSchema).or(z.number()),
+	imageOverrides: z.array(LayerImageOverrideSchema),
+	pointType: z.array(z.string()).optional(),
+	mirror: LayerMirrorSchema,
 });
+export type LayerDefinition = z.infer<typeof LayerDefinitionSchema>;
 
-export type AssetGraphicsDefinition = {
-	layers: LayerDefinition[];
-};
-export const IsAssetGraphicsDefinition = CreateObjectValidator<AssetGraphicsDefinition>({
-	layers: CreateArrayValidator({ validator: IsLayerDefinition }),
-}, { noExtraKey: true });
+export const AssetGraphicsDefinitionSchema = z.object({
+	layers: z.array(LayerDefinitionSchema),
+});
+export type AssetGraphicsDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
 
 export interface AssetsGraphicsDefinitionFile {
 	assets: Record<AssetId, AssetGraphicsDefinition>;

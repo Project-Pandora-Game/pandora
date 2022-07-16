@@ -1,49 +1,52 @@
-import type { IAccountRoleInfo } from '../account';
-import type { AppearanceBundle } from '../assets';
-import { CreateArrayValidator, CreateObjectValidator, CreateStringValidator } from '../validation';
+import { z } from 'zod';
+import { AccountRoleInfoSchema } from '../account';
+import { AppearanceBundleSchema } from '../assets';
+import { ZodMatcher, zTemplateString } from '../validation';
 
-export type CharacterId = `c${number}`;
+export const CharacterIdSchema = zTemplateString<`c${number}`>(z.string(), /^c[1-9][0-9]{0,15}$/);
+export type CharacterId = z.infer<typeof CharacterIdSchema>;
 
 /**
  * Test if a given value is a valid CharacterId - `'c{number}'`
  */
-export const IsCharacterId = CreateStringValidator({
-	regex: /^c[1-9][0-9]{0,15}$/,
-}) as (str: unknown) => str is CharacterId;
+export const IsCharacterId = ZodMatcher(CharacterIdSchema);
 
-export const IsCharacterIdArray = CreateArrayValidator<CharacterId>({ validator: IsCharacterId });
-
-export type ICharacterPublicSettings = {
-	labelColor: string;
-};
+export const CharacterPublicSettingsSchema = z.object({
+	labelColor: z.string().regex(/^#[0-9a-f]{6}$/i),
+});
+export type ICharacterPublicSettings = z.infer<typeof CharacterPublicSettingsSchema>;
 
 export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSettings> = {
 	labelColor: '#ffffff',
 };
 
-export const IsCharacterPublicSettings = CreateObjectValidator<Partial<ICharacterPublicSettings>>({
-	labelColor: CreateStringValidator({ regex: /^#[0-9a-f]{6}$/i }),
-}, { partial: true });
+export const CharacterPublicDataSchema = z.object({
+	id: CharacterIdSchema,
+	accountId: z.number(),
+	name: z.string(),
+	appearance: AppearanceBundleSchema.optional(),
+	settings: CharacterPublicSettingsSchema,
+});
 
-export type ICharacterPublicData = {
-	id: CharacterId;
-	accountId: number;
-	name: string;
-	appearance?: AppearanceBundle;
-	settings: ICharacterPublicSettings;
-};
+export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;
 
-export type ICharacterData = ICharacterPublicData & {
-	inCreation?: true;
-	created: number;
-	accessId: string;
-	roles?: IAccountRoleInfo;
-};
+export const CharacterDataSchema = CharacterPublicDataSchema.merge(z.object({
+	inCreation: z.literal(true).optional(),
+	created: z.number(),
+	accessId: z.string(),
+	roles: AccountRoleInfoSchema.optional(),
+}));
 
-export type ICharacterDataCreate = Pick<ICharacterData, 'name'>;
-export type ICharacterDataAccess = Pick<ICharacterData, 'id' | 'accessId'>;
-export type ICharacterDataUpdate = Partial<Omit<ICharacterData, 'inCreation' | 'accountId' | 'created'>> & ICharacterDataAccess;
-export type ICharacterDataId = Pick<ICharacterData, 'id'>;
+export type ICharacterData = z.infer<typeof CharacterDataSchema>;
+
+export const CharacterDataCreateSchema = CharacterDataSchema.pick({ name: true });
+export type ICharacterDataCreate = z.infer<typeof CharacterDataCreateSchema>;
+export const CharacterDataAccessSchema = CharacterDataSchema.pick({ id: true, accessId: true });
+export type ICharacterDataAccess = z.infer<typeof CharacterDataAccessSchema>;
+export const CharacterDataUpdateSchema = CharacterDataSchema.omit({ inCreation: true, accountId: true, created: true }).partial().merge(CharacterDataAccessSchema);
+export type ICharacterDataUpdate = z.infer<typeof CharacterDataUpdateSchema>;
+export const CharacterDataIdSchema = CharacterDataSchema.pick({ id: true });
+export type ICharacterDataId = z.infer<typeof CharacterDataIdSchema>;
 
 export type ICharacterSelfInfo = {
 	id: CharacterId;

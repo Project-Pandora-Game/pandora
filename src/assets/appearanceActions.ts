@@ -1,53 +1,28 @@
-import { CharacterId, IsCharacterId } from '../character';
+import { z } from 'zod';
+import { CharacterId, CharacterIdSchema } from '../character';
 import { AssertNever } from '../utility';
-import { CreateObjectValidator, CreateOneOfValidator } from '../validation';
 import { Appearance } from './appearance';
 import { AssetManager } from './assetManager';
-import { AssetId, IsAssetId } from './definitions';
-import { IsItemId, ItemId } from './item';
+import { AssetIdSchema } from './definitions';
+import { ItemIdSchema } from './item';
 
-interface AppearanceActionBase {
-	type: string;
-}
-
-export interface AppearanceActionCreate extends AppearanceActionBase {
-	type: 'create';
-	target: CharacterId;
-	itemId: ItemId;
-	asset: AssetId;
-}
-
-export const IsAppearanceActionCreate = CreateObjectValidator<AppearanceActionCreate>({
-	type: CreateOneOfValidator('create'),
-	target: IsCharacterId,
-	itemId: IsItemId,
-	asset: IsAssetId,
+export const AppearanceActionCreateSchema = z.object({
+	type: z.literal('create'),
+	target: CharacterIdSchema,
+	itemId: ItemIdSchema,
+	asset: AssetIdSchema,
 });
+export type AppearanceActionCreate = z.infer<typeof AppearanceActionCreateSchema>;
 
-export interface AppearanceActionDelete extends AppearanceActionBase {
-	type: 'delete';
-	target: CharacterId;
-	itemId: ItemId;
-}
-
-export const IsAppearanceActionDelete = CreateObjectValidator<AppearanceActionDelete>({
-	type: CreateOneOfValidator('delete'),
-	target: IsCharacterId,
-	itemId: IsItemId,
+export const AppearanceActionDeleteSchema = z.object({
+	type: z.literal('delete'),
+	target: CharacterIdSchema,
+	itemId: ItemIdSchema,
 });
+export type AppearanceActionDelete = z.infer<typeof AppearanceActionDeleteSchema>;
 
-export type AppearanceAction =
-	AppearanceActionCreate |
-	AppearanceActionDelete;
-
-const AppearanceActionValidators: ((value: unknown) => boolean)[] = [
-	IsAppearanceActionCreate,
-	IsAppearanceActionDelete,
-];
-
-export function IsAppearanceAction(value: unknown): value is AppearanceAction {
-	return AppearanceActionValidators.some((i) => i(value));
-}
+export const AppearanceActionSchema = z.discriminatedUnion('type', [AppearanceActionCreateSchema, AppearanceActionDeleteSchema]);
+export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
 export interface AppearanceActionContext {
 	player: CharacterId;

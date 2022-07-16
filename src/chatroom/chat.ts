@@ -1,39 +1,25 @@
-import { CharacterId, IsCharacterId } from '../character';
-import { CreateArrayValidator, CreateMaybeValidator, CreateObjectValidator, CreateOneOfValidator, CreateTupleValidator, CreateUnionValidator, IsString } from '../validation';
+import { z } from 'zod';
+import { CharacterId, CharacterIdSchema } from '../character';
 import { ChatActionId } from './chatActions';
 
-export type IChatModifier = 'normal' | 'bold' | 'italic';
+export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
+export type IChatModifier = z.infer<typeof ChatModifierSchema>;
 
-export const IsChatModifier = CreateOneOfValidator<IChatModifier>('normal', 'bold', 'italic');
+export const ChatSegmentSchema = z.tuple([ChatModifierSchema, z.string()]);
+export type IChatSegment = z.infer<typeof ChatSegmentSchema>;
 
-export type IChatSegment = [IChatModifier, string];
+export const ChatTypeSchema = z.enum(['chat', 'me', 'emote', 'ooc']);
+export type IChatType = z.infer<typeof ChatTypeSchema>;
 
-export const IsChatSegment = CreateTupleValidator<IChatSegment>(IsChatModifier, IsString);
-
-export type IChatType = 'chat' | 'me' | 'emote' | 'ooc';
-
-export type IClientMessage = {
-	type: 'me' | 'emote';
-	parts: IChatSegment[];
-} | {
-	type: 'chat' | 'ooc';
-	parts: IChatSegment[];
-	to?: CharacterId;
-};
-
-export const IsIClientMessage = CreateUnionValidator<IClientMessage>(
-	CreateObjectValidator({
-		type: CreateOneOfValidator('me', 'emote'),
-		parts: CreateArrayValidator({ validator: IsChatSegment }),
-	}),
-	CreateObjectValidator({
-		type: CreateOneOfValidator('ooc', 'chat'),
-		parts: CreateArrayValidator({ validator: IsChatSegment }),
-		to: CreateMaybeValidator(IsCharacterId),
-	}),
-);
-
-export const IsIClientMessageArray = CreateArrayValidator<IClientMessage>({ validator: IsIClientMessage });
+export const ClientMessageSchema = z.object({
+	type: z.enum(['me', 'emote']),
+	parts: z.array(ChatSegmentSchema),
+}).or(z.object({
+	type: z.enum(['chat', 'ooc']),
+	parts: z.array(ChatSegmentSchema),
+	to: CharacterIdSchema.optional(),
+}));
+export type IClientMessage = z.infer<typeof ClientMessageSchema>;
 
 export type IChatRoomMessageChatCharacter = { id: CharacterId, name: string; labelColor: string; };
 export type IChatRoomMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
@@ -83,6 +69,5 @@ export type IChatRoomMessageDirectoryAction = Omit<IChatRoomMessageAction, 'data
 	};
 };
 
-export type IChatRoomStatus = 'none' | 'typing' | 'whisper' | 'afk';
-
-export const IsChatRoomStatus = CreateOneOfValidator<IChatRoomStatus>('none', 'typing', 'whisper', 'afk');
+export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whisper', 'afk']);
+export type IChatRoomStatus = z.infer<typeof ChatRoomStatusSchema>;

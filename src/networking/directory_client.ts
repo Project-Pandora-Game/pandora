@@ -1,17 +1,19 @@
-import type { AccountRole, IAccountRoleInfo } from '../account';
+import { z } from 'zod';
+import { IAccountRoleInfo, AccountRoleSchema } from '../account';
 import type { CharacterId } from '../character';
+import type { ShardFeature } from '../chatroom';
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
-import type { ShardFeature } from './shard_directory';
 
 export type IDirectoryStatus = {
 	time: number;
 	betaKeyRequired?: true;
 };
 
-export type IDirectoryAccountSettings = {
-	visibleRoles: AccountRole[];
-};
+export const DirectoryAccountSettingsSchema = z.object({
+	visibleRoles: z.array(AccountRoleSchema),
+});
+export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
 export type IDirectoryAccountInfo = {
 	id: number;

@@ -1,11 +1,11 @@
-import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import type { IDirectoryAccountInfo, IDirectoryAccountSettings, IDirectoryCharacterConnectionInfo, IDirectoryShardInfo } from './directory_client';
+import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult, DefineSocketInterface } from './helpers';
+import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryShardInfo } from './directory_client';
 import type { MessageHandler } from './message_handler';
-import type { IEmpty } from './empty';
-import type { CharacterId, ICharacterDataId, ICharacterSelfInfo, ICharacterSelfInfoUpdate } from '../character';
-import type { IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomDirectoryUpdate, RoomId } from '../chatroom';
-import { AccountRole, ConfiguredAccountRole, IAccountRoleManageInfo, IsAccountRole } from '../account';
-import { CreateArrayValidator, CreateObjectValidator, CreateOneOfValidator } from '../validation';
+import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
+import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomDirectoryInfo, RoomIdSchema } from '../chatroom';
+import { ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
+import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema } from '../validation';
+import { z } from 'zod';
 
 type ShardError = 'noShardFound' | 'failed';
 
@@ -15,18 +15,19 @@ type ShardConnection<T = ShardError> = {
 	result: 'ok';
 } & IDirectoryCharacterConnectionInfo);
 
-export type IClientDirectoryAuthMessage = {
-	username: string;
-	token: string;
-	character: null | {
-		id: CharacterId;
-		secret: string;
-	};
-};
+export const ClientDirectoryAuthMessageSchema = z.object({
+	username: UserNameSchema,
+	token: z.string(),
+	character: z.object({
+		id: CharacterIdSchema,
+		secret: z.string(),
+	}).nullable(),
+});
 
-export type IShardTokenType = 'stable' | 'beta' | 'testing' | 'development';
+export type IClientDirectoryAuthMessage = z.infer<typeof ClientDirectoryAuthMessageSchema>;
 
-export const IsShardTokenType = CreateOneOfValidator<IShardTokenType>('stable', 'beta', 'testing', 'development');
+export const ShardTokenTypeSchema = z.enum(['stable', 'beta', 'testing', 'development']);
+export type IShardTokenType = z.infer<typeof ShardTokenTypeSchema>;
 
 export type IShardTokenInfo = {
 	id: string;
@@ -35,89 +36,89 @@ export type IShardTokenInfo = {
 	created: { id: number; username: string; time: number; };
 };
 
-export const IsDirectoryAccountSettings = CreateObjectValidator<Partial<IDirectoryAccountSettings>>({
-	visibleRoles: CreateArrayValidator<AccountRole>({ validator: IsAccountRole }),
-}, { noExtraKey: true, partial: true });
-
-/** Client->Directory handlers */
-interface ClientDirectory {
+export const ClientDirectoryInSchema = z.object({
 	//#region Before Login
-	login(arg: { username: string; passwordSha512: string; verificationToken?: string; }): {
-		result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials',
-	} | {
-		result: 'ok',
-		token: { value: string; expires: number; },
-		account: IDirectoryAccountInfo,
-	};
-	register(arg: { username: string; passwordSha512: string; email: string; betaKey?: string; }): {
-		result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey',
-	};
-	resendVerificationEmail(arg: { email: string; }): {
-		result: 'maybeSent',
-	};
-	passwordReset(arg: { email: string; }): {
-		result: 'maybeSent',
-	};
-	passwordResetConfirm(arg: { username: string; passwordSha512: string; token: string; }): {
-		result: 'ok' | 'unknownCredentials',
-	};
+	login: z.object({
+		username: UserNameSchema,
+		passwordSha512: PasswordSha512Schema,
+		verificationToken: SimpleTokenSchema.optional(),
+	}),
+	register: z.object({
+		username: UserNameSchema,
+		passwordSha512: PasswordSha512Schema,
+		email: EmailAddressSchema,
+		betaKey: z.string().optional(),
+	}),
+	resendVerificationEmail: z.object({
+		email: EmailAddressSchema,
+	}),
+	passwordReset: z.object({
+		email: EmailAddressSchema,
+	}),
+	passwordResetConfirm: z.object({
+		username: UserNameSchema,
+		passwordSha512: PasswordSha512Schema,
+		token: SimpleTokenSchema,
+	}),
 	//#endregion Before Login
 
 	//#region Account management
-	passwordChange(arg: { passwordSha512Old: string; passwordSha512New: string; }): {
-		result: 'ok' | 'invalidPassword',
-	};
-	logout(arg: { invalidateToken?: string; }): void;
-	gitHubBind(arg: { login: string; }): { url: string; };
-	gitHubUnbind(_: IEmpty): void;
-	changeSettings(arg: Partial<IDirectoryAccountSettings>): void;
+	passwordChange: z.object({
+		passwordSha512Old: PasswordSha512Schema,
+		passwordSha512New: PasswordSha512Schema,
+	}),
+	logout: z.object({
+		invalidateToken: z.string().optional(),
+	}),
+	gitHubBind: z.object({
+		login: z.string(),
+	}),
+	gitHubUnbind: z.object({}),
+	changeSettings: DirectoryAccountSettingsSchema.partial(),
 	//#endregion
 
 	//#region Character management
-	listCharacters(_: IEmpty): {
-		characters: ICharacterSelfInfo[];
-		limit: number;
-	};
-	createCharacter(_: IEmpty): ShardConnection<ShardError | 'maxCharactersReached'>;
-	updateCharacter(arg: ICharacterSelfInfoUpdate): ICharacterSelfInfo;
-	deleteCharacter(arg: ICharacterDataId): { result: 'ok' | 'characterInUse'; };
+	listCharacters: z.object({}),
+	createCharacter: z.object({}),
+	updateCharacter: z.object({
+		id: CharacterIdSchema,
+		preview: z.string().optional(),
+	}),
+	deleteCharacter: z.object({
+		id: CharacterIdSchema,
+	}),
 	//#endregion
 
 	//#region Character connection, shard interaction
-	connectCharacter(arg: ICharacterDataId): ShardConnection;
-	disconnectCharacter: (_: IEmpty) => void;
-	shardInfo(_: IEmpty): {
-		shards: IDirectoryShardInfo[],
-	};
-	listRooms(_: IEmpty): {
-		rooms: IChatRoomDirectoryInfo[];
-	};
-	chatRoomCreate(arg: IChatRoomDirectoryConfig): ShardConnection<ShardError | 'nameTaken'>;
-	chatRoomEnter(arg: {
-		id: RoomId,
-		password?: string,
-	}): ShardConnection<'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'>;
-	chatRoomLeave(_: IEmpty): void;
-	chatRoomUpdate(arg: IChatRoomDirectoryUpdate): {
-		result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess',
-	};
+	connectCharacter: z.object({
+		id: CharacterIdSchema,
+	}),
+	disconnectCharacter: z.object({}),
+	shardInfo: z.object({}),
+	listRooms: z.object({}),
+	chatRoomCreate: ChatRoomDirectoryConfigSchema,
+	chatRoomEnter: z.object({
+		id: RoomIdSchema,
+		password: z.string().optional(),
+	}),
+	chatRoomLeave: z.object({}),
+	chatRoomUpdate: ChatRoomDirectoryUpdateSchema,
 	//#endregion
 
 	//#region Management/admin endpoints; these require specific roles to be used
 
 	// Account role assignment
-	manageGetAccountRoles(arg: { id: number; }): { result: 'notFound'; } | {
-		result: 'ok';
-		roles: IAccountRoleManageInfo;
-	};
-	manageSetAccountRole(arg: {
-		id: number;
-		role: ConfiguredAccountRole;
-		expires?: number;
-	}): { result: 'ok' | 'notFound'; };
+	manageGetAccountRoles: z.object({
+		id: z.number(),
+	}),
+	manageSetAccountRole: z.object({
+		id: z.number(),
+		role: ConfiguredAccountRoleSchema,
+		expires: z.number().optional(),
+	}),
 
 	// Shard token management
-	manageCreateShardToken(arg: {
+	manageCreateShardToken: z.object({
 		/**
 		 * Type of the token to create.
 		 * stable/beta requires admin role.
@@ -128,31 +129,69 @@ interface ClientDirectory {
 		 * testing: developer, contributor
 		 * development: developer
 		 */
-		type: IShardTokenType;
+		type: ShardTokenTypeSchema,
 		/**
 		 * If set, the token will expire at this time.
 		 * If not set, the token will never expire.
 		 * Directory may change this value.
 		 */
-		expires?: number;
-	}): { result: 'adminRequired'; } | {
+		expires: z.number().optional(),
+	}),
+	manageInvalidateShardToken: z.object({
+		id: z.string(),
+	}),
+	manageListShardTokens: z.object({}),
+	//#endregion
+});
+
+export type IClientDirectoryIn = z.infer<typeof ClientDirectoryInSchema>;
+
+export type IClientDirectoryOut = {
+	login: { result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials'; } | {
+		result: 'ok';
+		token: { value: string; expires: number; };
+		account: IDirectoryAccountInfo;
+	},
+	register: { result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey'; };
+	resendVerificationEmail: { result: 'maybeSent'; };
+	passwordReset: { result: 'maybeSent'; };
+	passwordResetConfirm: { result: 'ok' | 'unknownCredentials'; };
+	passwordChange: { result: 'ok' | 'invalidPassword'; };
+	gitHubBind: { url: string; };
+	listCharacters: {
+		characters: ICharacterSelfInfo[];
+		limit: number;
+	};
+	createCharacter: ShardConnection<ShardError | 'maxCharactersReached'>;
+	updateCharacter: ICharacterSelfInfo;
+	deleteCharacter: { result: 'ok' | 'characterInUse'; };
+	connectCharacter: ShardConnection;
+	shardInfo: { shards: IDirectoryShardInfo[]; };
+	listRooms: { rooms: IChatRoomDirectoryInfo[]; };
+	chatRoomCreate: ShardConnection<ShardError | 'nameTaken'>;
+	chatRoomEnter: ShardConnection<'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'>;
+	chatRoomUpdate: { result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; };
+	manageGetAccountRoles: { result: 'notFound'; } | {
+		result: 'ok';
+		roles: IAccountRoleManageInfo;
+	};
+	manageSetAccountRole: { result: 'ok' | 'notFound'; };
+	manageCreateShardToken: { result: 'adminRequired'; } | {
 		result: 'ok';
 		info: IShardTokenInfo;
 		token: string;
 	};
-	manageInvalidateShardToken(arg: { id: string; }): { result: 'ok' | 'notFound'; };
-	manageListShardTokens(_: IEmpty): { info: IShardTokenInfo[]; };
+	manageInvalidateShardToken: { result: 'ok' | 'notFound'; };
+	manageListShardTokens: { info: IShardTokenInfo[]; };
+};
 
-	//#endregion
-}
-
-export type IClientDirectory = SocketInterface<ClientDirectory>;
-export type IClientDirectoryArgument = RecordOnly<SocketInterfaceArgs<ClientDirectory>>;
-export type IClientDirectoryUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<ClientDirectory>;
-export type IClientDirectoryResult = SocketInterfaceResult<ClientDirectory>;
-export type IClientDirectoryPromiseResult = SocketInterfacePromiseResult<ClientDirectory>;
-export type IClientDirectoryNormalResult = SocketInterfaceNormalResult<ClientDirectory>;
-export type IClientDirectoryResponseHandler = SocketInterfaceResponseHandler<ClientDirectory>;
-export type IClientDirectoryOneshotHandler = SocketInterfaceOneshotHandler<ClientDirectory>;
-export type IClientDirectoryMessageHandler<Context> = MessageHandler<ClientDirectory, Context>;
-export type IClientDirectoryBase = ClientDirectory;
+export type IClientDirectoryBase = DefineSocketInterface<IClientDirectoryIn, IClientDirectoryOut>;
+export type IClientDirectory = SocketInterface<IClientDirectoryBase>;
+export type IClientDirectoryArgument = RecordOnly<SocketInterfaceArgs<IClientDirectoryBase>>;
+export type IClientDirectoryUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<IClientDirectoryBase>;
+export type IClientDirectoryResult = SocketInterfaceResult<IClientDirectoryBase>;
+export type IClientDirectoryPromiseResult = SocketInterfacePromiseResult<IClientDirectoryBase>;
+export type IClientDirectoryNormalResult = SocketInterfaceNormalResult<IClientDirectoryBase>;
+export type IClientDirectoryResponseHandler = SocketInterfaceResponseHandler<IClientDirectoryBase>;
+export type IClientDirectoryOneshotHandler = SocketInterfaceOneshotHandler<IClientDirectoryBase>;
+export type IClientDirectoryMessageHandler<Context> = MessageHandler<IClientDirectoryBase, Context>;

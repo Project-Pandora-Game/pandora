@@ -1,27 +1,19 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import { CharacterId, IsCharacterId } from '../character';
+import { CharacterIdSchema } from '../character';
 import type { MessageHandler } from './message_handler';
-import type { IChatRoomFullInfo, RoomId } from '../chatroom/room';
-import { IsRoomId } from '../chatroom/validation';
+import { IChatRoomFullInfo, RoomId, RoomIdSchema } from '../chatroom/room';
 import { IEmpty } from './empty';
-import { CreateNullableValidator, CreateObjectValidator, IsNumber, IsString } from '../validation';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
+import { z } from 'zod';
 
-export type IShardCharacterDefinition = {
-	id: CharacterId;
-	account: number;
-	accessId: string;
-	connectSecret: string;
-	room: RoomId | null;
-};
-
-export const IsIShardCharacterDefinition = CreateObjectValidator<IShardCharacterDefinition>({
-	id: IsCharacterId,
-	account: IsNumber,
-	accessId: IsString,
-	connectSecret: IsString,
-	room: CreateNullableValidator(IsRoomId),
+export const ShardCharacterDefinitionSchema = z.object({
+	id: CharacterIdSchema,
+	account: z.number(),
+	accessId: z.string(),
+	connectSecret: z.string(),
+	room: RoomIdSchema.nullable(),
 });
+export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionSchema>;
 
 export type IDirectoryShardUpdate = {
 	/** List of characters connected to this shard (both outside and in room) */

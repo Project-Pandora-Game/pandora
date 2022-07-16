@@ -1,4 +1,4 @@
-import { IShardDirectoryMessageHandler, IShardDirectoryBase, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryUnconfirmedArgument, IShardDirectoryNormalResult, IsString, IsCharacterId, BadMessageError, Shard as Validation } from 'pandora-common';
+import { IShardDirectoryMessageHandler, IShardDirectoryBase, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, IShardDirectoryNormalResult, BadMessageError } from 'pandora-common';
 import type { IConnectionShard } from './common';
 import { GetDatabase } from '../database/databaseProvider';
 import { ShardManager } from '../shard/shardManager';
@@ -42,8 +42,8 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		}
 	}
 
-	private async handleShardRegister(args: IShardDirectoryUnconfirmedArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRegister'] {
-		if (!Validation.shardRegister(args) || connection.shard)
+	private async handleShardRegister(args: IShardDirectoryArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRegister'] {
+		if (connection.shard)
 			throw new BadMessageError();
 
 		const shard = ShardManager.getOrCreateShard(args.shardId);
@@ -53,7 +53,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		return result;
 	}
 
-	private handleShardRequestStop(_args: IShardDirectoryUnconfirmedArgument['shardRequestStop'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRequestStop'] {
+	private handleShardRequestStop(_args: IShardDirectoryArgument['shardRequestStop'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRequestStop'] {
 		const shard = connection.shard;
 		if (!shard)
 			throw new BadMessageError();
@@ -61,17 +61,17 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		return shard.stop();
 	}
 
-	private handleCharacterDisconnect({ id, reason }: IShardDirectoryUnconfirmedArgument['characterDisconnect'], connection: IConnectionShard): void {
+	private handleCharacterDisconnect({ id /* TODO , reason */ }: IShardDirectoryArgument['characterDisconnect'], connection: IConnectionShard): void {
 		const shard = connection.shard;
-		if (!IsCharacterId(id) || !shard || !shard.getConnectedCharacter(id) || !IsString(reason))
+		if (!shard || !shard?.getConnectedCharacter(id))
 			throw new BadMessageError();
 
 		shard.disconnectCharacter(id);
 	}
 
-	private async createCharacter({ id }: IShardDirectoryUnconfirmedArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {
+	private async createCharacter({ id }: IShardDirectoryArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {
 		const shard = connection.shard;
-		if (!IsCharacterId(id) || !shard)
+		if (!shard)
 			throw new BadMessageError();
 
 		const character = shard.getConnectedCharacter(id);
@@ -85,17 +85,15 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		return char;
 	}
 
-	private async handleGetCharacter({ id, accessId }: IShardDirectoryUnconfirmedArgument['getCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['getCharacter'] {
-		const shard = connection.shard;
-		if (!IsCharacterId(id) || !IsString(accessId) || !shard || !shard.getConnectedCharacter(id))
+	private async handleGetCharacter({ id, accessId }: IShardDirectoryArgument['getCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['getCharacter'] {
+		if (!connection.shard?.getConnectedCharacter(id))
 			throw new BadMessageError();
 
 		return await GetDatabase().getCharacter(id, accessId) as IShardDirectoryNormalResult['getCharacter'];
 	}
 
-	private async handleSetCharacter(args: IShardDirectoryUnconfirmedArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
-		const shard = connection.shard;
-		if (!Validation.setCharacter(args) || !CheckSetCharacterKeys(args) || !shard)
+	private async handleSetCharacter(args: IShardDirectoryArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
+		if (!connection.shard)
 			throw new BadMessageError();
 
 		if (Object.keys(args).length > 2 && !await GetDatabase().setCharacter(args))
@@ -104,5 +102,3 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		return { result: 'success' };
 	}
 };
-
-const CheckSetCharacterKeys = (obj: Record<string, unknown>) => !['inCreation', 'accountId', 'created'].some((key) => key in obj);

@@ -279,7 +279,7 @@ async function CreateInMemoryMongo({
 function Id(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
 	return {
 		...obj,
-		id: `c${obj.id}`,
+		id: `c${obj.id}` as const,
 	};
 }
 

@@ -20,7 +20,7 @@ export class Room {
 	private logger: Logger;
 
 	constructor(config: IChatRoomDirectoryConfig, shard: Shard, id?: RoomId) {
-		this.id = id ?? `r${nanoid()}`;
+		this.id = id ?? `r${nanoid()}` as const;
 		this.logger = GetLogger('Room', `[Room ${this.id}]`);
 		this.config = config;
 

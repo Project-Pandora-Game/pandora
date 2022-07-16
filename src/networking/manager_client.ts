@@ -1,5 +1,5 @@
 import { IConnectionClient } from './common';
-import { GetLogger, IsClientDirectoryAuthMessage, IsIChatRoomDirectoryConfig, IsRoomId, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryUnconfirmedArgument, IClientDirectoryPromiseResult, IsUsername, IsEmail, CreateStringValidator, IsSimpleToken, CreateObjectValidator, CreateBase64Validator, IsCharacterId, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IsString, IsPartialIChatRoomDirectoryConfig, IDirectoryStatus, AccountRole, IsNumber, IsConfiguredAccountRole, IsShardTokenType, IsDirectoryAccountSettings } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY, CHARACTER_LIMIT_NORMAL } from '../config';
@@ -25,6 +25,9 @@ const messagesMetric = new promClient.Counter({
 	help: 'Count of received messages from clients',
 	labelNames: ['messageType'],
 });
+
+const IsIChatRoomDirectoryConfig = ZodMatcher(ChatRoomDirectoryConfigSchema);
+const IsClientDirectoryAuthMessage = ZodMatcher(ClientDirectoryAuthMessageSchema);
 
 /** Class that stores all currently connected clients */
 export const ConnectionManagerClient = new class ConnectionManagerClient {
@@ -139,16 +142,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	 * @param connection - The connection that this message comes from
 	 * @returns Result of the login
 	 */
-	private async handleLogin({ username, passwordSha512, verificationToken }: IClientDirectoryUnconfirmedArgument['login'], connection: IConnectionClient): IClientDirectoryPromiseResult['login'] {
-		// Verify content of the message
-		if (connection.isLoggedIn() ||
-			!IsUsername(username) ||
-			!IsPasswordSha512(passwordSha512) ||
-			(verificationToken !== undefined && !IsSimpleToken(verificationToken))
-		) {
-			throw new BadMessageError();
-		}
-
+	private async handleLogin({ username, passwordSha512, verificationToken }: IClientDirectoryArgument['login'], connection: IConnectionClient): IClientDirectoryPromiseResult['login'] {
 		// Find account by username
 		const account = await accountManager.loadAccountByUsername(username);
 		// Verify the password
@@ -176,13 +170,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		};
 	}
 
-	private async handleLogout({ invalidateToken }: IClientDirectoryUnconfirmedArgument['logout'], connection: IConnectionClient): IClientDirectoryPromiseResult['logout'] {
-		// Verify content of the message
-		if (!connection.isLoggedIn() ||
-			(invalidateToken !== undefined && typeof invalidateToken !== 'string')
-		) {
+	private async handleLogout({ invalidateToken }: IClientDirectoryArgument['logout'], connection: IConnectionClient): IClientDirectoryPromiseResult['logout'] {
+		if (!connection.isLoggedIn())
 			throw new BadMessageError();
-		}
 
 		const account = connection.account;
 
@@ -196,9 +186,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		}
 	}
 
-	private async handleRegister({ username, email, passwordSha512, betaKey }: IClientDirectoryUnconfirmedArgument['register'], connection: IConnectionClient): IClientDirectoryPromiseResult['register'] {
-		// Verify content of the message
-		if (connection.isLoggedIn() || !IsUsername(username) || !IsEmail(email) || !IsPasswordSha512(passwordSha512))
+	private async handleRegister({ username, email, passwordSha512, betaKey }: IClientDirectoryArgument['register'], connection: IConnectionClient): IClientDirectoryPromiseResult['register'] {
+		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
 		if (BETA_KEY && betaKey !== BETA_KEY)
@@ -211,9 +200,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private async handleResendVerificationEmail({ email }: IClientDirectoryUnconfirmedArgument['resendVerificationEmail'], connection: IConnectionClient): IClientDirectoryPromiseResult['resendVerificationEmail'] {
-		// Verify content of the message
-		if (connection.isLoggedIn() || !IsEmail(email))
+	private async handleResendVerificationEmail({ email }: IClientDirectoryArgument['resendVerificationEmail'], connection: IConnectionClient): IClientDirectoryPromiseResult['resendVerificationEmail'] {
+		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
 		await AccountProcedureResendVerifyEmail(email);
@@ -221,9 +209,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'maybeSent' };
 	}
 
-	private async handlePasswordReset({ email }: IClientDirectoryUnconfirmedArgument['passwordReset'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordReset'] {
-		// Verify content of the message
-		if (connection.isLoggedIn() || !IsEmail(email))
+	private async handlePasswordReset({ email }: IClientDirectoryArgument['passwordReset'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordReset'] {
+		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
 		await AccountProcedurePasswordReset(email);
@@ -231,9 +218,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'maybeSent' };
 	}
 
-	private async handlePasswordResetConfirm({ username, token, passwordSha512 }: IClientDirectoryUnconfirmedArgument['passwordResetConfirm'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordResetConfirm'] {
-		// Verify content of the message
-		if (connection.isLoggedIn() || !IsUsername(username) || !IsSimpleToken(token) || !IsPasswordSha512(passwordSha512))
+	private async handlePasswordResetConfirm({ username, token, passwordSha512 }: IClientDirectoryArgument['passwordResetConfirm'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordResetConfirm'] {
+		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
 		const account = await accountManager.loadAccountByUsername(username);
@@ -243,9 +229,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private async handlePasswordChange({ passwordSha512Old, passwordSha512New }: IClientDirectoryUnconfirmedArgument['passwordChange'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordChange'] {
-		// Verify content of the message
-		if (!connection.isLoggedIn() || !IsPasswordSha512(passwordSha512Old) || !IsPasswordSha512(passwordSha512New))
+	private async handlePasswordChange({ passwordSha512Old, passwordSha512New }: IClientDirectoryArgument['passwordChange'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordChange'] {
+		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
 		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New))
@@ -254,7 +239,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private handleListCharacters(_: IClientDirectoryUnconfirmedArgument['listCharacters'], connection: IConnectionClient): IClientDirectoryNormalResult['listCharacters'] {
+	private handleListCharacters(_: IClientDirectoryArgument['listCharacters'], connection: IConnectionClient): IClientDirectoryNormalResult['listCharacters'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -264,7 +249,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		};
 	}
 
-	private async handleCreateCharacter(_: IClientDirectoryUnconfirmedArgument['createCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['createCharacter'] {
+	private async handleCreateCharacter(_: IClientDirectoryArgument['createCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['createCharacter'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -287,8 +272,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		});
 	}
 
-	private async handleUpdateCharacter(arg: IClientDirectoryUnconfirmedArgument['updateCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['updateCharacter'] {
-		if (!connection.isLoggedIn() || !IsUpdateCharacter(arg) || !connection.account.hasCharacter(arg.id))
+	private async handleUpdateCharacter(arg: IClientDirectoryArgument['updateCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['updateCharacter'] {
+		if (!connection.isLoggedIn() || !connection.account.hasCharacter(arg.id))
 			throw new BadMessageError();
 
 		const info = await connection.account.updateCharacter(arg);
@@ -298,8 +283,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return info;
 	}
 
-	private async handleDeleteCharacter({ id }: IClientDirectoryUnconfirmedArgument['deleteCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['deleteCharacter'] {
-		if (!connection.isLoggedIn() || !IsCharacterId(id) || !connection.account.hasCharacter(id))
+	private async handleDeleteCharacter({ id }: IClientDirectoryArgument['deleteCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['deleteCharacter'] {
+		if (!connection.isLoggedIn() || !connection.account.hasCharacter(id))
 			throw new BadMessageError();
 
 		const success = await connection.account.deleteCharacter(id);
@@ -309,9 +294,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private async handleConnectCharacter({ id }: IClientDirectoryUnconfirmedArgument['connectCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['connectCharacter'] {
+	private async handleConnectCharacter({ id }: IClientDirectoryArgument['connectCharacter'], connection: IConnectionClient): IClientDirectoryPromiseResult['connectCharacter'] {
 		// TODO: move character, allow connecting to an already connected character
-		if (!connection.isLoggedIn() || !IsCharacterId(id) || !connection.account.hasCharacter(id))
+		if (!connection.isLoggedIn() || !connection.account.hasCharacter(id))
 			throw new BadMessageError();
 
 		const char = connection.account.characters.get(id);
@@ -333,23 +318,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		});
 	}
 
-	private handleDisconnectCharacter(_: IClientDirectoryUnconfirmedArgument['disconnectCharacter'], connection: IConnectionClient): void {
-		if (!connection.isLoggedIn()) {
+	private handleDisconnectCharacter(_: IClientDirectoryArgument['disconnectCharacter'], connection: IConnectionClient): void {
+		if (!connection.isLoggedIn())
 			throw new BadMessageError();
-		}
 
 		connection.character?.disconnect();
 		connection.setCharacter(null);
 		connection.sendConnectionStateUpdate();
 	}
 
-	private handleShardInfo(_: IClientDirectoryUnconfirmedArgument['shardInfo'], _connection: IConnectionClient): IClientDirectoryNormalResult['shardInfo'] {
+	private handleShardInfo(_: IClientDirectoryArgument['shardInfo'], _connection: IConnectionClient): IClientDirectoryNormalResult['shardInfo'] {
 		return {
 			shards: ShardManager.listShads(),
 		};
 	}
 
-	private handleListRooms(_: IClientDirectoryUnconfirmedArgument['listRooms'], connection: IConnectionClient): IClientDirectoryNormalResult['listRooms'] {
+	private handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryNormalResult['listRooms'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -358,7 +342,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		};
 	}
 
-	private async handleChatRoomCreate(roomConfig: IClientDirectoryUnconfirmedArgument['chatRoomCreate'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomCreate'] {
+	private async handleChatRoomCreate(roomConfig: IClientDirectoryArgument['chatRoomCreate'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomCreate'] {
 		if (!connection.isLoggedIn() || !connection.character || !IsIChatRoomDirectoryConfig(roomConfig))
 			throw new BadMessageError();
 
@@ -381,8 +365,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		});
 	}
 
-	private async handleChatRoomEnter({ id, password }: IClientDirectoryUnconfirmedArgument['chatRoomEnter'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomEnter'] {
-		if (!connection.isLoggedIn() || !connection.character || !IsRoomId(id) || (password !== undefined && !IsString(password)))
+	private async handleChatRoomEnter({ id, password }: IClientDirectoryArgument['chatRoomEnter'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomEnter'] {
+		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
 		const room = ShardManager.getRoom(id);
@@ -410,8 +394,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		});
 	}
 
-	private handleChatRoomUpdate(roomConfig: IClientDirectoryUnconfirmedArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryNormalResult['chatRoomUpdate'] {
-		if (!connection.isLoggedIn() || !connection.character || !IsPartialIChatRoomDirectoryConfig(roomConfig))
+	private handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryNormalResult['chatRoomUpdate'] {
+		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
 		if (!connection.character.room) {
@@ -427,9 +411,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result };
 	}
 
-	private handleChatRoomLeave(_: IClientDirectoryUnconfirmedArgument['chatRoomLeave'], connection: IConnectionClient): void {
+	private handleChatRoomLeave(_: IClientDirectoryArgument['chatRoomLeave'], connection: IConnectionClient): void {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
+
 		connection.character.room?.removeCharacter(connection.character, 'leave');
 	}
 
@@ -457,32 +442,29 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		connection.sendConnectionStateUpdate();
 	}
 
-	private handleGitHubBind({ login }: IClientDirectoryUnconfirmedArgument['gitHubBind'], connection: IConnectionClient): IClientDirectoryNormalResult['gitHubBind'] {
-		if (!connection.isLoggedIn() || !IsString(login))
+	private handleGitHubBind({ login }: IClientDirectoryArgument['gitHubBind'], connection: IConnectionClient): IClientDirectoryNormalResult['gitHubBind'] {
+		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
 		const url = GitHubVerifier.prepareLink(connection.account.id, login) || 'GitHub Verify API Not Supported';
 		return { url };
 	}
 
-	private async handleGitHubUnbind(_: IClientDirectoryUnconfirmedArgument['gitHubUnbind'], connection: IConnectionClient): IClientDirectoryPromiseResult['gitHubUnbind'] {
+	private async handleGitHubUnbind(_: IClientDirectoryArgument['gitHubUnbind'], connection: IConnectionClient): IClientDirectoryPromiseResult['gitHubUnbind'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
 		await connection.account.secure.setGitHubInfo(null);
 	}
 
-	private async handleChangeSettings(settings: IClientDirectoryUnconfirmedArgument['changeSettings'], connection: IConnectionClient): IClientDirectoryPromiseResult['changeSettings'] {
-		if (!IsDirectoryAccountSettings(settings) || !connection.isLoggedIn())
+	private async handleChangeSettings(settings: IClientDirectoryArgument['changeSettings'], connection: IConnectionClient): IClientDirectoryPromiseResult['changeSettings'] {
+		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
 		await connection.account.changeSettings(settings);
 	}
 
-	private async handleManageGetAccountRoles({ id }: IClientDirectoryUnconfirmedArgument['manageGetAccountRoles']): IClientDirectoryPromiseResult['manageGetAccountRoles'] {
-		if (!IsNumber(id))
-			throw new BadMessageError();
-
+	private async handleManageGetAccountRoles({ id }: IClientDirectoryArgument['manageGetAccountRoles']): IClientDirectoryPromiseResult['manageGetAccountRoles'] {
 		const account = await accountManager.loadAccountById(id);
 		if (!account)
 			return { result: 'notFound' };
@@ -493,10 +475,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		};
 	}
 
-	private async handleManageSetAccountRole({ id, role, expires }: IClientDirectoryUnconfirmedArgument['manageSetAccountRole'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageSetAccountRole'] {
-		if (!IsNumber(id) || !IsConfiguredAccountRole(role) || expires !== undefined && !IsNumber(expires))
-			throw new BadMessageError();
-
+	private async handleManageSetAccountRole({ id, role, expires }: IClientDirectoryArgument['manageSetAccountRole'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageSetAccountRole'] {
 		const account = await accountManager.loadAccountById(id);
 		if (!account)
 			return { result: 'notFound' };
@@ -505,10 +484,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private async handleManageCreateShardToken({ type, expires }: IClientDirectoryUnconfirmedArgument['manageCreateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateShardToken'] {
-		if (!IsShardTokenType(type) || expires !== undefined && !IsNumber(expires))
-			throw new BadMessageError();
-
+	private async handleManageCreateShardToken({ type, expires }: IClientDirectoryArgument['manageCreateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateShardToken'] {
 		const result = await ShardTokenStore.create(connection.account, { type, expires });
 		if (typeof result === 'string')
 			return { result };
@@ -519,15 +495,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		};
 	}
 
-	private async handleManageInvalidateShardToken({ id }: IClientDirectoryUnconfirmedArgument['manageInvalidateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateShardToken'] {
-		if (!IsString(id))
-			throw new BadMessageError();
-
+	private async handleManageInvalidateShardToken({ id }: IClientDirectoryArgument['manageInvalidateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateShardToken'] {
 		const success = await ShardTokenStore.revoke(connection.account, id);
 		return { result: success ? 'ok' : 'notFound' };
 	}
 
-	private handleManageListShardTokens(_: IClientDirectoryUnconfirmedArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryNormalResult['manageListShardTokens'] {
+	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryNormalResult['manageListShardTokens'] {
 		const info = ShardTokenStore.list(connection.account);
 		return { info };
 	}
@@ -558,18 +531,6 @@ function Auth<T, R>(role: AccountRole, handler: (args: T, connection: IConnectio
 		return handler(args, connection);
 	};
 }
-
-/** Checks if the given password is a base64 encode SHA-512 hash */
-const IsPasswordSha512 = CreateStringValidator({
-	regex: /^[a-zA-Z0-9+/]{86}==$/,
-});
-
-// TODO: Add length check for preview
-
-const IsUpdateCharacter = CreateObjectValidator({
-	id: IsCharacterId,
-	preview: CreateBase64Validator(),
-}, { noExtraKey: true });
 
 /** Create a server status object to be sent to clients */
 function MakeStatus(): IDirectoryStatus {

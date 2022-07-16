@@ -1,9 +1,10 @@
-import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardUnconfirmedArgument, IsCharacterName, CharacterId, BadMessageError, IClientShardPromiseResult, IsAppearanceAction, DoAppearanceAction, IsIClientMessageArray, IsNumber, IsCharacterPublicSettings, IsChatRoomStatus, IsCharacterId } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
 import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
 import promClient from 'prom-client';
+import { DoAppearanceAction } from 'pandora-common';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -81,11 +82,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return character != null && character.isValid && character.connectSecret === secret;
 	}
 
-	private async handleFinishCharacterCreation({ name }: IClientShardUnconfirmedArgument['finishCharacterCreation'], client: IConnectionClient): IClientShardPromiseResult['finishCharacterCreation'] {
+	private async handleFinishCharacterCreation({ name }: IClientShardArgument['finishCharacterCreation'], client: IConnectionClient): IClientShardPromiseResult['finishCharacterCreation'] {
 		if (!client.character)
 			throw new BadMessageError();
 
-		if (!IsCharacterName(name) || !client.character.isInCreation)
+		if (!client.character.isInCreation)
 			throw new BadMessageError();
 
 		if (!await client.character.finishCreation(name)) {
@@ -95,8 +96,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private handleChatRoomMessage({ messages, id, editId }: IClientShardUnconfirmedArgument['chatRoomMessage'], client: IConnectionClient): void {
-		if (!client.character?.room || !IsIClientMessageArray(messages) || !IsNumber(id) || editId !== undefined && !IsNumber(editId))
+	private handleChatRoomMessage({ messages, id, editId }: IClientShardArgument['chatRoomMessage'], client: IConnectionClient): void {
+		if (!client.character?.room)
 			throw new BadMessageError();
 
 		if (messages.length === 0 && editId === undefined)
@@ -108,15 +109,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		room.handleMessages(character, messages, id, editId);
 	}
 
-	private handleChatRoomMessageAck({ lastTime }: IClientShardUnconfirmedArgument['chatRoomMessageAck'], client: IConnectionClient): void {
-		if (!client.character?.room || !IsNumber(lastTime))
+	private handleChatRoomMessageAck({ lastTime }: IClientShardArgument['chatRoomMessageAck'], client: IConnectionClient): void {
+		if (!client.character?.room)
 			throw new BadMessageError();
 
 		client.character.onMessageAck(lastTime);
 	}
 
-	private handleChatRoomStatus({ status, target }: IClientShardUnconfirmedArgument['chatRoomStatus'], client: IConnectionClient): void {
-		if (!client.character?.room || !IsChatRoomStatus(status) || target !== undefined && !IsCharacterId(target))
+	private handleChatRoomStatus({ status, target }: IClientShardArgument['chatRoomStatus'], client: IConnectionClient): void {
+		if (!client.character?.room)
 			throw new BadMessageError();
 
 		const room = client.character.room;
@@ -125,8 +126,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		room.updateStatus(character, status, target);
 	}
 
-	private handleAppearanceAction(action: IClientShardUnconfirmedArgument['appearanceAction'], client: IConnectionClient): void {
-		if (!client.character || !IsAppearanceAction(action))
+	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: IConnectionClient): void {
+		if (!client.character)
 			throw new BadMessageError();
 
 		if (!DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager)) {
@@ -134,8 +135,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		}
 	}
 
-	private handleUpdateSettings(settings: IClientShardUnconfirmedArgument['updateSettings'], client: IConnectionClient): void {
-		if (!client.character || !IsCharacterPublicSettings(settings))
+	private handleUpdateSettings(settings: IClientShardArgument['updateSettings'], client: IConnectionClient): void {
+		if (!client.character)
 			throw new BadMessageError();
 
 		client.character.setPublicSettings(settings);

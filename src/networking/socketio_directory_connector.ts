@@ -1,5 +1,5 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, CreateMessageHandlerOnAny, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId } from 'pandora-common';
+import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
@@ -55,6 +55,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 
 	/** Current state of the connection */
 	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;
+	private readonly _messageHandler: MessageHandler<IDirectoryShardBase>;
 	/** Current state of the connection */
 	get state(): DirectoryConnectionState {
 		return this._state;
@@ -71,15 +72,17 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		// Setup message handler
-		const handler = new MessageHandler<IDirectoryShardBase>({
+		this._messageHandler = new MessageHandler<IDirectoryShardBase>({
 			stop: Stop,
 			update: (update) => this.updateFromDirectory(update).then(() => ({})),
 		}, {
 		});
-		this.socket.onAny(CreateMessageHandlerOnAny(logger, (messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> => {
-			messagesMetric.inc({ messageType });
-			return handler.onMessage(messageType, message, callback);
-		}));
+		this.socket.onAny(this.handleMessage.bind(this));
+	}
+
+	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
+		messagesMetric.inc({ messageType });
+		return this._messageHandler.onMessage(messageType, message, callback);
 	}
 
 	/**

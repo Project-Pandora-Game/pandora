@@ -1,11 +1,11 @@
-import { CharacterId, GetLogger, IShardClientBase, Connection, IncomingSocket, IServerSocket } from 'pandora-common';
+import { CharacterId, GetLogger, IShardClientBase, ZodConnection, IncomingSocket, IServerSocket, ClientShardInSchema } from 'pandora-common';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
 import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
 
 /** Class housing connection from a client */
-export class ClientConnection extends Connection<IncomingSocket, IShardClientBase, true> implements IConnectionClient {
+export class ClientConnection extends ZodConnection<IncomingSocket, typeof ClientShardInSchema, IShardClientBase> implements IConnectionClient {
 	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
 	private _aborted: boolean = false;
@@ -19,7 +19,7 @@ export class ClientConnection extends Connection<IncomingSocket, IShardClientBas
 	public readonly headers: Record<string, undefined | string | string[]>;
 
 	constructor(server: IServerSocket<IShardClientBase>, socket: IncomingSocket, headers: Record<string, undefined | string | string[]>) {
-		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
+		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`), ClientShardInSchema);
 		this.headers = headers;
 		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this);

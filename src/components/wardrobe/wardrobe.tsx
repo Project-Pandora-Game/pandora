@@ -195,7 +195,7 @@ function InventoryAssetViewList({ elem, listMode }: { elem: Asset; listMode: boo
 	const action: AppearanceAction = {
 		type: 'create',
 		target: character.data.id,
-		itemId: `i/${nanoid()}`,
+		itemId: `i/${nanoid()}` as const,
 		asset: elem.id,
 	};
 	const shardConnector = useShardConnector();

@@ -1,7 +1,6 @@
 import {
 	CharacterId,
 	ConnectionBase,
-	CreateMessageHandlerOnAny,
 	GetLogger,
 	IClientShardBase,
 	IDirectoryCharacterConnectionInfo,
@@ -43,6 +42,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
 	private readonly _room: IChatRoomHandler;
 	private readonly _player: Observable<PlayerCharacter | null>;
+	private readonly _messageHandler: MessageHandler<IShardClientBase>;
 
 	private loadResolver: ((arg: this) => void) | null = null;
 
@@ -67,7 +67,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		// Setup message handler
-		const handler = new MessageHandler<IShardClientBase>({}, {
+		this._messageHandler = new MessageHandler<IShardClientBase>({}, {
 			load: this.onLoad.bind(this),
 			updateCharacter: this.onUpdateCharacter.bind(this),
 			chatRoomUpdate: (data: IShardClientArgument['chatRoomUpdate']) => {
@@ -83,7 +83,11 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 				this._room.onStatus(status);
 			},
 		});
-		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
+		this.socket.onAny(this.handleMessage.bind(this));
+	}
+
+	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
+		return this._messageHandler.onMessage(messageType, message, callback);
 	}
 
 	public connectionInfoMatches(info: IDirectoryCharacterConnectionInfo): boolean {

@@ -6,7 +6,8 @@ import {
 	IChatRoomDirectoryConfig,
 	IDirectoryAccountInfo,
 	IDirectoryShardInfo,
-	IsChatroomName,
+	ChatRoomBaseInfoSchema,
+	ZodMatcher,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -21,6 +22,8 @@ import {
 import './chatroomAdmin.scss';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
+
+const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
 function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoomDirectoryConfig {
 	return {

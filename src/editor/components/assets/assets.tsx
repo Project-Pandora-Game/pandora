@@ -52,7 +52,7 @@ function AssetElement({ asset }: { asset: Asset; }): ReactElement {
 	const navigate = useNavigate();
 
 	function add() {
-		editor.character.appearance.createItem(`i/editor/${nanoid()}`, asset);
+		editor.character.appearance.createItem(`i/editor/${nanoid()}` as const, asset);
 	}
 
 	return (

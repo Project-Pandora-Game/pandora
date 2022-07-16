@@ -1,4 +1,4 @@
-import { AccountRole, ConfiguredAccountRole, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized, IsConfiguredAccountRole } from 'pandora-common';
+import { AccountRole, ConfiguredAccountRole, ConfiguredAccountRoleSchema, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized, ZodMatcher } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent';
@@ -12,6 +12,8 @@ const RoleListContext = createContext({
 	roles: null as null | IAccountRoleManageInfo,
 	reload: () => { /** noop */ },
 });
+
+const IsConfiguredAccountRole = ZodMatcher(ConfiguredAccountRoleSchema);
 
 export function Roles(): ReactElement {
 	const connector = useDirectoryConnector();

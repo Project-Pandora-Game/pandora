@@ -1,4 +1,4 @@
-import { AssetGraphicsDefinition, GetLogger, IsAssetGraphicsDefinition } from 'pandora-common';
+import { AssetGraphicsDefinition, AssetGraphicsDefinitionSchema, GetLogger, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
@@ -11,6 +11,8 @@ import { EDITOR_ALPHA_ICONS, useEditorAssetLayers } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import './asset.scss';
+
+const IsAssetGraphicsDefinition = ZodMatcher(AssetGraphicsDefinitionSchema);
 
 export function AssetUI() {
 	const editor = useEditor();

@@ -1,4 +1,6 @@
-import { AssertNever, AtomicCondition, Condition, IsConditionOperator, LayerImageOverride, TransformDefinition } from 'pandora-common';
+import { AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher } from 'pandora-common';
+
+const IsConditionOperator = ZodMatcher(ConditionOperatorSchema);
 
 export function SplitAndClean(input: string, separator: string): string[] {
 	return input

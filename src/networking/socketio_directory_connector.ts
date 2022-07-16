@@ -1,6 +1,5 @@
 import {
 	ConnectionBase,
-	CreateMessageHandlerOnAny,
 	GetLogger,
 	HTTP_HEADER_CLIENT_REQUEST_SHARD,
 	IClientDirectoryAuthMessage,
@@ -58,6 +57,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
+	private readonly _messageHandler: MessageHandler<IDirectoryClientBase>;
+
 	/** Current state of the connection */
 	get state(): ReadonlyObservable<DirectoryConnectionState> {
 		return this._state;
@@ -96,7 +97,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		// Setup message handler
-		const handler = new MessageHandler<IDirectoryClientBase>({}, {
+		this._messageHandler = new MessageHandler<IDirectoryClientBase>({}, {
 			serverStatus: (status) => {
 				this._directoryStatus.value = status;
 			},
@@ -106,7 +107,11 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
 		});
-		this.socket.onAny(CreateMessageHandlerOnAny(logger, handler.onMessage.bind(handler)));
+		this.socket.onAny(this.handleMessage.bind(this));
+	}
+
+	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
+		return this._messageHandler.onMessage(messageType, message, callback);
 	}
 
 	public static create(uri: string): SocketIODirectoryConnector {

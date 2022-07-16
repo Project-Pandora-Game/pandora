@@ -5085,15 +5085,16 @@ p-try@^2.0.0:
   resolved "https://registry.yarnpkg.com/p-try/-/p-try-2.2.0.tgz#cb2868540e313d61de58fafbe35ce9004d5540e6"
   integrity sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==
 
-"pandora-common@github:Project-Pandora-Game/pandora-common#ccd09a7":
+"pandora-common@github:Project-Pandora-Game/pandora-common#006cea7":
   version "0.1.0"
-  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#ccd09a712ea8463e999d50f58773134074647f07"
+  resolved "git+ssh://git@github.com/Project-Pandora-Game/pandora-common.git#006cea7ad111f2ff895f17a0d18faca75f39a03e"
   dependencies:
     "@types/node" "^17.0.31"
     lodash "^4.17.21"
     rimraf "^3.0.2"
     tslib "^2.4.0"
     typescript "^4.6.4"
+    zod "^3.17.3"
 
 param-case@^3.0.4:
   version "3.0.4"
@@ -7212,3 +7213,8 @@ yocto-queue@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/yocto-queue/-/yocto-queue-0.1.0.tgz#0294eb3dee05028d31ee1a5fa2c556a6aaf10a1b"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
+
+zod@^3.17.3:
+  version "3.17.3"
+  resolved "https://registry.yarnpkg.com/zod/-/zod-3.17.3.tgz#86abbc670ff0063a4588d85a4dcc917d6e4af2ba"
+  integrity sha512-4oKP5zvG6GGbMlqBkI5FESOAweldEhSOZ6LI6cG+JzUT7ofj1ZOC0PJudpQOpT1iqOFpYYtX5Pw0+o403y4bcg==

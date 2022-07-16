@@ -53,4 +53,8 @@ export class UnimplementedDirectoryConnector extends ConnectionBase<EmitterWithA
 	public setShardConnectionInfo(_info: IDirectoryCharacterConnectionInfo): void {
 		throw new Error('Method not implemented');
 	}
+
+	protected onMessage(_messageType: string, _message: Record<string, unknown>, _callback?: ((arg: Record<string, unknown>) => void) | undefined): Promise<boolean> {
+		throw new Error('Method not implemented');
+	}
 }

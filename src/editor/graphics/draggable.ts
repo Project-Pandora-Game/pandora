@@ -6,6 +6,7 @@ import dotTexture from '../../assets/editor/dotTexture.png';
 import { Editor } from '../editor';
 import { TypedEventEmitter } from '../../event';
 import type { GraphicsCharacterEditor } from './character/editorCharacter';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 
 type DraggableProps = {
 	createTexture?: () => Texture;
@@ -72,8 +73,13 @@ export class DraggablePoint extends TypedEventEmitter<{
 		super();
 		this.draggable = new Draggable({
 			dragStart: () => {
+				// Cannot drag template point
+				if (typeof this._getDefinitionLocation()[0] === 'string')
+					return false;
+				// Only allow drag if the point is already selected
 				if (editor.targetPoint.value === this)
 					return true;
+				// Select the point on click
 				editor.targetPoint.value = this;
 				return false;
 			},
@@ -96,7 +102,7 @@ export class DraggablePoint extends TypedEventEmitter<{
 		this.emit('change', undefined);
 	}
 
-	private _getDefinitionLocation(): [AssetGraphicsLayer, PointDefinition] {
+	private _getDefinitionLocation(): [AssetGraphicsLayer | string, PointDefinition] {
 		let layer = this.layer;
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
@@ -106,6 +112,16 @@ export class DraggablePoint extends TypedEventEmitter<{
 			if (!Array.isArray(layer.definition.points)) {
 				throw new Error('More than one jump in points reference');
 			}
+		}
+		if (typeof layer.definition.points === 'string') {
+			const template = GraphicsManagerInstance.value?.getTemplate(layer.definition.points);
+			if (!template) {
+				throw new Error(`Unknown template '${layer.definition.points}'`);
+			}
+			if (template.length <= this.point.index) {
+				throw new Error('Invalid attempt to set point position');
+			}
+			return [layer.definition.points, template[this.point.index]];
 		}
 		if (layer.definition.points.length <= this.point.index) {
 			throw new Error('Invalid attempt to set point position');
@@ -126,6 +142,9 @@ export class DraggablePoint extends TypedEventEmitter<{
 			x = CharacterSize.WIDTH - x;
 		}
 		const [layer, point] = this._getDefinitionLocation();
+		if (typeof layer === 'string') {
+			throw new Error('Cannot modify template');
+		}
 		point.pos = [x, y];
 		layer.onChange();
 	}
@@ -136,6 +155,9 @@ export class DraggablePoint extends TypedEventEmitter<{
 
 	public setPointType(type: PointDefinition['pointType']): void {
 		const [layer, point] = this._getDefinitionLocation();
+		if (typeof layer === 'string') {
+			throw new Error('Cannot modify template');
+		}
 		point.pointType = type;
 		layer.onChange();
 	}
@@ -146,6 +168,9 @@ export class DraggablePoint extends TypedEventEmitter<{
 
 	public setMirror(value: boolean): void {
 		const [layer, point] = this._getDefinitionLocation();
+		if (typeof layer === 'string') {
+			throw new Error('Cannot modify template');
+		}
 		point.mirror = value;
 		layer.onChange();
 	}
@@ -156,12 +181,18 @@ export class DraggablePoint extends TypedEventEmitter<{
 
 	public setTransforms(value: PointDefinition['transforms']): void {
 		const [layer, point] = this._getDefinitionLocation();
+		if (typeof layer === 'string') {
+			throw new Error('Cannot modify template');
+		}
 		point.transforms = value;
 		layer.onChange();
 	}
 
 	public deletePoint(): void {
 		const layer = this._getDefinitionLocation()[0];
+		if (typeof layer === 'string') {
+			throw new Error('Cannot modify template');
+		}
 		if (!Array.isArray(layer.definition.points)) {
 			throw new Error('Assertion failed');
 		}

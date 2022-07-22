@@ -1,6 +1,7 @@
-import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
-import { MakeMirroredPoints, MirrorImageOverride, MirrorPoint } from '../graphics/mirroring';
+import { MakeMirroredPoints, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
+import { GraphicsManagerInstance } from './graphicsManager';
 
 export interface PointDefinitionCalculated extends PointDefinition {
 	index: number;
@@ -50,6 +51,13 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 				throw new Error('More than one jump in points reference');
 			}
 		}
+		if (typeof points === 'string') {
+			const template = GraphicsManagerInstance.value?.getTemplate(points);
+			if (!template) {
+				throw new Error(`Unknown template '${points}'`);
+			}
+			points = template;
+		}
 		if (this.isMirror && this.definition.mirror === LayerMirror.FULL) {
 			points = points.map(MirrorPoint);
 		}
@@ -72,7 +80,11 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 
 		const mirrored: LayerDefinition = {
 			...this.definition,
-			imageOverrides: this.definition.imageOverrides.map(MirrorImageOverride),
+			image: MirrorLayerImageSetting(this.definition.image),
+			scaling: this.definition.scaling && {
+				...this.definition.scaling,
+				stops: this.definition.scaling.stops.map((stop) => [stop[0], MirrorLayerImageSetting(stop[1])]),
+			},
 		};
 
 		if (this.definition.mirror === LayerMirror.FULL) {
@@ -93,19 +105,23 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 
 	public getAllImages(): string[] {
 		const result = new Set<string>();
-		result.add(this.definition.image);
-		for (const override of this.definition.imageOverrides) {
-			result.add(override.image);
+		for (const setting of (this.definition.scaling?.stops.map((s) => s[1]) ?? []).concat(this.definition.image)) {
+			result.add(setting.image);
+			for (const override of setting.overrides) {
+				result.add(override.image);
+			}
 		}
 		result.delete('');
 		return Array.from(result.values());
 	}
 
-	public setImage(image: string): void {
+	public setImage(image: string, stop?: number): void {
 		if (this.mirror && this.isMirror)
-			return this.mirror.setImage(image);
+			return this.mirror.setImage(image, stop);
 
-		this.definition.image = image;
+		const setting = this.getImageSettingsForScalingStop(stop);
+		setting.image = image;
+
 		this.onChange();
 	}
 
@@ -117,11 +133,13 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		this.onChange();
 	}
 
-	public setImageOverrides(imageOverrides: LayerImageOverride[]): void {
+	public setImageOverrides(imageOverrides: LayerImageOverride[], stop?: number): void {
 		if (this.mirror && this.isMirror)
-			return this.mirror.setImageOverrides(imageOverrides.map(MirrorImageOverride));
+			return this.mirror.setImageOverrides(imageOverrides.map(MirrorImageOverride), stop);
 
-		this.definition.imageOverrides = imageOverrides.slice();
+		const settings = this.getImageSettingsForScalingStop(stop);
+		settings.overrides = imageOverrides.slice();
+
 		this.onChange();
 	}
 
@@ -156,12 +174,25 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 				throw new Error('More than one jump in points reference');
 			}
 		}
+		if (typeof layer.definition.points === 'string') {
+			throw new Error('Cannot create new point in template');
+		}
 		layer.definition.points.push({
 			pos: [x, y],
 			mirror: false,
 			transforms: [],
 		});
 		layer.onChange();
+	}
+
+	public getImageSettingsForScalingStop(stop: number | null | undefined): LayerImageSetting {
+		if (!stop)
+			return this.definition.image;
+		const res = this.definition.scaling?.stops.find((s) => s[0] === stop)?.[1];
+		if (!res) {
+			throw new Error('Failed to get stop');
+		}
+		return res;
 	}
 }
 

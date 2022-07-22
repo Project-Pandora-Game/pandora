@@ -6,6 +6,7 @@ import { TypedEventEmitter } from '../../../event';
 import { LayerState } from '../../../graphics/def';
 import { GraphicsCharacter } from '../../../graphics/graphicsCharacter';
 import { Editor } from '../../editor';
+import { EditorLayer } from '../layer/editorLayer';
 import { AppearanceEditor } from './appearanceEditor';
 
 export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
@@ -24,7 +25,7 @@ export class GraphicsCharacterEditor extends GraphicsCharacter<EditorCharacter> 
 	protected constructor(editor: Editor) {
 		super(editor.character);
 		this.editor = editor;
-		this.addChild(this.boneLayer).zIndex = 11;
+		this.addChild(this.boneLayer).zIndex = EditorLayer.Z_INDEX_EXTRA + 1;
 		const cleanup: (() => void)[] = [];
 		cleanup.push(editor.showBones.subscribe((show) => {
 			this.boneLayer.visible = show;

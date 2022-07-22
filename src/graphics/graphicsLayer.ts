@@ -1,4 +1,4 @@
-import { CoordinatesCompressed, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { BoneName, CoordinatesCompressed, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
 import type { LayerStateOverrides } from './def';
 import { Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
@@ -6,6 +6,7 @@ import { Conjunction, EvaluateCondition } from './utility';
 import Delaunator from 'delaunator';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
+import { max, maxBy, min, minBy } from 'lodash';
 
 Mesh.BATCHABLE_SIZE = 1000000;
 
@@ -15,7 +16,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	private _bones = new Set<string>();
 	private _imageBones = new Set<string>();
 	private _triangles = new Uint32Array();
-	private _uv!: Float64Array;
+	private _uv = new Float64Array();
 	private _texture: Texture = Texture.EMPTY;
 	private _image!: string;
 	private _result!: Mesh | Sprite;
@@ -58,7 +59,25 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	public update({ bones = new Set(), state, force }: { bones?: Set<string>, state?: LayerStateOverrides, force?: boolean; }): void {
 		let update = false;
 		if (Conjunction(this._bones, bones) || force) {
-			this.calculateVertices();
+			this.vertices = this.calculateVertices();
+
+			const uvPose: Record<BoneName, number> = {};
+			if (this.layer.definition.scaling) {
+				let setting: number | undefined;
+				const stops = this.layer.definition.scaling.stops.map((stop) => stop[0]);
+				const value = this.character.getBoneLikeValue(this.layer.definition.scaling.scaleBone);
+				// Find the best matching scaling override
+				if (value > 0) {
+					setting = max(stops.filter((stop) => stop > 0 && stop <= value));
+				} else if (value < 0) {
+					setting = min(stops.filter((stop) => stop < 0 && stop >= value));
+				}
+				if (setting) {
+					uvPose[this.layer.definition.scaling.scaleBone] = setting;
+				}
+			}
+			this._uv = this.calculateVertices(true, uvPose);
+
 			update = true;
 		}
 		if (Conjunction(this._imageBones, bones) || force) {
@@ -96,7 +115,18 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		const manager = GraphicsManagerInstance.value;
 		if (!manager)
 			return false;
-		const image = this.layer.definition.imageOverrides.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c)))?.image ?? this.layer.definition.image;
+		let setting = this.layer.definition.image;
+		if (this.layer.definition.scaling) {
+			const s = this.layer.definition.scaling;
+			const value = this.character.getBoneLikeValue(s.scaleBone);
+			// Find the best matching scaling override
+			if (value > 0) {
+				setting = maxBy(s.stops.filter((stop) => stop[0] > 0 && stop[0] <= value), (stop) => stop[0])?.[1] ?? setting;
+			} else if (value < 0) {
+				setting = minBy(s.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0])?.[1] ?? setting;
+			}
+		}
+		const image = setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c)))?.image ?? setting.image;
 		if (image !== this._image) {
 			this._image = image;
 			this.getTexture(image).then((texture) => {
@@ -132,16 +162,13 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 				.flatMap((point) => point.transforms.map((trans) => trans.bone)),
 		);
 		this._imageBones = new Set(
-			this.layer.definition.imageOverrides
+			this.layer.definition.image.overrides
+				.concat(...(this.layer.definition.scaling?.stops.flatMap((stop) => stop[1].overrides) ?? []))
 				.flatMap((override) => override.condition)
 				.flat()
 				.map((condition) => condition.bone),
 		);
 
-		this._uv = new Float64Array(this.points.flatMap((point) => ([
-			point.pos[0] / this.layer.definition.width,
-			point.pos[1] / this.layer.definition.height,
-		])));
 		const triangles: number[] = [];
 		const delaunator = new Delaunator(this.points.flatMap((point) => point.pos));
 		for (let i = 0; i < delaunator.triangles.length; i += 3) {
@@ -153,9 +180,17 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		this._triangles = new Uint32Array(triangles);
 	}
 
-	protected calculateVertices(): void {
-		this.vertices = new Float64Array(this.points
-			.flatMap((point) => this.character.evalTransform(this.mirrorPoint(point.pos), point.transforms, point.mirror)));
+	protected calculateVertices(normalize: boolean = false, valueOverrides?: Record<BoneName, number>): Float64Array {
+		const result = new Float64Array(this.points
+			.flatMap((point) => this.character.evalTransform(this.mirrorPoint(point.pos), point.transforms, point.mirror, valueOverrides)));
+		if (normalize) {
+			const h = this.layer.definition.height;
+			const w = this.layer.definition.width;
+			for (let i = 0; i < result.length; i++) {
+				result[i] /= i % 2 ? h : w;
+			}
+		}
+		return result;
 	}
 
 	protected mirrorPoint([x, y]: CoordinatesCompressed): CoordinatesCompressed {

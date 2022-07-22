@@ -1,4 +1,4 @@
-import { CharacterSize, Condition, LayerImageOverride, PointDefinition, TransformDefinition } from 'pandora-common';
+import { CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition } from 'pandora-common';
 import { PointDefinitionCalculated } from '../assets/assetGraphics';
 
 /** formatting for `<T extends (...)>` is different for ESLint and VS Code */
@@ -30,16 +30,20 @@ export function MirrorTransform(transform: TransformDefinition): TransformDefini
 		}
 		case 'shift': {
 			const { x, y } = transform.value;
-			if (/_[rl]$/.test(bone))
-				return { ...trans, type, value: { x: x * -1, y: y * -1 } };
-			else
-				return { ...trans, type, value: { x: x * -1, y } };
+			return { ...trans, type, value: { x: x * -1, y } };
 		}
 	}
 }
 
 export function MirrorImageOverride({ image, condition }: LayerImageOverride): LayerImageOverride {
 	return { image, condition: MirrorCondition(condition) };
+}
+
+export function MirrorLayerImageSetting(setting: LayerImageSetting): LayerImageSetting {
+	return {
+		...setting,
+		overrides: setting.overrides.map(MirrorImageOverride),
+	};
 }
 
 export function MirrorPoint(point: PointDefinition): PointDefinition {

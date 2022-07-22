@@ -1,6 +1,7 @@
 import React, { ReactElement, useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
+import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { Button } from '../../../components/common/Button/Button';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -14,7 +15,6 @@ import './points.scss';
 export function PointsUI(): ReactElement {
 	const editor = useEditor();
 	const selectedLayer = useObservable(editor.targetLayer);
-	const selectedPoint = useObservable(editor.targetPoint);
 	const asset = selectedLayer?.asset;
 
 	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
@@ -29,9 +29,25 @@ export function PointsUI(): ReactElement {
 		<div className='editor-pointsui'>
 			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; {selectedLayer.name}</h3>
 			<MirrorPointsFromLayer layer={ selectedLayer } asset={ asset } />
+			<PointsEditUi layer={ selectedLayer } />
+		</div>
+	);
+}
+
+export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+	const editor = useEditor();
+	const selectedPoint = useObservable(editor.targetPoint);
+	const points = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.points);
+
+	if (typeof points === 'string') {
+		return <div>Template cannot be edited</div>;
+	}
+
+	return (
+		<>
 			<Button onClick={ () => {
 				const pos = editor.setupScene.container.center;
-				selectedLayer.createNewPoint(pos.x, pos.y);
+				layer.createNewPoint(pos.x, pos.y);
 			} }>
 				Add new point
 			</Button>
@@ -41,13 +57,17 @@ export function PointsUI(): ReactElement {
 					<PointConfiguration point={ selectedPoint } /> :
 					<div>No point selected</div>
 			}
-		</div>
+		</>
 	);
 }
 
 function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const layers = useEditorAssetLayers(asset, false);
 	const points = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.points);
+	const graphicsManger = useObservable(GraphicsManagerInstance);
+
+	if (!graphicsManger)
+		return null;
 
 	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
 	for (const l of layers) {
@@ -58,7 +78,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 		}
 	}
 	// Add point template options
-	for (const t of asset.editor.pointTemplates.keys()) {
+	for (const t of graphicsManger.pointTemplateList) {
 		const id = `t/${t}`;
 		elements.push(
 			<option value={ id } key={ id }>Template: { t }</option>,
@@ -71,7 +91,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 				<br />
 				<select
 					id='mirror-points-from-layer'
-					value={ typeof points === 'number' ? `${points}` : '' }
+					value={ typeof points === 'number' ? `${points}` : typeof points === 'string' ? `t/${points}` : '' }
 					onChange={ (event) => {
 						let source: number | string | null = null;
 						if (event.target.value.startsWith('t/')) {
@@ -93,6 +113,17 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 						asset.layerMirrorFrom(layer, null);
 					} }>
 						Unlink mirrored points
+					</Button>
+				</>
+			}
+			{
+				typeof points === 'string' &&
+				<>
+					<div>Points are from template: { points }</div>
+					<Button onClick={ () => {
+						asset.layerMirrorFrom(layer, null);
+					} }>
+						Unlink point template
 					</Button>
 				</>
 			}

@@ -53,13 +53,10 @@ function SetupTransform(bone: string,
 describe('MirrorTransform()', () => {
 
 	it.each([
-		['shift', 'test_r', { x: 1, y: 1 }, 'test_l', { x: -1, y: -1 }, undefined],
-		['shift', 'test_l', { x: 1, y: 1 }, 'test_r', { x: -1, y: -1 }, undefined],
-		['shift', 'test_r', { x: -1, y: -1 }, 'test_l', { x: 1, y: 1 }, undefined],
-		['shift', 'test_l', { x: -1, y: -1 }, 'test_r', { x: 1, y: 1 }, undefined],
-		['shift', 'test_r', 100, 'test_l', { x: NaN, y: NaN }, undefined],
-		['shift', 'test_l', 100, 'test_r', { x: NaN, y: NaN }, undefined],
-		// non-mirrored bone
+		['shift', 'test_r', { x: 1, y: 1 }, 'test_l', { x: -1, y: 1 }, undefined],
+		['shift', 'test_l', { x: 1, y: 1 }, 'test_r', { x: -1, y: 1 }, undefined],
+		['shift', 'test_r', { x: -1, y: -1 }, 'test_l', { x: 1, y: -1 }, undefined],
+		['shift', 'test_l', { x: -1, y: -1 }, 'test_r', { x: 1, y: -1 }, undefined],
 		['shift', 'test', { x: 1, y: 1 }, 'test', { x: -1, y: 1 }, undefined],
 		['shift', 'test', { x: -1, y: 1 }, 'test', { x: 1, y: 1 }, undefined],
 
@@ -67,8 +64,6 @@ describe('MirrorTransform()', () => {
 		['rotate', 'test_l', 100, 'test_r', -100, undefined],
 		['rotate', 'test_r', -100, 'test_l', 100, undefined],
 		['rotate', 'test_l', -100, 'test_r', 100, undefined],
-		['rotate', 'test_r', { x: -1, y: -1 }, 'test_l', NaN, undefined],
-		['rotate', 'test_l', { x: -1, y: -1 }, 'test_r', NaN, undefined],
 	])(
 		'should %p bone: %p, value: %p into bone: %p, value: %p',
 		(type, ibone, ivalue, ebone, evalue, condition) => {

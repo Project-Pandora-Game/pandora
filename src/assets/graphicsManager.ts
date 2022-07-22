@@ -1,4 +1,4 @@
-import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile } from 'pandora-common';
+import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { Observable } from '../observable';
 import { AssetGraphics } from './assetGraphics';
@@ -11,12 +11,16 @@ export interface IGraphicsLoader {
 
 export class GraphicsManager {
 	private readonly _assetGraphics: Map<AssetId, AssetGraphics> = new Map();
+	private readonly _pointTemplates: Map<string, PointTemplate> = new Map();
+	private _pointTemplateList: readonly string[] = [];
+
 	public readonly definitionsHash: string;
 	public readonly loader: IGraphicsLoader;
 
 	constructor(loader: IGraphicsLoader, definitionsHash: string, data: AssetsGraphicsDefinitionFile) {
 		this.loader = loader;
 		this.definitionsHash = definitionsHash;
+		this.loadPointTemplats(data.pointTemplates);
 		this.loadAssets(data.assets);
 	}
 
@@ -26,6 +30,14 @@ export class GraphicsManager {
 
 	public getAssetGraphicsById(id: AssetId): AssetGraphics | undefined {
 		return this._assetGraphics.get(id);
+	}
+
+	public get pointTemplateList(): readonly string[] {
+		return this._pointTemplateList;
+	}
+
+	public getTemplate(name: string): PointTemplate | undefined {
+		return this._pointTemplates.get(name);
 	}
 
 	private loadAssets(assets: Record<AssetId, AssetGraphicsDefinition>): void {
@@ -48,6 +60,14 @@ export class GraphicsManager {
 				this._assetGraphics.set(id as AssetId, asset);
 			}
 		}
+	}
+
+	private loadPointTemplats(pointTemplates: Record<string, PointTemplate>): void {
+		this._pointTemplates.clear();
+		for (const [name, template] of Object.entries(pointTemplates)) {
+			this._pointTemplates.set(name, template);
+		}
+		this._pointTemplateList = Array.from(this._pointTemplates.keys());
 	}
 
 	protected createAssetGraphics(id: AssetId, data: AssetGraphicsDefinition): AssetGraphics {

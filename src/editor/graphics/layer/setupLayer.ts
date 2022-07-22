@@ -1,17 +1,13 @@
 import { Graphics, Container, Sprite } from 'pixi.js';
 import { DraggablePoint } from '../draggable';
 import { EditorLayer } from './editorLayer';
-import Delaunator from 'delaunator';
-import { SelectPoints } from '../../../graphics/graphicsLayer';
+import { BoneName } from 'pandora-common';
 
 export class SetupLayer extends EditorLayer {
 	private _wireFrame?: Graphics;
 
-	protected override calculateVertices(): boolean {
-		this.vertices = new Float64Array(this.points
-			.flatMap((point) => this.mirrorPoint(point.pos)));
-
-		return true;
+	protected override calculateVertices(normalize: boolean = false, valueOverrides?: Record<BoneName, number>): Float64Array {
+		return super.calculateVertices(normalize, valueOverrides ?? {});
 	}
 
 	protected override _calculatePoints() {
@@ -35,6 +31,8 @@ export class SetupLayer extends EditorLayer {
 				this._wireFrame = this.makeWireFrame();
 				this.character.addChild(this._wireFrame).zIndex = EditorLayer.Z_INDEX_EXTRA;
 				this.character.sortChildren();
+			} else {
+				this._drawWireFrame(this._wireFrame);
 			}
 			this.updateAllPoints();
 		} else {
@@ -56,7 +54,7 @@ export class SetupLayer extends EditorLayer {
 	}
 
 	private makeWireFrame(): Graphics {
-		const wireframe = this._wireFrame = new Graphics();
+		const wireframe = (this._wireFrame ??= new Graphics());
 		wireframe.x = this.x;
 		wireframe.y = this.y;
 		this._drawWireFrame(wireframe);
@@ -66,23 +64,14 @@ export class SetupLayer extends EditorLayer {
 	private _drawWireFrame(graphics: Graphics) {
 		graphics.clear();
 
-		const coords = this.points.map((point) => point.pos);
-		graphics.lineStyle(1, 0x555555, 0.1);
-
-		const delaunator = new Delaunator(this.points.flatMap((point) => point.pos));
-		const triangles: number[] = [];
-		for (let i = 0; i < delaunator.triangles.length; i += 3) {
-			const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
-			graphics.drawPolygon(t.flatMap((p) => coords[p]));
-			if (t.every((tp) => SelectPoints(this.points[tp], this.layer.definition.pointType, this.layer.side))) {
-				triangles.push(...t);
-			}
-		}
-
-		graphics.lineStyle(2, 0x333333, 0.3);
-		for (let i = 0; i < triangles.length; i += 3) {
-			const poly = [0, 1, 2].map((p) => coords[triangles[i + p]]);
-			graphics.drawPolygon(poly.flat());
+		graphics.lineStyle(1, 0x333333, 0.2);
+		const h = this.layer.definition.height;
+		const w = this.layer.definition.width;
+		for (let i = 0; i < this.triangles.length; i += 3) {
+			const poly = [0, 1, 2]
+				.map((p) => this.triangles[i + p])
+				.flatMap((p) => [this.uv[2 * p] * w, this.uv[2 * p + 1] * h]);
+			graphics.drawPolygon(poly);
 		}
 	}
 

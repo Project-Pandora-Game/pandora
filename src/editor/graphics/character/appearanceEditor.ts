@@ -1,8 +1,8 @@
-import { Appearance, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, ItemId, LayerMirror, LayerPriority } from 'pandora-common';
+import { Appearance, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, ItemId, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
-import { IGraphicsLoader } from '../../../assets/graphicsManager';
+import { GraphicsManagerInstance, IGraphicsLoader } from '../../../assets/graphicsManager';
 import { LoadArrayBufferTexture, StripAssetHash } from '../../../graphics/utility';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Editor } from '../../editor';
@@ -59,11 +59,13 @@ export class EditorAssetGraphics extends AssetGraphics {
 			y: 0,
 			width: CharacterSize.WIDTH,
 			height: CharacterSize.HEIGHT,
-			image: '',
 			priority: 'OVERLAY',
 			points: [],
 			mirror: LayerMirror.NONE,
-			imageOverrides: [],
+			image: {
+				image: '',
+				overrides: [],
+			},
 		});
 		this.layers = [...this.layers, newLayer];
 		this.onChange();
@@ -123,6 +125,52 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
+	setScaleAs(layer: AssetGraphicsLayer, scaleAs: string | null): void {
+		if (layer.mirror && layer.isMirror) {
+			layer = layer.mirror;
+		}
+
+		if (scaleAs) {
+			layer.definition.scaling = {
+				scaleBone: scaleAs,
+				stops: [],
+			};
+		} else {
+			layer.definition.scaling = undefined;
+		}
+
+		layer.onChange();
+		this.onChange();
+	}
+
+	addScalingStop(layer: AssetGraphicsLayer, value: number): void {
+		if (value === 0 || !Number.isInteger(value) || value < -180 || value > 180 || !layer.definition.scaling) {
+			throw new Error('Invalid value supplied');
+		}
+
+		if (layer.definition.scaling.stops.some((stop) => stop[0] === value))
+			return;
+
+		const newStops: [number, LayerImageSetting][] = [...layer.definition.scaling.stops, [value, cloneDeep(layer.definition.image)]];
+		newStops.sort((a, b) => a[0] - b[0]);
+
+		layer.definition.scaling.stops = newStops;
+
+		layer.onChange();
+		this.onChange();
+	}
+
+	removeScalingStop(layer: AssetGraphicsLayer, stop: number): void {
+		if (!layer.definition.scaling) {
+			throw new Error('Invalid value supplied');
+		}
+
+		layer.definition.scaling.stops = layer.definition.scaling.stops.filter((s) => s[0] !== stop);
+
+		layer.onChange();
+		this.onChange();
+	}
+
 	public layerMirrorFrom(layer: AssetGraphicsLayer, source: number | string | null): void {
 		if (layer.mirror && layer.isMirror)
 			return this.layerMirrorFrom(layer.mirror, source);
@@ -140,15 +188,25 @@ export class EditorAssetGraphics extends AssetGraphics {
 				layer.definition.points = cloneDeep(points);
 				layer.onChange();
 			}
+			if (typeof layer.definition.points === 'string') {
+				const manager = GraphicsManagerInstance.value;
+				const template = manager?.getTemplate(layer.definition.points);
+				if (!template) {
+					throw new Error('Unknown point template');
+				}
+				layer.definition.points = cloneDeep(template);
+				layer.onChange();
+			}
 			return;
 		}
 
 		if (typeof source === 'string') {
-			const template = this.editor.pointTemplates.get(source);
+			const manager = GraphicsManagerInstance.value;
+			const template = manager?.getTemplate(source);
 			if (!template) {
 				throw new Error('Unknown point template');
 			}
-			layer.definition.points = cloneDeep(template);
+			layer.definition.points = source;
 			layer.onChange();
 			return;
 		}
@@ -250,23 +308,27 @@ export class EditorAssetGraphics extends AssetGraphics {
 		const images = new Set<string>();
 		for (const layer of this.layers) {
 			let shouldUpdate = false;
-			{
-				const layerImage = layer.definition.image;
-				images.add(layerImage);
-				const layerImageBasename = StripAssetHash(layerImage);
-				if (layerImage !== layerImageBasename) {
-					layer.definition.image = layerImageBasename;
-					shouldUpdate = true;
+			const processSetting = (setting: LayerImageSetting): void => {
+				{
+					const layerImage = setting.image;
+					images.add(layerImage);
+					const layerImageBasename = StripAssetHash(layerImage);
+					if (layerImage !== layerImageBasename) {
+						setting.image = layerImageBasename;
+						shouldUpdate = true;
+					}
 				}
-			}
-			for (const override of layer.definition.imageOverrides) {
-				images.add(override.image);
-				const basename = StripAssetHash(override.image);
-				if (override.image !== basename) {
-					override.image = basename;
-					shouldUpdate = true;
+				for (const override of setting.overrides) {
+					images.add(override.image);
+					const basename = StripAssetHash(override.image);
+					if (override.image !== basename) {
+						override.image = basename;
+						shouldUpdate = true;
+					}
 				}
-			}
+			};
+			processSetting(layer.definition.image);
+			layer.definition.scaling?.stops.forEach((s) => processSetting(s[1]));
 			if (shouldUpdate) {
 				layer.onChange();
 			}

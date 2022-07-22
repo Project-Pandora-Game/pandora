@@ -7,7 +7,7 @@ import { GraphicsCharacterEditor } from '../character/editorCharacter';
 
 export abstract class EditorLayer extends GraphicsLayer<GraphicsCharacterEditor> {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	protected static readonly Z_INDEX_EXTRA = 10000;
+	public static readonly Z_INDEX_EXTRA = 10000;
 
 	private readonly _cleanups: (() => void)[] = [];
 

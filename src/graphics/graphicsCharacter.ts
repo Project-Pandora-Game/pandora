@@ -173,11 +173,12 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		AssertNever(operator);
 	}
 
-	public evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[], _mirror: boolean): [number, number] {
+	public evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[], _mirror: boolean, valueOverrides?: Record<BoneName, number>): [number, number] {
 		let [resX, resY] = [x, y];
 		for (const transform of transforms) {
 			const { type, bone: boneName, condition } = transform;
 			const bone = this.getBone(boneName);
+			const rotation = valueOverrides ? (valueOverrides[boneName] ?? 0) : bone.rotation;
 			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c))) {
 				continue;
 			}
@@ -185,14 +186,14 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 				case 'rotate': {
 					let vecX = resX - bone.definition.x;
 					let vecY = resY - bone.definition.y;
-					const value = transform.value * bone.rotation;
+					const value = transform.value * rotation;
 					[vecX, vecY] = RotateVector(vecX, vecY, value);
 					resX = bone.definition.x + vecX;
 					resY = bone.definition.y + vecY;
 					break;
 				}
 				case 'shift': {
-					const percent = bone.rotation / 180;
+					const percent = rotation / 180;
 					resX += percent * transform.value.x;
 					resY += percent * transform.value.y;
 					break;

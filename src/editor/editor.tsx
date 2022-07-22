@@ -14,11 +14,10 @@ import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, PointDefinition, CharacterSize } from 'pandora-common';
+import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
-import { cloneDeep } from 'lodash';
 import { useEditor } from './editorContextProvider';
 
 const logger = GetLogger('Editor');
@@ -65,29 +64,6 @@ export class Editor extends TypedEventEmitter<{
 		this.character = new EditorCharacter();
 		this.setupScene = new EditorSetupScene(this);
 		this.resultScene = new EditorResultScene(this);
-
-		// Load some point templates
-		const body = manager.getAssetGraphicsById('a/body/base');
-		if (body) {
-			for (const layer of body.layers) {
-				if (Array.isArray(layer.definition.points)) {
-					this.pointTemplates.set(layer.name, cloneDeep(layer.definition.points));
-				}
-			}
-		}
-		// Static picture template
-		this.pointTemplates.set('Static', [
-			{
-				pos: [0, 0],
-				mirror: true,
-				transforms: [],
-			},
-			{
-				pos: [0, CharacterSize.HEIGHT],
-				mirror: true,
-				transforms: [],
-			},
-		]);
 
 		// Prevent loosing progress
 		window.addEventListener('beforeunload', (event) => {
@@ -204,8 +180,6 @@ export class Editor extends TypedEventEmitter<{
 		}
 		this.targetAsset.value = graphics;
 	}
-
-	public readonly pointTemplates = new Map<string, PointDefinition[]>();
 
 	public setBackgroundColor(color: number): void {
 		this.setupScene.background = `#${color.toString(16)}`;

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { BoneNameSchema } from '../appearance';
 import type { AssetId } from '../definitions';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
@@ -77,6 +78,9 @@ export const PointDefinitionSchema = z.object({
 });
 export type PointDefinition = z.infer<typeof PointDefinitionSchema>;
 
+export const PointTemplateSchema = z.array(PointDefinitionSchema);
+export type PointTemplate = z.infer<typeof PointTemplateSchema>;
+
 export const LayerImageOverrideSchema = z.object({
 	image: z.string(),
 	condition: ConditionSchema,
@@ -89,6 +93,7 @@ export const LAYER_PRIORITIES = [
 	'BACK_HAIR',
 	'BELOW_BODY',
 	'BODY',
+	'BREASTS',
 	'ABOVE_BODY',
 	'FRONT_HAIR',
 	'ABOVE_FRONT_HAIR',
@@ -115,14 +120,24 @@ export enum LayerSide {
 	RIGHT,
 }
 
+export const LayerImageSettingSchema = z.object({
+	image: z.string(),
+	overrides: z.array(LayerImageOverrideSchema),
+});
+export type LayerImageSetting = z.infer<typeof LayerImageSettingSchema>;
+
 export const LayerDefinitionSchema = RectangleSchema.extend({
 	name: z.string().optional(),
-	image: z.string(),
 	priority: LayerPrioritySchema,
-	points: z.array(PointDefinitionSchema).or(z.number()),
-	imageOverrides: z.array(LayerImageOverrideSchema),
+	points: z.union([z.array(PointDefinitionSchema), z.string(), z.number()]),
 	pointType: z.array(z.string()).optional(),
 	mirror: LayerMirrorSchema,
+
+	image: LayerImageSettingSchema,
+	scaling: z.object({
+		scaleBone: BoneNameSchema,
+		stops: z.array(z.tuple([z.number(), LayerImageSettingSchema])),
+	}).optional(),
 });
 export type LayerDefinition = z.infer<typeof LayerDefinitionSchema>;
 
@@ -133,4 +148,5 @@ export type AssetGraphicsDefinition = z.infer<typeof AssetGraphicsDefinitionSche
 
 export interface AssetsGraphicsDefinitionFile {
 	assets: Record<AssetId, AssetGraphicsDefinition>;
+	pointTemplates: Record<string, PointTemplate>;
 }

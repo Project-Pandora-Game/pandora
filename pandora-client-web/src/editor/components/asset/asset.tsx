@@ -140,13 +140,15 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 		editor.setLayerAlphaOverride([layer], alphaIndex+1);
 	};
 
+	const name = useSyncExternalStore(layer.getSubscriber('change'), () => layer.name);
+
 	return (
 		<li className={ isSelected ? 'selected' : '' }>
 			<button
 				className={ classNames('layerName', { alphaMaskLayer: hasAlphaMasks }) }
 				onClick={ () => editor.targetLayer.value = layer }
 			>
-				{ layer.name }
+				{ name }
 			</button>
 			<Button className='slim hideDisabled' aria-label='move' disabled={ layer.isMirror } onClick={ () => asset.moveLayerRelative(layer, -1) } title='Move layer up'>
 				🠉
@@ -155,7 +157,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 				{EDITOR_ALPHA_ICONS[alphaIndex]}
 			</Button>
 			<Button className='slim hideDisabled' aria-label='delete' disabled={ layer.isMirror } onClick={ () => {
-				if (!confirm(`Delete layer '${layer.name}'?`))
+				if (!confirm(`Delete layer '${name}'?`))
 					return;
 				asset.deleteLayer(layer);
 			} } title='DELETE this layer'>

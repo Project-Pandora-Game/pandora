@@ -1,3 +1,5 @@
+@import '../../../styles/utils';
+
 .editor-assetui {
 	display: flex;
 	flex-flow: column;
@@ -41,7 +43,7 @@
 
 				&.selected {
 					.layerName, .layerName:hover {
-						background: #999;
+						@include corner-border(2px, black, 0.5em, #999);
 					}
 				}
 

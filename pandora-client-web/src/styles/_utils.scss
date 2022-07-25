@@ -74,3 +74,20 @@
 }
 
 //#endregion
+
+//#region Misc
+
+@mixin corner-border($thickness: 1px, $color: black, $width: 20px, $background: inherit) {
+	border: $thickness solid transparent;
+	background:
+		conic-gradient(from 90deg  at top    $thickness left  $thickness, #0000 90deg, $color 0) 0    0,
+		conic-gradient(from 180deg at top    $thickness right $thickness, #0000 90deg, $color 0) 100% 0,
+		conic-gradient(from 0deg   at bottom $thickness left  $thickness, #0000 90deg, $color 0) 0    100%,
+		conic-gradient(from -90deg at bottom $thickness right $thickness, #0000 90deg, $color 0) 100% 100%,
+		$background;
+	background-size: $width $width;
+	background-origin: border-box;
+	background-repeat: no-repeat;
+}
+
+//#endregion

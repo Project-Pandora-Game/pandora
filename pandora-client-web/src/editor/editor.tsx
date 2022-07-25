@@ -1,7 +1,7 @@
-import React, { ReactElement, useSyncExternalStore } from 'react';
+import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { useGraphicsScene } from '../graphics/graphicsScene';
 import { EditorSetupScene, EditorResultScene } from './graphics/editorScene';
-import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { AssetsUI } from './components/assets/assets';
 import { AssetUI } from './components/asset/asset';
 import { BoneUI } from './components/bones/bones';
@@ -193,44 +193,64 @@ export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: 
 	return includeMirror ? layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]) : layers;
 }
 
-function TabSelector(): ReactElement {
-	const navigate = useNavigate();
-	const location = useLocation();
+function SetupView(): ReactElement {
+	const editor = useEditor();
+	const refSetup = useGraphicsScene<HTMLDivElement>(editor.setupScene);
+
+	return <div className='canvasContainer' ref={ refSetup } />;
+}
+
+function PreviewView(): ReactElement {
+	const editor = useEditor();
+	const refResult = useGraphicsScene<HTMLDivElement>(editor.resultScene);
+
+	return <div className='canvasContainer' ref={ refResult } />;
+}
+
+const TABS: [string, string, () => ReactElement][] = [
+	['Global', 'editor-ui', AssetsUI],
+	['Bones', 'editor-ui', BoneUI],
+	['Asset', 'editor-ui', AssetUI],
+	['Layer', 'editor-ui', LayerUI],
+	['Points', 'editor-ui', PointsUI],
+	['Setup', 'editor-scene', SetupView],
+	['Preview', 'editor-scene', PreviewView],
+];
+
+function Tab({ defaultTab }: { defaultTab: string; }): ReactElement {
+	const [current, setCurrent] = useState(defaultTab);
+	const [showTabs, setShowTabs] = useState(true);
+
+	const currentTab = TABS.find((tab) => tab[0] === current) ?? TABS[0][0];
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const CurrentTabComponent = currentTab[2];
+
 	return (
-		<>
+		<div className={ currentTab[1] }>
+			{
+				showTabs &&  (
 			<div className='ui-selector'>
-				<Button className='slim' theme={ location.pathname === '/' ? 'defaultActive' : 'default' } onClick={ () => navigate('/') }>Global</Button>
-				<Button className='slim' theme={ location.pathname === '/bones' ? 'defaultActive' : 'default' } onClick={ () => navigate('/bones') }>Bones</Button>
+						{
+							TABS.map((tab) => (
+								<Button className='slim' theme={ currentTab === tab ? 'defaultActive' : 'default' } onClick={ () => setCurrent(tab[0]) } key={ tab[0] }>{tab[0]}</Button>
+							))
+						}
 			</div>
-			<div className='ui-selector'>
-				<Button className='slim' theme={ location.pathname === '/asset' ? 'defaultActive' : 'default' } onClick={ () => navigate('/asset') }>Asset</Button>
-				<Button className='slim' theme={ location.pathname === '/layer' ? 'defaultActive' : 'default' } onClick={ () => navigate('/layer') }>Layer</Button>
-				<Button className='slim' theme={ location.pathname === '/points' ? 'defaultActive' : 'default' } onClick={ () => navigate('/points') }>Points</Button>
+				)
+			}
+			<button className='ui-selector-toggle' onClick={ () => setShowTabs(!showTabs) }>{ showTabs ? '\u2227 ' : '\u2228' }</button>
+			<CurrentTabComponent />
 			</div>
-		</>
 	);
 }
 
 export function EditorView(): ReactElement {
-	const editor = useEditor();
-	const refSetup = useGraphicsScene<HTMLDivElement>(editor.setupScene);
-	const refResult = useGraphicsScene<HTMLDivElement>(editor.resultScene);
-
 	return (
 		<BrowserRouter basename='/editor'>
 			<div className='editor'>
-				<div className='editor-ui'>
-					<TabSelector />
-					<Routes>
-						<Route path='*' element={ <AssetsUI /> } />
-						<Route path='/bones' element={ <BoneUI /> } />
-						<Route path='/asset' element={ <AssetUI /> } />
-						<Route path='/layer' element={ <LayerUI /> } />
-						<Route path='/points' element={ <PointsUI /> } />
-					</Routes>
-				</div>
-				<div ref={ refSetup } className='editor-scene' />
-				<div ref={ refResult } className='editor-scene' />
+				<Tab defaultTab='Global' />
+				<Tab defaultTab='Setup' />
+				<Tab defaultTab='Preview' />
 			</div>
 		</BrowserRouter>
 	);

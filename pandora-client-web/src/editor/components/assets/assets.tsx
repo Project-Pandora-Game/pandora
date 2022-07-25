@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import { nanoid } from 'nanoid';
 import { Asset, AssetId, Item } from 'pandora-common';
 import React, { ReactElement, useSyncExternalStore } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useCharacterAppearanceItems } from '../../../character/character';
 import { Button } from '../../../components/common/Button/Button';
@@ -57,7 +56,6 @@ function StripAssetIdAndCategory(id: AssetId, category: string) {
 
 function AssetElement({ asset, category }: { asset: Asset; category: string; }): ReactElement {
 	const editor = useEditor();
-	const navigate = useNavigate();
 
 	function add() {
 		editor.character.appearance.addItem(
@@ -72,7 +70,6 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
-					navigate('/asset');
 				} } title='Edit this asset'>
 					E
 				</Button>
@@ -86,7 +83,6 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 
 function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 	const editor = useEditor();
-	const navigate = useNavigate();
 
 	function add() {
 		alert('Not yet implemented');
@@ -98,7 +94,6 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(assetId);
-					navigate('/asset');
 				} } title='Edit this asset'>
 					E
 				</Button>
@@ -114,8 +109,6 @@ const itemOpenState = new WeakMap<Item, ToggleLiState>();
 function ItemElement({ item }: { item: Item; }): ReactElement {
 	const editor = useEditor();
 	const appearance = editor.character.appearance;
-
-	const navigate = useNavigate();
 
 	let toggleState = itemOpenState.get(item);
 	if (!toggleState) {
@@ -149,7 +142,6 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
-					navigate('/asset');
 				} } title="Edit this item's asset">
 					E
 				</Button>

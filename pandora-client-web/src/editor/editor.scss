@@ -3,35 +3,59 @@
 .editor {
 	display: flex;
 	flex-flow: row;
+	gap: 2px;
+	background-color: black;
+	height: 100%;
+	align-items: stretch;
+	overflow: hidden;
 
-	.editor-ui {
-		flex-basis: 20%;
-		min-width: 20em;
+	>div {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5em;
-		height: 100vh;
-		overflow-y: auto;
-		padding: 0.5em;
-		textarea {
-			resize: none;
-			width: 100%;
-			height: 80%;
-		}
-	}
-
-	.editor-scene {
-		flex-basis: 40%;
-		display: flex;
-		padding: 0;
-		height: 100vh;
-		border-left: 2px solid black;
 		overflow: hidden;
+		background-color: #ccc;
+
+		&.editor-ui {
+			flex: 1;
+			min-width: 20em;
+			overflow-y: auto;
+			padding: 0 0.5em;
+			gap: 0.5em;
+			textarea {
+				resize: none;
+				width: 100%;
+				height: 80%;
+			}
+		}
+
+		&.editor-scene {
+			flex: 2;
+
+			.canvasContainer {
+				flex: 1;
+				overflow: hidden;
+			}
+		}
 	}
 
 	.ui-selector {
 		@include flex($wrap: wrap);
 		justify-content: center;
-		gap: 1rem;
+		gap: 0.5rem;
+		padding: 0.5em;
+	}
+
+	.ui-selector-toggle {
+		background: black;
+		color: white;
+		font-size: smaller;
+		cursor: pointer;
+		padding: 0;
+		margin: 0 -1rem;
+
+		&:hover {
+			background: white;
+			color: black;
+		}
 	}
 }

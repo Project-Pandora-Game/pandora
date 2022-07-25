@@ -23,7 +23,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 	}
 
 	public get name(): string {
-		let name = this.definition.name || `${this.index}`;
+		let name = this.definition.name || `Layer #${this.index + 1}`;
 		if (this.side === LayerSide.LEFT) {
 			name += ' (left)';
 		} else if (this.side === LayerSide.RIGHT) {

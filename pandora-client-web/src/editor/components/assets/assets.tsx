@@ -71,7 +71,7 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
 				} } title='Edit this asset'>
-					E
+					🖌
 				</Button>
 				<Button onClick={ add } title='Equip'>
 					+
@@ -95,7 +95,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 				<Button onClick={ () => {
 					editor.startEditAsset(assetId);
 				} } title='Edit this asset'>
-					E
+					🖌
 				</Button>
 				<Button onClick={ add } title='Equip'>
 					+
@@ -143,7 +143,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
 				} } title="Edit this item's asset">
-					E
+					🖌
 				</Button>
 			</div>
 		}>

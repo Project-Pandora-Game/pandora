@@ -1,5 +1,5 @@
 import type { ArrayCompressType } from '../../utility';
-import type { AtomicCondition, Condition, CoordinatesCompressed, LayerImageOverride, LayerMirror, LayerPriority, PointDefinition, Size, TransformDefinition } from './graphics';
+import type { AtomicCondition, BoneType, Condition, CoordinatesCompressed, LayerImageOverride, LayerMirror, LayerPriority, PointDefinition, Size, TransformDefinition } from './graphics';
 
 export type SizeCompressed = ArrayCompressType<Size, ['width', 'height']>;
 
@@ -37,6 +37,7 @@ export interface BoneDefinitionCompressed {
 	mirror?: string;
 	parent?: string;
 	baseRotation?: number;
+	type: BoneType;
 }
 
 export type PointDefinitionCompressed = {

@@ -5,7 +5,7 @@ import { AppearanceItems, AppearanceItemsFixBodypartOrder, ValidateAppearanceIte
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
-import { BoneState } from './graphics';
+import { BoneState, BoneType } from './graphics';
 import { Item, ItemBundleSchema, ItemId } from './item';
 
 export const BoneNameSchema = z.string();
@@ -60,15 +60,9 @@ export class Appearance {
 	}
 
 	public exportToBundle(): AppearanceBundle {
-		const pose: Record<BoneName, number> = {};
-		for (const state of this.pose.values()) {
-			if (state.rotation !== 0) {
-				pose[state.definition.name] = state.rotation;
-			}
-		}
 		return {
 			items: this.items.map((item) => item.exportToBundle()),
-			pose,
+			pose: this.exportPose(),
 			handsPose: this._armsPose,
 			view: this._view,
 		};
@@ -202,6 +196,34 @@ export class Appearance {
 			}
 		}
 		this.onChange(['items', 'pose']);
+	}
+
+	public importPose(pose: Record<BoneName, number>, type?: BoneType): void {
+		for (const [bone, state] of this.pose.entries()) {
+			if (type && state.definition.type !== type) {
+				continue;
+			}
+			this.pose.set(bone, {
+				definition: state.definition,
+				rotation: pose[state.definition.name] || 0,
+			});
+		}
+		this.fullPose = Array.from(this.pose.values());
+		this.onChange(['pose']);
+	}
+
+	public exportPose(type?: BoneType): Record<BoneName, number> {
+		const pose: Record<BoneName, number> = {};
+		for (const state of this.pose.values()) {
+			if (state.rotation === 0) {
+				continue;
+			}
+			if (type && state.definition.type !== type) {
+				continue;
+			}
+			pose[state.definition.name] = state.rotation;
+		}
+		return pose;
 	}
 
 	public reloadAssetManager(assetManager: AssetManager, logger?: Logger) {

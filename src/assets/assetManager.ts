@@ -130,6 +130,7 @@ export class AssetManager {
 			mirror,
 			isMirror: mirror !== undefined,
 			parent,
+			type: bone.type,
 		};
 		if (mirror) {
 			mirror.mirror = res;

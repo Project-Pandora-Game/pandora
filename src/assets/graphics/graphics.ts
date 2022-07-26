@@ -8,6 +8,8 @@ export type Coordinates = z.infer<typeof CoordinatesSchema>;
 export const CoordinatesCompressedSchema = z.tuple([CoordinatesSchema.shape.x, CoordinatesSchema.shape.y]);
 export type CoordinatesCompressed = z.infer<typeof CoordinatesCompressedSchema>;
 
+export type BoneType = 'pose' | 'body';
+
 export const SizeSchema = z.object({
 	width: z.number(),
 	height: z.number(),
@@ -63,6 +65,7 @@ export interface BoneDefinition {
 	mirror?: BoneDefinition;
 	isMirror: boolean;
 	parent?: BoneDefinition;
+	type: BoneType;
 }
 
 export interface BoneState {

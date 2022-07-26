@@ -21,7 +21,24 @@ export const AppearanceActionDeleteSchema = z.object({
 });
 export type AppearanceActionDelete = z.infer<typeof AppearanceActionDeleteSchema>;
 
-export const AppearanceActionSchema = z.discriminatedUnion('type', [AppearanceActionCreateSchema, AppearanceActionDeleteSchema]);
+export const AppearanceActionPose = z.object({
+	type: z.literal('pose'),
+	target: CharacterIdSchema,
+	pose: z.record(z.string(), z.number()),
+});
+
+export const AppearanceActionBody = z.object({
+	type: z.literal('body'),
+	target: CharacterIdSchema,
+	pose: z.record(z.string(), z.number()),
+});
+
+export const AppearanceActionSchema = z.discriminatedUnion('type', [
+	AppearanceActionCreateSchema,
+	AppearanceActionDeleteSchema,
+	AppearanceActionPose,
+	AppearanceActionBody,
+]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
 export interface AppearanceActionContext {
@@ -41,31 +58,41 @@ export function DoAppearanceAction(
 		dryRun?: boolean;
 	} = {},
 ): boolean {
-	if (action.type === 'create') {
-		const appearance = context.characters.get(action.target);
-		if (!appearance)
-			return false;
-		const asset = assetManager.getAssetById(action.asset);
-		if (!asset)
-			return false;
-		if (!appearance.allowCreateItem(action.itemId, asset))
-			return false;
+	const appearance = context.characters.get(action.target);
+	if (!appearance)
+		return false;
 
-		if (!dryRun) {
-			appearance.createItem(action.itemId, asset);
+	switch (action.type) {
+		case 'create': {
+			const asset = assetManager.getAssetById(action.asset);
+			if (!asset)
+				return false;
+			if (!appearance.allowCreateItem(action.itemId, asset))
+				return false;
+			if (!dryRun) {
+				appearance.createItem(action.itemId, asset);
+			}
+			return true;
 		}
-	} else if (action.type === 'delete') {
-		const appearance = context.characters.get(action.target);
-		if (!appearance)
-			return false;
-		if (!appearance.allowRemoveItem(action.itemId))
-			return false;
+		case 'delete': {
+			if (!appearance.allowRemoveItem(action.itemId))
+				return false;
 
-		if (!dryRun) {
-			appearance.removeItem(action.itemId);
+			if (!dryRun) {
+				appearance.removeItem(action.itemId);
+			}
+			return true;
 		}
-	} else {
-		AssertNever(action);
+		case 'body':
+		case 'pose':
+			if (context.player !== action.target) // TODO: allow posing other players with settings
+				return false;
+
+			if (!dryRun) {
+				appearance.importPose(action.pose, action.type);
+			}
+			return true;
+		default:
+			AssertNever(action);
 	}
-	return true;
 }

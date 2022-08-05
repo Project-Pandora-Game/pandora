@@ -1,0 +1,165 @@
+import { MockDatabase } from './mockDb';
+import MongoDatabase from './mongoDb';
+import { DATABASE_TYPE } from '../config';
+import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings } from 'pandora-common';
+
+export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
+
+export interface PandoraDatabase {
+	/** The id in numeric form that will be assigned to next created account */
+	readonly nextAccountId: number;
+
+	/** The id in numeric form that will be assigned to next created character */
+	readonly nextCharacterId: number;
+
+	/**
+	 * Find and get account with matching `id`
+	 * @returns The account data or `null` if not found
+	 */
+	getAccountById(id: number): Promise<DatabaseAccountWithSecure | null>;
+	/**
+	 * Find and get account with matching `username`
+	 * @returns The account data or `null` if not found
+	 */
+	getAccountByUsername(username: string): Promise<DatabaseAccountWithSecure | null>;
+	/**
+	 * Get account by email hash
+	 * @param emailHash - Email hash to search for
+	 */
+	getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null>;
+
+	/**
+	 * Create account
+	 *
+	 * **CRITICAL SECTION** - High potential for race conditions
+	 * @param data - Account data
+	 * @returns The created account data or `null` if account already exists
+	 */
+	createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'>;
+
+	/**
+	 * Sets account settings
+	 * @param id - Account id
+	 * @param data - Settings data
+	 */
+	updateAccountSettings(id: number, data: IDirectoryAccountSettings): Promise<void>;
+
+	/**
+	 * Sets account's secure data use should only be used in AccountSecure class
+	 * @param id - Id of account to update
+	 */
+	setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void>;
+
+	/**
+	 * Sets account's secure data use should only be used in AccountSecure class
+	 * @param id - Id of account to update
+	 */
+	setAccountSecureGitHub(id: number, data: DatabaseAccountSecure['github']): Promise<boolean>;
+
+	/**
+	 * Sets account's secure data use should only be used in AccountSecure class
+	 * @param id - Id of account to update
+	 */
+	setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void>;
+
+	/**
+	 * Creates a new character for the account
+	 * @param accountId - Id of account to create character for
+	 * @param data - Character data
+	 */
+	createCharacter(accountId: number): Promise<ICharacterSelfInfoDb>;
+
+	/**
+	 * Finish the character creation process
+	 * @param accountId - Id of account to create character for
+	 */
+	finalizeCharacter(accountId: number): Promise<ICharacterData | null>;
+
+	/**
+	 * Update character's self info
+	 * @param accountId - Id of account to update character for
+	 * @param data - Character info data
+	 */
+	updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null>;
+
+	/**
+	 * Delete character
+	 * @param accountId - Id of account to delete character for
+	 * @param characterId - Id of character to delete
+	 */
+	deleteCharacter(accountId: number, characterId: CharacterId): Promise<void>;
+
+	/**
+	 * Sets a new access id for the account
+	 * @param id - Id of character
+	 * @return - New access id
+	 */
+	setCharacterAccess(id: CharacterId): Promise<string | null>;
+
+	//#region Shard
+
+	/**
+	 * Get a character's data
+	 * @param id - Id of character
+	 * @param accessId - Id of access or false to generate a new one
+	 */
+	getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null>;
+
+	/**
+	 * Update a character's data
+	 * @param data - Character data with id
+	 */
+	setCharacter(data: Partial<ICharacterData> & ICharacterDataAccess): Promise<boolean>;
+
+	//#endregion
+
+	//#region Config
+
+	/**
+	 * Get config data
+	 * @param type
+	 */
+	getConfig<T extends DatabaseConfig['type']>(type: T): Promise<null | (DatabaseConfig & { type: T; })['data']>;
+
+	/**
+	 * Set config data
+	 * @param type
+	 * @param data
+	 */
+	setConfig<T extends DatabaseConfig['type']>(type: T, data: (DatabaseConfig & { type: T; })['data']): Promise<void>;
+}
+
+/** Current database connection */
+let database: MongoDatabase | MockDatabase | undefined;
+
+/** Init database connection based on configuration */
+export async function InitDatabase(): Promise<void> {
+	switch (DATABASE_TYPE) {
+		case 'mongodb':
+			database = await new MongoDatabase().init();
+			break;
+		case 'mongodb-in-memory':
+			database = await new MongoDatabase().init({ inMemory: true });
+			break;
+		case 'mongodb-local':
+			database = await new MongoDatabase().init({ inMemory: true, dbPath: './localDb' });
+			break;
+		case 'mock':
+		default:
+			database = await new MockDatabase().init();
+	}
+}
+
+export async function CloseDatabase(): Promise<void> {
+	if (database instanceof MongoDatabase) {
+		await database.close();
+	}
+}
+
+/** Get currently active database connection */
+export function GetDatabase(): PandoraDatabase {
+	if (!database) {
+		throw new Error('Database not initialized');
+	}
+	return database;
+}

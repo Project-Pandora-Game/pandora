@@ -1,0 +1,9 @@
+/.idea
+/dist
+/node_modules
+/coverage
+/.env
+/localDb
+/logs
+/globalConfig.json
+/.persistent

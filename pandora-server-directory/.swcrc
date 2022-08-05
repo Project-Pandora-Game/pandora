@@ -1,0 +1,23 @@
+{
+	"jsc": {
+		"parser": {
+			"syntax": "typescript",
+			"tsx": false,
+			"decorators": true,
+			"dynamicImport": true,
+			"privateMethod": true,
+			"functionBind": false,
+			"classPrivateProperty": true,
+			"exportDefaultFrom": false,
+			"exportNamespaceFrom": false,
+			"decoratorsBeforeExport": false,
+			"importMeta": false
+		},
+		"transform": null,
+		"target": "es2020",
+		"loose": false,
+		"externalHelpers": false,
+		"keepClassNames": false
+	},
+	"sourceMaps": true
+}

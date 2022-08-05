@@ -1,0 +1,59 @@
+@import '../../styles/constants';
+@import '../../styles/utils';
+
+$header-button-img-height: 1.5em;
+$header-button-v-padding: 0.3em;
+$header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
+
+.HeaderButton {
+	background-color: transparent;
+	border: 0.2em solid transparent;
+	min-width: 4em;
+
+	&.withText {
+		min-width: 6em;
+	}
+
+	.icon-container {
+		position: relative;
+		display: inline-block;
+		height: $header-button-height;
+		padding: $header-button-v-padding 0.5em;
+
+		.badge {
+			position: absolute;
+			display: inline-block;
+			border-radius: 100%;
+			bottom: 0;
+			left: 60%;
+			aspect-ratio: 1;
+			min-height: unset;
+			min-width: unset;
+			width: 1.4em;
+			height: 1.4em;
+			font-size: 0.8em;
+			line-height: 1.5;
+			color: $white-primary;
+			background-color: $theme-notification;
+			padding: 0 0.3em;
+		}
+	}
+
+	img {
+		height: $header-button-img-height;
+	}
+
+	&:hover, &:focus, &.active {
+		background-color: $grey-darkest;
+		color: $white-primary;
+
+		img {
+			filter: invert(100%);
+		}
+	}
+
+	&:focus {
+		outline: 0;
+		border-color: $white-secondary;
+	}
+}

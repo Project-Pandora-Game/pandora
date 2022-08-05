@@ -1,0 +1,70 @@
+.editor-assetui {
+	display: flex;
+	flex-flow: column;
+
+	.exportImport {
+		display: flex;
+		flex-flow: row;
+		margin-bottom: 1em;
+		gap: 0.5em;
+	}
+
+	.layerList, .assetImageList {
+		display: flex;
+		flex-flow: column;
+
+		ul {
+			padding: 0 0.5em;
+
+			li {
+				margin-top: 0.5em;
+				display: flex;
+				gap: 0.3em;
+
+				.layerName, .imageName {
+					flex: 1;
+					display: flex;
+					align-items: center;
+					background: #bbb;
+					min-width: 0;
+					padding: 0.4em;
+				}
+
+				.layerName {
+					cursor: pointer;
+
+					&:hover {
+						background: #aaa;
+					}
+				}
+
+				&.selected {
+					.layerName, .layerName:hover {
+						background: #999;
+					}
+				}
+
+				.imageName {
+					user-select: all;
+					word-break: break-all;
+					overflow-wrap: anywhere;
+				}
+
+				&.preview img {
+					width: 100%;
+					background-color: var(--editor-background-color #1099bb);
+				}
+			}
+		}
+	}
+
+	.hiddenUpload {
+		display: flex;
+		flex-direction: column;
+		text-align: center;
+
+		input {
+			display: none;
+		}
+	}
+}

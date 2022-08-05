@@ -1,0 +1,32 @@
+@import 'constants';
+
+$font-family-main: 'Arial', 'Helvetica', sans-serif;
+
+html, body {
+	font-family: $font-family-main;
+}
+
+a {
+	display: inline-block;
+	color: $theme-link;
+	cursor: pointer;
+	margin: -0.2em -0.5em;
+	padding: 0.2em 0.5em;
+	vertical-align: middle;
+	line-height: 1.6;
+	transition: all 150ms linear;
+	text-decoration: none;
+
+	&:hover, &:focus, &:active {
+		color: $white-primary;
+	}
+
+	&:focus, &:active {
+		outline: 0.15em solid $black-secondary;
+	}
+}
+
+p {
+	line-height: 1.4;
+	margin: 0 0 1em;
+}

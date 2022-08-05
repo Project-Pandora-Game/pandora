@@ -1,0 +1,54 @@
+@import '../../styles/constants';
+@import '../../styles/utils';
+
+.RootErrorBoundary {
+	margin: auto;
+	@include flex(column, nowrap);
+	padding: min(2em, 3vh) 2em;
+	border: 1px solid $black-secondary;
+	width: 95vw;
+	max-width: 72em;
+	max-height: 90vh;
+	overflow: hidden;
+	background-color: $grey-lightest;
+	border-radius: 0.5em;
+
+	& > :last-child {
+		margin-bottom: 0;
+	}
+
+	h1 {
+		margin-top: 0;
+	}
+
+	pre {
+		position: relative;
+		flex: 1;
+		margin: 0 0 1em;
+		border: 1px solid;
+		padding: 1em;
+		overflow: auto;
+		background-color: $grey-lighter;
+		border-radius: 0.25em;
+
+		.button-wrapper {
+			position: absolute;
+			top: 0;
+			right: 0;
+		}
+
+		.Button {
+			position: fixed;
+			border-radius: 0 0 0 0.2em;
+			transform: translateX(-100%);
+		}
+
+		.report-content {
+			user-select: all;
+		}
+	}
+
+	.buttons {
+		text-align: right;
+	}
+}

@@ -1,0 +1,186 @@
+@import '../../styles/utils';
+@import '../../styles/constants';
+
+$header-height: 2em;
+
+.wardrobe {
+	display: flex;
+	flex-flow: row;
+	gap: 1em;
+
+	height: 100%;
+
+	.characterPreview {
+		height: 100%;
+		width: max(min(20em, 90vw), 33vw);
+		flex-shrink: 0;
+
+		canvas {
+			height: 100%;
+			width: 100%;
+		}
+	}
+}
+
+.wardrobe-ui {
+	display: flex;
+	flex-flow: row;
+	position: relative;
+	width: 100%;
+	gap: 1em;
+
+	>header {
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: $header-height;
+		display: flex;
+		width: 100%;
+
+		ul {
+			display: flex;
+			justify-content: center;
+			width: 100%;
+			margin: 0;
+			padding: 0;
+		}
+
+		li.tab {
+			display: inline-block;
+			padding: 0 0.5em;
+			border-bottom: $header-height solid;
+			border-bottom-color: $white;
+			border-left: 1em solid transparent;
+			border-right: 1em solid transparent;
+			border-top: 0;
+			line-height: $header-height;
+			color: $black;
+			cursor: pointer;
+			transition: border-bottom-color 0.2s ease-in-out;
+
+			&.active {
+				border-bottom-color: $black-primary;
+				color: $white;
+			}
+
+			&:hover:not(.active) {
+				border-bottom-color: $black-secondary;
+				color: $white;
+			}
+		}
+	}
+
+	> :not(header) {
+		position: relative;
+		top: $header-height;
+		height: calc(100% - $header-height);
+	}
+}
+
+.inventoryView {
+	height: 100%;
+	flex: 1 1 0px;
+	background-color: $grey-lighter;
+	border: solid $black 2px;
+	display: grid;
+	grid-template:
+		"toolbar" 3em
+		"list" auto
+		/ auto;
+	min-width: min(20em, 90vw);
+
+	.toolbar {
+		grid-area: toolbar;
+		display: flex;
+		flex-direction: row;
+
+		span {
+			flex: 1;
+			display: flex;
+			align-items: center;
+			padding: 0.2em;
+		}
+
+		button {
+			border: solid $black 1px;
+			margin: 2px;
+
+			&.active {
+				background-color: $grey-mid;
+			}
+		}
+
+		input[type=text] {
+			padding: 0.2em;
+			height: 2em;
+			margin: auto;
+			width: 10vw;
+		}
+	}
+
+	.list,
+	.grid {
+		grid-area: list;
+		overflow: auto;
+		display: flex;
+		padding: 3px;
+		gap: 3px;
+	}
+
+	.list {
+		flex-flow: column;
+	}
+
+	.grid {
+		flex-flow: row wrap;
+		align-items: flex-start;
+		align-content: flex-start;
+	}
+}
+
+.inventoryViewItem {
+	border: solid $black 1px;
+	background-color: $grey-lighter;
+	display: flex;
+
+	&.allowed:hover {
+		cursor: pointer;
+		background-color: $grey-light;
+	}
+
+	&.blocked {
+		background-color: #977;
+	}
+
+	&.listMode {
+		padding: 3px 0.5em;
+		height: 2em;
+		align-items: center;
+		gap: 0.5em;
+
+		.itemPreview {
+			height: 1.5em;
+			width: 1.5em;
+			border: solid $black 1px;
+		}
+	}
+
+	&.gridMode {
+		padding: 0.5em;
+		width: 32%;
+		flex-direction: column;
+		row-gap: 0.5em;
+
+		.itemPreview {
+			width: 100%;
+			aspect-ratio: 1;
+			border: solid $black 1px;
+		}
+
+		.itemName {
+			@include center-flex;
+			height: 2em;
+			width: 100%;
+		}
+	}
+}

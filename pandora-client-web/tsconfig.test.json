@@ -1,0 +1,7 @@
+{
+	"extends": "./tsconfig.base.json",
+	"compilerOptions": {
+		"types": ["@types/jest", "offscreencanvas"]
+	},
+	"include": ["./test/**/*", "./src/**/*.d.ts"]
+}

@@ -1,0 +1,11 @@
+.management {
+	&>.management-header {
+		display: flex;
+		flex-flow: row wrap;
+		justify-content: center;
+
+		&>a {
+			margin: 0.3em;
+		}
+	}
+}

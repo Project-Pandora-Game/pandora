@@ -1,0 +1,56 @@
+@import 'styles/typography';
+@import 'styles/forms';
+@import 'styles/utils';
+
+* {
+	box-sizing: border-box;
+}
+
+html, body {
+	height: 100%;
+	margin: 0;
+	background-color: $grey-lightest;
+}
+
+#pandora-root, #editor-root {
+	@include flex(column);
+	margin: 0;
+	height: 100%;
+	background-color: $grey-lighter;
+	user-select: none;
+}
+
+.selectable {
+	user-select: all;
+}
+
+div.main {
+	@include flex(column);
+	background-color: $grey-lighter;
+	background-image: linear-gradient(to right, #bbb 90%, rgb(174, 174, 174) 10%);
+	background-size: 3em 3em;
+	flex: 1;
+	overflow: auto;
+
+	& > * {
+		flex: 1;
+		padding: 1em;
+		min-width: fit-content;
+	}
+
+	& > footer {
+		flex: none;
+		align-self: stretch;
+		height: 1.5em;
+		padding: 0.2em;
+		font-style: italic;
+		background-color: $grey-mid;
+		user-select: text;
+	}
+}
+
+.centerbox {
+	@include center-flex;
+	min-width: 100%;
+	min-height: 100%;
+}

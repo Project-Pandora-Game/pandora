@@ -1,0 +1,62 @@
+@import '../../../styles/constants';
+
+$button-themes: (
+	default: (
+		background: $grey-darkest,
+		color: $white-primary,
+		background-hover: $grey-lightest,
+		color-hover: $black-primary,
+		focus-outline: $black-secondary
+	),
+	defaultActive: (
+		background: $grey-lightest,
+		color: $black-primary,
+		background-hover: $grey-lightest,
+		color-hover: $black-primary,
+		focus-outline: $black-secondary
+	),
+);
+
+.Button {
+	border-radius: 0.2em;
+	padding: 0.8em 1.8em;
+	border: 0.2em solid;
+
+	@each $theme-name, $theme-data in $button-themes {
+		&.#{$theme-name} {
+			background-color: map-get($theme-data, "background");
+			border-color: map-get($theme-data, "background");
+			color: map-get($theme-data, "color");
+
+			&:hover, &:focus, &:active {
+				background-color: map-get($theme-data, "background-hover");
+				color: map-get($theme-data, "color-hover");
+			}
+
+			&:hover {
+				border-color: map-get($theme-data, "background-hover");
+			}
+
+			&:focus, &:active {
+				border-color: map-get($theme-data, "focus-outline");
+			}
+
+			&:disabled {
+				cursor: unset;
+				&:hover, &:focus, &:active {
+					background-color: map-get($theme-data, "background");
+					border-color: map-get($theme-data, "background");
+					color: map-get($theme-data, "color");
+				}
+			}
+		}
+	}
+
+	&.slim {
+		padding: 0.1em 0.2em;
+	}
+
+	&.hideDisabled:disabled {
+		visibility: hidden !important;
+	}
+}

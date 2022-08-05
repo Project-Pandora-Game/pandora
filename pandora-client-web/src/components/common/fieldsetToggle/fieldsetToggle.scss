@@ -1,0 +1,22 @@
+fieldset.fieldset-toggle {
+	border: 0.1em solid;
+	border-radius: 0.2em;
+
+	&>legend.fieldset-toggle-legend {
+		margin-left: 1rem;
+		cursor: pointer;
+
+		&::before {
+			content: '▶';
+			display: inline-block;
+			background-repeat: no-repeat;
+			width: 1rem;
+			height: 1rem;
+			padding-right: 0.5rem;
+		}
+
+		&.open::before {
+			content: '▼';
+		}
+	}
+}

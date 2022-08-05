@@ -1,0 +1,25 @@
+.bone-ui {
+	&>h3 {
+		margin-left: 2rem;
+	}
+
+	& .bone-rotation {
+		display: flex;
+		flex-flow: row;
+		width: 100%;
+		gap: 0 0.5rem;
+
+		&>input[type='range'] {
+			width: 100%;
+			border-radius: 0.2em;
+			padding: 0;
+		}
+
+		&>input[type='number'] {
+			text-align: right;
+			width: 5rem;
+			border: 0.1em solid;
+			border-radius: 0.2em;
+		}
+	}
+}

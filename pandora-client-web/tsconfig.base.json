@@ -1,0 +1,21 @@
+{
+	"compilerOptions": {
+		"target": "ES6",
+		"lib": ["DOM", "ESNext"],
+		"types": ["offscreencanvas"],
+		"module": "ESNext",
+		"moduleResolution": "Node",
+		"experimentalDecorators": true,
+		"esModuleInterop": true,
+		"baseUrl": "./src",
+		"outDir": "./dist",
+		"noEmitOnError": true,
+		"sourceMap": true,
+		"removeComments": true,
+		"strict": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"jsx": "react",
+		"resolveJsonModule": true
+	}
+}

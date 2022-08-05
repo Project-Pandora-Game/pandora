@@ -1,8 +1,8 @@
 {
-	"name": "pandora-server-directory",
+	"name": "pandora-server-shard",
 	"version": "0.1.0",
 	"private": true,
-	"repository": "github:Project-Pandora-Game/pandora-server-directory",
+	"repository": "github:Project-Pandora-Game/pandora-server-shard",
 	"license": "GPL-3.0-or-later",
 	"engines": {
 		"node": ">=16.x"
@@ -32,7 +32,7 @@
 		"lodash": "^4.17.21",
 		"mongodb": "^4.3.1",
 		"nanoid": "^3.3.4",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#215b5ee",
+		"pandora-common": "*",
 		"prom-client": "^14.0.1",
 		"socket.io": "^4.4.1",
 		"socket.io-client": "^4.4.1"

@@ -19,5 +19,11 @@
 	"typescript.preferences.quoteStyle": "single",
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": true
-	}
+	},
+	"eslint.workingDirectories": [
+		"pandora-client-web",
+		"pandora-common",
+		"pandora-server-directory",
+		"pandora-server-shard"
+	]
 }

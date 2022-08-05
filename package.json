@@ -5,5 +5,8 @@
 		"pandora-common",
 		"pandora-server-directory",
 		"pandora-server-shard"
-	]
+	],
+	"scripts": {
+		"postinstall": "node postinstall.cjs"
+	}
 }

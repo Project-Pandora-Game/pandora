@@ -17,8 +17,7 @@
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
-		"start": "yarn dev",
-		"postinstall": "node scripts/postinstall.cjs"
+		"start": "yarn dev"
 	},
 	"dependencies": {
 		"classnames": "^2.3.1",

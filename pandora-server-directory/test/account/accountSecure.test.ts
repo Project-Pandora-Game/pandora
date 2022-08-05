@@ -1,9 +1,9 @@
 import { LogLevel, SetConsoleOutput } from 'pandora-common';
 import { Account, CreateAccountData } from '../../src/account/account';
 import AccountSecure, { AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
-import * as databaseProvider from '../../src/database/databaseProvider';
 import { MockDatabase } from '../../src/database/mockDb';
 import GetEmailSender from '../../src/services/email';
+import { TestMockDb } from '../utils';
 
 const TEST_USERNAME = 'testuser';
 const TEST_EMAIL = 'test@project-pandora.com';
@@ -47,11 +47,9 @@ describe('AccountSecure', () => {
 	});
 	const mockSaving = jest.spyOn(MockDatabase.prototype, 'setAccountSecure');
 
-	let mockDb: MockDatabase;
 	beforeAll(async () => {
 		SetConsoleOutput(LogLevel.FATAL);
-		mockDb = await new MockDatabase().init(false);
-		jest.spyOn(databaseProvider, 'GetDatabase').mockReturnValue(mockDb);
+		await TestMockDb();
 	});
 
 	describe('isActivated()', () => {

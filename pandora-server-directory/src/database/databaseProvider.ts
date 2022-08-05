@@ -133,7 +133,11 @@ export interface PandoraDatabase {
 let database: MongoDatabase | MockDatabase | undefined;
 
 /** Init database connection based on configuration */
-export async function InitDatabase(): Promise<void> {
+export async function InitDatabase(setDb?: typeof database): Promise<void> {
+	if (setDb) {
+		database = setDb;
+		return;
+	}
 	switch (DATABASE_TYPE) {
 		case 'mongodb':
 			database = await new MongoDatabase().init();

@@ -5,7 +5,7 @@ const { copyFile } = require('fs/promises');
 const { resolve } = require('path');
 const { spawnSync } = require('child_process');
 
-const WORKSPACES = require('./package.json').workspaces;
+const WORKSPACES = require('./package.json').workspaces.packages;
 
 postinstall();
 

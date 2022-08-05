@@ -1,11 +1,16 @@
 {
 	"private": true,
-	"workspaces": [
-		"pandora-client-web",
-		"pandora-common",
-		"pandora-server-directory",
-		"pandora-server-shard"
-	],
+	"workspaces": {
+		"packages": [
+			"pandora-client-web",
+			"pandora-common",
+			"pandora-server-directory",
+			"pandora-server-shard"
+		],
+		"nohoist": [
+			"**/react-reverse-portal"
+		]
+	},
 	"scripts": {
 		"postinstall": "node postinstall.cjs"
 	}

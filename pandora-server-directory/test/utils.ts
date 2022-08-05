@@ -3,7 +3,7 @@ import { logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { Account, CreateAccountData } from '../src/account/account';
 import { accountManager } from '../src/account/accountManager';
 import { Character } from '../src/account/character';
-import * as databaseProvider from '../src/database/databaseProvider';
+import { InitDatabase } from '../src/database/databaseProvider';
 import { MockDatabase, PrehashPassword } from '../src/database/mockDb';
 
 export function TestSetupLogging() {
@@ -18,7 +18,7 @@ let mockDb: MockDatabase | undefined;
 export async function TestMockDb(): Promise<MockDatabase> {
 	if (!mockDb) {
 		mockDb = await new MockDatabase().init(false);
-		jest.spyOn(databaseProvider, 'GetDatabase').mockReturnValue(mockDb);
+		await InitDatabase(mockDb);
 	}
 	return mockDb;
 }

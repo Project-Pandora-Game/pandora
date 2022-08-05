@@ -1,9 +1,8 @@
 import { IChatRoomDirectoryConfig, LogLevel, RoomId, SetConsoleOutput } from 'pandora-common';
-import { MockDatabase } from '../../src/database/mockDb';
-import * as databaseProvider from '../../src/database/databaseProvider';
 import { ShardManager } from '../../src/shard/shardManager';
 import { Shard } from '../../src/shard/shard';
 import { Room } from '../../src/shard/room';
+import { TestMockDb } from '../utils';
 
 const TEST_SHARD_ID = 'shardTestId';
 const TEST_ROOM_ID: RoomId = 'rTestId';
@@ -42,14 +41,12 @@ const TEST_ROOM_DEV: IChatRoomDirectoryConfig = {
 };
 
 describe('ShardManager', () => {
-	let mockDb: MockDatabase;
 	let shard1: Shard;
 	let shard2: Shard;
 
 	beforeAll(async () => {
 		SetConsoleOutput(LogLevel.FATAL);
-		mockDb = await new MockDatabase().init(false);
-		jest.spyOn(databaseProvider, 'GetDatabase').mockReturnValue(mockDb);
+		await TestMockDb();
 	});
 
 	describe('getOrCreateShard()', () => {

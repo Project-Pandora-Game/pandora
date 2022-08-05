@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"target": "ES2021",
+		"lib": ["ESNext"],
+		"module": "CommonJS",
+		"moduleResolution": "Node",
+		"resolveJsonModule": true,
+		"experimentalDecorators": true,
+		"esModuleInterop": true,
+		"baseUrl": "./src",
+		"outDir": "./dist",
+		"noEmitOnError": true,
+		"sourceMap": true,
+		"removeComments": true,
+		"strict": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true
+	}
+}

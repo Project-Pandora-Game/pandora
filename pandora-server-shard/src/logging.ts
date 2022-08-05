@@ -1,0 +1,93 @@
+import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
+import fs from 'fs';
+import { GetLogger, logConfig, LogLevel } from 'pandora-common';
+import axios from 'axios';
+
+/** Custom function for stringifying data when logging into file */
+export function AnyToString(data: unknown): string {
+	if (typeof data === 'string') {
+		return data;
+	}
+
+	if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
+		if (data instanceof Error) {
+			return data.stack ? `[${data.stack}\n]` : `[Error ${data.name}: ${data.message}]`;
+		}
+		if ('toString' in data) {
+			const customString = String(data);
+			if (customString !== '[object Object]') {
+				return customString;
+			}
+		} else {
+			return '[object null]';
+		}
+	}
+
+	return (
+		JSON.stringify(data, (_k, v) => {
+			if (typeof v === 'object' && v !== null && v !== data) {
+				if (Array.isArray(v))
+					return '[object Array]';
+				if ('toString' in v)
+					return String(v);
+				return '[object null]';
+			}
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+			return v;
+		}) ?? 'undefined'
+	);
+}
+
+export function AddFileOutput(fileName: string, append: boolean, logLevel: LogLevel, logLevelOverrides: Record<string, LogLevel> = {}): void {
+	const fd = fs.openSync(fileName, append ? 'a' : 'w');
+	logConfig.logOutputs.push({
+		logLevel,
+		logLevelOverrides,
+		supportsColor: false,
+		onMessage: (prefix, message) => {
+			const line = [prefix, ...message.map((v) => AnyToString(v))].join(' ') + '\n';
+			fs.writeSync(fd, line, undefined, 'utf8');
+		},
+	});
+}
+
+export function AddDiscordLogOutput(name: string, webhookUrl: string, logLevel: LogLevel, logLevelOverrides: Record<string, LogLevel> = {}): void {
+	const LOG_COLORS: Record<LogLevel, number> = {
+		[LogLevel.FATAL]: 0x581845,
+		[LogLevel.ERROR]: 0xC70039,
+		[LogLevel.WARNING]: 0xFF5733,
+		[LogLevel.ALERT]: 0xFFC300,
+		[LogLevel.INFO]: 0xFFFFFF,
+		[LogLevel.VERBOSE]: 0x08C43A,
+		[LogLevel.DEBUG]: 0x0C71C4,
+	};
+	let suspend: boolean = false;
+
+	const logger = GetLogger('Discord');
+
+	logConfig.logOutputs.push({
+		logLevel,
+		logLevelOverrides,
+		supportsColor: false,
+		onMessage: (prefix, message, level) => {
+			if (suspend)
+				return;
+
+			const request: RESTPostAPIWebhookWithTokenJSONBody = {
+				embeds: [{
+					author: {
+						name,
+					},
+					color: LOG_COLORS[level] ?? 0xFFC300,
+					title: prefix,
+					description: `\`\`\`\n${message.map((v) => AnyToString(v)).join(' ')}\n\`\`\``,
+				}],
+			};
+			axios.post(webhookUrl, request).catch((err) => {
+				suspend = true;
+				logger.error('Failed to send discord webhook error', err);
+				suspend = false;
+			});
+		},
+	});
+}

@@ -1,0 +1,73 @@
+import { z } from 'zod';
+import { CharacterId, CharacterIdSchema } from '../character';
+import { ChatActionId } from './chatActions';
+
+export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
+export type IChatModifier = z.infer<typeof ChatModifierSchema>;
+
+export const ChatSegmentSchema = z.tuple([ChatModifierSchema, z.string()]);
+export type IChatSegment = z.infer<typeof ChatSegmentSchema>;
+
+export const ChatTypeSchema = z.enum(['chat', 'me', 'emote', 'ooc']);
+export type IChatType = z.infer<typeof ChatTypeSchema>;
+
+export const ClientMessageSchema = z.object({
+	type: z.enum(['me', 'emote']),
+	parts: z.array(ChatSegmentSchema),
+}).or(z.object({
+	type: z.enum(['chat', 'ooc']),
+	parts: z.array(ChatSegmentSchema),
+	to: CharacterIdSchema.optional(),
+}));
+export type IClientMessage = z.infer<typeof ClientMessageSchema>;
+
+export type IChatRoomMessageChatCharacter = { id: CharacterId, name: string; labelColor: string; };
+export type IChatRoomMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
+	id: number;
+	insertId?: number;
+} & ({
+	type: 'me' | 'emote';
+	from: IChatRoomMessageChatCharacter;
+} | {
+	type: 'chat' | 'ooc';
+	from: IChatRoomMessageChatCharacter;
+	to?: IChatRoomMessageChatCharacter;
+});
+
+export type IChatRoomMessageDeleted = {
+	type: 'deleted';
+	id: number;
+	from: CharacterId;
+};
+
+export type IChatRoomMessageActionCharacter = { id: CharacterId, name: string; pronoun: string; };
+export type IChatRoomMessageAction = {
+	type: 'action' | 'serverMessage';
+	/** id to be looked up in message translation database */
+	id: ChatActionId;
+	data?: {
+		/** Used to generate specific dictionary entries, acts as source */
+		character?: IChatRoomMessageActionCharacter;
+		/** Used to generate specific dictionary entries, defaults to `character` */
+		targetCharacter?: IChatRoomMessageActionCharacter;
+	};
+	dictionary?: Record<string, string>;
+};
+
+export type IChatRoomMessageBase = IChatRoomMessageChat | IChatRoomMessageAction | IChatRoomMessageDeleted;
+export type IChatRoomMessage = IChatRoomMessageBase & {
+	/** Time the message was sent, guaranteed to be unique */
+	time: number;
+};
+
+export type IChatRoomMessageDirectoryAction = Omit<IChatRoomMessageAction, 'data'> & {
+	/** Time the message was sent, guaranteed to be unique from Directory; not necessarily the final one */
+	directoryTime: number;
+	data?: {
+		character?: CharacterId;
+		targetCharacter?: CharacterId;
+	};
+};
+
+export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whisper', 'afk']);
+export type IChatRoomStatus = z.infer<typeof ChatRoomStatusSchema>;

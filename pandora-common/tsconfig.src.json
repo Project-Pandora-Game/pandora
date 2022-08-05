@@ -1,0 +1,10 @@
+{
+	"compilerOptions": {
+		"types": [],
+		"declaration": true,
+		"declarationMap": true,
+		"removeComments": false,
+	},
+	"extends": "./tsconfig.base.json",
+	"include": ["./src/**/*"]
+}

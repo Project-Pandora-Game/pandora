@@ -1,0 +1,52 @@
+{
+	"name": "pandora-common",
+	"version": "0.1.0",
+	"private": true,
+	"repository": "git@github.com:Project-Pandora-Game/pandora-common.git",
+	"license": "MIT",
+	"engines": {
+		"node": ">=16.x"
+	},
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": [
+		"/dist/**/*"
+	],
+	"scripts": {
+		"prebuild": "rimraf dist",
+		"build": "tsc -p ./tsconfig.src.json",
+		"build:swc": "swc src -d dist",
+		"predev": "rimraf dist",
+		"dev": "tsc -p ./tsconfig.src.json -w",
+		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
+		"lint:fix": "eslint --fix .",
+		"type-check": "tsc -p . --noEmit",
+		"type-check:test": "tsc -p ./tsconfig.test.json --noEmit",
+		"type-check:src": "tsc -p ./tsconfig.src.json --noEmit",
+		"test": "jest",
+		"test:coverage": "jest --coverage",
+		"test:watch": "jest --watch",
+		"prepack": "yarn run build",
+		"install": "yarn run build",
+		"postinstall": "node scripts/postinstall.cjs"
+	},
+	"dependencies": {
+		"@types/node": "^17.0.31",
+		"lodash": "^4.17.21",
+		"rimraf": "^3.0.2",
+		"tslib": "^2.4.0",
+		"typescript": "^4.6.4",
+		"zod": "^3.17.3"
+	},
+	"devDependencies": {
+		"@swc/cli": "^0.1.57",
+		"@swc/core": "^1.2.177",
+		"@swc/jest": "^0.2.20",
+		"@types/jest": "^27.5.0",
+		"@typescript-eslint/eslint-plugin": "^5.22.0",
+		"@typescript-eslint/parser": "^5.22.0",
+		"eslint": "^8.14.0",
+		"jest": "^28.0.3",
+		"ts-mockito": "^2.6.1"
+	}
+}

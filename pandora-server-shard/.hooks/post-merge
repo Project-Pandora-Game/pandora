@@ -1,6 +1,0 @@
-#!/bin/bash
-
-set -eou pipefail
-source "./.hooks/include.sh"
-
-yarn_helper

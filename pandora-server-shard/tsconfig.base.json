@@ -2,6 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2021",
 		"lib": ["ESNext"],
+		"types": ["@types/node", "@types/jest"],
 		"module": "CommonJS",
 		"moduleResolution": "Node",
 		"resolveJsonModule": true,

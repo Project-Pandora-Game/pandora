@@ -1,6 +1,6 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { UserEvent } from '@testing-library/user-event/dist/types/setup';
+import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React from 'react';
 import { ResendVerificationForm } from '../../../../src/components/login/forms/resendVerificationForm';
 import { RenderWithRouter } from '../../../testUtils';

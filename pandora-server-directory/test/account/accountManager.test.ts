@@ -1,9 +1,9 @@
 import { accountManager, ACCOUNTMANAGER_TICK_INTERVAL, ACCOUNT_INACTIVITY_THRESHOLD } from '../../src/account/accountManager';
 import AccountSecure, { GenerateEmailHash } from '../../src/account/accountSecure';
 import { MockDatabase, PrehashPassword } from '../../src/database/mockDb';
-import * as databaseProvider from '../../src/database/databaseProvider';
 import { Account, CreateAccountData } from '../../src/account/account';
 import { LogLevel, SetConsoleOutput } from 'pandora-common';
+import { TestMockDb } from '../utils';
 
 const TEST_USERNAME = 'testuser';
 const TEST_EMAIL = 'test@project-pandora.com';
@@ -15,8 +15,7 @@ describe('AccountManager', () => {
 
 	beforeAll(async () => {
 		SetConsoleOutput(LogLevel.FATAL);
-		mockDb = await new MockDatabase().init(false);
-		jest.spyOn(databaseProvider, 'GetDatabase').mockReturnValue(mockDb);
+		mockDb = await TestMockDb();
 		// Create at least one account
 		await mockDb.createAccount(await CreateAccountData(
 			'backgroundAccount',

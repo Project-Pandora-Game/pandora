@@ -21,8 +21,7 @@
 		"type-check:src": "tsc -p ./tsconfig.src.json --noEmit",
 		"test": "jest",
 		"test:coverage": "jest --coverage",
-		"test:watch": "jest --watch",
-		"postinstall": "node scripts/postinstall.cjs"
+		"test:watch": "jest --watch"
 	},
 	"dependencies": {
 		"@octokit/auth-oauth-app": "^4.3.1",
@@ -33,11 +32,11 @@
 		"dotenv": "^14.3.2",
 		"express": "^4.18.1",
 		"lodash": "^4.17.21",
-		"mongodb": "^4.3.1",
+		"mongodb": "~4.3.1",
 		"mongodb-memory-server": "^8.4.0",
 		"nanoid": "^3.2.0",
 		"nodemailer": "^6.7.2",
-		"pandora-common": "github:Project-Pandora-Game/pandora-common#006cea7",
+		"pandora-common": "*",
 		"prom-client": "^14.0.1",
 		"socket.io": "^4.4.1"
 	},

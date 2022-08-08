@@ -1,21 +1,18 @@
 import { LogLevel, SetConsoleOutput } from 'pandora-common';
-import { MockDatabase } from '../../src/database/mockDb';
-import * as databaseProvider from '../../src/database/databaseProvider';
 import { Account } from '../../src/account/account';
 import AccountSecure from '../../src/account/accountSecure';
 import { accountManager } from '../../src/account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../../src/account/accountProcedures';
+import { TestMockDb } from '../utils';
 
 const TEST_USERNAME = 'testuser';
 const TEST_EMAIL = 'test@project-pandora.com';
 
-let mockDb: MockDatabase;
 let testAccountId: number;
 
 beforeAll(async () => {
 	SetConsoleOutput(LogLevel.FATAL);
-	mockDb = await new MockDatabase().init(false);
-	jest.spyOn(databaseProvider, 'GetDatabase').mockReturnValue(mockDb);
+	await TestMockDb();
 	// Create at least one account
 	const account = await accountManager.createAccount(TEST_USERNAME, 'test', TEST_EMAIL);
 	expect(account).toBeInstanceOf(Account);

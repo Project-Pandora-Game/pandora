@@ -1,0 +1,18 @@
+{
+	"private": true,
+	"workspaces": {
+		"packages": [
+			"pandora-client-web",
+			"pandora-common",
+			"pandora-server-directory",
+			"pandora-server-shard"
+		],
+		"nohoist": [
+			"**/react-reverse-portal"
+		]
+	},
+	"scripts": {
+		"postinstall": "node postinstall.cjs",
+		"ci": "yarn workspaces run build && yarn workspaces run lint && yarn workspaces run type-check:test && yarn workspaces run test"
+	}
+}

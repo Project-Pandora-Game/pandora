@@ -167,15 +167,15 @@ async function HandleCallback(req: Request, res: Response): Promise<void> {
 
 async function UpdateGitHubRole({ login, id }: Awaited<ReturnType<Octokit['users']['getByUsername']>>['data'], accountId: number): Promise<void> {
 	try {
-		const role = await GitHubVerifier.getGitHubRole({ id: id as number, login: login as string });
+		const role = await GitHubVerifier.getGitHubRole({ id, login });
 		const account = await accountManager.loadAccountById(accountId);
 		if (!account) {
 			logger.warning(`Account ${accountId} not found`);
 			return;
 		}
 		await account.secure.setGitHubInfo({
-			login: login as string,
-			id: id as number,
+			login,
+			id,
 			role,
 		});
 	} catch (e) {

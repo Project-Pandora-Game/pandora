@@ -46,7 +46,7 @@ export default function (env: WebpackEnv): Configuration {
 			open: true,
 			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),
 			static: {
-				directory: join(__dirname, '..', 'pandora-assets', 'out'),
+				directory: join(__dirname, '..', '..', 'pandora-assets', 'out'),
 				publicPath: '/pandora-assets',
 				serveIndex: true,
 			},

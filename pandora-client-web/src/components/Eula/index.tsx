@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
+import { useBrowserStorage } from '../../browserStorage';
+import { ChildrenProps } from '../../common/reactTypes';
 import { GAME_NAME, GAME_VERSION } from '../../config/Environment';
 
 /**
  * Display the end user license agreement, with the option to accept it.
  */
-export function Eula({ accept }: EulaProps): React.ReactElement {
+export function Eula({ accept }: EulaProps): ReactElement {
 	return (
 		<div className='eula'>
 			<h1>Welcome to { GAME_NAME }</h1>
@@ -33,6 +35,24 @@ export function Eula({ accept }: EulaProps): React.ReactElement {
 				<button onClick={ EulaDisagree }>Disagree</button>
 			</div>
 		</div>
+	);
+}
+
+export function EulaGate({ children }: ChildrenProps): ReactElement {
+	const [eula, setEula] = useBrowserStorage('eula', false);
+
+	if (!eula) {
+		return (
+			<div className='main'>
+				<Eula accept={ () => setEula(true) } />
+			</div>
+		);
+	}
+
+	return (
+		<>
+			{ children }
+		</>
 	);
 }
 

@@ -10,7 +10,7 @@ import { SocketIODirectoryConnector } from '../../networking/socketio_directory_
 import { useObservable } from '../../observable';
 
 let directoryConnectorInstance: DirectoryConnector | undefined;
-let connectionPromise: Promise<DirectoryConnector>;
+let connectionPromise: Promise<DirectoryConnector> | undefined;
 
 /** Factory function responsible for providing the concrete directory connector implementation to the application */
 function CreateDirectoryConnector(): DirectoryConnector {
@@ -23,7 +23,6 @@ function CreateDirectoryConnector(): DirectoryConnector {
 
 try {
 	directoryConnectorInstance = CreateDirectoryConnector();
-	connectionPromise = directoryConnectorInstance.connect();
 } catch (err) { // Catch errors in connector creation so that they can be handled by an error boundary
 	directoryConnectorInstance = undefined;
 	connectionPromise = Promise.reject(err);
@@ -39,6 +38,9 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 	useEffect(() => {
 		void (async () => {
 			try {
+				if (connectionPromise === undefined) {
+					connectionPromise = directoryConnectorInstance?.connect();
+				}
 				await connectionPromise;
 			} catch (error) {
 				logger.fatal('Directory connection failed:', error);

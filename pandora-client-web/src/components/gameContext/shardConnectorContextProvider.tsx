@@ -19,7 +19,6 @@ import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
 import { useChatRoomHandler } from './chatRoomContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
-import { usePlayerContext } from './playerContextProvider';
 
 export interface ShardConnectorContextData {
 	shardConnector: ShardConnector | null;
@@ -46,7 +45,6 @@ export const connectorFactoryContext = createContext<ConnectorFactoryContext>({
 });
 
 export function ShardConnectorContextProvider({ children }: ChildrenProps): ReactElement {
-	const player = usePlayerContext();
 	const room = useChatRoomHandler();
 	const [shardConnector, setShardConnector] = useState<ShardConnector | null>(null);
 
@@ -56,10 +54,11 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 	}), [shardConnector]);
 
 	const context = useMemo<ConnectorFactoryContext>(() => ({
-		shardConnectorFactory: (info) => new SocketIOShardConnector(info, player, room),
-	}), [player, room]);
+		shardConnectorFactory: (info) => new SocketIOShardConnector(info, room),
+	}), [room]);
 
 	useDebugExpose('shardConnector', shardConnector);
+	useDebugExpose('player', useNullableObservable(shardConnector?.player));
 
 	return (
 		<connectorFactoryContext.Provider value={ context }>
@@ -153,16 +152,14 @@ export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) =
 function useDisconnectFromShard(): () => void {
 	const shardConnector = useShardConnector();
 	const setShardConnector = useSetShardConnector();
-	const player = usePlayerContext();
 
 	return useCallback(() => {
 		if (shardConnector) {
 			shardConnector.disconnect();
 			setShardConnector(null);
-			player.value = null;
 			LastSelectedCharacter.value = undefined;
 		}
-	}, [shardConnector, setShardConnector, player]);
+	}, [shardConnector, setShardConnector]);
 }
 
 function useSetShardConnector(): Dispatch<SetStateAction<ShardConnector | null>> {

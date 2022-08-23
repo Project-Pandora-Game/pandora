@@ -60,10 +60,10 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		return this._connectionInfo;
 	}
 
-	constructor(info: IDirectoryCharacterConnectionInfo, player: Observable<PlayerCharacter | null>, room: IChatRoomHandler) {
+	constructor(info: IDirectoryCharacterConnectionInfo, room: IChatRoomHandler) {
 		super(CreateConnection(info), logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
-		this._player = player;
+		this._player = new Observable<PlayerCharacter | null>(null);
 		this._room = room;
 		room.setShard(this);
 

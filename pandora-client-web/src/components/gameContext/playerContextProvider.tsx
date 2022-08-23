@@ -1,15 +1,11 @@
-import { useState, useContext, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { CharacterId, ICharacterData } from 'pandora-common';
 import { PlayerCharacter } from '../../character/player';
-import { playerContext } from './stateContextProvider';
-import { Observable, useObservable } from '../../observable';
+import { useNullableObservable } from '../../observable';
+import { useShardConnector } from './shardConnectorContextProvider';
 
 export function usePlayer(): PlayerCharacter | null {
-	return useObservable(usePlayerContext());
-}
-
-export function usePlayerContext(): Observable<PlayerCharacter | null> {
-	return useContext(playerContext);
+	return useNullableObservable(useShardConnector()?.player);
 }
 
 export function usePlayerData() {

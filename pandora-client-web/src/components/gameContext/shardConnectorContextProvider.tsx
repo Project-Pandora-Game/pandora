@@ -17,7 +17,7 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { LastSelectedCharacter, SocketIOShardConnector } from '../../networking/socketio_shard_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
-import { useChatRoomHandler, useChatRoomSetShard } from './chatRoomContextProvider';
+import { useChatRoomHandler } from './chatRoomContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
 import { usePlayerContext } from './playerContextProvider';
 
@@ -82,7 +82,6 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 	const directoryState = useObservable(directoryConnector.state);
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
 	const shardState = useNullableObservable(shardConnector?.state);
-	const setChatRoomShard = useChatRoomSetShard();
 
 	useEffect(() => {
 		setDebugData({
@@ -91,10 +90,6 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 			shardState: shardState ?? undefined,
 		});
 	}, [directoryState, directoryStatus, shardState, setDebugData]);
-
-	useEffect(() => {
-		setChatRoomShard(shardConnector);
-	}, [shardConnector, setChatRoomShard]);
 
 	useEffect(() => {
 		return directoryConnector.connectionStateEventEmitter.on('connectionState', ({ character }) => {

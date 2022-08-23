@@ -14,7 +14,7 @@ export function StateContextProvider({ children }: ChildrenProps): ReactElement 
 	const { notify } = useNotification(NotificationSource.CHAT_MESSAGE);
 
 	const player = useMemo(() => new Observable<PlayerCharacter | null>(null), []);
-	const chatRoom = useMemo<ChatRoom>(() => new ChatRoom(notify, player), [notify, player]);
+	const chatRoom = useMemo<ChatRoom>(() => new ChatRoom(notify), [notify]);
 
 	useDebugExpose('player', useObservable(player));
 	useDebugExpose('chatRoom', chatRoom);

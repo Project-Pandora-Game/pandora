@@ -5,7 +5,7 @@ import { GetLogger } from 'pandora-common';
 import { useCallback, useContext, useMemo } from 'react';
 import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
-import { Observable, ReadonlyObservable, useObservable } from '../../observable';
+import { Observable, useObservable } from '../../observable';
 import { ChatParser } from '../chatroom/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
@@ -20,6 +20,7 @@ export interface IChatRoomHandler {
 	onUpdate(data: IChatRoomUpdate): void;
 	onMessage(messages: IChatRoomMessage[]): number;
 	onStatus(status: IShardClientArgument['chatRoomStatus']): void;
+	setShard(shard: ShardConnector | null): void;
 }
 
 export interface IChatRoomMessageSender {
@@ -103,9 +104,8 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 	public readonly characters = new Observable<readonly Character[]>([]);
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
 	private readonly _messageNotify: (data: NotificationData) => void;
-	private readonly _playerObservable: ReadonlyObservable<PlayerCharacter | null>;
 	public get player(): PlayerCharacter | null {
-		return this._playerObservable.value;
+		return this._shard?.player.value ?? null;
 	}
 
 	get playerId() {
@@ -142,9 +142,8 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 		return id;
 	}
 
-	constructor(messageNotify: (data: NotificationData) => void, player: ReadonlyObservable<PlayerCharacter | null>) {
+	constructor(messageNotify: (data: NotificationData) => void) {
 		this._messageNotify = messageNotify;
-		this._playerObservable = player;
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMOUT / 2);
 	}
 
@@ -375,7 +374,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 		if (type !== undefined) {
 			messages = [{ type, parts: raw ? [['normal', message]] : ChatParser.parseStyle(message), to: target }];
 		} else if (raw) {
-			throw new Error('Raw is not implementedf for multi-part messages');
+			throw new Error('Raw is not implemented for multi-part messages');
 		} else {
 			messages = ChatParser.parse(message, target);
 		}
@@ -473,11 +472,6 @@ export function useChatRoomData(): IChatRoomClientData | null {
 export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {
 	const context = useContext(chatRoomContext);
 	return useCallback((status: IChatRoomStatus) => context.setPlayerStatus(status), [context]);
-}
-
-export function useChatRoomSetShard(): (shard: ShardConnector | null) => void {
-	const context = useContext(chatRoomContext);
-	return useCallback((shard: ShardConnector | null) => context.setShard(shard), [context]);
 }
 
 export function useChatRoomStatus(): { data: ICharacterPublicData, status: IChatRoomStatus }[] {

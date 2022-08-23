@@ -51,6 +51,11 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		return this._state;
 	}
 
+	/** The player */
+	get player(): ReadonlyObservable<PlayerCharacter | null> {
+		return this._player;
+	}
+
 	get connectionInfo(): ReadonlyObservable<Readonly<IDirectoryCharacterConnectionInfo>> {
 		return this._connectionInfo;
 	}
@@ -60,6 +65,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
 		this._player = player;
 		this._room = room;
+		room.setShard(this);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -128,6 +134,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 			return;
 		this.socket.close();
 		this.setState(ShardConnectionState.DISCONNECTED);
+		this._room.setShard(null);
 		logger.info('Disconnected from Shard');
 	}
 

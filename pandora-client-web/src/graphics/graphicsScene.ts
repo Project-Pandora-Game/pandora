@@ -92,7 +92,7 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		return `#${backgroundColor.toString(16).padStart(6, '0')}`;
 	}
 	set background(data: string) {
-		if (/#[0-9a-f]{6, 8}/i.test(data)) {
+		if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(data)) {
 			this._background = '';
 			this._backgroundSprite?.destroy();
 			this._backgroundSprite = undefined;
@@ -100,14 +100,14 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 			if (data.length > 7) {
 				this._app.renderer.backgroundAlpha = parseInt(data.substring(7, 9), 16) / 255;
 			}
-		} else if (/data:image\/png;base64,[0-9a-zA-Z+/=]+/i.test(data)) {
+		} else if (/^data:image\/png;base64,[0-9a-zA-Z+/=]+$/i.test(data)) {
 			this._background = data;
 			const img = new Image();
 			img.src = data;
 			this._backgroundSprite = this.add(new Sprite(Texture.from(img)), -1000);
 			this._backgroundSprite.width = this._app.renderer.width;
 			this._backgroundSprite.height = this._app.renderer.height;
-		} else if (/https?:\/\/.+/i.test(data)) {
+		} else if (/^https?:\/\/.+$/i.test(data)) {
 			this._background = data;
 			(async () => {
 				this._backgroundSprite = this.add(new Sprite(await Texture.fromURL(data)), -1000);

@@ -87,6 +87,8 @@ export class Character {
 
 	private logger: Logger;
 
+	public position: [number, number] = [0, 0];
+
 	constructor(data: ICharacterData, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;

@@ -3,6 +3,7 @@ import type { MessageHandler } from './message_handler';
 import { CharacterDataCreateSchema, CharacterIdSchema, CharacterPublicSettingsSchema } from '../character';
 import { AppearanceActionSchema } from '../assets';
 import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
+import { ChatRoomDirectoryConfigSchema } from '../chatroom/room';
 import { z } from 'zod';
 
 /** Client->Shard handlers */
@@ -19,6 +20,10 @@ export const ClientShardInSchema = z.object({
 	}),
 	chatRoomMessageAck: z.object({
 		lastTime: z.number().min(0),
+	}),
+	chatRoomCharacterMove: z.object({
+		id: CharacterIdSchema.optional(),
+		position: ChatRoomDirectoryConfigSchema.shape.size,
 	}),
 	appearanceAction: AppearanceActionSchema,
 	updateSettings: CharacterPublicSettingsSchema.partial(),

@@ -35,6 +35,9 @@ function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoo
 		protected: false,
 		password: null,
 		features: [],
+		background: '#1099bb',
+		size: [1000, 1000],
+		scaling: 0,
 	};
 }
 
@@ -133,6 +136,19 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 						onChange={ (event) => setRoomModifiedData({ protected: true, password: event.target.value || null }) } />
 				</div>
 			}
+			<div className='input-container'>
+				<label>Background</label>
+				<input type='color' value={ currentConfig.background } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
+			</div>
+			<div className='input-container'>
+				<label>Room size</label>
+				<input autoComplete='none' type='number' value={ currentConfig.size[0] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [Number.parseInt(event.target.value, 10), currentConfig.size[1]] }) } />
+				<input autoComplete='none' type='number' value={ currentConfig.size[1] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [currentConfig.size[0], Number.parseInt(event.target.value, 10)] }) } />
+			</div>
+			<div className='input-container'>
+				<label>Y Scaling</label>
+				<input type='range' value={ currentConfig.scaling } min={ 0 } max={ 10 } step={ 0.1 } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ scaling: Number.parseFloat(event.target.value) }) } />
+			</div>
 		</>
 	);
 

@@ -44,6 +44,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			chatRoomMessageAck: this.handleChatRoomMessageAck.bind(this),
 			chatRoomStatus: this.handleChatRoomStatus.bind(this),
+			chatRoomCharacterMove: this.handleChatRoomCharacterMove.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 		});
 	}
@@ -124,6 +125,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		const character = client.character;
 
 		room.updateStatus(character, status, target);
+	}
+
+	private handleChatRoomCharacterMove({ id, position }: IClientShardArgument['chatRoomCharacterMove'], client: IConnectionClient): void {
+		if (!client.character?.room)
+			throw new BadMessageError();
+
+		const room = client.character.room;
+		const character = client.character;
+
+		room.updateCharacterPosition(character, id ?? character.id, position);
 	}
 
 	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: IConnectionClient): void {

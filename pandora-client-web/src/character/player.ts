@@ -1,4 +1,4 @@
-import { GetLogger, ICharacterData, ICharacterDataCreate } from 'pandora-common';
+import { GetLogger, ICharacterData, ICharacterDataCreate, ICharacterRoomData } from 'pandora-common';
 import { useCallback } from 'react';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { Character } from './character';
@@ -8,10 +8,13 @@ export type CharacterCreationCallback = (
 	creationData: ICharacterDataCreate,
 ) => Promise<'ok' | 'failed'>;
 
-export class PlayerCharacter extends Character<ICharacterData> {
+export class PlayerCharacter extends Character<ICharacterData & ICharacterRoomData> {
 
 	constructor(data: ICharacterData) {
-		super(data, GetLogger('Character', `[Player ${ data.id }]`));
+		super({
+			...data,
+			position: [0, 0],
+		}, GetLogger('Character', `[Player ${data.id}]`));
 	}
 
 	public setCreationComplete(): void {

@@ -21,6 +21,7 @@ import { usePlayerData, usePlayerId } from '../gameContext/playerContextProvider
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
 import { ChatParser } from './chatParser';
+import { ChatRoomScene } from './chatRoomScene';
 import './chatroom.scss';
 
 export function Chatroom(): ReactElement {
@@ -47,6 +48,7 @@ export function Chatroom(): ReactElement {
 							{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
 						</ul>
 					</div>
+					<ChatRoomScene />
 				</div>
 			</ChatInputContextProvider>
 		</div>

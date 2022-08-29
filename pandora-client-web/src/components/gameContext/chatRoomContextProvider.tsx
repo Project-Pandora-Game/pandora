@@ -11,6 +11,7 @@ import { ShardConnectionState, ShardConnector } from '../../networking/shardConn
 import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
 import { chatRoomContext } from './stateContextProvider';
+import { TypedEventEmitter } from '../../event';
 
 const logger = GetLogger('ChatRoom');
 
@@ -98,12 +99,13 @@ function ProcessMessage(message: IChatRoomMessageAction & { time: number; }): IC
 	};
 }
 
-export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
+export class ChatRoom extends TypedEventEmitter<{
+	messageNotify: NotificationData
+}> implements IChatRoomHandler, IChatRoomMessageSender {
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
 	public readonly data = new Observable<IChatRoomClientData | null>(null);
 	public readonly characters = new Observable<readonly Character[]>([]);
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
-	private readonly _messageNotify: (data: NotificationData) => void;
 	public get player(): PlayerCharacter | null {
 		return this._shard?.player.value ?? null;
 	}
@@ -142,8 +144,8 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 		return id;
 	}
 
-	constructor(messageNotify: (data: NotificationData) => void) {
-		this._messageNotify = messageNotify;
+	constructor() {
+		super();
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMOUT / 2);
 	}
 
@@ -266,7 +268,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 			if (!IsUserMessage(message)) {
 				nextMessages.push(ProcessMessage(message));
 				if (!notified) {
-					this._messageNotify({ time: Date.now() });
+					this.emit('messageNotify', { time: Date.now() });
 					notified = true;
 				}
 			} else if (message.type === 'deleted') {
@@ -297,7 +299,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 			} else {
 				nextMessages.push(message);
 				if (!notified) {
-					this._messageNotify({ time: Date.now() });
+					this.emit('messageNotify', { time: Date.now() });
 					notified = true;
 				}
 			}

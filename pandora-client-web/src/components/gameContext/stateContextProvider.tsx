@@ -4,7 +4,7 @@ import { useDebugExpose } from '../../common/useDebugExpose';
 import { ChatRoom } from './chatRoomContextProvider';
 import { useNotification, NotificationSource } from './notificationContextProvider';
 
-export const chatRoomContext = createContext<ChatRoom>(null as unknown as ChatRoom);
+export const chatRoomContext = createContext<ChatRoom | null>(null);
 
 export function StateContextProvider({ children }: ChildrenProps): ReactElement {
 	const { notify } = useNotification(NotificationSource.CHAT_MESSAGE);

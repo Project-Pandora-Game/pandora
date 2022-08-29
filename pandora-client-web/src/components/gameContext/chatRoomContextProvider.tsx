@@ -446,36 +446,44 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 	}
 }
 
+function useChatroom(): ChatRoom {
+	const room = useContext(chatRoomContext);
+	if (!room) {
+		throw new Error('Attempt to access ChatRoom outside of context');
+	}
+	return room;
+}
+
 export function useChatRoomHandler(): IChatRoomHandler {
-	return useContext(chatRoomContext);
+	return useChatroom();
 }
 
 export function useChatRoomMessageSender(): IChatRoomMessageSender {
-	return useContext(chatRoomContext);
+	return useChatroom();
 }
 
 export function useChatRoomMessages(): readonly IChatroomMessageProcessed[] {
-	const context = useContext(chatRoomContext);
+	const context = useChatroom();
 	return useObservable(context.messages);
 }
 
 export function useChatRoomCharacters(): readonly Character[] {
-	const context = useContext(chatRoomContext);
+	const context = useChatroom();
 	return useObservable(context.characters);
 }
 
 export function useChatRoomData(): IChatRoomClientData | null {
-	const context = useContext(chatRoomContext);
+	const context = useChatroom();
 	return useObservable(context.data);
 }
 
 export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {
-	const context = useContext(chatRoomContext);
+	const context = useChatroom();
 	return useCallback((status: IChatRoomStatus) => context.setPlayerStatus(status), [context]);
 }
 
 export function useChatRoomStatus(): { data: ICharacterPublicData, status: IChatRoomStatus }[] {
-	const context = useContext(chatRoomContext);
+	const context = useChatroom();
 	const characters = useObservable(context.characters);
 	const status = useObservable(context.status);
 	return useMemo(() => {

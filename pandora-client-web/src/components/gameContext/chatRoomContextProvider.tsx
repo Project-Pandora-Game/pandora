@@ -5,7 +5,7 @@ import { GetLogger } from 'pandora-common';
 import { useCallback, useContext, useMemo } from 'react';
 import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
-import { Observable, useObservable } from '../../observable';
+import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { ChatParser } from '../chatroom/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
@@ -448,8 +448,12 @@ export class ChatRoom extends TypedEventEmitter<{
 	}
 }
 
-function useChatroom(): ChatRoom {
-	const room = useContext(chatRoomContext);
+function useChatroom(): ChatRoom | null {
+	return useContext(chatRoomContext);
+}
+
+function useChatroomRequired(): ChatRoom {
+	const room = useChatroom();
 	if (!room) {
 		throw new Error('Attempt to access ChatRoom outside of context');
 	}
@@ -457,35 +461,35 @@ function useChatroom(): ChatRoom {
 }
 
 export function useChatRoomHandler(): IChatRoomHandler {
-	return useChatroom();
+	return useChatroomRequired();
 }
 
 export function useChatRoomMessageSender(): IChatRoomMessageSender {
-	return useChatroom();
+	return useChatroomRequired();
 }
 
 export function useChatRoomMessages(): readonly IChatroomMessageProcessed[] {
-	const context = useChatroom();
+	const context = useChatroomRequired();
 	return useObservable(context.messages);
 }
 
-export function useChatRoomCharacters(): readonly Character[] {
+export function useChatRoomCharacters(): (readonly Character[]) | null {
 	const context = useChatroom();
-	return useObservable(context.characters);
+	return useNullableObservable(context?.characters);
 }
 
 export function useChatRoomData(): IChatRoomClientData | null {
 	const context = useChatroom();
-	return useObservable(context.data);
+	return useNullableObservable(context?.data);
 }
 
 export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {
-	const context = useChatroom();
+	const context = useChatroomRequired();
 	return useCallback((status: IChatRoomStatus) => context.setPlayerStatus(status), [context]);
 }
 
 export function useChatRoomStatus(): { data: ICharacterPublicData, status: IChatRoomStatus }[] {
-	const context = useChatroom();
+	const context = useChatroomRequired();
 	const characters = useObservable(context.characters);
 	const status = useObservable(context.status);
 	return useMemo(() => {

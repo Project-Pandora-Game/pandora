@@ -50,7 +50,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			return false;
 		}
 		if (targetId) {
-			const targetCharacter = characters.find((c) => c.data.id === targetId);
+			const targetCharacter = characters?.find((c) => c.data.id === targetId);
 			if (targetCharacter) {
 				setTarget(targetCharacter);
 			} else {
@@ -76,7 +76,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			if (t === playerId) {
 				return;
 			}
-			setTarget(!t ? null : characters.find((c) => c.data.id === t) ?? null);
+			setTarget(!t ? null : characters?.find((c) => c.data.id === t) ?? null);
 		},
 		editing,
 		setEditing,

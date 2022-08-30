@@ -12,7 +12,7 @@ import { connect, Socket } from 'socket.io-client';
 import { LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
 import { PlayerCharacter } from '../character/player';
-import type { IChatRoomHandler } from '../components/gameContext/chatRoomContextProvider';
+import { ChatRoom } from '../components/gameContext/chatRoomContextProvider';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
 import { ShardConnector, ShardConnectionState } from './shardConnector';
@@ -40,7 +40,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 
 	private readonly _state: Observable<ShardConnectionState> = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
-	private readonly _room: IChatRoomHandler;
+	private readonly _room: ChatRoom;
 	private readonly _player: Observable<PlayerCharacter | null>;
 	private readonly _messageHandler: MessageHandler<IShardClientBase>;
 
@@ -56,16 +56,20 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		return this._player;
 	}
 
+	/** The player */
+	get room(): ChatRoom {
+		return this._room;
+	}
+
 	get connectionInfo(): ReadonlyObservable<Readonly<IDirectoryCharacterConnectionInfo>> {
 		return this._connectionInfo;
 	}
 
-	constructor(info: IDirectoryCharacterConnectionInfo, room: IChatRoomHandler) {
+	constructor(info: IDirectoryCharacterConnectionInfo) {
 		super(CreateConnection(info), logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
 		this._player = new Observable<PlayerCharacter | null>(null);
-		this._room = room;
-		room.setShard(this);
+		this._room = new ChatRoom(this);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -134,7 +138,6 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 			return;
 		this.socket.close();
 		this.setState(ShardConnectionState.DISCONNECTED);
-		this._room.setShard(null);
 		logger.info('Disconnected from Shard');
 	}
 

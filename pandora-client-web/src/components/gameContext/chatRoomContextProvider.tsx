@@ -2,7 +2,7 @@ import type { CharacterId, ICharacterPublicData, IChatRoomClientData, IChatRoomM
 // TODO: fix this import
 import type { ChatActionDictionaryMetaEntry } from 'pandora-common/dist/chatroom/chatActions';
 import { GetLogger } from 'pandora-common';
-import { useCallback, useContext, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
@@ -10,8 +10,8 @@ import { ChatParser } from '../chatroom/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
-import { chatRoomContext } from './stateContextProvider';
 import { TypedEventEmitter } from '../../event';
+import { useShardConnector } from './shardConnectorContextProvider';
 
 const logger = GetLogger('ChatRoom');
 
@@ -21,7 +21,6 @@ export interface IChatRoomHandler {
 	onUpdate(data: IChatRoomUpdate): void;
 	onMessage(messages: IChatRoomMessage[]): number;
 	onStatus(status: IShardClientArgument['chatRoomStatus']): void;
-	setShard(shard: ShardConnector | null): void;
 }
 
 export interface IChatRoomMessageSender {
@@ -107,7 +106,7 @@ export class ChatRoom extends TypedEventEmitter<{
 	public readonly characters = new Observable<readonly Character[]>([]);
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
 	public get player(): PlayerCharacter | null {
-		return this._shard?.player.value ?? null;
+		return this._shard.player.value;
 	}
 
 	get playerId() {
@@ -132,7 +131,7 @@ export class ChatRoom extends TypedEventEmitter<{
 	}
 
 	private _lastMessageTime: number = 0;
-	private _shard: ShardConnector | null = null;
+	private readonly _shard: ShardConnector;
 
 	private _lastMessageId = 0;
 	private _getNextMessageId(): number {
@@ -144,8 +143,9 @@ export class ChatRoom extends TypedEventEmitter<{
 		return id;
 	}
 
-	constructor() {
+	constructor(shard: ShardConnector) {
 		super();
+		this._shard = shard;
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMOUT / 2);
 	}
 
@@ -341,7 +341,7 @@ export class ChatRoom extends TypedEventEmitter<{
 			}
 			this.status.value = chars;
 		}
-		this._shard?.sendMessage('chatRoomStatus', { status, target });
+		this._shard.sendMessage('chatRoomStatus', { status, target });
 	}
 
 	public getStatus(id: CharacterId): IChatRoomStatus {
@@ -352,7 +352,7 @@ export class ChatRoom extends TypedEventEmitter<{
 
 	private readonly _sent = new Map<number, { text: string; time: number; target?: CharacterId }>();
 	public sendMessage(message: string, { editing, type, raw, target }: IMessageParseOptions = {}): void {
-		if (this._shard?.state.value !== ShardConnectionState.CONNECTED) {
+		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
 			throw new Error('Shard is not connected');
 		}
 		if (editing !== undefined) {
@@ -391,7 +391,7 @@ export class ChatRoom extends TypedEventEmitter<{
 	}
 
 	public deleteMessage(deleteId: number): void {
-		if (this._shard?.state.value !== ShardConnectionState.CONNECTED) {
+		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
 			throw new Error('Shard is not connected');
 		}
 		const edit = this._sent.get(deleteId);
@@ -442,14 +442,10 @@ export class ChatRoom extends TypedEventEmitter<{
 	}
 
 	//#endregion MessageSender
-
-	public setShard(shard: ShardConnector | null): void {
-		this._shard = shard;
-	}
 }
 
 function useChatroom(): ChatRoom | null {
-	return useContext(chatRoomContext);
+	return useShardConnector()?.room ?? null;
 }
 
 function useChatroomRequired(): ChatRoom {
@@ -458,10 +454,6 @@ function useChatroomRequired(): ChatRoom {
 		throw new Error('Attempt to access ChatRoom outside of context');
 	}
 	return room;
-}
-
-export function useChatRoomHandler(): IChatRoomHandler {
-	return useChatroomRequired();
 }
 
 export function useChatRoomMessageSender(): IChatRoomMessageSender {

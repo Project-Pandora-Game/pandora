@@ -17,8 +17,8 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { LastSelectedCharacter, SocketIOShardConnector } from '../../networking/socketio_shard_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
-import { useChatRoomHandler } from './chatRoomContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
+import { NotificationSource, useNotification } from './notificationContextProvider';
 
 export interface ShardConnectorContextData {
 	shardConnector: ShardConnector | null;
@@ -45,7 +45,8 @@ export const connectorFactoryContext = createContext<ConnectorFactoryContext>({
 });
 
 export function ShardConnectorContextProvider({ children }: ChildrenProps): ReactElement {
-	const room = useChatRoomHandler();
+	const { notify } = useNotification(NotificationSource.CHAT_MESSAGE);
+
 	const [shardConnector, setShardConnector] = useState<ShardConnector | null>(null);
 
 	const contextData = useMemo<ShardConnectorContextData>(() => ({
@@ -54,11 +55,18 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 	}), [shardConnector]);
 
 	const context = useMemo<ConnectorFactoryContext>(() => ({
-		shardConnectorFactory: (info) => new SocketIOShardConnector(info, room),
-	}), [room]);
+		shardConnectorFactory: (info) => new SocketIOShardConnector(info),
+	}), []);
+
+	const chatRoom = shardConnector?.room;
+
+	useEffect(() => {
+		return chatRoom?.on('messageNotify', notify);
+	}, [chatRoom, notify]);
 
 	useDebugExpose('shardConnector', shardConnector);
 	useDebugExpose('player', useNullableObservable(shardConnector?.player));
+	useDebugExpose('chatRoom', chatRoom);
 
 	return (
 		<connectorFactoryContext.Provider value={ context }>

@@ -17,12 +17,6 @@ const logger = GetLogger('ChatRoom');
 
 const MESSAGE_EDIT_TIMOUT = 1000 * 60 * 10; // 10 minutes
 
-export interface IChatRoomHandler {
-	onUpdate(data: IChatRoomUpdate): void;
-	onMessage(messages: IChatRoomMessage[]): number;
-	onStatus(status: IShardClientArgument['chatRoomStatus']): void;
-}
-
 export interface IChatRoomMessageSender {
 	sendMessage(message: string, options?: IMessageParseOptions): void;
 	deleteMessage(deleteId: number): void;
@@ -100,7 +94,7 @@ function ProcessMessage(message: IChatRoomMessageAction & { time: number; }): IC
 
 export class ChatRoom extends TypedEventEmitter<{
 	messageNotify: NotificationData
-}> implements IChatRoomHandler, IChatRoomMessageSender {
+}> implements IChatRoomMessageSender {
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
 	public readonly data = new Observable<IChatRoomClientData | null>(null);
 	public readonly characters = new Observable<readonly Character[]>([]);

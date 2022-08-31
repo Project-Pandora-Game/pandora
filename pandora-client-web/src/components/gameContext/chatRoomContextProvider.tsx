@@ -1,6 +1,4 @@
-import type { CharacterId, ICharacterPublicData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
-// TODO: fix this import
-import type { ChatActionDictionaryMetaEntry } from 'pandora-common/dist/chatroom/chatActions';
+import type { CharacterId, ChatActionDictionaryMetaEntry, ICharacterPublicData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo } from 'react';
 import { Character } from '../../character/character';

@@ -2,7 +2,6 @@ import { IsAuthorized } from 'pandora-common';
 import React, { ComponentType, ReactElement, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
-import { useBrowserStorage } from '../browserStorage';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
 import { AccountSettings } from '../components/accountSettings/accountSettings';
 import { CharacterCreate } from '../components/characterCreate/characterCreate';
@@ -10,7 +9,6 @@ import { CharacterSelect } from '../components/characterSelect/characterSelect';
 import { Chatroom } from '../components/chatroom/chatroom';
 import { ChatroomAdmin, ChatroomCreate } from '../components/chatroomAdmin/chatroomAdmin';
 import { ChatroomSelect } from '../components/chatroomSelect/chatroomSelect';
-import { Eula } from '../components/Eula';
 import { useCurrentAccount } from '../components/gameContext/directoryConnectorContextProvider';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { AuthPage } from '../components/login/authPage';
@@ -19,11 +17,6 @@ import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 
 export function PandoraRoutes(): ReactElement {
-	const [eula, setEula] = useBrowserStorage('eula', false);
-
-	if (!eula)
-		return <Eula accept={ () => setEula(true) } />;
-
 	return (
 		<Routes>
 			<Route path='*' element={ <DefaultFallback /> } />

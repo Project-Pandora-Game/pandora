@@ -54,7 +54,7 @@ export const DATABASE_NAME = process.env.DATABASE_NAME ?? 'pandora-test';
 //#region Assets
 
 /** Path to directory that has compiled asset definitions */
-export const ASSETS_DEFINITION_PATH = process.env.ASSETS_DEFINITION_PATH ?? '../pandora-assets/out';
+export const ASSETS_DEFINITION_PATH = process.env.ASSETS_DEFINITION_PATH ?? '../../pandora-assets/out';
 /** URL from where Client will download assets; empty to host on this shard */
 export const ASSETS_SOURCE = process.env.ASSETS_SOURCE ?? '';
 

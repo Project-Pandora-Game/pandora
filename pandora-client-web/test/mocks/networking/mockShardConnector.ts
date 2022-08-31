@@ -1,4 +1,6 @@
 import { IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import { PlayerCharacter } from '../../../src/character/player';
+import { ChatRoom } from '../../../src/components/gameContext/chatRoomContextProvider';
 import { ShardConnectionState, ShardConnector } from '../../../src/networking/shardConnector';
 import { Observable } from '../../../src/observable';
 
@@ -6,9 +8,13 @@ import { Observable } from '../../../src/observable';
 export class MockShardConnector implements ShardConnector {
 	public readonly connectionInfo: Observable<Readonly<IDirectoryCharacterConnectionInfo>>;
 	public readonly state = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
+	public readonly player: Observable<PlayerCharacter | null>;
+	public readonly room: ChatRoom;
 
-	public constructor(info: IDirectoryCharacterConnectionInfo = MockConnectionInfo()) {
+	public constructor(info: IDirectoryCharacterConnectionInfo = MockConnectionInfo(), player: Observable<PlayerCharacter | null> = new Observable<PlayerCharacter | null>(null)) {
 		this.connectionInfo = new Observable<Readonly<IDirectoryCharacterConnectionInfo>>(info);
+		this.player = player;
+		this.room = new ChatRoom(this);
 	}
 
 	public awaitResponse = jest.fn().mockResolvedValue(undefined);

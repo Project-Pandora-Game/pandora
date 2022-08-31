@@ -1,26 +1,19 @@
-import type { CharacterId, ICharacterPublicData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
-// TODO: fix this import
-import type { ChatActionDictionaryMetaEntry } from 'pandora-common/dist/chatroom/chatActions';
+import type { CharacterId, ChatActionDictionaryMetaEntry, ICharacterPublicData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
-import { useCallback, useContext, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
-import { Observable, ReadonlyObservable, useObservable } from '../../observable';
+import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { ChatParser } from '../chatroom/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
-import { chatRoomContext } from './stateContextProvider';
+import { TypedEventEmitter } from '../../event';
+import { useShardConnector } from './shardConnectorContextProvider';
 
 const logger = GetLogger('ChatRoom');
 
 const MESSAGE_EDIT_TIMOUT = 1000 * 60 * 10; // 10 minutes
-
-export interface IChatRoomHandler {
-	onUpdate(data: IChatRoomUpdate): void;
-	onMessage(messages: IChatRoomMessage[]): number;
-	onStatus(status: IShardClientArgument['chatRoomStatus']): void;
-}
 
 export interface IChatRoomMessageSender {
 	sendMessage(message: string, options?: IMessageParseOptions): void;
@@ -97,15 +90,15 @@ function ProcessMessage(message: IChatRoomMessageAction & { time: number; }): IC
 	};
 }
 
-export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
+export class ChatRoom extends TypedEventEmitter<{
+	messageNotify: NotificationData
+}> implements IChatRoomMessageSender {
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
 	public readonly data = new Observable<IChatRoomClientData | null>(null);
 	public readonly characters = new Observable<readonly Character[]>([]);
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
-	private readonly _messageNotify: (data: NotificationData) => void;
-	private readonly _playerObservable: ReadonlyObservable<PlayerCharacter | null>;
 	public get player(): PlayerCharacter | null {
-		return this._playerObservable.value;
+		return this._shard.player.value;
 	}
 
 	get playerId() {
@@ -130,7 +123,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 	}
 
 	private _lastMessageTime: number = 0;
-	private _shard: ShardConnector | null = null;
+	private readonly _shard: ShardConnector;
 
 	private _lastMessageId = 0;
 	private _getNextMessageId(): number {
@@ -142,9 +135,9 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 		return id;
 	}
 
-	constructor(messageNotify: (data: NotificationData) => void, player: ReadonlyObservable<PlayerCharacter | null>) {
-		this._messageNotify = messageNotify;
-		this._playerObservable = player;
+	constructor(shard: ShardConnector) {
+		super();
+		this._shard = shard;
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMOUT / 2);
 	}
 
@@ -267,7 +260,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 			if (!IsUserMessage(message)) {
 				nextMessages.push(ProcessMessage(message));
 				if (!notified) {
-					this._messageNotify({ time: Date.now() });
+					this.emit('messageNotify', { time: Date.now() });
 					notified = true;
 				}
 			} else if (message.type === 'deleted') {
@@ -298,7 +291,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 			} else {
 				nextMessages.push(message);
 				if (!notified) {
-					this._messageNotify({ time: Date.now() });
+					this.emit('messageNotify', { time: Date.now() });
 					notified = true;
 				}
 			}
@@ -340,7 +333,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 			}
 			this.status.value = chars;
 		}
-		this._shard?.sendMessage('chatRoomStatus', { status, target });
+		this._shard.sendMessage('chatRoomStatus', { status, target });
 	}
 
 	public getStatus(id: CharacterId): IChatRoomStatus {
@@ -351,7 +344,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 
 	private readonly _sent = new Map<number, { text: string; time: number; target?: CharacterId }>();
 	public sendMessage(message: string, { editing, type, raw, target }: IMessageParseOptions = {}): void {
-		if (this._shard?.state.value !== ShardConnectionState.CONNECTED) {
+		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
 			throw new Error('Shard is not connected');
 		}
 		if (editing !== undefined) {
@@ -375,7 +368,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 		if (type !== undefined) {
 			messages = [{ type, parts: raw ? [['normal', message]] : ChatParser.parseStyle(message), to: target }];
 		} else if (raw) {
-			throw new Error('Raw is not implementedf for multi-part messages');
+			throw new Error('Raw is not implemented for multi-part messages');
 		} else {
 			messages = ChatParser.parse(message, target);
 		}
@@ -390,7 +383,7 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 	}
 
 	public deleteMessage(deleteId: number): void {
-		if (this._shard?.state.value !== ShardConnectionState.CONNECTED) {
+		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
 			throw new Error('Shard is not connected');
 		}
 		const edit = this._sent.get(deleteId);
@@ -441,47 +434,46 @@ export class ChatRoom implements IChatRoomHandler, IChatRoomMessageSender {
 	}
 
 	//#endregion MessageSender
-
-	public setShard(shard: ShardConnector | null): void {
-		this._shard = shard;
-	}
 }
 
-export function useChatRoomHandler(): IChatRoomHandler {
-	return useContext(chatRoomContext);
+function useChatroom(): ChatRoom | null {
+	return useShardConnector()?.room ?? null;
+}
+
+function useChatroomRequired(): ChatRoom {
+	const room = useChatroom();
+	if (!room) {
+		throw new Error('Attempt to access ChatRoom outside of context');
+	}
+	return room;
 }
 
 export function useChatRoomMessageSender(): IChatRoomMessageSender {
-	return useContext(chatRoomContext);
+	return useChatroomRequired();
 }
 
 export function useChatRoomMessages(): readonly IChatroomMessageProcessed[] {
-	const context = useContext(chatRoomContext);
+	const context = useChatroomRequired();
 	return useObservable(context.messages);
 }
 
-export function useChatRoomCharacters(): readonly Character[] {
-	const context = useContext(chatRoomContext);
-	return useObservable(context.characters);
+export function useChatRoomCharacters(): (readonly Character[]) | null {
+	const context = useChatroom();
+	return useNullableObservable(context?.characters);
 }
 
 export function useChatRoomData(): IChatRoomClientData | null {
-	const context = useContext(chatRoomContext);
-	return useObservable(context.data);
+	const context = useChatroom();
+	return useNullableObservable(context?.data);
 }
 
 export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {
-	const context = useContext(chatRoomContext);
+	const context = useChatroomRequired();
 	return useCallback((status: IChatRoomStatus) => context.setPlayerStatus(status), [context]);
 }
 
-export function useChatRoomSetShard(): (shard: ShardConnector | null) => void {
-	const context = useContext(chatRoomContext);
-	return useCallback((shard: ShardConnector | null) => context.setShard(shard), [context]);
-}
-
 export function useChatRoomStatus(): { data: ICharacterPublicData, status: IChatRoomStatus }[] {
-	const context = useContext(chatRoomContext);
+	const context = useChatroomRequired();
 	const characters = useObservable(context.characters);
 	const status = useObservable(context.status);
 	return useMemo(() => {

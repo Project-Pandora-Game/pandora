@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React from 'react';
 import { RegistrationForm } from '../../../../src/components/login/forms/registrationForm';
-import { RenderWithRouter } from '../../../testUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
 import { INVALID_EMAILS, INVALID_USERNAMES } from '../loginTestData';
 
@@ -17,7 +17,7 @@ describe('Registration Form', () => {
 
 	beforeEach(() => {
 		user = userEvent.setup();
-		RenderWithRouter(<RegistrationForm />, {
+		RenderWithRouterAndProviders(<RegistrationForm />, {
 			initialEntries: ['/register'],
 			onPathnameUpdate: (newPathname) => {
 				pathname = newPathname;

@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { EulaGate } from './components/Eula';
 import { GameContextProvider } from './components/gameContext/gameContextProvider';
 import { Header } from './components/header/Header';
 import { NODE_ENV, USER_DEBUG } from './config/Environment';
@@ -27,15 +28,17 @@ function Start(): void {
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
-			<BrowserRouter>
-				<GameContextProvider>
-					<Header />
-					<ToastContainer theme='dark' />
-					<div className='main'>
-						<PandoraRoutes />
-					</div>
-				</GameContextProvider>
-			</BrowserRouter>
+			<EulaGate>
+				<BrowserRouter>
+					<GameContextProvider>
+						<Header />
+						<ToastContainer theme='dark' />
+						<div className='main'>
+							<PandoraRoutes />
+						</div>
+					</GameContextProvider>
+				</BrowserRouter>
+			</EulaGate>
 		</React.StrictMode>,
 	);
 }

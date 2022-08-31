@@ -5,12 +5,10 @@ import React, { ComponentType, Dispatch, ReactElement, SetStateAction, useEffect
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ChildrenProps } from '../src/common/reactTypes';
 import { DebugContext, debugContext, DebugData } from '../src/components/error/debugContextProvider';
+import { directoryConnectorContext } from '../src/components/gameContext/directoryConnectorContextProvider';
 import {
 	connectorFactoryContext,
 	ConnectorFactoryContext,
-} from '../src/components/gameContext/connectorFactoryContextProvider';
-import { directoryConnectorContext } from '../src/components/gameContext/directoryConnectorContextProvider';
-import {
 	shardConnectorContext,
 	ShardConnectorContextData,
 } from '../src/components/gameContext/shardConnectorContextProvider';
@@ -46,7 +44,7 @@ export function RenderWithProviders(
 
 export function RenderWithRouterAndProviders(
 	element: ReactElement,
-	props: Omit<ProvidersProps & TestRouterProps, 'children'>,
+	props: Omit<Partial<ProvidersProps> & TestRouterProps, 'children'> = {},
 	options?: RenderOptions,
 ): RenderResult {
 	const {
@@ -55,7 +53,7 @@ export function RenderWithRouterAndProviders(
 		...providersProps
 	} = props;
 	return render(
-		<Providers { ...providersProps }>
+		<Providers { ...MockProvidersProps(providersProps) }>
 			<TestRouter initialEntries={ initialEntries } onPathnameUpdate={ onPathnameUpdate }>
 				{ element }
 			</TestRouter>

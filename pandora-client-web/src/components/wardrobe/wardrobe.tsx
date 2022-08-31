@@ -37,7 +37,7 @@ export function WardrobeScreen(): ReactElement | null {
 			setCharacter(player);
 			return;
 		}
-		const get = () => chatRoomCharacters.find((c) => c.data.id === characterId) ?? null;
+		const get = () => chatRoomCharacters?.find((c) => c.data.id === characterId) ?? null;
 		setCharacter(get());
 	}, [setCharacter, characterId, player, chatRoomCharacters]);
 

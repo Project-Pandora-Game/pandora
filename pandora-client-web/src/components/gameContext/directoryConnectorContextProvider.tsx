@@ -4,32 +4,43 @@ import React, { createContext, ReactElement, useContext, useEffect, useRef } fro
 import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
+import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
-import { UnimplementedDirectoryConnector } from '../../networking/unimplementedDirectoryConnector';
+import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
 import { useObservable } from '../../observable';
-import { CreateDirectoryConnector } from './connectorFactoryContextProvider';
 
-let directoryConnectorInstance: DirectoryConnector;
-let connectionPromise: Promise<DirectoryConnector>;
+let directoryConnectorInstance: DirectoryConnector | undefined;
+let connectionPromise: Promise<DirectoryConnector> | undefined;
+
+/** Factory function responsible for providing the concrete directory connector implementation to the application */
+function CreateDirectoryConnector(): DirectoryConnector {
+	if (!DIRECTORY_ADDRESS) {
+		throw new Error('Unable to create directory connector: missing DIRECTORY_ADDRESS');
+	}
+
+	return SocketIODirectoryConnector.create(DIRECTORY_ADDRESS);
+}
 
 try {
 	directoryConnectorInstance = CreateDirectoryConnector();
-	connectionPromise = directoryConnectorInstance.connect();
 } catch (err) { // Catch errors in connector creation so that they can be handled by an error boundary
-	directoryConnectorInstance = new UnimplementedDirectoryConnector();
+	directoryConnectorInstance = undefined;
 	connectionPromise = Promise.reject(err);
 }
 
-export const directoryConnectorContext = createContext<DirectoryConnector>(new UnimplementedDirectoryConnector());
+export const directoryConnectorContext = createContext<DirectoryConnector | undefined>(undefined);
 
 const logger = GetLogger('DirectoryConnectorContextProvider');
 
-export function DirectoryConnectorContextProvider({ children }: ChildrenProps): ReactElement {
+export function DirectoryConnectorContextProvider({ children }: ChildrenProps): ReactElement | null {
 	const errorHandler = useErrorHandler();
 
 	useEffect(() => {
 		void (async () => {
 			try {
+				if (connectionPromise === undefined) {
+					connectionPromise = directoryConnectorInstance?.connect();
+				}
 				await connectionPromise;
 			} catch (error) {
 				logger.fatal('Directory connection failed:', error);
@@ -40,6 +51,9 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 
 	useDebugExpose('directoryConnector', directoryConnectorInstance);
 
+	if (!directoryConnectorInstance)
+		return null;
+
 	return (
 		<directoryConnectorContext.Provider value={ directoryConnectorInstance }>
 			{ children }
@@ -48,7 +62,11 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 }
 
 export function useDirectoryConnector(): DirectoryConnector {
-	return useContext(directoryConnectorContext);
+	const connector = useContext(directoryConnectorContext);
+	if (!connector) {
+		throw new Error('Attempt to access DirectoryConnector outside of context');
+	}
+	return connector;
 }
 
 export function useDirectoryChangeListener(

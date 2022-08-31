@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React from 'react';
 import { LoginForm } from '../../../../src/components/login/forms/loginForm';
-import { RenderWithRouter } from '../../../testUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
 import { INVALID_USERNAMES } from '../loginTestData';
 
@@ -18,7 +18,7 @@ describe('Login Form', () => {
 		let pathname: string;
 
 		beforeEach(() => {
-			RenderWithRouter(<LoginForm />, {
+			RenderWithRouterAndProviders(<LoginForm />, {
 				initialEntries: ['/login'],
 				onPathnameUpdate: (newPathname) => {
 					pathname = newPathname;
@@ -93,7 +93,7 @@ describe('Login Form', () => {
 	it('should display any message that has been pushed to the current history state', async () => {
 		const message = 'This is a history message';
 
-		RenderWithRouter(<LoginForm />, { initialEntries: [{ pathname: '/login', state: { message } }] });
+		RenderWithRouterAndProviders(<LoginForm />, { initialEntries: [{ pathname: '/login', state: { message } }] });
 
 		await waitFor(() => {
 			expect(screen.getByText(message)).toBeVisible();

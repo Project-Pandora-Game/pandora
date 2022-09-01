@@ -13,6 +13,7 @@
 	},
 	"scripts": {
 		"postinstall": "node postinstall.cjs",
-		"ci": "yarn workspaces run build && yarn workspaces run lint && yarn workspaces run type-check:test && yarn workspaces run test"
+		"ci": "yarn workspaces run build && yarn workspaces run lint && yarn workspaces run type-check:test && yarn workspaces run test",
+		"deploy-client": "yarn workspace pandora-client-web run build && rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist"
 	}
 }

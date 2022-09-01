@@ -70,21 +70,20 @@ $header-height: 2em;
 
 	.list,
 	.grid {
-		grid-area: list;
+		flex: 1;
 		overflow: auto;
-		display: flex;
 		padding: 3px;
 		gap: 3px;
 	}
 
 	.list {
+		display: flex;
 		flex-flow: column;
 	}
 
 	.grid {
-		flex-flow: row wrap;
-		align-items: flex-start;
-		align-content: flex-start;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
 
@@ -117,7 +116,6 @@ $header-height: 2em;
 
 	&.gridMode {
 		padding: 0.5em;
-		width: 32%;
 		flex-direction: column;
 		row-gap: 0.5em;
 
@@ -129,7 +127,8 @@ $header-height: 2em;
 
 		.itemName {
 			@include center-flex;
-			height: 2em;
+			text-align: center;
+			min-height: 2em;
 			width: 100%;
 		}
 	}

@@ -11,7 +11,7 @@ import {
 	IsObject,
 	Item,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useContext, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceItems } from '../../character/character';
@@ -138,20 +138,12 @@ function InventoryView<T extends Readonly<Asset | Item>>({ className, title, ite
 }): ReactElement | null {
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
-	const flt = useDeferredValue(filter).toLowerCase().trim().split(/\s+/);
+	const flt = filter.toLowerCase().trim().split(/\s+/);
 
-	const filteredItems = items.filter((item) => {
-		if (flt.length === 0)
-			return true;
-
-		for (const f of flt) {
-			const { definition } = 'asset' in item ? item.asset : item;
-			if (definition.name.toLowerCase().includes(f))
-				return true;
-		}
-
-		return true;
-	});
+	const filteredItems = items.filter((item) => flt.every((f) => {
+		const { definition } = 'asset' in item ? item.asset : item;
+		return definition.name.toLowerCase().includes(f);
+	}));
 
 	return (
 		<div className={ classNames('inventoryView', className) }>

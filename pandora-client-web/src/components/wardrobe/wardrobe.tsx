@@ -22,6 +22,7 @@ import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphic
 import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
+import { Tab, TabContainer } from '../../common/tabs';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -96,59 +97,37 @@ function useWardrobeContext(): Readonly<{
 	return useContext(wardrobeContext);
 }
 
-function useCreateTabContext<T extends string>(defaultValue: T, layout: Readonly<Record<T, string>>) {
-	const [current, setTab] = useState(defaultValue);
-	return useMemo(() => ({
-		current,
-		setTab: setTab as (tab: string) => void,
-		layout,
-	}), [current, setTab, layout]);
-}
-
-function Tabs({ context }: { context: { current: string; setTab: (tab: string) => void, layout: Readonly<Record<string, string>>  } }): ReactElement {
-	const { current, setTab, layout } = context;
-	return (
-		<ul>
-			{ Object.keys(layout).map((tab) => (
-				<li key={ tab } className={ classNames('tab', { active: tab === current }) } onClick={ () => setTab(tab) }>
-					{ layout[tab] }
-				</li>
-			)) }
-		</ul>
-	);
-}
-
-const TAB_LAYOUT = {
-	room: 'Room inventory',
-	recent: 'Recent items',
-	saved: 'Saved items',
-	create: 'Create new item',
-} as const;
-
 const scene = new GraphicsScene();
 function Wardrobe(): ReactElement | null {
 	const { character, appearance, assetList } = useWardrobeContext();
 	const ref = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
-	const tabs = useCreateTabContext<keyof typeof TAB_LAYOUT>('create', TAB_LAYOUT);
 
 	return (
 		<div className='wardrobe'>
 			<div className='characterPreview' ref={ ref } />
 			<div className='wardrobe-ui'>
-				<header>
-					<Tabs context={ tabs } />
-				</header>
 				<InventoryView title='Currently worn items' items={ appearance } ItemRow={ InventoryItemViewList } />
-				{ tabs.current === 'create' && <InventoryView title='Create and use a new item' items={ assetList } ItemRow={ InventoryAssetViewList } /> }
-				{ tabs.current === 'room' && <div className='inventoryView' /> }
-				{ tabs.current === 'recent' && <div className='inventoryView' /> }
-				{ tabs.current === 'saved' && <div className='inventoryView' /> }
+				<TabContainer className='flex-1'>
+					<Tab name='Create new item'>
+						<InventoryView title='Create and use a new item' items={ assetList } ItemRow={ InventoryAssetViewList } />
+					</Tab>
+					<Tab name='Room inventory'>
+						<div className='inventoryView' />
+					</Tab>
+					<Tab name='Recent items'>
+						<div className='inventoryView' />
+					</Tab>
+					<Tab name='Saved items'>
+						<div className='inventoryView' />
+					</Tab>
+				</TabContainer>
 			</div>
 		</div>
 	);
 }
 
-function InventoryView<T extends Readonly<Asset | Item>>({ title, items, ItemRow }: {
+function InventoryView<T extends Readonly<Asset | Item>>({ className, title, items, ItemRow }: {
+	className?: string;
 	title: string;
 	items: readonly T[];
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -175,7 +154,7 @@ function InventoryView<T extends Readonly<Asset | Item>>({ title, items, ItemRow
 	});
 
 	return (
-		<div className='inventoryView'>
+		<div className={ classNames('inventoryView', className) }>
 			<div className='toolbar'>
 				<span>{title}</span>
 				<input type='text' value={ filter } onChange={ (e) => setFilter(e.target.value) } />

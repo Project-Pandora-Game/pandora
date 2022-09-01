@@ -28,69 +28,19 @@ $header-height: 2em;
 	position: relative;
 	width: 100%;
 	gap: 1em;
-
-	>header {
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: $header-height;
-		display: flex;
-		width: 100%;
-
-		ul {
-			display: flex;
-			justify-content: center;
-			width: 100%;
-			margin: 0;
-			padding: 0;
-		}
-
-		li.tab {
-			display: inline-block;
-			padding: 0 0.5em;
-			border-bottom: $header-height solid;
-			border-bottom-color: $white;
-			border-left: 1em solid transparent;
-			border-right: 1em solid transparent;
-			border-top: 0;
-			line-height: $header-height;
-			color: $black;
-			cursor: pointer;
-			transition: border-bottom-color 0.2s ease-in-out;
-
-			&.active {
-				border-bottom-color: $black-primary;
-				color: $white;
-			}
-
-			&:hover:not(.active) {
-				border-bottom-color: $black-secondary;
-				color: $white;
-			}
-		}
-	}
-
-	> :not(header) {
-		position: relative;
-		top: $header-height;
-		height: calc(100% - $header-height);
-	}
 }
 
 .inventoryView {
-	height: 100%;
-	flex: 1 1 0px;
-	background-color: $grey-lighter;
-	border: solid $black 2px;
-	display: grid;
-	grid-template:
-		"toolbar" 3em
-		"list" auto
-		/ auto;
+	@include flex(column);
+	flex: 1;
+	overflow: hidden;
 	min-width: min(20em, 90vw);
 
+	background-color: $grey-lighter;
+	border: solid $black 2px;
+
 	.toolbar {
-		grid-area: toolbar;
+		height: 3em;
 		display: flex;
 		flex-direction: row;
 

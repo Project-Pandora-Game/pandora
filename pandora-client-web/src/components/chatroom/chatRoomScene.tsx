@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
+import { CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import React, { ReactElement, useEffect, useRef } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
@@ -12,14 +12,15 @@ class ChatRoomGraphicsScene extends GraphicsScene {}
 
 class ChatRoomCharacter extends GraphicsCharacter {
 	private _data: IChatRoomClientData | null = null;
+	private _position: [number, number];
 
 	constructor(character: Character<ICharacterRoomData>, data: IChatRoomClientData | null) {
 		super(character);
 		this._data = data;
-		[this.x, this.y] = character.data.position;
+		this._position = character.data.position;
 		this.on('destroy', character.on('update', ({ position }) => {
 			if (position) {
-				[this.x, this.y] = position;
+				this._position = position;
 				this.updateRoomData(this._data);
 			}
 		}));
@@ -28,7 +29,32 @@ class ChatRoomCharacter extends GraphicsCharacter {
 
 	updateRoomData(data: IChatRoomClientData | null) {
 		this._data = data;
-		// TODO: scaling
+		if (!this._data) {
+			return;
+		}
+		const height = this._data.size[1];
+		const y = Math.max(height, this._position[1]);
+		const scaling = this._data.scaling;
+
+		if (y === 0 || scaling < 1) {
+			this._setScale(1);
+			return;
+		}
+
+		const relativeHeight = height / y;
+		const minScale = 1 / scaling;
+		this._setScale(1 - (1 - minScale) * relativeHeight);
+	}
+
+	private _setScale(scale: number) {
+		if (!this._data) {
+			return;
+		}
+		const [width, height] = this._data.size;
+		const [x, y] = this._position;
+		this.scale.set(scale, scale);
+		this.x = Math.max(width, x);
+		this.y = 0 - Math.max(height, y) - (CharacterSize.HEIGHT * scale - CharacterSize.HEIGHT) / 2;
 	}
 }
 

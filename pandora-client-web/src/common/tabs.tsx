@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ReactElement, useLayoutEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useMemo, useState } from 'react';
 import { ChildrenProps } from './reactTypes';
 import './tabs.scss';
 
@@ -14,19 +14,12 @@ export function TabContainer({ children, id, className }: {
 	className?: string;
 }): ReactElement {
 
-	const [currentTab, setTab] = useState(0);
+	const [currentTab, setTab] = useState(() => {
+		const defaultTab = children.findIndex((c) => c && c.props.default);
+		return defaultTab < 0 ? 0 : defaultTab;
+	});
 
 	const tabs = useMemo<(string | undefined)[]>(() => children.map((c) => c?.props.name), [children]);
-
-	useLayoutEffect(() => {
-		if (children.length === 0)
-			return;
-		let defaultTab = children.findIndex((c) => c && c.props.default);
-		if (defaultTab < 0) {
-			defaultTab = 0;
-		}
-		setTab(defaultTab);
-	}, [children]);
 
 	return (
 		<div className={ classNames('tab-container', className) } id={ id }>

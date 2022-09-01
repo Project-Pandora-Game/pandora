@@ -99,29 +99,106 @@ function useWardrobeContext(): Readonly<{
 
 const scene = new GraphicsScene();
 function Wardrobe(): ReactElement | null {
-	const { character, appearance, assetList } = useWardrobeContext();
+	const { character } = useWardrobeContext();
 	const ref = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
 
 	return (
 		<div className='wardrobe'>
 			<div className='characterPreview' ref={ ref } />
-			<div className='wardrobe-ui'>
-				<InventoryView title='Currently worn items' items={ appearance } ItemRow={ InventoryItemViewList } />
-				<TabContainer className='flex-1'>
-					<Tab name='Create new item'>
-						<InventoryView title='Create and use a new item' items={ assetList } ItemRow={ InventoryAssetViewList } />
-					</Tab>
-					<Tab name='Room inventory'>
-						<div className='inventoryView' />
-					</Tab>
-					<Tab name='Recent items'>
-						<div className='inventoryView' />
-					</Tab>
-					<Tab name='Saved items'>
-						<div className='inventoryView' />
-					</Tab>
-				</TabContainer>
-			</div>
+			<TabContainer className='flex-1'>
+				<Tab name='Items'>
+					<div className='wardrobe-pane'>
+						<WardrobeItemManipulation />
+					</div>
+				</Tab>
+				<Tab name='Body'>
+					<div className='wardrobe-pane'>
+						<WardrobeBodyManipulation />
+					</div>
+				</Tab>
+				<Tab name='Poses & Expressions'>
+					<div className='wardrobe-pane'>
+						<div className='center-flex flex-1'>
+							TODO
+						</div>
+					</div>
+				</Tab>
+				<Tab name='Outfits'>
+					<div className='wardrobe-pane'>
+						<div className='center-flex flex-1'>
+							TODO
+						</div>
+					</div>
+				</Tab>
+			</TabContainer>
+		</div>
+	);
+}
+
+function WardrobeItemManipulation({ className }: { className?: string }): ReactElement {
+	const { appearance, assetList } = useWardrobeContext();
+
+	const filter = (item: Item | Asset) => {
+		const { definition } = 'asset' in item ? item.asset : item;
+		return definition.bodypart === undefined;
+	};
+
+	return (
+		<div className={ classNames('wardrobe-ui', className) }>
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } ItemRow={ InventoryItemViewList } />
+			<TabContainer className='flex-1'>
+				<Tab name='Create new item'>
+					<InventoryView title='Create and use a new item' items={ assetList.filter(filter) } ItemRow={ InventoryAssetViewList } />
+				</Tab>
+				<Tab name='Room inventory'>
+					<div className='inventoryView'>
+						<div className='center-flex flex-1'>
+							TODO
+						</div>
+					</div>
+				</Tab>
+				<Tab name='Recent items'>
+					<div className='inventoryView'>
+						<div className='center-flex flex-1'>
+							TODO
+						</div>
+					</div>
+				</Tab>
+				<Tab name='Saved items'>
+					<div className='inventoryView'>
+						<div className='center-flex flex-1'>
+							TODO
+						</div>
+					</div>
+				</Tab>
+			</TabContainer>
+		</div>
+	);
+}
+
+function WardrobeBodyManipulation({ className }: { className?: string }): ReactElement {
+	const { appearance, assetList } = useWardrobeContext();
+
+	const filter = (item: Item | Asset) => {
+		const { definition } = 'asset' in item ? item.asset : item;
+		return definition.bodypart !== undefined;
+	};
+
+	return (
+		<div className={ classNames('wardrobe-ui', className) }>
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } ItemRow={ InventoryItemViewList } />
+			<TabContainer className='flex-1'>
+				<Tab name='Change body parts'>
+					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } ItemRow={ InventoryAssetViewList } />
+				</Tab>
+				<Tab name='Change body size'>
+					<div className='inventoryView'>
+						<div className='center-flex flex-1'>
+							TODO
+						</div>
+					</div>
+				</Tab>
+			</TabContainer>
 		</div>
 	);
 }

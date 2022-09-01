@@ -22,6 +22,15 @@ $header-height: 2em;
 	}
 }
 
+.wardrobe-pane {
+	display: flex;
+	flex: 1;
+	border: solid black 2px;
+	padding: 1em;
+	background-color: #aaaaaaaa;
+	overflow: hidden;
+}
+
 .wardrobe-ui {
 	display: flex;
 	flex-flow: row;

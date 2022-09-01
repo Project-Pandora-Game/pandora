@@ -10,14 +10,14 @@ $header-height: 2em;
 		display: flex;
 		width: 100%;
 		margin: 0;
-		padding: 0 0.3em;
+		padding: 0 0.5em;
 
 		li.tab {
 			@include center-flex;
 			padding: 0.5em 1em;
 			margin: 0 -0.3em;
 			z-index: 0;
-			flex-grow: 1;
+			flex: 1;
 
 			background-color: $white;
 			clip-path: polygon(0.75em 0%, calc(100% - 0.75em) 0%, 100% 100%, 0% 100%);

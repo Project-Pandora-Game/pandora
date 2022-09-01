@@ -40,6 +40,7 @@ $header-height: 2em;
 	border: solid $black 2px;
 
 	.toolbar {
+		flex-shrink: 0;
 		height: 3em;
 		display: flex;
 		flex-direction: row;
@@ -70,7 +71,6 @@ $header-height: 2em;
 
 	.list,
 	.grid {
-		flex: 1;
 		overflow: auto;
 		padding: 3px;
 		gap: 3px;

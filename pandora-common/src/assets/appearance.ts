@@ -198,11 +198,12 @@ export class Appearance {
 		this.onChange(['items', 'pose']);
 	}
 
-	public importPose(pose: Record<BoneName, number>, type?: BoneType): void {
+	public importPose(pose: Record<BoneName, number>, type: BoneType | true, missingAsZero: boolean): void {
 		for (const [bone, state] of this.pose.entries()) {
-			if (type && state.definition.type !== type) {
+			if (type !== true && state.definition.type !== type)
 				continue;
-			}
+			if (!missingAsZero && pose[state.definition.name] == null)
+				continue;
 			this.pose.set(bone, {
 				definition: state.definition,
 				rotation: pose[state.definition.name] || 0,

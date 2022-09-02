@@ -4,17 +4,21 @@ import {
 	Appearance,
 	AppearanceAction,
 	AppearanceActionContext,
+	ArmsPose,
 	Asset,
+	BoneName,
+	BoneState,
 	CharacterId,
+	CharacterView,
 	DoAppearanceAction,
 	IsCharacterId,
 	IsObject,
 	Item,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceItems } from '../../character/character';
+import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -23,6 +27,11 @@ import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../../common/tabs';
+import { FieldsetToggle } from '../common/fieldsetToggle';
+import { Button } from '../common/Button/Button';
+import { USER_DEBUG } from '../../config/Environment';
+import { WARDROBE_POSES } from '../../graphics/def';
+import _ from 'lodash';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -118,8 +127,13 @@ function Wardrobe(): ReactElement | null {
 				</Tab>
 				<Tab name='Poses & Expressions'>
 					<div className='wardrobe-pane'>
-						<div className='center-flex flex-1'>
-							TODO
+						<div className='wardrobe-ui'>
+							<WardrobePoseGui />
+							<div className='inventoryView'>
+								<div className='center-flex flex-1'>
+									TODO
+								</div>
+							</div>
 						</div>
 					</div>
 				</Tab>
@@ -192,11 +206,7 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } ItemRow={ InventoryAssetViewList } />
 				</Tab>
 				<Tab name='Change body size'>
-					<div className='inventoryView'>
-						<div className='center-flex flex-1'>
-							TODO
-						</div>
-					</div>
+					<WardrobeBodySizeEditor />
 				</Tab>
 			</TabContainer>
 		</div>
@@ -278,5 +288,176 @@ function InventoryItemViewList({ elem, listMode }: { elem: Item; listMode: boole
 			<div className='itemPreview' />
 			<span className='itemName'>{elem.asset.definition.name}</span>
 		</div>
+	);
+}
+
+function WardrobeBodySizeEditor(): ReactElement {
+	const { character } = useWardrobeContext();
+	const shardConnector = useShardConnector();
+	const bones = useCharacterAppearancePose(character);
+
+	const setBodyDirect = useCallback(({ pose }: { pose: Record<BoneName, number>; }) => {
+		if (shardConnector) {
+			shardConnector.sendMessage('appearanceAction', {
+				type: 'body',
+				target: character.data.id,
+				pose,
+			});
+		}
+	}, [shardConnector, character]);
+
+	const setBody = useMemo(() => _.throttle(setBodyDirect, 100), [setBodyDirect]);
+
+	return (
+		<div className='inventoryView'>
+			<div className='bone-ui'>
+				{
+					bones
+						.filter((bone) => bone.definition.type === 'body')
+						.map((bone) => (
+							<BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => {
+								setBody({
+									pose: {
+										[bone.definition.name]: value,
+									},
+								});
+							} } />
+						))
+				}
+			</div>
+		</div>
+	);
+}
+
+function WardrobePoseGui(): ReactElement {
+	const { character } = useWardrobeContext();
+	const shardConnector = useShardConnector();
+
+	const bones = useCharacterAppearancePose(character);
+	const armsPose = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
+		if (change.includes('pose')) {
+			onChange();
+		}
+	}), () => character.appearance.getArmsPose());
+	const view = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
+		if (change.includes('pose')) {
+			onChange();
+		}
+	}), () => character.appearance.getView());
+
+	const setPoseDirect = useCallback(({ pose, armsPose: armsPoseSet }: { pose: Record<BoneName, number>; armsPose?: ArmsPose }) => {
+		if (shardConnector) {
+			shardConnector.sendMessage('appearanceAction', {
+				type: 'pose',
+				target: character.data.id,
+				pose,
+				armsPose: armsPoseSet,
+			});
+		}
+	}, [shardConnector, character]);
+
+	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
+
+	return (
+		<div className='inventoryView'>
+			<div className='bone-ui'>
+				<div>
+					<label htmlFor='back-view-toggle'>Show back view</label>
+					<input
+						id='back-view-toggle'
+						type='checkbox'
+						checked={ view === CharacterView.BACK }
+						onChange={ (e) => {
+							if (shardConnector) {
+								shardConnector.sendMessage('appearanceAction', {
+									type: 'setView',
+									target: character.data.id,
+									view: e.target.checked ? CharacterView.BACK : CharacterView.FRONT,
+								});
+							}
+						} }
+					/>
+				</div>
+				{
+					WARDROBE_POSES.map((poseCategory, poseCategoryIndex) => (
+						<React.Fragment key={ poseCategoryIndex }>
+							<h4>{ poseCategory.category }</h4>
+							<div className='pose-row'>
+								{
+									poseCategory.poses.map((pose, poseIndex) => (
+										<Button key={ poseIndex }
+											className='slim'
+											onClick={ () => {
+												setPose(pose);
+											} }
+										>
+											{ pose.name }
+										</Button>
+									))
+								}
+							</div>
+						</React.Fragment>
+					))
+				}
+				{ USER_DEBUG &&
+					<FieldsetToggle legend='[DEV] Manual pose' persistent='bone-ui-dev-pose' open={ false }>
+						<div>
+							<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
+							<input
+								id='arms-front-toggle'
+								type='checkbox'
+								checked={ armsPose === ArmsPose.FRONT }
+								onChange={ (e) => {
+									if (shardConnector) {
+										setPose({
+											pose: {},
+											armsPose: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK,
+										});
+									}
+								} }
+							/>
+						</div>
+						<br />
+						{
+							bones
+								.filter((bone) => bone.definition.type === 'pose')
+								.map((bone) => (
+									<BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => {
+										setPose({
+											pose: {
+												[bone.definition.name]: value,
+											},
+										});
+									} } />
+								))
+						}
+					</FieldsetToggle>}
+			</div>
+		</div>
+	);
+}
+
+export function BoneRowElement({ bone, onChange }: { bone: BoneState; onChange: (value: number) => void }) {
+	const name = bone.definition.name
+		.replace(/^\w/, (c) => c.toUpperCase())
+		.replace(/_r$/, () => ' Right')
+		.replace(/_l$/, () => ' Left')
+		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
+
+	const onInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const value = Math.round(parseFloat(event.target.value));
+		if (Number.isInteger(value)) {
+			onChange(value);
+		}
+	};
+
+	return (
+		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + bone.definition.name }>
+			<div className='bone-rotation'>
+				<input type='range' min='-180' max='180' step='1' value={ bone.rotation } onChange={ onInput } />
+				<input type='number' min='-180' max='180' step='1' value={ bone.rotation } onChange={ onInput } />
+				<Button className='slim' onClick={ () => onChange(0) }>↺</Button>
+			</div>
+		</FieldsetToggle>
 	);
 }

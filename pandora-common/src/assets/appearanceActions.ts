@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character';
 import { AssertNever } from '../utility';
-import { Appearance } from './appearance';
+import { Appearance, ArmsPose, CharacterView } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemIdSchema } from './item';
@@ -25,6 +25,7 @@ export const AppearanceActionPose = z.object({
 	type: z.literal('pose'),
 	target: CharacterIdSchema,
 	pose: z.record(z.string(), z.number()),
+	armsPose: z.nativeEnum(ArmsPose).optional(),
 });
 
 export const AppearanceActionBody = z.object({
@@ -33,11 +34,18 @@ export const AppearanceActionBody = z.object({
 	pose: z.record(z.string(), z.number()),
 });
 
+export const AppearanceActionSetView = z.object({
+	type: z.literal('setView'),
+	target: CharacterIdSchema,
+	view: z.nativeEnum(CharacterView),
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
 	AppearanceActionPose,
 	AppearanceActionBody,
+	AppearanceActionSetView,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -84,12 +92,20 @@ export function DoAppearanceAction(
 			return true;
 		}
 		case 'body':
-		case 'pose':
-			if (context.player !== action.target) // TODO: allow posing other players with settings
+			if (context.player !== action.target)
 				return false;
-
+		// falls through
+		case 'pose':
 			if (!dryRun) {
-				appearance.importPose(action.pose, action.type);
+				appearance.importPose(action.pose, action.type, false);
+				if ('armsPose' in action && action.armsPose != null) {
+					appearance.setArmsPose(action.armsPose);
+				}
+			}
+			return true;
+		case 'setView':
+			if (!dryRun) {
+				appearance.setView(action.view);
 			}
 			return true;
 		default:

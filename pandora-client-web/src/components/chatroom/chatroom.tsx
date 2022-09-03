@@ -179,7 +179,7 @@ function RenderActionContent(action: IChatroomMessageActionProcessed): [IChatSeg
 			}
 		}
 	}
-	if (action.type === 'action') {
+	if (action.type === 'action' && actionText) {
 		actionText = `(${actionText})`;
 	}
 	return [ChatParser.parseStyle(actionText), actionExtraText ? ChatParser.parseStyle(actionExtraText) : null];
@@ -362,7 +362,7 @@ function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }
 	const [content, extraContent] = useMemo(() => RenderActionContent(message), [message]);
 
 	// If there is nothing to disply, hide this message
-	if (!content && !extraContent)
+	if (content.length === 0 && extraContent == null)
 		return null;
 
 	const style = message.type === 'action' && message.data?.character ? ({ backgroundColor: message.data.character.labelColor + '44' }) : undefined;
@@ -371,7 +371,7 @@ function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }
 		<div className={ classNames('message', message.type, extraContent !== null ? 'foldable' : null) } style={ style } onClick={ () => setFolded(!folded) }>
 			<DisplayInfo message={ message } />
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
-			{ content?.map((c, i) => RenderChatPart(c, i)) }
+			{ content.map((c, i) => RenderChatPart(c, i)) }
 			{ extraContent != null && folded ? ' ( ... )' : null }
 			{
 				!folded && extraContent != null && (

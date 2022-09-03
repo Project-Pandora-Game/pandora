@@ -10,7 +10,7 @@ function GetItemBodypartSortIndex(assetMananger: AssetManager, item: Item): numb
 		assetMananger.bodyparts.findIndex((bp) => bp.name === item.asset.definition.bodypart);
 }
 
-export function AppearanceItemsFixBodypartOrder(assetMananger: AssetManager, items: AppearanceItems): AppearanceItems {
+export function AppearanceItemsFixBodypartOrder(assetMananger: AssetManager, items: AppearanceItems): Item[] {
 	return items
 		.slice()
 		.sort((a, b) =>

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character';
 import { AssertNever } from '../utility';
-import { Appearance, ArmsPose, CharacterView } from './appearance';
+import { Appearance, ArmsPose, CharacterView, AppearanceActionHandler, AppearanceActionProcessingContext } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemIdSchema } from './item';
@@ -54,6 +54,8 @@ export interface AppearanceActionContext {
 	characters: Map<CharacterId, Appearance>;
 	// TODO
 	roomInventory: null;
+	/** Handler for sending messages to chat */
+	actionHandler?: AppearanceActionHandler;
 }
 
 export function DoAppearanceAction(
@@ -69,6 +71,11 @@ export function DoAppearanceAction(
 	const appearance = context.characters.get(action.target);
 	if (!appearance)
 		return false;
+	const processingContext: AppearanceActionProcessingContext = {
+		player: action.target,
+		sourceCharacter: context.player,
+		actionHandler: context.actionHandler,
+	};
 
 	switch (action.type) {
 		case 'create': {
@@ -78,7 +85,7 @@ export function DoAppearanceAction(
 			if (!appearance.allowCreateItem(action.itemId, asset))
 				return false;
 			if (!dryRun) {
-				appearance.createItem(action.itemId, asset);
+				appearance.createItem(action.itemId, asset, processingContext);
 			}
 			return true;
 		}
@@ -87,7 +94,7 @@ export function DoAppearanceAction(
 				return false;
 
 			if (!dryRun) {
-				appearance.removeItem(action.itemId);
+				appearance.removeItem(action.itemId, processingContext);
 			}
 			return true;
 		}

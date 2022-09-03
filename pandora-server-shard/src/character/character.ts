@@ -263,6 +263,9 @@ export class Character {
 			player: this.id,
 			characters,
 			roomInventory: null,
+			actionHandler: (message) => {
+				this.room?.handleAppearanceActionMessage(message);
+			},
 		};
 	}
 

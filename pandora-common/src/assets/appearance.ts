@@ -1,4 +1,7 @@
+import _ from 'lodash';
 import { z } from 'zod';
+import type { CharacterId } from '../character';
+import type { ChatActionId, IChatRoomMessageActionItem } from '../chatroom';
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
@@ -38,6 +41,22 @@ export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
 };
 
 export type AppearanceChangeType = 'items' | 'pose';
+
+export type AppearanceActionHandlerMessage = {
+	id: ChatActionId;
+	character?: CharacterId;
+	targetCharacter?: CharacterId;
+	item?: IChatRoomMessageActionItem;
+	itemPrevious?: IChatRoomMessageActionItem;
+	dictionary?: Record<string, string>;
+};
+export type AppearanceActionHandler = (message: AppearanceActionHandlerMessage) => void;
+
+export interface AppearanceActionProcessingContext {
+	player?: CharacterId;
+	sourceCharacter?: CharacterId;
+	actionHandler?: AppearanceActionHandler;
+}
 
 export class Appearance {
 	private assetMananger: AssetManager;
@@ -94,7 +113,7 @@ export class Appearance {
 		}
 
 		// Validate and add all items
-		loadedItems = AppearanceItemsFixBodypartOrder(this.assetMananger, loadedItems).slice();
+		loadedItems = AppearanceItemsFixBodypartOrder(this.assetMananger, loadedItems);
 		let newItems: readonly Item[] = [];
 		let currentBodypartIndex: number | null = this.assetMananger.bodyparts.length > 0 ? 0 : null;
 		while (loadedItems.length > 0) {
@@ -268,22 +287,49 @@ export class Appearance {
 		return ValidateAppearanceItems(this.assetMananger, newItems);
 	}
 
-	public createItem(id: ItemId, asset: Asset): Item {
+	public createItem(id: ItemId, asset: Asset, ctx: AppearanceActionProcessingContext): Item {
 		if (!this.allowCreateItem(id, asset)) {
 			throw new Error('Attempt to create item while not allowed');
 		}
 
 		// Do change
 		const item = this.makeItem(id, asset);
-		let newItems = this.items;
+		let newItems = this.items.slice();
+		let removed: AppearanceItems = [];
 		// if this is a bodypart not allowing multiple do a swap instead
 		if (item.asset.definition.bodypart && this.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
-			newItems = newItems.filter((oldItem) => oldItem.asset === asset || oldItem.asset.definition.bodypart !== item.asset.definition.bodypart);
+			removed = _.remove(newItems, (oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
 		}
 		newItems = AppearanceItemsFixBodypartOrder(this.assetMananger, [...newItems, item]);
 
 		this.items = newItems;
 		this.onChange(['items']);
+
+		// Change message to chat
+		if (ctx.actionHandler) {
+			if (removed.length > 0) {
+				ctx.actionHandler({
+					id: 'itemReplace',
+					character: ctx.sourceCharacter,
+					targetCharacter: ctx.player,
+					item: {
+						assetId: asset.id,
+					},
+					itemPrevious: {
+						assetId: removed[0].asset.id,
+					},
+				});
+			} else {
+				ctx.actionHandler({
+					id: 'itemAdd',
+					character: ctx.sourceCharacter,
+					targetCharacter: ctx.player,
+					item: {
+						assetId: asset.id,
+					},
+				});
+			}
+		}
 
 		return item;
 	}
@@ -299,16 +345,29 @@ export class Appearance {
 		return ValidateAppearanceItems(this.assetMananger, newItems);
 	}
 
-	public removeItem(id: ItemId): void {
+	public removeItem(id: ItemId, ctx: AppearanceActionProcessingContext): void {
 		if (!this.allowRemoveItem(id)) {
 			throw new Error('Attempt to remove item while not allowed');
 		}
 
 		// Do change
-		const newItems = this.items.filter((i) => i.id !== id);
+		const newItems = this.items.slice();
+		const removedItems = _.remove(newItems, (i) => i.id === id);
 
 		this.items = newItems;
 		this.onChange(['items']);
+
+		// Change message to chat
+		if (ctx.actionHandler && removedItems.length > 0) {
+			ctx.actionHandler({
+				id: 'itemRemove',
+				character: ctx.sourceCharacter,
+				targetCharacter: ctx.player,
+				item: {
+					assetId: removedItems[0].asset.id,
+				},
+			});
+		}
 	}
 
 	public allowMoveItem(id: ItemId, shift: number): boolean {

@@ -7,7 +7,15 @@ export type AssetId = z.infer<typeof AssetIdSchema>;
 
 export interface AssetDefinition {
 	id: AssetId;
+	/** The visible name of this asset */
 	name: string;
+	/** Chat action messages specific to this asset */
+	actionMessages?: {
+		/** Message for when this item is added */
+		itemAdd?: string;
+		/** Message for when this item is removed */
+		itemRemove?: string;
+	};
 	bodypart?: string;
 	hasGraphics: boolean;
 }

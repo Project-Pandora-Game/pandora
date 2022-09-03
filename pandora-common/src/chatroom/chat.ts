@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { AssetId } from '../assets';
 import { CharacterId, CharacterIdSchema } from '../character';
 import { ChatActionId } from './chatActions';
 
@@ -40,7 +41,15 @@ export type IChatRoomMessageDeleted = {
 	from: CharacterId;
 };
 
-export type IChatRoomMessageActionCharacter = { id: CharacterId, name: string; pronoun: string; };
+export type IChatRoomMessageActionCharacter = {
+	id: CharacterId;
+	name: string;
+	pronoun: string;
+	labelColor: string;
+};
+export type IChatRoomMessageActionItem = {
+	assetId: AssetId;
+};
 export type IChatRoomMessageAction = {
 	type: 'action' | 'serverMessage';
 	/** id to be looked up in message translation database */
@@ -50,6 +59,10 @@ export type IChatRoomMessageAction = {
 		character?: IChatRoomMessageActionCharacter;
 		/** Used to generate specific dictionary entries, defaults to `character` */
 		targetCharacter?: IChatRoomMessageActionCharacter;
+		/** The item this message is about */
+		item?: IChatRoomMessageActionItem;
+		/** The previous state of item this message is about, defaults to `item` */
+		itemPrevious?: IChatRoomMessageActionItem;
 	};
 	dictionary?: Record<string, string>;
 };

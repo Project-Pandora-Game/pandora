@@ -10,6 +10,7 @@ import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
 import { TypedEventEmitter } from '../../event';
 import { useShardConnector } from './shardConnectorContextProvider';
+import { AssetManagerClient } from '../../assets/assetManager';
 
 const logger = GetLogger('ChatRoom');
 
@@ -50,7 +51,10 @@ export type IMessageParseOptions = {
 	target?: CharacterId;
 };
 
-function ProcessMessage(message: IChatRoomMessageAction & { time: number; }): IChatroomMessageActionProcessed {
+function ProcessMessage(
+	message: IChatRoomMessageAction & { time: number; },
+	assetManager: AssetManagerClient,
+): IChatroomMessageActionProcessed {
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
 
 	const source = message.data?.character;
@@ -79,6 +83,23 @@ function ProcessMessage(message: IChatRoomMessageAction & { time: number; }): IC
 			metaDictionary.TARGET_CHARACTER_DYNAMIC = `${name}'s (${id})`;
 			metaDictionary.TARGET_CHARACTER_DYNAMIC_SELF = `${name} (${id})`;
 		}
+	}
+
+	const item = message.data?.item;
+	const itemPrevious = message.data?.itemPrevious ?? item;
+
+	if (item) {
+		const { assetId } = item;
+		const asset = assetManager.getAssetById(assetId);
+
+		metaDictionary.ITEM_ASSET_NAME = asset?.definition.name ?? `[UNKNOWN ASSET '${assetId}']`;
+	}
+
+	if (itemPrevious) {
+		const { assetId } = itemPrevious;
+		const asset = assetManager.getAssetById(assetId);
+
+		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = asset?.definition.name ?? `[UNKNOWN ASSET '${assetId}']`;
 	}
 
 	return {
@@ -245,7 +266,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		});
 	}
 
-	public onMessage(messages: IChatRoomMessage[]): number {
+	public onMessage(messages: IChatRoomMessage[], assetManager: AssetManagerClient): number {
 		messages = messages.filter((m) => m.time > this._lastMessageTime);
 		this._lastMessageTime = messages
 			.map((m) => m.time)
@@ -258,7 +279,7 @@ export class ChatRoom extends TypedEventEmitter<{
 
 		for (const message of messages) {
 			if (!IsUserMessage(message)) {
-				nextMessages.push(ProcessMessage(message));
+				nextMessages.push(ProcessMessage(message, assetManager));
 				if (!notified) {
 					this.emit('messageNotify', { time: Date.now() });
 					notified = true;

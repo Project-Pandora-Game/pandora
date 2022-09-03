@@ -15,6 +15,9 @@ export const CHARACTER_TIMEOUT = 30_000;
 /** Time (in ms) as interval when character's periodic actions (like saving of modified data) happen */
 export const CHARACTER_TICK_INTERVAL = 60_000;
 
+/** Time (in ms) for how long is update delayed before being sent; used for batching changes before updating room */
+const UPDATE_DEBOUNCE = 50;
+
 type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id' | 'appearance'>;
 type ICharacterPublicDataChange = Omit<ICharacterPublicData, 'id' | 'appearance'>;
 type ICharacterPrivateDataChange = Omit<ICharacterDataUpdate, keyof ICharacterPublicData>;
@@ -320,8 +323,15 @@ export class Character {
 			this.modified.add('appearance');
 		}
 
+		this.sendUpdateHasChanges ||= changed;
+		this.sendUpdateDebounced();
+	}
+
+	private sendUpdateHasChanges: boolean = false;
+	private readonly sendUpdateDebounced = _.debounce(this.sendUpdate.bind(this), UPDATE_DEBOUNCE, { maxWait: 5 * UPDATE_DEBOUNCE });
+	private sendUpdate(): void {
 		if (this.room) {
-			if (changed) {
+			if (this.sendUpdateHasChanges) {
 				this.room.sendUpdateToAllInRoom({ update: { id: this.id, appearance: this.appearance.exportToBundle() } });
 			} else {
 				this.room.sendUpdateTo(this, { update: { id: this.id, appearance: this.appearance.exportToBundle() } });
@@ -329,6 +339,7 @@ export class Character {
 		} else {
 			this.connection?.sendMessage('updateCharacter', { appearance: this.appearance.exportToBundle() });
 		}
+		this.sendUpdateHasChanges = false;
 	}
 
 	public setPublicSettings(settings: Partial<ICharacterPublicSettings>): void {

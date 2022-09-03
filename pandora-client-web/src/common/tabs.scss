@@ -1,0 +1,42 @@
+@import '../styles/utils';
+@import '../styles/constants';
+
+$header-height: 2em;
+
+.tab-container {
+	@include flex(column);
+
+	ul {
+		display: flex;
+		width: 100%;
+		margin: 0;
+		padding: 0 0.5em;
+
+		li.tab {
+			@include center-flex;
+			padding: 0.5em 1em;
+			margin: 0 -0.3em;
+			z-index: 0;
+			flex: 1;
+
+			background-color: $white;
+			clip-path: polygon(0.75em 0%, calc(100% - 0.75em) 0%, 100% 100%, 0% 100%);
+
+			color: $black;
+			cursor: pointer;
+			transition: background-color 0.2s ease-in-out;
+
+			&.active {
+				background-color: $black;
+				color: $white;
+				z-index: 2;
+			}
+
+			&:hover:not(.active) {
+				background-color: $grey-darker;
+				color: $white;
+				z-index: 1;
+			}
+		}
+	}
+}

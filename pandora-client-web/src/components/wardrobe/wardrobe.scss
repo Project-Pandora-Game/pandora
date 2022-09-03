@@ -22,75 +22,35 @@ $header-height: 2em;
 	}
 }
 
+.wardrobe-pane {
+	display: flex;
+	flex: 1;
+	border: solid black 2px;
+	padding: 1em;
+	background-color: #aaaaaaaa;
+	overflow: hidden;
+}
+
 .wardrobe-ui {
 	display: flex;
 	flex-flow: row;
 	position: relative;
 	width: 100%;
 	gap: 1em;
-
-	>header {
-		position: absolute;
-		top: 0;
-		left: 0;
-		height: $header-height;
-		display: flex;
-		width: 100%;
-
-		ul {
-			display: flex;
-			justify-content: center;
-			width: 100%;
-			margin: 0;
-			padding: 0;
-		}
-
-		li.tab {
-			display: inline-block;
-			padding: 0 0.5em;
-			border-bottom: $header-height solid;
-			border-bottom-color: $white;
-			border-left: 1em solid transparent;
-			border-right: 1em solid transparent;
-			border-top: 0;
-			line-height: $header-height;
-			color: $black;
-			cursor: pointer;
-			transition: border-bottom-color 0.2s ease-in-out;
-
-			&.active {
-				border-bottom-color: $black-primary;
-				color: $white;
-			}
-
-			&:hover:not(.active) {
-				border-bottom-color: $black-secondary;
-				color: $white;
-			}
-		}
-	}
-
-	> :not(header) {
-		position: relative;
-		top: $header-height;
-		height: calc(100% - $header-height);
-	}
 }
 
 .inventoryView {
-	height: 100%;
-	flex: 1 1 0px;
-	background-color: $grey-lighter;
-	border: solid $black 2px;
-	display: grid;
-	grid-template:
-		"toolbar" 3em
-		"list" auto
-		/ auto;
+	@include flex(column);
+	flex: 1;
+	overflow: hidden;
 	min-width: min(20em, 90vw);
 
+	background-color: $grey-lighter;
+	border: solid $black 2px;
+
 	.toolbar {
-		grid-area: toolbar;
+		flex-shrink: 0;
+		height: 3em;
 		display: flex;
 		flex-direction: row;
 
@@ -120,21 +80,19 @@ $header-height: 2em;
 
 	.list,
 	.grid {
-		grid-area: list;
 		overflow: auto;
-		display: flex;
 		padding: 3px;
 		gap: 3px;
 	}
 
 	.list {
+		display: flex;
 		flex-flow: column;
 	}
 
 	.grid {
-		flex-flow: row wrap;
-		align-items: flex-start;
-		align-content: flex-start;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
 
@@ -167,7 +125,6 @@ $header-height: 2em;
 
 	&.gridMode {
 		padding: 0.5em;
-		width: 32%;
 		flex-direction: column;
 		row-gap: 0.5em;
 
@@ -179,8 +136,52 @@ $header-height: 2em;
 
 		.itemName {
 			@include center-flex;
-			height: 2em;
+			text-align: center;
+			min-height: 2em;
 			width: 100%;
+		}
+	}
+}
+
+.bone-ui {
+	overflow: auto;
+	padding: 0.5em;
+	display: flex;
+	flex-flow: column;
+	gap: 0.5em;
+
+	>h3 {
+		margin-left: 2rem;
+	}
+
+	>h4 {
+		margin: 0 0 0 0.5em;
+	}
+
+	.pose-row {
+		display: flex;
+		flex-flow: row wrap;
+		gap: 0.5em;
+		margin: 0 1em;
+	}
+
+	.bone-rotation {
+		display: flex;
+		flex-flow: row;
+		width: 100%;
+		gap: 0 0.5rem;
+
+		>input[type='range'] {
+			width: 100%;
+			border-radius: 0.2em;
+			padding: 0;
+		}
+
+		>input[type='number'] {
+			text-align: right;
+			width: 5rem;
+			border: 0.1em solid;
+			border-radius: 0.2em;
 		}
 	}
 }

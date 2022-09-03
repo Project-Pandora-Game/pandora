@@ -1,4 +1,4 @@
-import { CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
+import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import React, { ReactElement, useEffect, useRef } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
@@ -68,6 +68,8 @@ export function ChatRoomScene(): ReactElement | null {
 	const lastData = useRef<IChatRoomClientData | null>(null);
 	const ref = useGraphicsScene<HTMLDivElement>(scene);
 	const graphics = useRef<Map<CharacterId, ChatRoomCharacter>>();
+
+	AssertNotNullable(characters);
 
 	useDebugExpose('scene', scene);
 

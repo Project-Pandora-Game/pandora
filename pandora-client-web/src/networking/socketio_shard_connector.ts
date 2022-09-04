@@ -9,7 +9,7 @@ import {
 	MessageHandler,
 } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
-import { LoadAssetDefinitions } from '../assets/assetManager';
+import { GetAssetManager, LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
 import { PlayerCharacter } from '../character/player';
 import { ChatRoom } from '../components/gameContext/chatRoomContextProvider';
@@ -84,7 +84,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 				this._room.onUpdate(data);
 			},
 			chatRoomMessage: (message: IShardClientArgument['chatRoomMessage']) => {
-				const lastTime = this._room.onMessage(message.messages);
+				const lastTime = this._room.onMessage(message.messages, GetAssetManager());
 				if (lastTime > 0) {
 					this.sendMessage('chatRoomMessageAck', { lastTime });
 				}

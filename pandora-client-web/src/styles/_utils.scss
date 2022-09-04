@@ -5,7 +5,7 @@
 	flex-flow: $direction $wrap;
 }
 
-.flex-row-nowrap {
+.flex-row, .flex-row-nowrap {
 	@include flex;
 }
 
@@ -13,7 +13,7 @@
 	@include flex($wrap: wrap);
 }
 
-.flex-col-nowrap {
+.flex-col, .flex-col-nowrap {
 	@include flex($direction: column);
 }
 
@@ -67,6 +67,10 @@
 
 .center-flex {
 	@include center-flex;
+}
+
+.hidden {
+	display: none !important;
 }
 
 //#endregion

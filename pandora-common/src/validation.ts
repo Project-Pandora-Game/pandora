@@ -17,6 +17,9 @@ export function ZodMatcher<T extends ZodTypeAny>(validator: T, passthrough?: tru
 	return (val: unknown): val is z.infer<T> => validator.safeParse(val).success;
 }
 
+export const HexColorStringSchema = zTemplateString<`#${string}`>(z.string(), /^#[0-9a-f]{6}$/i);
+export type HexColorString = z.infer<typeof HexColorStringSchema>;
+
 /** Checks if the `obj` is an object (not null, not array) */
 export function IsObject(obj: unknown): obj is Record<string, unknown> {
 	return !!obj && typeof obj === 'object' && !Array.isArray(obj);

@@ -11,11 +11,14 @@ import {
 	CharacterId,
 	CharacterView,
 	DoAppearanceAction,
+	HexColorString,
+	HexColorStringSchema,
 	IsCharacterId,
 	IsObject,
 	Item,
+	ItemId,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
@@ -30,8 +33,8 @@ import { Tab, TabContainer } from '../../common/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import { Button } from '../common/Button/Button';
 import { USER_DEBUG } from '../../config/Environment';
-import { WARDROBE_POSES } from '../../graphics/def';
 import _ from 'lodash';
+import { CommonProps } from '../../common/reactTypes';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -157,12 +160,20 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 		return definition.bodypart === undefined;
 	};
 
+	const [selectedItemId, setSelectedItemId] = useState<ItemId| null>(null);
+	const selectedItem = selectedItemId && appearance.find((i) => i.id === selectedItemId);
+
+	// Reset selected item each time screen opens
+	useLayoutEffect(() => {
+		setSelectedItemId(null);
+	}, []);
+
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } ItemRow={ InventoryItemViewList } />
-			<TabContainer className='flex-1'>
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } selectItem={ setSelectedItemId } selectedItemId={ selectedItemId } />
+			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
 				<Tab name='Create new item'>
-					<InventoryView title='Create and use a new item' items={ assetList.filter(filter) } ItemRow={ InventoryAssetViewList } />
+					<InventoryView title='Create and use a new item' items={ assetList.filter(filter) } />
 				</Tab>
 				<Tab name='Room inventory'>
 					<div className='inventoryView'>
@@ -186,6 +197,12 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 					</div>
 				</Tab>
 			</TabContainer>
+			{
+				selectedItem != null &&
+				<div className='flex-col flex-1'>
+					<WardrobeItemConfigMenu key={ selectedItem.id } item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
+				</div>
+			}
 		</div>
 	);
 }
@@ -198,30 +215,41 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 		return definition.bodypart !== undefined;
 	};
 
+	const [selectedItemId, setSelectedItemId] = useState<ItemId| null>(null);
+	const selectedItem = selectedItemId && appearance.find((i) => i.id === selectedItemId);
+
+	// Reset selected item each time screen opens
+	useLayoutEffect(() => {
+		setSelectedItemId(null);
+	}, []);
+
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } ItemRow={ InventoryItemViewList } />
-			<TabContainer className='flex-1'>
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } selectItem={ setSelectedItemId } selectedItemId={ selectedItemId } />
+			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
 				<Tab name='Change body parts'>
-					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } ItemRow={ InventoryAssetViewList } />
+					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } />
 				</Tab>
 				<Tab name='Change body size'>
 					<WardrobeBodySizeEditor />
 				</Tab>
 			</TabContainer>
+			{
+				selectedItem != null &&
+				<div className='flex-col flex-1'>
+					<WardrobeItemConfigMenu key={ selectedItem.id } item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
+				</div>
+			}
 		</div>
 	);
 }
 
-function InventoryView<T extends Readonly<Asset | Item>>({ className, title, items, ItemRow }: {
+function InventoryView<T extends Readonly<Asset | Item>>({ className, title, items, selectItem, selectedItemId }: {
 	className?: string;
 	title: string;
 	items: readonly T[];
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ItemRow: (_: {
-		elem: T;
-		listMode: boolean;
-	}) => ReactElement
+	selectItem?: (item: ItemId | null) => void;
+	selectedItemId?: ItemId | null;
 }): ReactElement | null {
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
@@ -242,20 +270,23 @@ function InventoryView<T extends Readonly<Asset | Item>>({ className, title, ite
 			</div>
 			<div className={ listMode ? 'list' : 'grid' }>
 				{...filteredItems
-					.map((i) => <ItemRow key={ i.id } elem={ i } listMode={ listMode } />)}
+					.map((i) => i instanceof Item ? <InventoryItemViewList key={ i.id } item={ i } listMode={ listMode } selected={ i.id === selectedItemId } selectItem={ selectItem } /> :
+					i instanceof Asset ? <InventoryAssetViewList key={ i.id } asset={ i } listMode={ listMode } /> : null)}
 			</div>
 		</div>
 	);
 }
 
-function InventoryAssetViewList({ elem, listMode }: { elem: Asset; listMode: boolean; }): ReactElement {
+function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: boolean; }): ReactElement {
 	const { actions, character } = useWardrobeContext();
+
 	const action: AppearanceAction = {
 		type: 'create',
 		target: character.data.id,
 		itemId: `i/${nanoid()}` as const,
-		asset: elem.id,
+		asset: asset.id,
 	};
+
 	const shardConnector = useShardConnector();
 	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	return (
@@ -265,29 +296,189 @@ function InventoryAssetViewList({ elem, listMode }: { elem: Asset; listMode: boo
 			}
 		} }>
 			<div className='itemPreview' />
-			<span className='itemName'>{elem.definition.name}</span>
+			<span className='itemName'>{asset.definition.name}</span>
 		</div>
 	);
 }
 
-function InventoryItemViewList({ elem, listMode }: { elem: Item; listMode: boolean; }): ReactElement {
-	const { actions, character } = useWardrobeContext();
-	const action: AppearanceAction = {
-		type: 'delete',
-		target: character.data.id,
-		itemId: elem.id,
-	};
-	const shardConnector = useShardConnector();
-	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+function InventoryItemViewList({ item, listMode, selected=false, selectItem }: { item: Item; listMode: boolean; selected?: boolean; selectItem?: (item: ItemId | null) => void; }): ReactElement {
+	const { character } = useWardrobeContext();
+
+	const asset = item.asset;
+
 	return (
-		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
-			if (shardConnector && possible) {
-				shardConnector.sendMessage('appearanceAction', action);
-			}
+		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', selected && 'selected', 'allowed') } onClick={ () => {
+			selectItem?.(selected ? null : item.id);
 		} }>
 			<div className='itemPreview' />
-			<span className='itemName'>{elem.asset.definition.name}</span>
+			<span className='itemName'>{asset.definition.name}</span>
+			{
+				listMode &&
+				<div className='quickActions'>
+					<WardrobeActionButton action={ {
+						type: 'move',
+						target: character.data.id,
+						itemId: item.id,
+						shift: 1,
+					} }>
+						⬇️
+					</WardrobeActionButton>
+					<WardrobeActionButton action={ {
+						type: 'move',
+						target: character.data.id,
+						itemId: item.id,
+						shift: -1,
+					} }>
+						⬆️
+					</WardrobeActionButton>
+					<WardrobeActionButton action={ {
+						type: 'delete',
+						target: character.data.id,
+						itemId: item.id,
+					} }>
+						➖
+					</WardrobeActionButton>
+				</div>
+			}
 		</div>
+	);
+}
+
+function WardrobeActionButton({
+	id,
+	className,
+	children,
+	action,
+}: CommonProps & {
+	action: AppearanceAction;
+}): ReactElement {
+	const { actions } = useWardrobeContext();
+	const shardConnector = useShardConnector();
+
+	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+
+	return (
+		<button id={ id }
+			className={ classNames('wardrobeActionButton', className, possible ? 'allowed' : 'blocked') }
+			onClick={ (ev) => {
+				ev.stopPropagation();
+				if (shardConnector && possible) {
+					shardConnector.sendMessage('appearanceAction', action);
+				}
+			} }
+		>
+			{ children }
+		</button>
+	);
+}
+
+function WardrobeItemConfigMenu({
+	item,
+	onClose,
+}: {
+	item: Item;
+	onClose: () => void;
+}): ReactElement {
+	const { character } = useWardrobeContext();
+	const shardConnector = useShardConnector();
+
+	return (
+		<div className='inventoryView'>
+			<div className='toolbar'>
+				<span>Editing item: {item.asset.definition.name}</span>
+				<button onClick={ () => onClose() }>✖️</button>
+			</div>
+			<div className='toolbar flex-row-wrap'>
+				<WardrobeActionButton action={ {
+					type: 'move',
+					target: character.data.id,
+					itemId: item.id,
+					shift: 1,
+				} }>
+					⬇️ Wear on top
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'move',
+					target: character.data.id,
+					itemId: item.id,
+					shift: -1,
+				} }>
+					⬆️ Wear under
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'delete',
+					target: character.data.id,
+					itemId: item.id,
+				} }>
+					➖ Remove and delete
+				</WardrobeActionButton>
+			</div>
+			<FieldsetToggle legend='Coloring'>
+				{
+					item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
+						<div className='wardrobeColorRow' key={ colorPartIndex }>
+							<span className='flex-1'>{colorPart.name}</span>
+							<WardrobeColorSelector
+								initialValue={ item.color[colorPartIndex] ?? colorPart.default }
+								resetValue={ colorPart.default }
+								throttle={ 100 }
+								onChange={ (color) => {
+									if (shardConnector) {
+										const newColor = item.color.slice();
+										newColor[colorPartIndex] = color;
+										shardConnector.sendMessage('appearanceAction', {
+											type: 'color',
+											target: character.data.id,
+											itemId: item.id,
+											color: newColor,
+										});
+									}
+								} }
+							/>
+						</div>
+					))
+				}
+			</FieldsetToggle>
+			<div className='center-flex flex-1'>
+				TODO
+			</div>
+		</div>
+	);
+}
+
+function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 0 }: {
+	initialValue: HexColorString;
+	resetValue?: HexColorString;
+	onChange?: (value: HexColorString) => void;
+	throttle?: number;
+}): ReactElement {
+	const [input, setInput] = useState<string>(initialValue.toUpperCase());
+
+	const onChangeCaller = useCallback((value: HexColorString) => onChange?.(value), [onChange]);
+	const onChangeCallerThrottled = useMemo(() => _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
+
+	const changeCallback = useCallback((value: string) => {
+		value = '#' + value.replace(/[^0-9a-f]/gi, '').toUpperCase();
+		setInput(value);
+		const valid = HexColorStringSchema.safeParse(value).success;
+		if (valid) {
+			onChangeCallerThrottled(value as HexColorString);
+		}
+	}, [setInput, onChangeCallerThrottled]);
+
+	return (
+		<>
+			<input type='text' value={ input } maxLength={ 7 } onChange={ (ev) => {
+				changeCallback(ev.target.value);
+			} } />
+			<input type='color' value={ input } onChange={ (ev) => {
+				changeCallback(ev.target.value);
+			} } />
+			{
+				resetValue != null &&
+				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
+			}
+		</>
 	);
 }
 
@@ -345,7 +536,7 @@ function WardrobePoseGui(): ReactElement {
 		}
 	}), () => character.appearance.getView());
 
-	const setPoseDirect = useCallback(({ pose, armsPose: armsPoseSet }: { pose: Record<BoneName, number>; armsPose?: ArmsPose }) => {
+	const setPoseDirect = useCallback(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
 		if (shardConnector) {
 			shardConnector.sendMessage('appearanceAction', {
 				type: 'pose',
@@ -379,7 +570,7 @@ function WardrobePoseGui(): ReactElement {
 					/>
 				</div>
 				{
-					WARDROBE_POSES.map((poseCategory, poseCategoryIndex) => (
+					GetAssetManager().getPosePresets().map((poseCategory, poseCategoryIndex) => (
 						<React.Fragment key={ poseCategoryIndex }>
 							<h4>{ poseCategory.category }</h4>
 							<div className='pose-row'>

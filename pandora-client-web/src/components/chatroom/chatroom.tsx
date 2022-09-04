@@ -10,6 +10,7 @@ import React, {
 	useState,
 } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { GetAssetManager } from '../../assets/assetManager';
 import { useEvent } from '../../common/useEvent';
 import { Button } from '../common/Button/Button';
 import { ContextMenu, useContextMenu } from '../contextMenu';
@@ -140,8 +141,28 @@ function RenderChatPart([type, contents]: IChatSegment, index: number): ReactEle
 	}
 }
 
+function GetActiontext(action: IChatroomMessageActionProcessed): string | undefined {
+	const assetManager = GetAssetManager();
+	const item = action.data?.item;
+	const asset = item && assetManager.getAssetById(item.assetId);
+	const itemPrevious = action.data?.itemPrevious ?? item;
+	const assetPrevious = itemPrevious && assetManager.getAssetById(itemPrevious.assetId);
+
+	const defaultMessage = CHAT_ACTIONS.get(action.id);
+
+	// Asset-specific message overrides
+	switch (action.id) {
+		case 'itemAdd':
+			return asset?.definition.actionMessages?.itemAdd ?? defaultMessage;
+		case 'itemRemove':
+			return assetPrevious?.definition.actionMessages?.itemRemove ?? defaultMessage;
+	}
+
+	return defaultMessage;
+}
+
 function RenderActionContent(action: IChatroomMessageActionProcessed): [IChatSegment[], IChatSegment[] | null] {
-	let actionText = CHAT_ACTIONS.get(action.id);
+	let actionText = GetActiontext(action);
 	if (actionText === undefined) {
 		return [ChatParser.parseStyle(`( ERROR UNKNOWN ACTION '${action.id}' )`), null];
 	}
@@ -158,7 +179,7 @@ function RenderActionContent(action: IChatroomMessageActionProcessed): [IChatSeg
 			}
 		}
 	}
-	if (action.type === 'action') {
+	if (action.type === 'action' && actionText) {
 		actionText = `(${actionText})`;
 	}
 	return [ChatParser.parseStyle(actionText), actionExtraText ? ChatParser.parseStyle(actionExtraText) : null];
@@ -335,16 +356,22 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 	);
 }
 
-function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }): ReactElement {
+function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }): ReactElement | null {
 	const [folded, setFolded] = useState(true);
 
 	const [content, extraContent] = useMemo(() => RenderActionContent(message), [message]);
 
+	// If there is nothing to disply, hide this message
+	if (content.length === 0 && extraContent == null)
+		return null;
+
+	const style = message.type === 'action' && message.data?.character ? ({ backgroundColor: message.data.character.labelColor + '44' }) : undefined;
+
 	return (
-		<div className={ classNames('message', message.type, extraContent !== null ? 'foldable' : null) } onClick={ () => setFolded(!folded) }>
+		<div className={ classNames('message', message.type, extraContent !== null ? 'foldable' : null) } style={ style } onClick={ () => setFolded(!folded) }>
 			<DisplayInfo message={ message } />
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
-			{ content?.map((c, i) => RenderChatPart(c, i)) }
+			{ content.map((c, i) => RenderChatPart(c, i)) }
 			{ extraContent != null && folded ? ' ( ... )' : null }
 			{
 				!folded && extraContent != null && (

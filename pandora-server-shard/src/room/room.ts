@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ICharacterPublicData, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ICharacterPublicData, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, AppearanceActionHandlerMessage } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 
@@ -202,6 +202,23 @@ export class Room extends ServerRoom<IShardClientBase> {
 		this._queueMessages(queue);
 	}
 
+	public handleAppearanceActionMessage(message: AppearanceActionHandlerMessage): void {
+		this._queueMessages([
+			{
+				type: 'action',
+				id: message.id,
+				time: this.nextMessageTime(),
+				data: {
+					character: this._getCharacterActionInfo(message.character),
+					targetCharacter: message.targetCharacter !== message.character ? this._getCharacterActionInfo(message.targetCharacter) : undefined,
+					item: message.item,
+					itemPrevious: message.itemPrevious,
+				},
+				dictionary: message.dictionary,
+			},
+		]);
+	}
+
 	private _queueMessages(messages: IChatRoomMessage[]): void {
 		for (const character of this.characters) {
 			character.queueMessages(messages.filter((msg) => {
@@ -245,9 +262,9 @@ export class Room extends ServerRoom<IShardClientBase> {
 
 		const char = this.getCharacterById(id);
 		if (!char)
-			return this.actionCache.get(id)?.result ?? { id, name: '[UNKNOWN]', pronoun: 'her' };
+			return this.actionCache.get(id)?.result ?? { id, name: '[UNKNOWN]', pronoun: 'her', labelColor: '#ffffff' };
 
-		const result = { id: char.id, name: char.name, pronoun: 'her' };
+		const result: IChatRoomMessageActionCharacter = { id: char.id, name: char.name, pronoun: 'her', labelColor: char.settings.labelColor };
 		this.actionCache.set(id, { result });
 
 		return result;

@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { zTemplateString } from '../validation';
+import { HexColorString, zTemplateString } from '../validation';
+import type { ArmsPose, BoneName } from './appearance';
 import { BoneDefinitionCompressed } from './graphics';
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
@@ -7,8 +8,22 @@ export type AssetId = z.infer<typeof AssetIdSchema>;
 
 export interface AssetDefinition {
 	id: AssetId;
+	/** The visible name of this asset */
 	name: string;
+	/** Chat action messages specific to this asset */
+	actionMessages?: {
+		/** Message for when this item is added */
+		itemAdd?: string;
+		/** Message for when this item is removed */
+		itemRemove?: string;
+	};
 	bodypart?: string;
+	/** Configuration of user-configurable asset colorization */
+	colorization?: {
+		/** Name that describes the meaning of this color to user, `null` if it cannot be colored by user */
+		name: string | null;
+		default: HexColorString;
+	}[];
 	hasGraphics: boolean;
 }
 
@@ -24,9 +39,19 @@ export interface AssetBodyPart {
 	adjustable: boolean;
 }
 
+export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
+	category: string;
+	poses: {
+		name: string;
+		pose: Partial<Record<Bones, number>>;
+		armsPose?: ArmsPose;
+	}[];
+}[];
+
 export interface AssetsDefinitionFile {
 	assets: Record<AssetId, AssetDefinition>;
 	bones: Record<string, BoneDefinitionCompressed>;
+	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];
 	graphicsId: string;
 }

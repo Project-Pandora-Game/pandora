@@ -1,5 +1,6 @@
 @import '../../styles/utils';
 @import '../../styles/constants';
+@import '../../styles/forms';
 
 $header-height: 2em;
 
@@ -50,9 +51,11 @@ $header-height: 2em;
 
 	.toolbar {
 		flex-shrink: 0;
-		height: 3em;
+		min-height: 3.5em;
 		display: flex;
 		flex-direction: row;
+		padding: 0.25em 0.25em;
+		gap: 0.3em;
 
 		span {
 			flex: 1;
@@ -97,13 +100,21 @@ $header-height: 2em;
 }
 
 .inventoryViewItem {
+	@extend button;
 	border: solid $black 1px;
 	background-color: $grey-lighter;
 	display: flex;
 
+	&.selected {
+		background-color: #97c;
+	}
+
 	&.allowed:hover {
 		cursor: pointer;
 		background-color: $grey-light;
+		&.selected {
+			background-color: #86a;
+		}
 	}
 
 	&.blocked {
@@ -112,7 +123,7 @@ $header-height: 2em;
 
 	&.listMode {
 		padding: 3px 0.5em;
-		height: 2em;
+		height: 3em;
 		align-items: center;
 		gap: 0.5em;
 
@@ -120,6 +131,10 @@ $header-height: 2em;
 			height: 1.5em;
 			width: 1.5em;
 			border: solid $black 1px;
+		}
+
+		.quickActions {
+			margin-left: auto;
 		}
 	}
 
@@ -140,7 +155,48 @@ $header-height: 2em;
 			min-height: 2em;
 			width: 100%;
 		}
+
+		.quickActions {
+			flex-flow: wrap;
+			margin: auto;
+		}
 	}
+
+	.quickActions {
+		display: flex;
+		gap: 0.2em;
+		margin-left: auto;
+
+		.wardrobeActionButton {
+			height: 2.2em;
+			width: 2.2em;
+		}
+	}
+}
+
+.wardrobeActionButton {
+	@include center-flex;
+	min-height: 2em;
+	border: 1px solid black;
+
+	background-color: $grey-lighter;
+
+	&.allowed:hover {
+		cursor: pointer;
+		background-color: $grey-mid;
+	}
+
+	&.blocked {
+		cursor: default;
+		background-color: #977;
+	}
+}
+
+.wardrobeColorRow {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	margin-bottom: 0.5em;
 }
 
 .bone-ui {

@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character';
 import { AssertNever } from '../utility';
-import { Appearance, ArmsPose, CharacterView } from './appearance';
+import { HexColorStringSchema } from '../validation';
+import { Appearance, ArmsPose, CharacterView, AppearanceActionHandler, AppearanceActionProcessingContext } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemIdSchema } from './item';
@@ -24,14 +25,14 @@ export type AppearanceActionDelete = z.infer<typeof AppearanceActionDeleteSchema
 export const AppearanceActionPose = z.object({
 	type: z.literal('pose'),
 	target: CharacterIdSchema,
-	pose: z.record(z.string(), z.number()),
+	pose: z.record(z.string(), z.number().optional()),
 	armsPose: z.nativeEnum(ArmsPose).optional(),
 });
 
 export const AppearanceActionBody = z.object({
 	type: z.literal('body'),
 	target: CharacterIdSchema,
-	pose: z.record(z.string(), z.number()),
+	pose: z.record(z.string(), z.number().optional()),
 });
 
 export const AppearanceActionSetView = z.object({
@@ -40,12 +41,28 @@ export const AppearanceActionSetView = z.object({
 	view: z.nativeEnum(CharacterView),
 });
 
+export const AppearanceActionMove = z.object({
+	type: z.literal('move'),
+	target: CharacterIdSchema,
+	itemId: ItemIdSchema,
+	shift: z.number().int(),
+});
+
+export const AppearanceActionColor = z.object({
+	type: z.literal('color'),
+	target: CharacterIdSchema,
+	itemId: ItemIdSchema,
+	color: z.array(HexColorStringSchema),
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
 	AppearanceActionPose,
 	AppearanceActionBody,
 	AppearanceActionSetView,
+	AppearanceActionMove,
+	AppearanceActionColor,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -54,6 +71,8 @@ export interface AppearanceActionContext {
 	characters: Map<CharacterId, Appearance>;
 	// TODO
 	roomInventory: null;
+	/** Handler for sending messages to chat */
+	actionHandler?: AppearanceActionHandler;
 }
 
 export function DoAppearanceAction(
@@ -69,6 +88,11 @@ export function DoAppearanceAction(
 	const appearance = context.characters.get(action.target);
 	if (!appearance)
 		return false;
+	const processingContext: AppearanceActionProcessingContext = {
+		player: action.target,
+		sourceCharacter: context.player,
+		actionHandler: context.actionHandler,
+	};
 
 	switch (action.type) {
 		case 'create': {
@@ -78,7 +102,7 @@ export function DoAppearanceAction(
 			if (!appearance.allowCreateItem(action.itemId, asset))
 				return false;
 			if (!dryRun) {
-				appearance.createItem(action.itemId, asset);
+				appearance.createItem(action.itemId, asset, processingContext);
 			}
 			return true;
 		}
@@ -87,7 +111,7 @@ export function DoAppearanceAction(
 				return false;
 
 			if (!dryRun) {
-				appearance.removeItem(action.itemId);
+				appearance.removeItem(action.itemId, processingContext);
 			}
 			return true;
 		}
@@ -106,6 +130,22 @@ export function DoAppearanceAction(
 		case 'setView':
 			if (!dryRun) {
 				appearance.setView(action.view);
+			}
+			return true;
+		case 'move':
+			if (!appearance.allowMoveItem(action.itemId, action.shift))
+				return false;
+
+			if (!dryRun) {
+				appearance.moveItem(action.itemId, action.shift, processingContext);
+			}
+			return true;
+		case 'color':
+			if (!appearance.allowColorItem(action.itemId, action.color))
+				return false;
+
+			if (!dryRun) {
+				appearance.colorItem(action.itemId, action.color, processingContext);
 			}
 			return true;
 		default:

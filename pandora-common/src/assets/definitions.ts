@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { zTemplateString } from '../validation';
+import { HexColorString, zTemplateString } from '../validation';
 import { BoneDefinitionCompressed } from './graphics';
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
@@ -17,6 +17,12 @@ export interface AssetDefinition {
 		itemRemove?: string;
 	};
 	bodypart?: string;
+	/** Configuration of user-configurable asset colorization */
+	colorization?: {
+		/** Name that describes the meaning of this color to user, `null` if it cannot be colored by user */
+		name: string | null;
+		default: HexColorString;
+	}[];
 	hasGraphics: boolean;
 }
 

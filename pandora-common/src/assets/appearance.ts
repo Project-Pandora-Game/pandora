@@ -9,7 +9,7 @@ import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState, BoneType } from './graphics';
-import { Item, ItemBundleSchema, ItemId } from './item';
+import { Item, ItemBundle, ItemBundleSchema, ItemId } from './item';
 
 export const BoneNameSchema = z.string();
 export type BoneName = z.infer<typeof BoneNameSchema>;
@@ -74,8 +74,11 @@ export class Appearance {
 		this.onChangeHandler = onChange;
 	}
 
-	protected makeItem(id: ItemId, asset: Asset): Item {
-		return new Item(id, asset);
+	protected makeItem(id: ItemId, asset: Asset, bundle: ItemBundle | null): Item {
+		return new Item(id, asset, bundle ?? {
+			id,
+			asset: asset.id,
+		});
 	}
 
 	public exportToBundle(): AppearanceBundle {
@@ -107,8 +110,7 @@ export class Appearance {
 				continue;
 			}
 
-			const item = this.makeItem(itemBundle.id, asset);
-			item.importFromBundle(itemBundle);
+			const item = this.makeItem(itemBundle.id, asset, itemBundle);
 			loadedItems.push(item);
 		}
 
@@ -133,7 +135,7 @@ export class Appearance {
 					ShuffleArray(possibleAssets);
 
 					for (const asset of possibleAssets) {
-						const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset)];
+						const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null)];
 						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
 							newItems = tryFix;
 							break;
@@ -173,7 +175,7 @@ export class Appearance {
 				ShuffleArray(possibleAssets);
 
 				for (const asset of possibleAssets) {
-					const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset)];
+					const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null)];
 					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
 						newItems = tryFix;
 						break;
@@ -276,7 +278,7 @@ export class Appearance {
 			return false;
 
 		// Simulate change
-		const item = this.makeItem(id, asset);
+		const item = this.makeItem(id, asset, null);
 		let newItems = this.items;
 		// if this is a bodypart not allowing multiple do a swap instead
 		if (item.asset.definition.bodypart && this.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
@@ -293,7 +295,7 @@ export class Appearance {
 		}
 
 		// Do change
-		const item = this.makeItem(id, asset);
+		const item = this.makeItem(id, asset, null);
 		let newItems = this.items.slice();
 		let removed: AppearanceItems = [];
 		// if this is a bodypart not allowing multiple do a swap instead

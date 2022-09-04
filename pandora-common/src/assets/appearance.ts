@@ -385,7 +385,7 @@ export class Appearance {
 		return ValidateAppearanceItems(this.assetMananger, newItems);
 	}
 
-	public moveItem(id: ItemId, shift: number): void {
+	public moveItem(id: ItemId, shift: number, ctx: AppearanceActionProcessingContext): void {
 		if (!this.allowMoveItem(id, shift)) {
 			throw new Error('Attempt to move item while not allowed');
 		}
@@ -403,6 +403,11 @@ export class Appearance {
 
 		this.items = newItems;
 		this.onChange(['items']);
+
+		// Change message to chat
+		if (ctx.actionHandler) {
+			// TODO: Message to chat that items were reordered
+		}
 	}
 
 	public setPose(bone: string, value: number): void {

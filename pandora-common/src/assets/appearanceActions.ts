@@ -40,12 +40,20 @@ export const AppearanceActionSetView = z.object({
 	view: z.nativeEnum(CharacterView),
 });
 
+export const AppearanceActionMove = z.object({
+	type: z.literal('move'),
+	target: CharacterIdSchema,
+	itemId: ItemIdSchema,
+	shift: z.number().int(),
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
 	AppearanceActionPose,
 	AppearanceActionBody,
 	AppearanceActionSetView,
+	AppearanceActionMove,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -113,6 +121,14 @@ export function DoAppearanceAction(
 		case 'setView':
 			if (!dryRun) {
 				appearance.setView(action.view);
+			}
+			return true;
+		case 'move':
+			if (!appearance.allowMoveItem(action.itemId, action.shift))
+				return false;
+
+			if (!dryRun) {
+				appearance.moveItem(action.itemId, action.shift, processingContext);
 			}
 			return true;
 		default:

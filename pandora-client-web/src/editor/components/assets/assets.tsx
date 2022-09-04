@@ -130,7 +130,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				{ /* TODO: Button to move down */ }
 				{ appearance.allowMoveItem(item.id, -1) &&
 				<Button onClick={ () => {
-					appearance.moveItem(item.id, -1);
+					appearance.moveItem(item.id, -1, {});
 				} } title='Move item one up' style={ { fontSize: 'x-small' } } >
 					🠉
 				</Button>}

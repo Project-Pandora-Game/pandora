@@ -11,6 +11,8 @@ import {
 	CharacterId,
 	CharacterView,
 	DoAppearanceAction,
+	HexColorString,
+	HexColorStringSchema,
 	IsCharacterId,
 	IsObject,
 	Item,
@@ -379,6 +381,7 @@ function WardrobeItemConfigMenu({
 	onClose: () => void;
 }): ReactElement {
 	const { character } = useWardrobeContext();
+	const shardConnector = useShardConnector();
 
 	return (
 		<div className='inventoryView'>
@@ -411,11 +414,71 @@ function WardrobeItemConfigMenu({
 					➖ Remove and delete
 				</WardrobeActionButton>
 			</div>
+			<FieldsetToggle legend='Coloring'>
+				{
+					item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
+						<div className='wardrobeColorRow' key={ colorPartIndex }>
+							<span className='flex-1'>{colorPart.name}</span>
+							<WardrobeColorSelector
+								initialValue={ item.color[colorPartIndex] ?? colorPart.default }
+								resetValue={ colorPart.default }
+								throttle={ 100 }
+								onChange={ (color) => {
+									if (shardConnector) {
+										const newColor = item.color.slice();
+										newColor[colorPartIndex] = color;
+										shardConnector.sendMessage('appearanceAction', {
+											type: 'color',
+											target: character.data.id,
+											itemId: item.id,
+											color: newColor,
+										});
+									}
+								} }
+							/>
+						</div>
+					))
+				}
+			</FieldsetToggle>
 			<div className='center-flex flex-1'>
 				TODO
 			</div>
 		</div>
 	);
+}
+
+function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 0 }: {
+	initialValue: HexColorString;
+	resetValue?: HexColorString;
+	onChange?: (value: HexColorString) => void;
+	throttle?: number;
+}): ReactElement {
+	const [input, setInput] = useState<string>(initialValue);
+
+	const onChangeCaller = useCallback((value: HexColorString) => onChange?.(value), [onChange]);
+	const onChangeCallerThrottled = useMemo(() => _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
+
+	const changeCallback = useCallback((value: string) => {
+		value = '#' + value.toLowerCase().replace(/[^0-9a-f]/g, '');
+		setInput(value);
+		const valid = HexColorStringSchema.safeParse(value).success;
+		if (valid) {
+			onChangeCallerThrottled(value as HexColorString);
+		}
+	}, [setInput, onChangeCallerThrottled]);
+
+	return (<>
+		<input type='text' value={input} maxLength={7} onChange={(ev) => {
+			changeCallback(ev.target.value);
+		}} />
+		<input type='color' value={input} onChange={(ev) => {
+			changeCallback(ev.target.value);
+		}} />
+		{
+			resetValue != null &&
+			<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
+		}
+	</>);
 }
 
 function WardrobeBodySizeEditor(): ReactElement {

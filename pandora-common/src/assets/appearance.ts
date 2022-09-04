@@ -4,6 +4,7 @@ import type { CharacterId } from '../character';
 import type { ChatActionId, IChatRoomMessageActionItem } from '../chatroom';
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
+import { HexColorString } from '../validation';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
@@ -409,6 +410,42 @@ export class Appearance {
 		// Change message to chat
 		if (ctx.actionHandler) {
 			// TODO: Message to chat that items were reordered
+		}
+	}
+
+	public allowColorItem(id: ItemId, color: readonly HexColorString[]): boolean {
+		const itemIndex = this.items.findIndex((item) => item.id === id);
+
+		if (itemIndex < 0)
+			return false;
+
+		// Simulate change
+		const newItems = this.items.slice();
+		newItems[itemIndex] = newItems[itemIndex].changeColor(color);
+
+		return ValidateAppearanceItems(this.assetMananger, newItems);
+	}
+
+	public colorItem(id: ItemId, color: readonly HexColorString[], ctx: AppearanceActionProcessingContext): void {
+		if (!this.allowColorItem(id, color)) {
+			throw new Error('Attempt to color item while not allowed');
+		}
+
+		const itemIndex = this.items.findIndex((item) => item.id === id);
+
+		if (itemIndex < 0)
+			throw new Error('Valid color of unknown item');
+
+		// Do change
+		const newItems = this.items.slice();
+		newItems[itemIndex] = newItems[itemIndex].changeColor(color);
+
+		this.items = newItems;
+		this.onChange(['items']);
+
+		// Change message to chat
+		if (ctx.actionHandler) {
+			// TODO: Message to chat that item was colored
 		}
 	}
 

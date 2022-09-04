@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character';
 import { AssertNever } from '../utility';
+import { HexColorStringSchema } from '../validation';
 import { Appearance, ArmsPose, CharacterView, AppearanceActionHandler, AppearanceActionProcessingContext } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
@@ -47,6 +48,13 @@ export const AppearanceActionMove = z.object({
 	shift: z.number().int(),
 });
 
+export const AppearanceActionColor = z.object({
+	type: z.literal('color'),
+	target: CharacterIdSchema,
+	itemId: ItemIdSchema,
+	color: z.array(HexColorStringSchema),
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
@@ -54,6 +62,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionBody,
 	AppearanceActionSetView,
 	AppearanceActionMove,
+	AppearanceActionColor,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -129,6 +138,14 @@ export function DoAppearanceAction(
 
 			if (!dryRun) {
 				appearance.moveItem(action.itemId, action.shift, processingContext);
+			}
+			return true;
+		case 'color':
+			if (!appearance.allowColorItem(action.itemId, action.color))
+				return false;
+
+			if (!dryRun) {
+				appearance.colorItem(action.itemId, action.color, processingContext);
 			}
 			return true;
 		default:

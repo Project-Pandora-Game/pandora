@@ -192,6 +192,13 @@ $header-height: 2em;
 	}
 }
 
+.wardrobeColorRow {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+	margin-bottom: 0.5em;
+}
+
 .bone-ui {
 	overflow: auto;
 	padding: 0.5em;

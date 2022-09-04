@@ -159,10 +159,10 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } ItemRow={ InventoryItemViewList } />
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } />
 			<TabContainer className='flex-1'>
 				<Tab name='Create new item'>
-					<InventoryView title='Create and use a new item' items={ assetList.filter(filter) } ItemRow={ InventoryAssetViewList } />
+					<InventoryView title='Create and use a new item' items={ assetList.filter(filter) } />
 				</Tab>
 				<Tab name='Room inventory'>
 					<div className='inventoryView'>
@@ -200,10 +200,10 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } ItemRow={ InventoryItemViewList } />
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } />
 			<TabContainer className='flex-1'>
 				<Tab name='Change body parts'>
-					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } ItemRow={ InventoryAssetViewList } />
+					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } />
 				</Tab>
 				<Tab name='Change body size'>
 					<WardrobeBodySizeEditor />
@@ -213,15 +213,10 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 	);
 }
 
-function InventoryView<T extends Readonly<Asset | Item>>({ className, title, items, ItemRow }: {
+function InventoryView<T extends Readonly<Asset | Item>>({ className, title, items }: {
 	className?: string;
 	title: string;
 	items: readonly T[];
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	ItemRow: (_: {
-		elem: T;
-		listMode: boolean;
-	}) => ReactElement
 }): ReactElement | null {
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
@@ -242,20 +237,23 @@ function InventoryView<T extends Readonly<Asset | Item>>({ className, title, ite
 			</div>
 			<div className={ listMode ? 'list' : 'grid' }>
 				{...filteredItems
-					.map((i) => <ItemRow key={ i.id } elem={ i } listMode={ listMode } />)}
+					.map((i) => i instanceof Item ? <InventoryItemViewList key={ i.id } item={ i } listMode={ listMode } /> :
+					i instanceof Asset ? <InventoryAssetViewList key={ i.id } asset={ i } listMode={ listMode } /> : null)}
 			</div>
 		</div>
 	);
 }
 
-function InventoryAssetViewList({ elem, listMode }: { elem: Asset; listMode: boolean; }): ReactElement {
+function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: boolean; }): ReactElement {
 	const { actions, character } = useWardrobeContext();
+
 	const action: AppearanceAction = {
 		type: 'create',
 		target: character.data.id,
 		itemId: `i/${nanoid()}` as const,
-		asset: elem.id,
+		asset: asset.id,
 	};
+
 	const shardConnector = useShardConnector();
 	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	return (
@@ -265,18 +263,22 @@ function InventoryAssetViewList({ elem, listMode }: { elem: Asset; listMode: boo
 			}
 		} }>
 			<div className='itemPreview' />
-			<span className='itemName'>{elem.definition.name}</span>
+			<span className='itemName'>{asset.definition.name}</span>
 		</div>
 	);
 }
 
-function InventoryItemViewList({ elem, listMode }: { elem: Item; listMode: boolean; }): ReactElement {
+function InventoryItemViewList({ item, listMode }: { item: Item; listMode: boolean; }): ReactElement {
 	const { actions, character } = useWardrobeContext();
+
+	const asset = item.asset;
+
 	const action: AppearanceAction = {
 		type: 'delete',
 		target: character.data.id,
-		itemId: elem.id,
+		itemId: item.id,
 	};
+
 	const shardConnector = useShardConnector();
 	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	return (
@@ -286,7 +288,7 @@ function InventoryItemViewList({ elem, listMode }: { elem: Item; listMode: boole
 			}
 		} }>
 			<div className='itemPreview' />
-			<span className='itemName'>{elem.asset.definition.name}</span>
+			<span className='itemName'>{asset.definition.name}</span>
 		</div>
 	);
 }

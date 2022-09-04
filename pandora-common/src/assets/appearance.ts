@@ -220,7 +220,7 @@ export class Appearance {
 		this.onChange(['items', 'pose']);
 	}
 
-	public importPose(pose: Record<BoneName, number>, type: BoneType | true, missingAsZero: boolean): void {
+	public importPose(pose: Partial<Record<BoneName, number>>, type: BoneType | true, missingAsZero: boolean): void {
 		for (const [bone, state] of this.pose.entries()) {
 			if (type !== true && state.definition.type !== type)
 				continue;

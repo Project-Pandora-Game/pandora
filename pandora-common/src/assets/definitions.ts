@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { HexColorString, zTemplateString } from '../validation';
+import type { ArmsPose, BoneName } from './appearance';
 import { BoneDefinitionCompressed } from './graphics';
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
@@ -38,9 +39,19 @@ export interface AssetBodyPart {
 	adjustable: boolean;
 }
 
+export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
+	category: string;
+	poses: {
+		name: string;
+		pose: Partial<Record<Bones, number>>;
+		armsPose?: ArmsPose;
+	}[];
+}[];
+
 export interface AssetsDefinitionFile {
 	assets: Record<AssetId, AssetDefinition>;
 	bones: Record<string, BoneDefinitionCompressed>;
+	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];
 	graphicsId: string;
 }

@@ -25,14 +25,14 @@ export type AppearanceActionDelete = z.infer<typeof AppearanceActionDeleteSchema
 export const AppearanceActionPose = z.object({
 	type: z.literal('pose'),
 	target: CharacterIdSchema,
-	pose: z.record(z.string(), z.number()),
+	pose: z.record(z.string(), z.number().optional()),
 	armsPose: z.nativeEnum(ArmsPose).optional(),
 });
 
 export const AppearanceActionBody = z.object({
 	type: z.literal('body'),
 	target: CharacterIdSchema,
-	pose: z.record(z.string(), z.number()),
+	pose: z.record(z.string(), z.number().optional()),
 });
 
 export const AppearanceActionSetView = z.object({

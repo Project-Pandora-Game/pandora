@@ -33,7 +33,6 @@ import { Tab, TabContainer } from '../../common/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import { Button } from '../common/Button/Button';
 import { USER_DEBUG } from '../../config/Environment';
-import { WARDROBE_POSES } from '../../graphics/def';
 import _ from 'lodash';
 import { CommonProps } from '../../common/reactTypes';
 
@@ -535,7 +534,7 @@ function WardrobePoseGui(): ReactElement {
 		}
 	}), () => character.appearance.getView());
 
-	const setPoseDirect = useCallback(({ pose, armsPose: armsPoseSet }: { pose: Record<BoneName, number>; armsPose?: ArmsPose }) => {
+	const setPoseDirect = useCallback(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
 		if (shardConnector) {
 			shardConnector.sendMessage('appearanceAction', {
 				type: 'pose',
@@ -569,7 +568,7 @@ function WardrobePoseGui(): ReactElement {
 					/>
 				</div>
 				{
-					WARDROBE_POSES.map((poseCategory, poseCategoryIndex) => (
+					GetAssetManager().getPosePresets().map((poseCategory, poseCategoryIndex) => (
 						<React.Fragment key={ poseCategoryIndex }>
 							<h4>{ poseCategory.category }</h4>
 							<div className='pose-row'>

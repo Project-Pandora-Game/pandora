@@ -1,10 +1,12 @@
+import { cloneDeep } from 'lodash';
 import { Asset } from './asset';
-import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile } from './definitions';
+import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 
 export class AssetManager {
 	private readonly _assets: Map<AssetId, Asset> = new Map();
 	private readonly _bones: Map<string, BoneDefinition> = new Map();
+	private _posePresets: AssetsPosePresets = [];
 	private _definitionsHash: string = '';
 
 	get definitionsHash(): string {
@@ -33,6 +35,10 @@ export class AssetManager {
 		return [...this._bones.values()];
 	}
 
+	public getPosePresets(): AssetsPosePresets {
+		return cloneDeep(this._posePresets);
+	}
+
 	/**
 	 * Finds the bone with the given name.
 	 * @param name - name of the bone
@@ -51,6 +57,7 @@ export class AssetManager {
 		this._definitionsHash = definitionsHash;
 		this._bodyparts = data.bodyparts;
 		this._graphicsId = data.graphicsId;
+		this._posePresets = data.posePresets ?? [];
 
 		this._bones.clear();
 		this.loadBones(data.bones);

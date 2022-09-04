@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { ArmsPose, BoneName, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
+import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 
 export type LayerStateOverrides = {

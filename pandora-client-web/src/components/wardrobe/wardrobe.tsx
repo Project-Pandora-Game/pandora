@@ -466,18 +466,20 @@ function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 
 		}
 	}, [setInput, onChangeCallerThrottled]);
 
-	return (<>
-		<input type='text' value={input} maxLength={7} onChange={(ev) => {
-			changeCallback(ev.target.value);
-		}} />
-		<input type='color' value={input} onChange={(ev) => {
-			changeCallback(ev.target.value);
-		}} />
-		{
-			resetValue != null &&
-			<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
-		}
-	</>);
+	return (
+		<>
+			<input type='text' value={ input } maxLength={ 7 } onChange={ (ev) => {
+				changeCallback(ev.target.value);
+			} } />
+			<input type='color' value={ input } onChange={ (ev) => {
+				changeCallback(ev.target.value);
+			} } />
+			{
+				resetValue != null &&
+				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
+			}
+		</>
+	);
 }
 
 function WardrobeBodySizeEditor(): ReactElement {

@@ -21,7 +21,7 @@ function FixupColorFromAsset(color: readonly HexColorString[], asset: Asset): re
 	}
 	// Add if missing
 	if (color.length < colorization.length) {
-		color = color.concat(colorization.map(c => c.default).slice(color.length));
+		color = color.concat(colorization.map((c) => c.default).slice(color.length));
 	}
 	return color;
 }

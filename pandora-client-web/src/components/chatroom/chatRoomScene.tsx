@@ -41,7 +41,7 @@ class ChatRoomCharacter extends GraphicsCharacter {
 			return;
 		}
 		const height = this._data.size[1];
-		const y = Math.max(height, this._position[1]);
+		const y = Math.min(height, this._position[1]);
 		const scaling = this._data.scaling;
 
 		if (y === 0 || scaling < 1) {
@@ -81,8 +81,8 @@ class ChatRoomCharacter extends GraphicsCharacter {
 		const [width, height] = this._data.size;
 		const [x, y] = this._position;
 		this.scale.set(scale, scale);
-		this.x = Math.max(width, x);
-		this.y = 0 - Math.max(height, y) - (CharacterSize.HEIGHT * scale - CharacterSize.HEIGHT) / 2;
+		this.x = Math.min(width, x);
+		this.y = 0 - Math.min(height, y) - (CharacterSize.HEIGHT * scale - CharacterSize.HEIGHT) / 2;
 	}
 }
 

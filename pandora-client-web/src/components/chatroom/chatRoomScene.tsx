@@ -1,4 +1,5 @@
 import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
+import { Text } from 'pixi.js';
 import React, { ReactElement, useEffect, useRef } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
@@ -10,15 +11,17 @@ import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomC
 
 class ChatRoomGraphicsScene extends GraphicsScene {}
 
-class ChatRoomCharacter extends GraphicsCharacter {
+class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
 	private _data: IChatRoomClientData | null = null;
-	private _position: [number, number];
 	private _name: Text;
+
+	private get _position(): [number, number] {
+		return this.appearanceContainer.data.position;
+	}
 
 	constructor(character: Character<ICharacterRoomData>, data: IChatRoomClientData | null) {
 		super(character);
 		this._data = data;
-		this._position = character.data.position;
 		this._name = new Text(`${character.data.name} (${character.data.id})`, {
 			fontFamily: 'Arial',
 			fontSize: this._getTextSize(),
@@ -66,7 +69,6 @@ class ChatRoomCharacter extends GraphicsCharacter {
 
 	private _onCharacterUpdate({ position, settings }: Partial<ICharacterRoomData>) {
 		if (position) {
-			this._position = position;
 			this.updateRoomData(this._data);
 		}
 		if (settings) {

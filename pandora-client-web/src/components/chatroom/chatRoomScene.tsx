@@ -19,7 +19,7 @@ class ChatRoomCharacter extends GraphicsCharacter {
 		super(character);
 		this._data = data;
 		this._position = character.data.position;
-		this._name = new Text(character.data.name, {
+		this._name = new Text(`${character.data.name} (${character.data.id})`, {
 			fontFamily: 'Arial',
 			fontSize: this._getTextSize(),
 			fill: character.data.settings.labelColor,

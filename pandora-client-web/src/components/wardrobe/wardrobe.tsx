@@ -289,14 +289,14 @@ function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: b
 	const shardConnector = useShardConnector();
 	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	return (
-		<button className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
+		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
 			if (shardConnector && possible) {
 				shardConnector.sendMessage('appearanceAction', action);
 			}
 		} }>
 			<div className='itemPreview' />
 			<span className='itemName'>{asset.definition.name}</span>
-		</button>
+		</div>
 	);
 }
 
@@ -306,7 +306,7 @@ function InventoryItemViewList({ item, listMode, selected=false, selectItem }: {
 	const asset = item.asset;
 
 	return (
-		<button className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', selected && 'selected', 'allowed') } onClick={ () => {
+		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', selected && 'selected', 'allowed') } onClick={ () => {
 			selectItem?.(selected ? null : item.id);
 		} }>
 			<div className='itemPreview' />
@@ -339,7 +339,7 @@ function InventoryItemViewList({ item, listMode, selected=false, selectItem }: {
 					</WardrobeActionButton>
 				</div>
 			}
-		</button>
+		</div>
 	);
 }
 

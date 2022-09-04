@@ -1,5 +1,6 @@
 @import '../../styles/utils';
 @import '../../styles/constants';
+@import '../../styles/forms';
 
 $header-height: 2em;
 
@@ -99,6 +100,7 @@ $header-height: 2em;
 }
 
 .inventoryViewItem {
+	@extend button;
 	border: solid $black 1px;
 	background-color: $grey-lighter;
 	display: flex;

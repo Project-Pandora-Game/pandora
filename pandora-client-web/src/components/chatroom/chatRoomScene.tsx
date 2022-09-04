@@ -1,27 +1,47 @@
 import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
-import { Text } from 'pixi.js';
+import { InteractionEvent, Point, Text } from 'pixi.js';
 import React, { ReactElement, useEffect, useRef } from 'react';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsScene, useGraphicsScene } from '../../graphics/graphicsScene';
+import { Clamp } from '../../graphics/utility';
+import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 
 class ChatRoomGraphicsScene extends GraphicsScene {}
 
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
 	private _data: IChatRoomClientData | null = null;
 	private _name: Text;
+	private _dragging?: Point;
 
 	private get _position(): [number, number] {
 		return this.appearanceContainer.data.position;
 	}
 
-	constructor(character: Character<ICharacterRoomData>, data: IChatRoomClientData | null) {
+	private set _position(value: [number, number]) {
+		if (this._position[0] === value[0] && this._position[1] === value[1]) {
+			return;
+		}
+		this.shard?.sendMessage('chatRoomCharacterMove', {
+			id: this.appearanceContainer.data.id,
+			position: [
+				Clamp(value[0], 0, this._data?.size[0] ?? 0),
+				Clamp(value[1], 0, this._data?.size[1] ?? 0),
+			],
+		});
+	}
+
+	shard: ShardConnector | null;
+
+	constructor(character: Character<ICharacterRoomData>, data: IChatRoomClientData | null, shard: ShardConnector | null) {
 		super(character);
 		this._data = data;
+		this.shard = shard;
 		this._name = new Text(`${character.data.name} (${character.data.id})`, {
 			fontFamily: 'Arial',
 			fontSize: this._getTextSize(),
@@ -33,9 +53,15 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		this._name.anchor.set(0.5, 0.5);
 		this._name.y = CharacterSize.HEIGHT - this._getTextHeightOffset();
 		this._name.x = CharacterSize.WIDTH / 2;
+		this.interactive = true;
 		this.addChild(this._name);
-		this.on('destroy', character.on('update', this._onCharacterUpdate.bind(this)));
 		this.updateRoomData(data);
+		this
+			.on('destroy', character.on('update', this._onCharacterUpdate.bind(this)))
+			.on('pointerdown', this._onDragStart.bind(this))
+			.on('pointerup', this._onDragEnd.bind(this))
+			.on('pointerupoutside', this._onDragEnd.bind(this))
+			.on('pointermove', this._onDragMove.bind(this));
 	}
 
 	updateRoomData(data: IChatRoomClientData | null) {
@@ -86,6 +112,26 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		this.x = Math.min(width, x);
 		this.y = 0 - Math.min(height, y) - (CharacterSize.HEIGHT * scale - CharacterSize.HEIGHT) / 2;
 	}
+
+	private _onDragStart(event: InteractionEvent) {
+		event.stopPropagation();
+		if (this._dragging) return;
+		this._dragging = event.data.getLocalPosition(this);
+	}
+
+	private _onDragEnd(_event: InteractionEvent) {
+		this._dragging = undefined;
+	}
+
+	private _onDragMove(event: InteractionEvent) {
+		if (!this._dragging) return;
+		event.stopPropagation();
+		const dragPointerEnd = event.data.getLocalPosition(this);
+		this._position = [
+			this._position[0] + (dragPointerEnd.x - this._dragging.x),
+			this._position[1] - (dragPointerEnd.y - this._dragging.y),
+		];
+	}
 }
 
 const scene = new ChatRoomGraphicsScene();
@@ -98,6 +144,7 @@ export function ChatRoomScene(): ReactElement | null {
 	const lastData = useRef<IChatRoomClientData | null>(null);
 	const ref = useGraphicsScene<HTMLDivElement>(scene);
 	const graphics = useRef<Map<CharacterId, ChatRoomCharacter>>();
+	const shard = useShardConnector();
 
 	AssertNotNullable(characters);
 
@@ -120,7 +167,7 @@ export function ChatRoomScene(): ReactElement | null {
 		graphics.current ??= new Map();
 		for (const character of characters) {
 			if (!graphics.current.has(character.data.id)) {
-				const char = new ChatRoomCharacter(character, lastData.current);
+				const char = new ChatRoomCharacter(character, lastData.current, shard);
 				if (lastManager.current)
 					char.useGraphics(lastManager.current.getAssetGraphicsById.bind(lastManager.current));
 				scene.add(char);
@@ -133,9 +180,11 @@ export function ChatRoomScene(): ReactElement | null {
 				scene.remove(gChar);
 				graphics.current.delete(id);
 				gChar.destroy();
+			} else {
+				gChar.shard = shard;
 			}
 		}
-	}, [characters]);
+	}, [characters, shard]);
 
 	useEffect(() => {
 		if (!graphics.current || !data)

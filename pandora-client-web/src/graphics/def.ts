@@ -96,6 +96,16 @@ export const WARDROBE_POSES: {
 					},
 					armsPose: ArmsPose.FRONT,
 				},
+				{
+					name: 'Touching hips',
+					pose: {
+						arm_r: 19,
+						arm_l: 19,
+						elbow_r: 112,
+						elbow_l: 112,
+					},
+					armsPose: ArmsPose.FRONT,
+				},
 				// TODO: right side only poses can break in combination with back poses
 				{
 					name: 'Right hand over mouth',
@@ -115,16 +125,66 @@ export const WARDROBE_POSES: {
 					},
 					armsPose: ArmsPose.FRONT,
 				},
+				{
+					name: 'Waving 1',
+					pose: {
+						arm_r: 19,
+						arm_l: 72,
+						elbow_r: -113,
+						elbow_l: 20,
+					},
+					armsPose: ArmsPose.FRONT,
+				},
+				{
+					name: 'Waving 2',
+					pose: {
+						arm_r: 19,
+						arm_l: 72,
+						elbow_r: -98,
+						elbow_l: 20,
+					},
+					armsPose: ArmsPose.FRONT,
+				},
 				// TODO: Consider way to switch front/back view of just the hand (maybe together with option to show fists)
 				{
 					name: 'Covering eyes',
 					pose: {
-						arm_r: -43,
-						arm_l: -43,
-						elbow_r: -127,
-						elbow_l: -127,
+						arm_r: -15,
+						arm_l: -15,
+						elbow_r: -137,
+						elbow_l: -137,
 					},
 					armsPose: ArmsPose.FRONT,
+				},
+				{
+					name: 'Covered eyes peeking',
+					pose: {
+						arm_r: -15,
+						arm_l: -2,
+						elbow_r: -137,
+						elbow_l: -137,
+					},
+					armsPose: ArmsPose.FRONT,
+				},
+				{
+					name: 'Covered eyes peeking 2',
+					pose: {
+						arm_r: -15,
+						arm_l: -33,
+						elbow_r: -137,
+						elbow_l: -137,
+					},
+					armsPose: ArmsPose.FRONT,
+				},
+				{
+					name: 'Hand on ear',
+					pose: {
+						arm_r: 79,
+						arm_l: 6,
+						elbow_r: 6,
+						elbow_l: -137,
+					},
+					armsPose: ArmsPose.BACK,
 				},
 				{
 					name: 'Wrists crossed front',

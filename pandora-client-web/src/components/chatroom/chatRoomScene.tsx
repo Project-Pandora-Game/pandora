@@ -13,17 +13,25 @@ class ChatRoomGraphicsScene extends GraphicsScene {}
 class ChatRoomCharacter extends GraphicsCharacter {
 	private _data: IChatRoomClientData | null = null;
 	private _position: [number, number];
+	private _name: Text;
 
 	constructor(character: Character<ICharacterRoomData>, data: IChatRoomClientData | null) {
 		super(character);
 		this._data = data;
 		this._position = character.data.position;
-		this.on('destroy', character.on('update', ({ position }) => {
-			if (position) {
-				this._position = position;
-				this.updateRoomData(this._data);
-			}
-		}));
+		this._name = new Text(character.data.name, {
+			fontFamily: 'Arial',
+			fontSize: this._getTextSize(),
+			fill: character.data.settings.labelColor,
+			align: 'center',
+			dropShadow: true,
+			dropShadowBlur: 4,
+		});
+		this._name.anchor.set(0.5, 0.5);
+		this._name.y = CharacterSize.HEIGHT - this._getTextHeightOffset();
+		this._name.x = CharacterSize.WIDTH / 2;
+		this.addChild(this._name);
+		this.on('destroy', character.on('update', this._onCharacterUpdate.bind(this)));
 		this.updateRoomData(data);
 	}
 
@@ -44,6 +52,26 @@ class ChatRoomCharacter extends GraphicsCharacter {
 		const relativeHeight = height / y;
 		const minScale = 1 / scaling;
 		this._setScale(1 - (1 - minScale) * relativeHeight);
+	}
+
+	private _getTextHeightOffset() {
+		// TODO: change this based on pose
+		return 100;
+	}
+
+	private _getTextSize() {
+		// TODO: set it based on scaling
+		return 32;
+	}
+
+	private _onCharacterUpdate({ position, settings }: Partial<ICharacterRoomData>) {
+		if (position) {
+			this._position = position;
+			this.updateRoomData(this._data);
+		}
+		if (settings) {
+			this._name.style.fill = settings.labelColor;
+		}
 	}
 
 	private _setScale(scale: number) {

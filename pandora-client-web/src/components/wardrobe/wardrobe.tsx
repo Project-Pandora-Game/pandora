@@ -199,7 +199,7 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 			{
 				selectedItem != null &&
 				<div className='flex-col flex-1'>
-					<WardrobeItemConfigMenu item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
+					<WardrobeItemConfigMenu key={ selectedItem.id } item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
 				</div>
 			}
 		</div>
@@ -236,7 +236,7 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 			{
 				selectedItem != null &&
 				<div className='flex-col flex-1'>
-					<WardrobeItemConfigMenu item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
+					<WardrobeItemConfigMenu key={ selectedItem.id } item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
 				</div>
 			}
 		</div>
@@ -289,14 +289,14 @@ function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: b
 	const shardConnector = useShardConnector();
 	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	return (
-		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
+		<button className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
 			if (shardConnector && possible) {
 				shardConnector.sendMessage('appearanceAction', action);
 			}
 		} }>
 			<div className='itemPreview' />
 			<span className='itemName'>{asset.definition.name}</span>
-		</div>
+		</button>
 	);
 }
 
@@ -306,7 +306,7 @@ function InventoryItemViewList({ item, listMode, selected=false, selectItem }: {
 	const asset = item.asset;
 
 	return (
-		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', selected && 'selected', 'allowed') } onClick={ () => {
+		<button className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', selected && 'selected', 'allowed') } onClick={ () => {
 			selectItem?.(selected ? null : item.id);
 		} }>
 			<div className='itemPreview' />
@@ -339,7 +339,7 @@ function InventoryItemViewList({ item, listMode, selected=false, selectItem }: {
 					</WardrobeActionButton>
 				</div>
 			}
-		</div>
+		</button>
 	);
 }
 

@@ -453,13 +453,13 @@ function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 
 	onChange?: (value: HexColorString) => void;
 	throttle?: number;
 }): ReactElement {
-	const [input, setInput] = useState<string>(initialValue);
+	const [input, setInput] = useState<string>(initialValue.toUpperCase());
 
 	const onChangeCaller = useCallback((value: HexColorString) => onChange?.(value), [onChange]);
 	const onChangeCallerThrottled = useMemo(() => _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
 
 	const changeCallback = useCallback((value: string) => {
-		value = '#' + value.toLowerCase().replace(/[^0-9a-f]/g, '');
+		value = '#' + value.replace(/[^0-9a-f]/gi, '').toUpperCase();
 		setInput(value);
 		const valid = HexColorStringSchema.safeParse(value).success;
 		if (valid) {

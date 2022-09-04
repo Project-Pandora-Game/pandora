@@ -34,5 +34,5 @@ function usePersistentOpen(initialState: boolean, key?: string): [boolean, () =>
 			STATES.set(key, !state);
 		}
 		return !state;
-	}, (key !== undefined && STATES.get(key)) ?? initialState);
+	}, (key !== undefined ? STATES.get(key) : undefined) ?? initialState);
 }

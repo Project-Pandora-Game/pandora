@@ -14,8 +14,9 @@ import {
 	IsCharacterId,
 	IsObject,
 	Item,
+	ItemId,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
@@ -32,6 +33,7 @@ import { Button } from '../common/Button/Button';
 import { USER_DEBUG } from '../../config/Environment';
 import { WARDROBE_POSES } from '../../graphics/def';
 import _ from 'lodash';
+import { CommonProps } from '../../common/reactTypes';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -157,10 +159,18 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 		return definition.bodypart === undefined;
 	};
 
+	const [selectedItemId, setSelectedItemId] = useState<ItemId| null>(null);
+	const selectedItem = selectedItemId && appearance.find((i) => i.id === selectedItemId);
+
+	// Reset selected item each time screen opens
+	useLayoutEffect(() => {
+		setSelectedItemId(null);
+	}, []);
+
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } />
-			<TabContainer className='flex-1'>
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } selectItem={ setSelectedItemId } selectedItemId={ selectedItemId } />
+			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
 				<Tab name='Create new item'>
 					<InventoryView title='Create and use a new item' items={ assetList.filter(filter) } />
 				</Tab>
@@ -186,6 +196,12 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 					</div>
 				</Tab>
 			</TabContainer>
+			{
+				selectedItem != null &&
+				<div className='flex-col flex-1'>
+					<WardrobeItemConfigMenu item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
+				</div>
+			}
 		</div>
 	);
 }
@@ -198,10 +214,18 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 		return definition.bodypart !== undefined;
 	};
 
+	const [selectedItemId, setSelectedItemId] = useState<ItemId| null>(null);
+	const selectedItem = selectedItemId && appearance.find((i) => i.id === selectedItemId);
+
+	// Reset selected item each time screen opens
+	useLayoutEffect(() => {
+		setSelectedItemId(null);
+	}, []);
+
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } />
-			<TabContainer className='flex-1'>
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } selectItem={ setSelectedItemId } selectedItemId={ selectedItemId } />
+			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
 				<Tab name='Change body parts'>
 					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } />
 				</Tab>
@@ -209,14 +233,22 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 					<WardrobeBodySizeEditor />
 				</Tab>
 			</TabContainer>
+			{
+				selectedItem != null &&
+				<div className='flex-col flex-1'>
+					<WardrobeItemConfigMenu item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
+				</div>
+			}
 		</div>
 	);
 }
 
-function InventoryView<T extends Readonly<Asset | Item>>({ className, title, items }: {
+function InventoryView<T extends Readonly<Asset | Item>>({ className, title, items, selectItem, selectedItemId }: {
 	className?: string;
 	title: string;
 	items: readonly T[];
+	selectItem?: (item: ItemId | null) => void;
+	selectedItemId?: ItemId | null;
 }): ReactElement | null {
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
@@ -237,7 +269,7 @@ function InventoryView<T extends Readonly<Asset | Item>>({ className, title, ite
 			</div>
 			<div className={ listMode ? 'list' : 'grid' }>
 				{...filteredItems
-					.map((i) => i instanceof Item ? <InventoryItemViewList key={ i.id } item={ i } listMode={ listMode } /> :
+					.map((i) => i instanceof Item ? <InventoryItemViewList key={ i.id } item={ i } listMode={ listMode } selected={ i.id === selectedItemId } selectItem={ selectItem } /> :
 					i instanceof Asset ? <InventoryAssetViewList key={ i.id } asset={ i } listMode={ listMode } /> : null)}
 			</div>
 		</div>
@@ -268,27 +300,120 @@ function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: b
 	);
 }
 
-function InventoryItemViewList({ item, listMode }: { item: Item; listMode: boolean; }): ReactElement {
-	const { actions, character } = useWardrobeContext();
+function InventoryItemViewList({ item, listMode, selected=false, selectItem }: { item: Item; listMode: boolean; selected?: boolean; selectItem?: (item: ItemId | null) => void; }): ReactElement {
+	const { character } = useWardrobeContext();
 
 	const asset = item.asset;
 
-	const action: AppearanceAction = {
-		type: 'delete',
-		target: character.data.id,
-		itemId: item.id,
-	};
-
-	const shardConnector = useShardConnector();
-	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	return (
-		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
-			if (shardConnector && possible) {
-				shardConnector.sendMessage('appearanceAction', action);
-			}
+		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', selected && 'selected', 'allowed') } onClick={ () => {
+			selectItem?.(selected ? null : item.id);
 		} }>
 			<div className='itemPreview' />
 			<span className='itemName'>{asset.definition.name}</span>
+			{
+				listMode &&
+				<div className='quickActions'>
+					<WardrobeActionButton action={ {
+						type: 'move',
+						target: character.data.id,
+						itemId: item.id,
+						shift: 1,
+					} }>
+						⬇️
+					</WardrobeActionButton>
+					<WardrobeActionButton action={ {
+						type: 'move',
+						target: character.data.id,
+						itemId: item.id,
+						shift: -1,
+					} }>
+						⬆️
+					</WardrobeActionButton>
+					<WardrobeActionButton action={ {
+						type: 'delete',
+						target: character.data.id,
+						itemId: item.id,
+					} }>
+						➖
+					</WardrobeActionButton>
+				</div>
+			}
+		</div>
+	);
+}
+
+function WardrobeActionButton({
+	id,
+	className,
+	children,
+	action,
+}: CommonProps & {
+	action: AppearanceAction;
+}): ReactElement {
+	const { actions } = useWardrobeContext();
+	const shardConnector = useShardConnector();
+
+	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+
+	return (
+		<button id={ id }
+			className={ classNames('wardrobeActionButton', className, possible ? 'allowed' : 'blocked') }
+			onClick={ (ev) => {
+				ev.stopPropagation();
+				if (shardConnector && possible) {
+					shardConnector.sendMessage('appearanceAction', action);
+				}
+			} }
+		>
+			{ children }
+		</button>
+	);
+}
+
+function WardrobeItemConfigMenu({
+	item,
+	onClose,
+}: {
+	item: Item;
+	onClose: () => void;
+}): ReactElement {
+	const { character } = useWardrobeContext();
+
+	return (
+		<div className='inventoryView'>
+			<div className='toolbar'>
+				<span>Editing item: {item.asset.definition.name}</span>
+				<button onClick={ () => onClose() }>✖️</button>
+			</div>
+			<div className='toolbar flex-row-wrap'>
+				<WardrobeActionButton action={ {
+					type: 'move',
+					target: character.data.id,
+					itemId: item.id,
+					shift: 1,
+				} }>
+					⬇️ Wear on top
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'move',
+					target: character.data.id,
+					itemId: item.id,
+					shift: -1,
+				} }>
+					⬆️ Wear under
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'delete',
+					target: character.data.id,
+					itemId: item.id,
+				} }>
+					➖ Remove and delete
+				</WardrobeActionButton>
+			</div>
+			<div className='center-flex flex-1'>
+				TODO
+			</div>
 		</div>
 	);
 }

@@ -14,11 +14,12 @@ import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT } from 'pandora-common';
+import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
 import { useEditor } from './editorContextProvider';
+import { ImageExporter } from './graphics/export/imageExporter';
 
 const logger = GetLogger('Editor');
 
@@ -185,6 +186,24 @@ export class Editor extends TypedEventEmitter<{
 		this.setupScene.setBackground(`#${color.toString(16)}`);
 		this.resultScene.setBackground(`#${color.toString(16)}`);
 		document.documentElement.style.setProperty('--editor-background-color', `#${color.toString(16)}`);
+	}
+
+	public exportImage(resultScene: boolean = true): void {
+		const exporter = new ImageExporter();
+		const result = exporter.characterCut(resultScene ? this.resultScene.resultCharacter : this.setupScene.setupCharacter, {
+			x: 0,
+			y: 0,
+			height: CharacterSize.HEIGHT,
+			width: CharacterSize.WIDTH,
+		}, 'png');
+
+		const link = document.createElement('a');
+		link.href = result;
+		link.download = `export.png`;
+		link.style.display = 'none';
+		document.body.appendChild(link);
+		link.click();
+		link.remove();
 	}
 }
 

@@ -5,7 +5,7 @@ import { GraphicsCharacter } from '../../../graphics/graphicsCharacter';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
 
-export class ImageExorter {
+export class ImageExporter {
 	private readonly _app: Application;
 
 	private get _extract(): Extract {

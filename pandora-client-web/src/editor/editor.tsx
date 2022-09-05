@@ -229,18 +229,18 @@ function Tab({ defaultTab }: { defaultTab: string; }): ReactElement {
 		<div className={ currentTab[1] }>
 			{
 				showTabs &&  (
-			<div className='ui-selector'>
+					<div className='ui-selector'>
 						{
 							TABS.map((tab) => (
 								<Button className='slim' theme={ currentTab === tab ? 'defaultActive' : 'default' } onClick={ () => setCurrent(tab[0]) } key={ tab[0] }>{tab[0]}</Button>
 							))
 						}
-			</div>
+					</div>
 				)
 			}
 			<button className='ui-selector-toggle' onClick={ () => setShowTabs(!showTabs) }>{ showTabs ? '\u2227 ' : '\u2228' }</button>
 			<CurrentTabComponent />
-			</div>
+		</div>
 	);
 }
 

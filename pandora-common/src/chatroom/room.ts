@@ -29,7 +29,7 @@ export const ChatRoomBaseInfoSchema = z.object({
 });
 
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__ChatRoomBaseInfo = IsTrueType<Satisfies<IChatRoomBaseInfo, z.infer<typeof ChatRoomBaseInfoSchema>>>;
+type __satisfies__ChatRoomBaseInfo = Satisfies<z.infer<typeof ChatRoomBaseInfoSchema>, IChatRoomBaseInfo>;
 
 export type IChatRoomDirectoryConfig = IChatRoomBaseInfo & {
 	/** The requested features */
@@ -60,7 +60,7 @@ export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.obje
 }));
 
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__ChatRoomDirectoryConfig = IsTrueType<Satisfies<IChatRoomDirectoryConfig, z.infer<typeof ChatRoomDirectoryConfigSchema>>>;
+type __satisfies__ChatRoomDirectoryConfig = Satisfies<z.infer<typeof ChatRoomDirectoryConfigSchema>, IChatRoomDirectoryConfig>;
 
 export const ChatRoomDirectoryUpdateSchema = ChatRoomDirectoryConfigSchema.omit({ features: true, development: true }).partial();
 
@@ -95,6 +95,6 @@ export const ChatRoomFullInfoSchema = ChatRoomDirectoryConfigSchema.merge(z.obje
 }));
 
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__ChatRoomFullInfo = IsTrueType<Satisfies<IChatRoomFullInfo, z.infer<typeof ChatRoomFullInfoSchema>>>;
+type __satisfies__ChatRoomFullInfo = Satisfies<z.infer<typeof ChatRoomFullInfoSchema>, IChatRoomFullInfo>;
 
 export type IChatRoomLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'kick' | 'ban';

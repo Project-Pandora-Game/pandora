@@ -1,3 +1,4 @@
+import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { Item } from './item';
@@ -18,6 +19,57 @@ export function AppearanceItemsFixBodypartOrder(assetMananger: AssetManager, ite
 		);
 }
 
+/**
+ * Calculates what pose is enforced by items
+ * @param items - Items being worn
+ * @returns The enforcement or `null` if the item combination is invalid
+ */
+export function AppearanceItemsGetPoseLimits(items: AppearanceItems): {
+	forcePose: Map<string, [number, number]>;
+	forceArms?: ArmsPose;
+} | null {
+	const forcePose = new Map<string, [number, number]>();
+	let forceArms: ArmsPose | undefined;
+	for (const item of items) {
+		const poseLimits = item.asset.definition.poseLimits;
+		if (!poseLimits)
+			continue;
+
+		if (poseLimits.forceArms != null) {
+			// Invalid combination of forceArms
+			if (forceArms != null && forceArms !== poseLimits.forceArms)
+				return null;
+			forceArms = poseLimits.forceArms;
+		}
+
+		if (poseLimits.forcePose != null) {
+			for (const [bone, value] of Object.entries(poseLimits.forcePose)) {
+				if (value == null)
+					continue;
+
+				const limit = typeof value === 'number' ? [value, value] : value;
+				let currentLimit = forcePose.get(bone) ?? [BONE_MIN, BONE_MAX];
+
+				currentLimit = [
+					Math.max(currentLimit[0], limit[0]),
+					Math.min(currentLimit[1], limit[1]),
+				];
+
+				// Invalid combination of forced bones
+				if (currentLimit[0] > currentLimit[1])
+					return null;
+
+				forcePose.set(bone, currentLimit);
+			}
+		}
+	}
+
+	return {
+		forceArms,
+		forcePose,
+	};
+}
+
 /** Validates items prefix, ignoring required items */
 export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items: AppearanceItems): boolean {
 	// Bodypart validation
@@ -32,6 +84,10 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		if (!bodypart.allowMultiple && items.filter((item) => item.asset.definition.bodypart === bodypart.name).length > 1)
 			return false;
 	}
+
+	// Check the pose is possible
+	if (AppearanceItemsGetPoseLimits(items) == null)
+		return false;
 
 	const assetCounts = new Map<AssetId, number>();
 	// Each asset limits count of it being added

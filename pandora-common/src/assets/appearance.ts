@@ -5,7 +5,7 @@ import type { ChatActionId, IChatRoomMessageActionItem } from '../chatroom';
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
 import { HexColorString } from '../validation';
-import { AppearanceItems, AppearanceItemsFixBodypartOrder, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
+import { AppearanceItems, AppearanceItemsFixBodypartOrder, AppearanceItemsGetPoseLimits, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
@@ -14,6 +14,9 @@ import { Item, ItemBundle, ItemBundleSchema, ItemId } from './item';
 
 export const BoneNameSchema = z.string();
 export type BoneName = z.infer<typeof BoneNameSchema>;
+
+export const BONE_MIN = -180;
+export const BONE_MAX = 180;
 
 export enum ArmsPose {
 	FRONT,
@@ -204,7 +207,7 @@ export class Appearance {
 		for (const bone of this.assetMananger.getAllBones()) {
 			this.pose.set(bone.name, {
 				definition: bone,
-				rotation: Number.isInteger(bundle.pose[bone.name]) ? bundle.pose[bone.name] : 0,
+				rotation: Number.isInteger(bundle.pose[bone.name]) ? _.clamp(bundle.pose[bone.name], BONE_MIN, BONE_MAX) : 0,
 			});
 		}
 		this._armsPose = bundle.handsPose;
@@ -217,7 +220,42 @@ export class Appearance {
 				}
 			}
 		}
+		this.enforcePoseLimits();
 		this.onChange(['items', 'pose']);
+	}
+
+	private enforcePoseLimits(): boolean {
+		const poseLimits = AppearanceItemsGetPoseLimits(this.items);
+		if (poseLimits == null)
+			return false;
+		let change = false;
+
+		if (poseLimits.forceArms != null && this._armsPose !== poseLimits.forceArms) {
+			this._armsPose = poseLimits.forceArms;
+			change = true;
+		}
+
+		for (const [bone, state] of this.pose.entries()) {
+			const limits = poseLimits.forcePose.get(bone);
+			if (limits == null)
+				continue;
+
+			const rotation = _.clamp(state.rotation, limits[0], limits[1]);
+			if (rotation === state.rotation)
+				continue;
+
+			this.pose.set(bone, {
+				definition: state.definition,
+				rotation,
+			});
+			change = true;
+		}
+
+		if (change) {
+			this.fullPose = Array.from(this.pose.values());
+		}
+
+		return change;
 	}
 
 	public importPose(pose: Partial<Record<BoneName, number>>, type: BoneType | true, missingAsZero: boolean): void {
@@ -226,12 +264,14 @@ export class Appearance {
 				continue;
 			if (!missingAsZero && pose[state.definition.name] == null)
 				continue;
+
 			this.pose.set(bone, {
 				definition: state.definition,
-				rotation: pose[state.definition.name] || 0,
+				rotation: _.clamp(pose[state.definition.name] || 0, BONE_MIN, BONE_MAX),
 			});
 		}
 		this.fullPose = Array.from(this.pose.values());
+		this.enforcePoseLimits();
 		this.onChange(['pose']);
 	}
 
@@ -306,7 +346,8 @@ export class Appearance {
 		newItems = AppearanceItemsFixBodypartOrder(this.assetMananger, [...newItems, item]);
 
 		this.items = newItems;
-		this.onChange(['items']);
+		const poseChanged = this.enforcePoseLimits();
+		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
 
 		// Change message to chat
 		if (ctx.actionHandler) {
@@ -358,7 +399,8 @@ export class Appearance {
 		const removedItems = _.remove(newItems, (i) => i.id === id);
 
 		this.items = newItems;
-		this.onChange(['items']);
+		const poseChanged = this.enforcePoseLimits();
+		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
 
 		// Change message to chat
 		if (ctx.actionHandler && removedItems.length > 0) {
@@ -405,7 +447,8 @@ export class Appearance {
 		newItems.splice(newPos, 0, ...moved);
 
 		this.items = newItems;
-		this.onChange(['items']);
+		const poseChanged = this.enforcePoseLimits();
+		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
 
 		// Change message to chat
 		if (ctx.actionHandler) {
@@ -441,7 +484,8 @@ export class Appearance {
 		newItems[itemIndex] = newItems[itemIndex].changeColor(color);
 
 		this.items = newItems;
-		this.onChange(['items']);
+		const poseChanged = this.enforcePoseLimits();
+		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
 
 		// Change message to chat
 		if (ctx.actionHandler) {
@@ -455,14 +499,8 @@ export class Appearance {
 		const state = this.pose.get(bone);
 		if (!state)
 			throw new Error(`Attempt to set pose for unknown bone: ${bone}`);
-		if (state.rotation !== value) {
-			this.pose.set(bone, {
-				definition: state.definition,
-				rotation: value,
-			});
-			this.fullPose = Array.from(this.pose.values());
-			this.onChange(['pose']);
-		}
+
+		this.importPose({ [bone]: value }, true, false);
 	}
 
 	public getPose(bone: string): BoneState {
@@ -483,6 +521,7 @@ export class Appearance {
 	public setArmsPose(value: ArmsPose): void {
 		if (this._armsPose !== value) {
 			this._armsPose = value;
+			this.enforcePoseLimits();
 			this.onChange(['pose']);
 		}
 	}

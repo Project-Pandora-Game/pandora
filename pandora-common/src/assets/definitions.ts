@@ -6,7 +6,17 @@ import { BoneDefinitionCompressed } from './graphics';
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
 
-export interface AssetDefinition {
+export interface AssetDefinitionPoseLimits<Bones extends BoneName = BoneName> {
+	/**
+	 * Forces the bones within specific range; has two options at representation:
+	 * - `[number, number]` - Minimum and maximum for this bone
+	 * - `number` - Must be exactly this; shorthand for min=max
+	 */
+	forcePose?: Partial<Record<Bones, [number, number] | number>>;
+	forceArms?: ArmsPose;
+}
+
+export interface AssetDefinition<Bones extends BoneName = BoneName> {
 	id: AssetId;
 	/** The visible name of this asset */
 	name: string;
@@ -24,6 +34,8 @@ export interface AssetDefinition {
 		name: string | null;
 		default: HexColorString;
 	}[];
+	/** Configuration of how the asset limits pose */
+	poseLimits?: AssetDefinitionPoseLimits<Bones>;
 	hasGraphics: boolean;
 }
 

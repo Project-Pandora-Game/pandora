@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ZodTrimedRegex, zTemplateString } from '../validation';
-import { IsTrueType, Satisfies } from '../utility';
+import { Satisfies } from '../utility';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;

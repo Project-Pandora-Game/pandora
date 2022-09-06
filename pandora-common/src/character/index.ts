@@ -1,3 +1,6 @@
+export * from './restrictionsManager';
+export * from './speech';
+
 import { z } from 'zod';
 import { AccountRoleInfoSchema } from '../account';
 import { AppearanceBundleSchema } from '../assets';

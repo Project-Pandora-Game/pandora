@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ICharacterPublicData, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, AppearanceActionHandlerMessage } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ICharacterPublicData, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 
@@ -143,6 +143,19 @@ export class Room extends ServerRoom<IShardClientBase> {
 	}
 
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
+		// Handle speech muffling
+		const player = new CharacterRestrictionsManager(from.id, from.appearance);
+		const muffleStrength = player.getMouthMuffleStrength();
+		if (muffleStrength > 0) {
+			for (const message of messages) {
+				if (message.type === 'chat') {
+					for (const part of message.parts) {
+						part[1] = MuffleSpokenText(part[1], muffleStrength);
+					}
+				}
+			}
+		}
+
 		const queue: IChatRoomMessage[] = [];
 		const now = Date.now();
 		let history = this.history.get(from.id);

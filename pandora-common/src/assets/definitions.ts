@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { HexColorString, zTemplateString } from '../validation';
 import type { ArmsPose, BoneName } from './appearance';
-import { BoneDefinitionCompressed } from './graphics';
+import type { EffectsProperty } from './effects';
+import type { BoneDefinitionCompressed } from './graphics';
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
@@ -36,6 +37,8 @@ export interface AssetDefinition<Bones extends BoneName = BoneName> {
 	}[];
 	/** Configuration of how the asset limits pose */
 	poseLimits?: AssetDefinitionPoseLimits<Bones>;
+	/** The effects this item applies when worn */
+	effects?: EffectsProperty;
 	hasGraphics: boolean;
 }
 

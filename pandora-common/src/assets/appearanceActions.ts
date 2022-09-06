@@ -6,6 +6,7 @@ import { Appearance, ArmsPose, CharacterView, AppearanceActionHandler, Appearanc
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemIdSchema } from './item';
+import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
@@ -85,9 +86,13 @@ export function DoAppearanceAction(
 		dryRun?: boolean;
 	} = {},
 ): boolean {
-	const appearance = context.characters.get(action.target);
-	if (!appearance)
+	const playerAppearance = context.characters.get(context.player);
+	const targetAppearance = context.characters.get(action.target);
+	if (!targetAppearance || !playerAppearance)
 		return false;
+
+	const player = new CharacterRestrictionsManager(context.player, playerAppearance);
+
 	const processingContext: AppearanceActionProcessingContext = {
 		player: action.target,
 		sourceCharacter: context.player,
@@ -99,19 +104,24 @@ export function DoAppearanceAction(
 			const asset = assetManager.getAssetById(action.asset);
 			if (!asset)
 				return false;
-			if (!appearance.allowCreateItem(action.itemId, asset))
+			if (!targetAppearance.allowCreateItem(action.itemId, asset))
 				return false;
+			if (!player.canUseHands())
+				return false;
+
 			if (!dryRun) {
-				appearance.createItem(action.itemId, asset, processingContext);
+				targetAppearance.createItem(action.itemId, asset, processingContext);
 			}
 			return true;
 		}
 		case 'delete': {
-			if (!appearance.allowRemoveItem(action.itemId))
+			if (!targetAppearance.allowRemoveItem(action.itemId))
+				return false;
+			if (!player.canUseHands())
 				return false;
 
 			if (!dryRun) {
-				appearance.removeItem(action.itemId, processingContext);
+				targetAppearance.removeItem(action.itemId, processingContext);
 			}
 			return true;
 		}
@@ -121,31 +131,35 @@ export function DoAppearanceAction(
 		// falls through
 		case 'pose':
 			if (!dryRun) {
-				appearance.importPose(action.pose, action.type, false);
+				targetAppearance.importPose(action.pose, action.type, false);
 				if ('armsPose' in action && action.armsPose != null) {
-					appearance.setArmsPose(action.armsPose);
+					targetAppearance.setArmsPose(action.armsPose);
 				}
 			}
 			return true;
 		case 'setView':
 			if (!dryRun) {
-				appearance.setView(action.view);
+				targetAppearance.setView(action.view);
 			}
 			return true;
 		case 'move':
-			if (!appearance.allowMoveItem(action.itemId, action.shift))
+			if (!targetAppearance.allowMoveItem(action.itemId, action.shift))
+				return false;
+			if (!player.canUseHands())
 				return false;
 
 			if (!dryRun) {
-				appearance.moveItem(action.itemId, action.shift, processingContext);
+				targetAppearance.moveItem(action.itemId, action.shift, processingContext);
 			}
 			return true;
 		case 'color':
-			if (!appearance.allowColorItem(action.itemId, action.color))
+			if (!targetAppearance.allowColorItem(action.itemId, action.color))
+				return false;
+			if (!player.canUseHands())
 				return false;
 
 			if (!dryRun) {
-				appearance.colorItem(action.itemId, action.color, processingContext);
+				targetAppearance.colorItem(action.itemId, action.color, processingContext);
 			}
 			return true;
 		default:

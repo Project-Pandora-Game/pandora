@@ -100,13 +100,19 @@ export function DoAppearanceAction(
 	};
 
 	switch (action.type) {
+		// Create and equip an item
 		case 'create': {
 			const asset = assetManager.getAssetById(action.asset);
 			if (!asset)
 				return false;
+			// Must result in valid appearance
 			if (!targetAppearance.allowCreateItem(action.itemId, asset))
 				return false;
+			// Player equipping the item must be able to use their hands
 			if (!player.canUseHands())
+				return false;
+			// If equipping on self, the asset must allow self-equip
+			if (context.player === action.target && !(asset.definition.allowSelfEquip ?? true))
 				return false;
 
 			if (!dryRun) {
@@ -114,9 +120,12 @@ export function DoAppearanceAction(
 			}
 			return true;
 		}
+		// Unequip and delete an item
 		case 'delete': {
+			// Must result in valid appearance
 			if (!targetAppearance.allowRemoveItem(action.itemId))
 				return false;
+			// Player removing the item must be able to use their hands
 			if (!player.canUseHands())
 				return false;
 
@@ -125,6 +134,7 @@ export function DoAppearanceAction(
 			}
 			return true;
 		}
+		// Resize body or change pose
 		case 'body':
 			if (context.player !== action.target)
 				return false;
@@ -137,14 +147,18 @@ export function DoAppearanceAction(
 				}
 			}
 			return true;
+		// Changes view of the character - front or back
 		case 'setView':
 			if (!dryRun) {
 				targetAppearance.setView(action.view);
 			}
 			return true;
+		// Moves an item within inventory, reordering the worn order
 		case 'move':
+			// Must result in valid appearance
 			if (!targetAppearance.allowMoveItem(action.itemId, action.shift))
 				return false;
+			// Player moving the item must be able to use their hands
 			if (!player.canUseHands())
 				return false;
 
@@ -152,9 +166,12 @@ export function DoAppearanceAction(
 				targetAppearance.moveItem(action.itemId, action.shift, processingContext);
 			}
 			return true;
+		// Changes the color of an item
 		case 'color':
+			// Must result in valid appearance
 			if (!targetAppearance.allowColorItem(action.itemId, action.color))
 				return false;
+			// Player coloring the item must be able to use their hands
 			if (!player.canUseHands())
 				return false;
 

@@ -19,8 +19,10 @@ export interface AssetDefinitionPoseLimits<Bones extends BoneName = BoneName> {
 
 export interface AssetDefinition<Bones extends BoneName = BoneName> {
 	id: AssetId;
+
 	/** The visible name of this asset */
 	name: string;
+
 	/** Chat action messages specific to this asset */
 	actionMessages?: {
 		/** Message for when this item is added */
@@ -28,17 +30,29 @@ export interface AssetDefinition<Bones extends BoneName = BoneName> {
 		/** Message for when this item is removed */
 		itemRemove?: string;
 	};
+
 	bodypart?: string;
+
 	/** Configuration of user-configurable asset colorization */
 	colorization?: {
 		/** Name that describes the meaning of this color to user, `null` if it cannot be colored by user */
 		name: string | null;
 		default: HexColorString;
 	}[];
+
 	/** Configuration of how the asset limits pose */
 	poseLimits?: AssetDefinitionPoseLimits<Bones>;
+
 	/** The effects this item applies when worn */
 	effects?: EffectsProperty;
+
+	/**
+	 * Allows or forbids character from equipping this item themselves
+	 * @default true
+	 */
+	allowSelfEquip?: boolean;
+
+	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
 }
 

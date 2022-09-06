@@ -114,6 +114,9 @@ export function DoAppearanceAction(
 			// If equipping on self, the asset must allow self-equip
 			if (context.player === action.target && !(asset.definition.allowSelfEquip ?? true))
 				return false;
+			// Bodyparts can only be changed on self
+			if (asset.definition.bodypart != null && context.player !== action.target)
+				return false;
 
 			if (!dryRun) {
 				targetAppearance.createItem(action.itemId, asset, processingContext);
@@ -122,11 +125,15 @@ export function DoAppearanceAction(
 		}
 		// Unequip and delete an item
 		case 'delete': {
+			const item = targetAppearance.getItemById(action.itemId);
 			// Must result in valid appearance
-			if (!targetAppearance.allowRemoveItem(action.itemId))
+			if (!item || !targetAppearance.allowRemoveItem(action.itemId))
 				return false;
 			// Player removing the item must be able to use their hands
 			if (!player.canUseHands())
+				return false;
+			// Bodyparts can only be changed on self
+			if (item.asset.definition.bodypart != null && context.player !== action.target)
 				return false;
 
 			if (!dryRun) {
@@ -154,31 +161,41 @@ export function DoAppearanceAction(
 			}
 			return true;
 		// Moves an item within inventory, reordering the worn order
-		case 'move':
+		case 'move': {
+			const item = targetAppearance.getItemById(action.itemId);
 			// Must result in valid appearance
-			if (!targetAppearance.allowMoveItem(action.itemId, action.shift))
+			if (!item || !targetAppearance.allowMoveItem(action.itemId, action.shift))
 				return false;
 			// Player moving the item must be able to use their hands
 			if (!player.canUseHands())
+				return false;
+			// Bodyparts can only be changed on self
+			if (item.asset.definition.bodypart != null && context.player !== action.target)
 				return false;
 
 			if (!dryRun) {
 				targetAppearance.moveItem(action.itemId, action.shift, processingContext);
 			}
 			return true;
+		}
 		// Changes the color of an item
-		case 'color':
+		case 'color': {
+			const item = targetAppearance.getItemById(action.itemId);
 			// Must result in valid appearance
-			if (!targetAppearance.allowColorItem(action.itemId, action.color))
+			if (!item || !targetAppearance.allowColorItem(action.itemId, action.color))
 				return false;
 			// Player coloring the item must be able to use their hands
 			if (!player.canUseHands())
+				return false;
+			// Bodyparts can only be changed on self
+			if (item.asset.definition.bodypart != null && context.player !== action.target)
 				return false;
 
 			if (!dryRun) {
 				targetAppearance.colorItem(action.itemId, action.color, processingContext);
 			}
 			return true;
+		}
 		default:
 			AssertNever(action);
 	}

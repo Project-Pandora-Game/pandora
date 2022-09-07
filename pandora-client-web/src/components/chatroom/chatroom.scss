@@ -5,13 +5,13 @@
 	height: 100%;
 
 	.tab-container {
-		flex: 1 1 100%;
 		min-width: 30%;
 		max-width: max(30em, 30vw);
 	}
 
 	.controls {
 		margin: 1em;
+		flex: 1;
 	}
 }
 
@@ -43,8 +43,8 @@
 	background-color: #333;
 	display: flex;
 	flex-flow: column;
-	height: 100%;
-	flex-grow: 1;
+	flex: 1;
+	overflow: hidden;
 
 	&>div.messages {
 		display: flex;

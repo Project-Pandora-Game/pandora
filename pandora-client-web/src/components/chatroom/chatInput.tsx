@@ -1,8 +1,8 @@
-import type { CharacterId, IChatRoomStatus } from 'pandora-common';
+import type { CharacterId, IChatRoomStatus, RoomId } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
-import { useChatRoomCharacters, useChatRoomMessageSender, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
 import { COMMAND_KEY } from './commands';
 import { toast } from 'react-toastify';
@@ -31,6 +31,8 @@ const chatInputContext = createContext<IChatInputHandler>({
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
+const InputResore: { input: string; roomId: RoomId | null } = { input: '', roomId: null };
+
 export function ChatInputContextProvider({ children }: { children: React.ReactNode }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
@@ -38,6 +40,17 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const characters = useChatRoomCharacters();
 	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
+	const roomId = useChatRoomData()?.id;
+
+	useEffect(() => {
+		if (!roomId)
+			return;
+
+		if (roomId !== InputResore.roomId) {
+			InputResore.roomId = roomId;
+			InputResore.input = '';
+		}
+	}, [roomId]);
 
 	const setEditing = useEvent((messageId: number | null) => {
 		setEditingState(messageId);
@@ -70,6 +83,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			if (ref.current) {
 				ref.current.value = value;
 			}
+			InputResore.input = value;
 		},
 		target,
 		setTarget: (t: CharacterId | null) => {
@@ -171,7 +185,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		if (value === lastInput.current)
 			return;
 
-		lastInput.current = value;
+		InputResore.input = lastInput.current = value;
 		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
 		const trimmed = value.trim();
 		if (trimmed.length > 0 && !trimmed.startsWith(COMMAND_KEY)) {
@@ -201,7 +215,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } />;
+	return <textarea ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } defaultValue={ InputResore.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);

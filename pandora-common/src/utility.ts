@@ -3,7 +3,7 @@ export type Equals<X, Y> =
 	(<T>() => T extends X ? 1 : 2) extends
 	(<T>() => T extends Y ? 1 : 2) ? true : false;
 
-export type Satisfies<T, U extends T> = T extends U ? true : false;
+export type Satisfies<T extends U, U> = T;
 
 export type IsTrueType<T extends true> = T;
 

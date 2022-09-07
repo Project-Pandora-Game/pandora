@@ -9,7 +9,7 @@ import {
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useReducer, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../networking/directoryConnector';
 import { PersistentToast } from '../../persistentToast';
@@ -81,6 +81,19 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	const shards = useShards();
 	const accountId = currentAccount?.id;
 
+	const scalingProps = useMemo(() => ({
+		min: 0,
+		max: 10,
+		step: 0.1,
+		onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+			let scaling = Number.parseFloat(event.target.value);
+			if (scaling < 0.5) scaling = 0;
+			else if (scaling < 1) scaling = 1;
+			else if (scaling > 10) scaling = 10;
+			setRoomModifiedData({ scaling });
+		},
+	}), [setRoomModifiedData]);
+
 	if (!creation && !roomData) {
 		return <Navigate to='/chatroom_select' />;
 	} else if (creation && roomData) {
@@ -141,18 +154,18 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 				<input type='color' value={ currentConfig.background } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
 			</div>
 			<div className='input-container'>
-				<label>Room size</label>
-				<input autoComplete='none' type='number' value={ currentConfig.size[0] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [Number.parseInt(event.target.value, 10), currentConfig.size[1]] }) } />
-				<input autoComplete='none' type='number' value={ currentConfig.size[1] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [currentConfig.size[0], Number.parseInt(event.target.value, 10)] }) } />
+				<label>Room Size: width, height</label>
+				<div className='row-half'>
+					<input autoComplete='none' type='number' value={ currentConfig.size[0] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [Number.parseInt(event.target.value, 10), currentConfig.size[1]] }) } />
+					<input autoComplete='none' type='number' value={ currentConfig.size[1] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [currentConfig.size[0], Number.parseInt(event.target.value, 10)] }) } />
+				</div>
 			</div>
 			<div className='input-container'>
 				<label>Y Scaling</label>
-				<input type='range' value={ currentConfig.scaling } min={ 0 } max={ 10 } step={ 0.1 } readOnly={ !isPlayerAdmin } onChange={ (event) => {
-					let scaling = Number.parseFloat(event.target.value);
-					if (scaling < 0.5) scaling = 0;
-					else if (scaling < 1) scaling = 1;
-					setRoomModifiedData({ scaling });
-				} } />
+				<div className='row-first'>
+					<input type='range' value={ currentConfig.scaling } readOnly={ !isPlayerAdmin } { ...scalingProps } />
+					<input type='number' value={ currentConfig.scaling } readOnly={ !isPlayerAdmin } { ...scalingProps } />
+				</div>
 			</div>
 		</>
 	);

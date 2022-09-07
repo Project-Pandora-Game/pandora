@@ -19,6 +19,18 @@
 		}
 	}
 
+	.row-half {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1em;
+	}
+
+	.row-first {
+		display: grid;
+		grid-template-columns: 1fr 5em;
+		gap: 1em;
+	}
+
 	.message {
 		font-size: 0.9em;
 		margin: 0.5em 0;

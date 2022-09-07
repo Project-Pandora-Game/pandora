@@ -106,6 +106,15 @@ export class Room {
 				this.config.password = null;
 			}
 		}
+		if (changes.background) {
+			this.config.background = changes.background;
+		}
+		if (changes.size) {
+			this.config.size = changes.size;
+		}
+		if (changes.scaling !== undefined) {
+			this.config.scaling = changes.scaling;
+		}
 
 		// Features and development fields are intentionally ignored
 
@@ -124,6 +133,12 @@ export class Room {
 				changeList.push('admins');
 			if (changes.banned)
 				changeList.push('ban list');
+			if (changes.background)
+				changeList.push('background');
+			if (changes.size)
+				changeList.push('size');
+			if (changes.scaling)
+				changeList.push('scaling');
 
 			if (changeList.length >= 2) {
 				this.sendMessage({

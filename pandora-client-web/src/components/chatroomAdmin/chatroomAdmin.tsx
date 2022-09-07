@@ -147,7 +147,12 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 			</div>
 			<div className='input-container'>
 				<label>Y Scaling</label>
-				<input type='range' value={ currentConfig.scaling } min={ 0 } max={ 10 } step={ 0.1 } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ scaling: Number.parseFloat(event.target.value) }) } />
+				<input type='range' value={ currentConfig.scaling } min={ 0 } max={ 10 } step={ 0.1 } readOnly={ !isPlayerAdmin } onChange={ (event) => {
+					let scaling = Number.parseFloat(event.target.value);
+					if (scaling < 0.5) scaling = 0;
+					else if (scaling < 1) scaling = 1;
+					setRoomModifiedData({ scaling });
+				} } />
 			</div>
 		</>
 	);

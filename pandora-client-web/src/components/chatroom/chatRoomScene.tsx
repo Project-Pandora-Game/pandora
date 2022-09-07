@@ -1,5 +1,6 @@
 import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
-import { InteractionEvent, Point, Text } from 'pixi.js';
+import { IBounceOptions } from 'pixi-viewport';
+import { InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
 import React, { ReactElement, useEffect } from 'react';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
@@ -131,6 +132,15 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 }
 
+const BONCE_OVERFLOW = 500;
+const BASE_BOUNCE_OPTIONS: IBounceOptions = {
+	ease: 'easeOutQuad',
+	friction: 0,
+	sides: 'all',
+	time: 500,
+	underflow: 'center',
+};
+
 class ChatRoomGraphicsScene extends GraphicsScene {
 	private readonly _characters: Map<CharacterId, ChatRoomCharacter> = new Map();
 	private _shard: ShardConnector | null = null;
@@ -139,6 +149,10 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 
 	constructor() {
 		super();
+		this.container
+			.drag({ clampWheel: true })
+			.wheel({ smooth: 10, percent: 0.1 })
+			.bounce({ ...BASE_BOUNCE_OPTIONS });
 		GraphicsManagerInstance.subscribe((manager) => {
 			if (manager) {
 				this._manager = manager;
@@ -193,6 +207,15 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		}
 		if (this._room?.background !== data.background) {
 			this.background = data.background;
+		}
+		if (!this._room || this._room.size[0] !== data.size[0] || this._room.size[1] !== data.size[1]) {
+			const container = this.container;
+			container.worldHeight = data.size[1] + BONCE_OVERFLOW * 2;
+			container.worldWidth = data.size[0] + BONCE_OVERFLOW * 2;
+			this.container.bounce({
+				...BASE_BOUNCE_OPTIONS,
+				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, data.size[0] + BONCE_OVERFLOW, data.size[1] + BONCE_OVERFLOW),
+			});
 		}
 		this._room = data;
 		this._characters.forEach((character) => {

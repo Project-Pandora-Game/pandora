@@ -1,31 +1,41 @@
 .chatroom {
 	display: flex;
-	flex-flow: row wrap;
+	flex-flow: row;
 	gap: 1em;
 	height: 100%;
 
-	.character-info {
-		&>a {
-			padding: 0;
-		}
+	.tab-container {
+		flex: 1 1 100%;
+		min-width: 30%;
+		max-width: max(30em, 30vw);
+	}
 
-		&>* {
-			margin-right: 1em;
-		}
-
-		&>*:last-child {
-			margin-right: 0;
-		}
+	.controls {
+		margin: 1em;
 	}
 }
 
 .chatroom-scene {
-	height: 1000px;
-	width: 1000px;
+	height: 100%;
+	width: 100%;
 
 	canvas {
 		height: 100%;
 		width: 100%;
+	}
+}
+
+.character-info {
+	&>a {
+		padding: 0;
+	}
+
+	&>* {
+		margin-right: 1em;
+	}
+
+	&>*:last-child {
+		margin-right: 0;
 	}
 }
 
@@ -34,8 +44,6 @@
 	display: flex;
 	flex-flow: column;
 	height: 100%;
-	min-width: 50%;
-	max-width: max(50em, 50vw);
 	flex-grow: 1;
 
 	&>div.messages {

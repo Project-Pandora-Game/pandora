@@ -13,6 +13,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { useEvent } from '../../common/useEvent';
 import { Button } from '../common/Button/Button';
+import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
 import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatRoomData, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
@@ -37,19 +38,25 @@ export function Chatroom(): ReactElement {
 		<div className='chatroom'>
 			<ChatInputContextProvider>
 				<ChatRoomScene />
-				<Chat />
-				<div>
-					<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
-					<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
-					<br />
-					<p>You are in room {roomData.name}</p>
-					<div>
-						Characters in this room:<br />
-						<ul>
-							{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
-						</ul>
-					</div>
-				</div>
+				<TabContainer>
+					<Tab name='Chat'>
+						<Chat />
+					</Tab>
+					<Tab name='Controls'>
+						<div className='controls'>
+							<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
+							<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
+							<br />
+							<p>You are in room {roomData.name}</p>
+							<div>
+								Characters in this room:<br />
+								<ul>
+									{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
+								</ul>
+							</div>
+						</div>
+					</Tab>
+				</TabContainer>
 			</ChatInputContextProvider>
 		</div>
 	);

@@ -151,7 +151,10 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 			}
 			<div className='input-container'>
 				<label>Background</label>
-				<input type='color' value={ currentConfig.background } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
+				<div className='row-first'>
+					<input type='text' value={ currentConfig.background } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
+					<input type='color' value={ currentConfig.background.startsWith('#') ? currentConfig.background : '#FFFFFF' } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
+				</div>
 			</div>
 			<div className='input-container'>
 				<label>Room Size: width, height</label>

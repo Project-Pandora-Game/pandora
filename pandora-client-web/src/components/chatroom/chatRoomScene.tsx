@@ -1,18 +1,15 @@
 import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import { InteractionEvent, Point, Text } from 'pixi.js';
-import React, { ReactElement, useEffect, useRef } from 'react';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager';
+import React, { ReactElement, useEffect } from 'react';
+import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsScene, useGraphicsScene } from '../../graphics/graphicsScene';
 import { Clamp } from '../../graphics/utility';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useObservable } from '../../observable';
 import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-
-class ChatRoomGraphicsScene extends GraphicsScene {}
 
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
 	private _data: IChatRoomClientData | null = null;
@@ -134,16 +131,82 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 }
 
+class ChatRoomGraphicsScene extends GraphicsScene {
+	private readonly _characters: Map<CharacterId, ChatRoomCharacter> = new Map();
+	private _shard: ShardConnector | null = null;
+	private _room: IChatRoomClientData | null = null;
+	private _manager: GraphicsManager | null = GraphicsManagerInstance.value;
+
+	constructor() {
+		super();
+		GraphicsManagerInstance.subscribe((manager) => {
+			if (manager) {
+				this._manager = manager;
+				for (const [, character] of this._characters) {
+					character.useGraphics(manager.getAssetGraphicsById.bind(manager));
+				}
+			}
+		});
+	}
+
+	public clear() {
+		this._characters.forEach((character) => {
+			character.destroy();
+			this.remove(character);
+		});
+		this._characters.clear();
+	}
+
+	public updateCharacters(data: readonly Character<ICharacterRoomData>[]) {
+		for (const [id, character] of this._characters) {
+			if (!data.find((c) => c.data.id === id)) {
+				character.destroy();
+				this._characters.delete(id);
+			}
+		}
+		for (const character of data) {
+			if (this._characters.has(character.data.id)) {
+				return;
+			}
+			const graphics = new ChatRoomCharacter(character, this._room, this._shard);
+			if (this._manager) {
+				graphics.useGraphics(this._manager.getAssetGraphicsById.bind(this._manager));
+			}
+			this._characters.set(character.data.id, graphics);
+			this.add(graphics);
+		}
+	}
+
+	public updateShard(shard: ShardConnector | null) {
+		if (this._shard === shard) {
+			return;
+		}
+		this._shard = shard;
+		this._characters.forEach((character) => {
+			character.shard = shard;
+		});
+	}
+
+	public updateRoomData(data: IChatRoomClientData) {
+		if (this._room === data) {
+			return;
+		}
+		if (this._room?.background !== data.background) {
+			this.background = data.background;
+		}
+		this._room = data;
+		this._characters.forEach((character) => {
+			character.updateRoomData(data);
+		});
+	}
+}
+
 const scene = new ChatRoomGraphicsScene();
 
 export function ChatRoomScene(): ReactElement | null {
 	const data = useChatRoomData();
 	const characters = useChatRoomCharacters();
-	const manager = useObservable(GraphicsManagerInstance);
-	const lastManager = useRef<typeof manager>(null);
-	const lastData = useRef<IChatRoomClientData | null>(null);
 	const ref = useGraphicsScene<HTMLDivElement>(scene);
-	const graphics = useRef<Map<CharacterId, ChatRoomCharacter>>();
 	const shard = useShardConnector();
 
 	AssertNotNullable(characters);
@@ -151,52 +214,18 @@ export function ChatRoomScene(): ReactElement | null {
 	useDebugExpose('scene', scene);
 
 	useEffect(() => {
-		if (!manager || !graphics.current) {
-			lastManager.current = manager;
-			return;
+		if (characters) {
+			scene.updateCharacters(characters);
 		}
-		if (lastManager.current !== manager) {
-			for (const char of graphics.current.values()) {
-				char.useGraphics(manager.getAssetGraphicsById.bind(manager));
-			}
-			lastManager.current = manager;
-		}
-	}, [manager]);
+	}, [characters]);
 
 	useEffect(() => {
-		graphics.current ??= new Map();
-		for (const character of characters) {
-			if (!graphics.current.has(character.data.id)) {
-				const char = new ChatRoomCharacter(character, lastData.current, shard);
-				if (lastManager.current)
-					char.useGraphics(lastManager.current.getAssetGraphicsById.bind(lastManager.current));
-				scene.add(char);
-				graphics.current.set(character.data.id, char);
-			}
-		}
-		for (const [id, gChar] of graphics.current.entries()) {
-			const char = characters.find((c) => c.data.id === id);
-			if (!char) {
-				scene.remove(gChar);
-				graphics.current.delete(id);
-				gChar.destroy();
-			} else {
-				gChar.shard = shard;
-			}
-		}
-	}, [characters, shard]);
+		scene.updateShard(shard);
+	}, [shard]);
 
 	useEffect(() => {
-		if (!graphics.current || !data)
-			return;
-
-		if (lastData.current?.background !== data.background) {
-			scene.background = data?.background;
-		}
-
-		lastData.current = data;
-		for (const char of graphics.current.values()) {
-			char.updateRoomData(data);
+		if (data) {
+			scene.updateRoomData(data);
 		}
 	}, [data]);
 

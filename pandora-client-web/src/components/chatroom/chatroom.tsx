@@ -36,6 +36,7 @@ export function Chatroom(): ReactElement {
 	return (
 		<div className='chatroom'>
 			<ChatInputContextProvider>
+				<ChatRoomScene />
 				<Chat />
 				<div>
 					<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
@@ -48,7 +49,6 @@ export function Chatroom(): ReactElement {
 							{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
 						</ul>
 					</div>
-					<ChatRoomScene />
 				</div>
 			</ChatInputContextProvider>
 		</div>

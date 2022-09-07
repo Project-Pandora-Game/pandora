@@ -29,7 +29,7 @@ import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphic
 import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
-import { Tab, TabContainer } from '../../common/tabs';
+import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import { Button } from '../common/Button/Button';
 import { USER_DEBUG } from '../../config/Environment';

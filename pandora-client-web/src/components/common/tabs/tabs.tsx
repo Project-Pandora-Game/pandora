@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React, { ReactElement, useMemo, useState } from 'react';
-import { ChildrenProps } from './reactTypes';
+import { ChildrenProps } from '../../../common/reactTypes';
 import './tabs.scss';
 
 interface TabProps extends ChildrenProps {

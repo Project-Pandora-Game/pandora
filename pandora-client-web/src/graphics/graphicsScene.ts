@@ -99,6 +99,8 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 			this._app.renderer.backgroundColor = parseInt(data.substring(1, 7), 16);
 			if (data.length > 7) {
 				this._app.renderer.backgroundAlpha = parseInt(data.substring(7, 9), 16) / 255;
+			} else {
+				this._app.renderer.backgroundAlpha = 1;
 			}
 		} else if (/^data:image\/png;base64,[0-9a-zA-Z+/=]+$/i.test(data)) {
 			this._background = data;

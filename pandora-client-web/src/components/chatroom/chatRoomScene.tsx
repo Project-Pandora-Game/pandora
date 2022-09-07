@@ -75,7 +75,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			return;
 		}
 
-		const relativeHeight = height / y;
+		const relativeHeight = y / height;
 		const minScale = 1 / scaling;
 		this._setScale(1 - (1 - minScale) * relativeHeight);
 	}

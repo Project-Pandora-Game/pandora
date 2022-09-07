@@ -108,7 +108,11 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const [x, y] = this._position;
 		this.scale.set(scale, scale);
 		this.x = Math.min(width, x);
+		const oldY = this.y;
 		this.y = 0 - Math.min(height, y) - (CharacterSize.HEIGHT * scale - CharacterSize.HEIGHT) / 2;
+		if (oldY !== this.y) {
+			this.emit('YChanged', this.y);
+		}
 	}
 
 	private _onDragStart(event: InteractionEvent) {
@@ -132,6 +136,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 }
 
+const CHARACTER_INDEX_START = 100;
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 	ease: 'easeOutQuad',
@@ -163,6 +168,22 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		});
 	}
 
+	public reorderCharacters() {
+		let orderChanged = false;
+		[...this._characters.values()]
+			.sort((a, b) => a.y - b.y)
+			.forEach((character, index) => {
+				if (character.zIndex !== index + CHARACTER_INDEX_START) {
+					character.zIndex = index + CHARACTER_INDEX_START;
+					orderChanged = true;
+				}
+			});
+
+		if (orderChanged) {
+			this.container.sortChildren();
+		}
+	}
+
 	public clear() {
 		this._characters.forEach((character) => {
 			character.destroy();
@@ -186,9 +207,11 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			if (this._manager) {
 				graphics.useGraphics(this._manager.getAssetGraphicsById.bind(this._manager));
 			}
+			graphics.on('YChanged', () => this.reorderCharacters());
 			this._characters.set(character.data.id, graphics);
 			this.add(graphics);
 		}
+		this.reorderCharacters();
 	}
 
 	public updateShard(shard: ShardConnector | null) {

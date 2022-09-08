@@ -7,6 +7,7 @@ import {
 	AppearanceItems,
 	AppearanceItemsGetPoseLimits,
 	ArmsPose,
+	AssertNotNullable,
 	Asset,
 	AssetsPosePresets,
 	BoneName,
@@ -26,7 +27,7 @@ import {
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
+import { Character, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterRestrictionsManager } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -387,6 +388,9 @@ function WardrobeItemConfigMenu({
 }): ReactElement {
 	const { character } = useWardrobeContext();
 	const shardConnector = useShardConnector();
+	const player = usePlayer();
+	AssertNotNullable(player);
+	const canUseHands = useCharacterRestrictionsManager(player, (manager) => manager.canUseHands());
 
 	return (
 		<div className='inventoryView'>
@@ -428,6 +432,7 @@ function WardrobeItemConfigMenu({
 								initialValue={ item.color[colorPartIndex] ?? colorPart.default }
 								resetValue={ colorPart.default }
 								throttle={ 100 }
+								disabled={ !canUseHands }
 								onChange={ (color) => {
 									if (shardConnector) {
 										const newColor = item.color.slice();
@@ -452,11 +457,12 @@ function WardrobeItemConfigMenu({
 	);
 }
 
-function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 0 }: {
+function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 0, disabled = true }: {
 	initialValue: HexColorString;
 	resetValue?: HexColorString;
 	onChange?: (value: HexColorString) => void;
 	throttle?: number;
+	disabled?: boolean;
 }): ReactElement {
 	const [input, setInput] = useState<string>(initialValue.toUpperCase());
 
@@ -474,10 +480,10 @@ function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 
 
 	return (
 		<>
-			<input type='text' value={ input } maxLength={ 7 } onChange={ (ev) => {
+			<input type='text' value={ input } disabled={ disabled } maxLength={ 7 } onChange={ (ev) => {
 				changeCallback(ev.target.value);
 			} } />
-			<input type='color' value={ input } onChange={ (ev) => {
+			<input type='color' value={ input } disabled={ disabled } onChange={ (ev) => {
 				changeCallback(ev.target.value);
 			} } />
 			{

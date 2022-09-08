@@ -18,19 +18,21 @@ import { ContextMenu, useContextMenu } from '../contextMenu';
 import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatRoomData, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
-import { usePlayerData, usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerData, usePlayerId } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
 import { ChatParser } from './chatParser';
 import { ChatRoomScene } from './chatRoomScene';
 import './chatroom.scss';
+import { WardrobePoseGui } from '../wardrobe/wardrobe';
 
 export function Chatroom(): ReactElement {
+	const player = usePlayer();
 	const roomData = useChatRoomData();
 	const navigate = useNavigate();
 	const directoryConnector = useDirectoryConnector();
 
-	if (!roomData) {
+	if (!roomData || !player) {
 		return <Navigate to='/chatroom_select' />;
 	}
 
@@ -55,6 +57,9 @@ export function Chatroom(): ReactElement {
 								</ul>
 							</div>
 						</div>
+					</Tab>
+					<Tab name='Pose'>
+						<WardrobePoseGui character={ player } />
 					</Tab>
 				</TabContainer>
 			</ChatInputContextProvider>

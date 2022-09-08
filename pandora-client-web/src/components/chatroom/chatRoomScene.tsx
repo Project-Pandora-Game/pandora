@@ -124,7 +124,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	private _updateTextPosition() {
 		const x = CharacterSize.WIDTH / 2;
 		const y = CharacterSize.HEIGHT - this._getTextHeightOffset();
-		this.hitArea = new Rectangle(x - 50, y - 25, 100, 50);
+		this.hitArea = new Rectangle(x - 100, y - 50, 200, 100);
 		this._name.x = x;
 		this._name.y = y;
 	}

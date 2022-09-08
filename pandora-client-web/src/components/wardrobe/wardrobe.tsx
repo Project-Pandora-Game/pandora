@@ -11,6 +11,8 @@ import {
 	AssetsPosePresets,
 	BoneName,
 	BoneState,
+	BONE_MAX,
+	BONE_MIN,
 	CharacterId,
 	CharacterView,
 	DoAppearanceAction,
@@ -627,7 +629,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 		}
 	});
 
-	const { poses, forceArms } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), bones, armsPose), [character, bones, armsPose]);
+	const { poses, forceArms, forcePose } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), bones, armsPose), [character, bones, armsPose]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
@@ -689,7 +691,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 							bones
 								.filter((bone) => bone.definition.type === 'pose')
 								.map((bone) => (
-									<BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => {
+									<BoneRowElement key={ bone.definition.name } bone={ bone } forcePose={ forcePose } onChange={ (value) => {
 										setPose({
 											pose: {
 												[bone.definition.name]: value,
@@ -713,26 +715,32 @@ function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose
 	);
 }
 
-export function BoneRowElement({ bone, onChange }: { bone: BoneState; onChange: (value: number) => void }) {
-	const name = bone.definition.name
+export function BoneRowElement({ bone, onChange, forcePose }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; }) {
+	const [min, max] = useMemo(() => forcePose?.get(bone.definition.name) ?? [BONE_MIN, BONE_MAX], [bone, forcePose]);
+
+	const name = useMemo(() => bone.definition.name
 		.replace(/^\w/, (c) => c.toUpperCase())
 		.replace(/_r$/, () => ' Right')
 		.replace(/_l$/, () => ' Left')
-		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
+		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase()), [bone]);
 
-	const onInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(value)) {
+		if (Number.isInteger(value) && value >= min && value <= max && value !== bone.rotation) {
 			onChange(value);
 		}
-	};
+	});
+
+	const onInputThrottled = useMemo(() => _.throttle(onInput, 100), [onInput]);
 
 	return (
 		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + bone.definition.name }>
 			<div className='bone-rotation'>
-				<input type='range' min='-180' max='180' step='1' value={ bone.rotation } onChange={ onInput } />
-				<input type='number' min='-180' max='180' step='1' value={ bone.rotation } onChange={ onInput } />
-				<Button className='slim' onClick={ () => onChange(0) }>↺</Button>
+				<input type='range' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInputThrottled } />
+				<input type='number' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInputThrottled } />
+				<Button className='slim' onClick={ () => onChange(0) } disabled={ bone.rotation === 0 || min > 0 || max < 0 }>
+					↺
+				</Button>
 			</div>
 		</FieldsetToggle>
 	);

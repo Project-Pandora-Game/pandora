@@ -537,16 +537,17 @@ type CheckedAssetsPosePresets = {
 	poses: CheckedPosePreset[];
 }[];
 
-function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: ArmsPose): CheckedAssetsPosePresets {
+function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: ArmsPose): {
+	poses: CheckedAssetsPosePresets;
+	forcePose?: Map<string, [number, number]>;
+	forceArms?: ArmsPose;
+} {
 	const presets = GetAssetManager().getPosePresets();
-	const limits = AppearanceItemsGetPoseLimits(items);
+	const limits = AppearanceItemsGetPoseLimits(items) || { forceArms: undefined, forcePose: undefined };
 	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
 
 	const isAbailable = ({ pose, armsPose }: AssetsPosePreset) => {
-		if (!limits)
-			return true;
-
-		if (armsPose && limits.forceArms && armsPose !== limits.forceArms)
+		if (armsPose !== undefined && limits.forceArms !== undefined && armsPose !== limits.forceArms)
 			return false;
 
 		if (!limits.forcePose)
@@ -568,7 +569,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	};
 
 	const isActive = (preset: AssetsPosePreset) => {
-		if (preset.armsPose) {
+		if (preset.armsPose !== undefined) {
 			if (preset.armsPose !== arms)
 				return false;
 		} else if (arms === ArmsPose.BACK)
@@ -585,7 +586,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 		return true;
 	};
 
-	return presets.map<CheckedAssetsPosePresets[number]>((preset) => ({
+	const poses = presets.map<CheckedAssetsPosePresets[number]>((preset) => ({
 		category: preset.category,
 		poses: preset.poses.map((pose) => {
 			const available = isAbailable(pose);
@@ -596,6 +597,8 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 			};
 		}),
 	}));
+
+	return { poses, ...limits };
 }
 
 export function WardrobePoseGui({ character }: { character: Character }): ReactElement {
@@ -624,7 +627,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 		}
 	});
 
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), bones, armsPose), [character, bones, armsPose]);
+	const { poses, forceArms } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), bones, armsPose), [character, bones, armsPose]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
@@ -637,6 +640,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 						id='back-view-toggle'
 						type='checkbox'
 						checked={ view === CharacterView.BACK }
+						disabled={ forceArms !== undefined }
 						onChange={ (e) => {
 							if (shardConnector) {
 								shardConnector.sendMessage('appearanceAction', {

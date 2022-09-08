@@ -315,7 +315,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			const container = this.container;
 			container.worldHeight = data.size[1];
 			container.worldWidth = data.size[0];
-			this.resize(false);
+			this.resize(true);
 			this.container.bounce({
 				...BASE_BOUNCE_OPTIONS,
 				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, data.size[0] + 2 * BONCE_OVERFLOW, data.size[1] + 2 * BONCE_OVERFLOW),

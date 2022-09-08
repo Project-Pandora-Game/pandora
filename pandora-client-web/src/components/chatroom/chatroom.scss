@@ -1,3 +1,6 @@
+@import '../../styles/constants';
+@import '../../styles/utils';
+
 .chatroom {
 	display: flex;
 	flex-flow: row;
@@ -110,6 +113,15 @@
 }
 
 .typing-indicator, .input-modifiers {
+	@include flex(row, wrap);
+	align-items: center;
+
+	background-color: #2A2A2A;
 	color: white;
-	margin-left: 0.5em;
+	padding-left: 0.5em;
+	gap: 0.5em;
+}
+
+.typing-indicator {
+	min-height: 1.5em;
 }

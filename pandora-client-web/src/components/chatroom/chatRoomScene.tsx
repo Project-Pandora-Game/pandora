@@ -46,14 +46,14 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	private _yOffset: number = 0;
 	private _scale: number = 0;
 
-	private get _position(): [number, number] {
+	public get characterRoomPosition(): [number, number] {
 		return this.appearanceContainer.data.position;
 	}
 
 	private _setPositionRaw(x: number, y: number): void {
 		x = _.clamp(x, 0, this._data?.size[0] ?? 0);
 		y = _.clamp(y, 0, this._data?.size[1] ?? 0);
-		if (this._position[0] === x && this._position[1] === y || !this.shard) {
+		if (this.characterRoomPosition[0] === x && this.characterRoomPosition[1] === y || !this.shard) {
 			return;
 		}
 		this.shard?.sendMessage('chatRoomCharacterMove', {
@@ -142,8 +142,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		}
 
 		const [width, height] = this._data.size;
-		const x = Math.min(width, this._position[0]);
-		const y = Math.min(height, this._position[1]);
+		const x = Math.min(width, this.characterRoomPosition[0]);
+		const y = Math.min(height, this.characterRoomPosition[1]);
 
 		const scaling = Math.max(1, this._data.scaling);
 		const relativeHeight = y / height;
@@ -250,7 +250,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	public reorderCharacters() {
 		let orderChanged = false;
 		[...this._characters.values()]
-			.sort((a, b) => a.y - b.y)
+			.sort((a, b) => b.characterRoomPosition[1] - a.characterRoomPosition[1])
 			.forEach((character, index) => {
 				if (character.zIndex !== index + CHARACTER_INDEX_START) {
 					character.zIndex = index + CHARACTER_INDEX_START;

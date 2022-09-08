@@ -150,7 +150,9 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const minScale = 1 / scaling;
 		this._scale = 1 - (1 - minScale) * relativeHeight;
 
-		this._yOffset = this.getBoneLikeValue('kneeling') * 2;
+		this._yOffset = 0
+			+ 2 * this.getBoneLikeValue('kneeling')
+			+ 0.8 * this.getBoneLikeValue('sitting');
 
 		const oldY = this.y;
 

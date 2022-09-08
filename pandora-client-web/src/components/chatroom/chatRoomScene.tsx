@@ -1,6 +1,6 @@
 import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
-import { InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
+import { Graphics, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
 import React, { ReactElement, useEffect } from 'react';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
@@ -11,28 +11,34 @@ import { Clamp } from '../../graphics/utility';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import _ from 'lodash';
 
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
 	private _data: IChatRoomClientData | null = null;
 	private _name: Text;
 	private _dragging?: Point;
 
+	// Calculated properties
+	private _yOffset: number = 0;
+	private _scale: number = 0;
+
 	private get _position(): [number, number] {
 		return this.appearanceContainer.data.position;
 	}
 
-	private set _position(value: [number, number]) {
-		if (this._position[0] === value[0] && this._position[1] === value[1]) {
+	private _setPositionRaw(x: number, y: number): void {
+		x = Clamp(x, 0, this._data?.size[0] ?? 0);
+		y = Clamp(y, 0, this._data?.size[1] ?? 0)
+		if (this._position[0] === x && this._position[1] === y || !this.shard) {
 			return;
 		}
 		this.shard?.sendMessage('chatRoomCharacterMove', {
 			id: this.appearanceContainer.data.id,
-			position: [
-				Clamp(value[0], 0, this._data?.size[0] ?? 0),
-				Clamp(value[1], 0, this._data?.size[1] ?? 0),
-			],
+			position: [x, y],
 		});
 	}
+
+	private readonly setPositionThrottled = _.throttle(this._setPositionRaw.bind(this), 100);
 
 	shard: ShardConnector | null;
 
@@ -48,14 +54,21 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			dropShadow: true,
 			dropShadowBlur: 4,
 		});
+
+		const cleanupCalls: (() => void)[] = [];
+
+		cleanupCalls.push(character.on('appearanceUpdate', () => {
+			this._updateTextPosition();
+		}));
+		cleanupCalls.push(character.on('update', this._onCharacterUpdate.bind(this)));
+
 		this._name.anchor.set(0.5, 0.5);
-		this._name.y = CharacterSize.HEIGHT - this._getTextHeightOffset();
-		this._name.x = CharacterSize.WIDTH / 2;
 		this.interactive = true;
+		this._updateTextPosition();
 		this.addChild(this._name);
 		this.updateRoomData(data);
 		this
-			.on('destroy', character.on('update', this._onCharacterUpdate.bind(this)))
+			.on('destroy', () => cleanupCalls.forEach((c) => c()))
 			.on('pointerdown', this._onDragStart.bind(this))
 			.on('pointerup', this._onDragEnd.bind(this))
 			.on('pointerupoutside', this._onDragEnd.bind(this))
@@ -64,31 +77,24 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 	updateRoomData(data: IChatRoomClientData | null) {
 		this._data = data;
-		if (!this._data) {
-			return;
-		}
-		const height = this._data.size[1];
-		const y = Math.min(height, this._position[1]);
-		const scaling = this._data.scaling;
-
-		if (y === 0 || scaling < 1) {
-			this._setScale(1);
-			return;
-		}
-
-		const relativeHeight = y / height;
-		const minScale = 1 / scaling;
-		this._setScale(1 - (1 - minScale) * relativeHeight);
+		this._reposition();
 	}
 
 	private _getTextHeightOffset() {
-		// TODO: change this based on pose
-		return 100;
+		return 100 + (this.getBoneLikeValue("kneeling") * 2);
 	}
 
 	private _getTextSize() {
 		// TODO: set it based on scaling
 		return 32;
+	}
+
+	private _updateTextPosition() {
+		const x = CharacterSize.WIDTH / 2;
+		const y = CharacterSize.HEIGHT - this._getTextHeightOffset();
+		this.hitArea = new Rectangle(x - 50, y - 25, 100, 50);
+		this._name.x = x;
+		this._name.y = y;
 	}
 
 	private _onCharacterUpdate({ position, settings }: Partial<ICharacterRoomData>) {
@@ -100,16 +106,36 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		}
 	}
 
-	private _setScale(scale: number) {
+	private _reposition() {
 		if (!this._data) {
 			return;
 		}
+
 		const [width, height] = this._data.size;
-		const [x, y] = this._position;
-		this.scale.set(scale, scale);
-		this.x = Math.min(width, x);
+		const x = Math.min(width, this._position[0]);
+		const y = Math.min(height, this._position[1]);
+
+		const scaling = this._data.scaling;
+
+		if (scaling < 1) {
+			this._scale = 1;
+		} else {
+			const relativeHeight = y / height;
+			const minScale = 1 / scaling;
+			this._scale = 1 - (1 - minScale) * relativeHeight;
+		}
+
+		this._yOffset = this.getBoneLikeValue("kneeling") * 2;
+
 		const oldY = this.y;
-		this.y = 0 - Math.min(height, y) - (CharacterSize.HEIGHT * scale - CharacterSize.HEIGHT) / 2;
+
+		this.scale.set(this._scale);
+		this.x = x;
+		this.y = height
+			- CharacterSize.HEIGHT * this._scale
+			- y
+			+ this._yOffset;
+
 		if (oldY !== this.y) {
 			this.emit('YChanged', this.y);
 		}
@@ -118,7 +144,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	private _onDragStart(event: InteractionEvent) {
 		event.stopPropagation();
 		if (this._dragging) return;
-		this._dragging = event.data.getLocalPosition(this);
+		this._dragging = event.data.getLocalPosition(this.parent);
 	}
 
 	private _onDragEnd(_event: InteractionEvent) {
@@ -126,13 +152,17 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 
 	private _onDragMove(event: InteractionEvent) {
-		if (!this._dragging) return;
+		if (!this._dragging || !this._data) return;
 		event.stopPropagation();
-		const dragPointerEnd = event.data.getLocalPosition(this);
-		this._position = [
-			this._position[0] + (dragPointerEnd.x - this._dragging.x),
-			this._position[1] - (dragPointerEnd.y - this._dragging.y),
-		];
+		const dragPointerEnd = event.data.getLocalPosition(this.parent);
+
+		const [width, height] = this._data.size;
+		const scaling = this._data.scaling;
+
+		const minScale = 1 / scaling;
+		const y = height * (height - dragPointerEnd.y + this._yOffset - this._getTextHeightOffset()) / (height + 1 - minScale);
+
+		this.setPositionThrottled(dragPointerEnd.x, y);
 	}
 }
 
@@ -152,12 +182,18 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	private _room: IChatRoomClientData | null = null;
 	private _manager: GraphicsManager | null = GraphicsManagerInstance.value;
 
+	private readonly _border: Graphics;
+
 	constructor() {
 		super();
 		this.container
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
 			.bounce({ ...BASE_BOUNCE_OPTIONS });
+
+		this._border = this.container.addChild(new Graphics());
+		this._border.zIndex = 2;
+
 		GraphicsManagerInstance.subscribe((manager) => {
 			if (manager) {
 				this._manager = manager;
@@ -194,7 +230,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 
 	public updateCharacters(data: readonly Character<ICharacterRoomData>[]) {
 		for (const [id, character] of this._characters) {
-			if (!data.find((c) => c.data.id === id)) {
+			if (!data.some((c) => c.data.id === id)) {
 				character.destroy();
 				this._characters.delete(id);
 			}
@@ -239,6 +275,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 				...BASE_BOUNCE_OPTIONS,
 				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, data.size[0] + BONCE_OVERFLOW, data.size[1] + BONCE_OVERFLOW),
 			});
+			this._border.clear().lineStyle(2, 0x404040, 0.4).drawRect(0, 0, data.size[0], data.size[1]);
 		}
 		this._room = data;
 		this._characters.forEach((character) => {

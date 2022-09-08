@@ -68,6 +68,10 @@ export class Room extends ServerRoom<IShardClientBase> {
 		};
 	}
 
+	public isAdmin(character: Character): boolean {
+		return this.data.admin.includes(character.accountId);
+	}
+
 	updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
 		const size = this.data.size;
 		if (x >= size[0] || y >= size[1]) {
@@ -77,8 +81,9 @@ export class Room extends ServerRoom<IShardClientBase> {
 		if (!character) {
 			return;
 		}
-		if (character.id !== source.id) {
-			return; // TODO: allow other characters to move
+		// Only admin can move other characters
+		if (character.id !== source.id && !this.isAdmin(source)) {
+			return;
 		}
 		character.position = [x, y];
 		this.sendUpdateToAllInRoom({ update: { id: character.id, position: character.position } });

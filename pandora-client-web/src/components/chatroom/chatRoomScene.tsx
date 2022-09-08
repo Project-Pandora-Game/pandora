@@ -147,15 +147,10 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const x = Math.min(width, this._position[0]);
 		const y = Math.min(height, this._position[1]);
 
-		const scaling = this._data.scaling;
-
-		if (scaling < 1) {
-			this._scale = 1;
-		} else {
-			const relativeHeight = y / height;
-			const minScale = 1 / scaling;
-			this._scale = 1 - (1 - minScale) * relativeHeight;
-		}
+		const scaling = Math.max(1, this._data.scaling);
+		const relativeHeight = y / height;
+		const minScale = 1 / scaling;
+		this._scale = 1 - (1 - minScale) * relativeHeight;
 
 		this._yOffset = this.getBoneLikeValue('kneeling') * 2;
 
@@ -214,10 +209,10 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const dragPointerEnd = event.data.getLocalPosition(this.parent);
 
 		const height = this._data.size[1];
-		const scaling = this._data.scaling;
-
+		const scaling = Math.max(1, this._data.scaling);
 		const minScale = 1 / scaling;
-		const y = height * (height - dragPointerEnd.y + this._yOffset - this._getTextHeightOffset()) / (height + 1 - minScale);
+
+		const y = (dragPointerEnd.y - height - this._yOffset + this._getTextHeightOffset()) / ((1 - minScale) * (this._getTextHeightOffset() / height) - 1);
 
 		this.setPositionThrottled(dragPointerEnd.x, y);
 	}

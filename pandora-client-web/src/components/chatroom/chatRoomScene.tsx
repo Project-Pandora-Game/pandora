@@ -28,7 +28,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 	private _setPositionRaw(x: number, y: number): void {
 		x = Clamp(x, 0, this._data?.size[0] ?? 0);
-		y = Clamp(y, 0, this._data?.size[1] ?? 0)
+		y = Clamp(y, 0, this._data?.size[1] ?? 0);
 		if (this._position[0] === x && this._position[1] === y || !this.shard) {
 			return;
 		}
@@ -81,7 +81,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 
 	private _getTextHeightOffset() {
-		return 100 + (this.getBoneLikeValue("kneeling") * 2);
+		return 100 + (this.getBoneLikeValue('kneeling') * 2);
 	}
 
 	private _getTextSize() {
@@ -125,7 +125,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			this._scale = 1 - (1 - minScale) * relativeHeight;
 		}
 
-		this._yOffset = this.getBoneLikeValue("kneeling") * 2;
+		this._yOffset = this.getBoneLikeValue('kneeling') * 2;
 
 		const oldY = this.y;
 
@@ -156,7 +156,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		event.stopPropagation();
 		const dragPointerEnd = event.data.getLocalPosition(this.parent);
 
-		const [width, height] = this._data.size;
+		const height = this._data.size[1];
 		const scaling = this._data.scaling;
 
 		const minScale = 1 / scaling;
@@ -264,16 +264,18 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		if (this._room === data) {
 			return;
 		}
-		if (this._room?.background !== data.background) {
-			this.background = data.background;
+		const sizeChanged = !this._room || this._room.size[0] !== data.size[0] || this._room.size[1] !== data.size[1];
+		if (this._room?.background !== data.background || sizeChanged) {
+			this.setBackground(data.background, data.size[0], data.size[1]);
 		}
-		if (!this._room || this._room.size[0] !== data.size[0] || this._room.size[1] !== data.size[1]) {
+		if (sizeChanged) {
 			const container = this.container;
-			container.worldHeight = data.size[1] + BONCE_OVERFLOW * 2;
-			container.worldWidth = data.size[0] + BONCE_OVERFLOW * 2;
+			container.worldHeight = data.size[1];
+			container.worldWidth = data.size[0];
+			this.resize(false);
 			this.container.bounce({
 				...BASE_BOUNCE_OPTIONS,
-				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, data.size[0] + BONCE_OVERFLOW, data.size[1] + BONCE_OVERFLOW),
+				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, data.size[0] + 2 * BONCE_OVERFLOW, data.size[1] + 2 * BONCE_OVERFLOW),
 			});
 			this._border.clear().lineStyle(2, 0x404040, 0.4).drawRect(0, 0, data.size[0], data.size[1]);
 		}

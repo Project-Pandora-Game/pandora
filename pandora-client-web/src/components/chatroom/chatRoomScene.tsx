@@ -1,6 +1,6 @@
 import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
-import { Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
+import { Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
 import React, { CSSProperties, ReactElement, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
@@ -33,6 +33,7 @@ type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterR
 	data: IChatRoomClientData | null;
 	shard: ShardConnector | null;
 	menuOpen: (character: Self, data: InteractionData) => void;
+	filters: Filter[];
 };
 
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
@@ -72,7 +73,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		return this.appearanceContainer.data.id;
 	}
 
-	constructor({ character, data, shard, menuOpen }: ChatRoomCharacterProps<ChatRoomCharacter>) {
+	constructor({ character, data, shard, menuOpen, filters }: ChatRoomCharacterProps<ChatRoomCharacter>) {
 		super(character);
 		this.name = character.data.name;
 		this._data = data;
@@ -86,6 +87,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			dropShadow: true,
 			dropShadowBlur: 4,
 		});
+		this.filters = filters;
 
 		const cleanupCalls: (() => void)[] = [];
 
@@ -228,6 +230,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	private _room: IChatRoomClientData | null = null;
 	private _manager: GraphicsManager | null = GraphicsManagerInstance.value;
 	private _menuOpen: (Character: ChatRoomCharacter, data: InteractionData) => void = noop;
+	private _filterExclude?: CharacterId;
 
 	private readonly _border: Graphics;
 
@@ -286,7 +289,13 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			if (this._characters.has(character.data.id)) {
 				continue;
 			}
-			const graphics = new ChatRoomCharacter({ character, data: this._room, shard: this._shard, menuOpen: this._menuOpen });
+			const graphics = new ChatRoomCharacter({
+				character,
+				data: this._room,
+				shard: this._shard,
+				menuOpen: this._menuOpen,
+				filters: character.data.id === this._filterExclude ? [] : this.backgroundFilters,
+			});
 			if (this._manager) {
 				graphics.useGraphics(this._manager.getAssetGraphicsById.bind(this._manager));
 			}
@@ -337,6 +346,16 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		this._characters.forEach((character) => {
 			character.updateMenuOpen(open);
 		});
+	}
+
+	updateFilters(filters: Filter[], exclude?: CharacterId) {
+		this._filterExclude = exclude;
+		this._characters.forEach((character) => {
+			if (character.id !== exclude) {
+				character.filters = filters;
+			}
+		});
+		this.setBackgroundFilters(filters);
 	}
 }
 

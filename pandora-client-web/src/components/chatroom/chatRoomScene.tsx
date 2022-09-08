@@ -7,7 +7,6 @@ import { Character } from '../../character/character';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsScene, useGraphicsScene } from '../../graphics/graphicsScene';
-import { Clamp } from '../../graphics/utility';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -27,8 +26,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 
 	private _setPositionRaw(x: number, y: number): void {
-		x = Clamp(x, 0, this._data?.size[0] ?? 0);
-		y = Clamp(y, 0, this._data?.size[1] ?? 0);
+		x = _.clamp(x, 0, this._data?.size[0] ?? 0);
+		y = _.clamp(y, 0, this._data?.size[1] ?? 0);
 		if (this._position[0] === x && this._position[1] === y || !this.shard) {
 			return;
 		}

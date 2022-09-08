@@ -4,8 +4,11 @@ import {
 	Appearance,
 	AppearanceAction,
 	AppearanceActionContext,
+	AppearanceItems,
+	AppearanceItemsGetPoseLimits,
 	ArmsPose,
 	Asset,
+	AssetsPosePresets,
 	BoneName,
 	BoneState,
 	CharacterId,
@@ -35,6 +38,7 @@ import { Button } from '../common/Button/Button';
 import { USER_DEBUG } from '../../config/Environment';
 import _ from 'lodash';
 import { CommonProps } from '../../common/reactTypes';
+import { useEvent } from '../../common/useEvent';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -520,6 +524,80 @@ function WardrobeBodySizeEditor(): ReactElement {
 	);
 }
 
+type AssetsPosePreset = AssetsPosePresets[number]['poses'][number];
+type CheckedPosePreset = {
+	active: boolean;
+	available: boolean;
+	name: string;
+	pose: Partial<Record<BoneName, number>>;
+	armsPose?: ArmsPose;
+};
+type CheckedAssetsPosePresets = {
+	category: string;
+	poses: CheckedPosePreset[];
+}[];
+
+function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: ArmsPose): CheckedAssetsPosePresets {
+	const presets = GetAssetManager().getPosePresets();
+	const limits = AppearanceItemsGetPoseLimits(items);
+	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
+
+	const isAbailable = ({ pose, armsPose }: AssetsPosePreset) => {
+		if (!limits)
+			return true;
+
+		if (armsPose && limits.forceArms && armsPose !== limits.forceArms)
+			return false;
+
+		if (!limits.forcePose)
+			return true;
+
+		for (const [boneName, value] of Object.entries(pose)) {
+			if (value === undefined)
+				continue;
+
+			const limit = limits.forcePose.get(boneName);
+			if (!limit)
+				continue;
+
+			if (value < limit[0] || value > limit[1])
+				return false;
+		}
+
+		return true;
+	};
+
+	const isActive = (preset: AssetsPosePreset) => {
+		if (preset.armsPose) {
+			if (preset.armsPose !== arms)
+				return false;
+		} else if (arms === ArmsPose.BACK)
+			return false;
+
+		for (const [boneName, value] of Object.entries(preset.pose)) {
+			if (value === undefined)
+				continue;
+
+			if (bones.get(boneName) !== value)
+				return false;
+		}
+
+		return true;
+	};
+
+	return presets.map<CheckedAssetsPosePresets[number]>((preset) => ({
+		category: preset.category,
+		poses: preset.poses.map((pose) => {
+			const available = isAbailable(pose);
+			return {
+				...pose,
+				active: available && isActive(pose),
+				available,
+			};
+		}),
+	}));
+}
+
 export function WardrobePoseGui({ character }: { character: Character }): ReactElement {
 	const shardConnector = useShardConnector();
 
@@ -535,7 +613,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 		}
 	}), () => character.appearance.getView());
 
-	const setPoseDirect = useCallback(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
+	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
 		if (shardConnector) {
 			shardConnector.sendMessage('appearanceAction', {
 				type: 'pose',
@@ -544,7 +622,9 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 				armsPose: armsPoseSet,
 			});
 		}
-	}, [shardConnector, character]);
+	});
+
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), bones, armsPose), [character, bones, armsPose]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
@@ -569,20 +649,13 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 					/>
 				</div>
 				{
-					GetAssetManager().getPosePresets().map((poseCategory, poseCategoryIndex) => (
+					poses.map((poseCategory, poseCategoryIndex) => (
 						<React.Fragment key={ poseCategoryIndex }>
 							<h4>{ poseCategory.category }</h4>
 							<div className='pose-row'>
 								{
 									poseCategory.poses.map((pose, poseIndex) => (
-										<Button key={ poseIndex }
-											className='slim'
-											onClick={ () => {
-												setPose(pose);
-											} }
-										>
-											{ pose.name }
-										</Button>
+										<PoseButton key={ poseIndex } pose={ pose } setPose={ setPose } />
 									))
 								}
 							</div>
@@ -624,6 +697,15 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 					</FieldsetToggle>}
 			</div>
 		</div>
+	);
+}
+
+function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
+	const { name, available, active } = pose;
+	return (
+		<Button className={ classNames('slim', { ['pose-disabled']: !available }) } disabled={ active } onClick={ () => setPose(pose) }>
+			{ name }
+		</Button>
 	);
 }
 

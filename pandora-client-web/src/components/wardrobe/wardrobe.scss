@@ -219,6 +219,14 @@ $header-height: 2em;
 		flex-flow: row wrap;
 		gap: 0.5em;
 		margin: 0 1em;
+
+		.Button.pose-disabled {
+			display: none;
+		}
+
+		.Button:disabled {
+			background-color: $grey-dark;
+		}
 	}
 
 	.bone-rotation {

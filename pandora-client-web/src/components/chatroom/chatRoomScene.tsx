@@ -282,7 +282,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		}
 		for (const character of data) {
 			if (this._characters.has(character.data.id)) {
-				return;
+				continue;
 			}
 			const graphics = new ChatRoomCharacter({ character, data: this._room, shard: this._shard, menuOpen: this._menuOpen });
 			if (this._manager) {

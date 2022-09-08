@@ -1,4 +1,4 @@
-import { Clamp, Conjunction, EvaluateCondition, GetAngle, RotateVector } from '../../src/graphics/utility';
+import { Conjunction, EvaluateCondition, GetAngle, RotateVector } from '../../src/graphics/utility';
 
 describe('GetAngle()', () => {
 	const cases = [
@@ -53,20 +53,6 @@ describe('Conjunction()', () => {
 		'should return %p given a: %p, b: %p',
 		(result, a, b) => {
 			expect(Conjunction(a as Set<string>, b as Set<string>)).toBe(result);
-		},
-	);
-});
-
-describe('Clamp()', () => {
-	const cases = [
-		[10, 10, 5, 15],
-		[10, 15, 4, 10],
-		[4, 1, 4, 100],
-	];
-	it.each(cases)(
-		'should return %p given value: %p, min: %p, max: %p',
-		(result, value, min, max) => {
-			expect(Clamp(value, min, max)).toBe(result);
 		},
 	);
 });

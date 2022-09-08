@@ -1,15 +1,37 @@
+$context-menu-themes: (
+	opaque: (
+		background: rgba(0, 0, 0, 0.5),
+		bolder: rgba(255, 255, 255, 0.5),
+	),
+);
+
 .context-menu {
 	position: fixed;
 	top: 0;
 	left: 0;
-	background: rgba(0, 0, 0, 0.5);
+	color: white;
+	background: black;
 	z-index: 9999;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
 	align-items: center;
-	border: 0.2em solid rgba(255, 255, 255, 0.5);
+	border-color: white;
+	border-style: solid;
+	border-width: 0.2em;
 	border-radius: 0.2em;
 	padding: 0.5em;
 	gap: 0.3em;
+
+	a {
+		color: white;
+		text-decoration: none;
+	}
+
+	@each $theme-name, $theme-data in $context-menu-themes {
+		&.#{$theme-name} {
+			background: map-get($theme-data, "background");
+			border-color: map-get($theme-data, "bolder");
+		}
+	}
 }

@@ -1,12 +1,13 @@
 import { Texture, Sprite, InteractionEvent, DisplayObject } from 'pixi.js';
 import { BoneDefinition, CharacterSize, PointDefinition } from 'pandora-common';
-import { Clamp, GetAngle, RotateVector } from '../../graphics/utility';
+import { GetAngle, RotateVector } from '../../graphics/utility';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../../assets/assetGraphics';
 import dotTexture from '../../assets/editor/dotTexture.png';
 import { Editor } from '../editor';
 import { TypedEventEmitter } from '../../event';
 import type { GraphicsCharacterEditor } from './character/editorCharacter';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
+import _ from 'lodash';
 
 type DraggableProps = {
 	createTexture?: () => Texture;
@@ -56,8 +57,8 @@ export class Draggable extends Sprite {
 
 		this._setPos(
 			this,
-			Clamp(Math.round(dragPointerEnd.x), 0, CharacterSize.WIDTH),
-			Clamp(Math.round(dragPointerEnd.y), 0, CharacterSize.HEIGHT),
+			_.clamp(Math.round(dragPointerEnd.x), 0, CharacterSize.WIDTH),
+			_.clamp(Math.round(dragPointerEnd.y), 0, CharacterSize.HEIGHT),
 		);
 	}
 }
@@ -84,7 +85,7 @@ export class DraggablePoint extends TypedEventEmitter<{
 				return false;
 			},
 			createTexture: () => Texture.from(dotTexture),
-			setPos: (_, x, y) => this.setPos(x, y),
+			setPos: (_spirte, x, y) => this.setPos(x, y),
 		});
 		this.layer = layer;
 		this.updatePoint(point, false);
@@ -212,7 +213,7 @@ export class DraggableBone {
 	constructor(character: GraphicsCharacterEditor, definition: BoneDefinition, isResult: boolean) {
 		this.draggable = new Draggable({
 			createTexture: () => Texture.from(dotTexture),
-			setPos: (_, x, y) => this.setPos(x, y),
+			setPos: (_sprite, x, y) => this.setPos(x, y),
 		});
 		this.draggable.tint = 0xff00ff;
 		this.draggable.alpha = 0.8;

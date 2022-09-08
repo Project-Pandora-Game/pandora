@@ -1,8 +1,8 @@
-import type { CharacterId, IChatRoomStatus } from 'pandora-common';
+import type { CharacterId, IChatRoomStatus, RoomId } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
-import { useChatRoomCharacters, useChatRoomMessageSender, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
 import { COMMAND_KEY } from './commands';
 import { toast } from 'react-toastify';
@@ -10,6 +10,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
 import { usePlayerId } from '../gameContext/playerContextProvider';
 import './chatroom.scss';
+import { BrowserStorage } from '../../browserStorage';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -31,6 +32,12 @@ const chatInputContext = createContext<IChatInputHandler>({
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
+type ChatInputSave = {
+	input: string;
+	roomId: RoomId | null;
+};
+const InputResore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
+
 export function ChatInputContextProvider({ children }: { children: React.ReactNode }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
@@ -38,6 +45,16 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const characters = useChatRoomCharacters();
 	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
+	const roomId = useChatRoomData()?.id;
+
+	useEffect(() => {
+		if (!roomId)
+			return;
+
+		if (roomId !== InputResore.value.roomId) {
+			InputResore.value = { input: '', roomId };
+		}
+	}, [roomId]);
 
 	const setEditing = useEvent((messageId: number | null) => {
 		setEditingState(messageId);
@@ -70,6 +87,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			if (ref.current) {
 				ref.current.value = value;
 			}
+			InputResore.value = { input: value, roomId: InputResore.value.roomId };
 		},
 		target,
 		setTarget: (t: CharacterId | null) => {
@@ -172,6 +190,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			return;
 
 		lastInput.current = value;
+		InputResore.value = { input: value, roomId: InputResore.value.roomId };
 		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
 		const trimmed = value.trim();
 		if (trimmed.length > 0 && !trimmed.startsWith(COMMAND_KEY)) {
@@ -201,7 +220,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } />;
+	return <textarea ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } defaultValue={ InputResore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);

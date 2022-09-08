@@ -23,10 +23,6 @@ export function Conjunction<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): boolean {
 	return [...a].some((x) => b.has(x));
 }
 
-export function Clamp(value: number, min: number, max: number): number {
-	return Math.min(Math.max(value, min), max);
-}
-
 export function StripAssetIdPrefix(id: AssetId): string {
 	return id.replace(/^a\//, '');
 }

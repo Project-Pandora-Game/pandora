@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ICharacterPublicData, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 
@@ -68,13 +68,35 @@ export class Room extends ServerRoom<IShardClientBase> {
 		};
 	}
 
-	getCharacterData(c: Character): ICharacterPublicData {
+	public isAdmin(character: Character): boolean {
+		return this.data.admin.includes(character.accountId);
+	}
+
+	updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
+		const size = this.data.size;
+		if (x >= size[0] || y >= size[1]) {
+			return;
+		}
+		const character = this.getCharacterById(id);
+		if (!character) {
+			return;
+		}
+		// Only admin can move other characters
+		if (character.id !== source.id && !this.isAdmin(source)) {
+			return;
+		}
+		character.position = [x, y];
+		this.sendUpdateToAllInRoom({ update: { id: character.id, position: character.position } });
+	}
+
+	getCharacterData(c: Character): ICharacterRoomData {
 		return {
 			name: c.name,
 			id: c.id,
 			accountId: c.accountId,
 			appearance: c.appearance.exportToBundle(),
 			settings: c.settings,
+			position: c.position,
 		};
 	}
 
@@ -87,6 +109,7 @@ export class Room extends ServerRoom<IShardClientBase> {
 	}
 
 	public characterEnter(character: Character): void {
+		character.position = [CharacterSize.WIDTH * (1 + 0.2 * (Math.random() - 0.5)), 0];
 		this.characters.add(character);
 		character.setRoom(this);
 		this.sendUpdateTo(character, { room: this.getClientData() });

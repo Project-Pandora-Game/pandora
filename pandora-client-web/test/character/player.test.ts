@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData } from 'pandora-common';
+import { CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData, ICharacterRoomData, CharacterSize } from 'pandora-common';
 import { PlayerCharacter } from '../../src/character/player';
 
 describe('PlayerCharacter', () => {
@@ -37,7 +37,7 @@ describe('PlayerCharacter', () => {
 	}
 });
 
-function MockPlayerData(overrides?: Partial<ICharacterData>): ICharacterData {
+function MockPlayerData(overrides?: Partial<ICharacterData & ICharacterRoomData>): ICharacterData {
 	return {
 		id: 'c123',
 		accountId: 0,
@@ -46,6 +46,7 @@ function MockPlayerData(overrides?: Partial<ICharacterData>): ICharacterData {
 		accessId: 'mockID',
 		settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 		roles: {},
+		position: [CharacterSize.WIDTH / 2, 0],
 		...overrides,
 	};
 }

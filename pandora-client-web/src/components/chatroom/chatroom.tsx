@@ -13,41 +13,55 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { useEvent } from '../../common/useEvent';
 import { Button } from '../common/Button/Button';
+import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
 import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatRoomData, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
-import { usePlayerData, usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerData, usePlayerId } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
 import { ChatParser } from './chatParser';
+import { ChatRoomScene } from './chatRoomScene';
 import './chatroom.scss';
+import { WardrobePoseGui } from '../wardrobe/wardrobe';
 
 export function Chatroom(): ReactElement {
+	const player = usePlayer();
 	const roomData = useChatRoomData();
 	const navigate = useNavigate();
 	const directoryConnector = useDirectoryConnector();
 
-	if (!roomData) {
+	if (!roomData || !player) {
 		return <Navigate to='/chatroom_select' />;
 	}
 
 	return (
 		<div className='chatroom'>
 			<ChatInputContextProvider>
-				<Chat />
-				<div>
-					<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
-					<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
-					<br />
-					<p>You are in room {roomData.name}</p>
-					<div>
-						Characters in this room:<br />
-						<ul>
-							{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
-						</ul>
-					</div>
-				</div>
+				<ChatRoomScene />
+				<TabContainer>
+					<Tab name='Chat'>
+						<Chat />
+					</Tab>
+					<Tab name='Controls'>
+						<div className='controls'>
+							<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
+							<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
+							<br />
+							<p>You are in room {roomData.name}</p>
+							<div>
+								Characters in this room:<br />
+								<ul>
+									{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
+								</ul>
+							</div>
+						</div>
+					</Tab>
+					<Tab name='Pose'>
+						<WardrobePoseGui character={ player } />
+					</Tab>
+				</TabContainer>
 			</ChatInputContextProvider>
 		</div>
 	);
@@ -216,7 +230,7 @@ function DisplayUserMessage({ message }: { message: IChatRoomMessageChat & { tim
 	return (
 		<div className={ classNames('message', message.type, isPrivate && 'private') } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
 			{ self ? (
-				<ContextMenu ref={ ref }>
+				<ContextMenu ref={ ref } className='opaque'>
 					<DisplayContextMenuItems close={ close } id={ message.id } />
 				</ContextMenu>
 			) : null }

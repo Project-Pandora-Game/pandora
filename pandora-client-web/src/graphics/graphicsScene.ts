@@ -61,16 +61,18 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		};
 	}
 
-	resize(): void {
+	resize(center: boolean = true): void {
 		this._app.resize();
 		const { width, height } = this._app.screen;
 		this.container.resize(width, height);
 		this.container.clampZoom({
-			minScale: Math.min(height / CharacterSize.HEIGHT, width / CharacterSize.WIDTH) * 0.9,
+			minScale: Math.min(height / this.container.worldHeight, width / this.container.worldWidth) * 0.9,
 			maxScale: 2,
 		});
-		this.container.fit();
-		this.container.moveCenter(CharacterSize.WIDTH / 2, CharacterSize.HEIGHT / 2);
+		if (center) {
+			this.container.fit();
+			this.container.moveCenter(this.container.worldWidth / 2, this.container.worldHeight / 2);
+		}
 		this.emit('resize', undefined);
 	}
 
@@ -91,28 +93,44 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		const { backgroundColor } = this._app.renderer;
 		return `#${backgroundColor.toString(16).padStart(6, '0')}`;
 	}
-	set background(data: string) {
-		if (/#[0-9a-f]{6, 8}/i.test(data)) {
+	public setBackground(data: string, width?: number, height?: number) {
+		if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(data)) {
 			this._background = '';
 			this._backgroundSprite?.destroy();
 			this._backgroundSprite = undefined;
 			this._app.renderer.backgroundColor = parseInt(data.substring(1, 7), 16);
 			if (data.length > 7) {
 				this._app.renderer.backgroundAlpha = parseInt(data.substring(7, 9), 16) / 255;
+			} else {
+				this._app.renderer.backgroundAlpha = 1;
 			}
-		} else if (/data:image\/png;base64,[0-9a-zA-Z+/=]+/i.test(data)) {
+		} else if (/^data:image\/png;base64,[0-9a-zA-Z+/=]+$/i.test(data)) {
 			this._background = data;
 			const img = new Image();
 			img.src = data;
-			this._backgroundSprite = this.add(new Sprite(Texture.from(img)), -1000);
-			this._backgroundSprite.width = this._app.renderer.width;
-			this._backgroundSprite.height = this._app.renderer.height;
-		} else if (/https?:\/\/.+/i.test(data)) {
+			const texture = Texture.from(img);
+			this._backgroundSprite = this.add(new Sprite(texture), -1000);
+			if (width) {
+				this._backgroundSprite.width = width;
+			}
+			if (height) {
+				this._backgroundSprite.height = height;
+			}
+			this._app.renderer.backgroundColor = 0x000000;
+			this._app.renderer.backgroundAlpha = 1;
+		} else if (/^https?:\/\/.+$/i.test(data)) {
 			this._background = data;
 			(async () => {
-				this._backgroundSprite = this.add(new Sprite(await Texture.fromURL(data)), -1000);
-				this._backgroundSprite.width = this._app.renderer.width;
-				this._backgroundSprite.height = this._app.renderer.height;
+				const texture = await Texture.fromURL(data);
+				this._backgroundSprite = this.add(new Sprite(texture), -1000);
+				if (width) {
+					this._backgroundSprite.width = width;
+				}
+				if (height) {
+					this._backgroundSprite.height = height;
+				}
+				this._app.renderer.backgroundColor = 0x000000;
+				this._app.renderer.backgroundAlpha = 1;
 			})().catch(() => { /** */ });
 		} else {
 			// eslint-disable-next-line no-console

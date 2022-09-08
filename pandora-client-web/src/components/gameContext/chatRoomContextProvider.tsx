@@ -1,4 +1,4 @@
-import type { CharacterId, ChatActionDictionaryMetaEntry, ICharacterPublicData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
+import type { CharacterId, ChatActionDictionaryMetaEntry, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo } from 'react';
 import { Character } from '../../character/character';
@@ -116,7 +116,7 @@ export class ChatRoom extends TypedEventEmitter<{
 }> implements IChatRoomMessageSender {
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
 	public readonly data = new Observable<IChatRoomClientData | null>(null);
-	public readonly characters = new Observable<readonly Character[]>([]);
+	public readonly characters = new Observable<readonly Character<ICharacterRoomData>[]>([]);
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
 	public get player(): PlayerCharacter | null {
 		return this._shard.player.value;
@@ -249,7 +249,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		this._setRestore();
 	}
 
-	private _updateCharacters(characters: readonly ICharacterPublicData[]): void {
+	private _updateCharacters(characters: readonly ICharacterRoomData[]): void {
 		if (!this.player)
 			throw new Error('Cannot update room when player is not loaded');
 
@@ -260,7 +260,7 @@ export class ChatRoom extends TypedEventEmitter<{
 			if (char) {
 				char.update(c);
 			} else {
-				char = new Character(c);
+				char = new Character<ICharacterRoomData>(c);
 			}
 			return char;
 		});
@@ -478,7 +478,7 @@ export function useChatRoomMessages(): readonly IChatroomMessageProcessed[] {
 	return useObservable(context.messages);
 }
 
-export function useChatRoomCharacters(): (readonly Character[]) | null {
+export function useChatRoomCharacters(): (readonly Character<ICharacterRoomData>[]) | null {
 	const context = useChatroom();
 	return useNullableObservable(context?.characters);
 }
@@ -493,12 +493,12 @@ export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?:
 	return useCallback((status: IChatRoomStatus) => context.setPlayerStatus(status), [context]);
 }
 
-export function useChatRoomStatus(): { data: ICharacterPublicData, status: IChatRoomStatus }[] {
+export function useChatRoomStatus(): { data: ICharacterRoomData, status: IChatRoomStatus }[] {
 	const context = useChatroomRequired();
 	const characters = useObservable(context.characters);
 	const status = useObservable(context.status);
 	return useMemo(() => {
-		const result: { data: ICharacterPublicData, status: IChatRoomStatus }[] = [];
+		const result: { data: ICharacterRoomData, status: IChatRoomStatus }[] = [];
 		for (const c of characters) {
 			if (status.has(c.data.id)) {
 				result.push({ data: c.data, status: context.getStatus(c.data.id) });

@@ -29,7 +29,7 @@ import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphic
 import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
-import { Tab, TabContainer } from '../../common/tabs';
+import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import { Button } from '../common/Button/Button';
 import { USER_DEBUG } from '../../config/Environment';
@@ -131,7 +131,7 @@ function Wardrobe(): ReactElement | null {
 				<Tab name='Poses & Expressions'>
 					<div className='wardrobe-pane'>
 						<div className='wardrobe-ui'>
-							<WardrobePoseGui />
+							<WardrobePoseGui character={ character } />
 							<div className='inventoryView'>
 								<div className='center-flex flex-1'>
 									TODO
@@ -520,8 +520,7 @@ function WardrobeBodySizeEditor(): ReactElement {
 	);
 }
 
-function WardrobePoseGui(): ReactElement {
-	const { character } = useWardrobeContext();
+export function WardrobePoseGui({ character }: { character: Character }): ReactElement {
 	const shardConnector = useShardConnector();
 
 	const bones = useCharacterAppearancePose(character);

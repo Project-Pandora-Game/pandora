@@ -7,17 +7,30 @@ import { TestMockDb } from '../utils';
 const TEST_SHARD_ID = 'shardTestId';
 const TEST_ROOM_ID: RoomId = 'rTestId';
 
-const TEST_ROOM: IChatRoomDirectoryConfig = {
-	name: 'test',
-	description: 'Some description',
+const TEST_ROOM_DEFAULTS: Readonly<IChatRoomDirectoryConfig> = {
+	name: '',
+	description: '',
 	maxUsers: 10,
+	admin: [],
+	banned: [],
 	protected: false,
 	password: null,
+	features: [],
+	background: '#1099bb',
+	size: [1000, 1000],
+	scaling: 0,
+};
+
+const TEST_ROOM: IChatRoomDirectoryConfig = {
+	...TEST_ROOM_DEFAULTS,
+	name: 'test',
+	description: 'Some description',
 	admin: [1],
 	banned: [2],
-	features: [],
 };
+
 const TEST_ROOM2: IChatRoomDirectoryConfig = {
+	...TEST_ROOM_DEFAULTS,
 	name: 'test2',
 	description: 'Another description',
 	maxUsers: 7,
@@ -25,16 +38,12 @@ const TEST_ROOM2: IChatRoomDirectoryConfig = {
 	password: 'abcd',
 	admin: [2],
 	banned: [22, 13],
-	features: [],
 };
 const TEST_ROOM_DEV: IChatRoomDirectoryConfig = {
+	...TEST_ROOM_DEFAULTS,
 	name: 'test-dev',
 	description: 'Development room',
-	maxUsers: 10,
-	protected: false,
-	password: null,
 	admin: [1],
-	banned: [],
 	features: ['development'],
 	development: {
 	},

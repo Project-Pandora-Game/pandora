@@ -9,7 +9,7 @@ import {
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useReducer, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../networking/directoryConnector';
 import { PersistentToast } from '../../persistentToast';
@@ -35,6 +35,9 @@ function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoo
 		protected: false,
 		password: null,
 		features: [],
+		background: '#1099bb',
+		size: [4000, 2000],
+		scaling: 1,
 	};
 }
 
@@ -77,6 +80,18 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	const directoryConnector = useDirectoryConnector();
 	const shards = useShards();
 	const accountId = currentAccount?.id;
+
+	const scalingProps = useMemo(() => ({
+		min: 1,
+		max: 20,
+		step: 0.1,
+		onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+			let scaling = Number.parseFloat(event.target.value);
+			if (scaling < 1) scaling = 1;
+			else if (scaling > 20) scaling = 20;
+			setRoomModifiedData({ scaling });
+		},
+	}), [setRoomModifiedData]);
 
 	if (!creation && !roomData) {
 		return <Navigate to='/chatroom_select' />;
@@ -133,6 +148,27 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 						onChange={ (event) => setRoomModifiedData({ protected: true, password: event.target.value || null }) } />
 				</div>
 			}
+			<div className='input-container'>
+				<label>Background</label>
+				<div className='row-first'>
+					<input type='text' value={ currentConfig.background } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
+					<input type='color' value={ currentConfig.background.startsWith('#') ? currentConfig.background : '#FFFFFF' } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
+				</div>
+			</div>
+			<div className='input-container'>
+				<label>Room Size: width, height</label>
+				<div className='row-half'>
+					<input autoComplete='none' type='number' value={ currentConfig.size[0] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [Number.parseInt(event.target.value, 10), currentConfig.size[1]] }) } />
+					<input autoComplete='none' type='number' value={ currentConfig.size[1] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [currentConfig.size[0], Number.parseInt(event.target.value, 10)] }) } />
+				</div>
+			</div>
+			<div className='input-container'>
+				<label>Y Scaling</label>
+				<div className='row-first'>
+					<input type='range' value={ currentConfig.scaling } readOnly={ !isPlayerAdmin } { ...scalingProps } />
+					<input type='number' value={ currentConfig.scaling } readOnly={ !isPlayerAdmin } { ...scalingProps } />
+				</div>
+			</div>
 		</>
 	);
 

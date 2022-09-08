@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React, { ReactElement, useMemo, useState } from 'react';
-import { ChildrenProps } from './reactTypes';
+import { ChildrenProps } from '../../../common/reactTypes';
 import './tabs.scss';
 
 interface TabProps extends ChildrenProps {
@@ -23,7 +23,7 @@ export function TabContainer({ children, id, className }: {
 
 	return (
 		<div className={ classNames('tab-container', className) } id={ id }>
-			<ul>
+			<ul className='tab-container__header'>
 				{
 					tabs.map((tab, index) => (tab &&
 						<li key={ index } className={ classNames('tab', { active: index === currentTab }) } onClick={ () => setTab(index) }>

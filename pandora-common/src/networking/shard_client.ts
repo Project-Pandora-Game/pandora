@@ -5,8 +5,12 @@ import type { IChatRoomFullInfo } from '../chatroom';
 import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 
+export type ICharacterRoomData = ICharacterPublicData & {
+	position: [number, number];
+};
+
 export type IChatRoomClientData = IChatRoomFullInfo & {
-	characters: ICharacterPublicData[];
+	characters: ICharacterRoomData[];
 };
 
 export type IChatRoomUpdate = {
@@ -14,8 +18,8 @@ export type IChatRoomUpdate = {
 } | {
 	info?: Partial<IChatRoomClientData>;
 	leave?: CharacterId;
-	join?: ICharacterPublicData;
-	update?: Pick<ICharacterPublicData, 'id'> & Partial<ICharacterPublicData>;
+	join?: ICharacterRoomData;
+	update?: Pick<ICharacterRoomData, 'id'> & Partial<ICharacterRoomData>;
 };
 
 /** Shard->Client handlers */

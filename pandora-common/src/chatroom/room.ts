@@ -47,6 +47,12 @@ export type IChatRoomDirectoryConfig = IChatRoomBaseInfo & {
 	admin: number[];
 	/** The password of the chat room if the room is protected */
 	password: string | null;
+	/** The background image of the chat room */
+	background: string;
+	/** The size of the chat room */
+	size: [number, number];
+	/** The Y -> scale of the chat room */
+	scaling: number;
 };
 
 export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.object({
@@ -57,6 +63,9 @@ export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.obje
 	banned: z.array(z.number()),
 	admin: z.array(z.number()),
 	password: z.string().nullable(),
+	background: z.string(),
+	size: z.tuple([z.number().min(0), z.number().min(0)]),
+	scaling: z.number().min(0),
 }));
 
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars

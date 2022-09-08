@@ -182,8 +182,8 @@ export class Editor extends TypedEventEmitter<{
 	}
 
 	public setBackgroundColor(color: number): void {
-		this.setupScene.background = `#${color.toString(16)}`;
-		this.resultScene.background = `#${color.toString(16)}`;
+		this.setupScene.setBackground(`#${color.toString(16)}`);
+		this.resultScene.setBackground(`#${color.toString(16)}`);
 		document.documentElement.style.setProperty('--editor-background-color', `#${color.toString(16)}`);
 	}
 }

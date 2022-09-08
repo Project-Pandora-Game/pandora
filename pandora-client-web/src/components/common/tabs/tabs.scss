@@ -1,12 +1,12 @@
-@import '../styles/utils';
-@import '../styles/constants';
+@import '../../../styles/utils';
+@import '../../../styles/constants';
 
 $header-height: 2em;
 
 .tab-container {
 	@include flex(column);
 
-	ul {
+	&>&__header {
 		display: flex;
 		width: 100%;
 		margin: 0;

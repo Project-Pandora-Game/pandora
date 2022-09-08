@@ -36,8 +36,8 @@ function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoo
 		password: null,
 		features: [],
 		background: '#1099bb',
-		size: [1000, 1000],
-		scaling: 0,
+		size: [4000, 2000],
+		scaling: 1,
 	};
 }
 
@@ -82,14 +82,13 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	const accountId = currentAccount?.id;
 
 	const scalingProps = useMemo(() => ({
-		min: 0,
-		max: 10,
+		min: 1,
+		max: 20,
 		step: 0.1,
 		onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
 			let scaling = Number.parseFloat(event.target.value);
-			if (scaling < 0.5) scaling = 0;
-			else if (scaling < 1) scaling = 1;
-			else if (scaling > 10) scaling = 10;
+			if (scaling < 1) scaling = 1;
+			else if (scaling > 20) scaling = 20;
 			setRoomModifiedData({ scaling });
 		},
 	}), [setRoomModifiedData]);

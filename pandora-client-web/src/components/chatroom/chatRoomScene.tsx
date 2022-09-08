@@ -14,6 +14,7 @@ import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomC
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import _, { noop } from 'lodash';
 
+const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
 const CHARACTER_INDEX_START = 100;
 const BONCE_OVERFLOW = 500;
@@ -31,6 +32,7 @@ type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterR
 	shard: ShardConnector | null;
 	menuOpen: (character: Self, data: InteractionData) => void;
 };
+
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
 	private _data: IChatRoomClientData | null = null;
 	private _menuOpen: (character: ChatRoomCharacter, data: InteractionData) => void;
@@ -112,10 +114,6 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		this._menuOpen = open;
 	}
 
-	private _getTextHeightOffset() {
-		return 100 + (this.getBoneLikeValue('kneeling') * 2);
-	}
-
 	private _getTextSize() {
 		// TODO: set it based on scaling
 		return 32;
@@ -123,7 +121,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 	private _updateTextPosition() {
 		const x = CharacterSize.WIDTH / 2;
-		const y = CharacterSize.HEIGHT - this._getTextHeightOffset();
+		const y = CharacterSize.HEIGHT - BOTTOM_NAME_OFFSET - this._yOffset;
 		this.hitArea = new Rectangle(x - 100, y - 50, 200, 100);
 		this._name.x = x;
 		this._name.y = y;
@@ -162,6 +160,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			- CharacterSize.HEIGHT * this._scale
 			- y
 			+ this._yOffset;
+
+		this._updateTextPosition();
 
 		if (oldY !== this.y) {
 			this.emit('YChanged', this.y);
@@ -212,7 +212,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const scaling = Math.max(1, this._data.scaling);
 		const minScale = 1 / scaling;
 
-		const y = (dragPointerEnd.y - height - this._yOffset + this._getTextHeightOffset()) / ((1 - minScale) * (this._getTextHeightOffset() / height) - 1);
+		const y = (dragPointerEnd.y - height + BOTTOM_NAME_OFFSET) / ((1 - minScale) * ((BOTTOM_NAME_OFFSET + this._yOffset) / height) - 1);
 
 		this.setPositionThrottled(dragPointerEnd.x, y);
 	}

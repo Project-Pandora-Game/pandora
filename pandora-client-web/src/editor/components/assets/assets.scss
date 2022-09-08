@@ -3,6 +3,13 @@
 		padding: 0;
 	}
 
+	>div {
+		display: flex;
+		flex-flow: row;
+		margin-bottom: 1em;
+		gap: 0.5em;
+	}
+
 	&,
 	ul {
 		list-style-type: none;

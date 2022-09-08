@@ -131,7 +131,7 @@ function Wardrobe(): ReactElement | null {
 				<Tab name='Poses & Expressions'>
 					<div className='wardrobe-pane'>
 						<div className='wardrobe-ui'>
-							<WardrobePoseGui character={character} />
+							<WardrobePoseGui character={ character } />
 							<div className='inventoryView'>
 								<div className='center-flex flex-1'>
 									TODO

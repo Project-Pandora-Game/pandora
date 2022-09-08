@@ -1,9 +1,10 @@
-import React, { ReactNode, ForwardedRef, ReactElement, useState, createRef, useEffect, useImperativeHandle, CSSProperties, useMemo, forwardRef, RefObject } from 'react';
+import classNames from 'classnames';
+import React, { ForwardedRef, ReactElement, useState, createRef, useEffect, useImperativeHandle, CSSProperties, useMemo, forwardRef, RefObject } from 'react';
+import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
 import './contextMenu.scss';
 
-type ContextMenuProps = { children: ReactNode };
 type ContextMenuHandle = {
 	onContextMenu: (event: React.MouseEvent<HTMLDivElement>) => void;
 	close: () => void;
@@ -11,7 +12,7 @@ type ContextMenuHandle = {
 
 let closeLastContextMenu: null | (() => void) = null;
 
-function ContextMenuImpl({ children }: ContextMenuProps, ref: ForwardedRef<ContextMenuHandle>): ReactElement | null {
+function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef<ContextMenuHandle>): ReactElement | null {
 	const [anchorPoint, setAnchorPoint] = useState({ x: 0, y: 0 });
 	const [show, setShow] = useState(false);
 	const self = createRef<HTMLDivElement>();
@@ -68,13 +69,13 @@ function ContextMenuImpl({ children }: ContextMenuProps, ref: ForwardedRef<Conte
 		return null;
 
 	return (
-		<div className='context-menu' style={ style } ref={ self }>
+		<div className={ classNames('context-menu', className) } style={ style } ref={ self }>
 			{ children }
 		</div>
 	);
 }
 
-export const ContextMenu = forwardRef<ContextMenuHandle, ContextMenuProps>(ContextMenuImpl);
+export const ContextMenu = forwardRef<ContextMenuHandle, CommonProps>(ContextMenuImpl);
 
 export function useContextMenu(): [RefObject<ContextMenuHandle>, (event: React.MouseEvent<HTMLDivElement>) => void, () => void] {
 	const ref = createRef<ContextMenuHandle>();

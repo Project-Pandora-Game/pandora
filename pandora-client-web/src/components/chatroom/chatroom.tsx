@@ -225,7 +225,7 @@ function DisplayUserMessage({ message }: { message: IChatRoomMessageChat & { tim
 	return (
 		<div className={ classNames('message', message.type, isPrivate && 'private') } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
 			{ self ? (
-				<ContextMenu ref={ ref }>
+				<ContextMenu ref={ ref } className='opaque'>
 					<DisplayContextMenuItems close={ close } id={ message.id } />
 				</ContextMenu>
 			) : null }

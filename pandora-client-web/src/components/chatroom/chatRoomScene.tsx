@@ -12,6 +12,8 @@ import { GraphicsScene, useGraphicsScene } from '../../graphics/graphicsScene';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { useChatInput } from './chatInput';
+import { usePlayerId } from '../gameContext/playerContextProvider';
 import _, { noop } from 'lodash';
 
 const BOTTOM_NAME_OFFSET = 100;
@@ -394,6 +396,9 @@ export function ChatRoomScene(): ReactElement | null {
 }
 
 function CharacterContextMenu({ character, data, onClose }: { character: ChatRoomCharacter | null; data: InteractionData | null; onClose: () => void; }): ReactElement | null {
+	const { setTarget } = useChatInput();
+	const playerId = usePlayerId();
+
 	if (!character || !data) {
 		return null;
 	}
@@ -416,6 +421,11 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 			<Link to='/wardrobe' state={ { character: character.id } }>
 				Wardrobe
 			</Link>
+			{ character.id !== playerId && (
+				<span onClick={ () => setTarget(character.id) }>
+					Whisper
+				</span>
+			) }
 			<span onClick={ onClose } >
 				Close
 			</span>

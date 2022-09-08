@@ -81,12 +81,7 @@ export class Editor extends TypedEventEmitter<{
 			items: [
 				{ id: 'i/body', asset: 'a/body/base' },
 			],
-			pose: {
-				arm_r: 75,
-				arm_l: -75,
-				elbow_r: 100,
-				elbow_l: -10,
-			},
+			pose: {},
 		});
 		/* eslint-enable @typescript-eslint/naming-convention */
 	}

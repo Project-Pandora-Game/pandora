@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 
@@ -109,7 +109,7 @@ export class Room extends ServerRoom<IShardClientBase> {
 	}
 
 	public characterEnter(character: Character): void {
-		// TODO set some initial position character.position = [0, 0];
+		character.position = [CharacterSize.WIDTH * (1 + 0.2 * (Math.random() - 0.5)), 0];
 		this.characters.add(character);
 		character.setRoom(this);
 		this.sendUpdateTo(character, { room: this.getClientData() });

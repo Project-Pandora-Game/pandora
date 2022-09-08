@@ -10,6 +10,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
 import { usePlayerId } from '../gameContext/playerContextProvider';
 import './chatroom.scss';
+import { BrowserStorage } from '../../browserStorage';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -31,7 +32,11 @@ const chatInputContext = createContext<IChatInputHandler>({
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
-const InputResore: { input: string; roomId: RoomId | null } = { input: '', roomId: null };
+type ChatInputSave = {
+	input: string;
+	roomId: RoomId | null;
+};
+const InputResore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
 
 export function ChatInputContextProvider({ children }: { children: React.ReactNode }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
@@ -46,9 +51,8 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		if (!roomId)
 			return;
 
-		if (roomId !== InputResore.roomId) {
-			InputResore.roomId = roomId;
-			InputResore.input = '';
+		if (roomId !== InputResore.value.roomId) {
+			InputResore.value = { input: '', roomId };
 		}
 	}, [roomId]);
 
@@ -83,7 +87,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			if (ref.current) {
 				ref.current.value = value;
 			}
-			InputResore.input = value;
+			InputResore.value = { input: value, roomId: InputResore.value.roomId };
 		},
 		target,
 		setTarget: (t: CharacterId | null) => {
@@ -185,7 +189,8 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		if (value === lastInput.current)
 			return;
 
-		InputResore.input = lastInput.current = value;
+		lastInput.current = value;
+		InputResore.value = { input: value, roomId: InputResore.value.roomId };
 		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
 		const trimmed = value.trim();
 		if (trimmed.length > 0 && !trimmed.startsWith(COMMAND_KEY)) {
@@ -215,7 +220,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } defaultValue={ InputResore.input } />;
+	return <textarea ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } defaultValue={ InputResore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);

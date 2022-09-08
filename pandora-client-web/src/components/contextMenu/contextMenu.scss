@@ -1,4 +1,4 @@
-$context-menu-thames: (
+$context-menu-themes: (
 	opaque: (
 		background: rgba(0, 0, 0, 0.5),
 		bolder: rgba(255, 255, 255, 0.5),
@@ -28,7 +28,7 @@ $context-menu-thames: (
 		text-decoration: none;
 	}
 
-	@each $theme-name, $theme-data in $context-menu-thames {
+	@each $theme-name, $theme-data in $context-menu-themes {
 		&.#{$theme-name} {
 			background: map-get($theme-data, "background");
 			border-color: map-get($theme-data, "bolder");

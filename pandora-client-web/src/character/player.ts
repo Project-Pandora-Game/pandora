@@ -1,4 +1,4 @@
-import { GetLogger, ICharacterData, ICharacterDataCreate, ICharacterRoomData } from 'pandora-common';
+import { GetLogger, ICharacterData, ICharacterDataCreate, ICharacterRoomData, CharacterSize } from 'pandora-common';
 import { useCallback } from 'react';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { Character } from './character';
@@ -13,7 +13,7 @@ export class PlayerCharacter extends Character<ICharacterData & ICharacterRoomDa
 	constructor(data: ICharacterData) {
 		super({
 			...data,
-			position: [0, 0],
+			position: [CharacterSize.WIDTH / 2, 0],
 		}, GetLogger('Character', `[Player ${data.id}]`));
 	}
 

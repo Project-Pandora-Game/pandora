@@ -1,7 +1,9 @@
 import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
-import { Graphics, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
-import React, { ReactElement, useEffect } from 'react';
+import { Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
+import React, { CSSProperties, ReactElement, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useEvent } from '../../common/useEvent';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
 import { useDebugExpose } from '../../common/useDebugExpose';
@@ -10,12 +12,33 @@ import { GraphicsScene, useGraphicsScene } from '../../graphics/graphicsScene';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import _ from 'lodash';
+import _, { noop } from 'lodash';
 
+const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
+const CHARACTER_INDEX_START = 100;
+const BONCE_OVERFLOW = 500;
+const BASE_BOUNCE_OPTIONS: IBounceOptions = {
+	ease: 'easeOutQuad',
+	friction: 0,
+	sides: 'all',
+	time: 500,
+	underflow: 'center',
+};
+
+type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterRoomData>>> = {
+	character: Character<ICharacterRoomData>;
+	data: IChatRoomClientData | null;
+	shard: ShardConnector | null;
+	menuOpen: (character: Self, data: InteractionData) => void;
+};
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
 	private _data: IChatRoomClientData | null = null;
+	private _menuOpen: (character: ChatRoomCharacter, data: InteractionData) => void;
 	private _name: Text;
+
 	private _dragging?: Point;
+	private _pointerDown = false;
+	private _waitPonterUp: number | null = null;
 
 	// Calculated properties
 	private _yOffset: number = 0;
@@ -41,11 +64,17 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 	shard: ShardConnector | null;
 
-	constructor(character: Character<ICharacterRoomData>, data: IChatRoomClientData | null, shard: ShardConnector | null) {
+	public get id(): CharacterId {
+		return this.appearanceContainer.data.id;
+	}
+
+	constructor({ character, data, shard, menuOpen }: ChatRoomCharacterProps<ChatRoomCharacter>) {
 		super(character);
+		this.name = character.data.name;
 		this._data = data;
 		this.shard = shard;
-		this._name = new Text(`${character.data.name} (${character.data.id})`, {
+		this._menuOpen = menuOpen;
+		this._name = new Text(this.name, {
 			fontFamily: 'Arial',
 			fontSize: this._getTextSize(),
 			fill: character.data.settings.labelColor,
@@ -68,15 +97,19 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		this.updateRoomData(data);
 		this
 			.on('destroy', () => cleanupCalls.forEach((c) => c()))
-			.on('pointerdown', this._onDragStart.bind(this))
-			.on('pointerup', this._onDragEnd.bind(this))
-			.on('pointerupoutside', this._onDragEnd.bind(this))
-			.on('pointermove', this._onDragMove.bind(this));
+			.on('pointerdown', this._onPointerDown.bind(this))
+			.on('pointerup', this._onPointerUp.bind(this))
+			.on('pointerupoutside', this._onPointerUp.bind(this))
+			.on('pointermove', this._onPointerMove.bind(this));
 	}
 
 	updateRoomData(data: IChatRoomClientData | null) {
 		this._data = data;
 		this._reposition();
+	}
+
+	updateMenuOpen(open: (character: ChatRoomCharacter, data: InteractionData) => void) {
+		this._menuOpen = open;
 	}
 
 	private _getTextHeightOffset() {
@@ -140,14 +173,39 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		}
 	}
 
+	private _onPointerDown(_event: InteractionEvent) {
+		this._pointerDown = true;
+		if (this._waitPonterUp) {
+			clearTimeout(this._waitPonterUp);
+			this._waitPonterUp = null;
+		}
+		this._waitPonterUp = setTimeout(() => {
+			this._waitPonterUp = null;
+		}, CHARACTER_WAIT_DRAG_THRESHOLD);
+	}
+
+	private _onPointerUp(event: InteractionEvent) {
+		this._dragging = undefined;
+		this._pointerDown = false;
+		if (this._waitPonterUp) {
+			clearTimeout(this._waitPonterUp);
+			this._waitPonterUp = null;
+			this._menuOpen(this, event.data);
+		}
+	}
+
+	private _onPointerMove(event: InteractionEvent) {
+		if (this._dragging) {
+			this._onDragMove(event);
+		} else if (!this._waitPonterUp && this._pointerDown) {
+			this._onDragStart(event);
+		}
+	}
+
 	private _onDragStart(event: InteractionEvent) {
 		event.stopPropagation();
 		if (this._dragging) return;
 		this._dragging = event.data.getLocalPosition(this.parent);
-	}
-
-	private _onDragEnd(_event: InteractionEvent) {
-		this._dragging = undefined;
 	}
 
 	private _onDragMove(event: InteractionEvent) {
@@ -165,21 +223,12 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 }
 
-const CHARACTER_INDEX_START = 100;
-const BONCE_OVERFLOW = 500;
-const BASE_BOUNCE_OPTIONS: IBounceOptions = {
-	ease: 'easeOutQuad',
-	friction: 0,
-	sides: 'all',
-	time: 500,
-	underflow: 'center',
-};
-
 class ChatRoomGraphicsScene extends GraphicsScene {
 	private readonly _characters: Map<CharacterId, ChatRoomCharacter> = new Map();
 	private _shard: ShardConnector | null = null;
 	private _room: IChatRoomClientData | null = null;
 	private _manager: GraphicsManager | null = GraphicsManagerInstance.value;
+	private _menuOpen: (Character: ChatRoomCharacter, data: InteractionData) => void = noop;
 
 	private readonly _border: Graphics;
 
@@ -238,7 +287,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			if (this._characters.has(character.data.id)) {
 				return;
 			}
-			const graphics = new ChatRoomCharacter(character, this._room, this._shard);
+			const graphics = new ChatRoomCharacter({ character, data: this._room, shard: this._shard, menuOpen: this._menuOpen });
 			if (this._manager) {
 				graphics.useGraphics(this._manager.getAssetGraphicsById.bind(this._manager));
 			}
@@ -283,6 +332,13 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			character.updateRoomData(data);
 		});
 	}
+
+	updateMenuOpen(open: (character: ChatRoomCharacter, data: InteractionData) => void) {
+		this._menuOpen = open;
+		this._characters.forEach((character) => {
+			character.updateMenuOpen(open);
+		});
+	}
 }
 
 const scene = new ChatRoomGraphicsScene();
@@ -292,6 +348,8 @@ export function ChatRoomScene(): ReactElement | null {
 	const characters = useChatRoomCharacters();
 	const ref = useGraphicsScene<HTMLDivElement>(scene);
 	const shard = useShardConnector();
+	const [menuActive, setMenuActive] = useState<ChatRoomCharacter | null>(null);
+	const [clickData, setClickData] = useState<InteractionData | null>(null);
 
 	AssertNotNullable(characters);
 
@@ -313,10 +371,57 @@ export function ChatRoomScene(): ReactElement | null {
 		}
 	}, [data]);
 
+	useEffect(() => {
+		scene.updateMenuOpen((character, eventData) => {
+			setClickData(eventData);
+			setMenuActive(character);
+		});
+	}, [setMenuActive, setClickData]);
+
+	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
+		if (menuActive && clickData) {
+			setMenuActive(null);
+			event.stopPropagation();
+			event.preventDefault();
+		}
+	});
+
 	if (!data)
 		return null;
 
 	return (
-		<div ref={ ref } className='chatroom-scene' />
+		<div ref={ ref } className='chatroom-scene' onPointerDown={ onPointerDown }>
+			<CharacterContextMenu character={ menuActive } data={ clickData } onClose={ () => setMenuActive(null) } />
+		</div>
+	);
+}
+
+function CharacterContextMenu({ character, data, onClose }: { character: ChatRoomCharacter | null; data: InteractionData | null; onClose: () => void; }): ReactElement | null {
+	if (!character || !data) {
+		return null;
+	}
+
+	const event = data?.originalEvent;
+	const style: CSSProperties = {};
+	if (event instanceof MouseEvent || event instanceof PointerEvent) {
+		style.left = event.pageX;
+		style.top = event.pageY;
+	} else if (event instanceof TouchEvent) {
+		style.left = event.touches[0].pageX;
+		style.top = event.touches[0].pageY;
+	}
+
+	return (
+		<div className='context-menu' style={ style } onPointerDown={ (e) => e.stopPropagation() }>
+			<span>
+				{ character.name } ({ character.id })
+			</span>
+			<Link to='/wardrobe' state={ { character: character.id } }>
+				Wardrobe
+			</Link>
+			<span onClick={ onClose } >
+				Close
+			</span>
+		</div>
 	);
 }

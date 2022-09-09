@@ -199,32 +199,46 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 				</div>
 				{
 					currentConfig.features.includes('development') &&
-					<div className='input-container'>
-						<h3>Development settings</h3>
-						<label>Shard for room</label>
-						<select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
-							(event) => {
-								const value = event.target.value;
-								setRoomModifiedData({
-									development: {
-										...currentConfig.development,
-										shardId: value === '[Auto]' ? undefined : value,
-									},
-								});
-							}
-						}>
-							{
-								!shards ?
-									<option>Loading...</option> :
-									<>
-										<option key='[Auto]' value='[Auto]' >[Auto]</option>
-										{
-											shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
-										}
-									</>
-							}
-						</select>
-					</div>
+						<div className='input-container'>
+							<h3>Development settings</h3>
+							<label>Shard for room</label>
+							<select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+								(event) => {
+									const value = event.target.value;
+									setRoomModifiedData({
+										development: {
+											...currentConfig.development,
+											shardId: value === '[Auto]' ? undefined : value,
+										},
+									});
+								}
+							}>
+								{
+									!shards ?
+										<option>Loading...</option> :
+										<>
+											<option key='[Auto]' value='[Auto]' >[Auto]</option>
+											{
+												shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
+											}
+										</>
+								}
+							</select>
+							<div className='input-line'>
+								<label>Auto admin for developers</label>
+								<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={
+									(event) => {
+										const autoAdmin = event.target.checked;
+										setRoomModifiedData({
+											development: {
+												...currentConfig.development,
+												autoAdmin,
+											},
+										});
+									}
+								} />
+							</div>
+						</div>
 				}
 				<Button onClick={ () => void createRoom(currentConfig) }>Create room</Button>
 			</div>

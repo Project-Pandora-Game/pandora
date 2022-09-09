@@ -40,6 +40,8 @@ export type IChatRoomDirectoryConfig = IChatRoomBaseInfo & {
 	development?: {
 		/** The id of the shard that the room will be created on */
 		shardId?: string;
+		/** Automatically grants admin to every developer on enter */
+		autoAdmin?: boolean;
 	};
 	/** The banned account ids */
 	banned: number[];
@@ -59,6 +61,7 @@ export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.obje
 	features: z.array(ShardFeatureSchema),
 	development: z.object({
 		shardId: z.string().optional(),
+		autoAdmin: z.boolean().optional(),
 	}).optional(),
 	banned: z.array(z.number()),
 	admin: z.array(z.number()),

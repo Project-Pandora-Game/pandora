@@ -250,8 +250,12 @@ export class Room {
 			});
 		}
 
-		this.shard.update('characters');
-		ConnectionManagerClient.onRoomListChange();
+		if (this.config.development?.autoAdmin && character.account.roles.isAuthorized('developer')) {
+			this.update({ admin: [...this.config.admin, character.account.id] }, null);
+		} else {
+			this.shard.update('characters');
+			ConnectionManagerClient.onRoomListChange();
+		}
 	}
 
 	public removeCharacter(character: Character, reason: IChatRoomLeaveReason): void {

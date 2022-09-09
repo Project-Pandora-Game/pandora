@@ -25,7 +25,7 @@ import {
 	ItemId,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterRestrictionsManager } from '../../character/character';
 import { useObservable } from '../../observable';
@@ -120,6 +120,7 @@ const scene = new GraphicsScene();
 function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
 	const ref = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
+	const navigate = useNavigate();
 
 	return (
 		<div className='wardrobe'>
@@ -154,6 +155,7 @@ function Wardrobe(): ReactElement | null {
 						</div>
 					</div>
 				</Tab>
+				<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
 			</TabContainer>
 		</div>
 	);

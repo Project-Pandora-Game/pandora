@@ -1,11 +1,13 @@
 import classNames from 'classnames';
-import React, { ReactElement, useMemo, useState } from 'react';
+import React, { ReactElement, useMemo, useState, ReactNode } from 'react';
 import { ChildrenProps } from '../../../common/reactTypes';
 import './tabs.scss';
 
 interface TabProps extends ChildrenProps {
-	name: string;
+	name: ReactNode;
 	default?: boolean;
+	onClick?: React.MouseEventHandler<HTMLLIElement>;
+	className?: string;
 }
 
 export function TabContainer({ children, id, className }: {
@@ -19,15 +21,18 @@ export function TabContainer({ children, id, className }: {
 		return defaultTab < 0 ? 0 : defaultTab;
 	});
 
-	const tabs = useMemo<(string | undefined)[]>(() => children.map((c) => c?.props.name), [children]);
+	const tabs = useMemo<(TabProps | undefined)[]>(() => children.map((c) => c?.props), [children]);
 
 	return (
 		<div className={ classNames('tab-container', className) } id={ id }>
 			<ul className='tab-container__header'>
 				{
 					tabs.map((tab, index) => (tab &&
-						<li key={ index } className={ classNames('tab', { active: index === currentTab }) } onClick={ () => setTab(index) }>
-							{tab}
+						<li key={ index }
+							className={ classNames('tab', { active: index === currentTab }, tab.className) }
+							onClick={ tab.onClick ?? (() => setTab(index)) }
+						>
+							{tab.name}
 						</li>
 					))
 				}

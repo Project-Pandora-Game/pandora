@@ -37,6 +37,11 @@ $header-height: 2em;
 				color: $white;
 				z-index: 1;
 			}
+
+			&.slim {
+				flex: 0;
+				white-space: nowrap;
+			}
 		}
 	}
 }

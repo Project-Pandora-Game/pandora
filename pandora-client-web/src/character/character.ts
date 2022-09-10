@@ -2,6 +2,7 @@ import { Appearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, BoneState,
 import { useMemo, useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
+import type { PlayerCharacter } from './player';
 
 export type AppearanceEvents = {
 	'appearanceUpdate': AppearanceChangeType[];
@@ -28,6 +29,10 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		this.appearance = new Appearance(GetAssetManager(), (changes) => this.emit('appearanceUpdate', changes));
 		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
 		this.logger.verbose('Loaded');
+	}
+
+	public isPlayer(): this is PlayerCharacter {
+		return false;
 	}
 
 	public update(data: Partial<T>): void {

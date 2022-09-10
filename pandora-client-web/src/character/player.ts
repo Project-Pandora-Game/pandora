@@ -17,6 +17,10 @@ export class PlayerCharacter extends Character<ICharacterData & ICharacterRoomDa
 		}, GetLogger('Character', `[Player ${data.id}]`));
 	}
 
+	public override isPlayer(): this is PlayerCharacter {
+		return true;
+	}
+
 	public setCreationComplete(): void {
 		delete this._data.inCreation;
 		this.emit('update', this._data);

@@ -76,3 +76,17 @@ export function ShuffleArray<T extends unknown[]>(array: T): T {
 	}
 	return array;
 }
+
+/**
+ * Returns longest preffix all input strings have in common (case sensitive)
+ */
+export function LongestCommonPrefix(strings: string[]): string {
+	if (strings.length === 0) return "";
+
+	strings = strings.slice().sort();
+	let i = 0;
+	while (i < strings[0].length && strings[0][i] === strings[strings.length - 1][i]) {
+		i++;
+	}
+	return strings[0].substring(0, i);
+}

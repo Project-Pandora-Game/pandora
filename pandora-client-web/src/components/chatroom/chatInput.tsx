@@ -214,7 +214,10 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			ev.stopPropagation();
 			try {
 				// Process command
-				const autocompleteResult = CommandAutocompleteCycle(textarea.value.slice(1), {
+				let inputPosition = textarea.selectionStart || textarea.value.length;
+				let input = textarea.value.slice(1, textarea.selectionStart);
+
+				const autocompleteResult = CommandAutocompleteCycle(input, {
 					displayError(error) {
 						toast(error, TOAST_OPTIONS_ERROR);
 					},
@@ -223,7 +226,10 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 					messageSender: sender,
 				});
 
-				textarea.value = COMMAND_KEY + autocompleteResult.result;
+				const replacementStart = COMMAND_KEY + autocompleteResult.replace;
+
+				textarea.value = replacementStart + textarea.value.slice(inputPosition).trimStart();
+				textarea.setSelectionRange(replacementStart.length, replacementStart.length, 'none')
 				setAutocompleteHint(autocompleteResult);
 
 			} catch (error) {

@@ -20,7 +20,7 @@ export interface IChatRoomMessageSender {
 	sendMessage(message: string, options?: IMessageParseOptions): void;
 	deleteMessage(deleteId: number): void;
 	getMessageEditTimeout(id: number): number | undefined;
-	getMessageEdit(id: number): { text: string, target?: CharacterId } | undefined;
+	getMessageEdit(id: number): { text: string, target?: CharacterId; } | undefined;
 	getLastMessageEdit(): number | undefined;
 }
 
@@ -112,7 +112,7 @@ function ProcessMessage(
 }
 
 export class ChatRoom extends TypedEventEmitter<{
-	messageNotify: NotificationData
+	messageNotify: NotificationData;
 }> implements IChatRoomMessageSender {
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
 	public readonly data = new Observable<IChatRoomClientData | null>(null);
@@ -129,7 +129,12 @@ export class ChatRoom extends TypedEventEmitter<{
 	private readonly _restore = BrowserStorage.createSession<undefined | {
 		roomId: RoomId;
 		messages: readonly IChatroomMessageProcessed[];
-		sent: [number, { text: string; time: number; }][];
+		sent: [number, {
+			text: string;
+			time: number;
+			rawType?: 'chat' | 'ooc' | 'me' | 'emote';
+			target?: CharacterId;
+		}][];
 	}>('chatRoomRestore', undefined);
 
 	private _setRestore(roomId?: RoomId): void {
@@ -363,7 +368,12 @@ export class ChatRoom extends TypedEventEmitter<{
 
 	//#region MessageSender
 
-	private readonly _sent = new Map<number, { text: string; time: number; target?: CharacterId }>();
+	private readonly _sent = new Map<number, {
+		text: string;
+		time: number;
+		rawType?: 'chat' | 'ooc' | 'me' | 'emote';
+		target?: CharacterId;
+	}>();
 	public sendMessage(message: string, { editing, type, raw, target }: IMessageParseOptions = {}): void {
 		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
 			throw new Error('Shard is not connected');
@@ -372,6 +382,10 @@ export class ChatRoom extends TypedEventEmitter<{
 			const edit = this._sent.get(editing);
 			if (!edit || edit.time + MESSAGE_EDIT_TIMOUT < Date.now()) {
 				throw new Error('Message not found');
+			}
+			if (edit.rawType) {
+				raw = true;
+				type = edit.rawType;
 			}
 		}
 		if (target !== undefined) {
@@ -394,7 +408,12 @@ export class ChatRoom extends TypedEventEmitter<{
 			messages = ChatParser.parse(message, target);
 		}
 		const id = this._getNextMessageId();
-		this._sent.set(id, { text: message, time: Date.now(), target });
+		this._sent.set(id, {
+			text: message,
+			time: Date.now(),
+			rawType: raw ? type : undefined,
+			target,
+		});
 		if (editing !== undefined) {
 			this._sent.delete(editing);
 			this._shard.sendMessage('chatRoomMessage', { id, messages, editId: editing });
@@ -425,7 +444,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		return edit.time + MESSAGE_EDIT_TIMOUT - Date.now();
 	}
 
-	public getMessageEdit(id: number): { text: string, target?: CharacterId } | undefined {
+	public getMessageEdit(id: number): { text: string, target?: CharacterId; } | undefined {
 		const edit = this._sent.get(id);
 		if (!edit || edit.time + MESSAGE_EDIT_TIMOUT < Date.now()) {
 			return undefined;
@@ -493,12 +512,12 @@ export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?:
 	return useCallback((status: IChatRoomStatus) => context.setPlayerStatus(status), [context]);
 }
 
-export function useChatRoomStatus(): { data: ICharacterRoomData, status: IChatRoomStatus }[] {
+export function useChatRoomStatus(): { data: ICharacterRoomData, status: IChatRoomStatus; }[] {
 	const context = useChatroomRequired();
 	const characters = useObservable(context.characters);
 	const status = useObservable(context.status);
 	return useMemo(() => {
-		const result: { data: ICharacterRoomData, status: IChatRoomStatus }[] = [];
+		const result: { data: ICharacterRoomData, status: IChatRoomStatus; }[] = [];
 		for (const c of characters) {
 			if (status.has(c.data.id)) {
 				result.push({ data: c.data, status: context.getStatus(c.data.id) });

@@ -125,3 +125,31 @@
 .typing-indicator {
 	min-height: 1.5em;
 }
+
+.autocomplete-hint {
+	position: relative;
+
+	>div {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		right: 1em;
+		margin: 0.2em;
+
+		@include flex(column);
+		background-color: #338;
+		color: white;
+		padding: 0.5em;
+		gap: 0.1em;
+
+		hr {
+			width: 100%;
+		}
+
+		span {
+			&.selected {
+				background-color: #7e7eff54;
+			}
+		}
+	}
+}

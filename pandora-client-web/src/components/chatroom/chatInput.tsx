@@ -1,16 +1,20 @@
-import type { CharacterId, IChatRoomStatus, RoomId } from 'pandora-common';
+import { AssertNotNullable, CharacterId, IChatRoomStatus, RoomId } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
-import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
-import { COMMAND_KEY } from './commands';
+import { AutocompleteDisplyData, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
 import { usePlayerId } from '../gameContext/playerContextProvider';
 import './chatroom.scss';
 import { BrowserStorage } from '../../browserStorage';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import classNames from 'classnames';
+
+const AUTOCOMPLETE_HINT_DISMISS_TIMEOUT = 10_000;
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -19,6 +23,8 @@ export type IChatInputHandler = {
 	setTarget: (target: CharacterId | null) => void;
 	editing: number | null;
 	setEditing: (editing: number | null) => boolean;
+	autocompleteHint: AutocompleteDisplyData | null;
+	setAutocompleteHint: (hint: AutocompleteDisplyData | null) => void;
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
@@ -29,6 +35,8 @@ const chatInputContext = createContext<IChatInputHandler>({
 	setTarget: noop,
 	editing: null,
 	setEditing: () => false,
+	autocompleteHint: null,
+	setAutocompleteHint: noop,
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
@@ -42,6 +50,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
 	const [editing, setEditingState] = useState<number | null>(null);
+	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplyData | null>(null);
 	const characters = useChatRoomCharacters();
 	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
@@ -98,8 +107,10 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		},
 		editing,
 		setEditing,
+		autocompleteHint,
+		setAutocompleteHint,
 		ref,
-	}), [target, editing, setEditing, playerId, characters]);
+	}), [target, editing, setEditing, autocompleteHint, setAutocompleteHint, playerId, characters]);
 
 	return (
 		<chatInputContext.Provider value={ context }>
@@ -112,6 +123,7 @@ export function ChatInputArea({ messagesDiv, scroll }: { messagesDiv: RefObject<
 	const { ref } = useChatInput();
 	return (
 		<>
+			<AutoCompleteHint />
 			<TypingIndicator scroll={ scroll } />
 			<Modifiers scroll={ scroll } />
 			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
@@ -125,8 +137,12 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 	const lastInput = useRef('');
 	const timeout = useRef<number>();
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
+	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
-	const { target, editing, setEditing, setValue } = useChatInput();
+	const { target, editing, setEditing, setValue, setAutocompleteHint } = useChatInput();
+
+	const shardConnector = useShardConnector();
+	AssertNotNullable(shardConnector);
 
 	const sendStatus = useEvent((status: IChatRoomStatus) => {
 		setPlayerStatus(status, currentTarget.current);
@@ -150,19 +166,68 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
-				// TODO ... all options
-				sender.sendMessage(textarea.value, {
-					target: target?.data.id,
-					editing: editing || undefined,
-				});
-				textarea.value = '';
-				setEditing(null);
+				setAutocompleteHint(null);
+				let input = textarea.value;
+				if (input.startsWith(COMMAND_KEY) && !input.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+					// Process command
+					if (RunCommand(input.slice(1), {
+						displayError(error) {
+							toast(error, TOAST_OPTIONS_ERROR);
+						},
+						shardConnector,
+						chatRoom,
+						messageSender: sender,
+					})) {
+						textarea.value = '';
+					}
+				} else {
+					// Double command key escapes itself
+					if (input.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+						input = input.slice(1);
+					}
+					input = input.trim();
+					// Ignore empty input, unless editing
+					if (editing == null && !input) {
+						return;
+					}
+					// TODO ... all options
+					sender.sendMessage(input, {
+						target: target?.data.id,
+						editing: editing || undefined,
+					});
+					textarea.value = '';
+					setEditing(null);
+				}
 			} catch (error) {
 				if (error instanceof Error) {
 					toast(error.message, TOAST_OPTIONS_ERROR);
 				}
 				return;
 			}
+		}
+		if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+			ev.preventDefault();
+			ev.stopPropagation();
+			try {
+				// Process command
+				const autocompleteResult = CommandAutocompleteCycle(textarea.value.slice(1), {
+					displayError(error) {
+						toast(error, TOAST_OPTIONS_ERROR);
+					},
+					shardConnector,
+					chatRoom,
+					messageSender: sender,
+				});
+
+				textarea.value = COMMAND_KEY + autocompleteResult.result;
+				setAutocompleteHint(autocompleteResult);
+
+			} catch (error) {
+				if (error instanceof Error) {
+					toast(error.message, TOAST_OPTIONS_ERROR);
+				}
+			}
+			return;
 		}
 		if (ev.key === 'ArrowUp' && !textarea.value.trim()) {
 			ev.preventDefault();
@@ -193,10 +258,11 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		InputResore.value = { input: value, roomId: InputResore.value.roomId };
 		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
 		const trimmed = value.trim();
-		if (trimmed.length > 0 && !trimmed.startsWith(COMMAND_KEY)) {
+		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY))) {
 			nextStatus = { status: target ? 'whisper' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
+			setAutocompleteHint(null);
 		}
 
 		if (nextStatus.status === 'none') {
@@ -290,6 +356,38 @@ function Modifiers({ scroll }: { scroll: () => void }): ReactElement {
 					</Button>
 				</span>
 			) }
+		</div>
+	);
+}
+
+function AutoCompleteHint(): ReactElement | null {
+	const { autocompleteHint, setAutocompleteHint } = useChatInput();
+
+	useEffect(() => {
+		if (!autocompleteHint)
+			return undefined;
+		const timeout = setTimeout(() => {
+			setAutocompleteHint(null);
+		}, AUTOCOMPLETE_HINT_DISMISS_TIMEOUT);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [autocompleteHint, setAutocompleteHint]);
+
+	if (!autocompleteHint || autocompleteHint.options.length === 0)
+		return null;
+
+	return (
+		<div className='autocomplete-hint'>
+			<div>
+				[autocomplete hint]
+				<hr />
+				{
+					autocompleteHint.options.map((option, index) => (
+						<span key={ index } className={ classNames({ selected: index === autocompleteHint.index }) }>{option[1]}</span>
+					))
+				}
+			</div>
 		</div>
 	);
 }

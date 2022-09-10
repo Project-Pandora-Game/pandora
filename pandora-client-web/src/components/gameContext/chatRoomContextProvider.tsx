@@ -457,11 +457,11 @@ export class ChatRoom extends TypedEventEmitter<{
 	//#endregion MessageSender
 }
 
-function useChatroom(): ChatRoom | null {
+export function useChatroom(): ChatRoom | null {
 	return useShardConnector()?.room ?? null;
 }
 
-function useChatroomRequired(): ChatRoom {
+export function useChatroomRequired(): ChatRoom {
 	const room = useChatroom();
 	if (!room) {
 		throw new Error('Attempt to access ChatRoom outside of context');

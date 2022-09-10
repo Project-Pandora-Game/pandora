@@ -1,5 +1,5 @@
 import { IEmpty } from '../networking';
-import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, ICommandExecutionContext } from './executor';
+import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, CommanExecutorOptions, ICommandExecutionContext } from './executor';
 
 interface CommandBuilderSource<
 	Context extends ICommandExecutionContext,
@@ -70,8 +70,15 @@ export class CommandBuilder<
 		);
 	}
 
-	public handler(handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments> {
-		const executor = new CommandRunnerExecutor<Context, EntryArguments>(handler);
+	public handler(handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
+	public handler(options: CommanExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
+	public handler(options: CommanExecutorOptions | ((context: Context, args: EntryArguments, rest: string) => boolean | undefined | void), handler?: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments> {
+		if (typeof options === 'function') {
+			handler = options;
+			options = {};
+		}
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!);
 		return this.parent.build(executor);
 	}
 }

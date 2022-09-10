@@ -41,10 +41,10 @@ export const COMMANDS: readonly IClientCommand[] = [
 	{
 		key: ['whisper', 'w'],
 		description: 'Send a private message to a user',
-		usage: '<character> <message>',
+		usage: '<target> <message>',
 		handler: CreateClientCommand()
 			.argument('target', CommandSelectorCharacter({ allowSelf: false }))
-			.handler(({ messageSender, displayError }, { target }, message) => {
+			.handler({ restArgName: 'message' }, ({ messageSender, displayError }, { target }, message) => {
 				message = message.trim();
 				if (!message) {
 					displayError?.(`Cannot send empty message`);

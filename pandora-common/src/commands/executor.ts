@@ -31,14 +31,20 @@ export interface CommandRunner<
 	predictHeader(): string;
 }
 
+export interface CommanExecutorOptions {
+	restArgName?: string;
+}
+
 export class CommandRunnerExecutor<
 	Context extends ICommandExecutionContext,
 	EntryArguments extends Record<string, never>,
 > implements CommandRunner<Context, EntryArguments> {
 
+	private readonly options: CommanExecutorOptions;
 	private readonly handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void;
 
-	constructor(handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void) {
+	constructor(options: CommanExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void) {
+		this.options = options;
 		this.handler = handler;
 	}
 
@@ -47,11 +53,14 @@ export class CommandRunnerExecutor<
 	}
 
 	autocomplete(): CommandAutocompleteResult {
-		return null;
+		return this.options.restArgName ? {
+			header: `🡆<${this.options.restArgName}>🡄`,
+			options: [],
+		} : null;
 	}
 
 	predictHeader(): string {
-		return '';
+		return this.options.restArgName ? `<${this.options.restArgName}>` : '';
 	}
 }
 

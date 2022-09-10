@@ -4,7 +4,7 @@ import { noop } from 'lodash';
 import { Character } from '../../character/character';
 import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
-import { AutocompleteDisplyData, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
+import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
@@ -13,8 +13,6 @@ import './chatroom.scss';
 import { BrowserStorage } from '../../browserStorage';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import classNames from 'classnames';
-
-const AUTOCOMPLETE_HINT_DISMISS_TIMEOUT = 10_000;
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -160,6 +158,31 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		sendStatus('none');
 	});
 
+	const updateCommandHelp = useEvent((textarea: HTMLTextAreaElement) => {
+		let input = textarea.value;
+		if (
+			input.startsWith(COMMAND_KEY) &&
+			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
+			editing == null
+		) {
+			input = input.slice(1, textarea.selectionStart || textarea.value.length);
+
+			const autocompleteResult = CommandAutocomplete(input, {
+				shardConnector,
+				chatRoom,
+				messageSender: sender,
+			});
+
+			setAutocompleteHint({
+				replace: textarea.value,
+				result: autocompleteResult,
+				index: null,
+			});
+		} else {
+			setAutocompleteHint(null);
+		}
+	});
+
 	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		const textarea = ev.currentTarget;
 		if (ev.key === 'Enter' && !ev.shiftKey) {
@@ -214,8 +237,8 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			ev.stopPropagation();
 			try {
 				// Process command
-				let inputPosition = textarea.selectionStart || textarea.value.length;
-				let input = textarea.value.slice(1, textarea.selectionStart);
+				const inputPosition = textarea.selectionStart || textarea.value.length;
+				const input = textarea.value.slice(1, textarea.selectionStart);
 
 				const autocompleteResult = CommandAutocompleteCycle(input, {
 					displayError(error) {
@@ -229,7 +252,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 				const replacementStart = COMMAND_KEY + autocompleteResult.replace;
 
 				textarea.value = replacementStart + textarea.value.slice(inputPosition).trimStart();
-				textarea.setSelectionRange(replacementStart.length, replacementStart.length, 'none')
+				textarea.setSelectionRange(replacementStart.length, replacementStart.length, 'none');
 				setAutocompleteHint(autocompleteResult);
 
 			} catch (error) {
@@ -272,7 +295,6 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			nextStatus = { status: target ? 'whisper' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
-			setAutocompleteHint(null);
 		}
 
 		if (nextStatus.status === 'none') {
@@ -294,9 +316,13 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		timeout.current = setTimeout(() => inputEnd(), 3_000);
 	});
 
+	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {
+		updateCommandHelp(ev.target);
+	});
+
 	useEffect(() => () => inputEnd(), [inputEnd]);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } defaultValue={ InputResore.value.input } />;
+	return <textarea ref={ ref } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputResore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);
@@ -371,31 +397,25 @@ function Modifiers({ scroll }: { scroll: () => void }): ReactElement {
 }
 
 function AutoCompleteHint(): ReactElement | null {
-	const { autocompleteHint, setAutocompleteHint } = useChatInput();
+	const { autocompleteHint } = useChatInput();
 
-	useEffect(() => {
-		if (!autocompleteHint)
-			return undefined;
-		const timeout = setTimeout(() => {
-			setAutocompleteHint(null);
-		}, AUTOCOMPLETE_HINT_DISMISS_TIMEOUT);
-		return () => {
-			clearTimeout(timeout);
-		};
-	}, [autocompleteHint, setAutocompleteHint]);
-
-	if (!autocompleteHint?.result || autocompleteHint.result.options.length === 0)
+	if (!autocompleteHint?.result)
 		return null;
 
 	return (
 		<div className='autocomplete-hint'>
 			<div>
 				{ autocompleteHint.result.header }
-				<hr />
 				{
-					autocompleteHint.result.options.map((option, index) => (
-						<span key={ index } className={ classNames({ selected: index === autocompleteHint.index }) }>{option.displayValue}</span>
-					))
+					autocompleteHint.result.options.length > 0 &&
+						<>
+							<hr />
+							{
+								autocompleteHint.result.options.map((option, index) => (
+									<span key={ index } className={ classNames({ selected: index === autocompleteHint.index }) }>{option.displayValue}</span>
+								))
+							}
+						</>
 				}
 			</div>
 		</div>

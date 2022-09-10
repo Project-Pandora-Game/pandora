@@ -1,4 +1,4 @@
-import { CommandAutocompleteOption, CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
+import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
 import type { ShardConnector } from '../../networking/shardConnector';
 import type { ChatRoom, IChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { COMMANDS } from './commands';
@@ -67,14 +67,14 @@ export function RunCommand(originalInput: string, ctx: Omit<ICommandExecutionCon
 	return command.handler.run(context, {}, args);
 }
 
-function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): CommandAutocompleteResult {
+export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): CommandAutocompleteResult {
 	const { commandName, spacing, command, args } = GetCommand(msg);
 
 	// If there is no space after commandName, we are autocompleting the command itself
 	if (!spacing) {
 		const options = COMMANDS
 			.filter((c) => c.key[0].startsWith(commandName))
-			.map<CommandAutocompleteOption>((c) => ({
+			.map((c) => ({
 				replaceValue: c.key[0],
 				displayValue: `/${c.key[0]}${c.usage ? ' ' + c.usage : ''} - ${c.description}`,
 			}));
@@ -138,7 +138,7 @@ export function CommandAutocompleteCycle(msg: string, ctx: Omit<ICommandExecutio
 	} else if (autocompleteLastResult.options.length === 1) {
 		return {
 			replace: autocompleteLastResult.options[0].replaceValue + ' ',
-			result: null,
+			result: CommandAutocomplete(autocompleteLastResult.options[0].replaceValue + ' ', ctx),
 			index: null,
 		};
 	}

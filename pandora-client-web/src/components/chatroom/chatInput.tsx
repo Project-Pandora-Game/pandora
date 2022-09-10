@@ -168,7 +168,11 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			try {
 				setAutocompleteHint(null);
 				let input = textarea.value;
-				if (input.startsWith(COMMAND_KEY) && !input.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+				if (
+					input.startsWith(COMMAND_KEY) &&
+					!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
+					editing == null
+				) {
 					// Process command
 					if (RunCommand(input.slice(1), {
 						displayError(error) {

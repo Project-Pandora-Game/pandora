@@ -374,12 +374,12 @@ export class ChatRoom extends TypedEventEmitter<{
 				throw new Error('Message not found');
 			}
 		}
-		if (target === undefined) {
-			if (!this.characters.value.find((c) => c.data.id === this.playerId)) {
-				throw new Error('Target not in room');
+		if (target !== undefined) {
+			if (!this.characters.value.some((c) => c.data.id === target)) {
+				throw new Error('Target not found in the room');
 			}
 			if (target === this.playerId) {
-				throw new Error('Target is self');
+				throw new Error('Cannot send targeted message to yourself');
 			}
 			if (type === 'me' || type === 'emote') {
 				throw new Error('Emote and me messages cannot be sent to a specific target');

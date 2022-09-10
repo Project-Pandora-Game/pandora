@@ -1,4 +1,4 @@
-import { CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
+import { CommandAutocompleteOption, CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
 import type { ShardConnector } from '../../networking/shardConnector';
 import type { ChatRoom, IChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { COMMANDS } from './commands';
@@ -67,14 +67,21 @@ export function RunCommand(originalInput: string, ctx: Omit<ICommandExecutionCon
 	return command.handler.run(context, {}, args);
 }
 
-function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): [string, string][] {
+function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): CommandAutocompleteResult {
 	const { commandName, spacing, command, args } = GetCommand(msg);
 
 	// If there is no space after commandName, we are autocompleting the command itself
 	if (!spacing) {
-		return COMMANDS
+		const options = COMMANDS
 			.filter((c) => c.key[0].startsWith(commandName))
-			.map((c) => [c.key[0], `${c.key[0]}${c.usage ? ' ' + c.usage : ''} - ${c.description}`]);
+			.map<CommandAutocompleteOption>((c) => ({
+				replaceValue: c.key[0],
+				displayValue: `/${c.key[0]}${c.usage ? ' ' + c.usage : ''} - ${c.description}`,
+			}));
+		return options.length > 0 ? {
+			header: 'Commands',
+			options,
+		} : null;
 	}
 
 	const context: ICommandExecutionContextClient = {
@@ -84,60 +91,63 @@ function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionContextClie
 	};
 
 	if (command) {
-		return command.handler
-			.autocomplete(context, {}, args)
-			.map(({ replaceValue, displayValue }) => [
-				commandName + ' ' + replaceValue,
+		const autocompleteResult = command.handler.autocomplete(context, {}, args);
+
+		return autocompleteResult != null ? {
+			header: `/${commandName} ${autocompleteResult.header}`,
+			options: autocompleteResult.options.map(({ replaceValue, displayValue }) => ({
+				replaceValue: commandName + ' ' + replaceValue,
 				displayValue,
-			]);
+			})),
+		} : null;
 	}
 
-	return [];
+	return null;
 }
 
 export interface AutocompleteDisplyData {
-	result: string;
-	options: [string, string][];
+	result: CommandAutocompleteResult;
+	replace: string;
 	index: number | null;
 }
 
 let autocompleteLastQuery: string | null = null;
-let autocompleteLastResult: [string, string][] = [];
+let autocompleteLastResult: CommandAutocompleteResult = null;
 let autocompleteNextIndex = 0;
 
 export function CommandAutocompleteCycle(msg: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): AutocompleteDisplyData {
-	if (autocompleteLastQuery === msg && autocompleteNextIndex < autocompleteLastResult.length) {
+	if (autocompleteLastQuery === msg && autocompleteLastResult && autocompleteNextIndex < autocompleteLastResult.options.length) {
 		const index = autocompleteNextIndex;
-		const result = autocompleteLastResult[index][0].trim();
-		autocompleteNextIndex = (autocompleteNextIndex + 1) % autocompleteLastResult.length;
-		autocompleteLastQuery = result;
+		const replace = autocompleteLastResult.options[index].replaceValue.trim();
+		autocompleteNextIndex = (autocompleteNextIndex + 1) % autocompleteLastResult.options.length;
+		autocompleteLastQuery = replace;
 		return {
-			result,
-			options: autocompleteLastResult,
+			replace,
+			result: autocompleteLastResult,
 			index,
 		};
 	}
 	autocompleteLastQuery = null;
 	autocompleteLastResult = CommandAutocomplete(msg, ctx);
-	if (autocompleteLastResult.length === 0) {
+	if (!autocompleteLastResult || autocompleteLastResult.options.length === 0) {
 		return {
-			result: msg,
-			options: [],
+			replace: msg,
+			result: null,
 			index: null,
 		};
-	} else if (autocompleteLastResult.length === 1) {
+	} else if (autocompleteLastResult.options.length === 1) {
 		return {
-			result: autocompleteLastResult[0][0] + ' ',
-			options: [],
+			replace: autocompleteLastResult.options[0].replaceValue + ' ',
+			result: null,
 			index: null,
 		};
 	}
-	const best = LongestCommonPrefix(autocompleteLastResult.map((i) => i[0]));
+	const best = LongestCommonPrefix(autocompleteLastResult.options.map((i) => i.replaceValue));
 	autocompleteLastQuery = best;
 	autocompleteNextIndex = 0;
 	return {
-		result: best,
-		options: autocompleteLastResult,
+		replace: best,
+		result: autocompleteLastResult,
 		index: null,
 	};
 }

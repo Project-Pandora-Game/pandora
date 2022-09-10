@@ -10,6 +10,10 @@ export interface ICommandExecutionContext {
 export type CommandStepPreparseProcessor = ((input: string) => { value: string; spacing: string; rest: string; });
 
 export type CommandAutocompleteOption = { replaceValue: string; displayValue: string; };
+export type CommandAutocompleteResult = {
+	header: string;
+	options: CommandAutocompleteOption[];
+} | null;
 
 export interface CommandStepProcessor<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, never> = IEmpty> {
 	preparse: CommandStepPreparseProcessor | 'all' | 'allTrimmed' | 'quotedArg' | 'quotedArgTrimmed';
@@ -23,7 +27,8 @@ export interface CommandRunner<
 > {
 	run(context: Context, args: EntryArguments, rest: string): boolean;
 
-	autocomplete(context: Context, args: EntryArguments, rest: string): CommandAutocompleteOption[];
+	autocomplete(context: Context, args: EntryArguments, rest: string): CommandAutocompleteResult;
+	predictHeader(): string;
 }
 
 export class CommandRunnerExecutor<
@@ -41,8 +46,12 @@ export class CommandRunnerExecutor<
 		return this.handler(context, args, rest) ?? true;
 	}
 
-	autocomplete(): never[] {
-		return [];
+	autocomplete(): CommandAutocompleteResult {
+		return null;
+	}
+
+	predictHeader(): string {
+		return '';
 	}
 }
 
@@ -85,37 +94,48 @@ export class CommandRunnerArgParser<
 		}, rest);
 	}
 
-	autocomplete(context: Context, args: EntryArguments, input: string): CommandAutocompleteOption[] {
+	autocomplete(context: Context, args: EntryArguments, input: string): CommandAutocompleteResult {
 		const { value, spacing, rest } = this.preprocessor(input);
 
 		const isQuotedPreprocessor = this.processor.preparse === 'quotedArg' || this.processor.preparse === 'quotedArgTrimmed';
 
 		// If nothing follows, this is the thing to autocomplete
 		if (!rest && !spacing) {
-			const result = !this.processor.autocomplete ? [] :
+			const options = !this.processor.autocomplete ? [] :
 				this.processor.autocomplete(value, context, args);
-			const shouldQuote = isQuotedPreprocessor && result.some(({ replaceValue }) => CommandArgumentNeedsQuotes(replaceValue));
+			const shouldQuote = isQuotedPreprocessor && options.some(({ replaceValue }) => CommandArgumentNeedsQuotes(replaceValue));
 
-			return result.map(({ displayValue, replaceValue }) => ({
-				displayValue,
-				replaceValue: shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue,
-			}));
+			return options.length > 0 ? {
+				header: `🡆<${this.name}>🡄 ${this.next.predictHeader()}`,
+				options: options.map(({ displayValue, replaceValue }) => ({
+					displayValue,
+					replaceValue: shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue,
+				})),
+			} : null;
 		}
 
 		// Otherwise we continue
 		const parsed = this.processor.parse(value, context, args);
 		// The following completers might need current args, fail if we are invalid
 		if (!parsed.success) {
-			return [];
+			return null;
 		}
-		return this.next
-			.autocomplete(context, {
-				...args,
-				[this.name]: parsed.value,
-			}, rest)
-			.map(({ replaceValue, displayValue }) => ({
+
+		const nextResult = this.next.autocomplete(context, {
+			...args,
+			[this.name]: parsed.value,
+		}, rest);
+		return nextResult != null ? {
+			header: `<${this.name}> ${nextResult.header}`,
+			options: nextResult.options.map(({ replaceValue, displayValue }) => ({
 				replaceValue: (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) + ' ' + replaceValue,
 				displayValue,
-			}));
+			})),
+		} : null;
+
+	}
+
+	predictHeader(): string {
+		return `<${this.name}> ${this.next.predictHeader()}`;
 	}
 }

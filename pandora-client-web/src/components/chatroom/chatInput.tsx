@@ -384,17 +384,17 @@ function AutoCompleteHint(): ReactElement | null {
 		};
 	}, [autocompleteHint, setAutocompleteHint]);
 
-	if (!autocompleteHint || autocompleteHint.options.length === 0)
+	if (!autocompleteHint?.result || autocompleteHint.result.options.length === 0)
 		return null;
 
 	return (
 		<div className='autocomplete-hint'>
 			<div>
-				[autocomplete hint]
+				{ autocompleteHint.result.header }
 				<hr />
 				{
-					autocompleteHint.options.map((option, index) => (
-						<span key={ index } className={ classNames({ selected: index === autocompleteHint.index }) }>{option[1]}</span>
+					autocompleteHint.result.options.map((option, index) => (
+						<span key={ index } className={ classNames({ selected: index === autocompleteHint.index }) }>{option.displayValue}</span>
 					))
 				}
 			</div>

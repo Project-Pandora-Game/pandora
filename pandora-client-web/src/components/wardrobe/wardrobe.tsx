@@ -42,6 +42,8 @@ import { USER_DEBUG } from '../../config/Environment';
 import _ from 'lodash';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
+import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
+import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -78,7 +80,7 @@ const wardrobeContext = createContext({
 	actions: null as unknown as AppearanceActionContext,
 });
 
-function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode }): ReactElement {
+export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode }): ReactElement {
 	const appearance = useCharacterAppearanceItems(character);
 	const assetList = useObservable(GetAssetManager().assetList);
 
@@ -140,11 +142,7 @@ function Wardrobe(): ReactElement | null {
 					<div className='wardrobe-pane'>
 						<div className='wardrobe-ui'>
 							<WardrobePoseGui character={ character } />
-							<div className='inventoryView'>
-								<div className='center-flex flex-1'>
-									TODO
-								</div>
-							</div>
+							<WardrobeExpressionGui />
 						</div>
 					</div>
 				</Tab>
@@ -452,9 +450,58 @@ function WardrobeItemConfigMenu({
 					))
 				}
 			</FieldsetToggle>
-			<div className='center-flex flex-1'>
-				TODO
-			</div>
+			{
+				Array.from(item.modules.entries())
+					.map(([moduleName, m]) => (
+						<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
+							<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
+						</FieldsetToggle>
+					))
+			}
+		</div>
+	);
+}
+
+function WardrobeModuleConfig({ item, moduleName, m }: {
+	item: Item;
+	moduleName: string;
+	m: IItemModule;
+}): ReactElement {
+	return (
+		<>
+			{
+				m instanceof ItemModuleTyped ? <WardrobeModuleConfigTyped item={ item } moduleName={ moduleName } m={ m } /> :
+				'[ ERROR: UNKNOWN MODULE TYPE ]'
+			}
+		</>
+	);
+}
+
+function WardrobeModuleConfigTyped({ item, moduleName, m }: {
+	item: Item;
+	moduleName: string;
+	m: ItemModuleTyped
+}): ReactElement {
+	const { character } = useWardrobeContext();
+
+	return (
+		<div className='toolbar flex-row-wrap'>
+			{
+				m.config.variants.map((v) => (
+					<WardrobeActionButton action={ {
+						type: 'moduleAction',
+						target: character.data.id,
+						itemId: item.id,
+						module: moduleName,
+						action: {
+							moduleType: 'typed',
+							setVariant: v.id,
+						},
+					} } key={ v.id } className={ m.activeVariant.id === v.id ? 'selected' : '' }>
+						{ v.name }
+					</WardrobeActionButton>
+				))
+			}
 		</div>
 	);
 }
@@ -746,5 +793,26 @@ export function BoneRowElement({ bone, onChange, forcePose }: { bone: BoneState;
 				</Button>
 			</div>
 		</FieldsetToggle>
+	);
+}
+
+export function WardrobeExpressionGui(): ReactElement {
+	const { appearance } = useWardrobeContext();
+
+	return (
+		<div className='inventoryView'>
+			{
+				appearance
+					.flatMap((item) => (
+						Array.from(item.modules.entries())
+							.filter((m) => m[1].config.expression)
+							.map(([moduleName, m]) => (
+								<FieldsetToggle legend={ m.config.expression } key={ moduleName }>
+									<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
+								</FieldsetToggle>
+							))
+					))
+			}
+		</div>
 	);
 }

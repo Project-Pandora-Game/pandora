@@ -232,7 +232,7 @@ export class DraggableBone {
 			let bx = this.definition.x;
 			let by = this.definition.y;
 			if (this.definition.parent) {
-				[bx, by] = this.character.evalTransform([bx, by], [{ type: 'rotate', bone: this.definition.parent.name, value: this.definition.isMirror ? -1 : 1 }], this.definition.isMirror);
+				[bx, by] = this.character.evalTransform([bx, by], [{ type: 'rotate', bone: this.definition.parent.name, value: this.definition.isMirror ? -1 : 1 }], this.definition.isMirror, null);
 			}
 			let angle = GetAngle(x - bx, y - by);
 			if (this.definition.isMirror) {
@@ -265,7 +265,7 @@ export class DraggableBone {
 			let y = this.definition.y;
 			if (this.definition.parent) {
 				angle += this.character.getBoneLikeValue(this.definition.parent.name);
-				[x, y] = this.character.evalTransform([x, y], [{ type: 'rotate', bone: this.definition.parent.name, value: this.definition.isMirror ? -1 : 1 }], this.definition.isMirror);
+				[x, y] = this.character.evalTransform([x, y], [{ type: 'rotate', bone: this.definition.parent.name, value: this.definition.isMirror ? -1 : 1 }], this.definition.isMirror, null);
 			}
 			if (this.definition.isMirror) {
 				angle = 180 - angle;

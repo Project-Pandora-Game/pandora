@@ -1,16 +1,16 @@
 import type { ArrayCompressType } from '../../utility';
-import type { AtomicCondition, BoneType, Condition, CoordinatesCompressed, LayerImageOverride, LayerMirror, LayerPriority, PointDefinition, Size, TransformDefinition } from './graphics';
+import type { BoneType, Condition, ConditionOperator, CoordinatesCompressed, LayerImageOverride, LayerMirror, LayerPriority, PointDefinition, Size, TransformDefinition } from './graphics';
 
 export type SizeCompressed = ArrayCompressType<Size, ['width', 'height']>;
 
 export type RectangleCompressed = [...CoordinatesCompressed, ...SizeCompressed];
 
-export type AtomicConditionCompressed = ArrayCompressType<AtomicCondition, ['bone', 'operator', 'value']>;
+export type AtomicConditionCompressed = [string, ConditionOperator, number | string];
 
 export type ConditionCompressed = AtomicConditionCompressed[][];
 
 export function ExtractCondition(condition: ConditionCompressed): Condition {
-	return condition?.map((segment) => segment.map(([bone, operator, value]) => ({ bone, operator, value })));
+	return condition?.map((segment) => segment.map(([bone, operator, value]) => typeof value === 'number' ? ({ bone, operator, value }) : ({ module: bone, operator, value })));
 }
 
 export type TransformDefinitionCompressed =

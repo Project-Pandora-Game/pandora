@@ -28,7 +28,7 @@ export class CharacterRestrictionsManager {
 		}
 		this._items = items;
 		this._effects = items
-			.map((item) => item.asset.definition.effects)
+			.map((item) => item.getEffects())
 			.reduce(MergeEffects, EFFECTS_DEFAULT);
 
 		return this._effects;

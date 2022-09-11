@@ -1,4 +1,4 @@
-import { BoneName, CoordinatesCompressed, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { AtomicConditionBone, BoneName, CoordinatesCompressed, Item, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
 import type { LayerStateOverrides } from './def';
 import { Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
@@ -12,6 +12,7 @@ Mesh.BATCHABLE_SIZE = 1000000;
 
 export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharacter> extends Container {
 	protected readonly character: Character;
+	protected readonly item: Item | null;
 	protected readonly layer: AssetGraphicsLayer;
 	private _bones = new Set<string>();
 	private _imageBones = new Set<string>();
@@ -46,12 +47,13 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		this.addChild(this._result);
 	}
 
-	constructor(layer: AssetGraphicsLayer, character: Character) {
+	constructor(layer: AssetGraphicsLayer, character: Character, item: Item | null) {
 		super();
 		this.x = layer.definition.x;
 		this.y = layer.definition.y;
 		this.layer = layer;
 		this.character = character;
+		this.item = item;
 
 		this._calculatePoints();
 	}
@@ -126,7 +128,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 				setting = minBy(s.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0])?.[1] ?? setting;
 			}
 		}
-		const image = setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c)))?.image ?? setting.image;
+		const image = setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c, this.item)))?.image ?? setting.image;
 		if (image !== this._image) {
 			this._image = image;
 			this.getTexture(image).then((texture) => {
@@ -166,6 +168,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 				.concat(...(this.layer.definition.scaling?.stops.flatMap((stop) => stop[1].overrides) ?? []))
 				.flatMap((override) => override.condition)
 				.flat()
+				.filter((condition): condition is AtomicConditionBone => 'bone' in condition && condition.bone != null)
 				.map((condition) => condition.bone),
 		);
 
@@ -182,7 +185,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 
 	protected calculateVertices(normalize: boolean = false, valueOverrides?: Record<BoneName, number>): Float64Array {
 		const result = new Float64Array(this.points
-			.flatMap((point) => this.character.evalTransform(this.mirrorPoint(point.pos), point.transforms, point.mirror, valueOverrides)));
+			.flatMap((point) => this.character.evalTransform(this.mirrorPoint(point.pos), point.transforms, point.mirror, this.item, valueOverrides)));
 		if (normalize) {
 			const h = this.layer.definition.height;
 			const w = this.layer.definition.width;

@@ -1,6 +1,6 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
 import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
-import { AtomicCondition, CharacterSize, CharacterView, TransformDefinition } from 'pandora-common/dist/assets';
+import { AtomicCondition, CharacterSize, CharacterView, Item, TransformDefinition } from 'pandora-common/dist/assets';
 import { Container, IDestroyOptions } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
@@ -80,6 +80,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			result.push(
 				...graphics.allLayers.map<LayerState>((layer) => ({
 					layer,
+					item,
 					state: {
 						color: (
 							layer.definition.colorizationIndex != null &&
@@ -120,8 +121,8 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		return result.concat(toSort.filter((l) => !result.includes(l)));
 	}
 
-	protected createLayer(layer: AssetGraphicsLayer): GraphicsLayer {
-		return new GraphicsLayer(layer, this);
+	protected createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
+		return new GraphicsLayer(layer, this, item);
 	}
 
 	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
@@ -137,7 +138,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		this.sortLayers(this._layers.slice()).forEach((layerState, index) => {
 			let graphics = this._graphicsLayers.get(layerState);
 			if (!graphics) {
-				graphics = this.createLayer(layerState.layer);
+				graphics = this.createLayer(layerState.layer, layerState.item);
 				this._graphicsLayers.set(layerState, graphics);
 				this.addChild(graphics);
 				graphics.update({ state: layerState.state, force: true });
@@ -153,14 +154,27 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 	//#region Point transform
 	private readonly _evalCache = new Map<string, boolean>();
-	public evalCondition(condition: AtomicCondition): boolean {
-		const key = `${condition.bone}-${condition.operator}-${condition.value}`;
-		let result = this._evalCache.get(key);
-		if (result === undefined) {
-			const value = this.getBoneLikeValue(condition.bone);
-			this._evalCache.set(key, result = this._evalConditionCore(condition, value));
+	public evalCondition(condition: AtomicCondition, item: Item | null): boolean {
+		if ('module' in condition && condition.module != null) {
+			const m = item?.modules.get(condition.module);
+			// If there is no item or no module, the value is always not equal
+			if (!m) {
+				return condition.operator === '!=';
+			}
+			return m.evalCondition(condition.operator, condition.value);
 		}
-		return result;
+
+		if ('bone' in condition && condition.bone != null) {
+			const key = `${condition.bone}-${condition.operator}-${condition.value}`;
+			let result = this._evalCache.get(key);
+			if (result === undefined) {
+				const value = this.getBoneLikeValue(condition.bone);
+				this._evalCache.set(key, result = this._evalConditionCore(condition, value));
+			}
+			return result;
+		}
+
+		AssertNever();
 	}
 	private _evalConditionCore({ operator, value }: AtomicCondition, currentValue: number): boolean {
 		switch (operator) {
@@ -180,13 +194,13 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		AssertNever(operator);
 	}
 
-	public evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[], _mirror: boolean, valueOverrides?: Record<BoneName, number>): [number, number] {
+	public evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[], _mirror: boolean, item: Item | null, valueOverrides?: Record<BoneName, number>): [number, number] {
 		let [resX, resY] = [x, y];
 		for (const transform of transforms) {
 			const { type, bone: boneName, condition } = transform;
 			const bone = this.getBone(boneName);
 			const rotation = valueOverrides ? (valueOverrides[boneName] ?? 0) : bone.rotation;
-			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c))) {
+			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c, item))) {
 				continue;
 			}
 			switch (type) {

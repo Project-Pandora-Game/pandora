@@ -24,7 +24,7 @@ import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInp
 import { ChatParser } from './chatParser';
 import { ChatRoomScene } from './chatRoomScene';
 import './chatroom.scss';
-import { WardrobePoseGui } from '../wardrobe/wardrobe';
+import { WardrobeContextProvider, WardrobeExpressionGui, WardrobePoseGui } from '../wardrobe/wardrobe';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -60,6 +60,11 @@ export function Chatroom(): ReactElement {
 					</Tab>
 					<Tab name='Pose'>
 						<WardrobePoseGui character={ player } />
+					</Tab>
+					<Tab name='Expressions'>
+						<WardrobeContextProvider player={ player } character={ player }>
+							<WardrobeExpressionGui />
+						</WardrobeContextProvider>
 					</Tab>
 				</TabContainer>
 			</ChatInputContextProvider>

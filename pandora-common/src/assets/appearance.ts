@@ -11,6 +11,7 @@ import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState, BoneType } from './graphics';
 import { Item, ItemBundle, ItemBundleSchema, ItemId } from './item';
+import { ItemModuleAction } from './modules';
 
 export const BoneNameSchema = z.string();
 export type BoneName = z.infer<typeof BoneNameSchema>;
@@ -60,6 +61,7 @@ export interface AppearanceActionProcessingContext {
 	player?: CharacterId;
 	sourceCharacter?: CharacterId;
 	actionHandler?: AppearanceActionHandler;
+	dryRun?: boolean;
 }
 
 export class Appearance {
@@ -491,6 +493,38 @@ export class Appearance {
 		if (ctx.actionHandler) {
 			// TODO: Message to chat that item was colored
 		}
+	}
+
+	public moduleAction(id: ItemId, module: string, action: ItemModuleAction, ctx: AppearanceActionProcessingContext): boolean {
+		const itemIndex = this.items.findIndex((item) => item.id === id);
+		if (itemIndex < 0)
+			return false;
+
+		// Do change
+		const newItems = this.items.slice();
+		const resultItem = newItems[itemIndex].moduleAction(module, action);
+
+		if (!resultItem)
+			return false;
+
+		newItems[itemIndex] = resultItem;
+
+		if (!ValidateAppearanceItems(this.assetMananger, newItems))
+			return false;
+
+		if (ctx.dryRun)
+			return true;
+
+		this.items = newItems;
+		const poseChanged = this.enforcePoseLimits();
+		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
+
+		// Change message to chat
+		if (ctx.actionHandler) {
+			// TODO: Message to chat that item module was changed
+		}
+
+		return true;
 	}
 
 	public setPose(bone: string, value: number): void {

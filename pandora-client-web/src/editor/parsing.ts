@@ -22,8 +22,14 @@ function ParseFloat(input: string): number {
 	return result;
 }
 
-function SerializeAtomicCondition(condition: AtomicCondition): string {
-	return `${condition.bone}${condition.operator}${condition.value}`;
+export function SerializeAtomicCondition(condition: AtomicCondition): string {
+	if ('bone' in condition && condition.bone != null)
+		return `${condition.bone}${condition.operator}${condition.value}`;
+
+	if ('module' in condition && condition.module != null)
+		return `m_${condition.module}${condition.operator}${condition.value}`;
+
+	AssertNever();
 }
 
 function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondition {
@@ -31,13 +37,22 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 	if (!parsed) {
 		throw new Error(`Failed to parse condition '${input}'`);
 	}
-	if (!validBones.includes(parsed[1])) {
-		throw new Error(`Unknown bone in condition '${input}'`);
-	}
 	if (!IsConditionOperator(parsed[2])) {
 		throw new Error(`Invalid operator in condition '${input}'`);
 	}
+
+	if (parsed[1].startsWith('m_')) {
+		return {
+			module: parsed[1].slice(2),
+			operator: parsed[2],
+			value: parsed[3],
+		};
+	}
+
 	const value = ParseFloat(parsed[3]);
+	if (!validBones.includes(parsed[1])) {
+		throw new Error(`Unknown bone in condition '${input}'`);
+	}
 	return {
 		bone: parsed[1],
 		operator: parsed[2],

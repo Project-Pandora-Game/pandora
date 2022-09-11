@@ -7,6 +7,7 @@ import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemIdSchema } from './item';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
+import { ItemModuleActionSchema } from './modules';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
@@ -56,6 +57,14 @@ export const AppearanceActionColor = z.object({
 	color: z.array(HexColorStringSchema),
 });
 
+export const AppearanceActionModuleAction = z.object({
+	type: z.literal('moduleAction'),
+	target: CharacterIdSchema,
+	itemId: ItemIdSchema,
+	module: z.string(),
+	action: ItemModuleActionSchema,
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
@@ -64,6 +73,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionSetView,
 	AppearanceActionMove,
 	AppearanceActionColor,
+	AppearanceActionModuleAction,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -97,6 +107,7 @@ export function DoAppearanceAction(
 		player: action.target,
 		sourceCharacter: context.player,
 		actionHandler: context.actionHandler,
+		dryRun,
 	};
 
 	switch (action.type) {
@@ -195,6 +206,21 @@ export function DoAppearanceAction(
 				targetAppearance.colorItem(action.itemId, action.color, processingContext);
 			}
 			return true;
+		}
+		// Module-specific action
+		case 'moduleAction': {
+			const item = targetAppearance.getItemById(action.itemId);
+			// Must result in valid appearance
+			if (!item)
+				return false;
+			// Player doing the action must be able to use their hands
+			if (!player.canUseHands())
+				return false;
+			// Bodyparts can only be changed on self
+			if (item.asset.definition.bodypart != null && context.player !== action.target)
+				return false;
+
+			return targetAppearance.moduleAction(action.itemId, action.module, action.action, processingContext);
 		}
 		default:
 			AssertNever(action);

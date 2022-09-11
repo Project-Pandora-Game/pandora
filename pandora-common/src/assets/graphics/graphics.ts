@@ -30,11 +30,22 @@ export const CONDITION_OPERATORS = ['=', '<', '<=', '>', '>=', '!='] as const;
 export const ConditionOperatorSchema = z.enum(CONDITION_OPERATORS);
 export type ConditionOperator = z.infer<typeof ConditionOperatorSchema>;
 
-export const AtomicConditionSchema = z.object({
+export const AtomicConditionBoneSchema = z.object({
 	bone: z.string(),
 	operator: ConditionOperatorSchema,
 	value: z.number(),
 });
+export type AtomicConditionBone = z.infer<typeof AtomicConditionBoneSchema>;
+export const AtomicConditionModuleSchema = z.object({
+	module: z.string(),
+	operator: ConditionOperatorSchema,
+	value: z.string(),
+});
+
+export const AtomicConditionSchema = z.union([
+	AtomicConditionBoneSchema,
+	AtomicConditionModuleSchema,
+]);
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
 
 export const ConditionSchema = z.array(z.array(AtomicConditionSchema));

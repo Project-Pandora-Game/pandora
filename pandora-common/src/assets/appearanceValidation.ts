@@ -1,6 +1,6 @@
 import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
 import { AssetManager } from './assetManager';
-import { AssetId } from './definitions';
+import { AssetDefinitionPoseLimits, AssetId } from './definitions';
 import { Item } from './item';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
@@ -19,55 +19,58 @@ export function AppearanceItemsFixBodypartOrder(assetMananger: AssetManager, ite
 		);
 }
 
+export type PoseLimitsResult = {
+	forcePose: Map<string, [number, number]>;
+	forceArms?: ArmsPose;
+} | null;
+
+export function MergePoseLimits(base: PoseLimitsResult, poseLimits: AssetDefinitionPoseLimits | undefined): PoseLimitsResult {
+	// If already invalid, then invalid
+	if (base === null)
+		return null;
+
+	if (!poseLimits)
+		return base;
+
+	if (poseLimits.forceArms != null) {
+		// Invalid combination of forceArms
+		if (base.forceArms != null && base.forceArms !== poseLimits.forceArms)
+			return null;
+		base.forceArms = poseLimits.forceArms;
+	}
+
+	if (poseLimits.forcePose != null) {
+		for (const [bone, value] of Object.entries(poseLimits.forcePose)) {
+			if (value == null)
+				continue;
+
+			const limit = typeof value === 'number' ? [value, value] : value;
+			let currentLimit = base.forcePose.get(bone) ?? [BONE_MIN, BONE_MAX];
+
+			currentLimit = [
+				Math.max(currentLimit[0], limit[0]),
+				Math.min(currentLimit[1], limit[1]),
+			];
+
+			// Invalid combination of forced bones
+			if (currentLimit[0] > currentLimit[1])
+				return null;
+
+			base.forcePose.set(bone, currentLimit);
+		}
+	}
+
+	return base;
+}
+
 /**
  * Calculates what pose is enforced by items
  * @param items - Items being worn
  * @returns The enforcement or `null` if the item combination is invalid
  */
-export function AppearanceItemsGetPoseLimits(items: AppearanceItems): {
-	forcePose: Map<string, [number, number]>;
-	forceArms?: ArmsPose;
-} | null {
-	const forcePose = new Map<string, [number, number]>();
-	let forceArms: ArmsPose | undefined;
-	for (const item of items) {
-		const poseLimits = item.asset.definition.poseLimits;
-		if (!poseLimits)
-			continue;
-
-		if (poseLimits.forceArms != null) {
-			// Invalid combination of forceArms
-			if (forceArms != null && forceArms !== poseLimits.forceArms)
-				return null;
-			forceArms = poseLimits.forceArms;
-		}
-
-		if (poseLimits.forcePose != null) {
-			for (const [bone, value] of Object.entries(poseLimits.forcePose)) {
-				if (value == null)
-					continue;
-
-				const limit = typeof value === 'number' ? [value, value] : value;
-				let currentLimit = forcePose.get(bone) ?? [BONE_MIN, BONE_MAX];
-
-				currentLimit = [
-					Math.max(currentLimit[0], limit[0]),
-					Math.min(currentLimit[1], limit[1]),
-				];
-
-				// Invalid combination of forced bones
-				if (currentLimit[0] > currentLimit[1])
-					return null;
-
-				forcePose.set(bone, currentLimit);
-			}
-		}
-	}
-
-	return {
-		forceArms,
-		forcePose,
-	};
+export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimitsResult {
+	return items
+		.reduce<PoseLimitsResult>((base, asset) => asset.applyPoseLimits(base), { forcePose: new Map<string, [number, number]>() });
 }
 
 /** Validates items prefix, ignoring required items */

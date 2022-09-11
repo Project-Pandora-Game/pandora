@@ -41,7 +41,10 @@ export type EffectsProperty = {
 	[e in EffectName]?: Exclude<EffectsDefinition[e], false | 0>;
 };
 
-export function MergeEffects(baseEffects: Readonly<EffectsDefinition>, add: Readonly<EffectsProperty> | undefined): EffectsDefinition {
+// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+type __satisfies__EffectsProperty = Satisfies<EffectsProperty, Partial<EffectsDefinition>>;
+
+export function MergeEffects(baseEffects: Readonly<EffectsDefinition>, add: Readonly<Partial<EffectsDefinition>> | undefined): EffectsDefinition {
 	if (!add)
 		return baseEffects;
 	const baseEffectsResult: Record<string, number | boolean> = { ...baseEffects };

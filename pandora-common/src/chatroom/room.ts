@@ -21,6 +21,10 @@ export type IChatRoomBaseInfo = {
 	maxUsers: number;
 };
 
+export type AppearanceActionRoomContext = {
+	features: readonly ChatRoomFeature[];
+};
+
 export const ChatRoomBaseInfoSchema = z.object({
 	name: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex),
 	description: z.string(),

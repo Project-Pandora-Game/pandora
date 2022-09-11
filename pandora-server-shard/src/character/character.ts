@@ -268,7 +268,7 @@ export class Character {
 		return {
 			player: this.id,
 			characters,
-			roomInventory: null,
+			room: this.room ? this.room.getAppearanceActionRoomContext() : null,
 			actionHandler: (message) => {
 				this.room?.handleAppearanceActionMessage(message);
 			},

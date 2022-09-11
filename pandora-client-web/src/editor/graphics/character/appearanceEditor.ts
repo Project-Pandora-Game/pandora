@@ -1,4 +1,4 @@
-import { Appearance, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, ItemId, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
+import { Appearance, AssetGraphicsDefinition, AssetId, CharacterSize, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
@@ -10,26 +10,7 @@ import { cloneDeep } from 'lodash';
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
 
 export class AppearanceEditor extends Appearance {
-
-	// Unrestricted adding and removing of items
-	public override allowCreateItem(id: ItemId, _asset: Asset): boolean {
-		return this.getItemById(id) === undefined;
-	}
-
-	public override allowRemoveItem(id: ItemId): boolean {
-		return this.getItemById(id) !== undefined;
-	}
-
-	public override allowMoveItem(id: ItemId, shift: number): boolean {
-		const items = this.getAllItems();
-		const currentPos = items.findIndex((item) => item.id === id);
-		const newPos = currentPos + shift;
-
-		if (currentPos < 0 || newPos < 0 || newPos >= items.length)
-			return false;
-
-		return true;
-	}
+	// Nothing
 }
 
 export class EditorAssetGraphics extends AssetGraphics {

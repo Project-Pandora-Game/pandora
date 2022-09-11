@@ -32,7 +32,7 @@ import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphicsScene';
-import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { useAppearanceActionRoomContext, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -83,6 +83,7 @@ const wardrobeContext = createContext({
 export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode }): ReactElement {
 	const appearance = useCharacterAppearanceItems(character);
 	const assetList = useObservable(GetAssetManager().assetList);
+	const roomContext = useAppearanceActionRoomContext();
 
 	const actions: AppearanceActionContext = useMemo(() => {
 		const characters = new Map<CharacterId, Appearance>();
@@ -91,9 +92,9 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 		return {
 			player: player.data.id,
 			characters,
-			roomInventory: null,
+			room: roomContext,
 		};
-	}, [character.appearance, character.data.id, player.appearance, player.data.id]);
+	}, [character.appearance, character.data.id, player.appearance, player.data.id, roomContext]);
 
 	const context = useMemo(() => ({
 		character,

@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize, AppearanceActionRoomContext } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 
@@ -59,6 +59,12 @@ export class Room extends ServerRoom<IShardClientBase> {
 
 	getInfo(): IChatRoomFullInfo {
 		return this.data;
+	}
+
+	public getAppearanceActionRoomContext(): AppearanceActionRoomContext {
+		return {
+			features: this.data.features,
+		};
 	}
 
 	getClientData(): IChatRoomClientData {
@@ -173,7 +179,7 @@ export class Room extends ServerRoom<IShardClientBase> {
 
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
 		// Handle speech muffling
-		const player = new CharacterRestrictionsManager(from.id, from.appearance);
+		const player = new CharacterRestrictionsManager(from.id, from.appearance, this.getAppearanceActionRoomContext());
 		const muffleStrength = player.getMouthMuffleStrength();
 		if (muffleStrength > 0) {
 			for (const message of messages) {

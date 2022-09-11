@@ -4,11 +4,17 @@ import type { Satisfies } from '../../utility';
 import type { EffectsDefinition } from '../effects';
 import { PoseLimitsResult } from '../appearanceValidation';
 import { ConditionOperator } from '../graphics';
+import { ItemInteractionType } from '../../character';
 
 export interface IModuleConfigCommon<Type extends string> {
 	type: Type;
 	/** The display name of this module */
 	name: string;
+	/**
+	 * The kind of interaction this module provides, affects prerequisites for changing it.
+	 * @default ItemInteractionType.MODIFY
+	 */
+	interactionType?: ItemInteractionType;
 	/** If this module is hoisted to expressions */
 	expression?: string;
 }

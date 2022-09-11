@@ -291,8 +291,8 @@ export class Appearance {
 		return pose;
 	}
 
-	public reloadAssetManager(assetManager: AssetManager, logger?: Logger) {
-		if (this.assetMananger === assetManager)
+	public reloadAssetManager(assetManager: AssetManager, logger?: Logger, force: boolean = false) {
+		if (this.assetMananger === assetManager && !force)
 			return;
 		const bundle = this.exportToBundle();
 		this.assetMananger = assetManager;

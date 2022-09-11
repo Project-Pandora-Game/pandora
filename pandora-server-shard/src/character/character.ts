@@ -109,8 +109,8 @@ export class Character {
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
 
-	public reloadAssetManager(manager: AssetManager) {
-		this.appearance.reloadAssetManager(manager, this.logger.prefixMessages('Appearance manager reload:'));
+	public reloadAssetManager(manager: AssetManager, force: boolean = false) {
+		this.appearance.reloadAssetManager(manager, this.logger.prefixMessages('Appearance manager reload:'), force);
 	}
 
 	public update(data: IShardCharacterDefinition) {

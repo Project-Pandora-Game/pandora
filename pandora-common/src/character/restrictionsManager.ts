@@ -2,7 +2,6 @@ import _ from 'lodash';
 import type { CharacterId } from '.';
 import { Asset, Item, ItemId } from '../assets';
 import type { Appearance } from '../assets/appearance';
-import type { Item } from '../assets/item';
 import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from '../assets/effects';
 import { AppearanceActionRoomContext } from '../chatroom';
 

@@ -24,7 +24,8 @@ export function StartHttpServer(): Promise<void> {
 	}
 
 	// Setup Express application
-	const expressApp = express();
+	const expressApp = express()
+		.disable('x-powered-by');;
 
 	// Setup HTTP(S) server
 	if (SERVER_HTTPS_CERT || SERVER_HTTPS_KEY) {

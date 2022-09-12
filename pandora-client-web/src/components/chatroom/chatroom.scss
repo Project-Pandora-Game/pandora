@@ -147,7 +147,9 @@
 		}
 
 		span {
-			&.selected {
+			cursor: pointer;
+
+			&:hover, &.selected {
 				background-color: #7e7eff54;
 			}
 		}

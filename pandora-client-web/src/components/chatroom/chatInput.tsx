@@ -401,8 +401,15 @@ function Modifiers({ scroll }: { scroll: () => void }): ReactElement {
 }
 
 function AutoCompleteHint(): ReactElement | null {
-	const { autocompleteHint } = useChatInput();
+	const { autocompleteHint, ref } = useChatInput();
 
+	const chatRoom = useChatroomRequired();
+	const sender = useChatRoomMessageSender();
+	const chatInput = useChatInput();
+	const { setAutocompleteHint } = chatInput;
+
+	const shardConnector = useShardConnector();
+	AssertNotNullable(shardConnector);
 	if (!autocompleteHint?.result)
 		return null;
 
@@ -416,7 +423,39 @@ function AutoCompleteHint(): ReactElement | null {
 							<hr />
 							{
 								autocompleteHint.result.options.map((option, index) => (
-									<span key={ index } className={ classNames({ selected: index === autocompleteHint.index }) }>{option.displayValue}</span>
+									<span key={ index }
+										className={ classNames({ selected: index === autocompleteHint.index }) }
+										onClick={ (ev) => {
+											const textarea = ref.current;
+											if (!textarea)
+												return;
+
+											ev.preventDefault();
+											ev.stopPropagation();
+
+											const inputPosition = textarea.selectionStart || textarea.value.length;
+											const input = option.replaceValue + ' ';
+
+											textarea.value = COMMAND_KEY + input + textarea.value.slice(inputPosition).trimStart();
+											textarea.focus();
+											textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
+
+											const autocompleteResult = CommandAutocomplete(input, {
+												shardConnector,
+												chatRoom,
+												messageSender: sender,
+												inputHandlerContext: chatInput,
+											});
+
+											setAutocompleteHint({
+												replace: textarea.value,
+												result: autocompleteResult,
+												index: null,
+											});
+										} }
+									>
+										{option.displayValue}
+									</span>
 								))
 							}
 						</>

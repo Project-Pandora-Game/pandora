@@ -130,8 +130,6 @@ export function ChatInputArea({ messagesDiv, scroll }: { messagesDiv: RefObject<
 }
 
 function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> }, ref: ForwardedRef<HTMLTextAreaElement>) {
-	const currentTarget = useRef<CharacterId | undefined>();
-	const lastStatus = useRef<IChatRoomStatus>('none');
 	const lastInput = useRef('');
 	const timeout = useRef<number>();
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
@@ -143,20 +141,12 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
 
-	const sendStatus = useEvent((status: IChatRoomStatus) => {
-		setPlayerStatus(status, currentTarget.current);
-		lastStatus.current = status;
-	});
-
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
 			clearTimeout(timeout.current);
 			timeout.current = 0;
 		}
-		if (lastStatus.current === 'none') {
-			return;
-		}
-		sendStatus('none');
+		setPlayerStatus('none');
 	});
 
 	const updateCommandHelp = useEvent((textarea: HTMLTextAreaElement) => {
@@ -306,12 +296,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			return;
 		}
 
-		const lastTarget = currentTarget.current;
-		currentTarget.current = nextStatus.target;
-
-		if (nextStatus.status !== lastStatus.current || nextStatus.target !== lastTarget) {
-			sendStatus(nextStatus.status);
-		}
+		setPlayerStatus(nextStatus.status, nextStatus.target);
 
 		if (timeout.current) {
 			clearTimeout(timeout.current);

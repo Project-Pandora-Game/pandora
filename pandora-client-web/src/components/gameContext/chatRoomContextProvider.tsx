@@ -347,6 +347,9 @@ export class ChatRoom extends TypedEventEmitter<{
 
 	//#endregion Handler
 
+	private _indicatorStatus: IChatRoomStatus = 'none';
+	private _indicatorTarget: CharacterId | undefined;
+
 	public setPlayerStatus(status: IChatRoomStatus, target?: CharacterId): void {
 		const id = this.playerId;
 		if (id && this._status.get(id) !== status) {
@@ -359,7 +362,11 @@ export class ChatRoom extends TypedEventEmitter<{
 			}
 			this.status.value = chars;
 		}
-		this._shard.sendMessage('chatRoomStatus', { status, target });
+		if (this._indicatorStatus !== status || this._indicatorTarget !== target) {
+			this._indicatorStatus = status;
+			this._indicatorTarget = target;
+			this._shard.sendMessage('chatRoomStatus', { status, target });
+		}
 	}
 
 	public getStatus(id: CharacterId): IChatRoomStatus {
@@ -509,7 +516,7 @@ export function useChatRoomData(): IChatRoomClientData | null {
 
 export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {
 	const context = useChatroomRequired();
-	return useCallback((status: IChatRoomStatus) => context.setPlayerStatus(status), [context]);
+	return useCallback((status: IChatRoomStatus, target?: CharacterId) => context.setPlayerStatus(status, target), [context]);
 }
 
 export function useChatRoomStatus(): { data: ICharacterRoomData, status: IChatRoomStatus; }[] {

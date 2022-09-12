@@ -227,6 +227,7 @@ $header-height: 2em;
 			&.pose-unavailable {
 				background-color: $grey-darker;
 				color: $grey-mid;
+				opacity: 40%;
 			}
 		}
 	}

@@ -222,7 +222,13 @@ export class Room {
 	}
 
 	public isAdmin(character: Character): boolean {
-		return this.config.admin.includes(character.account.id);
+		if (this.config.admin.includes(character.account.id))
+			return true;
+
+		if (this.config.development?.autoAdmin && character.account.roles.isAuthorized('developer'))
+			return true;
+
+		return false;
 	}
 
 	public addCharacter(character: Character, sendEnterMessage: boolean = true): void {

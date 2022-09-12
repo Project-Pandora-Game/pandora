@@ -1,4 +1,4 @@
-import { Application, Container, InteractionManager, Sprite, Texture } from 'pixi.js';
+import { Application, Container, Filter, InteractionManager, Sprite, Texture } from 'pixi.js';
 import * as PixiViewport from 'pixi-viewport';
 import { useRef, useEffect, useLayoutEffect } from 'react';
 import { TypedEventEmitter } from '../event';
@@ -13,6 +13,7 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	readonly container: PixiViewport.Viewport;
 	private element: HTMLElement | undefined;
 	private readonly resizeObserver: ResizeObserver;
+	protected backgroundFilters: Filter[] = [];
 
 	get width(): number {
 		return this._app.renderer.width;
@@ -86,6 +87,13 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		this.container.removeChild(container);
 	}
 
+	setBackgroundFilters(filters: Filter[]) {
+		if (this._backgroundSprite) {
+			this._backgroundSprite.filters = filters;
+		}
+		this.backgroundFilters = filters;
+	}
+
 	private _background = '';
 	private _backgroundSprite?: Sprite;
 	get background(): string {
@@ -108,34 +116,29 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 			this._background = data;
 			const img = new Image();
 			img.src = data;
-			const texture = Texture.from(img);
-			this._backgroundSprite = this.add(new Sprite(texture), -1000);
-			if (width) {
-				this._backgroundSprite.width = width;
-			}
-			if (height) {
-				this._backgroundSprite.height = height;
-			}
-			this._app.renderer.backgroundColor = 0x000000;
-			this._app.renderer.backgroundAlpha = 1;
+			this._setBackgroundTexture(Texture.from(img), width, height);
 		} else if (/^https?:\/\/.+$/i.test(data)) {
 			this._background = data;
 			(async () => {
-				const texture = await Texture.fromURL(data);
-				this._backgroundSprite = this.add(new Sprite(texture), -1000);
-				if (width) {
-					this._backgroundSprite.width = width;
-				}
-				if (height) {
-					this._backgroundSprite.height = height;
-				}
-				this._app.renderer.backgroundColor = 0x000000;
-				this._app.renderer.backgroundAlpha = 1;
+				this._setBackgroundTexture(await Texture.fromURL(data), width, height);
 			})().catch(() => { /** */ });
 		} else {
 			// eslint-disable-next-line no-console
 			console.log('Invalid background data: ' + data);
 		}
+	}
+
+	private _setBackgroundTexture(texture: Texture, width?: number, height?: number) {
+		this._backgroundSprite = this.add(new Sprite(texture), -1000);
+		this._backgroundSprite.filters = this.backgroundFilters;
+		if (width) {
+			this._backgroundSprite.width = width;
+		}
+		if (height) {
+			this._backgroundSprite.height = height;
+		}
+		this._app.renderer.backgroundColor = 0x000000;
+		this._app.renderer.backgroundAlpha = 1;
 	}
 }
 

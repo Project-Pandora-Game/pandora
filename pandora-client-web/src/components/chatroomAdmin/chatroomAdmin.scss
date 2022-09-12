@@ -19,6 +19,12 @@
 		}
 	}
 
+	.input-line {
+		@include flex(row);
+		gap: 0.5em;
+		width: 100%;
+	}
+
 	.row-half {
 		display: grid;
 		grid-template-columns: 1fr 1fr;

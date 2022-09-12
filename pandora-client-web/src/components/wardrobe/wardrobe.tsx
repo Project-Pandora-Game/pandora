@@ -4,10 +4,16 @@ import {
 	Appearance,
 	AppearanceAction,
 	AppearanceActionContext,
+	AppearanceItems,
+	AppearanceItemsGetPoseLimits,
 	ArmsPose,
+	AssertNotNullable,
 	Asset,
+	AssetsPosePresets,
 	BoneName,
 	BoneState,
+	BONE_MAX,
+	BONE_MIN,
 	CharacterId,
 	CharacterView,
 	DoAppearanceAction,
@@ -19,9 +25,9 @@ import {
 	ItemId,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
+import { Character, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterRestrictionsManager } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -35,6 +41,7 @@ import { Button } from '../common/Button/Button';
 import { USER_DEBUG } from '../../config/Environment';
 import _ from 'lodash';
 import { CommonProps } from '../../common/reactTypes';
+import { useEvent } from '../../common/useEvent';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state;
@@ -113,6 +120,7 @@ const scene = new GraphicsScene();
 function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
 	const ref = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
+	const navigate = useNavigate();
 
 	return (
 		<div className='wardrobe'>
@@ -147,6 +155,7 @@ function Wardrobe(): ReactElement | null {
 						</div>
 					</div>
 				</Tab>
+				<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
 			</TabContainer>
 		</div>
 	);
@@ -381,6 +390,9 @@ function WardrobeItemConfigMenu({
 }): ReactElement {
 	const { character } = useWardrobeContext();
 	const shardConnector = useShardConnector();
+	const player = usePlayer();
+	AssertNotNullable(player);
+	const canUseHands = useCharacterRestrictionsManager(player, (manager) => manager.canUseHands());
 
 	return (
 		<div className='inventoryView'>
@@ -422,6 +434,7 @@ function WardrobeItemConfigMenu({
 								initialValue={ item.color[colorPartIndex] ?? colorPart.default }
 								resetValue={ colorPart.default }
 								throttle={ 100 }
+								disabled={ !canUseHands }
 								onChange={ (color) => {
 									if (shardConnector) {
 										const newColor = item.color.slice();
@@ -446,11 +459,12 @@ function WardrobeItemConfigMenu({
 	);
 }
 
-function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 0 }: {
+function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 0, disabled = true }: {
 	initialValue: HexColorString;
 	resetValue?: HexColorString;
 	onChange?: (value: HexColorString) => void;
 	throttle?: number;
+	disabled?: boolean;
 }): ReactElement {
 	const [input, setInput] = useState<string>(initialValue.toUpperCase());
 
@@ -468,10 +482,10 @@ function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 
 
 	return (
 		<>
-			<input type='text' value={ input } maxLength={ 7 } onChange={ (ev) => {
+			<input type='text' value={ input } disabled={ disabled } maxLength={ 7 } onChange={ (ev) => {
 				changeCallback(ev.target.value);
 			} } />
-			<input type='color' value={ input } onChange={ (ev) => {
+			<input type='color' value={ input } disabled={ disabled } onChange={ (ev) => {
 				changeCallback(ev.target.value);
 			} } />
 			{
@@ -520,6 +534,80 @@ function WardrobeBodySizeEditor(): ReactElement {
 	);
 }
 
+type AssetsPosePreset = AssetsPosePresets[number]['poses'][number];
+type CheckedPosePreset = {
+	active: boolean;
+	available: boolean;
+	name: string;
+	pose: Partial<Record<BoneName, number>>;
+	armsPose?: ArmsPose;
+};
+type CheckedAssetsPosePresets = {
+	category: string;
+	poses: CheckedPosePreset[];
+}[];
+
+function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: ArmsPose): {
+	poses: CheckedAssetsPosePresets;
+	forcePose?: Map<string, [number, number]>;
+	forceArms?: ArmsPose;
+} {
+	const presets = GetAssetManager().getPosePresets();
+	const limits = AppearanceItemsGetPoseLimits(items) || { forceArms: undefined, forcePose: undefined };
+	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
+
+	const isAvailable = ({ pose, armsPose }: AssetsPosePreset) => {
+		if (armsPose !== undefined && limits.forceArms !== undefined && armsPose !== limits.forceArms)
+			return false;
+
+		if (!limits.forcePose)
+			return true;
+
+		for (const [boneName, value] of Object.entries(pose)) {
+			if (value === undefined)
+				continue;
+
+			const limit = limits.forcePose.get(boneName);
+			if (!limit)
+				continue;
+
+			if (value < limit[0] || value > limit[1])
+				return false;
+		}
+
+		return true;
+	};
+
+	const isActive = (preset: AssetsPosePreset) => {
+		if (preset.armsPose !== undefined && preset.armsPose !== arms)
+			return false;
+
+		for (const [boneName, value] of Object.entries(preset.pose)) {
+			if (value === undefined)
+				continue;
+
+			if (bones.get(boneName) !== value)
+				return false;
+		}
+
+		return true;
+	};
+
+	const poses = presets.map<CheckedAssetsPosePresets[number]>((preset) => ({
+		category: preset.category,
+		poses: preset.poses.map((pose) => {
+			const available = isAvailable(pose);
+			return {
+				...pose,
+				active: available && isActive(pose),
+				available,
+			};
+		}),
+	}));
+
+	return { poses, ...limits };
+}
+
 export function WardrobePoseGui({ character }: { character: Character }): ReactElement {
 	const shardConnector = useShardConnector();
 
@@ -535,7 +623,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 		}
 	}), () => character.appearance.getView());
 
-	const setPoseDirect = useCallback(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
+	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
 		if (shardConnector) {
 			shardConnector.sendMessage('appearanceAction', {
 				type: 'pose',
@@ -544,7 +632,9 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 				armsPose: armsPoseSet,
 			});
 		}
-	}, [shardConnector, character]);
+	});
+
+	const { poses, forceArms, forcePose } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), bones, armsPose), [character, bones, armsPose]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
@@ -557,6 +647,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 						id='back-view-toggle'
 						type='checkbox'
 						checked={ view === CharacterView.BACK }
+						disabled={ forceArms !== undefined }
 						onChange={ (e) => {
 							if (shardConnector) {
 								shardConnector.sendMessage('appearanceAction', {
@@ -569,20 +660,13 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 					/>
 				</div>
 				{
-					GetAssetManager().getPosePresets().map((poseCategory, poseCategoryIndex) => (
+					poses.map((poseCategory, poseCategoryIndex) => (
 						<React.Fragment key={ poseCategoryIndex }>
 							<h4>{ poseCategory.category }</h4>
 							<div className='pose-row'>
 								{
 									poseCategory.poses.map((pose, poseIndex) => (
-										<Button key={ poseIndex }
-											className='slim'
-											onClick={ () => {
-												setPose(pose);
-											} }
-										>
-											{ pose.name }
-										</Button>
+										<PoseButton key={ poseIndex } pose={ pose } setPose={ setPose } />
 									))
 								}
 							</div>
@@ -612,7 +696,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 							bones
 								.filter((bone) => bone.definition.type === 'pose')
 								.map((bone) => (
-									<BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => {
+									<BoneRowElement key={ bone.definition.name } bone={ bone } forcePose={ forcePose } onChange={ (value) => {
 										setPose({
 											pose: {
 												[bone.definition.name]: value,
@@ -627,26 +711,39 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 	);
 }
 
-export function BoneRowElement({ bone, onChange }: { bone: BoneState; onChange: (value: number) => void }) {
-	const name = bone.definition.name
+function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
+	const { name, available, active } = pose;
+	return (
+		<Button className={ classNames('slim', { ['pose-unavailable']: !available }) } disabled={ active || !available } onClick={ () => setPose(pose) }>
+			{ name }
+		</Button>
+	);
+}
+
+export function BoneRowElement({ bone, onChange, forcePose }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; }) {
+	const [min, max] = useMemo(() => forcePose?.get(bone.definition.name) ?? [BONE_MIN, BONE_MAX], [bone, forcePose]);
+
+	const name = useMemo(() => bone.definition.name
 		.replace(/^\w/, (c) => c.toUpperCase())
 		.replace(/_r$/, () => ' Right')
 		.replace(/_l$/, () => ' Left')
-		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
+		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase()), [bone]);
 
-	const onInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(value)) {
+		if (Number.isInteger(value) && value >= min && value <= max && value !== bone.rotation) {
 			onChange(value);
 		}
-	};
+	});
 
 	return (
 		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + bone.definition.name }>
 			<div className='bone-rotation'>
-				<input type='range' min='-180' max='180' step='1' value={ bone.rotation } onChange={ onInput } />
-				<input type='number' min='-180' max='180' step='1' value={ bone.rotation } onChange={ onInput } />
-				<Button className='slim' onClick={ () => onChange(0) }>↺</Button>
+				<input type='range' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInput } />
+				<input type='number' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInput } />
+				<Button className='slim' onClick={ () => onChange(0) } disabled={ bone.rotation === 0 || min > 0 || max < 0 }>
+					↺
+				</Button>
 			</div>
 		</FieldsetToggle>
 	);

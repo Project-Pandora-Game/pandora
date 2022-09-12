@@ -82,11 +82,18 @@ export class CommandRunnerArgParser<
 	}
 
 	private get preprocessor(): CommandStepPreparseProcessor {
-		return this.processor.preparse === 'all' ? (input) => ({ value: input, spacing: '', rest: '' }) :
-			this.processor.preparse === 'allTrimmed' ? (input) => ({ value: input.trim(), spacing: '', rest: '' }) :
-				this.processor.preparse === 'quotedArg' ? CommandParseQuotedString :
-					this.processor.preparse === 'quotedArgTrimmed' ? CommandParseQuotedStringTrim :
-						this.processor.preparse;
+		switch (this.processor.preparse) {
+			case 'all':
+				return (input) => ({ value: input, spacing: '', rest: '' });
+			case 'allTrimmed':
+				return (input) => ({ value: input.trim(), spacing: '', rest: '' });
+			case 'quotedArg':
+				return CommandParseQuotedString;
+			case 'quotedArgTrimmed':
+				return CommandParseQuotedStringTrim;
+			default:
+				return this.processor.preparse;
+		}
 	}
 
 	run(context: Context, args: EntryArguments, input: string): boolean {

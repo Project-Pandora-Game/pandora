@@ -1,6 +1,7 @@
 import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
 import type { ShardConnector } from '../../networking/shardConnector';
 import type { ChatRoom, IChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
+import type { IChatInputHandler } from './chatInput';
 import { COMMANDS } from './commands';
 
 export const COMMAND_KEY = '/';
@@ -9,6 +10,7 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 	shardConnector: ShardConnector;
 	chatRoom: ChatRoom;
 	messageSender: IChatRoomMessageSender;
+	inputHandlerContext: IChatInputHandler;
 }
 
 export type IClientCommand = {

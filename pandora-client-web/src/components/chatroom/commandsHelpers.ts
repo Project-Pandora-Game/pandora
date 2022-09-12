@@ -80,7 +80,8 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 		return characters
 			.filter((c) => c.data.name.toLowerCase().startsWith(selector.toLowerCase()))
 			.map((c) => ({
-				replaceValue: c.data.name,
+				// Use ID for autocomplete if there are multiple characters with matching name
+				replaceValue: characters.filter((otherChar) => otherChar.data.name.toLowerCase() === c.data.name.toLowerCase()).length > 1 ? c.data.id.slice(1) : c.data.name,
 				displayValue: `${c.data.name} (${c.data.id})`,
 			}));
 	},

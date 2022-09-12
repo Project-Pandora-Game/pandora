@@ -137,7 +137,8 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
 	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
-	const { target, editing, setEditing, setValue, setAutocompleteHint } = useChatInput();
+	const chatInput = useChatInput();
+	const { target, editing, setEditing, setValue, setAutocompleteHint } = chatInput;
 
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
@@ -171,6 +172,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 				shardConnector,
 				chatRoom,
 				messageSender: sender,
+				inputHandlerContext: chatInput,
 			});
 
 			setAutocompleteHint({
@@ -204,6 +206,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 						shardConnector,
 						chatRoom,
 						messageSender: sender,
+						inputHandlerContext: chatInput,
 					})) {
 						textarea.value = '';
 					}
@@ -247,6 +250,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 					shardConnector,
 					chatRoom,
 					messageSender: sender,
+					inputHandlerContext: chatInput,
 				});
 
 				const replacementStart = COMMAND_KEY + autocompleteResult.replace;

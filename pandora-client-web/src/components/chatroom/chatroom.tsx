@@ -316,6 +316,7 @@ function DisplayInfo({ message }: { message: IChatroomMessageProcessed; }): Reac
 				? <time>{ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)}` }</time>
 				: <time>{ time.toLocaleTimeString('en-IE').substring(0, 5) }</time> }
 			{ message.edited ? <span> [edited]</span> : null }
+			{ /* Space so copied text looks nicer */ ' ' }
 		</span>
 	);
 }

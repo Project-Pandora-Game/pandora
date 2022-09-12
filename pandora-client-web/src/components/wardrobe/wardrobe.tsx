@@ -556,7 +556,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	const limits = AppearanceItemsGetPoseLimits(items) || { forceArms: undefined, forcePose: undefined };
 	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
 
-	const isAbailable = ({ pose, armsPose }: AssetsPosePreset) => {
+	const isAvailable = ({ pose, armsPose }: AssetsPosePreset) => {
 		if (armsPose !== undefined && limits.forceArms !== undefined && armsPose !== limits.forceArms)
 			return false;
 
@@ -579,10 +579,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	};
 
 	const isActive = (preset: AssetsPosePreset) => {
-		if (preset.armsPose !== undefined) {
-			if (preset.armsPose !== arms)
-				return false;
-		} else if (arms === ArmsPose.BACK)
+		if (preset.armsPose !== undefined && preset.armsPose !== arms)
 			return false;
 
 		for (const [boneName, value] of Object.entries(preset.pose)) {
@@ -599,7 +596,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	const poses = presets.map<CheckedAssetsPosePresets[number]>((preset) => ({
 		category: preset.category,
 		poses: preset.poses.map((pose) => {
-			const available = isAbailable(pose);
+			const available = isAvailable(pose);
 			return {
 				...pose,
 				active: available && isActive(pose),
@@ -717,7 +714,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
 	const { name, available, active } = pose;
 	return (
-		<Button className={ classNames('slim', { ['pose-disabled']: !available }) } disabled={ active } onClick={ () => setPose(pose) }>
+		<Button className={ classNames('slim', { ['pose-unavailable']: !available }) } disabled={ active || !available } onClick={ () => setPose(pose) }>
 			{ name }
 		</Button>
 	);
@@ -739,13 +736,11 @@ export function BoneRowElement({ bone, onChange, forcePose }: { bone: BoneState;
 		}
 	});
 
-	const onInputThrottled = useMemo(() => _.throttle(onInput, 100), [onInput]);
-
 	return (
 		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + bone.definition.name }>
 			<div className='bone-rotation'>
-				<input type='range' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInputThrottled } />
-				<input type='number' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInputThrottled } />
+				<input type='range' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInput } />
+				<input type='number' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInput } />
 				<Button className='slim' onClick={ () => onChange(0) } disabled={ bone.rotation === 0 || min > 0 || max < 0 }>
 					↺
 				</Button>

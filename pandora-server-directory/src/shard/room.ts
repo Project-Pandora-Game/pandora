@@ -222,7 +222,13 @@ export class Room {
 	}
 
 	public isAdmin(character: Character): boolean {
-		return this.config.admin.includes(character.account.id);
+		if (this.config.admin.includes(character.account.id))
+			return true;
+
+		if (this.config.development?.autoAdmin && character.account.roles.isAuthorized('developer'))
+			return true;
+
+		return false;
 	}
 
 	public addCharacter(character: Character, sendEnterMessage: boolean = true): void {
@@ -250,12 +256,8 @@ export class Room {
 			});
 		}
 
-		if (this.config.development?.autoAdmin && character.account.roles.isAuthorized('developer')) {
-			this.update({ admin: [...this.config.admin, character.account.id] }, null);
-		} else {
-			this.shard.update('characters');
-			ConnectionManagerClient.onRoomListChange();
-		}
+		this.shard.update('characters');
+		ConnectionManagerClient.onRoomListChange();
 	}
 
 	public removeCharacter(character: Character, reason: IChatRoomLeaveReason): void {

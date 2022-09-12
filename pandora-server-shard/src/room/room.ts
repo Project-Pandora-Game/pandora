@@ -69,7 +69,13 @@ export class Room extends ServerRoom<IShardClientBase> {
 	}
 
 	public isAdmin(character: Character): boolean {
-		return this.data.admin.includes(character.accountId);
+		if (this.data.admin.includes(character.accountId))
+			return true;
+
+		if (this.data.development?.autoAdmin && character.isAuthorized('developer'))
+			return true;
+
+		return false;
 	}
 
 	updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {

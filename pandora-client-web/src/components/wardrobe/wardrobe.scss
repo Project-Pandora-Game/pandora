@@ -220,12 +220,14 @@ $header-height: 2em;
 		gap: 0.5em;
 		margin: 0 1em;
 
-		.Button.pose-disabled {
-			display: none;
-		}
-
 		.Button:disabled {
-			background-color: $grey-dark;
+			background-color: $grey-lighter;
+			color: $grey-darkest;
+
+			&.pose-unavailable {
+				background-color: $grey-darker;
+				color: $grey-mid;
+			}
 		}
 	}
 

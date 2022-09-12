@@ -8,6 +8,7 @@ import {
 	IDirectoryShardInfo,
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
+	IsAuthorized,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -99,7 +100,9 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 		return <Navigate to='/chatroom' />;
 	}
 
-	const isPlayerAdmin = creation || accountId && roomData?.admin.includes(accountId);
+	const isPlayerAdmin = creation
+		|| (accountId && roomData?.admin.includes(accountId))
+		|| (roomData?.development?.autoAdmin && IsAuthorized(currentAccount?.roles ?? {}, 'developer'));
 
 	const currentConfig: IChatRoomDirectoryConfig = {
 		...(roomData ?? DefaultRoomData(currentAccount)),

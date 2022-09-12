@@ -27,12 +27,12 @@ import {
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterRestrictionsManager } from '../../character/character';
+import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphicsScene';
-import { useAppearanceActionRoomContext, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { useAppearanceActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';

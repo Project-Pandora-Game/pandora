@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMounted } from '../../common/useMounted';
-import { GIT_COMMIT_HASH, NODE_ENV } from '../../config/Environment';
+import { GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment';
 import { Button } from '../common/Button/Button';
 import { Dialog, DialogCloseButton } from '../dialog/dialog';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
 
-const VERSION_CHECK_INTERVAL = 5 * 60_000; // 5 minutes
+// In debug mode 30 seconds, otherwise 5 minutes per new version check
+const VERSION_CHECK_INTERVAL = USER_DEBUG ? 30_000 : (5 * 60_000);
 
 export function VersionCheck() {
 	return NODE_ENV === 'production' ? <VersionCheckImpl /> : null;

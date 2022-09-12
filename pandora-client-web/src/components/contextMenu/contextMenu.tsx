@@ -79,7 +79,12 @@ export const ContextMenu = forwardRef<ContextMenuHandle, CommonProps>(ContextMen
 
 export function useContextMenu(): [RefObject<ContextMenuHandle>, (event: React.MouseEvent<HTMLDivElement>) => void, () => void] {
 	const ref = createRef<ContextMenuHandle>();
-	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => ref.current?.onContextMenu(event));
+	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => {
+		// Ignore custom context menu when holding shift
+		if (event.shiftKey)
+			return;
+		ref.current?.onContextMenu(event);
+	});
 	const close = useEvent(() => ref.current?.close());
 	return [ref, onContextMenu, close];
 }

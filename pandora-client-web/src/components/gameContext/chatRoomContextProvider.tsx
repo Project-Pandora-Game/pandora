@@ -20,7 +20,7 @@ export interface IChatRoomMessageSender {
 	sendMessage(message: string, options?: IMessageParseOptions): void;
 	deleteMessage(deleteId: number): void;
 	getMessageEditTimeout(id: number): number | undefined;
-	getMessageEdit(id: number): { text: string, target?: CharacterId } | undefined;
+	getMessageEdit(id: number): { text: string, target?: CharacterId; } | undefined;
 	getLastMessageEdit(): number | undefined;
 }
 
@@ -112,7 +112,7 @@ function ProcessMessage(
 }
 
 export class ChatRoom extends TypedEventEmitter<{
-	messageNotify: NotificationData
+	messageNotify: NotificationData;
 }> implements IChatRoomMessageSender {
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
 	public readonly data = new Observable<IChatRoomClientData | null>(null);
@@ -129,7 +129,12 @@ export class ChatRoom extends TypedEventEmitter<{
 	private readonly _restore = BrowserStorage.createSession<undefined | {
 		roomId: RoomId;
 		messages: readonly IChatroomMessageProcessed[];
-		sent: [number, { text: string; time: number; }][];
+		sent: [number, {
+			text: string;
+			time: number;
+			rawType?: 'chat' | 'ooc' | 'me' | 'emote';
+			target?: CharacterId;
+		}][];
 	}>('chatRoomRestore', undefined);
 
 	private _setRestore(roomId?: RoomId): void {
@@ -342,6 +347,9 @@ export class ChatRoom extends TypedEventEmitter<{
 
 	//#endregion Handler
 
+	private _indicatorStatus: IChatRoomStatus = 'none';
+	private _indicatorTarget: CharacterId | undefined;
+
 	public setPlayerStatus(status: IChatRoomStatus, target?: CharacterId): void {
 		const id = this.playerId;
 		if (id && this._status.get(id) !== status) {
@@ -354,7 +362,11 @@ export class ChatRoom extends TypedEventEmitter<{
 			}
 			this.status.value = chars;
 		}
-		this._shard.sendMessage('chatRoomStatus', { status, target });
+		if (this._indicatorStatus !== status || this._indicatorTarget !== target) {
+			this._indicatorStatus = status;
+			this._indicatorTarget = target;
+			this._shard.sendMessage('chatRoomStatus', { status, target });
+		}
 	}
 
 	public getStatus(id: CharacterId): IChatRoomStatus {
@@ -363,7 +375,12 @@ export class ChatRoom extends TypedEventEmitter<{
 
 	//#region MessageSender
 
-	private readonly _sent = new Map<number, { text: string; time: number; target?: CharacterId }>();
+	private readonly _sent = new Map<number, {
+		text: string;
+		time: number;
+		rawType?: 'chat' | 'ooc' | 'me' | 'emote';
+		target?: CharacterId;
+	}>();
 	public sendMessage(message: string, { editing, type, raw, target }: IMessageParseOptions = {}): void {
 		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
 			throw new Error('Shard is not connected');
@@ -373,13 +390,17 @@ export class ChatRoom extends TypedEventEmitter<{
 			if (!edit || edit.time + MESSAGE_EDIT_TIMOUT < Date.now()) {
 				throw new Error('Message not found');
 			}
+			if (edit.rawType) {
+				raw = true;
+				type = edit.rawType;
+			}
 		}
-		if (target === undefined) {
-			if (!this.characters.value.find((c) => c.data.id === this.playerId)) {
-				throw new Error('Target not in room');
+		if (target !== undefined) {
+			if (!this.characters.value.some((c) => c.data.id === target)) {
+				throw new Error('Target not found in the room');
 			}
 			if (target === this.playerId) {
-				throw new Error('Target is self');
+				throw new Error('Cannot send targeted message to yourself');
 			}
 			if (type === 'me' || type === 'emote') {
 				throw new Error('Emote and me messages cannot be sent to a specific target');
@@ -394,7 +415,12 @@ export class ChatRoom extends TypedEventEmitter<{
 			messages = ChatParser.parse(message, target);
 		}
 		const id = this._getNextMessageId();
-		this._sent.set(id, { text: message, time: Date.now(), target });
+		this._sent.set(id, {
+			text: message,
+			time: Date.now(),
+			rawType: raw ? type : undefined,
+			target,
+		});
 		if (editing !== undefined) {
 			this._sent.delete(editing);
 			this._shard.sendMessage('chatRoomMessage', { id, messages, editId: editing });
@@ -425,7 +451,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		return edit.time + MESSAGE_EDIT_TIMOUT - Date.now();
 	}
 
-	public getMessageEdit(id: number): { text: string, target?: CharacterId } | undefined {
+	public getMessageEdit(id: number): { text: string, target?: CharacterId; } | undefined {
 		const edit = this._sent.get(id);
 		if (!edit || edit.time + MESSAGE_EDIT_TIMOUT < Date.now()) {
 			return undefined;
@@ -457,11 +483,11 @@ export class ChatRoom extends TypedEventEmitter<{
 	//#endregion MessageSender
 }
 
-function useChatroom(): ChatRoom | null {
+export function useChatroom(): ChatRoom | null {
 	return useShardConnector()?.room ?? null;
 }
 
-function useChatroomRequired(): ChatRoom {
+export function useChatroomRequired(): ChatRoom {
 	const room = useChatroom();
 	if (!room) {
 		throw new Error('Attempt to access ChatRoom outside of context');
@@ -490,15 +516,15 @@ export function useChatRoomData(): IChatRoomClientData | null {
 
 export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {
 	const context = useChatroomRequired();
-	return useCallback((status: IChatRoomStatus) => context.setPlayerStatus(status), [context]);
+	return useCallback((status: IChatRoomStatus, target?: CharacterId) => context.setPlayerStatus(status, target), [context]);
 }
 
-export function useChatRoomStatus(): { data: ICharacterRoomData, status: IChatRoomStatus }[] {
+export function useChatRoomStatus(): { data: ICharacterRoomData, status: IChatRoomStatus; }[] {
 	const context = useChatroomRequired();
 	const characters = useObservable(context.characters);
 	const status = useObservable(context.status);
 	return useMemo(() => {
-		const result: { data: ICharacterRoomData, status: IChatRoomStatus }[] = [];
+		const result: { data: ICharacterRoomData, status: IChatRoomStatus; }[] = [];
 		for (const c of characters) {
 			if (status.has(c.data.id)) {
 				result.push({ data: c.data, status: context.getStatus(c.data.id) });

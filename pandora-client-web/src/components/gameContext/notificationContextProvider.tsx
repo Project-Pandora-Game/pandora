@@ -17,6 +17,7 @@ export interface NotificationData {
 export interface NotificationFullData extends NotificationData {
 	source: NotificationSource;
 	time: number;
+	alert: ReadonlySet<NotificationAlert>;
 }
 
 enum NotificationAlert {
@@ -37,6 +38,9 @@ class NotificationHandlerBase {
 	public get header(): ReadonlyObservable<readonly NotificationFullData[]> {
 		throw new Error('Not implemented');
 	}
+	public get title(): ReadonlyObservable<string> {
+		throw new Error('Not implemented');
+	}
 	public readonly supress = new Set<NotificationSource>();
 	public clearHeader() {
 		throw new Error('Not implemented');
@@ -55,10 +59,13 @@ class NotificationHandlerBase {
 	}
 }
 
+const BASE_TITLE = 'Pandora';
+
 class NotificationHandler extends NotificationHandlerBase {
 
+	private readonly _notifications = new Observable<readonly NotificationFullData[]>([]);
 	private readonly _header = new Observable<readonly NotificationFullData[]>([]);
-	private readonly _title = new Observable<string>('');
+	private readonly _title = new Observable<string>(BASE_TITLE);
 	private readonly _favico = new Observable<string>('');
 
 	constructor() {
@@ -70,10 +77,10 @@ class NotificationHandler extends NotificationHandlerBase {
 	}
 
 	public override get header(): ReadonlyObservable<readonly NotificationFullData[]> {
-		return this._header;
+		return this._notifications;
 	}
 
-	public get title(): ReadonlyObservable<string> {
+	public override get title(): ReadonlyObservable<string> {
 		return this._title;
 	}
 
@@ -82,7 +89,8 @@ class NotificationHandler extends NotificationHandlerBase {
 	}
 
 	public override clearHeader() {
-		this._header.value = [];
+		this._notifications.value = [];
+		this._updateNotifications();
 	}
 
 	public override rise(source: NotificationSource, data: NotificationData) {
@@ -90,42 +98,39 @@ class NotificationHandler extends NotificationHandlerBase {
 			return;
 		}
 		const { alert, audio } = this._getSettings(source);
-		const full: NotificationFullData = { source, ...data, time: Date.now() };
-		if (alert.has(NotificationAlert.HEADER)) {
-			this._riseHeader(full);
-		}
-		if (alert.has(NotificationAlert.TITLE)) {
-			this._riseTitle(full);
-		}
-		if (alert.has(NotificationAlert.FAVICO)) {
-			this._riseFavico(full);
-		}
+		const full: NotificationFullData = { source, ...data, time: Date.now(), alert };
+		this._notifications.value = [...this._notifications.value, full];
+		this._updateNotifications();
 		if (alert.has(NotificationAlert.POPUP)) {
 			this._risePopup(full, audio);
 		}
 	}
 
 	public override clear(clearSource: NotificationSource) {
-		this._header.value = this._header.value.filter(({ source }) => source !== clearSource);
+		this._notifications.value = this._notifications.value.filter(({ source }) => source !== clearSource);
+		this._updateNotifications();
 	}
 
 	private _getSettings(_source: NotificationSource): { alert: ReadonlySet<NotificationAlert>, audio: NotificationAudio } {
 		if (document.visibilityState === 'visible') {
 			return { alert: new Set([NotificationAlert.HEADER]), audio: NotificationAudio.NONE };
 		}
-		return { alert: new Set([NotificationAlert.HEADER, NotificationAlert.POPUP]), audio: NotificationAudio.ALWAYS };
+		return { alert: new Set([NotificationAlert.HEADER, NotificationAlert.TITLE, NotificationAlert.POPUP]), audio: NotificationAudio.ALWAYS };
 	}
 
-	private _riseHeader(data: NotificationFullData) {
-		this._header.value = [...this._header.value, data];
-	}
+	private _updateNotifications() {
+		const notifications = this._notifications.value;
 
-	private _riseTitle(_data: NotificationFullData) {
-		// TODO
-	}
+		// Header
+		this._header.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER));
 
-	private _riseFavico(_data: NotificationFullData) {
-		// TODO
+		// Title
+		const titleNotifications = notifications.filter((n) => n.alert.has(NotificationAlert.TITLE)).length;
+		this._title.value = titleNotifications > 0 ? `(${titleNotifications}) ${BASE_TITLE}` : BASE_TITLE;
+
+		// TODO: Favico
+		// const favicoNotifications = notifications.filter((n) => n.alert.has(NotificationAlert.FAVICO)).length;
+
 	}
 
 	private _risePopup(data: NotificationFullData, audio: NotificationAudio) {
@@ -184,9 +189,21 @@ export function NotificationContextProvider({ children }: { children: React.Reac
 	return (
 		<notificationContext.Provider value={ context }>
 			<VersionCheck />
+			<NotificationTitleUpdater />
 			{children}
 		</notificationContext.Provider>
 	);
+}
+
+function NotificationTitleUpdater(): null {
+	const context = useContext(notificationContext);
+	const title = useObservable(context.title);
+
+	useEffect(() => {
+		window.document.title = title;
+	}, [title]);
+
+	return null;
 }
 
 export function useNotification(source: NotificationSource): {

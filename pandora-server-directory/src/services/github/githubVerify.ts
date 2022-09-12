@@ -112,7 +112,7 @@ async function GitHubCheckSecret(octokit: Octokit, canRead: boolean = false): Pr
 
 export function GitHubVerifierAPI(): Router {
 	const router = Router();
-	router.use('callback', (req, res) => {
+	router.use('/callback', (req, res) => {
 		if (!GitHubVerifier.active) {
 			res.status(404).send('GitHub Verifier API is not attached').end();
 			return;

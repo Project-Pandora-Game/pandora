@@ -1,16 +1,18 @@
-import type { CharacterId, IChatRoomStatus, RoomId } from 'pandora-common';
+import { AssertNotNullable, CharacterId, IChatRoomStatus, RoomId } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
-import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
-import { COMMAND_KEY } from './commands';
+import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
 import { usePlayerId } from '../gameContext/playerContextProvider';
 import './chatroom.scss';
 import { BrowserStorage } from '../../browserStorage';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import classNames from 'classnames';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -19,6 +21,8 @@ export type IChatInputHandler = {
 	setTarget: (target: CharacterId | null) => void;
 	editing: number | null;
 	setEditing: (editing: number | null) => boolean;
+	autocompleteHint: AutocompleteDisplyData | null;
+	setAutocompleteHint: (hint: AutocompleteDisplyData | null) => void;
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
@@ -29,6 +33,8 @@ const chatInputContext = createContext<IChatInputHandler>({
 	setTarget: noop,
 	editing: null,
 	setEditing: () => false,
+	autocompleteHint: null,
+	setAutocompleteHint: noop,
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
@@ -42,6 +48,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
 	const [editing, setEditingState] = useState<number | null>(null);
+	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplyData | null>(null);
 	const characters = useChatRoomCharacters();
 	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
@@ -98,8 +105,10 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		},
 		editing,
 		setEditing,
+		autocompleteHint,
+		setAutocompleteHint,
 		ref,
-	}), [target, editing, setEditing, playerId, characters]);
+	}), [target, editing, setEditing, autocompleteHint, setAutocompleteHint, playerId, characters]);
 
 	return (
 		<chatInputContext.Provider value={ context }>
@@ -112,6 +121,7 @@ export function ChatInputArea({ messagesDiv, scroll }: { messagesDiv: RefObject<
 	const { ref } = useChatInput();
 	return (
 		<>
+			<AutoCompleteHint />
 			<TypingIndicator scroll={ scroll } />
 			<Modifiers scroll={ scroll } />
 			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
@@ -120,28 +130,49 @@ export function ChatInputArea({ messagesDiv, scroll }: { messagesDiv: RefObject<
 }
 
 function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> }, ref: ForwardedRef<HTMLTextAreaElement>) {
-	const currentTarget = useRef<CharacterId | undefined>();
-	const lastStatus = useRef<IChatRoomStatus>('none');
 	const lastInput = useRef('');
 	const timeout = useRef<number>();
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
+	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
-	const { target, editing, setEditing, setValue } = useChatInput();
+	const chatInput = useChatInput();
+	const { target, editing, setEditing, setValue, setAutocompleteHint } = chatInput;
 
-	const sendStatus = useEvent((status: IChatRoomStatus) => {
-		setPlayerStatus(status, currentTarget.current);
-		lastStatus.current = status;
-	});
+	const shardConnector = useShardConnector();
+	AssertNotNullable(shardConnector);
 
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
 			clearTimeout(timeout.current);
 			timeout.current = 0;
 		}
-		if (lastStatus.current === 'none') {
-			return;
+		setPlayerStatus('none');
+	});
+
+	const updateCommandHelp = useEvent((textarea: HTMLTextAreaElement) => {
+		let input = textarea.value;
+		if (
+			input.startsWith(COMMAND_KEY) &&
+			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
+			editing == null
+		) {
+			input = input.slice(1, textarea.selectionStart || textarea.value.length);
+
+			const autocompleteResult = CommandAutocomplete(input, {
+				shardConnector,
+				chatRoom,
+				messageSender: sender,
+				inputHandlerContext: chatInput,
+			});
+
+			setAutocompleteHint({
+				replace: textarea.value,
+				result: autocompleteResult,
+				index: null,
+			});
+		} else {
+			setAutocompleteHint(null);
 		}
-		sendStatus('none');
 	});
 
 	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -150,19 +181,80 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
-				// TODO ... all options
-				sender.sendMessage(textarea.value, {
-					target: target?.data.id,
-					editing: editing || undefined,
-				});
-				textarea.value = '';
-				setEditing(null);
+				setAutocompleteHint(null);
+				let input = textarea.value;
+				if (
+					input.startsWith(COMMAND_KEY) &&
+					!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
+					editing == null
+				) {
+					// Process command
+					if (RunCommand(input.slice(1), {
+						displayError(error) {
+							toast(error, TOAST_OPTIONS_ERROR);
+						},
+						shardConnector,
+						chatRoom,
+						messageSender: sender,
+						inputHandlerContext: chatInput,
+					})) {
+						textarea.value = '';
+					}
+				} else {
+					// Double command key escapes itself
+					if (input.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+						input = input.slice(1);
+					}
+					input = input.trim();
+					// Ignore empty input, unless editing
+					if (editing == null && !input) {
+						return;
+					}
+					// TODO ... all options
+					sender.sendMessage(input, {
+						target: target?.data.id,
+						editing: editing || undefined,
+					});
+					textarea.value = '';
+					setEditing(null);
+				}
 			} catch (error) {
 				if (error instanceof Error) {
 					toast(error.message, TOAST_OPTIONS_ERROR);
 				}
 				return;
 			}
+		}
+		if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+			ev.preventDefault();
+			ev.stopPropagation();
+			try {
+				// Process command
+				const inputPosition = textarea.selectionStart || textarea.value.length;
+				const input = textarea.value.slice(1, textarea.selectionStart);
+
+				const autocompleteResult = CommandAutocompleteCycle(input, {
+					displayError(error) {
+						toast(error, TOAST_OPTIONS_ERROR);
+					},
+					shardConnector,
+					chatRoom,
+					messageSender: sender,
+					inputHandlerContext: chatInput,
+				});
+
+				const replacementStart = COMMAND_KEY + autocompleteResult.replace;
+
+				textarea.value = replacementStart + textarea.value.slice(inputPosition).trimStart();
+				textarea.setSelectionRange(replacementStart.length, replacementStart.length, 'none');
+				setAutocompleteHint(autocompleteResult);
+
+			} catch (error) {
+				if (error instanceof Error) {
+					toast(error.message, TOAST_OPTIONS_ERROR);
+				}
+			}
+			return;
 		}
 		if (ev.key === 'ArrowUp' && !textarea.value.trim()) {
 			ev.preventDefault();
@@ -193,7 +285,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		InputResore.value = { input: value, roomId: InputResore.value.roomId };
 		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
 		const trimmed = value.trim();
-		if (trimmed.length > 0 && !trimmed.startsWith(COMMAND_KEY)) {
+		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY))) {
 			nextStatus = { status: target ? 'whisper' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
@@ -204,12 +296,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 			return;
 		}
 
-		const lastTarget = currentTarget.current;
-		currentTarget.current = nextStatus.target;
-
-		if (nextStatus.status !== lastStatus.current || nextStatus.target !== lastTarget) {
-			sendStatus(nextStatus.status);
-		}
+		setPlayerStatus(nextStatus.status, nextStatus.target);
 
 		if (timeout.current) {
 			clearTimeout(timeout.current);
@@ -218,9 +305,13 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		timeout.current = setTimeout(() => inputEnd(), 3_000);
 	});
 
+	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {
+		updateCommandHelp(ev.target);
+	});
+
 	useEffect(() => () => inputEnd(), [inputEnd]);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onBlur={ inputEnd } defaultValue={ InputResore.value.input } />;
+	return <textarea ref={ ref } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputResore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);
@@ -290,6 +381,71 @@ function Modifiers({ scroll }: { scroll: () => void }): ReactElement {
 					</Button>
 				</span>
 			) }
+		</div>
+	);
+}
+
+function AutoCompleteHint(): ReactElement | null {
+	const { autocompleteHint, ref } = useChatInput();
+
+	const chatRoom = useChatroomRequired();
+	const sender = useChatRoomMessageSender();
+	const chatInput = useChatInput();
+	const { setAutocompleteHint } = chatInput;
+
+	const shardConnector = useShardConnector();
+	AssertNotNullable(shardConnector);
+	if (!autocompleteHint?.result)
+		return null;
+
+	return (
+		<div className='autocomplete-hint'>
+			<div>
+				{ autocompleteHint.result.header }
+				{
+					autocompleteHint.result.options.length > 0 &&
+						<>
+							<hr />
+							{
+								autocompleteHint.result.options.map((option, index) => (
+									<span key={ index }
+										className={ classNames({ selected: index === autocompleteHint.index }) }
+										onClick={ (ev) => {
+											const textarea = ref.current;
+											if (!textarea)
+												return;
+
+											ev.preventDefault();
+											ev.stopPropagation();
+
+											const inputPosition = textarea.selectionStart || textarea.value.length;
+											const input = option.replaceValue + ' ';
+
+											textarea.value = COMMAND_KEY + input + textarea.value.slice(inputPosition).trimStart();
+											textarea.focus();
+											textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
+
+											const autocompleteResult = CommandAutocomplete(input, {
+												shardConnector,
+												chatRoom,
+												messageSender: sender,
+												inputHandlerContext: chatInput,
+											});
+
+											setAutocompleteHint({
+												replace: textarea.value,
+												result: autocompleteResult,
+												index: null,
+											});
+										} }
+									>
+										{option.displayValue}
+									</span>
+								))
+							}
+						</>
+				}
+			</div>
 		</div>
 	);
 }

@@ -647,7 +647,6 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 						id='back-view-toggle'
 						type='checkbox'
 						checked={ view === CharacterView.BACK }
-						disabled={ forceArms !== undefined }
 						onChange={ (e) => {
 							if (shardConnector) {
 								shardConnector.sendMessage('appearanceAction', {
@@ -681,6 +680,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 								id='arms-front-toggle'
 								type='checkbox'
 								checked={ armsPose === ArmsPose.FRONT }
+								disabled={ forceArms !== undefined }
 								onChange={ (e) => {
 									if (shardConnector) {
 										setPose({

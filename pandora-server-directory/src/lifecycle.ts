@@ -62,4 +62,8 @@ export function SetupSignalHandling(): void {
 		logger.info('Received SIGTERM');
 		void Stop();
 	});
+
+	process.on('exit', () => {
+		logger.alert('Stopped.');
+	});
 }

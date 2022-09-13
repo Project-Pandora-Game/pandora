@@ -5,4 +5,5 @@ export * from './asset';
 export * from './assetManager';
 export * from './definitions';
 export * from './item';
+export * from './modules';
 export * from './graphics';

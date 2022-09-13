@@ -11,6 +11,7 @@ import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState, BoneType } from './graphics';
 import { Item, ItemBundle, ItemBundleSchema, ItemId } from './item';
+import { ItemModuleAction } from './modules';
 
 export const BoneNameSchema = z.string();
 export type BoneName = z.infer<typeof BoneNameSchema>;
@@ -60,6 +61,7 @@ export interface AppearanceActionProcessingContext {
 	player?: CharacterId;
 	sourceCharacter?: CharacterId;
 	actionHandler?: AppearanceActionHandler;
+	dryRun?: boolean;
 }
 
 export class Appearance {
@@ -83,6 +85,10 @@ export class Appearance {
 			id,
 			asset: asset.id,
 		});
+	}
+
+	public spawnItem(id: ItemId, asset: Asset): Item {
+		return this.makeItem(id, asset, null);
 	}
 
 	public exportToBundle(): AppearanceBundle {
@@ -289,8 +295,8 @@ export class Appearance {
 		return pose;
 	}
 
-	public reloadAssetManager(assetManager: AssetManager, logger?: Logger) {
-		if (this.assetMananger === assetManager)
+	public reloadAssetManager(assetManager: AssetManager, logger?: Logger, force: boolean = false) {
+		if (this.assetMananger === assetManager && !force)
 			return;
 		const bundle = this.exportToBundle();
 		this.assetMananger = assetManager;
@@ -313,30 +319,12 @@ export class Appearance {
 		return this.items;
 	}
 
-	public allowCreateItem(id: ItemId, asset: Asset): boolean {
-		// Race condition prevention
-		if (this.getItemById(id))
+	public addItem(item: Item, ctx: AppearanceActionProcessingContext): boolean {
+		// Id must be unique
+		if (this.getItemById(item.id))
 			return false;
 
-		// Simulate change
-		const item = this.makeItem(id, asset, null);
-		let newItems = this.items;
-		// if this is a bodypart not allowing multiple do a swap instead
-		if (item.asset.definition.bodypart && this.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
-			newItems = newItems.filter((oldItem) => oldItem.asset === asset || oldItem.asset.definition.bodypart !== item.asset.definition.bodypart);
-		}
-		newItems = AppearanceItemsFixBodypartOrder(this.assetMananger, [...newItems, item]);
-
-		return ValidateAppearanceItems(this.assetMananger, newItems);
-	}
-
-	public createItem(id: ItemId, asset: Asset, ctx: AppearanceActionProcessingContext): Item {
-		if (!this.allowCreateItem(id, asset)) {
-			throw new Error('Attempt to create item while not allowed');
-		}
-
 		// Do change
-		const item = this.makeItem(id, asset, null);
 		let newItems = this.items.slice();
 		let removed: AppearanceItems = [];
 		// if this is a bodypart not allowing multiple do a swap instead
@@ -344,6 +332,13 @@ export class Appearance {
 			removed = _.remove(newItems, (oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
 		}
 		newItems = AppearanceItemsFixBodypartOrder(this.assetMananger, [...newItems, item]);
+
+		// Validate
+		if (!ValidateAppearanceItems(this.assetMananger, newItems))
+			return false;
+
+		if (ctx.dryRun)
+			return true;
 
 		this.items = newItems;
 		const poseChanged = this.enforcePoseLimits();
@@ -357,7 +352,7 @@ export class Appearance {
 					character: ctx.sourceCharacter,
 					targetCharacter: ctx.player,
 					item: {
-						assetId: asset.id,
+						assetId: item.asset.id,
 					},
 					itemPrevious: {
 						assetId: removed[0].asset.id,
@@ -369,34 +364,29 @@ export class Appearance {
 					character: ctx.sourceCharacter,
 					targetCharacter: ctx.player,
 					item: {
-						assetId: asset.id,
+						assetId: item.asset.id,
 					},
 				});
 			}
 		}
 
-		return item;
+		return true;
 	}
 
-	public allowRemoveItem(id: ItemId): boolean {
-		const item = this.getItemById(id);
-		if (!item)
+	public removeItem(id: ItemId, ctx: AppearanceActionProcessingContext): boolean {
+		if (!this.getItemById(id))
 			return false;
-
-		// Simulate change
-		const newItems = this.items.filter((i) => i.id !== id);
-
-		return ValidateAppearanceItems(this.assetMananger, newItems);
-	}
-
-	public removeItem(id: ItemId, ctx: AppearanceActionProcessingContext): void {
-		if (!this.allowRemoveItem(id)) {
-			throw new Error('Attempt to remove item while not allowed');
-		}
 
 		// Do change
 		const newItems = this.items.slice();
 		const removedItems = _.remove(newItems, (i) => i.id === id);
+
+		// Validate
+		if (!ValidateAppearanceItems(this.assetMananger, newItems))
+			return false;
+
+		if (ctx.dryRun)
+			return true;
 
 		this.items = newItems;
 		const poseChanged = this.enforcePoseLimits();
@@ -413,38 +403,28 @@ export class Appearance {
 				},
 			});
 		}
+
+		return true;
 	}
 
-	public allowMoveItem(id: ItemId, shift: number): boolean {
+	public moveItem(id: ItemId, shift: number, ctx: AppearanceActionProcessingContext): boolean {
 		const currentPos = this.items.findIndex((item) => item.id === id);
 		const newPos = currentPos + shift;
 
 		if (currentPos < 0 || newPos < 0 || newPos >= this.items.length)
 			return false;
 
-		// Simulate change
-		const newItems = this.items.slice();
-		const moved = newItems.splice(currentPos, 1);
-		newItems.splice(newPos, 0, ...moved);
-
-		return ValidateAppearanceItems(this.assetMananger, newItems);
-	}
-
-	public moveItem(id: ItemId, shift: number, ctx: AppearanceActionProcessingContext): void {
-		if (!this.allowMoveItem(id, shift)) {
-			throw new Error('Attempt to move item while not allowed');
-		}
-
-		const currentPos = this.items.findIndex((item) => item.id === id);
-		const newPos = currentPos + shift;
-
-		if (currentPos < 0 || newPos < 0 || newPos >= this.items.length)
-			throw new Error('Valid move outside of range');
-
 		// Do change
 		const newItems = this.items.slice();
 		const moved = newItems.splice(currentPos, 1);
 		newItems.splice(newPos, 0, ...moved);
+
+		// Validate
+		if (!ValidateAppearanceItems(this.assetMananger, newItems))
+			return false;
+
+		if (ctx.dryRun)
+			return true;
 
 		this.items = newItems;
 		const poseChanged = this.enforcePoseLimits();
@@ -454,34 +434,26 @@ export class Appearance {
 		if (ctx.actionHandler) {
 			// TODO: Message to chat that items were reordered
 		}
+
+		return true;
 	}
 
-	public allowColorItem(id: ItemId, color: readonly HexColorString[]): boolean {
+	public colorItem(id: ItemId, color: readonly HexColorString[], ctx: AppearanceActionProcessingContext): boolean {
 		const itemIndex = this.items.findIndex((item) => item.id === id);
 
 		if (itemIndex < 0)
 			return false;
 
-		// Simulate change
-		const newItems = this.items.slice();
-		newItems[itemIndex] = newItems[itemIndex].changeColor(color);
-
-		return ValidateAppearanceItems(this.assetMananger, newItems);
-	}
-
-	public colorItem(id: ItemId, color: readonly HexColorString[], ctx: AppearanceActionProcessingContext): void {
-		if (!this.allowColorItem(id, color)) {
-			throw new Error('Attempt to color item while not allowed');
-		}
-
-		const itemIndex = this.items.findIndex((item) => item.id === id);
-
-		if (itemIndex < 0)
-			throw new Error('Valid color of unknown item');
-
 		// Do change
 		const newItems = this.items.slice();
 		newItems[itemIndex] = newItems[itemIndex].changeColor(color);
+
+		// Validate
+		if (!ValidateAppearanceItems(this.assetMananger, newItems))
+			return false;
+
+		if (ctx.dryRun)
+			return true;
 
 		this.items = newItems;
 		const poseChanged = this.enforcePoseLimits();
@@ -491,6 +463,40 @@ export class Appearance {
 		if (ctx.actionHandler) {
 			// TODO: Message to chat that item was colored
 		}
+
+		return true;
+	}
+
+	public moduleAction(id: ItemId, module: string, action: ItemModuleAction, ctx: AppearanceActionProcessingContext): boolean {
+		const itemIndex = this.items.findIndex((item) => item.id === id);
+		if (itemIndex < 0)
+			return false;
+
+		// Do change
+		const newItems = this.items.slice();
+		const resultItem = newItems[itemIndex].moduleAction(module, action);
+
+		if (!resultItem)
+			return false;
+
+		newItems[itemIndex] = resultItem;
+
+		if (!ValidateAppearanceItems(this.assetMananger, newItems))
+			return false;
+
+		if (ctx.dryRun)
+			return true;
+
+		this.items = newItems;
+		const poseChanged = this.enforcePoseLimits();
+		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
+
+		// Change message to chat
+		if (ctx.actionHandler) {
+			// TODO: Message to chat that item module was changed
+		}
+
+		return true;
 	}
 
 	public setPose(bone: string, value: number): void {

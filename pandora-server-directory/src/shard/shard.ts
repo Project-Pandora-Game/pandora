@@ -80,7 +80,7 @@ export class Shard {
 
 		const accounts = new Map<number, Account>();
 		await Promise.all(
-			uniq(data.characters.map((c) => c.account))
+			uniq(data.characters.map((c) => c.account.id))
 				.map((id) => accountManager
 					.loadAccountById(id)
 					.then((account) => {
@@ -101,7 +101,7 @@ export class Shard {
 			// Skip characters that should be disconnected anyway
 			if (data.disconnectCharacters.includes(characterData.id))
 				continue;
-			const account = accounts.get(characterData.account);
+			const account = accounts.get(characterData.account.id);
 			const character = account?.characters.get(characterData.id);
 
 			if (!character ||
@@ -165,7 +165,13 @@ export class Shard {
 	}
 
 	private handleTimeout(): void {
-		ShardManager.deleteShard(this.id);
+		this.logger.info('Timed out');
+		this.stopping = true;
+		ConnectionManagerClient.onShardListChange();
+		ShardManager.deleteShard(this.id)
+			.catch((err) => {
+				this.logger.fatal('Failed to delete timed-out shard', err);
+			});
 	}
 
 	public async stop(): Promise<void> {
@@ -175,36 +181,45 @@ export class Shard {
 		if (this.shardConnection) {
 			await this.shardConnection.awaitResponse('stop', {});
 		}
-		if (this.features.includes('development')) {
-			await Sleep(5_000);
-		}
-		ShardManager.deleteShard(this.id);
+		await ShardManager.deleteShard(this.id);
 	}
 
-	public onDelete(attemptReassign: boolean): void {
+	public async onDelete(attemptReassign: boolean): Promise<void> {
 		this.stopping = true;
 		this.setConnection(null);
-		if (attemptReassign) {
-			[...this.rooms.values()].forEach((room) => {
-				ShardManager
-					.migrateRoom(room)
-					.catch((error) => {
-						this.logger.warning('Room migration failed', error);
-					});
-			});
-		}
-		[...this.characters.values()].forEach((character) => {
-			this.disconnectCharacter(character.id);
-			if (attemptReassign) {
-				character.connect().then(() => {
-					character.assignedConnection?.sendConnectionStateUpdate();
-				}, (err) => {
-					this.logger.fatal('Error reconnecting character to different shard', err);
-				});
+
+		// Development shards wait for another shard to be present before reassign (for up to 60 seconds)
+		if (attemptReassign && this.features.includes('development')) {
+			const end = Date.now() + 60_000;
+			while (Date.now() < end && ShardManager.listShads().length === 0 && !ShardManager.stopping) {
+				this.logger.verbose('Waiting for another shard before migrating...');
+				await Sleep(5_000);
 			}
-		});
+		}
+
+		if (attemptReassign) {
+			await Promise.all(
+				[...this.rooms.values()]
+					.map(async (room) => {
+						await ShardManager
+							.migrateRoom(room)
+							.catch((error) => {
+								this.logger.warning('Room migration failed', error);
+							});
+					}),
+			);
+		}
+		await Promise.all(
+			[...this.characters.values()]
+				.map(async (character) => {
+					this.disconnectCharacter(character.id);
+					if (attemptReassign) {
+						await character.connect();
+						character.assignedConnection?.sendConnectionStateUpdate();
+					}
+				}),
+		);
 		this.logger.info('Deleted');
-		ConnectionManagerClient.onShardListChange();
 	}
 
 	public updateInfo(info: IShardDirectoryArgument['shardRegister']): void {
@@ -333,7 +348,7 @@ export class Shard {
 		for (const [id, character] of this.characters) {
 			result.push({
 				id,
-				account: character.account.id,
+				account: character.account.getShardAccountDefinition(),
 				accessId: character.accessId,
 				connectSecret: character.connectSecret,
 				room: character.room ? character.room.id : null,

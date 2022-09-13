@@ -1,4 +1,4 @@
-import { AppearanceChangeType } from 'pandora-common';
+import { AppearanceChangeType, Item } from 'pandora-common';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { GraphicsLayer } from '../../../graphics/graphicsLayer';
@@ -13,8 +13,8 @@ export class ResultCharacter extends GraphicsCharacterEditor {
 		this._addBones();
 	}
 
-	protected override createLayer(layer: AssetGraphicsLayer): GraphicsLayer {
-		return new ResultLayer(layer, this);
+	protected override createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
+		return new ResultLayer(layer, this, item);
 	}
 
 	protected override update(changes: AppearanceChangeType[]): void {

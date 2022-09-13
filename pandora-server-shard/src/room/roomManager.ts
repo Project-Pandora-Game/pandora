@@ -49,4 +49,9 @@ export const RoomManager = new class RoomManager {
 		this._rooms.delete(id);
 		roomsMetric.set(this._rooms.size);
 	}
+
+	public removeAllRooms(): void {
+		Array.from(this._rooms.keys())
+			.map((id) => this.removeRoom(id));
+	}
 };

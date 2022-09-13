@@ -1,4 +1,4 @@
-import { AppearanceChangeType, LayerPriority } from 'pandora-common';
+import { AppearanceChangeType, Item, LayerPriority } from 'pandora-common';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { PRIORITY_ORDER_SPRITES } from '../../../graphics/def';
@@ -18,8 +18,8 @@ export class SetupCharacter extends GraphicsCharacterEditor {
 		return PRIORITY_ORDER_SPRITES;
 	}
 
-	protected override createLayer(layer: AssetGraphicsLayer): GraphicsLayer {
-		return new SetupLayer(layer, this);
+	protected override createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
+		return new SetupLayer(layer, this, item);
 	}
 
 	protected override update(changes: AppearanceChangeType[]): void {

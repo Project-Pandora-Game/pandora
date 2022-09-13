@@ -3,6 +3,7 @@ import { HexColorString, zTemplateString } from '../validation';
 import type { ArmsPose, BoneName } from './appearance';
 import type { EffectsProperty } from './effects';
 import type { BoneDefinitionCompressed } from './graphics';
+import { AssetModuleDefinition } from './modules';
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
@@ -51,6 +52,11 @@ export interface AssetDefinition<Bones extends BoneName = BoneName> {
 	 * @default true
 	 */
 	allowSelfEquip?: boolean;
+
+	/**
+	 * Modules this asset has
+	 */
+	modules?: Record<string, AssetModuleDefinition<Bones>>;
 
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;

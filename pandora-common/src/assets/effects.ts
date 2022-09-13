@@ -16,11 +16,18 @@ export type EffectsDefinition = {
 	 * - 10 = completely muffled
 	 */
 	muffleMouth: number;
+
+	/**
+	 * Prevents character from moving herself within the room, even if admin.
+	 * Moving others as admin is still possible.
+	 */
+	blockRoomMovement: boolean;
 };
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
 	blockHands: false,
 	muffleMouth: 0,
+	blockRoomMovement: false,
 };
 
 //#endregion
@@ -41,7 +48,10 @@ export type EffectsProperty = {
 	[e in EffectName]?: Exclude<EffectsDefinition[e], false | 0>;
 };
 
-export function MergeEffects(baseEffects: Readonly<EffectsDefinition>, add: Readonly<EffectsProperty> | undefined): EffectsDefinition {
+// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+type __satisfies__EffectsProperty = Satisfies<EffectsProperty, Partial<EffectsDefinition>>;
+
+export function MergeEffects(baseEffects: Readonly<EffectsDefinition>, add: Readonly<Partial<EffectsDefinition>> | undefined): EffectsDefinition {
 	if (!add)
 		return baseEffects;
 	const baseEffectsResult: Record<string, number | boolean> = { ...baseEffects };

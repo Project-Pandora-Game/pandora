@@ -1,4 +1,4 @@
-import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole } from 'pandora-common';
+import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -24,6 +24,7 @@ type ICharacterPrivateDataChange = Omit<ICharacterDataUpdate, keyof ICharacterPu
 
 export class Character {
 	private readonly data: Omit<ICharacterData, 'appearance'>;
+	public accountData: IShardAccountDefinition;
 	public connectSecret: string;
 
 	public readonly appearance: Appearance = new Appearance(assetManager);
@@ -89,7 +90,7 @@ export class Character {
 
 	public position: [number, number] = [CharacterSize.WIDTH / 2, 0];
 
-	constructor(data: ICharacterData, connectSecret: string, room: RoomId | null) {
+	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
 
@@ -99,6 +100,7 @@ export class Character {
 			...(this.data.settings ?? {}),
 		};
 
+		this.accountData = account;
 		this.connectSecret = connectSecret;
 		this.setConnection(null);
 		this.linkRoom(room);
@@ -109,17 +111,18 @@ export class Character {
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
 
-	public reloadAssetManager(manager: AssetManager) {
-		this.appearance.reloadAssetManager(manager, this.logger.prefixMessages('Appearance manager reload:'));
+	public reloadAssetManager(manager: AssetManager, force: boolean = false) {
+		this.appearance.reloadAssetManager(manager, this.logger.prefixMessages('Appearance manager reload:'), force);
 	}
 
 	public update(data: IShardCharacterDefinition) {
 		if (data.id !== this.data.id) {
 			throw new Error('Character update changes id');
 		}
-		if (data.account !== this.data.accountId) {
+		if (data.account.id !== this.data.accountId) {
 			throw new Error('Character update changes account');
 		}
+		this.accountData = data.account;
 		if (data.accessId !== this.data.accessId) {
 			this.logger.warning('Access id changed! This could be a bug');
 			this.data.accessId = data.accessId;
@@ -135,7 +138,7 @@ export class Character {
 	}
 
 	public isAuthorized(role: AccountRole): boolean {
-		return IsAuthorized(this.data.roles ?? {}, role);
+		return IsAuthorized(this.accountData.roles ?? {}, role);
 	}
 
 	private linkRoom(id: RoomId | null): void {
@@ -268,7 +271,7 @@ export class Character {
 		return {
 			player: this.id,
 			characters,
-			roomInventory: null,
+			room: this.room ? this.room.getAppearanceActionRoomContext() : null,
 			actionHandler: (message) => {
 				this.room?.handleAppearanceActionMessage(message);
 			},

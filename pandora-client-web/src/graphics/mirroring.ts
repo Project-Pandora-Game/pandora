@@ -11,10 +11,10 @@ export function MirrorCondition<T extends Maybe<Condition>>(condition: T): T {
 	if (!condition)
 		return condition;
 
-	return condition.map((cause) => cause.map(({ bone, ...rest }) => ({
-		...rest,
-		bone: MirrorBoneLike(bone),
-	}))) as T;
+	return condition.map((cause) => cause.map((c) => 'bone' in c && c.bone != null ? ({
+		...c,
+		bone: MirrorBoneLike(c.bone),
+	}) : c)) as T;
 }
 
 export function MirrorTransform(transform: TransformDefinition): TransformDefinition {

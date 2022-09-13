@@ -82,7 +82,7 @@ export class ResultLayer extends EditorLayer {
 		};
 
 		const vertices = this.points
-			.flatMap((point) => this.character.evalTransform(this.mirrorPoint(point.pos), point.transforms, point.mirror));
+			.flatMap((point) => this.character.evalTransform(this.mirrorPoint(point.pos), point.transforms, point.mirror, this.item));
 
 		for (let i = 0; i < vertices.length; i += 2) {
 			createPoint(vertices[i], vertices[i + 1]);

@@ -97,6 +97,10 @@ $header-height: 2em;
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
+
+	>.fieldset-toggle {
+		margin-top: 1em;
+	}
 }
 
 .inventoryViewItem {
@@ -181,9 +185,17 @@ $header-height: 2em;
 
 	background-color: $grey-lighter;
 
+	&.selected {
+		background-color: #97c;
+	}
+
 	&.allowed:hover {
 		cursor: pointer;
 		background-color: $grey-mid;
+
+		&.selected {
+			background-color: #86a;
+		}
 	}
 
 	&.blocked {

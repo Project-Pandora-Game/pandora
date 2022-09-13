@@ -8,7 +8,13 @@ export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
 export const RoomIdSchema = zTemplateString<`r${string}`>(z.string(), /^r/);
 export type RoomId = z.infer<typeof RoomIdSchema>;
 
-export type ChatRoomFeature = ShardFeature;
+export const ChatRoomFeatureSchema = z.enum([
+	// Allows characters inside to change their body
+	'allowBodyChanges',
+	// Enables development options for the room
+	'development',
+]);
+export type ChatRoomFeature = z.infer<typeof ChatRoomFeatureSchema>;
 
 export type IChatRoomBaseInfo = {
 	/** The name of the chat room */
@@ -19,6 +25,10 @@ export type IChatRoomBaseInfo = {
 	protected: boolean;
 	/** The maximum amount of users in the chat room */
 	maxUsers: number;
+};
+
+export type AppearanceActionRoomContext = {
+	features: readonly ChatRoomFeature[];
 };
 
 export const ChatRoomBaseInfoSchema = z.object({
@@ -58,7 +68,7 @@ export type IChatRoomDirectoryConfig = IChatRoomBaseInfo & {
 };
 
 export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.object({
-	features: z.array(ShardFeatureSchema),
+	features: z.array(ChatRoomFeatureSchema),
 	development: z.object({
 		shardId: z.string().optional(),
 		autoAdmin: z.boolean().optional(),

@@ -1,5 +1,5 @@
-import { Appearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, BoneState, CharacterRestrictionsManager, GetLogger, ICharacterPublicData, Item, Logger } from 'pandora-common';
-import { useMemo, useSyncExternalStore } from 'react';
+import { Appearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, BoneState, GetLogger, ICharacterPublicData, Item, Logger } from 'pandora-common';
+import { useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
 import type { PlayerCharacter } from './player';
@@ -71,15 +71,4 @@ export function useCharacterAppearancePose(character: AppearanceContainer): read
 			}
 		});
 	}, () => character.appearance.getFullPose());
-}
-
-export function useCharacterRestrictionsManager<T>(character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
-	const manager = useMemo(() => new CharacterRestrictionsManager(character.data.id, character.appearance), [character]);
-	return useSyncExternalStore((onChange) => {
-		return character.on('appearanceUpdate', (changed) => {
-			if (changed.includes('items')) {
-				onChange();
-			}
-		});
-	}, () => use(manager));
 }

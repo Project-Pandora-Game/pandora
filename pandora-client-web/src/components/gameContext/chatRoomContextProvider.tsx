@@ -1,6 +1,6 @@
-import type { CharacterId, ChatActionDictionaryMetaEntry, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
+import { AppearanceActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
@@ -512,6 +512,25 @@ export function useChatRoomCharacters(): (readonly Character<ICharacterRoomData>
 export function useChatRoomData(): IChatRoomClientData | null {
 	const context = useChatroom();
 	return useNullableObservable(context?.data);
+}
+
+export function useAppearanceActionRoomContext(): AppearanceActionRoomContext | null {
+	const data = useChatRoomData();
+	return useMemo(() => data ? ({
+		features: data.features,
+	}) : null, [data]);
+}
+
+export function useCharacterRestrictionsManager<T>(character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
+	const roomContext = useAppearanceActionRoomContext();
+	const manager = useMemo(() => new CharacterRestrictionsManager(character.data.id, character.appearance, roomContext), [character, roomContext]);
+	return useSyncExternalStore((onChange) => {
+		return character.on('appearanceUpdate', (changed) => {
+			if (changed.includes('items')) {
+				onChange();
+			}
+		});
+	}, () => use(manager));
 }
 
 export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {

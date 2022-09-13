@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
+import { Item, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 
 export type LayerStateOverrides = {
@@ -9,6 +9,7 @@ export type LayerStateOverrides = {
 
 export type LayerState = {
 	layer: AssetGraphicsLayer,
+	item: Item | null,
 	state?: LayerStateOverrides;
 };
 

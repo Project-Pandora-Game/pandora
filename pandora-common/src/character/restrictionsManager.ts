@@ -137,7 +137,7 @@ export class CharacterRestrictionsManager {
 		// Bodyparts have different handling (we already checked we can interact with the asset)
 		if (item.asset.definition.bodypart != null) {
 			// Not all rooms allow bodypart changes
-			if (this.room && !this.room.features.includes('development'))
+			if (this.room && !this.room.features.includes('allowBodyChanges'))
 				return false;
 			return true;
 		}

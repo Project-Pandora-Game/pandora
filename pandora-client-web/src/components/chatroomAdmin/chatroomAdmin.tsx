@@ -44,6 +44,10 @@ function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoo
 
 const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; }[] = [
 	{
+		id: 'allowBodyChanges',
+		name: 'Allow changes to character body',
+	},
+	{
 		id: 'development',
 		name: 'Development mode',
 	},
@@ -54,6 +58,8 @@ export function ChatroomCreate(): ReactElement {
 }
 
 export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {}): ReactElement | null {
+	const ID_PREFIX = 'chatroom-admin';
+
 	const navigate = useNavigate();
 	const currentAccount = useCurrentAccount();
 	const createRoom = useCreateRoom();
@@ -186,15 +192,21 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 					<ul>
 						{
 							CHATROOM_FEATURES.map((feature) => (
-								<li key={ feature.id }><input type='checkbox' checked={ currentConfig.features.includes(feature.id) } onChange={ (event) => {
-									if (event.target.checked) {
-										if (!currentConfig.features.includes(feature.id)) {
-											setRoomModifiedData({ features: [...currentConfig.features, feature.id] });
-										}
-									} else {
-										setRoomModifiedData({ features: currentConfig.features.filter((f) => f !== feature.id) });
-									}
-								} } />{ feature.name }
+								<li key={ feature.id }>
+									<input type='checkbox'
+										id={ `${ID_PREFIX}-feature-${feature.id}` }
+										checked={ currentConfig.features.includes(feature.id) }
+										onChange={ (event) => {
+											if (event.target.checked) {
+												if (!currentConfig.features.includes(feature.id)) {
+													setRoomModifiedData({ features: [...currentConfig.features, feature.id] });
+												}
+											} else {
+												setRoomModifiedData({ features: currentConfig.features.filter((f) => f !== feature.id) });
+											}
+										} }
+									/>
+									<label htmlFor={ `${ID_PREFIX}-feature-${feature.id}` }>{ feature.name }</label>
 								</li>
 							))
 						}

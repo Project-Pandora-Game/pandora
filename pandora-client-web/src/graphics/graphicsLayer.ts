@@ -58,7 +58,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		this._calculatePoints();
 	}
 
-	public update({ bones = new Set(), state, force }: { bones?: Set<string>, state?: LayerStateOverrides, force?: boolean; }): void {
+	public update({ bones = new Set(), state, force }: { bones?: ReadonlySet<string>, state?: LayerStateOverrides, force?: boolean; }): void {
 		let update = false;
 		if (Conjunction(this._bones, bones) || force) {
 			this.vertices = this.calculateVertices();

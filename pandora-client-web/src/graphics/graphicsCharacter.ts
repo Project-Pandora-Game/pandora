@@ -104,21 +104,16 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		AssertNever(armsPose);
 	}
 
-	protected sortLayers(toSort: LayerState[]): LayerState[] {
-		const sortOrder = this.getSortOrder();
-		const result: LayerState[] = [];
-		for (const priority of sortOrder) {
-			const temp = toSort.filter((l) => l.layer.definition.priority === priority);
-			if (PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority)) {
-				temp.reverse();
-			}
-			result.push(...temp);
-		}
+	protected sortLayers(states: LayerState[]): OrderedLayerState[] {
 		const view = this.appearanceContainer.appearance.getView();
+		const ordered = this.getSortOrder()
+			.map((priority) => new OrderedLayerState({ priority, view, states }));
+
 		if (view === CharacterView.BACK) {
-			result.reverse();
+			ordered.reverse();
 		}
-		return result.concat(toSort.filter((l) => !result.includes(l)));
+
+		return ordered;
 	}
 
 	protected createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
@@ -126,6 +121,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	}
 
 	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
+	private readonly _firstLayer = new OrderedLayerGraphics(this._getLayer.bind(this));
 	protected layerUpdate(bones: Set<string>): void {
 		this._evalCache.clear();
 		for (const [key, graphics] of this._graphicsLayers) {
@@ -135,21 +131,29 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 				graphics.destroy();
 			}
 		}
-		this.sortLayers(this._layers.slice()).forEach((layerState, index) => {
-			let graphics = this._graphicsLayers.get(layerState);
-			if (!graphics) {
-				graphics = this.createLayer(layerState.layer, layerState.item);
-				this._graphicsLayers.set(layerState, graphics);
-				this.addChild(graphics);
-				graphics.update({ state: layerState.state, force: true });
-			} else {
-				graphics.update({ state: layerState.state, bones });
+		let nextLayer = this._firstLayer.startUpdate();
+		this.sortLayers(this._layers.slice()).forEach((layerState) => {
+			nextLayer = nextLayer.update(layerState, bones);
+			if (nextLayer.parent !== this) {
+				this.addChild(nextLayer);
 			}
-			graphics.zIndex = index;
 		});
+		this._firstLayer.finishUpdate();
 		this.sortChildren();
 		const backView = this.appearanceContainer.appearance.getView() === CharacterView.BACK;
 		this.scale.x = backView ? -1 : 1;
+	}
+
+	private _getLayer(layerState: LayerState, bones: ReadonlySet<string>): GraphicsLayer {
+		let graphics = this._graphicsLayers.get(layerState);
+		if (!graphics) {
+			graphics = this.createLayer(layerState.layer, layerState.item);
+			this._graphicsLayers.set(layerState, graphics);
+			graphics.update({ state: layerState.state, force: true });
+		} else {
+			graphics.update({ state: layerState.state, bones });
+		}
+		return graphics;
 	}
 
 	//#region Point transform
@@ -234,5 +238,58 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			return this.appearanceContainer.appearance.getView() === CharacterView.BACK ? 1 : 0;
 		}
 		return this.getBone(name).rotation;
+	}
+}
+
+class OrderedLayerState {
+	private readonly _states: LayerState[] = [];
+
+	public get states(): readonly LayerState[] {
+		return this._states;
+	}
+
+	constructor({ priority, view, states }: { priority: LayerPriority, view: CharacterView, states: LayerState[]; }) {
+		this._states = states.filter((state) => state.layer.definition.priority === priority);
+		let reverse = view === CharacterView.BACK;
+		if (PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority)) {
+			reverse = !reverse;
+		}
+		if (reverse) {
+			this._states.reverse();
+		}
+	}
+}
+
+class OrderedLayerGraphics extends Container {
+	private readonly _getLayer: (state: LayerState, bones: ReadonlySet<string>) => GraphicsLayer;
+	private _next: OrderedLayerGraphics | null = null;
+	private _nextZIndex = 0;
+
+	constructor(getLayer: (state: LayerState, bones: ReadonlySet<string>) => GraphicsLayer) {
+		super();
+		this._getLayer = getLayer;
+	}
+
+	public update(ordered: OrderedLayerState, bones: ReadonlySet<string>): OrderedLayerGraphics {
+		for (const layerState of ordered.states) {
+			const graphics = this._getLayer(layerState, bones);
+			graphics.zIndex = this._nextZIndex++;
+			if (graphics.parent === this) {
+				continue;
+			}
+			graphics.parent?.removeChild(graphics);
+			this.addChild(graphics);
+		}
+		return this;
+	}
+
+	public startUpdate(): OrderedLayerGraphics {
+		this._nextZIndex = 0;
+		return this;
+	}
+
+	public finishUpdate(): void {
+		this.sortChildren();
+		this._next?.finishUpdate();
 	}
 }

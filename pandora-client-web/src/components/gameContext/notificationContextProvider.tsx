@@ -53,7 +53,7 @@ class NotificationHandlerBase {
 	}
 	public onWindowFocus(): void {
 		throw new Error('Not implemented');
-	};
+	}
 	public popupCheckEnabled(_userAction = false): Promise<boolean> {
 		throw new Error('Not implemented');
 	}
@@ -180,7 +180,7 @@ export function NotificationContextProvider({ children }: { children: React.Reac
 	useEffect(() => {
 		const listener = () => {
 			context.onWindowFocus();
-		}
+		};
 		window.addEventListener('focus', listener);
 		return () => window.removeEventListener('focus', listener);
 	}, [context]);

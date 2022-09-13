@@ -51,7 +51,7 @@ class NotificationHandlerBase {
 	public clear(_source: NotificationSource) {
 		throw new Error('Not implemented');
 	}
-	public onWindowFocus: (() => void) = () => {
+	public onWindowFocus(): void {
 		throw new Error('Not implemented');
 	};
 	public popupCheckEnabled(_userAction = false): Promise<boolean> {
@@ -67,14 +67,6 @@ class NotificationHandler extends NotificationHandlerBase {
 	private readonly _header = new Observable<readonly NotificationFullData[]>([]);
 	private readonly _title = new Observable<string>(BASE_TITLE);
 	private readonly _favico = new Observable<string>('');
-
-	constructor() {
-		super();
-		this.onWindowFocus = () => {
-			this._title.value = '';
-			this._favico.value = '';
-		};
-	}
 
 	public override get header(): ReadonlyObservable<readonly NotificationFullData[]> {
 		return this._notifications;
@@ -109,6 +101,10 @@ class NotificationHandler extends NotificationHandlerBase {
 	public override clear(clearSource: NotificationSource) {
 		this._notifications.value = this._notifications.value.filter(({ source }) => source !== clearSource);
 		this._updateNotifications();
+	}
+
+	public override onWindowFocus(): void {
+		// NOOP
 	}
 
 	private _getSettings(_source: NotificationSource): { alert: ReadonlySet<NotificationAlert>, audio: NotificationAudio } {
@@ -182,9 +178,12 @@ export function NotificationContextProvider({ children }: { children: React.Reac
 	useDebugExpose('notificationHandler', context);
 
 	useEffect(() => {
-		window.addEventListener('focus', context.onWindowFocus);
-		return () => window.removeEventListener('focus', context.onWindowFocus);
-	}, [context.onWindowFocus]);
+		const listener = () => {
+			context.onWindowFocus();
+		}
+		window.addEventListener('focus', listener);
+		return () => window.removeEventListener('focus', listener);
+	}, [context]);
 
 	return (
 		<notificationContext.Provider value={ context }>

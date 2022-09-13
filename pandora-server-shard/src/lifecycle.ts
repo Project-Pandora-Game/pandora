@@ -2,8 +2,16 @@ import { GetLogger, IEmpty } from 'pandora-common';
 import { CharacterManager } from './character/characterManager';
 import { StopHttpServer } from './networking/httpServer';
 import { DirectoryConnector } from './networking/socketio_directory_connector';
+import wtfnode from 'wtfnode';
 
 const logger = GetLogger('Lifecycle');
+
+{
+	const wtfNodeLogger = GetLogger('wtfnode');
+	wtfnode.setLogger('info', (...message) => wtfNodeLogger.info(...message));
+	wtfnode.setLogger('warn', (...message) => wtfNodeLogger.warning(...message));
+	wtfnode.setLogger('error', (...message) => wtfNodeLogger.error(...message));
+}
 
 let stopping: Promise<IEmpty> | undefined;
 const STOP_TIMEOUT = 10_000;
@@ -26,6 +34,8 @@ export function Stop(): Promise<IEmpty> {
 	logger.alert('Stopping...');
 	setTimeout(() => {
 		logger.fatal('Stop timed out!');
+		// Dump what is running
+		wtfnode.dump();
 		// Even though it is error, we exit with 0 to prevent container restart from triggering
 		process.exit(0);
 	}, STOP_TIMEOUT).unref();

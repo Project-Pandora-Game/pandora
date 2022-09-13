@@ -4,8 +4,16 @@ import { CloseDatabase } from './database/databaseProvider';
 import { StopHttpServer } from './networking/httpServer';
 import { ConnectionManagerClient } from './networking/manager_client';
 import { ShardManager } from './shard/shardManager';
+import wtfnode from 'wtfnode';
 
 const logger = GetLogger('Lifecycle');
+
+{
+	const wtfNodeLogger = GetLogger('wtfnode');
+	wtfnode.setLogger('info', (...message) => wtfNodeLogger.info(...message));
+	wtfnode.setLogger('warn', (...message) => wtfNodeLogger.warning(...message));
+	wtfnode.setLogger('error', (...message) => wtfNodeLogger.error(...message));
+}
 
 let stopping: Promise<void> | undefined;
 const STOP_TIMEOUT = 10_000;
@@ -29,6 +37,8 @@ export function Stop(): Promise<void> {
 	logger.alert('Stopping...');
 	setTimeout(() => {
 		logger.fatal('Stop timed out!');
+		// Dump what is running
+		wtfnode.dump();
 		// Even though it is error, we exit with 0 to prevent container restart from triggering
 		process.exit(0);
 	}, STOP_TIMEOUT).unref();

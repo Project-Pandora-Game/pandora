@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountInfo, IDirectoryAccountSettings } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { IConnectionClient } from '../networking/common';
 import { Character } from './character';
@@ -67,6 +67,13 @@ export class Account {
 			github: this.secure.getGitHubStatus(),
 			roles: this.roles.getSelfInfo(),
 			settings: _.cloneDeep(this.data.settings),
+		};
+	}
+
+	public getShardAccountDefinition(): IShardAccountDefinition {
+		return {
+			id: this.id,
+			roles: this.roles.getSelfInfo(),
 		};
 	}
 
@@ -162,8 +169,13 @@ export class Account {
 	}
 
 	public onAccountInfoChange(): void {
+		// Update connected clients
 		for (const connection of this.associatedConnections.values()) {
 			connection.sendConnectionStateUpdate();
+		}
+		// Update shards
+		for (const character of this.characters.values()) {
+			character.assignedShard?.update('characters');
 		}
 	}
 

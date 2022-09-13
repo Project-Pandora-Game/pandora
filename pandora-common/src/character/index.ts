@@ -2,7 +2,6 @@ export * from './restrictionsManager';
 export * from './speech';
 
 import { z } from 'zod';
-import { AccountRoleInfoSchema } from '../account';
 import { AppearanceBundleSchema } from '../assets';
 import { ZodMatcher, zTemplateString } from '../validation';
 
@@ -37,7 +36,6 @@ export const CharacterDataSchema = CharacterPublicDataSchema.merge(z.object({
 	inCreation: z.literal(true).optional(),
 	created: z.number(),
 	accessId: z.string(),
-	roles: AccountRoleInfoSchema.optional(),
 }));
 
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;

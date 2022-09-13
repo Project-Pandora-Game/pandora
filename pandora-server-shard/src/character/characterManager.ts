@@ -25,7 +25,7 @@ export const CharacterManager = new class CharacterManager {
 		return [...this._characters.values()]
 			.map((char) => ({
 				id: char.id,
-				account: char.accountId,
+				account: char.accountData,
 				accessId: char.accessId,
 				connectSecret: char.connectSecret,
 				room: char.room ? char.room.id : null,
@@ -58,7 +58,7 @@ export const CharacterManager = new class CharacterManager {
 		}
 
 		logger.verbose(`Adding character ${data.id}`);
-		char = new Character(data, character.connectSecret, character.room);
+		char = new Character(data, character.account, character.connectSecret, character.room);
 		this._characters.set(id, char);
 		charactersMetric.set(this._characters.size);
 		return char;

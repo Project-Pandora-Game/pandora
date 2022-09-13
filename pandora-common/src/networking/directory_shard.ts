@@ -5,10 +5,17 @@ import { IChatRoomFullInfo, RoomId, RoomIdSchema } from '../chatroom/room';
 import { IEmpty } from './empty';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 import { z } from 'zod';
+import { AccountRoleInfoSchema } from '../account';
+
+export const ShardAccountDefinitionSchema = z.object({
+	id: z.number(),
+	roles: AccountRoleInfoSchema.optional(),
+});
+export type IShardAccountDefinition = z.infer<typeof ShardAccountDefinitionSchema>;
 
 export const ShardCharacterDefinitionSchema = z.object({
 	id: CharacterIdSchema,
-	account: z.number(),
+	account: ShardAccountDefinitionSchema,
 	accessId: z.string(),
 	connectSecret: z.string(),
 	room: RoomIdSchema.nullable(),

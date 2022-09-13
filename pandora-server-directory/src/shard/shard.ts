@@ -80,7 +80,7 @@ export class Shard {
 
 		const accounts = new Map<number, Account>();
 		await Promise.all(
-			uniq(data.characters.map((c) => c.account))
+			uniq(data.characters.map((c) => c.account.id))
 				.map((id) => accountManager
 					.loadAccountById(id)
 					.then((account) => {
@@ -101,7 +101,7 @@ export class Shard {
 			// Skip characters that should be disconnected anyway
 			if (data.disconnectCharacters.includes(characterData.id))
 				continue;
-			const account = accounts.get(characterData.account);
+			const account = accounts.get(characterData.account.id);
 			const character = account?.characters.get(characterData.id);
 
 			if (!character ||
@@ -348,7 +348,7 @@ export class Shard {
 		for (const [id, character] of this.characters) {
 			result.push({
 				id,
-				account: character.account.id,
+				account: character.account.getShardAccountDefinition(),
 				accessId: character.accessId,
 				connectSecret: character.connectSecret,
 				room: character.room ? character.room.id : null,

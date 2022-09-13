@@ -93,6 +93,12 @@ export class Room extends ServerRoom<IShardClientBase> {
 		if (!character) {
 			return;
 		}
+		// If moving self, must not be restricted by items
+		if (character.id === source.id) {
+			const restrictionManager = new CharacterRestrictionsManager(character.id, character.appearance, this.getAppearanceActionRoomContext());
+			if (restrictionManager.getEffects().blockRoomMovement)
+				return;
+		}
 		// Only admin can move other characters
 		if (character.id !== source.id && !this.isAdmin(source)) {
 			return;

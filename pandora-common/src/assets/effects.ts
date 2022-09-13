@@ -16,11 +16,18 @@ export type EffectsDefinition = {
 	 * - 10 = completely muffled
 	 */
 	muffleMouth: number;
+
+	/**
+	 * Prevents character from moving herself within the room, even if admin.
+	 * Moving others as admin is still possible.
+	 */
+	blockRoomMovement: boolean;
 };
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
 	blockHands: false,
 	muffleMouth: 0,
+	blockRoomMovement: false,
 };
 
 //#endregion

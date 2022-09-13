@@ -468,14 +468,10 @@ function WardrobeModuleConfig({ item, moduleName, m }: {
 	moduleName: string;
 	m: IItemModule;
 }): ReactElement {
-	return (
-		<>
-			{
-				m instanceof ItemModuleTyped ? <WardrobeModuleConfigTyped item={ item } moduleName={ moduleName } m={ m } /> :
-				'[ ERROR: UNKNOWN MODULE TYPE ]'
-			}
-		</>
-	);
+	if (m instanceof ItemModuleTyped) {
+		return <WardrobeModuleConfigTyped item={ item } moduleName={ moduleName } m={ m } />;
+	}
+	return <>[ ERROR: UNKNOWN MODULE TYPE ]</>;
 }
 
 function WardrobeModuleConfigTyped({ item, moduleName, m }: {

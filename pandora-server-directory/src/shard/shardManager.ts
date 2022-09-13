@@ -24,6 +24,11 @@ const roomsMetric = new promClient.Gauge({
 export const ShardManager = new class ShardManager {
 	private readonly shards: Map<string, Shard> = new Map();
 	private readonly rooms: Map<RoomId, Room> = new Map();
+	private _stopping: boolean = false;
+
+	public get stopping(): boolean {
+		return this._stopping;
+	}
 
 	public async deleteShard(id: string): Promise<void> {
 		const shard = this.shards.get(id);
@@ -143,6 +148,7 @@ export const ShardManager = new class ShardManager {
 	 * When server is stopping, drop all shards
 	 */
 	public async onDestroy(): Promise<void> {
+		this._stopping = true;
 		const shards = [...this.shards.values()];
 		this.shards.clear();
 		shardsMetric.set(this.shards.size);

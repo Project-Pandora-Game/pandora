@@ -191,7 +191,7 @@ export class Shard {
 		// Development shards wait for another shard to be present before reassign (for up to 60 seconds)
 		if (attemptReassign && this.features.includes('development')) {
 			const end = Date.now() + 60_000;
-			while (Date.now() < end && ShardManager.listShads().length === 0) {
+			while (Date.now() < end && ShardManager.listShads().length === 0 && !ShardManager.stopping) {
 				this.logger.verbose('Waiting for another shard before migrating...');
 				await Sleep(5_000);
 			}

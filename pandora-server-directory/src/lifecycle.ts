@@ -16,7 +16,7 @@ async function StopGracefully(): Promise<void> {
 	// Stop sending status updates
 	ConnectionManagerClient.onDestroy();
 	// Unload all shards
-	ShardManager.onDestroy();
+	await ShardManager.onDestroy();
 	// Unload all accounts
 	accountManager.onDestroy();
 	// Disconnect database

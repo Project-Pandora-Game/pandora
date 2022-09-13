@@ -124,11 +124,11 @@ describe('ShardManager', () => {
 	});
 
 	describe('deleteShard()', () => {
-		it('Ignores unknown id', () => {
+		it('Ignores unknown id', async () => {
 			const shard1onDeleteSpy = jest.spyOn(shard1, 'onDelete');
 			const shard2onDeleteSpy = jest.spyOn(shard2, 'onDelete');
 
-			ShardManager.deleteShard('nonexistentId');
+			await ShardManager.deleteShard('nonexistentId');
 
 			expect(ShardManager.getShard(shard1.id)).toBe(shard1);
 			expect(shard1onDeleteSpy).not.toHaveBeenCalled();
@@ -136,11 +136,11 @@ describe('ShardManager', () => {
 			expect(shard2onDeleteSpy).not.toHaveBeenCalled();
 		});
 
-		it('Deletes shard by id', () => {
+		it('Deletes shard by id', async () => {
 			const shard1onDeleteSpy = jest.spyOn(shard1, 'onDelete');
 			const shard2onDeleteSpy = jest.spyOn(shard2, 'onDelete');
 
-			ShardManager.deleteShard(shard1.id);
+			await ShardManager.deleteShard(shard1.id);
 
 			// Not gettable
 			expect(ShardManager.getShard(shard1.id)).toBe(null);
@@ -268,10 +268,10 @@ describe('ShardManager', () => {
 	});
 
 	describe('onDestroy()', () => {
-		it('Deletes all shards', () => {
+		it('Deletes all shards', async () => {
 			const shard2onDeleteSpy = jest.spyOn(shard2, 'onDelete');
 
-			ShardManager.onDestroy();
+			await ShardManager.onDestroy();
 
 			// Not gettable
 			expect(ShardManager.getShard(shard1.id)).toBe(null);

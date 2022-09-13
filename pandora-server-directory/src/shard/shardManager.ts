@@ -25,13 +25,13 @@ export const ShardManager = new class ShardManager {
 	private readonly shards: Map<string, Shard> = new Map();
 	private readonly rooms: Map<RoomId, Room> = new Map();
 
-	public deleteShard(id: string): void {
+	public async deleteShard(id: string): Promise<void> {
 		const shard = this.shards.get(id);
 		if (!shard)
 			return;
 		this.shards.delete(id);
 		shardsMetric.set(this.shards.size);
-		shard.onDelete(true);
+		await shard.onDelete(true);
 	}
 
 	public getOrCreateShard(id: string | null): Shard {
@@ -142,12 +142,10 @@ export const ShardManager = new class ShardManager {
 	/**
 	 * When server is stopping, drop all shards
 	 */
-	public onDestroy(): void {
+	public async onDestroy(): Promise<void> {
 		const shards = [...this.shards.values()];
 		this.shards.clear();
 		shardsMetric.set(this.shards.size);
-		for (const shard of shards) {
-			shard.onDelete(false);
-		}
+		await Promise.all(shards.map((s) => s.onDelete(false)));
 	}
 };

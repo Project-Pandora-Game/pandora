@@ -1,4 +1,4 @@
-import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
+import { AppearanceChangeType, AssertNotNullable, CharacterId, CharacterSize, CharacterView, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
 import React, { CSSProperties, ReactElement, useEffect, useState } from 'react';
@@ -48,7 +48,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 	// Calculated properties
 	private _yOffset: number = 0;
-	private _scale: number = 0;
+	private _scale: number = 1;
+	private _scaleX: number = 1;
 
 	public get characterRoomPosition(): [number, number] {
 		return this.appearanceContainer.data.position;
@@ -92,14 +93,10 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 		const cleanupCalls: (() => void)[] = [];
 
-		cleanupCalls.push(character.on('appearanceUpdate', () => {
-			this._updateTextPosition();
-		}));
 		cleanupCalls.push(character.on('update', this._onCharacterUpdate.bind(this)));
 
 		this._name.anchor.set(0.5, 0.5);
 		this.interactive = true;
-		this._updateTextPosition();
 		this.addChild(this._name);
 		this.updateRoomData(data);
 		this
@@ -128,8 +125,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const x = CharacterSize.WIDTH / 2;
 		const y = CharacterSize.HEIGHT - BOTTOM_NAME_OFFSET - this._yOffset;
 		this.hitArea = new Rectangle(x - 100, y - 50, 200, 100);
-		this._name.x = x;
-		this._name.y = y;
+		this._name.position.set(x, y);
+		this._name.scale.set(1 / this._scaleX, 1);
 	}
 
 	private _onCharacterUpdate({ position, settings }: Partial<ICharacterRoomData>) {
@@ -139,6 +136,11 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		if (settings) {
 			this._name.style.fill = settings.labelColor;
 		}
+	}
+
+	protected override update(changes: AppearanceChangeType[]): void {
+		super.update(changes);
+		this._reposition();
 	}
 
 	private _reposition() {
@@ -155,13 +157,16 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const minScale = 1 / scaling;
 		this._scale = 1 - (1 - minScale) * relativeHeight;
 
+		const backView = this.appearanceContainer.appearance.getView() === CharacterView.BACK;
+		this._scaleX = backView ? -1 : 1;
+
 		this._yOffset = 0
 			+ 2 * this.getBoneLikeValue('kneeling')
 			+ 0.8 * this.getBoneLikeValue('sitting');
 
 		const oldY = this.y;
 
-		this.scale.set(this._scale);
+		this.scale.set(this._scaleX * this._scale, this._scale);
 		this.x = x;
 		this.y = height
 			- CharacterSize.HEIGHT * this._scale

@@ -15,6 +15,7 @@ import { AuthPage } from '../components/login/authPage';
 import { PandoraLobby } from '../components/pandoraLobby/pandoraLobby';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
+import { CharacterSettings } from '../components/characterSettings/characterSettings';
 
 export function PandoraRoutes(): ReactElement {
 	return (
@@ -27,6 +28,7 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/character_select' element={ <RequiresLogin element={ CharacterSelect } /> } />
 			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
+			<Route path='/character_settings' element={ <RequiresCharacter element={ CharacterSettings } /> } />
 			<Route path='/account_settings' element={ <RequiresLogin element={ AccountSettings } /> } />
 			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
 			<Route path='/chatroom_select' element={ <RequiresCharacter element={ ChatroomSelect } /> } />

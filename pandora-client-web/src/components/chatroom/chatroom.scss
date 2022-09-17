@@ -99,17 +99,6 @@
 		resize: none;
 		margin: 0;
 	}
-
-	.input-line {
-		display: flex;
-		flex-flow: row;
-		justify-content: left;
-		align-items: center;
-		height: 2em;
-		width: 100%;
-		color: white;
-		gap: 1em;
-	}
 }
 
 .typing-indicator, .input-modifiers {

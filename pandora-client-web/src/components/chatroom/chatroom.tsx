@@ -144,7 +144,6 @@ function Chat(): ReactElement | null {
 				{messages.map((m) => <Message key={ m.time } message={ m } />)}
 			</div>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } />
-			<PlayerColorEdit />
 		</div>
 	);
 }
@@ -401,23 +400,6 @@ function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }
 					</>
 				)
 			}
-		</div>
-	);
-}
-
-function PlayerColorEdit() {
-	const data = usePlayerData();
-	const [color, setColor] = useState(data?.settings.labelColor ?? '#ffffff');
-	const shardConnector = useShardConnector();
-
-	if (!data)
-		return null;
-
-	return (
-		<div className='input-line'>
-			<label>Color</label>
-			<input type='color' value={ color } onChange={ (event) => setColor(event.target.value) } />
-			<Button className='slim' onClick={ () => shardConnector?.sendMessage('updateSettings', { labelColor: color }) }>Save</Button>
 		</div>
 	);
 }

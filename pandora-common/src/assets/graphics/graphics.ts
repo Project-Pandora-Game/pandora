@@ -153,6 +153,8 @@ export const LayerDefinitionSchema = RectangleSchema.extend({
 		scaleBone: BoneNameSchema,
 		stops: z.array(z.tuple([z.number(), LayerImageSettingSchema])),
 	}).optional(),
+
+	alphaMask: z.array(LayerPrioritySchema).nonempty().optional(),
 });
 export type LayerDefinition = z.infer<typeof LayerDefinitionSchema>;
 

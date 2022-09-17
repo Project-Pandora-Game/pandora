@@ -11,6 +11,7 @@ import { EditorContextProvider, useMaybeEditor, useSetEditor } from './editorCon
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 import { useEvent } from '../common/useEvent';
 import { GraphicsManager } from '../assets/graphicsManager';
+import { EulaGate } from '../components/Eula';
 
 const logger = GetLogger('init');
 
@@ -26,10 +27,12 @@ async function Start(): Promise<void> {
 	logger.info('Starting...');
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
-			<EditorContextProvider>
-				<ToastContainer theme='dark' />
-				<AssetLoaderElement />
-			</EditorContextProvider>
+			<EulaGate>
+				<EditorContextProvider>
+					<ToastContainer theme='dark' />
+					<AssetLoaderElement />
+				</EditorContextProvider>
+			</EulaGate>
 		</React.StrictMode>,
 	);
 	return Promise.resolve();

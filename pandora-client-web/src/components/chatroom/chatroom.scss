@@ -124,6 +124,8 @@
 
 .typing-indicator {
 	min-height: 1.5em;
+	overflow: hidden;
+	white-space: nowrap;
 }
 
 .autocomplete-hint {

@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { ReactElement, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
-import { LoadAssetsFromDirectLink, LoadAssetsFromFileSystem } from './assetLoader';
+import { IsOriginSameAsOfficial, LoadAssetsFromDirectLink, LoadAssetsFromFileSystem, LoadAssetsFromOfficialLink } from './assetLoader';
 import { Button } from '../components/common/Button/Button';
 import '../index.scss';
 import { Editor, EditorView } from './editor';
@@ -75,6 +75,7 @@ function AssetLoaderElement() {
 		<div style={ { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', display: 'flex', flexFlow: 'column', gap: '1rem' } }>
 			<ButtonLoadFromFileSystem pending={ pending } load={ load } />
 			<ButtonLoadDirectLink pending={ pending } load={ load } />
+			<ButtonLoadOfficialLink pending={ pending } load={ load } />
 		</div>
 	);
 }
@@ -95,7 +96,7 @@ function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setL
 	const autoloaded = useRef(false);
 
 	useEffect(() => {
-		if (!autoloaded.current && !editor && !pending && !('showDirectoryPicker' in window)) {
+		if (!autoloaded.current && !editor && !pending && !('showDirectoryPicker' in window) && IsOriginSameAsOfficial()) {
 			autoloaded.current = true;
 			void load(setLoading, LoadAssetsFromDirectLink);
 		}
@@ -103,5 +104,16 @@ function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setL
 
 	return (
 		<Button onClick={ () => void load(setLoading, LoadAssetsFromDirectLink) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From Direct Link' }</Button>
+	);
+}
+
+function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement | null {
+	const [loading, setLoading] = useState(false);
+
+	if (IsOriginSameAsOfficial())
+		return null;
+
+	return (
+		<Button onClick={ () => void load(setLoading, LoadAssetsFromOfficialLink) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From Official Link' }</Button>
 	);
 }

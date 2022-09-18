@@ -2,7 +2,9 @@ import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
+import { useEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/Button/Button';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -35,6 +37,8 @@ export function LayerUI(): ReactElement {
 			<LayerImageOverridesTextarea layer={ selectedLayer } />
 			<hr />
 			<LayerScalingConfig layer={ selectedLayer } asset={ asset } />
+			<hr />
+			<LayerAlphaMask layer={ selectedLayer } />
 		</div>
 	);
 }
@@ -126,7 +130,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 
 	for (const priority of LAYER_PRIORITIES) {
 		elements.push(
-			<option value={ priority } key={ priority }>{ priority }</option>,
+			<option value={ priority } key={ priority }>{ GetReadablePriorityName(priority) }</option>,
 		);
 	}
 
@@ -304,3 +308,61 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 		</>
 	);
 }
+
+function LayerAlphaMask({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+	const [alphaMask, setAlphaMask] = useState((layer.definition.alphaMask ?? []) as readonly LayerPriority[]);
+
+	const addAlphaMask = useEvent((priority: LayerPriority) => {
+		const next: LayerPriority[] = [...new Set(alphaMask).add(priority)].sort();
+		layer.definition.alphaMask = next;
+		setAlphaMask(next);
+	});
+
+	const removeAlphaMask = useEvent((priority: LayerPriority) => {
+		const set = new Set(alphaMask);
+		set.delete(priority);
+		const next: LayerPriority[] = [...set].sort();
+		if (next.length === 0) {
+			delete layer.definition.alphaMask;
+		} else {
+			layer.definition.alphaMask = next;
+		}
+		setAlphaMask(next);
+	});
+
+	const removeAll = useEvent(() => {
+		delete layer.definition.alphaMask;
+		setAlphaMask([]);
+	});
+
+	return (
+		<FieldsetToggle legend='Alpha Mask' open={ alphaMask.length > 0 } className='alpha-mask-grid'>
+			<span />
+			<Button className='slim hideDisabled' onClick={ removeAll } disabled={ alphaMask.length === 0 } >Remove All</Button>
+			<hr />
+			{ alphaMask.map((p) => (
+				<React.Fragment key={ p }>
+					<span>{ GetReadablePriorityName(p) }</span>
+					<Button className='slim' onClick={ () => removeAlphaMask(p) }>Remove</Button>
+				</React.Fragment>
+			)) }
+			<hr />
+			{ LAYER_PRIORITIES
+				.filter((p) => !alphaMask.includes(p))
+				.map((p) => (
+					<React.Fragment key={ p }>
+						<span>{ GetReadablePriorityName(p) }</span>
+						<Button className='slim' onClick={ () => addAlphaMask(p) }>Add</Button>
+					</React.Fragment>
+				)) }
+		</FieldsetToggle>
+	);
+}
+
+function GetReadablePriorityName(priority: LayerPriority): string {
+	return priority
+		.toLowerCase()
+		.replace(/_/g, ' ')
+		.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+}
+

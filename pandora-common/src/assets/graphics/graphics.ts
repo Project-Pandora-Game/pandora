@@ -154,7 +154,7 @@ export const LayerDefinitionSchema = RectangleSchema.extend({
 		stops: z.array(z.tuple([z.number(), LayerImageSettingSchema])),
 	}).optional(),
 
-	alphaMask: z.array(LayerPrioritySchema).nonempty().optional(),
+	alphaMask: z.array(LayerPrioritySchema).min(1).optional(),
 });
 export type LayerDefinition = z.infer<typeof LayerDefinitionSchema>;
 

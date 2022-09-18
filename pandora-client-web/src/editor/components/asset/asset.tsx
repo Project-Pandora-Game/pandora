@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { AssetGraphicsDefinition, AssetGraphicsDefinitionSchema, GetLogger, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
@@ -140,7 +141,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 	return (
 		<li className={ isSelected ? 'selected' : '' }>
 			<button
-				className='layerName'
+				className={ classNames('layerName', { alphaMaskLayer: layer.definition.alphaMask  }) }
 				onClick={ () => editor.targetLayer.value = layer }
 			>
 				{ layer.name }

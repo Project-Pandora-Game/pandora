@@ -287,6 +287,8 @@ class OrderedLayerGraphics extends Container {
 
 	constructor(group: LayerPriority[], getLayer: (state: LayerState, bones: ReadonlySet<string>, cached: boolean) => GraphicsLayer) {
 		super();
+		this.sortableChildren = true;
+		this._maskLayers.sortableChildren = true;
 		this._getLayer = getLayer;
 		this.group = group;
 
@@ -381,7 +383,7 @@ function GetMaskGroups(ordered: OrderedLayerState[]): LayerPriority[][] {
 		}
 
 		return ReorderMaskGroups(groups, priorities);
-	}, [[...priorities].sort()]);
+	}, [[...priorities]]);
 }
 
 function MergeMasks(groups: LayerPriority[][], mask: LayerPriority[]): LayerPriority[][] {
@@ -392,14 +394,14 @@ function MergeMasks(groups: LayerPriority[][], mask: LayerPriority[]): LayerPrio
 	if (index === -1) {
 		index = groups.findIndex((g) => g.includes(mask[0]));
 		if (index === -1) {
-			throw new Error(`Mask group not found: ${mask[0]}`);
+			return MergeMasks(groups, mask.slice(1));
 		}
 		const group = groups[index];
 		const split = group.indexOf(mask[0]);
 		groups.push(group.slice(0, split));
 		groups.push(group.slice(split));
 		groups.splice(index, 1);
-		if (groups[groups.length - 1][0] === mask[0]) {
+		if (groups[groups.length - 1][0] !== mask[0]) {
 			throw new Error(`Mask group not found: ${mask[0]}`);
 		}
 		index = groups.length - 1;

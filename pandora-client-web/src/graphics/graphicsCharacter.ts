@@ -1,7 +1,7 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
 import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { AtomicCondition, CharacterSize, CharacterView, Item, TransformDefinition } from 'pandora-common/dist/assets';
-import { Container, IDestroyOptions, Sprite, Texture } from 'pixi.js';
+import { AbstractRenderer, Application, autoDetectRenderer, BLEND_MODES, CLEAR_MODES, COLOR_MASK_BITS, Container, defaultVertex, Filter, filters, FilterSystem, IDestroyOptions, IMaskTarget, ISpriteMaskTarget, MaskData, MASK_TYPES, Matrix, Renderer, RenderTexture, Sprite, SpriteMaskFilter, Texture, TextureMatrix } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
@@ -274,12 +274,96 @@ class OrderedLayerState {
 	}
 }
 
+class MaskFiler extends Filter {
+	private readonly _maskSprite: IMaskTarget;
+	private readonly _maskMatrix = new Matrix();
+
+	constructor(mask: IMaskTarget) {
+		super(`
+attribute vec2 aVertexPosition;
+attribute vec2 aTextureCoord;
+
+uniform mat3 projectionMatrix;
+uniform mat3 otherMatrix;
+
+varying vec2 vMaskCoord;
+varying vec2 vTextureCoord;
+
+void main(void)
+{
+	gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
+
+	vTextureCoord = aTextureCoord;
+	vMaskCoord = ( otherMatrix * vec3( aTextureCoord, 1.0)  ).xy;
+}
+`, `
+varying vec2 vMaskCoord;
+varying vec2 vTextureCoord;
+
+uniform sampler2D uSampler;
+uniform sampler2D mask;
+
+void main(void)
+{
+	vec4 original = texture2D(uSampler, vTextureCoord);
+	vec4 masky = texture2D(mask, vMaskCoord);
+	if (masky.r < 0.5) {
+		discard;
+	} else {
+		gl_FragColor = original;
+	}
+}
+`);
+		this._maskSprite = mask;
+		this._maskSprite.renderable = false;
+	}
+
+	override apply(filterManager: FilterSystem, input: RenderTexture, output: RenderTexture, clearMode: CLEAR_MODES): void {
+		const maskSprite = this._maskSprite as ISpriteMaskTarget;
+		const tex = maskSprite._texture;
+
+		if (!tex.valid) {
+			return;
+		}
+		if (!tex.uvMatrix) {
+			// margin = 0.0, let it bleed a bit, shader code becomes easier
+			// assuming that atlas textures were made with 1-pixel padding
+			tex.uvMatrix = new TextureMatrix(tex, 0.0);
+		}
+		tex.uvMatrix.update();
+
+		this.uniforms.mask = tex;
+		// get _normalized sprite texture coords_ and convert them to _normalized atlas texture coords_ with `prepend`
+		this.uniforms.otherMatrix = filterManager.calculateSpriteMatrix(this._maskMatrix, maskSprite)
+			.prepend(tex.uvMatrix.mapCoord);
+
+		filterManager.applyFilter(this, input, output, clearMode);
+	}
+}
+
 class OrderedLayerGraphics extends Container {
 	private readonly _getLayer: (state: LayerState, bones: ReadonlySet<string>, cached: boolean) => GraphicsLayer;
 	private _nextZIndex = 0;
 	private _hasMasks = false;
 	private readonly _maskLayers = new Container();
+	private readonly _maskTexture = RenderTexture.create({ width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT });
+	private readonly _maskSprite = new Sprite(this._maskTexture);
+	// private readonly _maskFilter = new MaskFiler(this._maskSprite);
 	public readonly group: LayerPriority[];
+
+	static _app?: Application;
+	static get renderer(): AbstractRenderer {
+		if (!OrderedLayerGraphics._app) {
+			OrderedLayerGraphics._app = new Application({
+				backgroundAlpha: 0,
+				resolution: 1,
+				antialias: true,
+				width: CharacterSize.WIDTH,
+				height: CharacterSize.HEIGHT,
+			});
+		}
+		return OrderedLayerGraphics._app.renderer;
+	}
 
 	public get priority(): LayerPriority {
 		return this.group[0];
@@ -291,6 +375,8 @@ class OrderedLayerGraphics extends Container {
 		this._maskLayers.sortableChildren = true;
 		this._getLayer = getLayer;
 		this.group = group;
+		this._maskSprite.width = CharacterSize.WIDTH;
+		this._maskSprite.height = CharacterSize.HEIGHT;
 
 		const sprite = new Sprite(Texture.WHITE);
 		sprite.width = CharacterSize.WIDTH;
@@ -298,6 +384,9 @@ class OrderedLayerGraphics extends Container {
 		sprite.zIndex = -1;
 
 		this._maskLayers.addChild(sprite);
+
+		// HERE: we actually draw the result sprite instead of using it as a filter (should have the same effect as adding sprite directly but noooooooo)
+		this.addChild(this._maskSprite);
 	}
 
 	public detach() {
@@ -322,15 +411,21 @@ class OrderedLayerGraphics extends Container {
 
 		}
 		this.sortChildren();
-		if (this._hasMasks) {
+		// eslint-disable-next-line no-constant-condition
+		if (this._hasMasks || true) {
 			this._maskLayers.sortChildren();
-			if (!this.mask) {
-				this.mask = this._maskLayers;
-				this.addChild(this._maskLayers);
-			}
+
+			// HERE: this just to test if we put a white texture directly, this._maskLayers is the correct one
+			const sprite = new Sprite(Texture.WHITE);
+			sprite.width = CharacterSize.WIDTH;
+			sprite.height = CharacterSize.HEIGHT;
+			OrderedLayerGraphics.renderer.render(sprite, { renderTexture: this._maskTexture, clear: true });
+
+			// HERE: if all correct this will just work, hopefully...
+			// this.filters = [this._maskFilter];
+
 		} else if (this.mask) {
-			this.removeChild(this._maskLayers);
-			this.mask = null;
+			this.filters = null;
 		}
 		return this;
 	}

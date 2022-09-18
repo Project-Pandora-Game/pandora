@@ -51,7 +51,7 @@ export class GraphicsCharacterEditor extends GraphicsCharacter<EditorCharacter> 
 			this._activeLayers.add(layer.layer);
 			const overrides = this.editor.getLayerStateOverride(layer.layer);
 			if (overrides) {
-				layer.state = overrides;
+				layer.state = { ...layer.state, ...overrides };
 			}
 		}
 		return result;

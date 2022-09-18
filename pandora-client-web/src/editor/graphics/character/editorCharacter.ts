@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js';
+import { AbstractRenderer, Container } from 'pixi.js';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { AppearanceContainer, AppearanceEvents } from '../../../character/character';
@@ -22,8 +22,8 @@ export class GraphicsCharacterEditor extends GraphicsCharacter<EditorCharacter> 
 	protected readonly boneLayer = new Container;
 	readonly editor: Editor;
 
-	protected constructor(editor: Editor) {
-		super(editor.character);
+	protected constructor(editor: Editor, renderer: AbstractRenderer) {
+		super(editor.character, renderer);
 		this.editor = editor;
 		this.addChild(this.boneLayer).zIndex = EditorLayer.Z_INDEX_EXTRA + 1;
 		const cleanup: (() => void)[] = [];

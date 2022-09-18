@@ -1,12 +1,11 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
 import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { AtomicCondition, CharacterSize, CharacterView, Item, TransformDefinition } from 'pandora-common/dist/assets';
-import { AbstractRenderer, Application, autoDetectRenderer, BLEND_MODES, CLEAR_MODES, COLOR_MASK_BITS, Container, defaultVertex, Filter, filters, FilterSystem, IDestroyOptions, IMaskTarget, ISpriteMaskTarget, MaskData, MASK_TYPES, Matrix, Renderer, RenderTexture, Sprite, SpriteMaskFilter, Texture, TextureMatrix } from 'pixi.js';
+import { AbstractRenderer, Container, IDestroyOptions, Rectangle, Sprite } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
-import _ from 'lodash';
 
 const logger = GetLogger('GraphicsCharacter');
 
@@ -17,11 +16,14 @@ export const FAKE_BONES: string[] = ['backView'];
 export class GraphicsCharacter<ContainerType extends AppearanceContainer = AppearanceContainer> extends Container {
 	protected graphicsGetter: GraphicsGetterFunction | undefined;
 	readonly appearanceContainer: ContainerType;
+	readonly renderer;
 	private _layers: LayerState[] = [];
 	private _pose: Record<BoneName, number> = {};
 	private _cleanupUpdate?: () => void;
 
-	constructor(appearanceContainer: ContainerType) {
+	private displayContainer = new Container();
+
+	constructor(appearanceContainer: ContainerType, renderer: AbstractRenderer) {
 		super();
 
 		this.pivot.x = CharacterSize.WIDTH / 2;
@@ -29,7 +31,10 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 		this.sortableChildren = true;
 
+		this.addChild(this.displayContainer);
+
 		this.appearanceContainer = appearanceContainer;
+		this.renderer = renderer;
 
 		this._cleanupUpdate = this.appearanceContainer.on('appearanceUpdate', (changes) => this.update(changes));
 	}
@@ -105,16 +110,21 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		AssertNever(armsPose);
 	}
 
-	protected sortLayers(states: LayerState[]): OrderedLayerState[] {
-		const view = this.appearanceContainer.appearance.getView();
-		const ordered = this.getSortOrder()
-			.map((priority) => new OrderedLayerState({ priority, view, states }));
-
-		if (view === CharacterView.BACK) {
-			ordered.reverse();
+	protected sortLayers(toSort: LayerState[]): LayerState[] {
+		const sortOrder = this.getSortOrder();
+		const result: LayerState[] = [];
+		for (const priority of sortOrder) {
+			const temp = toSort.filter((l) => l.layer.definition.priority === priority);
+			if (PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority)) {
+				temp.reverse();
+			}
+			result.push(...temp);
 		}
-
-		return ordered;
+		const view = this.appearanceContainer.appearance.getView();
+		if (view === CharacterView.BACK) {
+			result.reverse();
+		}
+		return result.concat(toSort.filter((l) => !result.includes(l)));
 	}
 
 	protected createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
@@ -122,7 +132,6 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	}
 
 	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
-	private _maskedLayers: OrderedLayerGraphics[] = [];
 	protected layerUpdate(bones: Set<string>): void {
 		this._evalCache.clear();
 		for (const [key, graphics] of this._graphicsLayers) {
@@ -132,41 +141,56 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 				graphics.destroy();
 			}
 		}
+		const sortedLayers = this.sortLayers(this._layers.slice());
+		const priorities = new Map<LayerPriority, Container[]>();
+		sortedLayers.forEach((layerState) => {
+			let graphics = this._graphicsLayers.get(layerState);
+			if (!graphics) {
+				graphics = this.createLayer(layerState.layer, layerState.item);
+				this._graphicsLayers.set(layerState, graphics);
+				graphics.update({ state: layerState.state, force: true });
+			} else {
+				graphics.update({ state: layerState.state, bones });
+			}
 
-		const layers = this.sortLayers(this._layers.slice());
-		this._updateMaskedLayers(layers, GetMaskGroups(layers), bones);
+			const priority = layerState.layer.definition.priority;
+			let layer = priorities.get(priority);
+			if (!layer) {
+				layer = [];
+				priorities.set(priority, layer);
+			}
+			if (layerState.layer.definition.alphaMask) {
+				const maskedContainer = new Container();
+				maskedContainer.addChild(...layer);
+
+				const bounds = new Rectangle(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
+
+				// TODO: FIXME: This is broken because `graphics` is not watched for changes, mainly async texture change
+				const texture = this.renderer.generateTexture(graphics, {
+					resolution: 1,
+					region: bounds,
+				});
+				const mask = new Sprite(texture);
+
+				maskedContainer.mask = mask;
+				layer = [mask, maskedContainer];
+				priorities.set(priority, layer);
+			} else {
+				layer.push(graphics);
+			}
+		});
+
+		this.displayContainer.removeChildren();
+		this.getSortOrder().forEach((priority) => {
+			const layers = priorities.get(priority);
+			if (layers) {
+				this.displayContainer.addChild(...layers);
+			}
+		});
 
 		this.sortChildren();
 		const backView = this.appearanceContainer.appearance.getView() === CharacterView.BACK;
 		this.scale.x = backView ? -1 : 1;
-	}
-
-	private _getLayer(layerState: LayerState, bones: ReadonlySet<string>, cached: boolean): GraphicsLayer {
-		let graphics = cached ? this._graphicsLayers.get(layerState) : undefined;
-		if (!graphics) {
-			graphics = this.createLayer(layerState.layer, layerState.item);
-			this._graphicsLayers.set(layerState, graphics);
-			graphics.on('destroy', () => this._graphicsLayers.delete(layerState));
-			graphics.update({ state: layerState.state, force: true });
-		} else {
-			graphics.update({ state: layerState.state, bones });
-		}
-		return graphics;
-	}
-
-	private _updateMaskedLayers(layers: OrderedLayerState[], maskGroups: LayerPriority[][], bones: Set<string>): void {
-		const destroy = _.remove(this._maskedLayers, (masked) => !maskGroups.some((group) => _.isEqual(group, masked.group)));
-		destroy.forEach((d) => d.detach());
-		maskGroups.forEach((group, index) => {
-			let masked = this._maskedLayers.find((m) => _.isEqual(group, m.group));
-			if (!masked) {
-				masked = new OrderedLayerGraphics(group, this._getLayer.bind(this));
-				this._maskedLayers.push(masked);
-				this.addChild(masked);
-			}
-			masked.update(layers, bones);
-			masked.zIndex = index + 1;
-		});
 	}
 
 	//#region Point transform
@@ -252,279 +276,4 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		}
 		return this.getBone(name).rotation;
 	}
-}
-
-class OrderedLayerState {
-	public readonly states: readonly LayerState[];
-	public readonly masks: readonly LayerState[];
-	public readonly priority: LayerPriority;
-
-	constructor({ priority, view, states }: { priority: LayerPriority, view: CharacterView, states: LayerState[]; }) {
-		const all = states.filter((state) => state.layer.definition.priority === priority);
-		let reverse = view === CharacterView.BACK;
-		if (PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority)) {
-			reverse = !reverse;
-		}
-		if (reverse) {
-			all.reverse();
-		}
-		this.masks = _.remove(all, (state) => state.layer.definition.alphaMask !== undefined);
-		this.priority = priority;
-		this.states = all;
-	}
-}
-
-class MaskFiler extends Filter {
-	private readonly _maskSprite: IMaskTarget;
-	private readonly _maskMatrix = new Matrix();
-
-	constructor(mask: IMaskTarget) {
-		super(`
-attribute vec2 aVertexPosition;
-attribute vec2 aTextureCoord;
-
-uniform mat3 projectionMatrix;
-uniform mat3 otherMatrix;
-
-varying vec2 vMaskCoord;
-varying vec2 vTextureCoord;
-
-void main(void)
-{
-	gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
-
-	vTextureCoord = aTextureCoord;
-	vMaskCoord = ( otherMatrix * vec3( aTextureCoord, 1.0)  ).xy;
-}
-`, `
-varying vec2 vMaskCoord;
-varying vec2 vTextureCoord;
-
-uniform sampler2D uSampler;
-uniform sampler2D mask;
-
-void main(void)
-{
-	vec4 original = texture2D(uSampler, vTextureCoord);
-	vec4 masky = texture2D(mask, vMaskCoord);
-	if (masky.r < 0.5) {
-		discard;
-	} else {
-		gl_FragColor = original;
-	}
-}
-`);
-		this._maskSprite = mask;
-		this._maskSprite.renderable = false;
-	}
-
-	override apply(filterManager: FilterSystem, input: RenderTexture, output: RenderTexture, clearMode: CLEAR_MODES): void {
-		const maskSprite = this._maskSprite as ISpriteMaskTarget;
-		const tex = maskSprite._texture;
-
-		if (!tex.valid) {
-			return;
-		}
-		if (!tex.uvMatrix) {
-			// margin = 0.0, let it bleed a bit, shader code becomes easier
-			// assuming that atlas textures were made with 1-pixel padding
-			tex.uvMatrix = new TextureMatrix(tex, 0.0);
-		}
-		tex.uvMatrix.update();
-
-		this.uniforms.mask = tex;
-		// get _normalized sprite texture coords_ and convert them to _normalized atlas texture coords_ with `prepend`
-		this.uniforms.otherMatrix = filterManager.calculateSpriteMatrix(this._maskMatrix, maskSprite)
-			.prepend(tex.uvMatrix.mapCoord);
-
-		filterManager.applyFilter(this, input, output, clearMode);
-	}
-}
-
-class OrderedLayerGraphics extends Container {
-	private readonly _getLayer: (state: LayerState, bones: ReadonlySet<string>, cached: boolean) => GraphicsLayer;
-	private _nextZIndex = 0;
-	private _hasMasks = false;
-	private readonly _maskLayers = new Container();
-	private readonly _maskTexture = RenderTexture.create({ width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT });
-	private readonly _maskSprite = new Sprite(this._maskTexture);
-	// private readonly _maskFilter = new MaskFiler(this._maskSprite);
-	public readonly group: LayerPriority[];
-
-	static _app?: Application;
-	static get renderer(): AbstractRenderer {
-		if (!OrderedLayerGraphics._app) {
-			OrderedLayerGraphics._app = new Application({
-				backgroundAlpha: 0,
-				resolution: 1,
-				antialias: true,
-				width: CharacterSize.WIDTH,
-				height: CharacterSize.HEIGHT,
-			});
-		}
-		return OrderedLayerGraphics._app.renderer;
-	}
-
-	public get priority(): LayerPriority {
-		return this.group[0];
-	}
-
-	constructor(group: LayerPriority[], getLayer: (state: LayerState, bones: ReadonlySet<string>, cached: boolean) => GraphicsLayer) {
-		super();
-		this.sortableChildren = true;
-		this._maskLayers.sortableChildren = true;
-		this._getLayer = getLayer;
-		this.group = group;
-		this._maskSprite.width = CharacterSize.WIDTH;
-		this._maskSprite.height = CharacterSize.HEIGHT;
-
-		const sprite = new Sprite(Texture.WHITE);
-		sprite.width = CharacterSize.WIDTH;
-		sprite.height = CharacterSize.HEIGHT;
-		sprite.zIndex = -1;
-
-		this._maskLayers.addChild(sprite);
-
-		// HERE: we actually draw the result sprite instead of using it as a filter (should have the same effect as adding sprite directly but noooooooo)
-		this.addChild(this._maskSprite);
-	}
-
-	public detach() {
-		this._maskLayers.destroy();
-		this.removeChildren();
-		this.parent?.removeChild(this);
-		this.destroy();
-	}
-
-	public update(orderedStates: OrderedLayerState[], bones: ReadonlySet<string>): OrderedLayerGraphics {
-		this._nextZIndex = 0;
-		this._hasMasks = false;
-		for (const ordered of orderedStates) {
-			if (this.group.includes(ordered.priority)) {
-				this._updateLayer(ordered.states, bones);
-			}
-			for (const mask of ordered.masks) {
-				if (mask.layer.definition.alphaMask?.some((name) => this.group.includes(name))) {
-					this._updateMask(mask, bones);
-				}
-			}
-
-		}
-		this.sortChildren();
-		// eslint-disable-next-line no-constant-condition
-		if (this._hasMasks || true) {
-			this._maskLayers.sortChildren();
-
-			// HERE: this just to test if we put a white texture directly, this._maskLayers is the correct one
-			const sprite = new Sprite(Texture.WHITE);
-			sprite.width = CharacterSize.WIDTH;
-			sprite.height = CharacterSize.HEIGHT;
-			OrderedLayerGraphics.renderer.render(sprite, { renderTexture: this._maskTexture, clear: true });
-
-			// HERE: if all correct this will just work, hopefully...
-			// this.filters = [this._maskFilter];
-
-		} else if (this.mask) {
-			this.filters = null;
-		}
-		return this;
-	}
-
-	private _updateLayer(states: readonly LayerState[], bones: ReadonlySet<string>): void {
-		for (const state of states) {
-			const layer = this._getLayer(state, bones, true);
-			layer.zIndex = this._nextZIndex++;
-			if (layer.parent === this) {
-				continue;
-			}
-			layer.parent?.removeChild(layer);
-			this.addChild(layer);
-		}
-	}
-
-	private _maskCache = new Map<LayerState, GraphicsLayer>();
-	private _updateMask(state: LayerState, bones: ReadonlySet<string>): void {
-		this._hasMasks = true;
-		let layer = this._maskCache.get(state);
-		if (!layer) {
-			layer = this._getLayer(state, bones, false);
-			this._maskCache.set(state, layer);
-			layer.on('destroy', () => this._maskCache.delete(state));
-		}
-		layer.zIndex = this._nextZIndex++;
-		if (layer.parent) {
-			return;
-		}
-		this._maskLayers.addChild(layer);
-	}
-}
-
-function GetMaskGroups(ordered: OrderedLayerState[]): LayerPriority[][] {
-	const priorities = ordered
-		.filter((o) => o.states.length > 0)
-		.map((o) => o.priority);
-
-	return ordered.reduce((groups, state) => {
-		if (state.masks.length === 0) {
-			return groups;
-		}
-
-		for (const mask of state.masks) {
-			// TODO: make sure this is always sorted
-			const alphaMask = [...mask.layer.definition.alphaMask as LayerPriority[]]
-				.sort();
-
-			groups = MergeMasks(groups, alphaMask);
-		}
-
-		return ReorderMaskGroups(groups, priorities);
-	}, [[...priorities]]);
-}
-
-function MergeMasks(groups: LayerPriority[][], mask: LayerPriority[]): LayerPriority[][] {
-	if (mask.length === 0) {
-		return groups;
-	}
-	let index = groups.findIndex((group) => group[0] === mask[0]);
-	if (index === -1) {
-		index = groups.findIndex((g) => g.includes(mask[0]));
-		if (index === -1) {
-			return MergeMasks(groups, mask.slice(1));
-		}
-		const group = groups[index];
-		const split = group.indexOf(mask[0]);
-		groups.push(group.slice(0, split));
-		groups.push(group.slice(split));
-		groups.splice(index, 1);
-		if (groups[groups.length - 1][0] !== mask[0]) {
-			throw new Error(`Mask group not found: ${mask[0]}`);
-		}
-		index = groups.length - 1;
-	}
-	const current = groups[index];
-	for (let i = 1; i < mask.length; i++) {
-		if (current.length <= i) {
-			return MergeMasks(groups, mask.slice(i));
-		}
-		if (current[i] === mask[i]) {
-			continue;
-		}
-		groups.splice(index, 1);
-		groups.push(current.slice(0, i));
-		groups.push(current.slice(i));
-		return MergeMasks(groups, mask.slice(i));
-	}
-	if (current.length <= mask.length) {
-		return groups;
-	}
-	groups.push(current.slice(0, mask.length));
-	groups.push(current.slice(mask.length));
-	groups.splice(index, 1);
-	return groups;
-}
-
-function ReorderMaskGroups(groups: LayerPriority[][], order: LayerPriority[]): LayerPriority[][] {
-	groups.map((group) => group.sort((a, b) => order.indexOf(a) - order.indexOf(b)));
-	groups.sort((a, b) => order.indexOf(a[0]) - order.indexOf(b[0]));
-	return groups;
 }

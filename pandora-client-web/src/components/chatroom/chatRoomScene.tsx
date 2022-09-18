@@ -1,6 +1,6 @@
 import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
-import { Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
+import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
 import React, { CSSProperties, ReactElement, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
@@ -34,6 +34,7 @@ type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterR
 	shard: ShardConnector | null;
 	menuOpen: (character: Self, data: InteractionData) => void;
 	filters: Filter[];
+	renderer: AbstractRenderer;
 };
 
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
@@ -73,8 +74,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		return this.appearanceContainer.data.id;
 	}
 
-	constructor({ character, data, shard, menuOpen, filters }: ChatRoomCharacterProps<ChatRoomCharacter>) {
-		super(character);
+	constructor({ character, data, shard, menuOpen, filters, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
+		super(character, renderer);
 		this.name = character.data.name;
 		this._data = data;
 		this.shard = shard;
@@ -295,6 +296,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 				shard: this._shard,
 				menuOpen: this._menuOpen,
 				filters: character.data.id === this._filterExclude ? [] : this.backgroundFilters,
+				renderer: this.renderer,
 			});
 			if (this._manager) {
 				graphics.useGraphics(this._manager.getAssetGraphicsById.bind(this._manager));

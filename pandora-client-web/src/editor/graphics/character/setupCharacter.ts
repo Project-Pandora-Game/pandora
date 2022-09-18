@@ -1,4 +1,5 @@
 import { AppearanceChangeType, Item, LayerPriority } from 'pandora-common';
+import { AbstractRenderer } from 'pixi.js';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { PRIORITY_ORDER_SPRITES } from '../../../graphics/def';
@@ -9,8 +10,8 @@ import { SetupLayer } from '../layer';
 import { GraphicsCharacterEditor } from './editorCharacter';
 
 export class SetupCharacter extends GraphicsCharacterEditor {
-	constructor(editor: Editor) {
-		super(editor);
+	constructor(editor: Editor, renderer: AbstractRenderer) {
+		super(editor, renderer);
 		this._addBones();
 	}
 

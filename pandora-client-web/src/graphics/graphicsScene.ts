@@ -1,4 +1,4 @@
-import { Application, Container, Filter, InteractionManager, Sprite, Texture } from 'pixi.js';
+import { AbstractRenderer, Application, Container, Filter, InteractionManager, Sprite, Texture } from 'pixi.js';
 import * as PixiViewport from 'pixi-viewport';
 import { useRef, useEffect, useLayoutEffect } from 'react';
 import { TypedEventEmitter } from '../event';
@@ -21,6 +21,10 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 
 	get height(): number {
 		return this._app.renderer.height;
+	}
+
+	get renderer(): AbstractRenderer {
+		return this._app.renderer;
 	}
 
 	constructor() {
@@ -160,7 +164,7 @@ export function useGraphicsSceneCharacter<T extends HTMLElement>(scene: Graphics
 	useLayoutEffect(() => {
 		if (!manager)
 			return;
-		const gCharacter = new GraphicsCharacter(character);
+		const gCharacter = new GraphicsCharacter(character, scene.renderer);
 		gCharacter.useGraphics(manager.getAssetGraphicsById.bind(manager));
 		scene.add(gCharacter);
 		return () => {

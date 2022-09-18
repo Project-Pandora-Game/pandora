@@ -32,7 +32,7 @@ export class EditorSetupScene extends EditorScene {
 
 	constructor(editor: Editor) {
 		super();
-		this.setupCharacter = new SetupCharacter(editor);
+		this.setupCharacter = new SetupCharacter(editor, this.renderer);
 		this.setupCharacter.useGraphics(editor.getAssetGraphicsById.bind(editor));
 		this.add(this.setupCharacter);
 	}
@@ -43,7 +43,7 @@ export class EditorResultScene extends EditorScene {
 
 	constructor(editor: Editor) {
 		super();
-		this.resultCharacter = new ResultCharacter(editor);
+		this.resultCharacter = new ResultCharacter(editor, this.renderer);
 		this.resultCharacter.useGraphics(editor.getAssetGraphicsById.bind(editor));
 		this.add(this.resultCharacter);
 	}

@@ -230,7 +230,7 @@ export class Appearance {
 		this.onChange(['items', 'pose']);
 	}
 
-	private enforcePoseLimits(): boolean {
+	protected enforcePoseLimits(): boolean {
 		const poseLimits = AppearanceItemsGetPoseLimits(this.items);
 		if (poseLimits == null)
 			return false;

@@ -1,5 +1,5 @@
 import { ArmsPose, CharacterView } from 'pandora-common';
-import React, { ReactElement, useSyncExternalStore } from 'react';
+import React, { ReactElement, useEffect, useState, useSyncExternalStore } from 'react';
 import { useCharacterAppearancePose } from '../../../character/character';
 import { BoneRowElement } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
@@ -21,6 +21,11 @@ export function BoneUI(): ReactElement {
 		}
 	}), () => character.appearance.getView());
 	const showBones = useObservable(editor.showBones);
+
+	const [unlocked, setUnlocked] = useState(character.appearance.enforce);
+	useEffect(() => {
+		character.appearance.enforce = !unlocked;
+	}, [character.appearance, unlocked]);
 
 	return (
 		<div className='bone-ui'>
@@ -57,8 +62,19 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
+			<div>
+				<label htmlFor='unlocked-toggle'>Disable bone limits</label>
+				<input
+					id='unlocked-toggle'
+					type='checkbox'
+					checked={ unlocked }
+					onChange={ (e) => {
+						setUnlocked(e.target.checked);
+					} }
+				/>
+			</div>
 			<h3>Bones</h3>
-			{bones.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } />)}
+			{bones.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } unlocked={ unlocked } />)}
 		</div>
 	);
 }

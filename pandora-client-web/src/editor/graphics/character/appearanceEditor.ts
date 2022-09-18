@@ -10,7 +10,28 @@ import { cloneDeep } from 'lodash';
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
 
 export class AppearanceEditor extends Appearance {
-	// Nothing
+	private _enforce = true;
+
+	public get enforce(): boolean {
+		return this._enforce;
+	}
+
+	public set enforce(value: boolean) {
+		if (this._enforce === value) {
+			return;
+		}
+		this._enforce = value;
+		if (this._enforce) {
+			super.enforcePoseLimits();
+		}
+	}
+
+	protected override enforcePoseLimits(): boolean {
+		if (!this._enforce)
+			return false;
+
+		return super.enforcePoseLimits();
+	}
 }
 
 export class EditorAssetGraphics extends AssetGraphics {

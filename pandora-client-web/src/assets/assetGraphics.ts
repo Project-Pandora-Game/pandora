@@ -1,4 +1,4 @@
-import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, LayerSide, PointDefinition } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
 import { MakeMirroredPoints, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
 import { GraphicsManagerInstance } from './graphicsManager';
@@ -139,6 +139,15 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 
 		const settings = this.getImageSettingsForScalingStop(stop);
 		settings.overrides = imageOverrides.slice();
+
+		this.onChange();
+	}
+
+	public setAlphaMask(alphaMask: LayerPriority[] | undefined): void {
+		if (this.mirror && this.isMirror)
+			return this.mirror.setAlphaMask(alphaMask);
+
+		this.definition.alphaMask = alphaMask;
 
 		this.onChange();
 	}

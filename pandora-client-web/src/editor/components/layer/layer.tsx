@@ -310,12 +310,11 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 }
 
 function LayerAlphaMask({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
-	const [alphaMask, setAlphaMask] = useState((layer.definition.alphaMask ?? []) as readonly LayerPriority[]);
+	const alphaMask = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.alphaMask) ?? [];
 
 	const addAlphaMask = useEvent((priority: LayerPriority) => {
 		const next: LayerPriority[] = [...new Set(alphaMask).add(priority)].sort();
-		layer.definition.alphaMask = next;
-		setAlphaMask(next);
+		layer.setAlphaMask(next);
 	});
 
 	const removeAlphaMask = useEvent((priority: LayerPriority) => {
@@ -323,16 +322,14 @@ function LayerAlphaMask({ layer }: { layer: AssetGraphicsLayer; }): ReactElement
 		set.delete(priority);
 		const next: LayerPriority[] = [...set].sort();
 		if (next.length === 0) {
-			delete layer.definition.alphaMask;
+			layer.setAlphaMask(undefined);
 		} else {
-			layer.definition.alphaMask = next;
+			layer.setAlphaMask(next);
 		}
-		setAlphaMask(next);
 	});
 
 	const removeAll = useEvent(() => {
-		delete layer.definition.alphaMask;
-		setAlphaMask([]);
+		layer.setAlphaMask(undefined);
 	});
 
 	return (

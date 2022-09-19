@@ -1,4 +1,4 @@
-import { Appearance, AssetGraphicsDefinition, AssetId, CharacterSize, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
+import { Appearance, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
@@ -53,6 +53,14 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 	protected onChange(): void {
 		this.onChangeHandler?.();
+	}
+
+	protected override createLayer(definition: LayerDefinition): AssetGraphicsLayer {
+		const layer = super.createLayer(definition);
+		layer.on('change', () => {
+			this.onChange();
+		});
+		return layer;
 	}
 
 	addLayer(): void {

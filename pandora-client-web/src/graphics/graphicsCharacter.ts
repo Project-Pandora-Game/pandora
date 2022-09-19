@@ -110,23 +110,6 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		AssertNever(armsPose);
 	}
 
-	protected sortLayers(toSort: LayerState[]): LayerState[] {
-		const sortOrder = this.getSortOrder();
-		const result: LayerState[] = [];
-		for (const priority of sortOrder) {
-			const temp = toSort.filter((l) => l.layer.definition.priority === priority);
-			if (PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority)) {
-				temp.reverse();
-			}
-			result.push(...temp);
-		}
-		const view = this.appearanceContainer.appearance.getView();
-		if (view === CharacterView.BACK) {
-			result.reverse();
-		}
-		return result.concat(toSort.filter((l) => !result.includes(l)));
-	}
-
 	protected createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
 		return new GraphicsLayer(layer, this, item, this.renderer);
 	}
@@ -141,9 +124,9 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 				graphics.destroy();
 			}
 		}
-		const sortedLayers = this.sortLayers(this._layers.slice());
+		const view = this.appearanceContainer.appearance.getView();
 		const priorities = new Map<LayerPriority, (Container | GraphicsLayer)[]>();
-		sortedLayers.forEach((layerState) => {
+		this._layers.forEach((layerState) => {
 			let graphics = this._graphicsLayers.get(layerState);
 			if (!graphics) {
 				graphics = this.createLayer(layerState.layer, layerState.item);
@@ -154,6 +137,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			}
 
 			const priority = layerState.layer.definition.priority;
+			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === CharacterView.BACK);
 			let layer = priorities.get(priority);
 			if (!layer) {
 				layer = [];
@@ -173,13 +157,19 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 				layer = [graphics, maskedContainer];
 				priorities.set(priority, layer);
+			} else if (reverse) {
+				layer.unshift(graphics);
 			} else {
 				layer.push(graphics);
 			}
 		});
 
 		this.displayContainer.removeChildren();
-		this.getSortOrder().forEach((priority) => {
+		let sortOrder = this.getSortOrder();
+		if (view === CharacterView.BACK) {
+			sortOrder = sortOrder.slice().reverse();
+		}
+		sortOrder.forEach((priority) => {
 			const layers = priorities.get(priority);
 			if (layers) {
 				layers.forEach((l) => {

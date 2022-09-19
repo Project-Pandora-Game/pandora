@@ -15,7 +15,7 @@ export class ResultCharacter extends GraphicsCharacterEditor {
 	}
 
 	protected override createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
-		return new ResultLayer(layer, this, item);
+		return new ResultLayer(layer, this, item, this.renderer);
 	}
 
 	protected override update(changes: AppearanceChangeType[]): void {

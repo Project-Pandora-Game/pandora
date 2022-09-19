@@ -1,7 +1,7 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
 import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { AtomicCondition, CharacterSize, CharacterView, Item, TransformDefinition } from 'pandora-common/dist/assets';
-import { AbstractRenderer, Container, IDestroyOptions, Rectangle, Sprite } from 'pixi.js';
+import { AbstractRenderer, Container, IDestroyOptions } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
@@ -16,7 +16,7 @@ export const FAKE_BONES: string[] = ['backView'];
 export class GraphicsCharacter<ContainerType extends AppearanceContainer = AppearanceContainer> extends Container {
 	protected graphicsGetter: GraphicsGetterFunction | undefined;
 	readonly appearanceContainer: ContainerType;
-	readonly renderer;
+	readonly renderer: AbstractRenderer;
 	private _layers: LayerState[] = [];
 	private _pose: Record<BoneName, number> = {};
 	private _cleanupUpdate?: () => void;
@@ -128,7 +128,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	}
 
 	protected createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
-		return new GraphicsLayer(layer, this, item);
+		return new GraphicsLayer(layer, this, item, this.renderer);
 	}
 
 	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
@@ -142,7 +142,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			}
 		}
 		const sortedLayers = this.sortLayers(this._layers.slice());
-		const priorities = new Map<LayerPriority, Container[]>();
+		const priorities = new Map<LayerPriority, (Container | GraphicsLayer)[]>();
 		sortedLayers.forEach((layerState) => {
 			let graphics = this._graphicsLayers.get(layerState);
 			if (!graphics) {
@@ -161,19 +161,17 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			}
 			if (layerState.layer.definition.alphaMask) {
 				const maskedContainer = new Container();
-				maskedContainer.addChild(...layer);
-
-				const bounds = new Rectangle(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
-
-				// TODO: FIXME: This is broken because `graphics` is not watched for changes, mainly async texture change
-				const texture = this.renderer.generateTexture(graphics, {
-					resolution: 1,
-					region: bounds,
+				layer.forEach((l) => {
+					if (l instanceof GraphicsLayer) {
+						l.addTo(maskedContainer);
+					} else {
+						maskedContainer.addChild(l);
+					}
 				});
-				const mask = new Sprite(texture);
 
-				maskedContainer.mask = mask;
-				layer = [mask, maskedContainer];
+				graphics.setMaskTarget(maskedContainer);
+
+				layer = [graphics, maskedContainer];
 				priorities.set(priority, layer);
 			} else {
 				layer.push(graphics);
@@ -184,7 +182,13 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		this.getSortOrder().forEach((priority) => {
 			const layers = priorities.get(priority);
 			if (layers) {
-				this.displayContainer.addChild(...layers);
+				layers.forEach((l) => {
+					if (l instanceof GraphicsLayer) {
+						l.addTo(this.displayContainer);
+					} else {
+						this.displayContainer.addChild(l);
+					}
+				});
 			}
 		});
 

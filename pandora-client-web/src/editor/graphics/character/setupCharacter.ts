@@ -20,7 +20,7 @@ export class SetupCharacter extends GraphicsCharacterEditor {
 	}
 
 	protected override createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
-		return new SetupLayer(layer, this, item);
+		return new SetupLayer(layer, this, item, this.renderer);
 	}
 
 	protected override update(changes: AppearanceChangeType[]): void {

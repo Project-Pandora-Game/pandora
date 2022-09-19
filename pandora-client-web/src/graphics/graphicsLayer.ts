@@ -1,6 +1,6 @@
-import { AtomicConditionBone, BoneName, CoordinatesCompressed, Item, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { AtomicConditionBone, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
 import type { LayerStateOverrides } from './def';
-import { Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
+import { AbstractRenderer, Container, Mesh, MeshGeometry, MeshMaterial, Rectangle, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
 import { Conjunction, EvaluateCondition } from './utility';
 import Delaunator from 'delaunator';
@@ -14,6 +14,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	protected readonly character: Character;
 	protected readonly item: Item | null;
 	protected readonly layer: AssetGraphicsLayer;
+	readonly renderer: AbstractRenderer;
 	private _bones = new Set<string>();
 	private _imageBones = new Set<string>();
 	private _triangles = new Uint32Array();
@@ -25,6 +26,10 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 
 	protected points: PointDefinitionCalculated[] = [];
 	protected vertices = new Float64Array();
+
+	protected targetParent?: Container;
+	private _oldMask?: Sprite;
+	protected maskTarget?: Container;
 
 	protected get texture(): Texture {
 		return this._texture;
@@ -40,20 +45,66 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	}
 	protected set result(value: Mesh | Sprite) {
 		if (this._result) {
+			this.targetParent?.removeChild(this._result);
 			this.removeChild(this._result);
 			this._result.destroy();
 		}
 		this._result = value;
 		this.addChild(this._result);
+		this.updateMaskTarget();
 	}
 
-	constructor(layer: AssetGraphicsLayer, character: Character, item: Item | null) {
+	protected updateMaskTarget(): void {
+		if (this._oldMask) {
+			this._oldMask.destroy();
+			this._oldMask = undefined;
+		}
+		if (!this.maskTarget || !this._result)
+			return;
+
+		// Create base for the mask
+		const maskContainer = new Container();
+		const background = new Sprite(Texture.WHITE);
+		background.width = CharacterSize.WIDTH;
+		background.height = CharacterSize.HEIGHT;
+		maskContainer.addChild(background);
+		maskContainer.addChild(this._result);
+
+		// Render mask texture
+		const bounds = new Rectangle(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
+		const texture = this.renderer.generateTexture(maskContainer, {
+			resolution: 1,
+			region: bounds,
+		});
+		this._oldMask = new Sprite(texture);
+
+		// Apply mask
+		this.maskTarget.mask = this._oldMask;
+		this.targetParent?.addChild(this._oldMask);
+	}
+
+	public setMaskTarget(target: Container | null): void {
+		this.maskTarget = target ?? undefined;
+		this.updateMaskTarget();
+	}
+
+	public addTo(parent: Container): void {
+		this.targetParent = parent;
+		if (this.maskTarget) {
+			this.updateMaskTarget();
+		} else {
+			parent.addChild(this);
+		}
+	}
+
+	constructor(layer: AssetGraphicsLayer, character: Character, item: Item | null, renderer: AbstractRenderer) {
 		super();
 		this.x = layer.definition.x;
 		this.y = layer.definition.y;
 		this.layer = layer;
 		this.character = character;
 		this.item = item;
+		this.renderer = renderer;
 
 		this._calculatePoints();
 	}
@@ -134,9 +185,11 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 			this.getTexture(image).then((texture) => {
 				if (this._image === image) {
 					this.result.texture = this._texture = texture;
+					this.updateMaskTarget();
 				}
 			}).catch(() => {
 				this.result.texture = this._texture = Texture.EMPTY;
+				this.updateMaskTarget();
 			});
 			return true;
 		}

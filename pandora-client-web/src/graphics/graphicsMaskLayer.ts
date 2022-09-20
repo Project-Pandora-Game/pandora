@@ -2,8 +2,9 @@ import { CharacterSize } from 'pandora-common';
 import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix } from 'pixi.js';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
-const FILTER_CONDITION = 'r > 0.5';
+const FILTER_CONDITION = 'a > 0.0';
 const POLYGON_COLOR = 0xFF0000;
+const POLYGON_ALPHA = 1.0;
 
 export class GraphicsMaskLayer {
 	private readonly _renderer: AbstractRenderer;
@@ -61,7 +62,7 @@ export class GraphicsMaskLayer {
 			g.width = CharacterSize.WIDTH;
 			g.height = CharacterSize.HEIGHT;
 			for (const polygonPoints of content) {
-				g.beginFill(POLYGON_COLOR);
+				g.beginFill(POLYGON_COLOR, POLYGON_ALPHA);
 				g.drawPolygon(polygonPoints.flat());
 				g.endFill();
 			}

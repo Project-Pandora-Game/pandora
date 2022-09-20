@@ -204,7 +204,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 
 	return (
 		<div>
-			<div>Image overrides:</div>
+			<div>{ asAlpha ? 'Alpha' : 'Image' } overrides:</div>
 			<textarea
 				spellCheck='false'
 				rows={ 6 }

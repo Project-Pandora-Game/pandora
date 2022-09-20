@@ -238,8 +238,9 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 				.flatMap((point) => point.transforms.map((trans) => trans.bone)),
 		);
 		this._imageBones = new Set(
-			this.layer.definition.image.overrides
-				.concat(...(this.layer.definition.scaling?.stops.flatMap((stop) => stop[1].overrides.concat(stop[1].alphaOverrides ?? [])) ?? []))
+			(this.layer.definition.scaling?.stops.flatMap((stop) => stop[1]) ?? [])
+				.concat([this.layer.definition.image])
+				.flatMap((s) => s.overrides.concat(s.alphaOverrides ?? []))
 				.flatMap((override) => override.condition)
 				.flat()
 				.filter((condition): condition is AtomicConditionBone => 'bone' in condition && condition.bone != null)

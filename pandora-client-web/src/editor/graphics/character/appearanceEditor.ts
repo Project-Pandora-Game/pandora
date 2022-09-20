@@ -328,8 +328,17 @@ export class EditorAssetGraphics extends AssetGraphics {
 						setting.image = layerImageBasename;
 						shouldUpdate = true;
 					}
+					const alphaImage = setting.alphaImage;
+					if (alphaImage) {
+						images.add(alphaImage);
+						const alphaImageBasename = StripAssetHash(alphaImage);
+						if (alphaImage !== alphaImageBasename) {
+							setting.alphaImage = alphaImageBasename;
+							shouldUpdate = true;
+						}
+					}
 				}
-				for (const override of setting.overrides) {
+				for (const override of setting.overrides.concat(setting.alphaOverrides ?? [])) {
 					images.add(override.image);
 					const basename = StripAssetHash(override.image);
 					if (override.image !== basename) {

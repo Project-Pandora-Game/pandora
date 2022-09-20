@@ -114,72 +114,49 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		return new GraphicsLayer(layer, this, item, this.renderer);
 	}
 
-	private _graphicsLayers = new Map<LayerState, Map<LayerPriority, GraphicsLayer>>();
+	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
 	protected layerUpdate(bones: Set<string>): void {
 		this._evalCache.clear();
-		for (const [key, priorities] of this._graphicsLayers) {
+		for (const [key, graphics] of this._graphicsLayers) {
 			if (!this._layers.includes(key)) {
 				this._graphicsLayers.delete(key);
-				for (const graphics of priorities.values()) {
-					graphics.destroy();
-				}
+				graphics.destroy();
 			}
 		}
 		const view = this.appearanceContainer.appearance.getView();
 		const priorityLayers = new Map<LayerPriority, (Container | GraphicsLayer)[]>();
 		this._layers.forEach((layerState) => {
-			const isAlphaMask = layerState.layer.definition.alphaMask != null;
-			const priorities = isAlphaMask ? (layerState.layer.definition.alphaMask ?? []) : [layerState.layer.definition.priority];
-
-			let allGraphics = this._graphicsLayers.get(layerState);
-			if (!allGraphics) {
-				allGraphics = new Map();
-				this._graphicsLayers.set(layerState, allGraphics);
-			}
-			for (const [priority, graphics] of allGraphics) {
-				if (!priorities.includes(priority)) {
-					allGraphics.delete(priority);
-					graphics.destroy();
-				}
+			let graphics = this._graphicsLayers.get(layerState);
+			if (!graphics) {
+				graphics = this.createLayer(layerState.layer, layerState.item);
+				this._graphicsLayers.set(layerState, graphics);
+				graphics.update({ state: layerState.state, force: true });
+			} else {
+				graphics.update({ state: layerState.state, bones });
 			}
 
-			for (const priority of priorities) {
-				let graphics = allGraphics.get(priority);
-				if (!graphics) {
-					graphics = this.createLayer(layerState.layer, layerState.item);
-					allGraphics.set(priority, graphics);
-					graphics.update({ state: layerState.state, force: true });
+			const priority = layerState.layer.definition.priority;
+			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === CharacterView.BACK);
+
+			let layer = priorityLayers.get(priority);
+			if (!layer) {
+				layer = [];
+				priorityLayers.set(priority, layer);
+			}
+
+			const maskedContainer = new Container();
+			layer.forEach((l) => {
+				if (l instanceof GraphicsLayer) {
+					l.addTo(maskedContainer);
 				} else {
-					graphics.update({ state: layerState.state, bones });
+					maskedContainer.addChild(l);
 				}
+			});
 
-				const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === CharacterView.BACK);
-				let layer = priorityLayers.get(priority);
-				if (!layer) {
-					layer = [];
-					priorityLayers.set(priority, layer);
-				}
-				if (layerState.layer.definition.alphaMask) {
-					const maskedContainer = new Container();
-					layer.forEach((l) => {
-						if (l instanceof GraphicsLayer) {
-							l.addTo(maskedContainer);
-						} else {
-							maskedContainer.addChild(l);
-						}
-					});
+			graphics.setMaskTarget(maskedContainer);
 
-					graphics.setMaskTarget(maskedContainer);
-
-					layer = [graphics, maskedContainer];
-					priorityLayers.set(priority, layer);
-				} else if (reverse) {
-					layer.unshift(graphics);
-				} else {
-					layer.push(graphics);
-				}
-			}
-
+			layer = reverse ? [graphics, maskedContainer] : [maskedContainer, graphics];
+			priorityLayers.set(priority, layer);
 		});
 
 		this.displayContainer.removeChildren();

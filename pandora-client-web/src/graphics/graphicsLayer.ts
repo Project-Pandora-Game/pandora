@@ -20,8 +20,11 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	private _triangles = new Uint32Array();
 	private _uv = new Float64Array();
 	private _texture: Texture = Texture.EMPTY;
-	private _image!: string;
+	private _image: string = '';
+	private _alphaTexture: Texture = Texture.EMPTY;
+	private _alphaImage: string = '';
 	private _result!: Mesh | Sprite;
+	private _alphaResult!: Mesh;
 	private _state?: LayerStateOverrides;
 
 	protected points: PointDefinitionCalculated[] = [];
@@ -45,7 +48,6 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	}
 	protected set result(value: Mesh | Sprite) {
 		if (this._result) {
-			this.targetParent?.removeChild(this._result);
 			this.removeChild(this._result);
 			this._result.destroy();
 		}
@@ -53,22 +55,33 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		this.addChild(this._result);
 		this.updateMaskTarget();
 	}
+	protected get alphaResult(): Mesh {
+		return this._alphaResult;
+	}
+	protected set alphaResult(value: Mesh) {
+		this._alphaResult = value;
+		this.updateMaskTarget();
+	}
 
 	protected updateMaskTarget(): void {
 		if (this._oldMask) {
+			if (this.maskTarget) {
+				this.maskTarget.mask = null;
+			}
 			this._oldMask.destroy();
 			this._oldMask = undefined;
 		}
-		if (!this.maskTarget || !this._result)
+		if (!this.maskTarget || !this._alphaResult || this._alphaTexture === Texture.EMPTY)
 			return;
 
 		// Create base for the mask
+		this._alphaResult.texture = this._alphaTexture;
 		const maskContainer = new Container();
 		const background = new Sprite(Texture.WHITE);
 		background.width = CharacterSize.WIDTH;
 		background.height = CharacterSize.HEIGHT;
 		maskContainer.addChild(background);
-		maskContainer.addChild(this._result);
+		maskContainer.addChild(this._alphaResult);
 
 		// Render mask texture
 		const bounds = new Rectangle(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
@@ -90,11 +103,8 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 
 	public addTo(parent: Container): void {
 		this.targetParent = parent;
-		if (this.maskTarget) {
-			this.updateMaskTarget();
-		} else {
-			parent.addChild(this);
-		}
+		parent.addChild(this);
+		this.updateMaskTarget();
 	}
 
 	constructor(layer: AssetGraphicsLayer, character: Character, item: Item | null, renderer: AbstractRenderer) {
@@ -151,6 +161,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 			this._triangles,
 		);
 		this.result = new Mesh(geometry, new MeshMaterial(this._texture));
+		this.alphaResult = new Mesh(geometry, new MeshMaterial(this._alphaTexture));
 	}
 
 	protected updateState(state?: LayerStateOverrides): void {
@@ -179,21 +190,35 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 				setting = minBy(s.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0])?.[1] ?? setting;
 			}
 		}
+		let change = false;
+
 		const image = setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c, this.item)))?.image ?? setting.image;
 		if (image !== this._image) {
 			this._image = image;
 			this.getTexture(image).then((texture) => {
 				if (this._image === image) {
 					this.result.texture = this._texture = texture;
-					this.updateMaskTarget();
 				}
 			}).catch(() => {
 				this.result.texture = this._texture = Texture.EMPTY;
+			});
+			change = true;
+		}
+		const alphaImage = setting.alphaOverrides?.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c, this.item)))?.image ?? setting.alphaImage ?? '';
+		if (alphaImage !== this._alphaImage) {
+			this._alphaImage = alphaImage;
+			this.getTexture(alphaImage).then((texture) => {
+				if (this._alphaImage === alphaImage) {
+					this._alphaTexture = texture;
+					this.updateMaskTarget();
+				}
+			}).catch(() => {
+				this._alphaTexture = Texture.EMPTY;
 				this.updateMaskTarget();
 			});
-			return true;
+			change = true;
 		}
-		return false;
+		return change;
 	}
 
 	protected getTexture(image: string): Promise<Texture> {

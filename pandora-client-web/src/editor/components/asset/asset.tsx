@@ -133,6 +133,8 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 		});
 	}, () => editor.getLayersAlphaOverrideIndex(layer));
 
+	const hasAlphaMasks = useSyncExternalStore(layer.getSubscriber('change'), () => layer.hasAlphaMasks());
+
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		editor.setLayerAlphaOverride([layer], alphaIndex+1);
@@ -141,7 +143,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 	return (
 		<li className={ isSelected ? 'selected' : '' }>
 			<button
-				className={ classNames('layerName', { alphaMaskLayer: layer.definition.alphaMask  }) }
+				className={ classNames('layerName', { alphaMaskLayer: hasAlphaMasks }) }
 				onClick={ () => editor.targetLayer.value = layer }
 			>
 				{ layer.name }

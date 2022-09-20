@@ -1,4 +1,4 @@
-import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, LayerSide, PointDefinition } from 'pandora-common';
+import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
 import { MakeMirroredPoints, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
 import { GraphicsManagerInstance } from './graphicsManager';
@@ -115,6 +115,14 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		return Array.from(result.values());
 	}
 
+	public setPointType(pointType: string[]): void {
+		if (this.mirror && this.isMirror)
+			return this.mirror.setPointType(pointType);
+
+		this.definition.pointType = pointType.length === 0 ? undefined : pointType.slice();
+		this.onChange();
+	}
+
 	public setImage(image: string, stop?: number): void {
 		if (this.mirror && this.isMirror)
 			return this.mirror.setImage(image, stop);
@@ -122,14 +130,6 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const setting = this.getImageSettingsForScalingStop(stop);
 		setting.image = image;
 
-		this.onChange();
-	}
-
-	public setPointType(pointType: string[]): void {
-		if (this.mirror && this.isMirror)
-			return this.mirror.setPointType(pointType);
-
-		this.definition.pointType = pointType.length === 0 ? undefined : pointType.slice();
 		this.onChange();
 	}
 
@@ -143,13 +143,29 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		this.onChange();
 	}
 
-	public setAlphaMask(alphaMask: LayerPriority[] | undefined): void {
+	public setAlphaImage(image: string, stop?: number): void {
 		if (this.mirror && this.isMirror)
-			return this.mirror.setAlphaMask(alphaMask);
+			return this.mirror.setAlphaImage(image, stop);
 
-		this.definition.alphaMask = alphaMask;
+		const setting = this.getImageSettingsForScalingStop(stop);
+		setting.alphaImage = image || undefined;
 
 		this.onChange();
+	}
+
+	public setAlphaOverrides(imageOverrides: LayerImageOverride[], stop?: number): void {
+		if (this.mirror && this.isMirror)
+			return this.mirror.setAlphaOverrides(imageOverrides.map(MirrorImageOverride), stop);
+
+		const settings = this.getImageSettingsForScalingStop(stop);
+		settings.alphaOverrides = imageOverrides.length > 0 ? imageOverrides.slice() : undefined;
+
+		this.onChange();
+	}
+
+	public hasAlphaMasks(): boolean {
+		return [...this.definition.scaling?.stops.map((s) => s[1]) ?? [], this.definition.image]
+			.some((i) => !!i.alphaImage || !!i.alphaOverrides);
 	}
 
 	public onChange(): void {

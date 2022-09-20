@@ -2,9 +2,7 @@ import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
-import { useEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/Button/Button';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -35,10 +33,10 @@ export function LayerUI(): ReactElement {
 			<hr />
 			<LayerImageSelect layer={ selectedLayer } asset={ asset } />
 			<LayerImageOverridesTextarea layer={ selectedLayer } />
+			<LayerImageSelect layer={ selectedLayer } asset={ asset } asAlpha />
+			<LayerImageOverridesTextarea layer={ selectedLayer } asAlpha />
 			<hr />
 			<LayerScalingConfig layer={ selectedLayer } asset={ asset } />
-			<hr />
-			<LayerAlphaMask layer={ selectedLayer } />
 		</div>
 	);
 }
@@ -67,9 +65,10 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 	);
 }
 
-function LayerImageSelect({ layer, asset, stop }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; }): ReactElement | null {
+function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; asAlpha?: boolean; }): ReactElement | null {
 	const imageList = useSyncExternalStore(asset.editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
-	const layerImage = useSyncExternalStore(layer.getSubscriber('change'), () => layer.getImageSettingsForScalingStop(stop).image);
+	const stopSettings = useSyncExternalStore(layer.getSubscriber('change'), () => layer.getImageSettingsForScalingStop(stop));
+	const layerImage = asAlpha ? (stopSettings.alphaImage ?? '') : stopSettings.image;
 
 	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
 	for (const image of imageList) {
@@ -80,13 +79,17 @@ function LayerImageSelect({ layer, asset, stop }: { layer: AssetGraphicsLayer; a
 
 	return (
 		<div>
-			<label htmlFor='layer-image-select'>Layer image asset:</label>
+			<label htmlFor='layer-image-select'>{ asAlpha ? 'Alpha' : 'Layer' } image asset:</label>
 			<select
 				id='layer-image-select'
 				className='flex'
 				value={ layerImage }
 				onChange={ (event) => {
-					layer.setImage(event.target.value, stop);
+					if (asAlpha) {
+						layer.setAlphaImage(event.target.value, stop);
+					} else {
+						layer.setImage(event.target.value, stop);
+					}
 				} }
 			>
 				{ elements }
@@ -177,8 +180,8 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 	);
 }
 
-function LayerImageOverridesTextarea({ layer, stop }: { layer: AssetGraphicsLayer; stop?: number; }): ReactElement {
-	const [value, setValue] = useState(SerializeLayerImageOverrides(layer.getImageSettingsForScalingStop(stop).overrides));
+function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
+	const [value, setValue] = useState(SerializeLayerImageOverrides(asAlpha ? (layer.getImageSettingsForScalingStop(stop).alphaOverrides ?? []) : layer.getImageSettingsForScalingStop(stop).overrides));
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -186,12 +189,16 @@ function LayerImageOverridesTextarea({ layer, stop }: { layer: AssetGraphicsLaye
 		try {
 			const result = ParseLayerImageOverrides(e.target.value, GetAssetManager().getAllBones().map((b) => b.name).concat(FAKE_BONES));
 			setError(null);
-			layer.setImageOverrides(result, stop);
+			if (asAlpha) {
+				layer.setAlphaOverrides(result, stop);
+			} else {
+				layer.setImageOverrides(result, stop);
+			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : String(err));
 		}
 
-	}, [layer, stop]);
+	}, [layer, stop, asAlpha]);
 
 	return (
 		<div>
@@ -306,53 +313,6 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 				</React.Fragment>
 			)) }
 		</>
-	);
-}
-
-function LayerAlphaMask({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
-	const alphaMask = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.alphaMask) ?? [];
-
-	const addAlphaMask = useEvent((priority: LayerPriority) => {
-		const next: LayerPriority[] = [...new Set(alphaMask).add(priority)].sort();
-		layer.setAlphaMask(next);
-	});
-
-	const removeAlphaMask = useEvent((priority: LayerPriority) => {
-		const set = new Set(alphaMask);
-		set.delete(priority);
-		const next: LayerPriority[] = [...set].sort();
-		if (next.length === 0) {
-			layer.setAlphaMask(undefined);
-		} else {
-			layer.setAlphaMask(next);
-		}
-	});
-
-	const removeAll = useEvent(() => {
-		layer.setAlphaMask(undefined);
-	});
-
-	return (
-		<FieldsetToggle legend='Alpha Mask' open={ alphaMask.length > 0 } className='alpha-mask-grid'>
-			<span />
-			<Button className='slim hideDisabled' onClick={ removeAll } disabled={ alphaMask.length === 0 } >Remove All</Button>
-			<hr />
-			{ alphaMask.map((p) => (
-				<React.Fragment key={ p }>
-					<span>{ GetReadablePriorityName(p) }</span>
-					<Button className='slim' onClick={ () => removeAlphaMask(p) }>Remove</Button>
-				</React.Fragment>
-			)) }
-			<hr />
-			{ LAYER_PRIORITIES
-				.filter((p) => !alphaMask.includes(p))
-				.map((p) => (
-					<React.Fragment key={ p }>
-						<span>{ GetReadablePriorityName(p) }</span>
-						<Button className='slim' onClick={ () => addAlphaMask(p) }>Add</Button>
-					</React.Fragment>
-				)) }
-		</FieldsetToggle>
 	);
 }
 

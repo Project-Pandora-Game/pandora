@@ -33,7 +33,7 @@ export function SerializeAtomicCondition(condition: AtomicCondition): string {
 }
 
 function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondition {
-	const parsed = /^\s*([-_a-z0-9]+)\s*([=<>!]+)\s*(-?[0-9.]+)\s*$/i.exec(input);
+	const parsed = /^\s*([-_a-z0-9]+)\s*([=<>!]+)\s*(-?[-_a-z0-9.]+)\s*$/i.exec(input);
 	if (!parsed) {
 		throw new Error(`Failed to parse condition '${input}'`);
 	}
@@ -50,6 +50,9 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 	}
 
 	const value = ParseFloat(parsed[3]);
+	if (isNaN(value)) {
+		throw new Error(`Expected decimal number, found '${parsed[3]}'`);
+	}
 	if (!validBones.includes(parsed[1])) {
 		throw new Error(`Unknown bone in condition '${input}'`);
 	}

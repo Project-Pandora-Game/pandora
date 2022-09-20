@@ -18,7 +18,7 @@ import { ContextMenu, useContextMenu } from '../contextMenu';
 import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatRoomData, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
-import { usePlayer, usePlayerData, usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
 import { ChatParser } from './chatParser';

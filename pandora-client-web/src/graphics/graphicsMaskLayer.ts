@@ -1,5 +1,5 @@
 import { CharacterSize } from 'pandora-common';
-import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix, Container } from 'pixi.js';
+import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix } from 'pixi.js';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
 const FILTER_CONDITION = 'a > 0.0';

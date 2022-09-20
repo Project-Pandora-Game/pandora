@@ -1,4 +1,4 @@
-import { Appearance, AssetGraphicsDefinition, AssetId, CharacterSize, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
+import { Appearance, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
@@ -10,7 +10,28 @@ import { cloneDeep } from 'lodash';
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
 
 export class AppearanceEditor extends Appearance {
-	// Nothing
+	private _enforce = true;
+
+	public get enforce(): boolean {
+		return this._enforce;
+	}
+
+	public set enforce(value: boolean) {
+		if (this._enforce === value) {
+			return;
+		}
+		this._enforce = value;
+		if (this._enforce) {
+			super.enforcePoseLimits();
+		}
+	}
+
+	protected override enforcePoseLimits(): boolean {
+		if (!this._enforce)
+			return false;
+
+		return super.enforcePoseLimits();
+	}
 }
 
 export class EditorAssetGraphics extends AssetGraphics {
@@ -32,6 +53,14 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 	protected onChange(): void {
 		this.onChangeHandler?.();
+	}
+
+	protected override createLayer(definition: LayerDefinition): AssetGraphicsLayer {
+		const layer = super.createLayer(definition);
+		layer.on('change', () => {
+			this.onChange();
+		});
+		return layer;
 	}
 
 	addLayer(): void {
@@ -299,8 +328,17 @@ export class EditorAssetGraphics extends AssetGraphics {
 						setting.image = layerImageBasename;
 						shouldUpdate = true;
 					}
+					const alphaImage = setting.alphaImage;
+					if (alphaImage) {
+						images.add(alphaImage);
+						const alphaImageBasename = StripAssetHash(alphaImage);
+						if (alphaImage !== alphaImageBasename) {
+							setting.alphaImage = alphaImageBasename;
+							shouldUpdate = true;
+						}
+					}
 				}
-				for (const override of setting.overrides) {
+				for (const override of setting.overrides.concat(setting.alphaOverrides ?? [])) {
 					images.add(override.image);
 					const basename = StripAssetHash(override.image);
 					if (override.image !== basename) {

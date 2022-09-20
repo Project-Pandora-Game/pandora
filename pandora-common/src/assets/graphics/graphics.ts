@@ -137,7 +137,9 @@ export enum LayerSide {
 export const LayerImageSettingSchema = z.object({
 	image: z.string(),
 	overrides: z.array(LayerImageOverrideSchema),
-});
+	alphaImage: z.string().min(1).optional(),
+	alphaOverrides: z.array(LayerImageOverrideSchema).min(1).optional(),
+}).strict();
 export type LayerImageSetting = z.infer<typeof LayerImageSettingSchema>;
 
 export const LayerDefinitionSchema = RectangleSchema.extend({
@@ -153,12 +155,12 @@ export const LayerDefinitionSchema = RectangleSchema.extend({
 		scaleBone: BoneNameSchema,
 		stops: z.array(z.tuple([z.number(), LayerImageSettingSchema])),
 	}).optional(),
-});
+}).strict();
 export type LayerDefinition = z.infer<typeof LayerDefinitionSchema>;
 
 export const AssetGraphicsDefinitionSchema = z.object({
 	layers: z.array(LayerDefinitionSchema),
-});
+}).strict();
 export type AssetGraphicsDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
 
 export interface AssetsGraphicsDefinitionFile {

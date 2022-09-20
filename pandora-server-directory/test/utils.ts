@@ -1,17 +1,9 @@
 import { nanoid } from 'nanoid';
-import { logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { Account, CreateAccountData } from '../src/account/account';
 import { accountManager } from '../src/account/accountManager';
 import { Character } from '../src/account/character';
 import { InitDatabase } from '../src/database/databaseProvider';
 import { MockDatabase, PrehashPassword } from '../src/database/mockDb';
-
-export function TestSetupLogging() {
-	SetConsoleOutput(LogLevel.FATAL);
-	logConfig.onFatal.push(() => {
-		fail('Fatal error happened');
-	});
-}
 
 let mockDb: MockDatabase | undefined;
 

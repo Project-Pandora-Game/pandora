@@ -20,6 +20,14 @@ export async function LoadAssetsFromDirectLink(): Promise<GraphicsManager> {
 	return Load(new URLGraphicsLoader(prefix + '/'));
 }
 
+export async function LoadAssetsFromOfficialLink(): Promise<GraphicsManager> {
+	return Load(new URLGraphicsLoader('https://project-pandora.com/pandora-assets/'));
+}
+
+export function IsOriginSameAsOfficial(): boolean {
+	return location.origin === 'https://project-pandora.com';
+}
+
 async function Load(loader: IGraphicsLoader): Promise<GraphicsManager> {
 	const hash = (await loader.loadTextFile('current')).trim();
 	const assetDefinitions = JSON.parse(await loader.loadTextFile(`assets_${hash}.json`)) as AssetsDefinitionFile;

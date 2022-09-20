@@ -1,12 +1,13 @@
 import { AtomicConditionBone, BoneName, CoordinatesCompressed, Item, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
 import type { LayerStateOverrides } from './def';
-import { Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
+import { AbstractRenderer, Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
 import { Conjunction, EvaluateCondition } from './utility';
 import Delaunator from 'delaunator';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { max, maxBy, min, minBy } from 'lodash';
+import { GraphicsMaskLayer } from './graphicsMaskLayer';
 
 Mesh.BATCHABLE_SIZE = 1000000;
 
@@ -14,14 +15,16 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	protected readonly character: Character;
 	protected readonly item: Item | null;
 	protected readonly layer: AssetGraphicsLayer;
+	readonly renderer: AbstractRenderer;
 	private _bones = new Set<string>();
 	private _imageBones = new Set<string>();
 	private _triangles = new Uint32Array();
 	private _uv = new Float64Array();
 	private _texture: Texture = Texture.EMPTY;
-	private _image!: string;
+	private _image: string = '';
 	private _result!: Mesh | Sprite;
 	private _state?: LayerStateOverrides;
+	private _alphaMask?: GraphicsMaskLayer;
 
 	protected points: PointDefinitionCalculated[] = [];
 	protected vertices = new Float64Array();
@@ -45,20 +48,39 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		}
 		this._result = value;
 		this.addChild(this._result);
+		if (this._alphaMask && value instanceof Sprite) {
+			this._alphaMask.updateGeometry(undefined);
+		}
 	}
 
-	constructor(layer: AssetGraphicsLayer, character: Character, item: Item | null) {
+	public addLowerLayer(layer: Container): void {
+		this.addChild(layer);
+		this.sortChildren();
+		if (this._alphaMask) {
+			layer.filters = [this._alphaMask.filter];
+		}
+	}
+
+	constructor(layer: AssetGraphicsLayer, character: Character, item: Item | null, renderer: AbstractRenderer) {
 		super();
+		this.sortableChildren = true;
 		this.x = layer.definition.x;
 		this.y = layer.definition.y;
 		this.layer = layer;
 		this.character = character;
 		this.item = item;
+		this.renderer = renderer;
+
+		if (layer.hasAlphaMasks()) {
+			this._alphaMask = new GraphicsMaskLayer(this.renderer);
+			this.addChild(this._alphaMask.sprite);
+			this.on('destroy', () => this._alphaMask?.destroy());
+		}
 
 		this._calculatePoints();
 	}
 
-	public update({ bones = new Set(), state, force }: { bones?: Set<string>, state?: LayerStateOverrides, force?: boolean; }): void {
+	public update({ bones = new Set(), state, force }: { bones?: ReadonlySet<string>, state?: LayerStateOverrides, force?: boolean; }): void {
 		let update = false;
 		if (Conjunction(this._bones, bones) || force) {
 			this.vertices = this.calculateVertices();
@@ -100,6 +122,9 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 			this._triangles,
 		);
 		this.result = new Mesh(geometry, new MeshMaterial(this._texture));
+		if (this._alphaMask) {
+			this._alphaMask.updateGeometry(geometry);
+		}
 	}
 
 	protected updateState(state?: LayerStateOverrides): void {
@@ -128,6 +153,8 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 				setting = minBy(s.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0])?.[1] ?? setting;
 			}
 		}
+		let change = false;
+
 		const image = setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c, this.item)))?.image ?? setting.image;
 		if (image !== this._image) {
 			this._image = image;
@@ -138,9 +165,13 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 			}).catch(() => {
 				this.result.texture = this._texture = Texture.EMPTY;
 			});
-			return true;
+			change = true;
 		}
-		return false;
+		if (this._alphaMask) {
+			const alphaContent = setting.alphaOverrides?.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c, this.item)))?.image ?? setting.alphaImage ?? '';
+			this._alphaMask.updateContent(alphaContent);
+		}
+		return change;
 	}
 
 	protected getTexture(image: string): Promise<Texture> {
@@ -164,8 +195,9 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 				.flatMap((point) => point.transforms.map((trans) => trans.bone)),
 		);
 		this._imageBones = new Set(
-			this.layer.definition.image.overrides
-				.concat(...(this.layer.definition.scaling?.stops.flatMap((stop) => stop[1].overrides) ?? []))
+			(this.layer.definition.scaling?.stops.flatMap((stop) => stop[1]) ?? [])
+				.concat([this.layer.definition.image])
+				.flatMap((s) => s.overrides.concat(s.alphaOverrides ?? []))
 				.flatMap((override) => override.condition)
 				.flat()
 				.filter((condition): condition is AtomicConditionBone => 'bone' in condition && condition.bone != null)

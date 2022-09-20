@@ -1,7 +1,7 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
 import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { AtomicCondition, CharacterSize, CharacterView, Item, TransformDefinition } from 'pandora-common/dist/assets';
-import { Container, IDestroyOptions } from 'pixi.js';
+import { AbstractRenderer, Container, IDestroyOptions } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
@@ -16,11 +16,14 @@ export const FAKE_BONES: string[] = ['backView'];
 export class GraphicsCharacter<ContainerType extends AppearanceContainer = AppearanceContainer> extends Container {
 	protected graphicsGetter: GraphicsGetterFunction | undefined;
 	readonly appearanceContainer: ContainerType;
-	private _layers: LayerState[] = [];
+	readonly renderer: AbstractRenderer;
+	private _layers: readonly LayerState[] = [];
 	private _pose: Record<BoneName, number> = {};
 	private _cleanupUpdate?: () => void;
 
-	constructor(appearanceContainer: ContainerType) {
+	private displayContainer = new Container();
+
+	constructor(appearanceContainer: ContainerType, renderer: AbstractRenderer) {
 		super();
 
 		this.pivot.x = CharacterSize.WIDTH / 2;
@@ -28,7 +31,10 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 
 		this.sortableChildren = true;
 
+		this.addChild(this.displayContainer);
+
 		this.appearanceContainer = appearanceContainer;
+		this.renderer = renderer;
 
 		this._cleanupUpdate = this.appearanceContainer.on('appearanceUpdate', (changes) => this.update(changes));
 	}
@@ -104,51 +110,73 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		AssertNever(armsPose);
 	}
 
-	protected sortLayers(toSort: LayerState[]): LayerState[] {
-		const sortOrder = this.getSortOrder();
-		const result: LayerState[] = [];
-		for (const priority of sortOrder) {
-			const temp = toSort.filter((l) => l.layer.definition.priority === priority);
-			if (PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority)) {
-				temp.reverse();
-			}
-			result.push(...temp);
-		}
-		const view = this.appearanceContainer.appearance.getView();
-		if (view === CharacterView.BACK) {
-			result.reverse();
-		}
-		return result.concat(toSort.filter((l) => !result.includes(l)));
-	}
-
 	protected createLayer(layer: AssetGraphicsLayer, item: Item | null): GraphicsLayer {
-		return new GraphicsLayer(layer, this, item);
+		return new GraphicsLayer(layer, this, item, this.renderer);
 	}
 
 	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
+	private _lastUpdateLayers: readonly LayerState[] | undefined;
+	private _lastUpdateView: CharacterView | undefined;
 	protected layerUpdate(bones: Set<string>): void {
 		this._evalCache.clear();
 		for (const [key, graphics] of this._graphicsLayers) {
 			if (!this._layers.includes(key)) {
 				this._graphicsLayers.delete(key);
-				this.removeChild(graphics);
 				graphics.destroy();
 			}
 		}
-		this.sortLayers(this._layers.slice()).forEach((layerState, index) => {
+		const view = this.appearanceContainer.appearance.getView();
+
+		if (this._layers === this._lastUpdateLayers && view === this._lastUpdateView) {
+			this._layers.forEach((layerState) => {
+				const graphics = this._graphicsLayers.get(layerState);
+				if (!graphics) {
+					throw new Error('Graphics not found while built layers didn\'t change');
+				} else {
+					graphics.update({ state: layerState.state, bones });
+				}
+			});
+			return;
+		}
+
+		const priorityLayers = new Map<LayerPriority, GraphicsLayer>();
+		this._layers.forEach((layerState) => {
 			let graphics = this._graphicsLayers.get(layerState);
 			if (!graphics) {
 				graphics = this.createLayer(layerState.layer, layerState.item);
 				this._graphicsLayers.set(layerState, graphics);
-				this.addChild(graphics);
 				graphics.update({ state: layerState.state, force: true });
 			} else {
 				graphics.update({ state: layerState.state, bones });
 			}
-			graphics.zIndex = index;
+
+			const priority = layerState.layer.definition.priority;
+			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === CharacterView.BACK);
+
+			const lowerLayer = priorityLayers.get(priority);
+
+			if (lowerLayer) {
+				lowerLayer.zIndex = reverse ? 1 : -1;
+				graphics.addLowerLayer(lowerLayer);
+			}
+
+			priorityLayers.set(priority, graphics);
 		});
+
+		this.displayContainer.removeChildren();
+		let sortOrder = this.getSortOrder();
+		if (view === CharacterView.BACK) {
+			sortOrder = sortOrder.slice().reverse();
+		}
+		sortOrder.forEach((priority) => {
+			const layer = priorityLayers.get(priority);
+			if (layer) {
+				this.displayContainer.addChild(layer);
+			}
+		});
+
 		this.sortChildren();
-		const backView = this.appearanceContainer.appearance.getView() === CharacterView.BACK;
+		const backView = view === CharacterView.BACK;
 		this.scale.x = backView ? -1 : 1;
 	}
 

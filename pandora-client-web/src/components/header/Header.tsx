@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { EMPTY, IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import friendsIcon from '../../assets/icons/friends.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
@@ -50,15 +50,17 @@ function LeftHeader(): ReactElement {
 function CharacterMenu({ close }: { close: () => void }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	return (
-		<div className='characterMenu'>
-			<header>Character menu</header>
+		<div className='characterMenu' onClick={ () => close() }>
+			<header onClick={ (ev) => ev.stopPropagation() }>Character menu</header>
 			<a onClick={ (ev) => {
-				close();
 				ev.preventDefault();
 				directoryConnector.sendMessage('disconnectCharacter', EMPTY);
 			} }>
 				Change character
 			</a>
+			<Link to='/character_settings'>
+				Character settings
+			</Link>
 		</div>
 	);
 }

@@ -1,4 +1,3 @@
-import { LogLevel, SetConsoleOutput } from 'pandora-common';
 import { Account, CreateAccountData } from '../../src/account/account';
 import AccountSecure, { AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import { MockDatabase } from '../../src/database/mockDb';
@@ -48,7 +47,6 @@ describe('AccountSecure', () => {
 	const mockSaving = jest.spyOn(MockDatabase.prototype, 'setAccountSecure');
 
 	beforeAll(async () => {
-		SetConsoleOutput(LogLevel.FATAL);
 		await TestMockDb();
 	});
 

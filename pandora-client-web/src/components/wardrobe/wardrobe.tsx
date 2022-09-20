@@ -764,8 +764,13 @@ function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose
 	);
 }
 
-export function BoneRowElement({ bone, onChange, forcePose }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; }) {
-	const [min, max] = useMemo(() => forcePose?.get(bone.definition.name) ?? [BONE_MIN, BONE_MAX], [bone, forcePose]);
+export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; unlocked?: boolean; }): ReactElement {
+	const [min, max] = useMemo(() => {
+		if (unlocked || !forcePose) {
+			return [BONE_MIN, BONE_MAX];
+		}
+		return forcePose.get(bone.definition.name) ?? [BONE_MIN, BONE_MAX];
+	}, [bone, forcePose, unlocked]);
 
 	const name = useMemo(() => bone.definition.name
 		.replace(/^\w/, (c) => c.toUpperCase())

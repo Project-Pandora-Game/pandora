@@ -1,5 +1,5 @@
 import { Item } from 'pandora-common';
-import { Texture } from 'pixi.js';
+import { AbstractRenderer, Texture } from 'pixi.js';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { LayerStateOverrides } from '../../../graphics/def';
 import { GraphicsLayer } from '../../../graphics/graphicsLayer';
@@ -12,8 +12,8 @@ export abstract class EditorLayer extends GraphicsLayer<GraphicsCharacterEditor>
 
 	private readonly _cleanups: (() => void)[] = [];
 
-	constructor(layer: AssetGraphicsLayer, character: GraphicsCharacterEditor, item: Item | null) {
-		super(layer, character, item);
+	constructor(layer: AssetGraphicsLayer, character: GraphicsCharacterEditor, item: Item | null, renderer: AbstractRenderer) {
+		super(layer, character, item, renderer);
 		this._cleanups.push(this.layer.on('change', this._pointUpdate.bind(this)));
 		this._cleanups.push(this.character.editor.targetLayer.subscribe(() => this.update({})));
 		this._cleanups.push(this.character.editor.targetPoint.subscribe(() => this.update({})));

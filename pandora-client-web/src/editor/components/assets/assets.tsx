@@ -41,13 +41,21 @@ function AssetCategoryElement({ category }: { category: AssetTreeViewCategory; }
 	return (
 		<ToggleLi name={ category.name } state={ category }>
 			<ul>
-				{category.assets.map((asset) => <AssetElement key={ asset.id } asset={ asset } />)}
+				{category.assets.map((asset) => <AssetElement key={ asset.id } asset={ asset } category={ category.name } />)}
 			</ul>
 		</ToggleLi>
 	);
 }
 
-function AssetElement({ asset }: { asset: Asset; }): ReactElement {
+function StripAssetIdAndCategory(id: AssetId, category: string) {
+	const str = StripAssetIdPrefix(id);
+	if (str.startsWith(category)) {
+		return str.replace(category, '.');
+	}
+	return str;
+}
+
+function AssetElement({ asset, category }: { asset: Asset; category: string; }): ReactElement {
 	const editor = useEditor();
 	const navigate = useNavigate();
 
@@ -60,7 +68,7 @@ function AssetElement({ asset }: { asset: Asset; }): ReactElement {
 
 	return (
 		<li>
-			<span>{StripAssetIdPrefix(asset.id)}</span>
+			<span>{StripAssetIdAndCategory(asset.id, category)}</span>
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);

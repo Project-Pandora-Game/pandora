@@ -2,7 +2,6 @@ import { accountManager, ACCOUNTMANAGER_TICK_INTERVAL, ACCOUNT_INACTIVITY_THRESH
 import AccountSecure, { GenerateEmailHash } from '../../src/account/accountSecure';
 import { MockDatabase, PrehashPassword } from '../../src/database/mockDb';
 import { Account, CreateAccountData } from '../../src/account/account';
-import { LogLevel, SetConsoleOutput } from 'pandora-common';
 import { TestMockDb } from '../utils';
 
 const TEST_USERNAME = 'testuser';
@@ -14,7 +13,6 @@ describe('AccountManager', () => {
 	let testAccountId: number;
 
 	beforeAll(async () => {
-		SetConsoleOutput(LogLevel.FATAL);
 		mockDb = await TestMockDb();
 		// Create at least one account
 		await mockDb.createAccount(await CreateAccountData(

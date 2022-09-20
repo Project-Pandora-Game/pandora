@@ -18,7 +18,7 @@ import { ContextMenu, useContextMenu } from '../contextMenu';
 import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatRoomData, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
-import { usePlayer, usePlayerData, usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
 import { ChatParser } from './chatParser';
@@ -144,7 +144,6 @@ function Chat(): ReactElement | null {
 				{messages.map((m) => <Message key={ m.time } message={ m } />)}
 			</div>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } />
-			<PlayerColorEdit />
 		</div>
 	);
 }
@@ -401,23 +400,6 @@ function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }
 					</>
 				)
 			}
-		</div>
-	);
-}
-
-function PlayerColorEdit() {
-	const data = usePlayerData();
-	const [color, setColor] = useState(data?.settings.labelColor ?? '#ffffff');
-	const shardConnector = useShardConnector();
-
-	if (!data)
-		return null;
-
-	return (
-		<div className='input-line'>
-			<label>Color</label>
-			<input type='color' value={ color } onChange={ (event) => setColor(event.target.value) } />
-			<Button className='slim' onClick={ () => shardConnector?.sendMessage('updateSettings', { labelColor: color }) }>Save</Button>
 		</div>
 	);
 }

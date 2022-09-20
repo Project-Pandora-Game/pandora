@@ -32,6 +32,7 @@
 
 				.layerName {
 					cursor: pointer;
+					position: relative;
 
 					&:hover {
 						background: #aaa;
@@ -42,6 +43,12 @@
 					.layerName, .layerName:hover {
 						background: #999;
 					}
+				}
+
+				.alphaMaskLayer::after {
+					content: '🔲';
+					position: absolute;
+					right: 0.3em;
 				}
 
 				.imageName {

@@ -1,4 +1,3 @@
-import { LogLevel, SetConsoleOutput } from 'pandora-common';
 import { Account } from '../../src/account/account';
 import AccountSecure from '../../src/account/accountSecure';
 import { accountManager } from '../../src/account/accountManager';
@@ -11,7 +10,6 @@ const TEST_EMAIL = 'test@project-pandora.com';
 let testAccountId: number;
 
 beforeAll(async () => {
-	SetConsoleOutput(LogLevel.FATAL);
 	await TestMockDb();
 	// Create at least one account
 	const account = await accountManager.createAccount(TEST_USERNAME, 'test', TEST_EMAIL);

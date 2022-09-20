@@ -11,6 +11,7 @@ module.exports = {
 	],
 	coverageDirectory: 'coverage',
 	errorOnDeprecated: true,
+	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
 	transform: {
 		'^.+\\.(t|j)sx?$': ['@swc/jest'],
 	},

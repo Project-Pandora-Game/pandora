@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { IClientDirectoryBase, IDirectoryClientBase, MockConnection, MockServerSocket } from 'pandora-common';
 import { ClientConnection } from '../../src/networking/connection_client';
 import { ConnectionManagerClient } from '../../src/networking/manager_client';
-import { TestMockAccount, TestMockCharacter, TestMockDb, TestSetupLogging } from '../utils';
+import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils';
 
 describe('ClientConnection', () => {
 	let connection: MockConnection<IClientDirectoryBase>;
@@ -11,7 +11,6 @@ describe('ClientConnection', () => {
 	let connectionOnMessage: jest.Mock<any, any>;
 
 	beforeAll(async () => {
-		TestSetupLogging();
 		await TestMockDb();
 	});
 

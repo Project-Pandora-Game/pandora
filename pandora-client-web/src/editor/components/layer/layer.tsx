@@ -33,6 +33,8 @@ export function LayerUI(): ReactElement {
 			<hr />
 			<LayerImageSelect layer={ selectedLayer } asset={ asset } />
 			<LayerImageOverridesTextarea layer={ selectedLayer } />
+			<LayerImageSelect layer={ selectedLayer } asset={ asset } asAlpha />
+			<LayerImageOverridesTextarea layer={ selectedLayer } asAlpha />
 			<hr />
 			<LayerScalingConfig layer={ selectedLayer } asset={ asset } />
 		</div>
@@ -63,9 +65,12 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 	);
 }
 
-function LayerImageSelect({ layer, asset, stop }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; }): ReactElement | null {
+function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; asAlpha?: boolean; }): ReactElement | null {
 	const imageList = useSyncExternalStore(asset.editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
-	const layerImage = useSyncExternalStore(layer.getSubscriber('change'), () => layer.getImageSettingsForScalingStop(stop).image);
+	const layerImage = useSyncExternalStore(layer.getSubscriber('change'), () => {
+		const stopSettings = layer.getImageSettingsForScalingStop(stop);
+		return asAlpha ? (stopSettings.alphaImage ?? '') : stopSettings.image;
+	});
 
 	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
 	for (const image of imageList) {
@@ -76,13 +81,17 @@ function LayerImageSelect({ layer, asset, stop }: { layer: AssetGraphicsLayer; a
 
 	return (
 		<div>
-			<label htmlFor='layer-image-select'>Layer image asset:</label>
+			<label htmlFor='layer-image-select'>{ asAlpha ? 'Alpha' : 'Layer' } image asset:</label>
 			<select
 				id='layer-image-select'
 				className='flex'
 				value={ layerImage }
 				onChange={ (event) => {
-					layer.setImage(event.target.value, stop);
+					if (asAlpha) {
+						layer.setAlphaImage(event.target.value, stop);
+					} else {
+						layer.setImage(event.target.value, stop);
+					}
 				} }
 			>
 				{ elements }
@@ -126,7 +135,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 
 	for (const priority of LAYER_PRIORITIES) {
 		elements.push(
-			<option value={ priority } key={ priority }>{ priority }</option>,
+			<option value={ priority } key={ priority }>{ GetReadablePriorityName(priority) }</option>,
 		);
 	}
 
@@ -173,8 +182,8 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 	);
 }
 
-function LayerImageOverridesTextarea({ layer, stop }: { layer: AssetGraphicsLayer; stop?: number; }): ReactElement {
-	const [value, setValue] = useState(SerializeLayerImageOverrides(layer.getImageSettingsForScalingStop(stop).overrides));
+function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
+	const [value, setValue] = useState(SerializeLayerImageOverrides(asAlpha ? (layer.getImageSettingsForScalingStop(stop).alphaOverrides ?? []) : layer.getImageSettingsForScalingStop(stop).overrides));
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -182,16 +191,20 @@ function LayerImageOverridesTextarea({ layer, stop }: { layer: AssetGraphicsLaye
 		try {
 			const result = ParseLayerImageOverrides(e.target.value, GetAssetManager().getAllBones().map((b) => b.name).concat(FAKE_BONES));
 			setError(null);
-			layer.setImageOverrides(result, stop);
+			if (asAlpha) {
+				layer.setAlphaOverrides(result, stop);
+			} else {
+				layer.setImageOverrides(result, stop);
+			}
 		} catch (err) {
 			setError(err instanceof Error ? err.message : String(err));
 		}
 
-	}, [layer, stop]);
+	}, [layer, stop, asAlpha]);
 
 	return (
 		<div>
-			<div>Image overrides:</div>
+			<div>{ asAlpha ? 'Alpha' : 'Image' } overrides:</div>
 			<textarea
 				spellCheck='false'
 				rows={ 6 }
@@ -304,3 +317,11 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 		</>
 	);
 }
+
+function GetReadablePriorityName(priority: LayerPriority): string {
+	return priority
+		.toLowerCase()
+		.replace(/_/g, ' ')
+		.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
+}
+

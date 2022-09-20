@@ -1,5 +1,5 @@
 import { CharacterSize } from 'pandora-common';
-import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix } from 'pixi.js';
+import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix, Container } from 'pixi.js';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
 const FILTER_CONDITION = 'a > 0.0';
@@ -9,14 +9,14 @@ const POLYGON_ALPHA = 1.0;
 export class GraphicsMaskLayer {
 	private readonly _renderer: AbstractRenderer;
 	private readonly _renderTexture = RenderTexture.create({ width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT });
-	private readonly _sprite = new Sprite(this._renderTexture);
 	private _textureParent?: Sprite | MeshMaterial;
 	private _texture: Texture = Texture.EMPTY;
 	private _result?: Mesh | Sprite;
 	private _geometry?: Geometry;
 	private _lastContent?: string | [number, number][][];
 
-	public readonly filter: Filter = new AlphaMaskFilter(this._sprite);
+	public readonly sprite = new Sprite(this._renderTexture);
+	public readonly filter: Filter = new AlphaMaskFilter(this.sprite);
 
 	constructor(renderer: AbstractRenderer) {
 		this._renderer = renderer;
@@ -30,10 +30,10 @@ export class GraphicsMaskLayer {
 		this._renderer.render(this._result, { renderTexture: this._renderTexture });
 	}
 
-	destory() {
+	destroy() {
 		this.filter.destroy();
 		this._renderTexture.destroy();
-		this._sprite.destroy();
+		this.sprite.destroy();
 		this._result?.destroy();
 		if (this._texture instanceof RenderTexture) {
 			this._texture.destroy();

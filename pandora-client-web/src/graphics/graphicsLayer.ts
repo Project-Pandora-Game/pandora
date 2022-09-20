@@ -73,6 +73,8 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 
 		if (layer.hasAlphaMasks()) {
 			this._alphaMask = new GraphicsMaskLayer(this.renderer);
+			this.addChild(this._alphaMask.sprite);
+			this.on('destroy', () => this._alphaMask?.destroy());
 		}
 
 		this._calculatePoints();

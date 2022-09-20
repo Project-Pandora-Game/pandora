@@ -71,7 +71,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		this.item = item;
 		this.renderer = renderer;
 
-		if (layer.definition.image.alphaImage !== undefined) {
+		if (layer.hasAlphaMasks()) {
 			this._alphaMask = new GraphicsMaskLayer(this.renderer);
 		}
 

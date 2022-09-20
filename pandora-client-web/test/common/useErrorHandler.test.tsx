@@ -1,7 +1,19 @@
 import { act, renderHook } from '@testing-library/react';
+import { noop } from 'lodash';
 import { useErrorHandler } from '../../src/common/useErrorHandler';
 
 describe('useErrorHandler', () => {
+	let consoleError: jest.SpyInstance;
+
+	beforeAll(() => {
+		consoleError = jest.spyOn(console, 'error');
+		consoleError.mockImplementation(noop);
+	});
+
+	afterAll(() => {
+		consoleError.mockRestore();
+	});
+
 	it('should throw an error that has been passed to it synchronously', () => {
 		const error = new Error('Synchronous error');
 		expect(() => renderHook(() => useErrorHandler(error))).toThrow(error);

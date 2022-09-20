@@ -52,8 +52,25 @@ describe('Account Manager', () => {
 			const { result } = renderHookWithTestProviders(useLogout);
 			expect(directoryConnector.logout).not.toHaveBeenCalled();
 
+			const original = window.location;
+			const reload = jest.fn();
+			Object.defineProperty(window, 'location', {
+				value: {
+					reload,
+				},
+				writable: true,
+			});
+
 			result.current();
 			expect(directoryConnector.logout).toHaveBeenCalledTimes(1);
+			// It triggers window reload
+			expect(reload).toHaveBeenCalledTimes(1);
+
+			// Restore
+			Object.defineProperty(window, 'location', {
+				value: original,
+				writable: true,
+			});
 		});
 	});
 

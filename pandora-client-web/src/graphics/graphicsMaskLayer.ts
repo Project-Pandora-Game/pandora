@@ -10,6 +10,7 @@ export class GraphicsMaskLayer {
 	private readonly _renderer: AbstractRenderer;
 	private readonly _renderTexture = RenderTexture.create({ width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT });
 	private readonly _sprite = new Sprite(this._renderTexture);
+	private _textureParent?: Sprite | MeshMaterial;
 	private _texture: Texture = Texture.EMPTY;
 	private _result?: Mesh | Sprite;
 	private _geometry?: Geometry;
@@ -22,9 +23,10 @@ export class GraphicsMaskLayer {
 	}
 
 	render() {
-		if (this._texture === Texture.EMPTY || !this._result) {
+		if (this._texture === Texture.EMPTY || !this._textureParent || !this._result) {
 			return;
 		}
+		this._textureParent.texture = this._texture;
 		this._renderer.render(this._result, { renderTexture: this._renderTexture });
 	}
 
@@ -85,9 +87,9 @@ export class GraphicsMaskLayer {
 		this._geometry = geometry;
 		this._result?.destroy();
 		if (this._geometry) {
-			this._result = new Mesh(this._geometry, new MeshMaterial(this._texture));
+			this._result = new Mesh(this._geometry, this._textureParent = new MeshMaterial(this._texture));
 		} else {
-			this._result = new Sprite(this._texture);
+			this._result = this._textureParent = new Sprite(this._texture);
 		}
 		this.render();
 	}

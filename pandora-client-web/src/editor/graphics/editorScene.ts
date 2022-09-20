@@ -10,14 +10,6 @@ class EditorScene extends GraphicsScene {
 		this.container
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
-			.bounce({
-				ease: 'easeOutQuad',
-				friction: 0,
-				sides: 'all',
-				time: 500,
-				underflow: 'center',
-				bounceBox: new Rectangle(-20, -20, CharacterSize.WIDTH + 20, CharacterSize.HEIGHT + 20),
-			})
 			.pinch({ noDrag: false, percent: 2 })
 			.decelerate({ friction: 0.7 });
 

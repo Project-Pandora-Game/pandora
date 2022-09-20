@@ -1,5 +1,6 @@
 /* eslint-disable */
 import '@testing-library/jest-dom';
+import { logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
 // @ts-expect-error - Use Node's crypto module to polyfill crypto
 import { webcrypto } from 'crypto';
 // @ts-expect-error - Use Node's TextEncode & TextDecoder as polyfills for JSDom
@@ -29,3 +30,9 @@ globalThis.process = {
 		DIRECTORY_ADDRESS: TEST_DIRECTORY_ADDRESS,
 	},
 };
+
+// Logging setup
+SetConsoleOutput(LogLevel.FATAL);
+logConfig.onFatal.push(() => {
+	fail('Fatal error happened');
+});

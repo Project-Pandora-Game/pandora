@@ -5,7 +5,6 @@ import { CreateAccountData } from '../../src/account/account';
 import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import { PandoraDatabase } from '../../src/database/databaseProvider';
 import { PrehashPassword } from '../../src/database/mockDb';
-import { TestSetupLogging } from '../utils';
 
 const TEST_USERNAME1 = 'testuser1';
 const TEST_EMAIL1 = 'test1@project-pandora.com';
@@ -21,7 +20,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 	let accountId2: number;
 
 	beforeAll(() => {
-		TestSetupLogging();
 		// we shouldn't see logs above ALERT level
 		logConfig.logOutputs.push({
 			logLevel: LogLevel.ALERT,

@@ -1,4 +1,4 @@
-import { IChatRoomDirectoryConfig, LogLevel, RoomId, SetConsoleOutput } from 'pandora-common';
+import { IChatRoomDirectoryConfig, RoomId } from 'pandora-common';
 import { ShardManager } from '../../src/shard/shardManager';
 import { Shard } from '../../src/shard/shard';
 import { Room } from '../../src/shard/room';
@@ -54,7 +54,6 @@ describe('ShardManager', () => {
 	let shard2: Shard;
 
 	beforeAll(async () => {
-		SetConsoleOutput(LogLevel.FATAL);
 		await TestMockDb();
 	});
 

@@ -17,7 +17,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	protected graphicsGetter: GraphicsGetterFunction | undefined;
 	readonly appearanceContainer: ContainerType;
 	readonly renderer: AbstractRenderer;
-	private _layers: LayerState[] = [];
+	private _layers: readonly LayerState[] = [];
 	private _pose: Record<BoneName, number> = {};
 	private _cleanupUpdate?: () => void;
 
@@ -115,6 +115,8 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	}
 
 	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
+	private _lastUpdateLayers: readonly LayerState[] | undefined;
+	private _lastUpdateView: CharacterView | undefined;
 	protected layerUpdate(bones: Set<string>): void {
 		this._evalCache.clear();
 		for (const [key, graphics] of this._graphicsLayers) {
@@ -124,6 +126,19 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			}
 		}
 		const view = this.appearanceContainer.appearance.getView();
+
+		if (this._layers === this._lastUpdateLayers && view === this._lastUpdateView) {
+			this._layers.forEach((layerState) => {
+				const graphics = this._graphicsLayers.get(layerState);
+				if (!graphics) {
+					throw new Error('Graphics not found while built layers didn\'t change');
+				} else {
+					graphics.update({ state: layerState.state, bones });
+				}
+			});
+			return;
+		}
+
 		const priorityLayers = new Map<LayerPriority, (Container | GraphicsLayer)[]>();
 		this._layers.forEach((layerState) => {
 			let graphics = this._graphicsLayers.get(layerState);
@@ -178,7 +193,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		});
 
 		this.sortChildren();
-		const backView = this.appearanceContainer.appearance.getView() === CharacterView.BACK;
+		const backView = view === CharacterView.BACK;
 		this.scale.x = backView ? -1 : 1;
 	}
 

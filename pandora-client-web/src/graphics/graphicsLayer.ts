@@ -191,7 +191,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 
 		this._bones = new Set(
 			this.points
-				.filter((point) => SelectPoints(point, this.layer.definition.pointType, this.layer.side))
+				.filter((point) => SelectPoints(point, this.layer.definition.pointType))
 				.flatMap((point) => point.transforms.map((trans) => trans.bone)),
 		);
 		this._imageBones = new Set(
@@ -208,7 +208,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		const delaunator = new Delaunator(this.points.flatMap((point) => point.pos));
 		for (let i = 0; i < delaunator.triangles.length; i += 3) {
 			const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
-			if (t.every((tp) => SelectPoints(this.points[tp], this.layer.definition.pointType, this.layer.side))) {
+			if (t.every((tp) => SelectPoints(this.points[tp], this.layer.definition.pointType))) {
 				triangles.push(...t);
 			}
 		}
@@ -236,22 +236,18 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	}
 }
 
-export function SelectPoints({ pointType }: PointDefinition, pointTypes?: string[], side?: LayerSide): boolean {
-	if (!pointType || !pointTypes)
-		return true;
-
-	let flt: ((def: string, sel: string) => boolean);
-	switch (side) {
-		case LayerSide.LEFT:
-			flt = (def: string, sel: string) => def === sel || def === `${sel}_l`;
-			break;
-		case LayerSide.RIGHT:
-			flt = (def: string, sel: string) => def === sel || def === `${sel}_r`;
-			break;
-		default:
-			flt = (def: string, sel: string) => def === sel || def === `${sel}_l` || def === `${sel}_r`;
-			break;
-	}
-
-	return pointTypes.some((sel) => flt(pointType, sel));
+export function SelectPoints({ pointType }: PointDefinition, pointTypes?: string[]): boolean {
+	// If point has no type, include it
+	return !pointType ||
+		// If there is no requirement on point types, include all
+		!pointTypes ||
+		// If the point type is included exactly, include it
+		pointTypes.includes(pointType) ||
+		// If the point type doesn't have side, include it if wanted types have sided one
+		!pointType.match(/_[lr]$/) && (
+			pointTypes.includes(pointType + '_r') ||
+			pointTypes.includes(pointType + '_l')
+		) ||
+		// If the point type has side, indide it if wanted types have base one
+		pointTypes.includes(pointType.replace(/_[lr]$/, ''));
 }

@@ -1,6 +1,6 @@
 import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
-import { MakeMirroredPoints, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
+import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
 import { GraphicsManagerInstance } from './graphicsManager';
 
 export interface PointDefinitionCalculated extends PointDefinition {
@@ -16,7 +16,6 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 	public mirror: AssetGraphicsLayer | undefined;
 	public readonly isMirror: boolean;
 	public definition: LayerDefinition;
-	public side: LayerSide | undefined;
 
 	public get index(): number {
 		return this.isMirror && this.mirror ? this.mirror.index : this.asset.layers.indexOf(this);
@@ -24,11 +23,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 
 	public get name(): string {
 		let name = this.definition.name || `Layer #${this.index + 1}`;
-		if (this.side === LayerSide.LEFT) {
-			name += ' (left)';
-		} else if (this.side === LayerSide.RIGHT) {
-			name += ' (right)';
-		} else if (this.isMirror) {
+		if (this.isMirror) {
 			name += ' (mirror)';
 		}
 		return name;
@@ -80,6 +75,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 
 		const mirrored: LayerDefinition = {
 			...this.definition,
+			pointType: this.definition.pointType?.map(MirrorBoneLike),
 			image: MirrorLayerImageSetting(this.definition.image),
 			scaling: this.definition.scaling && {
 				...this.definition.scaling,
@@ -95,11 +91,6 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 			this.mirror = new AssetGraphicsLayer(this.asset, mirrored, this);
 		} else {
 			this.mirror.definition = mirrored;
-		}
-
-		if (this.definition.mirror === LayerMirror.SELECT) {
-			this.side = LayerSide.LEFT;
-			this.mirror.side = LayerSide.RIGHT;
 		}
 	}
 

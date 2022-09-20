@@ -1,12 +1,13 @@
-import { AtomicConditionBone, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { AtomicConditionBone, BoneName, CoordinatesCompressed, Item, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
 import type { LayerStateOverrides } from './def';
-import { AbstractRenderer, Container, Mesh, MeshGeometry, MeshMaterial, Rectangle, Sprite, Texture } from 'pixi.js';
+import { AbstractRenderer, Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
 import { Conjunction, EvaluateCondition } from './utility';
 import Delaunator from 'delaunator';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { max, maxBy, min, minBy } from 'lodash';
+import { GraphicsMaskLayer } from './graphicsMaskLayer';
 
 Mesh.BATCHABLE_SIZE = 1000000;
 
@@ -21,17 +22,12 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	private _uv = new Float64Array();
 	private _texture: Texture = Texture.EMPTY;
 	private _image: string = '';
-	private _alphaTexture: Texture = Texture.EMPTY;
-	private _alphaImage: string = '';
 	private _result!: Mesh | Sprite;
-	private _alphaResult!: Mesh;
 	private _state?: LayerStateOverrides;
+	private _alphaMask?: GraphicsMaskLayer;
 
 	protected points: PointDefinitionCalculated[] = [];
 	protected vertices = new Float64Array();
-
-	private _maskSprite?: Sprite;
-	protected maskTarget?: Container;
 
 	protected get texture(): Texture {
 		return this._texture;
@@ -52,54 +48,17 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		}
 		this._result = value;
 		this.addChild(this._result);
-		this.updateMaskTarget();
-	}
-	protected get alphaResult(): Mesh {
-		return this._alphaResult;
-	}
-	protected set alphaResult(value: Mesh) {
-		this._alphaResult = value;
-		this.updateMaskTarget();
-	}
-
-	protected updateMaskTarget(): void {
-		if (this._maskSprite) {
-			if (this.maskTarget) {
-				this.maskTarget.mask = null;
-			}
-			this._maskSprite.destroy();
-			this._maskSprite = undefined;
+		if (this._alphaMask && value instanceof Sprite) {
+			this._alphaMask.updateGeometry(undefined);
 		}
-		if (!this.maskTarget || !this._alphaResult || this._alphaTexture === Texture.EMPTY)
-			return;
-
-		// Create base for the mask
-		this._alphaResult.texture = this._alphaTexture;
-		const maskContainer = new Container();
-		const background = new Sprite(Texture.WHITE);
-		background.width = CharacterSize.WIDTH;
-		background.height = CharacterSize.HEIGHT;
-		maskContainer.addChild(background);
-		maskContainer.addChild(this._alphaResult);
-
-		// Render mask texture
-		const bounds = new Rectangle(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
-		const texture = this.renderer.generateTexture(maskContainer, {
-			resolution: 1,
-			region: bounds,
-		});
-		this._maskSprite = new Sprite(texture);
-
-		// Apply mask
-		this.maskTarget.mask = this._maskSprite;
-		this.addChild(this._maskSprite);
 	}
 
 	public addLowerLayer(layer: Container): void {
 		this.addChild(layer);
 		this.sortChildren();
-		this.maskTarget = layer;
-		this.updateMaskTarget();
+		if (this._alphaMask) {
+			layer.filters = [this._alphaMask.filter];
+		}
 	}
 
 	constructor(layer: AssetGraphicsLayer, character: Character, item: Item | null, renderer: AbstractRenderer) {
@@ -111,6 +70,10 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		this.character = character;
 		this.item = item;
 		this.renderer = renderer;
+
+		if (layer.definition.image.alphaImage !== undefined) {
+			this._alphaMask = new GraphicsMaskLayer(this.renderer);
+		}
 
 		this._calculatePoints();
 	}
@@ -157,7 +120,9 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 			this._triangles,
 		);
 		this.result = new Mesh(geometry, new MeshMaterial(this._texture));
-		this.alphaResult = new Mesh(geometry, new MeshMaterial(this._alphaTexture));
+		if (this._alphaMask) {
+			this._alphaMask.updateGeometry(geometry);
+		}
 	}
 
 	protected updateState(state?: LayerStateOverrides): void {
@@ -200,19 +165,9 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 			});
 			change = true;
 		}
-		const alphaImage = setting.alphaOverrides?.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c, this.item)))?.image ?? setting.alphaImage ?? '';
-		if (alphaImage !== this._alphaImage) {
-			this._alphaImage = alphaImage;
-			this.getTexture(alphaImage).then((texture) => {
-				if (this._alphaImage === alphaImage) {
-					this._alphaTexture = texture;
-					this.updateMaskTarget();
-				}
-			}).catch(() => {
-				this._alphaTexture = Texture.EMPTY;
-				this.updateMaskTarget();
-			});
-			change = true;
+		if (this._alphaMask) {
+			const alphaContent = setting.alphaOverrides?.find((img) => EvaluateCondition(img.condition, (c) => this.character.evalCondition(c, this.item)))?.image ?? setting.alphaImage ?? '';
+			this._alphaMask.updateContent(alphaContent);
 		}
 		return change;
 	}

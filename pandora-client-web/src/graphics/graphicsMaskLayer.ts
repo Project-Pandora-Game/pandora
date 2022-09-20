@@ -19,8 +19,6 @@ export class GraphicsMaskLayer {
 
 	constructor(renderer: AbstractRenderer) {
 		this._renderer = renderer;
-		this._sprite.width = CharacterSize.WIDTH;
-		this._sprite.width = CharacterSize.HEIGHT;
 	}
 
 	render() {
@@ -38,7 +36,6 @@ export class GraphicsMaskLayer {
 		if (this._texture instanceof RenderTexture) {
 			this._texture.destroy();
 		}
-		this._geometry?.destroy();
 	}
 
 	updateContent(content: string | [number, number][][]): void {
@@ -81,7 +78,10 @@ export class GraphicsMaskLayer {
 	}
 
 	updateGeometry(geometry?: Geometry) {
-		if (this._geometry === geometry) return;
+		if (this._geometry === geometry) {
+			this.render();
+			return;
+		}
 		this._geometry = geometry;
 		this._result?.destroy();
 		if (this._geometry) {
@@ -89,8 +89,7 @@ export class GraphicsMaskLayer {
 		} else {
 			this._result = new Sprite(this._texture);
 		}
-		this._result.width = CharacterSize.WIDTH;
-		this._result.width = CharacterSize.HEIGHT;
+		this.render();
 	}
 
 	private _getTexture(image: string): Promise<Texture> {

@@ -67,8 +67,10 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 
 function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; asAlpha?: boolean; }): ReactElement | null {
 	const imageList = useSyncExternalStore(asset.editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
-	const stopSettings = useSyncExternalStore(layer.getSubscriber('change'), () => layer.getImageSettingsForScalingStop(stop));
-	const layerImage = asAlpha ? (stopSettings.alphaImage ?? '') : stopSettings.image;
+	const layerImage = useSyncExternalStore(layer.getSubscriber('change'), () => {
+		const stopSettings = layer.getImageSettingsForScalingStop(stop);
+		return asAlpha ? (stopSettings.alphaImage ?? '') : stopSettings.image;
+	});
 
 	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
 	for (const image of imageList) {

@@ -139,7 +139,7 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			return;
 		}
 
-		const priorityLayers = new Map<LayerPriority, (Container | GraphicsLayer)[]>();
+		const priorityLayers = new Map<LayerPriority, GraphicsLayer>();
 		this._layers.forEach((layerState) => {
 			let graphics = this._graphicsLayers.get(layerState);
 			if (!graphics) {
@@ -153,25 +153,14 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			const priority = layerState.layer.definition.priority;
 			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === CharacterView.BACK);
 
-			let layer = priorityLayers.get(priority);
-			if (!layer) {
-				layer = [];
-				priorityLayers.set(priority, layer);
+			const lowerLayer = priorityLayers.get(priority);
+
+			if (lowerLayer) {
+				lowerLayer.zIndex = reverse ? 1 : -1;
+				graphics.addLowerLayer(lowerLayer);
 			}
 
-			const maskedContainer = new Container();
-			layer.forEach((l) => {
-				if (l instanceof GraphicsLayer) {
-					l.addTo(maskedContainer);
-				} else {
-					maskedContainer.addChild(l);
-				}
-			});
-
-			graphics.setMaskTarget(maskedContainer);
-
-			layer = reverse ? [graphics, maskedContainer] : [maskedContainer, graphics];
-			priorityLayers.set(priority, layer);
+			priorityLayers.set(priority, graphics);
 		});
 
 		this.displayContainer.removeChildren();
@@ -180,15 +169,9 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 			sortOrder = sortOrder.slice().reverse();
 		}
 		sortOrder.forEach((priority) => {
-			const layers = priorityLayers.get(priority);
-			if (layers) {
-				layers.forEach((l) => {
-					if (l instanceof GraphicsLayer) {
-						l.addTo(this.displayContainer);
-					} else {
-						this.displayContainer.addChild(l);
-					}
-				});
+			const layer = priorityLayers.get(priority);
+			if (layer) {
+				this.displayContainer.addChild(layer);
 			}
 		});
 

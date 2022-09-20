@@ -30,8 +30,7 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	protected points: PointDefinitionCalculated[] = [];
 	protected vertices = new Float64Array();
 
-	protected targetParent?: Container;
-	private _oldMask?: Sprite;
+	private _maskSprite?: Sprite;
 	protected maskTarget?: Container;
 
 	protected get texture(): Texture {
@@ -64,12 +63,12 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 	}
 
 	protected updateMaskTarget(): void {
-		if (this._oldMask) {
+		if (this._maskSprite) {
 			if (this.maskTarget) {
 				this.maskTarget.mask = null;
 			}
-			this._oldMask.destroy();
-			this._oldMask = undefined;
+			this._maskSprite.destroy();
+			this._maskSprite = undefined;
 		}
 		if (!this.maskTarget || !this._alphaResult || this._alphaTexture === Texture.EMPTY)
 			return;
@@ -89,26 +88,23 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 			resolution: 1,
 			region: bounds,
 		});
-		this._oldMask = new Sprite(texture);
+		this._maskSprite = new Sprite(texture);
 
 		// Apply mask
-		this.maskTarget.mask = this._oldMask;
-		this.targetParent?.addChild(this._oldMask);
+		this.maskTarget.mask = this._maskSprite;
+		this.addChild(this._maskSprite);
 	}
 
-	public setMaskTarget(target: Container | null): void {
-		this.maskTarget = target ?? undefined;
-		this.updateMaskTarget();
-	}
-
-	public addTo(parent: Container): void {
-		this.targetParent = parent;
-		parent.addChild(this);
+	public addLowerLayer(layer: Container): void {
+		this.addChild(layer);
+		this.sortChildren();
+		this.maskTarget = layer;
 		this.updateMaskTarget();
 	}
 
 	constructor(layer: AssetGraphicsLayer, character: Character, item: Item | null, renderer: AbstractRenderer) {
 		super();
+		this.sortableChildren = true;
 		this.x = layer.definition.x;
 		this.y = layer.definition.y;
 		this.layer = layer;

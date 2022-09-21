@@ -1,6 +1,5 @@
 import { CharacterSize } from 'pandora-common';
 import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix } from 'pixi.js';
-import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
 const FILTER_CONDITION = 'a > 0.0';
 const POLYGON_COLOR = 0xFF0000;
@@ -8,6 +7,7 @@ const POLYGON_ALPHA = 1.0;
 
 export class GraphicsMaskLayer {
 	private readonly _renderer: AbstractRenderer;
+	private readonly _getTexture: (image: string) => Promise<Texture>;
 	private readonly _renderTexture = RenderTexture.create({ width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT });
 	private _textureParent?: Sprite | MeshMaterial;
 	private _texture: Texture = Texture.EMPTY;
@@ -18,8 +18,9 @@ export class GraphicsMaskLayer {
 	public readonly sprite = new Sprite(this._renderTexture);
 	public readonly filter: Filter = new AlphaMaskFilter(this.sprite);
 
-	constructor(renderer: AbstractRenderer) {
+	constructor(renderer: AbstractRenderer, getTexture: (image: string) => Promise<Texture>) {
 		this._renderer = renderer;
+		this._getTexture = getTexture;
 	}
 
 	render() {
@@ -92,13 +93,6 @@ export class GraphicsMaskLayer {
 			this._result = this._textureParent = new Sprite(this._texture);
 		}
 		this.render();
-	}
-
-	private _getTexture(image: string): Promise<Texture> {
-		const manager = GraphicsManagerInstance.value;
-		if (!manager)
-			return Promise.reject();
-		return manager.loader.getTexture(image);
 	}
 }
 

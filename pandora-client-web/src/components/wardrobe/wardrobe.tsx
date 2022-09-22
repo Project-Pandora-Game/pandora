@@ -652,6 +652,32 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	return { poses, ...limits };
 }
 
+function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
+	return (
+		<>
+			{poses.map((poseCategory, poseCategoryIndex) => (
+				<React.Fragment key={ poseCategoryIndex }>
+					<h4>{ poseCategory.category }</h4>
+					<div className='pose-row'>
+						{
+							poseCategory.poses.map((pose, poseIndex) => (
+								<PoseButton key={ poseIndex } pose={ pose } setPose={ setPose } />
+							))
+						}
+					</div>
+				</React.Fragment>
+			))}
+		</>
+	);
+}
+
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: Appearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => void }): ReactElement {
+	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
+	return (
+		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
+	);
+}
+
 export function WardrobePoseGui({ character }: { character: Character }): ReactElement {
 	const shardConnector = useShardConnector();
 
@@ -702,20 +728,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 						} }
 					/>
 				</div>
-				{
-					poses.map((poseCategory, poseCategoryIndex) => (
-						<React.Fragment key={ poseCategoryIndex }>
-							<h4>{ poseCategory.category }</h4>
-							<div className='pose-row'>
-								{
-									poseCategory.poses.map((pose, poseIndex) => (
-										<PoseButton key={ poseIndex } pose={ pose } setPose={ setPose } />
-									))
-								}
-							</div>
-						</React.Fragment>
-					))
-				}
+				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				{ USER_DEBUG &&
 					<FieldsetToggle legend='[DEV] Manual pose' persistent='bone-ui-dev-pose' open={ false }>
 						<div>

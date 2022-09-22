@@ -1,6 +1,5 @@
 import { RenderResult, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React, { ReactElement } from 'react';
 import { authFormDataContext, AuthFormDataState } from '../../../../src/components/login/authFormDataProvider';
 import { AccountVerificationForm } from '../../../../src/components/login/forms/accountVerificationForm';
@@ -12,7 +11,7 @@ describe('Account Verification Form', () => {
 	const username = 'test-user';
 	const password = 'password';
 
-	let user: UserEvent;
+	let user: ReturnType<typeof userEvent.setup>;
 	let pathname: string;
 
 	beforeEach(() => {

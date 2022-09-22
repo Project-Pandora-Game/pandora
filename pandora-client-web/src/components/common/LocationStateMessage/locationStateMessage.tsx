@@ -10,7 +10,7 @@ export interface LocationStateMessageProps extends HTMLProps<HTMLParagraphElemen
 
 export function LocationStateMessage(props: LocationStateMessageProps): ReactElement | null {
 	const { className, ...rest } = props;
-	const locationState = useLocation().state;
+	const locationState = useLocation().state as unknown;
 	const message = IsObject(locationState) && typeof locationState.message === 'string' ? locationState.message : '';
 	if (message) {
 		return (

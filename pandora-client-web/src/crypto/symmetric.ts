@@ -15,13 +15,13 @@ export default class SymmetricEncryption {
 
 	public async encrypt(text: string): Promise<string> {
 		const { iv, alg } = GenerateIV();
-		const encrypted = await subtle.encrypt(alg, this.#key, Encode(text)) as ArrayBuffer;
+		const encrypted = await subtle.encrypt(alg, this.#key, Encode(text));
 		return iv + ':' + ArrayToBase64(new Uint8Array(encrypted));
 	}
 
 	public async decrypt(text: string): Promise<string> {
 		const [iv, encrypted] = text.split(':');
-		const decrypted = await subtle.decrypt(GenerateIV(iv).alg, this.#key, Base64ToArray(encrypted)) as ArrayBuffer;
+		const decrypted = await subtle.decrypt(GenerateIV(iv).alg, this.#key, Base64ToArray(encrypted));
 		return Decode(new Uint8Array(decrypted));
 	}
 

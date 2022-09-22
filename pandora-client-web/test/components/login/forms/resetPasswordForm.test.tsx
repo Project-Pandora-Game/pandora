@@ -1,6 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React from 'react';
 import { ResetPasswordForm } from '../../../../src/components/login/forms/resetPasswordForm';
 import { RenderWithRouterAndProviders } from '../../../testUtils';
@@ -12,7 +11,7 @@ describe('Reset Password Form', () => {
 	const defaultResetCode = '123456';
 	const defaultPassword = 'password123';
 
-	let user: UserEvent;
+	let user: ReturnType<typeof userEvent.setup>;
 	let pathname: string;
 
 	beforeEach(() => {

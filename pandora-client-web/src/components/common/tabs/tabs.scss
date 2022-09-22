@@ -5,6 +5,7 @@ $header-height: 2em;
 
 .tab-container {
 	@include flex(column);
+	position: relative;
 
 	&>&__header {
 		display: flex;
@@ -42,6 +43,27 @@ $header-height: 2em;
 				flex: 0;
 				white-space: nowrap;
 			}
+
+			&.collapse {
+				flex: 0;
+				white-space: nowrap;
+				clip-path: none;
+				padding: 0.5em 0.5em;
+				margin: 0 -0.5em 0 0;
+			}
 		}
+
+		&.collapsed {
+			display: none;
+		}
+	}
+
+	&>&__collapsed {
+		position: absolute;
+		background-color: $white;
+		top: 0;
+		right: 0;
+		padding: 0.5em;
+		z-index: 1;
 	}
 }

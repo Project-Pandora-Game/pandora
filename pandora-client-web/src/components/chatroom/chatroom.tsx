@@ -40,7 +40,7 @@ export function Chatroom(): ReactElement {
 		<div className='chatroom'>
 			<ChatInputContextProvider>
 				<ChatRoomScene />
-				<TabContainer>
+				<TabContainer collapsable={ true }>
 					<Tab name='Chat'>
 						<Chat />
 					</Tab>

@@ -5,7 +5,7 @@ import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter } from './dbHelper';
 
 import AsyncLock from 'async-lock';
-import { MongoClient } from 'mongodb';
+import { type MatchKeysAndValues, MongoClient } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server';
 import { nanoid } from 'nanoid';
@@ -204,7 +204,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		for (const [k, v] of Object.entries(data)) {
 			update[`characters.$.${k}`] = v;
 		}
-		const result = await this._accounts.findOneAndUpdate({ 'id': accountId, 'characters.id': id }, { $set: update }, { returnDocument: 'after' });
+		const result = await this._accounts.findOneAndUpdate({ 'id': accountId, 'characters.id': id }, { $set: update as MatchKeysAndValues<DatabaseAccountWithSecure> }, { returnDocument: 'after' });
 		return result.value?.characters.find((c) => c.id === id) ?? null;
 	}
 

@@ -519,16 +519,25 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		await connection.account.secure.setCryptoKey(cryptoKey);
 	}
 
-	private handleGetDirectMessages(_: IClientDirectoryArgument['getDirectMessages'], _connection: IConnectionClient): IClientDirectoryPromiseResult['getDirectMessages'] {
-		throw new Error('Not implemented');
+	private async handleGetDirectMessages({ id }: IClientDirectoryArgument['getDirectMessages'], connection: IConnectionClient): IClientDirectoryPromiseResult['getDirectMessages'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		return await connection.account.directMessages.getMessages(id);
 	}
 
-	private handleSendDirectMessage(_: IClientDirectoryArgument['sendDirectMessage'], _connection: IConnectionClient): IClientDirectoryPromiseResult['sendDirectMessage'] {
-		throw new Error('Not implemented');
+	private async handleSendDirectMessage(data: IClientDirectoryArgument['sendDirectMessage'], connection: IConnectionClient): IClientDirectoryPromiseResult['sendDirectMessage'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		return await connection.account.directMessages.sendMessage(data);
 	}
 
-	private handleDirectMessageAck(_: IClientDirectoryArgument['directMessageAck'], _connection: IConnectionClient): IClientDirectoryPromiseResult['directMessageAck'] {
-		throw new Error('Not implemented');
+	private async handleDirectMessageAck({ id }: IClientDirectoryArgument['directMessageAck'], connection: IConnectionClient): IClientDirectoryPromiseResult['directMessageAck'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		return await connection.account.directMessages.ackMessage(id);
 	}
 
 	//#endregion Direct Messages

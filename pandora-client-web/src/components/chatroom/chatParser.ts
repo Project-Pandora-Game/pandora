@@ -2,7 +2,7 @@ import { CharacterId, IChatModifier, IClientMessage, IChatSegment } from 'pandor
 
 export type ParserConfig<Types extends string, Default extends string> = Record<Exclude<Types, Default>, [string, string]>;
 
-type LineTypes = 'chat' | 'me' | 'emote' | 'ooc';
+type LineTypes = 'chat' | 'me' | 'emote' | 'ooc' | 'raw';
 
 const ESCAPE = '\\'; // length must be 1
 
@@ -27,6 +27,7 @@ export class LineParser {
 		['**', '*\n', /\*?\*$/, 'emote', false],
 		['*', '*\n', /\*$/, 'me', false],
 		['((', '))\n', /\)?\)$/g, 'ooc', true],
+		['```', '```\n', /`{3}$/, 'raw', true],
 	];
 
 	public parse(text: string, allowNonTargeted: boolean): [LineTypes, string][] {
@@ -166,6 +167,13 @@ export const ChatParser = new class ChatParser {
 					result.push({
 						type,
 						parts: this._segmentParser.parse(line),
+						to,
+					});
+					break;
+				case 'raw':
+					result.push({
+						type: 'chat',
+						parts: [['normal', line]],
 						to,
 					});
 					break;

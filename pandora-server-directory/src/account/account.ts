@@ -5,6 +5,7 @@ import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL } from '../config';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
+import { AccountDirectMessages } from './accountDirectMessages';
 
 import _ from 'lodash';
 
@@ -21,6 +22,7 @@ export class Account {
 
 	public readonly secure: AccountSecure;
 	public readonly roles: AccountRoles;
+	public readonly directMessages: AccountDirectMessages;
 
 	public get id(): number {
 		return this.data.id;
@@ -34,6 +36,7 @@ export class Account {
 		this.lastActivity = Date.now();
 		this.secure = new AccountSecure(this, data.secure);
 		this.roles = new AccountRoles(this, data.roles);
+		this.directMessages = new AccountDirectMessages(this);
 		// Shallow copy to preserve received data when cleaning up secure
 		const cleanData: DatabaseAccount = { ...data };
 		delete cleanData.secure;

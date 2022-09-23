@@ -226,6 +226,21 @@ export class MockDatabase implements PandoraDatabase {
 		if (data.keys !== keys) {
 			data.keys = keys;
 			data.messages = [];
+		} else if (data.messages.length === 0) {
+			if (editing)
+				return Promise.resolve(false);
+
+			accounts
+				.split('-')
+				.map(parseInt)
+				.map((id) => this.accountDbView.find((dbAccount) => dbAccount.id === id))
+				.filter<DatabaseAccountWithSecure>(((acc) => acc !== undefined) as (acc: DatabaseAccountWithSecure | undefined) => acc is DatabaseAccountWithSecure)
+				.forEach((acc) => {
+					if (!acc.directMessages)
+						acc.directMessages = [accounts];
+					else if (!acc.directMessages.includes(accounts))
+						acc.directMessages.push(accounts);
+				});
 		}
 		if (editing !== undefined) {
 			const edit = data.messages.find((msg) => msg.time === editing);

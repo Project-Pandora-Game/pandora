@@ -240,6 +240,19 @@ export default class MongoDatabase implements PandoraDatabase {
 			if (data.keys !== keys) {
 				data.keys = keys;
 				data.messages = [];
+			} else if (data.messages.length === 0) {
+				if (editing)
+					return false;
+
+				for (const acc of await Promise.all((accounts).split('-').map(parseInt).map((id) => this.getAccountById(id)))) {
+					if (!acc)
+						continue;
+
+					if (!acc.directMessages)
+						await this._accounts.updateOne({ id: acc.id }, { $set: { directMessages: [accounts] } });
+					else if (!acc.directMessages.includes(accounts))
+						await this._accounts.updateOne({ id: acc.id }, { $push: { directMessages: accounts } });
+				}
 			}
 			if (editing !== undefined) {
 				const edit = data.messages.find((msg) => msg.time === editing);

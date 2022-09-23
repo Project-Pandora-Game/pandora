@@ -47,6 +47,7 @@ interface DatabaseAccount {
 	roles?: import('pandora-common').IAccountRoleManageInfo;
 	characters: import('./databaseProvider').ICharacterSelfInfoDb[];
 	settings: import('pandora-common').IDirectoryAccountSettings;
+	directMessages?: DirectMessageAccounts[];
 }
 
 /** Representation of account stored in database */

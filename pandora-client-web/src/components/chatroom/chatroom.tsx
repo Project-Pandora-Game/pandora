@@ -11,7 +11,6 @@ import React, {
 } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { useEvent } from '../../common/useEvent';
 import { Button } from '../common/Button/Button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
@@ -28,6 +27,9 @@ import { WardrobeContextProvider, WardrobeExpressionGui, WardrobePoseGui } from 
 import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
+import { useAutoScroll } from '../../common/useAutoScroll';
+
+
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -91,34 +93,10 @@ function DisplayCharacter({ char }: { char: ICharacterPublicData }): ReactElemen
 function Chat(): ReactElement | null {
 	const messages = useChatRoomMessages();
 	const shardConnector = useShardConnector();
-	const [autoScroll, setAutoScroll] = useState(true);
-	const messagesDiv = useRef<HTMLDivElement>(null);
+	const [messagesDiv, onScroll, scrollingMemo] = useAutoScroll<HTMLDivElement>();
 	const lastMessageCount = useRef(0);
-	// Needs to be object such that changes don't trigger render
-	const scrollingMemo = useMemo(() => ({ isScrolling: false }), []);
 
 	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);
-
-	// Only add the smooth scrolling effect after mount and first scroll
-	// to make sure there is no visual glitch when switching back into chat screen
-	useEffect(() => {
-		setTimeout(() => {
-			if (messagesDiv.current) {
-				messagesDiv.current.style.scrollBehavior = 'smooth';
-			}
-		}, 0);
-	}, []);
-
-	const scroll = useEvent(() => {
-		if (messagesDiv.current && autoScroll) {
-			scrollingMemo.isScrolling = true;
-			messagesDiv.current.scrollTop = messagesDiv.current.scrollHeight;
-		}
-	});
-
-	useEffect(() => {
-		scroll();
-	}, [messages, scroll]);
 
 	useEffect(() => {
 		if (scrollingMemo.isScrolling && document.visibilityState === 'visible') {
@@ -128,23 +106,12 @@ function Chat(): ReactElement | null {
 		return () => unsupress();
 	}, [messages, scrollingMemo, lastMessageCount, clear, supress, unsupress]);
 
-	const handleScroll = useCallback((ev: React.UIEvent<HTMLDivElement>) => {
-		if (messagesDiv.current && ev.target === messagesDiv.current) {
-			// We should scroll to the end if we are either in progress of scrolling or already on the end
-			const onEnd = messagesDiv.current.scrollTop + messagesDiv.current.offsetHeight + 1 >= messagesDiv.current.scrollHeight;
-			if (onEnd) {
-				scrollingMemo.isScrolling = false;
-			}
-			setAutoScroll(onEnd || scrollingMemo.isScrolling);
-		}
-	}, [setAutoScroll, messagesDiv, scrollingMemo]);
-
 	if (!shardConnector)
 		return null;
 
 	return (
 		<div className='chatArea'>
-			<Scrollbar color='dark' className='messages' ref={ messagesDiv } onScroll={ handleScroll } tabIndex={ 1 }>
+			<Scrollbar color='dark' className='messages' ref={ messagesDiv } onScroll={ onScroll } tabIndex={ 1 }>
 				{messages.map((m) => <Message key={ m.time } message={ m } />)}
 			</Scrollbar>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } />
@@ -152,7 +119,7 @@ function Chat(): ReactElement | null {
 	);
 }
 
-function RenderChatPart([type, contents]: IChatSegment, index: number): ReactElement {
+export function RenderChatPart([type, contents]: IChatSegment, index: number): ReactElement {
 	switch (type) {
 		case 'normal':
 			return <span key={ index }>{contents}</span>;

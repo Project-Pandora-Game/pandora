@@ -118,7 +118,7 @@ export const ClientDirectoryInSchema = z.object({
 	}),
 	directMessageAck: z.object({
 		id: z.number().min(0),
-		ack: z.number().min(0),
+		ack: z.number().min(0).or(z.literal('all')),
 	}),
 
 	//#region Management/admin endpoints; these require specific roles to be used

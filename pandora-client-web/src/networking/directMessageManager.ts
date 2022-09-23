@@ -5,8 +5,9 @@ import { KeyExchange } from '../crypto/keyExchange';
 import { BrowserStorage } from '../browserStorage';
 import { Observable, ReadonlyObservable } from '../observable';
 import { ChatParser } from '../components/chatroom/chatParser';
+import { TypedEventEmitter } from '../event';
 
-export class DirectMessageManager {
+export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; }> {
 	public readonly connector: DirectoryConnector;
 	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined);
 	private readonly _chats: Map<number, DirectMessageChannel> = new Map();
@@ -14,6 +15,7 @@ export class DirectMessageManager {
 	#crypto?: KeyExchange;
 
 	constructor(connector: DirectoryConnector) {
+		super();
 		this.connector = connector;
 	}
 
@@ -72,7 +74,9 @@ export class DirectMessageManager {
 
 	public async handleNewMessage(message: IDirectoryClientArgument['newDirectMessage']): Promise<void> {
 		try {
-			await this._getChat(message.account.id).loadSingle(message);
+			const channel = this._getChat(message.account.id);
+			await channel.loadSingle(message);
+			this.emit('newMessage', channel);
 		} catch {
 			// ignore
 		}
@@ -103,6 +107,7 @@ export class DirectMessageChannel {
 	private _loading?: Promise<void>;
 	private _publicKeyData?: string;
 	private _account!: IDirectoryClientArgument['newDirectMessage']['account'];
+	private _mounts = 0;
 	#encription!: SymmetricEncryption;
 
 	public readonly connector: DirectoryConnector;
@@ -119,10 +124,24 @@ export class DirectMessageChannel {
 		return this._account;
 	}
 
+	get mounted(): boolean {
+		return this._mounts > 0;
+	}
+
 	constructor(manager: DirectMessageManager, id: number) {
 		this._manager = manager;
 		this._id = id;
 		this.connector = manager.connector;
+	}
+
+	public addMount(): () => void {
+		if (this._mounts === 0) {
+			this.connector.sendMessage('directMessageAck', { id: this._id, ack: 'all' });
+		}
+		++this._mounts;
+		return () => {
+			--this._mounts;
+		};
 	}
 
 	public async sendMessage(message: string, editing?: number): Promise<void> {
@@ -163,6 +182,9 @@ export class DirectMessageChannel {
 			sent: account.id !== this._id,
 			edited,
 		});
+		if (this._mounts > 0) {
+			this.connector.sendMessage('directMessageAck', { id: this._id, ack: time });
+		}
 	}
 
 	async _load(): Promise<void> {

@@ -30,9 +30,17 @@ export class AccountDirectMessages {
 		this._unreadMessages = account.data.unreadMessages ?? [];
 	}
 
-	async ackMessage(id: number): Promise<void> {
-		const index = this._unreadMessages.indexOf(id);
-		if (index >= 0) {
+	async ackMessage(id: number | 'all'): Promise<void> {
+		if (this._unreadMessages.length === 0) {
+			return;
+		}
+		if (id === 'all') {
+			this._unreadMessages = [];
+		} else {
+			const index = this._unreadMessages.indexOf(id);
+			if (index < 0) {
+				return;
+			}
 			this._unreadMessages.splice(index, 1);
 		}
 		await this._updateUnreadMessages();

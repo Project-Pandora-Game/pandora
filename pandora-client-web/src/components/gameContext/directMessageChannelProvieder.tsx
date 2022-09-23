@@ -1,4 +1,4 @@
-import React, { createContext, ReactElement, useContext, useMemo, ReactNode, Suspense } from 'react';
+import React, { createContext, ReactElement, useContext, useMemo, ReactNode, Suspense, useEffect } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
@@ -8,6 +8,8 @@ const directMessageContext = createContext<DirectMessageChannel>(null as unknown
 function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps & { accountId: number }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const channel = useMemo(() => directoryConnector.directMessageHandler.loadChat(accountId), [directoryConnector, accountId]);
+
+	useEffect(() => channel.addMount(), [channel]);
 
 	return (
 		<directMessageContext.Provider value={ channel }>

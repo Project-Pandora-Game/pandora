@@ -4,6 +4,7 @@ import {
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 } from 'pandora-common';
+import { DirectMessageManager } from '../../../src/networking/directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../../src/networking/directoryConnector';
 import { Observable } from '../../../src/observable';
 import { TestEventEmitter } from '../testEventEmitter';
@@ -17,6 +18,7 @@ export class MockDirectoryConnector implements DirectoryConnector {
 
 	public readonly changeEventEmitter = new TestEventEmitter<Record<IDirectoryClientChangeEvents, true>>();
 	public readonly connectionStateEventEmitter = new TestEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>>();
+	public readonly directMessageHandler: DirectMessageManager = new DirectMessageManager(this);
 
 	public awaitResponse = jest.fn().mockResolvedValue(undefined);
 

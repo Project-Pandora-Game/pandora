@@ -1,4 +1,4 @@
-import {
+import type {
 	IClientDirectoryBase,
 	IConnectionBase,
 	IDirectoryAccountInfo,
@@ -7,8 +7,9 @@ import {
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 } from 'pandora-common';
-import { TypedEventEmitter } from '../event';
-import { ReadonlyObservable } from '../observable';
+import type { TypedEventEmitter } from '../event';
+import type { ReadonlyObservable } from '../observable';
+import type { DirectMessageManager } from './directMessageManager';
 
 export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials';
 
@@ -50,6 +51,8 @@ export interface DirectoryConnector extends IConnectionBase<IClientDirectoryBase
 
 	/** Event emitter for directory connection state change events */
 	readonly connectionStateEventEmitter: TypedEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>>;
+
+	readonly directMessageHandler: DirectMessageManager;
 
 	connect(): Promise<this>;
 

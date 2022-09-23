@@ -1,5 +1,5 @@
 import { ArrayToBase64, Base64ToArray, HashSHA512Base64 } from './helpers';
-import SymmetricEncryption from './symmetric';
+import { SymmetricEncryption } from './symmetric';
 
 const subtle = globalThis.crypto.subtle;
 
@@ -7,7 +7,7 @@ const ENCRYPTION_SALT = 'pandora-encryption-salt';
 const ECDH_PARAMS = { name: 'ECDH', namedCurve: 'P-256' };
 const ECDH_KEY_USAGES: KeyUsage[] = ['deriveKey'];
 
-export default class KeyExchange {
+export class KeyExchange {
 	#privateKey: CryptoKey;
 	#publicKey: CryptoKey;
 
@@ -44,7 +44,7 @@ export default class KeyExchange {
 		return new KeyExchange(keyPair.privateKey, keyPair.publicKey);
 	}
 
-	public async generateKeyPassword(username: string, password: string): Promise<string> {
+	public static async generateKeyPassword(username: string, password: string): Promise<string> {
 		return await HashSHA512Base64(ENCRYPTION_SALT + username + password);
 	}
 }

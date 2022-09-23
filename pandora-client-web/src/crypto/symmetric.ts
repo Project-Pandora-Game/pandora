@@ -6,7 +6,7 @@ const AES_GCM_PARAMS = { name: 'AES-GCM', length: 256 };
 const AES_GCM_KEY_USAGES: KeyUsage[] = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'];
 const PBKDF2_PARAMS = { name: 'PBKDF2', iterations: 100_000, hash: 'SHA-512' };
 
-export default class SymmetricEncryption {
+export class SymmetricEncryption {
 	#key: CryptoKey;
 
 	private constructor(key: CryptoKey) {

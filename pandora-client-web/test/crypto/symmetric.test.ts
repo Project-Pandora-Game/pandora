@@ -1,4 +1,4 @@
-import SymmetricEncryption from '../../src/crypto/symmetric';
+import { SymmetricEncryption } from '../../src/crypto/symmetric';
 import { Encode } from '../../src/crypto/helpers';
 
 let symmetric!: SymmetricEncryption;

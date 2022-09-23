@@ -84,6 +84,7 @@ export default class AccountSecure {
 
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
+		this.#secure.cryptoKey = undefined;
 
 		await this.#updateDatabase();
 
@@ -107,6 +108,7 @@ export default class AccountSecure {
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.activated = true;
 		this.#secure.password = await GeneratePasswordHash(password);
+		this.#secure.cryptoKey = undefined;
 
 		await this.#updateDatabase();
 

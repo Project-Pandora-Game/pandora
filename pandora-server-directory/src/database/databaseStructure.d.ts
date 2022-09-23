@@ -23,6 +23,20 @@ interface DatabaseAccountSecure {
 	cryptoKey?: string;
 }
 
+type DirectMessageAccounts = `${number}-${number}`;
+type DirectMessageKeys = `${string}-${string}`;
+
+interface DatabaseDirectMessages {
+	accounts: DirectMessageAccounts;
+	keys: DirectMessageKeys;
+	messages: {
+		time: number;
+		message: string;
+		source: number;
+		edited?: number;
+	}[];
+}
+
 /** Representation of account stored in database */
 interface DatabaseAccount {
 	username: string;

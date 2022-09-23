@@ -23,6 +23,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
 	private _config!: Collection<DatabaseConfig>;
+	private _directMessages!: Collection<DatabaseDirectMessages>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -85,6 +86,14 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		await this._config.createIndexes([
 			{ key: { type: 1 } },
+		], { unique: true });
+		//#endregion
+
+		//#region DirectMessages
+		this._directMessages = this._db.collection('directMessages');
+
+		await this._directMessages.createIndexes([
+			{ key: { accounts: 1 } },
 		], { unique: true });
 		//#endregion
 
@@ -215,6 +224,36 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async setCharacterAccess(id: CharacterId): Promise<string | null> {
 		const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
 		return result.value?.accessId ?? null;
+	}
+
+	public async getDirectMessages(accounts: DirectMessageAccounts, keys: DirectMessageKeys): Promise<DatabaseDirectMessages> {
+		const messages = await this._directMessages.findOne({ accounts });
+		if (!messages || messages.keys !== keys) {
+			return { accounts, keys, messages: [] };
+		}
+		return messages;
+	}
+
+	public async setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number], editing?: number): Promise<boolean> {
+		return await this._lock.acquire(`dm-${accounts}`, async () => {
+			const data = await this._directMessages.findOne({ accounts }) ?? { keys, accounts, messages: [] as DatabaseDirectMessages['messages'] };
+			if (data.keys !== keys) {
+				data.keys = keys;
+				data.messages = [];
+			}
+			if (editing !== undefined) {
+				const edit = data.messages.find((msg) => msg.time === editing);
+				if (!edit) {
+					return false;
+				}
+				edit.message = message.message;
+				edit.edited = message.time;
+			} else {
+				data.messages.push(message);
+			}
+			await this._directMessages.updateOne({ accounts }, { $set: data }, { upsert: true });
+			return true;
+		});
 	}
 
 	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {

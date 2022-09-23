@@ -96,6 +96,22 @@ export interface PandoraDatabase {
 	 */
 	setCharacterAccess(id: CharacterId): Promise<string | null>;
 
+	/**
+	 *
+	 * @param accounts - `${accountIdA}-${accessIdB}` where accountIdA < accountIdB
+	 * @param keys - account public keys
+	 * @returns direct messages associated with the accounts
+	 */
+	getDirectMessages(accounts: DirectMessageAccounts, keys: DirectMessageKeys): Promise<DatabaseDirectMessages>;
+
+	/**
+	 *
+	 * @param accounts - `${accountIdA}-${accessIdB}` where accountIdA < accountIdB
+	 * @param keys - account public keys
+	 * @param message - direct messages to store
+	 */
+	setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number], editing?: number): Promise<boolean>;
+
 	//#region Shard
 
 	/**

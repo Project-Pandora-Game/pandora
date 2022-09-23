@@ -21,6 +21,7 @@ export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
 	private configDb: DatabaseConfig[] = [];
+	private directMessagesDb: Map<DirectMessageAccounts, DatabaseDirectMessages> = new Map();
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 	private get accountDbView(): DatabaseAccountWithSecure[] {
@@ -210,6 +211,34 @@ export class MockDatabase implements PandoraDatabase {
 
 		char.accessId = nanoid(8);
 		return Promise.resolve(char.accessId);
+	}
+
+	public getDirectMessages(accounts: DirectMessageAccounts, keys: DirectMessageKeys): Promise<DatabaseDirectMessages> {
+		const data = this.directMessagesDb.get(accounts);
+		if (!data || data.keys !== keys) {
+			return Promise.resolve({ accounts, keys, messages: [] });
+		}
+		return Promise.resolve(data);
+	}
+
+	public setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number], editing?: number): Promise<boolean> {
+		const data = this.directMessagesDb.get(accounts) ?? { accounts, keys, messages: [] as DatabaseDirectMessages['messages'] };
+		if (data.keys !== keys) {
+			data.keys = keys;
+			data.messages = [];
+		}
+		if (editing !== undefined) {
+			const edit = data.messages.find((msg) => msg.time === editing);
+			if (!edit) {
+				return Promise.resolve(false);
+			}
+			edit.message = message.message;
+			edit.edited = message.time;
+		} else {
+			data.messages.push(message);
+		}
+		this.directMessagesDb.set(accounts, data);
+		return Promise.resolve(true);
 	}
 
 	public getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {

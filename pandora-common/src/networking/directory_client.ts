@@ -12,6 +12,7 @@ export type IDirectoryStatus = {
 
 export const DirectoryAccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema),
+	labelColor: z.string(),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
@@ -22,6 +23,7 @@ export type IDirectoryAccountInfo = {
 	github?: { id: number; login: string; };
 	roles?: IAccountRoleInfo;
 	settings: IDirectoryAccountSettings;
+	cryptoKey?: string;
 };
 
 export type IDirectoryShardInfo = {
@@ -46,9 +48,21 @@ interface DirectoryClient {
 	connectionState(arg: {
 		account: IDirectoryAccountInfo | null,
 		character: IDirectoryCharacterConnectionInfo | null,
+		unreadDirectMessages: number[],
 	}): void;
 	somethingChanged(arg: {
 		changes: IDirectoryClientChangeEvents[];
+	}): void;
+	newDirectMessage(arg: {
+		account: {
+			id: number;
+			name: string;
+			labelColor: string;
+			publicKeyData: string;
+		};
+		time: number;
+		message: string;
+		edited?: number;
 	}): void;
 }
 

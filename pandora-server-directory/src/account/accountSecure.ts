@@ -156,6 +156,18 @@ export default class AccountSecure {
 		return true;
 	}
 
+	getCryptoKey(): string | undefined {
+		return this.#secure.cryptoKey;
+	}
+
+	async setCryptoKey(key: string): Promise<void> {
+		if (this.#secure.cryptoKey === key)
+			return;
+
+		this.#secure.cryptoKey = key;
+		await this.#updateDatabase();
+	}
+
 	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {
 		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
 		if (TOKEN_LIMITS[reason] <= this.#secure.tokens.filter((t) => t.reason === reason).length) {

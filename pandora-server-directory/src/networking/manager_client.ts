@@ -91,6 +91,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 
 			gitHubBind: this.handleGitHubBind.bind(this),
 
+			getDirectMessages: this.handleGetDirectMessages.bind(this),
+			sendDirectMessage: this.handleSendDirectMessage.bind(this),
+
 			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
 			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
 			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
@@ -103,6 +106,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
+			setCryptoKey: this.handleSetCryptoKey.bind(this),
+			directMessageAck: this.handleDirectMessageAck.bind(this),
 		});
 	}
 
@@ -504,6 +509,29 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		const info = ShardTokenStore.list(connection.account);
 		return { info };
 	}
+
+	//#region Direct Messages
+
+	private async handleSetCryptoKey({ cryptoKey }: IClientDirectoryArgument['setCryptoKey'], connection: IConnectionClient): IClientDirectoryPromiseResult['setCryptoKey'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		await connection.account.secure.setCryptoKey(cryptoKey);
+	}
+
+	private handleGetDirectMessages(_: IClientDirectoryArgument['getDirectMessages'], _connection: IConnectionClient): IClientDirectoryPromiseResult['getDirectMessages'] {
+		throw new Error('Not implemented');
+	}
+
+	private handleSendDirectMessage(_: IClientDirectoryArgument['sendDirectMessage'], _connection: IConnectionClient): IClientDirectoryPromiseResult['sendDirectMessage'] {
+		throw new Error('Not implemented');
+	}
+
+	private handleDirectMessageAck(_: IClientDirectoryArgument['directMessageAck'], _connection: IConnectionClient): IClientDirectoryPromiseResult['directMessageAck'] {
+		throw new Error('Not implemented');
+	}
+
+	//#endregion Direct Messages
 
 	public onRoomListChange(): void {
 		for (const connection of this.connectedClients) {

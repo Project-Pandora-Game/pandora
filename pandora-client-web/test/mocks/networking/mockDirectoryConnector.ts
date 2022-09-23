@@ -50,6 +50,7 @@ export function MockAccountInfo(overrides?: Partial<IDirectoryAccountInfo>): IDi
 		roles: {},
 		settings: {
 			visibleRoles: [],
+			labelColor: '#ffffff',
 		},
 		...overrides,
 	};

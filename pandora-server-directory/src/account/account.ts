@@ -67,6 +67,7 @@ export class Account {
 			github: this.secure.getGitHubStatus(),
 			roles: this.roles.getSelfInfo(),
 			settings: _.cloneDeep(this.data.settings),
+			cryptoKey: this.secure.getCryptoKey(),
 		};
 	}
 
@@ -210,6 +211,7 @@ export async function CreateAccountData(username: string, password: string, emai
 		secure: await GenerateAccountSecureData(password, email, activated),
 		characters: [],
 		settings: {
+			labelColor: '#ffffff',
 			visibleRoles: [],
 		},
 	};

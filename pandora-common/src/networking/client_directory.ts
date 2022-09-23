@@ -75,6 +75,9 @@ export const ClientDirectoryInSchema = z.object({
 	}),
 	gitHubUnbind: z.object({}),
 	changeSettings: DirectoryAccountSettingsSchema.partial(),
+	setCryptoKey: z.object({
+		cryptoKey: z.string(),
+	}),
 	//#endregion
 
 	//#region Character management
@@ -104,6 +107,19 @@ export const ClientDirectoryInSchema = z.object({
 	chatRoomLeave: z.object({}),
 	chatRoomUpdate: ChatRoomDirectoryUpdateSchema,
 	//#endregion
+
+	getDirectMessages: z.object({
+		id: z.number().min(0),
+	}),
+	sendDirectMessage: z.object({
+		id: z.number().min(0),
+		message: z.string(),
+		editing: z.number().min(0).optional(),
+	}),
+	directMessageAck: z.object({
+		id: z.number().min(0),
+		ack: z.number().min(0),
+	}),
 
 	//#region Management/admin endpoints; these require specific roles to be used
 
@@ -171,6 +187,25 @@ export type IClientDirectoryOut = {
 	chatRoomCreate: ShardConnection<ShardError | 'nameTaken'>;
 	chatRoomEnter: ShardConnection<'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'>;
 	chatRoomUpdate: { result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; };
+	getDirectMessages: { result: 'notFound' | 'denied'; } | {
+		result: 'ok';
+		account: {
+			id: number;
+			name: string;
+			labelColor: string;
+			publicKeyData: string;
+		};
+		messages: {
+			time: number;
+			message: string;
+			source: number;
+			edited?: number;
+		}[];
+	};
+	sendDirectMessage: { result: 'notFound' | 'denied' | 'messageNotFound'; } | {
+		result: 'ok';
+		time: number;
+	};
 	manageGetAccountRoles: { result: 'notFound'; } | {
 		result: 'ok';
 		roles: IAccountRoleManageInfo;

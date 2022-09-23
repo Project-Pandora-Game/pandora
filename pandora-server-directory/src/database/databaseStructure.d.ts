@@ -20,6 +20,7 @@ interface DatabaseAccountSecure {
 	emailHash: string;
 	tokens: DatabaseAccountToken[];
 	github?: GitHubInfo;
+	cryptoKey?: string;
 }
 
 /** Representation of account stored in database */

@@ -1,6 +1,6 @@
 import { AppearanceChangeType, AssertNotNullable, CharacterId, CharacterSize, CharacterView, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
-import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
+import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters } from 'pixi.js';
 import React, { CSSProperties, ReactElement, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
@@ -10,11 +10,12 @@ import { useDebugExpose } from '../../common/useDebugExpose';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsScene, useGraphicsScene } from '../../graphics/graphicsScene';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomData, useChatRoomCharacters, useCharacterRestrictionsManager } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useChatInput } from './chatInput';
-import { usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import _, { noop } from 'lodash';
+import { PlayerCharacter } from '../../character/player';
 
 const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
@@ -33,7 +34,7 @@ type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterR
 	data: IChatRoomClientData | null;
 	shard: ShardConnector | null;
 	menuOpen: (character: Self, data: InteractionData) => void;
-	filters: Filter[];
+	flts: Filter[];
 	renderer: AbstractRenderer;
 };
 
@@ -75,7 +76,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		return this.appearanceContainer.data.id;
 	}
 
-	constructor({ character, data, shard, menuOpen, filters, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
+	constructor({ character, data, shard, menuOpen, flts, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
 		super(character, renderer);
 		this.name = character.data.name;
 		this._data = data;
@@ -89,7 +90,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			dropShadow: true,
 			dropShadowBlur: 4,
 		});
-		this.filters = filters;
+		this.filters = flts;
 
 		const cleanupCalls: (() => void)[] = [];
 
@@ -300,7 +301,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 				data: this._room,
 				shard: this._shard,
 				menuOpen: this._menuOpen,
-				filters: character.data.id === this._filterExclude ? [] : this.backgroundFilters,
+				flts: character.data.id === this._filterExclude ? [] : this.backgroundFilters,
 				renderer: this.renderer,
 			});
 			if (this._manager) {
@@ -355,14 +356,14 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		});
 	}
 
-	updateFilters(filters: Filter[], exclude?: CharacterId) {
+	updateFilters(flts: Filter[], exclude?: CharacterId) {
 		this._filterExclude = exclude;
 		this._characters.forEach((character) => {
 			if (character.id !== exclude) {
-				character.filters = filters;
+				character.filters = flts;
 			}
 		});
-		this.setBackgroundFilters(filters);
+		this.setBackgroundFilters(flts);
 	}
 }
 
@@ -375,8 +376,12 @@ export function ChatRoomScene(): ReactElement | null {
 	const shard = useShardConnector();
 	const [menuActive, setMenuActive] = useState<ChatRoomCharacter | null>(null);
 	const [clickData, setClickData] = useState<InteractionData | null>(null);
+	const player = usePlayer();
 
 	AssertNotNullable(characters);
+	AssertNotNullable(player);
+
+	const blindLevel = useCharacterRestrictionsManager(player, (manager) => manager.getBlindLevel());
 
 	useDebugExpose('scene', scene);
 
@@ -402,6 +407,16 @@ export function ChatRoomScene(): ReactElement | null {
 			setMenuActive(character);
 		});
 	}, [setMenuActive, setClickData]);
+
+	useEffect(() => {
+		if (blindLevel === 0) {
+			scene.updateFilters([]);
+		} else {
+			const filter = new filters.ColorMatrixFilter();
+			filter.brightness(1 - blindLevel / 10, false);
+			scene.updateFilters([filter], player.data.id);
+		}
+	}, [blindLevel, player.data.id]);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
 		if (menuActive && clickData) {

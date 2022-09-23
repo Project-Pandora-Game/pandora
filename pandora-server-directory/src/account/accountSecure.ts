@@ -1,9 +1,11 @@
+import { GetLogger } from 'pandora-common';
 import { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } from '../config';
 import { GetDatabase } from '../database/databaseProvider';
 import GetEmailSender from '../services/email';
 import type { Account } from './account';
 
 import { createHash, randomInt } from 'crypto';
+import { webcrypto } from 'node:crypto';
 import { nanoid } from 'nanoid';
 import * as argon2 from 'argon2';
 import _ from 'lodash';
@@ -15,6 +17,13 @@ export enum AccountTokenReason {
 	PASSWORD_RESET = 2,
 	/** Account login token */
 	LOGIN = 3,
+}
+
+const CRYPTO_KEY_DELIMITER = ':';
+enum CryptoKeyParts {
+	SALT,
+	PUBLIC_KEY,
+	PRIVATE_KEY,
 }
 
 /**
@@ -160,12 +169,24 @@ export default class AccountSecure {
 		return this.#secure.cryptoKey;
 	}
 
-	async setCryptoKey(key: string): Promise<void> {
+	getPublicKey(): string | undefined {
+		return this.#secure.cryptoKey?.split(CRYPTO_KEY_DELIMITER)[CryptoKeyParts.PUBLIC_KEY];
+	}
+
+	async setCryptoKey(key: string): Promise<boolean> {
 		if (this.#secure.cryptoKey === key)
-			return;
+			return true;
+
+		const array = key.split(CRYPTO_KEY_DELIMITER);
+		if (array.length !== 3)
+			return false;
+
+		if (await IsPublicKey(array[CryptoKeyParts.PUBLIC_KEY]))
+			return false;
 
 		this.#secure.cryptoKey = key;
 		await this.#updateDatabase();
+		return true;
 	}
 
 	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {
@@ -221,6 +242,22 @@ export async function GenerateAccountSecureData(password: string, email: string,
  */
 export function GenerateEmailHash(email: string): string {
 	return createHash('sha256').update(EMAIL_SALT).update(email.toLowerCase()).digest('base64');
+}
+
+async function IsPublicKey(keyData: string): Promise<boolean> {
+	try {
+		await webcrypto.subtle.importKey(
+			'spki',
+			Buffer.from(keyData, 'base64'),
+			{ name: 'ECDH', namedCurve: 'P-256' },
+			true,
+			['deriveKey'],
+		);
+		return true;
+	} catch (e) {
+		GetLogger('public-key').warning(e);
+		return false;
+	}
 }
 
 /**

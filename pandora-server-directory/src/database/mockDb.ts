@@ -256,6 +256,15 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(true);
 	}
 
+	public setUnreadMessages(accountId: number, messageIds: number[]): Promise<void> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
+		if (!acc)
+			return Promise.resolve();
+
+		acc.unreadMessages = messageIds;
+		return Promise.resolve();
+	}
+
 	public getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
 		const char = this.characterDb.get(id);
 		if (!char)

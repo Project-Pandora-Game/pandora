@@ -48,6 +48,7 @@ interface DatabaseAccount {
 	characters: import('./databaseProvider').ICharacterSelfInfoDb[];
 	settings: import('pandora-common').IDirectoryAccountSettings;
 	directMessages?: DirectMessageAccounts[];
+	unreadMessages?: number[];
 }
 
 /** Representation of account stored in database */

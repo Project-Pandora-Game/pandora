@@ -269,6 +269,10 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
+	public async setUnreadMessages(accountId: number, messageIds: number[]): Promise<void> {
+		await this._accounts.updateOne({ id: accountId }, { $set: { unreadMessages: messageIds } });
+	}
+
 	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
 		if (accessId === false) {
 			accessId = nanoid(8);

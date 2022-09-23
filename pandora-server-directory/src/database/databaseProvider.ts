@@ -112,6 +112,13 @@ export interface PandoraDatabase {
 	 */
 	setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number], editing?: number): Promise<boolean>;
 
+	/**
+	 * Sets unread direct messages for the account
+	 * @param accountId - Id of account to set unread direct messages for
+	 * @param messageIds - Ids of messages to set as unread
+	 */
+	setUnreadMessages(accountId: number, messageIds: number[]): Promise<void>;
+
 	//#region Shard
 
 	/**

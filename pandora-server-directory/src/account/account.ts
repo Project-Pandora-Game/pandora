@@ -36,7 +36,7 @@ export class Account {
 		this.lastActivity = Date.now();
 		this.secure = new AccountSecure(this, data.secure);
 		this.roles = new AccountRoles(this, data.roles);
-		this.directMessages = new AccountDirectMessages(this);
+		this.directMessages = new AccountDirectMessages(this, data);
 		// Shallow copy to preserve received data when cleaning up secure
 		const cleanData: DatabaseAccount = { ...data };
 		delete cleanData.secure;

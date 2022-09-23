@@ -25,9 +25,9 @@ export class AccountDirectMessages {
 		return this._account.secure.getPublicKey() as string;
 	}
 
-	constructor(account: Account) {
+	constructor(account: Account, data: DatabaseAccount) {
 		this._account = account;
-		this._unreadMessages = account.data.unreadMessages ?? [];
+		this._unreadMessages = data.unreadMessages ?? [];
 	}
 
 	async ackMessage(id: number | 'all'): Promise<void> {

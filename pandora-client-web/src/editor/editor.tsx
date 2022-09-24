@@ -1,27 +1,22 @@
 import React, { createContext, ReactElement, useContext, useMemo, useState, useSyncExternalStore } from 'react';
-import { useGraphicsScene } from '../graphics/graphicsScene';
-import { EditorSetupScene, EditorResultScene } from './graphics/editorScene';
 import { BrowserRouter } from 'react-router-dom';
 import { AssetsUI } from './components/assets/assets';
 import { AssetUI } from './components/asset/asset';
 import { BoneUI } from './components/bones/bones';
 import './editor.scss';
 import { Button } from '../components/common/Button/Button';
-import { EditorCharacter } from './graphics/character/editorCharacter';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { LayerStateOverrides } from '../graphics/def';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
-import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
+import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
 import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
-import { useEditor } from './editorContextProvider';
-import { ImageExporter } from './graphics/export/imageExporter';
 import { useEvent } from '../common/useEvent';
-import _ from 'lodash';
+import { PreviewView, SetupView } from './editorViews';
 
 const logger = GetLogger('Editor');
 
@@ -34,14 +29,17 @@ export class Editor extends TypedEventEmitter<{
 }> {
 	public readonly manager: GraphicsManager;
 	public readonly character: EditorCharacter;
-	public readonly setupScene: EditorSetupScene;
-	public readonly resultScene: EditorResultScene;
 
 	public readonly showBones = new Observable<boolean>(false);
 
 	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
 	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
 	public readonly targetPoint = new Observable<DraggablePoint | null>(null);
+
+	public readonly backgroundColor = new Observable<number>(0x1099bb);
+	public readonly getCenter = new Observable<() => { x: number; y: number; }>(
+		() => ({ x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }),
+	);
 
 	constructor(manager: GraphicsManager) {
 		super();
@@ -65,8 +63,6 @@ export class Editor extends TypedEventEmitter<{
 
 		this.manager = manager;
 		this.character = new EditorCharacter();
-		this.setupScene = new EditorSetupScene(this);
-		this.resultScene = new EditorResultScene(this);
 
 		// Prevent loosing progress
 		window.addEventListener('beforeunload', (event) => {
@@ -77,7 +73,6 @@ export class Editor extends TypedEventEmitter<{
 			return undefined;
 		}, { capture: true });
 
-		/* eslint-disable @typescript-eslint/naming-convention */
 		this.character.appearance.importFromBundle({
 			...APPEARANCE_BUNDLE_DEFAULT,
 			items: [
@@ -85,7 +80,6 @@ export class Editor extends TypedEventEmitter<{
 			],
 			pose: {},
 		});
-		/* eslint-enable @typescript-eslint/naming-convention */
 	}
 
 	private readonly editorGraphics = new Map<AssetId, EditorAssetGraphics>();
@@ -180,47 +174,14 @@ export class Editor extends TypedEventEmitter<{
 	}
 
 	public setBackgroundColor(color: number): void {
-		this.setupScene.setBackground(`#${color.toString(16)}`);
-		this.resultScene.setBackground(`#${color.toString(16)}`);
+		this.backgroundColor.value = color;
 		document.documentElement.style.setProperty('--editor-background-color', `#${color.toString(16)}`);
-	}
-
-	public exportImage(resultScene: boolean = true): void {
-		const exporter = new ImageExporter();
-		const result = exporter.characterCut(resultScene ? this.resultScene.resultCharacter : this.setupScene.setupCharacter, {
-			x: 0,
-			y: 0,
-			height: CharacterSize.HEIGHT,
-			width: CharacterSize.WIDTH,
-		}, 'png');
-
-		const link = document.createElement('a');
-		link.href = result;
-		link.download = `export.png`;
-		link.style.display = 'none';
-		document.body.appendChild(link);
-		link.click();
-		link.remove();
 	}
 }
 
 export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: boolean): readonly AssetGraphicsLayer[] {
 	const layers = useSyncExternalStore((change) => asset.editor.on('modifiedAssetsChange', change), () => asset.layers);
 	return includeMirror ? layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]) : layers;
-}
-
-function SetupView(): ReactElement {
-	const editor = useEditor();
-	const refSetup = useGraphicsScene<HTMLDivElement>(editor.setupScene);
-
-	return <div className='canvasContainer' ref={ refSetup } />;
-}
-
-function PreviewView(): ReactElement {
-	const editor = useEditor();
-	const refResult = useGraphicsScene<HTMLDivElement>(editor.resultScene);
-
-	return <div className='canvasContainer' ref={ refResult } />;
 }
 
 const TABS: [string, string, () => ReactElement][] = [

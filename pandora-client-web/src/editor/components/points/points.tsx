@@ -36,6 +36,7 @@ export function PointsUI(): ReactElement {
 
 export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
+	const getCenter = useObservable(editor.getCenter);
 	const selectedPoint = useObservable(editor.targetPoint);
 	const points = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.points);
 
@@ -46,7 +47,7 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 	return (
 		<>
 			<Button onClick={ () => {
-				const pos = editor.setupScene.container.center;
+				const pos = getCenter();
 				layer.createNewPoint(pos.x, pos.y);
 			} }>
 				Add new point

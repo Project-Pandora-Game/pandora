@@ -8,6 +8,9 @@ import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Editor } from '../../editor';
 import { cloneDeep } from 'lodash';
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
+import { TypedEventEmitter } from '../../../event';
+import { AppearanceContainer, AppearanceEvents } from '../../../character/character';
+import { GetAssetManagerEditor } from '../../assets/assetManager';
 
 export class AppearanceEditor extends Appearance {
 	private _enforce = true;
@@ -31,6 +34,15 @@ export class AppearanceEditor extends Appearance {
 			return false;
 
 		return super.enforcePoseLimits();
+	}
+}
+
+export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
+	appearance: AppearanceEditor;
+
+	constructor() {
+		super();
+		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), (changes) => this.emit('appearanceUpdate', changes));
 	}
 }
 

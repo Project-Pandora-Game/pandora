@@ -1,4 +1,4 @@
-import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
 import { GraphicsManagerInstance } from './graphicsManager';

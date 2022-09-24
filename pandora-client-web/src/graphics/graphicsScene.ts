@@ -1,19 +1,17 @@
 import { AbstractRenderer, Application, Container, Filter, InteractionManager, Sprite, Texture } from 'pixi.js';
 import * as PixiViewport from 'pixi-viewport';
-import { useRef, useEffect, useLayoutEffect } from 'react';
 import { TypedEventEmitter } from '../event';
 import { CharacterSize } from 'pandora-common';
-import { Character } from '../character/character';
-import { GraphicsCharacter } from './graphicsCharacter';
-import { useObservable } from '../observable';
-import { GraphicsManagerInstance } from '../assets/graphicsManager';
 
 export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	private readonly _app: Application;
+	private _destroyed: boolean = false;
 	readonly container: PixiViewport.Viewport;
 	private element: HTMLElement | undefined;
 	private readonly resizeObserver: ResizeObserver;
 	protected backgroundFilters: Filter[] = [];
+
+	protected cleanupCalls: (() => void)[] = [];
 
 	get width(): number {
 		return this._app.renderer.width;
@@ -25,6 +23,10 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 
 	get renderer(): AbstractRenderer {
 		return this._app.renderer;
+	}
+
+	public get destroyed(): boolean {
+		return this._destroyed;
 	}
 
 	constructor() {
@@ -42,6 +44,16 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		});
 		this.container.sortableChildren = true;
 		this._app.stage.addChild(this.container);
+	}
+
+	destroy() {
+		this.cleanupCalls.reverse().forEach((c) => c());
+		this.cleanupCalls = [];
+		this.resizeObserver.disconnect();
+		this.container.destroy({ children: true });
+		this._app.destroy(true, { children: true });
+		this.element = undefined;
+		this._destroyed = true;
 	}
 
 	renderTo(element: HTMLElement): () => void {
@@ -67,6 +79,8 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	}
 
 	resize(center: boolean = true): void {
+		if (this.destroyed)
+			return;
 		this._app.resize();
 		const { width, height } = this._app.screen;
 		this.container.resize(width, height);
@@ -106,6 +120,8 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		return `#${backgroundColor.toString(16).padStart(6, '0')}`;
 	}
 	public setBackground(data: string, width?: number, height?: number) {
+		if (this.destroyed)
+			return;
 		if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(data)) {
 			this._background = '';
 			this._backgroundSprite?.destroy();
@@ -133,6 +149,8 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	}
 
 	private _setBackgroundTexture(texture: Texture, width?: number, height?: number) {
+		if (this.destroyed)
+			return;
 		this._backgroundSprite = this.add(new Sprite(texture), -1000);
 		this._backgroundSprite.filters = this.backgroundFilters;
 		if (width) {
@@ -144,40 +162,4 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		this._app.renderer.backgroundColor = 0x000000;
 		this._app.renderer.backgroundAlpha = 1;
 	}
-}
-
-export function useGraphicsScene<T extends HTMLElement>(scene: GraphicsScene): React.RefObject<T> {
-	const ref = useRef<T>(null);
-	useEffect(() => {
-		if (ref.current) {
-			return scene.renderTo(ref.current);
-		}
-		return undefined;
-	}, [scene, ref]);
-	return ref;
-}
-
-export function useGraphicsSceneCharacter<T extends HTMLElement>(scene: GraphicsScene, character: Character): React.RefObject<T> {
-	const ref = useRef<T>(null);
-	const manager = useObservable(GraphicsManagerInstance);
-
-	useLayoutEffect(() => {
-		if (!manager)
-			return;
-		const gCharacter = new GraphicsCharacter(character, scene.renderer);
-		gCharacter.useGraphics(manager.getAssetGraphicsById.bind(manager));
-		scene.add(gCharacter);
-		return () => {
-			scene.remove(gCharacter);
-		};
-	}, [scene, character, manager]);
-
-	useEffect(() => {
-		if (ref.current) {
-			return scene.renderTo(ref.current);
-		}
-		return undefined;
-	}, [scene, ref]);
-
-	return ref;
 }

@@ -31,7 +31,7 @@ import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } fr
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphicsScene';
+import { GraphicsScene } from '../../graphics/graphicsScene';
 import { useAppearanceActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
@@ -44,6 +44,9 @@ import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
+import { GraphicsSceneRenderer, SceneConstructor } from '../../graphics/graphicsSceneRenderer';
+import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -119,15 +122,29 @@ function useWardrobeContext(): Readonly<{
 	return useContext(wardrobeContext);
 }
 
-const scene = new GraphicsScene();
 function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
-	const ref = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
 	const navigate = useNavigate();
+
+	const manager = useObservable(GraphicsManagerInstance);
+
+	const characterScene = useCallback<SceneConstructor>(() => {
+		if (!manager)
+			return null;
+
+		const scene = new GraphicsScene();
+
+		const gCharacter = new GraphicsCharacter(character, scene.renderer);
+		scene.add(gCharacter);
+
+		gCharacter.useGraphics(manager.getAssetGraphicsById.bind(manager));
+
+		return scene;
+	}, [character, manager]);
 
 	return (
 		<div className='wardrobe'>
-			<div className='characterPreview' ref={ ref } />
+			<GraphicsSceneRenderer className='characterPreview' scene={ characterScene } />
 			<TabContainer className='flex-1'>
 				<Tab name='Items'>
 					<div className='wardrobe-pane'>

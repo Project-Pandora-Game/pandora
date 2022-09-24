@@ -1,4 +1,4 @@
-import { AtomicConditionBone, BoneName, CoordinatesCompressed, Item, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { AtomicConditionBone, BoneName, CoordinatesCompressed, Item, LayerMirror, PointDefinition } from 'pandora-common';
 import type { LayerStateOverrides } from './def';
 import { AbstractRenderer, Container, Mesh, MeshGeometry, MeshMaterial, Sprite, Texture } from 'pixi.js';
 import { GraphicsCharacter } from './graphicsCharacter';
@@ -74,10 +74,19 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		if (layer.hasAlphaMasks()) {
 			this._alphaMask = new GraphicsMaskLayer(this.renderer, (image) => this.getTexture(image));
 			this.addChild(this._alphaMask.sprite);
-			this.on('destroy', () => this._alphaMask?.destroy());
 		}
 
 		this._calculatePoints();
+	}
+
+	override destroy() {
+		if (this._alphaMask) {
+			this._alphaMask.destroy();
+			this._alphaMask = undefined;
+		}
+		this.result.destroy();
+		this._image = '';
+		super.destroy({ children: false });
 	}
 
 	public update({ bones = new Set(), state, force }: { bones?: ReadonlySet<string>, state?: LayerStateOverrides, force?: boolean; }): void {
@@ -159,11 +168,13 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 		if (image !== this._image) {
 			this._image = image;
 			this.getTexture(image).then((texture) => {
-				if (this._image === image) {
+				if (this._image === image && !this.destroyed) {
 					this.result.texture = this._texture = texture;
 				}
 			}).catch(() => {
-				this.result.texture = this._texture = Texture.EMPTY;
+				if (!this.destroyed) {
+					this.result.texture = this._texture = Texture.EMPTY;
+				}
 			});
 			change = true;
 		}

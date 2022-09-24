@@ -20,10 +20,6 @@ export function AssetsUI(): ReactElement {
 
 	return (
 		<div className='asset-ui'>
-			<div>
-				<Button className='flex-1' onClick={ () => editor.exportImage(false) }>Export source</Button>
-				<Button className='flex-1' onClick={ () => editor.exportImage(true) }>Export result</Button>
-			</div>
 			<h3>Equipped</h3>
 			<ul>
 				{items.map((item) => <ItemElement key={ item.id } item={ item } />)}

@@ -21,6 +21,7 @@ import { DraggablePoint } from './graphics/draggable';
 import { useEditor } from './editorContextProvider';
 import { ImageExporter } from './graphics/export/imageExporter';
 import { useEvent } from '../common/useEvent';
+import _ from 'lodash';
 
 const logger = GetLogger('Editor');
 
@@ -243,7 +244,24 @@ function Tab({ defaultTab }: { defaultTab: string; }): ReactElement {
 	const { activeTabs, setActiveTabs } = useContext(activeTabsContext);
 	const setTab = useEvent((tab: string) => {
 		setCurrent(tab);
-		setActiveTabs([...activeTabs.filter((t) => t !== current), tab]);
+		const index = activeTabs.indexOf(current);
+		if (index >= 0) {
+			activeTabs[index] = tab;
+			setActiveTabs([...activeTabs]);
+		}
+	});
+	const newTab = useEvent(() => {
+		const next = TABS.find(([tab]) => !activeTabs.includes(tab))?.[0];
+		if (next) {
+			setActiveTabs([...activeTabs, next]);
+		}
+	});
+	const closeTab = useEvent(() => {
+		const index = activeTabs.indexOf(current);
+		if (index >= 0) {
+			activeTabs.splice(index, 1);
+			setActiveTabs([...activeTabs]);
+		}
 	});
 
 	const currentTab = TABS.find((tab) => tab[0] === current) ?? TABS[0][0];
@@ -262,6 +280,16 @@ function Tab({ defaultTab }: { defaultTab: string; }): ReactElement {
 									<Button className='slim' theme={ currentTab === tab ? 'defaultActive' : 'default' } onClick={ () => setTab(tab[0]) } key={ tab[0] }>{tab[0]}</Button>
 								))
 						}
+						{
+							(current === activeTabs[activeTabs.length - 1] && activeTabs.length < TABS.length) && (
+								<Button className='slim icon' theme='default' onClick={ newTab }>+</Button>
+							)
+						}
+						{
+							(activeTabs.length > 1) && (
+								<Button className='slim icon' theme='default' onClick={ closeTab }>✖</Button>
+							)
+						}
 					</div>
 				)
 			}
@@ -279,9 +307,7 @@ export function EditorView(): ReactElement {
 		<BrowserRouter basename='/editor'>
 			<activeTabsContext.Provider value={ context }>
 				<div className='editor'>
-					<Tab defaultTab='Global' />
-					<Tab defaultTab='Setup' />
-					<Tab defaultTab='Preview' />
+					{ activeTabs.map((tab) => <Tab defaultTab={ tab } key={ tab } />) }
 				</div>
 			</activeTabsContext.Provider>
 		</BrowserRouter>

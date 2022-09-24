@@ -67,6 +67,8 @@
 
 .center-flex {
 	@include center-flex;
+	// Give this a default gap so things look better without custom style
+	gap: 0.5em;
 }
 
 .hidden {

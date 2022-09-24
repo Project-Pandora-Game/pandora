@@ -21,14 +21,14 @@ export function AssetUI() {
 
 	if (!selectedAsset) {
 		return (
-			<div>
+			<div className='editor-setupui'>
 				<h3>Select an asset to edit layers</h3>
 			</div>
 		);
 	}
 
 	return (
-		<div className='editor-assetui'>
+		<div className='editor-setupui editor-assetui'>
 			<h3>Editing: { StripAssetIdPrefix(selectedAsset.id) }</h3>
 			<AssetExportImport asset={ selectedAsset } />
 			<AssetLayerList asset={ selectedAsset } />

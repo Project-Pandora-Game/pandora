@@ -9,7 +9,6 @@ import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../parsing';
-import './layer.scss';
 
 export function LayerUI(): ReactElement {
 	const editor = useEditor();
@@ -18,14 +17,14 @@ export function LayerUI(): ReactElement {
 
 	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
 		return (
-			<div>
+			<div className='editor-setupui'>
 				<h3>Select an layer to edit it</h3>
 			</div>
 		);
 	}
 
 	return (
-		<div className='editor-layerui'>
+		<div className='editor-setupui'>
 			<LayerName layer={ selectedLayer } />
 			<ColorPicker layer={ selectedLayer } asset={ asset } />
 			<LayerPrioritySelect layer={ selectedLayer } asset={ asset } />

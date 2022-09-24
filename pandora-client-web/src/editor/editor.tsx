@@ -185,8 +185,8 @@ export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: 
 }
 
 const TABS: [string, string, () => ReactElement][] = [
-	['Global', 'editor-ui', AssetsUI],
-	['Bones', 'editor-ui', BoneUI],
+	['Poses', 'editor-ui', BoneUI],
+	['Items', 'editor-ui', AssetsUI],
 	['Asset', 'editor-ui', AssetUI],
 	['Layer', 'editor-ui', LayerUI],
 	['Points', 'editor-ui', PointsUI],
@@ -195,80 +195,100 @@ const TABS: [string, string, () => ReactElement][] = [
 ];
 
 const activeTabsContext = createContext({
-	activeTabs: [] as string[],
+	activeTabs: [] as readonly string[],
 	setActiveTabs: (_tabs: string[]) => { /**/ },
 });
 
-function Tab({ defaultTab }: { defaultTab: string; }): ReactElement {
-	const [current, setCurrent] = useState(defaultTab);
-	const [showTabs, setShowTabs] = useState(true);
+function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 	const { activeTabs, setActiveTabs } = useContext(activeTabsContext);
-	const setTab = useEvent((tab: string) => {
-		setCurrent(tab);
-		const index = activeTabs.indexOf(current);
-		if (index >= 0) {
-			activeTabs[index] = tab;
-			setActiveTabs([...activeTabs]);
-		}
+	const setTab = useEvent((newTab: string) => {
+		const newTabs = activeTabs.slice();
+		newTabs[index] = newTab;
+		setActiveTabs(newTabs);
 	});
 	const newTab = useEvent(() => {
-		const next = TABS.find(([tab]) => !activeTabs.includes(tab))?.[0];
-		if (next) {
-			setActiveTabs([...activeTabs, next]);
-		}
+		const newTabs = activeTabs.slice();
+		newTabs.splice(index + 1, 0, tab);
+		setActiveTabs(newTabs);
 	});
 	const closeTab = useEvent(() => {
-		const index = activeTabs.indexOf(current);
-		if (index >= 0) {
-			activeTabs.splice(index, 1);
-			setActiveTabs([...activeTabs]);
-		}
+		const newTabs = activeTabs.slice();
+		newTabs.splice(index, 1);
+		setActiveTabs(newTabs);
 	});
 
-	const currentTab = TABS.find((tab) => tab[0] === current) ?? TABS[0][0];
+	const currentTab = TABS.find((t) => t[0] === tab) ?? TABS[0];
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const CurrentTabComponent = currentTab[2];
 
 	return (
 		<div className={ currentTab[1] }>
-			{
-				showTabs &&  (
-					<div className='ui-selector'>
+			<div className='ui-selector'>
+				<div className='flex-1 center-flex'>
+					<select
+						value={ currentTab[0] }
+						onChange={ (ev) => {
+							setTab(ev.target.value);
+						} }
+						onWheel={ (ev) => {
+							const el = ev.currentTarget;
+							if (el === document.activeElement)
+								return;
+							if (ev.deltaY < 0) {
+								ev.stopPropagation();
+								ev.preventDefault();
+								el.selectedIndex = Math.max(el.selectedIndex - 1, 0);
+								setTab(el.options[el.selectedIndex].value);
+							} else if (ev.deltaY > 0) {
+								ev.stopPropagation();
+								ev.preventDefault();
+								el.selectedIndex = Math.min(el.selectedIndex + 1, el.length - 1);
+								setTab(el.options[el.selectedIndex].value);
+							}
+						} }
+					>
 						{
-							TABS
-								.filter((tab) => currentTab === tab || !activeTabs.includes(tab[0]))
-								.map((tab) => (
-									<Button className='slim' theme={ currentTab === tab ? 'defaultActive' : 'default' } onClick={ () => setTab(tab[0]) } key={ tab[0] }>{tab[0]}</Button>
-								))
+							TABS.map((tab) => (
+								<option value={ tab[0] } key={ tab[0] }>{ tab[0] }</option>
+							))
 						}
-						{
-							(current === activeTabs[activeTabs.length - 1] && activeTabs.length < TABS.length) && (
-								<Button className='slim icon' theme='default' onClick={ newTab }>+</Button>
-							)
-						}
-						{
-							(activeTabs.length > 1) && (
-								<Button className='slim icon' theme='default' onClick={ closeTab }>✖</Button>
-							)
-						}
-					</div>
-				)
-			}
-			<button className='ui-selector-toggle' onClick={ () => setShowTabs(!showTabs) }>{ showTabs ? '\u2227 ' : '\u2228' }</button>
+					</select>
+					{
+						(activeTabs.length > 1) && (
+							<Button
+								title='Close this tab'
+								className='slim icon'
+								theme='default'
+								onClick={ closeTab }
+							>
+								✖
+							</Button>
+						)
+					}
+				</div>
+				<Button
+					title='Create a new tab to the right of this one'
+					className='slim icon'
+					theme='default'
+					onClick={ newTab }
+				>
+					+
+				</Button>
+			</div>
 			<CurrentTabComponent />
 		</div>
 	);
 }
 
 export function EditorView(): ReactElement {
-	const [activeTabs, setActiveTabs] = useState(['Global', 'Setup', 'Preview']);
+	const [activeTabs, setActiveTabs] = useState(['Items', 'Setup', 'Preview']);
 	const context = useMemo(() => ({ activeTabs, setActiveTabs }), [activeTabs, setActiveTabs]);
 
 	return (
 		<BrowserRouter basename='/editor'>
 			<activeTabsContext.Provider value={ context }>
 				<div className='editor'>
-					{ activeTabs.map((tab) => <Tab defaultTab={ tab } key={ tab } />) }
+					{ activeTabs.map((tab, index) => <Tab tab={ tab } index={ index } key={ index } />) }
 				</div>
 			</activeTabsContext.Provider>
 		</BrowserRouter>

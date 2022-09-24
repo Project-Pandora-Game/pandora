@@ -19,8 +19,6 @@
 			flex: 1;
 			min-width: 20em;
 			overflow-y: auto;
-			padding: 0 0.5em;
-			gap: 0.5em;
 			textarea {
 				resize: none;
 				width: 100%;
@@ -63,19 +61,39 @@
 		justify-content: center;
 		gap: 0.5rem;
 		padding: 0.5em;
+		border-bottom: solid black 3px;
+
+		select {
+			padding: 0.4em;
+		}
+	}
+}
+
+.editor .editor-ui .editor-setupui {
+	display: flex;
+	flex-flow: column;
+	gap: 0.3em;
+	padding: 0.5em;
+	overflow: auto;
+
+	select {
+		padding: 0.2em;
 	}
 
-	.ui-selector-toggle {
-		background: black;
-		color: white;
-		font-size: smaller;
-		cursor: pointer;
-		padding: 0;
-		margin: 0 -1rem;
+	& > div {
+		display: flex;
+		flex-flow: row wrap;
+		gap: 0.3em;
 
-		&:hover {
-			background: white;
-			color: black;
-		}
+		align-items: center;
+	}
+
+	textarea {
+		height: unset;
+		resize: vertical;
+	}
+
+	.error {
+		color: darkred;
 	}
 }

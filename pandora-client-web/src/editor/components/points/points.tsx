@@ -10,7 +10,6 @@ import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { DraggablePoint } from '../../graphics/draggable';
 import { ParseTransforms, SerializeTransforms } from '../../parsing';
-import './points.scss';
 
 export function PointsUI(): ReactElement {
 	const editor = useEditor();
@@ -19,14 +18,14 @@ export function PointsUI(): ReactElement {
 
 	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
 		return (
-			<div>
+			<div className='editor-setupui'>
 				<h3>Select an layer to edit its points</h3>
 			</div>
 		);
 	}
 
 	return (
-		<div className='editor-pointsui'>
+		<div className='editor-setupui'>
 			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; {selectedLayer.name}</h3>
 			<MirrorPointsFromLayer layer={ selectedLayer } asset={ asset } />
 			<PointsEditUi layer={ selectedLayer } />

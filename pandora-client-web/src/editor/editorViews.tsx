@@ -16,6 +16,7 @@ function EditorView({ sceneType }: {
 		<GraphicsSceneRenderer scene={ sceneConstructor } onScene={ setScene } className='canvasContainer'>
 			<div className='overlay'>
 				<Button className='slim iconButton'
+					title='Center the view'
 					onClick={ () => {
 						scene?.resize(true);
 					} }
@@ -23,6 +24,7 @@ function EditorView({ sceneType }: {
 					⊙
 				</Button>
 				<Button className='slim iconButton'
+					title='Download as image'
 					onClick={ () => {
 						scene?.exportImage();
 					} }

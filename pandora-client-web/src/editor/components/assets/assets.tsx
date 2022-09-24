@@ -19,7 +19,7 @@ export function AssetsUI(): ReactElement {
 	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
 
 	return (
-		<div className='asset-ui'>
+		<div className='editor-setupui asset-ui'>
 			<h3>Equipped</h3>
 			<ul>
 				{items.map((item) => <ItemElement key={ item.id } item={ item } />)}

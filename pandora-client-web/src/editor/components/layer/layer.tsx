@@ -57,7 +57,7 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 					onChange={ (event) => {
 						const l = layer.mirror && layer.isMirror ? layer.mirror : layer;
 						l.definition.name = event.target.value || undefined;
-						l.onChange();
+						l.onChange(false);
 					} }
 				/>
 			</div>

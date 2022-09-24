@@ -57,8 +57,10 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 	protected override createLayer(definition: LayerDefinition): AssetGraphicsLayer {
 		const layer = super.createLayer(definition);
-		layer.on('change', () => {
-			this.onChange();
+		layer.on('change', ({ structuralChange }) => {
+			if (structuralChange) {
+				this.onChange();
+			}
 		});
 		return layer;
 	}
@@ -132,8 +134,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 		layer.definition.priority = priority;
 
-		layer.onChange();
-		this.onChange();
+		layer.onChange(true);
 	}
 
 	setScaleAs(layer: AssetGraphicsLayer, scaleAs: string | null): void {
@@ -150,8 +151,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 			layer.definition.scaling = undefined;
 		}
 
-		layer.onChange();
-		this.onChange();
+		layer.onChange(false);
 	}
 
 	addScalingStop(layer: AssetGraphicsLayer, value: number): void {
@@ -167,8 +167,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 		layer.definition.scaling.stops = newStops;
 
-		layer.onChange();
-		this.onChange();
+		layer.onChange(false);
 	}
 
 	removeScalingStop(layer: AssetGraphicsLayer, stop: number): void {
@@ -178,8 +177,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 		layer.definition.scaling.stops = layer.definition.scaling.stops.filter((s) => s[0] !== stop);
 
-		layer.onChange();
-		this.onChange();
+		layer.onChange(false);
 	}
 
 	public layerMirrorFrom(layer: AssetGraphicsLayer, source: number | string | null): void {
@@ -197,7 +195,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 					throw new Error('More than one jump in points reference');
 				}
 				layer.definition.points = cloneDeep(points);
-				layer.onChange();
+				layer.onChange(false);
 			}
 			if (typeof layer.definition.points === 'string') {
 				const manager = GraphicsManagerInstance.value;
@@ -206,7 +204,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 					throw new Error('Unknown point template');
 				}
 				layer.definition.points = cloneDeep(template);
-				layer.onChange();
+				layer.onChange(false);
 			}
 			return;
 		}
@@ -218,7 +216,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 				throw new Error('Unknown point template');
 			}
 			layer.definition.points = source;
-			layer.onChange();
+			layer.onChange(false);
 			return;
 		}
 
@@ -232,7 +230,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		}
 
 		layer.definition.points = source;
-		layer.onChange();
+		layer.onChange(false);
 	}
 
 	private makePointDependenciesMap(): Map<AssetGraphicsLayer, AssetGraphicsLayer> {
@@ -264,7 +262,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 			}
 		}
 		for (const layer of changed) {
-			layer.onChange();
+			layer.onChange(false);
 		}
 	}
 
@@ -350,7 +348,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 			processSetting(layer.definition.image);
 			layer.definition.scaling?.stops.forEach((s) => processSetting(s[1]));
 			if (shouldUpdate) {
-				layer.onChange();
+				layer.onChange(false);
 			}
 		}
 		return Promise.allSettled(

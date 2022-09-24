@@ -147,7 +147,7 @@ export class DraggablePoint extends TypedEventEmitter<{
 			throw new Error('Cannot modify template');
 		}
 		point.pos = [x, y];
-		layer.onChange();
+		layer.onChange(false);
 	}
 
 	public get pointType(): PointDefinition['pointType'] {
@@ -160,7 +160,7 @@ export class DraggablePoint extends TypedEventEmitter<{
 			throw new Error('Cannot modify template');
 		}
 		point.pointType = type;
-		layer.onChange();
+		layer.onChange(false);
 	}
 
 	public get mirror(): boolean {
@@ -173,7 +173,7 @@ export class DraggablePoint extends TypedEventEmitter<{
 			throw new Error('Cannot modify template');
 		}
 		point.mirror = value;
-		layer.onChange();
+		layer.onChange(false);
 	}
 
 	public get transforms(): PointDefinition['transforms'] {
@@ -186,7 +186,7 @@ export class DraggablePoint extends TypedEventEmitter<{
 			throw new Error('Cannot modify template');
 		}
 		point.transforms = value;
-		layer.onChange();
+		layer.onChange(false);
 	}
 
 	public deletePoint(): void {
@@ -199,7 +199,7 @@ export class DraggablePoint extends TypedEventEmitter<{
 		}
 		// TODO: Make idempotent
 		layer.definition.points.splice(this.point.index, 1);
-		layer.onChange();
+		layer.onChange(false);
 	}
 }
 

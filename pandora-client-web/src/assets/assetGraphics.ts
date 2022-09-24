@@ -10,7 +10,10 @@ export interface PointDefinitionCalculated extends PointDefinition {
 }
 
 export class AssetGraphicsLayer extends TypedEventEmitter<{
-	change: undefined;
+	change: {
+		/** If the change that happened affects structure of layers, requiring layer regeneration */
+		structuralChange: boolean;
+	};
 }> {
 	public readonly asset: AssetGraphics;
 	public mirror: AssetGraphicsLayer | undefined;
@@ -111,7 +114,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 			return this.mirror.setPointType(pointType);
 
 		this.definition.pointType = pointType.length === 0 ? undefined : pointType.slice();
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public setImage(image: string, stop?: number): void {
@@ -121,7 +124,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const setting = this.getImageSettingsForScalingStop(stop);
 		setting.image = image;
 
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public setImageOverrides(imageOverrides: LayerImageOverride[], stop?: number): void {
@@ -131,7 +134,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const settings = this.getImageSettingsForScalingStop(stop);
 		settings.overrides = imageOverrides.slice();
 
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public setAlphaImage(image: string, stop?: number): void {
@@ -141,7 +144,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const setting = this.getImageSettingsForScalingStop(stop);
 		setting.alphaImage = image || undefined;
 
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public setAlphaOverrides(imageOverrides: LayerImageOverride[], stop?: number): void {
@@ -151,7 +154,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const settings = this.getImageSettingsForScalingStop(stop);
 		settings.alphaOverrides = imageOverrides.length > 0 ? imageOverrides.slice() : undefined;
 
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public hasAlphaMasks(): boolean {
@@ -159,21 +162,21 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 			.some((i) => !!i.alphaImage || !!i.alphaOverrides);
 	}
 
-	public onChange(): void {
+	public onChange(structuralChange: boolean): void {
 		if (this.mirror && this.isMirror)
-			return this.mirror.onChange();
+			return this.mirror.onChange(structuralChange);
 
-		this.emit('change', undefined);
+		this.emit('change', { structuralChange });
 		if (this.mirror) {
 			this.updateMirror();
-			this.mirror.emit('change', undefined);
+			this.mirror.emit('change', { structuralChange: false });
 		}
 		// Notify all layers that depend on this one
 		if (!this.isMirror && Array.isArray(this.definition.points)) {
 			const index = this.index;
 			for (const layer of this.asset.layers) {
 				if (layer !== this && layer.definition.points === index) {
-					layer.onChange();
+					layer.onChange(false);
 				}
 			}
 		}
@@ -198,7 +201,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 			mirror: false,
 			transforms: [],
 		});
-		layer.onChange();
+		layer.onChange(false);
 	}
 
 	public getImageSettingsForScalingStop(stop: number | null | undefined): LayerImageSetting {

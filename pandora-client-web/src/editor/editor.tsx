@@ -1,4 +1,4 @@
-import React, { ReactElement, useState, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, useContext, useMemo, useState, useSyncExternalStore } from 'react';
 import { useGraphicsScene } from '../graphics/graphicsScene';
 import { EditorSetupScene, EditorResultScene } from './graphics/editorScene';
 import { BrowserRouter } from 'react-router-dom';
@@ -20,6 +20,7 @@ import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
 import { useEditor } from './editorContextProvider';
 import { ImageExporter } from './graphics/export/imageExporter';
+import { useEvent } from '../common/useEvent';
 
 const logger = GetLogger('Editor');
 
@@ -231,9 +232,19 @@ const TABS: [string, string, () => ReactElement][] = [
 	['Preview', 'editor-scene', PreviewView],
 ];
 
+const activeTabsContext = createContext({
+	activeTabs: [] as string[],
+	setActiveTabs: (_tabs: string[]) => { /**/ },
+});
+
 function Tab({ defaultTab }: { defaultTab: string; }): ReactElement {
 	const [current, setCurrent] = useState(defaultTab);
 	const [showTabs, setShowTabs] = useState(true);
+	const { activeTabs, setActiveTabs } = useContext(activeTabsContext);
+	const setTab = useEvent((tab: string) => {
+		setCurrent(tab);
+		setActiveTabs([...activeTabs.filter((t) => t !== current), tab]);
+	});
 
 	const currentTab = TABS.find((tab) => tab[0] === current) ?? TABS[0][0];
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -245,9 +256,11 @@ function Tab({ defaultTab }: { defaultTab: string; }): ReactElement {
 				showTabs &&  (
 					<div className='ui-selector'>
 						{
-							TABS.map((tab) => (
-								<Button className='slim' theme={ currentTab === tab ? 'defaultActive' : 'default' } onClick={ () => setCurrent(tab[0]) } key={ tab[0] }>{tab[0]}</Button>
-							))
+							TABS
+								.filter((tab) => currentTab === tab || !activeTabs.includes(tab[0]))
+								.map((tab) => (
+									<Button className='slim' theme={ currentTab === tab ? 'defaultActive' : 'default' } onClick={ () => setTab(tab[0]) } key={ tab[0] }>{tab[0]}</Button>
+								))
 						}
 					</div>
 				)
@@ -259,13 +272,18 @@ function Tab({ defaultTab }: { defaultTab: string; }): ReactElement {
 }
 
 export function EditorView(): ReactElement {
+	const [activeTabs, setActiveTabs] = useState(['Global', 'Setup', 'Preview']);
+	const context = useMemo(() => ({ activeTabs, setActiveTabs }), [activeTabs, setActiveTabs]);
+
 	return (
 		<BrowserRouter basename='/editor'>
-			<div className='editor'>
-				<Tab defaultTab='Global' />
-				<Tab defaultTab='Setup' />
-				<Tab defaultTab='Preview' />
-			</div>
+			<activeTabsContext.Provider value={ context }>
+				<div className='editor'>
+					<Tab defaultTab='Global' />
+					<Tab defaultTab='Setup' />
+					<Tab defaultTab='Preview' />
+				</div>
+			</activeTabsContext.Provider>
 		</BrowserRouter>
 	);
 }

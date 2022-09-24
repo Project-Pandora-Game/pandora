@@ -31,6 +31,12 @@ export const IS_BROWSER = typeof window === 'object' && typeof document === 'obj
 /** True if the environment is a node */
 export const IS_NODE = !IS_BROWSER;
 
+export function Assert(condition: unknown, msg?: string): asserts condition {
+	if (!condition) {
+		throw new Error(msg ? `Assetion failed: ${msg}` : 'Assertion failed');
+	}
+}
+
 /**
  * Assert all arguments are `never`
  *

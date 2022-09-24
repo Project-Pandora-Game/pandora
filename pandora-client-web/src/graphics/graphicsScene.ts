@@ -85,7 +85,7 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		const { width, height } = this._app.screen;
 		this.container.resize(width, height);
 		this.container.clampZoom({
-			minScale: Math.min(height / this.container.worldHeight, width / this.container.worldWidth) * 0.9,
+			minScale: Math.min(height / this.container.worldHeight, width / this.container.worldWidth) * 0.2,
 			maxScale: 2,
 		});
 		if (center) {

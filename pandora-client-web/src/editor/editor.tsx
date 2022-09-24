@@ -201,9 +201,9 @@ const activeTabsContext = createContext({
 
 function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 	const { activeTabs, setActiveTabs } = useContext(activeTabsContext);
-	const setTab = useEvent((newTab: string) => {
+	const setTab = useEvent((newSelection: string) => {
 		const newTabs = activeTabs.slice();
-		newTabs[index] = newTab;
+		newTabs[index] = newSelection;
 		setActiveTabs(newTabs);
 	});
 	const newTab = useEvent(() => {
@@ -248,8 +248,8 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 						} }
 					>
 						{
-							TABS.map((tab) => (
-								<option value={ tab[0] } key={ tab[0] }>{ tab[0] }</option>
+							TABS.map((t) => (
+								<option value={ t[0] } key={ t[0] }>{ t[0] }</option>
 							))
 						}
 					</select>
@@ -281,7 +281,7 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 }
 
 export function EditorView(): ReactElement {
-	const [activeTabs, setActiveTabs] = useState(['Items', 'Setup', 'Preview']);
+	const [activeTabs, setActiveTabs] = useState(['Items', 'Asset', 'Preview']);
 	const context = useMemo(() => ({ activeTabs, setActiveTabs }), [activeTabs, setActiveTabs]);
 
 	return (

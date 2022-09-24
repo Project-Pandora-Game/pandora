@@ -1,7 +1,7 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
 import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { AtomicCondition, CharacterSize, CharacterView, Item, TransformDefinition } from 'pandora-common/dist/assets';
-import { AbstractRenderer, Container, IDestroyOptions } from 'pixi.js';
+import { AbstractRenderer, Container } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';

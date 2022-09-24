@@ -1,6 +1,6 @@
 @import '../../../styles/utils';
 
-.editor-assetui {
+.editor .editor-ui .editor-assetui {
 	.exportImport {
 		display: flex;
 		flex-flow: row;
@@ -11,6 +11,7 @@
 	.layerList, .assetImageList {
 		display: flex;
 		flex-flow: column;
+		align-items: stretch;
 
 		ul {
 			padding: 0 0.5em;

@@ -1,5 +1,5 @@
 import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore, useRef, useEffect } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { Button } from '../../../components/common/Button/Button';
@@ -182,8 +182,20 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 }
 
 function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
-	const [value, setValue] = useState(SerializeLayerImageOverrides(asAlpha ? (layer.getImageSettingsForScalingStop(stop).alphaOverrides ?? []) : layer.getImageSettingsForScalingStop(stop).overrides));
+	const originalValue = useSyncExternalStore(layer.getSubscriber('change'), () => {
+		const stopSettings = layer.getImageSettingsForScalingStop(stop);
+		return SerializeLayerImageOverrides(asAlpha ? (stopSettings.alphaOverrides ?? []) : stopSettings.overrides);
+	});
+	const valueRef = useRef(originalValue);
+	const [value, setValue] = useState(originalValue);
 	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		if (originalValue !== valueRef.current) {
+			valueRef.current = originalValue;
+			setValue(valueRef.current);
+		}
+	}, [originalValue]);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);

@@ -35,7 +35,7 @@ describe('LineParser', () => {
 
 		it('should handle escape - \\', () => {
 			expect(mockLineParser.parse('\\*hi there*', true))
-				.toStrictEqual([['chat', '\\*hi there*']]);
+				.toStrictEqual([['chat', '*hi there*']]);
 		});
 
 		it('should handle new line cases', () => {

@@ -1,4 +1,4 @@
-import React, { createContext, ReactElement, useContext, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { AssetsUI } from './components/assets/assets';
 import { AssetUI } from './components/asset/asset';
@@ -17,6 +17,8 @@ import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
 import { useEvent } from '../common/useEvent';
 import { PreviewView, SetupView } from './editorViews';
+import { useBrowserStorage } from '../browserStorage';
+import _ from 'lodash';
 
 const logger = GetLogger('Editor');
 
@@ -281,7 +283,7 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 }
 
 export function EditorView(): ReactElement {
-	const [activeTabs, setActiveTabs] = useState(['Items', 'Asset', 'Preview']);
+	const [activeTabs, setActiveTabs] = useBrowserStorage('editor-tabs', ['Items', 'Asset', 'Preview'], IsTabArray);
 	const context = useMemo(() => ({ activeTabs, setActiveTabs }), [activeTabs, setActiveTabs]);
 
 	return (
@@ -293,4 +295,8 @@ export function EditorView(): ReactElement {
 			</activeTabsContext.Provider>
 		</BrowserRouter>
 	);
+}
+
+function IsTabArray(value: unknown): value is readonly string[] {
+	return _.isArray(value) && value.every((v) => TABS.some((t) => t[0] === v));
 }

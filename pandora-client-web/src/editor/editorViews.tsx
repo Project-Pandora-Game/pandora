@@ -5,8 +5,8 @@ import { GraphicsSceneRenderer, SceneConstructor } from '../graphics/graphicsSce
 import { Editor } from './editor';
 import { Button } from '../components/common/Button/Button';
 import { useEvent } from '../common/useEvent';
+import { useNullableObservable } from '../observable';
 import _ from 'lodash';
-import { useNullableObservable, useObservable } from '../observable';
 
 function EditorView({ sceneType }: {
 	sceneType: new (editor: Editor) => EditorScene;

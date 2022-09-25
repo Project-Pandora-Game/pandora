@@ -2,10 +2,13 @@ import { AbstractRenderer, Application, Container, Filter, InteractionManager, S
 import * as PixiViewport from 'pixi-viewport';
 import { TypedEventEmitter } from '../event';
 import { CharacterSize } from 'pandora-common';
+import { Observable, ReadonlyObservable } from '../observable';
 
 export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	private readonly _app: Application;
+	private readonly _background = new Observable('#1099bb');
 	private _destroyed: boolean = false;
+	private _backgroundSprite?: Sprite;
 	readonly container: PixiViewport.Viewport;
 	private element: HTMLElement | undefined;
 	private readonly resizeObserver: ResizeObserver;
@@ -27,6 +30,10 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 
 	public get destroyed(): boolean {
 		return this._destroyed;
+	}
+
+	public get background(): ReadonlyObservable<string> {
+		return this._background;
 	}
 
 	constructor() {
@@ -112,35 +119,31 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 		this.backgroundFilters = filters;
 	}
 
-	private _background = '';
-	private _backgroundSprite?: Sprite;
-	get background(): string {
-		if (this._background) return this.background;
-		const { backgroundColor } = this._app.renderer;
-		return `#${backgroundColor.toString(16).padStart(6, '0')}`;
-	}
 	public setBackground(data: string, width?: number, height?: number) {
 		if (this.destroyed)
 			return;
 		if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(data)) {
-			this._background = '';
 			this._backgroundSprite?.destroy();
 			this._backgroundSprite = undefined;
-			this._app.renderer.backgroundColor = parseInt(data.substring(1, 7), 16);
+			const color = this._app.renderer.backgroundColor = parseInt(data.substring(1, 7), 16);
 			if (data.length > 7) {
 				this._app.renderer.backgroundAlpha = parseInt(data.substring(7, 9), 16) / 255;
 			} else {
 				this._app.renderer.backgroundAlpha = 1;
 			}
+			this._background.value = `#${color.toString(16).padStart(6, '0')}`;
 		} else if (/^data:image\/png;base64,[0-9a-zA-Z+/=]+$/i.test(data)) {
-			this._background = data;
+			this._background.value = data;
 			const img = new Image();
 			img.src = data;
 			this._setBackgroundTexture(Texture.from(img), width, height);
 		} else if (/^https?:\/\/.+$/i.test(data)) {
-			this._background = data;
+			this._background.value = data;
 			(async () => {
-				this._setBackgroundTexture(await Texture.fromURL(data), width, height);
+				const texture = await Texture.fromURL(data);
+				if (this._background.value === data) {
+					this._setBackgroundTexture(texture, width, height);
+				}
 			})().catch(() => { /** */ });
 		} else {
 			// eslint-disable-next-line no-console

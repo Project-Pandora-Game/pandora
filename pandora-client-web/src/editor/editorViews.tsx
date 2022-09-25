@@ -1,9 +1,12 @@
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { EditorSetupScene, EditorResultScene, EditorScene } from './graphics/editorScene';
 import { useEditor } from './editorContextProvider';
 import { GraphicsSceneRenderer, SceneConstructor } from '../graphics/graphicsSceneRenderer';
 import { Editor } from './editor';
 import { Button } from '../components/common/Button/Button';
+import { useEvent } from '../common/useEvent';
+import _ from 'lodash';
+import { useNullableObservable, useObservable } from '../observable';
 
 function EditorView({ sceneType }: {
 	sceneType: new (editor: Editor) => EditorScene;
@@ -31,8 +34,24 @@ function EditorView({ sceneType }: {
 				>
 					<u>⇣</u>
 				</Button>
+				<BackgroundColorPicker scene={ scene } throttle={ 30 } />
 			</div>
 		</GraphicsSceneRenderer>
+	);
+}
+
+function BackgroundColorPicker({ scene, throttle }: { scene: EditorScene | null | undefined, throttle: number }): ReactElement {
+	const background = useNullableObservable(scene?.background);
+	const color = background?.[0] === '#' ? background : '#000000';
+
+	const onChange = useEvent((ev: React.ChangeEvent<HTMLInputElement>) => {
+		scene?.setBackground(ev.target.value);
+	});
+
+	const onChangeThrottled = useMemo(() => _.throttle(onChange, throttle), [onChange, throttle]);
+
+	return (
+		<input type='color' value={ color } onChange={ onChangeThrottled } />
 	);
 }
 

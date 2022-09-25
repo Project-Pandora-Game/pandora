@@ -1,6 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { UserEvent } from '@testing-library/user-event/dist/types/setup/index';
 import React from 'react';
 import { RegistrationForm } from '../../../../src/components/login/forms/registrationForm';
 import { RenderWithRouterAndProviders } from '../../../testUtils';
@@ -12,7 +11,7 @@ describe('Registration Form', () => {
 	const defaultEmail = 'test-user@domain.com';
 	const defaultPassword = 'password123';
 
-	let user: UserEvent;
+	let user: ReturnType<typeof userEvent.setup>;
 	let pathname: string;
 
 	beforeEach(() => {

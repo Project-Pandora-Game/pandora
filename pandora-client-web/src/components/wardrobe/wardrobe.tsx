@@ -46,7 +46,7 @@ import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 
 export function WardrobeScreen(): ReactElement | null {
-	const locationState = useLocation().state;
+	const locationState = useLocation().state as unknown;
 	const player = usePlayer();
 	const chatRoomCharacters = useChatRoomCharacters();
 

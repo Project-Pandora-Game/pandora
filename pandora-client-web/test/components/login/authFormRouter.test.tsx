@@ -12,9 +12,17 @@ import { ResetPasswordForm } from '../../../src/components/login/forms/resetPass
 import { authPageComponents } from '../../../src/routing/authRoutingData';
 import { RenderWithRouterAndProviders } from '../../testUtils';
 
+const originalCrypto = window.crypto;
+
+Object.defineProperty(window, 'crypto', {
+	value: window.crypto,
+	enumerable: true,
+	configurable: true,
+	writable: true,
+});
+
 describe('AuthFormRouter', () => {
 	it.each(authPageComponents)('should render an error message on the path %p if SubtleCrypto is not available', (path) => {
-		const originalCrypto = window.crypto;
 		// @ts-expect-error - Simulating no SubtleCrypto
 		// noinspection JSConstantReassignment
 		window.crypto = {};

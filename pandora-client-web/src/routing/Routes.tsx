@@ -79,7 +79,7 @@ function useLoggedInCheck(preserveLocation = true): void {
 		if (!isLoggedIn) {
 			let options: NavigateOptions = {};
 			if (preserveLocation) {
-				options = { state: { redirectPath: location.pathname, redirectState: location.state } };
+				options = { state: { redirectPath: location.pathname, redirectState: location.state as unknown } };
 			}
 			navigate('/login', options);
 		}

@@ -131,10 +131,21 @@ export class Editor extends TypedEventEmitter<{
 	}
 
 	public getLayerTint(layer: AssetGraphicsLayer): number {
-		return this.getLayerStateOverride(layer)?.color ?? 0xffffff;
+		const override = this.getLayerStateOverride(layer);
+		if (override?.color !== undefined) {
+			return override.color;
+		}
+		const { colorization } = layer.asset.asset.definition;
+		if (colorization) {
+			const index = layer.definition.colorizationIndex ?? layer.index;
+			if (index != null && index >= 0 && index < colorization.length) {
+				return parseInt(colorization[index].default.substring(1), 16);
+			}
+		}
+		return 0xffffff;
 	}
 
-	public setLayerTint(layer: AssetGraphicsLayer, tint: number): void {
+	public setLayerTint(layer: AssetGraphicsLayer, tint: number | undefined): void {
 		this.setLayerStateOverride(layer, {
 			...this.getLayerStateOverride(layer),
 			color: tint,

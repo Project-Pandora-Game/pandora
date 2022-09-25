@@ -123,7 +123,7 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 					editor.setLayerTint(layer, Number.parseInt(event.target.value.replace(/^#/, ''), 16));
 				} }
 			/>
-			<Button className='slim' onClick={ () => editor.setLayerTint(layer, 0xffffff) } >↺</Button>
+			<Button className='slim' onClick={ () => editor.setLayerTint(layer, undefined) } >↺</Button>
 		</div>
 	);
 }

@@ -1,6 +1,7 @@
-import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
+import { Assert, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
+import { GetAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
 
 export interface PointDefinitionCalculated extends PointDefinition {
@@ -216,11 +217,21 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 }
 
 export class AssetGraphics {
+	private _asset?: Asset;
 	public readonly id: AssetId;
 	public layers!: readonly AssetGraphicsLayer[];
 
 	public get allLayers(): AssetGraphicsLayer[] {
 		return this.layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]);
+	}
+
+	public get asset(): Asset {
+		if (!this._asset) {
+			const managger = GetAssetManager();
+			this._asset = managger.getAssetById(this.id);
+			Assert(this._asset, 'Asset not found');
+		}
+		return this._asset;
 	}
 
 	constructor(id: AssetId, definition: AssetGraphicsDefinition) {

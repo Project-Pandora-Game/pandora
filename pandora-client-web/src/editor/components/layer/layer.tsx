@@ -1,7 +1,8 @@
 import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore, useRef, useEffect } from 'react';
+import React, { ReactElement, useMemo, useState, useSyncExternalStore, useRef, useEffect } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
+import { useEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/Button/Button';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
@@ -156,9 +157,9 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 }
 
 function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactElement | null {
-	const [value, setValue] = useState(layer.definition.pointType?.join(',') ?? '');
+	const [value, setValue] = useLayerValue(layer, () => layer.definition.pointType?.join(',') ?? '');
 
-	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
 		layer.setPointType(
 			e.target.value
@@ -166,7 +167,7 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 				.map((t) => t.trim())
 				.filter((t) => !!t),
 		);
-	}, [layer]);
+	});
 
 	return (
 		<div>
@@ -182,22 +183,13 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 }
 
 function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
-	const originalValue = useSyncExternalStore(layer.getSubscriber('change'), () => {
+	const [value, setValue] = useLayerValue(layer, () => {
 		const stopSettings = layer.getImageSettingsForScalingStop(stop);
 		return SerializeLayerImageOverrides(asAlpha ? (stopSettings.alphaOverrides ?? []) : stopSettings.overrides);
 	});
-	const valueRef = useRef(originalValue);
-	const [value, setValue] = useState(originalValue);
 	const [error, setError] = useState<string | null>(null);
 
-	useEffect(() => {
-		if (originalValue !== valueRef.current) {
-			valueRef.current = originalValue;
-			setValue(valueRef.current);
-		}
-	}, [originalValue]);
-
-	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
 		try {
 			const result = ParseLayerImageOverrides(e.target.value, GetAssetManager().getAllBones().map((b) => b.name).concat(FAKE_BONES));
@@ -211,7 +203,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 			setError(err instanceof Error ? err.message : String(err));
 		}
 
-	}, [layer, stop, asAlpha]);
+	});
 
 	return (
 		<div>
@@ -336,3 +328,15 @@ function GetReadablePriorityName(priority: LayerPriority): string {
 		.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
 }
 
+function useLayerValue<T>(layer: AssetGraphicsLayer, getSnapshot: () => T): [T, (newValue: T) => void] {
+	const originalValue = useSyncExternalStore(layer.getSubscriber('change'), getSnapshot);
+	const valueRef = useRef(originalValue);
+	const [value, setValue] = useState(originalValue);
+	useEffect(() => {
+		if (originalValue !== valueRef.current) {
+			valueRef.current = originalValue;
+			setValue(valueRef.current);
+		}
+	}, [originalValue]);
+	return [value, setValue];
+}

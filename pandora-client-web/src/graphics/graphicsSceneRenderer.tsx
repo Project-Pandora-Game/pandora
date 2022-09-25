@@ -11,7 +11,6 @@ export interface GraphicsSceneRendererProps<T extends GraphicsScene = GraphicsSc
 }
 
 export class GraphicsSceneRenderer<T extends GraphicsScene = GraphicsScene> extends React.Component<GraphicsSceneRendererProps<T>> {
-	private _targetCleanup?: () => void;
 	private _target: HTMLElement | null = null;
 	private _app: T | null = null;
 
@@ -28,12 +27,12 @@ export class GraphicsSceneRenderer<T extends GraphicsScene = GraphicsScene> exte
 	}
 
 	override componentDidUpdate(prevProps: Readonly<GraphicsSceneRendererProps<T>>): void {
-		Assert(this._app != null && this._target != null);
+		Assert(this._target != null);
 
 		const { scene, onScene } = this.props;
 
 		if (scene !== prevProps.scene) {
-			this._app.destroy();
+			this._app?.destroy();
 			this._app = scene() ?? null;
 			if (this._app) {
 				this._app.renderTo(this._target);
@@ -45,26 +44,20 @@ export class GraphicsSceneRenderer<T extends GraphicsScene = GraphicsScene> exte
 	}
 
 	override componentWillUnmount() {
-		Assert(this._app != null);
-
 		const { onScene } = this.props;
 
-		this._app.destroy();
+		this._app?.destroy();
 		this._app = null;
 		onScene?.(null);
 	}
 
+	private readonly _setTargetRefBound = (c: HTMLDivElement) => this.setTargetRef(c);
 	private setTargetRef(element: HTMLElement | null) {
 		if (this._target === element)
 			return;
 
-		if (this._targetCleanup) {
-			this._targetCleanup();
-			this._targetCleanup = undefined;
-		}
-
 		this._target = element;
-		if (element && this._app) {
+		if (this._app && element != null) {
 			this._app.renderTo(element);
 		}
 	}
@@ -72,6 +65,6 @@ export class GraphicsSceneRenderer<T extends GraphicsScene = GraphicsScene> exte
 	override render() {
 		const divProps = _.omit(this.props, ['scene', 'onScene']);
 
-		return <div { ...divProps } ref={ (c) => this.setTargetRef(c) } />;
+		return <div { ...divProps } ref={ this._setTargetRefBound } />;
 	}
 }

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useEvent } from './useEvent';
 
-export function useSyncUserInput(
+export function useSyncUserInput<T extends string | number | boolean>(
 	subscribe: (onStoreChange: () => void) => () => void,
-	getSnapshot: () => string,
-): [string, (newValue: string) => void] {
+	getSnapshot: () => T,
+): [T, (newValue: T) => void] {
 	const originalValue = useSyncExternalStore(subscribe, getSnapshot);
 	const [value, setValue] = useState(originalValue);
 	const shouldUpdate = useRef(true);
@@ -17,7 +17,7 @@ export function useSyncUserInput(
 		}
 	}, [originalValue, value]);
 
-	const updateValue = useEvent((newValue: string) => {
+	const updateValue = useEvent((newValue: T) => {
 		shouldUpdate.current = originalValue === newValue;
 		setValue(newValue);
 	});

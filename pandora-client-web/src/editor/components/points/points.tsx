@@ -1,7 +1,8 @@
-import React, { ReactElement, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
+import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -193,17 +194,8 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 }
 
 function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
-	const originalValue = useSyncExternalStore(point.getSubscriber('change'), () => SerializeTransforms(point.transforms));
-	const valueRef = useRef(originalValue);
-	const [value, setValue] = useState(originalValue);
+	const [value, setValue] = useSyncUserInput(point.getSubscriber('change'), () => SerializeTransforms(point.transforms));
 	const [error, setError] = useState<string | null>(null);
-
-	useEffect(() => {
-		if (originalValue !== valueRef.current) {
-			valueRef.current = originalValue;
-			setValue(originalValue);
-		}
-	}, [originalValue]);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
@@ -214,7 +206,7 @@ function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): Re
 		} catch (err) {
 			setError(err instanceof Error ? err.message : String(err));
 		}
-	}, [point]);
+	}, [point, setValue]);
 
 	return (
 		<>

@@ -1,8 +1,9 @@
 import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
-import React, { ReactElement, useMemo, useState, useSyncExternalStore, useRef, useEffect } from 'react';
+import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { useEvent } from '../../../common/useEvent';
+import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
@@ -157,7 +158,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 }
 
 function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactElement | null {
-	const [value, setValue] = useLayerValue(layer, () => layer.definition.pointType?.join(',') ?? '');
+	const [value, setValue] = useSyncUserInput(layer.getSubscriber('change'), () => layer.definition.pointType?.join(',') ?? '');
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
@@ -183,7 +184,7 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 }
 
 function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
-	const [value, setValue] = useLayerValue(layer, () => {
+	const [value, setValue] = useSyncUserInput(layer.getSubscriber('change'), () => {
 		const stopSettings = layer.getImageSettingsForScalingStop(stop);
 		return SerializeLayerImageOverrides(asAlpha ? (stopSettings.alphaOverrides ?? []) : stopSettings.overrides);
 	});
@@ -326,17 +327,4 @@ function GetReadablePriorityName(priority: LayerPriority): string {
 		.toLowerCase()
 		.replace(/_/g, ' ')
 		.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
-}
-
-function useLayerValue<T>(layer: AssetGraphicsLayer, getSnapshot: () => T): [T, (newValue: T) => void] {
-	const originalValue = useSyncExternalStore(layer.getSubscriber('change'), getSnapshot);
-	const valueRef = useRef(originalValue);
-	const [value, setValue] = useState(originalValue);
-	useEffect(() => {
-		if (originalValue !== valueRef.current) {
-			valueRef.current = originalValue;
-			setValue(valueRef.current);
-		}
-	}, [originalValue]);
-	return [value, setValue];
 }

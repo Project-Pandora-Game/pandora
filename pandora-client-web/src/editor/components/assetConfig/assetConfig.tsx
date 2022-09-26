@@ -1,6 +1,8 @@
-import { AssetDefinition, AssetModuleDefinition } from 'pandora-common';
+import { AssetDefinition, AssetModuleDefinition, ItemInteractionType } from 'pandora-common';
 import { EffectsDefinition, EFFECTS_DEFAULT } from 'pandora-common/dist/assets/effects';
-import React, { ReactElement } from 'react';
+import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
+import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
+import React, { ReactElement, useId, useMemo } from 'react';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { GetVisibleBoneName } from '../../../components/wardrobe/wardrobe';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
@@ -49,11 +51,11 @@ export function AssetConfigUI(): ReactElement {
 			</div>
 			<div>
 				<label htmlFor='graphics'>Has graphics: </label>
-				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } readOnly />
+				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } disabled />
 			</div>
 			<div>
 				<label htmlFor='allow-self-equip'>Allow self equip: </label>
-				<input id='allow-self-equip' type='checkbox' checked={ definition.allowSelfEquip ?? false } readOnly />
+				<input id='allow-self-equip' type='checkbox' checked={ definition.allowSelfEquip ?? false } disabled />
 			</div>
 			<Colorization colorization={ definition.colorization } />
 			<PoseLimits poseLimits={ definition.poseLimits } />
@@ -80,7 +82,7 @@ function Colorization({ colorization }: { colorization: AssetDefinition['coloriz
 	);
 }
 
-function PoseLimits({ poseLimits }: { poseLimits: AssetDefinition['poseLimits'] }): ReactElement | null {
+function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['poseLimits']; id?: string }): ReactElement | null {
 	if (!poseLimits) {
 		return null;
 	}
@@ -88,15 +90,15 @@ function PoseLimits({ poseLimits }: { poseLimits: AssetDefinition['poseLimits'] 
 	return (
 		<FieldsetToggle legend='Pose limits'>
 			<div>
-				<label htmlFor='force-arms'>Force arms: </label>
-				<input id='force-arms' type='text' value={ poseLimits.forceArms ?? '' } readOnly />
+				<label htmlFor={ `${id}force-arms` }>Force arms: </label>
+				<input id={ `${id}force-arms` } type='text' value={ poseLimits.forceArms ?? '' } readOnly />
 			</div>
 			<hr />
 			<div>
 				{ Object.entries(poseLimits.forcePose ?? {}).map(([key, value]) => (
 					<div key={ key }>
-						<label htmlFor={ `force-pose-${key}` }>{ GetVisibleBoneName(key) }: </label>
-						<input id={ `force-pose-${key}` } type='text' value={
+						<label htmlFor={ `${id}force-pose-${key}` }>{ GetVisibleBoneName(key) }: </label>
+						<input id={ `${id}force-pose-${key}` } type='text' value={
 							value === undefined ? '' :
 							typeof value === 'number' ? value.toString() :
 							`${value[0]} - ${value[1]}`
@@ -108,20 +110,21 @@ function PoseLimits({ poseLimits }: { poseLimits: AssetDefinition['poseLimits'] 
 	);
 }
 
-function Effects({ effects }: { effects: AssetDefinition['effects'] }): ReactElement {
+function Effects({ effects, id = '' }: { effects: AssetDefinition['effects']; id?: string }): ReactElement {
 	const allEffects: EffectsDefinition = { ...EFFECTS_DEFAULT, ...effects };
+	id += 'effect';
 
 	return (
 		<FieldsetToggle legend='Effects'>
 			{ Object.entries(allEffects).map(([key, value]) => (
 				<div key={ key }>
-					<label htmlFor={ `effect-${key}` }>{ key }: </label>
+					<label htmlFor={ `${id}-${key}` }>{ key }: </label>
 					{ typeof value === 'boolean' ? (
-						<input id={ `effect-${key}` } type='checkbox' checked={ value } readOnly />
+						<input id={ `${id}-${key}` } type='checkbox' checked={ value } disabled />
 					) : typeof value === 'number' ? (
-						<input id={ `effect-${key}` } type='number' value={ value } readOnly />
+						<input id={ `${id}-${key}` } type='number' value={ value } readOnly />
 					) : (
-						<input id={ `effect-${key}` } type='text' value={ value } readOnly />
+						<input id={ `${id}-${key}` } type='text' value={ value } readOnly />
 					) }
 				</div>
 			)) }
@@ -136,21 +139,100 @@ function Modules({ modules }: { modules: AssetDefinition['modules'] }): ReactEle
 
 	return (
 		<FieldsetToggle legend='Modules'>
-			{ Object.entries(modules).map(([name, module], index) => (
-				<Module key={ index } name={ name } module={ module } />
+			{ Object.entries(modules).map(([name, module]) => (
+				<Module key={ name } name={ name } module={ module } />
 			)) }
 		</FieldsetToggle>
 	);
 }
 
-function Module({ name }: { name: string; module: AssetModuleDefinition }): ReactElement {
+function Module({ name, module }: { name: string; module: AssetModuleDefinition }): ReactElement {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const ModuleRenderer = useMemo(() => {
+		switch (module.type) {
+			case 'typed':
+				return TypedModule;
+			default:
+				return UnknownModule;
+		}
+	}, [module.type]);
 	return (
 		<div>
 			<div>
-				<label htmlFor={ `module-${name}` }>{ name }: </label>
+				<label htmlFor={ `module-${name}` }>Key: </label>
 				<input id={ `module-${name}` } type='text' value={ name } readOnly />
 			</div>
-			<h4>TODO: implement this</h4>
+			<ModuleCommon module={ module } />
+			<ModuleRenderer module={ module } />
 		</div>
+	);
+}
+
+function UnknownModule({ module }: { module: AssetModuleDefinition }): ReactElement {
+	return (
+		<div>
+			Unknown module type: { String(module.type) }
+		</div>
+	);
+}
+
+function TypedModule({ module }: { module: IModuleConfigTyped }): ReactElement {
+	return (
+		<FieldsetToggle legend='Variants'>
+			{ module.variants.map((variant, index) => (
+				<TypedModuleOptions key={ index } options={ variant } />
+			)) }
+		</FieldsetToggle>
+	);
+}
+
+function TypedModuleOptions({ options }: { options: IModuleTypedOption }): ReactElement {
+	const id = useId();
+	return (
+		<div>
+			<div>
+				<label htmlFor={ `module-type-${id}-id` }>Id: </label>
+				<input id={ `module-type-${id}-id` } type='text' value={ options.id } readOnly />
+			</div>
+			<div>
+				<label htmlFor={ `module-type-${id}-name` }>Name: </label>
+				<input id={ `module-type-${id}-name` } type='text' value={ options.name } readOnly />
+			</div>
+			<div>
+				<label htmlFor={ `module-type-${id}-default` }>Default: </label>
+				<input id={ `module-type-${id}-default` } type='checkbox' checked={ options.default } disabled />
+			</div>
+			<PoseLimits poseLimits={ options.poseLimits } id={ `module-type-${id}-` } />
+			<Effects effects={ options.effects } id={ `module-type-${id}-` } />
+		</div>
+	);
+}
+
+function ModuleCommon({ module }: { module: IModuleConfigCommon<string> }): ReactElement {
+	const id = useId();
+	return (
+		<>
+			<div>
+				<label htmlFor={ `module-${id}-type` }>Type: </label>
+				<input id={ `module-${id}-type` } type='text' value={ module.type } readOnly />
+			</div>
+			<div>
+				<label htmlFor={ `module-${id}-name` }>Name: </label>
+				<input id={ `module-${id}-name` } type='text' value={ module.name } readOnly />
+			</div>
+			<div>
+				<label htmlFor={ `module-${id}-interaction` }>Interaction type: </label>
+				<select id={ `module-${id}-interaction` } value={ module.interactionType } disabled>
+					<option value={ ItemInteractionType.ACCESS_ONLY }>Access only</option>
+					<option value={ ItemInteractionType.STYLING }>Styling</option>
+					<option value={ ItemInteractionType.MODIFY }>Modify</option>
+					<option value={ ItemInteractionType.ADD_REMOVE }>Add/remove</option>
+				</select>
+			</div>
+			<div>
+				<label htmlFor={ `module-${id}-expression` }>Expression: </label>
+				<input id={ `module-${id}-expression` } type='text' value={ module.expression ?? '' } readOnly />
+			</div>
+		</>
 	);
 }

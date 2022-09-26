@@ -794,6 +794,14 @@ function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose
 	);
 }
 
+export function GetVisibleBoneName(name: string): string {
+	return name
+		.replace(/^\w/, (c) => c.toUpperCase())
+		.replace(/_r$/, () => ' Right')
+		.replace(/_l$/, () => ' Left')
+		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
+}
+
 export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; unlocked?: boolean; }): ReactElement {
 	const [min, max] = useMemo(() => {
 		if (unlocked || !forcePose) {
@@ -802,11 +810,7 @@ export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: 
 		return forcePose.get(bone.definition.name) ?? [BONE_MIN, BONE_MAX];
 	}, [bone, forcePose, unlocked]);
 
-	const name = useMemo(() => bone.definition.name
-		.replace(/^\w/, (c) => c.toUpperCase())
-		.replace(/_r$/, () => ' Right')
-		.replace(/_l$/, () => ' Left')
-		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase()), [bone]);
+	const name = useMemo(() => GetVisibleBoneName(bone.definition.name), [bone]);
 
 	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = Math.round(parseFloat(event.target.value));

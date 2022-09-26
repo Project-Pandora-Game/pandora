@@ -19,6 +19,7 @@ import { useEvent } from '../common/useEvent';
 import { PreviewView, SetupView } from './editorViews';
 import { useBrowserStorage } from '../browserStorage';
 import _ from 'lodash';
+import { AssetConfigUI } from './components/assetConfig/assetConfig';
 
 const logger = GetLogger('Editor');
 
@@ -203,6 +204,7 @@ const TABS: [string, string, () => ReactElement][] = [
 	['Asset', 'editor-ui', AssetUI],
 	['Layer', 'editor-ui', LayerUI],
 	['Points', 'editor-ui', PointsUI],
+	['Asset Config', 'editor-ui', AssetConfigUI],
 	['Setup', 'editor-scene', SetupView],
 	['Preview', 'editor-scene', PreviewView],
 ];

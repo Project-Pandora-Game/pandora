@@ -138,7 +138,7 @@ export class Editor extends TypedEventEmitter<{
 		}
 		const { colorization } = layer.asset.asset.definition;
 		if (colorization) {
-			const index = layer.definition.colorizationIndex ?? layer.index;
+			const index = layer.definition.colorizationIndex;
 			if (index != null && index >= 0 && index < colorization.length) {
 				return parseInt(colorization[index].default.substring(1), 16);
 			}

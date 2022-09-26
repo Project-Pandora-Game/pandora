@@ -158,7 +158,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 }
 
 function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactElement | null {
-	const [value, setValue] = useSyncUserInput(layer.getSubscriber('change'), () => layer.definition.pointType?.join(',') ?? '');
+	const [value, setValue] = useSyncUserInput(layer.getSubscriber('change'), () => layer.definition.pointType?.join(',') ?? '', [layer]);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
@@ -187,7 +187,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 	const [value, setValue] = useSyncUserInput(layer.getSubscriber('change'), () => {
 		const stopSettings = layer.getImageSettingsForScalingStop(stop);
 		return SerializeLayerImageOverrides(asAlpha ? (stopSettings.alphaOverrides ?? []) : stopSettings.overrides);
-	});
+	}, [layer, stop, asAlpha]);
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {

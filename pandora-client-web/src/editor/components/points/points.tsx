@@ -194,7 +194,7 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 }
 
 function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
-	const [value, setValue] = useSyncUserInput(point.getSubscriber('change'), () => SerializeTransforms(point.transforms));
+	const [value, setValue] = useSyncUserInput(point.getSubscriber('change'), () => SerializeTransforms(point.transforms), [point]);
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {

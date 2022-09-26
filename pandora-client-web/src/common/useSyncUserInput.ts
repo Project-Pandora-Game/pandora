@@ -13,6 +13,7 @@ export function useSyncUserInput<T extends string | number | boolean>(
 
 	useEffect(() => {
 		shouldUpdate.current = true;
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, deps);
 
 	useEffect(() => {

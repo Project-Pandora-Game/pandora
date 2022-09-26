@@ -11,14 +11,14 @@ import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize } from 'pandora-common';
+import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize, ZodMatcher, ParseArrayNotEmpty } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
 import { useEvent } from '../common/useEvent';
 import { PreviewView, SetupView } from './editorViews';
 import { useBrowserStorage } from '../browserStorage';
-import _ from 'lodash';
+import z from 'zod';
 import { AssetConfigUI } from './components/assetConfig/assetConfig';
 
 const logger = GetLogger('Editor');
@@ -296,7 +296,11 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 }
 
 export function EditorView(): ReactElement {
-	const [activeTabs, setActiveTabs] = useBrowserStorage('editor-tabs', ['Items', 'Asset', 'Preview'], IsTabArray);
+	const [activeTabs, setActiveTabs] = useBrowserStorage('editor-tabs', ['Items', 'Asset', 'Preview'],
+		ZodMatcher(
+			z.array(z.enum(ParseArrayNotEmpty(TABS.map((t) => t[0])))),
+		),
+	);
 	const context = useMemo(() => ({ activeTabs, setActiveTabs }), [activeTabs, setActiveTabs]);
 
 	return (
@@ -308,8 +312,4 @@ export function EditorView(): ReactElement {
 			</activeTabsContext.Provider>
 		</BrowserRouter>
 	);
-}
-
-function IsTabArray(value: unknown): value is readonly string[] {
-	return _.isArray(value) && value.every((v) => TABS.some((t) => t[0] === v));
 }

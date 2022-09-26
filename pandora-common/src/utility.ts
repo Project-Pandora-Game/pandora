@@ -52,6 +52,19 @@ export function AssertNotNullable<T>(value: T | null | undefined): asserts value
 	}
 }
 
+/** Asserts that passed array is not empty */
+export function AssertArrayNotEmpty<T>(value: T[]): asserts value is [T, ...T[]] {
+	if (value.length === 0) {
+		throw new Error('Value is empty array');
+	}
+}
+
+/** Asserts that passed array is not empty and returns it, useful for Zod enum */
+export function ParseArrayNotEmpty<T>(value: T[]): [T, ...T[]] {
+	AssertArrayNotEmpty(value);
+	return value;
+}
+
 /**
  * Compresses an object into an array of its values
  * @template T The type of the object

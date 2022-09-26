@@ -9,7 +9,7 @@ import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 
-export function AssetConfigUI(): ReactElement {
+export function AssetInfoUI(): ReactElement {
 	const editor = useEditor();
 	const graphics = useObservable(editor.targetAsset);
 	const asset = graphics?.asset;
@@ -17,7 +17,7 @@ export function AssetConfigUI(): ReactElement {
 	if (!asset) {
 		return (
 			<div className='editor-setupui'>
-				<h3>Select an asset</h3>
+				<h3>Select an asset to display</h3>
 			</div>
 		);
 	}
@@ -26,9 +26,7 @@ export function AssetConfigUI(): ReactElement {
 
 	return (
 		<div className='editor-setupui'>
-			<h3>WIP: this page is readonly</h3>
-			<hr />
-			<h3>Editing: { StripAssetIdPrefix(asset.id) }</h3>
+			<h3>Asset: { StripAssetIdPrefix(asset.id) }</h3>
 			<div>
 				<label htmlFor='id'>ID: </label>
 				<input id='id' type='text' value={ definition.id } readOnly />

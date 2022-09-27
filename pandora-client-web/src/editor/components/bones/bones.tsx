@@ -1,7 +1,8 @@
 import { ArmsPose, CharacterView } from 'pandora-common';
 import React, { ReactElement, useEffect, useState, useSyncExternalStore } from 'react';
 import { useCharacterAppearancePose } from '../../../character/character';
-import { BoneRowElement } from '../../../components/wardrobe/wardrobe';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { BoneRowElement, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 
@@ -22,7 +23,7 @@ export function BoneUI(): ReactElement {
 	}), () => character.appearance.getView());
 	const showBones = useObservable(editor.showBones);
 
-	const [unlocked, setUnlocked] = useState(character.appearance.enforce);
+	const [unlocked, setUnlocked] = useState(!character.appearance.enforce);
 	useEffect(() => {
 		character.appearance.enforce = !unlocked;
 	}, [character.appearance, unlocked]);
@@ -63,7 +64,7 @@ export function BoneUI(): ReactElement {
 				/>
 			</div>
 			<div>
-				<label htmlFor='unlocked-toggle'>Disable bone limits</label>
+				<label htmlFor='unlocked-toggle'>Ignore bone limits from items</label>
 				<input
 					id='unlocked-toggle'
 					type='checkbox'
@@ -73,8 +74,32 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<h3>Bones</h3>
-			{bones.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } unlocked={ unlocked } />)}
+			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } open={ false }>
+				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
+					if (pose.armsPose !== undefined) {
+						character.appearance.setArmsPose(pose.armsPose);
+					}
+					for (const [name, value] of Object.entries(pose.pose)) {
+						if (value) {
+							character.appearance.setPose(name, value);
+						}
+					}
+				} } />
+			</FieldsetToggle>
+			<hr />
+			<h4>Pose bones</h4>
+			{
+				bones
+					.filter((bone) => bone.definition.type === 'pose')
+					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } unlocked={ unlocked } />)
+			}
+			<hr />
+			<h4>Body bones</h4>
+			{
+				bones
+					.filter((bone) => bone.definition.type === 'body')
+					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } unlocked={ unlocked } />)
+			}
 		</div>
 	);
 }

@@ -1,7 +1,8 @@
-import React, { ReactElement, useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
+import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -10,7 +11,6 @@ import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { DraggablePoint } from '../../graphics/draggable';
 import { ParseTransforms, SerializeTransforms } from '../../parsing';
-import './points.scss';
 
 export function PointsUI(): ReactElement {
 	const editor = useEditor();
@@ -19,14 +19,14 @@ export function PointsUI(): ReactElement {
 
 	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
 		return (
-			<div>
+			<div className='editor-setupui'>
 				<h3>Select an layer to edit its points</h3>
 			</div>
 		);
 	}
 
 	return (
-		<div className='editor-pointsui'>
+		<div className='editor-setupui'>
 			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; {selectedLayer.name}</h3>
 			<MirrorPointsFromLayer layer={ selectedLayer } asset={ asset } />
 			<PointsEditUi layer={ selectedLayer } />
@@ -36,6 +36,7 @@ export function PointsUI(): ReactElement {
 
 export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
+	const getCenter = useObservable(editor.getCenter);
 	const selectedPoint = useObservable(editor.targetPoint);
 	const points = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.points);
 
@@ -46,7 +47,7 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 	return (
 		<>
 			<Button onClick={ () => {
-				const pos = editor.setupScene.container.center;
+				const pos = getCenter();
 				layer.createNewPoint(pos.x, pos.y);
 			} }>
 				Add new point
@@ -193,12 +194,8 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 }
 
 function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
-	const [value, setValue] = useState(SerializeTransforms(point.transforms));
+	const [value, setValue] = useSyncUserInput(point.getSubscriber('change'), () => SerializeTransforms(point.transforms), [point]);
 	const [error, setError] = useState<string | null>(null);
-
-	useEffect(() => {
-		setValue(SerializeTransforms(point.transforms));
-	}, [point]);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
@@ -209,7 +206,7 @@ function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): Re
 		} catch (err) {
 			setError(err instanceof Error ? err.message : String(err));
 		}
-	}, [point]);
+	}, [point, setValue]);
 
 	return (
 		<>

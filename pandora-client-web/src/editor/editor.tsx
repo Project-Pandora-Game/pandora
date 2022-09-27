@@ -1,29 +1,30 @@
-import React, { ReactElement, useSyncExternalStore } from 'react';
-import { useGraphicsScene } from '../graphics/graphicsScene';
-import { EditorSetupScene, EditorResultScene } from './graphics/editorScene';
-import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import React, { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
+import { BrowserRouter } from 'react-router-dom';
 import { AssetsUI } from './components/assets/assets';
 import { AssetUI } from './components/asset/asset';
 import { BoneUI } from './components/bones/bones';
 import './editor.scss';
 import { Button } from '../components/common/Button/Button';
-import { EditorCharacter } from './graphics/character/editorCharacter';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { LayerStateOverrides } from '../graphics/def';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
-import { EditorAssetGraphics } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT } from 'pandora-common';
+import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
+import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize, ZodMatcher, ParseArrayNotEmpty } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
-import { useEditor } from './editorContextProvider';
+import { useEvent } from '../common/useEvent';
+import { PreviewView, SetupView } from './editorViews';
+import { useBrowserStorage } from '../browserStorage';
+import z from 'zod';
+import { AssetInfoUI } from './components/assetInfo/assetInfo';
 
 const logger = GetLogger('Editor');
 
 export const EDITOR_ALPHAS = [1, 0.6, 0];
-export const EDITOR_ALPHA_ICONS = ['🌕', '🌓', '🌑'];
+export const EDITOR_ALPHA_ICONS = ['⯀', '⬕', '⬚'];
 
 export class Editor extends TypedEventEmitter<{
 	layerOverrideChange: AssetGraphicsLayer;
@@ -31,14 +32,17 @@ export class Editor extends TypedEventEmitter<{
 }> {
 	public readonly manager: GraphicsManager;
 	public readonly character: EditorCharacter;
-	public readonly setupScene: EditorSetupScene;
-	public readonly resultScene: EditorResultScene;
 
 	public readonly showBones = new Observable<boolean>(false);
 
 	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
 	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
 	public readonly targetPoint = new Observable<DraggablePoint | null>(null);
+
+	public readonly backgroundColor = new Observable<number>(0x1099bb);
+	public readonly getCenter = new Observable<() => { x: number; y: number; }>(
+		() => ({ x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }),
+	);
 
 	constructor(manager: GraphicsManager) {
 		super();
@@ -62,8 +66,6 @@ export class Editor extends TypedEventEmitter<{
 
 		this.manager = manager;
 		this.character = new EditorCharacter();
-		this.setupScene = new EditorSetupScene(this);
-		this.resultScene = new EditorResultScene(this);
 
 		// Prevent loosing progress
 		window.addEventListener('beforeunload', (event) => {
@@ -74,20 +76,13 @@ export class Editor extends TypedEventEmitter<{
 			return undefined;
 		}, { capture: true });
 
-		/* eslint-disable @typescript-eslint/naming-convention */
 		this.character.appearance.importFromBundle({
 			...APPEARANCE_BUNDLE_DEFAULT,
 			items: [
 				{ id: 'i/body', asset: 'a/body/base' },
 			],
-			pose: {
-				arm_r: 75,
-				arm_l: -75,
-				elbow_r: 100,
-				elbow_l: -10,
-			},
+			pose: {},
 		});
-		/* eslint-enable @typescript-eslint/naming-convention */
 	}
 
 	private readonly editorGraphics = new Map<AssetId, EditorAssetGraphics>();
@@ -137,10 +132,21 @@ export class Editor extends TypedEventEmitter<{
 	}
 
 	public getLayerTint(layer: AssetGraphicsLayer): number {
-		return this.getLayerStateOverride(layer)?.color ?? 0xffffff;
+		const override = this.getLayerStateOverride(layer);
+		if (override?.color !== undefined) {
+			return override.color;
+		}
+		const { colorization } = layer.asset.asset.definition;
+		if (colorization) {
+			const index = layer.definition.colorizationIndex;
+			if (index != null && index >= 0 && index < colorization.length) {
+				return parseInt(colorization[index].default.substring(1), 16);
+			}
+		}
+		return 0xffffff;
 	}
 
-	public setLayerTint(layer: AssetGraphicsLayer, tint: number): void {
+	public setLayerTint(layer: AssetGraphicsLayer, tint: number | undefined): void {
 		this.setLayerStateOverride(layer, {
 			...this.getLayerStateOverride(layer),
 			color: tint,
@@ -182,8 +188,7 @@ export class Editor extends TypedEventEmitter<{
 	}
 
 	public setBackgroundColor(color: number): void {
-		this.setupScene.setBackground(`#${color.toString(16)}`);
-		this.resultScene.setBackground(`#${color.toString(16)}`);
+		this.backgroundColor.value = color;
 		document.documentElement.style.setProperty('--editor-background-color', `#${color.toString(16)}`);
 	}
 }
@@ -193,45 +198,118 @@ export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: 
 	return includeMirror ? layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]) : layers;
 }
 
-function TabSelector(): ReactElement {
-	const navigate = useNavigate();
-	const location = useLocation();
+const TABS: [string, string, () => ReactElement][] = [
+	['Poses', 'editor-ui', BoneUI],
+	['Items', 'editor-ui', AssetsUI],
+	['Asset', 'editor-ui', AssetUI],
+	['Layer', 'editor-ui', LayerUI],
+	['Points', 'editor-ui', PointsUI],
+	['Asset Info', 'editor-ui', AssetInfoUI],
+	['Setup', 'editor-scene', SetupView],
+	['Preview', 'editor-scene', PreviewView],
+];
+
+const activeTabsContext = createContext({
+	activeTabs: [] as readonly string[],
+	setActiveTabs: (_tabs: string[]) => { /**/ },
+});
+
+function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
+	const { activeTabs, setActiveTabs } = useContext(activeTabsContext);
+	const setTab = useEvent((newSelection: string) => {
+		const newTabs = activeTabs.slice();
+		newTabs[index] = newSelection;
+		setActiveTabs(newTabs);
+	});
+	const newTab = useEvent(() => {
+		const newTabs = activeTabs.slice();
+		newTabs.splice(index + 1, 0, tab);
+		setActiveTabs(newTabs);
+	});
+	const closeTab = useEvent(() => {
+		const newTabs = activeTabs.slice();
+		newTabs.splice(index, 1);
+		setActiveTabs(newTabs);
+	});
+
+	const currentTab = TABS.find((t) => t[0] === tab) ?? TABS[0];
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const CurrentTabComponent = currentTab[2];
+
 	return (
-		<>
+		<div className={ currentTab[1] }>
 			<div className='ui-selector'>
-				<Button className='slim' theme={ location.pathname === '/' ? 'defaultActive' : 'default' } onClick={ () => navigate('/') }>Global</Button>
-				<Button className='slim' theme={ location.pathname === '/bones' ? 'defaultActive' : 'default' } onClick={ () => navigate('/bones') }>Bones</Button>
+				<div className='flex-1 center-flex'>
+					<select
+						value={ currentTab[0] }
+						onChange={ (ev) => {
+							setTab(ev.target.value);
+						} }
+						onWheel={ (ev) => {
+							const el = ev.currentTarget;
+							if (el === document.activeElement)
+								return;
+							if (ev.deltaY < 0) {
+								ev.stopPropagation();
+								ev.preventDefault();
+								el.selectedIndex = Math.max(el.selectedIndex - 1, 0);
+								setTab(el.options[el.selectedIndex].value);
+							} else if (ev.deltaY > 0) {
+								ev.stopPropagation();
+								ev.preventDefault();
+								el.selectedIndex = Math.min(el.selectedIndex + 1, el.length - 1);
+								setTab(el.options[el.selectedIndex].value);
+							}
+						} }
+					>
+						{
+							TABS.map((t) => (
+								<option value={ t[0] } key={ t[0] }>{ t[0] }</option>
+							))
+						}
+					</select>
+					{
+						(activeTabs.length > 1) && (
+							<Button
+								title='Close this tab'
+								className='slim icon'
+								theme='default'
+								onClick={ closeTab }
+							>
+								✖
+							</Button>
+						)
+					}
+				</div>
+				<Button
+					title='Create a new tab to the right of this one'
+					className='slim icon'
+					theme='default'
+					onClick={ newTab }
+				>
+					+
+				</Button>
 			</div>
-			<div className='ui-selector'>
-				<Button className='slim' theme={ location.pathname === '/asset' ? 'defaultActive' : 'default' } onClick={ () => navigate('/asset') }>Asset</Button>
-				<Button className='slim' theme={ location.pathname === '/layer' ? 'defaultActive' : 'default' } onClick={ () => navigate('/layer') }>Layer</Button>
-				<Button className='slim' theme={ location.pathname === '/points' ? 'defaultActive' : 'default' } onClick={ () => navigate('/points') }>Points</Button>
-			</div>
-		</>
+			<CurrentTabComponent />
+		</div>
 	);
 }
 
 export function EditorView(): ReactElement {
-	const editor = useEditor();
-	const refSetup = useGraphicsScene<HTMLDivElement>(editor.setupScene);
-	const refResult = useGraphicsScene<HTMLDivElement>(editor.resultScene);
+	const [activeTabs, setActiveTabs] = useBrowserStorage('editor-tabs', ['Items', 'Asset', 'Preview'],
+		ZodMatcher(
+			z.array(z.enum(ParseArrayNotEmpty(TABS.map((t) => t[0])))),
+		),
+	);
+	const context = useMemo(() => ({ activeTabs, setActiveTabs }), [activeTabs, setActiveTabs]);
 
 	return (
 		<BrowserRouter basename='/editor'>
-			<div className='editor'>
-				<div className='editor-ui'>
-					<TabSelector />
-					<Routes>
-						<Route path='*' element={ <AssetsUI /> } />
-						<Route path='/bones' element={ <BoneUI /> } />
-						<Route path='/asset' element={ <AssetUI /> } />
-						<Route path='/layer' element={ <LayerUI /> } />
-						<Route path='/points' element={ <PointsUI /> } />
-					</Routes>
+			<activeTabsContext.Provider value={ context }>
+				<div className='editor'>
+					{ activeTabs.map((tab, index) => <Tab tab={ tab } index={ index } key={ index } />) }
 				</div>
-				<div ref={ refSetup } className='editor-scene' />
-				<div ref={ refResult } className='editor-scene' />
-			</div>
+			</activeTabsContext.Provider>
 		</BrowserRouter>
 	);
 }

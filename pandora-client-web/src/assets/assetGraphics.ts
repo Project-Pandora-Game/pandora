@@ -1,6 +1,7 @@
-import { AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerSide, PointDefinition } from 'pandora-common';
+import { Assert, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
 import { TypedEventEmitter } from '../event';
-import { MakeMirroredPoints, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
+import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
+import { GetAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
 
 export interface PointDefinitionCalculated extends PointDefinition {
@@ -10,25 +11,23 @@ export interface PointDefinitionCalculated extends PointDefinition {
 }
 
 export class AssetGraphicsLayer extends TypedEventEmitter<{
-	change: undefined;
+	change: {
+		/** If the change that happened affects structure of layers, requiring layer regeneration */
+		structuralChange: boolean;
+	};
 }> {
 	public readonly asset: AssetGraphics;
 	public mirror: AssetGraphicsLayer | undefined;
 	public readonly isMirror: boolean;
 	public definition: LayerDefinition;
-	public side: LayerSide | undefined;
 
 	public get index(): number {
 		return this.isMirror && this.mirror ? this.mirror.index : this.asset.layers.indexOf(this);
 	}
 
 	public get name(): string {
-		let name = this.definition.name || `${this.index}`;
-		if (this.side === LayerSide.LEFT) {
-			name += ' (left)';
-		} else if (this.side === LayerSide.RIGHT) {
-			name += ' (right)';
-		} else if (this.isMirror) {
+		let name = this.definition.name || `Layer #${this.index + 1}`;
+		if (this.isMirror) {
 			name += ' (mirror)';
 		}
 		return name;
@@ -80,6 +79,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 
 		const mirrored: LayerDefinition = {
 			...this.definition,
+			pointType: this.definition.pointType?.map(MirrorBoneLike),
 			image: MirrorLayerImageSetting(this.definition.image),
 			scaling: this.definition.scaling && {
 				...this.definition.scaling,
@@ -96,11 +96,6 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		} else {
 			this.mirror.definition = mirrored;
 		}
-
-		if (this.definition.mirror === LayerMirror.SELECT) {
-			this.side = LayerSide.LEFT;
-			this.mirror.side = LayerSide.RIGHT;
-		}
 	}
 
 	public getAllImages(): string[] {
@@ -115,12 +110,22 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		return Array.from(result.values());
 	}
 
+	public setColorizationIndex(colorizationIndex: number | null): void {
+		Assert(colorizationIndex === null || Number.isInteger(colorizationIndex) && colorizationIndex >= 0);
+
+		if (this.mirror && this.isMirror)
+			return this.mirror.setColorizationIndex(colorizationIndex);
+
+		this.definition.colorizationIndex = colorizationIndex === null ? undefined : colorizationIndex;
+		this.onChange(false);
+	}
+
 	public setPointType(pointType: string[]): void {
 		if (this.mirror && this.isMirror)
 			return this.mirror.setPointType(pointType);
 
 		this.definition.pointType = pointType.length === 0 ? undefined : pointType.slice();
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public setImage(image: string, stop?: number): void {
@@ -130,7 +135,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const setting = this.getImageSettingsForScalingStop(stop);
 		setting.image = image;
 
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public setImageOverrides(imageOverrides: LayerImageOverride[], stop?: number): void {
@@ -140,7 +145,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const settings = this.getImageSettingsForScalingStop(stop);
 		settings.overrides = imageOverrides.slice();
 
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public setAlphaImage(image: string, stop?: number): void {
@@ -150,7 +155,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const setting = this.getImageSettingsForScalingStop(stop);
 		setting.alphaImage = image || undefined;
 
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public setAlphaOverrides(imageOverrides: LayerImageOverride[], stop?: number): void {
@@ -160,7 +165,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		const settings = this.getImageSettingsForScalingStop(stop);
 		settings.alphaOverrides = imageOverrides.length > 0 ? imageOverrides.slice() : undefined;
 
-		this.onChange();
+		this.onChange(false);
 	}
 
 	public hasAlphaMasks(): boolean {
@@ -168,21 +173,21 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 			.some((i) => !!i.alphaImage || !!i.alphaOverrides);
 	}
 
-	public onChange(): void {
+	public onChange(structuralChange: boolean): void {
 		if (this.mirror && this.isMirror)
-			return this.mirror.onChange();
+			return this.mirror.onChange(structuralChange);
 
-		this.emit('change', undefined);
+		this.emit('change', { structuralChange });
 		if (this.mirror) {
 			this.updateMirror();
-			this.mirror.emit('change', undefined);
+			this.mirror.emit('change', { structuralChange: false });
 		}
 		// Notify all layers that depend on this one
 		if (!this.isMirror && Array.isArray(this.definition.points)) {
 			const index = this.index;
 			for (const layer of this.asset.layers) {
 				if (layer !== this && layer.definition.points === index) {
-					layer.onChange();
+					layer.onChange(false);
 				}
 			}
 		}
@@ -207,7 +212,7 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 			mirror: false,
 			transforms: [],
 		});
-		layer.onChange();
+		layer.onChange(false);
 	}
 
 	public getImageSettingsForScalingStop(stop: number | null | undefined): LayerImageSetting {
@@ -222,11 +227,21 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 }
 
 export class AssetGraphics {
+	private _asset?: Asset;
 	public readonly id: AssetId;
 	public layers!: readonly AssetGraphicsLayer[];
 
 	public get allLayers(): AssetGraphicsLayer[] {
 		return this.layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]);
+	}
+
+	public get asset(): Asset {
+		if (!this._asset) {
+			const managger = GetAssetManager();
+			this._asset = managger.getAssetById(this.id);
+			Assert(this._asset, 'Asset not found');
+		}
+		return this._asset;
 	}
 
 	constructor(id: AssetId, definition: AssetGraphicsDefinition) {

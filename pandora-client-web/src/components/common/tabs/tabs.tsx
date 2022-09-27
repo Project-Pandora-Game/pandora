@@ -10,10 +10,11 @@ interface TabProps extends ChildrenProps {
 	className?: string;
 }
 
-export function TabContainer({ children, id, className }: {
+export function TabContainer({ children, id, className, collapsable }: {
 	children: (ReactElement<TabProps> | undefined | null)[]
 	id?: string;
 	className?: string;
+	collapsable?: true;
 }): ReactElement {
 
 	const [currentTab, setTab] = useState(() => {
@@ -21,11 +22,13 @@ export function TabContainer({ children, id, className }: {
 		return defaultTab < 0 ? 0 : defaultTab;
 	});
 
+	const [collapsed, setCollapsed] = useState(false);
+
 	const tabs = useMemo<(TabProps | undefined)[]>(() => children.map((c) => c?.props), [children]);
 
 	return (
 		<div className={ classNames('tab-container', className) } id={ id }>
-			<ul className='tab-container__header'>
+			<ul className={ classNames('tab-container__header', { collapsed }) }>
 				{
 					tabs.map((tab, index) => (tab &&
 						<li key={ index }
@@ -36,7 +39,19 @@ export function TabContainer({ children, id, className }: {
 						</li>
 					))
 				}
+				{
+					collapsable && (
+						<li className='tab collapse' onClick={ () => setCollapsed(true) }>
+							▲
+						</li>
+					)
+				}
 			</ul>
+			{ !collapsed ? null : (
+				<div className='tab-container__collapsed' onClick={ () => setCollapsed(false) }>
+					▼
+				</div>
+			) }
 			{ currentTab < children.length ? children[currentTab] : null }
 		</div>
 	);

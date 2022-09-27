@@ -31,7 +31,7 @@ import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } fr
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { GraphicsScene, useGraphicsSceneCharacter } from '../../graphics/graphicsScene';
+import { GraphicsScene } from '../../graphics/graphicsScene';
 import { useAppearanceActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
@@ -44,6 +44,9 @@ import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
+import { GraphicsSceneRenderer, SceneConstructor } from '../../graphics/graphicsSceneRenderer';
+import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -119,15 +122,29 @@ function useWardrobeContext(): Readonly<{
 	return useContext(wardrobeContext);
 }
 
-const scene = new GraphicsScene();
 function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
-	const ref = useGraphicsSceneCharacter<HTMLDivElement>(scene, character);
 	const navigate = useNavigate();
+
+	const manager = useObservable(GraphicsManagerInstance);
+
+	const characterScene = useCallback<SceneConstructor>(() => {
+		if (!manager)
+			return null;
+
+		const scene = new GraphicsScene();
+
+		const gCharacter = new GraphicsCharacter(character, scene.renderer);
+		scene.add(gCharacter);
+
+		gCharacter.useGraphics(manager.getAssetGraphicsById.bind(manager));
+
+		return scene;
+	}, [character, manager]);
 
 	return (
 		<div className='wardrobe'>
-			<div className='characterPreview' ref={ ref } />
+			<GraphicsSceneRenderer className='characterPreview' scene={ characterScene } />
 			<TabContainer className='flex-1'>
 				<Tab name='Items'>
 					<div className='wardrobe-pane'>
@@ -652,6 +669,32 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	return { poses, ...limits };
 }
 
+function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
+	return (
+		<>
+			{poses.map((poseCategory, poseCategoryIndex) => (
+				<React.Fragment key={ poseCategoryIndex }>
+					<h4>{ poseCategory.category }</h4>
+					<div className='pose-row'>
+						{
+							poseCategory.poses.map((pose, poseIndex) => (
+								<PoseButton key={ poseIndex } pose={ pose } setPose={ setPose } />
+							))
+						}
+					</div>
+				</React.Fragment>
+			))}
+		</>
+	);
+}
+
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: Appearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => void }): ReactElement {
+	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
+	return (
+		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
+	);
+}
+
 export function WardrobePoseGui({ character }: { character: Character }): ReactElement {
 	const shardConnector = useShardConnector();
 
@@ -702,20 +745,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 						} }
 					/>
 				</div>
-				{
-					poses.map((poseCategory, poseCategoryIndex) => (
-						<React.Fragment key={ poseCategoryIndex }>
-							<h4>{ poseCategory.category }</h4>
-							<div className='pose-row'>
-								{
-									poseCategory.poses.map((pose, poseIndex) => (
-										<PoseButton key={ poseIndex } pose={ pose } setPose={ setPose } />
-									))
-								}
-							</div>
-						</React.Fragment>
-					))
-				}
+				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				{ USER_DEBUG &&
 					<FieldsetToggle legend='[DEV] Manual pose' persistent='bone-ui-dev-pose' open={ false }>
 						<div>
@@ -764,6 +794,14 @@ function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose
 	);
 }
 
+export function GetVisibleBoneName(name: string): string {
+	return name
+		.replace(/^\w/, (c) => c.toUpperCase())
+		.replace(/_r$/, () => ' Right')
+		.replace(/_l$/, () => ' Left')
+		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
+}
+
 export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; unlocked?: boolean; }): ReactElement {
 	const [min, max] = useMemo(() => {
 		if (unlocked || !forcePose) {
@@ -772,11 +810,7 @@ export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: 
 		return forcePose.get(bone.definition.name) ?? [BONE_MIN, BONE_MAX];
 	}, [bone, forcePose, unlocked]);
 
-	const name = useMemo(() => bone.definition.name
-		.replace(/^\w/, (c) => c.toUpperCase())
-		.replace(/_r$/, () => ' Right')
-		.replace(/_l$/, () => ' Left')
-		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase()), [bone]);
+	const name = useMemo(() => GetVisibleBoneName(bone.definition.name), [bone]);
 
 	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = Math.round(parseFloat(event.target.value));

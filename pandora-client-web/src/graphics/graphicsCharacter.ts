@@ -1,7 +1,7 @@
 import { AppearanceChangeType, BoneName, BoneState, GetLogger, AssetId, LayerPriority, ArmsPose, AssertNever } from 'pandora-common';
 import { LayerState, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { AtomicCondition, CharacterSize, CharacterView, Item, TransformDefinition } from 'pandora-common/dist/assets';
-import { AbstractRenderer, Container, IDestroyOptions } from 'pixi.js';
+import { AbstractRenderer, Container } from 'pixi.js';
 import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
@@ -19,9 +19,13 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 	readonly renderer: AbstractRenderer;
 	private _layers: readonly LayerState[] = [];
 	private _pose: Record<BoneName, number> = {};
-	private _cleanupUpdate?: () => void;
+	protected cleanupCalls: (() => void)[] = [];
 
 	private displayContainer = new Container();
+
+	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
+	private _lastUpdateLayers: readonly LayerState[] | undefined;
+	private _lastUpdateView: CharacterView | undefined;
 
 	constructor(appearanceContainer: ContainerType, renderer: AbstractRenderer) {
 		super();
@@ -36,13 +40,24 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		this.appearanceContainer = appearanceContainer;
 		this.renderer = renderer;
 
-		this._cleanupUpdate = this.appearanceContainer.on('appearanceUpdate', (changes) => this.update(changes));
+		this.cleanupCalls.push(
+			this.appearanceContainer.on('appearanceUpdate', (changes) => this.update(changes)),
+		);
 	}
 
-	override destroy(options?: boolean | IDestroyOptions): void {
-		this._cleanupUpdate?.();
-		this._cleanupUpdate = undefined;
-		super.destroy(options);
+	override destroy(): void {
+		// Run cleanup handlers
+		this.cleanupCalls.reverse().forEach((c) => c());
+		this.cleanupCalls = [];
+		// Cleanup graphics layers
+		for (const graphics of this._graphicsLayers.values()) {
+			graphics.destroy();
+		}
+		this._graphicsLayers.clear();
+		this._lastUpdateLayers = undefined;
+		this._lastUpdateView = undefined;
+		// Destroy the container itself
+		super.destroy({ children: true });
 	}
 
 	public useGraphics(graphicsGetter: GraphicsGetterFunction): void {
@@ -114,9 +129,6 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		return new GraphicsLayer(layer, this, item, this.renderer);
 	}
 
-	private _graphicsLayers = new Map<LayerState, GraphicsLayer>();
-	private _lastUpdateLayers: readonly LayerState[] | undefined;
-	private _lastUpdateView: CharacterView | undefined;
 	protected layerUpdate(bones: Set<string>): void {
 		this._evalCache.clear();
 		for (const [key, graphics] of this._graphicsLayers) {

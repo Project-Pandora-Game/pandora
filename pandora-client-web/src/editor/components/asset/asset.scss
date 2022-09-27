@@ -1,7 +1,6 @@
-.editor-assetui {
-	display: flex;
-	flex-flow: column;
+@import '../../../styles/utils';
 
+.editor .editor-ui .editor-assetui {
 	.exportImport {
 		display: flex;
 		flex-flow: row;
@@ -12,6 +11,7 @@
 	.layerList, .assetImageList {
 		display: flex;
 		flex-flow: column;
+		align-items: stretch;
 
 		ul {
 			padding: 0 0.5em;
@@ -41,7 +41,7 @@
 
 				&.selected {
 					.layerName, .layerName:hover {
-						background: #999;
+						@include corner-border(2px, black, 0.5em, #999);
 					}
 				}
 

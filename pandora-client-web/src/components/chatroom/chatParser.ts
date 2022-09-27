@@ -2,7 +2,7 @@ import { CharacterId, IChatModifier, IClientMessage, IChatSegment } from 'pandor
 
 export type ParserConfig<Types extends string, Default extends string> = Record<Exclude<Types, Default>, [string, string]>;
 
-type LineTypes = 'chat' | 'me' | 'emote' | 'ooc';
+type LineTypes = 'chat' | 'me' | 'emote' | 'ooc' | 'raw';
 
 const ESCAPE = '\\'; // length must be 1
 
@@ -23,6 +23,13 @@ function IndexOf(text: string, find: string): [number, string] {
 }
 
 export class LineParser {
+	private readonly _config: [string, string, RegExp, LineTypes, boolean][] = [
+		['**', '*\n', /\*?\*$/, 'emote', false],
+		['*', '*\n', /\*$/, 'me', false],
+		['((', '))\n', /\)?\)$/g, 'ooc', true],
+		['```', '```\n', /`{3}$/, 'raw', true],
+	];
+
 	public parse(text: string, allowNonTargeted: boolean): [LineTypes, string][] {
 		const result: [LineTypes, string][] = [];
 		while (text) {
@@ -41,30 +48,22 @@ export class LineParser {
 		if (!text)
 			return [];
 
-		if (allowNonTargeted && text.startsWith('**')) {
-			const [index, t2] = IndexOf(text, '*\n');
-			if (index === -1)
-				return ['emote', t2.substring(2).replace(/\*?\*$/g, '')];
+		for (const [start, lineEnd, replace, type, targeted] of this._config) {
+			if (!targeted && !allowNonTargeted)
+				continue;
 
-			return ['emote', t2.substring(2, index).replace(/\*?\*$/g, ''), t2.substring(index + 1)];
-		}
-		if (allowNonTargeted && text.startsWith('*')) {
-			const [index, t2] = IndexOf(text, '*\n');
-			if (index === -1)
-				return ['me', t2.substring(1).replace(/\*$/g, '')];
+			if (text.startsWith(start)) {
+				const [index, inner] = IndexOf(text, lineEnd);
+				if (index === -1)
+					return [type, inner.substring(start.length).replace(replace, '')];
 
-			return ['me', t2.substring(1, index).replace(/\*$/g, ''), t2.substring(index + 1)];
-		}
-		if (text.startsWith('((')) {
-			const [index, t2] = IndexOf(text, '))\n');
-			if (index === -1)
-				return ['ooc', t2.substring(2).replace(/\)?\)$/g, '')];
+				return [type, inner.substring(start.length, index).replace(replace, ''), inner.substring(index + lineEnd.length)];
+			}
 
-			return ['ooc', t2.substring(2, index).replace(/\)?\)$/g, ''), t2.substring(index + 3)];
-		}
-
-		if (text.startsWith(ESCAPE + '((') || (allowNonTargeted && text.endsWith(ESCAPE + '*'))) {
-			text = text.substring(1);
+			if (text.startsWith(ESCAPE + start)) {
+				text = text.substring(1);
+				break;
+			}
 		}
 
 		const [indexA, tA] = allowNonTargeted ? IndexOf(text, '\n*') : [-1, text];
@@ -168,6 +167,13 @@ export const ChatParser = new class ChatParser {
 					result.push({
 						type,
 						parts: this._segmentParser.parse(line),
+						to,
+					});
+					break;
+				case 'raw':
+					result.push({
+						type: 'chat',
+						parts: [['normal', line]],
 						to,
 					});
 					break;

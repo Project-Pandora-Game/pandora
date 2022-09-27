@@ -22,12 +22,22 @@ export type EffectsDefinition = {
 	 * Moving others as admin is still possible.
 	 */
 	blockRoomMovement: boolean;
+
+	/**
+	 * Blinds the character.
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 10 = completely blind
+	 */
+	blind: number;
 };
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
 	blockHands: false,
 	muffleMouth: 0,
 	blockRoomMovement: false,
+	blind: 0,
 };
 
 //#endregion

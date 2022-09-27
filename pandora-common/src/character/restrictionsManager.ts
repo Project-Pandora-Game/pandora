@@ -97,6 +97,14 @@ export class CharacterRestrictionsManager {
 		return _.clamp(this.getEffects().muffleMouth, 0, 10);
 	}
 
+	/**
+	 * Calculates the blind level effect
+	 * @returns Strength as number in range [0, 10]
+	 */
+	public getBlindness(): number {
+		return _.clamp(this.getEffects().blind, 0, 10);
+	}
+
 	public canInteractWithCharacter(_target: CharacterRestrictionsManager): boolean {
 		// TODO: For permissions
 		return true;

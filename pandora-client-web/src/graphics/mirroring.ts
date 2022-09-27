@@ -11,10 +11,21 @@ export function MirrorCondition<T extends Maybe<Condition>>(condition: T): T {
 	if (!condition)
 		return condition;
 
-	return condition.map((cause) => cause.map((c) => 'bone' in c && c.bone != null ? ({
-		...c,
-		bone: MirrorBoneLike(c.bone),
-	}) : c)) as T;
+	return condition.map((cause) => cause.map((c) => {
+		if ('bone' in c && c.bone != null) {
+			return {
+				...c,
+				bone: MirrorBoneLike(c.bone),
+			};
+		}
+		if ('module' in c && c.module != null) {
+			return {
+				...c,
+				module: MirrorBoneLike(c.module),
+			};
+		}
+		return c;
+	})) as T;
 }
 
 export function MirrorTransform(transform: TransformDefinition): TransformDefinition {
@@ -60,18 +71,14 @@ export function MakeMirroredPoints(point: PointDefinitionCalculated): [PointDefi
 		return [point];
 
 	const { pos, transforms, pointType } = point;
-	const type = pointType && (pos[0] < CharacterSize.WIDTH / 2 ? `${pointType}_r` : `${pointType}_l`);
 
-	const point1: PointDefinitionCalculated = {
-		...point,
-		pointType: type,
-	};
+	const point1: PointDefinitionCalculated = { ...point };
 
 	const point2: PointDefinitionCalculated = {
 		...point,
 		pos: [CharacterSize.WIDTH - pos[0], pos[1]],
 		transforms: transforms.map(MirrorTransform),
-		pointType: MirrorBoneLike(type),
+		pointType: MirrorBoneLike(pointType),
 		isMirror: true,
 	};
 

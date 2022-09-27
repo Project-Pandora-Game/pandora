@@ -1,7 +1,9 @@
 import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
+import { useEvent } from '../../../common/useEvent';
+import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
@@ -9,7 +11,6 @@ import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../parsing';
-import './layer.scss';
 
 export function LayerUI(): ReactElement {
 	const editor = useEditor();
@@ -18,16 +19,19 @@ export function LayerUI(): ReactElement {
 
 	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
 		return (
-			<div>
+			<div className='editor-setupui'>
 				<h3>Select an layer to edit it</h3>
 			</div>
 		);
 	}
 
 	return (
-		<div className='editor-layerui'>
+		<div className='editor-setupui'>
 			<LayerName layer={ selectedLayer } />
+			<hr />
+			<ColorizationSetting layer={ selectedLayer } asset={ asset } />
 			<ColorPicker layer={ selectedLayer } asset={ asset } />
+			<hr />
 			<LayerPrioritySelect layer={ selectedLayer } asset={ asset } />
 			<LayerPointsFilterEdit layer={ selectedLayer } />
 			<hr />
@@ -57,7 +61,7 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 					onChange={ (event) => {
 						const l = layer.mirror && layer.isMirror ? layer.mirror : layer;
 						l.definition.name = event.target.value || undefined;
-						l.onChange();
+						l.onChange(false);
 					} }
 				/>
 			</div>
@@ -100,15 +104,82 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 	);
 }
 
+function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+	const [value, setValue] = useSyncUserInput(
+		layer.getSubscriber('change'),
+		() => layer.definition.colorizationIndex ?? -1,
+	);
+
+	const colorLayerName = useMemo(() => {
+		if (value < 0)
+			return '[ Not colorable ]';
+		const colorization = asset.asset.definition.colorization;
+		if (!colorization || value >= colorization.length)
+			return '[ Invalid index ]';
+		const name = colorization[value].name;
+		if (name == null)
+			return '[ Not colorable by user ]';
+		return name;
+	}, [value, asset]);
+
+	const onChange = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+		const newValue = Math.max(-1, Math.round(e.target.valueAsNumber));
+		setValue(newValue);
+		layer.setColorizationIndex(newValue < 0 ? null : newValue);
+	});
+
+	return (
+		<>
+			<div>
+				<label
+					htmlFor='layer-colorization'
+					title="Index in asset's 'colorization' setting that this layer follows for colorability by user; -1 if not colorable."
+				>
+					Colorization index (?):
+				</label>
+				<input
+					id='layer-colorization'
+					type='number'
+					value={ value }
+					min={ -1 }
+					step={ 1 }
+					onChange={ onChange }
+					className='flex-1'
+				/>
+			</div>
+			<div>
+				<label
+					htmlFor='layer-colorization-name'
+					title="Resolved name of color setting, based on value of 'Colorization index'"
+				>
+					Colorization name (?):
+				</label>
+				<input
+					id='layer-colorization-name'
+					type='text'
+					value={ colorLayerName }
+					readOnly
+					className='flex-1'
+				/>
+			</div>
+		</>
+	);
+}
+
 function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const editor = asset.editor;
 
 	const tint = useSyncExternalStore<number>((changed) => {
-		return editor.on('layerOverrideChange', (changedLayer) => {
+		const cleanup: (() => void)[] = [];
+		cleanup.push(editor.on('layerOverrideChange', (changedLayer) => {
 			if (changedLayer === layer) {
 				changed();
 			}
-		});
+		}));
+		cleanup.push(layer.on('change', () => {
+			changed();
+		}));
+		return () => cleanup.forEach((c) => c());
 	}, () => editor.getLayerTint(layer));
 
 	return (
@@ -123,7 +194,7 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 					editor.setLayerTint(layer, Number.parseInt(event.target.value.replace(/^#/, ''), 16));
 				} }
 			/>
-			<Button className='slim' onClick={ () => editor.setLayerTint(layer, 0xffffff) } >↺</Button>
+			<Button className='slim' onClick={ () => editor.setLayerTint(layer, undefined) } >↺</Button>
 		</div>
 	);
 }
@@ -157,9 +228,9 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 }
 
 function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactElement | null {
-	const [value, setValue] = useState(layer.definition.pointType?.join(',') ?? '');
+	const [value, setValue] = useSyncUserInput(layer.getSubscriber('change'), () => layer.definition.pointType?.join(',') ?? '', [layer]);
 
-	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
 		layer.setPointType(
 			e.target.value
@@ -167,7 +238,7 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 				.map((t) => t.trim())
 				.filter((t) => !!t),
 		);
-	}, [layer]);
+	});
 
 	return (
 		<div>
@@ -183,10 +254,13 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 }
 
 function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
-	const [value, setValue] = useState(SerializeLayerImageOverrides(asAlpha ? (layer.getImageSettingsForScalingStop(stop).alphaOverrides ?? []) : layer.getImageSettingsForScalingStop(stop).overrides));
+	const [value, setValue] = useSyncUserInput(layer.getSubscriber('change'), () => {
+		const stopSettings = layer.getImageSettingsForScalingStop(stop);
+		return SerializeLayerImageOverrides(asAlpha ? (stopSettings.alphaOverrides ?? []) : stopSettings.overrides);
+	}, [layer, stop, asAlpha]);
 	const [error, setError] = useState<string | null>(null);
 
-	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
 		try {
 			const result = ParseLayerImageOverrides(e.target.value, GetAssetManager().getAllBones().map((b) => b.name).concat(FAKE_BONES));
@@ -200,7 +274,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 			setError(err instanceof Error ? err.message : String(err));
 		}
 
-	}, [layer, stop, asAlpha]);
+	});
 
 	return (
 		<div>
@@ -324,4 +398,3 @@ function GetReadablePriorityName(priority: LayerPriority): string {
 		.replace(/_/g, ' ')
 		.replace(/(^\w|\s\w)/g, (m) => m.toUpperCase());
 }
-

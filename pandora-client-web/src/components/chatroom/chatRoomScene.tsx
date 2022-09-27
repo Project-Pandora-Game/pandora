@@ -1,20 +1,21 @@
-import { AssertNotNullable, CharacterId, CharacterSize, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
+import { AppearanceChangeType, AssertNotNullable, CharacterId, CharacterSize, CharacterView, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
-import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text } from 'pixi.js';
-import React, { CSSProperties, ReactElement, useEffect, useState } from 'react';
+import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters } from 'pixi.js';
+import React, { CSSProperties, ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
-import { GraphicsScene, useGraphicsScene } from '../../graphics/graphicsScene';
+import { GraphicsScene } from '../../graphics/graphicsScene';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useChatRoomData, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomData, useChatRoomCharacters, useCharacterRestrictionsManager } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useChatInput } from './chatInput';
-import { usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import _, { noop } from 'lodash';
+import { GraphicsSceneRenderer } from '../../graphics/graphicsSceneRenderer';
 
 const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
@@ -33,7 +34,7 @@ type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterR
 	data: IChatRoomClientData | null;
 	shard: ShardConnector | null;
 	menuOpen: (character: Self, data: InteractionData) => void;
-	filters: Filter[];
+	flts: Filter[];
 	renderer: AbstractRenderer;
 };
 
@@ -48,7 +49,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 	// Calculated properties
 	private _yOffset: number = 0;
-	private _scale: number = 0;
+	private _scale: number = 1;
+	private _scaleX: number = 1;
 
 	public get characterRoomPosition(): [number, number] {
 		return this.appearanceContainer.data.position;
@@ -74,7 +76,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		return this.appearanceContainer.data.id;
 	}
 
-	constructor({ character, data, shard, menuOpen, filters, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
+	constructor({ character, data, shard, menuOpen, flts, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
 		super(character, renderer);
 		this.name = character.data.name;
 		this._data = data;
@@ -88,22 +90,18 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			dropShadow: true,
 			dropShadowBlur: 4,
 		});
-		this.filters = filters;
+		this.filters = flts;
 
 		const cleanupCalls: (() => void)[] = [];
 
-		cleanupCalls.push(character.on('appearanceUpdate', () => {
-			this._updateTextPosition();
-		}));
 		cleanupCalls.push(character.on('update', this._onCharacterUpdate.bind(this)));
 
 		this._name.anchor.set(0.5, 0.5);
 		this.interactive = true;
-		this._updateTextPosition();
 		this.addChild(this._name);
 		this.updateRoomData(data);
 		this
-			.on('destroy', () => cleanupCalls.forEach((c) => c()))
+			.on('destroyed', () => cleanupCalls.forEach((c) => c()))
 			.on('pointerdown', this._onPointerDown.bind(this))
 			.on('pointerup', this._onPointerUp.bind(this))
 			.on('pointerupoutside', this._onPointerUp.bind(this))
@@ -128,8 +126,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const x = CharacterSize.WIDTH / 2;
 		const y = CharacterSize.HEIGHT - BOTTOM_NAME_OFFSET - this._yOffset;
 		this.hitArea = new Rectangle(x - 100, y - 50, 200, 100);
-		this._name.x = x;
-		this._name.y = y;
+		this._name.position.set(x, y);
+		this._name.scale.set(1 / this._scaleX, 1);
 	}
 
 	private _onCharacterUpdate({ position, settings }: Partial<ICharacterRoomData>) {
@@ -139,6 +137,11 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		if (settings) {
 			this._name.style.fill = settings.labelColor;
 		}
+	}
+
+	protected override update(changes: AppearanceChangeType[]): void {
+		super.update(changes);
+		this._reposition();
 	}
 
 	private _reposition() {
@@ -155,13 +158,16 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		const minScale = 1 / scaling;
 		this._scale = 1 - (1 - minScale) * relativeHeight;
 
+		const backView = this.appearanceContainer.appearance.getView() === CharacterView.BACK;
+		this._scaleX = backView ? -1 : 1;
+
 		this._yOffset = 0
-			+ 2 * this.getBoneLikeValue('kneeling')
-			+ 0.8 * this.getBoneLikeValue('sitting');
+			+ 1.75 * this.getBoneLikeValue('kneeling')
+			+ 0.75 * this.getBoneLikeValue('sitting');
 
 		const oldY = this.y;
 
-		this.scale.set(this._scale);
+		this.scale.set(this._scaleX * this._scale, this._scale);
 		this.x = x;
 		this.y = height
 			- CharacterSize.HEIGHT * this._scale
@@ -255,7 +261,14 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		});
 	}
 
+	override destroy(): void {
+		this.clear();
+		super.destroy();
+	}
+
 	public reorderCharacters() {
+		if (this.destroyed)
+			return;
 		let orderChanged = false;
 		[...this._characters.values()]
 			.sort((a, b) => b.characterRoomPosition[1] - a.characterRoomPosition[1])
@@ -280,6 +293,8 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	}
 
 	public updateCharacters(data: readonly Character<ICharacterRoomData>[]) {
+		if (this.destroyed)
+			return;
 		for (const [id, character] of this._characters) {
 			if (!data.some((c) => c.data.id === id)) {
 				character.destroy();
@@ -295,7 +310,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 				data: this._room,
 				shard: this._shard,
 				menuOpen: this._menuOpen,
-				filters: character.data.id === this._filterExclude ? [] : this.backgroundFilters,
+				flts: character.data.id === this._filterExclude ? [] : this.backgroundFilters,
 				renderer: this.renderer,
 			});
 			if (this._manager) {
@@ -309,6 +324,8 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	}
 
 	public updateShard(shard: ShardConnector | null) {
+		if (this.destroyed)
+			return;
 		if (this._shard === shard) {
 			return;
 		}
@@ -319,6 +336,8 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	}
 
 	public updateRoomData(data: IChatRoomClientData) {
+		if (this.destroyed)
+			return;
 		if (this._room === data) {
 			return;
 		}
@@ -344,59 +363,77 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	}
 
 	updateMenuOpen(open: (character: ChatRoomCharacter, data: InteractionData) => void) {
+		if (this.destroyed)
+			return;
 		this._menuOpen = open;
 		this._characters.forEach((character) => {
 			character.updateMenuOpen(open);
 		});
 	}
 
-	updateFilters(filters: Filter[], exclude?: CharacterId) {
+	updateFilters(flts: Filter[], exclude?: CharacterId) {
+		if (this.destroyed)
+			return;
 		this._filterExclude = exclude;
 		this._characters.forEach((character) => {
 			if (character.id !== exclude) {
-				character.filters = filters;
+				character.filters = flts;
 			}
 		});
-		this.setBackgroundFilters(filters);
+		this.setBackgroundFilters(flts);
 	}
 }
-
-const scene = new ChatRoomGraphicsScene();
 
 export function ChatRoomScene(): ReactElement | null {
 	const data = useChatRoomData();
 	const characters = useChatRoomCharacters();
-	const ref = useGraphicsScene<HTMLDivElement>(scene);
 	const shard = useShardConnector();
 	const [menuActive, setMenuActive] = useState<ChatRoomCharacter | null>(null);
 	const [clickData, setClickData] = useState<InteractionData | null>(null);
+	const player = usePlayer();
+
+	const [scene, setScene] = useState<ChatRoomGraphicsScene | null>(null);
+	const sceneCreator = useCallback(() => new ChatRoomGraphicsScene(), []);
 
 	AssertNotNullable(characters);
+	AssertNotNullable(player);
+
+	const blindness = useCharacterRestrictionsManager(player, (manager) => manager.getBlindness());
 
 	useDebugExpose('scene', scene);
 
 	useEffect(() => {
 		if (characters) {
-			scene.updateCharacters(characters);
+			scene?.updateCharacters(characters);
 		}
-	}, [characters]);
+	}, [scene, characters]);
 
 	useEffect(() => {
-		scene.updateShard(shard);
-	}, [shard]);
+		scene?.updateShard(shard);
+	}, [scene, shard]);
 
 	useEffect(() => {
 		if (data) {
-			scene.updateRoomData(data);
+			scene?.updateRoomData(data);
 		}
-	}, [data]);
+	}, [scene, data]);
 
 	useEffect(() => {
-		scene.updateMenuOpen((character, eventData) => {
+		scene?.updateMenuOpen((character, eventData) => {
 			setClickData(eventData);
 			setMenuActive(character);
 		});
-	}, [setMenuActive, setClickData]);
+	}, [scene, setMenuActive, setClickData]);
+
+	useEffect(() => {
+		if (blindness === 0) {
+			scene?.updateFilters([]);
+		} else {
+			const filter = new filters.ColorMatrixFilter();
+			filter.brightness(1 - blindness / 10, false);
+			scene?.updateFilters([filter], player.data.id);
+		}
+	}, [scene, blindness, player.data.id]);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
 		if (menuActive && clickData) {
@@ -410,9 +447,9 @@ export function ChatRoomScene(): ReactElement | null {
 		return null;
 
 	return (
-		<div ref={ ref } className='chatroom-scene' onPointerDown={ onPointerDown }>
+		<GraphicsSceneRenderer scene={ sceneCreator } onScene={ setScene } className='chatroom-scene' onPointerDown={ onPointerDown }>
 			<CharacterContextMenu character={ menuActive } data={ clickData } onClose={ () => setMenuActive(null) } />
-		</div>
+		</GraphicsSceneRenderer>
 	);
 }
 

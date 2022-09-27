@@ -138,7 +138,20 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 
 	protected updateState(state?: LayerStateOverrides): void {
 		this._state = state;
-		const { color = 0xffffff, alpha = 1 } = state ?? {};
+
+		const color: number = state?.color ??
+			(
+				(
+					this.item != null &&
+					this.layer.definition.colorizationIndex != null &&
+					this.layer.definition.colorizationIndex >= 0 &&
+					this.layer.definition.colorizationIndex < this.item.color.length
+				) ? Number.parseInt(this.item.color[this.layer.definition.colorizationIndex].slice(1), 16) : undefined
+			) ??
+			0xffffff;
+
+		const alpha = state?.alpha ?? 1;
+
 		if (color !== this._result.tint) {
 			this._result.tint = color;
 		}

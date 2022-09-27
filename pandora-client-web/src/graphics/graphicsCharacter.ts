@@ -102,13 +102,6 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 				...graphics.allLayers.map<LayerState>((layer) => ({
 					layer,
 					item,
-					state: {
-						color: (
-							layer.definition.colorizationIndex != null &&
-							layer.definition.colorizationIndex >= 0 &&
-							layer.definition.colorizationIndex < item.color.length
-						) ? Number.parseInt(item.color[layer.definition.colorizationIndex].slice(1), 16) : undefined,
-					},
 				})),
 			);
 		}

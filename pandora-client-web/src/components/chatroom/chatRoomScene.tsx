@@ -398,7 +398,7 @@ export function ChatRoomScene(): ReactElement | null {
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
 
-	const blindLevel = useCharacterRestrictionsManager(player, (manager) => manager.getBlindLevel());
+	const blindness = useCharacterRestrictionsManager(player, (manager) => manager.getBlindness());
 
 	useDebugExpose('scene', scene);
 
@@ -426,14 +426,14 @@ export function ChatRoomScene(): ReactElement | null {
 	}, [scene, setMenuActive, setClickData]);
 
 	useEffect(() => {
-		if (blindLevel === 0) {
+		if (blindness === 0) {
 			scene?.updateFilters([]);
 		} else {
 			const filter = new filters.ColorMatrixFilter();
-			filter.brightness(1 - blindLevel / 10, false);
+			filter.brightness(1 - blindness / 10, false);
 			scene?.updateFilters([filter], player.data.id);
 		}
-	}, [scene, blindLevel, player.data.id]);
+	}, [scene, blindness, player.data.id]);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
 		if (menuActive && clickData) {

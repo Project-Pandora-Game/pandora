@@ -101,8 +101,8 @@ export class CharacterRestrictionsManager {
 	 * Calculates the blind level effect
 	 * @returns Strength as number in range [0, 10]
 	 */
-	public getBlindLevel(): number {
-		return _.clamp(this.getEffects().blindLevel, 0, 10);
+	public getBlindness(): number {
+		return _.clamp(this.getEffects().blind, 0, 10);
 	}
 
 	public canInteractWithCharacter(_target: CharacterRestrictionsManager): boolean {

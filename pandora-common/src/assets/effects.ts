@@ -24,20 +24,20 @@ export type EffectsDefinition = {
 	blockRoomMovement: boolean;
 
 	/**
-	 * Blindness level of the character.
+	 * Blinds the character.
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
 	 * - 10 = completely blind
 	 */
-	blindLevel: number;
+	blind: number;
 };
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
 	blockHands: false,
 	muffleMouth: 0,
 	blockRoomMovement: false,
-	blindLevel: 0,
+	blind: 0,
 };
 
 //#endregion

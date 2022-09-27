@@ -110,6 +110,16 @@ export class AssetGraphicsLayer extends TypedEventEmitter<{
 		return Array.from(result.values());
 	}
 
+	public setColorizationIndex(colorizationIndex: number | null): void {
+		Assert(colorizationIndex === null || Number.isInteger(colorizationIndex) && colorizationIndex >= 0);
+
+		if (this.mirror && this.isMirror)
+			return this.mirror.setColorizationIndex(colorizationIndex);
+
+		this.definition.colorizationIndex = colorizationIndex === null ? undefined : colorizationIndex;
+		this.onChange(false);
+	}
+
 	public setPointType(pointType: string[]): void {
 		if (this.mirror && this.isMirror)
 			return this.mirror.setPointType(pointType);

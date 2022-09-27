@@ -28,7 +28,10 @@ export function LayerUI(): ReactElement {
 	return (
 		<div className='editor-setupui'>
 			<LayerName layer={ selectedLayer } />
+			<hr />
+			<ColorizationSetting layer={ selectedLayer } asset={ asset } />
 			<ColorPicker layer={ selectedLayer } asset={ asset } />
+			<hr />
 			<LayerPrioritySelect layer={ selectedLayer } asset={ asset } />
 			<LayerPointsFilterEdit layer={ selectedLayer } />
 			<hr />
@@ -101,15 +104,82 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 	);
 }
 
+function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+	const [value, setValue] = useSyncUserInput(
+		layer.getSubscriber('change'),
+		() => layer.definition.colorizationIndex ?? -1,
+	);
+
+	const colorLayerName = useMemo(() => {
+		if (value < 0)
+			return '[ Not colorable ]';
+		const colorization = asset.asset.definition.colorization;
+		if (!colorization || value >= colorization.length)
+			return '[ Invalid index ]';
+		const name = colorization[value].name;
+		if (name == null)
+			return '[ Not colorable by user ]';
+		return name;
+	}, [value, asset]);
+
+	const onChange = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+		const newValue = Math.max(-1, Math.round(e.target.valueAsNumber));
+		setValue(newValue);
+		layer.setColorizationIndex(newValue < 0 ? null : newValue);
+	});
+
+	return (
+		<>
+			<div>
+				<label
+					htmlFor='layer-colorization'
+					title="Index in asset's 'colorization' setting that this layer follows for colorability by user; -1 if not colorable."
+				>
+					Colorization index (?):
+				</label>
+				<input
+					id='layer-colorization'
+					type='number'
+					value={ value }
+					min={ -1 }
+					step={ 1 }
+					onChange={ onChange }
+					className='flex-1'
+				/>
+			</div>
+			<div>
+				<label
+					htmlFor='layer-colorization-name'
+					title="Resolved name of color setting, based on value of 'Colorization index'"
+				>
+					Colorization name (?):
+				</label>
+				<input
+					id='layer-colorization-name'
+					type='text'
+					value={ colorLayerName }
+					readOnly
+					className='flex-1'
+				/>
+			</div>
+		</>
+	);
+}
+
 function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const editor = asset.editor;
 
 	const tint = useSyncExternalStore<number>((changed) => {
-		return editor.on('layerOverrideChange', (changedLayer) => {
+		const cleanup: (() => void)[] = [];
+		cleanup.push(editor.on('layerOverrideChange', (changedLayer) => {
 			if (changedLayer === layer) {
 				changed();
 			}
-		});
+		}));
+		cleanup.push(layer.on('change', () => {
+			changed();
+		}));
+		return () => cleanup.forEach((c) => c());
 	}, () => editor.getLayerTint(layer));
 
 	return (

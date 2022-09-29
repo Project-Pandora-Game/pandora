@@ -1,6 +1,7 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize, AppearanceActionRoomContext } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize, AppearanceActionRoomContext, IChatroomBackgroundData, DEFAULT_BACKGROUND, CHARACTER_MIN_SIZE } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
+import { assetManager } from '../assets/assetManager';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -85,8 +86,24 @@ export class Room extends ServerRoom<IShardClientBase> {
 	}
 
 	updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
-		const size = this.data.size;
-		if (x >= size[0] || y >= size[1]) {
+		let roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
+
+		if (typeof this.data.background === 'string') {
+			const definition = assetManager.getBackgroundById(this.data.background);
+			if (definition) {
+				roomBackground = definition;
+			}
+		} else {
+			roomBackground = this.data.background;
+		}
+
+		// Y is limited by room size, but also by
+		const maxY = Math.floor(Math.min(
+			roomBackground.maxY != null ? Math.min(roomBackground.maxY, roomBackground.size[1]) : roomBackground.size[1],
+			(1 - CHARACTER_MIN_SIZE) * roomBackground.size[1] / roomBackground.scaling,
+		));
+
+		if (x > roomBackground.size[0] || y > maxY) {
 			return;
 		}
 		const character = this.getCharacterById(id);

@@ -3,7 +3,6 @@ import type { MessageHandler } from './message_handler';
 import { CharacterDataCreateSchema, CharacterIdSchema, CharacterPublicSettingsSchema } from '../character';
 import { AppearanceActionSchema } from '../assets';
 import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
-import { ChatRoomDirectoryConfigSchema } from '../chatroom/room';
 import { z } from 'zod';
 
 /** Client->Shard handlers */
@@ -23,7 +22,7 @@ export const ClientShardInSchema = z.object({
 	}),
 	chatRoomCharacterMove: z.object({
 		id: CharacterIdSchema.optional(),
-		position: ChatRoomDirectoryConfigSchema.shape.size,
+		position: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
 	}),
 	appearanceAction: AppearanceActionSchema,
 	updateSettings: CharacterPublicSettingsSchema.partial(),

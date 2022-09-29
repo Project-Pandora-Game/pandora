@@ -1,4 +1,4 @@
-import { noop } from 'lodash';
+import { clamp, cloneDeep, noop } from 'lodash';
 import {
 	ChatRoomFeature,
 	EMPTY,
@@ -9,6 +9,8 @@ import {
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
 	IsAuthorized,
+	IChatroomBackgroundData,
+	DEFAULT_BACKGROUND,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -23,6 +25,7 @@ import {
 import './chatroomAdmin.scss';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
+import { GetAssetManager } from '../../assets/assetManager';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -36,9 +39,7 @@ function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoo
 		protected: false,
 		password: null,
 		features: [],
-		background: '#1099bb',
-		size: [4000, 2000],
-		scaling: 1,
+		background: cloneDeep(DEFAULT_BACKGROUND) as IChatroomBackgroundData,
 	};
 }
 
@@ -52,6 +53,8 @@ const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; }[] = [
 		name: 'Development mode',
 	},
 ];
+
+const MAX_SCALING = 4;
 
 export function ChatroomCreate(): ReactElement {
 	return <ChatroomAdmin creation={ true } />;
@@ -88,32 +91,42 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	const shards = useShards();
 	const accountId = currentAccount?.id;
 
+	const availableBackgrounds = useMemo(() => GetAssetManager().getBackgrounds(), []);
+
+	const isPlayerAdmin = creation
+	|| (accountId && roomData?.admin.includes(accountId))
+	|| (roomData?.development?.autoAdmin && IsAuthorized(currentAccount?.roles ?? {}, 'developer'));
+
+	const currentConfig: IChatRoomDirectoryConfig = {
+		...(roomData ?? DefaultRoomData(currentAccount)),
+		...roomModifiedData,
+	};
+
+	const currentConfigBackground = currentConfig.background;
+
 	const scalingProps = useMemo(() => ({
-		min: 1,
-		max: 20,
+		min: 0,
+		max: MAX_SCALING,
 		step: 0.1,
 		onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-			let scaling = Number.parseFloat(event.target.value);
-			if (scaling < 1) scaling = 1;
-			else if (scaling > 20) scaling = 20;
-			setRoomModifiedData({ scaling });
+			let scaling = clamp(Number.parseFloat(event.target.value), 0, MAX_SCALING);
+			// Can't modify scaling of preset
+			if (typeof currentConfigBackground === 'string')
+				return;
+			setRoomModifiedData({
+				background: {
+					...currentConfigBackground,
+					scaling,
+				},
+			});
 		},
-	}), [setRoomModifiedData]);
+	}), [setRoomModifiedData, currentConfigBackground]);
 
 	if (!creation && !roomData) {
 		return <Navigate to='/chatroom_select' />;
 	} else if (creation && roomData) {
 		return <Navigate to='/chatroom' />;
 	}
-
-	const isPlayerAdmin = creation
-		|| (accountId && roomData?.admin.includes(accountId))
-		|| (roomData?.development?.autoAdmin && IsAuthorized(currentAccount?.roles ?? {}, 'developer'));
-
-	const currentConfig: IChatRoomDirectoryConfig = {
-		...(roomData ?? DefaultRoomData(currentAccount)),
-		...roomModifiedData,
-	};
 
 	if (shards && currentConfig.development?.shardId && !shards.some((s) => s.id === currentConfig.development?.shardId)) {
 		delete currentConfig.development.shardId;
@@ -159,25 +172,100 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 			}
 			<div className='input-container'>
 				<label>Background</label>
-				<div className='row-first'>
-					<input type='text' value={ currentConfig.background } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
-					<input type='color' value={ currentConfig.background.startsWith('#') ? currentConfig.background : '#FFFFFF' } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ background: event.target.value }) } />
-				</div>
+				<select
+					value={ typeof currentConfigBackground === 'string' ? currentConfigBackground : '' }
+					disabled={ !isPlayerAdmin }
+					onChange={ (event) => setRoomModifiedData({
+						background: event.target.value ? event.target.value : (cloneDeep(DEFAULT_BACKGROUND) as IChatroomBackgroundData),
+					}) }
+				>
+					{ availableBackgrounds.map((background) => (
+						<option key={ background.id } value={ background.id }>{ background.name }</option>
+					)) }
+					<option value=''>[ Custom ]</option>
+				</select>
 			</div>
-			<div className='input-container'>
-				<label>Room Size: width, height</label>
-				<div className='row-half'>
-					<input autoComplete='none' type='number' value={ currentConfig.size[0] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [Number.parseInt(event.target.value, 10), currentConfig.size[1]] }) } />
-					<input autoComplete='none' type='number' value={ currentConfig.size[1] } readOnly={ !isPlayerAdmin } onChange={ (event) => setRoomModifiedData({ size: [currentConfig.size[0], Number.parseInt(event.target.value, 10)] }) } />
-				</div>
-			</div>
-			<div className='input-container'>
-				<label>Y Scaling</label>
-				<div className='row-first'>
-					<input type='range' value={ currentConfig.scaling } readOnly={ !isPlayerAdmin } { ...scalingProps } />
-					<input type='number' value={ currentConfig.scaling } readOnly={ !isPlayerAdmin } { ...scalingProps } />
-				</div>
-			</div>
+			{
+				typeof currentConfigBackground === 'string' ? null : (
+					<>
+						<div className='input-container'>
+							<label>Background image</label>
+							<div className='row-first'>
+								<input type='text'
+									value={ currentConfigBackground.image }
+									readOnly={ !isPlayerAdmin }
+									onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
+								/>
+								<input type='color'
+									value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
+									readOnly={ !isPlayerAdmin }
+									onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
+								/>
+							</div>
+						</div>
+						<div className='input-container'>
+							<label>Room Size: width, height</label>
+							<div className='row-half'>
+								<input type='number'
+									autoComplete='none'
+									value={ currentConfigBackground.size[0] }
+									readOnly={ !isPlayerAdmin }
+									onChange={ (event) => setRoomModifiedData({
+										background: {
+											...currentConfigBackground,
+											size: [Number.parseInt(event.target.value, 10), currentConfigBackground.size[1]],
+										},
+									}) }
+								/>
+								<input type='number'
+									autoComplete='none'
+									value={ currentConfigBackground.size[1] }
+									readOnly={ !isPlayerAdmin }
+									onChange={ (event) => setRoomModifiedData({
+										background: {
+											...currentConfigBackground,
+											size: [currentConfigBackground.size[0], Number.parseInt(event.target.value, 10)],
+										},
+									}) }
+								/>
+							</div>
+						</div>
+						<div className='input-container'>
+							<label>Y limit</label>
+							<input type='number'
+								autoComplete='none'
+								min={ -1 }
+								value={ currentConfigBackground.maxY ?? -1 }
+								readOnly={ !isPlayerAdmin }
+								onChange={ (event) => {
+									const value = Number.parseInt(event.target.value, 10);
+									setRoomModifiedData({
+										background: {
+											...currentConfigBackground,
+											maxY: isNaN(value) || value < 0 ? undefined : value,
+										},
+									});
+								} }
+							/>
+						</div>
+						<div className='input-container'>
+							<label>Y Scaling</label>
+							<div className='row-first'>
+								<input type='range'
+									value={ currentConfigBackground.scaling }
+									readOnly={ !isPlayerAdmin }
+									{ ...scalingProps }
+								/>
+								<input type='number'
+									value={ currentConfigBackground.scaling }
+									readOnly={ !isPlayerAdmin }
+									{ ...scalingProps }
+								/>
+							</div>
+						</div>
+					</>
+				)
+			}
 		</>
 	);
 

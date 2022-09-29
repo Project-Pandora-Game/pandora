@@ -1,12 +1,13 @@
 import { cloneDeep } from 'lodash';
 import { Asset } from './asset';
-import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets } from './definitions';
+import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 
 export class AssetManager {
 	private readonly _assets: Map<AssetId, Asset> = new Map();
 	private readonly _bones: Map<string, BoneDefinition> = new Map();
 	private _posePresets: AssetsPosePresets = [];
+	private _backgrounds: IChatroomBackgroundInfo[] = [];
 	private _definitionsHash: string = '';
 
 	get definitionsHash(): string {
@@ -39,6 +40,14 @@ export class AssetManager {
 		return cloneDeep(this._posePresets);
 	}
 
+	public getBackgrounds(): IChatroomBackgroundInfo[] {
+		return cloneDeep(this._backgrounds);
+	}
+
+	public getBackgroundById(id: string): IChatroomBackgroundInfo | null {
+		return cloneDeep(this._backgrounds.find((b) => b.id === id) ?? null);
+	}
+
 	/**
 	 * Finds the bone with the given name.
 	 * @param name - name of the bone
@@ -58,6 +67,7 @@ export class AssetManager {
 		this._bodyparts = data.bodyparts;
 		this._graphicsId = data.graphicsId;
 		this._posePresets = data.posePresets ?? [];
+		this._backgrounds = data.backgrounds ?? [];
 
 		this._bones.clear();
 		this.loadBones(data.bones);

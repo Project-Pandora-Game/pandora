@@ -1,4 +1,4 @@
-import { AppearanceChangeType, AssertNotNullable, CharacterId, CharacterSize, CharacterView, ICharacterRoomData, IChatRoomClientData } from 'pandora-common';
+import { AppearanceChangeType, AssertNotNullable, AssetManager, CharacterId, CharacterSize, CharacterView, CHARACTER_MIN_SIZE, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters } from 'pixi.js';
 import React, { CSSProperties, ReactElement, useCallback, useEffect, useState } from 'react';
@@ -16,6 +16,7 @@ import { useChatInput } from './chatInput';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import _, { noop } from 'lodash';
 import { GraphicsSceneRenderer } from '../../graphics/graphicsSceneRenderer';
+import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 
 const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
@@ -32,6 +33,7 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterRoomData>>> = {
 	character: Character<ICharacterRoomData>;
 	data: IChatRoomClientData | null;
+	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
 	menuOpen: (character: Self, data: InteractionData) => void;
 	flts: Filter[];
@@ -40,6 +42,7 @@ type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterR
 
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
 	private _data: IChatRoomClientData | null = null;
+	private _background: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
 	private _menuOpen: (character: ChatRoomCharacter, data: InteractionData) => void;
 	private _name: Text;
 
@@ -57,8 +60,14 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 
 	private _setPositionRaw(x: number, y: number): void {
-		x = _.clamp(x, 0, this._data?.size[0] ?? 0);
-		y = _.clamp(y, 0, this._data?.size[1] ?? 0);
+		const maxY = Math.floor(Math.min(
+			this._background.maxY != null ? Math.min(this._background.maxY, this._background.size[1]) : this._background.size[1],
+			(1 - CHARACTER_MIN_SIZE) * this._background.size[1] / this._background.scaling,
+		));
+
+		x = _.clamp(Math.round(x), 0, this._background.size[0]);
+		y = _.clamp(Math.round(y), 0, maxY);
+
 		if (this.characterRoomPosition[0] === x && this.characterRoomPosition[1] === y || !this.shard) {
 			return;
 		}
@@ -76,10 +85,11 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		return this.appearanceContainer.data.id;
 	}
 
-	constructor({ character, data, shard, menuOpen, flts, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
+	constructor({ character, data, background, shard, menuOpen, flts, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
 		super(character, renderer);
 		this.name = character.data.name;
 		this._data = data;
+		this._background = background;
 		this.shard = shard;
 		this._menuOpen = menuOpen;
 		this._name = new Text(this.name, {
@@ -99,7 +109,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		this._name.anchor.set(0.5, 0.5);
 		this.interactive = true;
 		this.addChild(this._name);
-		this.updateRoomData(data);
+		this.updateRoomData(data, background);
 		this
 			.on('destroyed', () => cleanupCalls.forEach((c) => c()))
 			.on('pointerdown', this._onPointerDown.bind(this))
@@ -108,8 +118,9 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			.on('pointermove', this._onPointerMove.bind(this));
 	}
 
-	updateRoomData(data: IChatRoomClientData | null) {
+	updateRoomData(data: IChatRoomClientData | null, background: Readonly<IChatroomBackgroundData>) {
 		this._data = data;
+		this._background = background;
 		this._reposition();
 	}
 
@@ -132,7 +143,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 	private _onCharacterUpdate({ position, settings }: Partial<ICharacterRoomData>) {
 		if (position) {
-			this.updateRoomData(this._data);
+			this._reposition();
 		}
 		if (settings) {
 			this._name.style.fill = settings.labelColor;
@@ -149,14 +160,17 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			return;
 		}
 
-		const [width, height] = this._data.size;
+		const [width, height] = this._background.size;
+		const scaling = this._background.scaling;
 		const x = Math.min(width, this.characterRoomPosition[0]);
 		const y = Math.min(height, this.characterRoomPosition[1]);
 
-		const scaling = Math.max(1, this._data.scaling);
-		const relativeHeight = y / height;
-		const minScale = 1 / scaling;
-		this._scale = 1 - (1 - minScale) * relativeHeight;
+		let baseScale = 1;
+		if (this.getBoneLikeValue('sitting') > 0) {
+			baseScale *= 0.9;
+		}
+
+		this._scale = baseScale * (1 - (y * scaling) / height);
 
 		const backView = this.appearanceContainer.appearance.getView() === CharacterView.BACK;
 		this._scaleX = backView ? -1 : 1;
@@ -169,10 +183,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 		this.scale.set(this._scaleX * this._scale, this._scale);
 		this.x = x;
-		this.y = height
-			- CharacterSize.HEIGHT * this._scale
-			- y
-			+ this._yOffset;
+		this.pivot.y = CharacterSize.HEIGHT - this._yOffset;
+		this.y = height - y;
 
 		this._updateTextPosition();
 
@@ -221,11 +233,15 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		event.stopPropagation();
 		const dragPointerEnd = event.data.getLocalPosition(this.parent);
 
-		const height = this._data.size[1];
-		const scaling = Math.max(1, this._data.scaling);
-		const minScale = 1 / scaling;
+		const height = this._background.size[1];
+		const scaling = this._background.scaling;
 
-		const y = (dragPointerEnd.y - height + BOTTOM_NAME_OFFSET) / ((1 - minScale) * ((BOTTOM_NAME_OFFSET + this._yOffset) / height) - 1);
+		let baseScale = 1;
+		if (this.getBoneLikeValue('sitting') > 0) {
+			baseScale *= 0.9;
+		}
+
+		const y = (dragPointerEnd.y - height + baseScale * BOTTOM_NAME_OFFSET) / ((scaling / height) * baseScale * BOTTOM_NAME_OFFSET - 1);
 
 		this.setPositionThrottled(dragPointerEnd.x, y);
 	}
@@ -235,6 +251,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	private readonly _characters: Map<CharacterId, ChatRoomCharacter> = new Map();
 	private _shard: ShardConnector | null = null;
 	private _room: IChatRoomClientData | null = null;
+	private _roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
 	private _manager: GraphicsManager | null = GraphicsManagerInstance.value;
 	private _menuOpen: (Character: ChatRoomCharacter, data: InteractionData) => void = noop;
 	private _filterExclude?: CharacterId;
@@ -308,6 +325,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			const graphics = new ChatRoomCharacter({
 				character,
 				data: this._room,
+				background: this._roomBackground,
 				shard: this._shard,
 				menuOpen: this._menuOpen,
 				flts: character.data.id === this._filterExclude ? [] : this.backgroundFilters,
@@ -335,30 +353,46 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		});
 	}
 
-	public updateRoomData(data: IChatRoomClientData) {
+	public updateRoomData(data: IChatRoomClientData, assetManager: AssetManager) {
 		if (this.destroyed)
 			return;
 		if (this._room === data) {
 			return;
 		}
-		const sizeChanged = !this._room || this._room.size[0] !== data.size[0] || this._room.size[1] !== data.size[1];
-		if (this._room?.background !== data.background || sizeChanged) {
-			this.setBackground(data.background, data.size[0], data.size[1]);
+
+		let roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
+
+		if (typeof data.background === 'string') {
+			const definition = assetManager.getBackgroundById(data.background);
+			if (definition) {
+				roomBackground = {
+					...definition,
+					image: GetAssetsSourceUrl() + definition.image,
+				};
+			}
+		} else {
+			roomBackground = data.background;
 		}
+
+		const sizeChanged = !this._room || this._roomBackground.size[0] !== roomBackground.size[0] || this._roomBackground.size[1] !== roomBackground.size[1];
+		if (this._roomBackground.image !== roomBackground.image || sizeChanged) {
+			this.setBackground(roomBackground.image, roomBackground.size[0], roomBackground.size[1]);
+		}
+		this._roomBackground = roomBackground;
 		if (sizeChanged) {
 			const container = this.container;
-			container.worldHeight = data.size[1];
-			container.worldWidth = data.size[0];
+			container.worldHeight = roomBackground.size[1];
+			container.worldWidth = roomBackground.size[0];
 			this.resize(true);
 			this.container.bounce({
 				...BASE_BOUNCE_OPTIONS,
-				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, data.size[0] + 2 * BONCE_OVERFLOW, data.size[1] + 2 * BONCE_OVERFLOW),
+				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackground.size[0] + 2 * BONCE_OVERFLOW, roomBackground.size[1] + 2 * BONCE_OVERFLOW),
 			});
-			this._border.clear().lineStyle(2, 0x404040, 0.4).drawRect(0, 0, data.size[0], data.size[1]);
+			this._border.clear().lineStyle(2, 0x404040, 0.4).drawRect(0, 0, roomBackground.size[0], roomBackground.size[1]);
 		}
 		this._room = data;
 		this._characters.forEach((character) => {
-			character.updateRoomData(data);
+			character.updateRoomData(data, roomBackground);
 		});
 	}
 
@@ -414,7 +448,7 @@ export function ChatRoomScene(): ReactElement | null {
 
 	useEffect(() => {
 		if (data) {
-			scene?.updateRoomData(data);
+			scene?.updateRoomData(data, GetAssetManager());
 		}
 	}, [scene, data]);
 

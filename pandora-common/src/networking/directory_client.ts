@@ -40,6 +40,26 @@ export type IDirectoryCharacterConnectionInfo = {
 
 export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'roomList';
 
+export type IDirectoryDirectMessage = {
+	content: string;
+	source: number;
+	time: number;
+	edited?: number;
+};
+
+export type IDirectoryDirectMessageAccount = {
+	id: number;
+	name: string;
+	labelColor: string;
+	publicKeyData: string;
+};
+
+export type IDirectoryDirectMessageInfo = {
+	id: number;
+	account: string;
+	hasUnread?: true;
+};
+
 /** Directory->Client handlers */
 interface DirectoryClient {
 	/** Generic message for Directory's current status */
@@ -48,21 +68,20 @@ interface DirectoryClient {
 	connectionState(arg: {
 		account: IDirectoryAccountInfo | null,
 		character: IDirectoryCharacterConnectionInfo | null,
-		unreadDirectMessages: number[],
 	}): void;
 	somethingChanged(arg: {
 		changes: IDirectoryClientChangeEvents[];
 	}): void;
-	newDirectMessage(arg: {
-		account: {
-			id: number;
-			name: string;
-			labelColor: string;
-			publicKeyData: string;
+	directMessage(arg: {
+		info: IDirectoryDirectMessageInfo[];
+	} | {
+		message: IDirectoryDirectMessage & {
+			account?: IDirectoryDirectMessageAccount;
+			target: number;
 		};
-		time: number;
-		message: string;
-		edited?: number;
+	} | {
+		id: number;
+		action: 'read' | 'close';
 	}): void;
 }
 

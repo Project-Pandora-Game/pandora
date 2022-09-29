@@ -1,6 +1,6 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT } from 'pandora-common';
 import { CreateCharacter } from './dbHelper';
 
 import _ from 'lodash';
@@ -221,34 +221,21 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(data);
 	}
 
-	public setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number], editing?: number): Promise<boolean> {
+	public setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number]): Promise<boolean> {
 		const data = this.directMessagesDb.get(accounts) ?? { accounts, keys, messages: [] as DatabaseDirectMessages['messages'] };
 		if (data.keys !== keys) {
 			data.keys = keys;
 			data.messages = [];
-		} else if (data.messages.length === 0) {
-			if (editing)
-				return Promise.resolve(false);
-
-			accounts
-				.split('-')
-				.map(parseInt)
-				.map((id) => this.accountDbView.find((dbAccount) => dbAccount.id === id))
-				.filter<DatabaseAccountWithSecure>(((acc) => acc !== undefined) as (acc: DatabaseAccountWithSecure | undefined) => acc is DatabaseAccountWithSecure)
-				.forEach((acc) => {
-					if (!acc.directMessages)
-						acc.directMessages = [accounts];
-					else if (!acc.directMessages.includes(accounts))
-						acc.directMessages.push(accounts);
-				});
+		} else if (data.messages.length === 0 && message.edited !== undefined) {
+			return Promise.resolve(false);
 		}
-		if (editing !== undefined) {
-			const edit = data.messages.find((msg) => msg.time === editing);
+		if (message.edited !== undefined) {
+			const edit = data.messages.find((msg) => msg.time === message.edited);
 			if (!edit) {
 				return Promise.resolve(false);
 			}
-			edit.message = message.message;
-			edit.edited = message.time;
+			edit.content = message.content;
+			edit.edited = message.edited;
 		} else {
 			data.messages.push(message);
 		}
@@ -256,12 +243,12 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(true);
 	}
 
-	public setUnreadMessages(accountId: number, messageIds: number[]): Promise<void> {
+	public setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.resolve();
 
-		acc.unreadMessages = messageIds;
+		acc.directMessages = directMessageInfo;
 		return Promise.resolve();
 	}
 

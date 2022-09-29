@@ -1,7 +1,7 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings } from 'pandora-common';
+import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessageInfo } from 'pandora-common';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -110,14 +110,14 @@ export interface PandoraDatabase {
 	 * @param keys - account public keys
 	 * @param message - direct messages to store
 	 */
-	setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number], editing?: number): Promise<boolean>;
+	setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number]): Promise<boolean>;
 
 	/**
 	 * Sets unread direct messages for the account
 	 * @param accountId - Id of account to set unread direct messages for
 	 * @param messageIds - Ids of messages to set as unread
 	 */
-	setUnreadMessages(accountId: number, messageIds: number[]): Promise<void>;
+	setDirectMessageInfo(accountId: number, messageIds: IDirectoryDirectMessageInfo[]): Promise<void>;
 
 	//#region Shard
 

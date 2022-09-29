@@ -107,7 +107,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
 			setCryptoKey: this.handleSetCryptoKey.bind(this),
-			directMessageAck: this.handleDirectMessageAck.bind(this),
+			directMessage: this.handleDirectMessage.bind(this),
 		});
 	}
 
@@ -533,11 +533,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return await connection.account.directMessages.sendMessage(data);
 	}
 
-	private async handleDirectMessageAck({ id }: IClientDirectoryArgument['directMessageAck'], connection: IConnectionClient): IClientDirectoryPromiseResult['directMessageAck'] {
+	private async handleDirectMessage({ id, action }: IClientDirectoryArgument['directMessage'], connection: IConnectionClient): IClientDirectoryPromiseResult['directMessage'] {
 		if (!connection.account)
 			throw new BadMessageError();
 
-		return await connection.account.directMessages.ackMessage(id);
+		return await connection.account.directMessages.action(id, action);
 	}
 
 	//#endregion Direct Messages

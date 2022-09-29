@@ -29,13 +29,12 @@ type DirectMessageKeys = `${string}-${string}`;
 interface DatabaseDirectMessages {
 	accounts: DirectMessageAccounts;
 	keys: DirectMessageKeys;
-	messages: {
-		time: number;
-		message: string;
-		source: number;
-		edited?: number;
-	}[];
+	messages: import('pandora-common').IDirectoryDirectMessage[];
 }
+
+type DatabaseDirectMessageInfo = import('pandora-common').IDirectoryDirectMessageInfo & {
+	closed?: true;
+};
 
 /** Representation of account stored in database */
 interface DatabaseAccount {
@@ -47,8 +46,7 @@ interface DatabaseAccount {
 	roles?: import('pandora-common').IAccountRoleManageInfo;
 	characters: import('./databaseProvider').ICharacterSelfInfoDb[];
 	settings: import('pandora-common').IDirectoryAccountSettings;
-	directMessages?: DirectMessageAccounts[];
-	unreadMessages?: number[];
+	directMessages?: DatabaseDirectMessageInfo[];
 }
 
 /** Representation of account stored in database */

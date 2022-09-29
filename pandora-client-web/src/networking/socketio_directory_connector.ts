@@ -111,8 +111,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 				await this.directMessageHandler.accountChanged();
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
-			newDirectMessage: async (message) => {
-				await this.directMessageHandler.handleNewMessage(message);
+			directMessage: async (data) => {
+				await this.directMessageHandler.handleDirectMessage(data);
 			},
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
@@ -187,7 +187,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 
 	public logout(): void {
 		this.sendMessage('logout', { invalidateToken: this._authToken.value?.value });
-		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null, unreadDirectMessages: [] });
+		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
 		this.directMessageHandler.clear();
 	}
 

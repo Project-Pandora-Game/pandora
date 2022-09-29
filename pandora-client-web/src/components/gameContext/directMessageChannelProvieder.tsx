@@ -1,4 +1,4 @@
-import React, { createContext, ReactElement, useContext, useMemo, ReactNode, Suspense, useEffect } from 'react';
+import React, { createContext, ReactElement, useContext, useMemo, ReactNode, Suspense, useEffect, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
@@ -7,9 +7,26 @@ const directMessageContext = createContext<DirectMessageChannel>(null as unknown
 
 function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps & { accountId: number }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const channel = useMemo(() => directoryConnector.directMessageHandler.loadChat(accountId), [directoryConnector, accountId]);
+	const [closed, setClosed] = useState(false);
+	const channel = useMemo(() => {
+		if (closed)
+			return null;
 
-	useEffect(() => channel.addMount(), [channel]);
+		return directoryConnector.directMessageHandler.loadChat(accountId);
+	}, [directoryConnector, accountId, closed]);
+
+	useEffect(() => channel?.addMount(), [channel]);
+	useEffect(() => directoryConnector.directMessageHandler.on('close', (id) => {
+		if (id === accountId) {
+			setClosed(true);
+		}
+	}), [directoryConnector.directMessageHandler, accountId]);
+
+	if (!channel) {
+		return (
+			<span>Chat closed</span>
+		);
+	}
 
 	return (
 		<directMessageContext.Provider value={ channel }>

@@ -1,4 +1,4 @@
-import type { IClientDirectoryArgument, IClientDirectoryPromiseResult } from 'pandora-common';
+import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
 import { accountManager } from './accountManager';
@@ -15,10 +15,11 @@ function GetNextMessageTime(): number {
 
 export class AccountDirectMessages {
 	private readonly _account: Account;
-	private _unreadMessages: number[];
+	private _dms: DatabaseDirectMessageInfo[];
 
-	get unreadMessages(): readonly number[] {
-		return this._unreadMessages;
+	get dms(): IDirectoryDirectMessageInfo[] {
+		return this._dms
+			.filter((dm) => !dm.closed);
 	}
 
 	private get _publicKey(): string {
@@ -27,66 +28,90 @@ export class AccountDirectMessages {
 
 	constructor(account: Account, data: DatabaseAccount) {
 		this._account = account;
-		this._unreadMessages = data.unreadMessages ?? [];
+		this._dms = data.directMessages ?? [];
 	}
 
-	async ackMessage(id: number | 'all'): Promise<void> {
-		if (this._unreadMessages.length === 0) {
+	async action(id: number, action: 'read' | 'close' | 'open' | 'new', notifyClients: boolean = true): Promise<void> {
+		const dm = this._dms.find((info) => info.id === id);
+		if (!dm) {
 			return;
 		}
-		if (id === 'all') {
-			this._unreadMessages = [];
-		} else {
-			const index = this._unreadMessages.indexOf(id);
-			if (index < 0) {
-				return;
-			}
-			this._unreadMessages.splice(index, 1);
+		switch (action) {
+			case 'read':
+				if (dm.hasUnread) {
+					delete dm.hasUnread;
+				} else {
+					return;
+				}
+				break;
+			case 'close':
+				if (!dm.closed) {
+					dm.closed = true;
+					delete dm.hasUnread;
+				} else {
+					return;
+				}
+				break;
+			case 'open':
+				if (dm.closed) {
+					delete dm.closed;
+				} else {
+					return;
+				}
+				break;
+			case 'new':
+				if (!dm.hasUnread) {
+					dm.hasUnread = true;
+					delete dm.closed;
+				} else {
+					return;
+				}
+				break;
 		}
-		await this._updateUnreadMessages();
+		if (notifyClients && action !== 'new' && action !== 'open') {
+			for (const connection of this._account.associatedConnections) {
+				connection.sendMessage('directMessage', { id, action });
+			}
+		}
+		await GetDatabase().setDirectMessageInfo(this._account.id, this._dms);
 	}
 
-	async sendMessage({ id, message, editing }: IClientDirectoryArgument['sendDirectMessage']): IClientDirectoryPromiseResult['sendDirectMessage'] {
+	async sendMessage({ id, content, editing }: IClientDirectoryArgument['sendDirectMessage']): IClientDirectoryPromiseResult['sendDirectMessage'] {
 		if (!this._publicKey) {
 			return { result: 'denied' };
 		}
 		const target = await accountManager.loadAccountById(id);
-		if (!target) {
-			return { result: 'notFound' };
-		}
-		return await target.directMessages.handleMessage(this._account, message, editing);
-	}
-
-	async handleMessage(source: Account, message: string, editing?: number): IClientDirectoryPromiseResult['sendDirectMessage'] {
-		if (!this._publicKey) {
+		if (!target || !target.directMessages._publicKey) {
 			return { result: 'notFound' };
 		}
 		const time = GetNextMessageTime();
-		const [a, b] = this._account.id < source.id ? [this._account, source] : [source, this._account];
-		if (!await GetDatabase().setDirectMessage(`${a.id}-${b.id}`, `${a.directMessages._publicKey}-${b.directMessages._publicKey}`, { time, message, source: source.id }, editing)) {
+		const [a, b] = this._account.id < target.id ? [this._account, target] : [target, this._account];
+		const accounts: DirectMessageAccounts = `${a.id}-${b.id}`;
+		const keys: DirectMessageKeys = `${a.directMessages._publicKey}-${b.directMessages._publicKey}`;
+		const message: IDirectoryDirectMessage = {
+			content,
+			time: editing ?? time,
+			source: this._account.id,
+			edited: editing && time,
+		};
+		if (!await GetDatabase().setDirectMessage(accounts, keys, message)) {
 			return { result: 'messageNotFound' };
 		}
+		await target.directMessages.handleMessage({ ...message, target: target.id, account: this._getAccountInfo() });
+		await this.handleMessage({ ...message, target: target.id });
+		return { result: 'ok' };
+	}
 
-		if (!editing) {
-			this._unreadMessages.push(time);
-			await this._updateUnreadMessages();
-		} else if (!this._unreadMessages.includes(editing)) {
-			this._unreadMessages.push(editing);
-			await this._updateUnreadMessages();
+	async handleMessage(message: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; target: number; }): Promise<void> {
+		const self = message.source === this._account.id;
+		if (self) {
+			await this.action(message.target, 'open', false);
+		} else if (message.edited === undefined) {
+			await this.action(message.source, 'new', false);
 		}
-
-		if (this._account.associatedConnections.size !== 0) {
-			const data = {
-				account: this._getAccountInfo(source),
-				message,
-				time: editing ?? time,
-				edited: editing && time,
-			};
-			for (const connection of this._account.associatedConnections) {
-				connection.sendMessage('newDirectMessage', data);
-			}
+		for (const connection of this._account.associatedConnections) {
+			connection.sendMessage('directMessage', { message });
 		}
-		return { result: 'ok', time };
 	}
 
 	async getMessages(id: number): IClientDirectoryPromiseResult['getDirectMessages'] {
@@ -101,16 +126,13 @@ export class AccountDirectMessages {
 		const { messages } = await GetDatabase().getDirectMessages(`${a.id}-${b.id}`, `${a.directMessages._publicKey}-${b.directMessages._publicKey}`);
 		return {
 			result: 'ok',
-			account: this._getAccountInfo(target),
+			account: target.directMessages._getAccountInfo(),
 			messages,
 		};
 	}
 
-	private async _updateUnreadMessages(): Promise<void> {
-		await GetDatabase().setUnreadMessages(this._account.id, this._unreadMessages);
-	}
-
-	private _getAccountInfo(account: Account): { id: number; name: string; labelColor: string; publicKeyData: string; } {
+	private _getAccountInfo(): IDirectoryDirectMessageAccount {
+		const account = this._account;
 		return {
 			id: account.id,
 			name: account.username,

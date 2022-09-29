@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter } from './dbHelper';
@@ -234,33 +234,20 @@ export default class MongoDatabase implements PandoraDatabase {
 		return messages;
 	}
 
-	public async setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number], editing?: number): Promise<boolean> {
+	public async setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number]): Promise<boolean> {
 		return await this._lock.acquire(`dm-${accounts}`, async () => {
 			const data = await this._directMessages.findOne({ accounts }) ?? { keys, accounts, messages: [] as DatabaseDirectMessages['messages'] };
 			if (data.keys !== keys) {
 				data.keys = keys;
 				data.messages = [];
-			} else if (data.messages.length === 0) {
-				if (editing)
-					return false;
-
-				for (const acc of await Promise.all((accounts).split('-').map(parseInt).map((id) => this.getAccountById(id)))) {
-					if (!acc)
-						continue;
-
-					if (!acc.directMessages)
-						await this._accounts.updateOne({ id: acc.id }, { $set: { directMessages: [accounts] } });
-					else if (!acc.directMessages.includes(accounts))
-						await this._accounts.updateOne({ id: acc.id }, { $push: { directMessages: accounts } });
-				}
 			}
-			if (editing !== undefined) {
-				const edit = data.messages.find((msg) => msg.time === editing);
+			if (message.edited !== undefined) {
+				const edit = data.messages.find((msg) => msg.time === message.edited);
 				if (!edit) {
 					return false;
 				}
-				edit.message = message.message;
-				edit.edited = message.time;
+				edit.content = message.content;
+				edit.edited = message.edited;
 			} else {
 				data.messages.push(message);
 			}
@@ -269,8 +256,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async setUnreadMessages(accountId: number, messageIds: number[]): Promise<void> {
-		await this._accounts.updateOne({ id: accountId }, { $set: { unreadMessages: messageIds } });
+	public async setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void> {
+		await this._accounts.updateOne({ id: accountId }, { $set: { directMessages: directMessageInfo } });
 	}
 
 	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {

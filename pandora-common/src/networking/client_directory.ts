@@ -1,5 +1,5 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult, DefineSocketInterface } from './helpers';
-import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryShardInfo } from './directory_client';
+import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryShardInfo } from './directory_client';
 import type { MessageHandler } from './message_handler';
 import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomDirectoryInfo, RoomIdSchema } from '../chatroom';
@@ -113,12 +113,12 @@ export const ClientDirectoryInSchema = z.object({
 	}),
 	sendDirectMessage: z.object({
 		id: z.number().min(0),
-		message: z.string(),
+		content: z.string(),
 		editing: z.number().min(0).optional(),
 	}),
-	directMessageAck: z.object({
+	directMessage: z.object({
 		id: z.number().min(0),
-		ack: z.number().min(0).or(z.literal('all')),
+		action: z.enum(['read', 'close']),
 	}),
 
 	//#region Management/admin endpoints; these require specific roles to be used
@@ -189,23 +189,10 @@ export type IClientDirectoryOut = {
 	chatRoomUpdate: { result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; };
 	getDirectMessages: { result: 'notFound' | 'denied'; } | {
 		result: 'ok';
-		account: {
-			id: number;
-			name: string;
-			labelColor: string;
-			publicKeyData: string;
-		};
-		messages: {
-			time: number;
-			message: string;
-			source: number;
-			edited?: number;
-		}[];
+		account: IDirectoryDirectMessageAccount;
+		messages: IDirectoryDirectMessage[];
 	};
-	sendDirectMessage: { result: 'notFound' | 'denied' | 'messageNotFound'; } | {
-		result: 'ok';
-		time: number;
-	};
+	sendDirectMessage: { result: 'ok' | 'notFound' | 'denied' | 'messageNotFound'; };
 	manageGetAccountRoles: { result: 'notFound'; } | {
 		result: 'ok';
 		roles: IAccountRoleManageInfo;

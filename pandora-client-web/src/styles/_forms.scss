@@ -24,6 +24,10 @@ input[type=color] {
 	padding: 0;
 }
 
+select {
+	padding: 0.4em;
+}
+
 input[type=checkbox]:read-only {
 	filter: grayscale(100%);
 }

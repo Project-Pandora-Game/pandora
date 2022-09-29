@@ -17,6 +17,7 @@ import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import _, { noop } from 'lodash';
 import { GraphicsSceneRenderer } from '../../graphics/graphicsSceneRenderer';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
+import { ChatroomDebugConfig, useDebugConfig } from './chatroomDebug';
 
 const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
@@ -251,12 +252,15 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 	private readonly _characters: Map<CharacterId, ChatRoomCharacter> = new Map();
 	private _shard: ShardConnector | null = null;
 	private _room: IChatRoomClientData | null = null;
+	private _debugConfig: ChatroomDebugConfig;
 	private _roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
 	private _manager: GraphicsManager | null = GraphicsManagerInstance.value;
 	private _menuOpen: (Character: ChatRoomCharacter, data: InteractionData) => void = noop;
 	private _filterExclude?: CharacterId;
 
 	private readonly _border: Graphics;
+
+	private readonly _calibrationLine = new Graphics();
 
 	constructor() {
 		super();
@@ -267,6 +271,9 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 
 		this._border = this.container.addChild(new Graphics());
 		this._border.zIndex = 2;
+
+		this._calibrationLine.zIndex = -1;
+		this.container.addChild(this._calibrationLine);
 
 		GraphicsManagerInstance.subscribe((manager) => {
 			if (manager) {
@@ -353,10 +360,10 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		});
 	}
 
-	public updateRoomData(data: IChatRoomClientData, assetManager: AssetManager) {
+	public updateRoomData(data: IChatRoomClientData, assetManager: AssetManager, debugConfig?: ChatroomDebugConfig) {
 		if (this.destroyed)
 			return;
-		if (this._room === data) {
+		if (this._room === data && this._debugConfig === debugConfig) {
 			return;
 		}
 
@@ -372,6 +379,30 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			}
 		} else {
 			roomBackground = data.background;
+		}
+
+		// Calculate scaling calibration helper
+		this._calibrationLine.clear();
+		if (debugConfig?.roomScalingHelper) {
+			const maxY = Math.floor(Math.min(
+				roomBackground.maxY != null ? Math.min(roomBackground.maxY, roomBackground.size[1]) : roomBackground.size[1],
+				(1 - CHARACTER_MIN_SIZE) * roomBackground.size[1] / roomBackground.scaling,
+			)) + BOTTOM_NAME_OFFSET;
+			const scaleAtMaxY = 1 - (maxY * roomBackground.scaling) / roomBackground.size[1];
+
+			this._calibrationLine.beginFill(0x550000, 0.8);
+			this._calibrationLine.drawPolygon([
+				0.6 * roomBackground.size[0], roomBackground.size[1],
+				0.4 * roomBackground.size[0], roomBackground.size[1],
+				(0.5 - 0.1 * scaleAtMaxY) * roomBackground.size[0], roomBackground.size[1] - maxY,
+				(0.5 + 0.1 * scaleAtMaxY) * roomBackground.size[0], roomBackground.size[1] - maxY,
+			]);
+			this._calibrationLine.beginFill(0x990000, 0.6);
+			this._calibrationLine.drawPolygon([
+				0.55 * roomBackground.size[0], roomBackground.size[1],
+				0.45 * roomBackground.size[0], roomBackground.size[1],
+				0.5 * roomBackground.size[0], (1 - 1/roomBackground.scaling) * roomBackground.size[1],
+			]);
 		}
 
 		const sizeChanged = !this._room || this._roomBackground.size[0] !== roomBackground.size[0] || this._roomBackground.size[1] !== roomBackground.size[1];
@@ -391,6 +422,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			this._border.clear().lineStyle(2, 0x404040, 0.4).drawRect(0, 0, roomBackground.size[0], roomBackground.size[1]);
 		}
 		this._room = data;
+		this._debugConfig = debugConfig;
 		this._characters.forEach((character) => {
 			character.updateRoomData(data, roomBackground);
 		});
@@ -425,6 +457,7 @@ export function ChatRoomScene(): ReactElement | null {
 	const [menuActive, setMenuActive] = useState<ChatRoomCharacter | null>(null);
 	const [clickData, setClickData] = useState<InteractionData | null>(null);
 	const player = usePlayer();
+	const debugConfig = useDebugConfig();
 
 	const [scene, setScene] = useState<ChatRoomGraphicsScene | null>(null);
 	const sceneCreator = useCallback(() => new ChatRoomGraphicsScene(), []);
@@ -448,9 +481,9 @@ export function ChatRoomScene(): ReactElement | null {
 
 	useEffect(() => {
 		if (data) {
-			scene?.updateRoomData(data, GetAssetManager());
+			scene?.updateRoomData(data, GetAssetManager(), debugConfig);
 		}
-	}, [scene, data]);
+	}, [scene, data, debugConfig]);
 
 	useEffect(() => {
 		scene?.updateMenuOpen((character, eventData) => {

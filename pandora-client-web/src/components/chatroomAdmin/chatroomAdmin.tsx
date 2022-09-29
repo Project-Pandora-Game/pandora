@@ -109,7 +109,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 		max: MAX_SCALING,
 		step: 0.1,
 		onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-			let scaling = clamp(Number.parseFloat(event.target.value), 0, MAX_SCALING);
+			const scaling = clamp(Number.parseFloat(event.target.value), 0, MAX_SCALING);
 			// Can't modify scaling of preset
 			if (typeof currentConfigBackground === 'string')
 				return;

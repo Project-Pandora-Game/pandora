@@ -56,6 +56,16 @@ export class Room extends ServerRoom<IShardClientBase> {
 			(this.data as Record<string, unknown>)[key] = data[key];
 		}
 		this.sendUpdateToAllInRoom({ info: this.getClientData() });
+
+		// Put characters into correct place if needed
+		const roomBackground = ResolveBackground(assetManager, this.data.background);
+		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
+		for (const character of this.characters) {
+			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
+				character.position = [CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5)), 0];
+				this.sendUpdateToAllInRoom({ update: { id: character.id, position: character.position } });
+			}
+		}
 	}
 
 	getInfo(): IChatRoomFullInfo {
@@ -87,8 +97,6 @@ export class Room extends ServerRoom<IShardClientBase> {
 
 	updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
 		const roomBackground = ResolveBackground(assetManager, this.data.background);
-
-		// Y is limited by room size, but also by
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 
 		if (x > roomBackground.size[0] || y > maxY) {
@@ -132,7 +140,8 @@ export class Room extends ServerRoom<IShardClientBase> {
 	}
 
 	public characterEnter(character: Character): void {
-		character.position = [CharacterSize.WIDTH * (1 + 0.2 * (Math.random() - 0.5)), 0];
+		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
+		character.position = [CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5)), 0];
 		this.characters.add(character);
 		character.setRoom(this);
 		this.sendUpdateTo(character, { room: this.getClientData() });

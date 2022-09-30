@@ -1,6 +1,6 @@
 import { AppearanceChangeType, AssertNotNullable, AssetManager, CalculateCharacterMaxYForBackground, CharacterId, CharacterSize, CharacterView, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData, ResolveBackground } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
-import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters } from 'pixi.js';
+import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters, Container } from 'pixi.js';
 import React, { CSSProperties, ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
@@ -34,6 +34,7 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterRoomData>>> = {
 	character: Character<ICharacterRoomData>;
 	data: IChatRoomClientData | null;
+	debugConfig: ChatroomDebugConfig;
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
 	menuOpen: (character: Self, data: InteractionData) => void;
@@ -43,6 +44,7 @@ type ChatRoomCharacterProps<Self extends GraphicsCharacter<Character<ICharacterR
 
 class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>> {
 	private _data: IChatRoomClientData | null = null;
+	private _debugConfig: ChatroomDebugConfig;
 	private _background: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
 	private _menuOpen: (character: ChatRoomCharacter, data: InteractionData) => void;
 	private _name: Text;
@@ -55,6 +57,10 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	private _yOffset: number = 0;
 	private _scale: number = 1;
 	private _scaleX: number = 1;
+
+	// Debug data
+	private _debugGraphicsContainer: Container;
+	private _debugHitboxOverlay: Graphics;
 
 	public get characterRoomPosition(): [number, number] {
 		return this.appearanceContainer.data.position;
@@ -83,7 +89,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		return this.appearanceContainer.data.id;
 	}
 
-	constructor({ character, data, background, shard, menuOpen, flts, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
+	constructor({ character, data, debugConfig, background, shard, menuOpen, flts, renderer }: ChatRoomCharacterProps<ChatRoomCharacter>) {
 		super(character, renderer);
 		this.name = character.data.name;
 		this._data = data;
@@ -100,6 +106,18 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		});
 		this.filters = flts;
 
+		// Setup debug graphics
+		this._debugGraphicsContainer = new Container();
+		this._debugGraphicsContainer.visible = false;
+		this._debugGraphicsContainer.zIndex = 99999;
+		this.addChild(this._debugGraphicsContainer);
+		const characterFrame = new Graphics()
+			.lineStyle({ color: 0x00ff00, width: 2 })
+			.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
+		this._debugGraphicsContainer.addChild(characterFrame);
+		this._debugHitboxOverlay = new Graphics();
+		this._debugGraphicsContainer.addChild(this._debugHitboxOverlay);
+
 		const cleanupCalls: (() => void)[] = [];
 
 		cleanupCalls.push(character.on('update', this._onCharacterUpdate.bind(this)));
@@ -107,7 +125,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		this._name.anchor.set(0.5, 0.5);
 		this.interactive = true;
 		this.addChild(this._name);
-		this.updateRoomData(data, background);
+		this.updateRoomData(data, background, debugConfig);
 		this
 			.on('destroyed', () => cleanupCalls.forEach((c) => c()))
 			.on('pointerdown', this._onPointerDown.bind(this))
@@ -116,8 +134,9 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 			.on('pointermove', this._onPointerMove.bind(this));
 	}
 
-	updateRoomData(data: IChatRoomClientData | null, background: Readonly<IChatroomBackgroundData>) {
+	updateRoomData(data: IChatRoomClientData | null, background: Readonly<IChatroomBackgroundData>, debugConfig?: ChatroomDebugConfig) {
 		this._data = data;
+		this._debugConfig = debugConfig;
 		this._background = background;
 		this._reposition();
 	}
@@ -134,9 +153,16 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	private _updateTextPosition() {
 		const x = CharacterSize.WIDTH / 2;
 		const y = CharacterSize.HEIGHT - BOTTOM_NAME_OFFSET - this._yOffset;
-		this.hitArea = new Rectangle(x - 100, y - 50, 200, 100);
+		const hitArea = this.hitArea = new Rectangle(x - 100, y - 50, 200, 100);
 		this._name.position.set(x, y);
 		this._name.scale.set(1 / this._scaleX, 1);
+		// Debug graphics
+		if (this._debugConfig) {
+			this._debugHitboxOverlay
+				.clear()
+				.beginFill(0xff0000, 0.25)
+				.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
+		}
 	}
 
 	private _onCharacterUpdate({ position, settings }: Partial<ICharacterRoomData>) {
@@ -185,6 +211,9 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		this.y = height - y;
 
 		this._updateTextPosition();
+
+		// Show or hide debug data
+		this._debugGraphicsContainer.visible = !!this._debugConfig?.characterDebugOverlay;
 
 		if (oldY !== this.y) {
 			this.emit('YChanged', this.y);
@@ -329,6 +358,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			const graphics = new ChatRoomCharacter({
 				character,
 				data: this._room,
+				debugConfig: this._debugConfig,
 				background: this._roomBackground,
 				shard: this._shard,
 				menuOpen: this._menuOpen,
@@ -369,7 +399,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		// Calculate scaling calibration helper
 		this._calibrationLine.clear();
 		if (debugConfig?.roomScalingHelper) {
-			const maxY = CalculateCharacterMaxYForBackground(roomBackground) + BOTTOM_NAME_OFFSET;
+			const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 			const scaleAtMaxY = 1 - (maxY * roomBackground.scaling) / roomBackground.size[1];
 
 			this._calibrationLine.beginFill(0x550000, 0.8);
@@ -406,7 +436,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		this._room = data;
 		this._debugConfig = debugConfig;
 		this._characters.forEach((character) => {
-			character.updateRoomData(data, roomBackground);
+			character.updateRoomData(data, roomBackground, debugConfig);
 		});
 	}
 

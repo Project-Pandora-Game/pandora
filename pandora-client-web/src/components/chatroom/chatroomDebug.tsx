@@ -11,11 +11,13 @@ import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean(),
 	roomScalingHelper: z.boolean(),
+	characterDebugOverlay: z.boolean(),
 });
 
 const DEFAULT_DEBUG_CONFIG: z.infer<typeof ChatroomDebugConfigSchema> = {
 	enabled: false,
 	roomScalingHelper: false,
+	characterDebugOverlay: false,
 };
 
 export type ChatroomDebugConfig = z.infer<typeof ChatroomDebugConfigSchema> | undefined;
@@ -60,6 +62,19 @@ export function ChatroomDebugConfigView(): ReactElement {
 					} }
 				/>
 			</div>
+			<div>
+				<label htmlFor='chatroom-debug-character-overlay'>Show character debug overlay</label>
+				<input
+					id='chatroom-debug-character-overlay'
+					type='checkbox'
+					checked={ chatroomDebugConfig.characterDebugOverlay }
+					onChange={ (e) => {
+						applyChange({
+							characterDebugOverlay: e.target.checked,
+						});
+					} }
+				/>
+			</div>
 			<h3>Chatroom details</h3>
 			{
 				!roomData ? <div>Not in a chatroom</div> : (
@@ -67,13 +82,13 @@ export function ChatroomDebugConfigView(): ReactElement {
 						<h4>Characters</h4>
 						<div className='flex-col'>
 							{ roomData.characters.map((c) => (
-								<>
+								<React.Fragment key={ c.id }>
 									<span>Name: { c.name }</span>
 									<span>Character ID: { c.id }</span>
 									<span>Account ID: { c.accountId }</span>
 									<span>Position: { `[${c.position[0]}, ${c.position[1]}]` }</span>
 									<br />
-								</>
+								</React.Fragment>
 							)) }
 						</div>
 					</>

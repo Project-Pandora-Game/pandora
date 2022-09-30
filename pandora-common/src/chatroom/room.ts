@@ -73,6 +73,15 @@ export const DEFAULT_BACKGROUND: Readonly<IChatroomBackgroundData> = {
 /** What is the minimal scale allowed for character inside room. */
 export const CHARACTER_MIN_SIZE = 0.05;
 
+/** Calculates maximum Y coordinate for character in room based on background config */
+export function CalculateCharacterMaxYForBackground(roomBackground: IChatroomBackgroundData): number {
+	// Y is limited by room size, but also by background and by lowest achievable character size
+	return Math.floor(Math.min(
+		roomBackground.maxY != null ? Math.min(roomBackground.maxY, roomBackground.size[1]) : roomBackground.size[1],
+		(1 - CHARACTER_MIN_SIZE) * roomBackground.size[1] / roomBackground.scaling,
+	));
+}
+
 export type IChatRoomDirectoryConfig = IChatRoomBaseInfo & {
 	/** The requested features */
 	features: ChatRoomFeature[];

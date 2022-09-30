@@ -1,4 +1,4 @@
-import { AppearanceChangeType, AssertNotNullable, AssetManager, CharacterId, CharacterSize, CharacterView, CHARACTER_MIN_SIZE, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
+import { AppearanceChangeType, AssertNotNullable, AssetManager, CalculateCharacterMaxYForBackground, CharacterId, CharacterSize, CharacterView, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters } from 'pixi.js';
 import React, { CSSProperties, ReactElement, useCallback, useEffect, useState } from 'react';
@@ -61,10 +61,7 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	}
 
 	private _setPositionRaw(x: number, y: number): void {
-		const maxY = Math.floor(Math.min(
-			this._background.maxY != null ? Math.min(this._background.maxY, this._background.size[1]) : this._background.size[1],
-			(1 - CHARACTER_MIN_SIZE) * this._background.size[1] / this._background.scaling,
-		));
+		const maxY = CalculateCharacterMaxYForBackground(this._background);
 
 		x = _.clamp(Math.round(x), 0, this._background.size[0]);
 		y = _.clamp(Math.round(y), 0, maxY);
@@ -384,10 +381,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 		// Calculate scaling calibration helper
 		this._calibrationLine.clear();
 		if (debugConfig?.roomScalingHelper) {
-			const maxY = Math.floor(Math.min(
-				roomBackground.maxY != null ? Math.min(roomBackground.maxY, roomBackground.size[1]) : roomBackground.size[1],
-				(1 - CHARACTER_MIN_SIZE) * roomBackground.size[1] / roomBackground.scaling,
-			)) + BOTTOM_NAME_OFFSET;
+			const maxY = CalculateCharacterMaxYForBackground(roomBackground) + BOTTOM_NAME_OFFSET;
 			const scaleAtMaxY = 1 - (maxY * roomBackground.scaling) / roomBackground.size[1];
 
 			this._calibrationLine.beginFill(0x550000, 0.8);

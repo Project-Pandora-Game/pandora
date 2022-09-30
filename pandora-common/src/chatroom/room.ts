@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ZodTrimedRegex, zTemplateString } from '../validation';
 import { Satisfies } from '../utility';
 import { cloneDeep } from 'lodash';
+import { AssetManager } from '../assets';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
@@ -69,6 +70,30 @@ export const DEFAULT_BACKGROUND: Readonly<IChatroomBackgroundData> = {
 	size: cloneDeep(DEFAULT_ROOM_SIZE) as [number, number],
 	scaling: 1,
 };
+
+/**
+ * Resolves chatroom background data into effective background info
+ * @param assetManager - Asset manager to query for backgrounds
+ * @param background - The background to resolve
+ * @param baseUrl - Base URL to use for resolving image path, otherwise no change
+ */
+export function ResolveBackground(assetManager: AssetManager, background: string | IChatroomBackgroundData, baseUrl?: string): Readonly<IChatroomBackgroundData> {
+	let roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
+
+	if (typeof background === 'string') {
+		const definition = assetManager.getBackgroundById(background);
+		if (definition) {
+			roomBackground = baseUrl ? {
+				...definition,
+				image: baseUrl + definition.image,
+			} : definition;
+		}
+	} else {
+		roomBackground = background;
+	}
+
+	return roomBackground;
+}
 
 /** What is the minimal scale allowed for character inside room. */
 export const CHARACTER_MIN_SIZE = 0.05;

@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize, AppearanceActionRoomContext, IChatroomBackgroundData, DEFAULT_BACKGROUND, CalculateCharacterMaxYForBackground } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize, AppearanceActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -86,16 +86,7 @@ export class Room extends ServerRoom<IShardClientBase> {
 	}
 
 	updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
-		let roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
-
-		if (typeof this.data.background === 'string') {
-			const definition = assetManager.getBackgroundById(this.data.background);
-			if (definition) {
-				roomBackground = definition;
-			}
-		} else {
-			roomBackground = this.data.background;
-		}
+		const roomBackground = ResolveBackground(assetManager, this.data.background);
 
 		// Y is limited by room size, but also by
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);

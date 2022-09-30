@@ -1,4 +1,4 @@
-import { AppearanceChangeType, AssertNotNullable, AssetManager, CalculateCharacterMaxYForBackground, CharacterId, CharacterSize, CharacterView, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
+import { AppearanceChangeType, AssertNotNullable, AssetManager, CalculateCharacterMaxYForBackground, CharacterId, CharacterSize, CharacterView, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData, ResolveBackground } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters } from 'pixi.js';
 import React, { CSSProperties, ReactElement, useCallback, useEffect, useState } from 'react';
@@ -364,19 +364,7 @@ class ChatRoomGraphicsScene extends GraphicsScene {
 			return;
 		}
 
-		let roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
-
-		if (typeof data.background === 'string') {
-			const definition = assetManager.getBackgroundById(data.background);
-			if (definition) {
-				roomBackground = {
-					...definition,
-					image: GetAssetsSourceUrl() + definition.image,
-				};
-			}
-		} else {
-			roomBackground = data.background;
-		}
+		const roomBackground = ResolveBackground(assetManager, data.background, GetAssetsSourceUrl());
 
 		// Calculate scaling calibration helper
 		this._calibrationLine.clear();

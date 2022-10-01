@@ -183,7 +183,7 @@ export class DirectMessageChannel {
 		if (!this._loaded) {
 			throw new Error('Channel not loaded');
 		}
-		const encrypted = await this.#encription.encrypt(message);
+		const encrypted = message.length === 0 ? '' : await this.#encription.encrypt(message);
 		const response = await this.connector.awaitResponse('sendDirectMessage', { id: this._id, content: encrypted, editing });
 		if (response.result !== 'ok') {
 			// TODO
@@ -239,7 +239,8 @@ export class DirectMessageChannel {
 		if (this._loaded || this._failed) {
 			return;
 		}
-		const response = await this.connector.awaitResponse('getDirectMessages', { id: this._id });
+		const oldest = this._messages.value[0]?.time;
+		const response = await this.connector.awaitResponse('getDirectMessages', { id: this._id, until: oldest });
 		if (response.result !== 'ok') {
 			this._loading = undefined;
 			this._failed = response.result;
@@ -250,16 +251,41 @@ export class DirectMessageChannel {
 		this._loaded = true;
 		this._failed = undefined;
 		this._loading = undefined;
-		this._messages.value = [...this.messages.value, ...await Promise.all(response.messages.map(async (message) => ({
-			time: message.time,
-			message: ChatParser.parseStyle(await this.#encription.decrypt(message.content)),
-			sent: message.source !== this._id,
-			edited: message.edited,
-		})))]
+		this._messages.value = [
+			...this.messages.value.filter((old) => !response.messages.some((message) => message.time === old.time)),
+			...await Promise.all(response.messages.map(async (message) => ({
+				time: message.time,
+				message: ChatParser.parseStyle(await this.#encription.decrypt(message.content)),
+				sent: message.source !== this._id,
+				edited: message.edited,
+			})))]
 			.sort((a, b) => a.time - b.time);
 	}
 
 	private _loadSingle({ time, message, sent, edited }: { time: number; message: string; sent: boolean; edited?: number; }): void {
+		if (edited !== undefined) {
+			const index = this._messages.value.findIndex((m) => m.time === edited);
+			if (index < 0) {
+				return;
+			}
+			const begin = this._messages.value.slice(0, index);
+			const end = this._messages.value.slice(index + 1);
+			if (!message) {
+				this._messages.value = [...begin, ...end];
+				return;
+			}
+			this._messages.value = [
+				...begin,
+				{
+					time,
+					message: ChatParser.parseStyle(message),
+					sent,
+					edited,
+				},
+				...end,
+			];
+			return;
+		}
 		this._messages.value = [...this.messages.value, {
 			time,
 			message: ChatParser.parseStyle(message),

@@ -33,40 +33,35 @@ export class AccountDirectMessages {
 		this._dms = data.directMessages ?? [];
 	}
 
-	async action(id: number, action: 'read' | 'close' | 'open' | 'new', notifyClients: boolean = true): Promise<void> {
+	async action(id: number, action: 'read' | 'close' | 'open' | 'new', notifyClients: boolean = true, time?: number): Promise<void> {
 		const dm = this._dms.find((info) => info.id === id);
 		if (!dm) {
 			return;
+		}
+		if (time !== undefined) {
+			dm.time = time;
 		}
 		switch (action) {
 			case 'read':
 				if (dm.hasUnread) {
 					delete dm.hasUnread;
-				} else {
-					return;
 				}
 				break;
 			case 'close':
 				if (!dm.closed) {
 					dm.closed = true;
 					delete dm.hasUnread;
-				} else {
-					return;
 				}
 				break;
 			case 'open':
 				if (dm.closed) {
 					delete dm.closed;
-				} else {
-					return;
 				}
 				break;
 			case 'new':
 				if (!dm.hasUnread) {
 					dm.hasUnread = true;
 					delete dm.closed;
-				} else {
-					return;
 				}
 				break;
 		}
@@ -106,9 +101,9 @@ export class AccountDirectMessages {
 	async handleMessage(message: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; target: number; }): Promise<void> {
 		const self = message.source === this._account.id;
 		if (self) {
-			await this.action(message.target, 'open', false);
+			await this.action(message.target, 'open', false, message.time);
 		} else if (message.edited === undefined) {
-			await this.action(message.source, 'new', false);
+			await this.action(message.source, 'new', false, message.time);
 		}
 		for (const connection of this._account.associatedConnections) {
 			connection.sendMessage('directMessage', { message });

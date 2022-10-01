@@ -58,6 +58,7 @@ export type IDirectoryDirectMessageInfo = {
 	id: number;
 	account: string;
 	hasUnread?: true;
+	time: number;
 };
 
 /** Directory->Client handlers */

@@ -217,21 +217,21 @@ export class DirectMessageChannel {
 		const id = data.account?.id ?? data.source;
 		let info = infos.value.find((i) => i.id === id);
 		if (!info) {
-			info = { id, account: this._account.name };
-			infos.value = [...infos.value, info];
+			info = { id, time, account: this._account.name };
 		}
+		info.time = time;
 		if (this._mounts > 0) {
 			this.connector.sendMessage('directMessage', { id, action: 'read' });
 			if (info.hasUnread) {
 				delete info.hasUnread;
-				infos.value = [...infos.value];
 			}
+			infos.value = [...infos.value];
 			return true;
 		}
 		if (!info.hasUnread) {
 			info.hasUnread = true;
-			infos.value = [...infos.value];
 		}
+		infos.value = [...infos.value];
 		return false;
 	}
 

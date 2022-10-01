@@ -16,10 +16,12 @@ export function DirectMessages(): React.ReactElement {
 	const flt = React.useDeferredValue(filter.toLowerCase().trim());
 	const filtered = React.useMemo(() => {
 		const arr = flt.split(/\s+/).filter((s) => s.length > 0);
-		return info.filter(({ account, id }) => {
-			const name = `${account} (${id})`.toLowerCase();
-			return arr.every((s) => name.includes(s));
-		});
+		return info
+			.filter(({ account, id }) => {
+				const name = `${account} (${id})`.toLowerCase();
+				return arr.every((s) => name.includes(s));
+			})
+			.sort((a, b) => b.time - a.time);
 	}, [info, flt]);
 
 	return (

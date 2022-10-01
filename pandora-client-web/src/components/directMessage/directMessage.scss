@@ -1,12 +1,12 @@
 @import '../../styles/constants';
 
-.direct-messages {
+.direct-message {
 	display: flex;
 	flex-flow: row;
 	height: 100%;
 	background-color: $grey-darker;
 
-	.direct-messages-list {
+	.direct-message-list {
 		display: flex;
 		flex-flow: column;
 		flex: 1;
@@ -15,7 +15,7 @@
 		user-select: text;
 	}
 
-	.direct-message {
+	.direct-message-entry {
 		color: $white;
 		padding: 0.1em;
 		white-space: pre-wrap;

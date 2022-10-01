@@ -9,11 +9,11 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { RenderChatPart } from '../chatroom/chatroom';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
-import './directMessages.scss';
+import './directMessage.scss';
 
-export function DirectMessages({ accountId }: { accountId: number }): ReactElement {
+export function DirectMessage({ accountId }: { accountId: number }): ReactElement {
 	return (
-		<div className='direct-messages'>
+		<div className='direct-message'>
 			<DirectMessageChannelProvider accountId={ accountId }>
 				<DirectMessageList />
 				<DirectChannelInput />
@@ -33,7 +33,7 @@ function DirectMessageList(): ReactElement | null {
 	}
 
 	return (
-		<div ref={ ref } onScroll={ onScroll } className='direct-messages-list'>
+		<div ref={ ref } onScroll={ onScroll } className='direct-message-list'>
 			{messages.map((message) => (
 				<DirectMessageElement key={ message.time } message={ message } channel={ channel } account={ account } />
 			))}
@@ -60,19 +60,19 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 	const time = useMemo(() => new Date(message.time), [message.time]);
 
 	return (
-		<div className='direct-message'>
-			<span className='direct-message__info'>
+		<div className='direct-message-entry'>
+			<span className='direct-message-entry__info'>
 				<time>
 					{time.toLocaleDateString()} {time.toLocaleTimeString('en-IE').substring(0, 5)}
 				</time>
 				{ message.edited ? <span> [edited]</span> : null }
 				{ /* Space so copied text looks nicer */ ' ' }
 			</span>
-			<span style={ { color } } className='direct-message__name'>
+			<span style={ { color } } className='direct-message-entry__name'>
 				{name} ({id})
 			</span>
 			{': '}
-			<span className='direct-message__content'>
+			<span className='direct-message-entry__content'>
 				{...message.message.map((c, i) => RenderChatPart(c, i))}
 			</span>
 		</div>

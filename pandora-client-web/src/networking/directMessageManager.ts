@@ -227,6 +227,7 @@ export class DirectMessageChannel {
 		let info = infos.value.find((i) => i.id === id);
 		if (!info) {
 			info = { id, time, account: this._account.name };
+			infos.value = [...infos.value, info];
 		}
 		info.time = time;
 		if (this._mounts > 0) {

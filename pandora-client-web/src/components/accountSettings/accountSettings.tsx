@@ -21,6 +21,7 @@ export function AccountSettings(): ReactElement | null {
 			<div className='account-settings'>
 				<GitHubIntegration account={ account } />
 				<AccountRoleList account={ account } />
+				<LabelColor account={ account } />
 			</div>
 			<footer>Version: { GIT_DESCRIBE }</footer>
 		</>
@@ -159,5 +160,21 @@ function AccountRole({ role, data }: { role: AccountRole, data?: { expires?: num
 			</td>
 			<td>{ data ? data.expires ? `${new Date(data.expires).toLocaleString()}` : 'Never' : '-' }</td>
 		</tr>
+	);
+}
+
+function LabelColor({ account }: { account: IDirectoryAccountInfo }): ReactElement {
+	const directory = useDirectoryConnector();
+	const [color, setColor] = useState(account.settings.labelColor ?? '#ffffff');
+
+	return (
+		<fieldset>
+			<legend>Label color</legend>
+			<div className='input-row'>
+				<label>Color</label>
+				<input type='color' value={ color } onChange={ (event) => setColor(event.target.value) } />
+				<Button className='slim' onClick={ () => directory?.sendMessage('changeSettings', { labelColor: color }) }>Save</Button>
+			</div>
+		</fieldset>
 	);
 }

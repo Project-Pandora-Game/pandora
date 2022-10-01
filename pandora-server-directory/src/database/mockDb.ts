@@ -1,6 +1,6 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT } from 'pandora-common';
 import { CreateCharacter } from './dbHelper';
 
 import _ from 'lodash';
@@ -21,7 +21,7 @@ export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
 	private configDb: DatabaseConfig[] = [];
-	private directMessagesDb: Map<DirectMessageAccounts, DatabaseDirectMessages> = new Map();
+	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 	private get accountDbView(): DatabaseAccountWithSecure[] {
@@ -213,33 +213,42 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(char.accessId);
 	}
 
-	public getDirectMessages(accounts: DirectMessageAccounts, keys: DirectMessageKeys): Promise<DatabaseDirectMessages> {
+	public getDirectMessages(accounts: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]> {
 		const data = this.directMessagesDb.get(accounts);
-		if (!data || data.keys !== keys) {
-			return Promise.resolve({ accounts, keys, messages: [] });
+		if (!data) {
+			return Promise.resolve([]);
 		}
-		return Promise.resolve(data);
+		return Promise.resolve(data
+			.sort((a, b) => b.time - a.time)
+			.filter((msg) => !until || msg.time < until)
+			.slice(0, limit)
+			.map((msg) => _.cloneDeep(msg)));
 	}
 
-	public setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number]): Promise<boolean> {
-		const data = this.directMessagesDb.get(accounts) ?? { accounts, keys, messages: [] as DatabaseDirectMessages['messages'] };
-		if (data.keys !== keys) {
-			data.keys = keys;
-			data.messages = [];
-		} else if (data.messages.length === 0 && message.edited !== undefined) {
-			return Promise.resolve(false);
+	public setDirectMessage(accounts: DirectMessageAccounts, message: IDirectoryDirectMessage): Promise<boolean> {
+		let data = this.directMessagesDb.get(accounts);
+		if (!data) {
+			data = [];
+			this.directMessagesDb.set(accounts, data);
 		}
-		if (message.edited !== undefined) {
-			const edit = data.messages.find((msg) => msg.time === message.edited);
-			if (!edit) {
+		if (message.edited === undefined) {
+			data.push(message);
+			return Promise.resolve(true);
+		}
+		if (message.content) {
+			const msg = data.find((m) => m.time === message.time);
+			if (!msg)
 				return Promise.resolve(false);
-			}
-			edit.content = message.content;
-			edit.edited = message.edited;
-		} else {
-			data.messages.push(message);
+
+			msg.content = message.content;
+			msg.edited = message.edited;
+			return Promise.resolve(true);
 		}
-		this.directMessagesDb.set(accounts, data);
+		const index = data.findIndex((m) => m.time === message.time);
+		if (index === -1)
+			return Promise.resolve(false);
+
+		data.splice(index, 1);
 		return Promise.resolve(true);
 	}
 

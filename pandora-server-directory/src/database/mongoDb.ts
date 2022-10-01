@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter } from './dbHelper';
@@ -23,7 +23,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
 	private _config!: Collection<DatabaseConfig>;
-	private _directMessages!: Collection<DatabaseDirectMessages>;
+	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -94,6 +94,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		await this._directMessages.createIndexes([
 			{ key: { accounts: 1 } },
+			{ key: { time: 1 } },
 		], { unique: true });
 		//#endregion
 
@@ -226,34 +227,25 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result.value?.accessId ?? null;
 	}
 
-	public async getDirectMessages(accounts: DirectMessageAccounts, keys: DirectMessageKeys): Promise<DatabaseDirectMessages> {
-		const messages = await this._directMessages.findOne({ accounts });
-		if (!messages || messages.keys !== keys) {
-			return { accounts, keys, messages: [] };
-		}
-		return messages;
+	public async getDirectMessages(accounts: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]> {
+		return await this._directMessages
+			.find(until ? { accounts, time: { $lt: until } } : { accounts })
+			.sort({ time: -1 })
+			.limit(limit)
+			.toArray();
 	}
 
-	public async setDirectMessage(accounts: DirectMessageAccounts, keys: DirectMessageKeys, message: DatabaseDirectMessages['messages'][number]): Promise<boolean> {
-		return await this._lock.acquire(`dm-${accounts}`, async () => {
-			const data = await this._directMessages.findOne({ accounts }) ?? { keys, accounts, messages: [] as DatabaseDirectMessages['messages'] };
-			if (data.keys !== keys) {
-				data.keys = keys;
-				data.messages = [];
-			}
-			if (message.edited !== undefined) {
-				const edit = data.messages.find((msg) => msg.time === message.edited);
-				if (!edit) {
-					return false;
-				}
-				edit.content = message.content;
-				edit.edited = message.edited;
-			} else {
-				data.messages.push(message);
-			}
-			await this._directMessages.updateOne({ accounts }, { $set: data }, { upsert: true });
+	public async setDirectMessage(accounts: DirectMessageAccounts, message: IDirectoryDirectMessage): Promise<boolean> {
+		if (message.edited === undefined) {
+			await this._directMessages.insertOne({ ...message, accounts });
 			return true;
-		});
+		}
+		if (message.content) {
+			const { modifiedCount } = await this._directMessages.updateOne({ accounts, time: message.time }, { $set: { content: message.content, edited: message.edited } });
+			return modifiedCount === 1;
+		}
+		const { deletedCount } = await this._directMessages.deleteOne({ accounts, time: message.time });
+		return deletedCount === 1;
 	}
 
 	public async setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void> {

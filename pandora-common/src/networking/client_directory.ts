@@ -110,6 +110,7 @@ export const ClientDirectoryInSchema = z.object({
 
 	getDirectMessages: z.object({
 		id: z.number().min(0),
+		until: z.number().min(0).optional(),
 	}),
 	sendDirectMessage: z.object({
 		id: z.number().min(0),

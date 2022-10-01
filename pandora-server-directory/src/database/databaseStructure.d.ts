@@ -26,12 +26,6 @@ interface DatabaseAccountSecure {
 type DirectMessageAccounts = `${number}-${number}`;
 type DirectMessageKeys = `${string}-${string}`;
 
-interface DatabaseDirectMessages {
-	accounts: DirectMessageAccounts;
-	keys: DirectMessageKeys;
-	messages: import('pandora-common').IDirectoryDirectMessage[];
-}
-
 type DatabaseDirectMessageInfo = import('pandora-common').IDirectoryDirectMessageInfo & {
 	closed?: true;
 };

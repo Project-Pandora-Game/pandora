@@ -3,6 +3,8 @@ import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
 import { accountManager } from './accountManager';
 
+const MESSAGE_LOAD_COUNT = 50;
+
 let lastMessageTime = 0;
 function GetNextMessageTime(): number {
 	let time = Date.now();
@@ -87,14 +89,13 @@ export class AccountDirectMessages {
 		const time = GetNextMessageTime();
 		const [a, b] = this._account.id < target.id ? [this._account, target] : [target, this._account];
 		const accounts: DirectMessageAccounts = `${a.id}-${b.id}`;
-		const keys: DirectMessageKeys = `${a.directMessages._publicKey}-${b.directMessages._publicKey}`;
 		const message: IDirectoryDirectMessage = {
 			content,
 			time: editing ?? time,
 			source: this._account.id,
 			edited: editing && time,
 		};
-		if (!await GetDatabase().setDirectMessage(accounts, keys, message)) {
+		if (!await GetDatabase().setDirectMessage(accounts, message)) {
 			return { result: 'messageNotFound' };
 		}
 		await target.directMessages.handleMessage({ ...message, target: target.id, account: this._getAccountInfo() });
@@ -114,7 +115,7 @@ export class AccountDirectMessages {
 		}
 	}
 
-	async getMessages(id: number): IClientDirectoryPromiseResult['getDirectMessages'] {
+	async getMessages(id: number, until?: number): IClientDirectoryPromiseResult['getDirectMessages'] {
 		if (!this._publicKey) {
 			return { result: 'denied' };
 		}
@@ -123,7 +124,7 @@ export class AccountDirectMessages {
 			return { result: 'notFound' };
 		}
 		const [a, b] = this._account.id < target.id ? [this._account, target] : [target, this._account];
-		const { messages } = await GetDatabase().getDirectMessages(`${a.id}-${b.id}`, `${a.directMessages._publicKey}-${b.directMessages._publicKey}`);
+		const messages = await GetDatabase().getDirectMessages(`${a.id}-${b.id}`, MESSAGE_LOAD_COUNT, until);
 		return {
 			result: 'ok',
 			account: target.directMessages._getAccountInfo(),

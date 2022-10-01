@@ -1,4 +1,4 @@
-import React, { createContext, ReactElement, useContext, useMemo, ReactNode, Suspense, useEffect, useState } from 'react';
+import React, { createContext, ReactElement, useContext, useMemo, Suspense, useEffect, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
@@ -24,7 +24,13 @@ function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps
 
 	if (!channel) {
 		return (
-			<span>Chat closed</span>
+			<DirectMessageChannelFallback message='Chat closed' />
+		);
+	}
+
+	if (channel.failed) {
+		return (
+			<DirectMessageChannelFallback channel={ channel } />
 		);
 	}
 
@@ -35,9 +41,25 @@ function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps
 	);
 }
 
-export function DirectMessageChannelProvider({ accountId, children, fallback = 'Loading...' }: ChildrenProps & { accountId: number; fallback?: ReactNode }): ReactElement {
+function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { channel?: DirectMessageChannel, message?: string }): ReactElement {
+	if (channel?.failed) {
+		switch (channel.failed) {
+			case 'notFound':
+				message = 'Account not found';
+				break;
+			case 'denied':
+				message = 'Access denied';
+				break;
+		}
+	}
 	return (
-		<Suspense fallback={ fallback }>
+		<span>{message}</span>
+	);
+}
+
+export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number }): ReactElement {
+	return (
+		<Suspense fallback={ <DirectMessageChannelFallback message='Loading...' /> }>
 			<DirectMessageChannelProviderImpl accountId={ accountId }>
 				{children}
 			</DirectMessageChannelProviderImpl>

@@ -66,7 +66,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	 */
 	public loadChat(id: number): DirectMessageChannel {
 		const chat = this._getChat(id);
-		if (chat.loaded) {
+		if (chat.loaded || chat.failed) {
 			return chat;
 		}
 		// eslint-disable-next-line @typescript-eslint/no-throw-literal
@@ -133,6 +133,7 @@ export class DirectMessageChannel {
 	private _publicKeyData?: string;
 	private _account!: IDirectoryDirectMessageAccount;
 	private _mounts = 0;
+	private _failed?: 'notFound' | 'denied';
 	#encription!: SymmetricEncryption;
 
 	public readonly connector: DirectoryConnector;
@@ -151,6 +152,10 @@ export class DirectMessageChannel {
 
 	get mounted(): boolean {
 		return this._mounts > 0;
+	}
+
+	get failed(): 'notFound' | 'denied' | undefined {
+		return this._failed;
 	}
 
 	constructor(manager: DirectMessageManager, id: number) {
@@ -182,7 +187,7 @@ export class DirectMessageChannel {
 	}
 
 	async load(): Promise<void> {
-		if (this._loaded) {
+		if (this._loaded || this._failed) {
 			return;
 		}
 		if (this._loading) {
@@ -219,18 +224,19 @@ export class DirectMessageChannel {
 	}
 
 	async _load(): Promise<void> {
-		if (this._loaded) {
+		if (this._loaded || this._failed) {
 			return;
 		}
 		const response = await this.connector.awaitResponse('getDirectMessages', { id: this._id });
 		if (response.result !== 'ok') {
 			this._loading = undefined;
-			// TODO
+			this._failed = response.result;
 			return;
 		}
 		this._account = response.account;
 		await this._loadKey(response.account.publicKeyData);
 		this._loaded = true;
+		this._failed = undefined;
 		this._loading = undefined;
 		this._messages.value = [...this.messages.value, ...await Promise.all(response.messages.map(async (message) => ({
 			time: message.time,

@@ -30,7 +30,7 @@ export function useAutoScroll<Element extends HTMLElement>(): [
 
 	useEffect(() => {
 		scroll();
-	}, [ref, scroll]);
+	});
 
 	const onScroll = useEvent((ev: React.UIEvent<Element>) => {
 		if (ref.current && ev.target === ref.current) {

@@ -23,7 +23,10 @@ const CRYPTO_KEY_DELIMITER = ':';
 enum CryptoKeyParts {
 	SALT,
 	PUBLIC_KEY,
+	IV,
 	PRIVATE_KEY,
+
+	LENGTH,
 }
 
 /**
@@ -180,10 +183,10 @@ export default class AccountSecure {
 			return true;
 
 		const array = key.split(CRYPTO_KEY_DELIMITER);
-		if (array.length !== 3)
+		if (array.length !== CryptoKeyParts.LENGTH)
 			return false;
 
-		if (await IsPublicKey(array[CryptoKeyParts.PUBLIC_KEY]))
+		if (!await IsPublicKey(array[CryptoKeyParts.PUBLIC_KEY]))
 			return false;
 
 		this.#secure.cryptoKey = key;

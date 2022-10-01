@@ -42,6 +42,7 @@ export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'room
 
 export type IDirectoryDirectMessage = {
 	content: string;
+	keyHash: string;
 	source: number;
 	time: number;
 	edited?: number;

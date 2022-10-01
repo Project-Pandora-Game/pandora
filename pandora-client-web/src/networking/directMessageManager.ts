@@ -6,6 +6,7 @@ import { BrowserStorage } from '../browserStorage';
 import { Observable, ReadonlyObservable } from '../observable';
 import { ChatParser } from '../components/chatroom/chatParser';
 import { TypedEventEmitter } from '../event';
+import { HashSHA256Base64 } from '../crypto/helpers';
 
 export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: number; }> {
 	public readonly connector: DirectoryConnector;
@@ -63,6 +64,13 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 			throw new Error('Not logged in');
 		}
 		return this.#crypto.deriveKey(publicKeyData);
+	}
+
+	public publicKey(): Promise<string> {
+		if (!this.#crypto) {
+			throw new Error('Not logged in');
+		}
+		return this.#crypto.exportPublicKey();
 	}
 
 	/**
@@ -136,6 +144,7 @@ export class DirectMessageChannel {
 	private _loaded = false;
 	private _loading?: Promise<void>;
 	private _publicKeyData?: string;
+	private _keyHash?: string;
 	private _account!: IDirectoryDirectMessageAccount;
 	private _mounts = 0;
 	private _failed?: 'notFound' | 'denied';
@@ -253,13 +262,27 @@ export class DirectMessageChannel {
 		this._loading = undefined;
 		this._messages.value = [
 			...this.messages.value.filter((old) => !response.messages.some((message) => message.time === old.time)),
-			...await Promise.all(response.messages.map(async (message) => ({
-				time: message.time,
-				message: ChatParser.parseStyle(await this.#encription.decrypt(message.content)),
-				sent: message.source !== this._id,
-				edited: message.edited,
-			})))]
+			...await this._decryptMany(response.messages),
+		]
 			.sort((a, b) => a.time - b.time);
+	}
+
+	private async _decryptMany(messages: IDirectoryDirectMessage[]): Promise<DirectMessage[]> {
+		const decrypt = this._decrypt.bind(this);
+		const result = await Promise.all(messages.map(decrypt));
+		return result.filter<DirectMessage>((r): r is DirectMessage => r !== undefined);
+	}
+
+	private async _decrypt({ keyHash, time, content, source, edited }: IDirectoryDirectMessage): Promise<DirectMessage | undefined> {
+		if (keyHash !== this._keyHash) {
+			return undefined;
+		}
+		return {
+			time,
+			message: ChatParser.parseStyle(await this.#encription.decrypt(content)),
+			sent: source !== this._id,
+			edited,
+		};
 	}
 
 	private _loadSingle({ time, message, sent, edited }: { time: number; message: string; sent: boolean; edited?: number; }): void {
@@ -298,7 +321,10 @@ export class DirectMessageChannel {
 		if (this._publicKeyData === publicKeyData) {
 			return;
 		}
-		this._publicKeyData = publicKeyData;
+		const keyA = this._publicKeyData = publicKeyData;
+		const keyB = await this._manager.publicKey();
+		const text = keyA.localeCompare(keyB) < 0 ? `${keyA}-${keyB}` : `${keyB}-${keyA}`;
+		this._keyHash = await HashSHA256Base64(text);
 		this._messages.value = [];
 		this.#encription = await this._manager.deriveKey(publicKeyData);
 	}

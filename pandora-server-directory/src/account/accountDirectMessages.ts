@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
@@ -86,6 +87,7 @@ export class AccountDirectMessages {
 		const accounts: DirectMessageAccounts = `${a.id}-${b.id}`;
 		const message: IDirectoryDirectMessage = {
 			content,
+			keyHash: KeyHash(this._publicKey, target.directMessages._publicKey),
 			time: editing ?? time,
 			source: this._account.id,
 			edited: editing && time,
@@ -136,4 +138,9 @@ export class AccountDirectMessages {
 			publicKeyData: account.directMessages._publicKey,
 		};
 	}
+}
+
+function KeyHash(keyA: string, keyB: string): string {
+	const text = keyA.localeCompare(keyB) < 0 ? `${keyA}-${keyB}` : `${keyB}-${keyA}`;
+	return createHash('sha256').update(text, 'utf-8').digest('base64');
 }

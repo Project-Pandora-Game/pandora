@@ -1,4 +1,4 @@
-import type { IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import { IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import type { SymmetricEncryption } from '../crypto/symmetric';
 import type { DirectoryConnector } from './directoryConnector';
 import { KeyExchange } from '../crypto/keyExchange';
@@ -11,9 +11,13 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	public readonly connector: DirectoryConnector;
 	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined);
 	private readonly _chats: Map<number, DirectMessageChannel> = new Map();
-	private _info: IDirectoryDirectMessageInfo[] = [];
+	private readonly _info = new Observable<readonly IDirectoryDirectMessageInfo[]>([]);
 	private _lastCryptoKey?: string;
 	#crypto?: KeyExchange;
+
+	get info(): ReadonlyObservable<readonly IDirectoryDirectMessageInfo[]> {
+		return this._info;
+	}
 
 	constructor(connector: DirectoryConnector) {
 		super();
@@ -75,7 +79,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 
 	public async handleDirectMessage(data: IDirectoryClientArgument['directMessage']): Promise<void> {
 		if ('info' in data && data.info) {
-			this._info = data.info;
+			this._info.value = data.info;
 		} else if ('message' in data && data.message) {
 			try {
 				const id = data.message.account ? data.message.source : data.message.target;
@@ -88,17 +92,18 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		} else if ('id' in data && data.id && 'action' in data && data.action) {
 			switch (data.action) {
 				case 'read': {
-					const info = this._info.find((i) => i.id === data.id);
+					const info = this._info.value.find((i) => i.id === data.id);
 					if (info) {
 						delete info.hasUnread;
+						this._info.value = [...this._info.value];
 					}
 					break;
 				}
 				case 'close': {
 					this.emit('close', data.id);
-					const index = this._info.findIndex((i) => i.id === data.id);
+					const index = this._info.value.findIndex((i) => i.id === data.id);
 					if (index >= 0) {
-						this._info.splice(index, 1);
+						this._info.value = [...this._info.value.slice(0, index), ...this._info.value.slice(index + 1)];
 					}
 					this._chats.delete(data.id);
 					break;
@@ -197,7 +202,7 @@ export class DirectMessageChannel {
 		return this._loading;
 	}
 
-	async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: IDirectoryDirectMessageInfo[]): Promise<boolean> {
+	async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<boolean> {
 		const { content, time, edited } = data;
 		if (data.account) {
 			await this._loadKey(data.account.publicKeyData);
@@ -210,16 +215,23 @@ export class DirectMessageChannel {
 			edited,
 		});
 		const id = data.account?.id ?? data.source;
-		let info = infos.find((i) => i.id === id);
+		let info = infos.value.find((i) => i.id === id);
 		if (!info) {
 			info = { id, account: this._account.name };
+			infos.value = [...infos.value, info];
 		}
 		if (this._mounts > 0) {
 			this.connector.sendMessage('directMessage', { id, action: 'read' });
-			delete info.hasUnread;
+			if (info.hasUnread) {
+				delete info.hasUnread;
+				infos.value = [...infos.value];
+			}
 			return true;
 		}
-		info.hasUnread = true;
+		if (!info.hasUnread) {
+			info.hasUnread = true;
+			infos.value = [...infos.value];
+		}
 		return false;
 	}
 

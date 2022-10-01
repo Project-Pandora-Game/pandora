@@ -84,7 +84,7 @@ function RightHeader(): ReactElement {
 				<>
 					<HeaderButton icon={ notificationsIcon } iconAlt={ `${ notification.length } notifications` }
 						badge={ notification.length } onClick={ onNotificationClick } title='Notifications' />
-					<HeaderButton icon={ friendsIcon } iconAlt='Friends' onClick={ () => alert('Not yet implemented') } title='Friends' />
+					<HeaderButton icon={ friendsIcon } iconAlt='Friends' onClick={ () => navigate('/direct_messages') } title='Friends' />
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/account_settings') } title='Settings' />
 					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }
 					<span>{ currentAccount.username }</span>

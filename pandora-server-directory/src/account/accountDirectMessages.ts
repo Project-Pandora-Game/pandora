@@ -34,10 +34,18 @@ export class AccountDirectMessages {
 		this._dms = data.directMessages ?? [];
 	}
 
-	async action(id: number, action: 'read' | 'close' | 'open' | 'new', notifyClients: boolean = true, time?: number): Promise<void> {
-		const dm = this._dms.find((info) => info.id === id);
+	async action(id: number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time, account }: { notifyClients?: boolean, time?: number; account?: string; } = {}): Promise<void> {
+		let dm = this._dms.find((info) => info.id === id);
 		if (!dm) {
-			return;
+			if (!account || !time) {
+				return;
+			}
+			dm = {
+				id,
+				account,
+				time,
+			};
+			this._dms.push(dm);
 		}
 		if (time !== undefined) {
 			dm.time = time;
@@ -95,18 +103,16 @@ export class AccountDirectMessages {
 		if (!await GetDatabase().setDirectMessage(accounts, message)) {
 			return { result: 'messageNotFound' };
 		}
-		await target.directMessages.handleMessage({ ...message, target: target.id, account: this._getAccountInfo() });
-		await this.handleMessage({ ...message, target: target.id });
+		if (editing === undefined) {
+			await this.action(id, 'open', { notifyClients: false, time, account: target.username });
+			await target.directMessages.action(this._account.id, 'new', { notifyClients: false, time, account: this._account.username });
+		}
+		target.directMessages.handleMessage({ ...message, target: target.id, account: this._getAccountInfo() });
+		this.handleMessage({ ...message, target: target.id });
 		return { result: 'ok' };
 	}
 
-	async handleMessage(message: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; target: number; }): Promise<void> {
-		const self = message.source === this._account.id;
-		if (self) {
-			await this.action(message.target, 'open', false, message.time);
-		} else if (message.edited === undefined) {
-			await this.action(message.source, 'new', false, message.time);
-		}
+	handleMessage(message: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; target: number; }): void {
 		for (const connection of this._account.associatedConnections) {
 			connection.sendMessage('directMessage', { message });
 		}

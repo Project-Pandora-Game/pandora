@@ -9,14 +9,25 @@ import { Button } from '../common/Button/Button';
 
 export function DirectMessages(): React.ReactElement {
 	const directory = useDirectoryConnector();
+	const [filter, setFilter] = React.useState('');
 	const info = useObservable(directory.directMessageHandler.info);
 	const [selected, setSelected] = React.useState<number | null>(null);
+
+	const flt = React.useDeferredValue(filter.toLowerCase().trim());
+	const filtered = React.useMemo(() => {
+		const arr = flt.split(/\s+/).filter((s) => s.length > 0);
+		return info.filter(({ account, id }) => {
+			const name = `${account} (${id})`.toLowerCase();
+			return arr.every((s) => name.includes(s));
+		});
+	}, [info, flt]);
 
 	return (
 		<div className='direct-messages'>
 			<div className='direct-messages__list'>
+				<input type='text' value={ filter } onChange={ (e) => setFilter(e.target.value) } placeholder='Filter' />
 				<ul>
-					{info.map((i) => <DirectMessageInfo key={ i.id } info={ i } show={ setSelected } />)}
+					{filtered.map((i) => <DirectMessageInfo key={ i.id } info={ i } show={ setSelected } />)}
 				</ul>
 				<OpenConversation show={ setSelected } />
 			</div>

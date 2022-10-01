@@ -11,6 +11,10 @@
 		background-color: $grey-darker;
 		position: relative;
 
+		input {
+			width: 100%;
+		}
+
 		ul {
 			padding: 0 0.5em;
 			list-style-type: none;
@@ -52,10 +56,6 @@
 			flex-flow: row;
 			position: absolute;
 			bottom: 0;
-
-			input {
-				width: 100%;
-			}
 		}
 	}
 

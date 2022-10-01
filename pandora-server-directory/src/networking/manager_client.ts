@@ -520,14 +520,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	}
 
 	private async handleGetDirectMessages({ id, until }: IClientDirectoryArgument['getDirectMessages'], connection: IConnectionClient): IClientDirectoryPromiseResult['getDirectMessages'] {
-		if (!connection.account)
+		if (!connection.account || id === connection.account.id)
 			throw new BadMessageError();
 
 		return await connection.account.directMessages.getMessages(id, until);
 	}
 
 	private async handleSendDirectMessage(data: IClientDirectoryArgument['sendDirectMessage'], connection: IConnectionClient): IClientDirectoryPromiseResult['sendDirectMessage'] {
-		if (!connection.account)
+		if (!connection.account || data.id === connection.account.id)
 			throw new BadMessageError();
 
 		return await connection.account.directMessages.sendMessage(data);

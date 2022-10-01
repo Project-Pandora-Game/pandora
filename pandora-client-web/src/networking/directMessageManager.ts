@@ -223,13 +223,15 @@ export class DirectMessageChannel {
 			sent: data.account === undefined,
 			edited,
 		});
-		const id = data.account?.id ?? data.source;
+		const id = this._account.id;
 		let info = infos.value.find((i) => i.id === id);
 		if (!info) {
 			info = { id, time, account: this._account.name };
 			infos.value = [...infos.value, info];
 		}
-		info.time = time;
+		if (data.edited === undefined) {
+			info.time = time;
+		}
 		if (this._mounts > 0) {
 			this.connector.sendMessage('directMessage', { id, action: 'read' });
 			if (info.hasUnread) {

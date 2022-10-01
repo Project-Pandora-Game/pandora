@@ -5,7 +5,9 @@ const subtle = globalThis.crypto.subtle;
 
 const ENCRYPTION_SALT = 'pandora-encryption-salt';
 const ECDH_PARAMS = { name: 'ECDH', namedCurve: 'P-256' };
-const ECDH_KEY_USAGES: KeyUsage[] = ['deriveKey'];
+const ECDH_KEY_PRIVATE_USAGES: KeyUsage[] = ['deriveKey'];
+const ECDH_KEY_PUBLIC_USAGES: KeyUsage[] = [];
+const ECDH_KEY_USAGES: KeyUsage[] = [...ECDH_KEY_PRIVATE_USAGES, ...ECDH_KEY_PUBLIC_USAGES];
 
 export class KeyExchange {
 	#privateKey: CryptoKey;
@@ -35,7 +37,7 @@ export class KeyExchange {
 	public static async import(data: string, password: string): Promise<KeyExchange> {
 		const [salt, publicKey, iv, encryptedKeyBase64] = data.split(':');
 		const enc = await SymmetricEncryption.generate({ password, salt: Base64ToArray(salt) });
-		const privateKey = await enc.unwrapKey(iv, encryptedKeyBase64, ECDH_PARAMS, ECDH_KEY_USAGES);
+		const privateKey = await enc.unwrapKey(iv, encryptedKeyBase64, ECDH_PARAMS, ECDH_KEY_PRIVATE_USAGES);
 		return new KeyExchange(privateKey, await ImportSpki(publicKey));
 	}
 
@@ -50,5 +52,5 @@ export class KeyExchange {
 }
 
 async function ImportSpki(publicKey: string): Promise<CryptoKey> {
-	return await subtle.importKey('spki', Base64ToArray(publicKey), ECDH_PARAMS, true, ECDH_KEY_USAGES);
+	return await subtle.importKey('spki', Base64ToArray(publicKey), ECDH_PARAMS, true, ECDH_KEY_PUBLIC_USAGES);
 }

@@ -5,6 +5,7 @@ import { GetAssetManager } from '../../../assets/assetManager';
 import { useEvent } from '../../../common/useEvent';
 import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
+import { Select } from '../../../components/common/Select/Select';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -86,7 +87,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 	return (
 		<div>
 			<label htmlFor='layer-image-select'>{ asAlpha ? 'Alpha' : 'Layer' } image asset:</label>
-			<select
+			<Select
 				id='layer-image-select'
 				className='flex'
 				value={ layerImage }
@@ -99,7 +100,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 				} }
 			>
 				{ elements }
-			</select>
+			</Select>
 		</div>
 	);
 }
@@ -213,7 +214,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 	return (
 		<div>
 			<label htmlFor='layer-priority-select'>Layer priority type:</label>
-			<select
+			<Select
 				id='layer-priority-select'
 				className='flex'
 				value={ layerPriority }
@@ -222,7 +223,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 				} }
 			>
 				{ elements }
-			</select>
+			</Select>
 		</div>
 	);
 }
@@ -309,7 +310,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 		<>
 			<div>
 				<label htmlFor='layer-scaling-bone-select'>Select image based on value of bone:</label>
-				<select
+				<Select
 					id='layer-scaling-bone-select'
 					className='flex'
 					value={ layerScaling?.scaleBone ?? '' }
@@ -318,7 +319,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 					} }
 				>
 					{ elements }
-				</select>
+				</Select>
 			</div>
 			{
 				layerScaling && <LayerScalingList layer={ layer } asset={ asset } />
@@ -366,7 +367,7 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 		<>
 			<div>
 				<label htmlFor='layer-scaling-add-point-select'>Add stop point:</label>
-				<select
+				<Select
 					id='layer-scaling-add-point-select'
 					className='flex'
 					value={ toAdd }
@@ -375,7 +376,7 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 					} }
 				>
 					{ optionsToAdd }
-				</select>
+				</Select>
 				<Button className='slim' onClick={ doAdd }>Add</Button>
 			</div>
 			{ scalingStops?.map((stop) => (

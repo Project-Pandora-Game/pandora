@@ -26,6 +26,7 @@ import './chatroomAdmin.scss';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { GetAssetManager } from '../../assets/assetManager';
+import { Select } from '../common/Select/Select';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -172,7 +173,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 			}
 			<div className='input-container'>
 				<label>Background</label>
-				<select
+				<Select
 					value={ typeof currentConfigBackground === 'string' ? currentConfigBackground : '' }
 					disabled={ !isPlayerAdmin }
 					onChange={ (event) => setRoomModifiedData({
@@ -183,7 +184,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 						<option key={ background.id } value={ background.id }>{ background.name }</option>
 					)) }
 					<option value=''>[ Custom ]</option>
-				</select>
+				</Select>
 			</div>
 			{
 				typeof currentConfigBackground === 'string' ? null : (
@@ -305,7 +306,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 						<div className='input-container'>
 							<h3>Development settings</h3>
 							<label>Shard for room</label>
-							<select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+							<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
 								(event) => {
 									const value = event.target.value;
 									setRoomModifiedData({
@@ -326,7 +327,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 											}
 										</>
 								}
-							</select>
+							</Select>
 							<div className='input-line'>
 								<label>Auto admin for developers</label>
 								<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={

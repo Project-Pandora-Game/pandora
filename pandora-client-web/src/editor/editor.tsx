@@ -20,6 +20,7 @@ import { PreviewView, SetupView } from './editorViews';
 import { useBrowserStorage } from '../browserStorage';
 import z from 'zod';
 import { AssetInfoUI } from './components/assetInfo/assetInfo';
+import { Select } from '../components/common/Select/Select';
 
 const logger = GetLogger('Editor');
 
@@ -240,26 +241,10 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 		<div className={ currentTab[1] }>
 			<div className='ui-selector'>
 				<div className='flex-1 center-flex'>
-					<select
+					<Select
 						value={ currentTab[0] }
 						onChange={ (ev) => {
 							setTab(ev.target.value);
-						} }
-						onWheel={ (ev) => {
-							const el = ev.currentTarget;
-							if (el === document.activeElement)
-								return;
-							if (ev.deltaY < 0) {
-								ev.stopPropagation();
-								ev.preventDefault();
-								el.selectedIndex = Math.max(el.selectedIndex - 1, 0);
-								setTab(el.options[el.selectedIndex].value);
-							} else if (ev.deltaY > 0) {
-								ev.stopPropagation();
-								ev.preventDefault();
-								el.selectedIndex = Math.min(el.selectedIndex + 1, el.length - 1);
-								setTab(el.options[el.selectedIndex].value);
-							}
 						} }
 					>
 						{
@@ -267,7 +252,7 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 								<option value={ t[0] } key={ t[0] }>{ t[0] }</option>
 							))
 						}
-					</select>
+					</Select>
 					{
 						(activeTabs.length > 1) && (
 							<Button

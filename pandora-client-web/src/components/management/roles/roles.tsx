@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../common/Button/Button';
+import { Select } from '../../common/Select/Select';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './roles.scss';
 
@@ -125,10 +126,10 @@ function ManageRoleGrant(): ReactElement {
 			<legend>Grant Role</legend>
 			<div className='input-row'>
 				<label>Role</label>
-				<select value={ role ?? '' } onChange={ (e) => setRole(e.target.value as ConfiguredAccountRole) }>
+				<Select value={ role ?? '' } onChange={ (e) => setRole(e.target.value as ConfiguredAccountRole) }>
 					<option value=''>Select a role</option>
 					<option value={ 'moderator' } disabled={ includes('moderator') }>Moderator</option>
-				</select>
+				</Select>
 			</div>
 			<div className='input-row'>
 				<label>Expires</label>

@@ -63,7 +63,7 @@ export function DivContainer({
 		>
 			{ children }
 		</div>
-	)
+	);
 }
 
 export function Row({
@@ -82,7 +82,7 @@ export function Row({
 			direction: 'row',
 			justify: alignX,
 			align: alignY,
-		} }/>
+		} } />
 	);
 }
 

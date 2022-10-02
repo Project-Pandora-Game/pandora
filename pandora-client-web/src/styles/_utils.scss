@@ -1,3 +1,5 @@
+@import 'constants';
+
 //#region Flexbox
 
 @mixin flex($direction: row, $wrap: nowrap) {
@@ -68,11 +70,30 @@
 .center-flex {
 	@include center-flex;
 	// Give this a default gap so things look better without custom style
-	gap: 0.5em;
+	gap: spacing('normal');
 }
 
 .hidden {
 	display: none !important;
+}
+
+//#endregion
+
+//#region Spacing
+
+@each $spacing-name, $spacing-value in $spacing {
+	.spacing-#{$spacing-name} {
+		padding: $spacing-value;
+		gap: $spacing-value;
+	}
+
+	.padding-#{$spacing-name} {
+		padding: $spacing-value;
+	}
+
+	.gap-#{$spacing-name} {
+		padding: $spacing-value;
+	}
 }
 
 //#endregion

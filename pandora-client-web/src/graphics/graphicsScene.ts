@@ -154,8 +154,12 @@ export class GraphicsScene extends TypedEventEmitter<{ resize: void; }> {
 	private _setBackgroundTexture(texture: Texture, width?: number, height?: number) {
 		if (this.destroyed)
 			return;
-		this._backgroundSprite = this.add(new Sprite(texture), -1000);
-		this._backgroundSprite.filters = this.backgroundFilters;
+		if (!this._backgroundSprite) {
+			this._backgroundSprite = this.add(new Sprite(texture), -1000);
+			this._backgroundSprite.filters = this.backgroundFilters;
+		} else {
+			this._backgroundSprite.texture = texture;
+		}
 		if (width) {
 			this._backgroundSprite.width = width;
 		}

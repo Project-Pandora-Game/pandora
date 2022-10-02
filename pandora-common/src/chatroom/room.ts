@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { ZodTrimedRegex, zTemplateString } from '../validation';
 import { Satisfies } from '../utility';
+import { cloneDeep } from 'lodash';
+import { AssetManager } from '../assets';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
@@ -41,6 +43,70 @@ export const ChatRoomBaseInfoSchema = z.object({
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 type __satisfies__ChatRoomBaseInfo = Satisfies<z.infer<typeof ChatRoomBaseInfoSchema>, IChatRoomBaseInfo>;
 
+export type IChatroomBackgroundData = {
+	/** The background image of the chat room */
+	image: string;
+	/** The size of the chat room */
+	size: [number, number];
+	/** Limit how high can character move */
+	maxY?: number;
+	/** The Y -> scale of the chat room */
+	scaling: number;
+};
+
+export const ChatRoomBackgroundDataSchema = z.object({
+	image: z.string(),
+	size: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
+	maxY: z.number().int().min(0).optional(),
+	scaling: z.number().min(0),
+});
+
+// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+type __satisfies__ChatRoomBackgroundData = Satisfies<z.infer<typeof ChatRoomBackgroundDataSchema>, IChatroomBackgroundData>;
+
+export const DEFAULT_ROOM_SIZE = [4000, 2000] as const;
+export const DEFAULT_BACKGROUND: Readonly<IChatroomBackgroundData> = {
+	image: '#1099bb',
+	size: cloneDeep(DEFAULT_ROOM_SIZE) as [number, number],
+	scaling: 1,
+};
+
+/**
+ * Resolves chatroom background data into effective background info
+ * @param assetManager - Asset manager to query for backgrounds
+ * @param background - The background to resolve
+ * @param baseUrl - Base URL to use for resolving image path, otherwise no change
+ */
+export function ResolveBackground(assetManager: AssetManager, background: string | IChatroomBackgroundData, baseUrl?: string): Readonly<IChatroomBackgroundData> {
+	let roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
+
+	if (typeof background === 'string') {
+		const definition = assetManager.getBackgroundById(background);
+		if (definition) {
+			roomBackground = baseUrl ? {
+				...definition,
+				image: baseUrl + definition.image,
+			} : definition;
+		}
+	} else {
+		roomBackground = background;
+	}
+
+	return roomBackground;
+}
+
+/** What is the minimal scale allowed for character inside room. */
+export const CHARACTER_MIN_SIZE = 0.05;
+
+/** Calculates maximum Y coordinate for character in room based on background config */
+export function CalculateCharacterMaxYForBackground(roomBackground: IChatroomBackgroundData): number {
+	// Y is limited by room size, but also by background and by lowest achievable character size
+	return Math.floor(Math.min(
+		roomBackground.maxY != null ? Math.min(roomBackground.maxY, roomBackground.size[1]) : roomBackground.size[1],
+		(1 - CHARACTER_MIN_SIZE) * roomBackground.size[1] / roomBackground.scaling,
+	));
+}
+
 export type IChatRoomDirectoryConfig = IChatRoomBaseInfo & {
 	/** The requested features */
 	features: ChatRoomFeature[];
@@ -59,12 +125,8 @@ export type IChatRoomDirectoryConfig = IChatRoomBaseInfo & {
 	admin: number[];
 	/** The password of the chat room if the room is protected */
 	password: string | null;
-	/** The background image of the chat room */
-	background: string;
-	/** The size of the chat room */
-	size: [number, number];
-	/** The Y -> scale of the chat room */
-	scaling: number;
+	/** The ID of the background or custom data */
+	background: string | IChatroomBackgroundData;
 };
 
 export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.object({
@@ -76,9 +138,7 @@ export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.obje
 	banned: z.array(z.number()),
 	admin: z.array(z.number()),
 	password: z.string().nullable(),
-	background: z.string(),
-	size: z.tuple([z.number().min(0), z.number().min(0)]),
-	scaling: z.number().min(0),
+	background: z.union([z.string(), ChatRoomBackgroundDataSchema]),
 }));
 
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars

@@ -109,12 +109,6 @@ export class Room {
 		if (changes.background) {
 			this.config.background = changes.background;
 		}
-		if (changes.size) {
-			this.config.size = changes.size;
-		}
-		if (changes.scaling !== undefined) {
-			this.config.scaling = changes.scaling;
-		}
 
 		// Features and development fields are intentionally ignored
 
@@ -135,10 +129,6 @@ export class Room {
 				changeList.push('ban list');
 			if (changes.background)
 				changeList.push('background');
-			if (changes.size)
-				changeList.push('size');
-			if (changes.scaling)
-				changeList.push('scaling');
 
 			if (changeList.length >= 2) {
 				this.sendMessage({

@@ -49,6 +49,7 @@ export default function (env: WebpackEnv): Configuration {
 				directory: join(__dirname, '..', '..', 'pandora-assets', 'out'),
 				publicPath: '/pandora-assets',
 				serveIndex: true,
+				watch: false,
 			},
 		},
 		devtool: env.prod ? 'source-map' : 'eval-source-map',

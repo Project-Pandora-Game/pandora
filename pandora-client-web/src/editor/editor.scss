@@ -75,10 +75,6 @@
 		gap: 0.5rem;
 		padding: 0.5em;
 		border-bottom: solid black 3px;
-
-		select {
-			padding: 0.4em;
-		}
 	}
 }
 
@@ -88,10 +84,6 @@
 	gap: 0.3em;
 	padding: 0.5em;
 	overflow: auto;
-
-	select {
-		padding: 0.2em;
-	}
 
 	& > div {
 		display: flex;

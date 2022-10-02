@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import React, { useReducer, ReactNode } from 'react';
+import { useEvent } from '../../../common/useEvent';
 import './fieldsetToggle.scss';
 
 type FieldsetToggleProps = {
@@ -7,22 +8,29 @@ type FieldsetToggleProps = {
 	children: ReactNode;
 	className?: string;
 	open?: boolean;
+	forceOpen?: boolean;
+	onChange?: (value: boolean) => void;
 	persistent?: string;
 };
-export function FieldsetToggle({ legend, children, className, open: initialState = true, persistent }: FieldsetToggleProps) {
+export function FieldsetToggle({ legend, children, className, open: initialState = true, forceOpen, onChange, persistent }: FieldsetToggleProps) {
 	const [open, toggleOpen] = usePersistentOpen(initialState, persistent);
 
-	const onClick = (event: React.MouseEvent<HTMLElement>) => {
+	const effectiveOpen = forceOpen != null ? forceOpen : open;
+
+	const onClick = useEvent((event: React.MouseEvent<HTMLElement>) => {
 		event.preventDefault();
-		toggleOpen();
-	};
+		onChange?.(!effectiveOpen);
+		if (forceOpen == null) {
+			toggleOpen();
+		}
+	});
 
 	return (
 		<fieldset className={ classNames('fieldset-toggle', className) }>
-			<legend className={ classNames('fieldset-toggle-legend', open && 'open') } onClick={ onClick }>
+			<legend className={ classNames('fieldset-toggle-legend', effectiveOpen && 'open') } onClick={ onClick }>
 				{legend}
 			</legend>
-			{open && children}
+			{effectiveOpen && children}
 		</fieldset>
 	);
 }

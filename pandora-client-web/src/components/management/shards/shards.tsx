@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { Button } from '../../common/Button/Button';
+import { Select } from '../../common/Select/Select';
 import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './shards.scss';
 
@@ -133,7 +134,7 @@ function ShardCreate(): ReactElement {
 			<legend>Create Shard Token</legend>
 			<div className='input-row'>
 				<label>Production</label>
-				<select value={ type } onChange={ (e) => setType(e.target.value as IShardTokenType) }>
+				<Select value={ type } onChange={ (e) => setType(e.target.value as IShardTokenType) }>
 					{ isAdmin ? (
 						<>
 							<option key='stable' value='stable'>Stable</option>
@@ -142,7 +143,7 @@ function ShardCreate(): ReactElement {
 					) : null }
 					<option value='testing'>Testing</option>
 					<option value='development'>Development</option>
-				</select>
+				</Select>
 			</div>
 			<div className='input-row'>
 				<label>Expires</label>

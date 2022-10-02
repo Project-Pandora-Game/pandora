@@ -1,4 +1,4 @@
-import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition } from 'pandora-common';
+import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -113,6 +113,15 @@ export class Character {
 
 	public reloadAssetManager(manager: AssetManager, force: boolean = false) {
 		this.appearance.reloadAssetManager(manager, this.logger.prefixMessages('Appearance manager reload:'), force);
+		// Background definition might have changed, make sure character is still inside range
+		if (this.room) {
+			const roomBackground = ResolveBackground(assetManager, this.room.getClientData().background);
+			const maxY = CalculateCharacterMaxYForBackground(roomBackground);
+			if (this.position[0] > roomBackground.size[0] || this.position[1] > maxY) {
+				this.position = [CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5)), 0];
+				this.room.sendUpdateToAllInRoom({ update: { id: this.id, position: this.position } });
+			}
+		}
 	}
 
 	public update(data: IShardCharacterDefinition) {

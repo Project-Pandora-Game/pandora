@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { IChatroomBackgroundData } from '../chatroom';
 import { HexColorString, zTemplateString } from '../validation';
 import type { ArmsPose, BoneName } from './appearance';
 import type { EffectsProperty } from './effects';
@@ -83,10 +84,18 @@ export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	}[];
 }[];
 
+export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
+	/** The unique identifier for this background */
+	id: string;
+	/** The visible name for this background */
+	name: string;
+};
+
 export interface AssetsDefinitionFile {
 	assets: Record<AssetId, AssetDefinition>;
 	bones: Record<string, BoneDefinitionCompressed>;
 	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];
 	graphicsId: string;
+	backgrounds: IChatroomBackgroundInfo[];
 }

@@ -4,6 +4,7 @@ import { GetAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
+import { Select } from '../../../components/common/Select/Select';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditorAssetLayers } from '../../editor';
@@ -90,7 +91,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 			<div>
 				<label htmlFor='mirror-points-from-layer'>Mirror all points from selected layer:</label>
 				<br />
-				<select
+				<Select
 					id='mirror-points-from-layer'
 					value={ typeof points === 'number' ? `${points}` : typeof points === 'string' ? `t/${points}` : '' }
 					onChange={ (event) => {
@@ -104,7 +105,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 					} }
 				>
 					{ elements }
-				</select>
+				</Select>
 			</div>
 			{
 				typeof points === 'number' &&

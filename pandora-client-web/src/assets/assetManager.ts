@@ -26,6 +26,11 @@ export function OverrideAssetManager(manager: AssetManagerClient) {
 
 let lastGraphicsHash: string | undefined;
 let loader!: URLGraphicsLoader;
+let assetsSource: string = '';
+
+export function GetAssetsSourceUrl(): string {
+	return assetsSource;
+}
 
 export function LoadAssetDefinitions(definitionsHash: string, data: AssetsDefinitionFile, source: string): void {
 	GetAssetManager().load(definitionsHash, data);
@@ -35,6 +40,7 @@ export function LoadAssetDefinitions(definitionsHash: string, data: AssetsDefini
 		return;
 
 	lastGraphicsHash = data.graphicsId;
+	assetsSource = source;
 
 	loader ??= new URLGraphicsLoader(source);
 	loader.loadTextFile(`graphics_${lastGraphicsHash}.json`).then((json) => {

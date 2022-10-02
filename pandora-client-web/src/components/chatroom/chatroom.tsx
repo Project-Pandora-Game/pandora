@@ -25,6 +25,8 @@ import { ChatParser } from './chatParser';
 import { ChatRoomScene } from './chatRoomScene';
 import './chatroom.scss';
 import { WardrobeContextProvider, WardrobeExpressionGui, WardrobePoseGui } from '../wardrobe/wardrobe';
+import { USER_DEBUG } from '../../config/Environment';
+import { ChatroomDebugConfigView } from './chatroomDebug';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -56,6 +58,7 @@ export function Chatroom(): ReactElement {
 									{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
 								</ul>
 							</div>
+							{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
 						</div>
 					</Tab>
 					<Tab name='Pose'>

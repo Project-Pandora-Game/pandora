@@ -7,6 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { EulaGate } from './components/Eula';
 import { GameContextProvider } from './components/gameContext/gameContextProvider';
 import { Header } from './components/header/Header';
+import { UnifiedContext } from './components/unifiedContext/unifiedContext';
 import { NODE_ENV, USER_DEBUG } from './config/Environment';
 import './index.scss';
 import { PandoraRoutes } from './routing/Routes';
@@ -33,6 +34,7 @@ function Start(): void {
 					<GameContextProvider>
 						<Header />
 						<ToastContainer theme='dark' />
+						<UnifiedContext />
 						<div className='main'>
 							<PandoraRoutes />
 						</div>

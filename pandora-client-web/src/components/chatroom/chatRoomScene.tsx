@@ -201,7 +201,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 
 		this._yOffset = 0
 			+ 1.75 * this.getBoneLikeValue('kneeling')
-			+ 0.75 * this.getBoneLikeValue('sitting');
+			+ 0.75 * this.getBoneLikeValue('sitting')
+			+ (this.getBoneLikeValue('kneeling') === 0 ? -0.2 : 0) * this.getBoneLikeValue('tiptoeing');
 
 		const oldY = this.y;
 

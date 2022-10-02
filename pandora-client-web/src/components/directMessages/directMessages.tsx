@@ -43,7 +43,7 @@ function DirectMessageInfo({ info, show }: { info: Readonly<IDirectoryDirectMess
 	return (
 		<li onClick={ () => show(id) }>
 			{account} ({id})
-			{!hasUnread && <span>!</span>}
+			{hasUnread && <span>!</span>}
 		</li>
 	);
 }

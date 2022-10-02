@@ -9,11 +9,13 @@ export interface SelectProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes
 
 export function Select({ children, onChange, ...props }: SelectProps): ReactElement {
 
+	const readonly = !!(props.disabled || props['aria-disabled'] || props['aria-readonly']);
+
 	// TODO: Can't prevent default from here, as React uses passive listeners - remake into custom component and use Refs to prevent default
 	const onWheelHandler = useCallback((ev: React.WheelEvent<HTMLSelectElement>) => {
 		// Handle wheel changing element
 		const el = ev.currentTarget;
-		if (el === document.activeElement || props.disabled || props['aria-disabled'] || props['aria-readonly'])
+		if (el === document.activeElement || readonly)
 			return;
 		if (ev.deltaY < 0) {
 			ev.stopPropagation();
@@ -36,7 +38,7 @@ export function Select({ children, onChange, ...props }: SelectProps): ReactElem
 				});
 			}
 		}
-	}, [onChange]);
+	}, [onChange, readonly]);
 
 	return (
 		<select { ...props } onWheel={ onWheelHandler } onChange={ onChange }>

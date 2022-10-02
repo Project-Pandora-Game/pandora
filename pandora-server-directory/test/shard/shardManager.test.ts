@@ -16,9 +16,11 @@ const TEST_ROOM_DEFAULTS: Readonly<IChatRoomDirectoryConfig> = {
 	protected: false,
 	password: null,
 	features: [],
-	background: '#1099bb',
-	size: [1000, 1000],
-	scaling: 0,
+	background: {
+		image: '#1099bb',
+		size: [1000, 1000],
+		scaling: 0,
+	},
 };
 
 const TEST_ROOM: IChatRoomDirectoryConfig = {

@@ -3,11 +3,11 @@ import {
 	GetLogger,
 	HTTP_HEADER_CLIENT_REQUEST_SHARD,
 	IClientDirectoryAuthMessage,
-	IClientDirectoryBase,
+	IClientDirectory,
 	IDirectoryAccountInfo,
 	IDirectoryCharacterConnectionInfo,
 	IDirectoryClientArgument,
-	IDirectoryClientBase,
+	IDirectoryClient,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 	IsObject,
@@ -40,7 +40,7 @@ class ConnectionStateEventEmitter extends TypedEventEmitter<Pick<IDirectoryClien
 }
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> implements DirectoryConnector {
+export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectory> implements DirectoryConnector {
 
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>({
@@ -58,7 +58,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
-	private readonly _messageHandler: MessageHandler<IDirectoryClientBase>;
+	private readonly _messageHandler: MessageHandler<IDirectoryClient>;
 	public readonly directMessageHandler: DirectMessageManager;
 
 	/** Current state of the connection */
@@ -101,7 +101,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		this.directMessageHandler = new DirectMessageManager(this);
 
 		// Setup message handler
-		this._messageHandler = new MessageHandler<IDirectoryClientBase>({}, {
+		this._messageHandler = new MessageHandler<IDirectoryClient>({}, {
 			serverStatus: (status) => {
 				this._directoryStatus.value = status;
 			},

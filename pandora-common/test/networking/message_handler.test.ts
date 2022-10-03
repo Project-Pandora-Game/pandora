@@ -1,30 +1,57 @@
-import { RecordOnly, SocketInterfaceArgs, SocketInterfaceResult } from '../../src/networking/helpers';
+import { z } from 'zod';
+import { Satisfies } from '../../src';
+import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceRequest } from '../../src/networking/helpers';
 import { MessageHandler } from '../../src/networking/message_handler';
 
-interface TestInterface {
-	message1({ test }: { test: number; }): { test: number; };
-	message2({ test }: { test: number; }): { test: number; };
-	oneshot1(_arg: { test: number; }): void;
-	oneshot2(_arg: { test: number; }): void;
-}
+const TestSchema = {
+	message1: {
+		request: z.object({
+			test: z.number(),
+		}),
+		response: z.object({
+			test: z.number(),
+		}),
+	},
+	message2: {
+		request: z.object({
+			test: z.number(),
+		}),
+		response: z.object({
+			test: z.number(),
+		}),
+	},
+	oneshot1: {
+		request: z.object({
+			test: z.number(),
+		}),
+		response: null,
+	},
+	oneshot2: {
+		request: z.object({
+			test: z.number(),
+		}),
+		response: null,
+	},
+} as const;
 
-type TestArgument = RecordOnly<SocketInterfaceArgs<TestInterface>>;
-type TestResult = SocketInterfaceResult<TestInterface>;
+type TestInterface = Satisfies<typeof TestSchema, SocketInterfaceDefinition>;
+type TestInterfaceArgument = SocketInterfaceRequest<TestInterface>;
+type TestInterfaceResult = SocketInterfaceHandlerResult<TestInterface>;
 
 const testMessage = { test: 1 };
 
 describe('MessageHandler', () => {
 	const mockCallback = jest.fn<unknown, Record<string, unknown>[]>();
-	const handleMessage1 = jest.fn(({ test }: TestArgument['message1']): TestResult['message1'] => {
+	const handleMessage1 = jest.fn(({ test }: TestInterfaceArgument['message1']): TestInterfaceResult['message1'] => {
 		return { test: test + 1 };
 	});
-	const handleMessage2 = jest.fn(({ test }: TestArgument['message2']): TestResult['message2'] => {
+	const handleMessage2 = jest.fn(({ test }: TestInterfaceArgument['message2']): TestInterfaceResult['message2'] => {
 		return Promise.resolve({ test: test + 2 });
 	});
-	const handleOneshot1 = jest.fn((_arg: TestArgument['oneshot1']): TestResult['oneshot1'] => {
+	const handleOneshot1 = jest.fn((_arg: TestInterfaceArgument['oneshot1']): TestInterfaceResult['oneshot1'] => {
 		return;
 	});
-	const handleOneshot2 = jest.fn((_arg: TestArgument['oneshot2']): TestResult['oneshot2'] => {
+	const handleOneshot2 = jest.fn((_arg: TestInterfaceArgument['oneshot2']): TestInterfaceResult['oneshot2'] => {
 		return Promise.resolve();
 	});
 	const handler = new MessageHandler<TestInterface>({

@@ -1,4 +1,4 @@
-import type { IConnection, IDirectoryClientBase, IDirectoryShardBase } from 'pandora-common';
+import type { IConnection, IDirectoryClient, IDirectoryShard } from 'pandora-common';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
 import type { Shard } from '../shard/shard';
@@ -8,7 +8,7 @@ export enum ConnectionType {
 	CLIENT,
 }
 
-export interface IConnectionClient extends IConnection<IDirectoryClientBase, true> {
+export interface IConnectionClient extends IConnection<IDirectoryClient> {
 	readonly type: ConnectionType.CLIENT;
 	/** The current account this connection is logged in as or `null` if it isn't */
 	readonly account: Account | null;
@@ -32,7 +32,7 @@ export interface IConnectionClient extends IConnection<IDirectoryClientBase, tru
 	sendConnectionStateUpdate(): void;
 }
 
-export interface IConnectionShard extends IConnection<IDirectoryShardBase, true> {
+export interface IConnectionShard extends IConnection<IDirectoryShard> {
 	readonly type: ConnectionType.SHARD;
 	/** The associated shard */
 	shard: Shard | null;

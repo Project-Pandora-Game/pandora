@@ -1,6 +1,6 @@
-import { SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler } from './helpers';
 import { Logger } from '../logging';
 import type { Equals } from '../utility';
+import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceOneshotMessages, SocketInterfaceRequest, SocketInterfaceRespondedMessages } from './helpers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ResponseHandler<Context> = true extends Equals<Context, void> ? (arg: any) => Record<string, unknown> | Promise<Record<string, unknown>> : (arg: any, context: Context) => Record<string, unknown> | Promise<Record<string, unknown>>;
@@ -10,6 +10,14 @@ type OneshotHandler<Context> = true extends Equals<Context, void> ? (arg: any) =
 type AddContext<T, Context> = {
 	[K in keyof T]: true extends Equals<Context, void> ? T[K] : T[K] extends (arg: infer A) => infer R ? (arg: A, context: Context) => R : never;
 };
+
+type RespondingHandlers<T extends SocketInterfaceDefinition, Context> = AddContext<{
+	[K in SocketInterfaceRespondedMessages<T>]: (arg: SocketInterfaceRequest<T>[K]) => SocketInterfaceHandlerResult<T>[K];
+}, Context>;
+
+type OneshotHandlers<T extends SocketInterfaceDefinition, Context> = AddContext<{
+	[K in SocketInterfaceOneshotMessages<T>]: (arg: SocketInterfaceRequest<T>[K]) => SocketInterfaceHandlerResult<T>[K];
+}, Context>;
 
 export class BadMessageError extends Error {
 	protected readonly extra: unknown[];
@@ -40,11 +48,11 @@ export interface IMessageHandler<Context = void> {
 	onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void, ...[context]: true extends Equals<Context, void> ? [] : [Context]): Promise<boolean>;
 }
 
-export class MessageHandler<T, Context = void> implements IMessageHandler<Context> {
+export class MessageHandler<T extends SocketInterfaceDefinition, Context = void> implements IMessageHandler<Context> {
 	private readonly _responseHandlers: ReadonlyMap<string, ResponseHandler<Context>>;
 	private readonly _oneshotHandlers: ReadonlyMap<string, OneshotHandler<Context>>;
 
-	constructor(responseHandlers: AddContext<SocketInterfaceResponseHandler<T>, Context>, oneshotHandlers: AddContext<SocketInterfaceOneshotHandler<T>, Context>) {
+	constructor(responseHandlers: RespondingHandlers<T, Context>, oneshotHandlers: OneshotHandlers<T, Context>) {
 		this._responseHandlers = new Map(Object.entries(responseHandlers));
 		this._oneshotHandlers = new Map(Object.entries(oneshotHandlers));
 	}

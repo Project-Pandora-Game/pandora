@@ -1,96 +1,48 @@
-import type { Equals } from '../utility';
+import { z, ZodType } from 'zod';
+import type { KeysMatching, Promiseable } from '../utility';
 
-/** Transform all member function so they may return a promise */
-type Promisify<T> = {
-	[K in keyof T]: T[K] extends (args: infer A) => infer R ? (args: A) => R | Promise<R> : never;
-};
-
-/**
-
-Define a SocketInterface for type 'TestInternal' as 'Test':
-
-export type Test = SocketInterface<TestInternal>;
-export type TestArgument = RecordOnly<SocketInterfaceArgs<TestInternal>>;
-export type TestUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<TestInternal>;
-export type TestResult = SocketInterfaceResult<TestInternal>;
-export type TestPromiseResult = SocketInterfacePromiseResult<TestInternal>;
-export type TestNormalResult = SocketInterfaceNormalResult<TestInternal>;
-export type TestResponseHandler = SocketInterfaceResponseHandler<TestInternal>;
-export type TestOneshotHandler = SocketInterfaceOneshotHandler<TestInternal>;
-export type TestMessageHandler<Context> = MessageHandler<TestInternal, Context>;
-export type TestBase = TestInternal; // required for new MessageHandler<TestBase>
-
- */
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type DefineSocketInterface<In extends Record<string, Record<string, any>>, Out extends Partial<Record<keyof In, Record<string, any>>>> = {
-	[K in keyof In]: K extends keyof Out ? (args: In[K]) => Out[K] : (args: In[K]) => void;
-};
-
-/** */
-export type SocketInterfaceDefinition<T extends {
-	[K in keyof T]: (args: Record<string, unknown>) => void | Record<string, unknown>
-}> =
-	{
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[K in keyof T]: true extends Equals<void, ReturnType<T[K]>> ? ((arg: any) => void) : ((arg: any) => Record<string, any>);
+/** The base type for how (one-way) socket interface definition should look like */
+export type SocketInterfaceDefinition = {
+	[messageType: string]: {
+		/** The body of request of this message, must be an object */
+		request: ZodType<Record<never, unknown>>;
+		/** The body of request of this message, must be an object or `null` if this is one-shot message */
+		response: ZodType<Record<never, unknown>> | null;
 	};
-
-/** Defines the arguments for a SocketInterface */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type SocketInterfaceArgs<T extends Record<keyof T, any>> = {
-	[K in keyof T]: T[K] extends ((arg: infer U) => unknown) ? U : never;
 };
 
-/** Defines the unconfirmed arguments for a SocketInterface */
-export type SocketInterfaceUnconfirmedArgs<T extends Record<keyof T, unknown>> = {
-	[K in keyof T]: T[K] extends ((arg: infer U) => unknown) ? Partial<Record<keyof U, unknown>> : never;
+/** The base type for how socket interface definition looks like, also verifying all requests and responses are objects */
+export type SocketInterfaceDefinitionVerified<T extends SocketInterfaceDefinition> = {
+	[messageType in keyof T]: {
+		request: ZodType<RecordOnlyElement<z.infer<T[messageType]['request']>>>;
+		response: T[messageType]['response'] extends ZodType<Record<never, unknown>> ? ZodType<RecordOnlyElement<z.infer<T[messageType]['response']>>> : null;
+	};
 };
 
-/**
- * Defines the results of a SocketInterface
- *
- * must be used as RecordOnly<SocketInterfaceResult<MyType>>
- */
-export type SocketInterfaceResult<T extends SocketInterfaceDefinition<T>> =
-	{
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[K in keyof T]: T[K] extends (arg: any) => Record<string, any> ? (T[K] extends (arg: any) => infer R ? R | Promise<R> : never) : (T[K] extends (arg: any) => void ? (void | Promise<void>) : never);
-	};
-
-export type SocketInterfacePromiseResult<T extends Record<keyof T, unknown>> =
-	{
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[K in keyof T]: T[K] extends (arg: any) => Record<string, any> ? (T[K] extends (arg: any) => infer R ? Promise<R> : never) : (T[K] extends (arg: any) => void ? Promise<void> : never);
-	};
-
-export type SocketInterfaceNormalResult<T extends Record<keyof T, unknown>> =
-	{
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[K in keyof T]: T[K] extends (arg: any) => Record<string, any> ? (T[K] extends (arg: any) => infer R ? R : never) : (T[K] extends (arg: any) => void ? void : never);
-	};
-
-/** Filters SocketInterface for response handlers */
-export type SocketInterfaceResponseHandler<T extends Record<keyof T, unknown>> = Pick<Promisify<T>, {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	[K in keyof T]: T[K] extends (arg: any) => Record<string, any> ? K : never;
-}[keyof T]>;
-
-/** Filters SocketInterface for oneshot handlers */
-export type SocketInterfaceOneshotHandler<T extends Record<keyof T, unknown>> = Pick<Promisify<T>, {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	[K in keyof T]: T[K] extends (arg: any) => Record<string, any> ? never : K;
-}[keyof T]>;
-
-/** Defines SocketInterface for type T */
-export type SocketInterface<T extends Record<keyof T, unknown>> = {
-	[K in keyof T]: T[K] extends (arg: infer A) => infer R ? (arg: A) => R | Promise<R> : never;
+/** Defines the arguments for a SocketInterface request */
+export type SocketInterfaceRequest<T extends SocketInterfaceDefinition> = {
+	[K in keyof T]: z.infer<T[K]['request']>;
 };
 
-/** Only accept records with string keys as members */
-export type RecordOnly<T extends {
-	[K in keyof T]: K extends string ? RecordOnlyElement<T[K]> : never;
-}> = T;
+/** Defines the SocketInterface response (raw/awaited) */
+export type SocketInterfaceResponse<T extends SocketInterfaceDefinition> = {
+	[K in keyof T]: T[K]['response'] extends ZodType<Record<never, unknown>> ? z.infer<T[K]['response']> : void;
+};
+
+/** Defines the SocketInterface response (possibly wrapped in promise) */
+export type SocketInterfaceHandlerResult<T extends SocketInterfaceDefinition> = {
+	[K in keyof T]: Promiseable<SocketInterfaceResponse<T>[K]>;
+};
+
+/** Defines the SocketInterface response (promise - for async function) */
+export type SocketInterfaceHandlerPromiseResult<T extends SocketInterfaceDefinition> = {
+	[K in keyof T]: Promise<SocketInterfaceResponse<T>[K]>;
+};
+
+/** Lists all messageTypes that are oneshot (have no response) */
+export type SocketInterfaceOneshotMessages<T extends SocketInterfaceDefinition> = KeysMatching<SocketInterfaceResponse<T>, void> & string;
+/** Lists all messageTypes that have response */
+export type SocketInterfaceRespondedMessages<T extends SocketInterfaceDefinition> = KeysMatching<SocketInterfaceResponse<T>, Record<never, unknown>> & string;
 
 type RecordOnlyElement<T> =
 	T extends symbol ? never :

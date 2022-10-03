@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
@@ -24,7 +24,7 @@ const messagesMetric = new promClient.Counter({
 export const ConnectionManagerClient = new class ConnectionManagerClient {
 	private readonly _connectedClients: Set<IConnectionClient> = new Set();
 
-	private readonly messageHandler: IClientShardMessageHandler<IConnectionClient>;
+	private readonly messageHandler: MessageHandler<IClientShard, IConnectionClient>;
 
 	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionClient): Promise<boolean> {
 		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
@@ -37,7 +37,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	}
 
 	constructor() {
-		this.messageHandler = new MessageHandler<IClientShardBase, IConnectionClient>({
+		this.messageHandler = new MessageHandler<IClientShard, IConnectionClient>({
 			finishCharacterCreation: this.handleFinishCharacterCreation.bind(this),
 		}, {
 			chatRoomMessage: this.handleChatRoomMessage.bind(this),

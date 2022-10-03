@@ -1,5 +1,5 @@
 import { IConnectionClient } from './common';
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY, CHARACTER_LIMIT_NORMAL } from '../config';
@@ -33,7 +33,7 @@ const IsClientDirectoryAuthMessage = ZodMatcher(ClientDirectoryAuthMessageSchema
 export const ConnectionManagerClient = new class ConnectionManagerClient {
 	private connectedClients: Set<IConnectionClient> = new Set();
 
-	private readonly messageHandler: IClientDirectoryMessageHandler<IConnectionClient>;
+	private readonly messageHandler: MessageHandler<IClientDirectory, IConnectionClient>;
 
 	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionClient): Promise<boolean> {
 		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
@@ -68,7 +68,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	}
 
 	constructor() {
-		this.messageHandler = new MessageHandler<IClientDirectoryBase, IConnectionClient>({
+		this.messageHandler = new MessageHandler<IClientDirectory, IConnectionClient>({
 			login: this.handleLogin.bind(this),
 			register: this.handleRegister.bind(this),
 			resendVerificationEmail: this.handleResendVerificationEmail.bind(this),
@@ -245,7 +245,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private handleListCharacters(_: IClientDirectoryArgument['listCharacters'], connection: IConnectionClient): IClientDirectoryNormalResult['listCharacters'] {
+	private handleListCharacters(_: IClientDirectoryArgument['listCharacters'], connection: IConnectionClient): IClientDirectoryResult['listCharacters'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -333,13 +333,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		connection.sendConnectionStateUpdate();
 	}
 
-	private handleShardInfo(_: IClientDirectoryArgument['shardInfo'], _connection: IConnectionClient): IClientDirectoryNormalResult['shardInfo'] {
+	private handleShardInfo(_: IClientDirectoryArgument['shardInfo'], _connection: IConnectionClient): IClientDirectoryResult['shardInfo'] {
 		return {
 			shards: ShardManager.listShads(),
 		};
 	}
 
-	private handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryNormalResult['listRooms'] {
+	private handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryResult['listRooms'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -400,7 +400,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		});
 	}
 
-	private handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryNormalResult['chatRoomUpdate'] {
+	private handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryResult['chatRoomUpdate'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -448,7 +448,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		connection.sendConnectionStateUpdate();
 	}
 
-	private handleGitHubBind({ login }: IClientDirectoryArgument['gitHubBind'], connection: IConnectionClient): IClientDirectoryNormalResult['gitHubBind'] {
+	private handleGitHubBind({ login }: IClientDirectoryArgument['gitHubBind'], connection: IConnectionClient): IClientDirectoryResult['gitHubBind'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -506,7 +506,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: success ? 'ok' : 'notFound' };
 	}
 
-	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryNormalResult['manageListShardTokens'] {
+	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
 		const info = ShardTokenStore.list(connection.account);
 		return { info };
 	}
@@ -534,7 +534,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return await connection.account.directMessages.sendMessage(data);
 	}
 
-	private handleGetDirectMessageInfo(_: IClientDirectoryArgument['getDirectMessageInfo'], connection: IConnectionClient): IClientDirectoryNormalResult['getDirectMessageInfo'] {
+	private handleGetDirectMessageInfo(_: IClientDirectoryArgument['getDirectMessageInfo'], connection: IConnectionClient): IClientDirectoryResult['getDirectMessageInfo'] {
 		if (!connection.account)
 			throw new BadMessageError();
 

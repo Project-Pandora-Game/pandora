@@ -2,10 +2,10 @@ import {
 	CharacterId,
 	ConnectionBase,
 	GetLogger,
-	IClientShardBase,
+	IClientShard,
 	IDirectoryCharacterConnectionInfo,
 	IShardClientArgument,
-	IShardClientBase,
+	IShardClient,
 	MessageHandler,
 } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
@@ -36,13 +36,13 @@ function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacte
 const ShardConnectionProgress = new PersistentToast();
 
 /** Class housing connection from Shard to Shard */
-export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardBase> implements ShardConnector {
+export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShard> implements ShardConnector {
 
 	private readonly _state: Observable<ShardConnectionState> = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
 	private readonly _room: ChatRoom;
 	private readonly _player: Observable<PlayerCharacter | null>;
-	private readonly _messageHandler: MessageHandler<IShardClientBase>;
+	private readonly _messageHandler: MessageHandler<IShardClient>;
 
 	private loadResolver: ((arg: this) => void) | null = null;
 
@@ -77,7 +77,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		// Setup message handler
-		this._messageHandler = new MessageHandler<IShardClientBase>({}, {
+		this._messageHandler = new MessageHandler<IShardClient>({}, {
 			load: this.onLoad.bind(this),
 			updateCharacter: this.onUpdateCharacter.bind(this),
 			chatRoomUpdate: (data: IShardClientArgument['chatRoomUpdate']) => {

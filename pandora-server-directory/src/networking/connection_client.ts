@@ -1,11 +1,11 @@
-import { IDirectoryClientBase, GetLogger, ZodConnection, IncomingSocket, IServerSocket, ClientDirectoryInSchema } from 'pandora-common';
+import { IDirectoryClient, GetLogger, ZodConnection, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory } from 'pandora-common';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
 import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
 
 /** Class housing connection from a client */
-export class ClientConnection extends ZodConnection<IncomingSocket, typeof ClientDirectoryInSchema, IDirectoryClientBase> implements IConnectionClient {
+export class ClientConnection extends ZodConnection<IncomingSocket, IClientDirectory, IDirectoryClient> implements IConnectionClient {
 	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
 	/** The current account this connection is logged in as or `null` if it isn't */
@@ -24,8 +24,8 @@ export class ClientConnection extends ZodConnection<IncomingSocket, typeof Clien
 		return this.account !== null;
 	}
 
-	constructor(server: IServerSocket<IDirectoryClientBase>, socket: IncomingSocket, auth: unknown) {
-		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`), ClientDirectoryInSchema);
+	constructor(server: IServerSocket<IDirectoryClient>, socket: IncomingSocket, auth: unknown) {
+		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`), ClientDirectorySchema);
 		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this, auth);
 	}

@@ -1,12 +1,11 @@
-import type { MembersFirstArg } from '../utility';
 import type { IConnectionSender } from './connection';
-import type { SocketInterfaceDefinition, SocketInterfaceOneshotHandler } from './helpers';
+import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest } from './helpers';
 
-export interface IServerSocket<T extends SocketInterfaceDefinition<T>> {
-	sendToAll<K extends keyof SocketInterfaceOneshotHandler<T> & string>(client: ReadonlySet<IConnectionSender<T>>, messageType: K, message: MembersFirstArg<T>[K]): void;
+export interface IServerSocket<T extends SocketInterfaceDefinition> {
+	sendToAll<K extends SocketInterfaceOneshotMessages<T>>(client: ReadonlySet<IConnectionSender<T>>, messageType: K, message: SocketInterfaceRequest<T>[K]): void;
 }
 
-export class ServerRoom<T extends SocketInterfaceDefinition<T>> {
+export class ServerRoom<T extends SocketInterfaceDefinition> {
 	private readonly servers = new Map<IServerSocket<T>, Set<IConnectionSender<T>>>();
 	private readonly clients = new Map<string, IServerSocket<T>>();
 
@@ -39,7 +38,7 @@ export class ServerRoom<T extends SocketInterfaceDefinition<T>> {
 		}
 	}
 
-	sendMessage<K extends keyof SocketInterfaceOneshotHandler<T> & string>(messageType: K, message: MembersFirstArg<T>[K]): void {
+	sendMessage<K extends SocketInterfaceOneshotMessages<T>>(messageType: K, message: SocketInterfaceRequest<T>[K]): void {
 		for (const [server, clients] of this.servers) {
 			server.sendToAll(clients, messageType, message);
 		}

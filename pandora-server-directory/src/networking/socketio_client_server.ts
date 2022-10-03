@@ -1,17 +1,17 @@
 import type { Socket } from 'socket.io';
 import type { IncomingMessage, Server as HttpServer } from 'http';
-import { GetLogger, HTTP_HEADER_CLIENT_REQUEST_SHARD, IConnectionSender, IDirectoryClient, IDirectoryClientBase, MembersFirstArg } from 'pandora-common';
+import { GetLogger, HTTP_HEADER_CLIENT_REQUEST_SHARD, IConnectionSender, IDirectoryClient } from 'pandora-common';
 import { SocketIOServer } from './socketio_common_server';
 import { ClientConnection } from './connection_client';
 import { SocketIOSocket } from './socketio_common_socket';
 import { ShardManager, SHARD_WAIT_STOP } from '../shard/shardManager';
-import { SocketInterfaceOneshotHandler } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers';
 import { IServerSocket } from 'pandora-common/dist/networking/room';
 
 const logger = GetLogger('SIO-Server-Client');
 
 /** Class housing socket.io endpoint for clients */
-export class SocketIOServerClient extends SocketIOServer implements IServerSocket<IDirectoryClientBase> {
+export class SocketIOServerClient extends SocketIOServer implements IServerSocket<IDirectoryClient> {
 
 	constructor(httpServer: HttpServer) {
 		super(httpServer, {});
@@ -48,7 +48,7 @@ export class SocketIOServerClient extends SocketIOServer implements IServerSocke
 		}
 	}
 
-	sendToAll<K extends keyof SocketInterfaceOneshotHandler<IDirectoryClient> & string>(client: ReadonlySet<IConnectionSender<IDirectoryClientBase>>, messageType: K, message: MembersFirstArg<IDirectoryClientBase>[K]): void {
+	sendToAll<K extends SocketInterfaceOneshotMessages<IDirectoryClient>>(client: ReadonlySet<IConnectionSender<IDirectoryClient>>, messageType: K, message: SocketInterfaceRequest<IDirectoryClient>[K]): void {
 		const rooms = [...client].map((c) => c.id);
 		this.socketServer.to(rooms).emit(messageType, message);
 	}

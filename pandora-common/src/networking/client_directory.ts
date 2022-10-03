@@ -1,11 +1,11 @@
-import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult, DefineSocketInterface } from './helpers';
+import type { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
-import type { MessageHandler } from './message_handler';
 import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomDirectoryInfo, RoomIdSchema } from '../chatroom';
 import { ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
-import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema } from '../validation';
+import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
 import { z } from 'zod';
+import { Satisfies } from '../utility';
 
 type ShardError = 'noShardFound' | 'failed';
 
@@ -36,188 +36,250 @@ export type IShardTokenInfo = {
 	created: { id: number; username: string; time: number; };
 };
 
-export const ClientDirectoryInSchema = z.object({
+/** Client->Directory messages */
+export const ClientDirectorySchema = {
 	//#region Before Login
-	login: z.object({
-		username: UserNameSchema,
-		passwordSha512: PasswordSha512Schema,
-		verificationToken: SimpleTokenSchema.optional(),
-	}),
-	register: z.object({
-		username: UserNameSchema,
-		passwordSha512: PasswordSha512Schema,
-		email: EmailAddressSchema,
-		betaKey: z.string().optional(),
-	}),
-	resendVerificationEmail: z.object({
-		email: EmailAddressSchema,
-	}),
-	passwordReset: z.object({
-		email: EmailAddressSchema,
-	}),
-	passwordResetConfirm: z.object({
-		username: UserNameSchema,
-		passwordSha512: PasswordSha512Schema,
-		token: SimpleTokenSchema,
-	}),
+	login: {
+		request: z.object({
+			username: UserNameSchema,
+			passwordSha512: PasswordSha512Schema,
+			verificationToken: SimpleTokenSchema.optional(),
+		}),
+		response: ZodCast<{ result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials'; } | {
+			result: 'ok';
+			token: { value: string; expires: number; };
+			account: IDirectoryAccountInfo;
+		}>(),
+	},
+	register: {
+		request: z.object({
+			username: UserNameSchema,
+			passwordSha512: PasswordSha512Schema,
+			email: EmailAddressSchema,
+			betaKey: z.string().optional(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey'; }>(),
+	},
+	resendVerificationEmail: {
+		request: z.object({
+			email: EmailAddressSchema,
+		}),
+		response: ZodCast<{ result: 'maybeSent'; }>(),
+	},
+	passwordReset: {
+		request: z.object({
+			email: EmailAddressSchema,
+		}),
+		response: ZodCast<{ result: 'maybeSent'; }>(),
+	},
+	passwordResetConfirm: {
+		request: z.object({
+			username: UserNameSchema,
+			passwordSha512: PasswordSha512Schema,
+			token: SimpleTokenSchema,
+		}),
+		response: ZodCast<{ result: 'ok' | 'unknownCredentials'; }>(),
+	},
 	//#endregion Before Login
 
 	//#region Account management
-	passwordChange: z.object({
-		passwordSha512Old: PasswordSha512Schema,
-		passwordSha512New: PasswordSha512Schema,
-		cryptoKey: AccountCryptoKeySchema,
-	}),
-	logout: z.object({
-		invalidateToken: z.string().optional(),
-	}),
-	gitHubBind: z.object({
-		login: z.string(),
-	}),
-	gitHubUnbind: z.object({}),
-	changeSettings: DirectoryAccountSettingsSchema.partial(),
-	setCryptoKey: z.object({
-		cryptoKey: AccountCryptoKeySchema,
-	}),
+	passwordChange: {
+		request: z.object({
+			passwordSha512Old: PasswordSha512Schema,
+			passwordSha512New: PasswordSha512Schema,
+			cryptoKey: AccountCryptoKeySchema,
+		}),
+		response: ZodCast<{ result: 'ok' | 'invalidPassword'; }>(),
+	},
+	logout: {
+		request: z.object({
+			invalidateToken: z.string().optional(),
+		}),
+		response: null,
+	},
+	gitHubBind: {
+		request: z.object({
+			login: z.string(),
+		}),
+		response: ZodCast<{ url: string; }>(),
+	},
+	gitHubUnbind: {
+		request: z.object({}),
+		response: null,
+	},
+	changeSettings: {
+		request: DirectoryAccountSettingsSchema.partial(),
+		response: null,
+	},
+	setCryptoKey: {
+		request: z.object({
+			cryptoKey: AccountCryptoKeySchema,
+		}),
+		response: null,
+	},
 	//#endregion
 
 	//#region Character management
-	listCharacters: z.object({}),
-	createCharacter: z.object({}),
-	updateCharacter: z.object({
-		id: CharacterIdSchema,
-		preview: z.string().optional(),
-	}),
-	deleteCharacter: z.object({
-		id: CharacterIdSchema,
-	}),
+	listCharacters: {
+		request: z.object({}),
+		response: ZodCast<{
+			characters: ICharacterSelfInfo[];
+			limit: number;
+		}>(),
+	},
+	createCharacter: {
+		request: z.object({}),
+		response: ZodCast<ShardConnection<ShardError | 'maxCharactersReached'>>(),
+	},
+	updateCharacter: {
+		request: z.object({
+			id: CharacterIdSchema,
+			preview: z.string().optional(),
+		}),
+		response: ZodCast<ICharacterSelfInfo>(),
+	},
+	deleteCharacter: {
+		request: z.object({
+			id: CharacterIdSchema,
+		}),
+		response: ZodCast<{ result: 'ok' | 'characterInUse'; }>(),
+	},
 	//#endregion
 
 	//#region Character connection, shard interaction
-	connectCharacter: z.object({
-		id: CharacterIdSchema,
-	}),
-	disconnectCharacter: z.object({}),
-	shardInfo: z.object({}),
-	listRooms: z.object({}),
-	chatRoomCreate: ChatRoomDirectoryConfigSchema,
-	chatRoomEnter: z.object({
-		id: RoomIdSchema,
-		password: z.string().optional(),
-	}),
-	chatRoomLeave: z.object({}),
-	chatRoomUpdate: ChatRoomDirectoryUpdateSchema,
+	connectCharacter: {
+		request: z.object({
+			id: CharacterIdSchema,
+		}),
+		response: ZodCast<ShardConnection>(),
+	},
+	disconnectCharacter: {
+		request: z.object({}),
+		response: null,
+	},
+	shardInfo: {
+		request: z.object({}),
+		response: ZodCast<{ shards: IDirectoryShardInfo[]; }>(),
+	},
+	listRooms: {
+		request: z.object({}),
+		response: ZodCast<{ rooms: IChatRoomDirectoryInfo[]; }>(),
+	},
+	chatRoomCreate: {
+		request: ChatRoomDirectoryConfigSchema,
+		response: ZodCast<ShardConnection<ShardError | 'nameTaken'>>(),
+	},
+	chatRoomEnter: {
+		request: z.object({
+			id: RoomIdSchema,
+			password: z.string().optional(),
+		}),
+		response: ZodCast<ShardConnection<'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'>>(),
+	},
+	chatRoomLeave: {
+		request: z.object({}),
+		response: null,
+	},
+	chatRoomUpdate: {
+		request: ChatRoomDirectoryUpdateSchema,
+		response: ZodCast<{ result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; }>(),
+	},
 	//#endregion
 
-	getDirectMessages: z.object({
-		id: z.number().min(0),
-		until: z.number().min(0).optional(),
-	}),
-	sendDirectMessage: z.object({
-		id: z.number().min(0),
-		content: z.string(),
-		editing: z.number().min(0).optional(),
-	}),
-	directMessage: z.object({
-		id: z.number().min(0),
-		action: z.enum(['read', 'close']),
-	}),
-	getDirectMessageInfo: z.object({}),
+	getDirectMessages: {
+		request: z.object({
+			id: z.number().min(0),
+			until: z.number().min(0).optional(),
+		}),
+		response: ZodCast<{ result: 'notFound' | 'denied'; } | {
+			result: 'ok';
+			account: IDirectoryDirectMessageAccount;
+			messages: IDirectoryDirectMessage[];
+		}>(),
+	},
+	sendDirectMessage: {
+		request: z.object({
+			id: z.number().min(0),
+			content: z.string(),
+			editing: z.number().min(0).optional(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'denied' | 'messageNotFound'; }>(),
+	},
+	directMessage: {
+		request: z.object({
+			id: z.number().min(0),
+			action: z.enum(['read', 'close']),
+		}),
+		response: null,
+	},
+	getDirectMessageInfo: {
+		request: z.object({}),
+		response: ZodCast<{ info: IDirectoryDirectMessageInfo[]; }>(),
+	},
 
 	//#region Management/admin endpoints; these require specific roles to be used
 
 	// Account role assignment
-	manageGetAccountRoles: z.object({
-		id: z.number(),
-	}),
-	manageSetAccountRole: z.object({
-		id: z.number(),
-		role: ConfiguredAccountRoleSchema,
-		expires: z.number().optional(),
-	}),
+	manageGetAccountRoles: {
+		request: z.object({
+			id: z.number(),
+		}),
+		response: ZodCast<{ result: 'notFound'; } | {
+			result: 'ok';
+			roles: IAccountRoleManageInfo;
+		}>(),
+	},
+	manageSetAccountRole: {
+		request: z.object({
+			id: z.number(),
+			role: ConfiguredAccountRoleSchema,
+			expires: z.number().optional(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'notFound'; }>(),
+	},
 
 	// Shard token management
-	manageCreateShardToken: z.object({
-		/**
-		 * Type of the token to create.
-		 * stable/beta requires admin role.
-		 *
-		 * each type has required role to access it:
-		 * stable: none
-		 * beta: developer, contributor, supporter
-		 * testing: developer, contributor
-		 * development: developer
-		 */
-		type: ShardTokenTypeSchema,
-		/**
-		 * If set, the token will expire at this time.
-		 * If not set, the token will never expire.
-		 * Directory may change this value.
-		 */
-		expires: z.number().optional(),
-	}),
-	manageInvalidateShardToken: z.object({
-		id: z.string(),
-	}),
-	manageListShardTokens: z.object({}),
-	//#endregion
-});
-
-export type IClientDirectoryIn = z.infer<typeof ClientDirectoryInSchema>;
-
-export type IClientDirectoryOut = {
-	login: { result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials'; } | {
-		result: 'ok';
-		token: { value: string; expires: number; };
-		account: IDirectoryAccountInfo;
+	manageCreateShardToken: {
+		request: z.object({
+			/**
+			 * Type of the token to create.
+			 * stable/beta requires admin role.
+			 *
+			 * each type has required role to access it:
+			 * stable: none
+			 * beta: developer, contributor, supporter
+			 * testing: developer, contributor
+			 * development: developer
+			 */
+			type: ShardTokenTypeSchema,
+			/**
+			 * If set, the token will expire at this time.
+			 * If not set, the token will never expire.
+			 * Directory may change this value.
+			 */
+			expires: z.number().optional(),
+		}),
+		response: ZodCast<{ result: 'adminRequired'; } | {
+			result: 'ok';
+			info: IShardTokenInfo;
+			token: string;
+		}>(),
 	},
-	register: { result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey'; };
-	resendVerificationEmail: { result: 'maybeSent'; };
-	passwordReset: { result: 'maybeSent'; };
-	passwordResetConfirm: { result: 'ok' | 'unknownCredentials'; };
-	passwordChange: { result: 'ok' | 'invalidPassword'; };
-	gitHubBind: { url: string; };
-	listCharacters: {
-		characters: ICharacterSelfInfo[];
-		limit: number;
-	};
-	createCharacter: ShardConnection<ShardError | 'maxCharactersReached'>;
-	updateCharacter: ICharacterSelfInfo;
-	deleteCharacter: { result: 'ok' | 'characterInUse'; };
-	connectCharacter: ShardConnection;
-	shardInfo: { shards: IDirectoryShardInfo[]; };
-	listRooms: { rooms: IChatRoomDirectoryInfo[]; };
-	chatRoomCreate: ShardConnection<ShardError | 'nameTaken'>;
-	chatRoomEnter: ShardConnection<'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'>;
-	chatRoomUpdate: { result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; };
-	getDirectMessages: { result: 'notFound' | 'denied'; } | {
-		result: 'ok';
-		account: IDirectoryDirectMessageAccount;
-		messages: IDirectoryDirectMessage[];
-	};
-	sendDirectMessage: { result: 'ok' | 'notFound' | 'denied' | 'messageNotFound'; };
-	getDirectMessageInfo: { info: IDirectoryDirectMessageInfo[]; };
-	manageGetAccountRoles: { result: 'notFound'; } | {
-		result: 'ok';
-		roles: IAccountRoleManageInfo;
-	};
-	manageSetAccountRole: { result: 'ok' | 'notFound'; };
-	manageCreateShardToken: { result: 'adminRequired'; } | {
-		result: 'ok';
-		info: IShardTokenInfo;
-		token: string;
-	};
-	manageInvalidateShardToken: { result: 'ok' | 'notFound'; };
-	manageListShardTokens: { info: IShardTokenInfo[]; };
-};
+	manageInvalidateShardToken: {
+		request: z.object({
+			id: z.string(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'notFound'; }>(),
+	},
+	manageListShardTokens: {
+		request: z.object({}),
+		response: ZodCast<{ info: IShardTokenInfo[]; }>(),
+	},
+	//#endregion
+} as const;
 
-export type IClientDirectoryBase = DefineSocketInterface<IClientDirectoryIn, IClientDirectoryOut>;
-export type IClientDirectory = SocketInterface<IClientDirectoryBase>;
-export type IClientDirectoryArgument = RecordOnly<SocketInterfaceArgs<IClientDirectoryBase>>;
-export type IClientDirectoryUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<IClientDirectoryBase>;
-export type IClientDirectoryResult = SocketInterfaceResult<IClientDirectoryBase>;
-export type IClientDirectoryPromiseResult = SocketInterfacePromiseResult<IClientDirectoryBase>;
-export type IClientDirectoryNormalResult = SocketInterfaceNormalResult<IClientDirectoryBase>;
-export type IClientDirectoryResponseHandler = SocketInterfaceResponseHandler<IClientDirectoryBase>;
-export type IClientDirectoryOneshotHandler = SocketInterfaceOneshotHandler<IClientDirectoryBase>;
-export type IClientDirectoryMessageHandler<Context> = MessageHandler<IClientDirectoryBase, Context>;
+export type IClientDirectory = Satisfies<typeof ClientDirectorySchema, SocketInterfaceDefinitionVerified<typeof ClientDirectorySchema>>;
+export type IClientDirectoryArgument = SocketInterfaceRequest<IClientDirectory>;
+export type IClientDirectoryResult = SocketInterfaceHandlerResult<IClientDirectory>;
+export type IClientDirectoryPromiseResult = SocketInterfaceHandlerPromiseResult<IClientDirectory>;
+export type IClientDirectoryNormalResult = SocketInterfaceResponse<IClientDirectory>;

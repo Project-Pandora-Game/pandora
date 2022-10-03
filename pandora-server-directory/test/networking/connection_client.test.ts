@@ -1,12 +1,12 @@
 import { nanoid } from 'nanoid';
-import { IClientDirectoryBase, IDirectoryClientBase, MockConnection, MockServerSocket } from 'pandora-common';
+import { IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
 import { ClientConnection } from '../../src/networking/connection_client';
 import { ConnectionManagerClient } from '../../src/networking/manager_client';
 import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils';
 
 describe('ClientConnection', () => {
-	let connection: MockConnection<IClientDirectoryBase>;
-	let server: MockServerSocket<IDirectoryClientBase>;
+	let connection: MockConnection<IClientDirectory>;
+	let server: MockServerSocket<IDirectoryClient>;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let connectionOnMessage: jest.Mock<any, any>;
 
@@ -18,8 +18,8 @@ describe('ClientConnection', () => {
 		connectionOnMessage = jest.fn(() => {
 			return Promise.resolve(true);
 		});
-		server = new MockServerSocket<IDirectoryClientBase>();
-		connection = new MockConnection(new MockServerSocket<IClientDirectoryBase>(), { onMessage: connectionOnMessage }, nanoid());
+		server = new MockServerSocket<IDirectoryClient>();
+		connection = new MockConnection(new MockServerSocket<IClientDirectory>(), { onMessage: connectionOnMessage }, nanoid());
 	});
 	afterEach(() => {
 		connection.disconnect();

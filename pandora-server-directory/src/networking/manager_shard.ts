@@ -1,4 +1,4 @@
-import { IShardDirectoryMessageHandler, IShardDirectoryBase, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, IShardDirectoryNormalResult, BadMessageError } from 'pandora-common';
+import { IShardDirectory, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, BadMessageError } from 'pandora-common';
 import type { IConnectionShard } from './common';
 import { GetDatabase } from '../database/databaseProvider';
 import { ShardManager } from '../shard/shardManager';
@@ -11,7 +11,7 @@ const messagesMetric = new promClient.Counter({
 });
 
 export const ConnectionManagerShard = new class ConnectionManagerShard {
-	private readonly messageHandler: IShardDirectoryMessageHandler<IConnectionShard>;
+	private readonly messageHandler: MessageHandler<IShardDirectory, IConnectionShard>;
 
 	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionShard): Promise<boolean> {
 		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
@@ -24,7 +24,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 	}
 
 	constructor() {
-		this.messageHandler = new MessageHandler<IShardDirectoryBase, IConnectionShard>({
+		this.messageHandler = new MessageHandler<IShardDirectory, IConnectionShard>({
 			getCharacter: this.handleGetCharacter.bind(this),
 			setCharacter: this.handleSetCharacter.bind(this),
 			shardRegister: this.handleShardRegister.bind(this),
@@ -89,7 +89,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard {
 		if (!connection.shard?.getConnectedCharacter(id))
 			throw new BadMessageError();
 
-		return await GetDatabase().getCharacter(id, accessId) as IShardDirectoryNormalResult['getCharacter'];
+		return GetDatabase().getCharacter(id, accessId) as IShardDirectoryPromiseResult['getCharacter'];
 	}
 
 	private async handleSetCharacter(args: IShardDirectoryArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {

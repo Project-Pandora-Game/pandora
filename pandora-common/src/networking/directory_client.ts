@@ -2,9 +2,9 @@ import { z } from 'zod';
 import { IAccountRoleInfo, AccountRoleSchema } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
-import { HexColorStringSchema } from '../validation';
-import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
-import type { MessageHandler } from './message_handler';
+import { Satisfies } from '../utility';
+import { HexColorStringSchema, ZodCast } from '../validation';
+import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
 export type IDirectoryStatus = {
 	time: number;
@@ -86,41 +86,54 @@ export type IDirectoryDirectMessageInfo = {
 	time: number;
 };
 
-/** Directory->Client handlers */
-interface DirectoryClient {
+/** Directory->Client messages */
+export const DirectoryClientSchema = {
 	/** Generic message for Directory's current status */
-	serverStatus(arg: IDirectoryStatus): void;
+	serverStatus: {
+		request: ZodCast<IDirectoryStatus>(),
+		response: null,
+	},
+	connectionState: {
+		request: ZodCast<{
+			account: IDirectoryAccountInfo | null,
+			character: IDirectoryCharacterConnectionInfo | null,
+		}>(),
+		response: null,
+	},
+	somethingChanged: {
+		request: ZodCast<{
+			changes: IDirectoryClientChangeEvents[];
+		}>(),
+		response: null,
+	},
 
-	connectionState(arg: {
-		account: IDirectoryAccountInfo | null,
-		character: IDirectoryCharacterConnectionInfo | null,
-	}): void;
-	somethingChanged(arg: {
-		changes: IDirectoryClientChangeEvents[];
-	}): void;
 	/** Broadcast message to for account's connections when a DM is sent */
-	directMessageSent(message: IDirectoryDirectMessage & {
-		/** Target accountId */
-		target: number;
-	}): void;
+	directMessageSent: {
+		request: ZodCast<IDirectoryDirectMessage & {
+			/** Target accountId */
+			target: number;
+		}>(),
+		response: null,
+	},
 	/** Broadcast message to for account's connections when a DM is received */
-	directMessageGet(message: IDirectoryDirectMessage & {
-		/** Account info for the sender */
-		account: IDirectoryDirectMessageAccount;
-	}): void;
-	directMessageAction(arg: {
-		id: number;
-		action: 'read' | 'close';
-	}): void;
-}
+	directMessageGet: {
+		request: ZodCast<IDirectoryDirectMessage & {
+			/** Account info for the sender */
+			account: IDirectoryDirectMessageAccount;
+		}>(),
+		response: null,
+	},
+	directMessageAction: {
+		request: ZodCast<{
+			id: number;
+			action: 'read' | 'close';
+		}>(),
+		response: null,
+	},
+} as const;
 
-export type IDirectoryClient = SocketInterface<DirectoryClient>;
-export type IDirectoryClientArgument = RecordOnly<SocketInterfaceArgs<DirectoryClient>>;
-export type IDirectoryClientUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<DirectoryClient>;
-export type IDirectoryClientResult = SocketInterfaceResult<DirectoryClient>;
-export type IDirectoryClientPromiseResult = SocketInterfacePromiseResult<DirectoryClient>;
-export type IDirectoryClientNormalResult = SocketInterfaceNormalResult<DirectoryClient>;
-export type IDirectoryClientResponseHandler = SocketInterfaceResponseHandler<DirectoryClient>;
-export type IDirectoryClientOneshotHandler = SocketInterfaceOneshotHandler<DirectoryClient>;
-export type IDirectoryClientMessageHandler<Context> = MessageHandler<DirectoryClient, Context>;
-export type IDirectoryClientBase = DirectoryClient;
+export type IDirectoryClient = Satisfies<typeof DirectoryClientSchema, SocketInterfaceDefinitionVerified<typeof DirectoryClientSchema>>;
+export type IDirectoryClientArgument = SocketInterfaceRequest<IDirectoryClient>;
+export type IDirectoryClientResult = SocketInterfaceHandlerResult<IDirectoryClient>;
+export type IDirectoryClientPromiseResult = SocketInterfaceHandlerPromiseResult<IDirectoryClient>;
+export type IDirectoryClientNormalResult = SocketInterfaceResponse<IDirectoryClient>;

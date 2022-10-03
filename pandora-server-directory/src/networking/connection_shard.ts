@@ -1,16 +1,16 @@
-import { ZodConnection, GetLogger, IDirectoryShardBase, IncomingSocket, IServerSocket, ShardDirectoryInSchema } from 'pandora-common';
+import { ZodConnection, GetLogger, IncomingSocket, IServerSocket, ShardDirectorySchema, IShardDirectory, IDirectoryShard } from 'pandora-common';
 import { ConnectionType, IConnectionShard } from './common';
 import { ConnectionManagerShard } from './manager_shard';
 import { Shard } from '../shard/shard';
 
 /** Class housing connection from a shard */
-export class ShardConnection extends ZodConnection<IncomingSocket, typeof ShardDirectoryInSchema, IDirectoryShardBase> implements IConnectionShard {
+export class ShardConnection extends ZodConnection<IncomingSocket, IShardDirectory, IDirectoryShard> implements IConnectionShard {
 	readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
 
 	public shard: Shard | null = null;
 
-	constructor(server: IServerSocket<IDirectoryShardBase>, socket: IncomingSocket) {
-		super(server, socket, GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`), ShardDirectoryInSchema);
+	constructor(server: IServerSocket<IDirectoryShard>, socket: IncomingSocket) {
+		super(server, socket, GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`), ShardDirectorySchema);
 		this.logger.verbose('Connected');
 	}
 

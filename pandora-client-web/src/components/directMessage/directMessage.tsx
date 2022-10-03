@@ -26,14 +26,14 @@ function DirectMessageList(): ReactElement | null {
 	const channel = useDirectMessageChannel();
 	const messages = useObservable(channel.messages);
 	const account = useCurrentAccount();
-	const [ref, onScroll] = useAutoScroll<HTMLDivElement>();
+	const [ref] = useAutoScroll<HTMLDivElement>(`dm-${channel.account.id}`, { deps: [messages] });
 
 	if (!account) {
 		return null;
 	}
 
 	return (
-		<div ref={ ref } onScroll={ onScroll } className='direct-message-list'>
+		<div ref={ ref } className='direct-message-list'>
 			{messages.map((message) => (
 				<DirectMessageElement key={ message.time } message={ message } channel={ channel } account={ account } />
 			))}

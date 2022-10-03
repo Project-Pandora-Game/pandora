@@ -28,10 +28,7 @@ import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
-import { OutPortal } from 'react-reverse-portal';
-import { ChatRoomNode } from '../unifiedContext/unifiedContext';
-
-
+import { ChatRoomPortal } from '../unifiedContext/unifiedContext';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -43,7 +40,7 @@ export function Chatroom(): ReactElement {
 
 	return (
 		<div className='chatroom'>
-			<OutPortal node={ ChatRoomNode } className='chatroom' />
+			<ChatRoomPortal.Out />
 		</div>
 	);
 }
@@ -108,25 +105,26 @@ function DisplayCharacter({ char }: { char: ICharacterPublicData }): ReactElemen
 function Chat(): ReactElement | null {
 	const messages = useChatRoomMessages();
 	const shardConnector = useShardConnector();
-	const [messagesDiv, onScroll, scrollingMemo] = useAutoScroll<HTMLDivElement>();
+	const mounted = ChatRoomPortal.useMounted();
+	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>('chat', { deps: [messages], mounted });
 	const lastMessageCount = useRef(0);
 
 	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);
 
 	useEffect(() => {
-		if (scrollingMemo.isScrolling && document.visibilityState === 'visible') {
+		if (isScrolling.current && document.visibilityState === 'visible') {
 			supress();
 			clear();
 		}
 		return () => unsupress();
-	}, [messages, scrollingMemo, lastMessageCount, clear, supress, unsupress]);
+	}, [messages, isScrolling, lastMessageCount, clear, supress, unsupress]);
 
 	if (!shardConnector)
 		return null;
 
 	return (
 		<div className='chatArea'>
-			<Scrollbar color='dark' className='messages' ref={ messagesDiv } onScroll={ onScroll } tabIndex={ 1 }>
+			<Scrollbar color='dark' className='messages' ref={ messagesDiv } tabIndex={ 1 }>
 				{messages.map((m) => <Message key={ m.time } message={ m } />)}
 			</Scrollbar>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } />

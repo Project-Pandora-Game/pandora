@@ -1,47 +1,89 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, DependencyList } from 'react';
 import { useEvent } from './useEvent';
+import { useUniqueKeyRef } from './useUniqueKeyRef';
 
-export function useAutoScroll<Element extends HTMLElement>(): [
+export function useAutoScroll<Element extends HTMLElement>(memoKey: string, { deps = [], mounted }: { deps?: DependencyList, mounted?: boolean } = {}): [
 	React.RefObject<Element>,
-	(ev: React.UIEvent<Element>) => void,
-	{ readonly isScrolling: boolean; },
+	() => void,
+	React.RefObject<boolean>,
 ] {
-	const [autoScroll, setAutoScroll] = useState(true);
 	const ref = useRef<Element>(null);
-	// Needs to be object such that changes don't trigger render
-	const memo = useMemo(() => ({ isScrolling: false }), []);
+	const scrollPosition = useUniqueKeyRef(memoKey + '_scrollPosition', 0);
+	const isScrolling = useRef<boolean>(false);
+	const lastAutoScroll = useUniqueKeyRef(memoKey + '_lastAutoScroll', true);
+	const [autoScroll, setAutoScroll] = useState(lastAutoScroll.current);
 
-	// Only add the smooth scrolling effect after mount and first scroll
-	// to make sure there is no visual glitch when switching back into element
-	useEffect(() => {
-		setTimeout(() => {
-			if (ref.current) {
-				ref.current.style.scrollBehavior = 'smooth';
+	const onScroll = useEvent((ev: Event) => {
+		if (ref.current && ev.target === ref.current) {
+			const onEnd = ref.current.scrollTop + ref.current.offsetHeight + 1 >= ref.current.scrollHeight;
+			if (onEnd) {
+				isScrolling.current = false;
 			}
-		}, 0);
-	}, []);
-
-	const scroll = useEvent(() => {
-		if (ref.current && autoScroll) {
-			memo.isScrolling = true;
-			ref.current.scrollTop = ref.current.scrollHeight;
+			scrollPosition.current = ref.current.scrollTop;
+			lastAutoScroll.current = onEnd || isScrolling.current;
+			setAutoScroll(lastAutoScroll.current);
 		}
 	});
+
+	const scroll = useCallback(() => {
+		if (ref.current && autoScroll && ref.current.scrollHeight > 0) {
+			isScrolling.current = true;
+			ref.current.scrollTo({ top: ref.current.scrollHeight, behavior: 'auto' });
+			scrollPosition.current = ref.current.scrollHeight;
+		}
+	}, [autoScroll, scrollPosition]);
+
+	useEffect(() => {
+		if (!ref.current) {
+			return undefined;
+		}
+		const current = ref.current;
+		setTimeout(() => {
+			current.style.scrollBehavior = 'smooth';
+		}, 0);
+		current.addEventListener('scroll', onScroll);
+
+		if (!lastAutoScroll.current) {
+			current.scrollTo({ top: scrollPosition.current, behavior: 'auto' });
+		}
+
+		let cleanup: number | undefined;
+		if (lastAutoScroll.current && ref.current.scrollHeight === 0) {
+			cleanup = setInterval(() => {
+				if (ref.current && ref.current.scrollHeight > 0) {
+					clearInterval(cleanup);
+					cleanup = undefined;
+					isScrolling.current = true;
+					ref.current.scrollTo({ top: ref.current.scrollHeight, behavior: 'auto' });
+					scrollPosition.current = ref.current.scrollHeight;
+				}
+			}, 100);
+		}
+		return () => {
+			current.removeEventListener('scroll', onScroll);
+			if (cleanup) {
+				clearInterval(cleanup);
+				cleanup = undefined;
+			}
+		};
+	}, [lastAutoScroll, onScroll, scrollPosition]);
 
 	useEffect(() => {
 		scroll();
-	});
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [scroll, ...deps]);
 
-	const onScroll = useEvent((ev: React.UIEvent<Element>) => {
-		if (ref.current && ev.target === ref.current) {
-			// We should scroll to the end if we are either in progress of scrolling or already on the end
-			const onEnd = ref.current.scrollTop + ref.current.offsetHeight + 1 >= ref.current.scrollHeight;
-			if (onEnd) {
-				memo.isScrolling = false;
-			}
-			setAutoScroll(onEnd || memo.isScrolling);
+	useEffect(() => {
+		if (ref.current && mounted) {
+			const current = ref.current;
+			current.style.scrollBehavior = 'auto';
+			current.scrollTo({ top: scrollPosition.current, behavior: 'auto' });
+			setTimeout(() => {
+				current.style.scrollBehavior = 'smooth';
+			}, 0);
 		}
-	});
+	}, [mounted, scrollPosition]);
 
-	return [ref, onScroll, memo];
+	return [ref, scroll, isScrolling];
 }
+

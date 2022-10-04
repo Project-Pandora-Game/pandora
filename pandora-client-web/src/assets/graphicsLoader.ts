@@ -33,9 +33,9 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 	}
 
 	private readonly _pendingPromises = new Set<Promise<unknown>>();
-	protected monitorProgress<T extends Promise<unknown>>(promise: T): T {
+	protected monitorProgress<T>(promise: Promise<T>): Promise<T> {
 		this._pendingPromises.add(promise);
-		promise.finally(() => {
+		promise = promise.finally(() => {
 			this._pendingPromises.delete(promise);
 			this.updateLoadingProgressToast();
 		});

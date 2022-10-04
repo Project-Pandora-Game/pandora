@@ -1,9 +1,9 @@
 import React, { createRef, ErrorInfo, PureComponent, ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
+import { NODE_ENV } from '../../config/Environment';
 import { Button } from '../common/Button/Button';
 import { DebugContext, debugContext } from './debugContextProvider';
 import { BuildErrorReport } from './errorReport';
-import { ErrorTrap } from './errorTrap';
 import './rootErrorBoundary.scss';
 
 export enum ReportCopyState {
@@ -29,18 +29,46 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 		const { children } = this.props;
 		const { report } = this.state;
 
-		return (
-			<ErrorTrap>
-				{ report && this.renderErrorContent() }
-				{ !report && children }
-			</ErrorTrap>
-		);
+		if (report) {
+			return this.renderErrorContent();
+		}
+
+		return <>{ children }</>;
 	}
 
-	public override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-		const { debugData } = this.context as DebugContext;
-		const report = BuildErrorReport(error, errorInfo, debugData);
-		this.setState({ report });
+	public override componentDidCatch(error: Error, errorInfo?: ErrorInfo) {
+		if (!this.state.report) {
+			const { debugData } = this.context as DebugContext;
+			const report = BuildErrorReport(error, errorInfo, debugData);
+			this.setState({ report });
+		}
+	}
+
+	private readonly _uncaughtErrorListener = (event: ErrorEvent) => this._uncaughtErrorListenerRaw(event);
+	private _uncaughtErrorListenerRaw(event: ErrorEvent): void {
+		console.error('Uncaught error', event);
+		if (event.error instanceof Error) {
+			this.componentDidCatch(event.error);
+		} else if (event.error === null && NODE_ENV !== 'production') {
+			return;
+		} else {
+			this.componentDidCatch(new Error(`Uncaught error: ${ String(event.error) }`));
+		}
+	}
+
+	private readonly _unhandledPromiseRejectionListener = (event: PromiseRejectionEvent) => this._unhandledPromiseRejectionListenerRaw(event);
+	private _unhandledPromiseRejectionListenerRaw(event: PromiseRejectionEvent): void {
+		console.error('Unhandled promise rejection', event);
+		if (event.reason instanceof Error) {
+			this.componentDidCatch(event.reason);
+		} else {
+			this.componentDidCatch(new Error(`Unhandled promise rejection: ${ String(event.reason) }`));
+		}
+	}
+
+	override componentDidMount(): void {
+		window.addEventListener('error', this._uncaughtErrorListener);
+		window.addEventListener('unhandledrejection', this._unhandledPromiseRejectionListener);
 	}
 
 	public override componentWillUnmount(): void {
@@ -48,6 +76,8 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 			clearTimeout(this.timeout);
 			this.timeout = null;
 		}
+		window.removeEventListener('error', this._uncaughtErrorListener);
+		window.removeEventListener('unhandledrejection', this._unhandledPromiseRejectionListener);
 	}
 
 	private renderErrorContent(): ReactElement {

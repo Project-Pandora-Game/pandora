@@ -169,7 +169,8 @@
 		"one-var": ["warn", "never"],
 		"brace-style": "off",
 		"@typescript-eslint/brace-style": ["warn", "1tbs"],
-		"space-before-function-paren": [
+		"space-before-function-paren": "off",
+		"@typescript-eslint/space-before-function-paren": [
 			"warn",
 			{
 				"anonymous": "always",

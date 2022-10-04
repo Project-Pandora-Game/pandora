@@ -1,3 +1,4 @@
+import { GetLogger } from 'pandora-common';
 import React, { createRef, ErrorInfo, PureComponent, ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { NODE_ENV } from '../../config/Environment';
@@ -16,6 +17,8 @@ export interface RootErrorBoundaryState {
 	report?: string;
 	copyState: ReportCopyState;
 }
+
+const logger = GetLogger('ErrorBoundary');
 
 export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBoundaryState> {
 	private timeout: number | null = null;
@@ -46,7 +49,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 
 	private readonly _uncaughtErrorListener = (event: ErrorEvent) => this._uncaughtErrorListenerRaw(event);
 	private _uncaughtErrorListenerRaw(event: ErrorEvent): void {
-		console.error('Uncaught error', event);
+		logger.fatal('Uncaught error\n', `${event.message} @ ${event.filename}:${event.lineno}:${event.colno}\n`, event.error);
 		if (event.error instanceof Error) {
 			this.componentDidCatch(event.error);
 		} else if (event.error === null && NODE_ENV !== 'production') {
@@ -58,7 +61,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 
 	private readonly _unhandledPromiseRejectionListener = (event: PromiseRejectionEvent) => this._unhandledPromiseRejectionListenerRaw(event);
 	private _unhandledPromiseRejectionListenerRaw(event: PromiseRejectionEvent): void {
-		console.error('Unhandled promise rejection', event);
+		logger.fatal('Unhandled promise rejection', event.promise, `\n`, event.reason);
 		if (event.reason instanceof Error) {
 			this.componentDidCatch(event.reason);
 		} else {

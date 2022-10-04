@@ -1,3 +1,4 @@
+import { GetLogger, Logger } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { PersistentToast } from '../persistentToast';
 import { IGraphicsLoader } from './graphicsManager';
@@ -6,6 +7,11 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 	private readonly cache = new Map<string, Texture>();
 	private readonly pending = new Map<string, Promise<Texture>>();
 	private readonly textureLoadingProgress = new PersistentToast();
+	protected readonly logger: Logger;
+
+	constructor(logger: Logger) {
+		this.logger = logger;
+	}
 
 	async getTexture(path: string): Promise<Texture> {
 		if (!path)
@@ -22,8 +28,13 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 		promise = this.monitorProgress(this.loadTexture(path));
 		this.pending.set(path, promise);
 
+		const errorWithStack = new Error('Error loading image');
+
 		try {
 			texture = await promise;
+		} catch (err) {
+			this.logger.error('Failed to load image', path, '\n', err);
+			throw errorWithStack;
 		} finally {
 			this.pending.delete(path);
 		}
@@ -64,7 +75,7 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 	prefix: string;
 
 	constructor(prefix: string = '') {
-		super();
+		super(GetLogger('GraphicsLoader', `[URLGraphicsLoader '${prefix}']`));
 		this.prefix = prefix;
 	}
 

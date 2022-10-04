@@ -1,4 +1,4 @@
-import { AssetsDefinitionFile, AssetsGraphicsDefinitionFile } from 'pandora-common';
+import { AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager';
 import { GraphicsLoaderBase, URLGraphicsLoader } from '../assets/graphicsLoader';
@@ -54,7 +54,7 @@ class FileSystemGraphicsLoader extends GraphicsLoaderBase {
 	private readonly _handle: FileSystemDirectoryHandle;
 
 	constructor(handle: FileSystemDirectoryHandle) {
-		super();
+		super(GetLogger('GraphicsLoader', `[FileSystemGraphicsLoader]`));
 		this._handle = handle;
 	}
 

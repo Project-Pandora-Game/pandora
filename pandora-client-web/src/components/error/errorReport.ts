@@ -4,7 +4,7 @@ import { DirectoryConnectionState } from '../../networking/directoryConnector';
 import { ShardConnectionState } from '../../networking/shardConnector';
 import { DebugData } from './debugContextProvider';
 import { utils } from 'pixi.js';
-import bowser from "bowser";
+import bowser from 'bowser';
 
 interface ReportSection {
 	heading: string;

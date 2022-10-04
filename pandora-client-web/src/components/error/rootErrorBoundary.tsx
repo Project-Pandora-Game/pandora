@@ -40,10 +40,12 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 	}
 
 	public override componentDidCatch(error: Error, errorInfo?: ErrorInfo) {
-		if (!this.state.report) {
+		const { report } = this.state;
+		if (!report) {
 			const { debugData } = this.context as DebugContext;
-			const report = BuildErrorReport(error, errorInfo, debugData);
-			this.setState({ report });
+			this.setState({
+				report: BuildErrorReport(error, errorInfo, debugData),
+			});
 		}
 	}
 

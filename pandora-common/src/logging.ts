@@ -73,11 +73,11 @@ const consoleOutput: LogOutputDefinition = {
 		: (prefix, message, level) => {
 			const log = [prefix.replace(LOG_NAMES[level], `%c${LOG_NAMES[level]}%c`), LOG_COLORS[level], '', ...message];
 			const c = console as Record<string, unknown>;
-			if (level <= LogLevel.ERROR && typeof c.error === "function") {
+			if (level <= LogLevel.ERROR && typeof c.error === 'function') {
 				c.error(...log);
-			} else if (level <= LogLevel.ERROR && typeof c.warn === "function") {
+			} else if (level <= LogLevel.ERROR && typeof c.warn === 'function') {
 				c.warn(...log);
-			} else if (level >= LogLevel.DEBUG && typeof c.debug === "function") {
+			} else if (level >= LogLevel.DEBUG && typeof c.debug === 'function') {
 				c.debug(...log);
 			} else {
 				console.info(...log);

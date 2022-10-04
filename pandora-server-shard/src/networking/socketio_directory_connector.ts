@@ -51,7 +51,7 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDirectory> {
+export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, IDirectoryShard, Socket> {
 
 	/** Current state of the connection */
 	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;
@@ -64,7 +64,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 	public shardId: string | undefined;
 
 	constructor(uri: string, secret: string = '') {
-		super(CreateConnection(uri, secret), logger);
+		super(CreateConnection(uri, secret), 'DO_NOT_VALIDATE_DATA', logger);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));

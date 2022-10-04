@@ -14,6 +14,7 @@ import {
 	IsString,
 	MessageHandler,
 } from 'pandora-common';
+import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
 import { PrehashPassword } from '../crypto/helpers';
@@ -40,7 +41,7 @@ class ConnectionStateEventEmitter extends TypedEventEmitter<Pick<IDirectoryClien
 }
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectory> implements DirectoryConnector {
+export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory, IDirectoryClient, Socket> implements DirectoryConnector {
 
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>({
@@ -91,7 +92,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 	}
 
 	private constructor(socket: Socket) {
-		super(socket, logger);
+		super(socket, 'DO_NOT_VALIDATE_DATA', logger);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -124,8 +125,12 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
 
-	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return this._messageHandler.onMessage(messageType, message, callback);
+	protected onMessage<K extends (keyof IDirectoryClient & string)>(
+		messageType: K,
+		message: Record<string, unknown>,
+		callback?: ((arg: SocketInterfaceResponse<IDirectoryClient>[K]) => void) | undefined,
+	): Promise<boolean> {
+		return this._messageHandler.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void));
 	}
 
 	public static create(uri: string): SocketIODirectoryConnector {

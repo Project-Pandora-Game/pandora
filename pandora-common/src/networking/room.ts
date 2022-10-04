@@ -1,15 +1,15 @@
-import type { IConnectionSender } from './connection';
+import type { IIncomingConnection } from './connection';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest } from './helpers';
 
-export interface IServerSocket<T extends SocketInterfaceDefinition> {
-	sendToAll<K extends SocketInterfaceOneshotMessages<T>>(client: ReadonlySet<IConnectionSender<T>>, messageType: K, message: SocketInterfaceRequest<T>[K]): void;
+export interface IServerSocket<OutboundT extends SocketInterfaceDefinition> {
+	sendToAll<K extends SocketInterfaceOneshotMessages<OutboundT>>(client: ReadonlySet<IIncomingConnection<OutboundT>>, messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void;
 }
 
-export class ServerRoom<T extends SocketInterfaceDefinition> {
-	private readonly servers = new Map<IServerSocket<T>, Set<IConnectionSender<T>>>();
-	private readonly clients = new Map<string, IServerSocket<T>>();
+export class ServerRoom<OutboundT extends SocketInterfaceDefinition> {
+	private readonly servers = new Map<IServerSocket<OutboundT>, Set<IIncomingConnection<OutboundT>>>();
+	private readonly clients = new Map<string, IServerSocket<OutboundT>>();
 
-	join(server: IServerSocket<T>, client: IConnectionSender<T>): void {
+	join(server: IServerSocket<OutboundT>, client: IIncomingConnection<OutboundT>): void {
 		if (this.clients.has(client.id)) {
 			return;
 		}
@@ -22,7 +22,7 @@ export class ServerRoom<T extends SocketInterfaceDefinition> {
 		this.clients.set(client.id, server);
 	}
 
-	leave(client: IConnectionSender<T>): void {
+	leave(client: IIncomingConnection<OutboundT>): void {
 		const serverId = this.clients.get(client.id);
 		if (!serverId) {
 			return;
@@ -38,7 +38,7 @@ export class ServerRoom<T extends SocketInterfaceDefinition> {
 		}
 	}
 
-	sendMessage<K extends SocketInterfaceOneshotMessages<T>>(messageType: K, message: SocketInterfaceRequest<T>[K]): void {
+	sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void {
 		for (const [server, clients] of this.servers) {
 			server.sendToAll(clients, messageType, message);
 		}

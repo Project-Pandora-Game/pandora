@@ -6,64 +6,109 @@ import type { IServerSocket, ServerRoom } from './room';
 import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config';
 import { EmitterWithAck, IncomingSocket, MockConnectionSocket } from './socket';
 import { BadMessageError, IMessageHandler } from './message_handler';
+import { AssertNotNullable } from '../utility';
 
-export interface IConnectionSenderBase<T extends SocketInterfaceDefinition> {
+export interface IConnectionBase<OutboundT extends SocketInterfaceDefinition> {
 	/**
 	 * Send a oneshot message to the client
 	 * @param messageType - Type of message to send
 	 * @param message - Message data
 	 */
-	sendMessage<K extends SocketInterfaceOneshotMessages<T>>(messageType: K, message: SocketInterfaceRequest<T>[K]): void;
-}
+	sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void;
 
-export interface IConnectionBase<T extends SocketInterfaceDefinition> extends IConnectionSenderBase<T> {
 	/**
 	 * Send a message to the client and wait for a response
 	 * @param messageType - Type of message to send
 	 * @param message - Message data
 	 * @param timeout - Timeout in seconds
 	 */
-	awaitResponse<K extends SocketInterfaceRespondedMessages<T>>(
+	awaitResponse<K extends SocketInterfaceRespondedMessages<OutboundT>>(
 		messageType: K,
-		message: SocketInterfaceRequest<T>[K],
+		message: SocketInterfaceRequest<OutboundT>[K],
 		timeout?: number
-	): Promise<SocketInterfaceResponse<T>[K]>;
+	): Promise<SocketInterfaceResponse<OutboundT>[K]>;
 }
 
-export interface IConnectionSender<T extends SocketInterfaceDefinition> extends IConnectionSenderBase<T> {
+export interface IIncomingConnection<OutboundT extends SocketInterfaceDefinition> extends IConnectionBase<OutboundT> {
 	readonly id: string;
 	/** Check if this connection is still connected */
 	isConnected(): boolean;
 
-	joinRoom(room: ServerRoom<T>): void;
-	leaveRoom(room: ServerRoom<T>): void;
-}
-
-export interface IConnection<T extends SocketInterfaceDefinition> extends IConnectionBase<T>, IConnectionSender<T> {
+	joinRoom(room: ServerRoom<OutboundT>): void;
+	leaveRoom(room: ServerRoom<OutboundT>): void;
 }
 
 /** Allows sending messages */
-export abstract class ConnectionBase<EmitterT extends EmitterWithAck, T extends SocketInterfaceDefinition> implements IConnectionBase<T> {
+export abstract class ConnectionBase<
+	OutboundT extends SocketInterfaceDefinition,
+	IncomingT extends SocketInterfaceDefinition,
+	EmitterT extends EmitterWithAck = EmitterWithAck,
+> implements IConnectionBase<OutboundT> {
 	protected readonly socket: EmitterT;
 	protected readonly logger: Logger;
 
-	constructor(socket: EmitterT, logger: Logger) {
+	protected readonly schema: {
+		incoming: IncomingT;
+		outbound: OutboundT;
+	} | null;
+
+	constructor(
+		socket: EmitterT,
+		schema: [OutboundT, IncomingT] | 'DO_NOT_VALIDATE_DATA',
+		logger: Logger,
+	) {
 		this.socket = socket;
 		this.logger = logger;
+		this.schema = schema === 'DO_NOT_VALIDATE_DATA' ? null : {
+			outbound: schema[0],
+			incoming: schema[1],
+		};
 	}
 
-	sendMessage<K extends SocketInterfaceOneshotMessages<T>>(messageType: K, message: SocketInterfaceRequest<T>[K]): void {
+	sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void {
+		// If we have schema, validate sent message
+		if (this.schema) {
+			if (!Object.hasOwn(this.schema.outbound, messageType) || this.schema.outbound[messageType].response !== null) {
+				this.logger.error(`Attempt to send unknown message type '${messageType}', dropped.\n`, new Error());
+				return;
+			}
+
+			const result = this.schema.outbound[messageType].request.safeParse(message);
+
+			if (!result.success) {
+				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', result.error.toString());
+				return;
+			}
+			// Replace message with parsed result, as it might have stripped some data
+			message = result.data;
+		}
 		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 			this.logger.debug(`\u25B2 message '${messageType}':`, message);
 		}
 		this.socket.emit(messageType as string, message);
 	}
 
-	awaitResponse<K extends SocketInterfaceRespondedMessages<T>>(
+	awaitResponse<K extends SocketInterfaceRespondedMessages<OutboundT>>(
 		messageType: K,
-		message: SocketInterfaceRequest<T>[K],
+		message: SocketInterfaceRequest<OutboundT>[K],
 		timeout: number = DEFAULT_ACK_TIMEOUT,
-	): Promise<SocketInterfaceResponse<T>[K]> {
+	): Promise<SocketInterfaceResponse<OutboundT>[K]> {
+		// If we have schema, validate sent message
+		if (this.schema) {
+			if (!Object.hasOwn(this.schema.outbound, messageType) || this.schema.outbound[messageType].response === null) {
+				this.logger.error(`Attempt to send unknown message type '${messageType}', dropped.\n`, new Error());
+				return Promise.reject('Invalid message');
+			}
+
+			const result = this.schema.outbound[messageType].request.safeParse(message);
+
+			if (!result.success) {
+				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', result.error.toString());
+				return Promise.reject('Invalid message');
+			}
+			// Replace message with parsed result, as it might have stripped some data
+			message = result.data;
+		}
 		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 			this.logger.debug(`\u25B2 message '${messageType}':`, message);
 		}
@@ -73,15 +118,31 @@ export abstract class ConnectionBase<EmitterT extends EmitterWithAck, T extends 
 					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 						this.logger.warning(`\u25BC message '${messageType}' error:`, error);
 					}
-					reject(error);
-				} else if (!IsObject(response)) {
-					reject(new Error(`Invalid response type: ${typeof response}`));
-				} else {
-					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
-						this.logger.debug(`\u25BC message '${messageType}' response:`, response);
-					}
-					resolve(response as SocketInterfaceResponse<T>[K]);
+					return reject(error);
 				}
+				if (!IsObject(response)) {
+					return reject(new Error(`Invalid response type: ${typeof response}`));
+				}
+
+				// If we have schema, validate received response message
+				if (this.schema) {
+					const responseSchema = this.schema.outbound[messageType]?.response;
+					AssertNotNullable(responseSchema);
+
+					const result = responseSchema.safeParse(response);
+
+					if (!result.success) {
+						this.logger.warning(`Bad response content for '${messageType}'.\n`, result.error.toString(), '\n', response);
+						return reject(new Error('Invalid response'));
+					}
+					// Replace message with parsed result, as it might have stripped some data
+					response = result.data;
+				}
+
+				if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
+					this.logger.debug(`\u25BC message '${messageType}' response:`, response);
+				}
+				resolve(response as SocketInterfaceResponse<OutboundT>[K]);
 			});
 		});
 	}
@@ -90,16 +151,14 @@ export abstract class ConnectionBase<EmitterT extends EmitterWithAck, T extends 
 	 * Handle incoming message from client
 	 * @param messageType - The type of incoming message
 	 * @param message - The message
+	 * @param callback - Callback to respond, if this message is expecting response
 	 * @returns Promise of resolution of the message, for some messages also response data
 	 */
-	protected abstract onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean>;
-
-	protected validateMessage(_messageType: string, message: unknown): [true, Record<string, unknown>] | [false, string] {
-		if (!!message && typeof message === 'object' && !Array.isArray(message))
-			return [true, message as Record<string, unknown>];
-
-		return [false, `Invalid message type: ${typeof message}`];
-	}
+	protected abstract onMessage<K extends (keyof IncomingT & string)>(
+		messageType: K,
+		message: SocketInterfaceRequest<IncomingT>[K],
+		callback?: (arg: SocketInterfaceResponse<IncomingT>[K]) => void,
+	): Promise<boolean>;
 
 	protected handleMessage(messageType: unknown, message: unknown, callback: ((arg: Record<string, unknown>) => void) | undefined): void {
 		if (typeof messageType !== 'string') {
@@ -110,11 +169,32 @@ export abstract class ConnectionBase<EmitterT extends EmitterWithAck, T extends 
 			this.logger.warning(`Message '${messageType}' callback is not a function: ${typeof callback}`);
 			return;
 		}
-
-		const [valid, data] = this.validateMessage(messageType, message);
-		if (!valid) {
-			this.logger.warning(`Bad message content for '${messageType}'`, data, message);
+		if (!IsObject(message)) {
+			this.logger.warning(`Invalid message type: ${typeof message}`);
 			return;
+		}
+
+		// If we have schema, validate received message
+		if (this.schema) {
+			const messageSchema = this.schema.incoming[messageType];
+			if (messageSchema == null) {
+				this.logger.warning(`Invalid message type: '${messageType}'`);
+				return;
+			}
+
+			if ((messageSchema.response == null) !== (callback == null)) {
+				this.logger.warning(`Received message '${messageType}' ${callback != null ? 'has' : `doesn't have`} callback, but expected ${messageSchema.response != null ? 'one' : 'none'}`);
+				return;
+			}
+
+			const result = messageSchema.request.safeParse(message);
+
+			if (!result.success) {
+				this.logger.warning(`Bad message content for '${messageType}'.\n`, result.error.toString(), '\n', message);
+				return;
+			}
+			// Replace message with parsed result, as it might have stripped some data
+			message = result.data;
 		}
 
 		if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
@@ -123,12 +203,34 @@ export abstract class ConnectionBase<EmitterT extends EmitterWithAck, T extends 
 				const outerCallback = callback;
 				callback = (cbResult: Record<string, unknown>) => {
 					this.logger.debug(`\u25B2 message '${messageType}' result:`, cbResult);
-					outerCallback(data);
+					outerCallback(cbResult);
 				};
 			}
 		}
 
-		this.onMessage(messageType, data, callback)
+		// If we have schema, validate sent response
+		if (callback && this.schema) {
+			const outerCallback = callback;
+			callback = (cbResult: Record<string, unknown>) => {
+				const responseSchema = this.schema?.incoming[messageType]?.response;
+				AssertNotNullable(responseSchema);
+
+				const result = responseSchema.safeParse(cbResult);
+
+				if (!result.success) {
+					this.logger.error(`Attempt to send bad response for '${messageType}', dropped.\n`, new Error(), '\n', result.error.toString());
+					return;
+				}
+				// Replace message with parsed result, as it might have stripped some data
+				outerCallback(result.data);
+			};
+		}
+
+		this.onMessage(
+			messageType as (keyof IncomingT & string),
+			message as SocketInterfaceRequest<IncomingT>[keyof IncomingT & string],
+			callback as ((arg: SocketInterfaceResponse<IncomingT>[keyof IncomingT & string]) => void),
+		)
 			.then((success) => {
 				if (!success) {
 					this.logger.error(`Message '${messageType}' has no handler`);
@@ -148,12 +250,21 @@ export abstract class ConnectionBase<EmitterT extends EmitterWithAck, T extends 
 }
 
 /** Allows sending and receiving messages */
-export abstract class Connection<EmitterT extends IncomingSocket, T extends SocketInterfaceDefinition> extends ConnectionBase<EmitterT, T> implements IConnection<T> {
-	private _rooms: Set<ServerRoom<T>> = new Set();
-	private _server: IServerSocket<T>;
+export abstract class IncomingConnection<
+	OutboundT extends SocketInterfaceDefinition,
+	IncomingT extends SocketInterfaceDefinition,
+	SocketT extends IncomingSocket = IncomingSocket,
+> extends ConnectionBase<OutboundT, IncomingT, SocketT> implements IIncomingConnection<OutboundT> {
+	private _rooms: Set<ServerRoom<OutboundT>> = new Set();
+	private _server: IServerSocket<OutboundT>;
 
-	constructor(server: IServerSocket<T>, socket: EmitterT, logger: Logger) {
-		super(socket, logger);
+	constructor(
+		server: IServerSocket<OutboundT>,
+		socket: SocketT,
+		schema: [OutboundT, IncomingT] | 'DO_NOT_VALIDATE_DATA',
+		logger: Logger,
+	) {
+		super(socket, schema, logger);
 		this._server = server;
 		socket.onDisconnect = this.onDisconnect.bind(this);
 		socket.onMessage = this.handleMessage.bind(this);
@@ -163,7 +274,7 @@ export abstract class Connection<EmitterT extends IncomingSocket, T extends Sock
 		return this.socket.id;
 	}
 
-	get rooms(): ReadonlySet<ServerRoom<T>> {
+	get rooms(): ReadonlySet<ServerRoom<OutboundT>> {
 		return this._rooms;
 	}
 
@@ -177,34 +288,51 @@ export abstract class Connection<EmitterT extends IncomingSocket, T extends Sock
 		[...this._rooms].forEach((room) => room.leave(this));
 	}
 
-	public joinRoom(room: ServerRoom<T>): void {
+	public joinRoom(room: ServerRoom<OutboundT>): void {
 		room.join(this._server, this);
 		this._rooms.add(room);
 	}
 
-	public leaveRoom(room: ServerRoom<T>): void {
+	public leaveRoom(room: ServerRoom<OutboundT>): void {
 		room.leave(this);
 	}
 }
 
 export class MockServerSocket<T extends SocketInterfaceDefinition> implements IServerSocket<T> {
-	sendToAll<K extends SocketInterfaceOneshotMessages<T>>(clients: ReadonlySet<IConnectionSender<T>>, messageType: K, message: SocketInterfaceRequest<T>[K]): void {
+	sendToAll<K extends SocketInterfaceOneshotMessages<T>>(clients: ReadonlySet<IConnectionBase<T>>, messageType: K, message: SocketInterfaceRequest<T>[K]): void {
 		for (const client of clients) {
 			client.sendMessage(messageType, message);
 		}
 	}
 }
 
-export class MockConnection<T extends SocketInterfaceDefinition> extends Connection<MockConnectionSocket, T> {
-	readonly messageHandler: IMessageHandler<MockConnection<T>>;
+export class MockConnection<
+	OutboundT extends SocketInterfaceDefinition,
+	IncomingT extends SocketInterfaceDefinition,
+> extends IncomingConnection<OutboundT, IncomingT, MockConnectionSocket> {
+	readonly messageHandler: IMessageHandler<MockConnection<OutboundT, IncomingT>>;
 
-	constructor(server: IServerSocket<T>, messageHandler: IMessageHandler<MockConnection<T>>, id: string, logger?: Logger) {
-		super(server, new MockConnectionSocket(id), logger ?? GetLogger('MockConnection', `[MockConnection, ${id}]`));
+	constructor(
+		server: IServerSocket<OutboundT>,
+		messageHandler: IMessageHandler<MockConnection<OutboundT, IncomingT>>,
+		id: string,
+		logger?: Logger,
+	) {
+		super(server, new MockConnectionSocket(id), 'DO_NOT_VALIDATE_DATA', logger ?? GetLogger('MockConnection', `[MockConnection, ${id}]`));
 		this.messageHandler = messageHandler;
 	}
 
-	onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, this);
+	protected onMessage<K extends (keyof IncomingT & string)>(
+		messageType: K,
+		message: SocketInterfaceRequest<IncomingT>[K],
+		callback?: ((arg: SocketInterfaceResponse<IncomingT>[K]) => void) | undefined,
+	): Promise<boolean> {
+		return this.messageHandler.onMessage(
+			messageType,
+			message,
+			callback as ((arg: Record<string, unknown>) => void),
+			this,
+		);
 	}
 
 	connect(): IncomingSocket {
@@ -213,26 +341,5 @@ export class MockConnection<T extends SocketInterfaceDefinition> extends Connect
 
 	disconnect(): void {
 		this.socket.disconnect();
-	}
-}
-
-export abstract class ZodConnection<EmitterT extends IncomingSocket, IncomingT extends SocketInterfaceDefinition, OutboundT extends SocketInterfaceDefinition> extends Connection<EmitterT, OutboundT> {
-	private readonly _schema: IncomingT;
-
-	constructor(server: IServerSocket<OutboundT>, socket: EmitterT, logger: Logger, schema: IncomingT) {
-		super(server, socket, logger);
-		this._schema = schema;
-	}
-
-	protected override validateMessage(messageType: string, message: unknown): [true, Record<string, unknown>] | [false, string] {
-		if (!Object.hasOwn(this._schema, messageType))
-			return [false, 'Invalid message type'];
-
-		const result = this._schema[messageType].request.safeParse(message);
-
-		if (result.success)
-			return [true, result.data as Record<string, unknown>];
-
-		return [false, result.error.toString()];
 	}
 }

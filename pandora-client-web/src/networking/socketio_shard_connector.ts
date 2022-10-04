@@ -8,6 +8,7 @@ import {
 	IShardClient,
 	MessageHandler,
 } from 'pandora-common';
+import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { GetAssetManager, LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
@@ -36,7 +37,7 @@ function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacte
 const ShardConnectionProgress = new PersistentToast();
 
 /** Class housing connection from Shard to Shard */
-export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShard> implements ShardConnector {
+export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardClient, Socket> implements ShardConnector {
 
 	private readonly _state: Observable<ShardConnectionState> = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
@@ -66,7 +67,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShard>
 	}
 
 	constructor(info: IDirectoryCharacterConnectionInfo) {
-		super(CreateConnection(info), logger);
+		super(CreateConnection(info), 'DO_NOT_VALIDATE_DATA', logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
 		this._player = new Observable<PlayerCharacter | null>(null);
 		this._room = new ChatRoom(this);
@@ -96,8 +97,12 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShard>
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
 
-	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return this._messageHandler.onMessage(messageType, message, callback);
+	protected onMessage<K extends (keyof IShardClient & string)>(
+		messageType: K,
+		message: Record<string, unknown>,
+		callback?: ((arg: SocketInterfaceResponse<IShardClient>[K]) => void) | undefined,
+	): Promise<boolean> {
+		return this._messageHandler.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void));
 	}
 
 	public connectionInfoMatches(info: IDirectoryCharacterConnectionInfo): boolean {

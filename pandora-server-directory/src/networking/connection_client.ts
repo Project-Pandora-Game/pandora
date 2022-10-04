@@ -1,11 +1,12 @@
-import { IDirectoryClient, GetLogger, ZodConnection, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory } from 'pandora-common';
+import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema } from 'pandora-common';
+import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
 import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
 
 /** Class housing connection from a client */
-export class ClientConnection extends ZodConnection<IncomingSocket, IClientDirectory, IDirectoryClient> implements IConnectionClient {
+export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> implements IConnectionClient {
 	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
 	/** The current account this connection is logged in as or `null` if it isn't */
@@ -25,7 +26,7 @@ export class ClientConnection extends ZodConnection<IncomingSocket, IClientDirec
 	}
 
 	constructor(server: IServerSocket<IDirectoryClient>, socket: IncomingSocket, auth: unknown) {
-		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`), ClientDirectorySchema);
+		super(server, socket, [DirectoryClientSchema, ClientDirectorySchema], GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
 		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this, auth);
 	}
@@ -42,8 +43,12 @@ export class ClientConnection extends ZodConnection<IncomingSocket, IClientDirec
 	 * @param message - The message
 	 * @returns Promise of resolution of the message, for some messages also response data
 	 */
-	protected override onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return ConnectionManagerClient.onMessage(messageType, message, callback, this);
+	protected onMessage<K extends (keyof IClientDirectory & string)>(
+		messageType: K,
+		message: Record<string, unknown>,
+		callback?: ((arg: SocketInterfaceResponse<IClientDirectory>[K]) => void) | undefined,
+	): Promise<boolean> {
+		return ConnectionManagerClient.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void), this);
 	}
 
 	/**

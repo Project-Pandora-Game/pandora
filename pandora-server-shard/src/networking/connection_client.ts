@@ -1,11 +1,12 @@
-import { CharacterId, GetLogger, IShardClient, ZodConnection, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard } from 'pandora-common';
+import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema } from 'pandora-common';
+import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
 import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
 
 /** Class housing connection from a client */
-export class ClientConnection extends ZodConnection<IncomingSocket, IClientShard, IShardClient> implements IConnectionClient {
+export class ClientConnection extends IncomingConnection<IShardClient, IClientShard, IncomingSocket> implements IConnectionClient {
 	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
 	private _aborted: boolean = false;
@@ -19,7 +20,7 @@ export class ClientConnection extends ZodConnection<IncomingSocket, IClientShard
 	public readonly headers: Record<string, undefined | string | string[]>;
 
 	constructor(server: IServerSocket<IShardClient>, socket: IncomingSocket, headers: Record<string, undefined | string | string[]>) {
-		super(server, socket, GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`), ClientShardSchema);
+		super(server, socket, [ShardClientSchema, ClientShardSchema], GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
 		this.headers = headers;
 		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this);
@@ -57,7 +58,11 @@ export class ClientConnection extends ZodConnection<IncomingSocket, IClientShard
 	 * @param message - The message
 	 * @returns Promise of resolution of the message, for some messages also response data
 	 */
-	protected override onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return ConnectionManagerClient.onMessage(messageType, message, callback, this);
+	protected onMessage<K extends (keyof IClientShard & string)>(
+		messageType: K,
+		message: Record<string, unknown>,
+		callback?: ((arg: SocketInterfaceResponse<IClientShard>[K]) => void) | undefined,
+	): Promise<boolean> {
+		return ConnectionManagerClient.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void), this);
 	}
 }

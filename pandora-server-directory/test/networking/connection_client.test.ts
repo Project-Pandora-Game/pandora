@@ -5,7 +5,7 @@ import { ConnectionManagerClient } from '../../src/networking/manager_client';
 import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils';
 
 describe('ClientConnection', () => {
-	let connection: MockConnection<IClientDirectory>;
+	let connection: MockConnection<IClientDirectory, IDirectoryClient>;
 	let server: MockServerSocket<IDirectoryClient>;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let connectionOnMessage: jest.Mock<any, any>;
@@ -18,8 +18,8 @@ describe('ClientConnection', () => {
 		connectionOnMessage = jest.fn(() => {
 			return Promise.resolve(true);
 		});
-		server = new MockServerSocket<IDirectoryClient>();
-		connection = new MockConnection(new MockServerSocket<IClientDirectory>(), { onMessage: connectionOnMessage }, nanoid());
+		server = new MockServerSocket();
+		connection = new MockConnection(new MockServerSocket(), { onMessage: connectionOnMessage }, nanoid());
 	});
 	afterEach(() => {
 		connection.disconnect();
@@ -190,7 +190,7 @@ describe('ClientConnection', () => {
 			const account = await TestMockAccount();
 			const character = await TestMockCharacter(account);
 			const client = new ClientConnection(server, connection.connect(), {});
-			const connection2 = new MockConnection(server, { onMessage: connectionOnMessage }, nanoid());
+			const connection2 = new MockConnection<IClientDirectory, IDirectoryClient>(new MockServerSocket(), { onMessage: connectionOnMessage }, nanoid());
 			const client2 = new ClientConnection(server, connection2.connect(), {});
 			client.setAccount(account);
 			client2.setAccount(account);

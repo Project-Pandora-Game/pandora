@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io';
 import type { IncomingMessage, Server as HttpServer } from 'http';
-import { GetLogger, IConnectionSender, IsCharacterId, IServerSocket, IShardClient } from 'pandora-common';
+import { GetLogger, IIncomingConnection, IsCharacterId, IServerSocket, IShardClient } from 'pandora-common';
 import type { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers';
 import { SocketIOServer } from './socketio_common_server';
 import { ClientConnection } from './connection_client';
@@ -36,7 +36,7 @@ export class SocketIOServerClient extends SocketIOServer implements IServerSocke
 		next(undefined, true);
 	}
 
-	sendToAll<K extends SocketInterfaceOneshotMessages<IShardClient>>(client: ReadonlySet<IConnectionSender<IShardClient>>, messageType: K, message: SocketInterfaceRequest<IShardClient>[K]): void {
+	sendToAll<K extends SocketInterfaceOneshotMessages<IShardClient>>(client: ReadonlySet<IIncomingConnection<IShardClient>>, messageType: K, message: SocketInterfaceRequest<IShardClient>[K]): void {
 		const rooms = [...client].map((c) => c.id);
 		this.socketServer.to(rooms).emit(messageType, message);
 	}

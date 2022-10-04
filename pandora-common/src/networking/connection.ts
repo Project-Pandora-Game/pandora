@@ -7,6 +7,7 @@ import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './con
 import { EmitterWithAck, IncomingSocket, MockConnectionSocket } from './socket';
 import { BadMessageError, IMessageHandler } from './message_handler';
 import { AssertNotNullable } from '../utility';
+import { nanoid } from 'nanoid';
 
 export interface IConnectionBase<OutboundT extends SocketInterfaceDefinition> {
 	/**
@@ -309,17 +310,21 @@ export class MockServerSocket<T extends SocketInterfaceDefinition> implements IS
 export class MockConnection<
 	OutboundT extends SocketInterfaceDefinition,
 	IncomingT extends SocketInterfaceDefinition,
-> extends IncomingConnection<OutboundT, IncomingT, MockConnectionSocket> {
+> extends ConnectionBase<OutboundT, IncomingT, MockConnectionSocket> {
 	readonly messageHandler: IMessageHandler<MockConnection<OutboundT, IncomingT>>;
 
+	get id(): string {
+		return this.socket.id;
+	}
+
 	constructor(
-		server: IServerSocket<OutboundT>,
 		messageHandler: IMessageHandler<MockConnection<OutboundT, IncomingT>>,
-		id: string,
+		id: string = nanoid(),
 		logger?: Logger,
 	) {
-		super(server, new MockConnectionSocket(id), 'DO_NOT_VALIDATE_DATA', logger ?? GetLogger('MockConnection', `[MockConnection, ${id}]`));
+		super(new MockConnectionSocket(id), 'DO_NOT_VALIDATE_DATA', logger ?? GetLogger('MockConnection', `[MockConnection, ${id}]`));
 		this.messageHandler = messageHandler;
+		this.socket.onMessage = this.handleMessage.bind(this);
 	}
 
 	protected onMessage<K extends (keyof IncomingT & string)>(
@@ -333,6 +338,11 @@ export class MockConnection<
 			callback as ((arg: Record<string, unknown>) => void),
 			this,
 		);
+	}
+
+	/** Check if this connection is still connected */
+	isConnected(): boolean {
+		return this.socket.isConnected();
 	}
 
 	connect(): IncomingSocket {

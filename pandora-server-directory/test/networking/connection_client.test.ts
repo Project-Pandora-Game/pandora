@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid';
 import { IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
 import { ClientConnection } from '../../src/networking/connection_client';
 import { ConnectionManagerClient } from '../../src/networking/manager_client';
@@ -19,7 +18,7 @@ describe('ClientConnection', () => {
 			return Promise.resolve(true);
 		});
 		server = new MockServerSocket();
-		connection = new MockConnection(new MockServerSocket(), { onMessage: connectionOnMessage }, nanoid());
+		connection = new MockConnection({ onMessage: connectionOnMessage });
 	});
 	afterEach(() => {
 		connection.disconnect();
@@ -190,7 +189,7 @@ describe('ClientConnection', () => {
 			const account = await TestMockAccount();
 			const character = await TestMockCharacter(account);
 			const client = new ClientConnection(server, connection.connect(), {});
-			const connection2 = new MockConnection<IClientDirectory, IDirectoryClient>(new MockServerSocket(), { onMessage: connectionOnMessage }, nanoid());
+			const connection2 = new MockConnection<IClientDirectory, IDirectoryClient>({ onMessage: connectionOnMessage });
 			const client2 = new ClientConnection(server, connection2.connect(), {});
 			client.setAccount(account);
 			client2.setAccount(account);

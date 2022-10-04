@@ -3,10 +3,24 @@ import { useDebugExpose } from '../../common/useDebugExpose';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { VersionCheck } from '../versionCheck/versionCheck';
 
+type NotificationHeader<T extends ReadonlyObservable<readonly unknown[]> = ReadonlyObservable<readonly unknown[]>> = {
+	readonly notifications: T,
+	readonly friends: T,
+};
+export type NotificationHeaderKeys = keyof NotificationHeader;
+
 export enum NotificationSource {
 	CHAT_MESSAGE = 'CHAT_MESSAGE',
 	DIRECT_MESSAGE = 'DIRECT_MESSAGE',
 	VERSION_CHANGED = 'VERSION_CHANGED',
+}
+
+function IsNotificationSource(source: NotificationSource): boolean {
+	return source === NotificationSource.CHAT_MESSAGE || source === NotificationSource.VERSION_CHANGED;
+}
+
+function IsFriendsSource(source: NotificationSource): boolean {
+	return source === NotificationSource.DIRECT_MESSAGE;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -35,7 +49,7 @@ enum NotificationAudio {
 }
 
 class NotificationHandlerBase {
-	public get header(): ReadonlyObservable<readonly NotificationFullData[]> {
+	public get header(): NotificationHeader<ReadonlyObservable<readonly NotificationFullData[]>> {
 		throw new Error('Not implemented');
 	}
 	public get title(): ReadonlyObservable<string> {
@@ -64,12 +78,15 @@ const BASE_TITLE = 'Pandora';
 class NotificationHandler extends NotificationHandlerBase {
 
 	private readonly _notifications = new Observable<readonly NotificationFullData[]>([]);
-	private readonly _header = new Observable<readonly NotificationFullData[]>([]);
+	private readonly _header: NotificationHeader<Observable<readonly NotificationFullData[]>> = {
+		notifications: new Observable<readonly NotificationFullData[]>([]),
+		friends: new Observable<readonly NotificationFullData[]>([]),
+	} as const;
 	private readonly _title = new Observable<string>(BASE_TITLE);
 	private readonly _favico = new Observable<string>('');
 
-	public override get header(): ReadonlyObservable<readonly NotificationFullData[]> {
-		return this._notifications;
+	public override get header(): NotificationHeader<ReadonlyObservable<readonly NotificationFullData[]>> {
+		return this._header;
 	}
 
 	public override get title(): ReadonlyObservable<string> {
@@ -118,7 +135,8 @@ class NotificationHandler extends NotificationHandlerBase {
 		const notifications = this._notifications.value;
 
 		// Header
-		this._header.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER));
+		this._header.notifications.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && IsNotificationSource(n.source));
+		this._header.friends.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && IsFriendsSource(n.source));
 
 		// Title
 		const titleNotifications = notifications.filter((n) => n.alert.has(NotificationAlert.TITLE)).length;
@@ -220,10 +238,10 @@ export function useNotification(source: NotificationSource): {
 	}), [context, source]);
 }
 
-export function useNotificationHeader(): [readonly NotificationFullData[], () => void] {
+export function useNotificationHeader(type: NotificationHeaderKeys): [readonly NotificationFullData[], () => void] {
 	const context = useContext(notificationContext);
 	return [
-		useObservable(context.header),
+		useObservable(context.header[type]),
 		useCallback(() => context.clearHeader(), [context]),
 	];
 }

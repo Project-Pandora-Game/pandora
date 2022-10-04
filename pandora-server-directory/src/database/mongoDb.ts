@@ -304,6 +304,7 @@ async function CreateInMemoryMongo({
 		instance: {
 			dbPath,
 			storageEngine: dbPath ? 'wiredTiger' : 'ephemeralForTest',
+			args: ['--setParameter', 'diagnosticDataCollectionEnabled=false'],
 		},
 	});
 }

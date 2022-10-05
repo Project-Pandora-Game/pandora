@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { EMPTY, IsAuthorized } from 'pandora-common';
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import friendsIcon from '../../assets/icons/friends.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
@@ -13,9 +13,10 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import './header.scss';
 import { HeaderButton } from './HeaderButton';
-import { NotificationHeaderKeys, useNotificationHeader } from '../gameContext/notificationContextProvider';
+import { NotificationHeaderKeys, NotificationSource, useNotification, useNotificationHeader } from '../gameContext/notificationContextProvider';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { DirectMessageChannel } from '../../networking/directMessageManager';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -77,7 +78,7 @@ function RightHeader(): ReactElement {
 			{ loggedIn && (
 				<>
 					<NotificationButton icon={ notificationsIcon } title='Notifications' type='notifications' onClick={ () => toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR) } />
-					<NotificationButton icon={ friendsIcon } title='Friends' type='friends' onClick={ () => navigate('/direct_messages') } />
+					<FriendsHeaderButton />
 					<HeaderButton icon={ friendsIcon } iconAlt='Friends' onClick={ () => navigate('/direct_messages') } title='Friends' />
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/account_settings') } title='Settings' />
 					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }
@@ -110,6 +111,29 @@ function NotificationButton({ icon, title, type, onClick }: {
 			title={ title }
 			badge={ notification.length }
 			onClick={ onNotificationClick }  />
+	);
+}
+
+function FriendsHeaderButton(): ReactElement {
+	const navigate = useNavigate();
+	const handler = useDirectoryConnector().directMessageHandler;
+	const { notify } = useNotification(NotificationSource.DIRECT_MESSAGE);
+
+	useEffect(() => handler.on('newMessage', (channel: DirectMessageChannel) => {
+		if (channel.mounted && document.visibilityState === 'visible')
+			return;
+
+		notify({
+
+		});
+	}), [handler, notify]);
+
+	return (
+		<NotificationButton
+			icon={ friendsIcon }
+			title='Friends'
+			type='friends'
+			onClick={ () => navigate('/direct_messages') } />
 	);
 }
 

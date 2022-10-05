@@ -225,7 +225,8 @@ export class GraphicsLayer<Character extends GraphicsCharacter = GraphicsCharact
 				.flatMap((override) => override.condition)
 				.flat()
 				.filter((condition): condition is AtomicConditionBone => 'bone' in condition && condition.bone != null)
-				.map((condition) => condition.bone),
+				.map((condition) => condition.bone)
+				.concat(this.layer.definition.scaling ? [this.layer.definition.scaling.scaleBone] : []),
 		);
 
 		const triangles: number[] = [];

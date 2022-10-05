@@ -1,8 +1,13 @@
+import { GetLogger } from 'pandora-common';
 import { Texture, Resource } from 'pixi.js';
 import { GraphicsLoaderBase } from '../../src/assets/graphicsLoader';
 
 describe('GraphicsLoaderBase', () => {
 	const mockGraphicsLoaderBase = new class MockGraphicsLoaderBase extends GraphicsLoaderBase {
+		constructor() {
+			super(GetLogger('GraphicsLoader'));
+		}
+
 		protected loadTexture(_path: string): Promise<Texture<Resource>> {
 			throw new Error('Method not implemented.');
 		}

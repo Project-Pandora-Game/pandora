@@ -70,7 +70,19 @@ const consoleOutput: LogOutputDefinition = {
 	supportsColor: IS_NODE,
 	onMessage: IS_NODE
 		? (prefix, message) => console.info(prefix, ...message)
-		: (prefix, message, level) => console.info(prefix.replace(LOG_NAMES[level], `%c${LOG_NAMES[level]}%c`), LOG_COLORS[level], '', ...message),
+		: (prefix, message, level) => {
+			const log = [prefix.replace(LOG_NAMES[level], `%c${LOG_NAMES[level]}%c`), LOG_COLORS[level], '', ...message];
+			const c = console as Record<string, unknown>;
+			if (level <= LogLevel.ERROR && typeof c.error === 'function') {
+				c.error(...log);
+			} else if (level <= LogLevel.ERROR && typeof c.warn === 'function') {
+				c.warn(...log);
+			} else if (level >= LogLevel.DEBUG && typeof c.debug === 'function') {
+				c.debug(...log);
+			} else {
+				console.info(...log);
+			}
+		},
 };
 logConfig.logOutputs.push(consoleOutput);
 

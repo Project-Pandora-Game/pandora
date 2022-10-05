@@ -20,6 +20,7 @@
 		"start": "yarn dev"
 	},
 	"dependencies": {
+		"bowser": "^2.11.0",
 		"classnames": "^2.3.1",
 		"client-zip": "^2.2.2",
 		"delaunator": "^5.0.0",

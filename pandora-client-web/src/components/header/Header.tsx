@@ -79,7 +79,6 @@ function RightHeader(): ReactElement {
 				<>
 					<NotificationButton icon={ notificationsIcon } title='Notifications' type='notifications' onClick={ () => toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR) } />
 					<FriendsHeaderButton />
-					<HeaderButton icon={ friendsIcon } iconAlt='Friends' onClick={ () => navigate('/direct_messages') } title='Friends' />
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/account_settings') } title='Settings' />
 					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }
 					<span>{ currentAccount.username }</span>

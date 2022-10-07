@@ -1,10 +1,9 @@
 import type { Asset } from '../asset';
 import { z } from 'zod';
 import type { Satisfies } from '../../utility';
-import type { EffectsDefinition } from '../effects';
-import { PoseLimitsResult } from '../appearanceValidation';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character';
+import { AssetProperties } from '../properties';
 
 export interface IModuleConfigCommon<Type extends string> {
 	type: Type;
@@ -38,8 +37,9 @@ export interface IItemModule<Type extends string = string> {
 	readonly config: IModuleConfigCommon<Type>;
 
 	exportData(): IModuleItemDataCommon<Type>;
-	getEffects(): Partial<EffectsDefinition> | undefined;
-	applyPoseLimits(base: PoseLimitsResult): PoseLimitsResult;
+
+	getProperties(): AssetProperties;
+
 	evalCondition(operator: ConditionOperator, value: string): boolean;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	doAction(action: any): IItemModule<Type> | null;

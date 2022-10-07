@@ -2,7 +2,8 @@ import _ from 'lodash';
 import type { CharacterId } from '.';
 import { Asset, Item, ItemId } from '../assets';
 import type { Appearance } from '../assets/appearance';
-import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from '../assets/effects';
+import { EffectsDefinition } from '../assets/effects';
+import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from '../assets/properties';
 import { AppearanceActionRoomContext } from '../chatroom';
 
 export enum ItemInteractionType {
@@ -58,7 +59,7 @@ export class CharacterRestrictionsManager {
 	public readonly appearance: Appearance;
 	public readonly room: AppearanceActionRoomContext | null;
 	private _items: readonly Item[] = [];
-	private _effects: Readonly<EffectsDefinition> = { ...EFFECTS_DEFAULT };
+	private _properties: Readonly<AssetPropertiesResult> = CreateAssetPropertiesResult();
 
 	constructor(id: CharacterId, appearance: Appearance, room: AppearanceActionRoomContext | null) {
 		this.id = id;
@@ -66,20 +67,24 @@ export class CharacterRestrictionsManager {
 		this.room = room;
 	}
 
+	public getProperties(): Readonly<AssetPropertiesResult> {
+		const items = this.appearance.getAllItems();
+		if (items === this._items) {
+			return this._properties;
+		}
+		this._items = items;
+		this._properties = items
+			.flatMap((item) => item.getPropertiesParts())
+			.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+
+		return this._properties;
+	}
+
 	/**
 	 * @returns Stable result for effects
 	 */
 	public getEffects(): Readonly<EffectsDefinition> {
-		const items = this.appearance.getAllItems();
-		if (items === this._items) {
-			return this._effects;
-		}
-		this._items = items;
-		this._effects = items
-			.map((item) => item.getEffects())
-			.reduce(MergeEffects, EFFECTS_DEFAULT);
-
-		return this._effects;
+		return this.getProperties().effects;
 	}
 
 	/**

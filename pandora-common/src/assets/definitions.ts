@@ -2,9 +2,9 @@ import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexColorString, zTemplateString } from '../validation';
 import type { ArmsPose, BoneName } from './appearance';
-import type { EffectsProperty } from './effects';
 import type { BoneDefinitionCompressed } from './graphics';
 import { AssetModuleDefinition } from './modules';
+import { AssetProperties } from './properties';
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
@@ -12,6 +12,7 @@ export type AssetId = z.infer<typeof AssetIdSchema>;
 export interface AssetDefinitionExtraArgs {
 	bones: BoneName;
 	bodyparts: string;
+	attributes: string;
 }
 
 export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
@@ -24,7 +25,7 @@ export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = 
 	forceArms?: ArmsPose;
 }
 
-export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
+export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	id: AssetId;
 
 	/** The visible name of this asset */
@@ -47,18 +48,6 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 		name: string | null;
 		default: HexColorString;
 	}[];
-
-	/** Configuration of how the asset limits pose */
-	poseLimits?: AssetDefinitionPoseLimits<A>;
-
-	/** The effects this item applies when worn */
-	effects?: EffectsProperty;
-
-	/**
-	 * Allows or forbids character from equipping this item themselves
-	 * @default true
-	 */
-	allowSelfEquip?: boolean;
 
 	/**
 	 * Modules this asset has

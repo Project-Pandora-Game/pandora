@@ -1,11 +1,10 @@
 import { z } from 'zod';
 import { HexColorString, HexColorStringSchema, zTemplateString } from '../validation';
-import { MergePoseLimits, PoseLimitsResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetIdSchema } from './definitions';
-import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from './effects';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule, IModuleItemDataCommonSchema } from './modules/common';
+import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 
 export const ItemIdSchema = zTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;
@@ -99,16 +98,15 @@ export class Item {
 		});
 	}
 
-	public getEffects(): EffectsDefinition {
-		const assetEffects = MergeEffects(EFFECTS_DEFAULT, this.asset.definition.effects);
-		return Array.from(this.modules.values())
-			.map((m) => m.getEffects())
-			.reduce(MergeEffects, assetEffects);
+	public getPropertiesParts(): AssetProperties[] {
+		const propertyParts: AssetProperties[] = [this.asset.definition];
+		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
+
+		return propertyParts;
 	}
 
-	public applyPoseLimits(base: PoseLimitsResult): PoseLimitsResult {
-		return Array.from(this.modules.values())
-			.reduce((b, m) => m.applyPoseLimits(b),
-				MergePoseLimits(base, this.asset.definition.poseLimits));
+	public getProperties(): AssetPropertiesIndividualResult {
+		return this.getPropertiesParts()
+			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
 	}
 }

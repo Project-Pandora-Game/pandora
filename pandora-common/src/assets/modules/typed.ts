@@ -1,12 +1,11 @@
 import { Asset } from '../asset';
-import { EffectsDefinition, EffectsProperty } from '../effects';
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
 import { z } from 'zod';
-import { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from '../definitions';
-import { MergePoseLimits, PoseLimitsResult } from '../appearanceValidation';
+import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
+import { AssetProperties } from '../properties';
 
-export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
+export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	/** ID if this variant, must be unique */
 	id: string;
 
@@ -15,12 +14,6 @@ export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDe
 
 	/** If this variant should be autoselected as default; otherwise first one is used */
 	default?: true;
-
-	/** Configuration of how the asset limits pose */
-	poseLimits?: AssetDefinitionPoseLimits<A>;
-
-	/** The effects this item applies when worn */
-	effects?: EffectsProperty;
 }
 
 export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'typed'> {
@@ -81,12 +74,8 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 		};
 	}
 
-	getEffects(): Partial<EffectsDefinition> | undefined {
-		return this.activeVariant.effects;
-	}
-
-	applyPoseLimits(base: PoseLimitsResult): PoseLimitsResult {
-		return MergePoseLimits(base, this.activeVariant.poseLimits);
+	getProperties(): AssetProperties {
+		return this.activeVariant;
 	}
 
 	evalCondition(operator: ConditionOperator, value: string): boolean {

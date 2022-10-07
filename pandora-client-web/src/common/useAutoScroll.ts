@@ -5,7 +5,7 @@ import { useUniqueKeyRef } from './useUniqueKeyRef';
 export function useAutoScroll<Element extends HTMLElement>(memoKey: string, { deps = [], mounted }: { deps?: DependencyList, mounted?: boolean } = {}): [
 	React.RefObject<Element>,
 	() => void,
-	React.RefObject<boolean>,
+	boolean,
 ] {
 	const ref = useRef<Element>(null);
 	const scrollPosition = useUniqueKeyRef(memoKey + '_scrollPosition', 0);
@@ -84,6 +84,6 @@ export function useAutoScroll<Element extends HTMLElement>(memoKey: string, { de
 		}
 	}, [mounted, scrollPosition]);
 
-	return [ref, scroll, isScrolling];
+	return [ref, scroll, autoScroll];
 }
 

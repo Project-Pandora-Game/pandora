@@ -112,7 +112,7 @@ function Chat(): ReactElement | null {
 	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);
 
 	useEffect(() => {
-		if (isScrolling.current && document.visibilityState === 'visible') {
+		if (isScrolling && document.visibilityState === 'visible') {
 			supress();
 			clear();
 		}

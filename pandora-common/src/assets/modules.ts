@@ -4,13 +4,13 @@ import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemMo
 import { z } from 'zod';
 import { ZodMatcher } from '../validation';
 import { Asset } from './asset';
-import { BoneName } from './appearance';
+import { AssetDefinitionExtraArgs } from './definitions';
 
 //#region Module definitions
 
-export type IAssetModuleTypes<Bones extends BoneName = BoneName> = {
+export type IAssetModuleTypes<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
 	typed: {
-		config: IModuleConfigTyped<Bones>;
+		config: IModuleConfigTyped<A>;
 		data: IModuleItemDataTyped;
 	};
 };
@@ -40,7 +40,7 @@ type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 	}
 }>;
 
-export type AssetModuleDefinition<Bones extends BoneName = BoneName> = IAssetModuleTypes<Bones>[ModuleType]['config'];
+export type AssetModuleDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = IAssetModuleTypes<A>[ModuleType]['config'];
 
 export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleItemDataCommon<string> | undefined): IItemModule {
 	const moduleDefinition = asset.definition.modules?.[moduleName];

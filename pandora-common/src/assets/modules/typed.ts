@@ -2,12 +2,11 @@ import { Asset } from '../asset';
 import { EffectsDefinition, EffectsProperty } from '../effects';
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
 import { z } from 'zod';
-import { AssetDefinitionPoseLimits } from '../definitions';
-import { BoneName } from '../appearance';
+import { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from '../definitions';
 import { MergePoseLimits, PoseLimitsResult } from '../appearanceValidation';
 import { ConditionOperator } from '../graphics';
 
-export interface IModuleTypedOption<Bones extends BoneName = BoneName> {
+export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	/** ID if this variant, must be unique */
 	id: string;
 
@@ -18,15 +17,15 @@ export interface IModuleTypedOption<Bones extends BoneName = BoneName> {
 	default?: true;
 
 	/** Configuration of how the asset limits pose */
-	poseLimits?: AssetDefinitionPoseLimits<Bones>;
+	poseLimits?: AssetDefinitionPoseLimits<A>;
 
 	/** The effects this item applies when worn */
 	effects?: EffectsProperty;
 }
 
-export interface IModuleConfigTyped<Bones extends BoneName = BoneName> extends IModuleConfigCommon<'typed'> {
+export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'typed'> {
 	/** List of variants this typed module has */
-	variants: [IModuleTypedOption<Bones>, ...IModuleTypedOption<Bones>[]];
+	variants: [IModuleTypedOption<A>, ...IModuleTypedOption<A>[]];
 }
 
 export interface IModuleItemDataTyped extends IModuleItemDataCommon<'typed'> {

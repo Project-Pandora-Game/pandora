@@ -9,17 +9,22 @@ import { AssetModuleDefinition } from './modules';
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
 
-export interface AssetDefinitionPoseLimits<Bones extends BoneName = BoneName> {
+export interface AssetDefinitionExtraArgs {
+	bones: BoneName;
+	bodyparts: string;
+}
+
+export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	/**
 	 * Forces the bones within specific range; has two options at representation:
 	 * - `[number, number]` - Minimum and maximum for this bone
 	 * - `number` - Must be exactly this; shorthand for min=max
 	 */
-	forcePose?: Partial<Record<Bones, [number, number] | number>>;
+	forcePose?: Partial<Record<A['bones'], [number, number] | number>>;
 	forceArms?: ArmsPose;
 }
 
-export interface AssetDefinition<Bones extends BoneName = BoneName> {
+export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	id: AssetId;
 
 	/** The visible name of this asset */
@@ -33,7 +38,8 @@ export interface AssetDefinition<Bones extends BoneName = BoneName> {
 		itemRemove?: string;
 	};
 
-	bodypart?: string;
+	/** If this asset is a bodypart, `undefined` if not. */
+	bodypart?: A['bodyparts'];
 
 	/** Configuration of user-configurable asset colorization */
 	colorization?: {
@@ -43,7 +49,7 @@ export interface AssetDefinition<Bones extends BoneName = BoneName> {
 	}[];
 
 	/** Configuration of how the asset limits pose */
-	poseLimits?: AssetDefinitionPoseLimits<Bones>;
+	poseLimits?: AssetDefinitionPoseLimits<A>;
 
 	/** The effects this item applies when worn */
 	effects?: EffectsProperty;
@@ -57,7 +63,7 @@ export interface AssetDefinition<Bones extends BoneName = BoneName> {
 	/**
 	 * Modules this asset has
 	 */
-	modules?: Record<string, AssetModuleDefinition<Bones>>;
+	modules?: Record<string, AssetModuleDefinition<A>>;
 
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;

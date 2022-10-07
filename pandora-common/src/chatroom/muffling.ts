@@ -28,36 +28,38 @@ export class Muffler {
 	}
 
 	private muffleWord(word: string): string {
-		const random = new PseudoRandom(word + this.seed);
-		const lowerCase = word.toLowerCase();
-		const result = '';
+		const r = new PseudoRandom(word + this.seed);
+		const list: string[] = word.split('').map((c) => {
+			if (c.match(/[t]/ig)) {
+				return this.isUpper(c) ? this.roll(['T', 'Th', 'TH', 'Tph'], 0.5, r) ?? c : this.roll(['Th', 'th', 'tph'], 0.5, r) ?? c;
+			} else if (c.match(/[kqc]/ig)) {
+				return this.isUpper(c) ? this.roll(['Ch', 'Gh', 'gh'], 0.5, r) ?? c : this.roll(['ch', 'gh'], 0.5, r) ?? c;
+			} else if (c.match(/[gdbp]/ig)) {
+				return this.isUpper(c) ? this.roll(['Gh', 'gm'], 0.5, r) ?? c : this.roll(['ch', 'gh'], 0.5, r) ?? c;
+			} else if (c.match(/[s]/ig)) {
+				return this.isUpper(c) ? this.roll(['Sh', 'sh'], 0.5, r) ?? c : 'sh';
+			} else if (c.match(/[f]/ig)) {
+				return this.isUpper(c) ? this.roll(['Ph', 'ph'], 0.5, r) ?? c : 'ph';
+			} else if (c.match(/[lyr]/ig)) {
+				return this.isUpper(c) ? this.roll(['W'], 0.5, r) ?? c : this.roll(['w'], 0.5, r) ?? c;
+			} else if (c.match(/[aeiou]/ig)) {
+				return this.isUpper(c) ? this.roll(['M'], 0.5, r) ?? c : this.roll(['n'], 0.5, r) ?? c;
+			} else {
+				return c;
+			}
+		});
 
-		const { mouthBlocked, throatBlocked } = this.setting;
-		if (mouthBlocked || throatBlocked) {
-			return this.matchCaseSameLen(result, word);
-
-		} else {
-			const mid = Math.floor(result.length / 2);
-			return result.substring(random.between(0, mid),
-				random.between(mid, result.length));
-		}
+		return list.join('');
 	}
 
-	matchCaseSameLen(text: string, pattern: string): string {
-		let result = '';
-		text = text.toLowerCase();
+	private isUpper(char: string) {
+		return char === char.toUpperCase();
+	}
 
-		for (let i = 0; i < text.length; i++) {
-			const c = text.charAt(i);
-			const p = pattern.charCodeAt(i);
-
-			if (p >= 65 && p < 65 + 26) {
-				result += c.toUpperCase();
-			} else {
-				result += c.toLowerCase();
-			}
+	private roll(muf: string[], probMuf: number, random: PseudoRandom): string | null {
+		if (random.rand() <= probMuf) {
+			return muf[Math.round(random.between(0, muf.length - 1))];
 		}
-
-		return result;
+		return null;
 	}
 }

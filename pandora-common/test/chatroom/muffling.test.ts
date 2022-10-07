@@ -14,6 +14,7 @@ describe('Muffler', () => {
 			const test = 'The quick brown fox jumps over the lazy dog';
 			expect(muffler.muffle(test.toUpperCase()).split('').every((c) => c === c.toUpperCase()));
 			expect(muffler.muffle(test.toLowerCase()).split('').every((c) => c === c.toLowerCase()));
+			console.log(muffler.muffle(test));
 		});
 	});
 

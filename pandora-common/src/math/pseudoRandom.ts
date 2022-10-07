@@ -39,6 +39,13 @@ export class PseudoRandom {
 		return (r >>> 0) / 4294967296;
 	}
 
+	// return random between min & max;
+	public between(min: number, max: number): number {
+		if (min > max) throw Error(`min(${min}) cannot be larger than max(${max})`);
+
+		return (max - min) * this.rand() + min;
+	}
+
 	private quickHash(s: string): number {
 		let hash = 0;
 		if (s.length === 0) return hash;

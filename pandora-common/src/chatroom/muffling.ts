@@ -19,11 +19,11 @@ type MufflerSetting = {
 };
 
 export class Muffler {
-	private seed: string;
+	private salt: string;
 	private setting: MufflerSetting;
 
-	constructor(seed: string, setting?: Partial<MufflerSetting>) {
-		this.seed = seed;
+	constructor(salt: string, setting?: Partial<MufflerSetting>) {
+		this.salt = salt;
 		this.setting = setting ?? {
 			lipsTouch: Difficulty.EASY,
 			jawMove: Difficulty.EASY,
@@ -44,7 +44,7 @@ export class Muffler {
 	}
 
 	private muffleWord(word: string): string {
-		const r = new PseudoRandom(word + this.seed);
+		const r = new PseudoRandom(word + this.salt);
 		const { lipsTouch, jawMove, tongueRoof, coherency, mouthBreath, throatBreath } = this.setting;
 		let muffled: string[] = word.split('').map((c) => {
 			if (c.match(/[t]/ig)) {

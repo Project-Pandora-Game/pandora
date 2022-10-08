@@ -1,4 +1,4 @@
-@import '../../styles/constants';
+@import '../../styles/common';
 
 .dialog {
 	background-color: $black-secondary;
@@ -19,5 +19,47 @@
 		border: 1px solid $black;
 		border-radius: 1em;
 		background-color: $grey-lightest;
+	}
+}
+
+.overlay-bounding-box {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+
+	pointer-events: none;
+
+	>* {
+		pointer-events: auto;
+	}
+}
+
+.dialog-draggable {
+	z-index: 1000;
+	overflow: hidden;
+	min-width: 8em;
+	min-height: 5em;
+
+	border: 1px solid $black;
+	border-radius: 1em;
+	background-color: $grey-lightest;
+	display: flex !important;
+	flex-flow: column;
+
+	>header {
+		@include center-flex;
+		padding: 0.2em 1em;
+		background-color: $grey-light;
+		cursor: move;
+	}
+
+	>.dialog-content {
+		padding: 1em;
+		display: flex;
+		flex-flow: column;
+		flex: 1;
+		overflow: auto;
 	}
 }

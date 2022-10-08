@@ -1,7 +1,8 @@
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
-import React, { createContext, useContext, ReactElement, PureComponent } from 'react';
+import React, { createContext, useContext, ReactElement, PureComponent, ReactNode } from 'react';
+import { Rnd } from 'react-rnd';
 import { noop } from 'lodash';
-import type { ChildrenProps } from '../../common/reactTypes';
+import { ChildrenProps } from '../../common/reactTypes';
 import { Button, ButtonProps } from '../common/Button/Button';
 import { Observable, useObservable } from '../../observable';
 import './dialog.scss';
@@ -67,7 +68,72 @@ export class Dialog extends PureComponent<ChildrenProps> {
 	}
 
 	private _close() {
-		PORTALS.value = [...PORTALS.value.filter((n) => n !== this._node)];
+		PORTALS.value = PORTALS.value.filter((n) => n !== this._node);
+	}
+}
+
+export class DraggableDialog extends PureComponent<{
+	children?: ReactNode;
+	title: string;
+	rawContent?: boolean;
+}> {
+	private readonly _node: HtmlPortalNodeAny;
+	private readonly _context: DialogCloseContext;
+
+	constructor(props: {
+		children?: ReactNode;
+		title: string;
+		rawContent?: boolean;
+	}) {
+		super(props);
+		this._node = createHtmlPortalNode();
+		this._context = {
+			close: () => this._close(),
+		};
+	}
+
+	override componentDidMount() {
+		PORTALS.value = [this._node, ...PORTALS.value.filter((n) => n !== this._node)];
+	}
+
+	override componentWillUnmount() {
+		this._close();
+	}
+
+	override render() {
+		const { children, title, rawContent } = this.props;
+		return (
+			<InPortal node={ this._node }>
+				<div className='overlay-bounding-box'>
+					<Rnd
+						className='dialog-draggable'
+						dragHandleClassName='drag-handle'
+						default={{
+							x: Math.max((window.visualViewport?.width ?? 0) / 4 - 20, 0),
+							y: Math.max((window.visualViewport?.height ?? 0) / 4 - 20, 0),
+							width: 'auto',
+							height: 'auto',
+						}}
+						bounds='parent'
+					>
+						<dialogCloseContext.Provider value={ this._context }>
+							<header className='drag-handle'>{ title }</header>
+							{
+								rawContent ? children : (
+									<div className='dialog-content'>
+										{ children }
+									</div>
+								)
+							}
+						</dialogCloseContext.Provider>
+					</Rnd>
+				</div>
+			</InPortal>
+		);
+	}
+
+	private _close() {
+		PORTALS.value = PORTALS.value.filter((n) => n !== this._node);
 	}
 }
 

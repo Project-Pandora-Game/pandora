@@ -1,13 +1,18 @@
 import classNames from 'classnames';
 import { nanoid } from 'nanoid';
-import { Asset, AssetId, Item } from 'pandora-common';
-import React, { ReactElement, useSyncExternalStore } from 'react';
+import { Assert, AssertNotNullable, Asset, AssetId, Item } from 'pandora-common';
+import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
+import { useForm, Validate } from 'react-hook-form';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useCharacterAppearanceItems } from '../../../character/character';
 import { Button } from '../../../components/common/Button/Button';
+import { Row } from '../../../components/common/container/container';
+import { Form, FormField, FormFieldError } from '../../../components/common/Form/form';
+import { Select } from '../../../components/common/Select/Select';
+import { Dialog } from '../../../components/dialog/dialog';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
-import { AssetTreeViewCategory, GetAssetManagerEditor } from '../../assets/assetManager';
+import { AssetTreeViewCategory, ASSET_ID_PART_REGEX, GetAssetManagerEditor } from '../../assets/assetManager';
 import { EDITOR_ALPHA_ICONS } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import './assets.scss';
@@ -29,6 +34,7 @@ export function AssetsUI(): ReactElement {
 				{ editorAssets.map((assetId) => <EditedAssetElement key={ assetId } assetId={ assetId } />) }
 			</ul>
 			<h3>All assets</h3>
+			<AssetCreatePrompt />
 			<ul>
 				{view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } />)}
 			</ul>
@@ -83,9 +89,15 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 
 function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 	const editor = useEditor();
+	const asset = GetAssetManagerEditor().getAssetById(assetId);
+	AssertNotNullable(asset);
 
 	function add() {
-		alert('Not yet implemented');
+		AssertNotNullable(asset);
+		editor.character.appearance.addItem(
+			editor.character.appearance.spawnItem(`i/editor/${nanoid()}` as const, asset),
+			{},
+		);
 	}
 
 	return (
@@ -225,5 +237,119 @@ function ToggleLi<T extends { open: boolean; }>({ state, name, nameExtra, childr
 			{ nameExtra }
 			{open && children}
 		</li>
+	);
+}
+
+function AssetCreatePrompt(): ReactElement {
+	const [dialogOpen, setDialogOpen] = useState(false);
+
+	return (
+		<>
+			<Button
+				className='slim'
+				onClick={ () => setDialogOpen(true) }
+			>
+				Create a new asset
+			</Button>
+			{ dialogOpen ? <AssetCreateDialog closeDialog={ () => setDialogOpen(false) } /> : null }
+		</>
+	);
+}
+
+function AssetCreateDialog({ closeDialog }: { closeDialog: () => void }): ReactElement {
+	const editor = useEditor();
+	const assetManager = GetAssetManagerEditor();
+	const view = assetManager.assetTreeView;
+
+	const {
+		formState: { errors },
+		handleSubmit,
+		register,
+		getValues,
+	} = useForm<{
+		category: string;
+		id: string;
+		name: string;
+		bodypart: string;
+	}>({ shouldUseNativeValidation: true });
+
+	const validateId = useCallback<Validate<string>>((id) => {
+		const category = getValues('category');
+
+		if (!view.categories.some((c) => c.name === category)) {
+			return 'Invalid category';
+		}
+
+		if (!ASSET_ID_PART_REGEX.test(id)) {
+			return 'ID must consist of lowercase letters, numbers and underscores only';
+		}
+
+		const resultId: AssetId = `a/${category}/${id}`;
+
+		if (assetManager.getAssetById(resultId)) {
+			return 'Asset with this ID already exists';
+		}
+
+		return true;
+	}, [view, assetManager, getValues]);
+
+	const onSubmit = handleSubmit(async ({ category, id, name, bodypart }) => {
+		Assert(view.categories.some((c) => c.name === category));
+
+		const resultId: AssetId = `a/${category}/${id}`;
+		Assert(!assetManager.getAssetById(resultId));
+
+		await assetManager.createNewAsset(category, id, name, bodypart);
+		editor.startEditAsset(resultId);
+
+		closeDialog();
+	});
+
+	return (
+		<Dialog>
+			<Form dirty onSubmit={ onSubmit }>
+				<h3>Create a new asset</h3>
+				<FormField>
+					ID:
+					<Row alignY='center' gap='none'>
+						a/
+						<Select
+							{ ...register('category', { deps: 'id' }) }
+						>
+							<option value=''>[ Select category ]</option>
+							{ view.categories.map((c) => <option key={ c.name } value={ c.name }>{ c.name }</option>) }
+						</Select>
+						/
+						<input type='text'
+							{ ...register('id', { required: 'ID is required', validate: validateId }) }
+							placeholder='Enter identifier of the asset'
+						/>
+					</Row>
+					<FormFieldError error={ errors.id } />
+				</FormField>
+				<FormField>
+					Name:
+					<input type='text'
+						{ ...register('name', { required: 'Name is required' }) }
+						placeholder='Visible name of your asset'
+					/>
+					<FormFieldError error={ errors.name } />
+				</FormField>
+				<FormField>
+					Bodypart:
+					<Select
+						{ ...register('bodypart') }
+					>
+						<option value=''>[ Not a bodypart ]</option>
+						{ assetManager.bodyparts.map((b) => <option key={ b.name } value={ b.name }>{ b.name }</option>) }
+					</Select>
+					<FormFieldError error={ errors.bodypart } />
+				</FormField>
+				<Row alignX='space-between' className='fill-x'>
+					<Button onClick={ closeDialog }>Cancel</Button>
+					<Button type='submit'>Create</Button>
+				</Row>
+			</Form>
+		</Dialog>
 	);
 }

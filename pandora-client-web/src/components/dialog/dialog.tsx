@@ -108,12 +108,12 @@ export class DraggableDialog extends PureComponent<{
 					<Rnd
 						className='dialog-draggable'
 						dragHandleClassName='drag-handle'
-						default={{
+						default={ {
 							x: Math.max((window.visualViewport?.width ?? 0) / 4 - 20, 0),
 							y: Math.max((window.visualViewport?.height ?? 0) / 4 - 20, 0),
 							width: 'auto',
 							height: 'auto',
-						}}
+						} }
 						bounds='parent'
 					>
 						<dialogCloseContext.Provider value={ this._context }>

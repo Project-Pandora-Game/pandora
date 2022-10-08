@@ -33,5 +33,5 @@ export function ContextHelpButton({ children }: ChildrenProps): ReactElement {
 				</DraggableDialog>
 			) }
 		</>
-	)
+	);
 }

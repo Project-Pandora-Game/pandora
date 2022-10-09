@@ -48,21 +48,21 @@ export class Muffler {
 		const { lipsTouch, jawMove, tongueRoof, coherency, mouthBreath, throatBreath } = this.setting;
 		let muffled: string[] = word.split('').map((c) => {
 			if (c.match(/[t]/ig)) {
-				return this.roll(['th', 'tph'], ['Th', 'TH', 'Tph'], tongueRoof ?? Difficulty.EASY, r, c);
+				return this.roll(['th', 'tph'], tongueRoof ?? Difficulty.EASY, r, c);
 			} else if (c.match(/[kc]/ig)) {
-				return this.roll(['ch', 'gh'], ['Ch', 'Gh', 'gh'], tongueRoof ?? Difficulty.EASY, r, c);
+				return this.roll(['ch', 'gh'], tongueRoof ?? Difficulty.EASY, r, c);
 			} else if (c.match(/[z]/ig)) {
-				return this.roll(['gi'], ['Gi'], jawMove ?? 1, r, c);
+				return this.roll(['gi'], jawMove ?? 1, r, c);
 			} else if (c.match(/[bdgp]/ig)) {
-				return this.roll(['ch', 'gh'], ['Gh', 'Ch'], lipsTouch ?? Difficulty.EASY, r, c);
+				return this.roll(['ch', 'gh'], lipsTouch ?? Difficulty.EASY, r, c);
 			} else if (c.match(/[s]/ig)) {
-				return this.roll(['sh', 'ss'], ['Sh', 'Ss'], jawMove ?? Difficulty.EASY, r, c);
+				return this.roll(['sh', 'ss'], jawMove ?? Difficulty.EASY, r, c);
 			} else if (c.match(/[f]/ig)) {
-				return this.roll(['ph'], ['Ph'], lipsTouch ?? 1, r, c);
+				return this.roll(['ph'], lipsTouch ?? 1, r, c);
 			} else if (c.match(/[hjlrwxyq]/ig)) {
-				return this.roll(['w', 'm', 'h', 'n'], ['W', 'M', 'N'], coherency ?? 0, r, c);
+				return this.roll(['w', 'm', 'h', 'n'], coherency ?? 0, r, c);
 			} else if (c.match(/[aeiou]/ig)) {
-				return this.roll(['m', 'n', 'w', 'h'], ['M', 'N', 'H', 'W'], jawMove ?? Difficulty.EASY, r, c);
+				return this.roll(['m', 'n', 'w', 'h'], jawMove ?? Difficulty.EASY, r, c);
 			} else {
 				return c;
 			}
@@ -71,19 +71,19 @@ export class Muffler {
 		if (mouthBreath) {
 			muffled = muffled.map((c) => {
 				if (c.match(/(th|tph|ch|c)/ig)) {
-					return this.roll(['gh'], ['Gh'], mouthBreath, r, c);
+					return this.roll(['gh'], mouthBreath, r, c);
 				} else if (c.match(/(ph)/ig)) {
-					return this.roll(['mh', 'nh'], ['Mh', 'Nh'], mouthBreath, r, c);
+					return this.roll(['mh', 'nh'], mouthBreath, r, c);
 				} else if (c.match(/(ss|sh)/ig)) {
-					return this.roll(['hh', 'hm'], ['Hh', 'Hm'], mouthBreath, r, c);
+					return this.roll(['hh', 'hm'], mouthBreath, r, c);
 				} else if (c.match(/[aeiou]/ig)) {
-					return this.roll(['m', 'n', 'w'], ['M', 'N', 'W'], mouthBreath, r, c);
+					return this.roll(['m', 'n', 'w'], mouthBreath, r, c);
 				} else if (c.match(/[hjlrvwxyq]/ig)) {
-					return this.roll(['w', 'm', 'n'], ['W', 'M', 'N'], mouthBreath, r, c);
+					return this.roll(['w', 'm', 'n'], mouthBreath, r, c);
 				} else if (c.match(/h/ig)) {
-					return this.roll(['m', 'n'], ['M', 'N'], mouthBreath, r, c);
+					return this.roll(['m', 'n'], mouthBreath, r, c);
 				} else if (c.match(/gi/ig)) {
-					return this.roll(['gm', 'gn'], ['Gm', 'Gn'], mouthBreath, r, c);
+					return this.roll(['gm', 'gn'], mouthBreath, r, c);
 				} else {
 					return c;
 				}
@@ -93,19 +93,19 @@ export class Muffler {
 		if (throatBreath) {
 			muffled = muffled.map((c) => {
 				if (c.match(/(mh|nh|hm|hh)/ig)) {
-					return this.roll(['mm', 'nn', 'mn', 'nm'], ['Mm', 'Nn', 'Mn', 'Nm'], throatBreath, r, c);
+					return this.roll(['mm', 'nn', 'mn', 'nm'], throatBreath, r, c);
 				} else if (c.match(/gh|c|ch/ig)) {
-					return this.roll(['gm', 'gn'], ['Gm', 'Gn'], throatBreath, r, c);
+					return this.roll(['gm', 'gn'], throatBreath, r, c);
 				} else if (c.match(/w/ig)) {
-					return this.roll(['m', 'n'], ['M', 'N'], throatBreath, r, c);
+					return this.roll(['m', 'n'], throatBreath, r, c);
 				} else if (c.match(/[aeiou]/ig)) {
-					return this.roll(['m', 'n'], ['M', 'N'], throatBreath, r, c);
+					return this.roll(['m', 'n'], throatBreath, r, c);
 				} else if (c.match(/[hjlrvwxyq]/ig)) {
-					return this.roll(['m', 'n'], ['M', 'N'], throatBreath, r, c);
+					return this.roll(['m', 'n'], throatBreath, r, c);
 				} else if (c.match(/h/ig)) {
-					return this.roll(['m', 'n'], ['M', 'N'], throatBreath, r, c);
+					return this.roll(['m', 'n'], throatBreath, r, c);
 				} else if (c.match(/gi/ig)) {
-					return this.roll(['gm', 'gn'], ['Gm', 'Gn'], throatBreath, r, c);
+					return this.roll(['gm', 'gn'], throatBreath, r, c);
 				} else {
 					return c;
 				}
@@ -119,9 +119,10 @@ export class Muffler {
 		return char.charAt(0) === char.charAt(0).toUpperCase();
 	}
 
-	private roll(muf: string[], mufUpper: string[], probMuf: number, random: PseudoRandom, c: string): string {
+	private roll(muf: string[], probMuf: number, random: PseudoRandom, c: string): string {
 		if (random.rand() <= probMuf) {
-			return this.isUpper(c) ? mufUpper[Math.round(random.between(0, mufUpper.length - 1))] : muf[Math.round(random.between(0, muf.length - 1))];
+			const ran = random.randomElement(muf);
+			return this.isUpper(c) ? ran.toUpperCase() : ran;
 		}
 		return c;
 	}

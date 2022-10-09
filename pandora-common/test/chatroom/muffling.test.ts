@@ -35,6 +35,17 @@ describe('Muffler', () => {
 			expect(muffler.muffle('Nice to meet you.').includes('.')).toBeTruthy();
 			expect(muffler.muffle('What a nice day, let\'s go swimming').includes(',')).toBeTruthy();
 		});
+
+		it('should not affect new line and tabs', () => {
+			const muffler = new Muffler('character second ewrwqaa ewqlkhrqq');
+			expect(muffler.muffle('\n\n\n')).toBe('\n\n\n');
+			expect(muffler.muffle('\t\t\t')).toBe('\t\t\t');
+		});
+
+		it('should not affect common emotes', () => {
+			const muffler = new Muffler('character second ewrwqaa ewqlkhrqq');
+			expect(muffler.muffle('<3 :3 \t :0 >.< \t ^^ ^-^ .-.')).toBe('<3 :3 \t :0 >.< \t ^^ ^-^ .-.');
+		});
 	});
 
 });

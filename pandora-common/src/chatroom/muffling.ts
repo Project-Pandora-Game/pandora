@@ -37,7 +37,7 @@ export class Muffler {
 	}
 
 	private muffleWord(word: string): string {
-		const r = new PseudoRandom(word + this.salt);
+		const r = new PseudoRandom(word.trim() + this.salt);
 		const { lipsTouch, jawMove, tongueRoof, coherency, mouthBreath, throatBreath } = this.setting;
 		let muffled: string[] = word.split('').map((c) => {
 			if (c.match(/[t]/ig)) {

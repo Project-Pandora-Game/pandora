@@ -112,7 +112,7 @@ export class Muffler {
 			});
 		}
 
-		return muffled.join('').replace(/hh/ig, 'h').replace(/ww/ig, 'w');
+		return muffled.join('');
 	}
 
 	private isUpper(char: string) {

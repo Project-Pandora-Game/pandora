@@ -6,4 +6,5 @@ export * from './assetManager';
 export * from './definitions';
 export * from './item';
 export * from './modules';
+export * from './properties';
 export * from './graphics';

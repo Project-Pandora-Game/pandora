@@ -6,6 +6,7 @@ import { AppearanceContainer } from '../character/character';
 import { GraphicsLayer } from './graphicsLayer';
 import { EvaluateCondition, RotateVector } from './utility';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
+import { CreateAssetPropertiesResult, MergeAssetProperties } from 'pandora-common/dist/assets/properties';
 
 const logger = GetLogger('GraphicsCharacter');
 
@@ -90,7 +91,29 @@ export class GraphicsCharacter<ContainerType extends AppearanceContainer = Appea
 		if (!this.graphicsGetter)
 			return [];
 		const result: LayerState[] = [];
-		for (const item of this.appearanceContainer.appearance.getAllItems()) {
+
+		const visibleItems = this.appearanceContainer.appearance.getAllItems().slice();
+		let properties = CreateAssetPropertiesResult();
+		// Walk items in reverse and remove items that are hidden
+		for (let i = visibleItems.length - 1; i >= 0; i--) {
+			const item = visibleItems[i];
+
+			let visible = true;
+
+			// If this item has any attribute that is hidden, hide it
+			visible &&= !Array.from(item.getProperties().attributes)
+				.some((a) => properties.hides.has(a));
+
+			// Update known properties
+			properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
+
+			// Remove this item from rendering altogether, if not visible
+			if (!visible) {
+				visibleItems.splice(i, 1);
+			}
+		}
+
+		for (const item of visibleItems) {
 			const graphics = this.graphicsGetter(item.asset.id);
 			if (!graphics) {
 				if (item.asset.definition.hasGraphics) {

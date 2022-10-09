@@ -7,7 +7,8 @@ export interface SelectProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes
 	}): void;
 }
 
-export function Select({ children, onChange, ...props }: SelectProps): ReactElement {
+// eslint-disable-next-line @typescript-eslint/naming-convention
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function Select({ children, onChange, ...props }, ref): ReactElement {
 
 	const readonly = !!(props.disabled || props['aria-disabled'] || props['aria-readonly']);
 
@@ -41,8 +42,8 @@ export function Select({ children, onChange, ...props }: SelectProps): ReactElem
 	}, [onChange, readonly]);
 
 	return (
-		<select { ...props } onWheel={ onWheelHandler } onChange={ onChange }>
+		<select { ...props } onWheel={ onWheelHandler } onChange={ onChange } ref={ ref }>
 			{ children }
 		</select>
 	);
-}
+});

@@ -24,6 +24,7 @@ export const PRIORITY_ORDER_ARMS_BACK: readonly LayerPriority[] = [
 	'ABOVE_ARMS',
 	'BELOW_BODY',
 	'BODY',
+	'BELOW_BREASTS',
 	'BREASTS',
 	'ABOVE_BODY',
 	'FRONT_HAIR',
@@ -41,6 +42,7 @@ export const PRIORITY_ORDER_ARMS_FRONT: readonly LayerPriority[] = [
 	'BACK_HAIR',
 	'BELOW_BODY',
 	'BODY',
+	'BELOW_BREASTS',
 	'BREASTS',
 	'ABOVE_BODY',
 	'BELOW_ARMS',
@@ -61,5 +63,6 @@ export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<LayerPriority> = new
 	'BELOW_BACK_HAIR',
 	'BACK_HAIR',
 	'BELOW_BODY',
+	'BELOW_BREASTS',
 	'BELOW_ARMS',
 ]);

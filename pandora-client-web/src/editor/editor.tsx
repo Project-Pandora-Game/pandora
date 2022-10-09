@@ -11,7 +11,7 @@ import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize, ZodMatcher, ParseArrayNotEmpty } from 'pandora-common';
+import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
@@ -21,6 +21,8 @@ import { useBrowserStorage } from '../browserStorage';
 import z from 'zod';
 import { AssetInfoUI } from './components/assetInfo/assetInfo';
 import { Select } from '../components/common/Select/Select';
+import { GetAssetManagerEditor } from './assets/assetManager';
+import { nanoid } from 'nanoid';
 
 const logger = GetLogger('Editor');
 
@@ -184,6 +186,16 @@ export class Editor extends TypedEventEmitter<{
 			this.emit('modifiedAssetsChange', undefined);
 			graphics.loadAllUsedImages(this.manager.loader)
 				.catch((err) => logger.error('Error importing asset for editing', err));
+
+			// Wear this asset if not currently wearing it (but only if starting edit for the first time)
+			if (this.character.appearance.listItemsByAsset(asset).length === 0) {
+				const actualAsset = GetAssetManagerEditor().getAssetById(asset);
+				AssertNotNullable(actualAsset);
+				this.character.appearance.addItem(
+					this.character.appearance.spawnItem(`i/editor/${nanoid()}` as const, actualAsset),
+					{},
+				);
+			}
 		}
 		this.targetAsset.value = graphics;
 	}

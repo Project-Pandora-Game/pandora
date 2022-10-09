@@ -1,37 +1,30 @@
+import { EffectScale } from '../assets/effects';
 import { PseudoRandom } from '../math/pseudoRandom';
 
-enum Difficulty {
-	HARDEST = 1,
-	HARD = 0.8,
-	NORMAL = 0.5,
-	EASY = 0.3,
-	NONE = 0,
-}
-
-type MufflerSetting = {
-	lipsTouch?: Difficulty,
-	jawMove?: Difficulty,
-	tongueRoof?: Difficulty,
-	mouthBreath?: Difficulty,
-	throatBreath?: Difficulty,
-	coherency?: Difficulty,
-	stimulus?: number,
+export type MuffleSetting = {
+	lipsTouch: EffectScale,
+	jawMove: EffectScale,
+	tongueRoof: EffectScale,
+	mouthBreath: EffectScale,
+	throatBreath: EffectScale,
+	coherency: EffectScale,
+	stimulus: EffectScale,
 };
 
 export class Muffler {
 	private salt: string;
-	private setting: MufflerSetting;
+	private setting: MuffleSetting;
 
-	constructor(salt: string, setting?: Partial<MufflerSetting>) {
+	constructor(salt: string, setting?: Partial<MuffleSetting>) {
 		this.salt = salt;
-		this.setting = setting ?? {
-			lipsTouch: Difficulty.EASY,
-			jawMove: Difficulty.EASY,
-			tongueRoof: Difficulty.EASY,
-			coherency: Difficulty.EASY,
-			mouthBreath: Difficulty.NONE,
-			throatBreath: Difficulty.NONE,
-			stimulus: Difficulty.NONE,
+		this.setting = {
+			lipsTouch: setting ? setting.lipsTouch ?? 0 : 0,
+			jawMove: setting ? setting.jawMove ?? 0 : 0,
+			tongueRoof: setting ? setting.tongueRoof ?? 0 : 0,
+			mouthBreath: setting ? setting.mouthBreath ?? 0 : 0,
+			throatBreath: setting ? setting.throatBreath ?? 0 : 0,
+			coherency: setting ? setting.coherency ?? 0 : 0,
+			stimulus: setting ? setting.stimulus ?? 0 : 0,
 		};
 	}
 
@@ -48,27 +41,27 @@ export class Muffler {
 		const { lipsTouch, jawMove, tongueRoof, coherency, mouthBreath, throatBreath } = this.setting;
 		let muffled: string[] = word.split('').map((c) => {
 			if (c.match(/[t]/ig)) {
-				return this.roll(['th', 'tph'], tongueRoof ?? Difficulty.EASY, r, c);
+				return this.roll(['th', 'tph'], tongueRoof, r, c);
 			} else if (c.match(/[kc]/ig)) {
-				return this.roll(['ch', 'gh'], tongueRoof ?? Difficulty.EASY, r, c);
+				return this.roll(['ch', 'gh'], tongueRoof, r, c);
 			} else if (c.match(/[z]/ig)) {
-				return this.roll(['gi'], jawMove ?? 1, r, c);
+				return this.roll(['gi'], jawMove, r, c);
 			} else if (c.match(/[bdgp]/ig)) {
-				return this.roll(['ch', 'gh'], lipsTouch ?? Difficulty.EASY, r, c);
+				return this.roll(['ch', 'gh'], lipsTouch, r, c);
 			} else if (c.match(/[s]/ig)) {
-				return this.roll(['sh', 'ss'], jawMove ?? Difficulty.EASY, r, c);
+				return this.roll(['sh', 'ss'], jawMove, r, c);
 			} else if (c.match(/[f]/ig)) {
-				return this.roll(['ph'], lipsTouch ?? 1, r, c);
+				return this.roll(['ph'], lipsTouch, r, c);
 			} else if (c.match(/[hjlrwxyq]/ig)) {
-				return this.roll(['w', 'm', 'h', 'n'], coherency ?? 0, r, c);
+				return this.roll(['w', 'm', 'h', 'n'], coherency, r, c);
 			} else if (c.match(/[aeiou]/ig)) {
-				return this.roll(['m', 'n', 'w', 'h'], jawMove ?? Difficulty.EASY, r, c);
+				return this.roll(['m', 'n', 'w', 'h'], jawMove, r, c);
 			} else {
 				return c;
 			}
 		});
 
-		if (mouthBreath) {
+		if (mouthBreath > 0) {
 			muffled = muffled.map((c) => {
 				if (c.match(/(th|tph|ch|c)/ig)) {
 					return this.roll(['gh'], mouthBreath, r, c);
@@ -90,7 +83,7 @@ export class Muffler {
 			});
 		}
 
-		if (throatBreath) {
+		if (throatBreath > 0) {
 			muffled = muffled.map((c) => {
 				if (c.match(/(mh|nh|hm|hh)/ig)) {
 					return this.roll(['mm', 'nn', 'mn', 'nm'], throatBreath, r, c);
@@ -120,7 +113,7 @@ export class Muffler {
 	}
 
 	private roll(muf: string[], probMuf: number, random: PseudoRandom, c: string): string {
-		if (random.rand() <= probMuf) {
+		if (random.rand() <= probMuf / 10) {
 			const ran = random.randomElement(muf);
 			return this.isUpper(c) ? ran.toUpperCase() : ran;
 		}

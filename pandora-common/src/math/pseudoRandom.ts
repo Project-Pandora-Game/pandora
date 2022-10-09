@@ -46,6 +46,10 @@ export class PseudoRandom {
 		return (max - min) * this.rand() + min;
 	}
 
+	public randomElement<T extends ArrayLike<unknown>>(array: T): T[number] {
+		return array[Math.round(this.between(0, array.length - 1))];
+	}
+
 	private quickHash(s: string): number {
 		let hash = 0;
 		if (s.length === 0) return hash;

@@ -2,12 +2,63 @@ import { EffectScale } from '../assets/effects';
 import { PseudoRandom } from '../math/pseudoRandom';
 
 export type MuffleSetting = {
+	/**
+	 * Muffle lips related sounds (`b`, `d`, `g`, `p`,...)
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 10 = completely muffled
+	 */
 	lipsTouch: EffectScale,
+
+	/**
+	 * Muffle jaws related sounds (`z`, `s`)
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 10 = completely muffled
+	 */
 	jawMove: EffectScale,
+
+	/**
+	 * Muffle tongue related sounds (`r`, `re`, `k`, `c`,...)
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 10 = completely muffled
+	 */
 	tongueRoof: EffectScale,
+	/**
+	 * Muffle air breath sounds (`th`, `tph`, `ch`,...)
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 10 = completely muffled
+	 */
 	mouthBreath: EffectScale,
+	/**
+	 * Muffle strong throat vibration sounds (`gh`, `c`, `ch`, `gi`,...)
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 10 = completely muffled
+	 */
 	throatBreath: EffectScale,
+	/**
+	 * Muffle hinting letters (h, j, l, r, v, w, x, y, q)
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 10 = completely muffled
+	 */
 	coherency: EffectScale,
+	/**
+	 * Create stutter effects for the sentence.
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 10 = high amounts of stutter
+	 */
 	stimulus: EffectScale,
 };
 

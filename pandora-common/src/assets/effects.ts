@@ -4,20 +4,15 @@ import type { Satisfies } from '../utility';
 //#region Effects definition
 
 export type EffectScale = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
-export type EffectsDefinition = {
+
+/**
+ * The effects definition should be shallow structure, containing only named `number` or `boolean`.
+ */
+export type EffectsDefinition = MuffleSetting & {
 	/**
 	 * Prevents character from adding and removing items
 	 */
 	blockHands: boolean;
-
-	/**
-	 * Muffles sounds character is making using mouth
-	 *
-	 * Effective value range:
-	 * - 0 = no effect
-	 * - 10 = completely muffled
-	 */
-	muffleMouth: MuffleSetting;
 
 	/**
 	 * Prevents character from moving herself within the room, even if admin.
@@ -37,15 +32,16 @@ export type EffectsDefinition = {
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
 	blockHands: false,
-	muffleMouth: {
-		lipsTouch: 0,
-		jawMove: 0,
-		tongueRoof: 0,
-		mouthBreath: 0,
-		throatBreath: 0,
-		coherency: 0,
-		stimulus: 0,
-	},
+
+	// muffle
+	lipsTouch: 0,
+	jawMove: 0,
+	tongueRoof: 0,
+	mouthBreath: 0,
+	throatBreath: 0,
+	coherency: 0,
+	stimulus: 0,
+
 	blockRoomMovement: false,
 	blind: 0,
 };
@@ -55,13 +51,13 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 export type EffectName = keyof EffectsDefinition;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__EffectsDefinition = Satisfies<EffectsDefinition, Record<EffectName, number | boolean | MuffleSetting>>;
+type __satisfies__EffectsDefinition = Satisfies<EffectsDefinition, Record<EffectName, number | boolean>>;
 
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 type __satisfies__EFFECTS_DEFAULT = Satisfies<typeof EFFECTS_DEFAULT, EffectsDefinition>;
 
 type EffectsDefault = {
-	readonly [e in EffectName]: EffectsDefinition[e] extends number ? 0 : EffectsDefinition[e] extends boolean ? false : EffectsDefinition[e] extends MuffleSetting ? MuffleSetting : never;
+	readonly [e in EffectName]: EffectsDefinition[e] extends number ? 0 : EffectsDefinition[e] extends boolean ? false : never;
 };
 
 export type EffectsProperty = {
@@ -74,7 +70,7 @@ type __satisfies__EffectsProperty = Satisfies<EffectsProperty, Partial<EffectsDe
 export function MergeEffects(baseEffects: Readonly<EffectsDefinition>, add: Readonly<Partial<EffectsDefinition>> | undefined): EffectsDefinition {
 	if (!add)
 		return baseEffects;
-	const baseEffectsResult: Record<string, number | boolean | MuffleSetting> = { ...baseEffects };
+	const baseEffectsResult: Record<string, number | boolean> = { ...baseEffects };
 	for (const [effect, value] of Object.entries(add)) {
 		const current = baseEffectsResult[effect];
 		if (typeof current === 'number' && typeof value === 'number') {

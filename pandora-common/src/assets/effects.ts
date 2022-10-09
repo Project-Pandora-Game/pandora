@@ -1,4 +1,4 @@
-import { MuffleSetting } from '../chatroom/muffling';
+import type { MuffleSetting } from '../chatroom/muffling';
 import type { Satisfies } from '../utility';
 
 //#region Effects definition

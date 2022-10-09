@@ -1,4 +1,4 @@
-import { EffectScale } from '../assets/effects';
+import { EffectScale, EFFECTS_DEFAULT } from '../assets/effects';
 import { PseudoRandom } from '../math/pseudoRandom';
 
 export type MuffleSetting = {
@@ -69,13 +69,8 @@ export class Muffler {
 	constructor(salt: string, setting?: Partial<MuffleSetting>) {
 		this.salt = salt;
 		this.setting = {
-			lipsTouch: setting ? setting.lipsTouch ?? 0 : 0,
-			jawMove: setting ? setting.jawMove ?? 0 : 0,
-			tongueRoof: setting ? setting.tongueRoof ?? 0 : 0,
-			mouthBreath: setting ? setting.mouthBreath ?? 0 : 0,
-			throatBreath: setting ? setting.throatBreath ?? 0 : 0,
-			coherency: setting ? setting.coherency ?? 0 : 0,
-			stimulus: setting ? setting.stimulus ?? 0 : 0,
+			...EFFECTS_DEFAULT,
+			...setting,
 		};
 	}
 

@@ -91,7 +91,7 @@ export class Muffler {
 		const r = new PseudoRandom(word.trim().toLowerCase() + this.salt);
 		const { lipsTouch, jawMove, tongueRoof, coherency, mouthBreath, throatBreath } = this.setting;
 		let muffled: string[] = word.split('').map((c) => {
-			if (c.match(/[t]/ig)) {
+			if (/t/ig.test(c)) {
 				return this.roll(['th', 'tph'], tongueRoof, r, c);
 			} else if (c.match(/[kc]/ig)) {
 				return this.roll(['ch', 'gh'], tongueRoof, r, c);

@@ -94,7 +94,10 @@ export class CharacterRestrictionsManager {
 	 * @returns Strength as number in range [0, 10]
 	 */
 	public getMouthMuffleStrength(): number {
-		return _.clamp(this.getEffects().muffleMouth, 0, 10);
+		// WARN: Temp fix!! Takes average of 5 muffling attributes
+		const { jawMove, lipsTouch, tongueRoof, mouthBreath, throatBreath } = this.getEffects();
+
+		return _.clamp((jawMove + lipsTouch + tongueRoof + mouthBreath + throatBreath) / 5, 0, 10);
 	}
 
 	/**

@@ -27,11 +27,10 @@ export type EffectsDefinition = MuffleSetting & {
 	 * - 0 = no effect
 	 * - 10 = completely blind
 	 */
-	blind: EffectScale;
+	blind: number;
 };
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
-	blockHands: false,
 
 	// muffle
 	lipsTouch: 0,
@@ -42,6 +41,8 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 	coherency: 0,
 	stimulus: 0,
 
+	// others
+	blockHands: false,
 	blockRoomMovement: false,
 	blind: 0,
 };

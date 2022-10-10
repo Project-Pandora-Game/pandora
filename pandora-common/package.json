@@ -12,6 +12,12 @@
 	"files": [
 		"/dist/**/*"
 	],
+	"workspaces": {
+		"nohoist": [
+			"rimraf",
+			"typescript"
+		]
+	},
 	"scripts": {
 		"prebuild": "rimraf dist",
 		"build": "tsc -p ./tsconfig.src.json",

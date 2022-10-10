@@ -46,7 +46,7 @@ export class PseudoRandom {
 		return (max - min) * this.rand() + min;
 	}
 
-	public randomElement<T extends ArrayLike<unknown>>(array: T): T[number] {
+	public randomElement<T>(array: ArrayLike<T>): T {
 		return array[Math.round(this.between(0, array.length - 1))];
 	}
 

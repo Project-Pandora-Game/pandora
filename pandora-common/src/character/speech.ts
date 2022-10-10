@@ -1,4 +1,5 @@
-import { EffectScale, EFFECTS_DEFAULT } from '../assets/effects';
+import _ from 'lodash';
+import { EFFECTS_DEFAULT } from '../assets/effects';
 import { PseudoRandom } from '../math/pseudoRandom';
 
 export type MuffleSettings = {
@@ -9,7 +10,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	lipsTouch: EffectScale,
+	lipsTouch: number,
 
 	/**
 	 * Muffle jaws related sounds (`z`, `s`)
@@ -18,7 +19,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	jawMove: EffectScale,
+	jawMove: number,
 
 	/**
 	 * Muffle tongue related sounds (`r`, `re`, `k`, `c`,...)
@@ -27,7 +28,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	tongueRoof: EffectScale,
+	tongueRoof: number,
 	/**
 	 * Muffle air breath sounds (`th`, `tph`, `ch`,...)
 	 *
@@ -35,7 +36,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	mouthBreath: EffectScale,
+	mouthBreath: number,
 	/**
 	 * Muffle strong throat vibration sounds (`gh`, `c`, `ch`, `gi`,...)
 	 *
@@ -43,7 +44,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	throatBreath: EffectScale,
+	throatBreath: number,
 	/**
 	 * Muffle hinting letters (h, j, l, r, v, w, x, y, q)
 	 *
@@ -51,7 +52,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	coherency: EffectScale,
+	coherency: number,
 	/**
 	 * Create stutter effects for the sentence.
 	 *
@@ -59,7 +60,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = high amounts of stutter
 	 */
-	stimulus: EffectScale,
+	stimulus: number,
 };
 
 export class Muffler {
@@ -90,6 +91,7 @@ export class Muffler {
 	private muffleWord(word: string): string {
 		const r = new PseudoRandom(word.trim().toLowerCase() + this.salt);
 		const { lipsTouch, jawMove, tongueRoof, coherency, mouthBreath, throatBreath } = this.setting;
+
 		let muffled: string[] = word.split('').map((c) => {
 			if (/t/ig.test(c)) {
 				return this.roll(['th', 'tph'], tongueRoof, r, c);
@@ -164,7 +166,7 @@ export class Muffler {
 	}
 
 	private roll(muf: string[], probMuf: number, random: PseudoRandom, c: string): string {
-		if (random.rand() <= probMuf / 10) {
+		if (random.rand() <= _.clamp(probMuf, 0, 10) / 10) {
 			const ran = random.randomElement(muf);
 			return this.isUpper(c) ? ran.toUpperCase() : ran;
 		}

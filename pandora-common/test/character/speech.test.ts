@@ -1,9 +1,9 @@
-import { Muffler, MuffleSetting } from '../../src/chatroom/muffling';
+import { Muffler, MuffleSettings } from '../../src/character/speech';
 
 describe('Muffler', () => {
 	describe('muffle()', () => {
 		let muffler: Muffler;
-		const config: MuffleSetting = {
+		const config: MuffleSettings = {
 			lipsTouch: 3,
 			jawMove: 3,
 			throatBreath: 3,

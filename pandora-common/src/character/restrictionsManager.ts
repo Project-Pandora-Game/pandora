@@ -4,6 +4,7 @@ import { Asset, Item, ItemId } from '../assets';
 import type { Appearance } from '../assets/appearance';
 import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from '../assets/effects';
 import { AppearanceActionRoomContext } from '../chatroom';
+import { Muffler } from '../character/speech';
 
 export enum ItemInteractionType {
 	/**
@@ -90,14 +91,10 @@ export class CharacterRestrictionsManager {
 	}
 
 	/**
-	 * Calculates the mouth muffling effect
-	 * @returns Strength as number in range [0, 10]
+	 * Returns the Muffler class for this CharacterRestrictionsManager
 	 */
-	public getMouthMuffleStrength(): number {
-		// WARN: Temp fix!! Takes average of 5 muffling attributes
-		const { jawMove, lipsTouch, tongueRoof, mouthBreath, throatBreath } = this.getEffects();
-
-		return _.clamp((jawMove + lipsTouch + tongueRoof + mouthBreath + throatBreath) / 5, 0, 10);
+	public getMuffler(): Muffler {
+		return new Muffler(this.id, this.getEffects());
 	}
 
 	/**

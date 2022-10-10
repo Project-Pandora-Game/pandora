@@ -4,11 +4,11 @@ import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPo
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 
 export class AssetManager {
-	private readonly _assets: Map<AssetId, Asset> = new Map();
-	private readonly _bones: Map<string, BoneDefinition> = new Map();
-	private _posePresets: AssetsPosePresets = [];
-	private _backgrounds: IChatroomBackgroundInfo[] = [];
-	private _definitionsHash: string = '';
+	protected readonly _assets: Map<AssetId, Asset> = new Map();
+	protected readonly _bones: Map<string, BoneDefinition> = new Map();
+	protected _posePresets: AssetsPosePresets = [];
+	protected _backgrounds: IChatroomBackgroundInfo[] = [];
+	protected _definitionsHash: string = '';
 
 	get definitionsHash(): string {
 		return this._definitionsHash;

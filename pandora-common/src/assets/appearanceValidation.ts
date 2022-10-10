@@ -2,6 +2,7 @@ import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetDefinitionPoseLimits, AssetId } from './definitions';
 import { Item } from './item';
+import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems = readonly Item[];
@@ -70,7 +71,14 @@ export function MergePoseLimits(base: PoseLimitsResult, poseLimits: AssetDefinit
  */
 export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimitsResult {
 	return items
-		.reduce<PoseLimitsResult>((base, asset) => asset.applyPoseLimits(base), { forcePose: new Map<string, [number, number]>() });
+		.flatMap((item) => item.getPropertiesParts())
+		.reduce(MergeAssetProperties, CreateAssetPropertiesResult())
+		.poseLimits;
+}
+
+export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>): boolean {
+	return Array.from(requirements)
+		.every((r) => r.startsWith('!') ? !attributes.has(r.substring(1)) : attributes.has(r));
 }
 
 /** Validates items prefix, ignoring required items */
@@ -91,6 +99,16 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 	// Check the pose is possible
 	if (AppearanceItemsGetPoseLimits(items) == null)
 		return false;
+
+	// Check requirements are met
+	let globalProperties = CreateAssetPropertiesResult();
+	for (const item of items) {
+		// Item's attributes counts into its on requirements
+		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
+
+		if (!AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements))
+			return false;
+	}
 
 	const assetCounts = new Map<AssetId, number>();
 	// Each asset limits count of it being added

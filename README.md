@@ -54,8 +54,24 @@ yarn dev
 
 ## Specifications
 
-Please refer to the [documentation](https://github.com/Project-Pandora-Game/Documentation) repository.
+Please refer to the [documentation](https://github.com/Project-Pandora-Game/Documentation) repository for more details.
 
+### Project structure
+Individual components, and it's repository:
+  * [`Documentation`](https://github.com/Project-Pandora-Game/Documentation)
+  * Assets ([`pandora-assets`](https://github.com/Project-Pandora-Game/pandora-assets))
+  * Common ([`pandora-common`](./pandora-common/)) - shard library for all components.
+  * Directory server ([`pandora-server-directory`](./pandora-server-directory/))
+  * Shard server ([`pandora-server-shard`](./pandora-server-shard/))
+  * Web Client ([`pandora-client-web`](./pandora-client-web/))
+
+### Standards
+* Code styles:
+    * Not part of this document, enforced by linting; TODO: Writeup
+* Review process:
+    * No direct pushes to master outside of new repository setup
+    * 2 Approving reviews required (can be blocked by anyone, requires resolving)
+    * Preferred reviews by peers (code things by coders, assets by asset makers)
 ## Licenses
 
 | Sub Project                             | License file                            |

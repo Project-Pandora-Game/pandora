@@ -1,21 +1,16 @@
+import type { MuffleSettings } from '../character/speech';
 import type { Satisfies } from '../utility';
 
 //#region Effects definition
 
-export type EffectsDefinition = {
+/**
+ * The effects definition should be shallow structure, containing only named `number` or `boolean`.
+ */
+export type EffectsDefinition = MuffleSettings & {
 	/**
 	 * Prevents character from adding and removing items
 	 */
 	blockHands: boolean;
-
-	/**
-	 * Muffles sounds character is making using mouth
-	 *
-	 * Effective value range:
-	 * - 0 = no effect
-	 * - 10 = completely muffled
-	 */
-	muffleMouth: number;
 
 	/**
 	 * Prevents character from moving herself within the room, even if admin.
@@ -34,8 +29,18 @@ export type EffectsDefinition = {
 };
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
+
+	// muffle
+	lipsTouch: 0,
+	jawMove: 0,
+	tongueRoof: 0,
+	mouthBreath: 0,
+	throatBreath: 0,
+	coherency: 0,
+	stimulus: 0,
+
+	// others
 	blockHands: false,
-	muffleMouth: 0,
 	blockRoomMovement: false,
 	blind: 0,
 };

@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, MuffleSpokenText, CharacterSize, AppearanceActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClientBase, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, CharacterSize, AppearanceActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -200,12 +200,12 @@ export class Room extends ServerRoom<IShardClientBase> {
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
 		// Handle speech muffling
 		const player = new CharacterRestrictionsManager(from.id, from.appearance, this.getAppearanceActionRoomContext());
-		const muffleStrength = player.getMouthMuffleStrength();
-		if (muffleStrength > 0) {
+		const muffler = player.getMuffler();
+		if (muffler.isActive()) {
 			for (const message of messages) {
 				if (message.type === 'chat') {
 					for (const part of message.parts) {
-						part[1] = MuffleSpokenText(part[1], muffleStrength);
+						part[1] = muffler.muffle(part[1]);
 					}
 				}
 			}

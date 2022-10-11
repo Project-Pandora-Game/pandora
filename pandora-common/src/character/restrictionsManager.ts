@@ -5,6 +5,7 @@ import type { Appearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
 import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from '../assets/properties';
 import { AppearanceActionRoomContext } from '../chatroom';
+import { Muffler } from '../character/speech';
 
 export enum ItemInteractionType {
 	/**
@@ -95,11 +96,10 @@ export class CharacterRestrictionsManager {
 	}
 
 	/**
-	 * Calculates the mouth muffling effect
-	 * @returns Strength as number in range [0, 10]
+	 * Returns the Muffler class for this CharacterRestrictionsManager
 	 */
-	public getMouthMuffleStrength(): number {
-		return _.clamp(this.getEffects().muffleMouth, 0, 10);
+	public getMuffler(): Muffler {
+		return new Muffler(this.id, this.getEffects());
 	}
 
 	/**

@@ -1,6 +1,12 @@
 
 # The Pandora Game Project
-A monorepo.
+<img
+    style="display: block;margin: auto;width: 30%;"
+    src="https://avatars.githubusercontent.com/u/88410864?s=200&v=4"
+    alt="Pandora Logo">
+</img>
+<div style="text-align: center;">An open source 2D web-based game in the making.</div>
+
 ## Getting Started
 ### Prerequisite
 

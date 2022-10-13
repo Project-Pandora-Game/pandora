@@ -1,6 +1,6 @@
 import { ArmsPose, CharacterView } from 'pandora-common';
-import React, { ReactElement, useEffect, useState, useSyncExternalStore } from 'react';
-import { useCharacterAppearancePose } from '../../../character/character';
+import React, { ReactElement, useEffect, useState } from 'react';
+import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
@@ -13,16 +13,8 @@ export function BoneUI(): ReactElement {
 	const character = editor.character;
 
 	const bones = useCharacterAppearancePose(character);
-	const armsPose = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
-		if (change.includes('pose')) {
-			onChange();
-		}
-	}), () => character.appearance.getArmsPose());
-	const view = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
-		if (change.includes('pose')) {
-			onChange();
-		}
-	}), () => character.appearance.getView());
+	const armsPose = useCharacterAppearanceArmsPose(character);
+	const view = useCharacterAppearanceView(character);
 	const showBones = useObservable(editor.showBones);
 
 	const [unlocked, setUnlocked] = useState(!character.appearance.enforce);

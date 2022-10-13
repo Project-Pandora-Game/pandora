@@ -22,10 +22,10 @@ import {
 	Item,
 	ItemId,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
+import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -661,16 +661,8 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 	const shardConnector = useShardConnector();
 
 	const bones = useCharacterAppearancePose(character);
-	const armsPose = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
-		if (change.includes('pose')) {
-			onChange();
-		}
-	}), () => character.appearance.getArmsPose());
-	const view = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
-		if (change.includes('pose')) {
-			onChange();
-		}
-	}), () => character.appearance.getView());
+	const armsPose = useCharacterAppearanceArmsPose(character);
+	const view = useCharacterAppearanceView(character);
 
 	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
 		if (shardConnector) {

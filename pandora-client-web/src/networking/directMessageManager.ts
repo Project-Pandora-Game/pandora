@@ -1,4 +1,4 @@
-import { IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import { IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import type { SymmetricEncryption } from '../crypto/symmetric';
 import type { DirectoryConnector } from './directoryConnector';
 import { KeyExchange } from '../crypto/keyExchange';
@@ -13,7 +13,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined);
 	private readonly _chats: Map<number, DirectMessageChannel> = new Map();
 	private readonly _info = new Observable<readonly IDirectoryDirectMessageInfo[]>([]);
-	private _lastCryptoKey?: string;
+	private _lastCryptoKey?: Readonly<IAccountCryptoKey>;
 	#crypto?: KeyExchange;
 
 	get info(): ReadonlyObservable<readonly IDirectoryDirectMessageInfo[]> {

@@ -1,3 +1,4 @@
+import type { IAccountCryptoKey } from 'pandora-common';
 import { ArrayToBase64, Base64ToArray, HashSHA512Base64 } from './helpers';
 import { SymmetricEncryption } from './symmetric';
 
@@ -28,16 +29,21 @@ export class KeyExchange {
 		return ArrayToBase64(new Uint8Array(publicKey));
 	}
 
-	public async export(password: string): Promise<string> {
+	public async export(password: string): Promise<IAccountCryptoKey> {
 		const salt = crypto.getRandomValues(new Uint8Array(32));
 		const enc = await SymmetricEncryption.generate({ password, salt });
-		return [ArrayToBase64(salt), await this.exportPublicKey(), await enc.wrapKey(this.#privateKey)].join(':');
+		const { iv, encypted } = await enc.wrapKey(this.#privateKey);
+		return {
+			publicKey: await this.exportPublicKey(),
+			salt: ArrayToBase64(salt),
+			iv,
+			encyptedPrivateKey: encypted,
+		};
 	}
 
-	public static async import(data: string, password: string): Promise<KeyExchange> {
-		const [salt, publicKey, iv, encryptedKeyBase64] = data.split(':');
+	public static async import({ publicKey, iv, salt, encyptedPrivateKey }: IAccountCryptoKey, password: string): Promise<KeyExchange> {
 		const enc = await SymmetricEncryption.generate({ password, salt: Base64ToArray(salt) });
-		const privateKey = await enc.unwrapKey(iv, encryptedKeyBase64, ECDH_PARAMS, ECDH_KEY_PRIVATE_USAGES);
+		const privateKey = await enc.unwrapKey(iv, encyptedPrivateKey, ECDH_PARAMS, ECDH_KEY_PRIVATE_USAGES);
 		return new KeyExchange(privateKey, await ImportSpki(publicKey));
 	}
 

@@ -16,6 +16,14 @@ export const DirectoryAccountSettingsSchema = z.object({
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
+export const AccountCryptoKeySchema = z.object({
+	publicKey: z.string(),
+	salt: z.string(),
+	iv: z.string(),
+	encyptedPrivateKey: z.string(),
+});
+export type IAccountCryptoKey = z.infer<typeof AccountCryptoKeySchema>;
+
 export type IDirectoryAccountInfo = {
 	id: number;
 	username: string;
@@ -23,7 +31,7 @@ export type IDirectoryAccountInfo = {
 	github?: { id: number; login: string; };
 	roles?: IAccountRoleInfo;
 	settings: IDirectoryAccountSettings;
-	cryptoKey?: string;
+	cryptoKey?: IAccountCryptoKey;
 };
 
 export type IDirectoryShardInfo = {

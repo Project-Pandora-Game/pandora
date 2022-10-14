@@ -1,4 +1,4 @@
-import { GetLogger } from 'pandora-common';
+import { GetLogger, IAccountCryptoKey } from 'pandora-common';
 import { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } from '../config';
 import { GetDatabase } from '../database/databaseProvider';
 import GetEmailSender from '../services/email';
@@ -81,13 +81,13 @@ export default class AccountSecure {
 		return argon2.verify(this.#secure.password, password);
 	}
 
-	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: string): Promise<boolean> {
+	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<boolean> {
 		if (!this.isActivated() || !await this.verifyPassword(passwordOld) || !await this.#validateCryptoKey(cryptoKey))
 			return false;
 
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
-		this.#secure.cryptoKey = cryptoKey;
+		this.#secure.cryptoKey = _.cloneDeep(cryptoKey);
 
 		await this.#updateDatabase();
 
@@ -170,33 +170,25 @@ export default class AccountSecure {
 		return true;
 	}
 
-	public getCryptoKey(): string | undefined {
+	public getCryptoKey(): IAccountCryptoKey | undefined {
 		return this.#secure.cryptoKey;
 	}
 
 	public getPublicKey(): string | undefined {
-		return this.#secure.cryptoKey?.split(CRYPTO_KEY_DELIMITER)[CryptoKeyParts.PUBLIC_KEY];
+		return this.#secure.cryptoKey?.publicKey;
 	}
 
-	public async setCryptoKey(key: string): Promise<boolean> {
-		if (this.#secure.cryptoKey === key)
-			return true;
-
+	public async setCryptoKey(key: IAccountCryptoKey): Promise<boolean> {
 		if (!await this.#validateCryptoKey(key))
 			return false;
 
-		this.#secure.cryptoKey = key;
+		this.#secure.cryptoKey = _.cloneDeep(key);
 		await this.#updateDatabase();
 		return true;
 	}
 
-	async #validateCryptoKey(key: string, previous?: string): Promise<boolean> {
-		const array = key.split(CRYPTO_KEY_DELIMITER);
-		if (array.length !== CryptoKeyParts.LENGTH)
-			return false;
-
-		const publicKey = array[CryptoKeyParts.PUBLIC_KEY];
-		if (previous && previous.startsWith(publicKey))
+	async #validateCryptoKey({ publicKey }: IAccountCryptoKey, previous?: IAccountCryptoKey): Promise<boolean> {
+		if (previous?.publicKey === publicKey)
 			return true;
 
 		return await IsPublicKey(publicKey);

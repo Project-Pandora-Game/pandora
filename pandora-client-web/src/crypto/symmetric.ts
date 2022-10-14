@@ -25,10 +25,10 @@ export class SymmetricEncryption {
 		return Decode(new Uint8Array(decrypted));
 	}
 
-	public async wrapKey(key: CryptoKey): Promise<string> {
+	public async wrapKey(key: CryptoKey): Promise<{ iv: string; encypted: string; }> {
 		const { iv, alg } = GenerateIV();
 		const encryptedKey = await subtle.wrapKey('pkcs8', key, this.#key, alg);
-		return iv + ':' + ArrayToBase64(new Uint8Array(encryptedKey));
+		return { iv, encypted: ArrayToBase64(new Uint8Array(encryptedKey)) };
 	}
 
 	public async unwrapKey(iv: string, key: string, params: RsaHashedImportParams | EcKeyImportParams, usage: KeyUsage[]): Promise<CryptoKey> {

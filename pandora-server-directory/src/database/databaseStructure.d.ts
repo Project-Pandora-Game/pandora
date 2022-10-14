@@ -20,7 +20,7 @@ interface DatabaseAccountSecure {
 	emailHash: string;
 	tokens: DatabaseAccountToken[];
 	github?: GitHubInfo;
-	cryptoKey?: string;
+	cryptoKey?: import('pandora-common').IAccountCryptoKey;
 }
 
 type DirectMessageAccounts = `${number}-${number}`;

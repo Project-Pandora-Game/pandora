@@ -95,7 +95,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		await this._directMessages.createIndexes([
 			{ key: { accounts: 1 } },
 			{ key: { time: 1 } },
-		], { unique: true });
+		], { unique: false });
 		//#endregion
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);

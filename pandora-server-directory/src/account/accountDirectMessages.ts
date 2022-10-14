@@ -7,6 +7,7 @@ import { accountManager } from './accountManager';
 const MESSAGE_LOAD_COUNT = 50;
 
 let lastMessageTime = 0;
+/** TODO: handle host machine time jumping backwards */
 function GetNextMessageTime(): number {
 	let time = Date.now();
 	if (time <= lastMessageTime) {

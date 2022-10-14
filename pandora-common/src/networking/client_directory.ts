@@ -1,5 +1,5 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult, DefineSocketInterface } from './helpers';
-import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryShardInfo } from './directory_client';
+import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import type { MessageHandler } from './message_handler';
 import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomDirectoryInfo, RoomIdSchema } from '../chatroom';
@@ -122,6 +122,7 @@ export const ClientDirectoryInSchema = z.object({
 		id: z.number().min(0),
 		action: z.enum(['read', 'close']),
 	}),
+	getDirectMessageInfo: z.object({}),
 
 	//#region Management/admin endpoints; these require specific roles to be used
 
@@ -195,6 +196,7 @@ export type IClientDirectoryOut = {
 		messages: IDirectoryDirectMessage[];
 	};
 	sendDirectMessage: { result: 'ok' | 'notFound' | 'denied' | 'messageNotFound'; };
+	getDirectMessageInfo: { info: IDirectoryDirectMessageInfo[]; };
 	manageGetAccountRoles: { result: 'notFound'; } | {
 		result: 'ok';
 		roles: IAccountRoleManageInfo;

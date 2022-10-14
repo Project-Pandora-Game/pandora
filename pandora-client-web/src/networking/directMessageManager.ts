@@ -1,4 +1,4 @@
-import { IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import { EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import type { SymmetricEncryption } from '../crypto/symmetric';
 import type { DirectoryConnector } from './directoryConnector';
 import { KeyExchange } from '../crypto/keyExchange';
@@ -57,6 +57,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 			this._lastCryptoKey = await this.#crypto.export(cryptoPassword);
 			this.connector.sendMessage('setCryptoKey', { cryptoKey: this._lastCryptoKey });
 		}
+		await this._loadInfo();
 	}
 
 	public deriveKey(publicKeyData: string): Promise<SymmetricEncryption> {
@@ -85,37 +86,36 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		throw chat.load();
 	}
 
-	public async handleDirectMessage(data: IDirectoryClientArgument['directMessage']): Promise<void> {
-		if ('info' in data && data.info) {
-			this._info.value = data.info;
-		} else if ('message' in data && data.message) {
-			try {
-				const id = data.message.account ? data.message.source : data.message.target;
-				const chat = this._getChat(id);
-				await chat.loadSingle(data.message, this._info);
-				this.emit('newMessage', chat);
-			} catch {
-				// ignore
+	public async handleDirectMessageGet(data: IDirectoryClientArgument['directMessageGet']): Promise<void> {
+		const chat = this._getChat(data.source);
+		await chat.loadSingle(data, this._info);
+		this.emit('newMessage', chat);
+	}
+
+	public async handleDirectMessageSent(data: IDirectoryClientArgument['directMessageSent']): Promise<void> {
+		const chat = this._getChat(data.target);
+		await chat.loadSingle(data, this._info);
+		this.emit('newMessage', chat);
+	}
+
+	public handleDirectMessageAction({ id, action }: IDirectoryClientArgument['directMessageAction']): void {
+		switch (action) {
+			case 'read': {
+				const info = this._info.value.find((i) => i.id === id);
+				if (info) {
+					delete info.hasUnread;
+					this._info.value = [...this._info.value];
+				}
+				break;
 			}
-		} else if ('id' in data && data.id && 'action' in data && data.action) {
-			switch (data.action) {
-				case 'read': {
-					const info = this._info.value.find((i) => i.id === data.id);
-					if (info) {
-						delete info.hasUnread;
-						this._info.value = [...this._info.value];
-					}
-					break;
+			case 'close': {
+				this.emit('close', id);
+				const index = this._info.value.findIndex((i) => i.id === id);
+				if (index >= 0) {
+					this._info.value = [...this._info.value.slice(0, index), ...this._info.value.slice(index + 1)];
 				}
-				case 'close': {
-					this.emit('close', data.id);
-					const index = this._info.value.findIndex((i) => i.id === data.id);
-					if (index >= 0) {
-						this._info.value = [...this._info.value.slice(0, index), ...this._info.value.slice(index + 1)];
-					}
-					this._chats.delete(data.id);
-					break;
-				}
+				this._chats.delete(id);
+				break;
 			}
 		}
 	}
@@ -127,6 +127,11 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 			this._chats.set(id, chat);
 		}
 		return chat;
+	}
+
+	private async _loadInfo(): Promise<void> {
+		const { info } = await this.connector.awaitResponse('getDirectMessageInfo', EMPTY);
+		this._info.value = info;
 	}
 }
 

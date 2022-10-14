@@ -19,16 +19,6 @@ export enum AccountTokenReason {
 	LOGIN = 3,
 }
 
-const CRYPTO_KEY_DELIMITER = ':';
-enum CryptoKeyParts {
-	SALT,
-	PUBLIC_KEY,
-	IV,
-	PRIVATE_KEY,
-
-	LENGTH,
-}
-
 /**
  * Handles account security data
  *

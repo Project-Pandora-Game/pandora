@@ -59,7 +59,6 @@ export class ClientConnection extends ZodConnection<IncomingSocket, typeof Clien
 		if (account) {
 			account.associatedConnections.add(this);
 			account.touch();
-			this.sendMessage('directMessage', { info: account.directMessages.dms });
 		}
 	}
 

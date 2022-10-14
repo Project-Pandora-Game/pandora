@@ -93,6 +93,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 
 			getDirectMessages: this.handleGetDirectMessages.bind(this),
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
+			getDirectMessageInfo: this.handleGetDirectMessageInfo.bind(this),
 
 			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
 			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
@@ -531,6 +532,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 			throw new BadMessageError();
 
 		return await connection.account.directMessages.sendMessage(data);
+	}
+
+	private handleGetDirectMessageInfo(_: IClientDirectoryArgument['getDirectMessageInfo'], connection: IConnectionClient): IClientDirectoryNormalResult['getDirectMessageInfo'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		return { info: connection.account.directMessages.dms };
 	}
 
 	private async handleDirectMessage({ id, action }: IClientDirectoryArgument['directMessage'], connection: IConnectionClient): IClientDirectoryPromiseResult['directMessage'] {

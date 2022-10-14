@@ -97,14 +97,14 @@ interface DirectoryClient {
 	somethingChanged(arg: {
 		changes: IDirectoryClientChangeEvents[];
 	}): void;
-	directMessage(arg: {
-		info: IDirectoryDirectMessageInfo[];
-	} | {
-		message: IDirectoryDirectMessage & {
-			account?: IDirectoryDirectMessageAccount;
-			target: number;
-		};
-	} | {
+	directMessageSent(message: IDirectoryDirectMessage & {
+		target: number;
+	}): void;
+	directMessageGet(message: IDirectoryDirectMessage & {
+		account: IDirectoryDirectMessageAccount;
+		source: number;
+	}): void;
+	directMessageAction(arg: {
 		id: number;
 		action: 'read' | 'close';
 	}): void;

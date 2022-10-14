@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
 import { accountManager } from './accountManager';
@@ -77,7 +77,7 @@ export class AccountDirectMessages {
 		}
 		if (notifyClients && action !== 'new' && action !== 'open') {
 			for (const connection of this._account.associatedConnections) {
-				connection.sendMessage('directMessage', { id, action });
+				connection.sendMessage('directMessageAction', { id, action });
 			}
 		}
 		await GetDatabase().setDirectMessageInfo(this._account.id, this._dms);
@@ -108,14 +108,20 @@ export class AccountDirectMessages {
 			await this.action(id, 'open', { notifyClients: false, time, account: target.username });
 			await target.directMessages.action(this._account.id, 'new', { notifyClients: false, time, account: this._account.username });
 		}
-		target.directMessages.handleMessage({ ...message, target: target.id, account: this._getAccountInfo() });
-		this.handleMessage({ ...message, target: target.id });
+		target.directMessages.directMessageGet({ ...message, source: target.id, account: this._getAccountInfo() });
+		this.directMessageSent({ ...message, target: target.id });
 		return { result: 'ok' };
 	}
 
-	handleMessage(message: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; target: number; }): void {
+	private directMessageGet(message: IDirectoryClientArgument['directMessageGet']): void {
 		for (const connection of this._account.associatedConnections) {
-			connection.sendMessage('directMessage', { message });
+			connection.sendMessage('directMessageGet', message);
+		}
+	}
+
+	private directMessageSent(message: IDirectoryClientArgument['directMessageSent']): void {
+		for (const connection of this._account.associatedConnections) {
+			connection.sendMessage('directMessageSent', message);
 		}
 	}
 

@@ -111,8 +111,14 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 				await this.directMessageHandler.accountChanged();
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
-			directMessage: async (data) => {
-				await this.directMessageHandler.handleDirectMessage(data);
+			directMessageGet: async (data) => {
+				await this.directMessageHandler.handleDirectMessageGet(data);
+			},
+			directMessageSent: async (data) => {
+				await this.directMessageHandler.handleDirectMessageSent(data);
+			},
+			directMessageAction: async (data) => {
+				await this.directMessageHandler.handleDirectMessageAction(data);
 			},
 		});
 		this.socket.onAny(this.handleMessage.bind(this));

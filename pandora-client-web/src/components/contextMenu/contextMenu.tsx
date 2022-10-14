@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ForwardedRef, ReactElement, useState, createRef, useEffect, useImperativeHandle, CSSProperties, useMemo, forwardRef, RefObject } from 'react';
+import React, { ForwardedRef, ReactElement, useState, createRef, useEffect, useImperativeHandle, useMemo, forwardRef, RefObject, useLayoutEffect } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
@@ -60,16 +60,18 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 		};
 	}, [onContextMenu]);
 
-	const style = useMemo(() => ({
+	const position = useMemo(() => ({
 		left: anchorPoint.x,
 		top: anchorPoint.y,
-	}), [anchorPoint]) as CSSProperties;
+	}), [anchorPoint]);
+
+	usePositionWitoutOverflow(self, position);
 
 	if (!show)
 		return null;
 
 	return (
-		<div className={ classNames('context-menu', className) } style={ style } ref={ self }>
+		<div className={ classNames('context-menu', className) } ref={ self }>
 			{ children }
 		</div>
 	);
@@ -87,4 +89,21 @@ export function useContextMenu(): [RefObject<ContextMenuHandle>, (event: React.M
 	});
 	const close = useEvent(() => ref.current?.close());
 	return [ref, onContextMenu, close];
+}
+
+/**
+ * Postion the element without overflowing the window at bottom or right
+ */
+export function usePositionWitoutOverflow(ref: RefObject<HTMLElement>, pos: { top: number, left: number }): void {
+	useLayoutEffect(() => {
+		if (ref.current) {
+			const rect = ref.current.getBoundingClientRect();
+			if (rect.bottom > window.innerHeight) {
+				ref.current.style.top = `${pos.top - (rect.bottom - window.innerHeight)}px`;
+			}
+			if (rect.right > window.innerWidth) {
+				ref.current.style.left = `${pos.left - (rect.right - window.innerWidth)}px`;
+			}
+		}
+	}, [ref, pos]);
 }

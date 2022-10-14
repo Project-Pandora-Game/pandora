@@ -1,7 +1,7 @@
 import { AppearanceChangeType, AssertNotNullable, AssetManager, CalculateCharacterMaxYForBackground, CharacterId, CharacterSize, CharacterView, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData, ResolveBackground } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters, Container } from 'pixi.js';
-import React, { CSSProperties, ReactElement, useCallback, useEffect, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
@@ -18,6 +18,7 @@ import _, { noop } from 'lodash';
 import { GraphicsSceneRenderer } from '../../graphics/graphicsSceneRenderer';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { ChatroomDebugConfig, useDebugConfig } from './chatroomDebug';
+import { usePositionWitoutOverflow } from '../contextMenu/contextMenu';
 
 const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
@@ -536,23 +537,36 @@ export function ChatRoomScene(): ReactElement | null {
 function CharacterContextMenu({ character, data, onClose }: { character: ChatRoomCharacter | null; data: InteractionData | null; onClose: () => void; }): ReactElement | null {
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
+	const ref = useRef<HTMLDivElement>(null);
+
+	const event = data?.originalEvent;
+	const position = useMemo(() => {
+		if (event instanceof MouseEvent || event instanceof PointerEvent) {
+			return {
+				left: event.pageX,
+				top: event.pageY,
+			};
+		} else if (window.TouchEvent && event instanceof TouchEvent) {
+			// Firefox doesn't have TouchEvent defined in PC, so we need to check if it's defined
+			return {
+				left: event.touches[0].pageX,
+				top: event.touches[0].pageY,
+			};
+		}
+		return {
+			left: 0,
+			top: 0,
+		};
+	}, [event]);
+
+	usePositionWitoutOverflow(ref, position);
 
 	if (!character || !data) {
 		return null;
 	}
 
-	const event = data?.originalEvent;
-	const style: CSSProperties = {};
-	if (event instanceof MouseEvent || event instanceof PointerEvent) {
-		style.left = event.pageX;
-		style.top = event.pageY;
-	} else if (event instanceof TouchEvent) {
-		style.left = event.touches[0].pageX;
-		style.top = event.touches[0].pageY;
-	}
-
 	return (
-		<div className='context-menu' style={ style } onPointerDown={ (e) => e.stopPropagation() }>
+		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 			<span>
 				{ character.name } ({ character.id })
 			</span>

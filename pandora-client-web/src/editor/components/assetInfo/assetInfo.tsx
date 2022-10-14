@@ -4,6 +4,7 @@ import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
 import React, { ReactElement, useId, useMemo } from 'react';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { SlimScrollbar } from '../../../components/common/slimScrollbar/slimScrollbar';
 import { GetVisibleBoneName } from '../../../components/wardrobe/wardrobe';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -25,7 +26,7 @@ export function AssetInfoUI(): ReactElement {
 	const definition = asset.definition;
 
 	return (
-		<div className='editor-setupui'>
+		<SlimScrollbar color='lighter' className='editor-setupui extraSlim'>
 			<h3>Asset: { StripAssetIdPrefix(asset.id) }</h3>
 			<div>
 				<label htmlFor='id'>ID: </label>
@@ -59,7 +60,7 @@ export function AssetInfoUI(): ReactElement {
 			<PoseLimits poseLimits={ definition.poseLimits } />
 			<Effects effects={ definition.effects } />
 			<Modules modules={ definition.modules } />
-		</div>
+		</SlimScrollbar>
 	);
 }
 

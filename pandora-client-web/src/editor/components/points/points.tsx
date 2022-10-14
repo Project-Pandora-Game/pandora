@@ -5,6 +5,7 @@ import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
 import { Select } from '../../../components/common/Select/Select';
+import { SlimScrollbar } from '../../../components/common/slimScrollbar/slimScrollbar';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditorAssetLayers } from '../../editor';
@@ -27,11 +28,11 @@ export function PointsUI(): ReactElement {
 	}
 
 	return (
-		<div className='editor-setupui'>
+		<SlimScrollbar color='lighter' className='editor-setupui extraSlim'>
 			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; {selectedLayer.name}</h3>
 			<MirrorPointsFromLayer layer={ selectedLayer } asset={ asset } />
 			<PointsEditUi layer={ selectedLayer } />
-		</div>
+		</SlimScrollbar>
 	);
 }
 

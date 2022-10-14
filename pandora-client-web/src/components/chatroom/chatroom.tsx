@@ -28,11 +28,12 @@ import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
-import { ChatRoomPortal } from '../unifiedContext/unifiedContext';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
 	const roomData = useChatRoomData();
+	const navigate = useNavigate();
+	const directoryConnector = useDirectoryConnector();
 
 	if (!roomData || !player) {
 		return <Navigate to='/chatroom_select' />;
@@ -40,53 +41,38 @@ export function Chatroom(): ReactElement {
 
 	return (
 		<div className='chatroom'>
-			<ChatRoomPortal.Out />
-		</div>
-	);
-}
-
-export function ChatroomPorlatIn(): ReactElement | null {
-	const player = usePlayer();
-	const roomData = useChatRoomData();
-	const navigate = useNavigate();
-	const directoryConnector = useDirectoryConnector();
-
-	if (!roomData || !player) {
-		return null;
-	}
-
-	return (
-		<ChatInputContextProvider>
-			<ChatRoomScene />
-			<TabContainer collapsable={ true }>
-				<Tab name='Chat'>
-					<Chat />
-				</Tab>
-				<Tab name='Controls'>
-					<div className='controls'>
-						<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
-						<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
-						<br />
-						<p>You are in room {roomData.name}</p>
-						<div>
-							Characters in this room:<br />
-							<ul>
-								{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
-							</ul>
+			<ChatInputContextProvider>
+				<ChatRoomScene />
+				<TabContainer collapsable={ true }>
+					<Tab name='Chat'>
+						<Chat />
+					</Tab>
+					<Tab name='Controls'>
+						<div className='controls'>
+							<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
+							<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
+							<br />
+							<p>You are in room {roomData.name}</p>
+							<div>
+								Characters in this room:<br />
+								<ul>
+									{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
+								</ul>
+							</div>
+							{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
 						</div>
-						{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
-					</div>
-				</Tab>
-				<Tab name='Pose'>
-					<WardrobePoseGui character={ player } />
-				</Tab>
-				<Tab name='Expressions'>
-					<WardrobeContextProvider player={ player } character={ player }>
-						<WardrobeExpressionGui />
-					</WardrobeContextProvider>
-				</Tab>
-			</TabContainer>
-		</ChatInputContextProvider>
+					</Tab>
+					<Tab name='Pose'>
+						<WardrobePoseGui character={ player } />
+					</Tab>
+					<Tab name='Expressions'>
+						<WardrobeContextProvider player={ player } character={ player }>
+							<WardrobeExpressionGui />
+						</WardrobeContextProvider>
+					</Tab>
+				</TabContainer>
+			</ChatInputContextProvider>
+		</div>
 	);
 }
 
@@ -105,8 +91,7 @@ function DisplayCharacter({ char }: { char: ICharacterPublicData }): ReactElemen
 function Chat(): ReactElement | null {
 	const messages = useChatRoomMessages();
 	const shardConnector = useShardConnector();
-	const mounted = ChatRoomPortal.useMounted();
-	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>('chat', { deps: [messages], mounted });
+	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>('chat', { deps: [messages] });
 	const lastMessageCount = useRef(0);
 
 	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);

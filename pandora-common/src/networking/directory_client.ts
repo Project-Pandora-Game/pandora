@@ -20,7 +20,7 @@ export const AccountCryptoKeySchema = z.object({
 	publicKey: z.string(),
 	salt: z.string(),
 	iv: z.string(),
-	encyptedPrivateKey: z.string(),
+	encryptedPrivateKey: z.string(),
 });
 export type IAccountCryptoKey = z.infer<typeof AccountCryptoKeySchema>;
 

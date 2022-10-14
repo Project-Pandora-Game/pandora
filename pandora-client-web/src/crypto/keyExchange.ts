@@ -32,18 +32,18 @@ export class KeyExchange {
 	public async export(password: string): Promise<IAccountCryptoKey> {
 		const salt = crypto.getRandomValues(new Uint8Array(32));
 		const enc = await SymmetricEncryption.generate({ password, salt });
-		const { iv, encypted } = await enc.wrapKey(this.#privateKey);
+		const { iv, encrypted } = await enc.wrapKey(this.#privateKey);
 		return {
 			publicKey: await this.exportPublicKey(),
 			salt: ArrayToBase64(salt),
 			iv,
-			encyptedPrivateKey: encypted,
+			encryptedPrivateKey: encrypted,
 		};
 	}
 
-	public static async import({ publicKey, iv, salt, encyptedPrivateKey }: IAccountCryptoKey, password: string): Promise<KeyExchange> {
+	public static async import({ publicKey, iv, salt, encryptedPrivateKey }: IAccountCryptoKey, password: string): Promise<KeyExchange> {
 		const enc = await SymmetricEncryption.generate({ password, salt: Base64ToArray(salt) });
-		const privateKey = await enc.unwrapKey(iv, encyptedPrivateKey, ECDH_PARAMS, ECDH_KEY_PRIVATE_USAGES);
+		const privateKey = await enc.unwrapKey(iv, encryptedPrivateKey, ECDH_PARAMS, ECDH_KEY_PRIVATE_USAGES);
 		return new KeyExchange(privateKey, await ImportSpki(publicKey));
 	}
 

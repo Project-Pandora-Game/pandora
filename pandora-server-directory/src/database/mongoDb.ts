@@ -281,10 +281,26 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	private async _doMigrations(): Promise<void> {
-		// const settings: IDirectoryAccountSettings = {
-		// 	visibleRoles: [],
-		// };
-		// await this._accounts.updateMany({}, { $set: { settings } });
+		const accounts = await this._accounts.find({ 'secure.cryptoKey': { $type: 'string' } }).toArray();
+		let count = 0;
+		for (const account of accounts) {
+			if (typeof account.secure.cryptoKey !== 'string') {
+				logger.warning(`Account ${account.id} has a cryptoKey of type ${typeof account.secure.cryptoKey} instead of string`, account.secure.cryptoKey);
+				continue;
+			}
+
+			const cryptoKey = account.secure.cryptoKey as string;
+
+			const [salt, publicKey, iv, encryptedPrivateKey] = cryptoKey.split(':');
+			const crypto: DatabaseAccountWithSecure['secure']['cryptoKey'] = { salt, publicKey, iv, encryptedPrivateKey };
+
+			logger.info(`Migrating account ${account.id} to new crypto format,
+from '${cryptoKey}' to ${JSON.stringify(crypto)}`);
+
+			// await this._accounts.updateOne({ id: account.id }, { $set: { 'secure.cryptoKey': crypto } });
+			++count;
+		}
+		logger.info(`Migrated ${count} accounts to new crypto format`);
 	}
 }
 

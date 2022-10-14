@@ -294,10 +294,10 @@ export default class MongoDatabase implements PandoraDatabase {
 			const [salt, publicKey, iv, encryptedPrivateKey] = cryptoKey.split(':');
 			const crypto: DatabaseAccountWithSecure['secure']['cryptoKey'] = { salt, publicKey, iv, encryptedPrivateKey };
 
+			await this._accounts.updateOne({ id: account.id }, { $set: { 'secure.cryptoKey': crypto } });
 			logger.info(`Migrating account ${account.id} to new crypto format,
 from '${cryptoKey}' to ${JSON.stringify(crypto)}`);
 
-			// await this._accounts.updateOne({ id: account.id }, { $set: { 'secure.cryptoKey': crypto } });
 			++count;
 		}
 		logger.info(`Migrated ${count} accounts to new crypto format`);

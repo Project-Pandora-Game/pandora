@@ -260,15 +260,11 @@ describe('ClientConnection', () => {
 			connectionOnMessage.mockClear();
 
 			client.setAccount(account);
-			expect(connectionOnMessage).toHaveBeenCalledTimes(1);
-			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'directMessage', {
-				info: [],
-			}, undefined, expect.anything());
 
 			client.sendConnectionStateUpdate();
 
-			expect(connectionOnMessage).toHaveBeenCalledTimes(2);
-			expect(connectionOnMessage).toHaveBeenNthCalledWith(2, 'connectionState', {
+			expect(connectionOnMessage).toHaveBeenCalledTimes(1);
+			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: account.getAccountInfo(),
 				character: null,
 			}, undefined, expect.anything());

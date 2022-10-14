@@ -23,10 +23,11 @@ interface DatabaseAccountSecure {
 	cryptoKey?: import('pandora-common').IAccountCryptoKey;
 }
 
+/** Direct message key create from the 2 accounts' id where the first is always the lowest */
 type DirectMessageAccounts = `${number}-${number}`;
-type DirectMessageKeys = `${string}-${string}`;
 
 type DatabaseDirectMessageInfo = import('pandora-common').IDirectoryDirectMessageInfo & {
+	/** Flag to indicate the converation was closed and the info should not be sent to the account */
 	closed?: true;
 };
 

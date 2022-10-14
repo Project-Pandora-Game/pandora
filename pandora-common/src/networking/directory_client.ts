@@ -49,24 +49,39 @@ export type IDirectoryCharacterConnectionInfo = {
 export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'roomList';
 
 export type IDirectoryDirectMessage = {
+	/** Encrypted content, or empty string if the message was deleted. */
 	content: string;
+	/** SHA-256 base64 has from the public keys of the 2 parties, used to validate key change */
 	keyHash: string;
+	/** Source Account's id */
 	source: number;
+	/** Time the message was created, does not change when message is edited */
 	time: number;
+	/** Time the message was last edited. */
 	edited?: number;
 };
 
+/** Account info for direct message conversation */
 export type IDirectoryDirectMessageAccount = {
+	/** Id of the account */
 	id: number;
+	/** Name of the account */
 	name: string;
+	/** Label color of the account */
 	labelColor: string;
+	/** Public key of the account */
 	publicKeyData: string;
 };
 
+/** Direct message conversation info */
 export type IDirectoryDirectMessageInfo = {
+	/** Id of the other account */
 	id: number;
+	/** Name of the other account */
 	account: string;
+	/** Flag to indicate that there are unread messages */
 	hasUnread?: true;
+	/** Last message time */
 	time: number;
 };
 

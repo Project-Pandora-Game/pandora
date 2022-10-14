@@ -234,11 +234,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private async handlePasswordChange({ passwordSha512Old, passwordSha512New }: IClientDirectoryArgument['passwordChange'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordChange'] {
+	private async handlePasswordChange({ passwordSha512Old, passwordSha512New, cryptoKey }: IClientDirectoryArgument['passwordChange'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordChange'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New))
+		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey))
 			return { result: 'invalidPassword' };
 
 		return { result: 'ok' };

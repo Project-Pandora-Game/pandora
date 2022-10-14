@@ -66,6 +66,7 @@ export const ClientDirectoryInSchema = z.object({
 	passwordChange: z.object({
 		passwordSha512Old: PasswordSha512Schema,
 		passwordSha512New: PasswordSha512Schema,
+		cryptoKey: z.string(),
 	}),
 	logout: z.object({
 		invalidateToken: z.string().optional(),

@@ -81,13 +81,13 @@ export default class AccountSecure {
 		return argon2.verify(this.#secure.password, password);
 	}
 
-	public async changePassword(passwordOld: string, passwordNew: string): Promise<boolean> {
-		if (!this.isActivated() || !await this.verifyPassword(passwordOld))
+	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: string): Promise<boolean> {
+		if (!this.isActivated() || !await this.verifyPassword(passwordOld) || !await this.#validateCryptoKey(cryptoKey))
 			return false;
 
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
-		this.#secure.cryptoKey = undefined;
+		this.#secure.cryptoKey = cryptoKey;
 
 		await this.#updateDatabase();
 
@@ -170,28 +170,36 @@ export default class AccountSecure {
 		return true;
 	}
 
-	getCryptoKey(): string | undefined {
+	public getCryptoKey(): string | undefined {
 		return this.#secure.cryptoKey;
 	}
 
-	getPublicKey(): string | undefined {
+	public getPublicKey(): string | undefined {
 		return this.#secure.cryptoKey?.split(CRYPTO_KEY_DELIMITER)[CryptoKeyParts.PUBLIC_KEY];
 	}
 
-	async setCryptoKey(key: string): Promise<boolean> {
+	public async setCryptoKey(key: string): Promise<boolean> {
 		if (this.#secure.cryptoKey === key)
 			return true;
 
-		const array = key.split(CRYPTO_KEY_DELIMITER);
-		if (array.length !== CryptoKeyParts.LENGTH)
-			return false;
-
-		if (!await IsPublicKey(array[CryptoKeyParts.PUBLIC_KEY]))
+		if (!await this.#validateCryptoKey(key))
 			return false;
 
 		this.#secure.cryptoKey = key;
 		await this.#updateDatabase();
 		return true;
+	}
+
+	async #validateCryptoKey(key: string, previous?: string): Promise<boolean> {
+		const array = key.split(CRYPTO_KEY_DELIMITER);
+		if (array.length !== CryptoKeyParts.LENGTH)
+			return false;
+
+		const publicKey = array[CryptoKeyParts.PUBLIC_KEY];
+		if (previous && previous.startsWith(publicKey))
+			return true;
+
+		return await IsPublicKey(publicKey);
 	}
 
 	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {

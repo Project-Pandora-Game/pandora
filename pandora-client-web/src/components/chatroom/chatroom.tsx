@@ -27,6 +27,7 @@ import './chatroom.scss';
 import { WardrobeContextProvider, WardrobeExpressionGui, WardrobePoseGui } from '../wardrobe/wardrobe';
 import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
+import { Scrollbar } from '../common/scrollbar/scrollbar';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -143,9 +144,9 @@ function Chat(): ReactElement | null {
 
 	return (
 		<div className='chatArea'>
-			<div className='messages' ref={ messagesDiv } onScroll={ handleScroll } tabIndex={ 1 }>
+			<Scrollbar color='dark' className='messages' ref={ messagesDiv } onScroll={ handleScroll } tabIndex={ 1 }>
 				{messages.map((m) => <Message key={ m.time } message={ m } />)}
-			</div>
+			</Scrollbar>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } />
 		</div>
 	);

@@ -1,18 +1,14 @@
 {
 	"extends": [
-		"eslint:recommended",
-		"plugin:@typescript-eslint/recommended",
+		"./node_modules/pandora-common/.eslintrc.json",
 		"plugin:react/recommended",
 		"plugin:react-hooks/recommended"
 	],
 	"env": {
-		"es6": true,
-		"node": true
+		"browser": true
 	},
 	"ignorePatterns": [".git", "node_modules", "dist"],
-	"parserOptions": {
-		"ecmaVersion": 2021
-	},
+	"root": true,
 	"plugins": ["@typescript-eslint", "react", "react-hooks"],
 	"overrides": [
 		{
@@ -24,14 +20,6 @@
 				"sourceType": "module"
 			},
 			"rules": {
-				// NOs
-				"no-throw-literal": "off",
-				"@typescript-eslint/no-throw-literal": "error",
-				// Warnings
-				"@typescript-eslint/no-unnecessary-boolean-literal-compare": "warn",
-				// Style rules
-				"dot-notation": "off",
-				"@typescript-eslint/dot-notation": "warn",
 				"@typescript-eslint/naming-convention": [
 					"warn",
 					{
@@ -99,52 +87,12 @@
 			"version": "detect"
 		}
 	},
-	"root": true,
 	"rules": {
-		// Disabled recommended rules
-		"@typescript-eslint/no-inferrable-types": "off",
 		// NOs
-		"@typescript-eslint/ban-ts-comment": [
-			"error",
-			{
-				"ts-expect-error": "allow-with-description"
-			}
-		],
-		"@typescript-eslint/no-parameter-properties": "error",
-		"eqeqeq": [
-			"error",
-			"always",
-			{
-				"null": "ignore"
-			}
-		],
-		"no-bitwise": "error",
-		"no-eval": "error",
-		"no-console": "error",
-		"no-shadow": "off",
-		"@typescript-eslint/no-shadow": [
-			"error",
-			{
-				"hoist": "all"
-			}
-		],
-		"no-throw-literal": "error",
-		"no-var": "error",
-		"unicode-bom": "error",
 		"react/no-unsafe": ["error", { "checkAliases": true }],
 		"react/no-unstable-nested-components": "error",
 		"react/jsx-no-script-url": "error",
 		// Warnings
-		"@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-		"no-unused-expressions": "off",
-		"@typescript-eslint/no-unused-expressions": "warn",
-		"@typescript-eslint/prefer-for-of": "warn",
-		"prefer-const": "warn",
-		"no-undef-init": "warn",
-		"object-shorthand": "warn",
-		"no-multiple-empty-lines": ["warn", { "max": 1, "maxBOF": 0, "maxEOF": 1 }],
-		"operator-assignment": "warn",
-		"prefer-object-spread": "warn",
 		"react/default-props-match-prop-types": "warn",
 		"react/no-typos": "warn",
 		"react/prefer-stateless-function": "warn",
@@ -153,69 +101,6 @@
 		"react/jsx-no-constructed-context-values": "warn",
 		"react/jsx-no-useless-fragment": ["warn", { "allowExpressions": true }],
 		// Style rules
-		"dot-notation": "warn",
-		"semi": "off",
-		"@typescript-eslint/semi": ["warn", "always"],
-		"indent": "off",
-		"@typescript-eslint/indent": [
-			"warn",
-			"tab",
-			{
-				"SwitchCase": 1,
-				"ignoredNodes": ["ConditionalExpression"]
-			}
-		],
-		"comma-dangle": "off",
-		"@typescript-eslint/comma-dangle": ["warn", "always-multiline"],
-		"no-trailing-spaces": "warn",
-		"quotes": "off",
-		"@typescript-eslint/quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],
-		"jsx-quotes": ["warn", "prefer-single"],
-		"@typescript-eslint/array-type": ["warn"],
-		"@typescript-eslint/consistent-type-assertions": [
-			"warn",
-			{
-				"assertionStyle": "as",
-				"objectLiteralTypeAssertions": "never"
-			}
-		],
-		"@typescript-eslint/prefer-function-type": "warn",
-		"one-var": ["warn", "never"],
-		"brace-style": "off",
-		"@typescript-eslint/brace-style": ["warn", "1tbs"],
-		"space-before-function-paren": [
-			"warn",
-			{
-				"anonymous": "always",
-				"named": "never",
-				"asyncArrow": "always"
-			}
-		],
-		"array-bracket-spacing": ["warn", "never"],
-		"comma-spacing": "off",
-		"@typescript-eslint/comma-spacing": "warn",
-		"comma-style": "warn",
-		"computed-property-spacing": "warn",
-		"eol-last": "warn",
-		"func-call-spacing": "off",
-		"@typescript-eslint/func-call-spacing": "warn",
-		"key-spacing": "warn",
-		"@typescript-eslint/type-annotation-spacing": "warn",
-		"keyword-spacing": "off",
-		"@typescript-eslint/keyword-spacing": "warn",
-		"linebreak-style": ["warn", "unix"],
-		"no-whitespace-before-property": "warn",
-		"object-curly-newline": ["warn", { "multiline": true, "consistent": true }],
-		"object-curly-spacing": "off",
-		"@typescript-eslint/object-curly-spacing": ["warn", "always"],
-		"quote-props": ["warn", "consistent"],
-		"semi-spacing": "warn",
-		"semi-style": "warn",
-		"space-before-blocks": "warn",
-		"space-in-parens": "warn",
-		"switch-colon-spacing": "warn",
-		"arrow-spacing": "warn",
-		"arrow-parens": ["warn", "always"],
 		"react/destructuring-assignment": ["warn", "always"],
 		"react/jsx-closing-tag-location": "warn",
 		"react/jsx-curly-newline": ["warn", "consistent"],

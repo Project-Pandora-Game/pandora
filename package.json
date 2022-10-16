@@ -8,8 +8,7 @@
 			"pandora-server-shard"
 		],
 		"nohoist": [
-			"**/react-reverse-portal",
-			"pandora-common"
+			"**/react-reverse-portal"
 		]
 	},
 	"scripts": {

@@ -1,5 +1,5 @@
 {
-	"extends": "./node_modules/pandora-common/.eslintrc.json",
+	"extends": "../pandora-common/.eslintrc.json",
 	"env": {
 		"node": true
 	},

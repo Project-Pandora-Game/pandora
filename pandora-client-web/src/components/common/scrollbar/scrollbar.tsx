@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React, { HTMLAttributes, DetailedHTMLProps, ReactElement } from 'react';
-import './slimScrollbar.scss';
+import './scrollbar.scss';
 
 export type ScrollbarColor = 'dark' | 'lighter';
 
@@ -8,9 +8,9 @@ export interface ButtonProps extends DetailedHTMLProps<HTMLAttributes<HTMLDivEle
 	color: ScrollbarColor;
 }
 
-export function SlimScrollbar({ color, children, className, ...divProps }: ButtonProps): ReactElement {
+export function Scrollbar({ color, children, className, ...divProps }: ButtonProps): ReactElement {
 	return (
-		<div { ...divProps } className={ classNames('SlimScrollbar', className, color) }>
+		<div { ...divProps } className={ classNames('Scrollbar', className, color) }>
 			{ children }
 		</div>
 	);

@@ -11,7 +11,7 @@ $scrollbar-colors: (
 	),
 );
 
-.SlimScrollbar {
+.Scrollbar {
 	&::-webkit-scrollbar {
 		width: 0.5em;
 	}
@@ -32,7 +32,7 @@ $scrollbar-colors: (
 		}
 	}
 
-	&.extraSlim {
+	&.slim {
 		&::-webkit-scrollbar {
 			width: 0.3em;
 		}

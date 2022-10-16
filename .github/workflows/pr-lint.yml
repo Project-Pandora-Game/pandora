@@ -32,5 +32,3 @@ jobs:
             REFACTOR
             DEV
             CHORE
-          validateSingleCommit: true
-          validateSingleCommitMatchesPrTitle: true

@@ -19,9 +19,12 @@ export function PointsUI(): ReactElement {
 	const selectedLayer = useObservable(editor.targetLayer);
 	const asset = selectedLayer?.asset;
 
+	const advancedWarning = <h3 className='error'>This menu is intended for advanced users and is not necessary for the vast majority of assets.</h3>;
+
 	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
 		return (
 			<div className='editor-setupui'>
+				{ advancedWarning }
 				<h3>Select an layer to edit its points</h3>
 			</div>
 		);
@@ -29,6 +32,7 @@ export function PointsUI(): ReactElement {
 
 	return (
 		<Scrollbar color='lighter' className='editor-setupui slim'>
+			{ advancedWarning }
 			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; {selectedLayer.name}</h3>
 			<MirrorPointsFromLayer layer={ selectedLayer } asset={ asset } />
 			<PointsEditUi layer={ selectedLayer } />

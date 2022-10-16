@@ -1,7 +1,9 @@
+import { capitalize } from 'lodash';
 import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
+import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useEvent } from '../../../common/useEvent';
 import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
@@ -19,7 +21,14 @@ export function LayerUI(): ReactElement {
 	const selectedLayer = useObservable(editor.targetLayer);
 	const asset = selectedLayer?.asset;
 
-	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
+	if (!asset || !(asset instanceof EditorAssetGraphics)) {
+		return (
+			<div className='editor-setupui'>
+				<h3>Select an asset to edit layers</h3>
+			</div>
+		);
+	}
+	if (!selectedLayer) {
 		return (
 			<div className='editor-setupui'>
 				<h3>Select an layer to edit it</h3>
@@ -35,6 +44,7 @@ export function LayerUI(): ReactElement {
 			<ColorPicker layer={ selectedLayer } asset={ asset } />
 			<hr />
 			<LayerPrioritySelect layer={ selectedLayer } asset={ asset } />
+			<LayerTemplateSelect layer={ selectedLayer } asset={ asset } />
 			<LayerPointsFilterEdit layer={ selectedLayer } />
 			<hr />
 			<LayerImageSelect layer={ selectedLayer } asset={ asset } />
@@ -217,13 +227,54 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 			<label htmlFor='layer-priority-select'>Layer priority type:</label>
 			<Select
 				id='layer-priority-select'
-				className='flex'
+				className='flex-1'
 				value={ layerPriority }
 				onChange={ (event) => {
 					asset.setLayerPriority(layer, event.target.value as LayerPriority);
 				} }
 			>
 				{ elements }
+			</Select>
+		</div>
+	);
+}
+
+function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+	const points = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.points);
+	const graphicsManger = useObservable(GraphicsManagerInstance);
+
+	if (!graphicsManger)
+		return null;
+
+	const elements: ReactElement[] = [];
+	for (const t of graphicsManger.pointTemplateList) {
+		const id = `t/${t}`;
+		elements.push(
+			<option value={ id } key={ id }>{ capitalize(t) }</option>,
+		);
+	}
+	return (
+		<div>
+			<label htmlFor='layer-template-select'>
+				Point template for layer:
+			</label>
+			<Select
+				id='layer-template-select'
+				className='flex-1'
+				value={ typeof points === 'string' ? `t/${points}` : (Array.isArray(points) && points.length === 0) ? 't/' : '' }
+				onChange={ (event) => {
+					let source: number | string | null = null;
+					if (event.target.value.startsWith('t/')) {
+						source = event.target.value.substring(2);
+					} else if (event.target.value) {
+						source = Number.parseInt(event.target.value);
+					}
+					asset.layerMirrorFrom(layer, source);
+				} }
+			>
+				<option value='t/' key='t/'>[ No points ]</option>
+				{ elements }
+				<option value='' key=''>[ Custom points ]</option>
 			</Select>
 		</div>
 	);

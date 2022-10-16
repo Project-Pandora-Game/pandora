@@ -15,34 +15,25 @@ jobs:
     runs-on: self-hosted
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
+      - uses: actions/checkout@v3
       - run: yarn install --frozen-lockfile
-      - run: yarn workspaces run build
+      - run: yarn parallel:build
 
   lint:
     name: Lint
     runs-on: self-hosted
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
+      - uses: actions/checkout@v3
       - run: yarn install --frozen-lockfile
-      - run: yarn workspaces run lint
+      - run: yarn parallel:lint
 
   test:
     name: Test
     runs-on: self-hosted
 
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '16'
+      - uses: actions/checkout@v3
       - run: yarn install --frozen-lockfile
-      - run: yarn workspaces run type-check:test
-      - run: yarn workspaces run test
+      - run: yarn parallel:type-check:test
+      - run: yarn parallel:test

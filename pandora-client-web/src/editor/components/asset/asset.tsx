@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/Button/Button';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
@@ -28,7 +29,7 @@ export function AssetUI() {
 	}
 
 	return (
-		<div className='editor-setupui editor-assetui'>
+		<Scrollbar color='lighter' className='editor-setupui editor-assetui slim'>
 			<h3>Editing: { StripAssetIdPrefix(selectedAsset.id) }</h3>
 			<AssetExportImport asset={ selectedAsset } />
 			<AssetLayerList asset={ selectedAsset } />
@@ -59,7 +60,7 @@ export function AssetUI() {
 				</span>
 			</label>
 			<AssetImageList asset={ selectedAsset } />
-		</div>
+		</Scrollbar>
 	);
 }
 

@@ -15,6 +15,12 @@
 		"postinstall": "node postinstall.cjs",
 		"ci": "yarn workspaces run build && yarn workspaces run lint && yarn workspaces run type-check:test && yarn workspaces run test",
 		"deploy": "yarn workspace pandora-common run build && yarn workspace pandora-server-directory run build && yarn workspace pandora-server-shard run build && yarn run deploy-client",
-		"deploy-client": "yarn workspace pandora-client-web run build && rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist"
+		"deploy-client": "yarn workspace pandora-client-web run build && rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
+		"parallel:build": "yarn workspace pandora-common run build && { yarn workspace pandora-server-directory run build & yarn workspace pandora-server-shard run build & yarn workspace pandora-client-web run build; }",
+		"parallel:lint": "yarn workspace pandora-common run lint & yarn workspace pandora-server-directory run lint & yarn workspace pandora-server-shard run lint & yarn workspace pandora-client-web run lint;",
+		"parallel:type-check:test": "yarn workspace pandora-common run type-check:test & yarn workspace pandora-server-directory run type-check:test & yarn workspace pandora-server-shard run type-check:test & yarn workspace pandora-client-web run type-check:test;",
+		"parallel:test": "yarn workspace pandora-common run test & yarn workspace pandora-server-directory run test & yarn workspace pandora-server-shard run test & yarn workspace pandora-client-web run test;",
+		"parallel:ci": "yarn parallel:build && yarn run parallel:lint && yarn run parallel:type-check:test && yarn run parallel:test",
+		"parallel:deploy": "yarn parallel:build && rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist"
 	}
 }

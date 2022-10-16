@@ -11,7 +11,8 @@
 	"types": "./dist/index.d.ts",
 	"files": [
 		"/dist/**/*",
-		".eslintrc.json"
+		".eslintrc.json",
+		"tsconfig.base.json"
 	],
 	"workspaces": {
 		"nohoist": [

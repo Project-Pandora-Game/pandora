@@ -14,7 +14,7 @@ import { Dialog } from '../../../components/dialog/dialog';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
 import { AssetTreeViewCategory, ASSET_ID_PART_REGEX, GetAssetManagerEditor } from '../../assets/assetManager';
-import { EDITOR_ALPHA_ICONS } from '../../editor';
+import { EDITOR_ALPHA_ICONS, useEditorTabContext } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import './assets.scss';
 
@@ -63,6 +63,7 @@ function StripAssetIdAndCategory(id: AssetId, category: string) {
 
 function AssetElement({ asset, category }: { asset: Asset; category: string; }): ReactElement {
 	const editor = useEditor();
+	const tabContext = useEditorTabContext();
 
 	function add() {
 		editor.character.appearance.addItem(
@@ -77,6 +78,9 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
+					if (!tabContext.activeTabs.includes('Asset')) {
+						tabContext.setTab('Asset');
+					}
 				} } title='Edit this asset'>
 					🖌
 				</Button>
@@ -90,6 +94,7 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 
 function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 	const editor = useEditor();
+	const tabContext = useEditorTabContext();
 	const asset = GetAssetManagerEditor().getAssetById(assetId);
 	AssertNotNullable(asset);
 
@@ -107,6 +112,9 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(assetId);
+					if (!tabContext.activeTabs.includes('Asset')) {
+						tabContext.setTab('Asset');
+					}
 				} } title='Edit this asset'>
 					🖌
 				</Button>
@@ -121,6 +129,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 const itemOpenState = new WeakMap<Item, ToggleLiState>();
 function ItemElement({ item }: { item: Item; }): ReactElement {
 	const editor = useEditor();
+	const tabContext = useEditorTabContext();
 	const appearance = editor.character.appearance;
 
 	let toggleState = itemOpenState.get(item);
@@ -155,6 +164,9 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
+					if (!tabContext.activeTabs.includes('Asset')) {
+						tabContext.setTab('Asset');
+					}
 				} } title="Edit this item's asset">
 					🖌
 				</Button>
@@ -259,6 +271,7 @@ function AssetCreatePrompt(): ReactElement {
 
 function AssetCreateDialog({ closeDialog }: { closeDialog: () => void }): ReactElement {
 	const editor = useEditor();
+	const tabContext = useEditorTabContext();
 	const assetManager = GetAssetManagerEditor();
 	const view = assetManager.assetTreeView;
 
@@ -304,6 +317,9 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void }): ReactE
 		editor.startEditAsset(resultId);
 
 		closeDialog();
+		if (!tabContext.activeTabs.includes('Asset')) {
+			tabContext.setTab('Asset');
+		}
 	});
 
 	return (

@@ -23,7 +23,7 @@ export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList 
 	const scroll = useCallback(() => {
 		if (ref.current && autoScroll && ref.current.scrollHeight > 0) {
 			isScrolling.current = true;
-			ref.current.scrollTo({ top: ref.current.scrollHeight, behavior: 'auto' });
+			ref.current.scrollTo({ top: ref.current.scrollHeight, behavior: 'smooth' });
 		}
 	}, [autoScroll]);
 
@@ -37,6 +37,7 @@ export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList 
 			return undefined;
 		}
 		const current = ref.current;
+		current.scrollTo({ top: current.scrollHeight, behavior: 'auto' });
 		current.style.scrollBehavior = 'smooth';
 		current.addEventListener('scroll', onScroll);
 		return () => {

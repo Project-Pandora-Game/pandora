@@ -244,7 +244,7 @@ const currentTabContext = createContext<EditorCurrentTabContext>({
 	activeTabs: [],
 	setTab: noop,
 	closeTab: noop,
-})
+});
 
 function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 	const { activeTabs, setActiveTabs } = useContext(activeTabsContext);
@@ -267,6 +267,12 @@ function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 	const currentTab = TABS.find((t) => t[0] === tab) ?? TABS[0];
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const CurrentTabComponent = currentTab[2];
+
+	const context = useMemo<EditorCurrentTabContext>(() => ({
+		activeTabs,
+		setTab,
+		closeTab,
+	}), [activeTabs, setTab, closeTab]);
 
 	return (
 		<div className={ currentTab[1] }>
@@ -307,11 +313,7 @@ function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 					+
 				</Button>
 			</div>
-			<currentTabContext.Provider value={ {
-				activeTabs,
-				setTab,
-				closeTab,
-			} }>
+			<currentTabContext.Provider value={ context }>
 				<CurrentTabComponent />
 			</currentTabContext.Provider>
 		</div>

@@ -53,7 +53,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function 
 			el.addEventListener('wheel', onWheelHandler, { passive: false });
 			return () => {
 				el.removeEventListener('wheel', onWheelHandler);
-			}
+			};
 		}
 		return undefined;
 	}, [innerRef, onWheelHandler]);

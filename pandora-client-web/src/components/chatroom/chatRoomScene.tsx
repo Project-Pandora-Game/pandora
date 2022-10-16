@@ -18,7 +18,7 @@ import _, { noop } from 'lodash';
 import { GraphicsSceneRenderer } from '../../graphics/graphicsSceneRenderer';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { ChatroomDebugConfig, useDebugConfig } from './chatroomDebug';
-import { usePositionWitoutOverflow } from '../contextMenu/contextMenu';
+import { useContextMenuPosition } from '../contextMenu/contextMenu';
 
 const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
@@ -559,7 +559,7 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 		};
 	}, [event]);
 
-	usePositionWitoutOverflow(ref, position);
+	useContextMenuPosition(ref, position);
 
 	if (!character || !data) {
 		return null;

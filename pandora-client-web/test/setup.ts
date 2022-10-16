@@ -1,21 +1,20 @@
 /* eslint-disable */
 import '@testing-library/jest-dom';
 import { logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
-// @ts-expect-error - Use Node's crypto module to polyfill crypto
 import { webcrypto } from 'crypto';
-// @ts-expect-error - Use Node's TextEncode & TextDecoder as polyfills for JSDom
 import { TextEncoder, TextDecoder } from 'util';
 import { TEST_DIRECTORY_ADDRESS } from './testEnv';
 
+// @ts-expect-error - It works, not sure why types says it doesn't
 const { getRandomValues, subtle } = webcrypto;
 
 globalThis.TextEncoder ??= TextEncoder;
+// @ts-expect-error - Polyfill TextDecoder as JSDom doesn't support it
 globalThis.TextDecoder ??= TextDecoder;
-// @ts-expect-error - use Node Buffer
 globalThis.btoa ??= (str) => Buffer.from(str).toString('base64');
-// @ts-expect-error - use Node Buffer
 globalThis.atob ??= (str) => Buffer.from(str, 'base64').toString('utf8');
 
+// @ts-expect-error - Polyfill crypto as JSDom doesn't support it
 globalThis.crypto ??= webcrypto;
 globalThis.crypto.getRandomValues ??= getRandomValues;
 // @ts-expect-error - Polyfill SubtleCrypto as JSDom doesn't support it

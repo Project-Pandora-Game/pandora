@@ -26,7 +26,7 @@ function DirectMessageList(): ReactElement | null {
 	const channel = useDirectMessageChannel();
 	const messages = useObservable(channel.messages);
 	const account = useCurrentAccount();
-	const [ref] = useAutoScroll<HTMLDivElement>(`dm-${channel.account.id}`, { deps: [messages] });
+	const [ref] = useAutoScroll<HTMLDivElement>([messages]);
 
 	if (!account) {
 		return null;

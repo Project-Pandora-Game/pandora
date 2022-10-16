@@ -91,7 +91,7 @@ function DisplayCharacter({ char }: { char: ICharacterPublicData }): ReactElemen
 function Chat(): ReactElement | null {
 	const messages = useChatRoomMessages();
 	const shardConnector = useShardConnector();
-	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>('chat', { deps: [messages] });
+	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages]);
 	const lastMessageCount = useRef(0);
 
 	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);

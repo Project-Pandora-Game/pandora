@@ -117,8 +117,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 			directMessageSent: async (data) => {
 				await this.directMessageHandler.handleDirectMessageSent(data);
 			},
-			directMessageAction: async (data) => {
-				await this.directMessageHandler.handleDirectMessageAction(data);
+			directMessageAction: (data) => {
+				this.directMessageHandler.handleDirectMessageAction(data);
 			},
 		});
 		this.socket.onAny(this.handleMessage.bind(this));

@@ -7,6 +7,7 @@ import { DirectMessage, DirectMessageChannel } from '../../networking/directMess
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { RenderChatPart } from '../chatroom/chatroom';
+import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import './directMessage.scss';
@@ -33,11 +34,11 @@ function DirectMessageList(): ReactElement | null {
 	}
 
 	return (
-		<div ref={ ref } className='direct-message-list'>
+		<Scrollbar ref={ ref } color='dark' className='direct-message-list'>
 			{messages.map((message) => (
 				<DirectMessageElement key={ message.time } message={ message } channel={ channel } account={ account } />
 			))}
-		</div>
+		</Scrollbar>
 	);
 }
 

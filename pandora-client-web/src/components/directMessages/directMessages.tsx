@@ -6,6 +6,7 @@ import { DirectMessage } from '../directMessage/directMessage';
 import './directMessages.scss';
 import { useEvent } from '../../common/useEvent';
 import { Button } from '../common/Button/Button';
+import { Scrollbar } from '../common/scrollbar/scrollbar';
 
 export function DirectMessages(): React.ReactElement {
 	const directory = useDirectoryConnector();
@@ -28,9 +29,9 @@ export function DirectMessages(): React.ReactElement {
 		<div className='direct-messages'>
 			<div className='direct-messages__list'>
 				<input type='text' value={ filter } onChange={ (e) => setFilter(e.target.value) } placeholder='Filter' />
-				<ul>
+				<Scrollbar color='dark' tag='ul'>
 					{filtered.map((i) => <DirectMessageInfo key={ i.id } info={ i } show={ setSelected } />)}
-				</ul>
+				</Scrollbar>
 				<OpenConversation show={ setSelected } />
 			</div>
 			{selected !== null && <DirectMessage accountId={ selected } />}

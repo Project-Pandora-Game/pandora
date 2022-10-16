@@ -13,19 +13,6 @@
 		overflow-x: hidden;
 		overflow-y: scroll;
 		user-select: text;
-
-		&::-webkit-scrollbar {
-			width: 0.5em;
-		}
-
-		&::-webkit-scrollbar-thumb {
-			background-color: $grey-darkest;
-			border-radius: 0.5rem;
-		}
-
-		&::-webkit-scrollbar-thumb:hover {
-			background-color: $black;
-		}
 	}
 
 	.direct-message-entry {

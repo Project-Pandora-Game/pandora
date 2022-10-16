@@ -1,18 +1,22 @@
 import classNames from 'classnames';
-import React, { HTMLAttributes, DetailedHTMLProps, ReactElement, ForwardedRef, forwardRef } from 'react';
+import React, { DetailedHTMLProps, HTMLAttributes, ReactElement, ForwardedRef, forwardRef } from 'react';
 import './scrollbar.scss';
 
 export type ScrollbarColor = 'dark' | 'lighter';
 
-export interface ButtonProps extends DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
+export type ScrollbarProps<K extends keyof HTMLElementTagNameMap> = DetailedHTMLProps<HTMLAttributes<HTMLElementTagNameMap[K]>, HTMLElementTagNameMap[K]> & {
 	color: ScrollbarColor;
-}
+	tag?: K;
+};
 
-function ScrollbarImpl({ color, children, className, ...divProps }: ButtonProps, ref: ForwardedRef<HTMLDivElement>): ReactElement {
+function ScrollbarImpl<K extends keyof HTMLElementTagNameMap = 'div'>({ color, children, className, tag, ...props }: ScrollbarProps<K>, ref: ForwardedRef<HTMLElementTagNameMap[K]>): ReactElement {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const Element = (tag as 'div') ?? 'div';
+	const elementProps = props as DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 	return (
-		<div { ...divProps } ref={ ref } className={ classNames('Scrollbar', className, color) }>
+		<Element { ...elementProps } ref={ ref as ForwardedRef<HTMLDivElement> } className={ classNames('Scrollbar', className, color) }>
 			{ children }
-		</div>
+		</Element>
 	);
 }
 

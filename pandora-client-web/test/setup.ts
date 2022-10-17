@@ -12,9 +12,9 @@ Assert(typeof globalThis.TextDecoder === "undefined");
 // @ts-expect-error - Polyfill TextDecoder as JSDom doesn't support it
 globalThis.TextDecoder = TextDecoder;
 
-Assert(typeof globalThis.crypto === "undefined");
-// @ts-expect-error - Polyfill crypto as JSDom doesn't support it
-globalThis.crypto = webcrypto;
+Assert(typeof globalThis.crypto.subtle === "undefined");
+// @ts-expect-error - Polyfill subtle crypto as JSDom doesn't support it
+globalThis.crypto.subtle = webcrypto.subtle;
 
 // @ts-expect-error - Normally added by Webpack
 globalThis.process = {

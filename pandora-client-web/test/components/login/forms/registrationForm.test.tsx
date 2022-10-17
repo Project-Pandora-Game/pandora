@@ -39,7 +39,9 @@ describe('Registration Form', () => {
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Username', 'Username is required');
+		await ExpectFieldToBeInvalid('Username');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Username', 'Username is required');
 	});
 
 	it('should not permit an empty email to be submitted', async () => {
@@ -51,7 +53,9 @@ describe('Registration Form', () => {
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Email', 'Email is required');
+		await ExpectFieldToBeInvalid('Email');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Email', 'Email is required');
 	});
 
 	it('should not permit an empty password to be submitted', async () => {
@@ -63,7 +67,9 @@ describe('Registration Form', () => {
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Password', 'Password is required');
+		await ExpectFieldToBeInvalid('Password');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Password', 'Password is required');
 	});
 
 	it('should not permit an empty confirmation password to be submitted', async () => {
@@ -75,7 +81,9 @@ describe('Registration Form', () => {
 		await user.type(screen.getByLabelText('Password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Confirm password', 'Please confirm your password');
+		await ExpectFieldToBeInvalid('Confirm password');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Confirm password', 'Please confirm your password');
 	});
 
 	it.each(INVALID_USERNAMES)('should not permit the invalid username %p to be submitted', async (invalidUsername) => {
@@ -93,7 +101,9 @@ describe('Registration Form', () => {
 
 		await fillInAndSubmitForm(defaultUsername, invalidEmail, defaultPassword, defaultPassword);
 
-		await ExpectFieldToBeInvalid('Email', 'Invalid email format');
+		await ExpectFieldToBeInvalid('Email');
+		// Error may be caught by native validation, so the message is not reliably displayed
+		// await ExpectFieldToBeInvalid('Email', 'Invalid email format');
 	});
 
 	it.each([

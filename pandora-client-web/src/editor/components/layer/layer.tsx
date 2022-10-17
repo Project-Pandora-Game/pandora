@@ -1,5 +1,5 @@
 import { capitalize } from 'lodash';
-import { LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
+import { Assert, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
@@ -9,6 +9,7 @@ import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
 import { Select } from '../../../components/common/Select/Select';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -18,8 +19,9 @@ import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../pa
 
 export function LayerUI(): ReactElement {
 	const editor = useEditor();
+	const selectedAsset = useObservable(editor.targetAsset);
 	const selectedLayer = useObservable(editor.targetLayer);
-	const asset = selectedLayer?.asset;
+	const asset = selectedLayer?.asset ?? selectedAsset;
 
 	if (!asset || !(asset instanceof EditorAssetGraphics)) {
 		return (
@@ -35,6 +37,7 @@ export function LayerUI(): ReactElement {
 			</div>
 		);
 	}
+	Assert(asset === selectedLayer.asset);
 
 	return (
 		<Scrollbar color='lighter' className='editor-setupui slim'>
@@ -62,9 +65,22 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 
 	return (
 		<>
-			<h3>Editing: { StripAssetIdPrefix(layer.asset.id) } &gt; {layer.name}</h3>
+			<h3>
+				Editing: { StripAssetIdPrefix(layer.asset.id) } &gt; {layer.name}
+				<ContextHelpButton>
+					The &quot;Layer&quot;-tab lets you edit a layer of an asset by configuring various properties of the layer.<br />
+					The first line shows you the name of asset and asset layer you are currently editing.<br />
+					[category/asset-name] &gt; [layer-name]
+				</ContextHelpButton>
+			</h3>
 			<div>
-				<label htmlFor='layer-name'>Layer name:</label>
+				<label htmlFor='layer-name'>
+					Layer name:
+					<ContextHelpButton>
+						This field sets the name of the layer, as it is shown in the &quot;Asset&quot;-tab.<br />
+						It affects nothing else and is purely for identifying layers later on.
+					</ContextHelpButton>
+				</label>
 				<input
 					type='text'
 					id='layer-name'
@@ -97,7 +113,23 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 
 	return (
 		<div>
-			<label htmlFor='layer-image-select'>{ asAlpha ? 'Alpha' : 'Layer' } image asset:</label>
+			<label htmlFor='layer-image-select'>
+				{ asAlpha ? 'Alpha' : 'Layer' } image asset:
+				<ContextHelpButton>
+					<p>
+						Select the image you want to be used from the ones you uploaded in the Asset-tab.
+					</p>
+					<p>
+						{ asAlpha ?
+							'The image will be used as alpha mask to hide parts of images below from the same priority-layer.' :
+							'The assigned image will show for this layer, based on the set overrides/stop points (if applicable).'}
+						<br />
+						{ asAlpha ?
+							'Most assets do not need alpha masks. Look at existing skirt/shoe assets for examples on mask usage.' :
+							''}
+					</p>
+				</ContextHelpButton>
+			</label>
 			<Select
 				id='layer-image-select'
 				className='flex'
@@ -145,9 +177,27 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 			<div>
 				<label
 					htmlFor='layer-colorization'
-					title="Index in asset's 'colorization' setting that this layer follows for colorability by user; -1 if not colorable."
 				>
-					Colorization index (?):
+					Colorization index:
+					<ContextHelpButton>
+						<p>
+							This selects the index of the color this layer should use for tinting the asset image.<br />
+						</p>
+						<p>
+							In the asset.ts file of the asset you already have or will create later,<br />
+							there is a setting &apos;colorization&apos; about the default colors the asset uses.
+						</p>
+						<p>
+							A value of 0 for the input field means that it uses the first asset color<br />
+							from the &apos;*.asset.ts&apos; file.<br />
+							If you do not want this layer to be colorable by the user, set a value of -1.
+						</p>
+						<p>
+							If you know the order and amount of default colors you want to set later,<br />
+							you could set index in advance here and later add the colors to the &apos;*.asset.ts&apos; file.<br />
+							The recommendation is to revisit layer coloring after you completed the &apos;*.asset.ts&apos; file.
+						</p>
+					</ContextHelpButton>
 				</label>
 				<input
 					id='layer-colorization'
@@ -162,9 +212,16 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 			<div>
 				<label
 					htmlFor='layer-colorization-name'
-					title="Resolved name of color setting, based on value of 'Colorization index'"
 				>
-					Colorization name (?):
+					Colorization name:
+					<ContextHelpButton>
+						<p>
+							This value shows the according name of the color setting from the<br />
+							&apos;*.asset.ts&apos; file based on the input value of &apos;Colorization index&apos;.<br />
+							You cannot edit this field, as  you cannot define new colors and<br />
+							their name in the editor, but only in the asset code (*.asset.ts file).
+						</p>
+					</ContextHelpButton>
 				</label>
 				<input
 					id='layer-colorization-name'
@@ -196,7 +253,20 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 
 	return (
 		<div>
-			<label htmlFor='layer-tint'>Layer tint:</label>
+			<label htmlFor='layer-tint'>
+				Layer tint:
+				<ContextHelpButton>
+					<p>
+						You can manually select the layer tint by pressing on the rectangle.<br />
+						This color is only valid for testing in the editor and is not saved!<br />
+						You cannot define new colors in the editor, but only in the asset<br />
+						code (*.asset.ts file).<br />
+						Per default, the rectangle shows the color of the selected color index<br />
+						in &apos;Colorization index&apos;.<br />
+						The button on the right resets the color to the color of the selected index.
+					</p>
+				</ContextHelpButton>
+			</label>
 			<input
 				type='color'
 				className='flex'
@@ -224,7 +294,25 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 
 	return (
 		<div>
-			<label htmlFor='layer-priority-select'>Layer priority type:</label>
+			<label htmlFor='layer-priority-select'>
+				Layer priority type:
+				<ContextHelpButton>
+					<p>
+						This selects the priority of this layer, so that it is ordered correctly<br />
+						between the numerous body layers which are filled with the images from<br />
+						all equipped items on the character.
+					</p>
+					<p>
+						You likely need to experiment a bit here and look how it changes the<br />
+						editor character in the Preview-tab. Also turn the character view around in<br />
+						the Pose-tab to see how it looks from behind.
+					</p>
+					<p>
+						Sometimes, you may need to use the same image in two layers at different priorities,<br />
+						e.g. once above the breasts and the same image also below the breasts.
+					</p>
+				</ContextHelpButton>
+			</label>
 			<Select
 				id='layer-priority-select'
 				className='flex-1'
@@ -257,6 +345,30 @@ function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 		<div>
 			<label htmlFor='layer-template-select'>
 				Point template for layer:
+				<ContextHelpButton>
+					<p>
+						This is a very important selector.<br />
+						It lets you define the set of points this layer should use for<br />
+						transformations based on pose changes.
+					</p>
+					<p>
+						The templates are pretty much self explanatory.<br />
+						If you make any asset that should change alongside body changes,<br />
+						you use &apos;body&apos; - unless it is an asset where a more specialized<br />
+						template,exists, e.g. &apos;shirt&apos; for tops or &apos;skirt_short/skirt_long&apos;.
+					</p>
+					<p>
+						A special template is &apos;static&apos;. This one covers the whole canvas<br />
+						and does not use any transformations, so it can be used for images<br />
+						that should always be on the same spot in the same size.
+					</p>
+					<p>
+						If you cannot find a suitable template for your purpose or the<br />
+						chosen template cuts off parts of your image, please get help on<br />
+						Discord, as you either need custom points for this layer or we<br />
+						need to make a new template for your asset.
+					</p>
+				</ContextHelpButton>
 			</label>
 			<Select
 				id='layer-template-select'
@@ -292,10 +404,47 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 				.filter((t) => !!t),
 		);
 	});
-
+	// TODO: Consider rephrasing when we have seperated arms/hands/legs into more types.
 	return (
 		<div>
-			<div>Point type filter (comma separated):</div>
+			<div>
+				Point type filter (comma separated):
+				<ContextHelpButton>
+					<p>
+						<b>This is an advanced topic, rarely needed.</b><br />
+						The &apos;point type filter&apos; field lets you list the names of point types the image of<br />
+						this layer will touch. For instance &apos;body&apos; is the name of all points on the body,<br />
+						whereas &apos;bodyarms&apos; are the few points that are both part of the body as well as<br />
+						the arms. The other points along the arms are of type &apos;arms&apos;.
+					</p>
+					<p>
+						The rule of thumb is that if you create an asset that uses all points,<br />
+						you simply leave the field empty, as this will then not filter points at all<br />
+						and increases rendering performance.
+					</p>
+					<p>
+						If your asset should only be visible partially, filtering points makes sense:<br />
+						E.g. if you want to mirror an asset and only show it on one half of the body.<br />
+						You can look at the &quot;body/eyes3&quot; asset to see how you filter for one half of the<br />
+						static point space.
+					</p>
+					<p>
+						Another case where you need the filters is if you want parts of your image<br />
+						asset to be visible on different priority layers, e.g. the sleeves of a jacket.<br />
+						In this case, you need two layers with the same image asset and split it over<br />
+						the two desired layers using the point filters.<br />
+						You can take a look at the &quot;top/t-shirt&quot; asset to see an example of this.
+					</p>
+					<p>
+						More point types may be introduced later on.
+					</p>
+					<p>
+						The character view in the Preview-tab will help you to see if you filtered<br />
+						for the right point types. If your asset does not show correctly in typical<br />
+						poses, wrong point types (together with missing splits) here can be a cause of this.
+					</p>
+				</ContextHelpButton>
+			</div>
 			<textarea
 				spellCheck='false'
 				aria-label='layer points filter'
@@ -331,7 +480,47 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 
 	return (
 		<div>
-			<div>{ asAlpha ? 'Alpha' : 'Image' } overrides:</div>
+			<div>
+				{ asAlpha ? 'Alpha' : 'Image' } overrides:
+				<ContextHelpButton>
+					<p>
+						This field lets you define conditions for when the chosen image should be replaced.<br />
+						An image can be replaced with another image uploaded in the Asset-tab or the <br />
+						current image can be hidden by not providing a trailing filename for the override.<br />
+						Examples further down. Conditions can be chained with AND ( &amp; ) and OR ( | ) characters.
+					</p>
+					<p>
+						A condition follows the format [name][&lt;|=|&gt;][value] [image filename(optional)].<br />
+						The first value of a condition can either be the name of a bone or of a module defined in<br />
+						&apos;*.asset.ts&apos; file of the current asset later on.<br />
+						If it is the name of a module you need to prefix it with &apos;m_&apos; such as m_[modulename].
+					</p>
+					<p>
+						The value of a bone can be between -180 and 180 (see Poses-tab).<br />
+						The value of a module is typically the id of the related variant.
+					</p>
+					<p>
+						You can find the names of all bones in the file /pandora-assets/src/bones.ts<br />
+						Note that arm_r means only the right arm, but there is also arm_l for the left one.
+					</p>
+					Every line in the input field is one condition. Some examples:
+					<ul>
+						<li>
+							m_ropeStateModule=harness&amp;breasts&gt;100 rope_harness_largest.png<br />
+							This means, if the module with the name &apos;ropeStateModule&apos; has harness selected<br />
+							and the breasts slider is larger than 100, the default layer image is replaced.
+						</li>
+						<li>
+							leg_l&lt;0|backView&gt;0 <br />
+							This means, if the left leg slider is in the negative OR the character is in<br />
+							back view, we hide the current image (we replace it with no image).<br />
+							&apos;backView&apos; is a fake bone that has two states: backView&gt;0 and backView=0<br />
+							It is useful for some assets like shoes to stop the front or back view image<br />
+							from leaking from behind the body, when undesired.
+						</li>
+					</ul>
+				</ContextHelpButton>
+			</div>
 			<textarea
 				spellCheck='false'
 				rows={ 6 }
@@ -361,7 +550,40 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 	return (
 		<>
 			<div>
-				<label htmlFor='layer-scaling-bone-select'>Select image based on value of bone:</label>
+				<label htmlFor='layer-scaling-bone-select'>
+					Select image based on value of bone:
+					<ContextHelpButton>
+						<p>
+							This drop-down menu lets you override images based on the value/state of the<br />
+							selected bone/slider (see Pose-tab). Here, you can for instance select the<br />
+							breasts bone and then add the predefined stop-points (aka &quot;breast-sizes&quot; in<br />
+							this case) for which you want to overwrite the standard layer image with<br />
+							another one. This is used for instance to show the asset in the proper size<br />
+							that looks realistic for how the selected bone/slider state transformed the body.
+						</p>
+						<p>
+							In other words and for the breast example:<br />
+							You could create up to 6 images showing the item (e.g. a t-shirt) with different<br />
+							breast sizes and then set the images here for the according stop points.
+						</p>
+						<p>
+							Note that you do not need an image for every stop point; missing ones will be<br />
+							automatically scaled by the system, using the next nearest available stop point<br />
+							image. But adding premade images for all stop points may lead to higher<br />
+							quality results.
+						</p>
+						<p>
+							As a rule of thumb, you likely need two additional images for the stop points<br />
+							&apos;small&apos; and &apos;extreme&apos; besides the default layer image (which is implicitely<br />
+							a stop point that is called &apos;large&apos; in the body templates).
+						</p>
+						<p>
+							For more information on stop points, according slider state values and<br />
+							full body templates to draw over, see this Discord post:<br />
+							<a href='https://discord.com/channels/872284471611760720/873309624441401404/1019125393774620692' target='_blank' rel='noopener noreferrer'>Link to Discord</a>
+						</p>
+					</ContextHelpButton>
+				</label>
 				<Select
 					id='layer-scaling-bone-select'
 					className='flex'

@@ -36,7 +36,9 @@ describe('Login Form', () => {
 			await user.type(screen.getByLabelText('Password'), 'password');
 			await user.click(screen.getByRole('button'));
 
-			await ExpectFieldToBeInvalid('Username', 'Username is required');
+			await ExpectFieldToBeInvalid('Username');
+			// Error is caught by native validation, so the message is not displayed
+			// await ExpectFieldToBeInvalid('Username', 'Username is required');
 		});
 
 		it.each(INVALID_USERNAMES)('should not permit the invalid username %p to be submitted', async (username) => {
@@ -57,7 +59,9 @@ describe('Login Form', () => {
 			await user.type(screen.getByLabelText('Username'), 'test-user');
 			await user.click(screen.getByRole('button'));
 
-			await ExpectFieldToBeInvalid('Password', 'Password is required');
+			await ExpectFieldToBeInvalid('Password');
+			// Error is caught by native validation, so the message is not displayed
+			// await ExpectFieldToBeInvalid('Password', 'Password is required');
 		});
 
 		// TODO: Add a test for end-to-end form submission once we have a decent framework for mocking socket stuff

@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: yarn install --frozen-lockfile
-      - run: yarn parallel:build
+      - run: yarn run parallel:build
 
   lint:
     name: Lint
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: yarn install --frozen-lockfile
-      - run: yarn parallel:lint
+      - run: yarn run parallel:lint
 
   test:
     name: Test
@@ -35,5 +35,5 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - run: yarn install --frozen-lockfile
-      - run: yarn parallel:type-check:test
-      - run: yarn parallel:test
+      - run: yarn run parallel:type-check:test
+      - run: yarn run parallel:test

@@ -1,4 +1,7 @@
 {
-	"extends": "./tsconfig.base.json",
+	"extends": "pandora-common/tsconfig.base.json",
+	"compilerOptions": {
+		"types": ["@types/node", "@types/jest"]
+	},
 	"include": ["./src/**/*", "./test/**/*"]
 }

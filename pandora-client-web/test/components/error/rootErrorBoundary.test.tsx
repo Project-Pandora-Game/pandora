@@ -88,7 +88,6 @@ describe('RootErrorBoundary', () => {
 
 	function renderComponent(element: ReactElement): RenderResult {
 		return render(
-			// eslint-disable-next-line react/jsx-no-constructed-context-values
 			<debugContext.Provider value={ { debugData, setDebugData } }>
 				<RootErrorBoundary>
 					{ element }

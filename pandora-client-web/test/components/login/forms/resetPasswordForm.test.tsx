@@ -39,7 +39,9 @@ describe('Reset Password Form', () => {
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Username', 'Username is required');
+		await ExpectFieldToBeInvalid('Username');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Username', 'Username is required');
 	});
 
 	it('should not permit an empty reset code to be submitted', async () => {
@@ -51,7 +53,9 @@ describe('Reset Password Form', () => {
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Reset code', 'Reset code is required');
+		await ExpectFieldToBeInvalid('Reset code');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Reset code', 'Reset code is required');
 	});
 
 	it('should not permit an empty password to be submitted', async () => {
@@ -63,7 +67,9 @@ describe('Reset Password Form', () => {
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Password', 'Password is required');
+		await ExpectFieldToBeInvalid('Password');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Password', 'Password is required');
 	});
 
 	it('should not permit an empty confirmation password to be submitted', async () => {
@@ -75,7 +81,9 @@ describe('Reset Password Form', () => {
 		await user.type(screen.getByLabelText('Password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Confirm password', 'Please confirm your password');
+		await ExpectFieldToBeInvalid('Confirm password');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Confirm password', 'Please confirm your password');
 	});
 
 	it.each(INVALID_USERNAMES)('should not permit the invalid username %p to be submitted', async (invalidUsername) => {
@@ -93,6 +101,9 @@ describe('Reset Password Form', () => {
 			// TODO: Expand this to actually check that a WS message hasn't been sent
 			expect(screen.queryByText('Reset code is required')).not.toBeInTheDocument();
 
+			await user.type(screen.getByLabelText('Username'), defaultUsername);
+			await user.type(screen.getByLabelText('Password'), defaultPassword);
+			await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 			await user.type(screen.getByLabelText('Reset code'), invalidResetCode);
 			await user.click(screen.getByRole('button'));
 
@@ -111,6 +122,9 @@ describe('Reset Password Form', () => {
 			// TODO: Expand this to actually check that a WS message hasn't been sent
 			expect(screen.queryByText('Reset code is required')).not.toBeInTheDocument();
 
+			await user.type(screen.getByLabelText('Username'), defaultUsername);
+			await user.type(screen.getByLabelText('Password'), defaultPassword);
+			await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 			await user.type(screen.getByLabelText('Reset code'), invalidResetCode);
 			await user.click(screen.getByRole('button'));
 

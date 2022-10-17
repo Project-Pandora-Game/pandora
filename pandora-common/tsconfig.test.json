@@ -1,8 +1,7 @@
 {
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"declaration": false,
-		"removeComments": true,
+		"types": ["@types/node", "@types/jest"]
 	},
 	"include": ["./test/**/*", "./src/**/*.d.ts"]
 }

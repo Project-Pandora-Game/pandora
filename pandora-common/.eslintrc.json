@@ -4,8 +4,7 @@
 		"plugin:@typescript-eslint/recommended"
 	],
 	"env": {
-		"es6": true,
-		"node": true
+		"es6": true
 	},
 	"ignorePatterns": [".git", "node_modules", "dist"],
 	"parserOptions": {
@@ -15,10 +14,10 @@
 	"overrides": [
 		{
 			"extends": ["plugin:@typescript-eslint/recommended-requiring-type-checking"],
-			"files": ["*.ts"],
+			"files": ["*.ts", "*.tsx"],
 			"parser": "@typescript-eslint/parser",
 			"parserOptions": {
-				"project": ["./tsconfig.json", "./tsconfig.eslint.json"],
+				"project": ["./tsconfig.src.json", "./tsconfig.test.json"],
 				"sourceType": "module"
 			},
 			"rules": {

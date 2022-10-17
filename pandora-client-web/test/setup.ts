@@ -1,26 +1,22 @@
 /* eslint-disable */
 import '@testing-library/jest-dom';
-import { logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
+import { Assert, logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { webcrypto } from 'crypto';
 import { TextEncoder, TextDecoder } from 'util';
 import { TEST_DIRECTORY_ADDRESS } from './testEnv';
 
-// @ts-expect-error - It works, not sure why types says it doesn't
-const { getRandomValues, subtle } = webcrypto;
+Assert(typeof globalThis.TextEncoder === "undefined");
+globalThis.TextEncoder = TextEncoder;
 
-globalThis.TextEncoder ??= TextEncoder;
+Assert(typeof globalThis.TextDecoder === "undefined");
 // @ts-expect-error - Polyfill TextDecoder as JSDom doesn't support it
-globalThis.TextDecoder ??= TextDecoder;
-globalThis.btoa ??= (str) => Buffer.from(str).toString('base64');
-globalThis.atob ??= (str) => Buffer.from(str, 'base64').toString('utf8');
+globalThis.TextDecoder = TextDecoder;
 
+Assert(typeof globalThis.crypto === "undefined");
 // @ts-expect-error - Polyfill crypto as JSDom doesn't support it
-globalThis.crypto ??= webcrypto;
-globalThis.crypto.getRandomValues ??= getRandomValues;
-// @ts-expect-error - Polyfill SubtleCrypto as JSDom doesn't support it
-globalThis.crypto.subtle ??= subtle;
+globalThis.crypto = webcrypto;
 
-// @ts-expect-error -
+// @ts-expect-error - Normally added by Webpack
 globalThis.process = {
 	env: {
 		GAME_NAME: 'Pandora',

@@ -78,13 +78,9 @@ export function BoneUI(): ReactElement {
 			</div>
 			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } open={ false }>
 				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
-					if (pose.armsPose !== undefined) {
+					character.appearance.importPose(pose.pose, 'pose', false);
+					if (pose.armsPose != null) {
 						character.appearance.setArmsPose(pose.armsPose);
-					}
-					for (const [name, value] of Object.entries(pose.pose)) {
-						if (value) {
-							character.appearance.setPose(name, value);
-						}
 					}
 				} } />
 			</FieldsetToggle>

@@ -83,7 +83,7 @@ function AssetLoaderElement() {
 	);
 }
 
-function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }) {
+function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement {
 	const [loading, setLoading] = useState(false);
 	const supported = 'showDirectoryPicker' in window;
 	const text = supported ? 'Load Assets From File System' : 'File System Access API Not Supported';
@@ -93,28 +93,19 @@ function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (
 	);
 }
 
-function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }) {
-	const [loading, setLoading] = useState(false);
-	const editor = useMaybeEditor();
-	const autoloaded = useRef(false);
-
-	useEffect(() => {
-		if (!autoloaded.current && !editor && !pending && !('showDirectoryPicker' in window) && IsOriginSameAsOfficial()) {
-			autoloaded.current = true;
-			void load(setLoading, LoadAssetsFromDirectLink);
-		}
-	}, [editor, load, pending]);
-
-	return (
-		<Button onClick={ () => void load(setLoading, LoadAssetsFromDirectLink) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From Direct Link' }</Button>
-	);
-}
-
-function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement | null {
+function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement | null {
 	const [loading, setLoading] = useState(false);
 
 	if (IsOriginSameAsOfficial())
 		return null;
+
+	return (
+		<Button onClick={ () => void load(setLoading, LoadAssetsFromDirectLink) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From Local Link' }</Button>
+	);
+}
+
+function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement {
+	const [loading, setLoading] = useState(false);
 
 	return (
 		<Button onClick={ () => void load(setLoading, LoadAssetsFromOfficialLink) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From Official Link' }</Button>

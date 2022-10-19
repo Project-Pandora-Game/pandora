@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect, useRef, useState } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';

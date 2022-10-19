@@ -76,6 +76,10 @@
 						"leadingUnderscore": "require"
 					},
 					{
+						"selector": "objectLiteralProperty",
+						"format": null
+					},
+					{
 						"selector": "typeLike",
 						"format": ["PascalCase"]
 					},

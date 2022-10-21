@@ -87,11 +87,11 @@ Individual components, and it's repository:
 
 ### Standards
 * Code styles:
-    * Not part of this document, enforced by linting; TODO: Writeup
+    * Not part of this document, enforced by linting; TODO: Writeup.
 * Review process:
-    * No direct pushes to master outside of new repository setup
-    * 2 Approving reviews required (can be blocked by anyone, requires resolving)
-    * Preferred reviews by peers (code things by coders, assets by asset makers)
+    * No direct pushes to master.
+    * 2 Approving reviews required (can be blocked by anyone, requires resolving).
+    * Preferred reviews by peers (code things by coders, assets by asset makers).
 ## Licenses
 
 | Sub Project                             | License file                                |

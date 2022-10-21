@@ -4,6 +4,7 @@ import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../as
 import { GraphicsLoaderBase, URLGraphicsLoader } from '../assets/graphicsLoader';
 import { GetAssetManagerEditor } from './assets/assetManager';
 import { LoadArrayBufferTexture } from '../graphics/utility';
+import { EDITOR_ASSETS_ADDRESS } from '../config/Environment';
 
 export async function LoadAssetsFromFileSystem(): Promise<GraphicsManager> {
 	const dirHandle = await showDirectoryPicker();
@@ -14,22 +15,22 @@ export async function LoadAssetsFromFileSystem(): Promise<GraphicsManager> {
 	return Load(new FileSystemGraphicsLoader(dirHandle));
 }
 
-export async function LoadAssetsFromDirectLink(): Promise<GraphicsManager> {
-	const prefix = `${location.origin}/pandora-assets`;
-
-	return Load(new URLGraphicsLoader(prefix + '/'));
+export async function LoadAssetsFromAssetDevServer(): Promise<GraphicsManager> {
+	return Load(new URLGraphicsLoader(EDITOR_ASSETS_ADDRESS + '/'));
 }
 
 export async function LoadAssetsFromOfficialLink(): Promise<GraphicsManager> {
 	return Load(new URLGraphicsLoader('https://project-pandora.com/pandora-assets/'));
 }
 
-export function IsOriginSameAsOfficial(): boolean {
-	return location.origin === 'https://project-pandora.com';
-}
-
 async function Load(loader: IGraphicsLoader): Promise<GraphicsManager> {
-	const hash = (await loader.loadTextFile('current')).trim();
+	let hash: string;
+	try {
+		hash = (await loader.loadTextFile('current')).trim();
+	} catch (error) {
+		throw new Error('Failed to get assets version.\nIs the target server running and reachable?');
+
+	}
 	const assetDefinitions = JSON.parse(await loader.loadTextFile(`assets_${hash}.json`)) as AssetsDefinitionFile;
 
 	const assetManager = GetAssetManagerEditor();

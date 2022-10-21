@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
-import { IsOriginSameAsOfficial, LoadAssetsFromDirectLink, LoadAssetsFromFileSystem, LoadAssetsFromOfficialLink } from './assetLoader';
+import { LoadAssetsFromAssetDevServer, LoadAssetsFromFileSystem, LoadAssetsFromOfficialLink } from './assetLoader';
 import { Button } from '../components/common/Button/Button';
 import '../index.scss';
 import { Editor, EditorView } from './editor';
@@ -61,7 +61,11 @@ function AssetLoaderElement() {
 			const manager = await loadManager();
 			setEditor(new Editor(manager));
 		} catch (e) {
-			toast.error(`Failed to load: ${e as string}`, TOAST_OPTIONS_ERROR);
+			if (e instanceof Error) {
+				toast.error(`Failed to load:\n${e.message}`, TOAST_OPTIONS_ERROR);
+			} else {
+				toast.error(`Failed to load:\n${e as string}`, TOAST_OPTIONS_ERROR);
+			}
 			logger.error('Failed to load:', e);
 			setPending(false);
 			setLoading(false);
@@ -96,11 +100,8 @@ function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (
 function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement | null {
 	const [loading, setLoading] = useState(false);
 
-	if (IsOriginSameAsOfficial())
-		return null;
-
 	return (
-		<Button onClick={ () => void load(setLoading, LoadAssetsFromDirectLink) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From Local Link' }</Button>
+		<Button onClick={ () => void load(setLoading, LoadAssetsFromAssetDevServer) } disabled={ pending }>{ loading ? 'Loading...' : 'Load Assets From Local Development Server' }</Button>
 	);
 }
 

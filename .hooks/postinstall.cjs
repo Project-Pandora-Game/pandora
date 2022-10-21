@@ -35,7 +35,7 @@ async function copyDotenv(basePath) {
 }
 
 function configureGitHooks() {
-	const requiredPath = resolve(__dirname, '.hooks');
+	const requiredPath = './.hooks';
 	const { stdout } = spawnSync('git', ['config', 'core.hooksPath']);
 	const hooksPath = stdout.toString().trim();
 	if (hooksPath === requiredPath)

@@ -11,7 +11,7 @@
 ### Prerequisite
 
 - Get [Node.js](https://nodejs.org/en/)
-- Enable `yarn` with (requires nodejs >= 16.10, check [yarn documentation](https://yarnpkg.com/getting-started/install)):
+- Enable `yarn` with (requires nodejs >= 18.x, check [yarn documentation](https://yarnpkg.com/getting-started/install)):
   ```console
   corepack enable
   ```
@@ -25,6 +25,10 @@ Launch dev server:
 cd ./pandora-server-directory/
 yarn dev
 ```
+or
+```
+yarn workspace pandora-server-directory dev
+```
 
 ### Server Shard
 Launch dev server:
@@ -32,12 +36,19 @@ Launch dev server:
 cd ./pandora-server-shard/
 yarn dev
 ```
-
+or
+```
+yarn workspace pandora-server-shard dev
+```
 ### Client Web
 Launch dev server:
 ```console
 cd ./pandora-client-web/
 yarn dev
+```
+or
+```
+yarn workspace pandora-client-web dev
 ```
 You'd need both [Server](#server-directory) & [Shard](#server-shard) running in the background to have a functioning client.
 
@@ -57,7 +68,10 @@ Launch dev server:
 cd ./pandora-common-web/
 yarn dev
 ```
-
+or
+```
+yarn workspace pandora-common dev
+```
 ## Specifications
 
 Please refer to the [documentation](https://github.com/Project-Pandora-Game/Documentation) repository for more details.
@@ -80,9 +94,9 @@ Individual components, and it's repository:
     * Preferred reviews by peers (code things by coders, assets by asset makers)
 ## Licenses
 
-| Sub Project                             | License file                            |
-| --------------------------------------- | --------------------------------------- |
-| [Commons](pandora-common/)              | [MIT](pandora-common/LICENSE)           |
-| [Web Client](pandora-client-web/)       | [GNU](pandora-client-web/LICENSE)       |
-| [Server Directory](pandora-client-web/) | [GNU](pandora-server-directory/LICENSE) |
-| [Server Shard](pandora-client-web/)     | [GNU](pandora-client-web/LICENSE)       |
+| Sub Project                             | License file                                |
+| --------------------------------------- | ------------------------------------------- |
+| [Commons](pandora-common/)              | [MIT](pandora-common/LICENSE)               |
+| [Web Client](pandora-client-web/)       | [GPL-3.0](pandora-client-web/LICENSE)       |
+| [Server Directory](pandora-client-web/) | [GPL-3.0](pandora-server-directory/LICENSE) |
+| [Server Shard](pandora-client-web/)     | [GPL-3.0](pandora-client-web/LICENSE)       |

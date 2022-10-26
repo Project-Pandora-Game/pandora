@@ -9,6 +9,7 @@ import { Button } from '../../../components/common/Button/Button';
 import { Row } from '../../../components/common/container/container';
 import { Form, FormField, FormFieldError } from '../../../components/common/Form/form';
 import { Select } from '../../../components/common/Select/Select';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { Dialog } from '../../../components/dialog/dialog';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
@@ -24,7 +25,7 @@ export function AssetsUI(): ReactElement {
 	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
 
 	return (
-		<div className='editor-setupui asset-ui'>
+		<Scrollbar color='lighter' className='editor-setupui asset-ui slim'>
 			<h3>Equipped</h3>
 			<ul>
 				{items.map((item) => <ItemElement key={ item.id } item={ item } />)}
@@ -38,7 +39,7 @@ export function AssetsUI(): ReactElement {
 			<ul>
 				{view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } />)}
 			</ul>
-		</div>
+		</Scrollbar>
 	);
 }
 

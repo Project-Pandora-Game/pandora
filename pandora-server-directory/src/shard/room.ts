@@ -138,9 +138,7 @@ export class Room {
 						character: source.id,
 					},
 					dictionary: {
-						// eslint-disable-next-line @typescript-eslint/naming-convention
 						COUNT: `${changeList.length}`,
-						// eslint-disable-next-line @typescript-eslint/naming-convention
 						CHANGES: changeList.map((l) => ` \u2022 ${l}`).join('\n'),
 					},
 				});
@@ -152,7 +150,6 @@ export class Room {
 						character: source.id,
 					},
 					dictionary: {
-						// eslint-disable-next-line @typescript-eslint/naming-convention
 						CHANGE: changeList[0],
 					},
 				});

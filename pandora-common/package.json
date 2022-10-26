@@ -10,8 +10,16 @@
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
 	"files": [
-		"/dist/**/*"
+		"/dist/**/*",
+		".eslintrc.json",
+		"tsconfig.base.json"
 	],
+	"workspaces": {
+		"nohoist": [
+			"rimraf",
+			"typescript"
+		]
+	},
 	"scripts": {
 		"prebuild": "rimraf dist",
 		"build": "tsc -p ./tsconfig.src.json",

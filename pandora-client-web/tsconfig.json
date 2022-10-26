@@ -1,7 +1,9 @@
 {
-	"extends": "./tsconfig.base.json",
+	"extends": "pandora-common/tsconfig.base.json",
 	"compilerOptions": {
-		"types": ["@types/jest", "offscreencanvas"]
+		"lib": ["ESNext", "DOM"],
+		"types": ["@types/node", "@types/jest", "offscreencanvas"],
+		"jsx": "react"
 	},
 	"include": ["./src/**/*", "./test/**/*"]
 }

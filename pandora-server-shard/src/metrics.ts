@@ -17,7 +17,6 @@ export function MetricsServe(): express.RequestHandler {
 // Set default labels and collect some basic Node.js metrics
 promClient.register.setDefaultLabels({
 	app: 'pandora_shard',
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	shard_public_address: SERVER_PUBLIC_ADDRESS,
 });
 promClient.collectDefaultMetrics({ prefix: 'pandora_shard_' });

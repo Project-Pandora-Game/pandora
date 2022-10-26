@@ -49,7 +49,9 @@ describe('Account Verification Form', () => {
 
 			await user.click(screen.getByRole('button'));
 
-			await ExpectFieldToBeInvalid('Verification code', 'Verification code is required');
+			await ExpectFieldToBeInvalid('Verification code');
+			// Error is caught by native validation, so the message is not displayed
+			// await ExpectFieldToBeInvalid('Verification code', 'Verification code is required');
 		});
 
 		it.each(INVALID_LENGTH_TOKENS)('should not permit the invalid token %p to be submitted', async (token) => {

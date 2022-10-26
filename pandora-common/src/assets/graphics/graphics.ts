@@ -17,9 +17,7 @@ export const SizeSchema = z.object({
 export type Size = z.infer<typeof SizeSchema>;
 
 export const CharacterSize = {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	WIDTH: 1000,
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	HEIGHT: 1500,
 } as const;
 

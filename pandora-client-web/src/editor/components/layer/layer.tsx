@@ -6,6 +6,7 @@ import { useEvent } from '../../../common/useEvent';
 import { useSyncUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
 import { Select } from '../../../components/common/Select/Select';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -27,7 +28,7 @@ export function LayerUI(): ReactElement {
 	}
 
 	return (
-		<div className='editor-setupui'>
+		<Scrollbar color='lighter' className='editor-setupui slim'>
 			<LayerName layer={ selectedLayer } />
 			<hr />
 			<ColorizationSetting layer={ selectedLayer } asset={ asset } />
@@ -42,7 +43,7 @@ export function LayerUI(): ReactElement {
 			<LayerImageOverridesTextarea layer={ selectedLayer } asAlpha />
 			<hr />
 			<LayerScalingConfig layer={ selectedLayer } asset={ asset } />
-		</div>
+		</Scrollbar>
 	);
 }
 

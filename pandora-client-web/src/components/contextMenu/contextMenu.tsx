@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ForwardedRef, ReactElement, useState, createRef, useEffect, useImperativeHandle, CSSProperties, useMemo, forwardRef, RefObject } from 'react';
+import React, { ForwardedRef, ReactElement, useState, createRef, useEffect, useImperativeHandle, forwardRef, RefObject, useLayoutEffect } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
@@ -60,16 +60,13 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 		};
 	}, [onContextMenu]);
 
-	const style = useMemo(() => ({
-		left: anchorPoint.x,
-		top: anchorPoint.y,
-	}), [anchorPoint]) as CSSProperties;
+	useContextMenuPosition(self, { left: anchorPoint.x, top: anchorPoint.y });
 
 	if (!show)
 		return null;
 
 	return (
-		<div className={ classNames('context-menu', className) } style={ style } ref={ self }>
+		<div className={ classNames('context-menu', className) } ref={ self }>
 			{ children }
 		</div>
 	);
@@ -87,4 +84,23 @@ export function useContextMenu(): [RefObject<ContextMenuHandle>, (event: React.M
 	});
 	const close = useEvent(() => ref.current?.close());
 	return [ref, onContextMenu, close];
+}
+
+/**
+ * Postion the element without overflowing the window at bottom or right
+ * @param ref The element to position
+ * @param position The position to use, object doesn't need to be stable
+ */
+export function useContextMenuPosition(ref: RefObject<HTMLElement>, { top, left }: { top: number, left: number }): void {
+	useLayoutEffect(() => {
+		if (ref.current) {
+			const rect = ref.current.getBoundingClientRect();
+			if (rect.bottom > window.innerHeight) {
+				ref.current.style.top = `${top - (rect.bottom - window.innerHeight)}px`;
+			}
+			if (rect.right > window.innerWidth) {
+				ref.current.style.left = `${left - (rect.right - window.innerWidth)}px`;
+			}
+		}
+	}, [ref, top, left]);
 }

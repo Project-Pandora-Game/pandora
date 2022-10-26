@@ -2,6 +2,7 @@ import { ArmsPose, CharacterView } from 'pandora-common';
 import React, { ReactElement, useEffect, useState, useSyncExternalStore } from 'react';
 import { useCharacterAppearancePose } from '../../../character/character';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { BoneRowElement, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
@@ -29,7 +30,7 @@ export function BoneUI(): ReactElement {
 	}, [character.appearance, unlocked]);
 
 	return (
-		<div className='bone-ui'>
+		<Scrollbar color='lighter' className='bone-ui slim'>
 			<div>
 				<label htmlFor='show-bones-toggle'>Show bone points</label>
 				<input
@@ -100,6 +101,6 @@ export function BoneUI(): ReactElement {
 					.filter((bone) => bone.definition.type === 'body')
 					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } unlocked={ unlocked } />)
 			}
-		</div>
+		</Scrollbar>
 	);
 }

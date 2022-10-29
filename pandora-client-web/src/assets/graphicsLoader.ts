@@ -13,6 +13,10 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 		this.logger = logger;
 	}
 
+	getCachedTexture(path: string): Texture | null {
+		return this.cache.get(path) ?? null;
+	}
+
 	async getTexture(path: string): Promise<Texture> {
 		if (!path)
 			return Texture.EMPTY;

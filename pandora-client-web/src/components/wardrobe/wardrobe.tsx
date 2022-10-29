@@ -29,7 +29,6 @@ import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItems,
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { GraphicsScene } from '../../graphics/graphicsScene';
 import { useAppearanceActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
@@ -42,9 +41,8 @@ import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
-import { GraphicsSceneRenderer, SceneConstructor } from '../../graphics/graphicsSceneRenderer';
+import { GraphicsScene } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { ColorInput } from '../common/colorInput/colorInput';
 
 export function WardrobeScreen(): ReactElement | null {
@@ -125,25 +123,11 @@ function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
 	const navigate = useNavigate();
 
-	const manager = useObservable(GraphicsManagerInstance);
-
-	const characterScene = useCallback<SceneConstructor>(() => {
-		if (!manager)
-			return null;
-
-		const scene = new GraphicsScene();
-
-		const gCharacter = new GraphicsCharacter(character, scene.renderer);
-		scene.add(gCharacter);
-
-		gCharacter.useGraphics(manager.getAssetGraphicsById.bind(manager));
-
-		return scene;
-	}, [character, manager]);
-
 	return (
 		<div className='wardrobe'>
-			<GraphicsSceneRenderer className='characterPreview' scene={ characterScene } />
+			<GraphicsScene className='characterPreview'>
+				<GraphicsCharacter appearanceContainer={ character } />
+			</GraphicsScene>
 			<TabContainer className='flex-1'>
 				<Tab name='Items'>
 					<div className='wardrobe-pane'>

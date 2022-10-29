@@ -10,7 +10,7 @@ import { Button } from '../../../components/common/Button/Button';
 import { Select } from '../../../components/common/Select/Select';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { FAKE_BONES } from '../../../graphics/graphicsCharacter';
+import { FAKE_BONES } from '../../../graphics/appearanceConditionEvaluator';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';

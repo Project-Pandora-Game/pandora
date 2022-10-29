@@ -16,7 +16,6 @@ import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
 import { useEvent } from '../common/useEvent';
-import { PreviewView, SetupView } from './editorViews';
 import { useBrowserStorage } from '../browserStorage';
 import z from 'zod';
 import { AssetInfoUI } from './components/assetInfo/assetInfo';
@@ -24,6 +23,7 @@ import { Select } from '../components/common/Select/Select';
 import { GetAssetManagerEditor } from './assets/assetManager';
 import { nanoid } from 'nanoid';
 import { noop } from 'lodash';
+import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
 
 const logger = GetLogger('Editor');
 
@@ -41,9 +41,10 @@ export class Editor extends TypedEventEmitter<{
 
 	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
 	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
+	public readonly targetLayerPoints = new Observable<readonly DraggablePoint[]>([]);
 	public readonly targetPoint = new Observable<DraggablePoint | null>(null);
 
-	public readonly backgroundColor = new Observable<number>(0x1099bb);
+	public readonly backgroundColor = new Observable<string>('#1099bb');
 	public readonly getCenter = new Observable<() => { x: number; y: number; }>(
 		() => ({ x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }),
 	);
@@ -57,7 +58,10 @@ export class Editor extends TypedEventEmitter<{
 			}
 		});
 
+		let targetLayerUpdateCleanup: (() => void) | undefined;
 		this.targetLayer.subscribe((layer) => {
+			targetLayerUpdateCleanup?.();
+			targetLayerUpdateCleanup = undefined;
 			if (layer && this.targetAsset.value !== layer.asset) {
 				logger.error('Set target layer with non-matching target asset', layer, this.targetAsset.value);
 				this.targetLayer.value = null;
@@ -65,6 +69,27 @@ export class Editor extends TypedEventEmitter<{
 			}
 			if (this.targetPoint.value?.layer !== layer) {
 				this.targetPoint.value = null;
+			}
+			if (layer) {
+				const targetLayer = layer;
+				this.targetPoint.value = null;
+				this.targetLayerPoints.value = layer.calculatePoints()
+					.map((definition) => new DraggablePoint(targetLayer, definition));
+				targetLayerUpdateCleanup = targetLayer.on('change', (structuralChange) => {
+					const points = targetLayer.calculatePoints();
+					const currentPoints = this.targetLayerPoints.value;
+					if (!structuralChange && currentPoints.length === points.length) {
+						for (let i = 0; i < points.length; i++) {
+							currentPoints[i].updatePoint(points[i]);
+						}
+						return;
+					}
+					this.targetPoint.value = null;
+					this.targetLayerPoints.value = points.map((definition) => new DraggablePoint(targetLayer, definition));
+				});
+			} else {
+				this.targetPoint.value = null;
+				this.targetLayerPoints.value = [];
 			}
 		});
 
@@ -201,9 +226,9 @@ export class Editor extends TypedEventEmitter<{
 		this.targetAsset.value = graphics;
 	}
 
-	public setBackgroundColor(color: number): void {
+	public setBackgroundColor(color: string): void {
 		this.backgroundColor.value = color;
-		document.documentElement.style.setProperty('--editor-background-color', `#${color.toString(16)}`);
+		document.documentElement.style.setProperty('--editor-background-color', color);
 	}
 }
 
@@ -219,8 +244,8 @@ const TABS = [
 	['Layer', 'editor-ui', LayerUI],
 	['Points', 'editor-ui', PointsUI],
 	['Asset Info', 'editor-ui', AssetInfoUI],
-	['Setup', 'editor-scene', SetupView],
-	['Preview', 'editor-scene', PreviewView],
+	['Setup', 'editor-scene', EditorSetupScene],
+	['Preview', 'editor-scene', EditorResultScene],
 ] as const;
 
 type TabsName = (typeof TABS)[number][0];

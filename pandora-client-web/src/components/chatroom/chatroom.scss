@@ -6,6 +6,7 @@
 	flex-flow: row;
 	gap: 1em;
 	height: 100%;
+	min-width: 0 !important;
 
 	.tab-container {
 		min-width: 30%;
@@ -20,7 +21,8 @@
 
 .chatroom-scene {
 	height: 100%;
-	width: 100%;
+	flex: 1;
+	overflow: hidden;
 	position: relative;
 
 	canvas {

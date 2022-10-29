@@ -61,7 +61,7 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 			<h4>POINT CONFIGURATION</h4>
 			{
 				selectedPoint ?
-					<PointConfiguration point={ selectedPoint } /> :
+					<PointConfiguration layer={ layer } point={ selectedPoint } /> :
 					<div>No point selected</div>
 			}
 		</>
@@ -138,11 +138,11 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 	);
 }
 
-function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement | null {
-	const pointX = useSyncExternalStore(point.getSubscriber('change'), () => point.x);
-	const pointY = useSyncExternalStore(point.getSubscriber('change'), () => point.y);
-	const pointMirror = useSyncExternalStore(point.getSubscriber('change'), () => point.mirror);
-	const pointType = useSyncExternalStore(point.getSubscriber('change'), () => point.pointType);
+function PointConfiguration({ layer, point }: { layer: AssetGraphicsLayer; point: DraggablePoint; }): ReactElement | null {
+	const pointX = useSyncExternalStore(layer.getSubscriber('change'), () => point.x);
+	const pointY = useSyncExternalStore(layer.getSubscriber('change'), () => point.y);
+	const pointMirror = useSyncExternalStore(layer.getSubscriber('change'), () => point.mirror);
+	const pointType = useSyncExternalStore(layer.getSubscriber('change'), () => point.pointType);
 
 	return (
 		<>
@@ -169,7 +169,7 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 				/>
 			</div>
 			<div>List of transformations for this point:</div>
-			<PointTransformationsTextarea point={ point } />
+			<PointTransformationsTextarea layer={ layer } point={ point } />
 			<div>
 				<label>Mirror point to the opposing character half</label>
 				<input
@@ -199,8 +199,8 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 	);
 }
 
-function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
-	const [value, setValue] = useSyncUserInput(point.getSubscriber('change'), () => SerializeTransforms(point.transforms), [point]);
+function PointTransformationsTextarea({ layer, point }: { layer: AssetGraphicsLayer; point: DraggablePoint; }): ReactElement | null {
+	const [value, setValue] = useSyncUserInput(layer.getSubscriber('change'), () => SerializeTransforms(point.transforms), [point]);
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {

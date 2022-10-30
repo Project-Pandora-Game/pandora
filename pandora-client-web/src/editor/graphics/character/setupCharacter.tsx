@@ -1,4 +1,5 @@
 import { Container } from '@saitonakamura/react-pixi';
+import { CharacterView } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { PRIORITY_ORDER_SPRITES } from '../../../graphics/def';
@@ -16,7 +17,10 @@ export function SetupCharacter(): ReactElement {
 	const showBones = useObservable(editor.showBones);
 
 	return (
-		<GraphicsCharacterEditor Layer={ SetupLayer } getSortOrder={ () => PRIORITY_ORDER_SPRITES } >
+		<GraphicsCharacterEditor Layer={ SetupLayer } getSortOrder={ (_armsPose, view) => {
+			const reverse = view === CharacterView.BACK;
+			return reverse ? PRIORITY_ORDER_SPRITES.slice().reverse() : PRIORITY_ORDER_SPRITES;
+		} } >
 			{
 				!showBones ? null :
 				(

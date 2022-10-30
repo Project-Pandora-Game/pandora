@@ -4,7 +4,7 @@ import { max, maxBy, min, minBy } from 'lodash';
 import { BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Mesh, Rectangle, Texture } from 'pixi.js';
-import React, { ReactElement, useMemo } from 'react';
+import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
 import { AppearanceContainer } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
@@ -202,13 +202,16 @@ export function GraphicsLayer({
 				tint={ color }
 				alpha={ alpha }
 			/>
-			<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ lowerZIndex }>
+			<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ lowerZIndex } getTexture={ getTexture }>
 				{ children }
 			</MaskContainer>
 		</Container>
 	);
 }
 
+const MASK_OVERSCAN = 1000;
+const MASK_WIDTH = CharacterSize.WIDTH + 2 * MASK_OVERSCAN;
+const MASK_HEIGHT = CharacterSize.HEIGHT + 2 * MASK_OVERSCAN;
 function MaskContainer({
 	children,
 	maskImage,
@@ -228,42 +231,73 @@ function MaskContainer({
 	const app = useApp();
 	const alphaTexture = useTexture(maskImage, true, getTexture);
 
-	const finalAlphaTexture = useMemo(() => {
-		if (!maskImage)
-			return Texture.WHITE;
-		// Create base for the mask
-		const maskContainer = new PIXI.Container();
-		const background = new PIXI.Sprite(Texture.WHITE);
-		background.width = CharacterSize.WIDTH;
-		background.height = CharacterSize.HEIGHT;
-		maskContainer.addChild(background);
-		if (maskMesh) {
-			maskContainer.addChild(new PIXI.SimpleMesh(alphaTexture, maskMesh.vertices, maskMesh.uvs, maskMesh.indices));
+	const finalAlphaTexture = useRef<Texture | null>(null);
+	const maskSprite = useRef<PIXI.Sprite | null>(null);
+	const maskContainer = useRef<PIXI.Container | null>(null);
+
+	const update = useCallback(() => {
+		if (!maskSprite.current || !maskContainer.current)
+			return;
+		if (finalAlphaTexture.current !== null) {
+			maskSprite.current.texture = finalAlphaTexture.current;
+			maskContainer.current.mask = maskSprite.current;
 		} else {
-			maskContainer.addChild(new PIXI.Sprite(alphaTexture));
+			maskSprite.current.texture = Texture.WHITE;
+			maskContainer.current.mask = null;
 		}
+	}, []);
+
+	useLayoutEffect(() => {
+		if (alphaTexture === Texture.EMPTY)
+			return undefined;
+		// Create base for the mask
+		const textureContainer = new PIXI.Container();
+		const background = new PIXI.Sprite(Texture.WHITE);
+		background.width = MASK_WIDTH;
+		background.height = MASK_HEIGHT;
+		textureContainer.addChild(background);
+		let mask: PIXI.Container;
+		if (maskMesh) {
+			mask = new PIXI.SimpleMesh(alphaTexture, maskMesh.vertices, maskMesh.uvs, maskMesh.indices);
+		} else {
+			mask = new PIXI.Sprite(alphaTexture);
+		}
+		mask.x = MASK_OVERSCAN;
+		mask.y = MASK_OVERSCAN;
+		textureContainer.addChild(mask);
 
 		// Render mask texture
-		const bounds = new Rectangle(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
-		return app.renderer.generateTexture(maskContainer, {
+		const bounds = new Rectangle(0, 0, MASK_WIDTH, MASK_HEIGHT);
+		const texture = app.renderer.generateTexture(textureContainer, {
 			resolution: 1,
 			region: bounds,
 			scaleMode: PIXI.SCALE_MODES.NEAREST,
 			multisample: PIXI.MSAA_QUALITY.NONE,
 		});
-	}, [maskImage, maskMesh, alphaTexture, app]);
+		finalAlphaTexture.current = texture;
+		update();
+		return () => {
+			finalAlphaTexture.current = null;
+			update();
+			texture.destroy(true);
+		};
+	}, [maskMesh, alphaTexture, app, update]);
 
-	const [mask, setMask] = React.useState<PIXI.Sprite | null>(null);
+	const setMaskSprite = useCallback((sprite: PIXI.Sprite | null) => {
+		maskSprite.current = sprite;
+		update();
+	}, [update]);
+	const setMaskContainer = useCallback((container: PIXI.Container | null) => {
+		maskContainer.current = container;
+		update();
+	}, [update]);
 
 	return (
 		<>
-			<Container mask={ mask } zIndex={ zIndex }>
+			<Container ref={ setMaskContainer } zIndex={ zIndex }>
 				{ children }
 			</Container>
-			{
-				!maskImage ? null :
-				<Sprite ref={ setMask } texture={ finalAlphaTexture } />
-			}
+			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_OVERSCAN } y={ -MASK_OVERSCAN } />
 		</>
 	);
 }

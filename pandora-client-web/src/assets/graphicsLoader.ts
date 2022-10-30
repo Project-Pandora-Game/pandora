@@ -14,6 +14,9 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 	}
 
 	getCachedTexture(path: string): Texture | null {
+		if (!path)
+			return Texture.EMPTY;
+
 		return this.cache.get(path) ?? null;
 	}
 

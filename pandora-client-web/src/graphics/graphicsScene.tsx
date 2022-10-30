@@ -64,7 +64,8 @@ function GraphicsSceneCore({
 	const options = useMemo<IApplicationOptions>(() => ({
 		backgroundColor: 0x1099bb,
 		resolution: window.devicePixelRatio || 1,
-		antialias: true,
+		// Antialias **NEEDS** to be explicitely disabled - having it enabled causes seams when using filters (such as alpha masks)
+		antialias: false,
 		resizeTo: div,
 	}), [div]);
 

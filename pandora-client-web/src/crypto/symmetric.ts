@@ -2,9 +2,9 @@ import { Encode, ArrayToBase64, Base64ToArray, Decode, GenerateIV } from './help
 
 const subtle = globalThis.crypto.subtle;
 
-const AES_GCM_PARAMS = { name: 'AES-GCM', length: 256 };
-const AES_GCM_KEY_USAGES: KeyUsage[] = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'];
-const PBKDF2_PARAMS = { name: 'PBKDF2', iterations: 100_000, hash: 'SHA-512' };
+const AES_GCM_PARAMS = { name: 'AES-GCM', length: 256 } as const;
+const AES_GCM_KEY_USAGES: readonly KeyUsage[] = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'];
+const PBKDF2_PARAMS = { name: 'PBKDF2', iterations: 100_000, hash: 'SHA-512' } as const;
 
 export class SymmetricEncryption {
 	#key: CryptoKey;
@@ -45,7 +45,7 @@ export class SymmetricEncryption {
 			key = await subtle.deriveKey({
 				...PBKDF2_PARAMS,
 				salt,
-			}, pbkdf2, AES_GCM_PARAMS, true, AES_GCM_KEY_USAGES);
+			}, pbkdf2, AES_GCM_PARAMS, true, [...AES_GCM_KEY_USAGES]);
 		}
 		return new SymmetricEncryption(key);
 	}
@@ -56,7 +56,7 @@ export class SymmetricEncryption {
 			privateKey,
 			AES_GCM_PARAMS,
 			true,
-			AES_GCM_KEY_USAGES,
+			[...AES_GCM_KEY_USAGES],
 		);
 		return new SymmetricEncryption(sharedKey);
 	}

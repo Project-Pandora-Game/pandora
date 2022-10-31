@@ -18,13 +18,12 @@ import {
 	CharacterView,
 	DoAppearanceAction,
 	HexColorString,
-	HexColorStringSchema,
 	IsCharacterId,
 	IsObject,
 	Item,
 	ItemId,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { ChangeEvent, createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
@@ -47,6 +46,7 @@ import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { GraphicsSceneRenderer, SceneConstructor } from '../../graphics/graphicsSceneRenderer';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
+import { useColorInput } from '../../common/useColorInput';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -527,31 +527,20 @@ function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 
 	throttle?: number;
 	disabled?: boolean;
 }): ReactElement {
-	const [input, setInput] = useState<string>(initialValue.toUpperCase());
 
-	const onChangeCaller = useCallback((value: HexColorString) => onChange?.(value), [onChange]);
-	const onChangeCallerThrottled = useMemo(() => _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
-
-	const changeCallback = useCallback((value: string) => {
-		value = '#' + value.replace(/[^0-9a-f]/gi, '').toUpperCase();
-		setInput(value);
-		const valid = HexColorStringSchema.safeParse(value).success;
-		if (valid) {
-			onChangeCallerThrottled(value as HexColorString);
-		}
-	}, [setInput, onChangeCallerThrottled]);
+	const [color, setColor] = useColorInput(initialValue, { onChange, throttle });
+	const props = {
+		value: color,
+		onChange: (ev: ChangeEvent<HTMLInputElement>) => setColor(ev.target.value),
+	};
 
 	return (
 		<>
-			<input type='text' value={ input } disabled={ disabled } maxLength={ 7 } onChange={ (ev) => {
-				changeCallback(ev.target.value);
-			} } />
-			<input type='color' value={ input } disabled={ disabled } onChange={ (ev) => {
-				changeCallback(ev.target.value);
-			} } />
+			<input type='text' { ...props } disabled={ disabled } maxLength={ 7 } />
+			<input type='color' { ...props } disabled={ disabled } />
 			{
 				resetValue != null &&
-				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
+				<Button className='slim' onClick={ () => setColor(resetValue) }>↺</Button>
 			}
 		</>
 	);

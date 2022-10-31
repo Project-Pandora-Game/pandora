@@ -1,4 +1,4 @@
-import { EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import { AssertNotNullable, EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import type { SymmetricEncryption } from '../crypto/symmetric';
 import type { DirectoryConnector } from './directoryConnector';
 import { KeyExchange } from '../crypto/keyExchange';
@@ -7,6 +7,8 @@ import { Observable, ReadonlyObservable } from '../observable';
 import { ChatParser } from '../components/chatroom/chatParser';
 import { TypedEventEmitter } from '../event';
 import { HashSHA256Base64 } from '../crypto/helpers';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 
 export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: number; }> {
 	public readonly connector: DirectoryConnector;
@@ -46,9 +48,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 			return;
 		}
 		const cryptoPassword = this._cryptoPassword.value;
-		if (!cryptoPassword) {
-			throw new Error('Assertion failed: key exchange password not set');
-		}
+		AssertNotNullable(cryptoPassword);
 		if (account.cryptoKey) {
 			this.#crypto = await KeyExchange.import(account.cryptoKey, cryptoPassword);
 			this._lastCryptoKey = account.cryptoKey;
@@ -87,7 +87,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	}
 
 	public async handleDirectMessageGet(data: IDirectoryClientArgument['directMessageGet']): Promise<void> {
-		const chat = this._getChat(data.source);
+		const chat = this._getChat(data.account.id);
 		await chat.loadSingle(data, this._info);
 		this.emit('newMessage', chat);
 	}
@@ -153,7 +153,7 @@ export class DirectMessageChannel {
 	private _account!: IDirectoryDirectMessageAccount;
 	private _mounts = 0;
 	private _failed?: 'notFound' | 'denied';
-	#encription!: SymmetricEncryption;
+	#encryption!: SymmetricEncryption;
 
 	public readonly connector: DirectoryConnector;
 
@@ -197,10 +197,10 @@ export class DirectMessageChannel {
 		if (!this._loaded) {
 			throw new Error('Channel not loaded');
 		}
-		const encrypted = message.length === 0 ? '' : await this.#encription.encrypt(message);
+		const encrypted = message.length === 0 ? '' : await this.#encryption.encrypt(message);
 		const response = await this.connector.awaitResponse('sendDirectMessage', { id: this._id, content: encrypted, editing });
 		if (response.result !== 'ok') {
-			// TODO
+			toast(`Failed to send message: ${response.result}`, TOAST_OPTIONS_ERROR);
 			return;
 		}
 	}
@@ -216,7 +216,7 @@ export class DirectMessageChannel {
 		return this._loading;
 	}
 
-	async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<boolean> {
+	async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<void> {
 		const { content, time, edited } = data;
 		if (data.account) {
 			await this._loadKey(data.account.publicKeyData);
@@ -224,7 +224,7 @@ export class DirectMessageChannel {
 		}
 		this._loadSingle({
 			time,
-			message: await this.#encription.decrypt(content),
+			message: await this.#encryption.decrypt(content),
 			sent: data.account === undefined,
 			edited,
 		});
@@ -243,16 +243,15 @@ export class DirectMessageChannel {
 				delete info.hasUnread;
 			}
 			infos.value = [...infos.value];
-			return true;
+			return;
 		}
 		if (!info.hasUnread) {
 			info.hasUnread = true;
 		}
 		infos.value = [...infos.value];
-		return false;
 	}
 
-	async _load(): Promise<void> {
+	private async _load(): Promise<void> {
 		if (this._loaded || this._failed) {
 			return;
 		}
@@ -287,7 +286,7 @@ export class DirectMessageChannel {
 		}
 		return {
 			time,
-			message: ChatParser.parseStyle(await this.#encription.decrypt(content)),
+			message: ChatParser.parseStyle(await this.#encryption.decrypt(content)),
 			sent: source !== this._id,
 			edited,
 		};
@@ -334,6 +333,6 @@ export class DirectMessageChannel {
 		const text = keyA.localeCompare(keyB) < 0 ? `${keyA}-${keyB}` : `${keyB}-${keyA}`;
 		this._keyHash = await HashSHA256Base64(text);
 		this._messages.value = [];
-		this.#encription = await this._manager.deriveKey(publicKeyData);
+		this.#encryption = await this._manager.deriveKey(publicKeyData);
 	}
 }

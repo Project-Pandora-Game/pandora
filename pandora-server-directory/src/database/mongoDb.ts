@@ -13,6 +13,7 @@ const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
+const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
 
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
@@ -90,7 +91,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#endregion
 
 		//#region DirectMessages
-		this._directMessages = this._db.collection('directMessages');
+		this._directMessages = this._db.collection(DIRECT_MESSAGES_COLLECTION_NAME);
 
 		await this._directMessages.createIndexes([
 			{ key: { accounts: 1 } },

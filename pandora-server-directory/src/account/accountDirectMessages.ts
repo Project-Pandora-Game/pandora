@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
-import type { Account } from './account';
+import { Account, GetAccountIds } from './account';
 import { accountManager } from './accountManager';
 
 const MESSAGE_LOAD_COUNT = 50;
@@ -35,15 +35,16 @@ export class AccountDirectMessages {
 		this._dms = data.directMessages ?? [];
 	}
 
-	async action(id: number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time, account }: { notifyClients?: boolean, time?: number; account?: string; } = {}): Promise<void> {
+	async action(account: Account | number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time }: { notifyClients?: boolean, time?: number; } = {}): Promise<void> {
+		const id = typeof account === 'number' ? account : account.id;
 		let dm = this._dms.find((info) => info.id === id);
 		if (!dm) {
-			if (!account || !time) {
+			if (typeof account === 'number' || !time) {
 				return;
 			}
 			dm = {
 				id,
-				account,
+				account: account.username,
 				time,
 			};
 			this._dms.push(dm);
@@ -53,26 +54,18 @@ export class AccountDirectMessages {
 		}
 		switch (action) {
 			case 'read':
-				if (dm.hasUnread) {
-					delete dm.hasUnread;
-				}
+				delete dm.hasUnread;
 				break;
 			case 'close':
-				if (!dm.closed) {
-					dm.closed = true;
-					delete dm.hasUnread;
-				}
+				dm.closed = true;
+				delete dm.hasUnread;
 				break;
 			case 'open':
-				if (dm.closed) {
-					delete dm.closed;
-				}
+				delete dm.closed;
 				break;
 			case 'new':
-				if (!dm.hasUnread) {
-					dm.hasUnread = true;
-					delete dm.closed;
-				}
+				dm.hasUnread = true;
+				delete dm.closed;
 				break;
 		}
 		if (notifyClients && action !== 'new' && action !== 'open') {
@@ -92,23 +85,22 @@ export class AccountDirectMessages {
 			return { result: 'notFound' };
 		}
 		const time = GetNextMessageTime();
-		const [a, b] = this._account.id < target.id ? [this._account, target] : [target, this._account];
-		const accounts: DirectMessageAccounts = `${a.id}-${b.id}`;
+		const accounts = GetAccountIds(this._account, target);
 		const message: IDirectoryDirectMessage = {
 			content,
 			keyHash: KeyHash(this._publicKey, target.directMessages._publicKey),
 			time: editing ?? time,
 			source: this._account.id,
-			edited: editing && time,
+			edited: editing ? time : undefined,
 		};
 		if (!await GetDatabase().setDirectMessage(accounts, message)) {
 			return { result: 'messageNotFound' };
 		}
 		if (editing === undefined) {
-			await this.action(id, 'open', { notifyClients: false, time, account: target.username });
-			await target.directMessages.action(this._account.id, 'new', { notifyClients: false, time, account: this._account.username });
+			await this.action(target, 'open', { notifyClients: false, time });
+			await target.directMessages.action(this._account, 'new', { notifyClients: false, time });
 		}
-		target.directMessages.directMessageGet({ ...message, source: target.id, account: this._getAccountInfo() });
+		target.directMessages.directMessageGet({ ...message, account: this._getAccountInfo() });
 		this.directMessageSent({ ...message, target: target.id });
 		return { result: 'ok' };
 	}
@@ -133,8 +125,7 @@ export class AccountDirectMessages {
 		if (!target || !target.directMessages._publicKey) {
 			return { result: 'notFound' };
 		}
-		const [a, b] = this._account.id < target.id ? [this._account, target] : [target, this._account];
-		const messages = await GetDatabase().getDirectMessages(`${a.id}-${b.id}`, MESSAGE_LOAD_COUNT, until);
+		const messages = await GetDatabase().getDirectMessages(GetAccountIds(this._account, target), MESSAGE_LOAD_COUNT, until);
 		return {
 			result: 'ok',
 			account: target.directMessages._getAccountInfo(),

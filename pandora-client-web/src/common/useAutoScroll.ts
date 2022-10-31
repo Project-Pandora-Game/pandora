@@ -1,6 +1,16 @@
 import React, { useState, useRef, useEffect, useCallback, DependencyList } from 'react';
 import { useEvent } from './useEvent';
 
+/**
+ * @param deps - dependencies to trigger the scroll
+ * @returns [ref, scroll, autoScroll]
+ *
+ * 	ref - ref to be attached to the element to be scrolled
+ *
+ *  scroll - function to scroll to the bottom of the element, if autoScroll is true
+ *
+ *  autoScroll - boolean to indicate if the element should be scrolled automatically
+ */
 export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList = []): [
 	React.RefObject<Element>,
 	() => void,

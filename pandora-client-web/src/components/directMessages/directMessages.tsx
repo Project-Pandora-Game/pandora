@@ -34,7 +34,7 @@ export function DirectMessages(): React.ReactElement {
 				</Scrollbar>
 				<OpenConversation show={ setSelected } />
 			</div>
-			{selected !== null && <DirectMessage accountId={ selected } />}
+			{selected !== null && <DirectMessage accountId={ selected } key={ selected } />}
 		</div>
 	);
 }

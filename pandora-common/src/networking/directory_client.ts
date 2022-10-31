@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { IAccountRoleInfo, AccountRoleSchema } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
+import { HexColorStringSchema } from '../validation';
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
 import type { MessageHandler } from './message_handler';
 
@@ -12,7 +13,7 @@ export type IDirectoryStatus = {
 
 export const DirectoryAccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema),
-	labelColor: z.string(),
+	labelColor: HexColorStringSchema,
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
@@ -51,7 +52,7 @@ export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'room
 export type IDirectoryDirectMessage = {
 	/** Encrypted content, or empty string if the message was deleted. */
 	content: string;
-	/** SHA-256 base64 has from the public keys of the 2 parties, used to validate key change */
+	/** SHA-256 base64 hash from the public keys of the 2 parties, used to validate key change */
 	keyHash: string;
 	/** Source Account's id */
 	source: number;
@@ -97,12 +98,15 @@ interface DirectoryClient {
 	somethingChanged(arg: {
 		changes: IDirectoryClientChangeEvents[];
 	}): void;
+	/** Broadcast message to for account's connections when a DM is sent */
 	directMessageSent(message: IDirectoryDirectMessage & {
+		/** Target accountId */
 		target: number;
 	}): void;
+	/** Broadcast message to for account's connections when a DM is received */
 	directMessageGet(message: IDirectoryDirectMessage & {
+		/**	Account info for the sender  */
 		account: IDirectoryDirectMessageAccount;
-		source: number;
 	}): void;
 	directMessageAction(arg: {
 		id: number;

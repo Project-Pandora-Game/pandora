@@ -27,7 +27,7 @@ interface DatabaseAccountSecure {
 type DirectMessageAccounts = `${number}-${number}`;
 
 type DatabaseDirectMessageInfo = import('pandora-common').IDirectoryDirectMessageInfo & {
-	/** Flag to indicate the converation was closed and the info should not be sent to the account */
+	/** Flag to indicate the conversation was closed and the info should not be sent to the account */
 	closed?: true;
 };
 

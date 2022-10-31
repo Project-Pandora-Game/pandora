@@ -15,13 +15,11 @@ export enum NotificationSource {
 	VERSION_CHANGED = 'VERSION_CHANGED',
 }
 
-function IsNotificationSource(source: NotificationSource): boolean {
-	return source === NotificationSource.CHAT_MESSAGE || source === NotificationSource.VERSION_CHANGED;
-}
-
-function IsFriendsSource(source: NotificationSource): boolean {
-	return source === NotificationSource.DIRECT_MESSAGE;
-}
+export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationHeaderKeys>> = {
+	[NotificationSource.CHAT_MESSAGE]: 'notifications',
+	[NotificationSource.VERSION_CHANGED]: 'notifications',
+	[NotificationSource.DIRECT_MESSAGE]: 'friends',
+};
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface NotificationData {
@@ -81,7 +79,7 @@ class NotificationHandler extends NotificationHandlerBase {
 	private readonly _header: NotificationHeader<Observable<readonly NotificationFullData[]>> = {
 		notifications: new Observable<readonly NotificationFullData[]>([]),
 		friends: new Observable<readonly NotificationFullData[]>([]),
-	} as const;
+	};
 	private readonly _title = new Observable<string>(BASE_TITLE);
 	private readonly _favico = new Observable<string>('');
 
@@ -135,8 +133,8 @@ class NotificationHandler extends NotificationHandlerBase {
 		const notifications = this._notifications.value;
 
 		// Header
-		this._header.notifications.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && IsNotificationSource(n.source));
-		this._header.friends.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && IsFriendsSource(n.source));
+		this._header.notifications.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && NOTIFICATION_KEY[n.source] === 'notifications');
+		this._header.friends.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && NOTIFICATION_KEY[n.source] === 'friends');
 
 		// Title
 		const titleNotifications = notifications.filter((n) => n.alert.has(NotificationAlert.TITLE)).length;

@@ -43,18 +43,16 @@ function DirectMessageList(): ReactElement | null {
 }
 
 function DirectMessageElement({ message, channel, account }: { message: DirectMessage; channel: DirectMessageChannel; account: IDirectoryAccountInfo }): ReactElement {
-	const { color, name, id } = useMemo(() => {
+	const { color, name } = useMemo(() => {
 		if (message.sent) {
 			return {
 				color: account.settings.labelColor,
 				name: account.username,
-				id: account.id,
 			};
 		} else {
 			return {
 				color: channel.account.labelColor,
 				name: channel.account.name,
-				id: channel.account.id,
 			};
 		}
 	}, [message, account, channel]);
@@ -70,7 +68,7 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 				{ /* Space so copied text looks nicer */ ' ' }
 			</span>
 			<span style={ { color } } className='direct-message-entry__name'>
-				{name} ({id})
+				{name}
 			</span>
 			{': '}
 			<span className='direct-message-entry__content'>
@@ -90,7 +88,7 @@ function DirectChannelInput(): ReactElement {
 			const value = textarea.value.trim();
 			if (value) {
 				channel.sendMessage(value)
-					.catch(() => toast('Failed to send message', TOAST_OPTIONS_ERROR));
+					.catch((e) => toast(`Failed to send message: ${e as string}`, TOAST_OPTIONS_ERROR));
 				textarea.value = '';
 			}
 		}

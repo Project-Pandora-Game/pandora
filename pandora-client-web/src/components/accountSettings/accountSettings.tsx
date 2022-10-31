@@ -9,6 +9,7 @@ import './accountSettings.scss';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { GIT_DESCRIBE } from '../../config/Environment';
 import { uniq } from 'lodash';
+import { useColorInput } from '../../common/useColorInput';
 
 export function AccountSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -165,7 +166,7 @@ function AccountRole({ role, data }: { role: AccountRole, data?: { expires?: num
 
 function LabelColor({ account }: { account: IDirectoryAccountInfo }): ReactElement {
 	const directory = useDirectoryConnector();
-	const [color, setColor] = useState(account.settings.labelColor ?? '#ffffff');
+	const [color, setColor] = useColorInput(account.settings.labelColor ?? '#ffffff');
 
 	return (
 		<fieldset>
@@ -173,7 +174,12 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo }): ReactEleme
 			<div className='input-row'>
 				<label>Color</label>
 				<input type='color' value={ color } onChange={ (event) => setColor(event.target.value) } />
-				<Button className='slim' onClick={ () => directory?.sendMessage('changeSettings', { labelColor: color }) }>Save</Button>
+				<Button
+					className='slim'
+					onClick={ () => directory?.sendMessage('changeSettings', { labelColor: color }) }
+					disabled={ color === account.settings.labelColor?.toUpperCase() }>
+					Save
+				</Button>
 			</div>
 		</fieldset>
 	);

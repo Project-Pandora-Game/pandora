@@ -123,7 +123,7 @@ function FriendsHeaderButton(): ReactElement {
 			return;
 
 		notify({
-
+			// TODO: notification
 		});
 	}), [handler, notify]);
 

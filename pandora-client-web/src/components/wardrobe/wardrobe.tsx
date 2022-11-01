@@ -17,13 +17,12 @@ import {
 	CharacterId,
 	CharacterView,
 	DoAppearanceAction,
-	HexColorString,
 	IsCharacterId,
 	IsObject,
 	Item,
 	ItemId,
 } from 'pandora-common';
-import React, { ChangeEvent, createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
@@ -46,7 +45,7 @@ import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { GraphicsSceneRenderer, SceneConstructor } from '../../graphics/graphicsSceneRenderer';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import { useColorInput } from '../../common/useColorInput';
+import { ColorInput } from '../common/colorInput/colorInput';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -446,7 +445,7 @@ function WardrobeItemConfigMenu({
 					item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
 						<div className='wardrobeColorRow' key={ colorPartIndex }>
 							<span className='flex-1'>{colorPart.name}</span>
-							<WardrobeColorSelector
+							<ColorInput
 								initialValue={ item.color[colorPartIndex] ?? colorPart.default }
 								resetValue={ colorPart.default }
 								throttle={ 100 }
@@ -517,32 +516,6 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 				))
 			}
 		</div>
-	);
-}
-
-function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 0, disabled = true }: {
-	initialValue: HexColorString;
-	resetValue?: HexColorString;
-	onChange?: (value: HexColorString) => void;
-	throttle?: number;
-	disabled?: boolean;
-}): ReactElement {
-
-	const [color, setColor] = useColorInput(initialValue, { onChange, throttle });
-	const props = {
-		value: color,
-		onChange: (ev: ChangeEvent<HTMLInputElement>) => setColor(ev.target.value),
-	};
-
-	return (
-		<>
-			<input type='text' { ...props } disabled={ disabled } maxLength={ 7 } />
-			<input type='color' { ...props } disabled={ disabled } />
-			{
-				resetValue != null &&
-				<Button className='slim' onClick={ () => setColor(resetValue) }>↺</Button>
-			}
-		</>
 	);
 }
 

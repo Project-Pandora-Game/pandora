@@ -5,7 +5,7 @@ import { GIT_DESCRIBE } from '../../config/Environment';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import './characterSettings.scss';
-import { useColorInput } from '../../common/useColorInput';
+import { ColorInput, useColorInput } from '../common/colorInput/colorInput';
 
 export function CharacterSettings(): ReactElement | null {
 	const playerData = usePlayerData();
@@ -24,15 +24,15 @@ export function CharacterSettings(): ReactElement | null {
 }
 
 function LabelColor({ playerData }: { playerData: Readonly<ICharacterData> }): ReactElement {
-	const [color, setColor] = useColorInput(playerData.settings.labelColor ?? '#ffffff');
 	const shardConnector = useShardConnector();
+	const [color, setColor] = useColorInput(playerData.settings.labelColor);
 
 	return (
 		<fieldset>
 			<legend>Label color</legend>
 			<div className='input-row'>
 				<label>Color</label>
-				<input type='color' value={ color } onChange={ (event) => setColor(event.target.value) } />
+				<ColorInput initialValue={ color } onChange={ setColor } />
 				<Button
 					className='slim'
 					onClick={ () => shardConnector?.sendMessage('updateSettings', { labelColor: color }) }

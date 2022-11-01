@@ -5,7 +5,7 @@
     src="https://avatars.githubusercontent.com/u/88410864?s=200&v=4"
     alt="Pandora Logo">
 </img>
-<div style="text-align: center;">An open source 2D web-based game in the making.</div>
+<div style="text-align: center;">An open-source 2D web-based game in the making.</div>
 
 ## Getting Started
 ### Prerequisite
@@ -50,9 +50,9 @@ or
 ```
 yarn workspace pandora-client-web dev
 ```
-You'd need both [Server](#server-directory) & [Shard](#server-shard) running in the background to have a functioning client.
+To have a functioning client, you'd need both [Server](#server-directory) & [Shard](#server-shard) running in the background.
 
-Or connect directly to the beta server by replacing:
+Or connect directly to the beta server by replacing the:
 ```
 DIRECTORY_ADDRESS="http://127.0.0.1:25560"
 ```
@@ -77,7 +77,7 @@ yarn workspace pandora-common dev
 Please refer to the [documentation](https://github.com/Project-Pandora-Game/Documentation) repository for more details.
 
 ### Project structure
-Individual components, and it's repository:
+Individual components and their repository:
   * [`Documentation`](https://github.com/Project-Pandora-Game/Documentation)
   * Assets ([`pandora-assets`](https://github.com/Project-Pandora-Game/pandora-assets))
   * Common ([`pandora-common`](./pandora-common/)) - shard library for all components.

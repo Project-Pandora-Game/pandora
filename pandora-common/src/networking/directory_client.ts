@@ -105,7 +105,7 @@ interface DirectoryClient {
 	}): void;
 	/** Broadcast message to for account's connections when a DM is received */
 	directMessageGet(message: IDirectoryDirectMessage & {
-		/**	Account info for the sender  */
+		/** Account info for the sender */
 		account: IDirectoryDirectMessageAccount;
 	}): void;
 	directMessageAction(arg: {

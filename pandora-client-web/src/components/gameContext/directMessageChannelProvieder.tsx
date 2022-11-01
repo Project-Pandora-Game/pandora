@@ -1,9 +1,10 @@
+import { AssertNotNullable } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useMemo, Suspense, useEffect, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
 
-const directMessageContext = createContext<DirectMessageChannel>(null as unknown as DirectMessageChannel);
+const directMessageContext = createContext<DirectMessageChannel | null>(null);
 
 function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps & { accountId: number }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
@@ -68,5 +69,7 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 }
 
 export function useDirectMessageChannel(): DirectMessageChannel {
-	return useContext(directMessageContext);
+	const channel = useContext(directMessageContext);
+	AssertNotNullable(channel);
+	return channel;
 }

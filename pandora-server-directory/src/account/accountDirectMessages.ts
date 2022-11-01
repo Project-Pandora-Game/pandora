@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
-import { Account, GetAccountIds } from './account';
+import { Account, GetDirectMessageId } from './account';
 import { accountManager } from './accountManager';
 
 const MESSAGE_LOAD_COUNT = 50;
@@ -85,7 +85,7 @@ export class AccountDirectMessages {
 			return { result: 'notFound' };
 		}
 		const time = GetNextMessageTime();
-		const accounts = GetAccountIds(this._account, target);
+		const accounts = GetDirectMessageId(this._account, target);
 		const message: IDirectoryDirectMessage = {
 			content,
 			keyHash: KeyHash(this._publicKey, target.directMessages._publicKey),
@@ -125,7 +125,7 @@ export class AccountDirectMessages {
 		if (!target || !target.directMessages._publicKey) {
 			return { result: 'notFound' };
 		}
-		const messages = await GetDatabase().getDirectMessages(GetAccountIds(this._account, target), MESSAGE_LOAD_COUNT, until);
+		const messages = await GetDatabase().getDirectMessages(GetDirectMessageId(this._account, target), MESSAGE_LOAD_COUNT, until);
 		return {
 			result: 'ok',
 			account: target.directMessages._getAccountInfo(),

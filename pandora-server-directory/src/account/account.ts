@@ -220,7 +220,7 @@ export async function CreateAccountData(username: string, password: string, emai
 	};
 }
 
-export function GetAccountIds(a: Account, b: Account): DirectMessageAccounts {
+export function GetDirectMessageId(a: Account, b: Account): DirectMessageAccounts {
 	const [x, y] = a.id < b.id ? [a, b] : [b, a];
 	return `${x.id}-${y.id}`;
 }

@@ -11,7 +11,7 @@ import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable } from 'pandora-common';
+import { AssetId, GetLogger, APPEARANCE_BUNDLE_DEFAULT, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable, Assert } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
@@ -23,6 +23,7 @@ import { AssetInfoUI } from './components/assetInfo/assetInfo';
 import { Select } from '../components/common/Select/Select';
 import { GetAssetManagerEditor } from './assets/assetManager';
 import { nanoid } from 'nanoid';
+import { noop } from 'lodash';
 
 const logger = GetLogger('Editor');
 
@@ -211,7 +212,7 @@ export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: 
 	return includeMirror ? layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]) : layers;
 }
 
-const TABS: [string, string, () => ReactElement][] = [
+const TABS = [
 	['Poses', 'editor-ui', BoneUI],
 	['Items', 'editor-ui', AssetsUI],
 	['Asset', 'editor-ui', AssetUI],
@@ -220,16 +221,34 @@ const TABS: [string, string, () => ReactElement][] = [
 	['Asset Info', 'editor-ui', AssetInfoUI],
 	['Setup', 'editor-scene', SetupView],
 	['Preview', 'editor-scene', PreviewView],
-];
+] as const;
+
+type TabsName = (typeof TABS)[number][0];
 
 const activeTabsContext = createContext({
-	activeTabs: [] as readonly string[],
-	setActiveTabs: (_tabs: string[]) => { /**/ },
+	activeTabs: [] as readonly TabsName[],
+	setActiveTabs: (_tabs: TabsName[]) => { /**/ },
 });
 
-function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
+export interface EditorCurrentTabContext {
+	activeTabs: readonly TabsName[];
+	setTab(tab: TabsName): void,
+	closeTab(): void,
+}
+
+export function useEditorTabContext(): EditorCurrentTabContext {
+	return useContext(currentTabContext);
+}
+
+const currentTabContext = createContext<EditorCurrentTabContext>({
+	activeTabs: [],
+	setTab: noop,
+	closeTab: noop,
+});
+
+function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 	const { activeTabs, setActiveTabs } = useContext(activeTabsContext);
-	const setTab = useEvent((newSelection: string) => {
+	const setTab = useEvent((newSelection: TabsName) => {
 		const newTabs = activeTabs.slice();
 		newTabs[index] = newSelection;
 		setActiveTabs(newTabs);
@@ -249,6 +268,12 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const CurrentTabComponent = currentTab[2];
 
+	const context = useMemo<EditorCurrentTabContext>(() => ({
+		activeTabs,
+		setTab,
+		closeTab,
+	}), [activeTabs, setTab, closeTab]);
+
 	return (
 		<div className={ currentTab[1] }>
 			<div className='ui-selector'>
@@ -256,7 +281,8 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 					<Select
 						value={ currentTab[0] }
 						onChange={ (ev) => {
-							setTab(ev.target.value);
+							Assert(TABS.some((t) => t[0] === ev.target.value));
+							setTab(ev.target.value as TabsName);
 						} }
 					>
 						{
@@ -287,13 +313,15 @@ function Tab({ tab, index }: { tab: string; index: number; }): ReactElement {
 					+
 				</Button>
 			</div>
-			<CurrentTabComponent />
+			<currentTabContext.Provider value={ context }>
+				<CurrentTabComponent />
+			</currentTabContext.Provider>
 		</div>
 	);
 }
 
 export function EditorView(): ReactElement {
-	const [activeTabs, setActiveTabs] = useBrowserStorage('editor-tabs', ['Items', 'Asset', 'Preview'],
+	const [activeTabs, setActiveTabs] = useBrowserStorage<TabsName[]>('editor-tabs', ['Items', 'Layer', 'Preview'],
 		ZodMatcher(
 			z.array(z.enum(ParseArrayNotEmpty(TABS.map((t) => t[0])))),
 		),

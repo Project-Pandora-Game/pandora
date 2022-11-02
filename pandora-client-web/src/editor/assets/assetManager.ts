@@ -3,7 +3,7 @@ import { Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, Asset
 import { AssetManagerClient, OverrideAssetManager, GetAssetManager as GetAssetManagerClient } from '../../assets/assetManager';
 import { observable, ObservableClass } from '../../observable';
 
-export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*(_[a-z0-9]+)*$/;
+export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*([-_][a-z0-9]+)*$/;
 
 export class AssetManagerEditor extends AssetManagerClient {
 

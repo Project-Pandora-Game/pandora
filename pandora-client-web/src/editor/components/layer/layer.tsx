@@ -219,7 +219,7 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 							This value shows the according name of the color setting from the<br />
 							&apos;*.asset.ts&apos; file based on the input value of &apos;Colorization index&apos;.<br />
 							You cannot edit this field, as  you cannot define new colors and<br />
-							their name in the editor, but only in the asset code (*.asset.ts file).
+							their name in the editor but only in the asset code (*.asset.ts file).
 						</p>
 					</ContextHelpButton>
 				</label>
@@ -259,7 +259,7 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 					<p>
 						You can manually select the layer tint by pressing on the rectangle.<br />
 						This color is only valid for testing in the editor and is not saved!<br />
-						You cannot define new colors in the editor, but only in the asset<br />
+						You cannot define new colors in the editor but only in the asset<br />
 						code (*.asset.ts file).<br />
 						Per default, the rectangle shows the color of the selected color index<br />
 						in the &apos;Colorization index&apos; drop-down menu.<br />

@@ -2,8 +2,8 @@
 	"private": true,
 	"workspaces": {
 		"packages": [
-			"pandora-client-web",
 			"pandora-common",
+			"pandora-client-web",
 			"pandora-server-directory",
 			"pandora-server-shard"
 		],

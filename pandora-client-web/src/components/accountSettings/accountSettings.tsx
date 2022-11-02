@@ -9,6 +9,7 @@ import './accountSettings.scss';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { GIT_DESCRIBE } from '../../config/Environment';
 import { uniq } from 'lodash';
+import { ColorInput, useColorInput } from '../common/colorInput/colorInput';
 
 export function AccountSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -21,6 +22,7 @@ export function AccountSettings(): ReactElement | null {
 			<div className='account-settings'>
 				<GitHubIntegration account={ account } />
 				<AccountRoleList account={ account } />
+				<LabelColor account={ account } />
 			</div>
 			<footer>Version: { GIT_DESCRIBE }</footer>
 		</>
@@ -159,5 +161,26 @@ function AccountRole({ role, data }: { role: AccountRole, data?: { expires?: num
 			</td>
 			<td>{ data ? data.expires ? `${new Date(data.expires).toLocaleString()}` : 'Never' : '-' }</td>
 		</tr>
+	);
+}
+
+function LabelColor({ account }: { account: IDirectoryAccountInfo }): ReactElement {
+	const directory = useDirectoryConnector();
+	const [color, setColor] = useColorInput(account.settings.labelColor);
+
+	return (
+		<fieldset>
+			<legend>Label color</legend>
+			<div className='input-row'>
+				<label>Color</label>
+				<ColorInput initialValue={ color } onChange={ setColor } />
+				<Button
+					className='slim'
+					onClick={ () => directory?.sendMessage('changeSettings', { labelColor: color }) }
+					disabled={ color === account.settings.labelColor?.toUpperCase() }>
+					Save
+				</Button>
+			</div>
+		</fieldset>
 	);
 }

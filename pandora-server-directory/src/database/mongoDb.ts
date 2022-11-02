@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter } from './dbHelper';
@@ -13,6 +13,7 @@ const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
+const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
 
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
@@ -23,6 +24,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
 	private _config!: Collection<DatabaseConfig>;
+	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -86,6 +88,15 @@ export default class MongoDatabase implements PandoraDatabase {
 		await this._config.createIndexes([
 			{ key: { type: 1 } },
 		], { unique: true });
+		//#endregion
+
+		//#region DirectMessages
+		this._directMessages = this._db.collection(DIRECT_MESSAGES_COLLECTION_NAME);
+
+		await this._directMessages.createIndexes([
+			{ key: { accounts: 1 } },
+			{ key: { time: 1 } },
+		], { unique: false });
 		//#endregion
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);
@@ -217,6 +228,31 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result.value?.accessId ?? null;
 	}
 
+	public async getDirectMessages(accounts: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]> {
+		return await this._directMessages
+			.find(until ? { accounts, time: { $lt: until } } : { accounts })
+			.sort({ time: -1 })
+			.limit(limit)
+			.toArray();
+	}
+
+	public async setDirectMessage(accounts: DirectMessageAccounts, message: IDirectoryDirectMessage): Promise<boolean> {
+		if (message.edited === undefined) {
+			await this._directMessages.insertOne({ ...message, accounts });
+			return true;
+		}
+		if (message.content) {
+			const { modifiedCount } = await this._directMessages.updateOne({ accounts, time: message.time }, { $set: { content: message.content, edited: message.edited } });
+			return modifiedCount === 1;
+		}
+		const { deletedCount } = await this._directMessages.deleteOne({ accounts, time: message.time });
+		return deletedCount === 1;
+	}
+
+	public async setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void> {
+		await this._accounts.updateOne({ id: accountId }, { $set: { directMessages: directMessageInfo } });
+	}
+
 	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
 		if (accessId === false) {
 			accessId = nanoid(8);
@@ -246,10 +282,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	private async _doMigrations(): Promise<void> {
-		// const settings: IDirectoryAccountSettings = {
-		// 	visibleRoles: [],
-		// };
-		// await this._accounts.updateMany({}, { $set: { settings } });
+		// insert migration code here
 	}
 }
 

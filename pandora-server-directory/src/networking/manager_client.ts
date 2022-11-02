@@ -91,6 +91,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 
 			gitHubBind: this.handleGitHubBind.bind(this),
 
+			getDirectMessages: this.handleGetDirectMessages.bind(this),
+			sendDirectMessage: this.handleSendDirectMessage.bind(this),
+			getDirectMessageInfo: this.handleGetDirectMessageInfo.bind(this),
+
 			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
 			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
 			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
@@ -103,6 +107,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
+			setCryptoKey: this.handleSetCryptoKey.bind(this),
+			directMessage: this.handleDirectMessage.bind(this),
 		});
 	}
 
@@ -229,11 +235,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private async handlePasswordChange({ passwordSha512Old, passwordSha512New }: IClientDirectoryArgument['passwordChange'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordChange'] {
+	private async handlePasswordChange({ passwordSha512Old, passwordSha512New, cryptoKey }: IClientDirectoryArgument['passwordChange'], connection: IConnectionClient): IClientDirectoryPromiseResult['passwordChange'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New))
+		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey))
 			return { result: 'invalidPassword' };
 
 		return { result: 'ok' };
@@ -504,6 +510,45 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		const info = ShardTokenStore.list(connection.account);
 		return { info };
 	}
+
+	//#region Direct Messages
+
+	private async handleSetCryptoKey({ cryptoKey }: IClientDirectoryArgument['setCryptoKey'], connection: IConnectionClient): IClientDirectoryPromiseResult['setCryptoKey'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		await connection.account.secure.setCryptoKey(cryptoKey);
+	}
+
+	private async handleGetDirectMessages({ id, until }: IClientDirectoryArgument['getDirectMessages'], connection: IConnectionClient): IClientDirectoryPromiseResult['getDirectMessages'] {
+		if (!connection.account || id === connection.account.id)
+			throw new BadMessageError();
+
+		return await connection.account.directMessages.getMessages(id, until);
+	}
+
+	private async handleSendDirectMessage(data: IClientDirectoryArgument['sendDirectMessage'], connection: IConnectionClient): IClientDirectoryPromiseResult['sendDirectMessage'] {
+		if (!connection.account || data.id === connection.account.id)
+			throw new BadMessageError();
+
+		return await connection.account.directMessages.sendMessage(data);
+	}
+
+	private handleGetDirectMessageInfo(_: IClientDirectoryArgument['getDirectMessageInfo'], connection: IConnectionClient): IClientDirectoryNormalResult['getDirectMessageInfo'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		return { info: connection.account.directMessages.dms };
+	}
+
+	private async handleDirectMessage({ id, action }: IClientDirectoryArgument['directMessage'], connection: IConnectionClient): IClientDirectoryPromiseResult['directMessage'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		return await connection.account.directMessages.action(id, action);
+	}
+
+	//#endregion Direct Messages
 
 	public onRoomListChange(): void {
 		for (const connection of this.connectedClients) {

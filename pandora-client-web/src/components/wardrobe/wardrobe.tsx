@@ -17,8 +17,6 @@ import {
 	CharacterId,
 	CharacterView,
 	DoAppearanceAction,
-	HexColorString,
-	HexColorStringSchema,
 	IsCharacterId,
 	IsObject,
 	Item,
@@ -47,6 +45,7 @@ import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { GraphicsSceneRenderer, SceneConstructor } from '../../graphics/graphicsSceneRenderer';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
+import { ColorInput } from '../common/colorInput/colorInput';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -446,7 +445,7 @@ function WardrobeItemConfigMenu({
 					item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
 						<div className='wardrobeColorRow' key={ colorPartIndex }>
 							<span className='flex-1'>{colorPart.name}</span>
-							<WardrobeColorSelector
+							<ColorInput
 								initialValue={ item.color[colorPartIndex] ?? colorPart.default }
 								resetValue={ colorPart.default }
 								throttle={ 100 }
@@ -517,43 +516,6 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 				))
 			}
 		</div>
-	);
-}
-
-function WardrobeColorSelector({ initialValue, resetValue, onChange, throttle = 0, disabled = true }: {
-	initialValue: HexColorString;
-	resetValue?: HexColorString;
-	onChange?: (value: HexColorString) => void;
-	throttle?: number;
-	disabled?: boolean;
-}): ReactElement {
-	const [input, setInput] = useState<string>(initialValue.toUpperCase());
-
-	const onChangeCaller = useCallback((value: HexColorString) => onChange?.(value), [onChange]);
-	const onChangeCallerThrottled = useMemo(() => _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
-
-	const changeCallback = useCallback((value: string) => {
-		value = '#' + value.replace(/[^0-9a-f]/gi, '').toUpperCase();
-		setInput(value);
-		const valid = HexColorStringSchema.safeParse(value).success;
-		if (valid) {
-			onChangeCallerThrottled(value as HexColorString);
-		}
-	}, [setInput, onChangeCallerThrottled]);
-
-	return (
-		<>
-			<input type='text' value={ input } disabled={ disabled } maxLength={ 7 } onChange={ (ev) => {
-				changeCallback(ev.target.value);
-			} } />
-			<input type='color' value={ input } disabled={ disabled } onChange={ (ev) => {
-				changeCallback(ev.target.value);
-			} } />
-			{
-				resetValue != null &&
-				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
-			}
-		</>
 	);
 }
 

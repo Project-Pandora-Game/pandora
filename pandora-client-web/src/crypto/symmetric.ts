@@ -2,11 +2,11 @@ import { Encode, ArrayToBase64, Base64ToArray, Decode, GenerateIV } from './help
 
 const subtle = globalThis.crypto.subtle;
 
-const AES_GCM_PARAMS = { name: 'AES-GCM', length: 256 };
-const AES_GCM_KEY_USAGES: KeyUsage[] = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'];
-const PBKDF2_PARAMS = { name: 'PBKDF2', iterations: 100_000, hash: 'SHA-512' };
+const AES_GCM_PARAMS = { name: 'AES-GCM', length: 256 } as const;
+const AES_GCM_KEY_USAGES: readonly KeyUsage[] = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'];
+const PBKDF2_PARAMS = { name: 'PBKDF2', iterations: 100_000, hash: 'SHA-512' } as const;
 
-export default class SymmetricEncryption {
+export class SymmetricEncryption {
 	#key: CryptoKey;
 
 	private constructor(key: CryptoKey) {
@@ -25,10 +25,10 @@ export default class SymmetricEncryption {
 		return Decode(new Uint8Array(decrypted));
 	}
 
-	public async wrapKey(key: CryptoKey): Promise<string> {
+	public async wrapKey(key: CryptoKey): Promise<{ iv: string; encrypted: string; }> {
 		const { iv, alg } = GenerateIV();
 		const encryptedKey = await subtle.wrapKey('pkcs8', key, this.#key, alg);
-		return iv + ':' + ArrayToBase64(new Uint8Array(encryptedKey));
+		return { iv, encrypted: ArrayToBase64(new Uint8Array(encryptedKey)) };
 	}
 
 	public async unwrapKey(iv: string, key: string, params: RsaHashedImportParams | EcKeyImportParams, usage: KeyUsage[]): Promise<CryptoKey> {
@@ -45,7 +45,7 @@ export default class SymmetricEncryption {
 			key = await subtle.deriveKey({
 				...PBKDF2_PARAMS,
 				salt,
-			}, pbkdf2, AES_GCM_PARAMS, true, AES_GCM_KEY_USAGES);
+			}, pbkdf2, AES_GCM_PARAMS, true, [...AES_GCM_KEY_USAGES]);
 		}
 		return new SymmetricEncryption(key);
 	}
@@ -56,7 +56,7 @@ export default class SymmetricEncryption {
 			privateKey,
 			AES_GCM_PARAMS,
 			true,
-			AES_GCM_KEY_USAGES,
+			[...AES_GCM_KEY_USAGES],
 		);
 		return new SymmetricEncryption(sharedKey);
 	}

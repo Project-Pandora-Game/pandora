@@ -19,6 +19,11 @@ export async function HashSHA512Base64(text: string) {
 	return ArrayToBase64(new Uint8Array(hashBuffer));
 }
 
+export async function HashSHA256Base64(text: string) {
+	const hashBuffer = await subtle.digest('SHA-256', Encode(text));
+	return ArrayToBase64(new Uint8Array(hashBuffer));
+}
+
 export function GenerateIV(base64?: string): { iv: string; alg: { name: 'AES-GCM'; iv: Uint8Array; }; } {
 	if (base64 === undefined) {
 		const iv = crypto.getRandomValues(new Uint8Array(16));

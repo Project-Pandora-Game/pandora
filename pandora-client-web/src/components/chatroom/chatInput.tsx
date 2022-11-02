@@ -122,7 +122,7 @@ export function ChatInputArea({ messagesDiv, scroll }: { messagesDiv: RefObject<
 	return (
 		<>
 			<AutoCompleteHint />
-			<TypingIndicator scroll={ scroll } />
+			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
 			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
 		</>
@@ -320,17 +320,8 @@ export function useChatInput(): IChatInputHandler {
 	return useContext(chatInputContext);
 }
 
-function TypingIndicator({ scroll }: { scroll: () => void }): ReactElement {
+function TypingIndicator(): ReactElement {
 	const statuses = useChatRoomStatus();
-	const lastStatusLength = useRef(0);
-
-	useEffect(() => {
-		if (lastStatusLength.current !== statuses.length) {
-			scroll();
-			lastStatusLength.current = statuses.length;
-		}
-	}, [statuses, scroll]);
-
 	return (
 		<div className='typing-indicator'>
 			{ statuses.map(({ data, status }) => (

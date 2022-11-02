@@ -8,6 +8,13 @@ const TEST_USERNAME = 'testuser';
 const TEST_EMAIL = 'test@project-pandora.com';
 const TEST_EMAIL_HASH = GenerateEmailHash(TEST_EMAIL);
 
+const TEST_CRYPT = {
+	publicKey: 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEWDmwBlEMYi3nu7FsotmBDrHxxaX6rW8SaDQZkXPIAaofK4ZVD01Yac5yrMtX3/dWA8c720sGWQhhyyRkeEBB9Q==',
+	salt: 'salt',
+	iv: 'iv',
+	encryptedPrivateKey: 'encryptedPrivateKey',
+};
+
 async function CreateAccountSecure(password: string, email: string, activated: boolean): Promise<AccountSecure> {
 	const account = new Account({
 		...await CreateAccountData(TEST_USERNAME, password, email, activated),
@@ -224,21 +231,21 @@ describe('AccountSecure', () => {
 
 		it('Fails on inactive account', async () => {
 			const inactiveAccount = await CreateAccountSecure('password', TEST_EMAIL, false);
-			await expect(inactiveAccount.changePassword('password', 'newPassword')).resolves.toBe(false);
+			await expect(inactiveAccount.changePassword('password', 'newPassword', TEST_CRYPT)).resolves.toBe(false);
 			await expect(inactiveAccount.verifyPassword('password')).resolves.toBe(true);
 			await expect(inactiveAccount.verifyPassword('newPassword')).resolves.toBe(false);
 			expect(mockSaving).not.toHaveBeenCalled();
 		});
 
 		it('Fails if old password is incorrect', async () => {
-			await expect(account.changePassword('wrongPassword', 'newPassword')).resolves.toBe(false);
+			await expect(account.changePassword('wrongPassword', 'newPassword', TEST_CRYPT)).resolves.toBe(false);
 			await expect(account.verifyPassword('password')).resolves.toBe(true);
 			await expect(account.verifyPassword('newPassword')).resolves.toBe(false);
 			expect(mockSaving).not.toHaveBeenCalled();
 		});
 
 		it('Changes password', async () => {
-			await expect(account.changePassword('password', 'newPassword')).resolves.toBe(true);
+			await expect(account.changePassword('password', 'newPassword', TEST_CRYPT)).resolves.toBe(true);
 			// Old password is no longer valid
 			await expect(account.verifyPassword('password')).resolves.toBe(false);
 			// New password is valid

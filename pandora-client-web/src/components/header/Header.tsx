@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { EMPTY, IsAuthorized } from 'pandora-common';
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import friendsIcon from '../../assets/icons/friends.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
@@ -13,10 +13,10 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import './header.scss';
 import { HeaderButton } from './HeaderButton';
-import { useNotificationHeader } from '../gameContext/notificationContextProvider';
-import { useEvent } from '../../common/useEvent';
+import { NotificationHeaderKeys, NotificationSource, useNotification, useNotificationHeader } from '../gameContext/notificationContextProvider';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { DirectMessageChannel } from '../../networking/directMessageManager';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -70,21 +70,15 @@ function RightHeader(): ReactElement {
 	const logout = useLogout();
 	const navigate = useNavigate();
 	const loggedIn = currentAccount != null;
-	const [notification, clearNotifications] = useNotificationHeader();
-	const isDeveloper = currentAccount?.roles !== undefined && IsAuthorized(currentAccount.roles, 'developer');
 
-	const onNotificationClick = useEvent((_: React.MouseEvent<HTMLButtonElement>) => {
-		clearNotifications();
-		toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR);
-	});
+	const isDeveloper = currentAccount?.roles !== undefined && IsAuthorized(currentAccount.roles, 'developer');
 
 	return (
 		<div className='rightHeader'>
 			{ loggedIn && (
 				<>
-					<HeaderButton icon={ notificationsIcon } iconAlt={ `${ notification.length } notifications` }
-						badge={ notification.length } onClick={ onNotificationClick } title='Notifications' />
-					<HeaderButton icon={ friendsIcon } iconAlt='Friends' onClick={ () => alert('Not yet implemented') } title='Friends' />
+					<NotificationButton icon={ notificationsIcon } title='Notifications' type='notifications' onClick={ () => toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR) } />
+					<FriendsHeaderButton />
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/account_settings') } title='Settings' />
 					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }
 					<span>{ currentAccount.username }</span>
@@ -93,6 +87,52 @@ function RightHeader(): ReactElement {
 			) }
 			{ !loggedIn && <span>[not logged in]</span> }
 		</div>
+	);
+}
+
+function NotificationButton({ icon, title, type, onClick }: {
+	icon: string;
+	title: string;
+	type: NotificationHeaderKeys;
+	onClick: (_: React.MouseEvent<HTMLButtonElement>) => void;
+}): ReactElement {
+	const [notification, clearNotifications] = useNotificationHeader(type);
+
+	const onNotificationClick = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
+		clearNotifications();
+		onClick(ev);
+	}, [clearNotifications, onClick]);
+
+	return (
+		<HeaderButton
+			icon={ icon }
+			iconAlt={ `${ notification.length } ${ title }` }
+			title={ title }
+			badge={ notification.length }
+			onClick={ onNotificationClick }  />
+	);
+}
+
+function FriendsHeaderButton(): ReactElement {
+	const navigate = useNavigate();
+	const handler = useDirectoryConnector().directMessageHandler;
+	const { notify } = useNotification(NotificationSource.DIRECT_MESSAGE);
+
+	useEffect(() => handler.on('newMessage', (channel: DirectMessageChannel) => {
+		if (channel.mounted && document.visibilityState === 'visible')
+			return;
+
+		notify({
+			// TODO: notification
+		});
+	}), [handler, notify]);
+
+	return (
+		<NotificationButton
+			icon={ friendsIcon }
+			title='Friends'
+			type='friends'
+			onClick={ () => navigate('/direct_messages') } />
 	);
 }
 

@@ -1,5 +1,5 @@
 import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult, DefineSocketInterface } from './helpers';
-import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryShardInfo } from './directory_client';
+import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import type { MessageHandler } from './message_handler';
 import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomDirectoryInfo, RoomIdSchema } from '../chatroom';
@@ -66,6 +66,7 @@ export const ClientDirectoryInSchema = z.object({
 	passwordChange: z.object({
 		passwordSha512Old: PasswordSha512Schema,
 		passwordSha512New: PasswordSha512Schema,
+		cryptoKey: AccountCryptoKeySchema,
 	}),
 	logout: z.object({
 		invalidateToken: z.string().optional(),
@@ -75,6 +76,9 @@ export const ClientDirectoryInSchema = z.object({
 	}),
 	gitHubUnbind: z.object({}),
 	changeSettings: DirectoryAccountSettingsSchema.partial(),
+	setCryptoKey: z.object({
+		cryptoKey: AccountCryptoKeySchema,
+	}),
 	//#endregion
 
 	//#region Character management
@@ -104,6 +108,21 @@ export const ClientDirectoryInSchema = z.object({
 	chatRoomLeave: z.object({}),
 	chatRoomUpdate: ChatRoomDirectoryUpdateSchema,
 	//#endregion
+
+	getDirectMessages: z.object({
+		id: z.number().min(0),
+		until: z.number().min(0).optional(),
+	}),
+	sendDirectMessage: z.object({
+		id: z.number().min(0),
+		content: z.string(),
+		editing: z.number().min(0).optional(),
+	}),
+	directMessage: z.object({
+		id: z.number().min(0),
+		action: z.enum(['read', 'close']),
+	}),
+	getDirectMessageInfo: z.object({}),
 
 	//#region Management/admin endpoints; these require specific roles to be used
 
@@ -171,6 +190,13 @@ export type IClientDirectoryOut = {
 	chatRoomCreate: ShardConnection<ShardError | 'nameTaken'>;
 	chatRoomEnter: ShardConnection<'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'>;
 	chatRoomUpdate: { result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; };
+	getDirectMessages: { result: 'notFound' | 'denied'; } | {
+		result: 'ok';
+		account: IDirectoryDirectMessageAccount;
+		messages: IDirectoryDirectMessage[];
+	};
+	sendDirectMessage: { result: 'ok' | 'notFound' | 'denied' | 'messageNotFound'; };
+	getDirectMessageInfo: { info: IDirectoryDirectMessageInfo[]; };
 	manageGetAccountRoles: { result: 'notFound'; } | {
 		result: 'ok';
 		roles: IAccountRoleManageInfo;

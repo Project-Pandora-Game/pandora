@@ -20,7 +20,16 @@ interface DatabaseAccountSecure {
 	emailHash: string;
 	tokens: DatabaseAccountToken[];
 	github?: GitHubInfo;
+	cryptoKey?: import('pandora-common').IAccountCryptoKey;
 }
+
+/** Direct message key create from the 2 accounts' id where the first is always the lowest */
+type DirectMessageAccounts = `${number}-${number}`;
+
+type DatabaseDirectMessageInfo = import('pandora-common').IDirectoryDirectMessageInfo & {
+	/** Flag to indicate the conversation was closed and the info should not be sent to the account */
+	closed?: true;
+};
 
 /** Representation of account stored in database */
 interface DatabaseAccount {
@@ -32,6 +41,7 @@ interface DatabaseAccount {
 	roles?: import('pandora-common').IAccountRoleManageInfo;
 	characters: import('./databaseProvider').ICharacterSelfInfoDb[];
 	settings: import('pandora-common').IDirectoryAccountSettings;
+	directMessages?: DatabaseDirectMessageInfo[];
 }
 
 /** Representation of account stored in database */

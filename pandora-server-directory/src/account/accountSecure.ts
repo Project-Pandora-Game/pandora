@@ -1,9 +1,11 @@
+import { GetLogger, IAccountCryptoKey } from 'pandora-common';
 import { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } from '../config';
 import { GetDatabase } from '../database/databaseProvider';
 import GetEmailSender from '../services/email';
 import type { Account } from './account';
 
 import { createHash, randomInt } from 'crypto';
+import { webcrypto } from 'node:crypto';
 import { nanoid } from 'nanoid';
 import * as argon2 from 'argon2';
 import _ from 'lodash';
@@ -69,12 +71,13 @@ export default class AccountSecure {
 		return argon2.verify(this.#secure.password, password);
 	}
 
-	public async changePassword(passwordOld: string, passwordNew: string): Promise<boolean> {
-		if (!this.isActivated() || !await this.verifyPassword(passwordOld))
+	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<boolean> {
+		if (!this.isActivated() || !await this.verifyPassword(passwordOld) || !await this.#validateCryptoKey(cryptoKey))
 			return false;
 
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
+		this.#secure.cryptoKey = _.cloneDeep(cryptoKey);
 
 		await this.#updateDatabase();
 
@@ -98,6 +101,7 @@ export default class AccountSecure {
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.activated = true;
 		this.#secure.password = await GeneratePasswordHash(password);
+		this.#secure.cryptoKey = undefined;
 
 		await this.#updateDatabase();
 
@@ -156,6 +160,30 @@ export default class AccountSecure {
 		return true;
 	}
 
+	public getCryptoKey(): IAccountCryptoKey | undefined {
+		return this.#secure.cryptoKey;
+	}
+
+	public getPublicKey(): string | undefined {
+		return this.#secure.cryptoKey?.publicKey;
+	}
+
+	public async setCryptoKey(key: IAccountCryptoKey): Promise<boolean> {
+		if (!await this.#validateCryptoKey(key))
+			return false;
+
+		this.#secure.cryptoKey = _.cloneDeep(key);
+		await this.#updateDatabase();
+		return true;
+	}
+
+	async #validateCryptoKey({ publicKey }: IAccountCryptoKey, previous?: IAccountCryptoKey): Promise<boolean> {
+		if (previous?.publicKey === publicKey)
+			return true;
+
+		return await IsPublicKey(publicKey);
+	}
+
 	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {
 		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
 		if (TOKEN_LIMITS[reason] <= this.#secure.tokens.filter((t) => t.reason === reason).length) {
@@ -209,6 +237,22 @@ export async function GenerateAccountSecureData(password: string, email: string,
  */
 export function GenerateEmailHash(email: string): string {
 	return createHash('sha256').update(EMAIL_SALT).update(email.toLowerCase()).digest('base64');
+}
+
+async function IsPublicKey(keyData: string): Promise<boolean> {
+	try {
+		await webcrypto.subtle.importKey(
+			'spki',
+			Buffer.from(keyData, 'base64'),
+			{ name: 'ECDH', namedCurve: 'P-256' },
+			true,
+			['deriveKey'],
+		);
+		return true;
+	} catch (e) {
+		GetLogger('public-key').warning(e);
+		return false;
+	}
 }
 
 /**

@@ -40,10 +40,10 @@ export function AssetsUI(): ReactElement {
 						The &quot;pen&quot;-Button lets you edit the asset that is the basis of the equipped item.
 					</p>
 					<p>
-						You can also expand each item with the left-most &quot;[+]&quot;-Link, which displays all the layers of that item.<br />
+						You can also expand each item with the leftmost &quot;[+]&quot;-Link, which displays all the layers of that item.<br />
 						For every layer, the tint (color) of that layer can be set via the rectangle area.<br />
-						The button with &quot;square&quot;-icon lets you cycle an item or individual layers of<br />
-						an item between solid, half-transparent and invisible on the editor character.
+						The button with the &quot;square&quot;-icon lets you cycle an item or individual layers of<br />
+						an item between solid, half-transparent, and invisible on the editor character.
 					</p>
 				</ContextHelpButton>
 			</h3>
@@ -65,8 +65,8 @@ export function AssetsUI(): ReactElement {
 				All assets
 				<ContextHelpButton>
 					<p>
-						The section &quot;All assets&quot; shows you all assets in the currently loaded version of Pandora, grouped by their category.<br />
-						Pressing the left-most &quot;[+]&quot;-Link expands the category of assets, so you can see all assets in it.<br />
+						The section &quot;All assets&quot; shows all assets in the currently loaded version of Pandora, grouped by their category.<br />
+						Pressing the left-most &quot;[+]&quot;-Link expands the category of assets so that you can see all assets in it.<br />
 					</p>
 					<p>
 						You can equip or edit any of them. Equipping some clothing or restraint items can help you to see the new asset<br />
@@ -74,13 +74,13 @@ export function AssetsUI(): ReactElement {
 					</p>
 					<p>
 						The &quot;Create a new asset&quot;-button opens a new dialogue. First, choose a fitting category for your asset.<br />
-						You also need to give it an identifier that should be similar to the name, but with &quot;_&quot; instead of space characters, e.g.<br />
-						&quot;jeans_shorts&quot;. The visible asset name would in this example then be &quot;Jeans Shorts&quot;.
+						You also need to give it an identifier that should be similar to the name but with &quot;_&quot; instead of space characters, e.g.<br />
+						&quot;jeans_shorts&quot;. In this example, the visible asset name would then be &quot;Jeans Shorts&quot;.
 					</p>
 					<p>
-						Only in case the asset will be a body part (e.g. eyes or hair), you need to select something in the according<br />
+						Only in case the asset is a body part (e.g. eyes or hair), you must select something in the corresponding<br />
 						drop-down dialogue.<br />
-						After proceeding, you will the be prompted to download a &quot;*.zip&quot; file with your asset so that you can save its contents in<br />
+						After proceeding, you will be prompted to download a &quot;*.zip&quot; file with your asset so that you can save its contents in<br />
 						the pandora-asset repository for committing it when it is ready. This file consists of a minimal<br />
 						&quot;*.asset.ts&quot; file for you to build upon and a placeholder version of the &quot;graphics.json&quot;.
 					</p>

@@ -225,7 +225,8 @@ export class EditorAssetGraphics extends AssetGraphics {
 			layer.definition.points = [];
 			layer.onChange(false);
 			return;
-		} else if (typeof source === 'string') {
+		}
+		if (typeof source === 'string') {
 			const manager = GraphicsManagerInstance.value;
 			const template = manager?.getTemplate(source);
 			if (!template) {

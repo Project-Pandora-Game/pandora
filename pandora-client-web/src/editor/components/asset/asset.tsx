@@ -35,33 +35,33 @@ export function AssetUI() {
 				Editing: { StripAssetIdPrefix(selectedAsset.id) }
 				<ContextHelpButton>
 					<p>
-						The &quot;Asset&quot;-tab lets you edit, export, and import a single asset as well as manage<br />
+						The &quot;Asset&quot;-tab lets you edit, export, and import a single asset, as well as manage<br />
 						its layers and the images used by the asset.
 					</p>
 					<p>
 						The first line shows you which asset you are currently editing.<br />
 						Next are buttons that allow you to export and import the graphics definition of the<br />
-						current asset. It is in a &quot;graphics.json&quot; file, that every asset needs to have, as it<br />
+						current asset. It is in a &quot;graphics.json&quot; file that every asset needs to have, as it<br />
 						is used in the asset code to define how the asset is displayed.<br />
-						After editing the asset as desired, you can export the result as a zip file, containing<br />
+						After editing the asset as desired, you can export the result as a zip file containing<br />
 						the &quot;graphics.json&quot; file and your images. This zip needs to be extracted and its contents<br />
-						placed in same folder as the &quot;*.asset.ts&quot; file.
+						placed in the same folder as the &quot;*.asset.ts&quot; file.
 					</p>
 					<p>
 						You can also import the &quot;graphics.json&quot; file again, at any time, after selecting the fitting<br />
 						asset for editing under the &quot;Items&quot;-tab.<br />
 						This allows you to continue working on an asset at a later point in time by importing a<br />
-						previously exported intermediate editor state, independent on whether you finished the asset<br />
-						completely or you stopped earlier and exported however far you got as &quot;graphics.json&quot; file.
+						previously exported intermediate editor state, independent of whether you finished the asset<br />
+						completely or you stopped earlier and exported your current progress as &quot;graphics.json&quot; file.
 					</p>
 					<p>
 						Beneath the &quot;Unselect layer&quot;-button is the layer management section.<br />
-						There, you can either add new layers or select any of the existing ones by clicking on the<br />
+						There, you can either add new layers or select any existing ones by clicking on the<br />
 						layer name, which highlights it to show that it is selected.<br />
-						A layer needs to be selected in order to edit it in the &quot;Layer&quot;-tab.
+						A layer must be selected in order to edit it in the &quot;Layer&quot;-tab.
 					</p>
 					<p>
-						The order of layers in the list on this tab is NOT purely cosmetic for just the editor, but also<br />
+						The order of layers in the list on this tab is NOT purely cosmetic for just the editor but also<br />
 						affects the priority of a layer in comparison to the other layers of the same asset:<br />
 						The higher up a layer is shown here, the closer to the body it is.<br />
 						An incorrect layer order can be spotted by visual inconsistencies in the &quot;Preview&quot;-tab.
@@ -69,10 +69,10 @@ export function AssetUI() {
 					Moreover, there are a few buttons for each layer, such as:
 					<ul>
 						<li>
-							The &quot;arrow&quot;-button which allows to change the order of each layer in the editor list.
+							The &quot;arrow&quot;-button allows changing the order of each layer in the editor list.
 						</li>
 						<li>
-							The &quot;square&quot;-button lets you cycle the layer between solid, transparent and invisible.
+							The &quot;square&quot;-button lets you cycle the layer between solid, transparent, and invisible.
 						</li>
 						<li>
 							The &quot;trash bin&quot;-button deletes a layer.
@@ -95,9 +95,9 @@ export function AssetUI() {
 						the layers of this asset. Clicking the &quot;+&quot;-button next to an image will toggle<br />
 						a preview of the picture.
 					</p>
-					Note: After importing a &quot;graphics.json&quot; file, you will likely have to manually add all image<br />
-					files of the asset once more.<br />
-					Note: You can add multiple images at once.
+					<b>Note:</b> After importing a &quot;graphics.json&quot; file, you may have to add all image<br />
+					files of the asset once more manually.<br />
+					<b>Note:</b> You can add multiple images at once.
 				</ContextHelpButton>
 			</h4>
 			<label htmlFor='upload-button' className='hiddenUpload'>

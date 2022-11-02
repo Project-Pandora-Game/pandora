@@ -28,7 +28,7 @@ async function Load(loader: IGraphicsLoader): Promise<GraphicsManager> {
 	try {
 		hash = (await loader.loadTextFile('current')).trim();
 	} catch (error) {
-		throw new Error('Failed to get assets version.\nIs the target server running and reachable?');
+		throw new Error('Failed to get the assets version.\nIs the target server running and reachable?');
 
 	}
 	const assetDefinitions = JSON.parse(await loader.loadTextFile(`assets_${hash}.json`)) as AssetsDefinitionFile;

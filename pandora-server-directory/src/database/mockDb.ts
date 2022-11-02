@@ -1,6 +1,6 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, PASSWORD_PREHASH_SALT } from 'pandora-common';
+import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT } from 'pandora-common';
 import { CreateCharacter } from './dbHelper';
 
 import _ from 'lodash';
@@ -21,6 +21,7 @@ export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
 	private configDb: DatabaseConfig[] = [];
+	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 	private get accountDbView(): DatabaseAccountWithSecure[] {
@@ -210,6 +211,54 @@ export class MockDatabase implements PandoraDatabase {
 
 		char.accessId = nanoid(8);
 		return Promise.resolve(char.accessId);
+	}
+
+	public getDirectMessages(accounts: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]> {
+		const data = this.directMessagesDb.get(accounts);
+		if (!data) {
+			return Promise.resolve([]);
+		}
+		return Promise.resolve(data
+			.sort((a, b) => b.time - a.time)
+			.filter((msg) => !until || msg.time < until)
+			.slice(0, limit)
+			.map((msg) => _.cloneDeep(msg)));
+	}
+
+	public setDirectMessage(accounts: DirectMessageAccounts, message: IDirectoryDirectMessage): Promise<boolean> {
+		let data = this.directMessagesDb.get(accounts);
+		if (!data) {
+			data = [];
+			this.directMessagesDb.set(accounts, data);
+		}
+		if (message.edited === undefined) {
+			data.push(message);
+			return Promise.resolve(true);
+		}
+		if (message.content) {
+			const msg = data.find((m) => m.time === message.time);
+			if (!msg)
+				return Promise.resolve(false);
+
+			msg.content = message.content;
+			msg.edited = message.edited;
+			return Promise.resolve(true);
+		}
+		const index = data.findIndex((m) => m.time === message.time);
+		if (index === -1)
+			return Promise.resolve(false);
+
+		data.splice(index, 1);
+		return Promise.resolve(true);
+	}
+
+	public setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
+		if (!acc)
+			return Promise.resolve();
+
+		acc.directMessages = directMessageInfo;
+		return Promise.resolve();
 	}
 
 	public getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {

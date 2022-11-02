@@ -27,7 +27,9 @@ function VersionCheckImpl() {
 						setNextVersion(version);
 						if (!notifiedRef.current) {
 							notifiedRef.current = true;
-							notify({});
+							notify({
+								// TODO: notification
+							});
 						}
 					} else {
 						setNextVersion('');

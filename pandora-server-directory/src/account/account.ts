@@ -5,6 +5,7 @@ import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL } from '../config';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
+import { AccountDirectMessages } from './accountDirectMessages';
 
 import _ from 'lodash';
 
@@ -21,6 +22,7 @@ export class Account {
 
 	public readonly secure: AccountSecure;
 	public readonly roles: AccountRoles;
+	public readonly directMessages: AccountDirectMessages;
 
 	public get id(): number {
 		return this.data.id;
@@ -34,6 +36,7 @@ export class Account {
 		this.lastActivity = Date.now();
 		this.secure = new AccountSecure(this, data.secure);
 		this.roles = new AccountRoles(this, data.roles);
+		this.directMessages = new AccountDirectMessages(this, data);
 		// Shallow copy to preserve received data when cleaning up secure
 		const cleanData: DatabaseAccount = { ...data };
 		delete cleanData.secure;
@@ -67,6 +70,7 @@ export class Account {
 			github: this.secure.getGitHubStatus(),
 			roles: this.roles.getSelfInfo(),
 			settings: _.cloneDeep(this.data.settings),
+			cryptoKey: this.secure.getCryptoKey(),
 		};
 	}
 
@@ -210,7 +214,13 @@ export async function CreateAccountData(username: string, password: string, emai
 		secure: await GenerateAccountSecureData(password, email, activated),
 		characters: [],
 		settings: {
+			labelColor: '#ffffff',
 			visibleRoles: [],
 		},
 	};
+}
+
+export function GetDirectMessageId(a: Account, b: Account): DirectMessageAccounts {
+	const [x, y] = a.id < b.id ? [a, b] : [b, a];
+	return `${x.id}-${y.id}`;
 }

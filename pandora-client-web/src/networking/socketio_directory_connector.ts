@@ -20,6 +20,7 @@ import { PrehashPassword } from '../crypto/helpers';
 import { TypedEventEmitter } from '../event';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
+import { DirectMessageManager } from './directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
 
 type SocketAuthCallback = (data?: IClientDirectoryAuthMessage) => void;
@@ -58,6 +59,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
 	private readonly _messageHandler: MessageHandler<IDirectoryClientBase>;
+	public readonly directMessageHandler: DirectMessageManager;
 
 	/** Current state of the connection */
 	get state(): ReadonlyObservable<DirectoryConnectionState> {
@@ -96,16 +98,28 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		this.socket.on('disconnect', this.onDisconnect.bind(this));
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
+		this.directMessageHandler = new DirectMessageManager(this);
+
 		// Setup message handler
 		this._messageHandler = new MessageHandler<IDirectoryClientBase>({}, {
 			serverStatus: (status) => {
 				this._directoryStatus.value = status;
 			},
-			connectionState: (message: IDirectoryClientArgument['connectionState']) => {
+			connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
 				this._connectionStateEventEmitter.onStateChanged(message);
 				this.handleAccountChange(message.account);
+				await this.directMessageHandler.accountChanged();
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
+			directMessageGet: async (data) => {
+				await this.directMessageHandler.handleDirectMessageGet(data);
+			},
+			directMessageSent: async (data) => {
+				await this.directMessageHandler.handleDirectMessageSent(data);
+			},
+			directMessageAction: (data) => {
+				this.directMessageHandler.handleDirectMessageAction(data);
+			},
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -168,16 +182,19 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 
 		if (result.result === 'ok') {
 			this._authToken.value = { ...result.token, username: result.account.username };
+			await this.directMessageHandler.initCryptoPassword(username, password);
 			this.handleAccountChange(result.account);
 		} else {
 			this.handleAccountChange(null);
 		}
+		await this.directMessageHandler.accountChanged();
 		return result.result;
 	}
 
 	public logout(): void {
 		this.sendMessage('logout', { invalidateToken: this._authToken.value?.value });
 		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
+		this.directMessageHandler.clear();
 	}
 
 	/**

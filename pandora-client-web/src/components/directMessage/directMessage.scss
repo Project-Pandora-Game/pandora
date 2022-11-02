@@ -1,0 +1,38 @@
+@import '../../styles/constants';
+
+.direct-message {
+	display: flex;
+	flex-flow: column;
+	height: 100%;
+	background-color: $grey-darker;
+
+	.direct-message-list {
+		display: flex;
+		flex-flow: column;
+		flex: 1;
+		overflow-x: hidden;
+		overflow-y: scroll;
+		user-select: text;
+	}
+
+	.direct-message-entry {
+		color: $white;
+		padding: 0.1em;
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+
+		&__info {
+			float: right;
+			color: $grey-mid;
+			font-style: italic;
+			font-size: 0.6em;
+			margin-right: 0.2em;
+		}
+	}
+
+	textarea {
+		height: min(10em, 35%);
+		resize: none;
+		margin: 0;
+	}
+}

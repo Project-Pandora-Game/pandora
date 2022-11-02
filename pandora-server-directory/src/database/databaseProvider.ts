@@ -1,7 +1,7 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings } from 'pandora-common';
+import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo } from 'pandora-common';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -95,6 +95,30 @@ export interface PandoraDatabase {
 	 * @return - New access id
 	 */
 	setCharacterAccess(id: CharacterId): Promise<string | null>;
+
+	/**
+	 * Gets direct messages for the account
+	 * @param keys - `${accountIdA}-${accessIdB}` where accountIdA < accountIdB
+	 * @param limit - Max number of messages to return
+	 * @param until - Get messages before this date
+	 * @returns direct messages associated with the accounts
+	 */
+	getDirectMessages(keys: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]>;
+
+	/**
+	 * Sets direct a direct message for the account
+	 * @param keys - `${accountIdA}-${accessIdB}` where accountIdA < accountIdB
+	 * @param message - direct messages to store
+	 * @returns false only if message was an edit and it was not found
+	 */
+	setDirectMessage(keys: DirectMessageAccounts, message: IDirectoryDirectMessage): Promise<boolean>;
+
+	/**
+	 * Sets direct message info for the account
+	 * @param accountId - Id of account to set unread direct messages for
+	 * @param directMessageInfo - Direct message info to set
+	 */
+	setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void>;
 
 	//#region Shard
 

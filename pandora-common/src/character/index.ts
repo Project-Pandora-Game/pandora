@@ -3,7 +3,7 @@ export * from './speech';
 
 import { z } from 'zod';
 import { AppearanceBundleSchema } from '../assets';
-import { ZodMatcher, zTemplateString } from '../validation';
+import { HexColorStringSchema, ZodMatcher, zTemplateString } from '../validation';
 
 export const CharacterIdSchema = zTemplateString<`c${number}`>(z.string(), /^c[1-9][0-9]{0,15}$/);
 export type CharacterId = z.infer<typeof CharacterIdSchema>;
@@ -14,7 +14,7 @@ export type CharacterId = z.infer<typeof CharacterIdSchema>;
 export const IsCharacterId = ZodMatcher(CharacterIdSchema);
 
 export const CharacterPublicSettingsSchema = z.object({
-	labelColor: z.string().regex(/^#[0-9a-f]{6}$/i),
+	labelColor: HexColorStringSchema,
 });
 export type ICharacterPublicSettings = z.infer<typeof CharacterPublicSettingsSchema>;
 

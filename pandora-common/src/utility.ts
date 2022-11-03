@@ -22,7 +22,7 @@ export type BoolSelect<T extends boolean, TrueType, FalseType> = T extends true 
 /** Returns all keys which have values matching V */
 export type KeysMatching<T, V> = { [K in keyof T]: T[K] extends V ? K : never }[keyof T];
 
-export type Promiseable<T> = T | PromiseLike<T>;
+export type Awaitable<T> = T | PromiseLike<T>;
 
 declare const window: unknown;
 declare const document: Record<string, unknown>;

@@ -1,12 +1,12 @@
 import { z, ZodType } from 'zod';
-import type { KeysMatching, Promiseable } from '../utility';
+import type { KeysMatching, Awaitable } from '../utility';
 
 /** The base type for how (one-way) socket interface definition should look like */
 export type SocketInterfaceDefinition = {
 	[messageType: string]: {
 		/** The body of request of this message, must be an object */
 		request: ZodType<Record<never, unknown>>;
-		/** The body of request of this message, must be an object or `null` if this is one-shot message */
+		/** The body of response for this message, must be an object or `null` if this is one-shot message */
 		response: ZodType<Record<never, unknown>> | null;
 	};
 };
@@ -31,7 +31,7 @@ export type SocketInterfaceResponse<T extends SocketInterfaceDefinition> = {
 
 /** Defines the SocketInterface response (possibly wrapped in promise) */
 export type SocketInterfaceHandlerResult<T extends SocketInterfaceDefinition> = {
-	[K in keyof T]: Promiseable<SocketInterfaceResponse<T>[K]>;
+	[K in keyof T]: Awaitable<SocketInterfaceResponse<T>[K]>;
 };
 
 /** Defines the SocketInterface response (promise - for async function) */

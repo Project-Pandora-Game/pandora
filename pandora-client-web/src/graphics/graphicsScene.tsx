@@ -1,10 +1,11 @@
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Application, Filter, IApplicationOptions, Texture } from 'pixi.js';
-import { Sprite, Stage } from '@saitonakamura/react-pixi';
+import { Application, Filter, Texture } from 'pixi.js';
+import { Sprite } from '@saitonakamura/react-pixi';
 import { ChildrenProps } from '../common/reactTypes';
 import { useEvent } from '../common/useEvent';
 import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './pixiViewport';
 import { Assert, AssertNever, CharacterSize } from 'pandora-common';
+import { GraphicsSceneRendererDirect, GraphicsSceneRendererShared } from './graphicsSceneRenderer';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
@@ -16,34 +17,12 @@ export type GraphicsSceneProps = {
 	backgroundFilters?: Filter[] | null;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	forwardContexts?: readonly Context<any>[];
+
+	/** If this scene should create private (non-shared) pixi instance. Impacts performance! */
+	createPrivatePixiInstance?: boolean;
 };
 
 const DEFAULT_BACKGROUND_COLOR = 0x1099bb;
-
-function ContextBridge({ children, contexts, render }: {
-	children: ReactNode;
-	contexts: readonly Context<unknown>[];
-	render: (children: ReactNode) => ReactNode;
-}): ReactElement {
-	if (contexts.length === 0) {
-		return <>{ render(children) }</>;
-	}
-
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	const Ctx = contexts[0];
-
-	return (
-		<Ctx.Consumer>
-			{ (value) => (
-				<ContextBridge contexts={ contexts.slice(1) } render={ render }>
-					<Ctx.Provider value={ value }>
-						{children}
-					</Ctx.Provider>
-				</ContextBridge>
-			) }
-		</Ctx.Consumer>
-	);
-}
 
 function GraphicsSceneCore({
 	children,
@@ -56,18 +35,11 @@ function GraphicsSceneCore({
 	backgroundSize,
 	backgroundFilters,
 	forwardContexts = [],
+	createPrivatePixiInstance,
 }: ChildrenProps & GraphicsSceneProps & {
 	div: HTMLDivElement;
 }): ReactElement {
 	const appRef = useRef<Application | null>(null);
-
-	const options = useMemo<IApplicationOptions>(() => ({
-		backgroundColor: 0x1099bb,
-		resolution: window.devicePixelRatio || 1,
-		// Antialias **NEEDS** to be explicitely disabled - having it enabled causes seams when using filters (such as alpha masks)
-		antialias: false,
-		resizeTo: div,
-	}), [div]);
 
 	const [size, setSize] = useState({ width: 1, height: 1 });
 
@@ -179,42 +151,38 @@ function GraphicsSceneCore({
 		appRef.current = null;
 	}, []);
 
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const Renderer = createPrivatePixiInstance ? GraphicsSceneRendererDirect : GraphicsSceneRendererShared;
+
 	return (
-		<ContextBridge contexts={ forwardContexts } render={ (c) => (
-			<Stage
-				onMount={ onMount }
-				onUnmount={ onUnmount }
-				options={ options }
-				raf={ false }
-				renderOnComponentChange={ true }
+		<Renderer
+			container={ div }
+			forwardContexts={ forwardContexts }
+			onMount={ onMount }
+			onUnmount={ onUnmount }
+		>
+			<PixiViewport
+				{ ...size }
+				worldWidth={ worldWidth ?? CharacterSize.WIDTH }
+				worldHeight={ worldHeight ?? CharacterSize.HEIGHT }
+				setup={ viewportSetup }
+				ref={ viewportRef }
+				sortableChildren
 			>
-				{ c }
-			</Stage>
-		) }>
-			<React.StrictMode>
-				<PixiViewport
-					{ ...size }
-					worldWidth={ worldWidth ?? CharacterSize.WIDTH }
-					worldHeight={ worldHeight ?? CharacterSize.HEIGHT }
-					setup={ viewportSetup }
-					ref={ viewportRef }
-					sortableChildren
-				>
-					{ children }
-					{
-						!backgroundTexture ? null : (
-							<Sprite
-								zIndex={ -1000 }
-								texture={ backgroundTexture }
-								width={ backgroundSize?.[0] }
-								height={ backgroundSize?.[1] }
-								filters={ backgroundFilters ?? null }
-							/>
-						)
-					}
-				</PixiViewport>
-			</React.StrictMode>
-		</ContextBridge>
+				{ children }
+				{
+					!backgroundTexture ? null : (
+						<Sprite
+							zIndex={ -1000 }
+							texture={ backgroundTexture }
+							width={ backgroundSize?.[0] }
+							height={ backgroundSize?.[1] }
+							filters={ backgroundFilters ?? null }
+						/>
+					)
+				}
+			</PixiViewport>
+		</Renderer>
 	);
 }
 export function GraphicsScene({

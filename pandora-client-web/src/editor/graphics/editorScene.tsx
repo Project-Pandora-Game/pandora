@@ -62,6 +62,7 @@ export function EditorScene({
 		worldHeight: CharacterSize.HEIGHT,
 		worldWidth: CharacterSize.WIDTH,
 		background: backgroundColor,
+		createPrivatePixiInstance: true,
 	}), [viewportConfig, backgroundColor]);
 
 	const getCenter = useCallback(() => (viewportRef.current?.getCenter() ?? { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }), []);

@@ -18,6 +18,7 @@ const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString()
 
 const {
 	DIRECTORY_ADDRESS = 'http://127.0.0.1:25560',
+	EDITOR_ASSETS_ADDRESS = 'http://127.0.0.1:26969/assets',
 	WEBPACK_DEV_SERVER_PORT = '6969',
 	USER_DEBUG = 'false',
 } = config().parsed ?? {};
@@ -45,12 +46,6 @@ export default function (env: WebpackEnv): Configuration {
 			hot: true,
 			open: true,
 			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),
-			static: {
-				directory: join(__dirname, '..', '..', 'pandora-assets', 'out'),
-				publicPath: '/pandora-assets',
-				serveIndex: true,
-				watch: false,
-			},
 		},
 		devtool: env.prod ? 'source-map' : 'eval-source-map',
 		entry: {
@@ -87,6 +82,7 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 				VERSION: packageJson.version,
 				GAME_NAME,
 				DIRECTORY_ADDRESS,
+				EDITOR_ASSETS_ADDRESS,
 				USER_DEBUG,
 				GIT_COMMIT_HASH,
 				GIT_DESCRIBE,

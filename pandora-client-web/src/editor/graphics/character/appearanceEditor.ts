@@ -221,6 +221,11 @@ export class EditorAssetGraphics extends AssetGraphics {
 			return;
 		}
 
+		if (source === '') {
+			layer.definition.points = [];
+			layer.onChange(false);
+			return;
+		}
 		if (typeof source === 'string') {
 			const manager = GraphicsManagerInstance.value;
 			const template = manager?.getTemplate(source);

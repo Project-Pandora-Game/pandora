@@ -11,10 +11,11 @@ import { Form, FormField, FormFieldError } from '../../../components/common/Form
 import { Select } from '../../../components/common/Select/Select';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { Dialog } from '../../../components/dialog/dialog';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
 import { AssetTreeViewCategory, ASSET_ID_PART_REGEX, GetAssetManagerEditor } from '../../assets/assetManager';
-import { EDITOR_ALPHA_ICONS } from '../../editor';
+import { EDITOR_ALPHA_ICONS, useEditorTabContext } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import './assets.scss';
 
@@ -26,15 +27,72 @@ export function AssetsUI(): ReactElement {
 
 	return (
 		<Scrollbar color='lighter' className='editor-setupui asset-ui slim'>
-			<h3>Equipped</h3>
+			<h3>
+				Equipped
+				<ContextHelpButton>
+					<p>
+						This section lists all items that are currently equipped on the editor character.<br />
+						The editor character can be seen in the &quot;Preview&quot; and &quot;Setup&quot; tabs.
+					</p>
+					<p>
+						You can equip a new item by pressing the &quot;+&quot;-Button next to an asset in either the &quot;Edited assets&quot;<br />
+						or &quot;All assets&quot; section. Unequipping an item works by pressing the &quot;-&quot; button next to it.<br />
+						The &quot;pen&quot;-Button lets you edit the asset that is the basis of the equipped item.
+					</p>
+					<p>
+						You can also expand each item with the leftmost &quot;[+]&quot;-Link, which displays all the layers of that item.<br />
+						For every layer, the tint (color) of that layer can be set via the rectangle area.<br />
+						The button with the &quot;square&quot;-icon lets you cycle an item or individual layers of<br />
+						an item between solid, half-transparent, and invisible on the editor character.
+					</p>
+				</ContextHelpButton>
+			</h3>
 			<ul>
 				{items.map((item) => <ItemElement key={ item.id } item={ item } />)}
 			</ul>
-			<h3>Edited assets</h3>
+			<h3>
+				Edited assets
+				<ContextHelpButton>
+					The section &quot;Edited assets&quot; shows all assets you have started editing in this editor session.<br />
+					The &quot;pen&quot;-Button selects the asset for editing and switches to the asset tab for this.<br />
+					If you have multiple items you are editing, the &quot;pen&quot;-Button switches between them.
+				</ContextHelpButton>
+			</h3>
 			<ul>
 				{ editorAssets.map((assetId) => <EditedAssetElement key={ assetId } assetId={ assetId } />) }
 			</ul>
-			<h3>All assets</h3>
+			<h3>
+				All assets
+				<ContextHelpButton>
+					<p>
+						The section &quot;All assets&quot; shows all assets in the currently loaded version of Pandora, grouped by their category.<br />
+						Pressing the left-most &quot;[+]&quot;-Link expands the category of assets so that you can see all assets in it.<br />
+					</p>
+					<p>
+						You can equip or edit any of them. Equipping some clothing or restraint items can help you to see the new asset<br />
+						you are making together with other items on the editor character.
+					</p>
+					<p>
+						The &quot;Create a new asset&quot;-button opens a new dialogue. First, choose a fitting category for your asset.<br />
+						You also need to give it an identifier that should be similar to the name but with &quot;_&quot; instead of space characters, e.g.<br />
+						&quot;jeans_shorts&quot;. In this example, the visible asset name would then be &quot;Jeans Shorts&quot;.
+					</p>
+					<p>
+						Only in case the asset is a body part (e.g. eyes or hair), you must select something in the corresponding<br />
+						drop-down dialogue.<br />
+						After proceeding, you will be prompted to download a &quot;*.zip&quot; file with your asset so that you can save its contents in<br />
+						the pandora-asset repository for committing it when it is ready. This file consists of a minimal<br />
+						&quot;*.asset.ts&quot; file for you to build upon and a placeholder version of the &quot;graphics.json&quot;.
+					</p>
+					<p>
+						The tab view will immediately switch to the asset-tab with your new item loaded, automatically equipping it on the<br />
+						editor character, too.<br />
+						Please be aware that your asset is not saved in the editor, as the editor resets when it reloads or refreshes. Please<br />
+						make sure to export the asset you are making regularly and overwrite the &quot;graphics.json&quot; of the new asset with<br />
+						the	one from the exported package, <s>unless you started the editor in the &quot;Load Assets From File System&quot; mode</s> [autosaving not yet implemented].
+					</p>
+				</ContextHelpButton>
+			</h3>
 			<AssetCreatePrompt />
 			<ul>
 				{view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } />)}
@@ -63,6 +121,7 @@ function StripAssetIdAndCategory(id: AssetId, category: string) {
 
 function AssetElement({ asset, category }: { asset: Asset; category: string; }): ReactElement {
 	const editor = useEditor();
+	const tabContext = useEditorTabContext();
 
 	function add() {
 		editor.character.appearance.addItem(
@@ -77,6 +136,9 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
+					if (!tabContext.activeTabs.includes('Asset')) {
+						tabContext.setTab('Asset');
+					}
 				} } title='Edit this asset'>
 					🖌
 				</Button>
@@ -90,6 +152,7 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 
 function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 	const editor = useEditor();
+	const tabContext = useEditorTabContext();
 	const asset = GetAssetManagerEditor().getAssetById(assetId);
 	AssertNotNullable(asset);
 
@@ -107,6 +170,9 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(assetId);
+					if (!tabContext.activeTabs.includes('Asset')) {
+						tabContext.setTab('Asset');
+					}
 				} } title='Edit this asset'>
 					🖌
 				</Button>
@@ -121,6 +187,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 const itemOpenState = new WeakMap<Item, ToggleLiState>();
 function ItemElement({ item }: { item: Item; }): ReactElement {
 	const editor = useEditor();
+	const tabContext = useEditorTabContext();
 	const appearance = editor.character.appearance;
 
 	let toggleState = itemOpenState.get(item);
@@ -155,6 +222,9 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
+					if (!tabContext.activeTabs.includes('Asset')) {
+						tabContext.setTab('Asset');
+					}
 				} } title="Edit this item's asset">
 					🖌
 				</Button>
@@ -259,6 +329,7 @@ function AssetCreatePrompt(): ReactElement {
 
 function AssetCreateDialog({ closeDialog }: { closeDialog: () => void }): ReactElement {
 	const editor = useEditor();
+	const tabContext = useEditorTabContext();
 	const assetManager = GetAssetManagerEditor();
 	const view = assetManager.assetTreeView;
 
@@ -304,6 +375,9 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void }): ReactE
 		editor.startEditAsset(resultId);
 
 		closeDialog();
+		if (!tabContext.activeTabs.includes('Asset')) {
+			tabContext.setTab('Asset');
+		}
 	});
 
 	return (

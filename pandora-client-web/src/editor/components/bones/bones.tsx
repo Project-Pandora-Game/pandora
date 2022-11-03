@@ -3,6 +3,7 @@ import React, { ReactElement, useEffect, useState, useSyncExternalStore } from '
 import { useCharacterAppearancePose } from '../../../character/character';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { BoneRowElement, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
@@ -77,18 +78,47 @@ export function BoneUI(): ReactElement {
 			</div>
 			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } open={ false }>
 				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
-					if (pose.armsPose !== undefined) {
+					character.appearance.importPose(pose.pose, 'pose', false);
+					if (pose.armsPose != null) {
 						character.appearance.setArmsPose(pose.armsPose);
-					}
-					for (const [name, value] of Object.entries(pose.pose)) {
-						if (value) {
-							character.appearance.setPose(name, value);
-						}
 					}
 				} } />
 			</FieldsetToggle>
 			<hr />
-			<h4>Pose bones</h4>
+			<h4>
+				Pose bones
+				<ContextHelpButton>
+					<p>
+						The &quot;Poses&quot;-tab enables you to manipulate the bones/poses of the editor character, visible in the &quot;Preview&quot;-tab.<br />
+						You can manipulate each bone in two directions via either the slider for a quick and rough movement,<br />
+						or the number field for a more fine-grained setting.<br />
+						The middle position, or number 0, is the neutral position for each slider - the position in which<br />
+						images are not modified from the source image (in most cases).
+					</p>
+					<p>
+						You can experiment with them to see if your asset transforms correctly with the various possible<br />
+						bone movements that are allowed for the asset or to decide which poses should the asset require/forbid<br />
+						when you will be implementing the rest of the asset logic later.
+					</p>
+					On the top of the tab, there are four toggles:
+					<ul>
+						<li>
+							a toggle to show the positions of bone points on the body, allowing you to see the exact<br />
+							bone position and to drag the bone directly on the &quot;Preview&quot;-tab&apos;s character model
+						</li>
+						<li>
+							a toggle to move the arms in front of or behind the body
+						</li>
+						<li>
+							a toggle to display the character from behind instead of from the front
+						</li>
+						<li>
+							a toggle that lets you set the bone to an arbitrary position, ignoring potential<br />
+							in-game range limits of this bone
+						</li>
+					</ul>
+				</ContextHelpButton>
+			</h4>
 			{
 				bones
 					.filter((bone) => bone.definition.type === 'pose')

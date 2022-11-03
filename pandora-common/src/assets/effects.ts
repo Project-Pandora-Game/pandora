@@ -59,13 +59,6 @@ type EffectsDefault = {
 	readonly [e in EffectName]: EffectsDefinition[e] extends number ? 0 : EffectsDefinition[e] extends boolean ? false : never;
 };
 
-export type EffectsProperty = {
-	[e in EffectName]?: Exclude<EffectsDefinition[e], false | 0>;
-};
-
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__EffectsProperty = Satisfies<EffectsProperty, Partial<EffectsDefinition>>;
-
 export function MergeEffects(baseEffects: Readonly<EffectsDefinition>, add: Readonly<Partial<EffectsDefinition>> | undefined): EffectsDefinition {
 	if (!add)
 		return baseEffects;

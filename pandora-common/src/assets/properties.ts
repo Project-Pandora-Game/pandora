@@ -1,6 +1,6 @@
 import { MergePoseLimits, PoseLimitsResult } from './appearanceValidation';
 import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions';
-import { EffectsDefinition, EffectsProperty, EFFECTS_DEFAULT, MergeEffects } from './effects';
+import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from './effects';
 
 export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 
@@ -8,7 +8,7 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	poseLimits?: AssetDefinitionPoseLimits<A>;
 
 	/** The effects this item applies when worn */
-	effects?: EffectsProperty;
+	effects?: Partial<EffectsDefinition>;
 
 	/** Attributes this asset gives */
 	attributes?: (A['attributes'])[];

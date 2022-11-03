@@ -109,8 +109,8 @@ export class DraggableDialog extends PureComponent<{
 						className='dialog-draggable'
 						dragHandleClassName='drag-handle'
 						default={ {
-							x: Math.max((window.visualViewport?.width ?? 0) / 4 - 20, 0),
-							y: Math.max((window.visualViewport?.height ?? 0) / 4 - 20, 0),
+							x: Math.max((window.innerWidth ?? 0) / 4 - 20, 0),
+							y: Math.max((window.innerHeight ?? 0) / 8 - 10, 0),
 							width: 'auto',
 							height: 'auto',
 						} }

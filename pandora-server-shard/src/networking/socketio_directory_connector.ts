@@ -1,5 +1,5 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId } from 'pandora-common';
+import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
@@ -64,7 +64,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 	public shardId: string | undefined;
 
 	constructor(uri: string, secret: string = '') {
-		super(CreateConnection(uri, secret), 'DO_NOT_VALIDATE_DATA', logger);
+		super(CreateConnection(uri, secret), [ShardDirectorySchema, DirectoryShardSchema], logger);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));

@@ -13,6 +13,8 @@ import {
 	IsObject,
 	IsString,
 	MessageHandler,
+	ClientDirectorySchema,
+	DirectoryClientSchema,
 } from 'pandora-common';
 import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -92,7 +94,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	}
 
 	private constructor(socket: Socket) {
-		super(socket, 'DO_NOT_VALIDATE_DATA', logger);
+		super(socket, [ClientDirectorySchema, DirectoryClientSchema], logger);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));

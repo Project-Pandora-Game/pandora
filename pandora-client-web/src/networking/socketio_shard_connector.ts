@@ -7,6 +7,8 @@ import {
 	IShardClientArgument,
 	IShardClient,
 	MessageHandler,
+	ClientShardSchema,
+	ShardClientSchema,
 } from 'pandora-common';
 import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -67,7 +69,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 	}
 
 	constructor(info: IDirectoryCharacterConnectionInfo) {
-		super(CreateConnection(info), 'DO_NOT_VALIDATE_DATA', logger);
+		super(CreateConnection(info), [ClientShardSchema, ShardClientSchema], logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
 		this._player = new Observable<PlayerCharacter | null>(null);
 		this._room = new ChatRoom(this);

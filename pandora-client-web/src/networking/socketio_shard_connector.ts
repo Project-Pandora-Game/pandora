@@ -10,7 +10,7 @@ import {
 	ClientShardSchema,
 	ShardClientSchema,
 } from 'pandora-common';
-import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { GetAssetManager, LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
@@ -99,12 +99,12 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
 
-	protected onMessage<K extends (keyof IShardClient & string)>(
+	protected onMessage<K extends keyof IShardClient>(
 		messageType: K,
-		message: Record<string, unknown>,
+		message: SocketInterfaceRequest<IShardClient>[K],
 		callback?: ((arg: SocketInterfaceResponse<IShardClient>[K]) => void) | undefined,
 	): Promise<boolean> {
-		return this._messageHandler.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void));
+		return this._messageHandler.onMessage(messageType, message, callback, undefined);
 	}
 
 	public connectionInfoMatches(info: IDirectoryCharacterConnectionInfo): boolean {

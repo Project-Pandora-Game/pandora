@@ -311,14 +311,14 @@ export class MockConnection<
 	OutboundT extends SocketInterfaceDefinition,
 	IncomingT extends SocketInterfaceDefinition,
 > extends ConnectionBase<OutboundT, IncomingT, MockConnectionSocket> {
-	readonly messageHandler: IMessageHandler<MockConnection<OutboundT, IncomingT>>;
+	readonly messageHandler: IMessageHandler<IncomingT, MockConnection<OutboundT, IncomingT>>;
 
 	get id(): string {
 		return this.socket.id;
 	}
 
 	constructor(
-		messageHandler: IMessageHandler<MockConnection<OutboundT, IncomingT>>,
+		messageHandler: IMessageHandler<IncomingT, MockConnection<OutboundT, IncomingT>>,
 		id: string = nanoid(),
 		logger?: Logger,
 	) {
@@ -335,7 +335,7 @@ export class MockConnection<
 		return this.messageHandler.onMessage(
 			messageType,
 			message,
-			callback as ((arg: Record<string, unknown>) => void),
+			callback,
 			this,
 		);
 	}

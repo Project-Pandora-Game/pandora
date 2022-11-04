@@ -1,8 +1,9 @@
-import { IShardDirectory, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, BadMessageError } from 'pandora-common';
+import { IShardDirectory, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, BadMessageError, IMessageHandler } from 'pandora-common';
 import type { IConnectionShard } from './common';
 import { GetDatabase } from '../database/databaseProvider';
 import { ShardManager } from '../shard/shardManager';
 import promClient from 'prom-client';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 const messagesMetric = new promClient.Counter({
 	name: 'pandora_directory_shard_messages',
@@ -10,11 +11,16 @@ const messagesMetric = new promClient.Counter({
 	labelNames: ['messageType'],
 });
 
-export const ConnectionManagerShard = new class ConnectionManagerShard {
+export const ConnectionManagerShard = new class ConnectionManagerShard implements IMessageHandler<IShardDirectory, IConnectionShard> {
 	private readonly messageHandler: MessageHandler<IShardDirectory, IConnectionShard>;
 
-	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionShard): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
+	public async onMessage<K extends keyof IShardDirectory>(
+		messageType: K,
+		message: SocketInterfaceRequest<IShardDirectory>[K],
+		callback: ((arg: SocketInterfaceResponse<IShardDirectory>[K]) => void) | undefined,
+		context: IConnectionShard,
+	): Promise<boolean> {
+		return this.messageHandler.onMessage(messageType, message, callback, context).then((result) => {
 			// Only count valid messages
 			if (result) {
 				messagesMetric.inc({ messageType });

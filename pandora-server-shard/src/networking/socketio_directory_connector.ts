@@ -5,6 +5,7 @@ import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
 import { Stop } from '../lifecycle';
 import promClient from 'prom-client';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 10_000;
@@ -80,9 +81,13 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
 
-	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
+	protected onMessage<K extends keyof IDirectoryShard>(
+		messageType: K,
+		message: SocketInterfaceRequest<IDirectoryShard>[K],
+		callback?: ((arg: SocketInterfaceResponse<IDirectoryShard>[K]) => void) | undefined,
+	): Promise<boolean> {
 		messagesMetric.inc({ messageType });
-		return this._messageHandler.onMessage(messageType, message, callback);
+		return this._messageHandler.onMessage(messageType, message, callback, undefined);
 	}
 
 	/**

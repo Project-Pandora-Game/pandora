@@ -2,7 +2,7 @@ import { GetLogger, IncomingSocket, IServerSocket, ShardDirectorySchema, IShardD
 import { ConnectionType, IConnectionShard } from './common';
 import { ConnectionManagerShard } from './manager_shard';
 import { Shard } from '../shard/shard';
-import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 /** Class housing connection from a shard */
 export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardDirectory, IncomingSocket> implements IConnectionShard {
@@ -20,11 +20,11 @@ export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardD
 		ConnectionManagerShard.onDisconnect(this);
 	}
 
-	protected onMessage<K extends (keyof IShardDirectory & string)>(
+	protected onMessage<K extends keyof IShardDirectory>(
 		messageType: K,
-		message: Record<string, unknown>,
+		message: SocketInterfaceRequest<IShardDirectory>[K],
 		callback?: ((arg: SocketInterfaceResponse<IShardDirectory>[K]) => void) | undefined,
 	): Promise<boolean> {
-		return ConnectionManagerShard.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void), this);
+		return ConnectionManagerShard.onMessage(messageType, message, callback, this);
 	}
 }

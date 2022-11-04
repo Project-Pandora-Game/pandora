@@ -1,5 +1,5 @@
 import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema } from 'pandora-common';
-import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
 import { ConnectionType, IConnectionClient } from './common';
@@ -58,11 +58,11 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 	 * @param message - The message
 	 * @returns Promise of resolution of the message, for some messages also response data
 	 */
-	protected onMessage<K extends (keyof IClientShard & string)>(
+	protected onMessage<K extends keyof IClientShard>(
 		messageType: K,
-		message: Record<string, unknown>,
+		message: SocketInterfaceRequest<IClientShard>[K],
 		callback?: ((arg: SocketInterfaceResponse<IClientShard>[K]) => void) | undefined,
 	): Promise<boolean> {
-		return ConnectionManagerClient.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void), this);
+		return ConnectionManagerClient.onMessage(messageType, message, callback, this);
 	}
 }

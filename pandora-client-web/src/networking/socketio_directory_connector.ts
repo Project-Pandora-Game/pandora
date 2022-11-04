@@ -16,7 +16,7 @@ import {
 	ClientDirectorySchema,
 	DirectoryClientSchema,
 } from 'pandora-common';
-import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
 import { PrehashPassword } from '../crypto/helpers';
@@ -127,12 +127,12 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
 
-	protected onMessage<K extends (keyof IDirectoryClient & string)>(
+	protected onMessage<K extends keyof IDirectoryClient>(
 		messageType: K,
-		message: Record<string, unknown>,
+		message: SocketInterfaceRequest<IDirectoryClient>[K],
 		callback?: ((arg: SocketInterfaceResponse<IDirectoryClient>[K]) => void) | undefined,
 	): Promise<boolean> {
-		return this._messageHandler.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void));
+		return this._messageHandler.onMessage(messageType, message, callback, undefined);
 	}
 
 	public static create(uri: string): SocketIODirectoryConnector {

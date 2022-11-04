@@ -1,5 +1,5 @@
 import { IConnectionClient } from './common';
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY, CHARACTER_LIMIT_NORMAL } from '../config';
@@ -8,6 +8,7 @@ import type { Account } from '../account/account';
 import { GitHubVerifier } from '../services/github/githubVerify';
 import promClient from 'prom-client';
 import { ShardTokenStore } from '../shard/shardTokenStore';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -30,13 +31,18 @@ const IsIChatRoomDirectoryConfig = ZodMatcher(ChatRoomDirectoryConfigSchema);
 const IsClientDirectoryAuthMessage = ZodMatcher(ClientDirectoryAuthMessageSchema);
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient {
+export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, IConnectionClient> {
 	private connectedClients: Set<IConnectionClient> = new Set();
 
 	private readonly messageHandler: MessageHandler<IClientDirectory, IConnectionClient>;
 
-	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionClient): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
+	public async onMessage<K extends keyof IClientDirectory>(
+		messageType: K,
+		message: SocketInterfaceRequest<IClientDirectory>[K],
+		callback: ((arg: SocketInterfaceResponse<IClientDirectory>[K]) => void) | undefined,
+		context: IConnectionClient,
+	): Promise<boolean> {
+		return this.messageHandler.onMessage(messageType, message, callback, context).then((result) => {
 			// Only count valid messages
 			if (result) {
 				messagesMetric.inc({ messageType });

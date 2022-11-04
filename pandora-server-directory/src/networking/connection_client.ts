@@ -1,5 +1,5 @@
 import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema } from 'pandora-common';
-import { SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
 import { ConnectionType, IConnectionClient } from './common';
@@ -43,12 +43,12 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	 * @param message - The message
 	 * @returns Promise of resolution of the message, for some messages also response data
 	 */
-	protected onMessage<K extends (keyof IClientDirectory & string)>(
+	protected onMessage<K extends keyof IClientDirectory>(
 		messageType: K,
-		message: Record<string, unknown>,
+		message: SocketInterfaceRequest<IClientDirectory>[K],
 		callback?: ((arg: SocketInterfaceResponse<IClientDirectory>[K]) => void) | undefined,
 	): Promise<boolean> {
-		return ConnectionManagerClient.onMessage(messageType, message, callback as ((arg: Record<string, unknown>) => void), this);
+		return ConnectionManagerClient.onMessage(messageType, message, callback, this);
 	}
 
 	/**

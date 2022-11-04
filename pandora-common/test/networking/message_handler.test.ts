@@ -63,7 +63,8 @@ describe('MessageHandler', () => {
 	});
 
 	function onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return handler.onMessage(messageType, message, callback);
+		// @ts-expect-error: Intentionally bypassing type to test invalid messages getting through
+		return handler.onMessage(messageType, message, callback, undefined);
 	}
 
 	describe('onMessage()', () => {

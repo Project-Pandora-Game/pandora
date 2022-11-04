@@ -1,10 +1,11 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
 import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
 import promClient from 'prom-client';
 import { DoAppearanceAction } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -21,13 +22,18 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient {
+export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientShard, IConnectionClient> {
 	private readonly _connectedClients: Set<IConnectionClient> = new Set();
 
 	private readonly messageHandler: MessageHandler<IClientShard, IConnectionClient>;
 
-	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionClient): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
+	public async onMessage<K extends keyof IClientShard>(
+		messageType: K,
+		message: SocketInterfaceRequest<IClientShard>[K],
+		callback: ((arg: SocketInterfaceResponse<IClientShard>[K]) => void) | undefined,
+		context: IConnectionClient,
+	): Promise<boolean> {
+		return this.messageHandler.onMessage(messageType, message, callback, context).then((result) => {
 			// Only count valid messages
 			if (result) {
 				messagesMetric.inc({ messageType });

@@ -46,9 +46,8 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	protected onMessage<K extends keyof IClientDirectory>(
 		messageType: K,
 		message: SocketInterfaceRequest<IClientDirectory>[K],
-		callback?: ((arg: SocketInterfaceResponse<IClientDirectory>[K]) => void) | undefined,
-	): Promise<boolean> {
-		return ConnectionManagerClient.onMessage(messageType, message, callback, this);
+	): Promise<SocketInterfaceResponse<IClientDirectory>[K]> {
+		return ConnectionManagerClient.onMessage(messageType, message, this);
 	}
 
 	/**

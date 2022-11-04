@@ -104,7 +104,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this.directMessageHandler = new DirectMessageManager(this);
 
 		// Setup message handler
-		this._messageHandler = new MessageHandler<IDirectoryClient>({}, {
+		this._messageHandler = new MessageHandler<IDirectoryClient>({
 			serverStatus: (status) => {
 				this._directoryStatus.value = status;
 			},
@@ -114,11 +114,11 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 				await this.directMessageHandler.accountChanged();
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
-			directMessageGet: async (data) => {
-				await this.directMessageHandler.handleDirectMessageGet(data);
-			},
 			directMessageSent: async (data) => {
 				await this.directMessageHandler.handleDirectMessageSent(data);
+			},
+			directMessageGet: async (data) => {
+				await this.directMessageHandler.handleDirectMessageGet(data);
 			},
 			directMessageAction: (data) => {
 				this.directMessageHandler.handleDirectMessageAction(data);
@@ -130,9 +130,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	protected onMessage<K extends keyof IDirectoryClient>(
 		messageType: K,
 		message: SocketInterfaceRequest<IDirectoryClient>[K],
-		callback?: ((arg: SocketInterfaceResponse<IDirectoryClient>[K]) => void) | undefined,
-	): Promise<boolean> {
-		return this._messageHandler.onMessage(messageType, message, callback, undefined);
+	): Promise<SocketInterfaceResponse<IDirectoryClient>[K]> {
+		return this._messageHandler.onMessage(messageType, message, undefined);
 	}
 
 	public static create(uri: string): SocketIODirectoryConnector {

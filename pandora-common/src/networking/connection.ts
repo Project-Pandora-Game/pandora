@@ -158,8 +158,7 @@ export abstract class ConnectionBase<
 	protected abstract onMessage<K extends (keyof IncomingT & string)>(
 		messageType: K,
 		message: SocketInterfaceRequest<IncomingT>[K],
-		callback?: (arg: SocketInterfaceResponse<IncomingT>[K]) => void,
-	): Promise<boolean>;
+	): Promise<SocketInterfaceResponse<IncomingT>[K]>;
 
 	protected handleMessage(messageType: unknown, message: unknown, callback: ((arg: Record<string, unknown>) => void) | undefined): void {
 		if (typeof messageType !== 'string') {
@@ -230,11 +229,18 @@ export abstract class ConnectionBase<
 		this.onMessage(
 			messageType as (keyof IncomingT & string),
 			message as SocketInterfaceRequest<IncomingT>[keyof IncomingT & string],
-			callback as ((arg: SocketInterfaceResponse<IncomingT>[keyof IncomingT & string]) => void),
 		)
-			.then((success) => {
-				if (!success) {
-					this.logger.error(`Message '${messageType}' has no handler`);
+			.then((result) => {
+				if (IsObject(result)) {
+					if (callback) {
+						callback(result);
+					} else {
+						this.logger.error(`Message '${messageType}' has result, but missing callback`);
+					}
+				} else if (result !== undefined) {
+					this.logger.error(`Message '${messageType}' has invalid result type: ${typeof result}\n`, result);
+				} else if (callback) {
+					this.logger.error(`Message '${messageType}' no result, but expected one`);
 				}
 			})
 			.catch((error) => {
@@ -330,12 +336,10 @@ export class MockConnection<
 	protected onMessage<K extends (keyof IncomingT & string)>(
 		messageType: K,
 		message: SocketInterfaceRequest<IncomingT>[K],
-		callback?: ((arg: SocketInterfaceResponse<IncomingT>[K]) => void) | undefined,
-	): Promise<boolean> {
+	): Promise<SocketInterfaceResponse<IncomingT>[K]> {
 		return this.messageHandler.onMessage(
 			messageType,
 			message,
-			callback,
 			this,
 		);
 	}

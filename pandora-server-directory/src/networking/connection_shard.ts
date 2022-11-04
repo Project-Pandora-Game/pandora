@@ -23,8 +23,7 @@ export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardD
 	protected onMessage<K extends keyof IShardDirectory>(
 		messageType: K,
 		message: SocketInterfaceRequest<IShardDirectory>[K],
-		callback?: ((arg: SocketInterfaceResponse<IShardDirectory>[K]) => void) | undefined,
-	): Promise<boolean> {
-		return ConnectionManagerShard.onMessage(messageType, message, callback, this);
+	): Promise<SocketInterfaceResponse<IShardDirectory>[K]> {
+		return ConnectionManagerShard.onMessage(messageType, message, this);
 	}
 }

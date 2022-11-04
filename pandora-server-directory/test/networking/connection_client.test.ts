@@ -55,26 +55,17 @@ describe('ClientConnection', () => {
 	});
 
 	describe('Receiving messages', () => {
-		it('Passes message without callback to manager message handler', () => {
+		it('Passes message to manager message handler', async () => {
 			const onMessageSpy = jest.spyOn(ConnectionManagerClient, 'onMessage');
 
 			const client = new ClientConnection(server, connection.connect(), {});
 
 			connection.sendMessage('logout', {});
-
-			expect(onMessageSpy).toHaveBeenCalledTimes(1);
-			expect(onMessageSpy).toHaveBeenNthCalledWith(1, 'logout', {}, undefined, client);
-		});
-
-		it('Passes message with callback to manager message handler', async () => {
-			const onMessageSpy = jest.spyOn(ConnectionManagerClient, 'onMessage');
-
-			const client = new ClientConnection(server, connection.connect(), {});
-
 			await connection.awaitResponse('shardInfo', {});
 
-			expect(onMessageSpy).toHaveBeenCalledTimes(1);
-			expect(onMessageSpy).toHaveBeenNthCalledWith(1, 'shardInfo', expect.any(Object), expect.any(Function), client);
+			expect(onMessageSpy).toHaveBeenCalledTimes(2);
+			expect(onMessageSpy).toHaveBeenNthCalledWith(1, 'logout', {}, client);
+			expect(onMessageSpy).toHaveBeenNthCalledWith(2, 'shardInfo', expect.any(Object), client);
 		});
 	});
 
@@ -213,7 +204,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: account.getAccountInfo(),
 				character: null,
-			}, undefined, connection);
+			}, connection);
 
 			// Cleanup
 			client2.setCharacter(null);
@@ -250,7 +241,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: null,
 				character: null,
-			}, undefined, expect.anything());
+			}, expect.anything());
 		});
 
 		it('Sends state message with account', async () => {
@@ -266,7 +257,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: account.getAccountInfo(),
 				character: null,
-			}, undefined, expect.anything());
+			}, expect.anything());
 		});
 
 		it('Sends state message with character', async () => {
@@ -283,7 +274,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: account.getAccountInfo(),
 				character: character.getShardConnectionInfo(), // Note: is actually null because of no shard
-			}, undefined, expect.anything());
+			}, expect.anything());
 
 			// Cleanup
 			client.setCharacter(null);

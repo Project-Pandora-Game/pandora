@@ -17,7 +17,7 @@ mockLogger.logMessage = mockLogMessage;
 MESSAGE_HANDLER_DEBUG_MESSAGES.add('debuggedType');
 
 class MockConnectionBase extends ConnectionBase<IEmpty, IEmpty, EmitterWithAck> {
-	protected onMessage(): Promise<boolean> {
+	protected onMessage(): Promise<never> {
 		throw new Error('Method not implemented.');
 	}
 }

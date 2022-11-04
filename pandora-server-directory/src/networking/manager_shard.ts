@@ -17,27 +17,22 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 	public async onMessage<K extends keyof IShardDirectory>(
 		messageType: K,
 		message: SocketInterfaceRequest<IShardDirectory>[K],
-		callback: ((arg: SocketInterfaceResponse<IShardDirectory>[K]) => void) | undefined,
 		context: IConnectionShard,
-	): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, context).then((result) => {
-			// Only count valid messages
-			if (result) {
-				messagesMetric.inc({ messageType });
-			}
-			return result;
-		});
+	): Promise<SocketInterfaceResponse<IShardDirectory>[K]> {
+		messagesMetric.inc({ messageType });
+		return this.messageHandler.onMessage(messageType, message, context);
 	}
 
 	constructor() {
 		this.messageHandler = new MessageHandler<IShardDirectory, IConnectionShard>({
+			shardRegister: this.handleShardRegister.bind(this),
+			shardRequestStop: this.handleShardRequestStop.bind(this),
+			characterDisconnect: this.handleCharacterDisconnect.bind(this),
+			createCharacter: this.createCharacter.bind(this),
+
+			// Database
 			getCharacter: this.handleGetCharacter.bind(this),
 			setCharacter: this.handleSetCharacter.bind(this),
-			shardRegister: this.handleShardRegister.bind(this),
-			createCharacter: this.createCharacter.bind(this),
-		}, {
-			characterDisconnect: this.handleCharacterDisconnect.bind(this),
-			shardRequestStop: this.handleShardRequestStop.bind(this),
 		});
 	}
 

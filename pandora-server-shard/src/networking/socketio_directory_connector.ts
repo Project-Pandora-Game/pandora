@@ -74,9 +74,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 
 		// Setup message handler
 		this._messageHandler = new MessageHandler<IDirectoryShard>({
-			stop: Stop,
 			update: (update) => this.updateFromDirectory(update).then(() => ({})),
-		}, {
+			stop: Stop,
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -84,10 +83,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 	protected onMessage<K extends keyof IDirectoryShard>(
 		messageType: K,
 		message: SocketInterfaceRequest<IDirectoryShard>[K],
-		callback?: ((arg: SocketInterfaceResponse<IDirectoryShard>[K]) => void) | undefined,
-	): Promise<boolean> {
+	): Promise<SocketInterfaceResponse<IDirectoryShard>[K]> {
 		messagesMetric.inc({ messageType });
-		return this._messageHandler.onMessage(messageType, message, callback, undefined);
+		return this._messageHandler.onMessage(messageType, message, undefined);
 	}
 
 	/**

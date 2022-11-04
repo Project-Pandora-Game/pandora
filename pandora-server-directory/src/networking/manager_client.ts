@@ -39,16 +39,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	public async onMessage<K extends keyof IClientDirectory>(
 		messageType: K,
 		message: SocketInterfaceRequest<IClientDirectory>[K],
-		callback: ((arg: SocketInterfaceResponse<IClientDirectory>[K]) => void) | undefined,
 		context: IConnectionClient,
-	): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, context).then((result) => {
-			// Only count valid messages
-			if (result) {
-				messagesMetric.inc({ messageType });
-			}
-			return result;
-		});
+	): Promise<SocketInterfaceResponse<IClientDirectory>[K]> {
+		messagesMetric.inc({ messageType });
+		return this.messageHandler.onMessage(messageType, message, context);
 	}
 
 	/** Init the manager */
@@ -75,46 +69,48 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	constructor() {
 		this.messageHandler = new MessageHandler<IClientDirectory, IConnectionClient>({
+			// Before Login
 			login: this.handleLogin.bind(this),
 			register: this.handleRegister.bind(this),
 			resendVerificationEmail: this.handleResendVerificationEmail.bind(this),
 			passwordReset: this.handlePasswordReset.bind(this),
 			passwordResetConfirm: this.handlePasswordResetConfirm.bind(this),
-			passwordChange: this.handlePasswordChange.bind(this),
 
+			// Account management
+			passwordChange: this.handlePasswordChange.bind(this),
+			logout: this.handleLogout.bind(this),
+			gitHubBind: this.handleGitHubBind.bind(this),
+			gitHubUnbind: this.handleGitHubUnbind.bind(this),
+			changeSettings: this.handleChangeSettings.bind(this),
+			setCryptoKey: this.handleSetCryptoKey.bind(this),
+
+			// Character management
 			listCharacters: this.handleListCharacters.bind(this),
 			createCharacter: this.handleCreateCharacter.bind(this),
 			updateCharacter: this.handleUpdateCharacter.bind(this),
 			deleteCharacter: this.handleDeleteCharacter.bind(this),
+
+			// Character connection, shard interaction
 			connectCharacter: this.handleConnectCharacter.bind(this),
-
+			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
 			shardInfo: this.handleShardInfo.bind(this),
-
 			listRooms: this.handleListRooms.bind(this),
 			chatRoomCreate: this.handleChatRoomCreate.bind(this),
 			chatRoomEnter: this.handleChatRoomEnter.bind(this),
+			chatRoomLeave: this.handleChatRoomLeave.bind(this),
 			chatRoomUpdate: this.handleChatRoomUpdate.bind(this),
-
-			gitHubBind: this.handleGitHubBind.bind(this),
 
 			getDirectMessages: this.handleGetDirectMessages.bind(this),
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
+			directMessage: this.handleDirectMessage.bind(this),
 			getDirectMessageInfo: this.handleGetDirectMessageInfo.bind(this),
 
+			// Management/admin endpoints; these require specific roles to be used
 			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
 			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
 			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
 			manageInvalidateShardToken: Auth('developer', this.handleManageInvalidateShardToken.bind(this)),
 			manageListShardTokens: Auth('developer', this.handleManageListShardTokens.bind(this)),
-		}, {
-			logout: this.handleLogout.bind(this),
-			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
-			chatRoomLeave: this.handleChatRoomLeave.bind(this),
-
-			gitHubUnbind: this.handleGitHubUnbind.bind(this),
-			changeSettings: this.handleChangeSettings.bind(this),
-			setCryptoKey: this.handleSetCryptoKey.bind(this),
-			directMessage: this.handleDirectMessage.bind(this),
 		});
 	}
 

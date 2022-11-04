@@ -1,15 +1,11 @@
 import { Logger } from '../logging';
-import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceOneshotMessages, SocketInterfaceRequest, SocketInterfaceRespondedMessages, SocketInterfaceResponse } from './helpers';
+import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceMessages, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
-type MessageHandlerFunction<T extends SocketInterfaceDefinition, Context, Message extends keyof T> =
+type MessageHandlerFunction<T extends SocketInterfaceDefinition, Context, Message extends SocketInterfaceMessages<T> = SocketInterfaceMessages<T>> =
 	(arg: SocketInterfaceRequest<T>[Message], context: Context) => SocketInterfaceHandlerResult<T>[Message];
 
-type RespondingHandlers<T extends SocketInterfaceDefinition, Context> = {
-	[K in SocketInterfaceRespondedMessages<T>]: MessageHandlerFunction<T, Context, K>;
-};
-
-type OneshotHandlers<T extends SocketInterfaceDefinition, Context> = {
-	[K in SocketInterfaceOneshotMessages<T>]: MessageHandlerFunction<T, Context, K>;
+type MessageHandlers<T extends SocketInterfaceDefinition, Context> = {
+	[K in SocketInterfaceMessages<T>]: MessageHandlerFunction<T, Context, K>;
 };
 
 export class BadMessageError extends Error {
@@ -46,42 +42,29 @@ export interface IMessageHandler<T extends SocketInterfaceDefinition, Context = 
 	 * @param context - Context to pass to message handler
 	 * @returns Promise of resolution of the message, `true` if resolved, `false` on failure
 	 */
-	onMessage<K extends keyof T>(
+	onMessage<K extends SocketInterfaceMessages<T>>(
 		messageType: K,
 		message: SocketInterfaceRequest<T>[K],
-		callback: ((arg: SocketInterfaceResponse<T>[K]) => void) | undefined,
 		context: Context,
-	): Promise<boolean>
+	): Promise<SocketInterfaceResponse<T>[K]>;
 }
 
 export class MessageHandler<T extends SocketInterfaceDefinition, Context = undefined> implements IMessageHandler<T, Context> {
-	private readonly _responseHandlers: ReadonlyMap<keyof T, MessageHandlerFunction<T, Context, keyof T>>;
-	private readonly _oneshotHandlers: ReadonlyMap<keyof T, MessageHandlerFunction<T, Context, keyof T>>;
+	private readonly _messageHandlers: ReadonlyMap<SocketInterfaceMessages<T>, MessageHandlerFunction<T, Context>>;
 
-	constructor(responseHandlers: RespondingHandlers<T, Context>, oneshotHandlers: OneshotHandlers<T, Context>) {
-		this._responseHandlers = new Map(Object.entries(responseHandlers));
-		this._oneshotHandlers = new Map(Object.entries(oneshotHandlers));
+	constructor(handlers: MessageHandlers<T, Context>) {
+		this._messageHandlers = new Map(Object.entries(handlers));
 	}
 
-	public async onMessage<K extends keyof T>(
+	public async onMessage<K extends SocketInterfaceMessages<T>>(
 		messageType: K,
 		message: SocketInterfaceRequest<T>[K],
-		callback: ((arg: SocketInterfaceResponse<T>[K]) => void) | undefined,
 		context: Context,
-	): Promise<boolean> {
-		if (callback) {
-			const handler = this._responseHandlers.get(messageType);
-			if (!handler) {
-				return false;
-			}
-			callback((await handler(message, context)) as SocketInterfaceResponse<T>[K]);
-		} else {
-			const handler = this._oneshotHandlers.get(messageType);
-			if (!handler) {
-				return false;
-			}
-			await handler(message, context);
+	): Promise<SocketInterfaceResponse<T>[K]> {
+		const handler = this._messageHandlers.get(messageType) as (MessageHandlerFunction<T, Context, K> | undefined);
+		if (!handler) {
+			throw new Error(`Unknown messageType '${messageType}'`);
 		}
-		return true;
+		return (await handler(message, context)) as SocketInterfaceResponse<T>[K];
 	}
 }

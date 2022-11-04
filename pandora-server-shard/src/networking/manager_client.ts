@@ -30,27 +30,20 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
 		message: SocketInterfaceRequest<IClientShard>[K],
-		callback: ((arg: SocketInterfaceResponse<IClientShard>[K]) => void) | undefined,
 		context: IConnectionClient,
-	): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, context).then((result) => {
-			// Only count valid messages
-			if (result) {
-				messagesMetric.inc({ messageType });
-			}
-			return result;
-		});
+	): Promise<SocketInterfaceResponse<IClientShard>[K]> {
+		messagesMetric.inc({ messageType });
+		return this.messageHandler.onMessage(messageType, message, context);
 	}
 
 	constructor() {
 		this.messageHandler = new MessageHandler<IClientShard, IConnectionClient>({
 			finishCharacterCreation: this.handleFinishCharacterCreation.bind(this),
-		}, {
 			chatRoomMessage: this.handleChatRoomMessage.bind(this),
-			appearanceAction: this.handleAppearanceAction.bind(this),
-			chatRoomMessageAck: this.handleChatRoomMessageAck.bind(this),
 			chatRoomStatus: this.handleChatRoomStatus.bind(this),
+			chatRoomMessageAck: this.handleChatRoomMessageAck.bind(this),
 			chatRoomCharacterMove: this.handleChatRoomCharacterMove.bind(this),
+			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 		});
 	}

@@ -80,7 +80,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		// Setup message handler
-		this._messageHandler = new MessageHandler<IShardClient>({}, {
+		this._messageHandler = new MessageHandler<IShardClient>({
 			load: this.onLoad.bind(this),
 			updateCharacter: this.onUpdateCharacter.bind(this),
 			chatRoomUpdate: (data: IShardClientArgument['chatRoomUpdate']) => {
@@ -102,9 +102,8 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 	protected onMessage<K extends keyof IShardClient>(
 		messageType: K,
 		message: SocketInterfaceRequest<IShardClient>[K],
-		callback?: ((arg: SocketInterfaceResponse<IShardClient>[K]) => void) | undefined,
-	): Promise<boolean> {
-		return this._messageHandler.onMessage(messageType, message, callback, undefined);
+	): Promise<SocketInterfaceResponse<IShardClient>[K]> {
+		return this._messageHandler.onMessage(messageType, message, undefined);
 	}
 
 	public connectionInfoMatches(info: IDirectoryCharacterConnectionInfo): boolean {

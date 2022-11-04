@@ -39,6 +39,8 @@ export type SocketInterfaceHandlerPromiseResult<T extends SocketInterfaceDefinit
 	[K in keyof T]: Promise<SocketInterfaceResponse<T>[K]>;
 };
 
+/** Lists all messageTypes */
+export type SocketInterfaceMessages<T extends SocketInterfaceDefinition> = keyof T & string;
 /** Lists all messageTypes that are oneshot (have no response) */
 export type SocketInterfaceOneshotMessages<T extends SocketInterfaceDefinition> = KeysMatching<SocketInterfaceResponse<T>, void> & string;
 /** Lists all messageTypes that have response */

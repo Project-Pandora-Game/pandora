@@ -61,8 +61,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 	protected onMessage<K extends keyof IClientShard>(
 		messageType: K,
 		message: SocketInterfaceRequest<IClientShard>[K],
-		callback?: ((arg: SocketInterfaceResponse<IClientShard>[K]) => void) | undefined,
-	): Promise<boolean> {
-		return ConnectionManagerClient.onMessage(messageType, message, callback, this);
+	): Promise<SocketInterfaceResponse<IClientShard>[K]> {
+		return ConnectionManagerClient.onMessage(messageType, message, this);
 	}
 }

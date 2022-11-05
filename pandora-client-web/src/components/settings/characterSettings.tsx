@@ -22,7 +22,7 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterData> }): R
 
 	return (
 		<fieldset>
-			<legend>Label color</legend>
+			<legend>Name color</legend>
 			<div className='input-row'>
 				<label>Color</label>
 				<ColorInput initialValue={ color } onChange={ setColor } />

@@ -115,7 +115,7 @@ export function ChatRoomGraphicsScene({
 				zIndex={ 2 }
 				draw={ borderDraw }
 			/>
-			<Container zIndex={ 10 }>
+			<Container zIndex={ 10 } sortableChildren>
 				{
 					characters.map((character) => (
 						<ChatRoomCharacter

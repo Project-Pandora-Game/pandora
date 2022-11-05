@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { EMPTY, IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import friendsIcon from '../../assets/icons/friends.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
@@ -58,9 +58,6 @@ function CharacterMenu({ close }: { close: () => void }): ReactElement {
 			} }>
 				Change character
 			</a>
-			<Link to='/character_settings'>
-				Character settings
-			</Link>
 		</div>
 	);
 }
@@ -79,7 +76,7 @@ function RightHeader(): ReactElement {
 				<>
 					<NotificationButton icon={ notificationsIcon } title='Notifications' type='notifications' onClick={ () => toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR) } />
 					<FriendsHeaderButton />
-					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/account_settings') } title='Settings' />
+					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/settings') } title='Settings' />
 					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }
 					<span>{ currentAccount.username }</span>
 					<HeaderButton icon={ logoutIcon } iconAlt='Logout' onClick={ logout } title='Logout' />

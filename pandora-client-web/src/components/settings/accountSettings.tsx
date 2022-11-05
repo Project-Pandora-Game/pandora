@@ -5,9 +5,7 @@ import { AccountRole, ACCOUNT_ROLES_CONFIG, EMPTY, IDirectoryAccountInfo, IsAuth
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
 import { Button } from '../common/Button/Button';
-import './accountSettings.scss';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { GIT_DESCRIBE } from '../../config/Environment';
 import { uniq } from 'lodash';
 import { ColorInput, useColorInput } from '../common/colorInput/colorInput';
 
@@ -15,16 +13,13 @@ export function AccountSettings(): ReactElement | null {
 	const account = useCurrentAccount();
 
 	if (!account)
-		return null;
+		return <>Not logged in</>;
 
 	return (
 		<>
-			<div className='account-settings'>
-				<GitHubIntegration account={ account } />
-				<AccountRoleList account={ account } />
-				<LabelColor account={ account } />
-			</div>
-			<footer>Version: { GIT_DESCRIBE }</footer>
+			<GitHubIntegration account={ account } />
+			<AccountRoleList account={ account } />
+			<LabelColor account={ account } />
 		</>
 	);
 }

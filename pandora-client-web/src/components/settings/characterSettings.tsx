@@ -1,25 +1,18 @@
 import { ICharacterData } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { Button } from '../common/Button/Button';
-import { GIT_DESCRIBE } from '../../config/Environment';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import './characterSettings.scss';
 import { ColorInput, useColorInput } from '../common/colorInput/colorInput';
 
 export function CharacterSettings(): ReactElement | null {
 	const playerData = usePlayerData();
 
 	if (!playerData)
-		return null;
+		return <>No character selected</>;
 
 	return (
-		<>
-			<div className='character-settings'>
-				<LabelColor playerData={ playerData } />
-			</div>
-			<footer>Version: { GIT_DESCRIBE }</footer>
-		</>
+		<LabelColor playerData={ playerData } />
 	);
 }
 

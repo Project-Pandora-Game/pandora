@@ -3,7 +3,7 @@ import React, { ComponentType, ReactElement, useEffect, lazy, Suspense } from 'r
 import { useNavigate } from 'react-router';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
-import { AccountSettings } from '../components/accountSettings/accountSettings';
+import { Settings } from '../components/settings/settings';
 import { CharacterCreate } from '../components/characterCreate/characterCreate';
 import { CharacterSelect } from '../components/characterSelect/characterSelect';
 import { Chatroom } from '../components/chatroom/chatroom';
@@ -15,7 +15,6 @@ import { AuthPage } from '../components/login/authPage';
 import { PandoraLobby } from '../components/pandoraLobby/pandoraLobby';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
-import { CharacterSettings } from '../components/characterSettings/characterSettings';
 import { DirectMessages } from '../components/directMessages/directMessages';
 
 export function PandoraRoutes(): ReactElement {
@@ -29,8 +28,7 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/character_select' element={ <RequiresLogin element={ CharacterSelect } /> } />
 			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
-			<Route path='/character_settings' element={ <RequiresCharacter element={ CharacterSettings } /> } />
-			<Route path='/account_settings' element={ <RequiresLogin element={ AccountSettings } /> } />
+			<Route path='/settings' element={ <RequiresLogin element={ Settings } /> } />
 			<Route path='/direct_messages' element={ <RequiresLogin element={ DirectMessages } /> } />
 			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
 			<Route path='/chatroom_select' element={ <RequiresCharacter element={ ChatroomSelect } /> } />

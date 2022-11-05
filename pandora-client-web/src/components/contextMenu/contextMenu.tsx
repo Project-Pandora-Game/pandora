@@ -61,9 +61,9 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 	}, [onContextMenu]);
 
 	const positionRef = useContextMenuPosition({ left: anchorPoint.x, top: anchorPoint.y });
-	const finalRef = useCallback((ref: HTMLDivElement | null) => {
-		self.current = ref;
-		positionRef(ref);
+	const finalRef = useCallback((div: HTMLDivElement | null) => {
+		self.current = div;
+		positionRef(div);
 	}, [positionRef]);
 
 	if (!show)

@@ -201,18 +201,20 @@ function DisplayUserMessage({ message }: { message: IChatRoomMessageChat & { tim
 	const isPrivate = 'to' in message && message.to;
 	const self = message.from.id === playerId;
 	return (
-		<div className={ classNames('message', message.type, isPrivate && 'private') } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
+		<>
+			<div className={ classNames('message', message.type, isPrivate && 'private') } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
+				<DisplayInfo message={ message } />
+				{before}
+				<DisplayName message={ message } color={ message.from.labelColor } />
+				{...message.parts.map((c, i) => RenderChatPart(c, i))}
+				{after}
+			</div>
 			{ self ? (
 				<ContextMenu ref={ ref } className='opaque'>
 					<DisplayContextMenuItems close={ close } id={ message.id } />
 				</ContextMenu>
 			) : null }
-			<DisplayInfo message={ message } />
-			{before}
-			<DisplayName message={ message } color={ message.from.labelColor } />
-			{...message.parts.map((c, i) => RenderChatPart(c, i))}
-			{after}
-		</div>
+		</>
 	);
 }
 
@@ -237,15 +239,19 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 			return [];
 
 		return [
-			<span key='edit' onClick={ () => {
+			<a key='edit' onClick={ (e) => {
+				e.preventDefault();
+				e.stopPropagation();
 				if (!setEditing(id)) {
 					setEdit(false);
 				}
 				close();
 			} }>
 				Edit
-			</span>,
-			<span key='delete' onClick={ () => {
+			</a>,
+			<a key='delete' onClick={ (e) => {
+				e.preventDefault();
+				e.stopPropagation();
 				try {
 					sender.deleteMessage(id);
 				} catch {
@@ -254,7 +260,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 				close();
 			} }>
 				Delete
-			</span>,
+			</a>,
 			<br key='br' />,
 		];
 	}, [edit, id, close, sender, setEditing]);
@@ -262,7 +268,13 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 	return (
 		<>
 			{elements}
-			<span onClick={ () => close() }>Close</span>
+			<a onClick={ (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				close();
+			} }>
+				Close
+			</a>
 		</>
 	);
 }

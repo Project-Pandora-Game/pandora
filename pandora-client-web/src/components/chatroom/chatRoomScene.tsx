@@ -1,7 +1,7 @@
 import { AppearanceChangeType, AssertNotNullable, AssetManager, CalculateCharacterMaxYForBackground, CharacterId, CharacterSize, CharacterView, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData, ResolveBackground } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters, Container } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
@@ -573,13 +573,21 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 				Wardrobe
 			</Link>
 			{ character.id !== playerId && (
-				<span onClick={ () => setTarget(character.id) }>
+				<a onClick={ (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					setTarget(character.id);
+				} }>
 					Whisper
-				</span>
+				</a>
 			) }
-			<span onClick={ onClose } >
+			<a onClick={ (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				onClose();
+			} } >
 				Close
-			</span>
+			</a>
 		</div>
 	);
 }

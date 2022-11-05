@@ -537,7 +537,6 @@ export function ChatRoomScene(): ReactElement | null {
 function CharacterContextMenu({ character, data, onClose }: { character: ChatRoomCharacter | null; data: InteractionData | null; onClose: () => void; }): ReactElement | null {
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
-	const ref = useRef<HTMLDivElement>(null);
 
 	const event = data?.originalEvent;
 	const position = useMemo(() => {
@@ -559,7 +558,7 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 		};
 	}, [event]);
 
-	useContextMenuPosition(ref, position);
+	const ref = useContextMenuPosition(position);
 
 	if (!character || !data) {
 		return null;

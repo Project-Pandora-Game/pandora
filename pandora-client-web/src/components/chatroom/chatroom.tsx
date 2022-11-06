@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import { CharacterId, ICharacterPublicData, IChatRoomMessageChat, IChatSegment } from 'pandora-common';
 import { CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
 import React, {
+	memo,
 	ReactElement,
 	useCallback,
 	useEffect,
@@ -121,13 +122,15 @@ function Chat(): ReactElement | null {
 		return () => unsupress();
 	}, [messages, isScrolling, lastMessageCount, clear, supress, unsupress]);
 
+	const playerId = usePlayerId();
+
 	if (!shardConnector)
 		return null;
 
 	return (
 		<div className='chatArea'>
 			<Scrollbar color='dark' className='messages' ref={ messagesDiv } tabIndex={ 1 }>
-				{messages.map((m) => <Message key={ m.time } message={ m } />)}
+				{messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />)}
 			</Scrollbar>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } />
 		</div>
@@ -189,17 +192,24 @@ function RenderActionContent(action: IChatroomMessageActionProcessed): [IChatSeg
 	return [ChatParser.parseStyle(actionText), actionExtraText ? ChatParser.parseStyle(actionExtraText) : null];
 }
 
-function Message({ message }: { message: IChatroomMessageProcessed; }): ReactElement | null {
+function ChatroomMessageEquals(a: IChatroomMessageProcessed, b: IChatroomMessageProcessed): boolean {
+	return a.time === b.time && a.edited === b.edited;
+}
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
 	if (!IsUserMessage(message)) {
 		return <ActionMessage message={ message } />;
 	}
 	if (message.type === 'deleted') {
 		return null;
 	}
-	return <DisplayUserMessage message={ message } />;
-}
+	return <DisplayUserMessage message={ message } playerId={ playerId } />;
+}, (prev, next) => {
+	return ChatroomMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
+});
 
-function DisplayUserMessage({ message }: { message: IChatRoomMessageChat & { time: number }; }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number }; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -212,7 +222,6 @@ function DisplayUserMessage({ message }: { message: IChatRoomMessageChat & { tim
 		}
 	}, [message.type]);
 	const [ref, onContextMenu, close] = useContextMenu();
-	const playerId = usePlayerId();
 
 	const style = message.type === 'me' || message.type === 'emote' ? ({ backgroundColor: message.from.labelColor + '44' }) : undefined;
 	const isPrivate = 'to' in message && message.to;

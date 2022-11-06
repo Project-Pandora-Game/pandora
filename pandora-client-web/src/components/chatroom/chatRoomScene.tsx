@@ -51,8 +51,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	private _name: Text;
 
 	private _dragging?: Point;
-	private _pointerDown = false;
-	private _waitPonterUp: number | null = null;
+	/** Time at which user pressed button/touched */
+	private _pointerDown: number | null = null;
 
 	// Calculated properties
 	private _yOffset: number = 0;
@@ -222,44 +222,37 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		}
 	}
 
-	private _onPointerDown(_event: InteractionEvent) {
-		this._pointerDown = true;
-		if (this._waitPonterUp) {
-			clearTimeout(this._waitPonterUp);
-			this._waitPonterUp = null;
-		}
-		this._waitPonterUp = setTimeout(() => {
-			this._waitPonterUp = null;
-		}, CHARACTER_WAIT_DRAG_THRESHOLD);
+	private _onPointerDown(event: InteractionEvent) {
+		event.stopPropagation();
+		this._pointerDown = Date.now();
 	}
 
 	private _onPointerUp(event: InteractionEvent) {
 		this._dragging = undefined;
-		this._pointerDown = false;
-		if (this._waitPonterUp) {
-			clearTimeout(this._waitPonterUp);
-			this._waitPonterUp = null;
+		if (this._pointerDown !== null && Date.now() < this._pointerDown + CHARACTER_WAIT_DRAG_THRESHOLD) {
 			this._menuOpen(this, event.data);
 		}
+		this._pointerDown = null;
 	}
 
 	private _onPointerMove(event: InteractionEvent) {
+		if (this._pointerDown !== null) {
+			event.stopPropagation();
+		}
 		if (this._dragging) {
 			this._onDragMove(event);
-		} else if (!this._waitPonterUp && this._pointerDown) {
+		} else if (this._pointerDown !== null && Date.now() >= this._pointerDown + CHARACTER_WAIT_DRAG_THRESHOLD) {
 			this._onDragStart(event);
 		}
 	}
 
 	private _onDragStart(event: InteractionEvent) {
-		event.stopPropagation();
 		if (this._dragging) return;
 		this._dragging = event.data.getLocalPosition(this.parent);
 	}
 
 	private _onDragMove(event: InteractionEvent) {
 		if (!this._dragging || !this._data) return;
-		event.stopPropagation();
 		const dragPointerEnd = event.data.getLocalPosition(this.parent);
 
 		const height = this._background.size[1];

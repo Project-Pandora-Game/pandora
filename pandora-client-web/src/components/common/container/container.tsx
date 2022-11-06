@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React from 'react';
 import { ReactElement } from 'react';
 import { CommonProps } from '../../../common/reactTypes';
-import { ScssSpacing } from '../../../styles/constants';
+import { ScssOverflow, ScssSpacing } from '../../../styles/constants';
 import './container.scss';
 
 export interface DivContainerProps extends CommonProps {
@@ -20,6 +20,12 @@ export interface DivContainerProps extends CommonProps {
 	align?: 'stretch' | 'start' | 'end' | 'center';
 	/** Default: start */
 	wrapAlign?: 'start' | 'end' | 'center' | 'space-between' | 'space-around' | 'space-evenly' | 'stretch';
+
+	// Overflow properties
+	/** Default: visible */
+	overflowX?: ScssOverflow;
+	/** Default: visible */
+	overflowY?: ScssOverflow;
 
 	// Our spacing setup
 	/** Default: normal */
@@ -40,6 +46,8 @@ export function DivContainer({
 	justify,
 	align,
 	wrapAlign,
+	overflowX,
+	overflowY,
 	spacing = 'normal',
 	padding,
 	gap,
@@ -55,6 +63,8 @@ export function DivContainer({
 				justify ? `justify-${justify}` : null,
 				align ? `align-${align}` : null,
 				wrapAlign ? `wrap-align-${wrapAlign}` : null,
+				overflowX ? `overflow-x-${overflowX}` : null,
+				overflowY ? `overflow-y-${overflowY}` : null,
 				`spacing-${spacing}`,
 				padding ? `padding-${padding}` : null,
 				gap ? `gap-${gap}` : null,

@@ -65,6 +65,22 @@
 
 //#endregion
 
+//#region Overflow
+
+@each $type in (visible, hidden, auto, scroll) {
+	.overflow-#{$type} {
+		overflow: $type;
+	}
+	.overflow-x-#{$type} {
+		overflow-x: $type;
+	}
+	.overflow-y-#{$type} {
+		overflow-y: $type;
+	}
+}
+
+//#endregion
+
 //#region Spacing
 
 @each $spacing-name, $spacing-value in $spacing {

@@ -44,6 +44,7 @@ import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { GraphicsScene } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
+import { Column, Row } from '../common/container/container';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -399,66 +400,68 @@ function WardrobeItemConfigMenu({
 				<span>Editing item: {item.asset.definition.name}</span>
 				<button onClick={ () => onClose() }>✖️</button>
 			</div>
-			<div className='toolbar flex-row-wrap'>
-				<WardrobeActionButton action={ {
-					type: 'move',
-					target: character.data.id,
-					itemId: item.id,
-					shift: 1,
-				} }>
-					⬇️ Wear on top
-				</WardrobeActionButton>
-				<WardrobeActionButton action={ {
-					type: 'move',
-					target: character.data.id,
-					itemId: item.id,
-					shift: -1,
-				} }>
-					⬆️ Wear under
-				</WardrobeActionButton>
-				<WardrobeActionButton action={ {
-					type: 'delete',
-					target: character.data.id,
-					itemId: item.id,
-				} }>
-					➖ Remove and delete
-				</WardrobeActionButton>
-			</div>
-			<FieldsetToggle legend='Coloring'>
+			<Column overflowX='hidden' overflowY='auto'>
+				<Row wrap>
+					<WardrobeActionButton action={ {
+						type: 'move',
+						target: character.data.id,
+						itemId: item.id,
+						shift: 1,
+					} }>
+						⬇️ Wear on top
+					</WardrobeActionButton>
+					<WardrobeActionButton action={ {
+						type: 'move',
+						target: character.data.id,
+						itemId: item.id,
+						shift: -1,
+					} }>
+						⬆️ Wear under
+					</WardrobeActionButton>
+					<WardrobeActionButton action={ {
+						type: 'delete',
+						target: character.data.id,
+						itemId: item.id,
+					} }>
+						➖ Remove and delete
+					</WardrobeActionButton>
+				</Row>
+				<FieldsetToggle legend='Coloring'>
+					{
+						item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
+							<div className='wardrobeColorRow' key={ colorPartIndex }>
+								<span className='flex-1'>{colorPart.name}</span>
+								<ColorInput
+									initialValue={ item.color[colorPartIndex] ?? colorPart.default }
+									resetValue={ colorPart.default }
+									throttle={ 100 }
+									disabled={ !canUseHands }
+									onChange={ (color) => {
+										if (shardConnector) {
+											const newColor = item.color.slice();
+											newColor[colorPartIndex] = color;
+											shardConnector.sendMessage('appearanceAction', {
+												type: 'color',
+												target: character.data.id,
+												itemId: item.id,
+												color: newColor,
+											});
+										}
+									} }
+								/>
+							</div>
+						))
+					}
+				</FieldsetToggle>
 				{
-					item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
-						<div className='wardrobeColorRow' key={ colorPartIndex }>
-							<span className='flex-1'>{colorPart.name}</span>
-							<ColorInput
-								initialValue={ item.color[colorPartIndex] ?? colorPart.default }
-								resetValue={ colorPart.default }
-								throttle={ 100 }
-								disabled={ !canUseHands }
-								onChange={ (color) => {
-									if (shardConnector) {
-										const newColor = item.color.slice();
-										newColor[colorPartIndex] = color;
-										shardConnector.sendMessage('appearanceAction', {
-											type: 'color',
-											target: character.data.id,
-											itemId: item.id,
-											color: newColor,
-										});
-									}
-								} }
-							/>
-						</div>
-					))
+					Array.from(item.modules.entries())
+						.map(([moduleName, m]) => (
+							<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
+								<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
+							</FieldsetToggle>
+						))
 				}
-			</FieldsetToggle>
-			{
-				Array.from(item.modules.entries())
-					.map(([moduleName, m]) => (
-						<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
-							<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
-						</FieldsetToggle>
-					))
-			}
+			</Column>
 		</div>
 	);
 }
@@ -482,7 +485,7 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 	const { character } = useWardrobeContext();
 
 	return (
-		<div className='toolbar flex-row-wrap'>
+		<Row wrap>
 			{
 				m.config.variants.map((v) => (
 					<WardrobeActionButton action={ {
@@ -499,7 +502,7 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 					</WardrobeActionButton>
 				))
 			}
-		</div>
+		</Row>
 	);
 }
 

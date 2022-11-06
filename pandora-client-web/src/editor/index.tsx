@@ -6,6 +6,7 @@ import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
 import { LoadAssetsFromAssetDevServer, LoadAssetsFromFileSystem, LoadAssetsFromOfficialLink } from './assetLoader';
 import { Button } from '../components/common/Button/Button';
 import '../index.scss';
+import '../styles/globalUtils.scss';
 import { Editor, EditorView } from './editor';
 import { EditorContextProvider, useMaybeEditor, useSetEditor } from './editorContextProvider';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';

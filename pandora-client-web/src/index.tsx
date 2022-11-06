@@ -9,6 +9,7 @@ import { GameContextProvider } from './components/gameContext/gameContextProvide
 import { Header } from './components/header/Header';
 import { NODE_ENV, USER_DEBUG } from './config/Environment';
 import './index.scss';
+import './styles/globalUtils.scss';
 import { PandoraRoutes } from './routing/Routes';
 
 const logger = GetLogger('init');

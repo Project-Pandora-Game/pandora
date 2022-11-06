@@ -1,0 +1,85 @@
+@import 'common';
+
+//#region Flexbox
+
+.flex-row, .flex-row-nowrap {
+	@include flex;
+}
+
+.flex-row-wrap {
+	@include flex($wrap: wrap);
+}
+
+.flex-col, .flex-col-nowrap {
+	@include flex($direction: column);
+}
+
+.flex-col-wrap {
+	@include flex(column, wrap);
+}
+
+@for $weight from 1 through 12 {
+	.flex-#{$weight} {
+		flex: $weight;
+	}
+}
+
+.flex {
+	flex: 1;
+}
+
+//#endregion
+
+//#region Positioning
+
+.center-absolute {
+	@include center-absolute;
+}
+
+.center-fixed {
+	@include center-fixed;
+}
+
+.center-flex {
+	@include center-flex;
+	// Give this a default gap so things look better without custom style
+	gap: spacing('normal');
+}
+
+.hidden {
+	display: none !important;
+}
+
+.fill {
+	width: 100%;
+	height: 100%;
+}
+
+.fill-x {
+	width: 100%;
+}
+
+.fill-y {
+	height: 100%;
+}
+
+//#endregion
+
+//#region Spacing
+
+@each $spacing-name, $spacing-value in $spacing {
+	.spacing-#{$spacing-name} {
+		padding: $spacing-value;
+		gap: $spacing-value;
+	}
+
+	.padding-#{$spacing-name} {
+		padding: $spacing-value;
+	}
+
+	.gap-#{$spacing-name} {
+		padding: $spacing-value;
+	}
+}
+
+//#endregion

@@ -1,5 +1,5 @@
 import { IConnectionClient } from './common';
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectoryBase, IClientDirectoryMessageHandler, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryNormalResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY, CHARACTER_LIMIT_NORMAL } from '../config';
@@ -8,6 +8,7 @@ import type { Account } from '../account/account';
 import { GitHubVerifier } from '../services/github/githubVerify';
 import promClient from 'prom-client';
 import { ShardTokenStore } from '../shard/shardTokenStore';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -30,19 +31,18 @@ const IsIChatRoomDirectoryConfig = ZodMatcher(ChatRoomDirectoryConfigSchema);
 const IsClientDirectoryAuthMessage = ZodMatcher(ClientDirectoryAuthMessageSchema);
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient {
+export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, IConnectionClient> {
 	private connectedClients: Set<IConnectionClient> = new Set();
 
-	private readonly messageHandler: IClientDirectoryMessageHandler<IConnectionClient>;
+	private readonly messageHandler: MessageHandler<IClientDirectory, IConnectionClient>;
 
-	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionClient): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
-			// Only count valid messages
-			if (result) {
-				messagesMetric.inc({ messageType });
-			}
-			return result;
-		});
+	public async onMessage<K extends keyof IClientDirectory>(
+		messageType: K,
+		message: SocketInterfaceRequest<IClientDirectory>[K],
+		context: IConnectionClient,
+	): Promise<SocketInterfaceResponse<IClientDirectory>[K]> {
+		messagesMetric.inc({ messageType });
+		return this.messageHandler.onMessage(messageType, message, context);
 	}
 
 	/** Init the manager */
@@ -68,47 +68,49 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 	}
 
 	constructor() {
-		this.messageHandler = new MessageHandler<IClientDirectoryBase, IConnectionClient>({
+		this.messageHandler = new MessageHandler<IClientDirectory, IConnectionClient>({
+			// Before Login
 			login: this.handleLogin.bind(this),
 			register: this.handleRegister.bind(this),
 			resendVerificationEmail: this.handleResendVerificationEmail.bind(this),
 			passwordReset: this.handlePasswordReset.bind(this),
 			passwordResetConfirm: this.handlePasswordResetConfirm.bind(this),
-			passwordChange: this.handlePasswordChange.bind(this),
 
+			// Account management
+			passwordChange: this.handlePasswordChange.bind(this),
+			logout: this.handleLogout.bind(this),
+			gitHubBind: this.handleGitHubBind.bind(this),
+			gitHubUnbind: this.handleGitHubUnbind.bind(this),
+			changeSettings: this.handleChangeSettings.bind(this),
+			setCryptoKey: this.handleSetCryptoKey.bind(this),
+
+			// Character management
 			listCharacters: this.handleListCharacters.bind(this),
 			createCharacter: this.handleCreateCharacter.bind(this),
 			updateCharacter: this.handleUpdateCharacter.bind(this),
 			deleteCharacter: this.handleDeleteCharacter.bind(this),
+
+			// Character connection, shard interaction
 			connectCharacter: this.handleConnectCharacter.bind(this),
-
+			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
 			shardInfo: this.handleShardInfo.bind(this),
-
 			listRooms: this.handleListRooms.bind(this),
 			chatRoomCreate: this.handleChatRoomCreate.bind(this),
 			chatRoomEnter: this.handleChatRoomEnter.bind(this),
+			chatRoomLeave: this.handleChatRoomLeave.bind(this),
 			chatRoomUpdate: this.handleChatRoomUpdate.bind(this),
-
-			gitHubBind: this.handleGitHubBind.bind(this),
 
 			getDirectMessages: this.handleGetDirectMessages.bind(this),
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
+			directMessage: this.handleDirectMessage.bind(this),
 			getDirectMessageInfo: this.handleGetDirectMessageInfo.bind(this),
 
+			// Management/admin endpoints; these require specific roles to be used
 			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
 			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
 			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
 			manageInvalidateShardToken: Auth('developer', this.handleManageInvalidateShardToken.bind(this)),
 			manageListShardTokens: Auth('developer', this.handleManageListShardTokens.bind(this)),
-		}, {
-			logout: this.handleLogout.bind(this),
-			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
-			chatRoomLeave: this.handleChatRoomLeave.bind(this),
-
-			gitHubUnbind: this.handleGitHubUnbind.bind(this),
-			changeSettings: this.handleChangeSettings.bind(this),
-			setCryptoKey: this.handleSetCryptoKey.bind(this),
-			directMessage: this.handleDirectMessage.bind(this),
 		});
 	}
 
@@ -245,7 +247,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: 'ok' };
 	}
 
-	private handleListCharacters(_: IClientDirectoryArgument['listCharacters'], connection: IConnectionClient): IClientDirectoryNormalResult['listCharacters'] {
+	private handleListCharacters(_: IClientDirectoryArgument['listCharacters'], connection: IConnectionClient): IClientDirectoryResult['listCharacters'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -333,13 +335,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		connection.sendConnectionStateUpdate();
 	}
 
-	private handleShardInfo(_: IClientDirectoryArgument['shardInfo'], _connection: IConnectionClient): IClientDirectoryNormalResult['shardInfo'] {
+	private handleShardInfo(_: IClientDirectoryArgument['shardInfo'], _connection: IConnectionClient): IClientDirectoryResult['shardInfo'] {
 		return {
 			shards: ShardManager.listShads(),
 		};
 	}
 
-	private handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryNormalResult['listRooms'] {
+	private handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryResult['listRooms'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -400,7 +402,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		});
 	}
 
-	private handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryNormalResult['chatRoomUpdate'] {
+	private handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryResult['chatRoomUpdate'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -448,7 +450,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		connection.sendConnectionStateUpdate();
 	}
 
-	private handleGitHubBind({ login }: IClientDirectoryArgument['gitHubBind'], connection: IConnectionClient): IClientDirectoryNormalResult['gitHubBind'] {
+	private handleGitHubBind({ login }: IClientDirectoryArgument['gitHubBind'], connection: IConnectionClient): IClientDirectoryResult['gitHubBind'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -506,7 +508,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return { result: success ? 'ok' : 'notFound' };
 	}
 
-	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryNormalResult['manageListShardTokens'] {
+	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
 		const info = ShardTokenStore.list(connection.account);
 		return { info };
 	}
@@ -534,7 +536,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient {
 		return await connection.account.directMessages.sendMessage(data);
 	}
 
-	private handleGetDirectMessageInfo(_: IClientDirectoryArgument['getDirectMessageInfo'], connection: IConnectionClient): IClientDirectoryNormalResult['getDirectMessageInfo'] {
+	private handleGetDirectMessageInfo(_: IClientDirectoryArgument['getDirectMessageInfo'], connection: IConnectionClient): IClientDirectoryResult['getDirectMessageInfo'] {
 		if (!connection.account)
 			throw new BadMessageError();
 

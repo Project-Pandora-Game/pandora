@@ -1,10 +1,11 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectoryBase, MessageHandler, IDirectoryShardBase, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId } from 'pandora-common';
+import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
 import { Stop } from '../lifecycle';
 import promClient from 'prom-client';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 10_000;
@@ -51,11 +52,11 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDirectoryBase> {
+export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, IDirectoryShard, Socket> {
 
 	/** Current state of the connection */
 	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;
-	private readonly _messageHandler: MessageHandler<IDirectoryShardBase>;
+	private readonly _messageHandler: MessageHandler<IDirectoryShard>;
 	/** Current state of the connection */
 	get state(): DirectoryConnectionState {
 		return this._state;
@@ -64,7 +65,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 	public shardId: string | undefined;
 
 	constructor(uri: string, secret: string = '') {
-		super(CreateConnection(uri, secret), logger);
+		super(CreateConnection(uri, secret), [ShardDirectorySchema, DirectoryShardSchema], logger);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -72,17 +73,19 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IShardDir
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		// Setup message handler
-		this._messageHandler = new MessageHandler<IDirectoryShardBase>({
-			stop: Stop,
+		this._messageHandler = new MessageHandler<IDirectoryShard>({
 			update: (update) => this.updateFromDirectory(update).then(() => ({})),
-		}, {
+			stop: Stop,
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
 
-	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
+	protected onMessage<K extends keyof IDirectoryShard>(
+		messageType: K,
+		message: SocketInterfaceRequest<IDirectoryShard>[K],
+	): Promise<SocketInterfaceResponse<IDirectoryShard>[K]> {
 		messagesMetric.inc({ messageType });
-		return this._messageHandler.onMessage(messageType, message, callback);
+		return this._messageHandler.onMessage(messageType, message, undefined);
 	}
 
 	/**

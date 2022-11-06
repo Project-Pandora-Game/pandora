@@ -1,5 +1,5 @@
 import type {
-	IClientDirectoryBase,
+	IClientDirectory,
 	IConnectionBase,
 	IDirectoryAccountInfo,
 	IDirectoryCharacterConnectionInfo,
@@ -33,7 +33,7 @@ export interface AuthToken {
 	username: string;
 }
 
-export interface DirectoryConnector extends IConnectionBase<IClientDirectoryBase, false> {
+export interface DirectoryConnector extends IConnectionBase<IClientDirectory> {
 	/** Current state of the connection */
 	readonly state: ReadonlyObservable<DirectoryConnectionState>;
 

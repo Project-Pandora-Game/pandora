@@ -1,16 +1,17 @@
-import { ZodConnection, GetLogger, IDirectoryShardBase, IncomingSocket, IServerSocket, ShardDirectoryInSchema } from 'pandora-common';
+import { GetLogger, IncomingSocket, IServerSocket, ShardDirectorySchema, IShardDirectory, IDirectoryShard, IncomingConnection, DirectoryShardSchema } from 'pandora-common';
 import { ConnectionType, IConnectionShard } from './common';
 import { ConnectionManagerShard } from './manager_shard';
 import { Shard } from '../shard/shard';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 /** Class housing connection from a shard */
-export class ShardConnection extends ZodConnection<IncomingSocket, typeof ShardDirectoryInSchema, IDirectoryShardBase> implements IConnectionShard {
+export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardDirectory, IncomingSocket> implements IConnectionShard {
 	readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
 
 	public shard: Shard | null = null;
 
-	constructor(server: IServerSocket<IDirectoryShardBase>, socket: IncomingSocket) {
-		super(server, socket, GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`), ShardDirectoryInSchema);
+	constructor(server: IServerSocket<IDirectoryShard>, socket: IncomingSocket) {
+		super(server, socket, [DirectoryShardSchema, ShardDirectorySchema], GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`));
 		this.logger.verbose('Connected');
 	}
 
@@ -19,7 +20,10 @@ export class ShardConnection extends ZodConnection<IncomingSocket, typeof ShardD
 		ConnectionManagerShard.onDisconnect(this);
 	}
 
-	protected override onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return ConnectionManagerShard.onMessage(messageType, message, callback, this);
+	protected onMessage<K extends keyof IShardDirectory>(
+		messageType: K,
+		message: SocketInterfaceRequest<IShardDirectory>[K],
+	): Promise<SocketInterfaceResponse<IShardDirectory>[K]> {
+		return ConnectionManagerShard.onMessage(messageType, message, this);
 	}
 }

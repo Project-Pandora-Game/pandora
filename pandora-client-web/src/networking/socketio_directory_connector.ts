@@ -3,17 +3,20 @@ import {
 	GetLogger,
 	HTTP_HEADER_CLIENT_REQUEST_SHARD,
 	IClientDirectoryAuthMessage,
-	IClientDirectoryBase,
+	IClientDirectory,
 	IDirectoryAccountInfo,
 	IDirectoryCharacterConnectionInfo,
 	IDirectoryClientArgument,
-	IDirectoryClientBase,
+	IDirectoryClient,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 	IsObject,
 	IsString,
 	MessageHandler,
+	ClientDirectorySchema,
+	DirectoryClientSchema,
 } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
 import { PrehashPassword } from '../crypto/helpers';
@@ -40,7 +43,7 @@ class ConnectionStateEventEmitter extends TypedEventEmitter<Pick<IDirectoryClien
 }
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDirectoryBase> implements DirectoryConnector {
+export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory, IDirectoryClient, Socket> implements DirectoryConnector {
 
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>({
@@ -58,7 +61,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
-	private readonly _messageHandler: MessageHandler<IDirectoryClientBase>;
+	private readonly _messageHandler: MessageHandler<IDirectoryClient>;
 	public readonly directMessageHandler: DirectMessageManager;
 
 	/** Current state of the connection */
@@ -91,7 +94,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 	}
 
 	private constructor(socket: Socket) {
-		super(socket, logger);
+		super(socket, [ClientDirectorySchema, DirectoryClientSchema], logger);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -101,7 +104,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		this.directMessageHandler = new DirectMessageManager(this);
 
 		// Setup message handler
-		this._messageHandler = new MessageHandler<IDirectoryClientBase>({}, {
+		this._messageHandler = new MessageHandler<IDirectoryClient>({
 			serverStatus: (status) => {
 				this._directoryStatus.value = status;
 			},
@@ -111,11 +114,11 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 				await this.directMessageHandler.accountChanged();
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
-			directMessageGet: async (data) => {
-				await this.directMessageHandler.handleDirectMessageGet(data);
-			},
 			directMessageSent: async (data) => {
 				await this.directMessageHandler.handleDirectMessageSent(data);
+			},
+			directMessageGet: async (data) => {
+				await this.directMessageHandler.handleDirectMessageGet(data);
 			},
 			directMessageAction: (data) => {
 				this.directMessageHandler.handleDirectMessageAction(data);
@@ -124,8 +127,11 @@ export class SocketIODirectoryConnector extends ConnectionBase<Socket, IClientDi
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
 
-	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return this._messageHandler.onMessage(messageType, message, callback);
+	protected onMessage<K extends keyof IDirectoryClient>(
+		messageType: K,
+		message: SocketInterfaceRequest<IDirectoryClient>[K],
+	): Promise<SocketInterfaceResponse<IDirectoryClient>[K]> {
+		return this._messageHandler.onMessage(messageType, message, undefined);
 	}
 
 	public static create(uri: string): SocketIODirectoryConnector {

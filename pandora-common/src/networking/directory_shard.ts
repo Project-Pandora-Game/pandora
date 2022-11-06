@@ -1,11 +1,12 @@
-import type { SocketInterface, RecordOnly, SocketInterfaceArgs, SocketInterfaceUnconfirmedArgs, SocketInterfaceResult, SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler, SocketInterfaceNormalResult, SocketInterfacePromiseResult } from './helpers';
+import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
 import { CharacterIdSchema } from '../character';
-import type { MessageHandler } from './message_handler';
 import { IChatRoomFullInfo, RoomId, RoomIdSchema } from '../chatroom/room';
 import { IEmpty } from './empty';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 import { z } from 'zod';
 import { AccountRoleInfoSchema } from '../account';
+import { ZodCast } from '../validation';
+import { Satisfies } from '../utility';
 
 export const ShardAccountDefinitionSchema = z.object({
 	id: z.number(),
@@ -30,19 +31,20 @@ export type IDirectoryShardUpdate = {
 	messages: Record<RoomId, IChatRoomMessageDirectoryAction[]>;
 };
 
-/** Directory->Shard handlers */
-interface DirectoryShard {
-	update(arg: Partial<IDirectoryShardUpdate>): Promise<IEmpty>;
-	stop(arg: IEmpty): IEmpty;
-}
+/** Directory->Shard messages */
+export const DirectoryShardSchema = {
+	update: {
+		request: ZodCast<Partial<IDirectoryShardUpdate>>(),
+		response: ZodCast<IEmpty>(),
+	},
+	stop: {
+		request: ZodCast<IEmpty>(),
+		response: ZodCast<IEmpty>(),
+	},
+} as const;
 
-export type IDirectoryShard = SocketInterface<DirectoryShard>;
-export type IDirectoryShardArgument = RecordOnly<SocketInterfaceArgs<DirectoryShard>>;
-export type IDirectoryShardUnconfirmedArgument = SocketInterfaceUnconfirmedArgs<DirectoryShard>;
-export type IDirectoryShardResult = SocketInterfaceResult<DirectoryShard>;
-export type IDirectoryShardPromiseResult = SocketInterfacePromiseResult<DirectoryShard>;
-export type IDirectoryShardNormalResult = SocketInterfaceNormalResult<DirectoryShard>;
-export type IDirectoryShardResponseHandler = SocketInterfaceResponseHandler<DirectoryShard>;
-export type IDirectoryShardOneshotHandler = SocketInterfaceOneshotHandler<DirectoryShard>;
-export type IDirectoryShardMessageHandler<Context> = MessageHandler<DirectoryShard, Context>;
-export type IDirectoryShardBase = DirectoryShard;
+export type IDirectoryShard = Satisfies<typeof DirectoryShardSchema, SocketInterfaceDefinitionVerified<typeof DirectoryShardSchema>>;
+export type IDirectoryShardArgument = SocketInterfaceRequest<IDirectoryShard>;
+export type IDirectoryShardResult = SocketInterfaceHandlerResult<IDirectoryShard>;
+export type IDirectoryShardPromiseResult = SocketInterfaceHandlerPromiseResult<IDirectoryShard>;
+export type IDirectoryShardNormalResult = SocketInterfaceResponse<IDirectoryShard>;

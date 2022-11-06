@@ -17,6 +17,11 @@ export function ZodMatcher<T extends ZodTypeAny>(validator: T, passthrough?: tru
 	return (val: unknown): val is z.infer<T> => validator.safeParse(val).success;
 }
 
+/** A dirty thing that shouldn't really be used, but sometimes you are lazy */
+export function ZodCast<T>(): ZodType<T> {
+	return z.any();
+}
+
 export const HexColorStringSchema = zTemplateString<`#${string}`>(z.string(), /^#[0-9a-f]{6}$/i);
 export type HexColorString = z.infer<typeof HexColorStringSchema>;
 

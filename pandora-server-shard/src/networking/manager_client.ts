@@ -1,10 +1,11 @@
-import { GetLogger, MessageHandler, IClientShardMessageHandler, IClientShardBase, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
 import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
 import promClient from 'prom-client';
 import { DoAppearanceAction } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -21,30 +22,28 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient {
+export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientShard, IConnectionClient> {
 	private readonly _connectedClients: Set<IConnectionClient> = new Set();
 
-	private readonly messageHandler: IClientShardMessageHandler<IConnectionClient>;
+	private readonly messageHandler: MessageHandler<IClientShard, IConnectionClient>;
 
-	public onMessage(messageType: string, message: Record<string, unknown>, callback: ((arg: Record<string, unknown>) => void) | undefined, connection: IConnectionClient): Promise<boolean> {
-		return this.messageHandler.onMessage(messageType, message, callback, connection).then((result) => {
-			// Only count valid messages
-			if (result) {
-				messagesMetric.inc({ messageType });
-			}
-			return result;
-		});
+	public async onMessage<K extends keyof IClientShard>(
+		messageType: K,
+		message: SocketInterfaceRequest<IClientShard>[K],
+		context: IConnectionClient,
+	): Promise<SocketInterfaceResponse<IClientShard>[K]> {
+		messagesMetric.inc({ messageType });
+		return this.messageHandler.onMessage(messageType, message, context);
 	}
 
 	constructor() {
-		this.messageHandler = new MessageHandler<IClientShardBase, IConnectionClient>({
+		this.messageHandler = new MessageHandler<IClientShard, IConnectionClient>({
 			finishCharacterCreation: this.handleFinishCharacterCreation.bind(this),
-		}, {
 			chatRoomMessage: this.handleChatRoomMessage.bind(this),
-			appearanceAction: this.handleAppearanceAction.bind(this),
-			chatRoomMessageAck: this.handleChatRoomMessageAck.bind(this),
 			chatRoomStatus: this.handleChatRoomStatus.bind(this),
+			chatRoomMessageAck: this.handleChatRoomMessageAck.bind(this),
 			chatRoomCharacterMove: this.handleChatRoomCharacterMove.bind(this),
+			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 		});
 	}

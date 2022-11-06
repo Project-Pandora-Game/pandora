@@ -2,12 +2,15 @@ import {
 	CharacterId,
 	ConnectionBase,
 	GetLogger,
-	IClientShardBase,
+	IClientShard,
 	IDirectoryCharacterConnectionInfo,
 	IShardClientArgument,
-	IShardClientBase,
+	IShardClient,
 	MessageHandler,
+	ClientShardSchema,
+	ShardClientSchema,
 } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { GetAssetManager, LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
@@ -36,13 +39,13 @@ function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacte
 const ShardConnectionProgress = new PersistentToast();
 
 /** Class housing connection from Shard to Shard */
-export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardBase> implements ShardConnector {
+export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardClient, Socket> implements ShardConnector {
 
 	private readonly _state: Observable<ShardConnectionState> = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
 	private readonly _room: ChatRoom;
 	private readonly _player: Observable<PlayerCharacter | null>;
-	private readonly _messageHandler: MessageHandler<IShardClientBase>;
+	private readonly _messageHandler: MessageHandler<IShardClient>;
 
 	private loadResolver: ((arg: this) => void) | null = null;
 
@@ -66,7 +69,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 	}
 
 	constructor(info: IDirectoryCharacterConnectionInfo) {
-		super(CreateConnection(info), logger);
+		super(CreateConnection(info), [ClientShardSchema, ShardClientSchema], logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
 		this._player = new Observable<PlayerCharacter | null>(null);
 		this._room = new ChatRoom(this);
@@ -77,7 +80,7 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		this.socket.on('connect_error', this.onConnectError.bind(this));
 
 		// Setup message handler
-		this._messageHandler = new MessageHandler<IShardClientBase>({}, {
+		this._messageHandler = new MessageHandler<IShardClient>({
 			load: this.onLoad.bind(this),
 			updateCharacter: this.onUpdateCharacter.bind(this),
 			chatRoomUpdate: (data: IShardClientArgument['chatRoomUpdate']) => {
@@ -96,8 +99,11 @@ export class SocketIOShardConnector extends ConnectionBase<Socket, IClientShardB
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
 
-	protected onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void): Promise<boolean> {
-		return this._messageHandler.onMessage(messageType, message, callback);
+	protected onMessage<K extends keyof IShardClient>(
+		messageType: K,
+		message: SocketInterfaceRequest<IShardClient>[K],
+	): Promise<SocketInterfaceResponse<IShardClient>[K]> {
+		return this._messageHandler.onMessage(messageType, message, undefined);
 	}
 
 	public connectionInfoMatches(info: IDirectoryCharacterConnectionInfo): boolean {

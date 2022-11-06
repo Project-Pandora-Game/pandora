@@ -1,14 +1,11 @@
-import { SocketInterfaceResponseHandler, SocketInterfaceOneshotHandler } from './helpers';
 import { Logger } from '../logging';
-import type { Equals } from '../utility';
+import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceMessages, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ResponseHandler<Context> = true extends Equals<Context, void> ? (arg: any) => Record<string, unknown> | Promise<Record<string, unknown>> : (arg: any, context: Context) => Record<string, unknown> | Promise<Record<string, unknown>>;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type OneshotHandler<Context> = true extends Equals<Context, void> ? (arg: any) => void | Promise<void> : (arg: any, context: Context) => void | Promise<void>;
+type MessageHandlerFunction<T extends SocketInterfaceDefinition, Context, Message extends SocketInterfaceMessages<T> = SocketInterfaceMessages<T>> =
+	(arg: SocketInterfaceRequest<T>[Message], context: Context) => SocketInterfaceHandlerResult<T>[Message];
 
-type AddContext<T, Context> = {
-	[K in keyof T]: true extends Equals<Context, void> ? T[K] : T[K] extends (arg: infer A) => infer R ? (arg: A, context: Context) => R : never;
+type MessageHandlers<T extends SocketInterfaceDefinition, Context> = {
+	[K in SocketInterfaceMessages<T>]: MessageHandlerFunction<T, Context, K>;
 };
 
 export class BadMessageError extends Error {
@@ -25,7 +22,7 @@ export class BadMessageError extends Error {
 	}
 }
 
-export class UnauthoriedError extends BadMessageError {
+export class UnauthorizedError extends BadMessageError {
 	constructor(...extra: unknown[]) {
 		super(...extra);
 		this.name = 'Unauthorized';
@@ -36,33 +33,38 @@ export class UnauthoriedError extends BadMessageError {
 	}
 }
 
-export interface IMessageHandler<Context = void> {
-	onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void, ...[context]: true extends Equals<Context, void> ? [] : [Context]): Promise<boolean>;
+export interface IMessageHandler<T extends SocketInterfaceDefinition, Context = undefined> {
+	/**
+	 * Handle incoming message
+	 * @param messageType - The type of incoming message
+	 * @param message - The message
+	 * @param callback - Callback to call for message response
+	 * @param context - Context to pass to message handler
+	 * @returns Promise of resolution of the message, `true` if resolved, `false` on failure
+	 */
+	onMessage<K extends SocketInterfaceMessages<T>>(
+		messageType: K,
+		message: SocketInterfaceRequest<T>[K],
+		context: Context,
+	): Promise<SocketInterfaceResponse<T>[K]>;
 }
 
-export class MessageHandler<T, Context = void> implements IMessageHandler<Context> {
-	private readonly _responseHandlers: ReadonlyMap<string, ResponseHandler<Context>>;
-	private readonly _oneshotHandlers: ReadonlyMap<string, OneshotHandler<Context>>;
+export class MessageHandler<T extends SocketInterfaceDefinition, Context = undefined> implements IMessageHandler<T, Context> {
+	private readonly _messageHandlers: ReadonlyMap<SocketInterfaceMessages<T>, MessageHandlerFunction<T, Context>>;
 
-	constructor(responseHandlers: AddContext<SocketInterfaceResponseHandler<T>, Context>, oneshotHandlers: AddContext<SocketInterfaceOneshotHandler<T>, Context>) {
-		this._responseHandlers = new Map(Object.entries(responseHandlers));
-		this._oneshotHandlers = new Map(Object.entries(oneshotHandlers));
+	constructor(handlers: MessageHandlers<T, Context>) {
+		this._messageHandlers = new Map(Object.entries(handlers));
 	}
 
-	public async onMessage(messageType: string, message: Record<string, unknown>, callback?: (arg: Record<string, unknown>) => void, ...[context]: true extends Equals<Context, void> ? [] : [Context]): Promise<boolean> {
-		if (callback) {
-			const handler = this._responseHandlers.get(messageType);
-			if (!handler) {
-				return false;
-			}
-			callback(await handler(message, context as Context));
-		} else {
-			const handler = this._oneshotHandlers.get(messageType);
-			if (!handler) {
-				return false;
-			}
-			await handler(message, context as Context);
+	public async onMessage<K extends SocketInterfaceMessages<T>>(
+		messageType: K,
+		message: SocketInterfaceRequest<T>[K],
+		context: Context,
+	): Promise<SocketInterfaceResponse<T>[K]> {
+		const handler = this._messageHandlers.get(messageType) as (MessageHandlerFunction<T, Context, K> | undefined);
+		if (!handler) {
+			throw new Error(`Unknown messageType '${messageType}'`);
 		}
-		return true;
+		return (await handler(message, context)) as SocketInterfaceResponse<T>[K];
 	}
 }

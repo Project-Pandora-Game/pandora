@@ -1,4 +1,4 @@
-import type { IClientShardBase, IConnectionBase, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import type { IClientShard, IConnectionBase, IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import type { PlayerCharacter } from '../character/player';
 import type { ChatRoom } from '../components/gameContext/chatRoomContextProvider';
 import type { ReadonlyObservable } from '../observable';
@@ -19,7 +19,7 @@ export enum ShardConnectionState {
 	DISCONNECTED,
 }
 
-export interface ShardConnector extends IConnectionBase<IClientShardBase, false> {
+export interface ShardConnector extends IConnectionBase<IClientShard> {
 	/** Current state of the connection */
 	readonly state: ReadonlyObservable<ShardConnectionState>;
 	readonly player: ReadonlyObservable<PlayerCharacter | null>;

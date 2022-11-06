@@ -1,5 +1,5 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardDirectoryNormalResult, IShardCharacterDefinition, IShardDirectoryPromiseResult, IChatRoomFullInfo, AssertNever, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IChatRoomFullInfo, AssertNever, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryResult, IShardDirectoryPromiseResult } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
@@ -44,7 +44,7 @@ export class Shard {
 		return this.characters.get(id);
 	}
 
-	public handleReconnect(data: IShardDirectoryArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryNormalResult['shardRegister'] {
+	public handleReconnect(data: IShardDirectoryArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryResult['shardRegister'] {
 		// Invalidate current connection (when shard reconnects quicker than old connection times out)
 		if (this.shardConnection) {
 			this.setConnection(null);

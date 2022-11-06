@@ -1,12 +1,11 @@
-import { nanoid } from 'nanoid';
-import { IClientDirectoryBase, IDirectoryClientBase, MockConnection, MockServerSocket } from 'pandora-common';
+import { IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
 import { ClientConnection } from '../../src/networking/connection_client';
 import { ConnectionManagerClient } from '../../src/networking/manager_client';
 import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils';
 
 describe('ClientConnection', () => {
-	let connection: MockConnection<IClientDirectoryBase>;
-	let server: MockServerSocket<IDirectoryClientBase>;
+	let connection: MockConnection<IClientDirectory, IDirectoryClient>;
+	let server: MockServerSocket<IDirectoryClient>;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let connectionOnMessage: jest.Mock<any, any>;
 
@@ -18,8 +17,8 @@ describe('ClientConnection', () => {
 		connectionOnMessage = jest.fn(() => {
 			return Promise.resolve(true);
 		});
-		server = new MockServerSocket<IDirectoryClientBase>();
-		connection = new MockConnection(new MockServerSocket<IClientDirectoryBase>(), { onMessage: connectionOnMessage }, nanoid());
+		server = new MockServerSocket();
+		connection = new MockConnection({ onMessage: connectionOnMessage });
 	});
 	afterEach(() => {
 		connection.disconnect();
@@ -56,26 +55,17 @@ describe('ClientConnection', () => {
 	});
 
 	describe('Receiving messages', () => {
-		it('Passes message without callback to manager message handler', () => {
+		it('Passes message to manager message handler', async () => {
 			const onMessageSpy = jest.spyOn(ConnectionManagerClient, 'onMessage');
 
 			const client = new ClientConnection(server, connection.connect(), {});
 
 			connection.sendMessage('logout', {});
-
-			expect(onMessageSpy).toHaveBeenCalledTimes(1);
-			expect(onMessageSpy).toHaveBeenNthCalledWith(1, 'logout', {}, undefined, client);
-		});
-
-		it('Passes message with callback to manager message handler', async () => {
-			const onMessageSpy = jest.spyOn(ConnectionManagerClient, 'onMessage');
-
-			const client = new ClientConnection(server, connection.connect(), {});
-
 			await connection.awaitResponse('shardInfo', {});
 
-			expect(onMessageSpy).toHaveBeenCalledTimes(1);
-			expect(onMessageSpy).toHaveBeenNthCalledWith(1, 'shardInfo', expect.any(Object), expect.any(Function), client);
+			expect(onMessageSpy).toHaveBeenCalledTimes(2);
+			expect(onMessageSpy).toHaveBeenNthCalledWith(1, 'logout', {}, client);
+			expect(onMessageSpy).toHaveBeenNthCalledWith(2, 'shardInfo', expect.any(Object), client);
 		});
 	});
 
@@ -190,7 +180,7 @@ describe('ClientConnection', () => {
 			const account = await TestMockAccount();
 			const character = await TestMockCharacter(account);
 			const client = new ClientConnection(server, connection.connect(), {});
-			const connection2 = new MockConnection(server, { onMessage: connectionOnMessage }, nanoid());
+			const connection2 = new MockConnection<IClientDirectory, IDirectoryClient>({ onMessage: connectionOnMessage });
 			const client2 = new ClientConnection(server, connection2.connect(), {});
 			client.setAccount(account);
 			client2.setAccount(account);
@@ -214,7 +204,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: account.getAccountInfo(),
 				character: null,
-			}, undefined, connection);
+			}, connection);
 
 			// Cleanup
 			client2.setCharacter(null);
@@ -251,7 +241,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: null,
 				character: null,
-			}, undefined, expect.anything());
+			}, expect.anything());
 		});
 
 		it('Sends state message with account', async () => {
@@ -267,7 +257,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: account.getAccountInfo(),
 				character: null,
-			}, undefined, expect.anything());
+			}, expect.anything());
 		});
 
 		it('Sends state message with character', async () => {
@@ -284,7 +274,7 @@ describe('ClientConnection', () => {
 			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
 				account: account.getAccountInfo(),
 				character: character.getShardConnectionInfo(), // Note: is actually null because of no shard
-			}, undefined, expect.anything());
+			}, expect.anything());
 
 			// Cleanup
 			client.setCharacter(null);

@@ -2,7 +2,7 @@ import { AppearanceChangeType, AssertNotNullable, AssetManager, CalculateCharact
 import { IBounceOptions } from 'pixi-viewport';
 import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters, Container } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
@@ -535,6 +535,7 @@ export function ChatRoomScene(): ReactElement | null {
 }
 
 function CharacterContextMenu({ character, data, onClose }: { character: ChatRoomCharacter | null; data: InteractionData | null; onClose: () => void; }): ReactElement | null {
+	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 
@@ -569,25 +570,29 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 			<span>
 				{ character.name } ({ character.id })
 			</span>
-			<Link to='/wardrobe' state={ { character: character.id } }>
+			<button onClick={ (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				navigate('/wardrobe', { state: { character: character.id } });
+			} }>
 				Wardrobe
-			</Link>
+			</button>
 			{ character.id !== playerId && (
-				<a onClick={ (e) => {
+				<button onClick={ (e) => {
 					e.preventDefault();
 					e.stopPropagation();
 					setTarget(character.id);
 				} }>
 					Whisper
-				</a>
+				</button>
 			) }
-			<a onClick={ (e) => {
+			<button onClick={ (e) => {
 				e.preventDefault();
 				e.stopPropagation();
 				onClose();
 			} } >
 				Close
-			</a>
+			</button>
 		</div>
 	);
 }

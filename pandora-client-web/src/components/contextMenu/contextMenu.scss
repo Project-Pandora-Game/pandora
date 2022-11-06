@@ -27,15 +27,17 @@ $context-menu-themes: (
 	user-select: none;
 	isolation: isolate;
 
-	span, a {
+	span, button {
 		@include center-flex;
 		margin: 0;
 		padding: 0.2em 0.5em;
 	}
 
-	a {
+	button {
 		color: white;
+		background-color: transparent;
 		text-decoration: none;
+		padding: 0.5em 0.8em;
 
 		&:hover {
 			background-color: #fff4;

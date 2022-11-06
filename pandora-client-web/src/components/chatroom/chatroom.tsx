@@ -239,9 +239,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 			return [];
 
 		return [
-			<button key='edit' onClick={ (e) => {
-				e.preventDefault();
-				e.stopPropagation();
+			<button key='edit' onClick={ () => {
 				if (!setEditing(id)) {
 					setEdit(false);
 				}
@@ -249,9 +247,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 			} }>
 				Edit
 			</button>,
-			<button key='delete' onClick={ (e) => {
-				e.preventDefault();
-				e.stopPropagation();
+			<button key='delete' onClick={ () => {
 				try {
 					sender.deleteMessage(id);
 				} catch {
@@ -268,9 +264,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 	return (
 		<>
 			{elements}
-			<button onClick={ (e) => {
-				e.preventDefault();
-				e.stopPropagation();
+			<button onClick={ () => {
 				close();
 			} }>
 				Close

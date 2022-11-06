@@ -563,27 +563,21 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 			<span>
 				{ character.name } ({ character.id })
 			</span>
-			<button onClick={ (e) => {
-				e.preventDefault();
-				e.stopPropagation();
+			<button onClick={ () => {
 				onClose();
 				navigate('/wardrobe', { state: { character: character.id } });
 			} }>
 				Wardrobe
 			</button>
 			{ character.id !== playerId && (
-				<button onClick={ (e) => {
-					e.preventDefault();
-					e.stopPropagation();
+				<button onClick={ () => {
 					onClose();
 					setTarget(character.id);
 				} }>
 					Whisper
 				</button>
 			) }
-			<button onClick={ (e) => {
-				e.preventDefault();
-				e.stopPropagation();
+			<button onClick={ () => {
 				onClose();
 			} } >
 				Close

@@ -573,6 +573,7 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 			<button onClick={ (e) => {
 				e.preventDefault();
 				e.stopPropagation();
+				onClose();
 				navigate('/wardrobe', { state: { character: character.id } });
 			} }>
 				Wardrobe
@@ -581,6 +582,7 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 				<button onClick={ (e) => {
 					e.preventDefault();
 					e.stopPropagation();
+					onClose();
 					setTarget(character.id);
 				} }>
 					Whisper

@@ -1,8 +1,8 @@
 import { AppearanceChangeType, AssertNotNullable, AssetManager, CalculateCharacterMaxYForBackground, CharacterId, CharacterSize, CharacterView, DEFAULT_BACKGROUND, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData, ResolveBackground } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import { AbstractRenderer, Filter, Graphics, InteractionData, InteractionEvent, Point, Rectangle, Text, filters, Container } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { Character } from '../../character/character';
@@ -51,8 +51,8 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 	private _name: Text;
 
 	private _dragging?: Point;
-	private _pointerDown = false;
-	private _waitPonterUp: number | null = null;
+	/** Time at which user pressed button/touched */
+	private _pointerDown: number | null = null;
 
 	// Calculated properties
 	private _yOffset: number = 0;
@@ -222,44 +222,37 @@ class ChatRoomCharacter extends GraphicsCharacter<Character<ICharacterRoomData>>
 		}
 	}
 
-	private _onPointerDown(_event: InteractionEvent) {
-		this._pointerDown = true;
-		if (this._waitPonterUp) {
-			clearTimeout(this._waitPonterUp);
-			this._waitPonterUp = null;
-		}
-		this._waitPonterUp = setTimeout(() => {
-			this._waitPonterUp = null;
-		}, CHARACTER_WAIT_DRAG_THRESHOLD);
+	private _onPointerDown(event: InteractionEvent) {
+		event.stopPropagation();
+		this._pointerDown = Date.now();
 	}
 
 	private _onPointerUp(event: InteractionEvent) {
 		this._dragging = undefined;
-		this._pointerDown = false;
-		if (this._waitPonterUp) {
-			clearTimeout(this._waitPonterUp);
-			this._waitPonterUp = null;
+		if (this._pointerDown !== null && Date.now() < this._pointerDown + CHARACTER_WAIT_DRAG_THRESHOLD) {
 			this._menuOpen(this, event.data);
 		}
+		this._pointerDown = null;
 	}
 
 	private _onPointerMove(event: InteractionEvent) {
+		if (this._pointerDown !== null) {
+			event.stopPropagation();
+		}
 		if (this._dragging) {
 			this._onDragMove(event);
-		} else if (!this._waitPonterUp && this._pointerDown) {
+		} else if (this._pointerDown !== null && Date.now() >= this._pointerDown + CHARACTER_WAIT_DRAG_THRESHOLD) {
 			this._onDragStart(event);
 		}
 	}
 
 	private _onDragStart(event: InteractionEvent) {
-		event.stopPropagation();
 		if (this._dragging) return;
 		this._dragging = event.data.getLocalPosition(this.parent);
 	}
 
 	private _onDragMove(event: InteractionEvent) {
 		if (!this._dragging || !this._data) return;
-		event.stopPropagation();
 		const dragPointerEnd = event.data.getLocalPosition(this.parent);
 
 		const height = this._background.size[1];
@@ -535,9 +528,9 @@ export function ChatRoomScene(): ReactElement | null {
 }
 
 function CharacterContextMenu({ character, data, onClose }: { character: ChatRoomCharacter | null; data: InteractionData | null; onClose: () => void; }): ReactElement | null {
+	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
-	const ref = useRef<HTMLDivElement>(null);
 
 	const event = data?.originalEvent;
 	const position = useMemo(() => {
@@ -559,7 +552,7 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 		};
 	}, [event]);
 
-	useContextMenuPosition(ref, position);
+	const ref = useContextMenuPosition(position);
 
 	if (!character || !data) {
 		return null;
@@ -570,17 +563,25 @@ function CharacterContextMenu({ character, data, onClose }: { character: ChatRoo
 			<span>
 				{ character.name } ({ character.id })
 			</span>
-			<Link to='/wardrobe' state={ { character: character.id } }>
+			<button onClick={ () => {
+				onClose();
+				navigate('/wardrobe', { state: { character: character.id } });
+			} }>
 				Wardrobe
-			</Link>
+			</button>
 			{ character.id !== playerId && (
-				<span onClick={ () => setTarget(character.id) }>
+				<button onClick={ () => {
+					onClose();
+					setTarget(character.id);
+				} }>
 					Whisper
-				</span>
+				</button>
 			) }
-			<span onClick={ onClose } >
+			<button onClick={ () => {
+				onClose();
+			} } >
 				Close
-			</span>
+			</button>
 		</div>
 	);
 }

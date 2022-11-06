@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ForwardedRef, ReactElement, useState, createRef, useEffect, useImperativeHandle, forwardRef, RefObject, useLayoutEffect } from 'react';
+import React, { ForwardedRef, ReactElement, useState, useEffect, useImperativeHandle, forwardRef, RefObject, useCallback, useRef } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
@@ -15,7 +15,7 @@ let closeLastContextMenu: null | (() => void) = null;
 function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef<ContextMenuHandle>): ReactElement | null {
 	const [anchorPoint, setAnchorPoint] = useState({ x: 0, y: 0 });
 	const [show, setShow] = useState(false);
-	const self = createRef<HTMLDivElement>();
+	const self = useRef<HTMLDivElement | null>(null);
 	const mounted = useMounted();
 
 	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => {
@@ -60,13 +60,17 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 		};
 	}, [onContextMenu]);
 
-	useContextMenuPosition(self, { left: anchorPoint.x, top: anchorPoint.y });
+	const positionRef = useContextMenuPosition({ left: anchorPoint.x, top: anchorPoint.y });
+	const finalRef = useCallback((div: HTMLDivElement | null) => {
+		self.current = div;
+		positionRef(div);
+	}, [positionRef]);
 
 	if (!show)
 		return null;
 
 	return (
-		<div className={ classNames('context-menu', className) } ref={ self }>
+		<div className={ classNames('context-menu', className) } ref={ finalRef }>
 			{ children }
 		</div>
 	);
@@ -75,7 +79,7 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 export const ContextMenu = forwardRef<ContextMenuHandle, CommonProps>(ContextMenuImpl);
 
 export function useContextMenu(): [RefObject<ContextMenuHandle>, (event: React.MouseEvent<HTMLDivElement>) => void, () => void] {
-	const ref = createRef<ContextMenuHandle>();
+	const ref = useRef<ContextMenuHandle>(null);
 	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => {
 		// Ignore custom context menu when holding shift
 		if (event.shiftKey)
@@ -91,16 +95,20 @@ export function useContextMenu(): [RefObject<ContextMenuHandle>, (event: React.M
  * @param ref The element to position
  * @param position The position to use, object doesn't need to be stable
  */
-export function useContextMenuPosition(ref: RefObject<HTMLElement>, { top, left }: { top: number, left: number }): void {
-	useLayoutEffect(() => {
-		if (ref.current) {
-			const rect = ref.current.getBoundingClientRect();
-			if (rect.bottom > window.innerHeight) {
-				ref.current.style.top = `${top - (rect.bottom - window.innerHeight)}px`;
+export function useContextMenuPosition({ top, left }: { top: number, left: number }): (ref: HTMLElement | null) => void {
+	return useCallback((ref: HTMLElement | null) => {
+		if (ref) {
+			const rect = ref.getBoundingClientRect();
+			if (top + rect.height > window.innerHeight) {
+				ref.style.top = `${window.innerHeight - rect.height}px`;
+			} else {
+				ref.style.top = `${top}px`;
 			}
-			if (rect.right > window.innerWidth) {
-				ref.current.style.left = `${left - (rect.right - window.innerWidth)}px`;
+			if (left + rect.width > window.innerWidth) {
+				ref.style.left = `${window.innerWidth - rect.width}px`;
+			} else {
+				ref.style.left = `${left}px`;
 			}
 		}
-	}, [ref, top, left]);
+	}, [top, left]);
 }

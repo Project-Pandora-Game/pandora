@@ -47,5 +47,39 @@ function Start(): void {
  * Configures logging for the application.
  */
 function SetupLogging(): void {
-	SetConsoleOutput(LogLevel.DEBUG);
+	let level = USER_DEBUG ? LogLevel.VERBOSE : LogLevel.WARNING;
+	const search = new URLSearchParams(window.location.search);
+	if (search.has('loglevel')) {
+		const logLevel = search.get('loglevel') || '';
+		switch (logLevel.toLowerCase()) {
+			case 'debug':
+				level = LogLevel.DEBUG;
+				break;
+			case 'verbose':
+				level = LogLevel.VERBOSE;
+				break;
+			case 'info':
+				level = LogLevel.INFO;
+				break;
+			case 'alert':
+				level = LogLevel.ALERT;
+				break;
+			case 'warning':
+				level = LogLevel.WARNING;
+				break;
+			case 'error':
+				level = LogLevel.ERROR;
+				break;
+			case 'fatal':
+				level = LogLevel.FATAL;
+				break;
+			default: {
+				const parsed = parseInt(logLevel);
+				if (parsed >= LogLevel.FATAL && parsed <= LogLevel.DEBUG)
+					level = parsed;
+				break;
+			}
+		}
+	}
+	SetConsoleOutput(level);
 }

@@ -216,15 +216,19 @@ export class Editor extends TypedEventEmitter<{
 	}
 }
 
-export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
+export function useEditorLayerStateOverride(layer: AssetGraphicsLayer): LayerStateOverrides | undefined {
 	const editor = useEditor();
-	const override = useSyncExternalStore((changed) => {
+	return useSyncExternalStore((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {
 			if (changedLayer === layer) {
 				changed();
 			}
 		});
 	}, () => editor.getLayerStateOverride(layer));
+}
+
+export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
+	const override = useEditorLayerStateOverride(layer);
 	const { colorizationIndex } = useLayerDefinition(layer);
 	if (override?.color !== undefined) {
 		return override.color;

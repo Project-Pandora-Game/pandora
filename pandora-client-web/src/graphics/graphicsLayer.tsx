@@ -3,7 +3,7 @@ import Delaunator from 'delaunator';
 import { max, maxBy, min, minBy } from 'lodash';
 import { BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { IArrayBuffer, Mesh, Rectangle, Texture } from 'pixi.js';
+import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
 import { AppearanceContainer } from '../character/character';
@@ -12,8 +12,6 @@ import { AppearanceConditionEvaluator, useAppearanceConditionEvaluator } from '.
 import { LayerStateOverrides } from './def';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
-
-Mesh.BATCHABLE_SIZE = 1000000;
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
 	points: readonly PointDefinitionCalculated[];

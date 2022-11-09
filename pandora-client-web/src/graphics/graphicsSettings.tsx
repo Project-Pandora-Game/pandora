@@ -1,5 +1,5 @@
 import { ZodMatcher } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useMemo } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
 import { Select } from '../components/common/Select/Select';
@@ -13,13 +13,17 @@ export type IGraphicsSettings = z.infer<typeof GraphicsSettingsScheme>;
 
 const GRAPHICS_SETTINGS_DEFAULT: IGraphicsSettings = {
 	resolution: 100,
-	alphamaskEngine: 'pixi',
+	alphamaskEngine: 'customShader',
 };
 
-const storage = BrowserStorage.create<IGraphicsSettings>('settings.graphics', GRAPHICS_SETTINGS_DEFAULT, ZodMatcher(GraphicsSettingsScheme));
+const storage = BrowserStorage.create<Partial<IGraphicsSettings>>('settings.graphics', {}, ZodMatcher(GraphicsSettingsScheme.partial()));
 
 export function useGraphicsSettings(): IGraphicsSettings {
-	return useObservable(storage);
+	const overrides = useObservable(storage);
+	return useMemo(() => ({
+		...GRAPHICS_SETTINGS_DEFAULT,
+		...overrides,
+	}), [overrides]);
 }
 
 export function SetGraphicsSettings(changes: Partial<IGraphicsSettings>): void {

@@ -7,11 +7,13 @@ import { useObservable } from '../observable';
 
 export const GraphicsSettingsScheme = z.object({
 	resolution: z.number().int().min(0).max(100),
+	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
 });
 export type IGraphicsSettings = z.infer<typeof GraphicsSettingsScheme>;
 
 const GRAPHICS_SETTINGS_DEFAULT: IGraphicsSettings = {
 	resolution: 100,
+	alphamaskEngine: 'pixi',
 };
 
 const storage = BrowserStorage.create<IGraphicsSettings>('settings.graphics', GRAPHICS_SETTINGS_DEFAULT, ZodMatcher(GraphicsSettingsScheme));
@@ -34,12 +36,18 @@ export function GraphicsSettings(): ReactElement | null {
 }
 
 function QualitySettings(): ReactElement {
-	const { resolution } = useGraphicsSettings();
+	const { resolution, alphamaskEngine } = useGraphicsSettings();
+
+	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<IGraphicsSettings['alphamaskEngine'], string> = {
+		pixi: 'Pixi.js (default)',
+		customShader: 'Custom Pandora shader',
+		disabled: 'Ignore masks - WILL CAUSE VISUAL GLITCHES',
+	};
 
 	return (
 		<fieldset>
 			<legend>Quality</legend>
-			<div className='input-row'>
+			<div className='input-section'>
 				<label>Resolution</label>
 				<Select value={ Math.round(resolution).toString() } onChange={ (e) => {
 					const res = GraphicsSettingsScheme.shape.resolution.safeParse(Number.parseInt(e.target.value, 10));
@@ -47,6 +55,17 @@ function QualitySettings(): ReactElement {
 				} }>
 					{
 						[100, 90, 80, 65, 50, 25, 0].map((v) => <option key={ v } value={ v.toString() }>{ `${v}%` }</option>)
+					}
+				</Select>
+			</div>
+			<div className='input-section'>
+				<label>Alphamasking engine</label>
+				<Select value={ alphamaskEngine } onChange={ (e) => {
+					const res = GraphicsSettingsScheme.shape.alphamaskEngine.safeParse(e.target.value);
+					SetGraphicsSettings({ alphamaskEngine: res.success ? res.data : GRAPHICS_SETTINGS_DEFAULT.alphamaskEngine });
+				} }>
+					{
+						(Object.keys(ALPHAMASK_ENGINES_DESCRIPTIONS) as IGraphicsSettings['alphamaskEngine'][]).map((v) => <option key={ v } value={ v }>{ ALPHAMASK_ENGINES_DESCRIPTIONS[v] }</option>)
 					}
 				</Select>
 			</div>

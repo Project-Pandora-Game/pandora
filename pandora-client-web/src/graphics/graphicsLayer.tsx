@@ -4,12 +4,16 @@ import { max, maxBy, min, minBy } from 'lodash';
 import { BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
-import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
+import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { AppearanceContainer } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
+import { useObservable } from '../observable';
 import { AppearanceConditionEvaluator, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { LayerStateOverrides } from './def';
+import { GraphicsMaskLayer } from './graphicsMaskLayer';
+import { useGraphicsSettings } from './graphicsSettings';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
 
@@ -200,9 +204,17 @@ export function GraphicsLayer({
 				tint={ color }
 				alpha={ alpha }
 			/>
-			<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ lowerZIndex } getTexture={ getTexture }>
-				{ children }
-			</MaskContainer>
+			{
+				(layer.hasAlphaMasks()) ? (
+					<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ lowerZIndex } getTexture={ getTexture }>
+						{ children }
+					</MaskContainer>
+				) : (
+					<Container zIndex={ lowerZIndex }>
+						{ children }
+					</Container>
+				)
+			}
 		</Container>
 	);
 }
@@ -210,13 +222,7 @@ export function GraphicsLayer({
 const MASK_OVERSCAN = 1000;
 const MASK_WIDTH = CharacterSize.WIDTH + 2 * MASK_OVERSCAN;
 const MASK_HEIGHT = CharacterSize.HEIGHT + 2 * MASK_OVERSCAN;
-function MaskContainer({
-	children,
-	maskImage,
-	maskMesh,
-	zIndex,
-	getTexture,
-}: ChildrenProps & {
+interface MaskContainerProps extends ChildrenProps {
 	maskImage: string;
 	maskMesh?: {
 		vertices: IArrayBuffer;
@@ -225,7 +231,32 @@ function MaskContainer({
 	}
 	zIndex?: number;
 	getTexture?: (path: string) => Promise<Texture>;
-}): ReactElement {
+}
+
+function MaskContainer({
+	zIndex,
+	children,
+	...props
+}: MaskContainerProps): ReactElement {
+	const { alphamaskEngine } = useGraphicsSettings();
+
+	if (alphamaskEngine === 'pixi')
+		return <MaskContainerPixi { ...props } zIndex={ zIndex }>{ children }</MaskContainerPixi>;
+
+	if (alphamaskEngine === 'customShader')
+		return <MaskContainerCustom { ...props } zIndex={ zIndex }>{ children }</MaskContainerCustom>;
+
+	// Default - ignore masks
+	return <Container zIndex={ zIndex }>{ children }</Container>;
+}
+
+function MaskContainerPixi({
+	children,
+	maskImage,
+	maskMesh,
+	zIndex,
+	getTexture,
+}: MaskContainerProps): ReactElement {
 	const app = useApp();
 	const alphaTexture = useTexture(maskImage, true, getTexture);
 
@@ -238,10 +269,12 @@ function MaskContainer({
 			return;
 		if (finalAlphaTexture.current !== null) {
 			maskSprite.current.texture = finalAlphaTexture.current;
+			maskSprite.current.visible = true;
 			maskContainer.current.mask = maskSprite.current;
 		} else {
 			maskSprite.current.texture = Texture.WHITE;
 			maskContainer.current.mask = null;
+			maskSprite.current.visible = false;
 		}
 	}, []);
 
@@ -285,6 +318,83 @@ function MaskContainer({
 		maskSprite.current = sprite;
 		update();
 	}, [update]);
+	const setMaskContainer = useCallback((container: PIXI.Container | null) => {
+		maskContainer.current = container;
+		update();
+	}, [update]);
+
+	return (
+		<>
+			<Container ref={ setMaskContainer } zIndex={ zIndex }>
+				{ children }
+			</Container>
+			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_OVERSCAN } y={ -MASK_OVERSCAN } />
+		</>
+	);
+}
+
+function MaskContainerCustom({
+	children,
+	maskImage,
+	maskMesh,
+	zIndex,
+	getTexture,
+}: MaskContainerProps): ReactElement {
+	const app = useApp();
+	const manager = useObservable(GraphicsManagerInstance);
+
+	const maskLayer = useRef<GraphicsMaskLayer | null>(null);
+	const maskContainer = useRef<PIXI.Container | null>(null);
+	const maskImageFinal = useRef<string | null>(null);
+	const maskGeometryFinal = useRef<PIXI.Geometry | undefined | null>(null);
+
+	const update = useCallback(() => {
+		if (!maskContainer.current)
+			return;
+		if (maskLayer.current !== null) {
+			maskContainer.current.filters = [maskLayer.current.filter];
+		} else {
+			maskContainer.current.filters = null;
+		}
+	}, []);
+
+	useLayoutEffect(() => {
+		maskImageFinal.current = maskImage;
+		maskLayer.current?.updateContent(maskImage);
+	}, [maskImage]);
+
+	useLayoutEffect(() => {
+		const g = maskGeometryFinal.current = maskMesh ? new PIXI.MeshGeometry(maskMesh.vertices, maskMesh.uvs, maskMesh.indices) : undefined;
+		maskLayer.current?.updateGeometry(g);
+		return () => {
+			maskGeometryFinal.current?.destroy();
+			maskGeometryFinal.current = null;
+		};
+	}, [maskMesh]);
+
+	const [maskSprite, setMaskSprite] = useState<PIXI.Sprite | null>(null);
+
+	useLayoutEffect(() => {
+		const getTextureFinal = getTexture ?? manager?.loader.getTexture.bind(manager.loader);
+		if (!getTextureFinal || !maskSprite)
+			return;
+
+		const engine = new GraphicsMaskLayer(app.renderer, maskSprite, getTextureFinal, MASK_WIDTH, MASK_HEIGHT, MASK_OVERSCAN);
+		maskLayer.current = engine;
+		if (maskGeometryFinal.current !== null) {
+			engine.updateGeometry(maskGeometryFinal.current);
+		}
+		if (maskImageFinal.current !== null) {
+			engine.updateContent(maskImageFinal.current);
+		}
+		update();
+		return () => {
+			maskLayer.current = null;
+			update();
+			engine.destroy();
+		};
+	}, [app.renderer, getTexture, manager, maskSprite, update]);
+
 	const setMaskContainer = useCallback((container: PIXI.Container | null) => {
 		maskContainer.current = container;
 		update();

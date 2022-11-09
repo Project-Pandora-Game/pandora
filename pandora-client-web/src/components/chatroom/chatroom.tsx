@@ -9,7 +9,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Button } from '../common/Button/Button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
@@ -28,6 +28,7 @@ import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
+import { Row } from '../common/container/container';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -77,13 +78,29 @@ export function Chatroom(): ReactElement {
 }
 
 function DisplayCharacter({ char }: { char: ICharacterPublicData }): ReactElement {
+	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
+	const navigate = useNavigate();
 
 	return (
 		<li className='character-info'>
 			<span onClick={ () => setTarget(char.id) }>{char.name}</span>
 			<span>{char.id} / {char.accountId}</span>
-			<Link to='/wardrobe' state={ { character: char.id } }>Wardrobe</Link>
+			<br />
+			<Row>
+				<Button className='slim' onClick={ () => {
+					navigate('/wardrobe', { state: { character: char.id } });
+				} }>
+					Wardrobe
+				</Button>
+				{ char.id !== playerId && (
+					<Button className='slim' onClick={ () => {
+						setTarget(char.id);
+					} }>
+						Whisper
+					</Button>
+				) }
+			</Row>
 		</li>
 	);
 }

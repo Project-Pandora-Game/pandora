@@ -43,8 +43,8 @@ function QualitySettings(): ReactElement {
 	const { resolution, alphamaskEngine } = useGraphicsSettings();
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<IGraphicsSettings['alphamaskEngine'], string> = {
-		pixi: 'Pixi.js (default)',
-		customShader: 'Custom Pandora shader',
+		pixi: 'Pixi.js',
+		customShader: 'Custom Pandora shader (default)',
 		disabled: 'Ignore masks - WILL CAUSE VISUAL GLITCHES',
 	};
 

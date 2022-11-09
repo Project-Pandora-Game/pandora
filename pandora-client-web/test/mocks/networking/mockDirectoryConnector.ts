@@ -1,4 +1,5 @@
 import {
+	ACCOUNT_SETTINGS_DEFAULT,
 	IDirectoryAccountInfo,
 	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
@@ -50,10 +51,7 @@ export function MockAccountInfo(overrides?: Partial<IDirectoryAccountInfo>): IDi
 		created: 0,
 		username: 'test-user',
 		roles: {},
-		settings: {
-			visibleRoles: [],
-			labelColor: '#ffffff',
-		},
+		settings: ACCOUNT_SETTINGS_DEFAULT,
 		...overrides,
 	};
 }

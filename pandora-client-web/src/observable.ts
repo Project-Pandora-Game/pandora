@@ -7,7 +7,7 @@ export type UnsubscribeCallback = () => void;
 
 export interface ReadonlyObservable<T> {
 	readonly value: T;
-	subscribe(observer: Observer<T>): UnsubscribeCallback;
+	subscribe(observer: Observer<T>, callImmediately?: boolean): UnsubscribeCallback;
 }
 
 /** Class that stores value of type T, while allowing subscribers to observe reference changes */
@@ -32,8 +32,11 @@ export class Observable<T> implements ReadonlyObservable<T> {
 		}
 	}
 
-	public subscribe(observer: (value: T) => void): () => void {
+	public subscribe(observer: (value: T) => void, callImmediately: boolean = false): () => void {
 		this._observers.add(observer);
+		if (callImmediately) {
+			observer(this._value);
+		}
 		return () => this._observers.delete(observer);
 	}
 }

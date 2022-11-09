@@ -152,6 +152,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 		// flush fiber
 		this.root.render(this.getChildren());
+		this.app.render();
 	}
 
 	override componentWillUnmount() {

@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
 	IDirectoryAccountInfo,
@@ -51,7 +52,7 @@ export function MockAccountInfo(overrides?: Partial<IDirectoryAccountInfo>): IDi
 		created: 0,
 		username: 'test-user',
 		roles: {},
-		settings: ACCOUNT_SETTINGS_DEFAULT,
+		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
 		...overrides,
 	};
 }

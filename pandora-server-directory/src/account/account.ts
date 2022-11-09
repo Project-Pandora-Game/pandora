@@ -225,7 +225,7 @@ export async function CreateAccountData(username: string, password: string, emai
 		created: Date.now(),
 		secure: await GenerateAccountSecureData(password, email, activated),
 		characters: [],
-		settings: ACCOUNT_SETTINGS_DEFAULT,
+		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
 	};
 }
 

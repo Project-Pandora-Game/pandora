@@ -100,6 +100,10 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this.app = app;
 		container.appendChild(app.view);
 
+		// We are trying to simulate how `Stage` component works, only differently handing the Application instance
+		// For that we need to add this private shim `react-pixi` normally adds inside `Stage`,
+		// Which is used to propagate change events all the way up to the stage quickly, so application knows to render another frame
+		// @see - https://github.com/wisebits-tech/react-pixi/blob/react-18/src/stage/index.jsx#L127
 		// @ts-expect-error: Private shim
 		app.stage.__reactpixi = { root: this.app.stage };
 		this.root = createRoot(this.app.stage);

@@ -1,3 +1,4 @@
+import { Immutable } from 'immer';
 import type { Condition, AtomicCondition, AssetId } from 'pandora-common';
 import { Texture } from 'pixi.js';
 
@@ -14,7 +15,7 @@ export function RotateVector(x: number, y: number, angle: number): [number, numb
 	return [x * cos - y * sin, x * sin + y * cos];
 }
 
-export function EvaluateCondition(condition: Condition, evaluate: (condition: AtomicCondition) => boolean): boolean {
+export function EvaluateCondition(condition: Immutable<Condition>, evaluate: (condition: AtomicCondition) => boolean): boolean {
 	return condition.some((clause) => clause.every(evaluate));
 }
 

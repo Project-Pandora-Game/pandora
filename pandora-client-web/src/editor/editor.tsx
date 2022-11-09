@@ -7,7 +7,7 @@ import './editor.scss';
 import { Button } from '../components/common/Button/Button';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { LayerStateOverrides } from '../graphics/def';
-import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
+import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useLayerDefinition } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
@@ -24,6 +24,7 @@ import { GetAssetManagerEditor } from './assets/assetManager';
 import { nanoid } from 'nanoid';
 import { noop } from 'lodash';
 import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
+import { useEditor } from './editorContextProvider';
 
 const logger = GetLogger('Editor');
 
@@ -70,15 +71,14 @@ export class Editor extends TypedEventEmitter<{
 			if (this.targetPoint.value?.layer !== layer) {
 				this.targetPoint.value = null;
 			}
+			this.targetLayerPoints.value = [];
 			if (layer) {
 				const targetLayer = layer;
 				this.targetPoint.value = null;
-				this.targetLayerPoints.value = layer.calculatePoints()
-					.map((definition) => new DraggablePoint(targetLayer, definition));
-				targetLayerUpdateCleanup = targetLayer.on('change', (structuralChange) => {
-					const points = targetLayer.calculatePoints();
+				targetLayerUpdateCleanup = targetLayer.definition.subscribe(() => {
+					const points = CalculateImmediateLayerPointDefinition(targetLayer);
 					const currentPoints = this.targetLayerPoints.value;
-					if (!structuralChange && currentPoints.length === points.length) {
+					if (currentPoints.length === points.length) {
 						for (let i = 0; i < points.length; i++) {
 							currentPoints[i].updatePoint(points[i]);
 						}
@@ -86,10 +86,9 @@ export class Editor extends TypedEventEmitter<{
 					}
 					this.targetPoint.value = null;
 					this.targetLayerPoints.value = points.map((definition) => new DraggablePoint(targetLayer, definition));
-				});
+				}, true);
 			} else {
 				this.targetPoint.value = null;
-				this.targetLayerPoints.value = [];
 			}
 		});
 
@@ -160,21 +159,6 @@ export class Editor extends TypedEventEmitter<{
 		}
 	}
 
-	public getLayerTint(layer: AssetGraphicsLayer): number {
-		const override = this.getLayerStateOverride(layer);
-		if (override?.color !== undefined) {
-			return override.color;
-		}
-		const { colorization } = layer.asset.asset.definition;
-		if (colorization) {
-			const index = layer.definition.colorizationIndex;
-			if (index != null && index >= 0 && index < colorization.length) {
-				return parseInt(colorization[index].default.substring(1), 16);
-			}
-		}
-		return 0xffffff;
-	}
-
 	public setLayerTint(layer: AssetGraphicsLayer, tint: number | undefined): void {
 		this.setLayerStateOverride(layer, {
 			...this.getLayerStateOverride(layer),
@@ -230,6 +214,28 @@ export class Editor extends TypedEventEmitter<{
 		this.backgroundColor.value = color;
 		document.documentElement.style.setProperty('--editor-background-color', color);
 	}
+}
+
+export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
+	const editor = useEditor();
+	const override = useSyncExternalStore((changed) => {
+		return editor.on('layerOverrideChange', (changedLayer) => {
+			if (changedLayer === layer) {
+				changed();
+			}
+		});
+	}, () => editor.getLayerStateOverride(layer));
+	const { colorizationIndex } = useLayerDefinition(layer);
+	if (override?.color !== undefined) {
+		return override.color;
+	}
+	const { colorization } = layer.asset.asset.definition;
+	if (colorization) {
+		if (colorizationIndex != null && colorizationIndex >= 0 && colorizationIndex < colorization.length) {
+			return parseInt(colorization[colorizationIndex].default.substring(1), 16);
+		}
+	}
+	return 0xffffff;
 }
 
 export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: boolean): readonly AssetGraphicsLayer[] {

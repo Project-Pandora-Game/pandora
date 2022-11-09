@@ -1,11 +1,13 @@
 import { Container, SimpleMesh, Sprite, useApp } from '@saitonakamura/react-pixi';
 import Delaunator from 'delaunator';
+import { Immutable } from 'immer';
 import { max, maxBy, min, minBy } from 'lodash';
+import { nanoid } from 'nanoid';
 import { BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
+import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { AppearanceContainer } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
@@ -26,9 +28,9 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 	// causing (most likely) overlap, which would result in clipping.
 	// In some other cases this could lead to gaps or other visual artifacts
 	// Any optimization of unused points needs to be done *after* triangles are calculated
-	const points = useMemo(() => layer.calculatePoints(), [layer]);
+	const points = useLayerCalculatedPoints(layer);
 
-	const pointType = layer.definition.pointType;
+	const { pointType } = useLayerDefinition(layer);
 	const triangles = useMemo<Uint32Array>(() => {
 		const result: number[] = [];
 		const delaunator = new Delaunator(points.flatMap((point) => point.pos));
@@ -43,7 +45,7 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 	return { points, triangles };
 }
 
-export function SelectPoints({ pointType }: PointDefinition, pointTypes?: string[]): boolean {
+export function SelectPoints({ pointType }: PointDefinition, pointTypes?: readonly string[]): boolean {
 	// If point has no type, include it
 	return !pointType ||
 		// If there is no requirement on point types, include all
@@ -74,14 +76,12 @@ export function useLayerVertices(
 	normalize: boolean = false,
 	valueOverrides?: Record<BoneName, number>,
 ): Float64Array {
-	const mirrorType = layer.definition.mirror;
-	const height = layer.definition.height;
-	const width = layer.definition.width;
+	const { mirror, height, width } = useLayerDefinition(layer);
 
 	return useMemo(() => {
 		const result = new Float64Array(points
 			.flatMap((point) => evaluator.evalTransform(
-				MirrorPoint(point.pos, mirrorType, width),
+				MirrorPoint(point.pos, mirror, width),
 				point.transforms,
 				point.mirror,
 				item,
@@ -94,7 +94,7 @@ export function useLayerVertices(
 			}
 		}
 		return result;
-	}, [evaluator, mirrorType, height, width, item, normalize, points, valueOverrides]);
+	}, [evaluator, mirror, height, width, item, normalize, points, valueOverrides]);
 }
 
 export interface GraphicsLayerProps extends ChildrenProps {
@@ -126,8 +126,13 @@ export function GraphicsLayer({
 
 	const vertices = useLayerVertices(evaluator, points, layer, item, false, verticesPoseOverride);
 
-	const scalingBaseimage = layer.definition.image;
-	const scaling = layer.definition.scaling;
+	const {
+		image: scalingBaseimage,
+		scaling,
+		colorizationIndex,
+		x, y,
+	} = useLayerDefinition(layer);
+
 	const uvPose = useMemo<Record<BoneName, number>>(() => {
 		if (scaling) {
 			let settingValue: number | undefined;
@@ -147,7 +152,7 @@ export function GraphicsLayer({
 	}, [evaluator, scaling]);
 	const uv = useLayerVertices(evaluator, points, layer, item, true, uvPose);
 
-	const setting = useMemo<LayerImageSetting>(() => {
+	const setting = useMemo<Immutable<LayerImageSetting>>(() => {
 		if (scaling) {
 			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
 			// Find the best matching scaling override
@@ -175,7 +180,6 @@ export function GraphicsLayer({
 
 	const texture = useTexture(image, undefined, getTexture);
 
-	const colorizationIndex = layer.definition.colorizationIndex;
 	const color: number = state?.color ??
 		(
 			(
@@ -189,14 +193,21 @@ export function GraphicsLayer({
 
 	const alpha = state?.alpha ?? 1;
 
+	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
+
+	// Unfortunately `SimpleMesh` reuploads only vertices to GPU, meaning we need to recreate it whenever uvs or indices change
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	const meshKey = useMemo(() => nanoid(), [uv, triangles]);
+
 	return (
 		<Container
 			zIndex={ zIndex }
 			sortableChildren
 		>
 			<SimpleMesh
-				x={ layer.definition.x }
-				y={ layer.definition.y }
+				key={ meshKey }
+				x={ x }
+				y={ y }
 				vertices={ vertices }
 				uvs={ uv }
 				indices={ triangles }
@@ -205,7 +216,7 @@ export function GraphicsLayer({
 				alpha={ alpha }
 			/>
 			{
-				(layer.hasAlphaMasks()) ? (
+				hasAlphaMasks ? (
 					<MaskContainer maskImage={ alphaImage } maskMesh={ alphaMesh } zIndex={ lowerZIndex } getTexture={ getTexture }>
 						{ children }
 					</MaskContainer>

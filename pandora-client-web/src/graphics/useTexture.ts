@@ -6,15 +6,17 @@ import { useObservable } from '../observable';
 export function useTexture(image: string, preferBlank: boolean = false, customGetTexture?: (path: string) => Promise<Texture>): Texture {
 	const manager = useObservable(GraphicsManagerInstance);
 
-	const wanted = useRef(image);
+	const wanted = useRef('');
+	const wantedGetTexture = useRef<((path: string) => Promise<Texture>) | undefined>(undefined);
 	const [texture, setTexture] = useState({
 		image: '',
 		texture: Texture.EMPTY,
 	});
 
 	useEffect(() => {
-		wanted.current = image;
 		const getTexture = customGetTexture ?? manager?.loader.getTexture.bind(manager.loader);
+		wanted.current = image;
+		wantedGetTexture.current = getTexture;
 		if (!getTexture) {
 			setTexture({
 				image,
@@ -24,7 +26,7 @@ export function useTexture(image: string, preferBlank: boolean = false, customGe
 		}
 		(async () => {
 			const t = await getTexture(image);
-			if (wanted.current === image) {
+			if (wanted.current === image && wantedGetTexture.current === getTexture) {
 				setTexture({
 					image,
 					texture: t,
@@ -32,7 +34,7 @@ export function useTexture(image: string, preferBlank: boolean = false, customGe
 			}
 		})()
 			.catch((_err) => {
-				if (wanted.current === image) {
+				if (wanted.current === image && wantedGetTexture.current === getTexture) {
 					setTexture({
 						image,
 						texture: Texture.EMPTY,

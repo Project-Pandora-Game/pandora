@@ -1,17 +1,18 @@
 import { Texture, InteractionEvent, DisplayObject } from 'pixi.js';
-import { BoneDefinition, CharacterSize, PointDefinition } from 'pandora-common';
+import { Assert, BoneDefinition, CharacterSize, LayerDefinition, PointDefinition } from 'pandora-common';
 import { GetAngle, RotateVector } from '../../graphics/utility';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../../assets/assetGraphics';
 import dotTexture from '../../assets/editor/dotTexture.png';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import _ from 'lodash';
+import _, { cloneDeep } from 'lodash';
 import React, { ReactElement, useMemo, useRef } from 'react';
 import { useEvent } from '../../common/useEvent';
 import { Sprite } from '@saitonakamura/react-pixi';
 import { useEditor } from '../editorContextProvider';
-import { Observable, useObservable } from '../../observable';
+import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { AppearanceContainer } from '../../character/character';
+import { Draft, Immutable } from 'immer';
 
 type DraggableProps = {
 	x: number;
@@ -78,19 +79,19 @@ export function DraggablePointDisplay({
 }): ReactElement {
 	const editor = useEditor();
 	const selectedPoint = useObservable(editor.targetPoint);
-	const point = useObservable(draggablePoint.point);
+	const { pos, isMirror } = useDraggablePointDefinition(draggablePoint);
 	const isSelected = draggablePoint === selectedPoint;
 
 	return (
 		<Draggable
-			x={ point.pos[0] }
-			y={ point.pos[1] }
+			x={ pos[0] }
+			y={ pos[1] }
 			tint={ isSelected ?
-				(point.isMirror ? 0xaaff00 : 0xffff00) :
-				(point.isMirror ? 0x00ff00 : 0xffffff) }
+				(isMirror ? 0xaaff00 : 0xffff00) :
+				(isMirror ? 0x00ff00 : 0xffffff) }
 			dragStart={ () => {
 				// Cannot drag template point
-				if (typeof draggablePoint.getDefinitionLocation()[0] === 'string')
+				if (typeof draggablePoint.getDefinitionLocation() === 'string')
 					return false;
 				// Only allow drag if the point is already selected
 				if (editor.targetPoint.value === draggablePoint)
@@ -106,117 +107,119 @@ export function DraggablePointDisplay({
 }
 
 export class DraggablePoint {
-	readonly point: Observable<PointDefinitionCalculated>;
+	private readonly _definition: Observable<PointDefinitionCalculated>;
 	readonly layer: AssetGraphicsLayer;
+
+	public get definition(): ReadonlyObservable<Immutable<PointDefinitionCalculated>> {
+		return this._definition;
+	}
 
 	constructor(layer: AssetGraphicsLayer, point: PointDefinitionCalculated) {
 		this.layer = layer;
-		this.point = new Observable(point);
+		this._definition = new Observable(point);
+	}
+
+	private get index(): number {
+		return this._definition.value.index;
 	}
 
 	public updatePoint(point: PointDefinitionCalculated) {
-		this.point.value = point;
+		this._definition.value = point;
 	}
 
-	public getDefinitionLocation(): [AssetGraphicsLayer | string, PointDefinition] {
+	public getDefinitionLocation(): AssetGraphicsLayer | string {
 		let layer = this.layer;
-		const point = this.point.value;
+		const index = this.index;
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
-		if (typeof layer.definition.points === 'number') {
-			layer = layer.asset.layers[layer.definition.points];
-			if (!Array.isArray(layer.definition.points)) {
+		let d: Immutable<LayerDefinition> = layer.definition.value;
+		if (typeof d.points === 'number') {
+			layer = layer.asset.layers[d.points];
+			d = layer.definition.value;
+			if (typeof d.points === 'number' || typeof d.points === 'string') {
 				throw new Error('More than one jump in points reference');
 			}
 		}
-		if (typeof layer.definition.points === 'string') {
-			const template = GraphicsManagerInstance.value?.getTemplate(layer.definition.points);
+		if (typeof d.points === 'string') {
+			const template = GraphicsManagerInstance.value?.getTemplate(d.points);
 			if (!template) {
-				throw new Error(`Unknown template '${layer.definition.points}'`);
+				throw new Error(`Unknown template '${d.points}'`);
 			}
-			if (template.length <= point.index) {
+			if (template.length <= index) {
 				throw new Error('Invalid attempt to set point position');
 			}
-			return [layer.definition.points, template[point.index]];
+			return d.points;
 		}
-		if (layer.definition.points.length <= point.index) {
+		if (d.points.length <= index) {
 			throw new Error('Invalid attempt to set point position');
 		}
-		return [layer, layer.definition.points[point.index]];
+		return layer;
 	}
 
-	public get x(): number {
-		return this.point.value.pos[0];
-	}
-
-	public get y(): number {
-		return this.point.value.pos[1];
+	private _modifyPoint(producer: (draft: Draft<Immutable<PointDefinition>>) => void): void {
+		let layer = this.layer;
+		const index = this.index;
+		if (layer.mirror && layer.isMirror) {
+			layer = layer.mirror;
+		}
+		let def: Immutable<LayerDefinition> = layer.definition.value;
+		if (typeof def.points === 'number') {
+			layer = layer.asset.layers[def.points];
+			def = layer.definition.value;
+			if (typeof def.points === 'number' || typeof def.points === 'string') {
+				throw new Error('More than one jump in points reference');
+			}
+		}
+		layer._modifyDefinition((d) => {
+			Assert(typeof d.points !== 'number' && typeof d.points !== 'string' && d.points.length > index);
+			producer(d.points[index]);
+		});
 	}
 
 	public setPos(x: number, y: number): void {
-		if (this.point.value.isMirror) {
+		if (this._definition.value.isMirror) {
 			x = CharacterSize.WIDTH - x;
 		}
-		const [layer, point] = this.getDefinitionLocation();
-		if (typeof layer === 'string') {
-			throw new Error('Cannot modify template');
-		}
-		point.pos = [x, y];
-		layer.onChange(false);
-	}
-
-	public get pointType(): PointDefinition['pointType'] {
-		return this.getDefinitionLocation()[1].pointType;
+		this._modifyPoint((p) => {
+			p.pos = [x, y];
+		});
 	}
 
 	public setPointType(type: PointDefinition['pointType']): void {
-		const [layer, point] = this.getDefinitionLocation();
-		if (typeof layer === 'string') {
-			throw new Error('Cannot modify template');
-		}
-		point.pointType = type;
-		layer.onChange(false);
-	}
-
-	public get mirror(): boolean {
-		return this.point.value.mirror;
+		this._modifyPoint((p) => {
+			p.pointType = type;
+		});
 	}
 
 	public setMirror(value: boolean): void {
-		const [layer, point] = this.getDefinitionLocation();
-		if (typeof layer === 'string') {
-			throw new Error('Cannot modify template');
-		}
-		point.mirror = value;
-		layer.onChange(false);
-	}
-
-	public get transforms(): PointDefinition['transforms'] {
-		return this.getDefinitionLocation()[1].transforms;
+		this._modifyPoint((p) => {
+			p.mirror = value;
+		});
 	}
 
 	public setTransforms(value: PointDefinition['transforms']): void {
-		const [layer, point] = this.getDefinitionLocation();
-		if (typeof layer === 'string') {
-			throw new Error('Cannot modify template');
-		}
-		point.transforms = value;
-		layer.onChange(false);
+		this._modifyPoint((p) => {
+			p.transforms = cloneDeep(value);
+		});
 	}
 
 	public deletePoint(): void {
-		const layer = this.getDefinitionLocation()[0];
+		const layer = this.getDefinitionLocation();
 		if (typeof layer === 'string') {
 			throw new Error('Cannot modify template');
 		}
-		if (!Array.isArray(layer.definition.points)) {
-			throw new Error('Assertion failed');
-		}
+		const index = this.index;
 		// TODO: Make idempotent
-		layer.definition.points.splice(this.point.value.index, 1);
-		layer.onChange(false);
+		layer._modifyDefinition((d) => {
+			Assert(typeof d.points !== 'number' && typeof d.points !== 'string' && d.points.length > index);
+			d.points.splice(index, 1);
+		});
 	}
+}
+
+export function useDraggablePointDefinition(point: DraggablePoint): Immutable<PointDefinitionCalculated> {
+	return useObservable(point.definition);
 }
 
 export function DraggableBone({

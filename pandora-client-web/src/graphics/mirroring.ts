@@ -1,3 +1,4 @@
+import { Immutable } from 'immer';
 import { CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition } from 'pandora-common';
 import { PointDefinitionCalculated } from '../assets/assetGraphics';
 
@@ -7,9 +8,11 @@ export function MirrorBoneLike<T extends Maybe<string>>(bone: T): T {
 	return bone?.replace(/_[lr]$/, (m) => m === '_l' ? '_r' : '_l') as T;
 }
 
-export function MirrorCondition<T extends Maybe<Condition>>(condition: T): T {
+export function MirrorCondition(condition: Immutable<Condition>): Condition;
+export function MirrorCondition(condition: Immutable<Condition> | undefined): Condition | undefined;
+export function MirrorCondition(condition: Immutable<Condition> | undefined): Condition | undefined {
 	if (!condition)
-		return condition;
+		return undefined;
 
 	return condition.map((cause) => cause.map((c) => {
 		if ('bone' in c && c.bone != null) {
@@ -25,10 +28,10 @@ export function MirrorCondition<T extends Maybe<Condition>>(condition: T): T {
 			};
 		}
 		return c;
-	})) as T;
+	}));
 }
 
-export function MirrorTransform(transform: TransformDefinition): TransformDefinition {
+export function MirrorTransform(transform: Immutable<TransformDefinition>): TransformDefinition {
 	const { type, bone, condition } = transform;
 	const trans = {
 		bone: MirrorBoneLike(bone),
@@ -46,20 +49,21 @@ export function MirrorTransform(transform: TransformDefinition): TransformDefini
 	}
 }
 
-export function MirrorImageOverride({ image, condition }: LayerImageOverride): LayerImageOverride {
+export function MirrorImageOverride({ image, condition }: Immutable<LayerImageOverride>): LayerImageOverride {
 	return { image, condition: MirrorCondition(condition) };
 }
 
-export function MirrorLayerImageSetting(setting: LayerImageSetting): LayerImageSetting {
+export function MirrorLayerImageSetting(setting: Immutable<LayerImageSetting>): LayerImageSetting {
 	return {
 		...setting,
 		overrides: setting.overrides.map(MirrorImageOverride),
+		alphaOverrides: setting.alphaOverrides?.map(MirrorImageOverride),
 	};
 }
 
-export function MirrorPoint(point: PointDefinition): PointDefinition {
+export function MirrorPoint(point: Immutable<PointDefinition>): PointDefinition {
 	return {
-		pos: point.pos,
+		pos: [...point.pos],
 		mirror: point.mirror,
 		transforms: point.transforms.map(MirrorTransform),
 		pointType: MirrorBoneLike(point.pointType),

@@ -1,7 +1,7 @@
 import { Container } from '@saitonakamura/react-pixi';
-import { ArmsPose, AssertNever, AssetId, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, LayerPriority, MergeAssetProperties } from 'pandora-common';
+import { ArmsPose, AssertNever, AssertNotNullable, AssetId, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, LayerPriority, MergeAssetProperties } from 'pandora-common';
 import { Filter, InteractionEvent, Rectangle } from 'pixi.js';
-import React, { ReactElement, useMemo } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearanceView } from '../character/character';
@@ -50,6 +50,34 @@ const GetSortOrderDefault: LayerGetSortOrder = (armsPose, view) => {
 	}
 	AssertNever(armsPose);
 };
+
+function useLayerPriorityResolver(states: readonly LayerState[]): ReadonlyMap<LayerState, LayerPriority> {
+	const calculate = useCallback((layers: readonly LayerState[]) => {
+		const result = new Map<LayerState, LayerPriority>();
+		for (const layer of layers) {
+			result.set(layer, layer.layer.definition.value.priority);
+		}
+		return result;
+	}, []);
+
+	const [actualCalculate, setActualCalculate] = useState<(layers: readonly LayerState[]) => ReadonlyMap<LayerState, LayerPriority>>(() => calculate);
+
+	useEffect(() => {
+		const cleanup: (() => void)[] = [];
+
+		for (const state of states) {
+			cleanup.push(state.layer.definition.subscribe(() => {
+				setActualCalculate(() => (l: readonly LayerState[]) => calculate(l));
+			}));
+		}
+
+		return () => {
+			cleanup.forEach((c) => c());
+		};
+	}, [calculate, states]);
+
+	return useMemo(() => actualCalculate(states), [actualCalculate, states]);
+}
 
 export function GraphicsCharacterWithManager({
 	Layer,
@@ -121,10 +149,13 @@ export function GraphicsCharacterWithManager({
 	const armsPose = useCharacterAppearanceArmsPose(appearanceContainer);
 	const view = useCharacterAppearanceView(appearanceContainer);
 
+	const priorities = useLayerPriorityResolver(layers);
+
 	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, ReactElement>>(() => {
 		const result = new Map<LayerPriority, ReactElement>();
 		for (const layerState of layers) {
-			const priority = layerState.layer.definition.priority;
+			const priority = priorities.get(layerState);
+			AssertNotNullable(priority);
 			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === CharacterView.BACK);
 			const lowerLayer = result.get(priority);
 			// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -145,7 +176,7 @@ export function GraphicsCharacterWithManager({
 			));
 		}
 		return result;
-	}, [Layer, appearanceContainer, layers, view]);
+	}, [Layer, appearanceContainer, layers, priorities, view]);
 
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === CharacterView.BACK ? -1 : 1, y: 1 }), [view, scaleExtra]);
 

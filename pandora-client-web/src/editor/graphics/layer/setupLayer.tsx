@@ -9,6 +9,7 @@ import { useObservable } from '../../../observable';
 import { Container, Graphics } from '@saitonakamura/react-pixi';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { max, min } from 'lodash';
+import { useLayerDefinition } from '../../../assets/assetGraphics';
 
 export function SetupLayer({
 	layer,
@@ -23,7 +24,8 @@ export function SetupLayer({
 
 	const evaluator = useAppearanceConditionEvaluator(appearanceContainer);
 
-	const scaling = layer.definition.scaling;
+	const { scaling, height, width } = useLayerDefinition(layer);
+
 	const uvPose = useMemo<Record<BoneName, number>>(() => {
 		if (scaling) {
 			let settingValue: number | undefined;
@@ -46,15 +48,13 @@ export function SetupLayer({
 
 	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
 		g.clear().lineStyle(1, 0x333333, 0.2);
-		const h = layer.definition.height;
-		const w = layer.definition.width;
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]
 				.map((p) => triangles[i + p])
-				.flatMap((p) => [uv[2 * p] * w, uv[2 * p + 1] * h]);
+				.flatMap((p) => [uv[2 * p] * width, uv[2 * p + 1] * height]);
 			g.drawPolygon(poly);
 		}
-	}, [layer, triangles, uv]);
+	}, [height, triangles, uv, width]);
 
 	const displayPoints = useObservable(editor.targetLayerPoints);
 
@@ -64,7 +64,7 @@ export function SetupLayer({
 				{ ...props }
 				layer={ layer }
 				item={ item }
-				verticesPoseOverride={ {} }
+				verticesPoseOverride={ uvPose }
 				appearanceContainer={ appearanceContainer }
 			/>
 			{

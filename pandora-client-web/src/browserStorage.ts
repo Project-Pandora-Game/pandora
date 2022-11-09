@@ -9,6 +9,8 @@ export class BrowserStorage<T> extends Observable<T> {
 	/** Key used to store the value */
 	public readonly _key;
 	public readonly validate: (value: unknown) => boolean;
+	/** Inhibitor of saving to prevent infinite loop */
+	private _saveInhibit: boolean = false;
 
 	/**
 	 * @param name - Unique identifier of the value used to store it
@@ -22,6 +24,8 @@ export class BrowserStorage<T> extends Observable<T> {
 		this.validate = validate;
 		this.setParse(storage.getItem(this._key));
 		this.subscribe((value) => {
+			if (this._saveInhibit)
+				return;
 			if (value === undefined) {
 				storage.removeItem(this._key);
 			} else {
@@ -34,7 +38,10 @@ export class BrowserStorage<T> extends Observable<T> {
 		if (value !== null) {
 			const parsedValue = JSON.parse(value) as unknown;
 			if (this.validate(parsedValue)) {
+				const c = this._saveInhibit;
+				this._saveInhibit = true;
 				this.value = parsedValue as T;
+				this._saveInhibit = c;
 			}
 		}
 	}

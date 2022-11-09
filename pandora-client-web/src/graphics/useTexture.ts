@@ -17,7 +17,7 @@ export function useTexture(image: string, preferBlank: boolean = false, customGe
 		const getTexture = customGetTexture ?? manager?.loader.getTexture.bind(manager.loader);
 		if (!getTexture) {
 			setTexture({
-				image: '',
+				image,
 				texture: Texture.EMPTY,
 			});
 			return;
@@ -34,7 +34,7 @@ export function useTexture(image: string, preferBlank: boolean = false, customGe
 			.catch((_err) => {
 				if (wanted.current === image) {
 					setTexture({
-						image: '',
+						image,
 						texture: Texture.EMPTY,
 					});
 				}
@@ -44,5 +44,6 @@ export function useTexture(image: string, preferBlank: boolean = false, customGe
 	if (texture.image === image)
 		return texture.texture;
 
-	return manager?.loader.getCachedTexture(image) ?? (preferBlank ? Texture.EMPTY : texture.texture);
+	return (customGetTexture ? null : manager?.loader.getCachedTexture(image)) ??
+		(preferBlank ? Texture.EMPTY : texture.texture);
 }

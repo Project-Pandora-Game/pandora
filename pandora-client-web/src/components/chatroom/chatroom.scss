@@ -9,8 +9,8 @@
 	min-width: 0 !important;
 
 	.tab-container {
-		min-width: 30%;
-		width: max(30em, 30vw);
+		min-width: max(30em, 30vw);
+		flex: 1;
 	}
 
 	.controls {
@@ -21,9 +21,13 @@
 
 .chatroom-scene {
 	height: 100%;
-	flex: 1;
+	flex: 4;
 	overflow: hidden;
 	position: relative;
+
+	&.disabled {
+		display: none;
+	}
 
 	canvas {
 		height: 100%;

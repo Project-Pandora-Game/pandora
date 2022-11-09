@@ -1,5 +1,5 @@
 import React, { Context, ReactElement, ReactNode, useMemo } from 'react';
-import { Application, IApplicationOptions, Mesh, Ticker } from 'pixi.js';
+import { Application, IApplicationOptions, InteractionManager, Mesh, Ticker } from 'pixi.js';
 import { AssertNotNullable, GetLogger } from 'pandora-common';
 import { AppProvider, createRoot, ReactPixiRoot, Stage } from '@saitonakamura/react-pixi';
 import { cloneDeep } from 'lodash';
@@ -28,6 +28,7 @@ function CreateApplication(): Application {
 
 export interface GraphicsSceneRendererProps extends ChildrenProps {
 	container: HTMLDivElement;
+	resolution: number;
 	onMount?: (app: Application) => void;
 	onUnmount?: (app: Application) => void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -36,11 +37,15 @@ export interface GraphicsSceneRendererProps extends ChildrenProps {
 
 export function GraphicsSceneRendererDirect({
 	children,
+	resolution,
 	onMount,
 	onUnmount,
 	forwardContexts = [],
 }: GraphicsSceneRendererProps): ReactElement {
-	const options = useMemo<IApplicationOptions>(() => cloneDeep(PIXI_APPLICATION_OPTIONS), []);
+	const options = useMemo<IApplicationOptions>(() => ({
+		...cloneDeep(PIXI_APPLICATION_OPTIONS),
+		resolution,
+	}), [resolution]);
 
 	return (
 		<ContextBridge contexts={ forwardContexts } render={ (c) => (
@@ -87,7 +92,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	}
 
 	override componentDidMount() {
-		const { onMount, container } = this.props;
+		const { onMount, container, resolution } = this.props;
 
 		let app = AvailableApps.pop();
 		if (!app && SharedApps.length < SHARED_APP_MAX_COUNT) {
@@ -98,7 +103,10 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 			return;
 
 		this.app = app;
+		(app.renderer.plugins.interaction as InteractionManager).resolution = app.renderer.resolution = resolution;
 		container.appendChild(app.view);
+		this.app.resizeTo = container;
+		this.app.resize();
 
 		// We are trying to simulate how `Stage` component works, only differently handing the Application instance
 		// For that we need to add this private shim `react-pixi` normally adds inside `Stage`,
@@ -127,12 +135,19 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		AssertNotNullable(this.app);
 		AssertNotNullable(this.root);
 
-		const { container } = this.props;
-		const { container: oldContainer } = oldProps;
+		const { container, resolution } = this.props;
+		const { container: oldContainer, resolution: oldResolution } = oldProps;
 
 		if (container !== oldContainer) {
 			this.app.view.remove();
 			container.appendChild(this.app.view);
+			this.app.resizeTo = container;
+			this.app.resize();
+		}
+
+		if (resolution !== oldResolution) {
+			(this.app.renderer.plugins.interaction as InteractionManager).resolution = this.app.renderer.resolution = resolution;
+			this.app.resize();
 		}
 
 		// flush fiber
@@ -198,6 +213,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 export function GraphicsSceneRendererShared({
 	children,
+	resolution,
 	onMount,
 	onUnmount,
 	container,
@@ -206,6 +222,7 @@ export function GraphicsSceneRendererShared({
 	return (
 		<ContextBridge contexts={ forwardContexts } render={ (c) => (
 			<GraphicsSceneRendererSharedImpl
+				resolution={ resolution }
 				onMount={ onMount }
 				onUnmount={ onUnmount }
 				container={ container }

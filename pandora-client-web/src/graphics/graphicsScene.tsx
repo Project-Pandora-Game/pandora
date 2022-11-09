@@ -6,6 +6,8 @@ import { useEvent } from '../common/useEvent';
 import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './pixiViewport';
 import { Assert, AssertNever, CharacterSize } from 'pandora-common';
 import { GraphicsSceneRendererDirect, GraphicsSceneRendererShared } from './graphicsSceneRenderer';
+import classNames from 'classnames';
+import { useGraphicsSettings } from './graphicsSettings';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
@@ -27,6 +29,7 @@ const DEFAULT_BACKGROUND_COLOR = 0x1099bb;
 function GraphicsSceneCore({
 	children,
 	div,
+	resolution,
 	viewportConfig,
 	viewportRef,
 	worldWidth,
@@ -38,6 +41,7 @@ function GraphicsSceneCore({
 	createPrivatePixiInstance,
 }: ChildrenProps & GraphicsSceneProps & {
 	div: HTMLDivElement;
+	resolution: number;
 }): ReactElement {
 	const appRef = useRef<Application | null>(null);
 
@@ -160,6 +164,7 @@ function GraphicsSceneCore({
 			forwardContexts={ forwardContexts }
 			onMount={ onMount }
 			onUnmount={ onUnmount }
+			resolution={ resolution }
 		>
 			<PixiViewport
 				{ ...size }
@@ -189,19 +194,23 @@ export function GraphicsScene({
 	children,
 	sceneOptions,
 	divChildren,
+	className,
 	...divProps
 }: {
+	className: string | undefined;
 	sceneOptions?: GraphicsSceneProps;
 	divChildren?: ReactNode;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>): ReactElement {
 
+	const { resolution } = useGraphicsSettings();
+
 	const [div, setDiv] = useState<HTMLDivElement | null>(null);
 
 	return (
-		<div { ...divProps } ref={ setDiv }>
+		<div className={ classNames({ disabled: resolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
 			{
-				div ? (
-					<GraphicsSceneCore { ...sceneOptions } div={ div }>
+				div && resolution > 0 ? (
+					<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ resolution / 100 }>
 						{ children }
 					</GraphicsSceneCore>
 				) : null

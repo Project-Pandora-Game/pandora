@@ -62,7 +62,7 @@ export class Room extends ServerRoom<IShardClient> {
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		for (const character of this.characters) {
 			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
-				character.position = [CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5)), 0];
+				character.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
 				this.sendUpdateToAllInRoom({ update: { id: character.id, position: character.position } });
 			}
 		}
@@ -141,7 +141,7 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public characterEnter(character: Character): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
-		character.position = [CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5)), 0];
+		character.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
 		this.characters.add(character);
 		character.setRoom(this);
 		this.sendUpdateTo(character, { room: this.getClientData() });

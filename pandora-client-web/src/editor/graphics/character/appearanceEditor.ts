@@ -1,7 +1,7 @@
-import { Appearance, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
+import { Appearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
-import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
 import { GraphicsManagerInstance, IGraphicsLoader } from '../../../assets/graphicsManager';
 import { LoadArrayBufferTexture, StripAssetHash } from '../../../graphics/utility';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
@@ -11,6 +11,7 @@ import { downloadZip, InputWithSizeMeta } from 'client-zip';
 import { TypedEventEmitter } from '../../../event';
 import { AppearanceContainer, AppearanceEvents } from '../../../character/character';
 import { GetAssetManagerEditor } from '../../assets/assetManager';
+import { Immutable } from 'immer';
 
 export class AppearanceEditor extends Appearance {
 	private _enforce = true;
@@ -50,7 +51,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 	readonly editor: Editor;
 	public onChangeHandler: (() => void) | undefined;
 
-	constructor(editor: Editor, id: AssetId, definition?: AssetGraphicsDefinition, onChange?: () => void) {
+	constructor(editor: Editor, id: AssetId, definition?: Immutable<AssetGraphicsDefinition>, onChange?: () => void) {
 		super(id, definition ?? {
 			layers: [],
 		});
@@ -69,11 +70,6 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 	protected override createLayer(definition: LayerDefinition): AssetGraphicsLayer {
 		const layer = super.createLayer(definition);
-		layer.on('change', ({ structuralChange }) => {
-			if (structuralChange) {
-				this.onChange();
-			}
-		});
 		return layer;
 	}
 
@@ -102,9 +98,9 @@ export class EditorAssetGraphics extends AssetGraphics {
 			return;
 
 		// Prevent deletion if the layer has dependants
-		const dependant = this.layers.find((l) => l !== layer && l.definition.points === index);
+		const dependant = this.layers.find((l) => l !== layer && l.definition.value.points === index);
 		if (dependant) {
-			toast(`Failed to delete layer, because layer '${dependant.name}' depends on it`, TOAST_OPTIONS_ERROR);
+			toast(`Failed to delete layer, because layer '${LayerToImmediateName(dependant)}' depends on it`, TOAST_OPTIONS_ERROR);
 			return;
 		}
 
@@ -144,9 +140,9 @@ export class EditorAssetGraphics extends AssetGraphics {
 			layer = layer.mirror;
 		}
 
-		layer.definition.priority = priority;
-
-		layer.onChange(true);
+		layer._modifyDefinition((d) => {
+			d.priority = priority;
+		});
 	}
 
 	setScaleAs(layer: AssetGraphicsLayer, scaleAs: string | null): void {
@@ -154,42 +150,48 @@ export class EditorAssetGraphics extends AssetGraphics {
 			layer = layer.mirror;
 		}
 
-		if (scaleAs) {
-			layer.definition.scaling = {
-				scaleBone: scaleAs,
-				stops: [],
-			};
-		} else {
-			layer.definition.scaling = undefined;
-		}
-
-		layer.onChange(false);
+		layer._modifyDefinition((d) => {
+			if (scaleAs) {
+				d.scaling = {
+					scaleBone: scaleAs,
+					stops: [],
+				};
+			} else {
+				d.scaling = undefined;
+			}
+		});
 	}
 
 	addScalingStop(layer: AssetGraphicsLayer, value: number): void {
-		if (value === 0 || !Number.isInteger(value) || value < -180 || value > 180 || !layer.definition.scaling) {
+		if (layer.mirror && layer.isMirror) {
+			layer = layer.mirror;
+		}
+
+		if (value === 0 || !Number.isInteger(value) || value < -180 || value > 180) {
 			throw new Error('Invalid value supplied');
 		}
 
-		if (layer.definition.scaling.stops.some((stop) => stop[0] === value))
-			return;
+		layer._modifyDefinition((d) => {
+			Assert(d.scaling, 'Cannot add scaling stop if not scaling');
 
-		const newStops: [number, LayerImageSetting][] = [...layer.definition.scaling.stops, [value, cloneDeep(layer.definition.image)]];
-		newStops.sort((a, b) => a[0] - b[0]);
+			if (d.scaling.stops.some((stop) => stop[0] === value))
+				return;
 
-		layer.definition.scaling.stops = newStops;
-
-		layer.onChange(false);
+			d.scaling.stops.push([value, cloneDeep(d.image)]);
+			d.scaling.stops.sort((a, b) => a[0] - b[0]);
+		});
 	}
 
 	removeScalingStop(layer: AssetGraphicsLayer, stop: number): void {
-		if (!layer.definition.scaling) {
-			throw new Error('Invalid value supplied');
+		if (layer.mirror && layer.isMirror) {
+			layer = layer.mirror;
 		}
 
-		layer.definition.scaling.stops = layer.definition.scaling.stops.filter((s) => s[0] !== stop);
+		layer._modifyDefinition((d) => {
+			Assert(d.scaling, 'Cannot remove scaling stop if not scaling');
 
-		layer.onChange(false);
+			d.scaling.stops = d.scaling.stops.filter((s) => s[0] !== stop);
+		});
 	}
 
 	public layerMirrorFrom(layer: AssetGraphicsLayer, source: number | string | null): void {
@@ -200,86 +202,78 @@ export class EditorAssetGraphics extends AssetGraphics {
 			throw new Error('Cannot configure unknown layer');
 		}
 
-		if (source === null) {
-			if (typeof layer.definition.points === 'number') {
-				const points = this.layers[layer.definition.points].definition.points;
-				if (!Array.isArray(points)) {
-					throw new Error('More than one jump in points reference');
+		layer._modifyDefinition((d) => {
+			if (source === null) {
+				if (typeof d.points === 'number') {
+					const points = this.layers[d.points].definition.value.points;
+					if (!Array.isArray(points)) {
+						throw new Error('More than one jump in points reference');
+					}
+					d.points = cloneDeep(points);
 				}
-				layer.definition.points = cloneDeep(points);
-				layer.onChange(false);
+				if (typeof d.points === 'string') {
+					const manager = GraphicsManagerInstance.value;
+					const template = manager?.getTemplate(d.points);
+					if (!template) {
+						throw new Error('Unknown point template');
+					}
+					d.points = cloneDeep(template);
+				}
+				return;
 			}
-			if (typeof layer.definition.points === 'string') {
+
+			if (source === '') {
+				d.points = [];
+				return;
+			}
+			if (typeof source === 'string') {
 				const manager = GraphicsManagerInstance.value;
-				const template = manager?.getTemplate(layer.definition.points);
+				const template = manager?.getTemplate(source);
 				if (!template) {
 					throw new Error('Unknown point template');
 				}
-				layer.definition.points = cloneDeep(template);
-				layer.onChange(false);
+				d.points = source;
+				return;
 			}
-			return;
-		}
 
-		if (source === '') {
-			layer.definition.points = [];
-			layer.onChange(false);
-			return;
-		}
-		if (typeof source === 'string') {
-			const manager = GraphicsManagerInstance.value;
-			const template = manager?.getTemplate(source);
-			if (!template) {
-				throw new Error('Unknown point template');
+			if (source === layer.index) {
+				throw new Error('Cannot mirror layer from itself');
 			}
-			layer.definition.points = source;
-			layer.onChange(false);
-			return;
-		}
 
-		if (source === layer.index) {
-			throw new Error('Cannot mirror layer from itself');
-		}
+			const sourceLayer = this.layers[source];
+			if (!Array.isArray(sourceLayer?.definition.value.points)) {
+				throw new Error('Cannot mirror from layer that doesn\'t have own points');
+			}
 
-		const sourceLayer = this.layers[source];
-		if (!Array.isArray(sourceLayer?.definition.points)) {
-			throw new Error('Cannot mirror from layer that doesn\'t have own points');
-		}
-
-		layer.definition.points = source;
-		layer.onChange(false);
+			d.points = source;
+		});
 	}
 
 	private makePointDependenciesMap(): Map<AssetGraphicsLayer, AssetGraphicsLayer> {
 		const result = new Map<AssetGraphicsLayer, AssetGraphicsLayer>();
 		for (const layer of this.layers) {
-			if (typeof layer.definition.points === 'number') {
-				result.set(layer, this.layers[layer.definition.points]);
+			if (typeof layer.definition.value.points === 'number') {
+				result.set(layer, this.layers[layer.definition.value.points]);
 			}
 		}
 		return result;
 	}
 
 	private applyPointDependenciesMap(map: Map<AssetGraphicsLayer, AssetGraphicsLayer>) {
-		const changed: AssetGraphicsLayer[] = [];
 		for (const layer of this.layers) {
-			if (typeof layer.definition.points === 'number') {
-				const sourceLayer = map.get(layer);
-				if (!sourceLayer) {
-					throw new Error(`Failed to apply point map, layer '${layer.name}' not found in map`);
+			layer._modifyDefinition((d) => {
+				if (typeof d.points === 'number') {
+					const sourceLayer = map.get(layer);
+					if (!sourceLayer) {
+						throw new Error(`Failed to apply point map, layer '${LayerToImmediateName(layer)}' not found in map`);
+					}
+					const sourceIndex = this.layers.indexOf(sourceLayer);
+					if (sourceIndex < 0) {
+						throw new Error(`Failed to apply point map, depencency layer '${LayerToImmediateName(sourceLayer)}' for '${LayerToImmediateName(layer)}' not found`);
+					}
+					d.points = sourceIndex;
 				}
-				const sourceIndex = this.layers.indexOf(sourceLayer);
-				if (sourceIndex < 0) {
-					throw new Error(`Failed to apply point map, depencency layer '${sourceLayer.name}' for '${layer.name}' not found`);
-				}
-				if (layer.definition.points !== sourceIndex) {
-					layer.definition.points = sourceIndex;
-					changed.push(layer);
-				}
-			}
-		}
-		for (const layer of changed) {
-			layer.onChange(false);
+			});
 		}
 	}
 
@@ -333,40 +327,26 @@ export class EditorAssetGraphics extends AssetGraphics {
 	public loadAllUsedImages(loader: IGraphicsLoader): Promise<void> {
 		const images = new Set<string>();
 		for (const layer of this.layers) {
-			let shouldUpdate = false;
 			const processSetting = (setting: LayerImageSetting): void => {
 				{
 					const layerImage = setting.image;
 					images.add(layerImage);
-					const layerImageBasename = StripAssetHash(layerImage);
-					if (layerImage !== layerImageBasename) {
-						setting.image = layerImageBasename;
-						shouldUpdate = true;
-					}
+					setting.image = StripAssetHash(layerImage);
 					const alphaImage = setting.alphaImage;
 					if (alphaImage) {
 						images.add(alphaImage);
-						const alphaImageBasename = StripAssetHash(alphaImage);
-						if (alphaImage !== alphaImageBasename) {
-							setting.alphaImage = alphaImageBasename;
-							shouldUpdate = true;
-						}
+						setting.alphaImage = StripAssetHash(alphaImage);
 					}
 				}
 				for (const override of setting.overrides.concat(setting.alphaOverrides ?? [])) {
 					images.add(override.image);
-					const basename = StripAssetHash(override.image);
-					if (override.image !== basename) {
-						override.image = basename;
-						shouldUpdate = true;
-					}
+					override.image = StripAssetHash(override.image);
 				}
 			};
-			processSetting(layer.definition.image);
-			layer.definition.scaling?.stops.forEach((s) => processSetting(s[1]));
-			if (shouldUpdate) {
-				layer.onChange(false);
-			}
+			layer._modifyDefinition((d) => {
+				processSetting(d.image);
+				d.scaling?.stops.forEach((s) => processSetting(s[1]));
+			});
 		}
 		return Promise.allSettled(
 			Array.from(images.values())

@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition } from 'pandora-common';
+import { CharacterId, DirectoryAccountSettingsSchema, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, IsObject, ACCOUNT_SETTINGS_DEFAULT } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { IConnectionClient } from '../networking/common';
 import { Character } from './character';
@@ -7,7 +7,7 @@ import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
 
-import _ from 'lodash';
+import _, { cloneDeep } from 'lodash';
 
 /** Currently logged in or recently used account */
 export class Account {
@@ -44,6 +44,18 @@ export class Account {
 		this.data = cleanData;
 		for (const characterData of this.data.characters) {
 			this.characters.set(characterData.id, new Character(characterData, this));
+		}
+
+		// Settings migration
+		if (!IsObject(this.data.settings)) {
+			this.data.settings = cloneDeep(ACCOUNT_SETTINGS_DEFAULT);
+		} else {
+			const s = this.data.settings as Record<string, unknown>;
+			for (const [key, shape] of Object.entries(DirectoryAccountSettingsSchema.shape)) {
+				if (!shape.safeParse(s[key]).success) {
+					s[key] = cloneDeep((ACCOUNT_SETTINGS_DEFAULT as Record<string, unknown>)[key]);
+				}
+			}
 		}
 	}
 
@@ -213,10 +225,7 @@ export async function CreateAccountData(username: string, password: string, emai
 		created: Date.now(),
 		secure: await GenerateAccountSecureData(password, email, activated),
 		characters: [],
-		settings: {
-			labelColor: '#ffffff',
-			visibleRoles: [],
-		},
+		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
 	};
 }
 

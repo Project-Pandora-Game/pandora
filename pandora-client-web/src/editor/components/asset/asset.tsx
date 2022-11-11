@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { AssetGraphicsDefinition, AssetGraphicsDefinitionSchema, GetLogger, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { AssetGraphicsLayer, useLayerHasAlphaMasks, useLayerName } from '../../../assets/assetGraphics';
 import { useEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/Button/Button';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
@@ -195,14 +195,14 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 		});
 	}, () => editor.getLayersAlphaOverrideIndex(layer));
 
-	const hasAlphaMasks = useSyncExternalStore(layer.getSubscriber('change'), () => layer.hasAlphaMasks());
+	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		editor.setLayerAlphaOverride([layer], alphaIndex+1);
 	};
 
-	const name = useSyncExternalStore(layer.getSubscriber('change'), () => layer.name);
+	const name = useLayerName(layer);
 
 	return (
 		<li className={ isSelected ? 'selected' : '' }>

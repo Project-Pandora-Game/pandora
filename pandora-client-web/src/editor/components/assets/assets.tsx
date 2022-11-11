@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import { Assert, AssertNotNullable, Asset, AssetId, Item } from 'pandora-common';
 import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { useForm, Validate } from 'react-hook-form';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { AssetGraphicsLayer, useLayerName } from '../../../assets/assetGraphics';
 import { useCharacterAppearanceItems } from '../../../character/character';
 import { Button } from '../../../components/common/Button/Button';
 import { Row } from '../../../components/common/container/container';
@@ -15,7 +15,7 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
 import { AssetTreeViewCategory, ASSET_ID_PART_REGEX, GetAssetManagerEditor } from '../../assets/assetManager';
-import { EDITOR_ALPHA_ICONS, useEditorTabContext } from '../../editor';
+import { EDITOR_ALPHA_ICONS, useEditorLayerTint, useEditorTabContext } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import './assets.scss';
 
@@ -247,13 +247,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 		});
 	}, () => editor.getLayersAlphaOverrideIndex(layer));
 
-	const tint = useSyncExternalStore<number>((changed) => {
-		return editor.on('layerOverrideChange', (changedLayer) => {
-			if (changedLayer === layer) {
-				changed();
-			}
-		});
-	}, () => editor.getLayerTint(layer));
+	const tint = useEditorLayerTint(layer);
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
@@ -262,7 +256,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 
 	return (
 		<li>
-			<span>{layer.name}</span>
+			<span>{ useLayerName(layer) }</span>
 			<div className='controls'>
 				<input
 					type='color'

@@ -1,0 +1,43 @@
+import { Texture } from 'pixi.js';
+import React, { ReactElement, useEffect, useMemo, useReducer } from 'react';
+import { GraphicsLayerProps, GraphicsLayer } from '../../../graphics/graphicsLayer';
+import { useEditor } from '../../editorContextProvider';
+import { EditorAssetGraphics } from '../character/appearanceEditor';
+
+export const EDITOR_LAYER_Z_INDEX_EXTRA = 10000;
+
+export function EditorLayer({
+	getTexture,
+	layer,
+	...props
+}: GraphicsLayerProps): ReactElement {
+	const editor = useEditor();
+	const [editorGettersVersion, editorGettersUpdate] = useReducer((s: number) => s + 1, 0);
+
+	const asset = layer.asset;
+
+	// TODO: Make editor asset's images observable
+	const editorGetTexture = useMemo<((image: string) => Promise<Texture>) | undefined>(() => {
+		if (getTexture)
+			return getTexture;
+		if (asset instanceof EditorAssetGraphics)
+			return (image) => asset.getTexture(image);
+		return undefined;
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [getTexture, layer, editorGettersVersion]);
+
+	useEffect(() => {
+		if (asset instanceof EditorAssetGraphics) {
+			return editor.on('modifiedAssetsChange', () => editorGettersUpdate());
+		}
+		return undefined;
+	}, [editor, asset]);
+
+	return (
+		<GraphicsLayer
+			{ ...props }
+			layer={ layer }
+			getTexture={ editorGetTexture }
+		/>
+	);
+}

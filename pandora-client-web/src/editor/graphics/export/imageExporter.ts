@@ -1,7 +1,6 @@
 import { Size, Rectangle, CharacterSize } from 'pandora-common/dist/assets';
-import { Application, Container, Extract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture } from 'pixi.js';
+import { Application, Container, Extract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture, IRenderableObject } from 'pixi.js';
 import Delaunator from 'delaunator';
-import { GraphicsCharacter } from '../../../graphics/graphicsCharacter';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
 
@@ -34,10 +33,10 @@ export class ImageExporter {
 		return this.export(cutter, format);
 	}
 
-	characterCut(character: GraphicsCharacter, rect: Rectangle, format: ImageFormat): string {
+	imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat): string {
 		const fullSize = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT };
 		const renderTexture = RenderTexture.create(fullSize);
-		this._app.renderer.render(character, { renderTexture });
+		this._app.renderer.render(object, { renderTexture });
 		return this.textureCut(renderTexture, fullSize, [
 			[rect.x, rect.y],
 			[rect.x + rect.width, rect.y],

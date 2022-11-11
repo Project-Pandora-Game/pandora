@@ -7,7 +7,7 @@ import { DebugContextProvider, useDebugContext } from '../components/error/debug
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
 import { Editor } from './editor';
 
-const editorContext = createContext({
+export const EditorContext = createContext({
 	editor: null as Editor | null,
 	setEditor: noop as (editor: Editor | null) => void,
 });
@@ -25,9 +25,9 @@ export function EditorContextProvider({ children }: ChildrenProps): ReactElement
 		<DebugContextProvider>
 			<EditorErrorBoundry>
 				<Dialogs />
-				<editorContext.Provider value={ context }>
+				<EditorContext.Provider value={ context }>
 					{ children }
-				</editorContext.Provider>
+				</EditorContext.Provider>
 			</EditorErrorBoundry>
 		</DebugContextProvider>
 	);
@@ -48,7 +48,7 @@ function EditorErrorBoundry({ children }: ChildrenProps): ReactElement {
 }
 
 export function useMaybeEditor(): Editor | null {
-	return useContext(editorContext).editor;
+	return useContext(EditorContext).editor;
 }
 
 export function useEditor(): Editor {
@@ -60,5 +60,5 @@ export function useEditor(): Editor {
 }
 
 export function useSetEditor(): (editor: Editor | null) => void {
-	return useContext(editorContext).setEditor;
+	return useContext(EditorContext).setEditor;
 }

@@ -47,11 +47,19 @@
 				text-align: center;
 			}
 
-			.input-row {
+			.input-row, .input-section {
 				display: flex;
-				flex-direction: row;
+
+				&.input-row {
+					flex-direction: row;
+					align-items: center;
+				}
+
+				&.input-section {
+					flex-direction: column;
+				}
+
 				justify-content: space-between;
-				align-items: center;
 				margin-top: 1em;
 			}
 		}

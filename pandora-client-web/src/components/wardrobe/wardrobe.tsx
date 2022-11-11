@@ -22,14 +22,13 @@ import {
 	Item,
 	ItemId,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceItems, useCharacterAppearancePose } from '../../character/character';
+import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { GraphicsScene } from '../../graphics/graphicsScene';
 import { useAppearanceActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
@@ -42,9 +41,8 @@ import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
-import { GraphicsSceneRenderer, SceneConstructor } from '../../graphics/graphicsSceneRenderer';
+import { GraphicsScene } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { ColorInput } from '../common/colorInput/colorInput';
 
 export function WardrobeScreen(): ReactElement | null {
@@ -125,25 +123,11 @@ function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
 	const navigate = useNavigate();
 
-	const manager = useObservable(GraphicsManagerInstance);
-
-	const characterScene = useCallback<SceneConstructor>(() => {
-		if (!manager)
-			return null;
-
-		const scene = new GraphicsScene();
-
-		const gCharacter = new GraphicsCharacter(character, scene.renderer);
-		scene.add(gCharacter);
-
-		gCharacter.useGraphics(manager.getAssetGraphicsById.bind(manager));
-
-		return scene;
-	}, [character, manager]);
-
 	return (
 		<div className='wardrobe'>
-			<GraphicsSceneRenderer className='characterPreview' scene={ characterScene } />
+			<GraphicsScene className='characterPreview'>
+				<GraphicsCharacter appearanceContainer={ character } />
+			</GraphicsScene>
 			<TabContainer className='flex-1'>
 				<Tab name='Items'>
 					<div className='wardrobe-pane'>
@@ -661,16 +645,8 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 	const shardConnector = useShardConnector();
 
 	const bones = useCharacterAppearancePose(character);
-	const armsPose = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
-		if (change.includes('pose')) {
-			onChange();
-		}
-	}), () => character.appearance.getArmsPose());
-	const view = useSyncExternalStore((onChange) => character.on('appearanceUpdate', (change) => {
-		if (change.includes('pose')) {
-			onChange();
-		}
-	}), () => character.appearance.getView());
+	const armsPose = useCharacterAppearanceArmsPose(character);
+	const view = useCharacterAppearanceView(character);
 
 	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
 		if (shardConnector) {

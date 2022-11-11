@@ -1,26 +1,37 @@
 import { CharacterSize } from 'pandora-common';
 import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix } from 'pixi.js';
 
-const FILTER_CONDITION = 'a > 0.0';
+const FILTER_CONDITION = 'masky.a > 0.5 && masky.r < 0.5';
 const POLYGON_COLOR = 0xFF0000;
 const POLYGON_ALPHA = 1.0;
 
 export class GraphicsMaskLayer {
 	private readonly _renderer: AbstractRenderer;
 	private readonly _getTexture: (image: string) => Promise<Texture>;
-	private readonly _renderTexture = RenderTexture.create({ width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT });
+	private readonly _renderTexture: RenderTexture;
 	private _textureParent?: Sprite | MeshMaterial;
 	private _texture: Texture = Texture.EMPTY;
 	private _result?: Mesh | Sprite;
 	private _geometry?: Geometry;
 	private _lastContent?: string | [number, number][][];
 
-	public readonly sprite = new Sprite(this._renderTexture);
-	public readonly filter: Filter = new AlphaMaskFilter(this.sprite);
+	public readonly maskWidth: number;
+	public readonly maskHeight: number;
+	public readonly maskOverscan: number;
 
-	constructor(renderer: AbstractRenderer, getTexture: (image: string) => Promise<Texture>) {
+	public readonly sprite: Sprite;
+	public readonly filter: Filter;
+
+	constructor(renderer: AbstractRenderer, maskSprite: Sprite, getTexture: (image: string) => Promise<Texture>, width: number, height: number, overscan: number) {
+		this.maskWidth = width;
+		this.maskHeight = height;
+		this.maskOverscan = overscan;
 		this._renderer = renderer;
 		this._getTexture = getTexture;
+		this._renderTexture = RenderTexture.create({ width, height });
+		this.sprite = maskSprite;
+		this.sprite.texture = this._renderTexture;
+		this.filter = new AlphaMaskFilter(this.sprite);
 	}
 
 	render() {
@@ -33,12 +44,14 @@ export class GraphicsMaskLayer {
 
 	destroy() {
 		this.filter.destroy();
-		this._renderTexture.destroy();
-		this.sprite.destroy();
+		this.sprite.texture = Texture.WHITE;
+		this._renderTexture.destroy(true);
 		this._result?.destroy();
+		this._result = undefined;
 		if (this._texture instanceof RenderTexture) {
 			this._texture.destroy();
 		}
+		this._texture = Texture.EMPTY;
 	}
 
 	updateContent(content: string | [number, number][][]): void {
@@ -92,6 +105,7 @@ export class GraphicsMaskLayer {
 		} else {
 			this._result = this._textureParent = new Sprite(this._texture);
 		}
+		this._result.position.set(this.maskOverscan, this.maskOverscan);
 		this.render();
 	}
 }
@@ -126,7 +140,7 @@ void main(void)
 {
 	vec4 original = texture2D(uSampler, vTextureCoord);
 	vec4 masky = texture2D(mask, vMaskCoord);
-	if (masky.${FILTER_CONDITION}) {
+	if (${FILTER_CONDITION}) {
 		discard;
 	} else {
 		gl_FragColor = original;

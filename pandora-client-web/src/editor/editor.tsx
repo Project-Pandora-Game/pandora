@@ -7,7 +7,7 @@ import './editor.scss';
 import { Button } from '../components/common/Button/Button';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { LayerStateOverrides } from '../graphics/def';
-import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
+import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useLayerDefinition } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
@@ -16,7 +16,6 @@ import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
 import { useEvent } from '../common/useEvent';
-import { PreviewView, SetupView } from './editorViews';
 import { useBrowserStorage } from '../browserStorage';
 import z from 'zod';
 import { AssetInfoUI } from './components/assetInfo/assetInfo';
@@ -24,6 +23,8 @@ import { Select } from '../components/common/Select/Select';
 import { GetAssetManagerEditor } from './assets/assetManager';
 import { nanoid } from 'nanoid';
 import { noop } from 'lodash';
+import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
+import { useEditor } from './editorContextProvider';
 
 const logger = GetLogger('Editor');
 
@@ -41,9 +42,10 @@ export class Editor extends TypedEventEmitter<{
 
 	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
 	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
+	public readonly targetLayerPoints = new Observable<readonly DraggablePoint[]>([]);
 	public readonly targetPoint = new Observable<DraggablePoint | null>(null);
 
-	public readonly backgroundColor = new Observable<number>(0x1099bb);
+	public readonly backgroundColor = new Observable<string>('#1099bb');
 	public readonly getCenter = new Observable<() => { x: number; y: number; }>(
 		() => ({ x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }),
 	);
@@ -57,13 +59,35 @@ export class Editor extends TypedEventEmitter<{
 			}
 		});
 
+		let targetLayerUpdateCleanup: (() => void) | undefined;
 		this.targetLayer.subscribe((layer) => {
+			targetLayerUpdateCleanup?.();
+			targetLayerUpdateCleanup = undefined;
 			if (layer && this.targetAsset.value !== layer.asset) {
 				logger.error('Set target layer with non-matching target asset', layer, this.targetAsset.value);
 				this.targetLayer.value = null;
 				layer = null;
 			}
 			if (this.targetPoint.value?.layer !== layer) {
+				this.targetPoint.value = null;
+			}
+			this.targetLayerPoints.value = [];
+			if (layer) {
+				const targetLayer = layer;
+				this.targetPoint.value = null;
+				targetLayerUpdateCleanup = targetLayer.definition.subscribe(() => {
+					const points = CalculateImmediateLayerPointDefinition(targetLayer);
+					const currentPoints = this.targetLayerPoints.value;
+					if (currentPoints.length === points.length) {
+						for (let i = 0; i < points.length; i++) {
+							currentPoints[i].updatePoint(points[i]);
+						}
+						return;
+					}
+					this.targetPoint.value = null;
+					this.targetLayerPoints.value = points.map((definition) => new DraggablePoint(targetLayer, definition));
+				}, true);
+			} else {
 				this.targetPoint.value = null;
 			}
 		});
@@ -135,21 +159,6 @@ export class Editor extends TypedEventEmitter<{
 		}
 	}
 
-	public getLayerTint(layer: AssetGraphicsLayer): number {
-		const override = this.getLayerStateOverride(layer);
-		if (override?.color !== undefined) {
-			return override.color;
-		}
-		const { colorization } = layer.asset.asset.definition;
-		if (colorization) {
-			const index = layer.definition.colorizationIndex;
-			if (index != null && index >= 0 && index < colorization.length) {
-				return parseInt(colorization[index].default.substring(1), 16);
-			}
-		}
-		return 0xffffff;
-	}
-
 	public setLayerTint(layer: AssetGraphicsLayer, tint: number | undefined): void {
 		this.setLayerStateOverride(layer, {
 			...this.getLayerStateOverride(layer),
@@ -201,10 +210,36 @@ export class Editor extends TypedEventEmitter<{
 		this.targetAsset.value = graphics;
 	}
 
-	public setBackgroundColor(color: number): void {
+	public setBackgroundColor(color: string): void {
 		this.backgroundColor.value = color;
-		document.documentElement.style.setProperty('--editor-background-color', `#${color.toString(16)}`);
+		document.documentElement.style.setProperty('--editor-background-color', color);
 	}
+}
+
+export function useEditorLayerStateOverride(layer: AssetGraphicsLayer): LayerStateOverrides | undefined {
+	const editor = useEditor();
+	return useSyncExternalStore((changed) => {
+		return editor.on('layerOverrideChange', (changedLayer) => {
+			if (changedLayer === layer) {
+				changed();
+			}
+		});
+	}, () => editor.getLayerStateOverride(layer));
+}
+
+export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
+	const override = useEditorLayerStateOverride(layer);
+	const { colorizationIndex } = useLayerDefinition(layer);
+	if (override?.color !== undefined) {
+		return override.color;
+	}
+	const { colorization } = layer.asset.asset.definition;
+	if (colorization) {
+		if (colorizationIndex != null && colorizationIndex >= 0 && colorizationIndex < colorization.length) {
+			return parseInt(colorization[colorizationIndex].default.substring(1), 16);
+		}
+	}
+	return 0xffffff;
 }
 
 export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: boolean): readonly AssetGraphicsLayer[] {
@@ -219,8 +254,8 @@ const TABS = [
 	['Layer', 'editor-ui', LayerUI],
 	['Points', 'editor-ui', PointsUI],
 	['Asset Info', 'editor-ui', AssetInfoUI],
-	['Setup', 'editor-scene', SetupView],
-	['Preview', 'editor-scene', PreviewView],
+	['Setup', 'editor-scene', EditorSetupScene],
+	['Preview', 'editor-scene', EditorResultScene],
 ] as const;
 
 type TabsName = (typeof TABS)[number][0];

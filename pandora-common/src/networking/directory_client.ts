@@ -17,6 +17,11 @@ export const DirectoryAccountSettingsSchema = z.object({
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
+export const ACCOUNT_SETTINGS_DEFAULT: IDirectoryAccountSettings = {
+	visibleRoles: [],
+	labelColor: '#ffffff',
+};
+
 export const AccountCryptoKeySchema = z.object({
 	publicKey: z.string(),
 	salt: z.string(),

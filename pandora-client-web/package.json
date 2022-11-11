@@ -20,6 +20,7 @@
 		"start": "pnpm dev"
 	},
 	"dependencies": {
+		"@saitonakamura/react-pixi": "^7.0.0-beta-5",
 		"bowser": "^2.11.0",
 		"classnames": "^2.3.1",
 		"client-zip": "^2.2.2",

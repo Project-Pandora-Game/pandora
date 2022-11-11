@@ -17,7 +17,7 @@ export function useTexture(image: string, preferBlank: boolean = false, customGe
 		const getTexture = customGetTexture ?? manager?.loader.getTexture.bind(manager.loader);
 		wanted.current = image;
 		wantedGetTexture.current = getTexture;
-		if (!getTexture) {
+		if (!getTexture || image === '') {
 			setTexture({
 				image,
 				texture: Texture.EMPTY,
@@ -41,6 +41,11 @@ export function useTexture(image: string, preferBlank: boolean = false, customGe
 					});
 				}
 			});
+
+		return () => {
+			// Clear the wanted image so set doesn't happen after unmount
+			wanted.current = '';
+		};
 	}, [manager, image, customGetTexture]);
 
 	if (texture.image === image)

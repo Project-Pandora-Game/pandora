@@ -1,6 +1,6 @@
 {
 	"debug.onTaskErrors": "showErrors",
-	"npm.packageManager": "yarn",
+	"npm.packageManager": "pnpm",
 	"editor.insertSpaces": false,
 	"files.insertFinalNewline": true,
 	"files.trimTrailingWhitespace": true,

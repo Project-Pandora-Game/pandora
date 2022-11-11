@@ -51,7 +51,7 @@ importers:
       lodash: ^4.17.21
       mini-css-extract-plugin: ^2.5.3
       nanoid: ^3.3.4
-      pandora-common: '*'
+      pandora-common: workspace:*
       pixi-viewport: ^4.35.1
       pixi.js: ^6.5.4
       postcss: ^8.4.5
@@ -233,7 +233,7 @@ importers:
       nanoid: ^3.2.0
       nodemailer: ^6.7.2
       nodemon: ^2.0.15
-      pandora-common: '*'
+      pandora-common: workspace:*
       prom-client: ^14.0.1
       rimraf: ^3.0.2
       socket.io: ^4.5.2
@@ -306,7 +306,7 @@ importers:
       mongodb: ^4.10.0
       nanoid: ^3.3.4
       nodemon: ^2.0.16
-      pandora-common: '*'
+      pandora-common: workspace:*
       prom-client: ^14.0.1
       rimraf: ^3.0.2
       socket.io: ^4.5.2

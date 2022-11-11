@@ -238,22 +238,21 @@ export function useLayerName(layer: AssetGraphicsLayer): string {
 export function CalculateImmediateLayerPointDefinition(layer: AssetGraphicsLayer): PointDefinitionCalculated[] {
 	const d = layer.definition.value;
 	const sourceLayer = typeof d.points === 'number' ? layer.asset.layers[d.points] : layer;
-	const { points } = sourceLayer.definition.value;
+	let { points } = sourceLayer.definition.value;
 	Assert(typeof points !== 'number', 'More than one jump in points reference');
 
-	let p = points;
-	if (typeof p === 'string') {
-		const template = GraphicsManagerInstance.value?.getTemplate(p);
+	if (typeof points === 'string') {
+		const template = GraphicsManagerInstance.value?.getTemplate(points);
 		if (!template) {
-			throw new Error(`Unknown template '${p}'`);
+			throw new Error(`Unknown template '${points}'`);
 		}
-		p = template;
+		points = template;
 	}
 
 	if (layer.isMirror && d.mirror === LayerMirror.FULL) {
-		p = p.map(MirrorPoint);
+		points = points.map(MirrorPoint);
 	}
-	const calculatedPoints = p.map<PointDefinitionCalculated>((point, index) => ({
+	const calculatedPoints = points.map<PointDefinitionCalculated>((point, index) => ({
 		...cloneDeep(point) as PointDefinition,
 		pos: [...point.pos],
 		index,

@@ -31,7 +31,7 @@
 		"lodash": "^4.17.21",
 		"mongodb": "^4.10.0",
 		"nanoid": "^3.3.4",
-		"pandora-common": "*",
+		"pandora-common": "workspace:*",
 		"prom-client": "^14.0.1",
 		"socket.io": "^4.5.2",
 		"socket.io-client": "~4.4.1",

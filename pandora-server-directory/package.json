@@ -36,7 +36,7 @@
 		"mongodb-memory-server": "^8.9.2",
 		"nanoid": "^3.2.0",
 		"nodemailer": "^6.7.2",
-		"pandora-common": "*",
+		"pandora-common": "workspace:*",
 		"prom-client": "^14.0.1",
 		"socket.io": "^4.5.2",
 		"wtfnode": "^0.9.1"

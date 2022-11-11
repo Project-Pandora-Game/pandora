@@ -1,0 +1,5 @@
+packages:
+  - pandora-common
+  - pandora-server-directory
+  - pandora-server-shard
+  - pandora-client-web

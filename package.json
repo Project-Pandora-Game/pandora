@@ -13,14 +13,13 @@
 	},
 	"scripts": {
 		"postinstall": "node .hooks/postinstall.cjs",
-		"ci": "yarn workspaces run build && yarn workspaces run lint && yarn workspaces run type-check:test && yarn workspaces run test",
-		"deploy": "yarn workspace pandora-common run build && yarn workspace pandora-server-directory run build && yarn workspace pandora-server-shard run build && yarn run deploy-client",
-		"deploy-client": "yarn workspace pandora-client-web run build && rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
-		"parallel:build": "yarn workspace pandora-common run build && ./parallel.sh build directory shard client",
-		"parallel:lint": "./parallel.sh lint common directory shard client",
-		"parallel:type-check:test": "./parallel.sh type-check:test common directory shard client",
-		"parallel:test": "./parallel.sh test common directory shard client",
-		"parallel:ci": "yarn parallel:build && yarn run parallel:lint && yarn run parallel:type-check:test && yarn run parallel:test",
-		"parallel:deploy": "yarn parallel:build && rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist"
+		"ci": "pnpm run build && pnpm lint && pnpm run type-check:test && pnpm run test",
+		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
+		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
+		"debloy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
+		"lint": "pnpm -r --parallel run lint",
+		"type-check:test": "pnpm -r --parallel run type-check:test",
+		"test": "pnpm -r --parallel run test",
+		"build": "pnpm -r --parallel run build"
 	}
 }

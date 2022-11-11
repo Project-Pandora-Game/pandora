@@ -1151,6 +1151,11 @@
   resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.0.2.tgz#1c17eadb2fa77f80a796ad5ea9bf108e6993ef06"
   integrity sha512-GRSOFhJzjGN+d4sKHTMSvNeUPoZiDHWmRnXfzaxrqe7dE/Nzlc8BiMSJdLDESZlndM7jIUrZ/F4yWqVYlI0rwQ==
 
+"@saitonakamura/react-pixi@^7.0.0-beta-5":
+  version "7.0.0-beta-5"
+  resolved "https://registry.yarnpkg.com/@saitonakamura/react-pixi/-/react-pixi-7.0.0-beta-5.tgz#18ead3dcf1d0a7a72103959dafb3afb953cbf7a0"
+  integrity sha512-/La7Iz2GS7D3DHyYA+GQcyDToD/lZjXvNIHF5Mv3fA0EiQ3XwQI5z0TGD8SZ0VeU3PK4IhZW21dk9ycQKaGO+A==
+
 "@sekkmer/sass-loader@^13.0.2-H1":
   version "13.0.2-H1"
   resolved "https://registry.yarnpkg.com/@sekkmer/sass-loader/-/sass-loader-13.0.2-H1.tgz#0297ffd3ce13116ebf906ba79c735df855ab1712"

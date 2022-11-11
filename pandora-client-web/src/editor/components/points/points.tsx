@@ -1,8 +1,8 @@
-import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import React, { ReactElement, useCallback, useState } from 'react';
+import { AssetGraphicsLayer, LayerToImmediateName, useLayerDefinition, useLayerName } from '../../../assets/assetGraphics';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
-import { useSyncUserInput } from '../../../common/useSyncUserInput';
+import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/Button/Button';
 import { Select } from '../../../components/common/Select/Select';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
@@ -11,7 +11,7 @@ import { useObservable } from '../../../observable';
 import { useEditorAssetLayers } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
-import { DraggablePoint } from '../../graphics/draggable';
+import { DraggablePoint, useDraggablePointDefinition } from '../../graphics/draggable';
 import { ParseTransforms, SerializeTransforms } from '../../parsing';
 
 export function PointsUI(): ReactElement {
@@ -33,18 +33,22 @@ export function PointsUI(): ReactElement {
 	return (
 		<Scrollbar color='lighter' className='editor-setupui slim'>
 			{ advancedWarning }
-			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; {selectedLayer.name}</h3>
+			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; <LayerName layer={ selectedLayer } /></h3>
 			<MirrorPointsFromLayer layer={ selectedLayer } asset={ asset } />
 			<PointsEditUi layer={ selectedLayer } />
 		</Scrollbar>
 	);
 }
 
+export function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+	return <>{ useLayerName(layer) }</>;
+}
+
 export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const getCenter = useObservable(editor.getCenter);
 	const selectedPoint = useObservable(editor.targetPoint);
-	const points = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.points);
+	const { points } = useLayerDefinition(layer);
 
 	if (typeof points === 'string') {
 		return <div>Template cannot be edited</div>;
@@ -70,17 +74,19 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 
 function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const layers = useEditorAssetLayers(asset, false);
-	const points = useSyncExternalStore(layer.getSubscriber('change'), () => layer.definition.points);
+	const { points } = useLayerDefinition(layer);
 	const graphicsManger = useObservable(GraphicsManagerInstance);
+	const pointSourceLayer = typeof points === 'number' ? asset.layers[points] : layer;
+	const pointSourceLayerName = useLayerName(pointSourceLayer);
 
 	if (!graphicsManger)
 		return null;
 
 	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
 	for (const l of layers) {
-		if (Array.isArray(l.definition.points) && l !== layer) {
+		if (Array.isArray(l.definition.value.points) && l !== layer) {
 			elements.push(
-				<option value={ l.index } key={ l.index }>{ l.name }</option>,
+				<option value={ l.index } key={ l.index }>{ LayerToImmediateName(l) }</option>,
 			);
 		}
 	}
@@ -115,7 +121,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 			{
 				typeof points === 'number' &&
 				<>
-					<div>Points are mirrored from layer: { asset.layers[points].name }</div>
+					<div>Points are mirrored from layer: { pointSourceLayerName }</div>
 					<Button onClick={ () => {
 						asset.layerMirrorFrom(layer, null);
 					} }>
@@ -139,10 +145,9 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 }
 
 function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement | null {
-	const pointX = useSyncExternalStore(point.getSubscriber('change'), () => point.x);
-	const pointY = useSyncExternalStore(point.getSubscriber('change'), () => point.y);
-	const pointMirror = useSyncExternalStore(point.getSubscriber('change'), () => point.mirror);
-	const pointType = useSyncExternalStore(point.getSubscriber('change'), () => point.pointType);
+	const { pos, mirror, pointType } = useDraggablePointDefinition(point);
+	const pointX = pos[0];
+	const pointY = pos[1];
 
 	return (
 		<>
@@ -174,7 +179,7 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 				<label>Mirror point to the opposing character half</label>
 				<input
 					type='checkbox'
-					checked={ pointMirror }
+					checked={ mirror }
 					onChange={ (e) => {
 						point.setMirror(e.target.checked);
 					} }
@@ -200,7 +205,7 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 }
 
 function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
-	const [value, setValue] = useSyncUserInput(point.getSubscriber('change'), () => SerializeTransforms(point.transforms), [point]);
+	const [value, setValue] = useUpdatedUserInput(SerializeTransforms(useDraggablePointDefinition(point).transforms), [point]);
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {

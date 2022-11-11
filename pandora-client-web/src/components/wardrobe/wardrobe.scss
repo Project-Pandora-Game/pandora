@@ -16,6 +16,10 @@ $header-height: 2em;
 		width: max(min(20em, 90vw), 33vw);
 		flex-shrink: 0;
 
+		&.disabled {
+			display: none;
+		}
+
 		canvas {
 			height: 100%;
 			width: 100%;

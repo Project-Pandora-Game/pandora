@@ -1,4 +1,4 @@
-import { Appearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, BoneState, GetLogger, ICharacterPublicData, Item, Logger } from 'pandora-common';
+import { Appearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -71,4 +71,24 @@ export function useCharacterAppearancePose(character: AppearanceContainer): read
 			}
 		});
 	}, () => character.appearance.getFullPose());
+}
+
+export function useCharacterAppearanceArmsPose(character: AppearanceContainer): ArmsPose {
+	return useSyncExternalStore((onChange) => {
+		return character.on('appearanceUpdate', (changed) => {
+			if (changed.includes('pose')) {
+				onChange();
+			}
+		});
+	}, () => character.appearance.getArmsPose());
+}
+
+export function useCharacterAppearanceView(character: AppearanceContainer): CharacterView {
+	return useSyncExternalStore((onChange) => {
+		return character.on('appearanceUpdate', (changed) => {
+			if (changed.includes('pose')) {
+				onChange();
+			}
+		});
+	}, () => character.appearance.getView());
 }

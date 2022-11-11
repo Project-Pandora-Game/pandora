@@ -1,3 +1,4 @@
+import { Immutable } from 'immer';
 import { AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher } from 'pandora-common';
 
 const IsConditionOperator = ZodMatcher(ConditionOperatorSchema);
@@ -22,7 +23,7 @@ function ParseFloat(input: string): number {
 	return result;
 }
 
-export function SerializeAtomicCondition(condition: AtomicCondition): string {
+export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>): string {
 	if ('bone' in condition && condition.bone != null)
 		return `${condition.bone}${condition.operator}${condition.value}`;
 
@@ -63,7 +64,7 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 	};
 }
 
-function SerializeCondition(condition: Condition): string {
+function SerializeCondition(condition: Immutable<Condition>): string {
 	return condition
 		.map((clause) =>
 			clause
@@ -81,7 +82,7 @@ export function ParseCondition(input: string, validBones: string[]): Condition {
 		);
 }
 
-function SerializeTransform(transform: TransformDefinition): string {
+function SerializeTransform(transform: Immutable<TransformDefinition>): string {
 	if (transform.type === 'rotate') {
 		const res = `rotate ${transform.bone} ${transform.value}`;
 		return transform.condition ? `${res} ${SerializeCondition(transform.condition)}` : res;
@@ -130,7 +131,7 @@ function ParseTransform(input: string, validBones: string[]): TransformDefinitio
 	throw new Error(`Unknown transform '${columns[0]}'`);
 }
 
-export function SerializeTransforms(transforms: TransformDefinition[]): string {
+export function SerializeTransforms(transforms: Immutable<TransformDefinition[]>): string {
 	return transforms
 		.map(SerializeTransform)
 		.join('\n');
@@ -141,7 +142,7 @@ export function ParseTransforms(input: string, validBones: string[]): TransformD
 		.map((line) => ParseTransform(line, validBones));
 }
 
-export function SerializeLayerImageOverride(imageOverride: LayerImageOverride): string {
+export function SerializeLayerImageOverride(imageOverride: Immutable<LayerImageOverride>): string {
 	return `${SerializeCondition(imageOverride.condition)} ${imageOverride.image}`;
 }
 
@@ -153,7 +154,7 @@ export function ParseLayerImageOverride(input: string, validBones: string[]): La
 	};
 }
 
-export function SerializeLayerImageOverrides(imageOverrides: LayerImageOverride[]): string {
+export function SerializeLayerImageOverrides(imageOverrides: Immutable<LayerImageOverride[]>): string {
 	return imageOverrides
 		.map(SerializeLayerImageOverride)
 		.join('\n');

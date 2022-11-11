@@ -4,6 +4,7 @@ import { Observable } from '../observable';
 import { AssetGraphics } from './assetGraphics';
 
 export interface IGraphicsLoader {
+	getCachedTexture(path: string): Texture | null;
 	getTexture(path: string): Promise<Texture>;
 	loadTextFile(path: string): Promise<string>;
 	loadFileArrayBuffer(path: string, type?: string): Promise<ArrayBuffer>;

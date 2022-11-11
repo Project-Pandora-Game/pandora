@@ -5,6 +5,7 @@ import { Tab, TabContainer } from '../common/tabs/tabs';
 import { AccountSettings } from './accountSettings';
 import { useNavigate } from 'react-router-dom';
 import { CharacterSettings } from './characterSettings';
+import { GraphicsSettings } from '../../graphics/graphicsSettings';
 
 export function Settings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -30,7 +31,7 @@ export function Settings(): ReactElement | null {
 					<Tab name='Graphics'>
 						<div className='settings-tab'>
 							<div className='settings-tab-contents'>
-								Work in progress
+								<GraphicsSettings />
 							</div>
 						</div>
 					</Tab>

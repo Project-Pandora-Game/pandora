@@ -8,6 +8,9 @@ const BROWSER_STORAGES_SESSION = new Map<string, BrowserStorage<unknown>>();
 export class BrowserStorage<T> extends Observable<T> {
 	/** Key used to store the value */
 	public readonly _key;
+	public readonly validate: (value: unknown) => boolean;
+	/** Inhibitor of saving to prevent infinite loop */
+	private _saveInhibit: boolean = false;
 
 	/**
 	 * @param name - Unique identifier of the value used to store it
@@ -15,17 +18,14 @@ export class BrowserStorage<T> extends Observable<T> {
 	 * @param validate - Optional callback to validate currently saved value -
 	 * if it returns `false`, then `defaultValue` is used instead of the saved one
 	 */
-	private constructor(name: string, defaultValue: T, validate?: (value: unknown) => boolean, storage: Storage = localStorage) {
+	private constructor(storage: Storage, name: string, defaultValue: T, validate: (value: unknown) => boolean) {
 		super(defaultValue);
-		this._key = `pandora.${name}`;
-		const saved = storage.getItem(this._key);
-		if (saved !== null) {
-			const value = JSON.parse(saved) as unknown;
-			if (!validate || validate(value)) {
-				this.value = value as T;
-			}
-		}
+		this._key = name;
+		this.validate = validate;
+		this.setParse(storage.getItem(this._key));
 		this.subscribe((value) => {
+			if (this._saveInhibit)
+				return;
 			if (value === undefined) {
 				storage.removeItem(this._key);
 			} else {
@@ -34,26 +34,49 @@ export class BrowserStorage<T> extends Observable<T> {
 		});
 	}
 
+	public setParse(value: string | null): void {
+		if (value !== null) {
+			const parsedValue = JSON.parse(value) as unknown;
+			if (this.validate(parsedValue)) {
+				const c = this._saveInhibit;
+				this._saveInhibit = true;
+				this.value = parsedValue as T;
+				this._saveInhibit = c;
+			}
+		}
+	}
+
 	public static create<T>(name: string, defaultValue: T, validate?: (value: unknown) => boolean): BrowserStorage<T> {
+		name = `pandora.${name}`;
 		let storage = BROWSER_STORAGES_LOCAL.get(name) as BrowserStorage<T> | undefined;
 		if (storage !== undefined) {
 			return storage;
 		}
-		storage = new BrowserStorage<T>(name, defaultValue, validate);
+		storage = new BrowserStorage<T>(localStorage, name, defaultValue, validate ?? (() => true));
 		BROWSER_STORAGES_LOCAL.set(name, storage as BrowserStorage<unknown>);
 		return storage;
 	}
 
 	public static createSession<T>(name: string, defaultValue: T, validate?: (value: unknown) => boolean): BrowserStorage<T> {
+		name = `pandora.${name}`;
 		let storage = BROWSER_STORAGES_SESSION.get(name) as BrowserStorage<T> | undefined;
 		if (storage !== undefined) {
 			return storage;
 		}
-		storage = new BrowserStorage<T>(name, defaultValue, validate, sessionStorage);
+		storage = new BrowserStorage<T>(sessionStorage, name, defaultValue, validate ?? (() => true));
 		BROWSER_STORAGES_SESSION.set(name, storage as BrowserStorage<unknown>);
 		return storage;
 	}
 }
+
+window.addEventListener('storage', (ev) => {
+	if (ev.key && ev.storageArea === localStorage) {
+		const storage = BROWSER_STORAGES_LOCAL.get(ev.key);
+		if (storage) {
+			storage.setParse(ev.newValue);
+		}
+	}
+});
 
 export function useBrowserStorage<T>(name: string, defaultValue: T, validate?: (value: unknown) => boolean): [T, (value: T) => void] {
 	const storage = useMemo(() => BrowserStorage.create(name, defaultValue, validate), [name, defaultValue, validate]);

@@ -7,6 +7,13 @@ export function useSyncUserInput<T extends string | number | boolean>(
 	deps: DependencyList = [],
 ): [T, (newValue: T) => void] {
 	const originalValue = useSyncExternalStore(subscribe, getSnapshot);
+	return useUpdatedUserInput(originalValue, deps);
+}
+
+export function useUpdatedUserInput<T extends string | number | boolean>(
+	originalValue: T,
+	deps: DependencyList = [],
+): [T, (newValue: T) => void] {
 	const [value, setValue] = useState(originalValue);
 	const lastSetValue = useRef(originalValue);
 	const shouldUpdate = useRef(true);

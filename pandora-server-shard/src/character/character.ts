@@ -118,7 +118,7 @@ export class Character {
 			const roomBackground = ResolveBackground(assetManager, this.room.getClientData().background);
 			const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 			if (this.position[0] > roomBackground.size[0] || this.position[1] > maxY) {
-				this.position = [CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5)), 0];
+				this.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
 				this.room.sendUpdateToAllInRoom({ update: { id: this.id, position: this.position } });
 			}
 		}

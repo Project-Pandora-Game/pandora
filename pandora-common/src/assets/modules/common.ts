@@ -5,6 +5,8 @@ import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character';
 import { AssetProperties } from '../properties';
 import type { AppearanceValidationResult } from '../appearanceValidation';
+import type { AssetManager } from '../assetManager';
+import type { IItemLoadContext } from '../item';
 
 export interface IModuleConfigCommon<Type extends string> {
 	type: Type;
@@ -24,8 +26,8 @@ export const IModuleItemDataCommonSchema = z.object({
 type __satisfies__IModuleItemDataCommonSchema = Satisfies<z.infer<typeof IModuleItemDataCommonSchema>, IModuleItemDataCommon<string>>;
 
 export interface IAssetModuleDefinition<Type extends string> {
-	parseData(asset: Asset, moduleName: string, config: IModuleItemDataCommon<Type>, data: unknown): IModuleItemDataCommon<Type>;
-	loadModule(asset: Asset, moduleName: string, config: IModuleItemDataCommon<Type>, data: unknown): IItemModule<Type>;
+	parseData(asset: Asset, moduleName: string, config: IModuleItemDataCommon<Type>, data: unknown, assetMananger: AssetManager): IModuleItemDataCommon<Type>;
+	loadModule(asset: Asset, moduleName: string, config: IModuleItemDataCommon<Type>, data: unknown, context: IItemLoadContext): IItemModule<Type>;
 }
 
 export interface IItemModule<Type extends string = string> {

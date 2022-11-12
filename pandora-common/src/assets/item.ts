@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { Logger } from '../logging';
 import { HexColorString, HexColorStringSchema, zTemplateString } from '../validation';
 import { AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
+import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule, IModuleItemDataCommonSchema } from './modules/common';
@@ -31,18 +33,26 @@ function FixupColorFromAsset(color: readonly HexColorString[], asset: Asset): re
 	return color;
 }
 
+export type IItemLoadContext = {
+	assetMananger: AssetManager;
+	doLoadTimeCleanup: boolean;
+	logger?: Logger;
+};
+
 /**
  * Class representing an equipped item
  *
  * **THIS CLASS IS IMMUTABLE**
  */
 export class Item {
+	readonly assetMananger: AssetManager;
 	readonly id: ItemId;
 	readonly asset: Asset;
 	readonly color: readonly HexColorString[];
 	readonly modules: ReadonlyMap<string, IItemModule>;
 
-	constructor(id: ItemId, asset: Asset, bundle: ItemBundle) {
+	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
+		this.assetMananger = context.assetMananger;
 		this.id = id;
 		this.asset = asset;
 		if (this.asset.id !== bundle.asset) {
@@ -53,7 +63,7 @@ export class Item {
 		// Load modules
 		const modules = new Map<string, IItemModule>();
 		for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
-			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName]));
+			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
 		}
 		this.modules = modules;
 	}
@@ -88,7 +98,10 @@ export class Item {
 	public changeColor(color: readonly HexColorString[]): Item {
 		const bundle = this.exportToBundle();
 		bundle.color = color.slice();
-		return new Item(this.id, this.asset, bundle);
+		return new Item(this.id, this.asset, bundle, {
+			assetMananger: this.assetMananger,
+			doLoadTimeCleanup: false,
+		});
 	}
 
 	public moduleAction(moduleName: string, action: ItemModuleAction): Item | null {
@@ -105,6 +118,9 @@ export class Item {
 				...bundle.moduleData,
 				[moduleName]: moduleResult.exportData(),
 			},
+		}, {
+			assetMananger: this.assetMananger,
+			doLoadTimeCleanup: false,
 		});
 	}
 

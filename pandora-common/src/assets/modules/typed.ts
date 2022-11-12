@@ -6,6 +6,8 @@ import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceValidationResult } from '../appearanceValidation';
+import { IItemLoadContext } from '../item';
+import { AssetManager } from '../assetManager';
 
 export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	/** ID if this variant, must be unique */
@@ -52,14 +54,15 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 		};
 	}
 
-	loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigTyped, data: IModuleItemDataTyped): ItemModuleTyped {
-		return new ItemModuleTyped(config, data);
+	loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped {
+		return new ItemModuleTyped(config, data, context);
 	}
 }
 
 export class ItemModuleTyped implements IItemModule<'typed'> {
 	public readonly type = 'typed';
 
+	private readonly assetMananger: AssetManager;
 	public readonly config: IModuleConfigTyped;
 	public readonly activeVariant: Readonly<IModuleTypedOption>;
 
@@ -67,16 +70,21 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 		return this.config.interactionType ?? ItemInteractionType.MODIFY;
 	}
 
-	constructor(config: IModuleConfigTyped, data: IModuleItemDataTyped) {
+	constructor(config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext) {
+		this.assetMananger = context.assetMananger;
 		this.config = config;
 		// Get currently selected module
 		let activeVariant: IModuleTypedOption | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
-		// Get the variant marked as default if not found
-		if (!activeVariant) {
-			activeVariant = config.variants.find((v) => v.default);
+		// Warn if we were trying to find variant
+		if (!activeVariant && data.variant != null) {
+			context.logger?.warning(`Unknown typed module variant '${data.variant}'`);
 		}
-		// Use the first variant as last option
-		this.activeVariant = activeVariant ?? config.variants[0];
+		// Use the default variant if not found
+		this.activeVariant = activeVariant ??
+			// First variant marked as 'default'
+			config.variants.find((v) => v.default) ??
+			// The first variant as last resort
+			config.variants[0];
 	}
 
 	exportData(): IModuleItemDataTyped {
@@ -105,6 +113,9 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 		return setVariant ? new ItemModuleTyped(this.config, {
 			type: 'typed',
 			variant: setVariant.id,
+		}, {
+			assetMananger: this.assetMananger,
+			doLoadTimeCleanup: false,
 		}) : null;
 	}
 }

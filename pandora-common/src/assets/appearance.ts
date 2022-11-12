@@ -80,10 +80,14 @@ export class Appearance {
 		this.onChangeHandler = onChange;
 	}
 
-	protected makeItem(id: ItemId, asset: Asset, bundle: ItemBundle | null): Item {
+	protected makeItem(id: ItemId, asset: Asset, bundle: ItemBundle | null, logger?: Logger): Item {
 		return new Item(id, asset, bundle ?? {
 			id,
 			asset: asset.id,
+		}, {
+			assetMananger: this.assetMananger,
+			doLoadTimeCleanup: bundle !== null,
+			logger,
 		});
 	}
 
@@ -120,7 +124,7 @@ export class Appearance {
 				continue;
 			}
 
-			const item = this.makeItem(itemBundle.id, asset, itemBundle);
+			const item = this.makeItem(itemBundle.id, asset, itemBundle, logger);
 			loadedItems.push(item);
 		}
 
@@ -145,7 +149,7 @@ export class Appearance {
 					ShuffleArray(possibleAssets);
 
 					for (const asset of possibleAssets) {
-						const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null)];
+						const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
 						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
 							newItems = tryFix;
 							break;
@@ -185,7 +189,7 @@ export class Appearance {
 				ShuffleArray(possibleAssets);
 
 				for (const asset of possibleAssets) {
-					const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null)];
+					const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
 					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
 						newItems = tryFix;
 						break;

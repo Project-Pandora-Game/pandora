@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { ZodMatcher } from '../validation';
 import { Asset } from './asset';
 import { AssetDefinitionExtraArgs } from './definitions';
+import { IItemLoadContext } from './item';
 
 //#region Module definitions
 
@@ -42,7 +43,7 @@ type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 
 export type AssetModuleDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = IAssetModuleTypes<A>[ModuleType]['config'];
 
-export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleItemDataCommon<string> | undefined): IItemModule {
+export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleItemDataCommon<string> | undefined, context: IItemLoadContext): IItemModule {
 	const moduleDefinition = asset.definition.modules?.[moduleName];
 	if (!moduleDefinition) {
 		throw new Error('LoadItemModule called with invalid module for asset');
@@ -63,7 +64,9 @@ export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleIt
 					moduleName,
 					moduleDefinition,
 					data,
+					context.assetMananger,
 				),
+				context,
 			);
 		default:
 			AssertNever(moduleDefinition.type);

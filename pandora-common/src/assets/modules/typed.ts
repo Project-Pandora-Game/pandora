@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
+import { ItemInteractionType } from '../../character/restrictionsManager';
+import { AppearanceValidationResult } from '../appearanceValidation';
 
 export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	/** ID if this variant, must be unique */
@@ -17,6 +19,12 @@ export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDe
 }
 
 export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'typed'> {
+	/**
+	 * The kind of interaction this module provides, affects prerequisites for changing it.
+	 * @default ItemInteractionType.MODIFY
+	 */
+	interactionType?: ItemInteractionType;
+
 	/** List of variants this typed module has */
 	variants: [IModuleTypedOption<A>, ...IModuleTypedOption<A>[]];
 }
@@ -55,6 +63,10 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 	public readonly config: IModuleConfigTyped;
 	public readonly activeVariant: Readonly<IModuleTypedOption>;
 
+	public get interactionType(): ItemInteractionType {
+		return this.config.interactionType ?? ItemInteractionType.MODIFY;
+	}
+
 	constructor(config: IModuleConfigTyped, data: IModuleItemDataTyped) {
 		this.config = config;
 		// Get currently selected module
@@ -72,6 +84,10 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			type: 'typed',
 			variant: this.activeVariant.id,
 		};
+	}
+
+	validate(_isWorn: boolean): AppearanceValidationResult {
+		return true;
 	}
 
 	getProperties(): AssetProperties {

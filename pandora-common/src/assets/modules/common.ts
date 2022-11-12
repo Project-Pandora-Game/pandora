@@ -4,16 +4,12 @@ import type { Satisfies } from '../../utility';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character';
 import { AssetProperties } from '../properties';
+import type { AppearanceValidationResult } from '../appearanceValidation';
 
 export interface IModuleConfigCommon<Type extends string> {
 	type: Type;
 	/** The display name of this module */
 	name: string;
-	/**
-	 * The kind of interaction this module provides, affects prerequisites for changing it.
-	 * @default ItemInteractionType.MODIFY
-	 */
-	interactionType?: ItemInteractionType;
 	/** If this module is hoisted to expressions */
 	expression?: string;
 }
@@ -36,7 +32,12 @@ export interface IItemModule<Type extends string = string> {
 	readonly type: Type;
 	readonly config: IModuleConfigCommon<Type>;
 
+	/** The module specifies what kind of interaction type interacting with it is */
+	readonly interactionType: ItemInteractionType;
+
 	exportData(): IModuleItemDataCommon<Type>;
+
+	validate(isWorn: boolean): AppearanceValidationResult;
 
 	getProperties(): AssetProperties;
 

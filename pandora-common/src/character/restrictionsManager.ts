@@ -178,8 +178,8 @@ export class CharacterRestrictionsManager {
 		if (!module)
 			return false;
 
-		// The module specifies what kind of interaction it provides
-		const interaction: ItemInteractionType = module.config.interactionType ?? ItemInteractionType.MODIFY;
+		// The module can specify what kind of interaction it provides, unless asking for specific one
+		const interaction = module.interactionType;
 
 		// Must be able to interact with this item in that way
 		if (!this.canInteractWithItem(target, item, interaction))

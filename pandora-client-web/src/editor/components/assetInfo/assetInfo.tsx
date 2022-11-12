@@ -1,4 +1,4 @@
-import { AssetDefinition, AssetModuleDefinition, ItemInteractionType } from 'pandora-common';
+import { AssetDefinition, AssetModuleDefinition } from 'pandora-common';
 import { EffectsDefinition, EFFECTS_DEFAULT } from 'pandora-common/dist/assets/effects';
 import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
@@ -146,15 +146,14 @@ function Modules({ modules }: { modules: AssetDefinition['modules'] }): ReactEle
 }
 
 function Module({ name, module }: { name: string; module: AssetModuleDefinition }): ReactElement {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	const ModuleRenderer = useMemo(() => {
+	const moduleInfo = useMemo(() => {
 		switch (module.type) {
 			case 'typed':
-				return TypedModule;
+				return <TypedModule module={ module } />;
 			default:
-				return UnknownModule;
+				return <UnknownModule module={ module } />;
 		}
-	}, [module.type]);
+	}, [module]);
 	return (
 		<div>
 			<div>
@@ -162,7 +161,7 @@ function Module({ name, module }: { name: string; module: AssetModuleDefinition 
 				<input id={ `module-${name}` } type='text' value={ name } readOnly />
 			</div>
 			<ModuleCommon module={ module } />
-			<ModuleRenderer module={ module } />
+			{ moduleInfo }
 		</div>
 	);
 }
@@ -218,15 +217,6 @@ function ModuleCommon({ module }: { module: IModuleConfigCommon<string> }): Reac
 			<div>
 				<label htmlFor={ `module-${id}-name` }>Name: </label>
 				<input id={ `module-${id}-name` } type='text' value={ module.name } readOnly />
-			</div>
-			<div>
-				<label htmlFor={ `module-${id}-interaction` }>Interaction type: </label>
-				<select id={ `module-${id}-interaction` } value={ module.interactionType } disabled>
-					<option value={ ItemInteractionType.ACCESS_ONLY }>Access only</option>
-					<option value={ ItemInteractionType.STYLING }>Styling</option>
-					<option value={ ItemInteractionType.MODIFY }>Modify</option>
-					<option value={ ItemInteractionType.ADD_REMOVE }>Add/remove</option>
-				</select>
 			</div>
 			<div>
 				<label htmlFor={ `module-${id}-expression` }>Expression: </label>

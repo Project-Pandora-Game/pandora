@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { HexColorString, HexColorStringSchema, zTemplateString } from '../validation';
+import { AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetIdSchema } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
@@ -72,6 +73,15 @@ export class Item {
 			color: this.color.length > 0 ? this.color.slice() : undefined,
 			moduleData,
 		};
+	}
+
+	validate(isWorn: boolean): AppearanceValidationResult {
+		for (const module of this.modules.values()) {
+			if (!module.validate(isWorn))
+				return false;
+		}
+
+		return true;
 	}
 
 	/** Colors this item with passed color, returning new item with modified color */

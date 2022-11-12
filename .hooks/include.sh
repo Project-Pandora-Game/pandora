@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function yarn_helper() {
+function pnpm_helper() {
 	if [ "${CI:-}" == "true" ]; then
 		return
 	fi

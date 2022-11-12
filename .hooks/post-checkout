@@ -6,8 +6,8 @@ source "./.hooks/include.sh"
 PREV_COMMIT=$1
 POST_COMMIT=$2
 
-if [ -f yarn.lock ]; then
-	if [ "$(git diff --shortstat $PREV_COMMIT..$POST_COMMIT yarn.lock)" != "" ]; then
-		yarn_helper
+if [ -f pnpm-lock.yaml ]; then
+	if [ "$(git diff --shortstat $PREV_COMMIT..$POST_COMMIT pnpm-lock.yaml)" != "" ]; then
+		pnpm_helper
 	fi
 fi

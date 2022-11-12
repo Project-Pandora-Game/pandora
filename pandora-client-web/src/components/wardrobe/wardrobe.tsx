@@ -124,9 +124,22 @@ function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
 	const navigate = useNavigate();
 
+	const overlay = (
+		<div className='overlay'>
+			<Button className='slim iconButton'
+				title='Toggle character view'
+				onClick={ () => {
+					character.appearance.setView(character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT);
+				} }
+			>
+				↷
+			</Button>
+		</div>
+	);
+
 	return (
 		<div className='wardrobe'>
-			<GraphicsScene className='characterPreview'>
+			<GraphicsScene className='characterPreview' divChildren={ overlay }>
 				<GraphicsCharacter appearanceContainer={ character } />
 			</GraphicsScene>
 			<TabContainer className='flex-1'>

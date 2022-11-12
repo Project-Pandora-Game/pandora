@@ -119,7 +119,7 @@ export function DoAppearanceAction(
 				return false;
 			const item = targetAppearance.spawnItem(action.itemId, asset);
 			// Player adding the item must be able to use it
-			if (!player.canInteractWithItem(target, item, ItemInteractionType.ADD_REMOVE))
+			if (!player.canInteractWithItemDirect(target, item, ItemInteractionType.ADD_REMOVE))
 				return false;
 
 			return targetAppearance.addItem(item, processingContext);

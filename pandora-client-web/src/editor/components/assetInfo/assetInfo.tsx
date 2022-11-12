@@ -52,10 +52,6 @@ export function AssetInfoUI(): ReactElement {
 				<label htmlFor='graphics'>Has graphics: </label>
 				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } disabled />
 			</div>
-			<div>
-				<label htmlFor='allow-self-equip'>Allow self equip: </label>
-				<input id='allow-self-equip' type='checkbox' checked={ definition.allowSelfEquip ?? false } disabled />
-			</div>
 			<Colorization colorization={ definition.colorization } />
 			<PoseLimits poseLimits={ definition.poseLimits } />
 			<Effects effects={ definition.effects } />

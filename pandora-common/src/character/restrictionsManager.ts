@@ -47,7 +47,8 @@ export enum ItemInteractionType {
 	 *   - Must not be in room or the room must allow body modification
 	 * - If asset __is not__ bodypart:
 	 *   - Player must be able to use hands
-	 *   - If asset has `allowSelfEquip: false`, then cannot happen on self
+	 *   - If asset has `blockAddRemove`, then denied
+	 *   - If asset has `blockSelfAddRemove`, then cannot happen on self
 	 */
 	ADD_REMOVE = 'ADD_REMOVE',
 }
@@ -131,14 +132,16 @@ export class CharacterRestrictionsManager {
 		return true;
 	}
 
-	public canInteractWithItem(target: CharacterRestrictionsManager, item: Item | ItemId | undefined, interaction: ItemInteractionType): boolean {
-		if (typeof item === 'string') {
-			item = target.appearance.getItemById(item);
-		}
+	public canInteractWithItem(target: CharacterRestrictionsManager, itemId: ItemId, interaction: ItemInteractionType): boolean {
+		const item = target.appearance.getItemById(itemId);
 		// The item must exist to interact with it
 		if (!item)
 			return false;
 
+		return this.canInteractWithItemDirect(target, item, interaction);
+	}
+
+	public canInteractWithItemDirect(target: CharacterRestrictionsManager, item: Item, interaction: ItemInteractionType): boolean {
 		// Must be able to use item's asset
 		if (!this.canInteractWithAsset(target, item.asset))
 			return false;
@@ -155,9 +158,18 @@ export class CharacterRestrictionsManager {
 			return true;
 		}
 
-		// If equipping on self, the asset must allow self-equip
-		if (interaction === ItemInteractionType.ADD_REMOVE && this.id === target.id && !(item.asset.definition.allowSelfEquip ?? true))
-			return false;
+		const properties = item.getProperties();
+
+		// If equipping there are further checks
+		if (interaction === ItemInteractionType.ADD_REMOVE) {
+			// If item blocks add/remove, fail
+			if (properties.blockAddRemove)
+				return false;
+
+			// If equipping on self, the asset must allow self-equip
+			if (this.id === target.id && properties.blockSelfAddRemove)
+				return false;
+		}
 
 		// Must be able to use hands
 		if (!this.canUseHands())
@@ -166,23 +178,40 @@ export class CharacterRestrictionsManager {
 		return true;
 	}
 
-	public canInteractWithItemModule(target: CharacterRestrictionsManager, item: Item | ItemId | undefined, moduleName: string): boolean {
-		if (typeof item === 'string') {
-			item = target.appearance.getItemById(item);
-		}
-		// The item must exist
+	public canInteractWithItemModule(target: CharacterRestrictionsManager, itemId: ItemId, moduleName: string, interaction?: ItemInteractionType): boolean {
+		const item = target.appearance.getItemById(itemId);
+		// The item must exist to interact with it
 		if (!item)
 			return false;
+
+		return this.canInteractWithItemModuleDirect(target, item, moduleName, interaction);
+	}
+
+	public canInteractWithItemModuleDirect(target: CharacterRestrictionsManager, item: Item, moduleName: string, interaction?: ItemInteractionType): boolean {
 		// The module must exist
 		const module = item.modules.get(moduleName);
 		if (!module)
 			return false;
 
 		// The module can specify what kind of interaction it provides, unless asking for specific one
-		const interaction = module.interactionType;
+		interaction ??= module.interactionType;
 
 		// Must be able to interact with this item in that way
-		if (!this.canInteractWithItem(target, item, interaction))
+		if (!this.canInteractWithItemDirect(target, item, interaction))
+			return false;
+
+		// If access is all we needed, then success
+		if (interaction === ItemInteractionType.ACCESS_ONLY)
+			return true;
+
+		const properties = item.getProperties();
+
+		// If item blocks this module, fail
+		if (properties.blockModules.has(moduleName))
+			return false;
+
+		// If accessing on self, the item must not block it
+		if (this.id === target.id && properties.blockSelfModules.has(moduleName))
 			return false;
 
 		return true;

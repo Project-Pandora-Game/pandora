@@ -74,7 +74,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 		this.assetMananger = context.assetMananger;
 		this.config = config;
 		// Get currently selected module
-		let activeVariant: IModuleTypedOption | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
+		const activeVariant: IModuleTypedOption | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
 		// Warn if we were trying to find variant
 		if (!activeVariant && data.variant != null) {
 			context.logger?.warning(`Unknown typed module variant '${data.variant}'`);

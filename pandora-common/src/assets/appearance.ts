@@ -5,6 +5,7 @@ import type { ChatActionId, IChatRoomMessageActionItem } from '../chatroom';
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
 import { HexColorString } from '../validation';
+import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder, AppearanceItemsGetPoseLimits, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
@@ -323,19 +324,27 @@ export class Appearance {
 		return this.items;
 	}
 
+	protected _getManipulator(): AppearanceRootManipulator {
+		return new AppearanceRootManipulator(this.assetMananger, this.items);
+	}
+
 	public addItem(item: Item, ctx: AppearanceActionProcessingContext): boolean {
 		// Id must be unique
 		if (this.getItemById(item.id))
 			return false;
 
+		const manipulator = this._getManipulator();
+
 		// Do change
-		let newItems = this.items.slice();
 		let removed: AppearanceItems = [];
 		// if this is a bodypart not allowing multiple do a swap instead
 		if (item.asset.definition.bodypart && this.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
-			removed = _.remove(newItems, (oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
+			removed = manipulator.removeMatchingItems((oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
 		}
-		newItems = AppearanceItemsFixBodypartOrder(this.assetMananger, [...newItems, item]);
+		if (!manipulator.addItem(item))
+			return false;
+
+		const newItems = manipulator.getItems();
 
 		// Validate
 		if (!ValidateAppearanceItems(this.assetMananger, newItems))
@@ -377,15 +386,16 @@ export class Appearance {
 		return true;
 	}
 
-	public removeItem(id: ItemId, ctx: AppearanceActionProcessingContext): boolean {
-		if (!this.getItemById(id))
-			return false;
+	public removeItem(itemId: ItemId, ctx: AppearanceActionProcessingContext): boolean {
+		const manipulator = this._getManipulator();
 
 		// Do change
-		const newItems = this.items.slice();
-		const removedItems = _.remove(newItems, (i) => i.id === id);
+		const removedItems = manipulator.removeMatchingItems((i) => i.id === itemId);
+		const newItems = manipulator.getItems();
 
 		// Validate
+		if (removedItems.length !== 1)
+			return false;
 		if (!ValidateAppearanceItems(this.assetMananger, newItems))
 			return false;
 
@@ -411,17 +421,14 @@ export class Appearance {
 		return true;
 	}
 
-	public moveItem(id: ItemId, shift: number, ctx: AppearanceActionProcessingContext): boolean {
-		const currentPos = this.items.findIndex((item) => item.id === id);
-		const newPos = currentPos + shift;
-
-		if (currentPos < 0 || newPos < 0 || newPos >= this.items.length)
-			return false;
+	public moveItem(itemId: ItemId, shift: number, ctx: AppearanceActionProcessingContext): boolean {
+		const manipulator = this._getManipulator();
 
 		// Do change
-		const newItems = this.items.slice();
-		const moved = newItems.splice(currentPos, 1);
-		newItems.splice(newPos, 0, ...moved);
+		if (!manipulator.moveItem(itemId, shift))
+			return false;
+
+		const newItems = manipulator.getItems();
 
 		// Validate
 		if (!ValidateAppearanceItems(this.assetMananger, newItems))
@@ -442,15 +449,12 @@ export class Appearance {
 		return true;
 	}
 
-	public colorItem(id: ItemId, color: readonly HexColorString[], ctx: AppearanceActionProcessingContext): boolean {
-		const itemIndex = this.items.findIndex((item) => item.id === id);
-
-		if (itemIndex < 0)
-			return false;
+	public colorItem(itemId: ItemId, color: readonly HexColorString[], ctx: AppearanceActionProcessingContext): boolean {
+		const manipulator = this._getManipulator();
 
 		// Do change
-		const newItems = this.items.slice();
-		newItems[itemIndex] = newItems[itemIndex].changeColor(color);
+		manipulator.modifyItem(itemId, (it) => it.changeColor(color));
+		const newItems = manipulator.getItems();
 
 		// Validate
 		if (!ValidateAppearanceItems(this.assetMananger, newItems))
@@ -471,20 +475,14 @@ export class Appearance {
 		return true;
 	}
 
-	public moduleAction(id: ItemId, module: string, action: ItemModuleAction, ctx: AppearanceActionProcessingContext): boolean {
-		const itemIndex = this.items.findIndex((item) => item.id === id);
-		if (itemIndex < 0)
-			return false;
+	public moduleAction(itemId: ItemId, module: string, action: ItemModuleAction, ctx: AppearanceActionProcessingContext): boolean {
+		const manipulator = this._getManipulator();
 
 		// Do change
-		const newItems = this.items.slice();
-		const resultItem = newItems[itemIndex].moduleAction(module, action);
+		manipulator.modifyItem(itemId, (it) => it.moduleAction(module, action));
+		const newItems = manipulator.getItems();
 
-		if (!resultItem)
-			return false;
-
-		newItems[itemIndex] = resultItem;
-
+		// Validate
 		if (!ValidateAppearanceItems(this.assetMananger, newItems))
 			return false;
 

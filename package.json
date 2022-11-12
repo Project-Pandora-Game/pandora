@@ -1,16 +1,5 @@
 {
 	"private": true,
-	"workspaces": {
-		"packages": [
-			"pandora-common",
-			"pandora-client-web",
-			"pandora-server-directory",
-			"pandora-server-shard"
-		],
-		"nohoist": [
-			"**/react-reverse-portal"
-		]
-	},
 	"scripts": {
 		"postinstall": "node .hooks/postinstall.cjs",
 		"ci": "pnpm run build && pnpm lint && pnpm run type-check:test && pnpm run test",
@@ -20,6 +9,6 @@
 		"lint": "pnpm -r --parallel run lint",
 		"type-check:test": "pnpm -r --parallel run type-check:test",
 		"test": "pnpm -r --parallel run test",
-		"build": "pnpm -r --parallel run build"
+		"build": "pnpm -r run build"
 	}
 }

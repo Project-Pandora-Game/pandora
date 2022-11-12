@@ -25,6 +25,7 @@ export class AssetManagerEditor extends AssetManagerClient {
 		const definition: AssetDefinition = {
 			id,
 			name,
+			size: bodypart ? 'bodypart' : 'medium',
 			bodypart: bodypart ? bodypart : undefined,
 			colorization: [
 				{

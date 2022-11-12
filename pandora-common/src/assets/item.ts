@@ -86,6 +86,10 @@ export class Item {
 	}
 
 	validate(isWorn: boolean): AppearanceValidationResult {
+		// Check the asset can actually be worn
+		if (isWorn && this.asset.definition.wearable === false)
+			return false;
+
 		for (const module of this.modules.values()) {
 			if (!module.validate(isWorn))
 				return false;

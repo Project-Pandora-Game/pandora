@@ -9,6 +9,16 @@ import { AssetProperties } from './properties';
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
 
+export const AssetSizeSchema = z.enum(['small', 'medium', 'large', 'huge', 'bodypart']);
+export type AssetSize = z.infer<typeof AssetSizeSchema>;
+export const AssetSizeMapping: Record<AssetSize, number> = {
+	small: 1,
+	medium: 2,
+	large: 3,
+	huge: 4,
+	bodypart: 99,
+};
+
 export interface AssetDefinitionExtraArgs {
 	bones: BoneName;
 	bodyparts: string;
@@ -30,6 +40,19 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 
 	/** The visible name of this asset */
 	name: string;
+
+	/**
+	 * If this asset can be worn on body directly.
+	 * @default true
+	 */
+	wearable?: boolean;
+
+	/**
+	 * Size of this item. Affects mainly which things it can fit into.
+	 *
+	 * If this item is a bodypart, then and **only** then the size **must** be `'bodypart'`
+	 */
+	size: AssetSize;
 
 	/** Chat action messages specific to this asset */
 	actionMessages?: {

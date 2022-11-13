@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, ICharacterPublicData, IChatRoomMessageChat, IChatSegment } from 'pandora-common';
+import { CharacterId, ICharacterPublicData, IChatRoomMessageChat, IChatSegment, RoomId } from 'pandora-common';
 import { CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
 import React, {
 	memo,
@@ -193,7 +193,7 @@ function RenderActionContent(action: IChatroomMessageActionProcessed): [IChatSeg
 }
 
 function ChatroomMessageEquals(a: IChatroomMessageProcessed, b: IChatroomMessageProcessed): boolean {
-	return a.time === b.time && a.edited === b.edited;
+	return a.time === b.time && a.edited === b.edited && a.roomId === b.roomId;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
@@ -209,7 +209,7 @@ const Message = memo(function Message({ message, playerId }: { message: IChatroo
 	return ChatroomMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
-function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number }; playerId: CharacterId | null; }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number; roomId: RoomId; }; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':

@@ -27,11 +27,13 @@ export interface IChatRoomMessageSender {
 export type IChatroomMessageChatProcessed = (IChatRoomMessageChat | IChatRoomMessageDeleted) & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+	roomId: RoomId;
 };
 
 export type IChatroomMessageActionProcessed = IChatRoomMessageAction & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
+	roomId: RoomId;
 };
 
 export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatroomMessageActionProcessed) & {
@@ -40,7 +42,7 @@ export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatro
 	edited?: boolean;
 };
 
-export function IsUserMessage(message: IChatroomMessageProcessed): message is IChatroomMessageChatProcessed & { time: number; } {
+export function IsUserMessage(message: IChatroomMessageProcessed): message is IChatroomMessageChatProcessed {
 	return message.type !== 'action' && message.type !== 'serverMessage';
 }
 
@@ -52,7 +54,7 @@ export type IMessageParseOptions = {
 };
 
 function ProcessMessage(
-	message: IChatRoomMessageAction & { time: number; },
+	message: IChatRoomMessageAction & { time: number; roomId: RoomId; },
 	assetManager: AssetManagerClient,
 ): IChatroomMessageActionProcessed {
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
@@ -271,8 +273,14 @@ export class ChatRoom extends TypedEventEmitter<{
 		});
 	}
 
-	public onMessage(messages: IChatRoomMessage[], assetManager: AssetManagerClient): number {
-		messages = messages.filter((m) => m.time > this._lastMessageTime);
+	public onMessage(incoming: IChatRoomMessage[], assetManager: AssetManagerClient): number {
+		const roomId = this.data.value?.id;
+		if (!roomId) return 0;
+
+		const messages = incoming
+			.filter((m) => m.time > this._lastMessageTime)
+			.map<IChatRoomMessage & { roomId: RoomId }>((m) => ({ ...m, roomId }));
+
 		this._lastMessageTime = messages
 			.map((m) => m.time)
 			.reduce((a, b) => Math.max(a, b), this._lastMessageTime);

@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { cloneDeep } from 'lodash';
 import {
-	Appearance,
+	CharacterAppearance,
 	APPEARANCE_BUNDLE_DEFAULT,
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	ICharacterData,
@@ -47,7 +47,7 @@ describe('Character', () => {
 				accessId: 'updatedId',
 				appearance: cloneDeep(APPEARANCE_BUNDLE_DEFAULT),
 			};
-			const mockImport = jest.spyOn(Appearance.prototype, 'importFromBundle');
+			const mockImport = jest.spyOn(CharacterAppearance.prototype, 'importFromBundle');
 			mock.update(update);
 			expect(mock.data).toStrictEqual({ ...mockData, ...update });
 			expect(mockImport).nthCalledWith(1, update.appearance, expect.anything(), expect.anything());

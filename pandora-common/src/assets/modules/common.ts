@@ -4,9 +4,9 @@ import type { Satisfies } from '../../utility';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character';
 import { AssetProperties } from '../properties';
-import type { AppearanceValidationResult } from '../appearanceValidation';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
-import type { IItemLoadContext } from '../item';
+import type { IItemLoadContext, Item } from '../item';
 
 export interface IModuleConfigCommon<Type extends string> {
 	type: Type;
@@ -46,4 +46,15 @@ export interface IItemModule<Type extends string = string> {
 	evalCondition(operator: ConditionOperator, value: string): boolean;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	doAction(action: any): IItemModule<Type> | null;
+
+	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */
+	readonly contentsPhysicallyEquipped: boolean;
+
+	/** Gets content of this module */
+	getContents(): AppearanceItems;
+
+	/** Sets content of this module */
+	setContents(items: AppearanceItems): IItemModule<Type> | null;
+
+	acceptedContentFilter?(item: Item): boolean;
 }

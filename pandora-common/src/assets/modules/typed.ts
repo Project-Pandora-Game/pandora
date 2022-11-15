@@ -5,7 +5,7 @@ import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
-import { AppearanceValidationResult } from '../appearanceValidation';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { IItemLoadContext } from '../item';
 import { AssetManager } from '../assetManager';
 
@@ -117,5 +117,16 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			assetMananger: this.assetMananger,
 			doLoadTimeCleanup: false,
 		}) : null;
+	}
+
+	// Doesn't matter as typed module doesn't support nested content
+	public readonly contentsPhysicallyEquipped: boolean = true;
+
+	public getContents(): AppearanceItems {
+		return [];
+	}
+
+	public setContents(_items: AppearanceItems): ItemModuleTyped | null {
+		return null;
 	}
 }

@@ -1,29 +1,36 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character';
 import { AssertNever } from '../utility';
-import { HexColorStringSchema } from '../validation';
-import { Appearance, ArmsPose, CharacterView, AppearanceActionHandler, AppearanceActionProcessingContext } from './appearance';
+import { HexColorString, HexColorStringSchema } from '../validation';
+import { ArmsPose, CharacterView } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
-import { ItemIdSchema } from './item';
+import { AppearanceActionHandler, AppearanceActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType } from '../character/restrictionsManager';
-import { ItemModuleActionSchema } from './modules';
-import { AppearanceActionRoomContext } from '../chatroom';
+import { ItemModuleAction, ItemModuleActionSchema } from './modules';
+import { Item } from './item';
+import { AppearanceRootManipulator } from './appearanceHelpers';
+import { AppearanceItems } from './appearanceValidation';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
-	target: CharacterIdSchema,
+	/** ID to give the new item */
 	itemId: ItemIdSchema,
+	/** Asset to create the new item from */
 	asset: AssetIdSchema,
+	/** Target the item should be added to after creation */
+	target: RoomTargetSelectorSchema,
+	/** Container path on target where to add the item to */
+	container: ItemContainerPathSchema,
 });
-export type AppearanceActionCreate = z.infer<typeof AppearanceActionCreateSchema>;
 
 export const AppearanceActionDeleteSchema = z.object({
 	type: z.literal('delete'),
-	target: CharacterIdSchema,
-	itemId: ItemIdSchema,
+	/** Target with the item to delete */
+	target: RoomTargetSelectorSchema,
+	/** Path to the item to delete */
+	item: ItemPathSchema,
 });
-export type AppearanceActionDelete = z.infer<typeof AppearanceActionDeleteSchema>;
 
 export const AppearanceActionPose = z.object({
 	type: z.literal('pose'),
@@ -46,23 +53,33 @@ export const AppearanceActionSetView = z.object({
 
 export const AppearanceActionMove = z.object({
 	type: z.literal('move'),
-	target: CharacterIdSchema,
-	itemId: ItemIdSchema,
+	/** Target with the item to move */
+	target: RoomTargetSelectorSchema,
+	/** Path to the item to move */
+	item: ItemPathSchema,
+	/** Relative shift for the item inside its container */
 	shift: z.number().int(),
 });
 
 export const AppearanceActionColor = z.object({
 	type: z.literal('color'),
-	target: CharacterIdSchema,
-	itemId: ItemIdSchema,
+	/** Target with the item to color */
+	target: RoomTargetSelectorSchema,
+	/** Path to the item to color */
+	item: ItemPathSchema,
+	/** The new color to set */
 	color: z.array(HexColorStringSchema),
 });
 
 export const AppearanceActionModuleAction = z.object({
 	type: z.literal('moduleAction'),
-	target: CharacterIdSchema,
-	itemId: ItemIdSchema,
+	/** Target with the item to color */
+	target: RoomTargetSelectorSchema,
+	/** Path to the item to interact with */
+	item: ItemPathSchema,
+	/** The module to interact with */
 	module: z.string(),
+	/** Action to do on the module */
 	action: ItemModuleActionSchema,
 });
 
@@ -80,8 +97,8 @@ export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
 export interface AppearanceActionContext {
 	player: CharacterId;
-	characters: Map<CharacterId, Appearance>;
-	room: AppearanceActionRoomContext | null;
+	getTarget(target: RoomTargetSelector): RoomActionTarget | null;
+	getCharacter(id: CharacterId): CharacterRestrictionsManager | null;
 	/** Handler for sending messages to chat */
 	actionHandler?: AppearanceActionHandler;
 }
@@ -96,16 +113,11 @@ export function DoAppearanceAction(
 		dryRun?: boolean;
 	} = {},
 ): boolean {
-	const playerAppearance = context.characters.get(context.player);
-	const targetAppearance = context.characters.get(action.target);
-	if (!targetAppearance || !playerAppearance)
+	const player = context.getCharacter(context.player);
+	if (!player)
 		return false;
 
-	const player = new CharacterRestrictionsManager(context.player, playerAppearance, context.room);
-	const target = new CharacterRestrictionsManager(action.target, targetAppearance, context.room);
-
 	const processingContext: AppearanceActionProcessingContext = {
-		player: action.target,
 		sourceCharacter: context.player,
 		actionHandler: context.actionHandler,
 		dryRun,
@@ -115,67 +127,202 @@ export function DoAppearanceAction(
 		// Create and equip an item
 		case 'create': {
 			const asset = assetManager.getAssetById(action.asset);
-			if (!asset)
+			const target = context.getTarget(action.target);
+			if (!asset || !target)
 				return false;
-			const item = targetAppearance.spawnItem(action.itemId, asset);
+			const item = assetManager.createItem(action.itemId, asset, null);
 			// Player adding the item must be able to use it
-			if (!player.canInteractWithItemDirect(target, item, ItemInteractionType.ADD_REMOVE))
+			if (!player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE))
 				return false;
 
-			return targetAppearance.addItem(item, processingContext);
+			const manipulator = target.getManipulator();
+			if (!ActionAddItem(manipulator, action.container, item))
+				return false;
+			return target.commitChanges(manipulator, processingContext);
 		}
 		// Unequip and delete an item
 		case 'delete': {
+			const target = context.getTarget(action.target);
+			if (!target)
+				return false;
 			// Player removing the item must be able to use it
-			if (!player.canInteractWithItem(target, action.itemId, ItemInteractionType.ADD_REMOVE))
+			if (!player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE))
 				return false;
 
-			return targetAppearance.removeItem(action.itemId, processingContext);
+			const manipulator = target.getManipulator();
+			if (!ActionRemoveItem(manipulator, action.item))
+				return false;
+			return target.commitChanges(manipulator, processingContext);
 		}
 		// Moves an item within inventory, reordering the worn order
 		case 'move': {
+			const target = context.getTarget(action.target);
+			if (!target)
+				return false;
 			// Player moving the item must be able to interact with the item
-			if (!player.canInteractWithItem(target, action.itemId, ItemInteractionType.ADD_REMOVE))
+			if (!player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE))
 				return false;
 
-			return targetAppearance.moveItem(action.itemId, action.shift, processingContext);
+			const manipulator = target.getManipulator();
+			if (!ActionMoveItem(manipulator, action.item, action.shift))
+				return false;
+			return target.commitChanges(manipulator, processingContext);
 		}
 		// Changes the color of an item
 		case 'color': {
+			const target = context.getTarget(action.target);
+			if (!target)
+				return false;
 			// Player coloring the item must be able to interact with the item
-			if (!player.canInteractWithItem(target, action.itemId, ItemInteractionType.STYLING))
+			if (!player.canUseItem(target, action.item, ItemInteractionType.STYLING))
 				return false;
 
-			return targetAppearance.colorItem(action.itemId, action.color, processingContext);
+			const manipulator = target.getManipulator();
+			if (!ActionColorItem(manipulator, action.item, action.color))
+				return false;
+			return target.commitChanges(manipulator, processingContext);
 		}
 		// Module-specific action
 		case 'moduleAction': {
+			const target = context.getTarget(action.target);
+			if (!target)
+				return false;
 			// Player doing the action must be able to interact with the item
-			if (!player.canInteractWithItemModule(target, action.itemId, action.module))
+			if (!player.canUseItemModule(target, action.item, action.module))
 				return false;
 
-			return targetAppearance.moduleAction(action.itemId, action.module, action.action, processingContext);
+			const manipulator = target.getManipulator();
+			if (!ActionModuleAction(manipulator, action.item, action.module, action.action))
+				return false;
+			return target.commitChanges(manipulator, processingContext);
 		}
 		// Resize body or change pose
 		case 'body':
 			if (context.player !== action.target)
 				return false;
 		// falls through
-		case 'pose':
+		case 'pose': {
+			const target = context.getCharacter(action.target);
+			if (!target)
+				return false;
 			if (!dryRun) {
-				targetAppearance.importPose(action.pose, action.type, false);
+				target.appearance.importPose(action.pose, action.type, false);
 				if ('armsPose' in action && action.armsPose != null) {
-					targetAppearance.setArmsPose(action.armsPose);
+					target.appearance.setArmsPose(action.armsPose);
 				}
 			}
 			return true;
+		}
 		// Changes view of the character - front or back
-		case 'setView':
+		case 'setView': {
+			const target = context.getCharacter(action.target);
+			if (!target)
+				return false;
 			if (!dryRun) {
-				targetAppearance.setView(action.view);
+				target.appearance.setView(action.view);
 			}
 			return true;
+		}
 		default:
 			AssertNever(action);
 	}
+}
+
+export function ActionAddItem(rootManipulator: AppearanceRootManipulator, container: ItemContainerPath, item: Item): boolean {
+	const manipulator = rootManipulator.getContainer(container);
+
+	// Do change
+	let removed: AppearanceItems = [];
+	// if this is a bodypart not allowing multiple do a swap instead, but only in root
+	if (manipulator.isCharacter && item.asset.definition.bodypart && manipulator.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
+		removed = manipulator.removeMatchingItems((oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
+	}
+	if (!manipulator.addItem(item))
+		return false;
+
+	// Change message to chat
+	if (removed.length > 0) {
+		rootManipulator.queueMessage({
+			id: 'itemReplace',
+			item: {
+				assetId: item.asset.id,
+			},
+			itemPrevious: {
+				assetId: removed[0].asset.id,
+			},
+		});
+	} else {
+		rootManipulator.queueMessage({
+			id: 'itemAdd',
+			item: {
+				assetId: item.asset.id,
+			},
+		});
+	}
+
+	return true;
+}
+
+export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath): boolean {
+	const { container, itemId } = itemPath;
+	const manipulator = rootManipulator.getContainer(container);
+
+	// Do change
+	const removedItems = manipulator.removeMatchingItems((i) => i.id === itemId);
+
+	// Validate
+	if (removedItems.length !== 1)
+		return false;
+
+	// Change message to chat
+	rootManipulator.queueMessage({
+		id: 'itemRemove',
+		item: {
+			assetId: removedItems[0].asset.id,
+		},
+	});
+
+	return true;
+}
+
+export function ActionMoveItem(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, shift: number): boolean {
+	const { container, itemId } = itemPath;
+	const manipulator = rootManipulator.getContainer(container);
+
+	// Do change
+	if (!manipulator.moveItem(itemId, shift))
+		return false;
+
+	// Change message to chat
+	// TODO: Message to chat that items were reordered
+
+	return true;
+}
+
+export function ActionColorItem(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, color: readonly HexColorString[]): boolean {
+	const { container, itemId } = itemPath;
+	const manipulator = rootManipulator.getContainer(container);
+
+	// Do change
+	if (!manipulator.modifyItem(itemId, (it) => it.changeColor(color)))
+		return false;
+
+	// Change message to chat
+	// TODO: Message to chat that item was colored
+
+	return true;
+}
+
+export function ActionModuleAction(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, module: string, action: ItemModuleAction): boolean {
+	const { container, itemId } = itemPath;
+	const manipulator = rootManipulator.getContainer(container);
+
+	// Do change
+	if (!manipulator.modifyItem(itemId, (it) => it.moduleAction(module, action)))
+		return false;
+
+	// Change message to chat
+	// TODO: Message to chat that item module was changed
+
+	return true;
 }

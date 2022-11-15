@@ -1,4 +1,5 @@
 import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
+import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { AssetDefinitionPoseLimits, AssetId } from './definitions';
 import type { Item } from './item';
@@ -98,8 +99,15 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 			return false;
 	}
 
-	// Run internal validation of all items
+	// Validate all items
+	const ids = new Set<ItemId>();
 	for (const item of items) {
+		// ID must be unique
+		if (ids.has(item.id))
+			return false;
+		ids.add(item.id);
+
+		// Run internal item validation
 		if (!item.validate(true))
 			return false;
 	}

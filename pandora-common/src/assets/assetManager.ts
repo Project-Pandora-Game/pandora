@@ -1,7 +1,10 @@
 import { cloneDeep } from 'lodash';
+import type { Logger } from '../logging';
+import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
 import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
+import { Item, ItemBundle } from './item';
 
 export class AssetManager {
 	protected readonly _assets: Map<AssetId, Asset> = new Map();
@@ -153,5 +156,16 @@ export class AssetManager {
 			mirror.mirror = res;
 		}
 		return res;
+	}
+
+	public createItem(id: ItemId, asset: Asset, bundle: ItemBundle | null, logger?: Logger): Item {
+		return new Item(id, asset, bundle ?? {
+			id,
+			asset: asset.id,
+		}, {
+			assetMananger: this,
+			doLoadTimeCleanup: bundle !== null,
+			logger,
+		});
 	}
 }

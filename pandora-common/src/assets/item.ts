@@ -1,16 +1,14 @@
 import { z } from 'zod';
 import { Logger } from '../logging';
-import { HexColorString, HexColorStringSchema, zTemplateString } from '../validation';
-import { AppearanceValidationResult } from './appearanceValidation';
+import { HexColorString, HexColorStringSchema } from '../validation';
+import { ItemId, ItemIdSchema } from './appearanceTypes';
+import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule, IModuleItemDataCommonSchema } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
-
-export const ItemIdSchema = zTemplateString<`i/${string}`>(z.string(), /^i\//);
-export type ItemId = z.infer<typeof ItemIdSchema>;
 
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
@@ -113,6 +111,27 @@ export class Item {
 		if (!module || module.type !== action.moduleType)
 			return null;
 		const moduleResult = module.doAction(action);
+		if (!moduleResult)
+			return null;
+		const bundle = this.exportToBundle();
+		return new Item(this.id, this.asset, {
+			...bundle,
+			moduleData: {
+				...bundle.moduleData,
+				[moduleName]: moduleResult.exportData(),
+			},
+		}, {
+			assetMananger: this.assetMananger,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	public getModuleItems(moduleName: string): AppearanceItems {
+		return this.modules.get(moduleName)?.getContents() ?? [];
+	}
+
+	public setModuleItems(moduleName: string, items: AppearanceItems): Item | null {
+		const moduleResult = this.modules.get(moduleName)?.setContents(items);
 		if (!moduleResult)
 			return null;
 		const bundle = this.exportToBundle();

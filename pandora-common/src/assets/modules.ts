@@ -1,6 +1,7 @@
 import { AssertNever, Satisfies } from '../utility';
 import { IAssetModuleDefinition, IModuleItemDataCommon, IModuleConfigCommon, IItemModule } from './modules/common';
 import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema } from './modules/typed';
+import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema } from './modules/storage';
 import { z } from 'zod';
 import { ZodMatcher } from '../validation';
 import { Asset } from './asset';
@@ -14,17 +15,21 @@ export type IAssetModuleTypes<A extends AssetDefinitionExtraArgs = AssetDefiniti
 		config: IModuleConfigTyped<A>;
 		data: IModuleItemDataTyped;
 	};
+	storage: {
+		config: IModuleConfigStorage<A>;
+		data: IModuleItemDataStorage;
+	};
 };
 
 export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>; } = {
 	typed: new TypedModuleDefinition(),
+	storage: new StorageModuleDefinition(),
 };
 
-export const ItemModuleActionSchema = ItemModuleTypedActionSchema;
-// TODO: When we have more module types
-// export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
-// 	ItemModuleTypedActionSchema,
-// ]);
+export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
+	ItemModuleTypedActionSchema,
+	ItemModuleStorageActionSchema,
+]);
 export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
 //#endregion
@@ -68,7 +73,21 @@ export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleIt
 				),
 				context,
 			);
+		case 'storage':
+			return MODULE_TYPES.storage.loadModule(
+				asset,
+				moduleName,
+				moduleDefinition,
+				MODULE_TYPES.storage.parseData(
+					asset,
+					moduleName,
+					moduleDefinition,
+					data,
+					context.assetMananger,
+				),
+				context,
+			);
 		default:
-			AssertNever(moduleDefinition.type);
+			AssertNever(moduleDefinition);
 	}
 }

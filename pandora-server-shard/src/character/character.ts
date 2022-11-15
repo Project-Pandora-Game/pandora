@@ -1,4 +1,4 @@
-import { Appearance, AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground } from 'pandora-common';
+import { AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance, CharacterRestrictionsManager } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -27,7 +27,7 @@ export class Character {
 	public accountData: IShardAccountDefinition;
 	public connectSecret: string;
 
-	public readonly appearance: Appearance = new Appearance(assetManager);
+	public readonly appearance: CharacterAppearance;
 
 	private modified: Set<keyof ICharacterDataChange | 'appearance'> = new Set();
 
@@ -93,6 +93,7 @@ export class Character {
 	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
+		this.appearance = new CharacterAppearance(assetManager, data.id);
 
 		// TODO: remove this, this allow easier development so no need for DB migration
 		this.data.settings = {
@@ -270,17 +271,27 @@ export class Character {
 	}
 
 	public getAppearanceActionContext(): AppearanceActionContext {
-		const characters = new Map<CharacterId, Appearance>();
-		if (this.room) {
-			for (const char of this.room.getAllCharacters()) {
-				characters.set(char.id, char.appearance);
-			}
-		}
-		characters.set(this.id, this.appearance);
 		return {
 			player: this.id,
-			characters,
-			room: this.room ? this.room.getAppearanceActionRoomContext() : null,
+			getCharacter: (id) => {
+				const char = this.id === id ? this : this.room?.getCharacterById(id);
+				if (!char)
+					return null;
+				return new CharacterRestrictionsManager(id, char.appearance, this.room?.getAppearanceActionRoomContext() ?? null);
+			},
+			getTarget: (target) => {
+				if (target.type === 'character') {
+					const char = this.id === target.characterId ? this : this.room?.getCharacterById(target.characterId);
+					return char?.appearance ?? null;
+				}
+
+				if (target.type === 'roomInventory') {
+					// TODO: Not yet implemented
+					return null;
+				}
+
+				AssertNever(target);
+			},
 			actionHandler: (message) => {
 				this.room?.handleAppearanceActionMessage(message);
 			},

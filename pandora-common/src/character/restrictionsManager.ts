@@ -1,11 +1,14 @@
 import _ from 'lodash';
 import type { CharacterId } from '.';
-import { Asset, Item, ItemId } from '../assets';
-import type { Appearance } from '../assets/appearance';
+import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
 import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from '../assets/properties';
 import { AppearanceActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
+import { SplitContainerPath } from '../assets/appearanceHelpers';
+import type { Item } from '../assets/item';
+import type { Asset } from '../assets/asset';
+import type { ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
 
 export enum ItemInteractionType {
 	/**
@@ -57,14 +60,14 @@ export enum ItemInteractionType {
  * All functions should return a stable value, or useSyncExternalStore will not work properly.
  */
 export class CharacterRestrictionsManager {
-	public readonly id: CharacterId;
-	public readonly appearance: Appearance;
+	public readonly characterId: CharacterId;
+	public readonly appearance: CharacterAppearance;
 	public readonly room: AppearanceActionRoomContext | null;
 	private _items: readonly Item[] = [];
 	private _properties: Readonly<AssetPropertiesResult> = CreateAssetPropertiesResult();
 
-	constructor(id: CharacterId, appearance: Appearance, room: AppearanceActionRoomContext | null) {
-		this.id = id;
+	constructor(characterId: CharacterId, appearance: CharacterAppearance, room: AppearanceActionRoomContext | null) {
+		this.characterId = characterId;
 		this.appearance = appearance;
 		this.room = room;
 	}
@@ -100,7 +103,7 @@ export class CharacterRestrictionsManager {
 	 * Returns the Muffler class for this CharacterRestrictionsManager
 	 */
 	public getMuffler(): Muffler {
-		return new Muffler(this.id, this.getEffects());
+		return new Muffler(this.characterId, this.getEffects());
 	}
 
 	/**
@@ -111,18 +114,21 @@ export class CharacterRestrictionsManager {
 		return _.clamp(this.getEffects().blind, 0, 10);
 	}
 
-	public canInteractWithCharacter(_target: CharacterRestrictionsManager): boolean {
+	public canInteractWithTarget(target: RoomActionTarget): boolean {
+		// Room inventory can always be intereacted with
+		if (target.type === 'roomInventory')
+			return true;
 		// TODO: For permissions
 		return true;
 	}
 
-	public canInteractWithAsset(target: CharacterRestrictionsManager, asset: Asset): boolean {
+	public canUseAsset(target: RoomActionTarget, asset: Asset): boolean {
 		// Must be able to interact with character
-		if (!this.canInteractWithCharacter(target))
+		if (!this.canInteractWithTarget(target))
 			return false;
 
 		// Can do all on self
-		if (target.id === this.id)
+		if (target.type === 'character' && target.characterId === this.characterId)
 			return true;
 
 		// Bodyparts can only be changed on self
@@ -132,19 +138,53 @@ export class CharacterRestrictionsManager {
 		return true;
 	}
 
-	public canInteractWithItem(target: CharacterRestrictionsManager, itemId: ItemId, interaction: ItemInteractionType): boolean {
-		const item = target.appearance.getItemById(itemId);
+	public hasPermissionForItemContents(target: RoomActionTarget, item: Item): boolean {
+		// Iterate over whole content
+		for (const module of item.modules.keys()) {
+			for (const innerItem of item.getModuleItems(module)) {
+				if (!this.canUseItemDirect(target, [], innerItem, ItemInteractionType.ACCESS_ONLY))
+					return false;
+				if (!this.hasPermissionForItemContents(target, innerItem))
+					return false;
+			}
+		}
+		return true;
+	}
+
+	public canUseItem(target: RoomActionTarget, itemPath: ItemPath, interaction: ItemInteractionType): boolean {
+		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
 			return false;
 
-		return this.canInteractWithItemDirect(target, item, interaction);
+		return this.canUseItemDirect(target, itemPath.container, item, interaction);
 	}
 
-	public canInteractWithItemDirect(target: CharacterRestrictionsManager, item: Item, interaction: ItemInteractionType): boolean {
+	public canUseItemDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType): boolean {
 		// Must be able to use item's asset
-		if (!this.canInteractWithAsset(target, item.asset))
+		if (!this.canUseAsset(target, item.asset))
 			return false;
+
+		let isPhysicallyEquipped = true;
+		const isSelfAction = target.type === 'character' && target.characterId === this.characterId;
+
+		// Must be able to access all upper items
+		const upperPath = SplitContainerPath(container);
+		if (upperPath) {
+			const containingModule = target.getItem(upperPath.itemPath)?.modules.get(upperPath.module);
+			if (!containingModule)
+				return false;
+
+			isPhysicallyEquipped = containingModule.contentsPhysicallyEquipped;
+
+			if (!this.canUseItemModule(
+				target,
+				upperPath.itemPath,
+				upperPath.module,
+				interaction === ItemInteractionType.ACCESS_ONLY ? ItemInteractionType.ACCESS_ONLY : ItemInteractionType.MODIFY,
+			))
+				return false;
+		}
 
 		// If access is all we needed, then success
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
@@ -152,22 +192,29 @@ export class CharacterRestrictionsManager {
 
 		// Bodyparts have different handling (we already checked we can interact with the asset)
 		if (item.asset.definition.bodypart != null) {
+			// Only characters have bodyparts
+			if (target.type !== 'character')
+				return false;
 			// Not all rooms allow bodypart changes
 			if (this.room && !this.room.features.includes('allowBodyChanges'))
 				return false;
 			return true;
 		}
 
+		// To add or remove the item, we need to have access to all contained items
+		if (interaction === ItemInteractionType.ADD_REMOVE && !this.hasPermissionForItemContents(target, item))
+			return false;
+
 		const properties = item.getProperties();
 
 		// If equipping there are further checks
-		if (interaction === ItemInteractionType.ADD_REMOVE) {
+		if (interaction === ItemInteractionType.ADD_REMOVE && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
 			if (properties.blockAddRemove)
 				return false;
 
 			// If equipping on self, the asset must allow self-equip
-			if (this.id === target.id && properties.blockSelfAddRemove)
+			if (isSelfAction && properties.blockSelfAddRemove)
 				return false;
 		}
 
@@ -178,26 +225,28 @@ export class CharacterRestrictionsManager {
 		return true;
 	}
 
-	public canInteractWithItemModule(target: CharacterRestrictionsManager, itemId: ItemId, moduleName: string, interaction?: ItemInteractionType): boolean {
-		const item = target.appearance.getItemById(itemId);
+	public canUseItemModule(target: RoomActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): boolean {
+		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
 			return false;
 
-		return this.canInteractWithItemModuleDirect(target, item, moduleName, interaction);
+		return this.canUseItemModuleDirect(target, itemPath.container, item, moduleName, interaction);
 	}
 
-	public canInteractWithItemModuleDirect(target: CharacterRestrictionsManager, item: Item, moduleName: string, interaction?: ItemInteractionType): boolean {
+	public canUseItemModuleDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): boolean {
 		// The module must exist
 		const module = item.modules.get(moduleName);
 		if (!module)
 			return false;
 
+		const isSelfAction = target.type === 'character' && target.characterId === this.characterId;
+
 		// The module can specify what kind of interaction it provides, unless asking for specific one
 		interaction ??= module.interactionType;
 
 		// Must be able to interact with this item in that way
-		if (!this.canInteractWithItemDirect(target, item, interaction))
+		if (!this.canUseItemDirect(target, container, item, interaction))
 			return false;
 
 		// If access is all we needed, then success
@@ -211,7 +260,7 @@ export class CharacterRestrictionsManager {
 			return false;
 
 		// If accessing on self, the item must not block it
-		if (this.id === target.id && properties.blockSelfModules.has(moduleName))
+		if (isSelfAction && properties.blockSelfModules.has(moduleName))
 			return false;
 
 		return true;

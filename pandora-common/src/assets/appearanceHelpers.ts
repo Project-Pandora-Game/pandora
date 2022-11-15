@@ -1,11 +1,30 @@
 import _ from 'lodash';
+import type { AppearanceActionHandlerMessageTemplate, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
+import type { AssetManager } from './assetManager';
+import type { Item } from './item';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
-import { AssetManager } from './assetManager';
-import { Item, ItemId } from './item';
+
+export function SplitContainerPath(path: ItemContainerPath): {
+	itemPath: ItemPath;
+	module: string;
+} | undefined {
+	if (path.length < 1)
+		return undefined;
+
+	return {
+		itemPath: {
+			container: path.slice(0, -1),
+			itemId: path[path.length - 1].item,
+		},
+		module: path[path.length - 1].module,
+	};
+}
 
 export abstract class AppearanceManipulator {
 	public abstract getItems(): AppearanceItems;
 	protected abstract _applyItems(items: AppearanceItems): boolean;
+
+	public abstract readonly isCharacter: boolean;
 
 	public readonly assetMananger: AssetManager;
 
@@ -13,7 +32,17 @@ export abstract class AppearanceManipulator {
 		this.assetMananger = assetManager;
 	}
 
+	public getContainer(path: ItemContainerPath): AppearanceManipulator {
+		if (path.length < 1)
+			return this;
+		const step = path[0];
+		return new AppearanceContainerManipulator(this, step.item, step.module).getContainer(path.slice(1));
+	}
+
 	public addItem(item: Item, index?: number): boolean {
+		if (item.asset.definition.bodypart != null && !this.isCharacter)
+			return false;
+
 		let items = this.getItems().slice();
 		if (items.some((it) => it.id === item.id))
 			return false;
@@ -24,7 +53,9 @@ export abstract class AppearanceManipulator {
 		} else {
 			items.push(item);
 		}
-		items = AppearanceItemsFixBodypartOrder(this.assetMananger, items);
+		if (this.isCharacter) {
+			items = AppearanceItemsFixBodypartOrder(this.assetMananger, items);
+		}
 		return this._applyItems(items);
 	}
 
@@ -60,12 +91,45 @@ export abstract class AppearanceManipulator {
 	}
 }
 
+class AppearanceContainerManipulator extends AppearanceManipulator {
+	private _base: AppearanceManipulator;
+	private _item: ItemId;
+	private _module: string;
+
+	public readonly isCharacter: boolean = false;
+
+	constructor(base: AppearanceManipulator, item: ItemId, module: string) {
+		super(base.assetMananger);
+		this._base = base;
+		this._item = item;
+		this._module = module;
+	}
+
+	getItems(): AppearanceItems {
+		const item = this._base.getItems().find((i) => i.id === this._item);
+		return item ? item.getModuleItems(this._module) : [];
+	}
+
+	_applyItems(items: AppearanceItems): boolean {
+		return this._base.modifyItem(this._item, (it) => it.setModuleItems(this._module, items));
+	}
+}
+
 export class AppearanceRootManipulator extends AppearanceManipulator {
 	private _items: AppearanceItems;
+	private _messages: AppearanceActionHandlerMessageTemplate[] = [];
 
-	constructor(assetMananger: AssetManager, items: AppearanceItems) {
+	public readonly isCharacter: boolean;
+
+	constructor(assetMananger: AssetManager, items: AppearanceItems, isCharacter: boolean) {
 		super(assetMananger);
 		this._items = items.slice();
+		this.isCharacter = isCharacter;
+	}
+
+	/** Gets items, but is only present on the root of appearance to prevent accidental passing of container manipultors */
+	getRootItems(): AppearanceItems {
+		return this.getItems();
 	}
 
 	getItems(): AppearanceItems {
@@ -75,5 +139,15 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 	_applyItems(items: AppearanceItems): boolean {
 		this._items = items;
 		return true;
+	}
+
+	public queueMessage(message: AppearanceActionHandlerMessageTemplate): void {
+		this._messages.push(message);
+	}
+
+	public getAndClearPendingMessages(): AppearanceActionHandlerMessageTemplate[] {
+		const messages = this._messages;
+		this._messages = [];
+		return messages;
 	}
 }

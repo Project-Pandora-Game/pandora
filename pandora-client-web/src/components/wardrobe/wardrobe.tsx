@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { nanoid } from 'nanoid';
 import {
-	Appearance,
+	CharacterAppearance,
 	AppearanceAction,
 	AppearanceActionContext,
 	AppearanceItems,
@@ -14,13 +14,13 @@ import {
 	BoneState,
 	BONE_MAX,
 	BONE_MIN,
-	CharacterId,
 	CharacterView,
 	DoAppearanceAction,
 	IsCharacterId,
 	IsObject,
 	Item,
 	ItemId,
+	ItemContainerPath,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -45,6 +45,7 @@ import { GraphicsScene } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { Column, Row } from '../common/container/container';
+import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -74,35 +75,54 @@ export function WardrobeScreen(): ReactElement | null {
 	);
 }
 
-const wardrobeContext = createContext({
-	character: null as unknown as Character,
-	appearance: [] as readonly Item[],
-	assetList: [] as readonly Asset[],
-	actions: null as unknown as AppearanceActionContext,
-});
+interface WardrobeContext {
+	character: Character;
+	appearance: readonly Item[];
+	assetList: readonly Asset[];
+	actions: AppearanceActionContext;
+	containerPath: ItemContainerPath;
+	setContainerPath: (newPath: ItemContainerPath) => void;
+}
+
+const wardrobeContext = createContext<WardrobeContext | null>(null);
 
 export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode }): ReactElement {
 	const appearance = useCharacterAppearanceItems(character);
 	const assetList = useObservable(GetAssetManager().assetList);
 	const roomContext = useAppearanceActionRoomContext();
 
-	const actions: AppearanceActionContext = useMemo(() => {
-		const characters = new Map<CharacterId, Appearance>();
-		characters.set(player.data.id, player.appearance);
-		characters.set(character.data.id, character.appearance);
-		return {
-			player: player.data.id,
-			characters,
-			room: roomContext,
-		};
-	}, [character.appearance, character.data.id, player.appearance, player.data.id, roomContext]);
+	const [containerPath, setContainerPath] = useState<ItemContainerPath>([]);
 
-	const context = useMemo(() => ({
+	const actions = useMemo<AppearanceActionContext>(() => ({
+		player: player.data.id,
+		getCharacter: (id) => {
+			if (id === player.data.id) {
+				return player.getRestrictionManager(roomContext);
+			} else if (id === character.data.id) {
+				return character.getRestrictionManager(roomContext);
+			}
+			return null;
+		},
+		getTarget: (target) => {
+			if (target.type === 'character') {
+				if (target.characterId === player.data.id) {
+					return player.appearance;
+				} else if (target.characterId === character.data.id) {
+					return character.appearance;
+				}
+			}
+			return null;
+		},
+	}), [character, player, roomContext]);
+
+	const context = useMemo<WardrobeContext>(() => ({
 		character,
 		appearance,
 		assetList,
 		actions,
-	}), [appearance, character, assetList, actions]);
+		containerPath,
+		setContainerPath,
+	}), [appearance, character, assetList, actions, containerPath, setContainerPath]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -111,13 +131,10 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 	);
 }
 
-function useWardrobeContext(): Readonly<{
-	character: Character,
-	appearance: readonly Item[],
-	assetList: readonly Asset[],
-	actions: AppearanceActionContext,
-}> {
-	return useContext(wardrobeContext);
+function useWardrobeContext(): Readonly<WardrobeContext> {
+	const ctx = useContext(wardrobeContext);
+	AssertNotNullable(ctx);
+	return ctx;
 }
 
 function Wardrobe(): ReactElement | null {
@@ -175,27 +192,61 @@ function Wardrobe(): ReactElement | null {
 }
 
 function WardrobeItemManipulation({ className }: { className?: string }): ReactElement {
-	const { appearance, assetList } = useWardrobeContext();
+	const { appearance, assetList, containerPath, setContainerPath } = useWardrobeContext();
+	const asssetManager = GetAssetManager();
 
-	const filter = (item: Item | Asset) => {
+	const preFilter = useCallback((item: Item | Asset) => {
 		const { definition } = 'asset' in item ? item.asset : item;
-		return definition.bodypart === undefined;
-	};
+		return definition.bodypart === undefined && (containerPath.length !== 0 || definition.wearable !== false);
+	}, [containerPath]);
 
 	const [selectedItemId, setSelectedItemId] = useState<ItemId| null>(null);
-	const selectedItem = selectedItemId && appearance.find((i) => i.id === selectedItemId);
+
+	const [displayedItems, sourceFilter, containerSteps] = useMemo<[AppearanceItems, (item: Item) => boolean, readonly string[]]>(() => {
+		let items: AppearanceItems = appearance.filter(preFilter);
+		const steps: string[] = [];
+		let filter = (_item: Item) => true;
+		for (const step of containerPath) {
+			const item = items.find((it) => it.id === step.item);
+			if (!item)
+				return [[], () => false, []];
+			steps.push(item.asset.definition.name);
+			const module = item.modules.get(step.module);
+			filter = (i) => (module?.acceptedContentFilter?.(i) ?? true);
+			items = item.getModuleItems(step.module);
+		}
+		return [items, filter, steps];
+	}, [appearance, preFilter, containerPath]);
+
+	const selectedItem = selectedItemId && displayedItems.find((i) => i.id === selectedItemId);
 
 	// Reset selected item each time screen opens
 	useLayoutEffect(() => {
 		setSelectedItemId(null);
-	}, []);
+		setContainerPath([]);
+	}, [setContainerPath]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } selectItem={ setSelectedItemId } selectedItemId={ selectedItemId } />
+			<InventoryView
+				title={ containerPath.length > 0 ? '' : 'Currently worn items' }
+				items={ displayedItems }
+				selectItem={ setSelectedItemId }
+				selectedItemId={ selectedItemId }
+			>
+				{
+					containerPath.length > 0 &&
+					<div className='toolbar'>
+						<button onClick={ () => setContainerPath([]) } >Close</button>
+						<div className='center-flex'>Viewing contents of { containerSteps.join(' > ') }</div>
+					</div>
+				}
+			</InventoryView>
 			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
 				<Tab name='Create new item'>
-					<InventoryView title='Create and use a new item' items={ assetList.filter(filter) } />
+					<InventoryView title='Create and use a new item' items={ assetList.filter((asset) => {
+						return preFilter(asset) && sourceFilter(asssetManager.createItem(`i/__tmp__`, asset, null));
+					}) } />
 				</Tab>
 				<Tab name='Room inventory'>
 					<div className='inventoryView'>
@@ -230,7 +281,7 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 }
 
 function WardrobeBodyManipulation({ className }: { className?: string }): ReactElement {
-	const { appearance, assetList } = useWardrobeContext();
+	const { appearance, assetList, containerPath, setContainerPath } = useWardrobeContext();
 
 	const filter = (item: Item | Asset) => {
 		const { definition } = 'asset' in item ? item.asset : item;
@@ -244,6 +295,11 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 	useLayoutEffect(() => {
 		setSelectedItemId(null);
 	}, []);
+	useLayoutEffect(() => {
+		if (containerPath.length > 0) {
+			setContainerPath([]);
+		}
+	}, [containerPath, setContainerPath]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -266,9 +322,10 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 	);
 }
 
-function InventoryView<T extends Readonly<Asset | Item>>({ className, title, items, selectItem, selectedItemId }: {
+function InventoryView<T extends Readonly<Asset | Item>>({ className, title, children, items, selectItem, selectedItemId }: {
 	className?: string;
 	title: string;
+	children?: ReactNode;
 	items: readonly T[];
 	selectItem?: (item: ItemId | null) => void;
 	selectedItemId?: ItemId | null;
@@ -290,23 +347,32 @@ function InventoryView<T extends Readonly<Asset | Item>>({ className, title, ite
 				<button onClick={ () => setListMode(false) } className={ listMode ? '' : 'active' }>Grid</button>
 				<button onClick={ () => setListMode(true) } className={ listMode ? 'active' : ''  }>List</button>
 			</div>
+			{ children }
 			<div className={ listMode ? 'list' : 'grid' }>
 				{...filteredItems
-					.map((i) => i instanceof Item ? <InventoryItemViewList key={ i.id } item={ i } listMode={ listMode } selected={ i.id === selectedItemId } selectItem={ selectItem } /> :
-					i instanceof Asset ? <InventoryAssetViewList key={ i.id } asset={ i } listMode={ listMode } /> : null)}
+					.map((i) => i instanceof Item ?
+						<InventoryItemViewList key={ i.id } item={ i } listMode={ listMode } selected={ i.id === selectedItemId } selectItem={ selectItem } /> :
+						i instanceof Asset ? <InventoryAssetViewList key={ i.id } asset={ i } listMode={ listMode } /> :
+						null,
+					)
+				}
 			</div>
 		</div>
 	);
 }
 
 function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: boolean; }): ReactElement {
-	const { actions, character } = useWardrobeContext();
+	const { actions, character, containerPath } = useWardrobeContext();
 
 	const action: AppearanceAction = {
 		type: 'create',
-		target: character.data.id,
+		target: {
+			type: 'character',
+			characterId: character.data.id,
+		},
 		itemId: `i/${nanoid()}` as const,
 		asset: asset.id,
+		container: containerPath.slice(),
 	};
 
 	const shardConnector = useShardConnector();
@@ -324,7 +390,7 @@ function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: b
 }
 
 function InventoryItemViewList({ item, listMode, selected=false, selectItem }: { item: Item; listMode: boolean; selected?: boolean; selectItem?: (item: ItemId | null) => void; }): ReactElement {
-	const { character } = useWardrobeContext();
+	const { character, containerPath } = useWardrobeContext();
 
 	const asset = item.asset;
 
@@ -339,24 +405,42 @@ function InventoryItemViewList({ item, listMode, selected=false, selectItem }: {
 				<div className='quickActions'>
 					<WardrobeActionButton action={ {
 						type: 'move',
-						target: character.data.id,
-						itemId: item.id,
+						target: {
+							type: 'character',
+							characterId: character.data.id,
+						},
+						item: {
+							container: containerPath.slice(),
+							itemId: item.id,
+						},
 						shift: 1,
 					} }>
 						⬇️
 					</WardrobeActionButton>
 					<WardrobeActionButton action={ {
 						type: 'move',
-						target: character.data.id,
-						itemId: item.id,
+						target: {
+							type: 'character',
+							characterId: character.data.id,
+						},
+						item: {
+							container: containerPath.slice(),
+							itemId: item.id,
+						},
 						shift: -1,
 					} }>
 						⬆️
 					</WardrobeActionButton>
 					<WardrobeActionButton action={ {
 						type: 'delete',
-						target: character.data.id,
-						itemId: item.id,
+						target: {
+							type: 'character',
+							characterId: character.data.id,
+						},
+						item: {
+							container: containerPath.slice(),
+							itemId: item.id,
+						},
 					} }>
 						➖
 					</WardrobeActionButton>
@@ -401,7 +485,7 @@ function WardrobeItemConfigMenu({
 	item: Item;
 	onClose: () => void;
 }): ReactElement {
-	const { character } = useWardrobeContext();
+	const { character, containerPath } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 	const player = usePlayer();
 	AssertNotNullable(player);
@@ -417,55 +501,83 @@ function WardrobeItemConfigMenu({
 				<Row wrap>
 					<WardrobeActionButton action={ {
 						type: 'move',
-						target: character.data.id,
-						itemId: item.id,
+						target: {
+							type: 'character',
+							characterId: character.data.id,
+						},
+						item: {
+							container: containerPath.slice(),
+							itemId: item.id,
+						},
 						shift: 1,
 					} }>
 						⬇️ Wear on top
 					</WardrobeActionButton>
 					<WardrobeActionButton action={ {
 						type: 'move',
-						target: character.data.id,
-						itemId: item.id,
+						target: {
+							type: 'character',
+							characterId: character.data.id,
+						},
+						item: {
+							container: containerPath.slice(),
+							itemId: item.id,
+						},
 						shift: -1,
 					} }>
 						⬆️ Wear under
 					</WardrobeActionButton>
 					<WardrobeActionButton action={ {
 						type: 'delete',
-						target: character.data.id,
-						itemId: item.id,
+						target: {
+							type: 'character',
+							characterId: character.data.id,
+						},
+						item: {
+							container: containerPath.slice(),
+							itemId: item.id,
+						},
 					} }>
 						➖ Remove and delete
 					</WardrobeActionButton>
 				</Row>
-				<FieldsetToggle legend='Coloring'>
-					{
-						item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
-							<div className='wardrobeColorRow' key={ colorPartIndex }>
-								<span className='flex-1'>{colorPart.name}</span>
-								<ColorInput
-									initialValue={ item.color[colorPartIndex] ?? colorPart.default }
-									resetValue={ colorPart.default }
-									throttle={ 100 }
-									disabled={ !canUseHands }
-									onChange={ (color) => {
-										if (shardConnector) {
-											const newColor = item.color.slice();
-											newColor[colorPartIndex] = color;
-											shardConnector.sendMessage('appearanceAction', {
-												type: 'color',
-												target: character.data.id,
-												itemId: item.id,
-												color: newColor,
-											});
-										}
-									} }
-								/>
-							</div>
-						))
-					}
-				</FieldsetToggle>
+				{
+					(item.asset.definition.colorization && item.asset.definition.colorization.length > 0) && (
+						<FieldsetToggle legend='Coloring'>
+							{
+								item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
+									<div className='wardrobeColorRow' key={ colorPartIndex }>
+										<span className='flex-1'>{colorPart.name}</span>
+										<ColorInput
+											initialValue={ item.color[colorPartIndex] ?? colorPart.default }
+											resetValue={ colorPart.default }
+											throttle={ 100 }
+											disabled={ !canUseHands }
+											onChange={ (color) => {
+												if (shardConnector) {
+													const newColor = item.color.slice();
+													newColor[colorPartIndex] = color;
+													shardConnector.sendMessage('appearanceAction', {
+														type: 'color',
+														target: {
+															type: 'character',
+															characterId: character.data.id,
+														},
+														item: {
+															container: containerPath.slice(),
+															itemId: item.id,
+														},
+														color: newColor,
+													});
+												}
+											} }
+										/>
+									</div>
+								))
+							}
+						</FieldsetToggle>
+					)
+				}
 				{
 					Array.from(item.modules.entries())
 						.map(([moduleName, m]) => (
@@ -487,6 +599,9 @@ function WardrobeModuleConfig({ item, moduleName, m }: {
 	if (m instanceof ItemModuleTyped) {
 		return <WardrobeModuleConfigTyped item={ item } moduleName={ moduleName } m={ m } />;
 	}
+	if (m instanceof ItemModuleStorage) {
+		return <WardrobeModuleConfigStorage item={ item } moduleName={ moduleName } m={ m } />;
+	}
 	return <>[ ERROR: UNKNOWN MODULE TYPE ]</>;
 }
 
@@ -495,7 +610,7 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 	moduleName: string;
 	m: ItemModuleTyped
 }): ReactElement {
-	const { character } = useWardrobeContext();
+	const { character, containerPath } = useWardrobeContext();
 
 	return (
 		<Row wrap>
@@ -503,8 +618,14 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 				m.config.variants.map((v) => (
 					<WardrobeActionButton action={ {
 						type: 'moduleAction',
-						target: character.data.id,
-						itemId: item.id,
+						target: {
+							type: 'character',
+							characterId: character.data.id,
+						},
+						item: {
+							container: containerPath.slice(),
+							itemId: item.id,
+						},
 						module: moduleName,
 						action: {
 							moduleType: 'typed',
@@ -515,6 +636,37 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 					</WardrobeActionButton>
 				))
 			}
+		</Row>
+	);
+}
+
+function WardrobeModuleConfigStorage({ item, moduleName, m }: {
+	item: Item;
+	moduleName: string;
+	m: ItemModuleStorage;
+}): ReactElement {
+	const { containerPath, setContainerPath } = useWardrobeContext();
+
+	return (
+		<Row wrap>
+			<button
+				className={ classNames('wardrobeActionButton', 'allowed') }
+				onClick={ (ev) => {
+					ev.stopPropagation();
+					setContainerPath([
+						...containerPath,
+						{
+							item: item.id,
+							module: moduleName,
+						},
+					]);
+				} }
+			>
+				Open
+			</button>
+			<Row alignY='center'>
+				Contains { m.getContents().length } items.
+			</Row>
 		</Row>
 	);
 }
@@ -650,7 +802,7 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 	);
 }
 
-export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: Appearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => void }): ReactElement {
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => void }): ReactElement {
 	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
@@ -791,18 +943,20 @@ export function WardrobeExpressionGui(): ReactElement {
 
 	return (
 		<div className='inventoryView'>
-			{
-				appearance
-					.flatMap((item) => (
-						Array.from(item.modules.entries())
-							.filter((m) => m[1].config.expression)
-							.map(([moduleName, m]) => (
-								<FieldsetToggle legend={ m.config.expression } key={ moduleName }>
-									<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
-								</FieldsetToggle>
-							))
-					))
-			}
+			<Column overflowX='hidden' overflowY='auto'>
+				{
+					appearance
+						.flatMap((item) => (
+							Array.from(item.modules.entries())
+								.filter((m) => m[1].config.expression)
+								.map(([moduleName, m]) => (
+									<FieldsetToggle legend={ m.config.expression } key={ moduleName }>
+										<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
+									</FieldsetToggle>
+								))
+						))
+				}
+			</Column>
 		</div>
 	);
 }

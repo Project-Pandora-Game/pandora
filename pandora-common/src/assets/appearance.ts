@@ -1,18 +1,15 @@
 import _ from 'lodash';
 import { z } from 'zod';
 import type { CharacterId } from '../character';
-import type { ChatActionId, IChatRoomMessageActionItem } from '../chatroom';
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
-import { HexColorString } from '../validation';
 import { AppearanceRootManipulator } from './appearanceHelpers';
-import { AppearanceItems, AppearanceItemsFixBodypartOrder, AppearanceItemsGetPoseLimits, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
-import { Asset } from './asset';
+import type { AppearanceActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
+import { AppearanceItems, AppearanceItemsFixBodypartOrder, AppearanceItemsGetPoseLimits, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState, BoneType } from './graphics';
-import { Item, ItemBundle, ItemBundleSchema, ItemId } from './item';
-import { ItemModuleAction } from './modules';
+import { Item, ItemBundleSchema } from './item';
 
 export const BoneNameSchema = z.string();
 export type BoneName = z.infer<typeof BoneNameSchema>;
@@ -48,25 +45,11 @@ export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
 
 export type AppearanceChangeType = 'items' | 'pose';
 
-export type AppearanceActionHandlerMessage = {
-	id: ChatActionId;
-	character?: CharacterId;
-	targetCharacter?: CharacterId;
-	item?: IChatRoomMessageActionItem;
-	itemPrevious?: IChatRoomMessageActionItem;
-	dictionary?: Record<string, string>;
-};
-export type AppearanceActionHandler = (message: AppearanceActionHandlerMessage) => void;
+export class CharacterAppearance implements RoomActionTargetCharacter {
+	public readonly type = 'character';
+	public readonly characterId: CharacterId;
 
-export interface AppearanceActionProcessingContext {
-	player?: CharacterId;
-	sourceCharacter?: CharacterId;
-	actionHandler?: AppearanceActionHandler;
-	dryRun?: boolean;
-}
-
-export class Appearance {
-	private assetMananger: AssetManager;
+	protected assetMananger: AssetManager;
 	public onChangeHandler: ((changes: AppearanceChangeType[]) => void) | undefined;
 
 	private items: AppearanceItems = [];
@@ -75,25 +58,11 @@ export class Appearance {
 	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
 	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
 
-	constructor(assetMananger: AssetManager, onChange?: (changes: AppearanceChangeType[]) => void) {
+	constructor(assetMananger: AssetManager, characterId: CharacterId, onChange?: (changes: AppearanceChangeType[]) => void) {
 		this.assetMananger = assetMananger;
+		this.characterId = characterId;
 		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;
-	}
-
-	protected makeItem(id: ItemId, asset: Asset, bundle: ItemBundle | null, logger?: Logger): Item {
-		return new Item(id, asset, bundle ?? {
-			id,
-			asset: asset.id,
-		}, {
-			assetMananger: this.assetMananger,
-			doLoadTimeCleanup: bundle !== null,
-			logger,
-		});
-	}
-
-	public spawnItem(id: ItemId, asset: Asset): Item {
-		return this.makeItem(id, asset, null);
 	}
 
 	public exportToBundle(): AppearanceBundle {
@@ -125,7 +94,7 @@ export class Appearance {
 				continue;
 			}
 
-			const item = this.makeItem(itemBundle.id, asset, itemBundle, logger);
+			const item = this.assetMananger.createItem(itemBundle.id, asset, itemBundle, logger);
 			loadedItems.push(item);
 		}
 
@@ -150,7 +119,7 @@ export class Appearance {
 					ShuffleArray(possibleAssets);
 
 					for (const asset of possibleAssets) {
-						const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
+						const tryFix = [...newItems, this.assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
 						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
 							newItems = tryFix;
 							break;
@@ -190,7 +159,7 @@ export class Appearance {
 				ShuffleArray(possibleAssets);
 
 				for (const asset of possibleAssets) {
-					const tryFix = [...newItems, this.makeItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
+					const tryFix = [...newItems, this.assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
 					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
 						newItems = tryFix;
 						break;
@@ -312,8 +281,15 @@ export class Appearance {
 		this.onChangeHandler?.(changes);
 	}
 
-	public getItemById(id: ItemId): Item | undefined {
-		return this.items.find((i) => i.id === id);
+	public getItem({ container, itemId }: ItemPath): Item | undefined {
+		let current = this.items;
+		for (const step of container) {
+			const item = current.find((it) => it.id === step.item);
+			if (!item)
+				return undefined;
+			current = item.getModuleItems(step.module);
+		}
+		return current.find((it) => it.id === itemId);
 	}
 
 	public listItemsByAsset(asset: AssetId) {
@@ -324,178 +300,30 @@ export class Appearance {
 		return this.items;
 	}
 
-	protected _getManipulator(): AppearanceRootManipulator {
-		return new AppearanceRootManipulator(this.assetMananger, this.items);
+	public getManipulator(): AppearanceRootManipulator {
+		return new AppearanceRootManipulator(this.assetMananger, this.items, true);
 	}
 
-	public addItem(item: Item, ctx: AppearanceActionProcessingContext): boolean {
-		// Id must be unique
-		if (this.getItemById(item.id))
-			return false;
-
-		const manipulator = this._getManipulator();
-
-		// Do change
-		let removed: AppearanceItems = [];
-		// if this is a bodypart not allowing multiple do a swap instead
-		if (item.asset.definition.bodypart && this.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
-			removed = manipulator.removeMatchingItems((oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
-		}
-		if (!manipulator.addItem(item))
-			return false;
-
-		const newItems = manipulator.getItems();
+	commitChanges(manipulator: AppearanceRootManipulator, context: AppearanceActionProcessingContext): AppearanceValidationResult {
+		const newItems = manipulator.getRootItems();
 
 		// Validate
 		if (!ValidateAppearanceItems(this.assetMananger, newItems))
 			return false;
 
-		if (ctx.dryRun)
+		if (context.dryRun)
 			return true;
 
 		this.items = newItems;
 		const poseChanged = this.enforcePoseLimits();
 		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
 
-		// Change message to chat
-		if (ctx.actionHandler) {
-			if (removed.length > 0) {
-				ctx.actionHandler({
-					id: 'itemReplace',
-					character: ctx.sourceCharacter,
-					targetCharacter: ctx.player,
-					item: {
-						assetId: item.asset.id,
-					},
-					itemPrevious: {
-						assetId: removed[0].asset.id,
-					},
-				});
-			} else {
-				ctx.actionHandler({
-					id: 'itemAdd',
-					character: ctx.sourceCharacter,
-					targetCharacter: ctx.player,
-					item: {
-						assetId: item.asset.id,
-					},
-				});
-			}
-		}
-
-		return true;
-	}
-
-	public removeItem(itemId: ItemId, ctx: AppearanceActionProcessingContext): boolean {
-		const manipulator = this._getManipulator();
-
-		// Do change
-		const removedItems = manipulator.removeMatchingItems((i) => i.id === itemId);
-		const newItems = manipulator.getItems();
-
-		// Validate
-		if (removedItems.length !== 1)
-			return false;
-		if (!ValidateAppearanceItems(this.assetMananger, newItems))
-			return false;
-
-		if (ctx.dryRun)
-			return true;
-
-		this.items = newItems;
-		const poseChanged = this.enforcePoseLimits();
-		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
-
-		// Change message to chat
-		if (ctx.actionHandler && removedItems.length > 0) {
-			ctx.actionHandler({
-				id: 'itemRemove',
-				character: ctx.sourceCharacter,
-				targetCharacter: ctx.player,
-				item: {
-					assetId: removedItems[0].asset.id,
-				},
+		for (const message of manipulator.getAndClearPendingMessages()) {
+			context.actionHandler?.({
+				...message,
+				character: context.sourceCharacter,
+				targetCharacter: this.characterId,
 			});
-		}
-
-		return true;
-	}
-
-	public moveItem(itemId: ItemId, shift: number, ctx: AppearanceActionProcessingContext): boolean {
-		const manipulator = this._getManipulator();
-
-		// Do change
-		if (!manipulator.moveItem(itemId, shift))
-			return false;
-
-		const newItems = manipulator.getItems();
-
-		// Validate
-		if (!ValidateAppearanceItems(this.assetMananger, newItems))
-			return false;
-
-		if (ctx.dryRun)
-			return true;
-
-		this.items = newItems;
-		const poseChanged = this.enforcePoseLimits();
-		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
-
-		// Change message to chat
-		if (ctx.actionHandler) {
-			// TODO: Message to chat that items were reordered
-		}
-
-		return true;
-	}
-
-	public colorItem(itemId: ItemId, color: readonly HexColorString[], ctx: AppearanceActionProcessingContext): boolean {
-		const manipulator = this._getManipulator();
-
-		// Do change
-		manipulator.modifyItem(itemId, (it) => it.changeColor(color));
-		const newItems = manipulator.getItems();
-
-		// Validate
-		if (!ValidateAppearanceItems(this.assetMananger, newItems))
-			return false;
-
-		if (ctx.dryRun)
-			return true;
-
-		this.items = newItems;
-		const poseChanged = this.enforcePoseLimits();
-		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
-
-		// Change message to chat
-		if (ctx.actionHandler) {
-			// TODO: Message to chat that item was colored
-		}
-
-		return true;
-	}
-
-	public moduleAction(itemId: ItemId, module: string, action: ItemModuleAction, ctx: AppearanceActionProcessingContext): boolean {
-		const manipulator = this._getManipulator();
-
-		// Do change
-		manipulator.modifyItem(itemId, (it) => it.moduleAction(module, action));
-		const newItems = manipulator.getItems();
-
-		// Validate
-		if (!ValidateAppearanceItems(this.assetMananger, newItems))
-			return false;
-
-		if (ctx.dryRun)
-			return true;
-
-		this.items = newItems;
-		const poseChanged = this.enforcePoseLimits();
-		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
-
-		// Change message to chat
-		if (ctx.actionHandler) {
-			// TODO: Message to chat that item module was changed
 		}
 
 		return true;

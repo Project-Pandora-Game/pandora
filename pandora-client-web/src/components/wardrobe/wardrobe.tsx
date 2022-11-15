@@ -46,6 +46,7 @@ import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { Column, Row } from '../common/container/container';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
+import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -602,6 +603,9 @@ function WardrobeModuleConfig({ item, moduleName, m }: {
 	if (m instanceof ItemModuleStorage) {
 		return <WardrobeModuleConfigStorage item={ item } moduleName={ moduleName } m={ m } />;
 	}
+	if (m instanceof ItemModuleLockSlot) {
+		return <WardrobeModuleConfigLockSlot item={ item } moduleName={ moduleName } m={ m } />;
+	}
 	return <>[ ERROR: UNKNOWN MODULE TYPE ]</>;
 }
 
@@ -666,6 +670,41 @@ function WardrobeModuleConfigStorage({ item, moduleName, m }: {
 			</button>
 			<Row alignY='center'>
 				Contains { m.getContents().length } items.
+			</Row>
+		</Row>
+	);
+}
+
+function WardrobeModuleConfigLockSlot({ item, moduleName, m }: {
+	item: Item;
+	moduleName: string;
+	m: ItemModuleLockSlot;
+}): ReactElement {
+	const { containerPath, setContainerPath } = useWardrobeContext();
+
+	return (
+		<Row wrap>
+			<button
+				className={ classNames('wardrobeActionButton', 'allowed') }
+				onClick={ (ev) => {
+					ev.stopPropagation();
+					setContainerPath([
+						...containerPath,
+						{
+							item: item.id,
+							module: moduleName,
+						},
+					]);
+				} }
+			>
+				Modify
+			</button>
+			<Row alignY='center'>
+				{
+					m.lock ?
+					m.lock.asset.definition.name :
+					'Not locked.'
+				}
 			</Row>
 		</Row>
 	);

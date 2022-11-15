@@ -7,6 +7,7 @@ import { ZodMatcher } from '../validation';
 import { Asset } from './asset';
 import { AssetDefinitionExtraArgs } from './definitions';
 import { IItemLoadContext } from './item';
+import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
 
 //#region Module definitions
 
@@ -19,16 +20,22 @@ export type IAssetModuleTypes<A extends AssetDefinitionExtraArgs = AssetDefiniti
 		config: IModuleConfigStorage<A>;
 		data: IModuleItemDataStorage;
 	};
+	lockSlot: {
+		config: IModuleConfigLockSlot<A>;
+		data: IModuleItemDataLockSlot;
+	};
 };
 
 export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>; } = {
 	typed: new TypedModuleDefinition(),
 	storage: new StorageModuleDefinition(),
+	lockSlot: new LockSlotModuleDefinition(),
 };
 
 export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
 	ItemModuleTypedActionSchema,
 	ItemModuleStorageActionSchema,
+	ItemModuleLockSlotActionSchema,
 ]);
 export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
@@ -79,6 +86,20 @@ export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleIt
 				moduleName,
 				moduleDefinition,
 				MODULE_TYPES.storage.parseData(
+					asset,
+					moduleName,
+					moduleDefinition,
+					data,
+					context.assetMananger,
+				),
+				context,
+			);
+		case 'lockSlot':
+			return MODULE_TYPES.lockSlot.loadModule(
+				asset,
+				moduleName,
+				moduleDefinition,
+				MODULE_TYPES.lockSlot.parseData(
 					asset,
 					moduleName,
 					moduleDefinition,

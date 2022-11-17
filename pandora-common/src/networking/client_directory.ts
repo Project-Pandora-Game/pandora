@@ -283,6 +283,26 @@ export const ClientDirectorySchema = {
 		request: z.object({}),
 		response: ZodCast<{ info: IShardTokenInfo[]; }>(),
 	},
+	manageCreateBetaKey: {
+		request: z.object({
+			expires: z.number().optional(),
+			maxUses: z.number().optional(),
+		}),
+		response: ZodCast<{ result: 'adminRequired'; } | {
+			result: 'ok';
+			token: string;
+		}>(),
+	},
+	manageListBetaKeys: {
+		request: z.object({}),
+		response: ZodCast<{ keys: IBetaKeyInfo[]; }>(),
+	},
+	manageInvalidateBetaKey: {
+		request: z.object({
+			id: z.string(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'notFound'; }>(),
+	},
 	//#endregion
 } as const;
 

@@ -71,7 +71,8 @@ export const CHARACTER_LIMIT_NORMAL = 5;
 //#region Development
 
 /** Key needed to register, if set */
-export const BETA_KEY = process.env.BETA_KEY ?? '';
+export const BETA_KEY_GLOBAL = process.env.BETA_KEY_GLOBAL ?? '';
+export const BETA_KEY_ENABLED = process.env.BETA_KEY_ENABLED === 'true';
 
 //#endregion
 

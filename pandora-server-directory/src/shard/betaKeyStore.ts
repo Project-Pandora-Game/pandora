@@ -1,6 +1,6 @@
 import { GetLogger, type IBetaKeyInfo, type IClientDirectoryArgument } from 'pandora-common';
 import { type Account } from '../account/account';
-import { BETA_KEY } from '../config';
+import { BETA_KEY_GLOBAL } from '../config';
 import { TokenStoreBase } from './tokenStoreBase';
 
 const TOKEN_ID_LENGTH = 8;
@@ -15,14 +15,14 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 	}
 
 	protected onInit(): void {
-		if (BETA_KEY) {
+		if (BETA_KEY_GLOBAL) {
 			this.devInsert({
-				id: BETA_KEY.substring(0, TOKEN_ID_LENGTH),
-				token: BETA_KEY,
+				id: BETA_KEY_GLOBAL.substring(0, TOKEN_ID_LENGTH),
+				token: BETA_KEY_GLOBAL,
 				created: { id: 0, username: '[[Pandora]]', time: 0 },
 				uses: 0,
 			});
-			this.logger.info(`Token '${BETA_KEY}' created`);
+			this.logger.info(`Token '${BETA_KEY_GLOBAL}' created`);
 		}
 	}
 

@@ -11,7 +11,7 @@ export class MockShardConnector implements ShardConnector {
 	public readonly player: Observable<PlayerCharacter | null>;
 	public readonly room: ChatRoom;
 
-	public constructor(info: IDirectoryCharacterConnectionInfo = MockConnectionInfo(), player: Observable<PlayerCharacter | null> = new Observable<PlayerCharacter | null>(null)) {
+	constructor(info: IDirectoryCharacterConnectionInfo = MockConnectionInfo(), player: Observable<PlayerCharacter | null> = new Observable<PlayerCharacter | null>(null)) {
 		this.connectionInfo = new Observable<Readonly<IDirectoryCharacterConnectionInfo>>(info);
 		this.player = player;
 		this.room = new ChatRoom(this);

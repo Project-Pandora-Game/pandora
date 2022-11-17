@@ -18,7 +18,7 @@ export class Account {
 	/** List of connections logged in as this account */
 	public associatedConnections: Set<IConnectionClient> = new Set();
 
-	readonly characters: Map<CharacterId, Character> = new Map();
+	public readonly characters: Map<CharacterId, Character> = new Map();
 
 	public readonly secure: AccountSecure;
 	public readonly roles: AccountRoles;

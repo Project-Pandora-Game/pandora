@@ -21,7 +21,7 @@ export class AccountDirectMessages {
 	private readonly _account: Account;
 	private _dms: DatabaseDirectMessageInfo[];
 
-	get dms(): IDirectoryDirectMessageInfo[] {
+	public get dms(): IDirectoryDirectMessageInfo[] {
 		return this._dms
 			.filter((dm) => !dm.closed);
 	}
@@ -35,7 +35,7 @@ export class AccountDirectMessages {
 		this._dms = data.directMessages ?? [];
 	}
 
-	async action(account: Account | number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time }: { notifyClients?: boolean, time?: number; } = {}): Promise<void> {
+	public async action(account: Account | number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time }: { notifyClients?: boolean, time?: number; } = {}): Promise<void> {
 		const id = typeof account === 'number' ? account : account.id;
 		let dm = this._dms.find((info) => info.id === id);
 		if (!dm) {
@@ -76,7 +76,7 @@ export class AccountDirectMessages {
 		await GetDatabase().setDirectMessageInfo(this._account.id, this._dms);
 	}
 
-	async sendMessage({ id, content, editing }: IClientDirectoryArgument['sendDirectMessage']): IClientDirectoryPromiseResult['sendDirectMessage'] {
+	public async sendMessage({ id, content, editing }: IClientDirectoryArgument['sendDirectMessage']): IClientDirectoryPromiseResult['sendDirectMessage'] {
 		if (!this._publicKey) {
 			return { result: 'denied' };
 		}
@@ -117,7 +117,7 @@ export class AccountDirectMessages {
 		}
 	}
 
-	async getMessages(id: number, until?: number): IClientDirectoryPromiseResult['getDirectMessages'] {
+	public async getMessages(id: number, until?: number): IClientDirectoryPromiseResult['getDirectMessages'] {
 		if (!this._publicKey) {
 			return { result: 'denied' };
 		}

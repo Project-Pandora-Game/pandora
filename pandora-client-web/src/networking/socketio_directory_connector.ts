@@ -31,13 +31,13 @@ type SocketAuthCallback = (data?: IClientDirectoryAuthMessage) => void;
 const logger = GetLogger('DirConn');
 
 class DirectoryChangeEventEmitter extends TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
-	onSomethingChanged(changes: IDirectoryClientChangeEvents[]): void {
+	public onSomethingChanged(changes: IDirectoryClientChangeEvents[]): void {
 		changes.forEach((change) => this.emit(change, true));
 	}
 }
 
 class ConnectionStateEventEmitter extends TypedEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>> {
-	onStateChanged(data: IDirectoryClientArgument['connectionState']): void {
+	public onStateChanged(data: IDirectoryClientArgument['connectionState']): void {
 		this.emit('connectionState', data);
 	}
 }
@@ -65,31 +65,31 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	public readonly directMessageHandler: DirectMessageManager;
 
 	/** Current state of the connection */
-	get state(): ReadonlyObservable<DirectoryConnectionState> {
+	public get state(): ReadonlyObservable<DirectoryConnectionState> {
 		return this._state;
 	}
 
 	/** Directory status data */
-	get directoryStatus(): ReadonlyObservable<IDirectoryStatus> {
+	public get directoryStatus(): ReadonlyObservable<IDirectoryStatus> {
 		return this._directoryStatus;
 	}
 
 	/** Currently logged in account data or null if not logged in */
-	get currentAccount(): ReadonlyObservable<IDirectoryAccountInfo | null> {
+	public get currentAccount(): ReadonlyObservable<IDirectoryAccountInfo | null> {
 		return this._currentAccount;
 	}
 
-	get authToken(): ReadonlyObservable<AuthToken | undefined> {
+	public get authToken(): ReadonlyObservable<AuthToken | undefined> {
 		return this._authToken;
 	}
 
 	/** Event emitter for directory change events */
-	get changeEventEmitter(): TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
+	public get changeEventEmitter(): TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
 		return this._changeEventEmitter;
 	}
 
 	/** Event emitter for directory connection state change events */
-	get connectionStateEventEmitter(): TypedEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>> {
+	public get connectionStateEventEmitter(): TypedEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>> {
 		return this._connectionStateEventEmitter;
 	}
 

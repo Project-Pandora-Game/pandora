@@ -13,17 +13,17 @@ export class AssetManager {
 	protected _backgrounds: IChatroomBackgroundInfo[] = [];
 	protected _definitionsHash: string = '';
 
-	get definitionsHash(): string {
+	public get definitionsHash(): string {
 		return this._definitionsHash;
 	}
 
 	private _graphicsId: string = '';
-	get graphicsId(): string {
+	public get graphicsId(): string {
 		return this._graphicsId;
 	}
 
 	private _bodyparts: readonly AssetBodyPart[] = [];
-	get bodyparts(): readonly AssetBodyPart[] {
+	public get bodyparts(): readonly AssetBodyPart[] {
 		return this._bodyparts;
 	}
 

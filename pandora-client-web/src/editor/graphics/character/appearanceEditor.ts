@@ -62,7 +62,7 @@ export class AppearanceEditor extends CharacterAppearance {
 }
 
 export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
-	appearance: AppearanceEditor;
+	public appearance: AppearanceEditor;
 
 	constructor() {
 		super();
@@ -71,7 +71,7 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 }
 
 export class EditorAssetGraphics extends AssetGraphics {
-	readonly editor: Editor;
+	public readonly editor: Editor;
 	public onChangeHandler: (() => void) | undefined;
 
 	constructor(editor: Editor, id: AssetId, definition?: Immutable<AssetGraphicsDefinition>, onChange?: () => void) {
@@ -82,7 +82,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChangeHandler = onChange;
 	}
 
-	override load(definition: AssetGraphicsDefinition): void {
+	public override load(definition: AssetGraphicsDefinition): void {
 		super.load(definition);
 		this.onChange();
 	}
@@ -96,7 +96,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		return layer;
 	}
 
-	addLayer(): void {
+	public addLayer(): void {
 		const newLayer = this.createLayer({
 			x: 0,
 			y: 0,
@@ -115,7 +115,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	deleteLayer(layer: AssetGraphicsLayer): void {
+	public deleteLayer(layer: AssetGraphicsLayer): void {
 		const index = this.layers.indexOf(layer);
 		if (index < 0)
 			return;
@@ -137,7 +137,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	moveLayerRelative(layer: AssetGraphicsLayer, shift: number): void {
+	public moveLayerRelative(layer: AssetGraphicsLayer, shift: number): void {
 		const currentPos = this.layers.indexOf(layer);
 		if (currentPos < 0)
 			return;
@@ -158,7 +158,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	setLayerPriority(layer: AssetGraphicsLayer, priority: LayerPriority): void {
+	public setLayerPriority(layer: AssetGraphicsLayer, priority: LayerPriority): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -168,7 +168,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		});
 	}
 
-	setScaleAs(layer: AssetGraphicsLayer, scaleAs: string | null): void {
+	public setScaleAs(layer: AssetGraphicsLayer, scaleAs: string | null): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -185,7 +185,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		});
 	}
 
-	addScalingStop(layer: AssetGraphicsLayer, value: number): void {
+	public addScalingStop(layer: AssetGraphicsLayer, value: number): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -205,7 +205,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		});
 	}
 
-	removeScalingStop(layer: AssetGraphicsLayer, stop: number): void {
+	public removeScalingStop(layer: AssetGraphicsLayer, stop: number): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}

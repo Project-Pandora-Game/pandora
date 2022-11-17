@@ -18,7 +18,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	private _lastCryptoKey?: Readonly<IAccountCryptoKey>;
 	#crypto?: KeyExchange;
 
-	get info(): ReadonlyObservable<readonly IDirectoryDirectMessageInfo[]> {
+	public get info(): ReadonlyObservable<readonly IDirectoryDirectMessageInfo[]> {
 		return this._info;
 	}
 
@@ -157,23 +157,23 @@ export class DirectMessageChannel {
 
 	public readonly connector: DirectoryConnector;
 
-	get loaded(): boolean {
+	public get loaded(): boolean {
 		return this._loaded;
 	}
 
-	get messages(): ReadonlyObservable<readonly DirectMessage[]> {
+	public get messages(): ReadonlyObservable<readonly DirectMessage[]> {
 		return this._messages;
 	}
 
-	get account(): Readonly<IDirectoryDirectMessageAccount> {
+	public get account(): Readonly<IDirectoryDirectMessageAccount> {
 		return this._account;
 	}
 
-	get mounted(): boolean {
+	public get mounted(): boolean {
 		return this._mounts > 0;
 	}
 
-	get failed(): 'notFound' | 'denied' | undefined {
+	public get failed(): 'notFound' | 'denied' | undefined {
 		return this._failed;
 	}
 
@@ -205,7 +205,7 @@ export class DirectMessageChannel {
 		}
 	}
 
-	async load(): Promise<void> {
+	public async load(): Promise<void> {
 		if (this._loaded || this._failed) {
 			return;
 		}
@@ -216,7 +216,7 @@ export class DirectMessageChannel {
 		return this._loading;
 	}
 
-	async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<void> {
+	public async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<void> {
 		const { content, time, edited } = data;
 		if (data.account) {
 			await this._loadKey(data.account.publicKeyData);

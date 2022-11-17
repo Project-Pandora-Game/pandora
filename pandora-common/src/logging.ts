@@ -111,9 +111,9 @@ export function GetLogger(category: string, prefix?: string): Logger {
  */
 export class Logger {
 	/** Category of this logger instance, used for determining if message should be logged by loglevel */
-	readonly category: string;
+	public readonly category: string;
 	/** Prefix */
-	readonly prefix: string;
+	public readonly prefix: string;
 
 	constructor(category: string, prefix: string) {
 		this.category = category;
@@ -241,7 +241,7 @@ export class Logger {
 		return result + ' ' + this.prefix;
 	}
 
-	toString(): string {
+	public toString(): string {
 		return '[class Logger]';
 	}
 }

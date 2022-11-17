@@ -7,7 +7,7 @@ import { ConnectionManagerClient } from './manager_client';
 
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IShardClient, IClientShard, IncomingSocket> implements IConnectionClient {
-	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
+	public readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
 	private _aborted: boolean = false;
 	public get aborted(): boolean {

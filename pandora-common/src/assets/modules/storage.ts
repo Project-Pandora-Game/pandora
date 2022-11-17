@@ -32,7 +32,7 @@ type ItemModuleStorageAction = z.infer<typeof ItemModuleStorageActionSchema>;
 
 export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'> {
 
-	parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigStorage, data: unknown): IModuleItemDataStorage {
+	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigStorage, data: unknown): IModuleItemDataStorage {
 		const parsed = ModuleItemDataStorageScheme.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'storage',
@@ -40,7 +40,7 @@ export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'
 		};
 	}
 
-	loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage {
+	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage {
 		return new ItemModuleStorage(config, data, context);
 	}
 }
@@ -114,26 +114,26 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		this.contents = content;
 	}
 
-	exportData(): IModuleItemDataStorage {
+	public exportData(): IModuleItemDataStorage {
 		return {
 			type: 'storage',
 			contents: this.contents.map((item) => item.exportToBundle()),
 		};
 	}
 
-	validate(_isWorn: boolean): AppearanceValidationResult {
+	public validate(_isWorn: boolean): AppearanceValidationResult {
 		return ValidateStorage(this.contents, this.config);
 	}
 
-	getProperties(): AssetProperties {
+	public getProperties(): AssetProperties {
 		return {};
 	}
 
-	evalCondition(_operator: ConditionOperator, _value: string): boolean {
+	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
 		return false;
 	}
 
-	doAction(_action: ItemModuleStorageAction): ItemModuleStorage | null {
+	public doAction(_action: ItemModuleStorageAction): ItemModuleStorage | null {
 		return null;
 	}
 

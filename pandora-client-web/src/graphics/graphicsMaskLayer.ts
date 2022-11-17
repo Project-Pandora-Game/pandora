@@ -34,7 +34,7 @@ export class GraphicsMaskLayer {
 		this.filter = new AlphaMaskFilter(this.sprite);
 	}
 
-	render() {
+	public render() {
 		if (this._texture === Texture.EMPTY || !this._textureParent || !this._result) {
 			return;
 		}
@@ -42,7 +42,7 @@ export class GraphicsMaskLayer {
 		this._renderer.render(this._result, { renderTexture: this._renderTexture });
 	}
 
-	destroy() {
+	public destroy() {
 		this.filter.destroy();
 		this.sprite.texture = Texture.WHITE;
 		this._renderTexture.destroy(true);
@@ -54,7 +54,7 @@ export class GraphicsMaskLayer {
 		this._texture = Texture.EMPTY;
 	}
 
-	updateContent(content: string | [number, number][][]): void {
+	public updateContent(content: string | [number, number][][]): void {
 		if (this._lastContent === content) return;
 		this._lastContent = content;
 		if (typeof content === 'string') {
@@ -93,7 +93,7 @@ export class GraphicsMaskLayer {
 		}
 	}
 
-	updateGeometry(geometry?: Geometry) {
+	public updateGeometry(geometry?: Geometry) {
 		if (this._geometry === geometry) {
 			this.render();
 			return;
@@ -158,7 +158,7 @@ class AlphaMaskFilter extends Filter {
 		this._maskSprite.renderable = false;
 	}
 
-	override apply(filterManager: FilterSystem, input: RenderTexture, output: RenderTexture, clearMode: CLEAR_MODES) {
+	public override apply(filterManager: FilterSystem, input: RenderTexture, output: RenderTexture, clearMode: CLEAR_MODES) {
 		const maskSprite = this._maskSprite as ISpriteMaskTarget;
 		const tex = maskSprite._texture;
 

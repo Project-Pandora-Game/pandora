@@ -13,14 +13,14 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 		this.logger = logger;
 	}
 
-	getCachedTexture(path: string): Texture | null {
+	public getCachedTexture(path: string): Texture | null {
 		if (!path)
 			return Texture.EMPTY;
 
 		return this.cache.get(path) ?? null;
 	}
 
-	async getTexture(path: string): Promise<Texture> {
+	public async getTexture(path: string): Promise<Texture> {
 		if (!path)
 			return Texture.EMPTY;
 
@@ -79,7 +79,7 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 }
 
 export class URLGraphicsLoader extends GraphicsLoaderBase {
-	prefix: string;
+	public readonly prefix: string;
 
 	constructor(prefix: string = '') {
 		super(GetLogger('GraphicsLoader', `[URLGraphicsLoader '${prefix}']`));

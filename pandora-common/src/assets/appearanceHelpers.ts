@@ -105,12 +105,12 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 		this._module = module;
 	}
 
-	getItems(): AppearanceItems {
+	public getItems(): AppearanceItems {
 		const item = this._base.getItems().find((i) => i.id === this._item);
 		return item ? item.getModuleItems(this._module) : [];
 	}
 
-	_applyItems(items: AppearanceItems): boolean {
+	protected _applyItems(items: AppearanceItems): boolean {
 		return this._base.modifyItem(this._item, (it) => it.setModuleItems(this._module, items));
 	}
 }
@@ -128,15 +128,15 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 	}
 
 	/** Gets items, but is only present on the root of appearance to prevent accidental passing of container manipultors */
-	getRootItems(): AppearanceItems {
+	public getRootItems(): AppearanceItems {
 		return this.getItems();
 	}
 
-	getItems(): AppearanceItems {
+	public getItems(): AppearanceItems {
 		return this._items;
 	}
 
-	_applyItems(items: AppearanceItems): boolean {
+	protected _applyItems(items: AppearanceItems): boolean {
 		this._items = items;
 		return true;
 	}

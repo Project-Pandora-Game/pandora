@@ -304,7 +304,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return new AppearanceRootManipulator(this.assetMananger, this.items, true);
 	}
 
-	commitChanges(manipulator: AppearanceRootManipulator, context: AppearanceActionProcessingContext): AppearanceValidationResult {
+	public commitChanges(manipulator: AppearanceRootManipulator, context: AppearanceActionProcessingContext): AppearanceValidationResult {
 		const newItems = manipulator.getRootItems();
 
 		// Validate

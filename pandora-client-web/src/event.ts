@@ -9,14 +9,14 @@ export abstract class TypedEventEmitter<T extends TypedEvent> implements ITypedE
 	private readonly _listeners: Map<keyof T, Set<(value: T[keyof T]) => void>> = new Map();
 	private readonly _allListeners: Set<(value: Partial<T>) => void> = new Set();
 
-	onAny(listener: (value: Partial<T>) => void): () => void {
+	public onAny(listener: (value: Partial<T>) => void): () => void {
 		this._allListeners.add(listener);
 		return () => {
 			this._allListeners.delete(listener);
 		};
 	}
 
-	on<K extends keyof T>(event: K, listener: (value: T[K]) => void): () => void {
+	public on<K extends keyof T>(event: K, listener: (value: T[K]) => void): () => void {
 		let listeners = this._listeners.get(event) as Set<(value: T[K]) => void>;
 		if (!listeners) {
 			listeners = new Set<(value: T[K]) => void>();
@@ -31,7 +31,7 @@ export abstract class TypedEventEmitter<T extends TypedEvent> implements ITypedE
 		};
 	}
 
-	getSubscriber(key: keyof T): (onStoreChange: () => void) => () => void {
+	public getSubscriber(key: keyof T): (onStoreChange: () => void) => () => void {
 		return (onStoreChange) => this.on(key, () => onStoreChange());
 	}
 

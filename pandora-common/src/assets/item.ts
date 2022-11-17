@@ -43,11 +43,11 @@ export type IItemLoadContext = {
  * **THIS CLASS IS IMMUTABLE**
  */
 export class Item {
-	readonly assetMananger: AssetManager;
-	readonly id: ItemId;
-	readonly asset: Asset;
-	readonly color: readonly HexColorString[];
-	readonly modules: ReadonlyMap<string, IItemModule>;
+	public readonly assetMananger: AssetManager;
+	public readonly id: ItemId;
+	public readonly asset: Asset;
+	public readonly color: readonly HexColorString[];
+	public readonly modules: ReadonlyMap<string, IItemModule>;
 
 	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
 		this.assetMananger = context.assetMananger;
@@ -83,7 +83,7 @@ export class Item {
 		};
 	}
 
-	validate(isWorn: boolean): AppearanceValidationResult {
+	public validate(isWorn: boolean): AppearanceValidationResult {
 		// Check the asset can actually be worn
 		if (isWorn && this.asset.definition.wearable === false)
 			return false;

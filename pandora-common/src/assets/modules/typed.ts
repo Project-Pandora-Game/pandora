@@ -47,14 +47,14 @@ type ItemModuleTypedAction = z.infer<typeof ItemModuleTypedActionSchema>;
 
 export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 
-	parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigTyped, data: unknown): IModuleItemDataTyped {
+	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigTyped, data: unknown): IModuleItemDataTyped {
 		const parsed = ModuleItemDataTypedScheme.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'typed',
 		};
 	}
 
-	loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped {
+	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped {
 		return new ItemModuleTyped(config, data, context);
 	}
 }
@@ -87,28 +87,28 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			config.variants[0];
 	}
 
-	exportData(): IModuleItemDataTyped {
+	public exportData(): IModuleItemDataTyped {
 		return {
 			type: 'typed',
 			variant: this.activeVariant.id,
 		};
 	}
 
-	validate(_isWorn: boolean): AppearanceValidationResult {
+	public validate(_isWorn: boolean): AppearanceValidationResult {
 		return true;
 	}
 
-	getProperties(): AssetProperties {
+	public getProperties(): AssetProperties {
 		return this.activeVariant;
 	}
 
-	evalCondition(operator: ConditionOperator, value: string): boolean {
+	public evalCondition(operator: ConditionOperator, value: string): boolean {
 		return operator === '=' ? this.activeVariant.id === value :
 			operator === '!=' ? this.activeVariant.id !== value :
 				false;
 	}
 
-	doAction(action: ItemModuleTypedAction): ItemModuleTyped | null {
+	public doAction(action: ItemModuleTypedAction): ItemModuleTyped | null {
 		const setVariant = this.config.variants.find((v) => v.id === action.setVariant);
 		return setVariant ? new ItemModuleTyped(this.config, {
 			type: 'typed',

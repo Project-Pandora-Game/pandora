@@ -44,15 +44,15 @@ export class Dialog extends PureComponent<ChildrenProps> {
 		};
 	}
 
-	override componentDidMount() {
+	public override componentDidMount() {
 		PORTALS.value = [this._node, ...PORTALS.value.filter((n) => n !== this._node)];
 	}
 
-	override componentWillUnmount() {
+	public override componentWillUnmount() {
 		this._close();
 	}
 
-	override render() {
+	public override render() {
 		const { children } = this.props;
 		return (
 			<InPortal node={ this._node }>
@@ -92,15 +92,15 @@ export class DraggableDialog extends PureComponent<{
 		};
 	}
 
-	override componentDidMount() {
+	public override componentDidMount() {
 		PORTALS.value = [this._node, ...PORTALS.value.filter((n) => n !== this._node)];
 	}
 
-	override componentWillUnmount() {
+	public override componentWillUnmount() {
 		this._close();
 	}
 
-	override render() {
+	public override render() {
 		const { children, title, rawContent } = this.props;
 		return (
 			<InPortal node={ this._node }>

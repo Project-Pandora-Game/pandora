@@ -37,7 +37,7 @@ type ItemModuleLockSlotAction = z.infer<typeof ItemModuleLockSlotActionSchema>;
 
 export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlot'> {
 
-	parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigLockSlot, data: unknown): IModuleItemDataLockSlot {
+	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigLockSlot, data: unknown): IModuleItemDataLockSlot {
 		const parsed = ModuleItemDataLockSlotScheme.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'lockSlot',
@@ -45,7 +45,7 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		};
 	}
 
-	loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
+	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
 		return new ItemModuleLockSlot(config, data, context);
 	}
 }
@@ -98,28 +98,28 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		}
 	}
 
-	exportData(): IModuleItemDataLockSlot {
+	public exportData(): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',
 			lock: this.lock ? this.lock.exportToBundle() : null,
 		};
 	}
 
-	validate(_isWorn: boolean): AppearanceValidationResult {
+	public validate(_isWorn: boolean): AppearanceValidationResult {
 		return ValidateLock(this.lock, this.config);
 	}
 
-	getProperties(): AssetProperties {
+	public getProperties(): AssetProperties {
 		return this.lock !== null ?
 			(this.config.occupiedEffects ?? {}) :
 			(this.config.unoccupiedEffects ?? {});
 	}
 
-	evalCondition(_operator: ConditionOperator, _value: string): boolean {
+	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
 		return false;
 	}
 
-	doAction(_action: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
+	public doAction(_action: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
 		return null;
 	}
 

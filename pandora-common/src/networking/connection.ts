@@ -66,7 +66,7 @@ export abstract class ConnectionBase<
 		};
 	}
 
-	sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void {
+	public sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void {
 		// If we have schema, validate sent message
 		if (this.schema) {
 			if (!Object.hasOwn(this.schema.outbound, messageType) || this.schema.outbound[messageType].response !== null) {
@@ -89,7 +89,7 @@ export abstract class ConnectionBase<
 		this.socket.emit(messageType as string, message);
 	}
 
-	awaitResponse<K extends SocketInterfaceRespondedMessages<OutboundT>>(
+	public awaitResponse<K extends SocketInterfaceRespondedMessages<OutboundT>>(
 		messageType: K,
 		message: SocketInterfaceRequest<OutboundT>[K],
 		timeout: number = DEFAULT_ACK_TIMEOUT,
@@ -277,16 +277,16 @@ export abstract class IncomingConnection<
 		socket.onMessage = this.handleMessage.bind(this);
 	}
 
-	get id(): string {
+	public get id(): string {
 		return this.socket.id;
 	}
 
-	get rooms(): ReadonlySet<ServerRoom<OutboundT>> {
+	public get rooms(): ReadonlySet<ServerRoom<OutboundT>> {
 		return this._rooms;
 	}
 
 	/** Check if this connection is still connected */
-	isConnected(): boolean {
+	public isConnected(): boolean {
 		return this.socket.isConnected();
 	}
 
@@ -306,7 +306,7 @@ export abstract class IncomingConnection<
 }
 
 export class MockServerSocket<T extends SocketInterfaceDefinition> implements IServerSocket<T> {
-	sendToAll<K extends SocketInterfaceOneshotMessages<T>>(clients: ReadonlySet<IConnectionBase<T>>, messageType: K, message: SocketInterfaceRequest<T>[K]): void {
+	public sendToAll<K extends SocketInterfaceOneshotMessages<T>>(clients: ReadonlySet<IConnectionBase<T>>, messageType: K, message: SocketInterfaceRequest<T>[K]): void {
 		for (const client of clients) {
 			client.sendMessage(messageType, message);
 		}
@@ -317,9 +317,9 @@ export class MockConnection<
 	OutboundT extends SocketInterfaceDefinition,
 	IncomingT extends SocketInterfaceDefinition,
 > extends ConnectionBase<OutboundT, IncomingT, MockConnectionSocket> {
-	readonly messageHandler: IMessageHandler<IncomingT, MockConnection<OutboundT, IncomingT>>;
+	public readonly messageHandler: IMessageHandler<IncomingT, MockConnection<OutboundT, IncomingT>>;
 
-	get id(): string {
+	public get id(): string {
 		return this.socket.id;
 	}
 
@@ -345,15 +345,15 @@ export class MockConnection<
 	}
 
 	/** Check if this connection is still connected */
-	isConnected(): boolean {
+	public isConnected(): boolean {
 		return this.socket.isConnected();
 	}
 
-	connect(): IncomingSocket {
+	public connect(): IncomingSocket {
 		return this.socket.remote;
 	}
 
-	disconnect(): void {
+	public disconnect(): void {
 		this.socket.disconnect();
 	}
 }

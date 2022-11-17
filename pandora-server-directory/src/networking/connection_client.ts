@@ -7,21 +7,21 @@ import { ConnectionManagerClient } from './manager_client';
 
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> implements IConnectionClient {
-	readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
+	public readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
 
 	/** The current account this connection is logged in as or `null` if it isn't */
 	private _account: Account | null = null;
-	get account(): Account | null {
+	public get account(): Account | null {
 		return this._account;
 	}
 
 	/** The current character this connection is using or `null` if none */
 	private _character: Character | null = null;
-	get character(): Character | null {
+	public get character(): Character | null {
 		return this._character;
 	}
 
-	isLoggedIn(): this is { readonly account: Account; } {
+	public isLoggedIn(): this is { readonly account: Account; } {
 		return this.account !== null;
 	}
 

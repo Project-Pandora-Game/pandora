@@ -17,21 +17,21 @@ export class SocketIOSocket implements IncomingSocket {
 	public onDisconnect: ((reason: string) => void) | null = null;
 	public onMessage: ((messageType: unknown, message: unknown, callback: unknown) => void) | null = null;
 
-	get id(): string {
+	public get id(): string {
 		return this.socket.id;
 	}
 
-	isConnected(): boolean {
+	public isConnected(): boolean {
 		return this.socket.connected;
 	}
 
-	timeout(timeout: number): {
+	public timeout(timeout: number): {
 		emit(event: string, arg: unknown, callback: (error: unknown, arg: unknown) => void): void;
 	} {
 		return this.socket.timeout(timeout);
 	}
 
-	emit(event: string, arg: unknown, callback?: (arg: unknown) => void): void {
+	public emit(event: string, arg: unknown, callback?: (arg: unknown) => void): void {
 		if (callback) {
 			this.socket.emit(event, arg, callback);
 		} else {
@@ -39,7 +39,7 @@ export class SocketIOSocket implements IncomingSocket {
 		}
 	}
 
-	disconnect(): void {
+	public disconnect(): void {
 		this.socket.disconnect(true);
 	}
 }

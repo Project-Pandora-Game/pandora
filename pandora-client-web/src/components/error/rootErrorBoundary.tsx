@@ -71,7 +71,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 		}
 	}
 
-	override componentDidMount(): void {
+	public override componentDidMount(): void {
 		window.addEventListener('error', this._uncaughtErrorListener);
 		window.addEventListener('unhandledrejection', this._unhandledPromiseRejectionListener);
 	}

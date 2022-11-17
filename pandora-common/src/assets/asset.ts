@@ -9,7 +9,7 @@ export class Asset {
 		this.load(definition);
 	}
 
-	load(definition: AssetDefinition) {
+	public load(definition: AssetDefinition) {
 		this.definition = definition;
 	}
 }

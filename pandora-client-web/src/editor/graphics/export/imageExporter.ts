@@ -20,7 +20,7 @@ export class ImageExporter {
 		});
 	}
 
-	export(target: Container, format: ImageFormat): string {
+	public export(target: Container, format: ImageFormat): string {
 		this._app.renderer.resize(target.width, target.height);
 		const child = this._app.stage.addChild(target);
 		const result = this._extract.base64(target, `image/${format}`);
@@ -28,12 +28,12 @@ export class ImageExporter {
 		return result;
 	}
 
-	textureCut(texture: Texture, size: Size, points: [number, number][], format: ImageFormat): string {
+	public textureCut(texture: Texture, size: Size, points: [number, number][], format: ImageFormat): string {
 		const cutter = new TextureCutter(texture, size, points);
 		return this.export(cutter, format);
 	}
 
-	imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat): string {
+	public imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat): string {
 		const fullSize = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT };
 		const renderTexture = RenderTexture.create(fullSize);
 		this._app.renderer.render(object, { renderTexture });

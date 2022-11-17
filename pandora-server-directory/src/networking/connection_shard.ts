@@ -6,7 +6,7 @@ import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/
 
 /** Class housing connection from a shard */
 export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardDirectory, IncomingSocket> implements IConnectionShard {
-	readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
+	public readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
 
 	public shard: Shard | null = null;
 

@@ -9,7 +9,7 @@ export class AppearanceConditionEvaluator {
 	public readonly pose: ReadonlyMap<BoneName, Readonly<BoneState>>;
 	public readonly view: CharacterView;
 
-	public constructor(pose: readonly BoneState[], view: CharacterView) {
+	constructor(pose: readonly BoneState[], view: CharacterView) {
 		const poseResult = new Map<BoneName, Readonly<BoneState>>();
 		for (const bone of pose) {
 			poseResult.set(bone.definition.name, bone);

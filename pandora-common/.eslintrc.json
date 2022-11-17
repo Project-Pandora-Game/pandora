@@ -29,6 +29,12 @@
 				// Style rules
 				"dot-notation": "off",
 				"@typescript-eslint/dot-notation": "warn",
+				"@typescript-eslint/explicit-member-accessibility": ["warn", {
+					"accessibility": "explicit",
+					"overrides": {
+						"constructors": "no-public"
+					}
+				}],
 				"@typescript-eslint/naming-convention": [
 					"warn",
 					{

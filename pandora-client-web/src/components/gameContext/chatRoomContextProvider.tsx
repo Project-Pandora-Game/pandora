@@ -124,7 +124,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		return this._shard.player.value;
 	}
 
-	get playerId() {
+	public get playerId() {
 		return this.player?.data.id;
 	}
 

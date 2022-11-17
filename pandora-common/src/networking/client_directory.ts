@@ -29,11 +29,14 @@ export type IClientDirectoryAuthMessage = z.infer<typeof ClientDirectoryAuthMess
 export const ShardTokenTypeSchema = z.enum(['stable', 'beta', 'testing', 'development']);
 export type IShardTokenType = z.infer<typeof ShardTokenTypeSchema>;
 
-export type IShardTokenInfo = {
+export type IBaseTokenInfo = {
 	id: string;
-	type: IShardTokenType;
 	expires?: number;
 	created: { id: number; username: string; time: number; };
+};
+
+export type IShardTokenInfo = IBaseTokenInfo & {
+	type: IShardTokenType;
 };
 
 /** Client->Directory messages */

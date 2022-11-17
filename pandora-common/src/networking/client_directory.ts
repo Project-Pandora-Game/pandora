@@ -39,6 +39,11 @@ export type IShardTokenInfo = IBaseTokenInfo & {
 	type: IShardTokenType;
 };
 
+export type IBetaKeyInfo = IBaseTokenInfo & {
+	maxUses?: number;
+	uses: number;
+};
+
 /** Client->Directory messages */
 export const ClientDirectorySchema = {
 	//#region Before Login

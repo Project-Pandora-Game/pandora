@@ -1,0 +1,57 @@
+import { GetLogger, type IBetaKeyInfo, type IClientDirectoryArgument } from 'pandora-common';
+import { type Account } from '../account/account';
+import { BETA_KEY } from '../config';
+import { TokenStoreBase } from './tokenStoreBase';
+
+const TOKEN_ID_LENGTH = 8;
+const TOKEN_SECRET_LENGTH = 8;
+const logger = GetLogger('BetaKeyStore');
+
+type IStoredBetaKeyInfo = IBetaKeyInfo & { token: string; };
+
+export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaKeyInfo> {
+	constructor() {
+		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
+	}
+
+	protected onInit(): void {
+		if (BETA_KEY) {
+			this.devInsert({
+				id: BETA_KEY.substring(0, TOKEN_ID_LENGTH),
+				token: BETA_KEY,
+				created: { id: 0, username: '[[Pandora]]', time: 0 },
+				uses: 0,
+			});
+			this.logger.info(`Token '${BETA_KEY}' created`);
+		}
+	}
+
+	public async use(token: string): Promise<boolean> {
+		await this._action(token, (info) => {
+			++info.uses;
+			return info;
+		});
+	}
+
+	protected async load(): Promise<[string, IStoredBetaKeyInfo][]> {
+		return await GetDatabase().getConfig('betaKeys') || [];
+	}
+
+	protected save(data: [string, IStoredBetaKeyInfo][]): Promise<void> {
+		return GetDatabase().setConfig('betaKeys', data);
+	}
+
+	protected isValid({ maxUses, uses }: IStoredBetaKeyInfo): boolean {
+		return maxUses === undefined || uses < maxUses;
+	}
+
+	public async create(acc: Account, { expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey']): Promise<'adminRequired' | { info: IBetaKeyInfo, token: string; }> {
+		if (!acc.roles.isAuthorized('admin')) {
+			if (maxUses === undefined || maxUses > 5)
+				return 'adminRequired';
+			if (expires === undefined || expires > 60 * 60 * 24 * 7)
+				return 'adminRequired';
+		}
+		return await this._create(acc, { expires, maxUses, uses: 0 });
+	}
+};

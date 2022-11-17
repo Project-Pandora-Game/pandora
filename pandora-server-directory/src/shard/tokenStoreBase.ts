@@ -3,17 +3,19 @@ import { type IBaseTokenInfo, type Logger } from 'pandora-common';
 import { type Account } from '../account/account';
 import { nanoid } from 'nanoid';
 
-const TOKEN_ID_LENGTH = 16;
-
 const CLEANUP_INTERVAL = 1000 * 60 * 60 * 24; // 1 day
 
 export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	static readonly cleanups = new Set<() => void>();
 	#tokens!: Map<string, Full<Token>>;
 	protected readonly logger: Logger;
+	protected readonly idLength: number;
+	protected readonly secretLength: number;
 
-	protected constructor(logger: Logger) {
+	protected constructor(logger: Logger, idLength: number, secretLength: number) {
 		this.logger = logger;
+		this.idLength = idLength;
+		this.secretLength = secretLength;
 	}
 
 	public async init(): Promise<void> {
@@ -30,11 +32,11 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	protected abstract isValid(info: Full<Token>): boolean;
 
 	protected async _create(acc: Account, data: Omit<Token, 'created' | 'id'>): Promise<{ info: Stripped<Token>, token: string; }> {
-		let id = nanoid(TOKEN_ID_LENGTH);
+		let id = nanoid(this.idLength);
 		while (this.#tokens.has(id))
-			id = nanoid(TOKEN_ID_LENGTH);
+			id = nanoid(this.idLength);
 
-		const token = `${id}${nanoid(16)}`;
+		const token = `${id}${nanoid(this.secretLength)}`;
 		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 		const info: Full<Token> = {
 			...data,
@@ -87,23 +89,39 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	}
 
 	public get(token: string): Stripped<Token> | undefined {
-		const info = this.#tokens.get(token.substring(0, TOKEN_ID_LENGTH));
-		if (!info)
+		const info = this.#tokens.get(token.substring(0, this.idLength));
+		if (!info || info.token !== token || !this._validate(info))
 			return undefined;
-
-		const { expires, token: storedToken } = info;
-		if (storedToken !== token)
-			return;
-		if (expires !== undefined && expires < Date.now())
-			return;
-		if (!this.isValid(info))
-			return;
 
 		return omit(info, 'token');
 	}
 
 	public has(token: string): boolean {
 		return this.get(token) !== undefined;
+	}
+
+	protected async _action(token: string, action: (info: Stripped<Token>) => Stripped<Token> | undefined): Promise<boolean> {
+		const info = this.#tokens.get(token.substring(0, this.idLength));
+		if (!info || info.token !== token || !this._validate(info))
+			return false;
+
+		const newInfo = action(omit(info, 'token'));
+		if (!newInfo)
+			return true;
+
+		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+		this.#tokens.set(info.id, { ...newInfo, id: info.id, token: info.token, created: info.created } as Full<Token>);
+		await this._save();
+		return true;
+	}
+
+	protected _validate(info: Full<Token>): boolean {
+		if (info.expires !== undefined && info.expires < Date.now())
+			return false;
+		if (!this.isValid(info))
+			return false;
+
+		return true;
 	}
 
 	private async _save(): Promise<void> {

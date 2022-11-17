@@ -5,6 +5,8 @@ import { SHARD_SHARED_SECRET } from '../config';
 import { GetDatabase } from '../database/databaseProvider';
 import { TokenStoreBase } from './tokenStoreBase';
 
+const TOKEN_ID_LENGTH = 16;
+const TOKEN_SECRET_LENGTH = 18;
 const logger = GetLogger('ShardTokenStore');
 
 type IStoredShardTokenInfo = IShardTokenInfo & { token: string; };
@@ -12,13 +14,13 @@ type IStoredShardTokenInfo = IShardTokenInfo & { token: string; };
 export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<IShardTokenInfo> {
 
 	constructor() {
-		super(logger);
+		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
 	}
 
 	protected onInit(): void | Promise<void> {
 		if (SHARD_SHARED_SECRET) {
 			this.devInsert({
-				id: SHARD_SHARED_SECRET.substring(0, 16),
+				id: SHARD_SHARED_SECRET.substring(0, TOKEN_ID_LENGTH),
 				token: SHARD_SHARED_SECRET,
 				type: 'stable',
 				created: { id: 0, username: '[[Pandora]]', time: 0 },

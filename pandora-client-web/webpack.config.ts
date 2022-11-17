@@ -187,7 +187,7 @@ function GenerateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
 			},
 		},
 		{
-			loader: '@sekkmer/sass-loader',
+			loader: '@project-pandora-game/sass-loader',
 			options: {
 				ignoreErrors: !env.prod,
 			},

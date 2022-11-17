@@ -1,4 +1,4 @@
-import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, AppearanceActionRoomContext } from 'pandora-common';
+import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, AppearanceActionRoomContext, ItemPath } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -55,6 +55,16 @@ type CharacterEvents<T extends ICharacterPublicData> = AppearanceEvents & {
 
 export function useCharacterData<T extends ICharacterPublicData>(character: Character<T>): Readonly<T> {
 	return useSyncExternalStore(character.getSubscriber('update'), () => character.data);
+}
+
+export function useCharacterAppearanceItem(character: AppearanceContainer, item: ItemPath | null | undefined): Item | undefined {
+	return useSyncExternalStore((onChange) => {
+		return character.on('appearanceUpdate', (changed) => {
+			if (changed.includes('items')) {
+				onChange();
+			}
+		});
+	}, () => item ? character.appearance.getItem(item) : undefined);
 }
 
 export function useCharacterAppearanceItems(character: AppearanceContainer): readonly Item[] {

@@ -21,11 +21,14 @@ import {
 	Item,
 	ItemId,
 	ItemContainerPath,
+	RoomTargetSelector,
+	ItemPath,
+	Assert,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
+import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -47,6 +50,7 @@ import { ColorInput } from '../common/colorInput/colorInput';
 import { Column, Row } from '../common/container/container';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
+import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -78,21 +82,25 @@ export function WardrobeScreen(): ReactElement | null {
 
 interface WardrobeContext {
 	character: Character;
-	appearance: readonly Item[];
+	target: RoomTargetSelector;
 	assetList: readonly Asset[];
 	actions: AppearanceActionContext;
-	containerPath: ItemContainerPath;
-	setContainerPath: (newPath: ItemContainerPath) => void;
+}
+
+interface WardrobeFocus {
+	container: ItemContainerPath;
+	itemId: ItemId | null;
+}
+
+function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
+	return focus.itemId != null;
 }
 
 const wardrobeContext = createContext<WardrobeContext | null>(null);
 
 export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode }): ReactElement {
-	const appearance = useCharacterAppearanceItems(character);
 	const assetList = useObservable(GetAssetManager().assetList);
 	const roomContext = useAppearanceActionRoomContext();
-
-	const [containerPath, setContainerPath] = useState<ItemContainerPath>([]);
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.data.id,
@@ -118,12 +126,13 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 
 	const context = useMemo<WardrobeContext>(() => ({
 		character,
-		appearance,
+		target: {
+			type: 'character',
+			characterId: character.data.id,
+		},
 		assetList,
 		actions,
-		containerPath,
-		setContainerPath,
-	}), [appearance, character, assetList, actions, containerPath, setContainerPath]);
+	}), [character, assetList, actions]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -193,61 +202,36 @@ function Wardrobe(): ReactElement | null {
 }
 
 function WardrobeItemManipulation({ className }: { className?: string }): ReactElement {
-	const { appearance, assetList, containerPath, setContainerPath } = useWardrobeContext();
+	const { character, assetList } = useWardrobeContext();
 	const asssetManager = GetAssetManager();
+
+	const [currentFocus, setFocus] = useState<WardrobeFocus>({ container: [], itemId: null });
 
 	const preFilter = useCallback((item: Item | Asset) => {
 		const { definition } = 'asset' in item ? item.asset : item;
-		return definition.bodypart === undefined && (containerPath.length !== 0 || definition.wearable !== false);
-	}, [containerPath]);
+		return definition.bodypart === undefined && (currentFocus.container.length !== 0 || definition.wearable !== false);
+	}, [currentFocus]);
 
-	const [selectedItemId, setSelectedItemId] = useState<ItemId| null>(null);
-
-	const [displayedItems, sourceFilter, containerSteps] = useMemo<[AppearanceItems, (item: Item) => boolean, readonly string[]]>(() => {
-		let items: AppearanceItems = appearance.filter(preFilter);
-		const steps: string[] = [];
-		let filter = (_item: Item) => true;
-		for (const step of containerPath) {
-			const item = items.find((it) => it.id === step.item);
-			if (!item)
-				return [[], () => false, []];
-			steps.push(item.asset.definition.name);
-			const module = item.modules.get(step.module);
-			filter = (i) => (module?.acceptedContentFilter?.(i) ?? true);
-			items = item.getModuleItems(step.module);
-		}
-		return [items, filter, steps];
-	}, [appearance, preFilter, containerPath]);
-
-	const selectedItem = selectedItemId && displayedItems.find((i) => i.id === selectedItemId);
-
-	// Reset selected item each time screen opens
-	useLayoutEffect(() => {
-		setSelectedItemId(null);
-		setContainerPath([]);
-	}, [setContainerPath]);
+	const containerPath = useMemo(() => SplitContainerPath(currentFocus.container), [currentFocus.container]);
+	const containerItem = useCharacterAppearanceItem(character, containerPath?.itemPath);
+	const containerContentsFilter = useMemo<(item: Item) => boolean>(() => {
+		const module = containerPath ? containerItem?.modules.get(containerPath.module) : undefined;
+		return module?.acceptedContentFilter?.bind(module) ?? (() => true);
+	}, [containerPath, containerItem]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView
-				title={ containerPath.length > 0 ? '' : 'Currently worn items' }
-				items={ displayedItems }
-				selectItem={ setSelectedItemId }
-				selectedItemId={ selectedItemId }
-			>
-				{
-					containerPath.length > 0 &&
-					<div className='toolbar'>
-						<button onClick={ () => setContainerPath([]) } >Close</button>
-						<div className='center-flex'>Viewing contents of { containerSteps.join(' > ') }</div>
-					</div>
-				}
-			</InventoryView>
-			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
+			<InventoryItemView
+				title='Currently worn items'
+				filter={ preFilter }
+				focus={ currentFocus }
+				setFocus={ setFocus }
+			/>
+			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
 				<Tab name='Create new item'>
-					<InventoryView title='Create and use a new item' items={ assetList.filter((asset) => {
-						return preFilter(asset) && sourceFilter(asssetManager.createItem(`i/__tmp__`, asset, null));
-					}) } />
+					<InventoryAssetView title='Create and use a new item' assets={ assetList.filter((asset) => {
+						return preFilter(asset) && containerContentsFilter(asssetManager.createItem(`i/__tmp__`, asset, null));
+					}) } container={ currentFocus.container } />
 				</Tab>
 				<Tab name='Room inventory'>
 					<div className='inventoryView'>
@@ -272,9 +256,9 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 				</Tab>
 			</TabContainer>
 			{
-				selectedItem != null &&
+				WardrobeFocusesItem(currentFocus) &&
 				<div className='flex-col flex-1'>
-					<WardrobeItemConfigMenu key={ selectedItem.id } item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
+					<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } setFocus={ setFocus } />
 				</div>
 			}
 		</div>
@@ -282,98 +266,119 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 }
 
 function WardrobeBodyManipulation({ className }: { className?: string }): ReactElement {
-	const { appearance, assetList, containerPath, setContainerPath } = useWardrobeContext();
+	const { assetList } = useWardrobeContext();
 
 	const filter = (item: Item | Asset) => {
 		const { definition } = 'asset' in item ? item.asset : item;
 		return definition.bodypart !== undefined;
 	};
 
-	const [selectedItemId, setSelectedItemId] = useState<ItemId| null>(null);
-	const selectedItem = selectedItemId && appearance.find((i) => i.id === selectedItemId);
+	const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
+	const currentFocus = useMemo<WardrobeFocus>(() => ({
+		container: [],
+		itemId: selectedItemId,
+	}), [selectedItemId]);
 
 	// Reset selected item each time screen opens
 	useLayoutEffect(() => {
 		setSelectedItemId(null);
 	}, []);
-	useLayoutEffect(() => {
-		if (containerPath.length > 0) {
-			setContainerPath([]);
-		}
-	}, [containerPath, setContainerPath]);
+
+	const setFocus = useCallback((newFocus: WardrobeFocus) => {
+		Assert(newFocus.container.length === 0, 'Body cannot have containers');
+		setSelectedItemId(newFocus.itemId);
+	}, []);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } selectItem={ setSelectedItemId } selectedItemId={ selectedItemId } />
-			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
+			<InventoryItemView title='Currently worn items' filter={ filter } focus={ currentFocus } setFocus={ setFocus } />
+			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
 				<Tab name='Change body parts'>
-					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } />
+					<InventoryAssetView title='Add a new bodypart' assets={ assetList.filter(filter) } container={ [] } />
 				</Tab>
 				<Tab name='Change body size'>
 					<WardrobeBodySizeEditor />
 				</Tab>
 			</TabContainer>
 			{
-				selectedItem != null &&
+				WardrobeFocusesItem(currentFocus) &&
 				<div className='flex-col flex-1'>
-					<WardrobeItemConfigMenu key={ selectedItem.id } item={ selectedItem } onClose={ () => setSelectedItemId(null) } />
+					<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } setFocus={ setFocus } />
 				</div>
 			}
 		</div>
 	);
 }
 
-function InventoryView<T extends Readonly<Asset | Item>>({ className, title, children, items, selectItem, selectedItemId }: {
+function InventoryAssetView({ className, title, children, assets, container }: {
 	className?: string;
 	title: string;
 	children?: ReactNode;
-	items: readonly T[];
-	selectItem?: (item: ItemId | null) => void;
-	selectedItemId?: ItemId | null;
+	assets: readonly Asset[];
+	container: ItemContainerPath;
 }): ReactElement | null {
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
 	const flt = filter.toLowerCase().trim().split(/\s+/);
 
-	const filteredItems = items.filter((item) => flt.every((f) => {
-		const { definition } = 'asset' in item ? item.asset : item;
-		return definition.name.toLowerCase().includes(f);
+	const filteredAssets = assets.filter((asset) => flt.every((f) => {
+		return asset.definition.name.toLowerCase().includes(f);
 	}));
+
+	const filterInput = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		// Handler to autofocus search
+		const keyPressHandler = (ev: KeyboardEvent) => {
+			if (
+				filterInput.current &&
+				// Only if no other input is selected
+				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement)) &&
+				// Only if this isn't a special key or key combo
+				!ev.ctrlKey &&
+				!ev.metaKey &&
+				!ev.altKey &&
+				ev.key.length === 1
+			) {
+				filterInput.current.focus();
+			}
+		};
+		window.addEventListener('keypress', keyPressHandler);
+		return () => {
+			window.removeEventListener('keypress', keyPressHandler);
+		};
+	}, []);
 
 	return (
 		<div className={ classNames('inventoryView', className) }>
 			<div className='toolbar'>
 				<span>{title}</span>
-				<input type='text' value={ filter } onChange={ (e) => setFilter(e.target.value) } />
+				<input ref={ filterInput }
+					type='text'
+					placeholder='Filter assets'
+					value={ filter }
+					onChange={ (e) => setFilter(e.target.value) }
+				/>
 				<button onClick={ () => setListMode(false) } className={ listMode ? '' : 'active' }>Grid</button>
 				<button onClick={ () => setListMode(true) } className={ listMode ? 'active' : ''  }>List</button>
 			</div>
 			{ children }
 			<div className={ listMode ? 'list' : 'grid' }>
-				{...filteredItems
-					.map((i) => i instanceof Item ?
-						<InventoryItemViewList key={ i.id } item={ i } listMode={ listMode } selected={ i.id === selectedItemId } selectItem={ selectItem } /> :
-						i instanceof Asset ? <InventoryAssetViewList key={ i.id } asset={ i } listMode={ listMode } /> :
-						null,
-					)
-				}
+				{ filteredAssets.map((a) => <InventoryAssetViewList key={ a.id } asset={ a } container={ container } listMode={ listMode } />) }
 			</div>
 		</div>
 	);
 }
 
-function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: boolean; }): ReactElement {
-	const { actions, character, containerPath } = useWardrobeContext();
+function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
+	const { actions, target } = useWardrobeContext();
 
 	const action: AppearanceAction = {
 		type: 'create',
-		target: {
-			type: 'character',
-			characterId: character.data.id,
-		},
+		target,
 		itemId: `i/${nanoid()}` as const,
 		asset: asset.id,
-		container: containerPath.slice(),
+		container,
 	};
 
 	const shardConnector = useShardConnector();
@@ -390,63 +395,108 @@ function InventoryAssetViewList({ asset, listMode }: { asset: Asset; listMode: b
 	);
 }
 
-function InventoryItemViewList({ item, listMode, selected=false, selectItem }: { item: Item; listMode: boolean; selected?: boolean; selectItem?: (item: ItemId | null) => void; }): ReactElement {
-	const { character, containerPath } = useWardrobeContext();
+function InventoryItemView({
+	className,
+	title,
+	filter,
+	focus = { container: [], itemId: null },
+	setFocus,
+}: {
+	className?: string;
+	title: string;
+	filter?: (item: Item) => boolean;
+	focus?: WardrobeFocus;
+	setFocus?: (newFocus: WardrobeFocus) => void;
+}): ReactElement | null {
+	const { character } = useWardrobeContext();
+	const appearance = useCharacterAppearanceItems(character);
 
-	const asset = item.asset;
+	const [displayedItems, containerSteps] = useMemo<[AppearanceItems, readonly string[]]>(() => {
+		let items: AppearanceItems = filter ? appearance.filter(filter) : appearance;
+		const steps: string[] = [];
+		for (const step of focus.container) {
+			const item = items.find((it) => it.id === step.item);
+			if (!item)
+				return [[], []];
+			steps.push(item.asset.definition.name);
+			items = item.getModuleItems(step.module);
+		}
+		return [items, steps];
+	}, [appearance, filter, focus]);
 
 	return (
-		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', selected && 'selected', 'allowed') } onClick={ () => {
-			selectItem?.(selected ? null : item.id);
+		<div className={ classNames('inventoryView', className) }>
+			<div className='toolbar'>
+				{
+					focus.container.length > 0 ? (
+						<>
+							<button onClick={ () => {
+								const prev = SplitContainerPath(focus.container)?.itemPath;
+								setFocus?.(prev ?? { container: [], itemId: null });
+							} } >
+								Close
+							</button>
+							<div className='center-flex'>Viewing contents of { containerSteps.join(' > ') }</div>
+						</>
+					) :
+						<span>{title}</span>
+				}
+			</div>
+			<div className='list'>
+				{
+					displayedItems.map((i) => (
+						<InventoryItemViewList key={ i.id } item={ { container: focus.container, itemId: i.id } } selected={ i.id === focus.itemId } setFocus={ setFocus } />
+					))
+				}
+			</div>
+		</div>
+	);
+}
+
+function InventoryItemViewList({ item, selected=false, setFocus }: { item: ItemPath; selected?: boolean; setFocus?: (newFocus: WardrobeFocus) => void; }): ReactElement {
+	const { target, character } = useWardrobeContext();
+	const wornItem = useCharacterAppearanceItem(character, item);
+
+	if (!wornItem) {
+		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
+	}
+
+	const asset = wornItem.asset;
+
+	return (
+		<div className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', 'allowed') } onClick={ () => {
+			setFocus?.({
+				container: item.container,
+				itemId: selected ? null : item.itemId,
+			});
 		} }>
 			<div className='itemPreview' />
 			<span className='itemName'>{asset.definition.name}</span>
-			{
-				listMode &&
-				<div className='quickActions'>
-					<WardrobeActionButton action={ {
-						type: 'move',
-						target: {
-							type: 'character',
-							characterId: character.data.id,
-						},
-						item: {
-							container: containerPath.slice(),
-							itemId: item.id,
-						},
-						shift: 1,
-					} }>
-						⬇️
-					</WardrobeActionButton>
-					<WardrobeActionButton action={ {
-						type: 'move',
-						target: {
-							type: 'character',
-							characterId: character.data.id,
-						},
-						item: {
-							container: containerPath.slice(),
-							itemId: item.id,
-						},
-						shift: -1,
-					} }>
-						⬆️
-					</WardrobeActionButton>
-					<WardrobeActionButton action={ {
-						type: 'delete',
-						target: {
-							type: 'character',
-							characterId: character.data.id,
-						},
-						item: {
-							container: containerPath.slice(),
-							itemId: item.id,
-						},
-					} }>
-						➖
-					</WardrobeActionButton>
-				</div>
-			}
+			<div className='quickActions'>
+				<WardrobeActionButton action={ {
+					type: 'move',
+					target,
+					item,
+					shift: 1,
+				} }>
+					⬇️
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'move',
+					target,
+					item,
+					shift: -1,
+				} }>
+					⬆️
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'delete',
+					target,
+					item,
+				} }>
+					➖
+				</WardrobeActionButton>
+			</div>
 		</div>
 	);
 }
@@ -481,93 +531,88 @@ function WardrobeActionButton({
 
 function WardrobeItemConfigMenu({
 	item,
-	onClose,
+	setFocus,
 }: {
-	item: Item;
-	onClose: () => void;
+	item: ItemPath;
+	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
-	const { character, containerPath } = useWardrobeContext();
+	const { target, character } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 	const player = usePlayer();
 	AssertNotNullable(player);
 	const canUseHands = useCharacterRestrictionsManager(player, (manager) => manager.canUseHands());
+	const wornItem = useCharacterAppearanceItem(character, item);
+
+	const close = useCallback(() => {
+		setFocus({
+			container: item.container,
+			itemId: null,
+		});
+	}, [item, setFocus]);
+
+	if (!wornItem) {
+		return (
+			<div className='inventoryView'>
+				<div className='toolbar'>
+					<span>Editing item: [ ERROR: ITEM NOT FOUND ]</span>
+					<button onClick={ close }>✖️</button>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className='inventoryView'>
 			<div className='toolbar'>
-				<span>Editing item: {item.asset.definition.name}</span>
-				<button onClick={ () => onClose() }>✖️</button>
+				<span>Editing item: {wornItem.asset.definition.name}</span>
+				<button onClick={ close }>✖️</button>
 			</div>
 			<Column overflowX='hidden' overflowY='auto'>
 				<Row wrap>
 					<WardrobeActionButton action={ {
 						type: 'move',
-						target: {
-							type: 'character',
-							characterId: character.data.id,
-						},
-						item: {
-							container: containerPath.slice(),
-							itemId: item.id,
-						},
+						target,
+						item,
 						shift: 1,
 					} }>
 						⬇️ Wear on top
 					</WardrobeActionButton>
 					<WardrobeActionButton action={ {
 						type: 'move',
-						target: {
-							type: 'character',
-							characterId: character.data.id,
-						},
-						item: {
-							container: containerPath.slice(),
-							itemId: item.id,
-						},
+						target,
+						item,
 						shift: -1,
 					} }>
 						⬆️ Wear under
 					</WardrobeActionButton>
 					<WardrobeActionButton action={ {
 						type: 'delete',
-						target: {
-							type: 'character',
-							characterId: character.data.id,
-						},
-						item: {
-							container: containerPath.slice(),
-							itemId: item.id,
-						},
+						target,
+						item,
 					} }>
 						➖ Remove and delete
 					</WardrobeActionButton>
 				</Row>
 				{
-					(item.asset.definition.colorization && item.asset.definition.colorization.length > 0) && (
+					(wornItem.asset.definition.colorization && wornItem.asset.definition.colorization.length > 0) && (
 						<FieldsetToggle legend='Coloring'>
 							{
-								item.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
+								wornItem.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
 									<div className='wardrobeColorRow' key={ colorPartIndex }>
 										<span className='flex-1'>{colorPart.name}</span>
 										<ColorInput
-											initialValue={ item.color[colorPartIndex] ?? colorPart.default }
+											initialValue={ wornItem.color[colorPartIndex] ?? colorPart.default }
 											resetValue={ colorPart.default }
 											throttle={ 100 }
 											disabled={ !canUseHands }
 											onChange={ (color) => {
 												if (shardConnector) {
-													const newColor = item.color.slice();
+													const newColor = wornItem.color.slice();
 													newColor[colorPartIndex] = color;
 													shardConnector.sendMessage('appearanceAction', {
 														type: 'color',
-														target: {
-															type: 'character',
-															characterId: character.data.id,
-														},
-														item: {
-															container: containerPath.slice(),
-															itemId: item.id,
-														},
+														target,
+														item,
 														color: newColor,
 													});
 												}
@@ -580,10 +625,10 @@ function WardrobeItemConfigMenu({
 					)
 				}
 				{
-					Array.from(item.modules.entries())
+					Array.from(wornItem.modules.entries())
 						.map(([moduleName, m]) => (
 							<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
-								<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
+								<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } setFocus={ setFocus } />
 							</FieldsetToggle>
 						))
 				}
@@ -592,29 +637,28 @@ function WardrobeItemConfigMenu({
 	);
 }
 
-function WardrobeModuleConfig({ item, moduleName, m }: {
-	item: Item;
+interface WardrobeModuleProps<Module extends IItemModule> {
+	item: ItemPath;
 	moduleName: string;
-	m: IItemModule;
-}): ReactElement {
+	m: Module;
+	setFocus: (newFocus: WardrobeFocus) => void;
+}
+
+function WardrobeModuleConfig({ m, ...props }: WardrobeModuleProps<IItemModule>): ReactElement {
 	if (m instanceof ItemModuleTyped) {
-		return <WardrobeModuleConfigTyped item={ item } moduleName={ moduleName } m={ m } />;
+		return <WardrobeModuleConfigTyped { ...props } m={ m } />;
 	}
 	if (m instanceof ItemModuleStorage) {
-		return <WardrobeModuleConfigStorage item={ item } moduleName={ moduleName } m={ m } />;
+		return <WardrobeModuleConfigStorage { ...props } m={ m } />;
 	}
 	if (m instanceof ItemModuleLockSlot) {
-		return <WardrobeModuleConfigLockSlot item={ item } moduleName={ moduleName } m={ m } />;
+		return <WardrobeModuleConfigLockSlot { ...props } m={ m } />;
 	}
 	return <>[ ERROR: UNKNOWN MODULE TYPE ]</>;
 }
 
-function WardrobeModuleConfigTyped({ item, moduleName, m }: {
-	item: Item;
-	moduleName: string;
-	m: ItemModuleTyped
-}): ReactElement {
-	const { character, containerPath } = useWardrobeContext();
+function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<ItemModuleTyped>): ReactElement {
+	const { target } = useWardrobeContext();
 
 	return (
 		<Row wrap>
@@ -622,14 +666,8 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 				m.config.variants.map((v) => (
 					<WardrobeActionButton action={ {
 						type: 'moduleAction',
-						target: {
-							type: 'character',
-							characterId: character.data.id,
-						},
-						item: {
-							container: containerPath.slice(),
-							itemId: item.id,
-						},
+						target,
+						item,
 						module: moduleName,
 						action: {
 							moduleType: 'typed',
@@ -644,26 +682,23 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: {
 	);
 }
 
-function WardrobeModuleConfigStorage({ item, moduleName, m }: {
-	item: Item;
-	moduleName: string;
-	m: ItemModuleStorage;
-}): ReactElement {
-	const { containerPath, setContainerPath } = useWardrobeContext();
-
+function WardrobeModuleConfigStorage({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
 	return (
 		<Row wrap>
 			<button
 				className={ classNames('wardrobeActionButton', 'allowed') }
 				onClick={ (ev) => {
 					ev.stopPropagation();
-					setContainerPath([
-						...containerPath,
-						{
-							item: item.id,
-							module: moduleName,
-						},
-					]);
+					setFocus({
+						container: [
+							...item.container,
+							{
+								item: item.itemId,
+								module: moduleName,
+							},
+						],
+						itemId: null,
+					});
 				} }
 			>
 				Open
@@ -675,26 +710,23 @@ function WardrobeModuleConfigStorage({ item, moduleName, m }: {
 	);
 }
 
-function WardrobeModuleConfigLockSlot({ item, moduleName, m }: {
-	item: Item;
-	moduleName: string;
-	m: ItemModuleLockSlot;
-}): ReactElement {
-	const { containerPath, setContainerPath } = useWardrobeContext();
-
+function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
 	return (
 		<Row wrap>
 			<button
 				className={ classNames('wardrobeActionButton', 'allowed') }
 				onClick={ (ev) => {
 					ev.stopPropagation();
-					setContainerPath([
-						...containerPath,
-						{
-							item: item.id,
-							module: moduleName,
-						},
-					]);
+					setFocus({
+						container: [
+							...item.container,
+							{
+								item: item.itemId,
+								module: moduleName,
+							},
+						],
+						itemId: null,
+					});
 				} }
 			>
 				Modify
@@ -978,7 +1010,12 @@ export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: 
 }
 
 export function WardrobeExpressionGui(): ReactElement {
-	const { appearance } = useWardrobeContext();
+	const { character } = useWardrobeContext();
+	const appearance = useCharacterAppearanceItems(character);
+
+	const setFocus = useCallback(() => {
+		Assert(false, 'Expressions cannot focus container!');
+	}, []);
 
 	return (
 		<div className='inventoryView'>
@@ -990,7 +1027,12 @@ export function WardrobeExpressionGui(): ReactElement {
 								.filter((m) => m[1].config.expression)
 								.map(([moduleName, m]) => (
 									<FieldsetToggle legend={ m.config.expression } key={ moduleName }>
-										<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
+										<WardrobeModuleConfig
+											item={ { container: [], itemId: item.id } }
+											moduleName={ moduleName }
+											m={ m }
+											setFocus={ setFocus }
+										/>
 									</FieldsetToggle>
 								))
 						))

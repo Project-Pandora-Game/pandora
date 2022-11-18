@@ -202,13 +202,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
-		// TODO do not use beta key if account creation fails
 		if (BETA_KEY_ENABLED && (!betaKey || !await BetaKeyStore.use(betaKey)))
 			return { result: 'invalidBetaKey' };
 
 		const result = await accountManager.createAccount(username, passwordSha512, email);
-		if (typeof result === 'string')
+		if (typeof result === 'string') {
+			if (BETA_KEY_ENABLED) await BetaKeyStore.unuse(betaKey as string);
 			return { result };
+		}
 
 		return { result: 'ok' };
 	}

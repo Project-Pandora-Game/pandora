@@ -34,6 +34,13 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 		});
 	}
 
+	public async unuse(token: string): Promise<void> {
+		await this._action(token, (info) => {
+			--info.uses;
+			return info;
+		});
+	}
+
 	protected async load(): Promise<[string, IStoredBetaKeyInfo][]> {
 		return await GetDatabase().getConfig('betaKeys') || [];
 	}

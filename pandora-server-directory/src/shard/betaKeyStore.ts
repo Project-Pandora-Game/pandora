@@ -1,6 +1,7 @@
 import { GetLogger, type IBetaKeyInfo, type IClientDirectoryArgument } from 'pandora-common';
 import { type Account } from '../account/account';
 import { BETA_KEY_GLOBAL } from '../config';
+import { GetDatabase } from '../database/databaseProvider';
 import { TokenStoreBase } from './tokenStoreBase';
 
 const TOKEN_ID_LENGTH = 8;
@@ -27,7 +28,7 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 	}
 
 	public async use(token: string): Promise<boolean> {
-		await this._action(token, (info) => {
+		return await this._action(token, (info) => {
 			++info.uses;
 			return info;
 		});
@@ -38,7 +39,7 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 	}
 
 	protected save(data: [string, IStoredBetaKeyInfo][]): Promise<void> {
-		return GetDatabase().setConfig('betaKeys', data);
+		return GetDatabase().setConfig({ type: 'betaKeys', data });
 	}
 
 	protected isValid({ maxUses, uses }: IStoredBetaKeyInfo): boolean {

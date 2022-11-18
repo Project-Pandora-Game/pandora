@@ -35,7 +35,7 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 	}
 
 	protected save(data: [string, IStoredShardTokenInfo][]): Promise<void> {
-		return GetDatabase().setConfig('shardTokens', data);
+		return GetDatabase().setConfig({ type: 'shardTokens', data });
 	}
 
 	protected isValid(_info: IStoredShardTokenInfo): boolean {

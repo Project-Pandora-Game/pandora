@@ -58,3 +58,6 @@ type DatabaseConfig = {
 	type: 'betaKeys',
 	data: [string, import('pandora-common').IBetaKeyInfo & { token: string; }][];
 };
+
+type DatabaseConfigType = DatabaseConfig['type'];
+type DatabaseConfigData<T extends DatabaseConfigType> = Extract<DatabaseConfig, { type: T; }>['data'];

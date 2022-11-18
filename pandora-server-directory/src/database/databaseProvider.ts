@@ -143,14 +143,13 @@ export interface PandoraDatabase {
 	 * Get config data
 	 * @param type
 	 */
-	getConfig<T extends DatabaseConfig['type']>(type: T): Promise<null | (DatabaseConfig & { type: T; })['data']>;
+	getConfig<T extends DatabaseConfigType>(type: T): Promise<null | DatabaseConfigData<T>>;
 
 	/**
 	 * Set config data
-	 * @param type
 	 * @param data
 	 */
-	setConfig<T extends DatabaseConfig['type']>(type: T, data: (DatabaseConfig & { type: T; })['data']): Promise<void>;
+	setConfig(data: DatabaseConfig): Promise<void>;
 }
 
 /** Current database connection */

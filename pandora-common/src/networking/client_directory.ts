@@ -290,6 +290,7 @@ export const ClientDirectorySchema = {
 		}),
 		response: ZodCast<{ result: 'adminRequired'; } | {
 			result: 'ok';
+			info: IBetaKeyInfo;
 			token: string;
 		}>(),
 	},

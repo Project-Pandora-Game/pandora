@@ -1,0 +1,171 @@
+import { EMPTY, IsAuthorized, type IBetaKeyInfo } from 'pandora-common';
+import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
+import { useAsyncEvent } from '../../../common/useEvent';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
+import { Button } from '../../common/Button/Button';
+import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import '../shards/shards.scss';
+
+const BetaKeyListContext = createContext({
+	reload: () => { /** noop */ },
+	append: (_key: IBetaKeyInfo) => { /** noop */ },
+});
+
+export function BetaKeys(): ReactElement {
+	const connector = useDirectoryConnector();
+	const [list, setList] = useState<IBetaKeyInfo[]>([]);
+
+	const [reload] = useAsyncEvent(
+		() => connector.awaitResponse('manageListBetaKeys', EMPTY),
+		({ keys }) => setList(keys),
+	);
+
+	const context = useMemo(() => ({
+		reload,
+		append: (shard: IBetaKeyInfo) => {
+			setList((old) => [...old, shard]);
+		},
+	}), [reload]);
+
+	useEffect(() => {
+		void reload();
+	}, [reload]);
+
+	return (
+		<BetaKeyListContext.Provider value={ context }>
+			<div className='shards'>
+				<table>
+					<thead>
+						<tr>
+							<th>Id</th>
+							<th>Expires</th>
+							<th>Uses</th>
+							<th>Created By</th>
+							<th>Created At</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{ list.map((item) => (
+							<BetaKeyRow key={ item.id } betaKey={ item } />
+						)) }
+					</tbody>
+				</table>
+				<BetaKeyCreate />
+			</div>
+		</BetaKeyListContext.Provider>
+	);
+}
+
+function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo }): ReactElement {
+	const connector = useDirectoryConnector();
+	const { reload } = useContext(BetaKeyListContext);
+
+	const [onInvalidate] = useAsyncEvent(async () => {
+		if (!confirm('Are you sure you want to invalidate this token?'))
+			return { result: 'cancelled' };
+
+		return await connector.awaitResponse('manageInvalidateShardToken', { id: betaKey.id });
+	}, ({ result }) => {
+		if (result !== 'ok')  {
+			if (result !== 'cancelled') {
+				toast('Failed to invalidate shard token: ' + result, TOAST_OPTIONS_ERROR);
+			}
+		} else {
+			reload();
+		}
+	});
+
+	return (
+		<tr>
+			<td>{ betaKey.id }</td>
+			<td>
+				{ betaKey.expires === undefined ? 'Never' : new Date(betaKey.expires).toLocaleString() }
+			</td>
+			<td>{ betaKey.maxUses === undefined ? `${betaKey.uses} / ∞` : `${betaKey.uses} / ${betaKey.maxUses}` }</td>
+			<td>
+				{betaKey.created.username} ({betaKey.created.id})
+			</td>
+			<td>
+				{new Date(betaKey.created.time).toLocaleString()}
+			</td>
+			<td>
+				<Button className='slim' onClick={ () => void onInvalidate() }>Invalidate</Button>
+			</td>
+		</tr>
+	);
+}
+
+function BetaKeyCreate(): ReactElement {
+	const account = useCurrentAccount();
+	const isAdmin = account?.roles !== undefined && IsAuthorized(account.roles, 'admin');
+	const connector = useDirectoryConnector();
+	const [expires, setExpires] = useState<undefined | number>(undefined);
+	const  [maxUses, setMaxUses] = useState<undefined | number>(isAdmin ? undefined : Date.now() + 1000 * 60 * 60 * 24);
+	const { append } = useContext(BetaKeyListContext);
+
+	const updateMaxUses = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
+		const value = ev.target.value;
+		if (value === '' && isAdmin) {
+			setMaxUses(undefined);
+		} else {
+			const num = parseInt(value, 10);
+			if (!isNaN(num) && num >= 1 && num <= 5) {
+				setMaxUses(num);
+			}
+		}
+	}, [isAdmin]);
+
+	const updateExpires = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
+		const value = ev.target.value;
+		if (value === '') {
+			setExpires(undefined);
+		} else {
+			const date = new Date(value).getTime();
+			const now = Date.now();
+			if (date > now && (isAdmin || date <= now + 1000 * 60 * 60 * 24 * 7)) {
+				setExpires(date);
+			}
+		}
+	}, [isAdmin]);
+
+	const [onCreate] = useAsyncEvent(async () => {
+		return await connector.awaitResponse('manageCreateBetaKey', {
+			expires,
+			maxUses,
+		});
+	}, (data) => {
+		if (data.result !== 'ok') {
+			toast('Failed to create shard token: ' + data.result, TOAST_OPTIONS_ERROR);
+			return;
+		}
+		const { token, info } = data;
+		setExpires(undefined);
+		setMaxUses(isAdmin ? undefined : 1);
+		append(info);
+
+		navigator.clipboard.writeText(token)
+			.then(() => toast('Token copied to clipboard', TOAST_OPTIONS_SUCCESS))
+			.catch(() => toast('Failed to copy token to clipboard', TOAST_OPTIONS_ERROR));
+	});
+
+	return (
+		<fieldset className='shard-create'>
+			<legend>Create Beta Key</legend>
+			<div className='input-row'>
+				<label>Expires</label>
+				<input type='checkbox' checked={ expires !== undefined } onChange={ (e) => setExpires(e.target.checked ? Date.now() : undefined) } disabled={ !isAdmin } />
+				<input type='date' value={ expires === undefined ? '' : new Date(expires).toISOString().substring(0, 10) } onChange={ updateExpires } />
+			</div>
+			<div className='input-row'>
+				<label>Max Uses</label>
+				<input type='checkbox' checked={ maxUses !== undefined } onChange={ (e) => setMaxUses(e.target.checked ? 1 : undefined) } disabled={ !isAdmin } />
+				<input type='number' value={ maxUses === undefined ? '' : maxUses } onChange={ updateMaxUses } />
+			</div>
+			<div className='input-row'>
+				<Button className='slim' onClick={ () => void onCreate() }>Create</Button>
+			</div>
+		</fieldset>
+	);
+}

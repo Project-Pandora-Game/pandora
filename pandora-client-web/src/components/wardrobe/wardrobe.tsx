@@ -51,6 +51,9 @@ import { Column, Row } from '../common/container/container';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import emptyLock from '../../assets/icons/lock_empty.svg';
+import closedLock from '../../assets/icons/lock_closed.svg';
+import openLock from '../../assets/icons/lock_open.svg';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -349,6 +352,11 @@ function InventoryAssetView({ className, title, children, assets, container }: {
 		};
 	}, []);
 
+	// Clear filter when looking from different focus
+	useEffect(() => {
+		setFilter('');
+	}, [container, setFilter]);
+
 	return (
 		<div className={ classNames('inventoryView', className) }>
 			<div className='toolbar'>
@@ -411,18 +419,32 @@ function InventoryItemView({
 	const { character } = useWardrobeContext();
 	const appearance = useCharacterAppearanceItems(character);
 
-	const [displayedItems, containerSteps] = useMemo<[AppearanceItems, readonly string[]]>(() => {
+	const [displayedItems, containerModule, containerSteps] = useMemo<[AppearanceItems, IItemModule | undefined, readonly string[]]>(() => {
 		let items: AppearanceItems = filter ? appearance.filter(filter) : appearance;
+		let container: IItemModule | undefined;
 		const steps: string[] = [];
 		for (const step of focus.container) {
 			const item = items.find((it) => it.id === step.item);
-			if (!item)
-				return [[], []];
-			steps.push(item.asset.definition.name);
+			const module = item?.modules.get(step.module);
+			if (!item || !module)
+				return [[], undefined, []];
+			steps.push(`${item.asset.definition.name} (${module.config.name})`);
+			container = module;
 			items = item.getModuleItems(step.module);
 		}
-		return [items, steps];
+		return [items, container, steps];
 	}, [appearance, filter, focus]);
+
+	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
+	useEffect(() => {
+		if (!singleItemContainer)
+			return;
+		if (displayedItems.length === 1 && focus.itemId == null) {
+			setFocus?.({ ...focus, itemId: displayedItems[0].id });
+		} else if (displayedItems.length === 0 && focus.itemId != null) {
+			setFocus?.({ ...focus, itemId: null });
+		}
+	}, [focus, setFocus, singleItemContainer, displayedItems]);
 
 	return (
 		<div className={ classNames('inventoryView', className) }>
@@ -436,7 +458,10 @@ function InventoryItemView({
 							} } >
 								Close
 							</button>
-							<div className='center-flex'>Viewing contents of { containerSteps.join(' > ') }</div>
+							<div className='center-flex'>
+								Viewing contents of: <br />
+								{ containerSteps.join(' > ') }
+							</div>
 						</>
 					) :
 						<span>{title}</span>
@@ -445,7 +470,12 @@ function InventoryItemView({
 			<div className='list'>
 				{
 					displayedItems.map((i) => (
-						<InventoryItemViewList key={ i.id } item={ { container: focus.container, itemId: i.id } } selected={ i.id === focus.itemId } setFocus={ setFocus } />
+						<InventoryItemViewList key={ i.id }
+							item={ { container: focus.container, itemId: i.id } }
+							selected={ i.id === focus.itemId }
+							setFocus={ setFocus }
+							singleItemContainer={ singleItemContainer }
+						/>
 					))
 				}
 			</div>
@@ -453,7 +483,12 @@ function InventoryItemView({
 	);
 }
 
-function InventoryItemViewList({ item, selected=false, setFocus }: { item: ItemPath; selected?: boolean; setFocus?: (newFocus: WardrobeFocus) => void; }): ReactElement {
+function InventoryItemViewList({ item, selected=false, setFocus, singleItemContainer=false }: {
+	item: ItemPath;
+	selected?: boolean;
+	setFocus?: (newFocus: WardrobeFocus) => void;
+	singleItemContainer?: boolean;
+}): ReactElement {
 	const { target, character } = useWardrobeContext();
 	const wornItem = useCharacterAppearanceItem(character, item);
 
@@ -465,6 +500,8 @@ function InventoryItemViewList({ item, selected=false, setFocus }: { item: ItemP
 
 	return (
 		<div className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', 'allowed') } onClick={ () => {
+			if (singleItemContainer)
+				return;
 			setFocus?.({
 				container: item.container,
 				itemId: selected ? null : item.itemId,
@@ -473,22 +510,28 @@ function InventoryItemViewList({ item, selected=false, setFocus }: { item: ItemP
 			<div className='itemPreview' />
 			<span className='itemName'>{asset.definition.name}</span>
 			<div className='quickActions'>
-				<WardrobeActionButton action={ {
-					type: 'move',
-					target,
-					item,
-					shift: 1,
-				} }>
-					⬇️
-				</WardrobeActionButton>
-				<WardrobeActionButton action={ {
-					type: 'move',
-					target,
-					item,
-					shift: -1,
-				} }>
-					⬆️
-				</WardrobeActionButton>
+				{
+					singleItemContainer ? null : (
+						<>
+							<WardrobeActionButton action={ {
+								type: 'move',
+								target,
+								item,
+								shift: 1,
+							} }>
+								⬇️
+							</WardrobeActionButton>
+							<WardrobeActionButton action={ {
+								type: 'move',
+								target,
+								item,
+								shift: -1,
+							} }>
+								⬆️
+							</WardrobeActionButton>
+						</>
+					)
+				}
 				<WardrobeActionButton action={ {
 					type: 'delete',
 					target,
@@ -543,6 +586,11 @@ function WardrobeItemConfigMenu({
 	const canUseHands = useCharacterRestrictionsManager(player, (manager) => manager.canUseHands());
 	const wornItem = useCharacterAppearanceItem(character, item);
 
+	const containerPath = SplitContainerPath(item.container);
+	const containerItem = useCharacterAppearanceItem(character, containerPath?.itemPath);
+	const containerModule = containerPath != null ? containerItem?.modules.get(containerPath.module) : undefined;
+	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
+
 	const close = useCallback(() => {
 		setFocus({
 			container: item.container,
@@ -565,26 +613,32 @@ function WardrobeItemConfigMenu({
 		<div className='inventoryView'>
 			<div className='toolbar'>
 				<span>Editing item: {wornItem.asset.definition.name}</span>
-				<button onClick={ close }>✖️</button>
+				{ !singleItemContainer && <button onClick={ close }>✖️</button> }
 			</div>
 			<Column overflowX='hidden' overflowY='auto'>
 				<Row wrap>
-					<WardrobeActionButton action={ {
-						type: 'move',
-						target,
-						item,
-						shift: 1,
-					} }>
-						⬇️ Wear on top
-					</WardrobeActionButton>
-					<WardrobeActionButton action={ {
-						type: 'move',
-						target,
-						item,
-						shift: -1,
-					} }>
-						⬆️ Wear under
-					</WardrobeActionButton>
+					{
+						singleItemContainer ? null : (
+							<>
+								<WardrobeActionButton action={ {
+									type: 'move',
+									target,
+									item,
+									shift: 1,
+								} }>
+									⬇️ Wear on top
+								</WardrobeActionButton>
+								<WardrobeActionButton action={ {
+									type: 'move',
+									target,
+									item,
+									shift: -1,
+								} }>
+									⬆️ Wear under
+								</WardrobeActionButton>
+							</>
+						)
+					}
 					<WardrobeActionButton action={ {
 						type: 'delete',
 						target,
@@ -729,13 +783,20 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 					});
 				} }
 			>
-				Modify
+				<img src={
+					!m.lock ? emptyLock :
+						m.lock.getProperties().blockAddRemove ? closedLock :
+						openLock
+				}
+				width='21' height='33' />
 			</button>
 			<Row alignY='center'>
 				{
 					m.lock ?
-					m.lock.asset.definition.name :
-					'Not locked.'
+					m.lock.getProperties().blockAddRemove ?
+						m.lock.asset.definition.name + ': Locked' :
+						m.lock.asset.definition.name + ': Not locked' :
+					'No lock'
 				}
 			</Row>
 		</Row>

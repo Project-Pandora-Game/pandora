@@ -6,6 +6,23 @@ import type { BoneDefinitionCompressed } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetProperties } from './properties';
 
+export type AssetTypeDefinition = 'clothing' | 'restraint';
+export type AssetSlotDefinition =
+	'frontHair' |
+	'backHair' |
+	'eyes' |
+	'nose' |
+	'mouth' |
+	'head' |
+	'neck' |
+	'top' |
+	'bottom' |
+	'torso' |
+	'arms' |
+	'hands' |
+	'legs' |
+	'feet';
+
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
 
@@ -56,6 +73,13 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
+
+	/** Is this rather a body part, clothing or a restraint */
+	kind?: AssetTypeDefinition;
+
+	/** list of all body parts, this item uses */
+	occupies?: AssetSlotDefinition[] | AssetSlotDefinition;
+
 }
 
 /** Definition of bodypart */

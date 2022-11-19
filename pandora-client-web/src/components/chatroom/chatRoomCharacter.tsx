@@ -9,6 +9,7 @@ import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { Container, Graphics, Text } from '@saitonakamura/react-pixi';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
+import { MASK_SIZE } from '../../graphics/graphicsLayer';
 
 type ChatRoomCharacterProps = {
 	character: Character<ICharacterRoomData>;
@@ -157,8 +158,18 @@ export function ChatRoomCharacter({
 						zIndex={ 99999 }
 					>
 						<Graphics
+							x={ -MASK_SIZE.x }
+							y={ -MASK_SIZE.y }
 							draw={ (g) => {
-								g.lineStyle({ color: 0x00ff00, width: 2 })
+								g.clear()
+									.lineStyle({ color: 0xffff00, width: 2 })
+									.drawRect(0, 0, MASK_SIZE.width, MASK_SIZE.height);
+							} }
+						/>
+						<Graphics
+							draw={ (g) => {
+								g.clear()
+									.lineStyle({ color: 0x00ff00, width: 2 })
 									.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
 							} }
 						/>

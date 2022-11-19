@@ -1,4 +1,4 @@
-import { CharacterSize } from 'pandora-common';
+import { CharacterSize, Rectangle } from 'pandora-common';
 import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix } from 'pixi.js';
 
 const FILTER_CONDITION = 'masky.a > 0.5 && masky.r < 0.5';
@@ -15,20 +15,16 @@ export class GraphicsMaskLayer {
 	private _geometry?: Geometry;
 	private _lastContent?: string | [number, number][][];
 
-	public readonly maskWidth: number;
-	public readonly maskHeight: number;
-	public readonly maskOverscan: number;
+	public readonly maskSize: Readonly<Rectangle>;
 
 	public readonly sprite: Sprite;
 	public readonly filter: Filter;
 
-	constructor(renderer: AbstractRenderer, maskSprite: Sprite, getTexture: (image: string) => Promise<Texture>, width: number, height: number, overscan: number) {
-		this.maskWidth = width;
-		this.maskHeight = height;
-		this.maskOverscan = overscan;
+	constructor(renderer: AbstractRenderer, maskSprite: Sprite, getTexture: (image: string) => Promise<Texture>, maskSize: Readonly<Rectangle>) {
+		this.maskSize = maskSize;
 		this._renderer = renderer;
 		this._getTexture = getTexture;
-		this._renderTexture = RenderTexture.create({ width, height });
+		this._renderTexture = RenderTexture.create({ width: maskSize.width, height: maskSize.height });
 		this.sprite = maskSprite;
 		this.sprite.texture = this._renderTexture;
 		this.filter = new AlphaMaskFilter(this.sprite);
@@ -105,7 +101,7 @@ export class GraphicsMaskLayer {
 		} else {
 			this._result = this._textureParent = new Sprite(this._texture);
 		}
-		this._result.position.set(this.maskOverscan, this.maskOverscan);
+		this._result.position.set(this.maskSize.x, this.maskSize.y);
 		this.render();
 	}
 }

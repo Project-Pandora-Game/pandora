@@ -3,7 +3,7 @@ import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { max, maxBy, min, minBy } from 'lodash';
 import { nanoid } from 'nanoid';
-import { BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
+import { BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -230,9 +230,13 @@ export function GraphicsLayer({
 	);
 }
 
-const MASK_OVERSCAN = 1000;
-const MASK_WIDTH = CharacterSize.WIDTH + 2 * MASK_OVERSCAN;
-const MASK_HEIGHT = CharacterSize.HEIGHT + 2 * MASK_OVERSCAN;
+const MASK_X_OVERSCAN = 250;
+export const MASK_SIZE: Readonly<PandoraRectangle> = {
+	x: MASK_X_OVERSCAN,
+	y: 0,
+	width: CharacterSize.WIDTH + 2 * MASK_X_OVERSCAN,
+	height: CharacterSize.HEIGHT,
+};
 interface MaskContainerProps extends ChildrenProps {
 	maskImage: string;
 	maskMesh?: {
@@ -295,8 +299,8 @@ function MaskContainerPixi({
 		// Create base for the mask
 		const textureContainer = new PIXI.Container();
 		const background = new PIXI.Sprite(Texture.WHITE);
-		background.width = MASK_WIDTH;
-		background.height = MASK_HEIGHT;
+		background.width = MASK_SIZE.width;
+		background.height = MASK_SIZE.height;
 		textureContainer.addChild(background);
 		let mask: PIXI.Container;
 		if (maskMesh) {
@@ -304,12 +308,12 @@ function MaskContainerPixi({
 		} else {
 			mask = new PIXI.Sprite(alphaTexture);
 		}
-		mask.x = MASK_OVERSCAN;
-		mask.y = MASK_OVERSCAN;
+		mask.x = MASK_SIZE.x;
+		mask.y = MASK_SIZE.y;
 		textureContainer.addChild(mask);
 
 		// Render mask texture
-		const bounds = new Rectangle(0, 0, MASK_WIDTH, MASK_HEIGHT);
+		const bounds = new Rectangle(0, 0, MASK_SIZE.width, MASK_SIZE.height);
 		const texture = app.renderer.generateTexture(textureContainer, {
 			resolution: 1,
 			region: bounds,
@@ -339,7 +343,7 @@ function MaskContainerPixi({
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
 				{ children }
 			</Container>
-			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_OVERSCAN } y={ -MASK_OVERSCAN } />
+			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>
 	);
 }
@@ -390,7 +394,7 @@ function MaskContainerCustom({
 		if (!getTextureFinal || !maskSprite)
 			return;
 
-		const engine = new GraphicsMaskLayer(app.renderer, maskSprite, getTextureFinal, MASK_WIDTH, MASK_HEIGHT, MASK_OVERSCAN);
+		const engine = new GraphicsMaskLayer(app.renderer, maskSprite, getTextureFinal, MASK_SIZE);
 		maskLayer.current = engine;
 		if (maskGeometryFinal.current !== null) {
 			engine.updateGeometry(maskGeometryFinal.current);
@@ -416,7 +420,7 @@ function MaskContainerCustom({
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
 				{ children }
 			</Container>
-			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_OVERSCAN } y={ -MASK_OVERSCAN } />
+			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>
 	);
 }

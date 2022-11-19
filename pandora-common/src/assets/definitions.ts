@@ -7,25 +7,27 @@ import { AssetModuleDefinition } from './modules';
 import { AssetProperties } from './properties';
 
 export type AssetTypeDefinition = 'clothing' | 'restraint';
-export type AssetSlotDefinition =
-	'frontHair' |
-	'backHair' |
-	'eyes' |
-	'nose' |
-	'mouth' |
-	'head' |
-	'neck' |
-	'breasts' |
-	'top' |
-	'crotch' |
-	'bottom' |
-	'torso' |
-	'arms' |
-	'wrists' |
-	'hands' |
-	'legs' |
-	'ankles' |
-	'feet';
+export const ASSET_SLOT_DEFINITIONS = [
+	'frontHair',
+	'backHair',
+	'head',
+	'eyes',
+	'nose',
+	'mouth',
+	'neck',
+	'breasts',
+	'top',
+	'crotch',
+	'bottom',
+	'torso',
+	'arms',
+	'wrists',
+	'hands',
+	'legs',
+	'ankles',
+	'feet',
+] as const;
+export type AssetSlotDefinition = typeof ASSET_SLOT_DEFINITIONS[number];
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;

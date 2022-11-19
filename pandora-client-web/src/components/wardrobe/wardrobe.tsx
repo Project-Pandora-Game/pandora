@@ -10,6 +10,7 @@ import {
 	AssertNotNullable,
 	Asset,
 	AssetsPosePresets,
+	ASSET_SLOT_DEFINITIONS,
 	BoneName,
 	BoneState,
 	BONE_MAX,
@@ -52,28 +53,8 @@ const assetSorters = {
 		 * Provides the sorting of assets or items by slot that they occupy.
 		 * If an asset uses more than one slot, e.g. the maids dress, the first slot in its
 		 * definition is used.
-		 * TODO: Find a convenient way to make sure the sorting array is consistant to the definition of "AssetSlotDefinition"
 		 */
-		const sortingArray = [
-			'frontHair',
-			'backHair',
-			'head',
-			'eyes',
-			'nose',
-			'mouth',
-			'neck',
-			'breasts',
-			'top',
-			'crotch',
-			'bottom',
-			'torso',
-			'arms',
-			'wrists',
-			'hands',
-			'legs',
-			'ankles',
-			'feet',
-		];
+		const sortArray = ASSET_SLOT_DEFINITIONS;
 		const itemA = (a instanceof Asset) ? a : a.asset;
 		const itemB = (b instanceof Asset) ? b : b.asset;
 		let ret = 0;
@@ -84,7 +65,7 @@ const assetSorters = {
 		else {
 			const testA = Array.isArray(itemA.definition.occupies) ? itemA.definition.occupies[0] : itemA.definition.occupies;
 			const testB = Array.isArray(itemB.definition.occupies) ? itemB.definition.occupies[0] : itemB.definition.occupies;
-			ret = sortingArray.indexOf(testA) - sortingArray.indexOf(testB);
+			ret = sortArray.indexOf(testA) - sortArray.indexOf(testB);
 			if (ret === 0) ret = ((itemA.definition.name < itemB.definition.name) ? -1 : ((itemA.definition.name > itemB.definition.name) ? 1 : 0));
 		}
 		return (ret);

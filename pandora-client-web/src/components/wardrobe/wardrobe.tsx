@@ -9,7 +9,6 @@ import {
 	ArmsPose,
 	AssertNotNullable,
 	Asset,
-	AssetSlotDefinition,
 	AssetsPosePresets,
 	BoneName,
 	BoneState,
@@ -45,11 +44,16 @@ import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { GraphicsScene } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
-import { error } from 'console';
 
 /** A list of sorting functions */
 const assetSorters = {
-	bySlot(a: Asset | Item, b: Asset | Item) {
+	bySlot: (a: Asset | Item, b: Asset | Item) => {
+		/***
+		 * Provides the sorting of assets or items by slot that they occupy.
+		 * If an asset uses more than one slot, e.g. the maids dress, the first slot in its
+		 * definition is used.
+		 * TODO: Find a convenient way to make sure the sorting array is consistant to the definition of "AssetSlotDefinition"
+		 */
 		const sortingArray = [
 			'frontHair',
 			'backHair',
@@ -58,16 +62,20 @@ const assetSorters = {
 			'nose',
 			'mouth',
 			'neck',
+			'breasts',
 			'top',
+			'crotch',
 			'bottom',
 			'torso',
 			'arms',
+			'wrists',
 			'hands',
 			'legs',
+			'ankles',
 			'feet',
 		];
-		const itemA = (a instanceof Asset) ? GetAssetManager().getAssetById(a.id) : undefined;
-		const itemB = (b instanceof Asset) ? GetAssetManager().getAssetById(b.id) : undefined;
+		const itemA = (a instanceof Asset) ? a : a.asset;
+		const itemB = (b instanceof Asset) ? b : b.asset;
 		let ret = 0;
 
 		if (itemA === undefined || itemB === undefined) ret = 0;
@@ -75,7 +83,7 @@ const assetSorters = {
 		else if (itemB.definition.occupies === undefined) ret = 1;
 		else {
 			const testA = Array.isArray(itemA.definition.occupies) ? itemA.definition.occupies[0] : itemA.definition.occupies;
-			const testB = Array.isArray(itemB.definition.occupies) ? itemB.definition.occupies[0] : itemB.definition.occupies as AssetSlotDefinition;
+			const testB = Array.isArray(itemB.definition.occupies) ? itemB.definition.occupies[0] : itemB.definition.occupies;
 			ret = sortingArray.indexOf(testA) - sortingArray.indexOf(testB);
 			if (ret === 0) ret = ((itemA.definition.name < itemB.definition.name) ? -1 : ((itemA.definition.name > itemB.definition.name) ? 1 : 0));
 		}
@@ -217,13 +225,13 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
 			<InventoryView title='Currently worn items'
-				items={ appearance.filter(filter).sort(assetSorters.bySlot) }
+				items={ appearance.filter(filter) }
 				selectItem={ setSelectedItemId }
 				selectedItemId={ selectedItemId }
 			/>
 			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
 				<Tab name='Create new item'>
-					<InventoryView title='Create and use a new item' items={ assetList.filter(filter) } />
+					<InventoryView title='Create and use a new item' items={ assetList.filter(filter).sort(assetSorters.bySlot) } />
 				</Tab>
 				<Tab name='Room inventory'>
 					<div className='inventoryView'>
@@ -275,10 +283,10 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryView title='Currently worn items' items={ appearance.filter(filter).sort(assetSorters.bySlot) } selectItem={ setSelectedItemId } selectedItemId={ selectedItemId } />
+			<InventoryView title='Currently worn items' items={ appearance.filter(filter) } selectItem={ setSelectedItemId } selectedItemId={ selectedItemId } />
 			<TabContainer className={ classNames('flex-1', selectedItem && 'hidden') }>
 				<Tab name='Change body parts'>
-					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter) } />
+					<InventoryView title='Add a new bodypart' items={ assetList.filter(filter).sort(assetSorters.bySlot) } />
 				</Tab>
 				<Tab name='Change body size'>
 					<WardrobeBodySizeEditor />

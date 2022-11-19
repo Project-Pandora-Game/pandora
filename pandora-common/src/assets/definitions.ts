@@ -15,12 +15,16 @@ export type AssetSlotDefinition =
 	'mouth' |
 	'head' |
 	'neck' |
+	'breasts' |
 	'top' |
+	'crotch' |
 	'bottom' |
 	'torso' |
 	'arms' |
+	'wrists' |
 	'hands' |
 	'legs' |
+	'ankles' |
 	'feet';
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);

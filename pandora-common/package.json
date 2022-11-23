@@ -15,11 +15,10 @@
 		"tsconfig.base.json"
 	],
 	"scripts": {
-		"prebuild": "rimraf dist",
-		"build": "tsc -p ./tsconfig.src.json",
-		"build:swc": "swc src -d dist",
-		"predev": "rimraf dist",
-		"dev": "tsc -p ./tsconfig.src.json -w",
+		"clean": "rimraf dist",
+		"build": "pnpm run clean && tsc -p ./tsconfig.src.json",
+		"build:swc": "pnpm run clean && swc src -d dist",
+		"dev": "pnpm run clean && tsc -p ./tsconfig.src.json -w",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "tsc -p . --noEmit",

@@ -109,7 +109,7 @@ describe('Logger', () => {
 
 		it('should also call all onFatal handlers', () => {
 			mockLogger.fatal('this is fatal!');
-			expect(mockOnMessage.mock.calls.length).toBe(1);
+			expect(mockOnMessage.mock.calls.length).toBe(2);
 			expect(mockFatalHandler.mock.calls.length).toBe(1);
 		});
 	});

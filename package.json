@@ -5,12 +5,12 @@
 		"ci": "pnpm run build && pnpm lint && pnpm run type-check:test && pnpm run test",
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
-		"debloy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
+		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
 		"lint": "pnpm -r --parallel run lint",
 		"type-check:test": "pnpm -r --parallel run type-check:test",
 		"test": "pnpm -r --parallel run test",
 		"build": "pnpm -r run build",
-		"dev": "pnpm -r --parallel run dev"
+		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev"
 	},
 	"dependencies": {
 		"js-yaml": "^4.1.0"

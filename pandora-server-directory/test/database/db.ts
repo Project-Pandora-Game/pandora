@@ -26,7 +26,9 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			logLevelOverrides: {},
 			supportsColor: false,
 			onMessage(...args) {
-				fail(args);
+				// eslint-disable-next-line no-console
+				console.error(...args);
+				throw new Error('Got message above alert');
 			},
 		});
 	});
@@ -37,10 +39,10 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		const result1 = await db.createAccount(await CreateAccountData(TEST_USERNAME1, TEST_PASSWORD1, TEST_EMAIL1));
 		const result2 = await db.createAccount(await CreateAccountData(TEST_USERNAME2, TEST_PASSWORD2, TEST_EMAIL2, true));
 		if (typeof result1 === 'string') {
-			fail(result1);
+			throw new Error(result1);
 		}
 		if (typeof result2 === 'string') {
-			fail(result2);
+			throw new Error(result2);
 		}
 		accountId1 = result1.id;
 		accountId2 = result2.id;

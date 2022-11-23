@@ -9,15 +9,15 @@ const fs = require('fs');
 
 postinstall();
 async function postinstall() {
+	const isCI = process.env.CI === 'true';
+	if (!isCI) {
+		configureGitHooks();
+	}
 	try {
 		const doc = yaml.load(fs.readFileSync('pnpm-workspace.yaml', 'utf-8'));
 		const WORKSPACES = doc.packages;
-		const isCI = process.env.CI === 'true';
 		for (const workspace of WORKSPACES) {
 			await copyDotenv(workspace);
-		}
-		if (!isCI) {
-			configureGitHooks();
 		}
 	} catch (e) {
 		console.log(e);

@@ -6,6 +6,9 @@ import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../assets/appearance';
+
 /** Client->Shard messages */
 export const ClientShardSchema = {
 	finishCharacterCreation: {

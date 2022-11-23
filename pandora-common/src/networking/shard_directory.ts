@@ -6,6 +6,9 @@ import { z } from 'zod';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../assets/appearance';
+
 export const ShardDirectorySchema = {
 	shardRegister: {
 		request: z.object({

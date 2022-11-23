@@ -49,7 +49,6 @@
 		"@typescript-eslint/parser": "^5.38.0",
 		"eslint": "^8.23.1",
 		"jest": "^29.0.3",
-		"ts-mockito": "^2.6.1",
-		"pandora-common": "workspace:*"
+		"ts-mockito": "^2.6.1"
 	}
 }

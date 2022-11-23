@@ -1,4 +1,4 @@
-import { logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
+import { logConfig, LogLevel, SetConsoleOutput } from '../src/logging';
 
 // Logging setup
 SetConsoleOutput(LogLevel.FATAL);

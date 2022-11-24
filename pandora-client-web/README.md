@@ -17,39 +17,23 @@
 ### Quick start
 #### Requirements
 - [Node][node] version 18 or above:
-- Enable Yarn through corepack which is included in node 18:
+- Enable pnpm through corepack which is included in node 18:
 ```
 corepack enable
 ```
 
 #### Install dependencies
-Install dependencies using `yarn` (should only be needed once after cloning):
+Install dependencies using `pnpm` (should only be needed once after cloning):
 
 ```
-yarn
+pnpm i
 ```
-
-#### Running the client
-To run the application in development mode (with hot reload):
-
-```
-yarn dev
-```
-You'd need both [Server][pandora-server-directory] & [Shard][pandora-server-shard] running in the background to have a functioning client. Or connect directly to the beta server by replacing:
-```
-DIRECTORY_ADDRESS="http://127.0.0.1:25560"
-```
-With:
-```
-DIRECTORY_ADDRESS="https://project-pandora.com"
-```
-In [.env](./.env) file (appears after you finish [quick start](#quick-start))
 
 #### Building
 To build the application to the `/dist` directory:
 
 ```
-yarn build
+pnpm build
 ```
 
 ### File extensions and imports
@@ -85,15 +69,15 @@ Elsewhere, `.ts` extensions are sufficient.
 The repository uses [Jest][jest] with [SWC][swc] to run tests on `Typescript` & `React`.
 To run the tests:
 ```
-yarn test
+pnpm test
 ```
 To run test on file changes (good for test-first TTD):
 ```
-yarn test:watch
+pnpm test:watch
 ```
 To generate code coverage report in `./coverage` | browser UI at `./coverage/lcov-report/index.html`:
 ```
-yarn test:coverage
+pnpm test:coverage
 ```
 Conventions:
 - Test files are located in `./test`; located to mirror `.src`.
@@ -107,23 +91,23 @@ The repository uses [ESLint][eslint] for linting.
 To run the linter over the repository:
 
 ```
-yarn lint
+pnpm lint
 ```
 
 To run ESLint over the repository and automatically fix linting errors (where possible):
 
 ```
-yarn lint:fix
+pnpm lint:fix
 ```
 
 To run typescript type checker:
 ```
-yarn type-check
+pnpm type-check
 ```
 To run typechecking on respective folders:
 ```bash
-yarn type-check:test  # ./test
-yarn type-check:src   # ./src
+pnpm type-check:test  # ./test
+pnpm type-check:src   # ./src
 ```
 ## License
 

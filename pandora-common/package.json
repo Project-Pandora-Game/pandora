@@ -14,17 +14,10 @@
 		".eslintrc.json",
 		"tsconfig.base.json"
 	],
-	"workspaces": {
-		"nohoist": [
-			"rimraf",
-			"typescript"
-		]
-	},
 	"scripts": {
-		"prebuild": "rimraf dist",
-		"build": "tsc -p ./tsconfig.src.json",
-		"build:swc": "swc src -d dist",
-		"predev": "rimraf dist",
+		"clean": "rimraf dist",
+		"build": "pnpm run clean && tsc -p ./tsconfig.src.json",
+		"build:swc": "pnpm run clean && swc src -d dist",
 		"dev": "tsc -p ./tsconfig.src.json -w",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
@@ -34,8 +27,8 @@
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
-		"prepack": "yarn run build",
-		"install": "yarn run build"
+		"prepack": "pnpm run build",
+		"install": "pnpm run build"
 	},
 	"dependencies": {
 		"@types/node": "^18.11.0",
@@ -51,6 +44,7 @@
 		"@swc/core": "^1.3.2",
 		"@swc/jest": "^0.2.22",
 		"@types/jest": "^29.0.3",
+		"@types/lodash": "^4.14.188",
 		"@typescript-eslint/eslint-plugin": "^5.38.0",
 		"@typescript-eslint/parser": "^5.38.0",
 		"eslint": "^8.23.1",

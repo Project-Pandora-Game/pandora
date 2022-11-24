@@ -3,4 +3,4 @@
 set -eou pipefail
 source "./.hooks/include.sh"
 
-yarn_helper
+pnpm_helper

@@ -5,10 +5,9 @@
 	"repository": "git@github.com:Project-Pandora-Game/pandora-client-web.git",
 	"license": "GPL-3.0-or-later",
 	"scripts": {
-		"prebuild": "rimraf dist",
-		"build": "cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack --env prod",
-		"predev": "rimraf dist",
-		"dev": "cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack serve",
+		"clean": "rimraf dist",
+		"build": "pnpm run clean && cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack --env prod",
+		"dev": "pnpm run clean && cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack serve",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "tsc -p . --noEmit",
@@ -17,7 +16,7 @@
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
-		"start": "yarn dev"
+		"start": "pnpm dev"
 	},
 	"dependencies": {
 		"@saitonakamura/react-pixi": "^7.0.0-beta-5",
@@ -25,19 +24,23 @@
 		"classnames": "^2.3.1",
 		"client-zip": "^2.2.2",
 		"delaunator": "^5.0.0",
+		"engine.io-client": "^6.2.3",
+		"history": "^5.3.0",
 		"immer": "^9.0.14",
 		"lodash": "^4.17.21",
 		"nanoid": "^3.3.4",
-		"pandora-common": "*",
+		"pandora-common": "workspace:*",
 		"pixi-viewport": "^4.35.1",
 		"pixi.js": "^6.5.4",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-hook-form": "^7.36.0",
 		"react-rnd": "^10.3.7",
+		"react-router": "^6.4.3",
 		"react-router-dom": "^6.4.1",
 		"react-toastify": "^9.0.1",
-		"socket.io-client": "^4.5.2"
+		"socket.io-client": "^4.5.3",
+		"zod": "^3.19.1"
 	},
 	"devDependencies": {
 		"@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
@@ -60,6 +63,7 @@
 		"@types/react": "^18.0.20",
 		"@types/react-dom": "^18.0.6",
 		"@types/react-router-dom": "^5.3.3",
+		"@types/testing-library__jest-dom": "^5.14.5",
 		"@types/webpack": "^5.28.0",
 		"@typescript-eslint/eslint-plugin": "^5.38.0",
 		"@typescript-eslint/parser": "^5.38.0",

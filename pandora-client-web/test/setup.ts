@@ -29,5 +29,5 @@ globalThis.process = {
 // Logging setup
 SetConsoleOutput(LogLevel.FATAL);
 logConfig.onFatal.push(() => {
-	fail('Fatal error happened');
+	throw new Error('Fatal error happened');
 });

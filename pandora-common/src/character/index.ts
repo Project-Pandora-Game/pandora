@@ -2,7 +2,7 @@ export * from './restrictionsManager';
 export * from './speech';
 
 import { z } from 'zod';
-import { AppearanceBundleSchema } from '../assets';
+import { AppearanceBundleSchema } from '../assets/appearance';
 import { HexColorStringSchema, ZodMatcher, zTemplateString } from '../validation';
 
 export const CharacterIdSchema = zTemplateString<`c${number}`>(z.string(), /^c[1-9][0-9]{0,15}$/);

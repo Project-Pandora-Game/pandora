@@ -10,49 +10,18 @@
 ## Getting Started
 ### Prerequisite
 
-- Get [Node.js](https://nodejs.org/en/)
-- Enable `yarn` with (requires nodejs >= 18.x, check [yarn documentation](https://yarnpkg.com/getting-started/install)):
-  ```console
-  corepack enable
-  ```
-- Install dependencies with `yarn`:
-  ```console
-  yarn
-  ```
-### Server Directory
-Launch dev server:
-```console
-cd ./pandora-server-directory/
-yarn dev
-```
-or
-```
-yarn workspace pandora-server-directory dev
-```
-
-### Server Shard
-Launch dev server:
-```console
-cd ./pandora-server-shard/
-yarn dev
-```
-or
-```
-yarn workspace pandora-server-shard dev
-```
+1. Get [Node.js](https://nodejs.org/en/)
+2. Enable `pnpm` with (requires nodejs >= 18.x:
+	```console
+	corepack enable
+	```
+3. Install dependencies with `pnpm`:
+	```console
+	pnpm i
+	```
 ### Client Web
-Launch dev server:
-```console
-cd ./pandora-client-web/
-yarn dev
-```
-or
-```
-yarn workspace pandora-client-web dev
-```
-To have a functioning client, you'd need both [Server](#server-directory) & [Shard](#server-shard) running in the background.
+If you don't want to launch [Server](#server-directory) & [Shard](#server-shard) along side client, you can connect directly to the beta server by replacing:
 
-Or connect directly to the beta server by replacing the:
 ```
 DIRECTORY_ADDRESS="http://127.0.0.1:25560"
 ```
@@ -62,16 +31,32 @@ DIRECTORY_ADDRESS="https://project-pandora.com"
 ```
 In [.env](./pandora-client-web/.env) file.
 
-### Commons
-Launch dev server:
+Before launching dev server:
 ```console
-cd ./pandora-common-web/
-yarn dev
+cd ./pandora-client-web/
+pnpm dev
 ```
-or
-```
-yarn workspace pandora-common dev
-```
+## Local Dev Server
+If you want to run everything locally, follow these steps:
+
+1. Get [pandora-assets](https://github.com/Project-Pandora-Game/pandora-assets) repo, follow the instruction with `git clone --recursive` to the same parent directory.
+2.  Your folder structure would look like this:
+    ```
+ | parent (can be any name) |
+ | ------------------------ |pandora
+	| -- | pandora-assets
+	```
+3. Build the assets `pnpm i && pnpm build` in `pandora-assets` repo. You should have now have an `out` folder.
+	```
+ | parent (can be any name) |
+ | ------------------------ |pandora
+	| -- | pandora-assets/out
+	```
+4. Go back to `pandora` repository and launch dev services:
+	```
+	pnpm dev
+	```
+Congratulations, you've ran the entire pandora stack locally.
 ## Specifications
 
 Please refer to the [documentation](https://github.com/Project-Pandora-Game/Documentation) repository for more details.

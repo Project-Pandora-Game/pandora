@@ -6,6 +6,10 @@ import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 
+// Fix for pnpm resolution weirdness
+import type { } from 'zod';
+import type { } from '../assets/appearance';
+
 export type ICharacterRoomData = ICharacterPublicData & {
 	position: [number, number];
 };

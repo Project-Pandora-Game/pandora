@@ -100,13 +100,19 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		}
 		return new Promise((resolve, reject) => {
 			this._state = DirectoryConnectionState.INITIAL_CONNECTION_PENDING;
-			// Initial connection has shorter timeout
-			const timeout = setTimeout(() => {
-				this.disconnect();
-				reject('Connection timed out');
-			}, INITIAL_CONNECT_TIMEOUT).unref();
+			// Initial connection has shorter timeout (ignored in development mode)
+			let timeout: NodeJS.Timeout | undefined;
+			if (!SHARD_DEVELOPMENT_MODE) {
+				timeout = setTimeout(() => {
+					this.disconnect();
+					reject('Connection timed out');
+				}, INITIAL_CONNECT_TIMEOUT).unref();
+			}
 			this.socket.once('connect', () => {
-				clearTimeout(timeout);
+				if (timeout != null) {
+					clearTimeout(timeout);
+					timeout = undefined;
+				}
 				resolve(this);
 			});
 			// Attempt to connect

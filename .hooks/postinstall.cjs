@@ -4,18 +4,23 @@ const { constants } = require('fs');
 const { copyFile } = require('fs/promises');
 const { resolve } = require('path');
 const { spawnSync } = require('child_process');
-
-const WORKSPACES = require('../package.json').workspaces.packages;
+const yaml = require('js-yaml');
+const fs = require('fs');
 
 postinstall();
-
 async function postinstall() {
 	const isCI = process.env.CI === 'true';
-	for (const workspace of WORKSPACES) {
-		await copyDotenv(workspace);
-	}
 	if (!isCI) {
 		configureGitHooks();
+	}
+	try {
+		const doc = yaml.load(fs.readFileSync('pnpm-workspace.yaml', 'utf-8'));
+		const WORKSPACES = doc.packages;
+		for (const workspace of WORKSPACES) {
+			await copyDotenv(workspace);
+		}
+	} catch (e) {
+		console.log(e);
 	}
 }
 

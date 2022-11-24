@@ -1,4 +1,5 @@
-import { GetLogger, Logger, LogLevel, logConfig, SetConsoleOutput } from '../src/logging';
+import _ from 'lodash';
+import { GetLogger, Logger, LogLevel, logConfig, SetConsoleOutput, LogOutputDefinition } from '../src/logging';
 
 describe('GetLogger()', () => {
 	it('should return an instance of Logger', () => {
@@ -14,21 +15,29 @@ describe('SetConsoleOutput()', () => {
 
 		mockLogger.info('hello');
 		//INFO = 3 > ERROR = 0; output should not be called
-		expect(mockConsole.mock.calls.length).toBe(0);
+		expect(mockConsole).not.toHaveBeenCalled();
 	});
 });
 
 describe('Logger', () => {
 	const mockOnMessage = jest.fn((_prefix, _message) => {/**nothing */ });
 	const mockFatalHandler = jest.fn();
-	const mockLogOutput = {
+	const mockLogOutput: LogOutputDefinition = {
 		logLevel: LogLevel.VERBOSE,
 		supportsColor: true,
 		logLevelOverrides: {},
 		onMessage: mockOnMessage,
 	};
-	logConfig.logOutputs.push(mockLogOutput);
-	logConfig.onFatal.push(mockFatalHandler);
+	let onFatalBackup: (() => void)[] = [];
+	beforeAll(() => {
+		onFatalBackup = logConfig.onFatal;
+		logConfig.logOutputs.push(mockLogOutput);
+		logConfig.onFatal = [mockFatalHandler];
+	});
+	afterAll(() => {
+		_.remove(logConfig.logOutputs, (o) => o === mockLogOutput);
+		logConfig.onFatal = onFatalBackup;
+	});
 
 	describe('shortcuts', () => {
 		const mockLogger = GetLogger('mock');
@@ -39,51 +48,43 @@ describe('Logger', () => {
 		});
 		it('debug() should call logMessage with LogLevel.DEBUG', () => {
 			mockLogger.debug('debugging');
-			expect(mockLogMessage.mock.calls.length).toBe(1);
-			expect(mockLogMessage.mock.calls[0][0]).toBe(LogLevel.DEBUG);
-			expect(mockLogMessage.mock.calls[0][1]).toEqual(['debugging']);
+			expect(mockLogMessage).toHaveBeenCalledTimes(1);
+			expect(mockLogMessage).toHaveBeenNthCalledWith(1, LogLevel.DEBUG, ['debugging']);
 		});
 		it('verbose() should call logMessage with LogLevel.VERBOSE', () => {
 			mockLogger.verbose('verbosing');
-			expect(mockLogMessage.mock.calls.length).toBe(1);
-			expect(mockLogMessage.mock.calls[0][0]).toBe(LogLevel.VERBOSE);
-			expect(mockLogMessage.mock.calls[0][1]).toEqual(['verbosing']);
+			expect(mockLogMessage).toHaveBeenCalledTimes(1);
+			expect(mockLogMessage).toHaveBeenNthCalledWith(1, LogLevel.VERBOSE, ['verbosing']);
 		});
 		it('info() should call logMessage with LogLevel.INFO', () => {
 			mockLogger.info('infoing');
-			expect(mockLogMessage.mock.calls.length).toBe(1);
-			expect(mockLogMessage.mock.calls[0][0]).toBe(LogLevel.INFO);
-			expect(mockLogMessage.mock.calls[0][1]).toEqual(['infoing']);
+			expect(mockLogMessage).toHaveBeenCalledTimes(1);
+			expect(mockLogMessage).toHaveBeenNthCalledWith(1, LogLevel.INFO, ['infoing']);
 		});
 		it('log() should call logMessage with LogLevel.INFO', () => {
 			mockLogger.log('logging');
-			expect(mockLogMessage.mock.calls.length).toBe(1);
-			expect(mockLogMessage.mock.calls[0][0]).toBe(LogLevel.INFO);
-			expect(mockLogMessage.mock.calls[0][1]).toEqual(['logging']);
+			expect(mockLogMessage).toHaveBeenCalledTimes(1);
+			expect(mockLogMessage).toHaveBeenNthCalledWith(1, LogLevel.INFO, ['logging']);
 		});
 		it('alert() should call logMessage with LogLevel.ALERT', () => {
 			mockLogger.alert('alerting');
-			expect(mockLogMessage.mock.calls.length).toBe(1);
-			expect(mockLogMessage.mock.calls[0][0]).toBe(LogLevel.ALERT);
-			expect(mockLogMessage.mock.calls[0][1]).toEqual(['alerting']);
+			expect(mockLogMessage).toHaveBeenCalledTimes(1);
+			expect(mockLogMessage).toHaveBeenNthCalledWith(1, LogLevel.ALERT, ['alerting']);
 		});
 		it('warning() should call logMessage with LogLevel.WARNING', () => {
 			mockLogger.warning('warning');
-			expect(mockLogMessage.mock.calls.length).toBe(1);
-			expect(mockLogMessage.mock.calls[0][0]).toBe(LogLevel.WARNING);
-			expect(mockLogMessage.mock.calls[0][1]).toEqual(['warning']);
+			expect(mockLogMessage).toHaveBeenCalledTimes(1);
+			expect(mockLogMessage).toHaveBeenNthCalledWith(1, LogLevel.WARNING, ['warning']);
 		});
 		it('error() should call logMessage with LogLevel.ERROR', () => {
 			mockLogger.error('erroring');
-			expect(mockLogMessage.mock.calls.length).toBe(1);
-			expect(mockLogMessage.mock.calls[0][0]).toBe(LogLevel.ERROR);
-			expect(mockLogMessage.mock.calls[0][1]).toEqual(['erroring']);
+			expect(mockLogMessage).toHaveBeenCalledTimes(1);
+			expect(mockLogMessage).toHaveBeenNthCalledWith(1, LogLevel.ERROR, ['erroring']);
 		});
 		it('fatal() should call logMessage with LogLevel.FATAL', () => {
 			mockLogger.fatal('fatality');
-			expect(mockLogMessage.mock.calls.length).toBe(1);
-			expect(mockLogMessage.mock.calls[0][0]).toBe(LogLevel.FATAL);
-			expect(mockLogMessage.mock.calls[0][1]).toEqual(['fatality']);
+			expect(mockLogMessage).toHaveBeenCalledTimes(1);
+			expect(mockLogMessage).toHaveBeenNthCalledWith(1, LogLevel.FATAL, ['fatality']);
 		});
 	});
 
@@ -98,19 +99,18 @@ describe('Logger', () => {
 		});
 		it('should call output.onMessage', () => {
 			mockLogger.logMessage(LogLevel.INFO, ['hi']);
-			expect(mockOnMessage.mock.calls.length).toBe(1);
-			expect(mockOnMessage.mock.calls[0][0]).toContain('mock');
-			expect(mockOnMessage.mock.calls[0][1]).toContain('hi');
+			expect(mockOnMessage).toHaveBeenCalledTimes(1);
+			expect(mockOnMessage).toHaveBeenNthCalledWith(1, expect.stringContaining('mock'), expect.arrayContaining(['hi']), LogLevel.INFO);
 		});
 		it('should not call output.onMessage when LogLevel is lower', () => {
 			mockLogger.logMessage(LogLevel.DEBUG, ['im invisible']);
-			expect(mockOnMessage.mock.calls.length).toBe(0);
+			expect(mockOnMessage).not.toHaveBeenCalled();
 		});
 
 		it('should also call all onFatal handlers', () => {
 			mockLogger.fatal('this is fatal!');
-			expect(mockOnMessage.mock.calls.length).toBe(1);
-			expect(mockFatalHandler.mock.calls.length).toBe(1);
+			expect(mockOnMessage).toHaveBeenCalledTimes(1);
+			expect(mockFatalHandler).toHaveBeenCalledTimes(1);
 		});
 	});
 
@@ -124,9 +124,8 @@ describe('Logger', () => {
 
 		it('should return new Logger with provided prefix', () => {
 			mockLogger.prefixMessages('yay prefixed').log('something');
-			const call = mockOnMessage.mock.calls[0];
-			expect(call[0]).toContain('[mock] yay prefixed');
-			expect(call[1]).toContain('something');
+			expect(mockOnMessage).toHaveBeenCalledTimes(1);
+			expect(mockOnMessage).toHaveBeenNthCalledWith(1, expect.stringContaining('[mock] yay prefixed'), expect.arrayContaining(['something']), LogLevel.INFO);
 		});
 	});
 });

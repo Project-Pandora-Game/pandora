@@ -40,7 +40,7 @@ const LOG_NAMES: Readonly<Record<LogLevel, string>> = {
 };
 
 /** Definition for any log output */
-interface LogOutputDefinition {
+export interface LogOutputDefinition {
 	logLevel: LogLevel;
 	logLevelOverrides: Record<string, LogLevel>;
 	supportsColor: boolean;

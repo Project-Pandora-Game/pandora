@@ -55,6 +55,19 @@ type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 
 export type AssetModuleDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = IAssetModuleTypes<A>[ModuleType]['config'];
 
+export function GetModuleStaticAttributes(moduleDefinition: AssetModuleDefinition): ReadonlySet<string> {
+	switch (moduleDefinition.type) {
+		case 'typed':
+			return MODULE_TYPES.typed.getStaticAttributes(moduleDefinition);
+		case 'storage':
+			return MODULE_TYPES.storage.getStaticAttributes(moduleDefinition);
+		case 'lockSlot':
+			return MODULE_TYPES.lockSlot.getStaticAttributes(moduleDefinition);
+		default:
+			AssertNever(moduleDefinition);
+	}
+}
+
 export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleItemDataCommon<string> | undefined, context: IItemLoadContext): IItemModule {
 	const moduleDefinition = asset.definition.modules?.[moduleName];
 	if (!moduleDefinition) {

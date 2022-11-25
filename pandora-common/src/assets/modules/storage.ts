@@ -43,6 +43,10 @@ export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'
 	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage {
 		return new ItemModuleStorage(config, data, context);
 	}
+
+	public getStaticAttributes(_config: IModuleConfigStorage): ReadonlySet<string> {
+		return new Set<string>();
+	}
 }
 
 function ValidateStorage(contents: AppearanceItems, config: IModuleConfigStorage): AppearanceValidationResult {

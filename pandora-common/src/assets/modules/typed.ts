@@ -57,6 +57,14 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped {
 		return new ItemModuleTyped(config, data, context);
 	}
+
+	public getStaticAttributes(config: IModuleConfigTyped): ReadonlySet<string> {
+		const result = new Set<string>();
+		for (const option of config.variants) {
+			option.attributes?.forEach((a) => result.add(a));
+		}
+		return result;
+	}
 }
 
 export class ItemModuleTyped implements IItemModule<'typed'> {

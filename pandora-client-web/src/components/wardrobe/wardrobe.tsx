@@ -206,7 +206,6 @@ function Wardrobe(): ReactElement | null {
 
 function WardrobeItemManipulation({ className }: { className?: string }): ReactElement {
 	const { character, assetList } = useWardrobeContext();
-	const asssetManager = GetAssetManager();
 
 	const [currentFocus, setFocus] = useState<WardrobeFocus>({ container: [], itemId: null });
 
@@ -217,7 +216,7 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 
 	const containerPath = useMemo(() => SplitContainerPath(currentFocus.container), [currentFocus.container]);
 	const containerItem = useCharacterAppearanceItem(character, containerPath?.itemPath);
-	const containerContentsFilter = useMemo<(item: Item) => boolean>(() => {
+	const containerContentsFilter = useMemo<(asset: Asset) => boolean>(() => {
 		const module = containerPath ? containerItem?.modules.get(containerPath.module) : undefined;
 		return module?.acceptedContentFilter?.bind(module) ?? (() => true);
 	}, [containerPath, containerItem]);
@@ -233,7 +232,7 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
 				<Tab name='Create new item'>
 					<InventoryAssetView title='Create and use a new item' assets={ assetList.filter((asset) => {
-						return preFilter(asset) && containerContentsFilter(asssetManager.createItem(`i/__tmp__`, asset, null));
+						return preFilter(asset) && containerContentsFilter(asset);
 					}) } container={ currentFocus.container } />
 				</Tab>
 				<Tab name='Room inventory'>

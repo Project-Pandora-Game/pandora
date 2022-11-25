@@ -48,6 +48,10 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
 		return new ItemModuleLockSlot(config, data, context);
 	}
+
+	public getStaticAttributes(_config: IModuleConfigLockSlot): ReadonlySet<string> {
+		return new Set<string>();
+	}
 }
 
 function ValidateLock(lock: Item | null, config: IModuleConfigLockSlot): AppearanceValidationResult {
@@ -142,7 +146,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		});
 	}
 
-	public acceptedContentFilter(item: Item): boolean {
-		return ValidateLock(item, this.config);
+	public acceptedContentFilter(asset: Asset): boolean {
+		return this.config.lockRequirements.every((r) => r.startsWith('!') || asset.staticAttributes.has(r));
 	}
 }

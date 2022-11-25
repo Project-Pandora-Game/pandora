@@ -85,18 +85,13 @@ export class AssetManager {
 				this._assets.delete(id);
 			}
 		}
-		// Then load or update all defined assets
+		// Then load all defined assets
 		for (const [id, definition] of Object.entries(assets)) {
 			if (!id.startsWith('a/')) {
 				throw new Error(`Asset without valid prefix: ${id}`);
 			}
-			let asset = this._assets.get(id as AssetId);
-			if (asset) {
-				asset.load(definition);
-			} else {
-				asset = this.createAsset(id as AssetId, definition);
-				this._assets.set(id as AssetId, asset);
-			}
+			const asset = this.createAsset(id as AssetId, definition);
+			this._assets.set(id as AssetId, asset);
 		}
 	}
 

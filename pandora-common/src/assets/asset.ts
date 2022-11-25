@@ -1,15 +1,20 @@
 import { AssetDefinition, AssetId } from './definitions';
+import { GetModuleStaticAttributes } from './modules';
 
 export class Asset {
 	public readonly id: AssetId;
-	public definition!: AssetDefinition;
+	public readonly definition: AssetDefinition;
+	/** Attributes this asset can have statically, including reported by modules */
+	public readonly staticAttributes: ReadonlySet<string>;
 
 	constructor(id: AssetId, definition: AssetDefinition) {
 		this.id = id;
-		this.load(definition);
-	}
-
-	public load(definition: AssetDefinition) {
 		this.definition = definition;
+
+		const staticAttributes = this.staticAttributes = new Set<string>();
+		definition.attributes?.forEach((a) => staticAttributes.add(a));
+		for (const module of Object.values(definition.modules ?? {})) {
+			GetModuleStaticAttributes(module).forEach((a) => staticAttributes.add(a));
+		}
 	}
 }

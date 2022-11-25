@@ -597,6 +597,12 @@ function WardrobeItemConfigMenu({
 		});
 	}, [item, setFocus]);
 
+	useEffect(() => {
+		if (!wornItem) {
+			close();
+		}
+	}, [wornItem, close]);
+
 	if (!wornItem) {
 		return (
 			<div className='inventoryView'>

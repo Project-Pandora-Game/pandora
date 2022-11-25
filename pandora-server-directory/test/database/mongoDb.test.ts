@@ -25,7 +25,7 @@ describe('MongoDatabase extra tests', () => {
 	beforeEach(async () => {
 		server = await MongoMemoryServer.create({
 			binary: {
-				version: '5.0.6',
+				version: '6.0.3',
 				checkMD5: false,
 			},
 		});

@@ -30,6 +30,7 @@ import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
 import { Row } from '../common/container/container';
+import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -113,14 +114,15 @@ function Chat(): ReactElement | null {
 	const lastMessageCount = useRef(0);
 
 	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);
+	const visible = useDocumentVisibility();
 
 	useEffect(() => {
-		if (isScrolling && document.visibilityState === 'visible') {
+		if (isScrolling && visible) {
 			supress();
 			clear();
 		}
 		return () => unsupress();
-	}, [messages, isScrolling, lastMessageCount, clear, supress, unsupress]);
+	}, [messages, isScrolling, lastMessageCount, clear, supress, unsupress, visible]);
 
 	const playerId = usePlayerId();
 

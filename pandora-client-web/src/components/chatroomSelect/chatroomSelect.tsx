@@ -8,6 +8,9 @@ import { Button } from '../common/Button/Button';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
+import './chatroomSelect.scss';
+import closedDoor from './closed-door.svg';
+import openDoor from './opened-door.svg';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
@@ -22,12 +25,12 @@ export function ChatroomSelect(): ReactElement {
 		<div>
 			<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
 			<Button onClick={ () => navigate('/chatroom_create') }>Create room</Button><br />
-			Existing rooms:<br />
-			<ul>
+			<p>
+				Existing rooms:<br />
 				{ !roomList ? <div className='loading'>Loading...</div> : (
 					roomList.map((room) => <RoomEntry key={ room.id } { ...room } />)
-				) }
-			</ul>
+					)}
+			</p>
 		</div>
 	);
 }
@@ -35,9 +38,12 @@ export function ChatroomSelect(): ReactElement {
 function RoomEntry({ id, name, description: _description, hasPassword: _hasPassword, maxUsers, users, protected: _roomIsProtected }: IChatRoomDirectoryInfo): ReactElement {
 	const joinRoom = useJoinRoom();
 	return (
-		<li>
-			<a onClick={ () => void joinRoom(id) }>{`${name} (${users}/${maxUsers})` }</a>
-		</li>
+		<a className='room-list-grid' onClick={ () => void joinRoom(id) }>
+			<img className='room-list-entry' width='50px' height='50px' src={ _roomIsProtected ? closedDoor : openDoor } alt={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
+			<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
+			<div className='room-list-entry'>Some icons</div>
+			<div className='room-list-entry'>{(_description.length > 50) ? `${_description.substring(0, 47).concat('...') }` : `${_description}`}</div>
+		</a>
 	);
 }
 

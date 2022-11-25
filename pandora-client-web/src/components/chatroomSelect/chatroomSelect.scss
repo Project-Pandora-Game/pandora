@@ -1,0 +1,42 @@
+@import '../../styles/constants';
+@import '../../styles/utils';
+
+.chatroom-select {
+	width: 100%;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 3.5em;
+}
+
+.room-list-grid {
+	display: grid;
+	width: 80%;
+	grid-template-columns:
+		minmax(30px, 0.33fr)
+		minmax(200px, 2fr)
+		minmax(100px, 1fr)
+		minmax(500px, 5fr);
+	grid-template-rows: auto;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	background-color: darkgray;
+	color: white;
+	border: 0.2em solid black;
+}
+
+.room-list-grid:hover {
+	background-color: grey;
+	color: black
+}
+
+.room-list-entry {
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	text-align: left;
+}
+

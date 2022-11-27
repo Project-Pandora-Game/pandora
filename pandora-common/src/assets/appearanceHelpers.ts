@@ -2,6 +2,7 @@ import _ from 'lodash';
 import type { AppearanceActionHandlerMessageTemplate, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { Item } from './item';
+import type { IItemModule } from './modules/common';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
 
 export function SplitContainerPath(path: ItemContainerPath): {
@@ -20,11 +21,19 @@ export function SplitContainerPath(path: ItemContainerPath): {
 	};
 }
 
+export type IContainerPathActual = readonly {
+	readonly item: Item;
+	readonly moduleName: string;
+	readonly module: IItemModule;
+}[];
+
 export abstract class AppearanceManipulator {
 	public abstract getItems(): AppearanceItems;
 	protected abstract _applyItems(items: AppearanceItems): boolean;
 
 	public abstract readonly isCharacter: boolean;
+	public abstract readonly container: IItemModule | null;
+	public abstract readonly containerPath: IContainerPathActual | null;
 
 	public readonly assetMananger: AssetManager;
 
@@ -97,6 +106,19 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 	private _module: string;
 
 	public readonly isCharacter: boolean = false;
+	public get container(): IItemModule | null {
+		const item = this._base.getItems().find((i) => i.id === this._item);
+		return item?.modules.get(this._module) ?? null;
+	}
+	public get containerPath(): IContainerPathActual | null {
+		const basePath = this._base.containerPath;
+		const item = this._base.getItems().find((i) => i.id === this._item);
+		const module = item?.modules.get(this._module);
+		return (!basePath || !item || !module) ? null : [
+			...basePath,
+			{ item, moduleName: this._module, module },
+		];
+	}
 
 	constructor(base: AppearanceManipulator, item: ItemId, module: string) {
 		super(base.assetMananger);
@@ -120,6 +142,8 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 	private _messages: AppearanceActionHandlerMessageTemplate[] = [];
 
 	public readonly isCharacter: boolean;
+	public readonly container: null = null;
+	public readonly containerPath: IContainerPathActual = [];
 
 	constructor(assetMananger: AssetManager, items: AppearanceItems, isCharacter: boolean) {
 		super(assetMananger);

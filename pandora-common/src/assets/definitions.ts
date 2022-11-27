@@ -65,12 +65,22 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	 */
 	size: AssetSize;
 
-	/** Chat action messages specific to this asset */
-	actionMessages?: {
-		/** Message for when this item is added */
-		itemAdd?: string;
-		/** Message for when this item is removed */
-		itemRemove?: string;
+	/**
+	 * Chat specific settings for this asset
+	 *
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 */
+	chat?: {
+		/** How items of this asset are referred to in chat (defaults to asset's name) */
+		chatDescriptor?: string;
+		/** Message for when this item is added (defaults to `itemAdd`) */
+		actionAdd?: string;
+		/** Message for when this item is removed (defaults to `itemRemove`) */
+		actionRemove?: string;
+		/** Message for when this item is attached to something (defaults to `itemAttach`) */
+		actionAttach?: string;
+		/** Message for when this item is removed (defaults to `itemDetach`) */
+		actionDetach?: string;
 	};
 
 	/** If this asset is a bodypart, `undefined` if not. */

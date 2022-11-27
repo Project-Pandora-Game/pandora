@@ -270,19 +270,24 @@ export class Room extends ServerRoom<IShardClient> {
 		this._queueMessages(queue);
 	}
 
-	public handleAppearanceActionMessage(message: AppearanceActionHandlerMessage): void {
+	public handleAppearanceActionMessage({
+		id,
+		character,
+		targetCharacter,
+		dictionary,
+		...data
+	}: AppearanceActionHandlerMessage): void {
 		this._queueMessages([
 			{
 				type: 'action',
-				id: message.id,
+				id,
 				time: this.nextMessageTime(),
 				data: {
-					character: this._getCharacterActionInfo(message.character),
-					targetCharacter: message.targetCharacter !== message.character ? this._getCharacterActionInfo(message.targetCharacter) : undefined,
-					item: message.item,
-					itemPrevious: message.itemPrevious,
+					character: this._getCharacterActionInfo(character),
+					targetCharacter: targetCharacter !== character ? this._getCharacterActionInfo(targetCharacter) : undefined,
+					...data,
 				},
-				dictionary: message.dictionary,
+				dictionary,
 			},
 		]);
 	}

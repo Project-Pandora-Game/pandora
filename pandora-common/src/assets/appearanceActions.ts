@@ -250,13 +250,16 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 			itemPrevious: {
 				assetId: removed[0].asset.id,
 			},
+			itemContainerPath: manipulator.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName })),
 		});
 	} else {
+		const manipulatorContainer = manipulator.container;
 		rootManipulator.queueMessage({
-			id: 'itemAdd',
+			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 			item: {
 				assetId: item.asset.id,
 			},
+			itemContainerPath: manipulator.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName })),
 		});
 	}
 
@@ -275,11 +278,13 @@ export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, ite
 		return false;
 
 	// Change message to chat
+	const manipulatorContainer = manipulator.container;
 	rootManipulator.queueMessage({
-		id: 'itemRemove',
+		id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 		item: {
 			assetId: removedItems[0].asset.id,
 		},
+		itemContainerPath: manipulator.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName })),
 	});
 
 	return true;
@@ -295,6 +300,7 @@ export function ActionMoveItem(rootManipulator: AppearanceRootManipulator, itemP
 
 	// Change message to chat
 	// TODO: Message to chat that items were reordered
+	// Will need mechanism to rate-limit the messages not to send every reorder
 
 	return true;
 }
@@ -309,6 +315,7 @@ export function ActionColorItem(rootManipulator: AppearanceRootManipulator, item
 
 	// Change message to chat
 	// TODO: Message to chat that item was colored
+	// Will need mechanism to rate-limit the messages not to send every color change
 
 	return true;
 }

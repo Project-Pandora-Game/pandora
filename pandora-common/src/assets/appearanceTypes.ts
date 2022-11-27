@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { zTemplateString } from '../validation';
-import type { ChatActionId, IChatRoomMessageActionItem } from '../chatroom';
+import type { ChatActionId, IChatRoomMessageAction } from '../chatroom';
 import type { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceValidationResult } from './appearanceValidation';
 import type { Item } from './item';
@@ -39,10 +39,8 @@ const RoomInventorySelectorSchema = z.object({
 export const RoomTargetSelectorSchema = z.discriminatedUnion('type', [RoomCharacterSelectorSchema, RoomInventorySelectorSchema]);
 export type RoomTargetSelector = z.infer<typeof RoomTargetSelectorSchema>;
 
-export interface AppearanceActionHandlerMessageTemplate {
+export interface AppearanceActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoomMessageAction['data']>, 'character' | 'targetCharacter'> {
 	id: ChatActionId;
-	item?: IChatRoomMessageActionItem;
-	itemPrevious?: IChatRoomMessageActionItem;
 	dictionary?: Record<string, string>;
 }
 export interface AppearanceActionHandlerMessage extends AppearanceActionHandlerMessageTemplate {

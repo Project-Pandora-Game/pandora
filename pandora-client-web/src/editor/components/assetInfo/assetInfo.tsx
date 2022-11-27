@@ -37,14 +37,6 @@ export function AssetInfoUI(): ReactElement {
 				<input id='name' type='text' value={ definition.name } readOnly />
 			</div>
 			<div>
-				<label htmlFor='item-add'>Item add: </label>
-				<textarea id='item-add' value={ definition.actionMessages?.itemAdd } readOnly />
-			</div>
-			<div>
-				<label htmlFor='item-remove'>Item remove: </label>
-				<textarea id='item-remove' value={ definition.actionMessages?.itemRemove } readOnly />
-			</div>
-			<div>
 				<label htmlFor='bodypart'>Body part: </label>
 				<input id='bodypart' type='text' value={ definition.bodypart } readOnly />
 			</div>

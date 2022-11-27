@@ -151,6 +151,9 @@ export function RenderChatPart([type, contents]: IChatSegment, index: number): R
 }
 
 function GetActiontext(action: IChatroomMessageActionProcessed): string | undefined {
+	if (action.customText != null)
+		return action.customText;
+
 	const assetManager = GetAssetManager();
 	const item = action.data?.item;
 	const asset = item && assetManager.getAssetById(item.assetId);

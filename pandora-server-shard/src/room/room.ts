@@ -272,6 +272,7 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public handleAppearanceActionMessage({
 		id,
+		customText,
 		character,
 		targetCharacter,
 		dictionary,
@@ -281,6 +282,7 @@ export class Room extends ServerRoom<IShardClient> {
 			{
 				type: 'action',
 				id,
+				customText,
 				time: this.nextMessageTime(),
 				data: {
 					character: this._getCharacterActionInfo(character),

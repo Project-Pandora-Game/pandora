@@ -7,6 +7,7 @@ import { AssetProperties } from '../properties';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import type { IItemLoadContext } from '../item';
+import type { AppearanceActionMessageTemplateHandler } from '../appearanceTypes';
 
 export interface IModuleConfigCommon<Type extends string> {
 	type: Type;
@@ -46,7 +47,7 @@ export interface IItemModule<Type extends string = string> {
 
 	evalCondition(operator: ConditionOperator, value: string): boolean;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	doAction(action: any): IItemModule<Type> | null;
+	doAction(action: any, messageHandler: AppearanceActionMessageTemplateHandler): IItemModule<Type> | null;
 
 	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */
 	readonly contentsPhysicallyEquipped: boolean;

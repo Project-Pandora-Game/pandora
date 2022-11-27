@@ -41,8 +41,11 @@ export type RoomTargetSelector = z.infer<typeof RoomTargetSelectorSchema>;
 
 export interface AppearanceActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoomMessageAction['data']>, 'character' | 'targetCharacter'> {
 	id: ChatActionId;
+	/** Custom text is used instead of the `id` lookup result, if specified */
+	customText?: string;
 	dictionary?: Record<string, string>;
 }
+export type AppearanceActionMessageTemplateHandler = (message: AppearanceActionHandlerMessageTemplate) => void;
 export interface AppearanceActionHandlerMessage extends AppearanceActionHandlerMessageTemplate {
 	character?: CharacterId;
 	targetCharacter?: CharacterId;

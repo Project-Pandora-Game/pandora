@@ -8,6 +8,7 @@ import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { IItemLoadContext } from '../item';
 import { AssetManager } from '../assetManager';
+import type { AppearanceActionMessageTemplateHandler } from '../appearanceTypes';
 
 export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	/** ID if this variant, must be unique */
@@ -18,6 +19,14 @@ export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDe
 
 	/** If this variant should be autoselected as default; otherwise first one is used */
 	default?: true;
+
+	/**
+	 * Message to show when switching to this variant.
+	 * Can be either:
+	 * - string, which is shown always
+	 * - Object which maps previous setting to message to switch from it (with `_` usable as default)
+	 */
+	switchMessage?: string | Partial<Record<string | '_', string>>;
 }
 
 export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'typed'> {
@@ -116,15 +125,33 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 				false;
 	}
 
-	public doAction(action: ItemModuleTypedAction): ItemModuleTyped | null {
-		const setVariant = this.config.variants.find((v) => v.id === action.setVariant);
-		return setVariant ? new ItemModuleTyped(this.config, {
+	public doAction(action: ItemModuleTypedAction, messageHandler: AppearanceActionMessageTemplateHandler): ItemModuleTyped | null {
+		const newVariant = this.config.variants.find((v) => v.id === action.setVariant);
+		if (!newVariant)
+			return null;
+
+		// Get chat message about switching to this variant
+		const switchMessage = newVariant.switchMessage == null ? undefined :
+			// If switch message is a string, use it
+			typeof newVariant.switchMessage === 'string' ? newVariant.switchMessage :
+				// Otherwise try to get message for previous variant, falling back to default
+				(newVariant.switchMessage[this.activeVariant.id] ?? newVariant.switchMessage._);
+
+		// If we have non-empty switch message, queue it
+		if (switchMessage) {
+			messageHandler({
+				id: 'custom',
+				customText: switchMessage,
+			});
+		}
+
+		return new ItemModuleTyped(this.config, {
 			type: 'typed',
-			variant: setVariant.id,
+			variant: newVariant.id,
 		}, {
 			assetMananger: this.assetMananger,
 			doLoadTimeCleanup: false,
-		}) : null;
+		});
 	}
 
 	// Doesn't matter as typed module doesn't support nested content

@@ -59,6 +59,8 @@ export type IChatRoomMessageAction = {
 	type: 'action' | 'serverMessage';
 	/** id to be looked up in message translation database */
 	id: ChatActionId;
+	/** Custom text is used instead of the `id` lookup result, if specified */
+	customText?: string;
 	data?: {
 		/** Used to generate specific dictionary entries, acts as source */
 		character?: IChatRoomMessageActionCharacter;

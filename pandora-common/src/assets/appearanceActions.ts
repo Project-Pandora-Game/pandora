@@ -242,7 +242,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 
 	// Change message to chat
 	if (removed.length > 0) {
-		rootManipulator.queueMessage({
+		manipulator.queueMessage({
 			id: 'itemReplace',
 			item: {
 				assetId: item.asset.id,
@@ -250,16 +250,14 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 			itemPrevious: {
 				assetId: removed[0].asset.id,
 			},
-			itemContainerPath: manipulator.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName })),
 		});
 	} else {
 		const manipulatorContainer = manipulator.container;
-		rootManipulator.queueMessage({
+		manipulator.queueMessage({
 			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 			item: {
 				assetId: item.asset.id,
 			},
-			itemContainerPath: manipulator.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName })),
 		});
 	}
 
@@ -279,12 +277,11 @@ export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, ite
 
 	// Change message to chat
 	const manipulatorContainer = manipulator.container;
-	rootManipulator.queueMessage({
+	manipulator.queueMessage({
 		id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 		item: {
 			assetId: removedItems[0].asset.id,
 		},
-		itemContainerPath: manipulator.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName })),
 	});
 
 	return true;
@@ -325,8 +322,18 @@ export function ActionModuleAction(rootManipulator: AppearanceRootManipulator, i
 	const manipulator = rootManipulator.getContainer(container);
 
 	// Do change
-	if (!manipulator.modifyItem(itemId, (it) => it.moduleAction(module, action)))
+	if (!manipulator.modifyItem(itemId, (it) => it.moduleAction(
+		module,
+		action,
+		(m) => manipulator.queueMessage({
+			item: {
+				assetId: it.asset.id,
+			},
+			...m,
+		}),
+	))) {
 		return false;
+	}
 
 	// Change message to chat
 	// TODO: Message to chat that item module was changed

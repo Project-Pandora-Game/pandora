@@ -1,4 +1,7 @@
 const CHAT_ACTIONS_DEF = {
+	// Custom action should always provide customText replacement
+	custom: '[ ERROR: Custom action without text ]',
+
 	//#region Directory (server) messages
 	characterEntered: 'SOURCE_CHARACTER entered.',
 	characterLeft: 'SOURCE_CHARACTER left.',

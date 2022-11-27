@@ -98,6 +98,8 @@ export abstract class AppearanceManipulator {
 		items[index] = result;
 		return this._applyItems(items);
 	}
+
+	public abstract queueMessage(message: AppearanceActionHandlerMessageTemplate): void;
 }
 
 class AppearanceContainerManipulator extends AppearanceManipulator {
@@ -135,6 +137,11 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 	protected _applyItems(items: AppearanceItems): boolean {
 		return this._base.modifyItem(this._item, (it) => it.setModuleItems(this._module, items));
 	}
+
+	public queueMessage(message: AppearanceActionHandlerMessageTemplate): void {
+		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName }));
+		this._base.queueMessage(message);
+	}
 }
 
 export class AppearanceRootManipulator extends AppearanceManipulator {
@@ -166,6 +173,7 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 	}
 
 	public queueMessage(message: AppearanceActionHandlerMessageTemplate): void {
+		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName }));
 		this._messages.push(message);
 	}
 

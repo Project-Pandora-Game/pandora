@@ -55,7 +55,9 @@ export type IMessageParseOptions = {
 
 function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
 	const asset = assetManager.getAssetById(assetId);
-	return asset?.definition.chat?.chatDescriptor ?? asset?.definition.name ?? `[UNKNOWN ASSET '${assetId}']`;
+	return asset?.definition.chat?.chatDescriptor ??
+		asset?.definition.name.toLocaleLowerCase() ??
+		`[UNKNOWN ASSET '${assetId}']`;
 }
 
 function ProcessMessage(

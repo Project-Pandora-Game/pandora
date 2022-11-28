@@ -1,11 +1,10 @@
 import { noop } from 'lodash';
 import { EMPTY, GetLogger, IChatRoomDirectoryInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId } from 'pandora-common';
 import React, { ReactElement, useCallback, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
-import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
@@ -19,12 +18,7 @@ import devMode from './developer.svg';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
-	const roomData = useChatRoomData();
 	const roomList = useRoomList();
-
-	if (roomData) {
-		return <Navigate to='/chatroom' />;
-	}
 
 	return (
 		<div>
@@ -77,15 +71,12 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 								<div className='details-users'>Current users in this room:
 									<div className='details-users-list'>
 										{characters?.map((char) => <div key={ char.id }>{char.name}</div>)}
-										<div>Dummy 1</div>
-										<div>Dummy 2</div>
-										<div>Dummy 3</div>
 									</div>
 								</div> }
 							{(roomDetails.protected && roomDetails.hasPassword) && <div>Enter the password:</div>}
 							<div className='details-buttons'>
-								<Button className='slim' onClick={ () => void joinRoom }>Enter Room</Button>
-								<Button className='slim' onClick={ () => void close }>Close</Button>
+								<Button className='slim' onClick={ () => void joinRoom(id) }>Enter Room</Button>
+								<Button className='slim' onClick={ () => setShow(false) }>Close</Button>
 							</div>
 						</div>
 					</ModalDialog>

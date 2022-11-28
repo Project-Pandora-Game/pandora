@@ -1,8 +1,6 @@
 @import '../../styles/constants';
 @import '../../styles/utils';
 
-<<<<<<< HEAD
-=======
 .chatroom-select {
 	width: 100%;
 	display: flex;
@@ -11,19 +9,28 @@
 	gap: 3.5em;
 }
 
->>>>>>> Initial version for a nicer listing of rooms
+.details-close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.details-close:hover,
+.details-close:focus {
+	color: black;
+	text-decoration: none;
+	cursor: pointer;
+}
+
 .room-list-grid {
 	display: grid;
 	width: 80%;
 	grid-template-columns:
-<<<<<<< HEAD
-		minmax(30px, 0.33fr) minmax(200px, 2fr) minmax(100px, 1fr) minmax(500px, 5fr);
-=======
 		minmax(30px, 0.33fr)
 		minmax(200px, 2fr)
 		minmax(100px, 1fr)
 		minmax(500px, 5fr);
->>>>>>> Initial version for a nicer listing of rooms
 	grid-template-rows: auto;
 	padding-top: 0.5em;
 	padding-bottom: 0.5em;
@@ -40,16 +47,12 @@
 }
 
 .room-list-entry {
-<<<<<<< HEAD
 	height: 50px;
-=======
->>>>>>> Initial version for a nicer listing of rooms
 	padding-top: 0.5em;
 	padding-bottom: 0.5em;
 	padding-left: 0.5em;
 	padding-right: 0.5em;
 	text-align: left;
-<<<<<<< HEAD
 	vertical-align: middle;
 }
 
@@ -121,7 +124,6 @@
 	color: black;
 	text-decoration: none;
 	cursor: pointer;
-=======
->>>>>>> Initial version for a nicer listing of rooms
+	vertical-align: middle;
 }
 

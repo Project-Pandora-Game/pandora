@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from './shard';
@@ -65,6 +65,17 @@ export class Room {
 			id: this.id,
 			hasPassword: this.config.password !== null,
 			users: this.characterCount,
+		});
+	}
+
+	public getDirectoryExtendedInfo(): IChatRoomDirectoryExtendedInfo {
+		return ({
+			...this.getDirectoryInfo(),
+			characters: Array.from(this.characters).map((c) => ({
+				id: c.id,
+				accountId: c.account.id,
+				name: c.data.name,
+			})),
 		});
 	}
 
@@ -192,9 +203,6 @@ export class Room {
 		if (character.room === this)
 			return 'ok';
 
-		if (this.characterCount >= this.config.maxUsers)
-			return 'errFull';
-
 		if (this.config.banned.includes(character.account.id))
 			return 'noAccess';
 
@@ -204,6 +212,9 @@ export class Room {
 		) {
 			return this.config.password !== null ? 'invalidPassword' : 'noAccess';
 		}
+
+		if (this.characterCount >= this.config.maxUsers)
+			return 'errFull';
 
 		return 'ok';
 	}

@@ -1,5 +1,5 @@
 import { identity, noop } from 'lodash';
-import { ChatRoomBaseInfoSchema, EMPTY, GetLogger, IChatRoomDirectoryInfo, IClientDirectoryNormalResult, RoomId } from 'pandora-common';
+import { ChatRoomBaseInfoSchema, EMPTY, GetLogger, IChatRoomDirectoryInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId } from 'pandora-common';
 import React, { Children, ReactElement, useCallback, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../common/useErrorHandler';
@@ -119,4 +119,20 @@ function useRoomList(): IChatRoomDirectoryInfo[] | undefined {
 	});
 
 	return roomList;
+}
+
+export function useRoomExtendedInfo(chatroomId: RoomId): IChatRoomExtendedInfoResponse | undefined {
+	const [response, setResponse] = useState<IChatRoomExtendedInfoResponse>();
+	const directoryConnector = useDirectoryConnector();
+
+	const fetchRoomInfo = useCallback(async () => {
+		const result = await directoryConnector.awaitResponse('chatRoomGetInfo', { id: chatroomId });
+		setResponse(result);
+	}, [directoryConnector, chatroomId]);
+
+	useDirectoryChangeListener('roomList', () => {
+		fetchRoomInfo().catch(noop);
+	});
+
+	return response;
 }

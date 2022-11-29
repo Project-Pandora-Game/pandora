@@ -9,12 +9,12 @@ export class AssetManagerEditor extends AssetManagerClient {
 
 	public readonly assetTreeView: AssetTreeView = new AssetTreeViewClass;
 
-	override load(definitionsHash: string, data: AssetsDefinitionFile): void {
+	public override load(definitionsHash: string, data: AssetsDefinitionFile): void {
 		super.load(definitionsHash, data);
 		this.assetTreeView.update(this.getAllAssets());
 	}
 
-	async createNewAsset(category: string, idPart: string, name: string, bodypart: string): Promise<void> {
+	public async createNewAsset(category: string, idPart: string, name: string, bodypart: string): Promise<void> {
 		const id: AssetId = `a/${category}/${idPart}`;
 
 		Assert(ASSET_ID_PART_REGEX.test(category));
@@ -25,6 +25,7 @@ export class AssetManagerEditor extends AssetManagerClient {
 		const definition: AssetDefinition = {
 			id,
 			name,
+			size: bodypart ? 'bodypart' : 'medium',
 			bodypart: bodypart ? bodypart : undefined,
 			colorization: [
 				{
@@ -46,6 +47,8 @@ export class AssetManagerEditor extends AssetManagerClient {
 DefineAsset({
 	// Name of your asset, this is what users see
 	name: '${name}',${bodypart ? `\n\tbodypart: '${bodypart}',` : ''}
+	// Size of this item. Affects mainly which things it can fit into. For more details check pandora-common/src/assets/definitions.ts
+	size: '${bodypart ? 'bodypart' : 'medium'}',
 	// Name of the file with graphics created using Editor.
 	graphics: 'graphics.json',
 	// Definitions of how your asset should be colorable.
@@ -136,11 +139,11 @@ export type AssetTreeView = AssetTreeViewClass;
 class AssetTreeViewClass {
 	private readonly _categories = new Map<string, AssetTreeViewCategory>();
 
-	get categories(): AssetTreeViewCategory[] {
+	public get categories(): AssetTreeViewCategory[] {
 		return [...this._categories.values()];
 	}
 
-	update(assets: Asset[]) {
+	public update(assets: Asset[]) {
 		this._categories.clear();
 		for (const asset of assets) {
 			const [, category, name] = /^a\/([^/]+)\/([^/]+)$/.exec(asset.id) || [];
@@ -160,10 +163,10 @@ export type AssetTreeViewCategory = AssetTreeViewCategoryClass;
 class AssetTreeViewCategoryClass extends ObservableClass<{ open: boolean; }> {
 	private _assets = new Map<string, Asset>();
 
-	get assets(): Asset[] {
+	public get assets(): Asset[] {
 		return [...this._assets.values()];
 	}
-	readonly name: string;
+	public readonly name: string;
 
 	@observable
 	public open: boolean = false;
@@ -173,7 +176,7 @@ class AssetTreeViewCategoryClass extends ObservableClass<{ open: boolean; }> {
 		this.name = name;
 	}
 
-	set(name: string, asset: Asset) {
+	public set(name: string, asset: Asset) {
 		this._assets.set(name, asset);
 	}
 }

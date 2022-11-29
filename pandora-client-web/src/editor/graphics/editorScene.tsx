@@ -1,7 +1,7 @@
 import { Container, Graphics } from '@saitonakamura/react-pixi';
 import classNames from 'classnames';
 import _ from 'lodash';
-import { CharacterSize } from 'pandora-common';
+import { CharacterSize, CharacterView } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CommonProps } from '../../common/reactTypes';
@@ -38,6 +38,8 @@ export function EditorScene({
 
 	const editor = useEditor();
 	const backgroundColor = useObservable(editor.backgroundColor);
+
+	const character = editor.character;
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
@@ -103,6 +105,14 @@ export function EditorScene({
 
 	const overlay = (
 		<div className='overlay'>
+			<Button className='slim iconButton'
+				title='Toggle character view'
+				onClick={ () => {
+					character.appearance.setView(character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT);
+				} }
+			>
+				↷
+			</Button>
 			<Button className='slim iconButton'
 				title='Center the view'
 				onClick={ () => {

@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import { nanoid } from 'nanoid';
 import { Assert, AssertNotNullable, Asset, AssetId, Item } from 'pandora-common';
 import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { useForm, Validate } from 'react-hook-form';
@@ -18,6 +17,8 @@ import { AssetTreeViewCategory, ASSET_ID_PART_REGEX, GetAssetManagerEditor } fro
 import { EDITOR_ALPHA_ICONS, useEditorLayerTint, useEditorTabContext } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import './assets.scss';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 
 export function AssetsUI(): ReactElement {
 	const editor = useEditor();
@@ -124,10 +125,9 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 	const tabContext = useEditorTabContext();
 
 	function add() {
-		editor.character.appearance.addItem(
-			editor.character.appearance.spawnItem(`i/editor/${nanoid()}` as const, asset),
-			{},
-		);
+		if (!editor.character.appearance.addItem(asset)) {
+			toast('Failed to add item', TOAST_OPTIONS_ERROR);
+		}
 	}
 
 	return (
@@ -158,10 +158,9 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 
 	function add() {
 		AssertNotNullable(asset);
-		editor.character.appearance.addItem(
-			editor.character.appearance.spawnItem(`i/editor/${nanoid()}` as const, asset),
-			{},
-		);
+		if (!editor.character.appearance.addItem(asset)) {
+			toast('Failed to add item', TOAST_OPTIONS_ERROR);
+		}
 	}
 
 	return (
@@ -214,11 +213,11 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				{ /* TODO: Button to move down */ }
 				{ appearance.moveItem(item.id, -1, { dryRun: true }) &&
 				<Button onClick={ () => {
-					appearance.moveItem(item.id, -1, {});
+					appearance.moveItem(item.id, -1);
 				} } title='Move item one up' style={ { fontSize: 'x-small' } } >
 					🠉
 				</Button>}
-				<Button onClick={ () => appearance.removeItem(item.id, {}) } title='Unequip item'>-</Button>
+				<Button onClick={ () => appearance.removeItem(item.id) } title='Unequip item'>-</Button>
 				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);

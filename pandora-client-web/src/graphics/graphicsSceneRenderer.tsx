@@ -87,11 +87,11 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	private root: ReactPixiRoot | null = null;
 	private app: Application | null = null;
 
-	override render(): React.ReactNode {
+	public override render(): React.ReactNode {
 		return null;
 	}
 
-	override componentDidMount() {
+	public override componentDidMount() {
 		const { onMount, container, resolution } = this.props;
 
 		let app = AvailableApps.pop();
@@ -129,7 +129,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this.renderStage();
 	}
 
-	override componentDidUpdate(oldProps: Readonly<Omit<GraphicsSceneRendererProps, 'forwardContexts'>>) {
+	public override componentDidUpdate(oldProps: Readonly<Omit<GraphicsSceneRendererProps, 'forwardContexts'>>) {
 		if (!this.app && !this.root)
 			return;
 		AssertNotNullable(this.app);
@@ -155,7 +155,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this.app.render();
 	}
 
-	override componentWillUnmount() {
+	public override componentWillUnmount() {
 		if (!this.app && !this.root)
 			return;
 
@@ -189,11 +189,11 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this.app = null;
 	}
 
-	needsRenderUpdate = () => {
+	public needsRenderUpdate = () => {
 		this._needsUpdate = true;
 	};
 
-	renderStage = () => {
+	public renderStage = () => {
 		AssertNotNullable(this.app);
 		if (this._needsUpdate) {
 			this._needsUpdate = false;
@@ -201,13 +201,13 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		}
 	};
 
-	getChildren() {
+	public getChildren() {
 		const { children } = this.props;
 		AssertNotNullable(this.app);
 		return <AppProvider value={ this.app }>{children}</AppProvider>;
 	}
 
-	override componentDidCatch(error: unknown, errorInfo: unknown) {
+	public override componentDidCatch(error: unknown, errorInfo: unknown) {
 		GetLogger('Stage').error(`Error occurred in \`Stage\`.\n`, error, '\n', errorInfo);
 	}
 }

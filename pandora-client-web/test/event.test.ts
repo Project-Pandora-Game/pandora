@@ -12,10 +12,10 @@ describe('TypedEventEmitter', () => {
 		},
 	};
 	class MockEventEmitter extends TypedEventEmitter<MockEvent> {
-		emit1() {
+		public emit1() {
 			this.emit('event1', def.event1);
 		}
-		emit2() {
+		public emit2() {
 			this.emit('event2', def.event2);
 		}
 	}

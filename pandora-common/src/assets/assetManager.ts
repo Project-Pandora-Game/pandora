@@ -1,7 +1,10 @@
 import { cloneDeep } from 'lodash';
+import type { Logger } from '../logging';
+import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
 import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
+import { Item, ItemBundle } from './item';
 
 export class AssetManager {
 	protected readonly _assets: Map<AssetId, Asset> = new Map();
@@ -10,17 +13,17 @@ export class AssetManager {
 	protected _backgrounds: IChatroomBackgroundInfo[] = [];
 	protected _definitionsHash: string = '';
 
-	get definitionsHash(): string {
+	public get definitionsHash(): string {
 		return this._definitionsHash;
 	}
 
 	private _graphicsId: string = '';
-	get graphicsId(): string {
+	public get graphicsId(): string {
 		return this._graphicsId;
 	}
 
 	private _bodyparts: readonly AssetBodyPart[] = [];
-	get bodyparts(): readonly AssetBodyPart[] {
+	public get bodyparts(): readonly AssetBodyPart[] {
 		return this._bodyparts;
 	}
 
@@ -82,18 +85,13 @@ export class AssetManager {
 				this._assets.delete(id);
 			}
 		}
-		// Then load or update all defined assets
+		// Then load all defined assets
 		for (const [id, definition] of Object.entries(assets)) {
 			if (!id.startsWith('a/')) {
 				throw new Error(`Asset without valid prefix: ${id}`);
 			}
-			let asset = this._assets.get(id as AssetId);
-			if (asset) {
-				asset.load(definition);
-			} else {
-				asset = this.createAsset(id as AssetId, definition);
-				this._assets.set(id as AssetId, asset);
-			}
+			const asset = this.createAsset(id as AssetId, definition);
+			this._assets.set(id as AssetId, asset);
 		}
 	}
 
@@ -153,5 +151,16 @@ export class AssetManager {
 			mirror.mirror = res;
 		}
 		return res;
+	}
+
+	public createItem(id: ItemId, asset: Asset, bundle: ItemBundle | null, logger?: Logger): Item {
+		return new Item(id, asset, bundle ?? {
+			id,
+			asset: asset.id,
+		}, {
+			assetMananger: this,
+			doLoadTimeCleanup: bundle !== null,
+			logger,
+		});
 	}
 }

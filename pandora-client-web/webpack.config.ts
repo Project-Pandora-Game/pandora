@@ -214,7 +214,7 @@ class GenerateStringPlugin {
 		this._value = value;
 	}
 
-	apply(compiler: Compiler) {
+	public apply(compiler: Compiler) {
 		compiler.hooks.compilation.tap(this, (compilation) => {
 			compilation.hooks.processAssets.tap(
 				{

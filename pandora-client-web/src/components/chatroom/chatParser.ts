@@ -90,7 +90,7 @@ export class SegmentParser {
 		['_', 'italic'],
 	];
 
-	parse(text: string): IChatSegment[] {
+	public parse(text: string): IChatSegment[] {
 
 		const result: IChatSegment[] = [];
 		while (text) {
@@ -147,7 +147,7 @@ export const ChatParser = new class ChatParser {
 	private readonly _lineParser = new LineParser();
 	private readonly _segmentParser = new SegmentParser();
 
-	parse(text: string, to?: CharacterId): IClientMessage[] {
+	public parse(text: string, to?: CharacterId): IClientMessage[] {
 		const lines = this._lineParser.parse(text, to === undefined);
 		if (!lines.length)
 			return [];
@@ -182,7 +182,7 @@ export const ChatParser = new class ChatParser {
 		return result;
 	}
 
-	parseStyle(text: string): IChatSegment[] {
+	public parseStyle(text: string): IChatSegment[] {
 		return this._segmentParser.parse(text);
 	}
 };

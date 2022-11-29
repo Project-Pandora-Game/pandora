@@ -58,7 +58,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;
 	private readonly _messageHandler: MessageHandler<IDirectoryShard>;
 	/** Current state of the connection */
-	get state(): DirectoryConnectionState {
+	public get state(): DirectoryConnectionState {
 		return this._state;
 	}
 

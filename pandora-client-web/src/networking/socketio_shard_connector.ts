@@ -50,21 +50,21 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 	private loadResolver: ((arg: this) => void) | null = null;
 
 	/** Current state of the connection */
-	get state(): ReadonlyObservable<ShardConnectionState> {
+	public get state(): ReadonlyObservable<ShardConnectionState> {
 		return this._state;
 	}
 
 	/** The player */
-	get player(): ReadonlyObservable<PlayerCharacter | null> {
+	public get player(): ReadonlyObservable<PlayerCharacter | null> {
 		return this._player;
 	}
 
 	/** The player */
-	get room(): ChatRoom {
+	public get room(): ChatRoom {
 		return this._room;
 	}
 
-	get connectionInfo(): ReadonlyObservable<Readonly<IDirectoryCharacterConnectionInfo>> {
+	public get connectionInfo(): ReadonlyObservable<Readonly<IDirectoryCharacterConnectionInfo>> {
 		return this._connectionInfo;
 	}
 

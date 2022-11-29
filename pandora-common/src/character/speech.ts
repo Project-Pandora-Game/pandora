@@ -75,12 +75,12 @@ export class Muffler {
 		};
 	}
 
-	isActive(): boolean {
+	public isActive(): boolean {
 		const { lipsTouch, jawMove, tongueRoof, mouthBreath, throatBreath, coherency, stimulus } = this.setting;
 		return (lipsTouch + jawMove + tongueRoof + mouthBreath + throatBreath + coherency + stimulus) > 0;
 	}
 
-	muffle(input: string): string {
+	public muffle(input: string): string {
 		let list = input.split(' ');
 		list = list.map((word) => {
 			return this.muffleWord(word);

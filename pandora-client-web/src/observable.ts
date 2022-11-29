@@ -48,7 +48,7 @@ export class StaticObservable<T> implements ReadonlyObservable<T> {
 		this.value = value;
 	}
 
-	subscribe(_observer: Observer<T>): UnsubscribeCallback {
+	public subscribe(_observer: Observer<T>): UnsubscribeCallback {
 		return noop;
 	}
 }

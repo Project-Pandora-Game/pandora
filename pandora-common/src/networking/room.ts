@@ -9,7 +9,7 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition> {
 	private readonly servers = new Map<IServerSocket<OutboundT>, Set<IIncomingConnection<OutboundT>>>();
 	private readonly clients = new Map<string, IServerSocket<OutboundT>>();
 
-	join(server: IServerSocket<OutboundT>, client: IIncomingConnection<OutboundT>): void {
+	public join(server: IServerSocket<OutboundT>, client: IIncomingConnection<OutboundT>): void {
 		if (this.clients.has(client.id)) {
 			return;
 		}
@@ -22,7 +22,7 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition> {
 		this.clients.set(client.id, server);
 	}
 
-	leave(client: IIncomingConnection<OutboundT>): void {
+	public leave(client: IIncomingConnection<OutboundT>): void {
 		const serverId = this.clients.get(client.id);
 		if (!serverId) {
 			return;
@@ -38,7 +38,7 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition> {
 		}
 	}
 
-	sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void {
+	public sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void {
 		for (const [server, clients] of this.servers) {
 			server.sendToAll(clients, messageType, message);
 		}

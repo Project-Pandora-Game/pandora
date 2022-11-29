@@ -199,11 +199,11 @@ export class AssetGraphics {
 		this.load(definition);
 	}
 
-	load(definition: Immutable<AssetGraphicsDefinition>) {
+	public load(definition: Immutable<AssetGraphicsDefinition>) {
 		this.layers = definition.layers.map(this.createLayer.bind(this));
 	}
 
-	export(): Immutable<AssetGraphicsDefinition> {
+	public export(): Immutable<AssetGraphicsDefinition> {
 		return {
 			layers: this.layers.map((l) => l.definition.value),
 		};

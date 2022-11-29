@@ -1,10 +1,13 @@
 import { AssertNever, Satisfies } from '../utility';
 import { IAssetModuleDefinition, IModuleItemDataCommon, IModuleConfigCommon, IItemModule } from './modules/common';
 import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema } from './modules/typed';
+import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema } from './modules/storage';
 import { z } from 'zod';
 import { ZodMatcher } from '../validation';
 import { Asset } from './asset';
 import { AssetDefinitionExtraArgs } from './definitions';
+import { IItemLoadContext } from './item';
+import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
 
 //#region Module definitions
 
@@ -13,17 +16,27 @@ export type IAssetModuleTypes<A extends AssetDefinitionExtraArgs = AssetDefiniti
 		config: IModuleConfigTyped<A>;
 		data: IModuleItemDataTyped;
 	};
+	storage: {
+		config: IModuleConfigStorage<A>;
+		data: IModuleItemDataStorage;
+	};
+	lockSlot: {
+		config: IModuleConfigLockSlot<A>;
+		data: IModuleItemDataLockSlot;
+	};
 };
 
 export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>; } = {
 	typed: new TypedModuleDefinition(),
+	storage: new StorageModuleDefinition(),
+	lockSlot: new LockSlotModuleDefinition(),
 };
 
-export const ItemModuleActionSchema = ItemModuleTypedActionSchema;
-// TODO: When we have more module types
-// export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
-// 	ItemModuleTypedActionSchema,
-// ]);
+export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
+	ItemModuleTypedActionSchema,
+	ItemModuleStorageActionSchema,
+	ItemModuleLockSlotActionSchema,
+]);
 export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
 //#endregion
@@ -42,7 +55,20 @@ type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 
 export type AssetModuleDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = IAssetModuleTypes<A>[ModuleType]['config'];
 
-export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleItemDataCommon<string> | undefined): IItemModule {
+export function GetModuleStaticAttributes(moduleDefinition: AssetModuleDefinition): ReadonlySet<string> {
+	switch (moduleDefinition.type) {
+		case 'typed':
+			return MODULE_TYPES.typed.getStaticAttributes(moduleDefinition);
+		case 'storage':
+			return MODULE_TYPES.storage.getStaticAttributes(moduleDefinition);
+		case 'lockSlot':
+			return MODULE_TYPES.lockSlot.getStaticAttributes(moduleDefinition);
+		default:
+			AssertNever(moduleDefinition);
+	}
+}
+
+export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleItemDataCommon<string> | undefined, context: IItemLoadContext): IItemModule {
 	const moduleDefinition = asset.definition.modules?.[moduleName];
 	if (!moduleDefinition) {
 		throw new Error('LoadItemModule called with invalid module for asset');
@@ -63,9 +89,39 @@ export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleIt
 					moduleName,
 					moduleDefinition,
 					data,
+					context.assetMananger,
 				),
+				context,
+			);
+		case 'storage':
+			return MODULE_TYPES.storage.loadModule(
+				asset,
+				moduleName,
+				moduleDefinition,
+				MODULE_TYPES.storage.parseData(
+					asset,
+					moduleName,
+					moduleDefinition,
+					data,
+					context.assetMananger,
+				),
+				context,
+			);
+		case 'lockSlot':
+			return MODULE_TYPES.lockSlot.loadModule(
+				asset,
+				moduleName,
+				moduleDefinition,
+				MODULE_TYPES.lockSlot.parseData(
+					asset,
+					moduleName,
+					moduleDefinition,
+					data,
+					context.assetMananger,
+				),
+				context,
 			);
 		default:
-			AssertNever(moduleDefinition.type);
+			AssertNever(moduleDefinition);
 	}
 }

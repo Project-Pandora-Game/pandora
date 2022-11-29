@@ -1,17 +1,11 @@
+export * from './characterTypes';
 export * from './restrictionsManager';
 export * from './speech';
 
 import { z } from 'zod';
 import { AppearanceBundleSchema } from '../assets/appearance';
-import { HexColorStringSchema, ZodMatcher, zTemplateString } from '../validation';
-
-export const CharacterIdSchema = zTemplateString<`c${number}`>(z.string(), /^c[1-9][0-9]{0,15}$/);
-export type CharacterId = z.infer<typeof CharacterIdSchema>;
-
-/**
- * Test if a given value is a valid CharacterId - `'c{number}'`
- */
-export const IsCharacterId = ZodMatcher(CharacterIdSchema);
+import { HexColorStringSchema } from '../validation';
+import { CharacterId, CharacterIdSchema } from './characterTypes';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema,

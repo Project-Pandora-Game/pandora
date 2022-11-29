@@ -151,6 +151,9 @@ export function RenderChatPart([type, contents]: IChatSegment, index: number): R
 }
 
 function GetActiontext(action: IChatroomMessageActionProcessed): string | undefined {
+	if (action.customText != null)
+		return action.customText;
+
 	const assetManager = GetAssetManager();
 	const item = action.data?.item;
 	const asset = item && assetManager.getAssetById(item.assetId);
@@ -162,9 +165,13 @@ function GetActiontext(action: IChatroomMessageActionProcessed): string | undefi
 	// Asset-specific message overrides
 	switch (action.id) {
 		case 'itemAdd':
-			return asset?.definition.actionMessages?.itemAdd ?? defaultMessage;
+			return asset?.definition.chat?.actionAdd ?? defaultMessage;
 		case 'itemRemove':
-			return assetPrevious?.definition.actionMessages?.itemRemove ?? defaultMessage;
+			return assetPrevious?.definition.chat?.actionRemove ?? defaultMessage;
+		case 'itemAttach':
+			return asset?.definition.chat?.actionAttach ?? defaultMessage;
+		case 'itemDetach':
+			return assetPrevious?.definition.chat?.actionDetach ?? defaultMessage;
 	}
 
 	return defaultMessage;

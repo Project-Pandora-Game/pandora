@@ -1,4 +1,4 @@
-import { Appearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger } from 'pandora-common';
+import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, AppearanceActionRoomContext, ItemPath } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -9,11 +9,11 @@ export type AppearanceEvents = {
 };
 
 export type AppearanceContainer = ITypedEventEmitter<AppearanceEvents> & {
-	appearance: Appearance;
+	appearance: CharacterAppearance;
 };
 
 export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements AppearanceContainer {
-	public appearance: Appearance;
+	public appearance: CharacterAppearance;
 
 	protected readonly logger: Logger;
 
@@ -26,7 +26,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
-		this.appearance = new Appearance(GetAssetManager(), (changes) => this.emit('appearanceUpdate', changes));
+		this.appearance = new CharacterAppearance(GetAssetManager(), data.id, (changes) => this.emit('appearanceUpdate', changes));
 		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
 		this.logger.verbose('Loaded');
 	}
@@ -43,6 +43,10 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		this.logger.debug('Updated', data);
 		this.emit('update', data);
 	}
+
+	public getRestrictionManager(roomContext: AppearanceActionRoomContext | null): CharacterRestrictionsManager {
+		return new CharacterRestrictionsManager(this.data.id, this.appearance, roomContext);
+	}
 }
 
 type CharacterEvents<T extends ICharacterPublicData> = AppearanceEvents & {
@@ -51,6 +55,16 @@ type CharacterEvents<T extends ICharacterPublicData> = AppearanceEvents & {
 
 export function useCharacterData<T extends ICharacterPublicData>(character: Character<T>): Readonly<T> {
 	return useSyncExternalStore(character.getSubscriber('update'), () => character.data);
+}
+
+export function useCharacterAppearanceItem(character: AppearanceContainer, item: ItemPath | null | undefined): Item | undefined {
+	return useSyncExternalStore((onChange) => {
+		return character.on('appearanceUpdate', (changed) => {
+			if (changed.includes('items')) {
+				onChange();
+			}
+		});
+	}, () => item ? character.appearance.getItem(item) : undefined);
 }
 
 export function useCharacterAppearanceItems(character: AppearanceContainer): readonly Item[] {

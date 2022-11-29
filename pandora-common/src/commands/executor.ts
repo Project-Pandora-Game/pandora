@@ -48,18 +48,18 @@ export class CommandRunnerExecutor<
 		this.handler = handler;
 	}
 
-	run(context: Context, args: EntryArguments, rest: string): boolean {
+	public run(context: Context, args: EntryArguments, rest: string): boolean {
 		return this.handler(context, args, rest) ?? true;
 	}
 
-	autocomplete(): CommandAutocompleteResult {
+	public autocomplete(): CommandAutocompleteResult {
 		return this.options.restArgName ? {
 			header: `🡆<${this.options.restArgName}>🡄`,
 			options: [],
 		} : null;
 	}
 
-	predictHeader(): string {
+	public predictHeader(): string {
 		return this.options.restArgName ? `<${this.options.restArgName}>` : '';
 	}
 }
@@ -96,7 +96,7 @@ export class CommandRunnerArgParser<
 		}
 	}
 
-	run(context: Context, args: EntryArguments, input: string): boolean {
+	public run(context: Context, args: EntryArguments, input: string): boolean {
 		const { value, rest } = this.preprocessor(input);
 
 		const parsed = this.processor.parse(value, context, args);
@@ -110,7 +110,7 @@ export class CommandRunnerArgParser<
 		}, rest);
 	}
 
-	autocomplete(context: Context, args: EntryArguments, input: string): CommandAutocompleteResult {
+	public autocomplete(context: Context, args: EntryArguments, input: string): CommandAutocompleteResult {
 		const { value, spacing, rest } = this.preprocessor(input);
 
 		const isQuotedPreprocessor = this.processor.preparse === 'quotedArg' || this.processor.preparse === 'quotedArgTrimmed';
@@ -151,7 +151,7 @@ export class CommandRunnerArgParser<
 
 	}
 
-	predictHeader(): string {
+	public predictHeader(): string {
 		return `<${this.name}> ${this.next.predictHeader()}`;
 	}
 }

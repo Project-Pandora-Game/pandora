@@ -15,7 +15,7 @@ type IStoredShardTokenInfo = Omit<IShardTokenInfo, 'id'> & { token: string; };
 export const ShardTokenStore = new class ShardTokenStore {
 	#tokens!: Map<string, IStoredShardTokenInfo>;
 
-	async init(): Promise<void> {
+	public async init(): Promise<void> {
 		this.#tokens = new Map(await GetDatabase().getConfig('shardTokens') || []);
 
 		this._cleanup();

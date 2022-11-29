@@ -1,5 +1,6 @@
 export * from './appearance';
 export * from './appearanceActions';
+export * from './appearanceTypes';
 export * from './appearanceValidation';
 export * from './asset';
 export * from './assetManager';

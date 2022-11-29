@@ -1,4 +1,4 @@
-import { Appearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, AppearanceActionProcessingContext, ActionRemoveItem, ActionMoveItem } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -12,8 +12,9 @@ import { TypedEventEmitter } from '../../../event';
 import { AppearanceContainer, AppearanceEvents } from '../../../character/character';
 import { GetAssetManagerEditor } from '../../assets/assetManager';
 import { Immutable } from 'immer';
+import { nanoid } from 'nanoid';
 
-export class AppearanceEditor extends Appearance {
+export class AppearanceEditor extends CharacterAppearance {
 	private _enforce = true;
 
 	public get enforce(): boolean {
@@ -36,19 +37,41 @@ export class AppearanceEditor extends Appearance {
 
 		return super.enforcePoseLimits();
 	}
+
+	public addItem(asset: Asset, context: AppearanceActionProcessingContext = {}): boolean {
+		const item = this.assetMananger.createItem(`i/editor/${nanoid()}`, asset, null);
+		const manipulator = this.getManipulator();
+		return ActionAddItem(manipulator, [], item) && this.commitChanges(manipulator, context);
+	}
+
+	public removeItem(id: ItemId, context: AppearanceActionProcessingContext = {}): boolean {
+		const manipulator = this.getManipulator();
+		return ActionRemoveItem(manipulator, {
+			container: [],
+			itemId: id,
+		}) && this.commitChanges(manipulator, context);
+	}
+
+	public moveItem(id: ItemId, shift: number, context: AppearanceActionProcessingContext = {}): boolean {
+		const manipulator = this.getManipulator();
+		return ActionMoveItem(manipulator, {
+			container: [],
+			itemId: id,
+		}, shift) && this.commitChanges(manipulator, context);
+	}
 }
 
 export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
-	appearance: AppearanceEditor;
+	public appearance: AppearanceEditor;
 
 	constructor() {
 		super();
-		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), (changes) => this.emit('appearanceUpdate', changes));
+		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), 'c0', (changes) => this.emit('appearanceUpdate', changes));
 	}
 }
 
 export class EditorAssetGraphics extends AssetGraphics {
-	readonly editor: Editor;
+	public readonly editor: Editor;
 	public onChangeHandler: (() => void) | undefined;
 
 	constructor(editor: Editor, id: AssetId, definition?: Immutable<AssetGraphicsDefinition>, onChange?: () => void) {
@@ -59,7 +82,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChangeHandler = onChange;
 	}
 
-	override load(definition: AssetGraphicsDefinition): void {
+	public override load(definition: AssetGraphicsDefinition): void {
 		super.load(definition);
 		this.onChange();
 	}
@@ -73,7 +96,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		return layer;
 	}
 
-	addLayer(): void {
+	public addLayer(): void {
 		const newLayer = this.createLayer({
 			x: 0,
 			y: 0,
@@ -92,7 +115,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	deleteLayer(layer: AssetGraphicsLayer): void {
+	public deleteLayer(layer: AssetGraphicsLayer): void {
 		const index = this.layers.indexOf(layer);
 		if (index < 0)
 			return;
@@ -114,7 +137,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	moveLayerRelative(layer: AssetGraphicsLayer, shift: number): void {
+	public moveLayerRelative(layer: AssetGraphicsLayer, shift: number): void {
 		const currentPos = this.layers.indexOf(layer);
 		if (currentPos < 0)
 			return;
@@ -135,7 +158,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	setLayerPriority(layer: AssetGraphicsLayer, priority: LayerPriority): void {
+	public setLayerPriority(layer: AssetGraphicsLayer, priority: LayerPriority): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -145,7 +168,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		});
 	}
 
-	setScaleAs(layer: AssetGraphicsLayer, scaleAs: string | null): void {
+	public setScaleAs(layer: AssetGraphicsLayer, scaleAs: string | null): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -162,7 +185,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		});
 	}
 
-	addScalingStop(layer: AssetGraphicsLayer, value: number): void {
+	public addScalingStop(layer: AssetGraphicsLayer, value: number): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -182,7 +205,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		});
 	}
 
-	removeScalingStop(layer: AssetGraphicsLayer, stop: number): void {
+	public removeScalingStop(layer: AssetGraphicsLayer, stop: number): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}

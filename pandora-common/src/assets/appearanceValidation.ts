@@ -1,11 +1,14 @@
 import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
-import { AssetManager } from './assetManager';
-import { AssetDefinitionPoseLimits, AssetId } from './definitions';
-import { Item } from './item';
+import { ItemId } from './appearanceTypes';
+import type { AssetManager } from './assetManager';
+import type { AssetDefinitionPoseLimits, AssetId } from './definitions';
+import type { Item } from './item';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems = readonly Item[];
+
+export type AppearanceValidationResult = boolean;
 
 function GetItemBodypartSortIndex(assetMananger: AssetManager, item: Item): number {
 	return item.asset.definition.bodypart === undefined ? assetMananger.bodyparts.length :
@@ -76,13 +79,13 @@ export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimits
 		.poseLimits;
 }
 
-export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>): boolean {
+export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>): AppearanceValidationResult {
 	return Array.from(requirements)
 		.every((r) => r.startsWith('!') ? !attributes.has(r.substring(1)) : attributes.has(r));
 }
 
 /** Validates items prefix, ignoring required items */
-export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items: AppearanceItems): boolean {
+export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Bodypart validation
 
 	// Check bodypart order
@@ -93,6 +96,19 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 	// Check duplicate bodyparts
 	for (const bodypart of assetMananger.bodyparts) {
 		if (!bodypart.allowMultiple && items.filter((item) => item.asset.definition.bodypart === bodypart.name).length > 1)
+			return false;
+	}
+
+	// Validate all items
+	const ids = new Set<ItemId>();
+	for (const item of items) {
+		// ID must be unique
+		if (ids.has(item.id))
+			return false;
+		ids.add(item.id);
+
+		// Run internal item validation
+		if (!item.validate(true))
 			return false;
 	}
 
@@ -125,7 +141,7 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 }
 
 /** Validates the appearance items, including all prefixes and required items */
-export function ValidateAppearanceItems(assetMananger: AssetManager, items: AppearanceItems): boolean {
+export function ValidateAppearanceItems(assetMananger: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
 		if (!ValidateAppearanceItemsPrefix(assetMananger, items.slice(0, i)))

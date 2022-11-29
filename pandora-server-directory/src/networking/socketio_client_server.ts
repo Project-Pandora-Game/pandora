@@ -48,7 +48,7 @@ export class SocketIOServerClient extends SocketIOServer implements IServerSocke
 		}
 	}
 
-	sendToAll<K extends SocketInterfaceOneshotMessages<IDirectoryClient>>(client: ReadonlySet<IIncomingConnection<IDirectoryClient>>, messageType: K, message: SocketInterfaceRequest<IDirectoryClient>[K]): void {
+	public sendToAll<K extends SocketInterfaceOneshotMessages<IDirectoryClient>>(client: ReadonlySet<IIncomingConnection<IDirectoryClient>>, messageType: K, message: SocketInterfaceRequest<IDirectoryClient>[K]): void {
 		const rooms = [...client].map((c) => c.id);
 		this.socketServer.to(rooms).emit(messageType, message);
 	}

@@ -21,7 +21,6 @@ import z from 'zod';
 import { AssetInfoUI } from './components/assetInfo/assetInfo';
 import { Select } from '../components/common/Select/Select';
 import { GetAssetManagerEditor } from './assets/assetManager';
-import { nanoid } from 'nanoid';
 import { noop } from 'lodash';
 import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
 import { useEditor } from './editorContextProvider';
@@ -201,10 +200,7 @@ export class Editor extends TypedEventEmitter<{
 			if (this.character.appearance.listItemsByAsset(asset).length === 0) {
 				const actualAsset = GetAssetManagerEditor().getAssetById(asset);
 				AssertNotNullable(actualAsset);
-				this.character.appearance.addItem(
-					this.character.appearance.spawnItem(`i/editor/${nanoid()}` as const, actualAsset),
-					{},
-				);
+				this.character.appearance.addItem(actualAsset);
 			}
 		}
 		this.targetAsset.value = graphics;

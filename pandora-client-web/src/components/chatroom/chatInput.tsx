@@ -1,5 +1,5 @@
 import { AssertNotNullable, CharacterId, IChatRoomStatus, RoomId } from 'pandora-common';
-import React, { createContext, ForwardedRef, forwardRef, ReactElement, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
 import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
@@ -87,6 +87,28 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		}
 		return true;
 	});
+
+	// Handler to autofocus chat input
+	useEffect(() => {
+		const keyPressHandler = (ev: KeyboardEvent) => {
+			if (
+				ref.current &&
+				// Only if no other input is selected
+				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement)) &&
+				// Only if this isn't a special key or key combo
+				!ev.ctrlKey &&
+				!ev.metaKey &&
+				!ev.altKey &&
+				ev.key.length === 1
+			) {
+				ref.current.focus();
+			}
+		};
+		window.addEventListener('keypress', keyPressHandler);
+		return () => {
+			window.removeEventListener('keypress', keyPressHandler);
+		};
+	}, []);
 
 	const context = useMemo(() => ({
 		focus: () => ref.current?.focus(),
@@ -321,7 +343,14 @@ export function useChatInput(): IChatInputHandler {
 }
 
 function TypingIndicator(): ReactElement {
-	const statuses = useChatRoomStatus();
+	let statuses = useChatRoomStatus();
+
+	const extra: ReactNode[] = [];
+	if (statuses.filter((s) => s.status === 'typing').length > 3) {
+		statuses = statuses.filter((s) => s.status !== 'typing');
+		extra.push(<span key='extra-multiple-typing'>Multiple people are typing</span>);
+	}
+
 	return (
 		<div className='typing-indicator'>
 			{ statuses.map(({ data, status }) => (
@@ -332,6 +361,7 @@ function TypingIndicator(): ReactElement {
 					{ status }
 				</span>
 			)) }
+			{ extra }
 		</div>
 	);
 }

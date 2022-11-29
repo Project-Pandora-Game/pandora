@@ -29,8 +29,8 @@ export interface IncomingSocket extends EmitterWithAck {
 }
 
 export class MockConnectionSocket implements IncomingSocket {
-	readonly id;
-	readonly remote: MockConnectionSocket;
+	public readonly id;
+	public readonly remote: MockConnectionSocket;
 
 	constructor(id: string, otherSocket?: MockConnectionSocket) {
 		this.id = id;
@@ -46,11 +46,11 @@ export class MockConnectionSocket implements IncomingSocket {
 	public onDisconnect: ((reason: string) => void) | null = null;
 	public onMessage: ((messageType: unknown, message: unknown, callback: ((arg: Record<string, unknown>) => void) | undefined) => void) | null = null;
 
-	isConnected(): boolean {
+	public isConnected(): boolean {
 		return this.connected;
 	}
 
-	timeout(seconds: number): {
+	public timeout(seconds: number): {
 		emit(event: string, arg: unknown, callback: (error: unknown, arg: unknown) => void): void;
 	} {
 		return ({
@@ -81,11 +81,11 @@ export class MockConnectionSocket implements IncomingSocket {
 		});
 	}
 
-	emit(event: string, arg: unknown, callback?: (arg: unknown) => void): void {
+	public emit(event: string, arg: unknown, callback?: (arg: unknown) => void): void {
 		this.remote.onMessage?.(event, arg, callback);
 	}
 
-	disconnect(): void {
+	public disconnect(): void {
 		if (!this.connected)
 			return;
 		this.connected = false;

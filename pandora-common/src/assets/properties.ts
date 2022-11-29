@@ -28,10 +28,28 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	hides?: (A['attributes'])[];
 
 	/**
-	 * Allows or forbids character from equipping this item themselves
-	 * @default true
+	 * Prevents this item from being added or removed on anyone, including on oneself
+	 * @default false
 	 */
-	allowSelfEquip?: boolean;
+	blockAddRemove?: boolean;
+
+	/**
+	 * Prevents this item from being added or removed by a character on herself
+	 * @default false
+	 */
+	blockSelfAddRemove?: boolean;
+
+	/**
+	 * Prevents listed modules from being modified by anyone, including on oneself
+	 * @default []
+	 */
+	blockModules?: string[];
+
+	/**
+	 * Prevents listed modules from being modified by anyone wearing this item
+	 * @default []
+	 */
+	blockSelfModules?: string[];
 }
 
 export interface AssetPropertiesResult {
@@ -63,21 +81,30 @@ export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, p
 
 export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	requirements: Set<string | `!${string}`>;
-	allowSelfEquip: boolean;
+	blockAddRemove: boolean;
+	blockSelfAddRemove: boolean;
+	blockModules: Set<string>;
+	blockSelfModules: Set<string>;
 }
 
 export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividualResult {
 	return {
 		...CreateAssetPropertiesResult(),
 		requirements: new Set(),
-		allowSelfEquip: true,
+		blockAddRemove: false,
+		blockSelfAddRemove: false,
+		blockModules: new Set(),
+		blockSelfModules: new Set(),
 	};
 }
 
 export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualResult, properties: AssetProperties): AssetPropertiesIndividualResult {
 	base = MergeAssetProperties(base, properties);
 	properties.requirements?.forEach((a) => base.requirements.add(a));
-	base.allowSelfEquip &&= properties.allowSelfEquip !== false;
+	base.blockAddRemove ||= properties.blockAddRemove ?? false;
+	base.blockSelfAddRemove ||= properties.blockSelfAddRemove ?? false;
+	properties.blockModules?.forEach((a) => base.blockModules.add(a));
+	properties.blockSelfModules?.forEach((a) => base.blockSelfModules.add(a));
 
 	return base;
 }

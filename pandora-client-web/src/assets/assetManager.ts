@@ -8,7 +8,7 @@ const logger = GetLogger('AssetManager');
 export class AssetManagerClient extends AssetManager {
 	public readonly assetList = new Observable<Asset[]>([]);
 
-	override load(definitionsHash: string, data: AssetsDefinitionFile): void {
+	public override load(definitionsHash: string, data: AssetsDefinitionFile): void {
 		super.load(definitionsHash, data);
 		this.assetList.value = this.getAllAssets();
 	}

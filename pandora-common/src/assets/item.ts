@@ -1,13 +1,14 @@
 import { z } from 'zod';
-import { HexColorString, HexColorStringSchema, zTemplateString } from '../validation';
+import { Logger } from '../logging';
+import { HexColorString, HexColorStringSchema } from '../validation';
+import { AppearanceActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
+import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
+import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule, IModuleItemDataCommonSchema } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
-
-export const ItemIdSchema = zTemplateString<`i/${string}`>(z.string(), /^i\//);
-export type ItemId = z.infer<typeof ItemIdSchema>;
 
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
@@ -30,18 +31,26 @@ function FixupColorFromAsset(color: readonly HexColorString[], asset: Asset): re
 	return color;
 }
 
+export type IItemLoadContext = {
+	assetMananger: AssetManager;
+	doLoadTimeCleanup: boolean;
+	logger?: Logger;
+};
+
 /**
  * Class representing an equipped item
  *
  * **THIS CLASS IS IMMUTABLE**
  */
 export class Item {
-	readonly id: ItemId;
-	readonly asset: Asset;
-	readonly color: readonly HexColorString[];
-	readonly modules: ReadonlyMap<string, IItemModule>;
+	public readonly assetMananger: AssetManager;
+	public readonly id: ItemId;
+	public readonly asset: Asset;
+	public readonly color: readonly HexColorString[];
+	public readonly modules: ReadonlyMap<string, IItemModule>;
 
-	constructor(id: ItemId, asset: Asset, bundle: ItemBundle) {
+	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
+		this.assetMananger = context.assetMananger;
 		this.id = id;
 		this.asset = asset;
 		if (this.asset.id !== bundle.asset) {
@@ -52,7 +61,7 @@ export class Item {
 		// Load modules
 		const modules = new Map<string, IItemModule>();
 		for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
-			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName]));
+			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
 		}
 		this.modules = modules;
 	}
@@ -74,18 +83,34 @@ export class Item {
 		};
 	}
 
+	public validate(isWorn: boolean): AppearanceValidationResult {
+		// Check the asset can actually be worn
+		if (isWorn && this.asset.definition.wearable === false)
+			return false;
+
+		for (const module of this.modules.values()) {
+			if (!module.validate(isWorn))
+				return false;
+		}
+
+		return true;
+	}
+
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeColor(color: readonly HexColorString[]): Item {
 		const bundle = this.exportToBundle();
 		bundle.color = color.slice();
-		return new Item(this.id, this.asset, bundle);
+		return new Item(this.id, this.asset, bundle, {
+			assetMananger: this.assetMananger,
+			doLoadTimeCleanup: false,
+		});
 	}
 
-	public moduleAction(moduleName: string, action: ItemModuleAction): Item | null {
+	public moduleAction(moduleName: string, action: ItemModuleAction, messageHandler: AppearanceActionMessageTemplateHandler): Item | null {
 		const module = this.modules.get(moduleName);
 		if (!module || module.type !== action.moduleType)
 			return null;
-		const moduleResult = module.doAction(action);
+		const moduleResult = module.doAction(action, messageHandler);
 		if (!moduleResult)
 			return null;
 		const bundle = this.exportToBundle();
@@ -95,6 +120,30 @@ export class Item {
 				...bundle.moduleData,
 				[moduleName]: moduleResult.exportData(),
 			},
+		}, {
+			assetMananger: this.assetMananger,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	public getModuleItems(moduleName: string): AppearanceItems {
+		return this.modules.get(moduleName)?.getContents() ?? [];
+	}
+
+	public setModuleItems(moduleName: string, items: AppearanceItems): Item | null {
+		const moduleResult = this.modules.get(moduleName)?.setContents(items);
+		if (!moduleResult)
+			return null;
+		const bundle = this.exportToBundle();
+		return new Item(this.id, this.asset, {
+			...bundle,
+			moduleData: {
+				...bundle.moduleData,
+				[moduleName]: moduleResult.exportData(),
+			},
+		}, {
+			assetMananger: this.assetMananger,
+			doLoadTimeCleanup: false,
 		});
 	}
 

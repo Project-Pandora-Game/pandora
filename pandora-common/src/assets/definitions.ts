@@ -9,6 +9,20 @@ import { AssetProperties } from './properties';
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
 
+// Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
+// The size is used to make sure you cannot infinitely recurse storing items into one another
+// To store item inside something, it must be strictly smaller than the item you are storing it in
+export const AssetSizeSchema = z.enum(['small', 'medium', 'large', 'huge', 'bodypart']);
+export type AssetSize = z.infer<typeof AssetSizeSchema>;
+/** Numbers to compare size of what fits where in code */
+export const AssetSizeMapping: Record<AssetSize, number> = {
+	small: 1,
+	medium: 2,
+	large: 3,
+	huge: 4,
+	bodypart: 99,
+};
+
 export interface AssetDefinitionExtraArgs {
 	bones: BoneName;
 	bodyparts: string;
@@ -31,12 +45,42 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	/** The visible name of this asset */
 	name: string;
 
-	/** Chat action messages specific to this asset */
-	actionMessages?: {
-		/** Message for when this item is added */
-		itemAdd?: string;
-		/** Message for when this item is removed */
-		itemRemove?: string;
+	/**
+	 * If this asset can be worn on body directly.
+	 * @default true
+	 */
+	wearable?: boolean;
+
+	/**
+	 * Size of this item. Affects mainly which things it can fit into.
+	 *
+	 * Sizing logic:
+	 * - Is it a bodypart? -> `bodypart`
+	 * - Can it fit into a box (20cm x 20cm)? -> `small`
+	 * - Can it fit into a backpack? -> `medium`
+	 * - Can it fit into a 1m x 1m crate? -> `large`
+	 * - Is it a crate or bigger? -> `huge`
+	 *
+	 * If this item is a bodypart, then and **only** then the size **must** be `'bodypart'`
+	 */
+	size: AssetSize;
+
+	/**
+	 * Chat specific settings for this asset
+	 *
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 */
+	chat?: {
+		/** How items of this asset are referred to in chat (defaults to asset's name) */
+		chatDescriptor?: string;
+		/** Message for when this item is added (defaults to `itemAdd`) */
+		actionAdd?: string;
+		/** Message for when this item is removed (defaults to `itemRemove`) */
+		actionRemove?: string;
+		/** Message for when this item is attached to something (defaults to `itemAttach`) */
+		actionAttach?: string;
+		/** Message for when this item is removed (defaults to `itemDetach`) */
+		actionDetach?: string;
 	};
 
 	/** If this asset is a bodypart, `undefined` if not. */

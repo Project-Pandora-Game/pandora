@@ -1,4 +1,4 @@
-import { AppearanceActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
+import { AppearanceActionRoomContext, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -53,6 +53,13 @@ export type IMessageParseOptions = {
 	target?: CharacterId;
 };
 
+function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
+	const asset = assetManager.getAssetById(assetId);
+	return asset?.definition.chat?.chatDescriptor ??
+		asset?.definition.name.toLocaleLowerCase() ??
+		`[UNKNOWN ASSET '${assetId}']`;
+}
+
 function ProcessMessage(
 	message: IChatRoomMessageAction & { time: number; roomId: RoomId; },
 	assetManager: AssetManagerClient,
@@ -69,6 +76,7 @@ function ProcessMessage(
 		metaDictionary.SOURCE_CHARACTER_PRONOUN = pronoun;
 		metaDictionary.SOURCE_CHARACTER_PRONOUN_SELF = `${pronoun}self`;
 		metaDictionary.SOURCE_CHARACTER = `${name} (${id})`;
+		metaDictionary.SOURCE_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
 	}
 
 	if (target) {
@@ -78,30 +86,45 @@ function ProcessMessage(
 		metaDictionary.TARGET_CHARACTER_PRONOUN = pronoun;
 		metaDictionary.TARGET_CHARACTER_PRONOUN_SELF = `${pronoun}self`;
 		metaDictionary.TARGET_CHARACTER = `${name} (${id})`;
+		metaDictionary.TARGET_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
+
 		if (id === source?.id) {
-			metaDictionary.TARGET_CHARACTER_DYNAMIC = pronoun;
-			metaDictionary.TARGET_CHARACTER_DYNAMIC_SELF = `${pronoun}self`;
+			metaDictionary.TARGET_CHARACTER_DYNAMIC = metaDictionary.TARGET_CHARACTER_PRONOUN_SELF;
+			metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE = metaDictionary.TARGET_CHARACTER_PRONOUN;
 		} else {
-			metaDictionary.TARGET_CHARACTER_DYNAMIC = `${name}'s (${id})`;
-			metaDictionary.TARGET_CHARACTER_DYNAMIC_SELF = `${name} (${id})`;
+			metaDictionary.TARGET_CHARACTER_DYNAMIC = metaDictionary.TARGET_CHARACTER;
+			metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE = metaDictionary.TARGET_CHARACTER_POSSESSIVE;
 		}
 	}
 
 	const item = message.data?.item;
 	const itemPrevious = message.data?.itemPrevious ?? item;
+	const itemContainerPath = message.data?.itemContainerPath;
 
 	if (item) {
-		const { assetId } = item;
-		const asset = assetManager.getAssetById(assetId);
-
-		metaDictionary.ITEM_ASSET_NAME = asset?.definition.name ?? `[UNKNOWN ASSET '${assetId}']`;
+		metaDictionary.ITEM_ASSET_NAME = DescribeAsset(assetManager, item.assetId);
 	}
 
 	if (itemPrevious) {
-		const { assetId } = itemPrevious;
-		const asset = assetManager.getAssetById(assetId);
+		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = DescribeAsset(assetManager, itemPrevious.assetId);
+	}
 
-		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = asset?.definition.name ?? `[UNKNOWN ASSET '${assetId}']`;
+	if (itemContainerPath) {
+		if (itemContainerPath.length === 0) {
+			metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
+			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC;
+		} else if (itemContainerPath.length === 1) {
+			const asset = DescribeAsset(assetManager, itemContainerPath[0].assetId);
+
+			metaDictionary.ITEM_CONTAINER_SIMPLE = `${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${asset}`;
+			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
+		} else {
+			const assetFirst = DescribeAsset(assetManager, itemContainerPath[0].assetId);
+			const assetLast = DescribeAsset(assetManager, itemContainerPath[itemContainerPath.length - 1].assetId);
+
+			metaDictionary.ITEM_CONTAINER_SIMPLE = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+		}
 	}
 
 	return {
@@ -124,7 +147,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		return this._shard.player.value;
 	}
 
-	get playerId() {
+	public get playerId() {
 		return this.player?.data.id;
 	}
 

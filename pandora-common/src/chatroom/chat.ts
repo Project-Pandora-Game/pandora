@@ -50,10 +50,17 @@ export type IChatRoomMessageActionCharacter = {
 export type IChatRoomMessageActionItem = {
 	assetId: AssetId;
 };
+export type IChatroomMessageActionContainerPath = {
+	assetId: AssetId;
+	module: string;
+}[];
+
 export type IChatRoomMessageAction = {
 	type: 'action' | 'serverMessage';
 	/** id to be looked up in message translation database */
 	id: ChatActionId;
+	/** Custom text is used instead of the `id` lookup result, if specified */
+	customText?: string;
 	data?: {
 		/** Used to generate specific dictionary entries, acts as source */
 		character?: IChatRoomMessageActionCharacter;
@@ -63,6 +70,8 @@ export type IChatRoomMessageAction = {
 		item?: IChatRoomMessageActionItem;
 		/** The previous state of item this message is about, defaults to `item` */
 		itemPrevious?: IChatRoomMessageActionItem;
+		/** Path to the container possible on `character` that `item` or `itemPrevious` are in */
+		itemContainerPath?: IChatroomMessageActionContainerPath;
 	};
 	dictionary?: Record<string, string>;
 };

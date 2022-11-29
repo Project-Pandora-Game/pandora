@@ -68,7 +68,7 @@ export class Room extends ServerRoom<IShardClient> {
 		}
 	}
 
-	getInfo(): IChatRoomFullInfo {
+	public getInfo(): IChatRoomFullInfo {
 		return this.data;
 	}
 
@@ -78,7 +78,7 @@ export class Room extends ServerRoom<IShardClient> {
 		};
 	}
 
-	getClientData(): IChatRoomClientData {
+	public getClientData(): IChatRoomClientData {
 		return {
 			...this.getInfo(),
 			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
@@ -95,7 +95,7 @@ export class Room extends ServerRoom<IShardClient> {
 		return false;
 	}
 
-	updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
+	public updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
 		const roomBackground = ResolveBackground(assetManager, this.data.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 
@@ -120,7 +120,7 @@ export class Room extends ServerRoom<IShardClient> {
 		this.sendUpdateToAllInRoom({ update: { id: character.id, position: character.position } });
 	}
 
-	getCharacterData(c: Character): ICharacterRoomData {
+	public getCharacterData(c: Character): ICharacterRoomData {
 		return {
 			name: c.name,
 			id: c.id,
@@ -131,11 +131,11 @@ export class Room extends ServerRoom<IShardClient> {
 		};
 	}
 
-	getAllCharacters(): Character[] {
+	public getAllCharacters(): Character[] {
 		return [...this.characters.values()];
 	}
 
-	getCharacterById(id: CharacterId): Character | null {
+	public getCharacterById(id: CharacterId): Character | null {
 		return Array.from(this.characters.values()).find((c) => c.id === id) ?? null;
 	}
 
@@ -270,19 +270,26 @@ export class Room extends ServerRoom<IShardClient> {
 		this._queueMessages(queue);
 	}
 
-	public handleAppearanceActionMessage(message: AppearanceActionHandlerMessage): void {
+	public handleAppearanceActionMessage({
+		id,
+		customText,
+		character,
+		targetCharacter,
+		dictionary,
+		...data
+	}: AppearanceActionHandlerMessage): void {
 		this._queueMessages([
 			{
 				type: 'action',
-				id: message.id,
+				id,
+				customText,
 				time: this.nextMessageTime(),
 				data: {
-					character: this._getCharacterActionInfo(message.character),
-					targetCharacter: message.targetCharacter !== message.character ? this._getCharacterActionInfo(message.targetCharacter) : undefined,
-					item: message.item,
-					itemPrevious: message.itemPrevious,
+					character: this._getCharacterActionInfo(character),
+					targetCharacter: targetCharacter !== character ? this._getCharacterActionInfo(targetCharacter) : undefined,
+					...data,
 				},
-				dictionary: message.dictionary,
+				dictionary,
 			},
 		]);
 	}

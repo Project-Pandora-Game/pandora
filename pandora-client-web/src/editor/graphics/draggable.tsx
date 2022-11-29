@@ -108,7 +108,7 @@ export function DraggablePointDisplay({
 
 export class DraggablePoint {
 	private readonly _definition: Observable<PointDefinitionCalculated>;
-	readonly layer: AssetGraphicsLayer;
+	public readonly layer: AssetGraphicsLayer;
 
 	public get definition(): ReadonlyObservable<Immutable<PointDefinitionCalculated>> {
 		return this._definition;

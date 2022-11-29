@@ -13,7 +13,7 @@ class CommandBuilderRoot<
 	Context extends ICommandExecutionContext,
 	Arguments extends Record<string, never>,
 > implements CommandBuilderSource<Context, Arguments, Arguments> {
-	build(next: CommandRunner<Context, Arguments>): CommandRunner<Context, Arguments> {
+	public build(next: CommandRunner<Context, Arguments>): CommandRunner<Context, Arguments> {
 		return next;
 	}
 }
@@ -35,7 +35,7 @@ class CommandBuilderStep<
 		this.processor = processor;
 	}
 
-	build(next: CommandRunner<Context, EntryArguments & { [i in ArgumentName]: ArgumentResultType; }>): CommandRunner<Context, StartArguments> {
+	public build(next: CommandRunner<Context, EntryArguments & { [i in ArgumentName]: ArgumentResultType; }>): CommandRunner<Context, StartArguments> {
 		const processor = new CommandRunnerArgParser<Context, EntryArguments, ArgumentName, ArgumentResultType>(this.name, this.processor, next);
 		return this.parent.build(processor);
 	}

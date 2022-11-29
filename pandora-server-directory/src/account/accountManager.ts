@@ -64,6 +64,7 @@ export class AccountManager {
 			accounts: inUseAccountCount,
 			characters: inUseCharacterCount,
 		});
+
 		const db = GetDatabase();
 		totalAccountsMetric.set(db.nextAccountId - 1);
 		totalCharactersMetric.set(db.nextCharacterId - 1);

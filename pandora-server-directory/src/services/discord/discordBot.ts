@@ -65,7 +65,7 @@ export const DiscordBot = new class DiscordBot {
 			if (!channel) {
 				continue;
 			}
-			const channelName = `${key}-${value}`;
+			const channelName = `${key[0].toUpperCase()}${key.slice(1)}: ${value}`;
 			if (channel.name === channelName) {
 				continue;
 			}

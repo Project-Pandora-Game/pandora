@@ -1,10 +1,7 @@
 import Discord, { BitFieldResolvable, GatewayIntentsString, GuildChannel } from 'discord.js';
 import _ from 'lodash';
 import { GetLogger } from 'pandora-common';
-
-const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
-const DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID = process.env.DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID || '';
-const DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID = process.env.DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID || '';
+import { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID } from '../../config';
 
 const STATUS_THROTTLE_TIME = 5_000; // 5 seconds
 

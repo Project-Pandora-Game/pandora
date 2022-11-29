@@ -74,3 +74,14 @@ export const CHARACTER_LIMIT_NORMAL = 5;
 export const BETA_KEY = process.env.BETA_KEY ?? '';
 
 //#endregion
+
+//#region Discord
+
+/** Discord bot token */
+export const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
+/** Discord bot account status channel ID */
+export const DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID = process.env.DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID || '';
+/** Discord bot character status channel ID */
+export const DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID = process.env.DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID || '';
+
+//#endregion

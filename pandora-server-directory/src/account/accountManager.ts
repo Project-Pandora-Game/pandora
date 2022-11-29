@@ -2,6 +2,7 @@ import { GetDatabase } from '../database/databaseProvider';
 import { GetLogger } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 import promClient from 'prom-client';
+import { DiscordBot } from '../services/discord/discordBot';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
@@ -59,7 +60,10 @@ export class AccountManager {
 		}
 		inUseAccountsMetric.set(inUseAccountCount);
 		inUseCharactersMetric.set(inUseCharacterCount);
-
+		DiscordBot.setOnlineStatus({
+			accounts: inUseAccountCount,
+			characters: inUseCharacterCount,
+		});
 		const db = GetDatabase();
 		totalAccountsMetric.set(db.nextAccountId - 1);
 		totalCharactersMetric.set(db.nextCharacterId - 1);
@@ -84,6 +88,10 @@ export class AccountManager {
 			this.unloadAccount(account);
 		}
 		inUseAccountsMetric.set(0);
+		DiscordBot.setOnlineStatus({
+			accounts: 0,
+			characters: 0,
+		});
 	}
 
 	/** Create account from received data, adding it to loaded accounts */

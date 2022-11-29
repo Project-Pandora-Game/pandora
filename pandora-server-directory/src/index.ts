@@ -10,6 +10,7 @@ import { SetupSignalHandling } from './lifecycle';
 import { ConnectionManagerClient } from './networking/manager_client';
 import { GitHubVerifier } from './services/github/githubVerify';
 import { ShardTokenStore } from './shard/shardTokenStore';
+import { DiscordBot } from './services/discord/discordBot';
 
 const logger = GetLogger('init');
 
@@ -25,6 +26,7 @@ async function Start(): Promise<void> {
 	SetupLogging();
 	logger.info(`${APP_NAME} starting...`);
 	await GetEmailSender().init();
+	await DiscordBot.init();
 	logger.verbose('Initializing database...');
 	await InitDatabase();
 	await ShardTokenStore.init();

@@ -5,6 +5,7 @@ import { StopHttpServer } from './networking/httpServer';
 import { ConnectionManagerClient } from './networking/manager_client';
 import { ShardManager } from './shard/shardManager';
 import wtfnode from 'wtfnode';
+import { DiscordBot } from './services/discord/discordBot';
 
 const logger = GetLogger('Lifecycle');
 
@@ -21,6 +22,8 @@ const STOP_TIMEOUT = 10_000;
 async function StopGracefully(): Promise<void> {
 	// Stop HTTP server
 	StopHttpServer();
+	// Stop discord bot
+	DiscordBot.onDestroy();
 	// Stop sending status updates
 	ConnectionManagerClient.onDestroy();
 	// Unload all shards

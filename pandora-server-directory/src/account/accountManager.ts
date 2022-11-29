@@ -89,10 +89,6 @@ export class AccountManager {
 			this.unloadAccount(account);
 		}
 		inUseAccountsMetric.set(0);
-		DiscordBot.setOnlineStatus({
-			accounts: 0,
-			characters: 0,
-		});
 	}
 
 	/** Create account from received data, adding it to loaded accounts */

@@ -24,6 +24,7 @@ export const DiscordBot = new class DiscordBot {
 		intents: GATEWAY_INTENTS,
 	});
 	private _statusChannels?: Partial<Status<GuildChannel>>;
+	private _destroyed = false;
 
 	public async init(): Promise<this> {
 		if (!DISCORD_BOT_TOKEN) {
@@ -37,22 +38,35 @@ export const DiscordBot = new class DiscordBot {
 			return this;
 		}
 
+		/** Call with no status to trigger throttle */
+		this.setOnlineStatus({});
+
 		this._statusChannels = {
 			accounts: await this._getGuildChannel(DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID),
 			characters: await this._getGuildChannel(DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID),
 		};
 
-		this.setOnlineStatus({
-			accounts: 0,
-			characters: 0,
-		});
+		this._client.user?.setStatus('online');
 
 		logger.info('Discord Bot is ready');
 
 		return this;
 	}
 
+	public onDestroy(): void {
+		if (this._destroyed) {
+			return;
+		}
+		this._destroyed = true;
+		this.setOnlineStatus.cancel();
+		this._client.user?.setStatus('dnd');
+		this._client.destroy();
+	}
+
 	public readonly setOnlineStatus = _.throttle((status: Partial<DiscordBotStatus>): void => {
+		if (this._destroyed) {
+			return;
+		}
 		const catcher = (error: Error) => logger.error(error);
 		for (const [key, value] of Object.entries(status)) {
 			if (value === undefined) {

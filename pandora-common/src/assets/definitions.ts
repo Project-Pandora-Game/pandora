@@ -2,9 +2,10 @@ import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexColorString, zTemplateString } from '../validation';
 import type { ArmsPose, BoneName } from './appearance';
+import type { AssetAutomaticActions } from './appearanceAutomation';
 import type { BoneDefinitionCompressed } from './graphics';
-import { AssetModuleDefinition } from './modules';
-import { AssetProperties } from './properties';
+import type { AssetModuleDefinition } from './modules';
+import type { AssetProperties } from './properties';
 
 export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
@@ -97,6 +98,9 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	 * Modules this asset has
 	 */
 	modules?: Record<string, AssetModuleDefinition<A>>;
+
+	/** Automation on specific events to make using the item easier for users */
+	automation?: AssetAutomaticActions;
 
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;

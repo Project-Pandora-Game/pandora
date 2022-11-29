@@ -50,6 +50,7 @@ const ModuleItemDataTypedScheme = z.object({
 
 export const ItemModuleTypedActionSchema = z.object({
 	moduleType: z.literal('typed'),
+	/** ID if an variant to set this module to */
 	setVariant: z.string(),
 });
 type ItemModuleTypedAction = z.infer<typeof ItemModuleTypedActionSchema>;

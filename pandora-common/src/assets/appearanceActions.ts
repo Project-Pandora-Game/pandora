@@ -11,6 +11,7 @@ import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { Item } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems } from './appearanceValidation';
+import { AssetAutomationRun } from './appearanceAutomation';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
@@ -233,9 +234,17 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 
 	// Do change
 	let removed: AppearanceItems = [];
-	// if this is a bodypart not allowing multiple do a swap instead, but only in root
-	if (manipulator.isCharacter && item.asset.definition.bodypart && manipulator.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
-		removed = manipulator.removeMatchingItems((oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
+
+	// Special actions to do on character
+	if (manipulator.isCharacter) {
+		// Run pre-add automation
+		if (!AssetAutomationRun(rootManipulator, item.asset.definition.automation?.beforeAdd))
+			return false;
+
+		// if this is a bodypart not allowing multiple do a swap instead
+		if (item.asset.definition.bodypart && manipulator.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
+			removed = manipulator.removeMatchingItems((oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
+		}
 	}
 	if (!manipulator.addItem(item))
 		return false;
@@ -274,6 +283,13 @@ export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, ite
 	// Validate
 	if (removedItems.length !== 1)
 		return false;
+
+	// Special actions to do on character
+	if (manipulator.isCharacter) {
+		// Run post-remove automation
+		if (!AssetAutomationRun(rootManipulator, removedItems[0].asset.definition.automation?.afterRemove))
+			return false;
+	}
 
 	// Change message to chat
 	const manipulatorContainer = manipulator.container;

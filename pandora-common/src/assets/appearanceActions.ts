@@ -321,7 +321,7 @@ export function ActionModuleAction(rootManipulator: AppearanceRootManipulator, i
 	const { container, itemId } = itemPath;
 	const manipulator = rootManipulator.getContainer(container);
 
-	// Do change
+	// Do change and store chat messages
 	if (!manipulator.modifyItem(itemId, (it) => it.moduleAction(
 		module,
 		action,
@@ -334,9 +334,6 @@ export function ActionModuleAction(rootManipulator: AppearanceRootManipulator, i
 	))) {
 		return false;
 	}
-
-	// Change message to chat
-	// TODO: Message to chat that item module was changed
 
 	return true;
 }

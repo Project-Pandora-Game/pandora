@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { GetLogger } from 'pandora-common';
 import { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID } from '../../config';
 
-const STATUS_THROTTLE_TIME = 5_000; // 5 seconds
+const STATUS_THROTTLE_TIME = 10 * 60 * 1000; // 10 minutes
 
 const GATEWAY_INTENTS: BitFieldResolvable<GatewayIntentsString, number> = [
 	'Guilds',

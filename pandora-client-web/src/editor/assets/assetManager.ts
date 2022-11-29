@@ -47,6 +47,8 @@ export class AssetManagerEditor extends AssetManagerClient {
 DefineAsset({
 	// Name of your asset, this is what users see
 	name: '${name}',${bodypart ? `\n\tbodypart: '${bodypart}',` : ''}
+	// Size of this item. Affects mainly which things it can fit into. For more details check pandora-common/src/assets/definitions.ts
+	size: '${bodypart ? 'bodypart' : 'medium'}',
 	// Name of the file with graphics created using Editor.
 	graphics: 'graphics.json',
 	// Definitions of how your asset should be colorable.

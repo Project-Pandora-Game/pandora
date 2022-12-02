@@ -5,7 +5,7 @@ import { Character } from '../account/character';
 import { Shard } from './shard';
 import { ShardManager } from './shardManager';
 import { ConnectionManagerClient } from '../networking/manager_client';
-import { uniq } from 'lodash';
+import { pick, uniq } from 'lodash';
 
 export class Room {
 	public readonly id: RoomId;
@@ -71,6 +71,7 @@ export class Room {
 	public getDirectoryExtendedInfo(): IChatRoomDirectoryExtendedInfo {
 		return ({
 			...this.getDirectoryInfo(),
+			...pick(this.config, ['features', 'admin', 'background']),
 			characters: Array.from(this.characters).map((c) => ({
 				id: c.id,
 				accountId: c.account.id,

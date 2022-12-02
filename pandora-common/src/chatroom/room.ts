@@ -170,7 +170,7 @@ export type IChatRoomDirectoryInfo = IChatRoomBaseInfo & {
 	// };
 };
 
-export type IChatRoomDirectoryExtendedInfo = IChatRoomDirectoryInfo & {
+export type IChatRoomDirectoryExtendedInfo = IChatRoomDirectoryInfo & Pick<IChatRoomDirectoryConfig, 'features' | 'admin' | 'background'> & {
 	characters: {
 		id: CharacterId;
 		accountId: number;

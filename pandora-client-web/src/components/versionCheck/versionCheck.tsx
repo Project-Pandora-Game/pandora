@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMounted } from '../../common/useMounted';
 import { GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment';
 import { Button } from '../common/Button/Button';
-import { Dialog, DialogCloseButton } from '../dialog/dialog';
+import { ModalDialog, DialogCloseButton } from '../dialog/dialog';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
 
 // In debug mode 30 seconds, otherwise 5 minutes per new version check
@@ -45,7 +45,7 @@ function VersionCheckImpl() {
 	}
 
 	return (
-		<Dialog>
+		<ModalDialog>
 			<h3>
 				You are running an outdated version of the application.
 			</h3>
@@ -62,7 +62,7 @@ function VersionCheckImpl() {
 				<Button onClick={ () => window.location.reload() }>Reload</Button>
 				<DialogCloseButton>Cancel</DialogCloseButton>
 			</div>
-		</Dialog>
+		</ModalDialog>
 	);
 }
 

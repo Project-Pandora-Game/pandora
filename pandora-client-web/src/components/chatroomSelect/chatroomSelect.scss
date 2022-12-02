@@ -2,11 +2,19 @@
 @import '../../styles/utils';
 
 .chatroom-details {
-background-color: #fefefe;
-	margin: 15% auto;
-	padding: 20px;
-	border: 1px solid black;
-	width: 80%;
+	width: 100%;
+	display: grid;
+}
+
+.details-description {
+	border-style: solid;
+	border-width: 0.1em;
+	background-color: darkgray;
+	padding: 0.2em;
+}
+
+.details-users {
+	columns: 2;
 }
 
 .details-close {
@@ -55,4 +63,5 @@ background-color: #fefefe;
 	text-align: left;
 	vertical-align: middle;
 }
+
 

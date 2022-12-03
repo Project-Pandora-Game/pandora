@@ -140,7 +140,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!client.character)
 			throw new BadMessageError();
 
-		if (!DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager)) {
+		if (DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager).result !== 'success') {
 			client.character.onAppearanceChanged(false);
 		}
 	}

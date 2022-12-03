@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash';
 import type { Logger } from '../logging';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
+import { AssetAttributeDefinition, AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { Item, ItemBundle } from './item';
 
@@ -11,6 +11,7 @@ export class AssetManager {
 	protected readonly _bones: Map<string, BoneDefinition> = new Map();
 	protected _posePresets: AssetsPosePresets = [];
 	protected _backgrounds: IChatroomBackgroundInfo[] = [];
+	protected _attributes: Map<string, AssetAttributeDefinition> = new Map();
 	protected _definitionsHash: string = '';
 
 	public get definitionsHash(): string {
@@ -51,6 +52,10 @@ export class AssetManager {
 		return cloneDeep(this._backgrounds.find((b) => b.id === id) ?? null);
 	}
 
+	public getAttributeDefinition(attribute: string): Readonly<AssetAttributeDefinition> | undefined {
+		return this._attributes.get(attribute);
+	}
+
 	/**
 	 * Finds the bone with the given name.
 	 * @param name - name of the bone
@@ -72,20 +77,14 @@ export class AssetManager {
 		this._posePresets = data.posePresets ?? [];
 		this._backgrounds = data.backgrounds ?? [];
 
-		this._bones.clear();
 		this.loadBones(data.bones);
-
+		this.loadAttributes(data.attributes);
 		this.loadAssets(data.assets);
 	}
 
 	private loadAssets(assets: Record<AssetId, AssetDefinition>): void {
-		// First unload no-longer existing assets
-		for (const id of this._assets.keys()) {
-			if (assets[id] === undefined) {
-				this._assets.delete(id);
-			}
-		}
-		// Then load all defined assets
+		this._assets.clear();
+
 		for (const [id, definition] of Object.entries(assets)) {
 			if (!id.startsWith('a/')) {
 				throw new Error(`Asset without valid prefix: ${id}`);
@@ -95,11 +94,21 @@ export class AssetManager {
 		}
 	}
 
+	private loadAttributes(attributes: Record<string, AssetAttributeDefinition>): void {
+		this._assets.clear();
+
+		for (const [id, definition] of Object.entries(attributes)) {
+			this._attributes.set(id, definition);
+		}
+	}
+
 	protected createAsset(id: AssetId, data: AssetDefinition): Asset {
 		return new Asset(id, data);
 	}
 
 	protected loadBones(bones: Record<string, BoneDefinitionCompressed>): void {
+		this._bones.clear();
+
 		const next: Record<string, BoneDefinitionCompressed> = {};
 		let allNext = true;
 		let hasNext = false;

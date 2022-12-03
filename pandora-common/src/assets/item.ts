@@ -86,14 +86,21 @@ export class Item {
 	public validate(isWorn: boolean): AppearanceValidationResult {
 		// Check the asset can actually be worn
 		if (isWorn && this.asset.definition.wearable === false)
-			return false;
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: this.asset.id,
+				},
+			};
 
 		for (const module of this.modules.values()) {
-			if (!module.validate(isWorn))
-				return false;
+			const r = module.validate(isWorn);
+			if (!r.success)
+				return r;
 		}
 
-		return true;
+		return { success: true };
 	}
 
 	/** Colors this item with passed color, returning new item with modified color */

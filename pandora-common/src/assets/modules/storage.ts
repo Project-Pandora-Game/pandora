@@ -5,7 +5,7 @@ import { AssetDefinitionExtraArgs, AssetSize, AssetSizeMapping } from '../defini
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
 import { IItemLoadContext, Item, ItemBundle, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { ItemId } from '../appearanceTypes';
@@ -54,15 +54,40 @@ function ValidateStorage(contents: AppearanceItems, config: IModuleConfigStorage
 	const ids = new Set<ItemId>();
 	for (const item of contents) {
 		if (ids.has(item.id))
-			return false;
+			return {
+				success: false,
+				error: {
+					problem: 'invalid',
+				},
+			};
 		ids.add(item.id);
 	}
 
+	// Count must be within limit
+	if (contents.length > config.maxCount)
+		return {
+			success: false,
+			error: {
+				problem: 'tooManyItems',
+				asset: null,
+				limit: config.maxCount,
+			},
+		};
+
 	// Size must be within limit
 	const limitSize = AssetSizeMapping[config.maxAcceptedSize] ?? 0;
-	return contents.length <= config.maxCount &&
-		contents.every((i) => (AssetSizeMapping[i.asset.definition.size] ?? 99) <= limitSize) &&
-		contents.every((i) => i.validate(false));
+	const problematic = contents.find((i) => (AssetSizeMapping[i.asset.definition.size] ?? 99) > limitSize);
+	if (problematic != null)
+		return {
+			success: false,
+			error: {
+				problem: 'contentNotAllowed',
+				asset: problematic.asset.id,
+			},
+		};
+
+	return contents.map((i) => i.validate(false))
+		.reduce(AppearanceValidationCombineResults, { success: true });
 }
 
 export class ItemModuleStorage implements IItemModule<'storage'> {
@@ -107,7 +132,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 					continue;
 				}
 				// Skip if invalid
-				if (!item.validate(false)) {
+				if (!item.validate(false).success) {
 					context.logger?.warning(`Skipping stored item reporting invalid ${itemBundle.asset}`);
 					continue;
 				}

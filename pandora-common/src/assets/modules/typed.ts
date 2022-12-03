@@ -112,7 +112,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 	}
 
 	public validate(_isWorn: boolean): AppearanceValidationResult {
-		return true;
+		return { success: true };
 	}
 
 	public getProperties(): AssetProperties {

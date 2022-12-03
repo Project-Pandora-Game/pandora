@@ -78,7 +78,7 @@ export class AssetManager {
 		this._backgrounds = data.backgrounds ?? [];
 
 		this.loadBones(data.bones);
-		this.loadAttributes(data.attributes);
+		this.loadAttributes(data.attributes ?? {});
 		this.loadAssets(data.assets);
 	}
 

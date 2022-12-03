@@ -16,7 +16,7 @@ export enum ItemInteractionType {
 	 *
 	 * Requirements:
 	 * - Player can interact with character (handling things like permissions and safeword state)
-	 * - Player can use the asset of this item on character (blocked/limited items check; bodyparts can only be changed on self)
+	 * - Player can use the asset of this item on character (blocked/limited items check)
 	 */
 	ACCESS_ONLY = 'ACCESS_ONLY',
 	/**
@@ -26,6 +26,7 @@ export enum ItemInteractionType {
 	 * - Requires all `ACCESS_ONLY` requirements
 	 * - If asset __is__ bodypart:
 	 *   - Must not be in room or the room must allow body modification
+	 *   - Must be targetting herself
 	 * - If asset __is not__ bodypart:
 	 *   - Player must be able to use hands
 	 */
@@ -37,6 +38,7 @@ export enum ItemInteractionType {
 	 * - Requires all `ACCESS_ONLY` requirements
 	 * - If asset __is__ bodypart:
 	 *   - Must not be in room or the room must allow body modification
+	 *   - Must be targetting herself
 	 * - If asset __is not__ bodypart:
 	 *   - Player must be able to use hands
 	 */
@@ -48,6 +50,7 @@ export enum ItemInteractionType {
 	 * - Requires all `ACCESS_ONLY` requirements
 	 * - If asset __is__ bodypart:
 	 *   - Must not be in room or the room must allow body modification
+	 *   - Must be targetting herself
 	 * - If asset __is not__ bodypart:
 	 *   - Player must be able to use hands
 	 *   - If asset has `blockAddRemove`, then denied
@@ -163,16 +166,6 @@ export class CharacterRestrictionsManager {
 		if (target.type === 'character' && target.characterId === this.characterId)
 			return { allowed: true };
 
-		// Bodyparts can only be changed on self
-		if (asset.definition.bodypart != null)
-			return {
-				allowed: false,
-				restriction: {
-					type: 'permission',
-					missingPermission: 'modifyBodyOthers',
-				},
-			};
-
 		return { allowed: true };
 	}
 
@@ -252,6 +245,7 @@ export class CharacterRestrictionsManager {
 						type: 'invalid',
 					},
 				};
+
 			// Not all rooms allow bodypart changes
 			if (this.room && !this.room.features.includes('allowBodyChanges'))
 				return {
@@ -261,6 +255,17 @@ export class CharacterRestrictionsManager {
 						missingPermission: 'modifyBodyRoom',
 					},
 				};
+
+			// Bodyparts can only be changed on self
+			if (target.characterId !== this.characterId)
+				return {
+					allowed: false,
+					restriction: {
+						type: 'permission',
+						missingPermission: 'modifyBodyOthers',
+					},
+				};
+
 			return { allowed: true };
 		}
 

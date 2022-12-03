@@ -67,7 +67,7 @@ importers:
       postcss-preset-env: ^7.2.3
       react: ^18.2.0
       react-dom: ^18.2.0
-      react-hook-form: ^7.36.0
+      react-hook-form: ^7.40.0
       react-refresh: ^0.14.0
       react-refresh-typescript: ^2.0.7
       react-reverse-portal: ^2.1.1
@@ -107,7 +107,7 @@ importers:
       pixi.js: 6.5.8
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
-      react-hook-form: 7.39.3_react@18.2.0
+      react-hook-form: 7.40.0_react@18.2.0
       react-rnd: 10.3.7_biqbaboplfbrettd7655fr4n2y
       react-router: 6.4.3_react@18.2.0
       react-router-dom: 6.4.3_biqbaboplfbrettd7655fr4n2y
@@ -8863,8 +8863,8 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     dev: false
 
-  /react-hook-form/7.39.3_react@18.2.0:
-    resolution: {integrity: sha512-H/vwk1vBf+TiXuyW6+hWz+zCujiDO6NqHlN5sPE/a+NGKKGK95XTM65DZz3NmEgs2M20Wka+g4uv4VD367wDBA==}
+  /react-hook-form/7.40.0_react@18.2.0:
+    resolution: {integrity: sha512-0rokdxMPJs0k9bvFtY6dbcSydyNhnZNXCR49jgDr/aR03FDHFOK6gfh8ccqB3fl696Mk7lqh04xdm+agqWXKSw==}
     engines: {node: '>=12.22.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18

@@ -155,6 +155,7 @@ function useWardrobeContext(): Readonly<WardrobeContext> {
 
 function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
+	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
 
 	const overlay = (
@@ -162,7 +163,11 @@ function Wardrobe(): ReactElement | null {
 			<Button className='slim iconButton'
 				title='Toggle character view'
 				onClick={ () => {
-					character.appearance.setView(character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT);
+					shardConnector?.sendMessage('appearanceAction', {
+						type: 'setView',
+						target: character.data.id,
+						view: character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT,
+					});
 				} }
 			>
 				↷

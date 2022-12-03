@@ -84,7 +84,9 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 	public readonly activeVariant: Readonly<IModuleTypedOption>;
 
 	public get interactionType(): ItemInteractionType {
-		return this.config.interactionType ?? ItemInteractionType.MODIFY;
+		// Interaction can be overridden by config, but defaults to modify (unless this is an expression, then to expression)
+		return this.config.interactionType ??
+			(this.config.expression != null ? ItemInteractionType.EXPRESSION_CHANGE : ItemInteractionType.MODIFY);
 	}
 
 	constructor(config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext) {

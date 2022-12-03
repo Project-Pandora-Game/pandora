@@ -20,6 +20,16 @@ export enum ItemInteractionType {
 	 */
 	ACCESS_ONLY = 'ACCESS_ONLY',
 	/**
+	 * Special interaction for changing expression
+	 *
+	 * Requirements:
+	 * - Requires all `ACCESS_ONLY` requirements
+	 * - If asset __is__ bodypart:
+	 *   - Must be targetting herself
+	 * - If asset __is not__ bodypart this action is invalid (never allowed)
+	 */
+	EXPRESSION_CHANGE = 'EXPRESSION_CHANGE',
+	/**
 	 * Item modified only in stylistic way (e.g. color)
 	 *
 	 * Requirements:
@@ -246,8 +256,12 @@ export class CharacterRestrictionsManager {
 					},
 				};
 
-			// Not all rooms allow bodypart changes
-			if (this.room && !this.room.features.includes('allowBodyChanges'))
+			// Not all rooms allow bodypart changes (changing expression is allowed)
+			if (
+				this.room &&
+				!this.room.features.includes('allowBodyChanges') &&
+				interaction !== ItemInteractionType.EXPRESSION_CHANGE
+			) {
 				return {
 					allowed: false,
 					restriction: {
@@ -255,6 +269,7 @@ export class CharacterRestrictionsManager {
 						missingPermission: 'modifyBodyRoom',
 					},
 				};
+			}
 
 			// Bodyparts can only be changed on self
 			if (target.characterId !== this.characterId)
@@ -268,6 +283,15 @@ export class CharacterRestrictionsManager {
 
 			return { allowed: true };
 		}
+
+		// Changing expression makes sense only on bodyparts
+		if (interaction === ItemInteractionType.EXPRESSION_CHANGE)
+			return {
+				allowed: false,
+				restriction: {
+					type: 'invalid',
+				},
+			};
 
 		// To add or remove the item, we need to have access to all contained items
 		if (interaction === ItemInteractionType.ADD_REMOVE) {

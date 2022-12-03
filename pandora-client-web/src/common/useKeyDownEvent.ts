@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 
 export function useKeyDownEvent(
-	key: string,
 	callback: (event: KeyboardEvent) => void,
+	key?: string,
 ) {
 	useEffect(() => {
 		const handler = (event: KeyboardEvent) => {
-			if (event.key === key) {
+			if (!key || event.key === key) {
 				callback(event);
 			}
 		};

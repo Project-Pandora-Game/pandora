@@ -20,7 +20,7 @@ export function ContextHelpButton({ children }: ChildrenProps): ReactElement {
 		setOpen(false);
 	}, []);
 
-	useKeyDownEvent('Escape', close);
+	useKeyDownEvent(close, 'Escape');
 
 	return (
 		<>

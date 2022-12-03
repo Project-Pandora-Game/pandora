@@ -2,6 +2,21 @@ import { AppearanceActionResult, AssertNever } from 'pandora-common';
 import { DescribeAsset } from '../components/gameContext/chatRoomContextProvider';
 import { AssetManagerClient } from './assetManager';
 
+/** Returns if the button to do the action should be straight out hidden instead of only disabled */
+export function AppearanceActionResultShouldHide(result: AppearanceActionResult): boolean {
+	if (result.result === 'invalidAction')
+		return true;
+
+	if (
+		result.result === 'validationError' &&
+		result.validationError.problem === 'bodypartError' &&
+		result.validationError.problemDetail === 'incorrectOrder'
+	)
+		return true;
+
+	return false;
+}
+
 export function RenderAppearanceActionResult(assetManager: AssetManagerClient, result: AppearanceActionResult): string {
 	if (result.result === 'success') {
 		return 'No problem.';

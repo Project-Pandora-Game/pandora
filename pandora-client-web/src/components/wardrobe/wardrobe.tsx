@@ -55,7 +55,7 @@ import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers
 import emptyLock from '../../assets/icons/lock_empty.svg';
 import closedLock from '../../assets/icons/lock_closed.svg';
 import openLock from '../../assets/icons/lock_open.svg';
-import { RenderAppearanceActionResult } from '../../assets/appearanceValidation';
+import { AppearanceActionResultShouldHide, RenderAppearanceActionResult } from '../../assets/appearanceValidation';
 import { HoverElement } from '../hoverElement/hoverElement';
 
 export function WardrobeScreen(): ReactElement | null {
@@ -550,7 +550,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 								target,
 								item,
 								shift: 1,
-							} }>
+							} } hideReserveSpace>
 								⬇️
 							</WardrobeActionButton>
 							<WardrobeActionButton action={ {
@@ -558,7 +558,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 								target,
 								item,
 								shift: -1,
-							} }>
+							} } hideReserveSpace>
 								⬆️
 							</WardrobeActionButton>
 						</>
@@ -568,7 +568,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 					type: 'delete',
 					target,
 					item,
-				} }>
+				} } hideReserveSpace>
 					➖
 				</WardrobeActionButton>
 			</div>
@@ -581,13 +581,17 @@ function WardrobeActionButton({
 	className,
 	children,
 	action,
+	hideReserveSpace = false,
 }: CommonProps & {
 	action: AppearanceAction;
+	/** Makes the button hide if it should in a way, that occupied space is preserved */
+	hideReserveSpace?: boolean;
 }): ReactElement {
 	const { actions } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 
 	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const hide = AppearanceActionResultShouldHide(check);
 	const ref = useRef<HTMLButtonElement>(null);
 
 	return (
@@ -595,6 +599,7 @@ function WardrobeActionButton({
 			id={ id }
 			ref={ ref }
 			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked') }
+			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
 				if (check.result === 'success') {

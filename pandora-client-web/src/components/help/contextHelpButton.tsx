@@ -7,6 +7,7 @@ import { Column } from '../common/container/container';
 import { DraggableDialog } from '../dialog/dialog';
 import helpIcon from '../../assets/icons/help.svg';
 import './contextHelpButton.scss';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 
 export function ContextHelpButton({ children }: ChildrenProps): ReactElement {
 	const [open, setOpen] = useState(false);
@@ -18,6 +19,8 @@ export function ContextHelpButton({ children }: ChildrenProps): ReactElement {
 	const close = useCallback(() => {
 		setOpen(false);
 	}, []);
+
+	useKeyDownEvent('Escape', close);
 
 	return (
 		<>

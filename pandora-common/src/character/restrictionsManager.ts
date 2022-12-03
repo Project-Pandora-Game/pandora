@@ -166,7 +166,7 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public canUseAsset(target: RoomActionTarget, asset: Asset): RestrictionResult {
+	public canUseAsset(target: RoomActionTarget, _asset: Asset): RestrictionResult {
 		// Must be able to interact with character
 		const r = this.canInteractWithTarget(target);
 		if (!r.allowed)

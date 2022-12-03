@@ -598,7 +598,6 @@ function WardrobeActionButton({
 		<button
 			id={ id }
 			ref={ ref }
-			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked') }
 			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();

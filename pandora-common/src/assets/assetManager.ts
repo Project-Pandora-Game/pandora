@@ -95,7 +95,7 @@ export class AssetManager {
 	}
 
 	private loadAttributes(attributes: Record<string, AssetAttributeDefinition>): void {
-		this._assets.clear();
+		this._attributes.clear();
 
 		for (const [id, definition] of Object.entries(attributes)) {
 			this._attributes.set(id, definition);

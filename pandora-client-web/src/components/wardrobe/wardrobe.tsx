@@ -24,8 +24,9 @@ import {
 	RoomTargetSelector,
 	ItemPath,
 	Assert,
+	AppearanceActionResult,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
@@ -55,8 +56,7 @@ import emptyLock from '../../assets/icons/lock_empty.svg';
 import closedLock from '../../assets/icons/lock_closed.svg';
 import openLock from '../../assets/icons/lock_open.svg';
 import { RenderAppearanceActionResult } from '../../assets/appearanceValidation';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { HoverElement } from '../hoverElement/hoverElement';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -385,9 +385,28 @@ function InventoryAssetView({ className, title, children, assets, container }: {
 	);
 }
 
+function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement> }) {
+	const assetManager = GetAssetManager();
+	const reson =  useMemo(() => check.result === 'success'
+		? ''
+		: RenderAppearanceActionResult(assetManager, check),
+	[assetManager, check]);
+
+	if (check.result === 'success') {
+		return null;
+	}
+
+	return (
+		<HoverElement parent={ parent } className='action-warning'>
+			This action isn&apos;t possible, because:
+			<br />
+			{ reson }
+		</HoverElement>
+	);
+}
+
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
 	const { actions, target } = useWardrobeContext();
-	const assetManager = GetAssetManager();
 
 	const action: AppearanceAction = {
 		type: 'create',
@@ -399,16 +418,17 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 
 	const shardConnector = useShardConnector();
 	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const ref = useRef<HTMLDivElement>(null);
 	return (
-		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', check.result === 'success' ? 'allowed' : 'blocked') } onClick={ () => {
-			if (check.result === 'success') {
-				shardConnector?.sendMessage('appearanceAction', action);
-			} else {
-				const reason = `This action isn't possible, because:\n` +
-					RenderAppearanceActionResult(assetManager, check);
-				toast(reason, TOAST_OPTIONS_ERROR);
-			}
-		} }>
+		<div
+			className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', check.result === 'success' ? 'allowed' : 'blocked') }
+			ref={ ref }
+			onClick={ () => {
+				if (check.result === 'success') {
+					shardConnector?.sendMessage('appearanceAction', action);
+				}
+			} }>
+			<ActionWarning check={ check } parent={ ref } />
 			<div className='itemPreview' />
 			<span className='itemName'>{asset.definition.name}</span>
 		</div>
@@ -566,24 +586,23 @@ function WardrobeActionButton({
 }): ReactElement {
 	const { actions } = useWardrobeContext();
 	const shardConnector = useShardConnector();
-	const assetManager = GetAssetManager();
 
 	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const ref = useRef<HTMLButtonElement>(null);
 
 	return (
-		<button id={ id }
+		<button
+			id={ id }
+			ref={ ref }
 			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked') }
 			onClick={ (ev) => {
 				ev.stopPropagation();
 				if (check.result === 'success') {
 					shardConnector?.sendMessage('appearanceAction', action);
-				} else {
-					const reason = `This action isn't possible, because:\n` +
-						RenderAppearanceActionResult(assetManager, check);
-					toast(reason, TOAST_OPTIONS_ERROR);
 				}
 			} }
 		>
+			<ActionWarning check={ check } parent={ ref } />
 			{ children }
 		</button>
 	);

@@ -8,7 +8,7 @@ import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item } from '../assets/item';
 import type { Asset } from '../assets/asset';
-import type { ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
+import type { AssetId, ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
 
 export enum ItemInteractionType {
 	/**
@@ -55,6 +55,37 @@ export enum ItemInteractionType {
 	 */
 	ADD_REMOVE = 'ADD_REMOVE',
 }
+
+export type Restriction =
+	| {
+		type: 'permission';
+		missingPermission: 'modifyBodyOthers' | 'modifyBodyRoom';
+	}
+	| {
+		type: 'blockedAddRemove';
+		asset: AssetId;
+		self: boolean;
+	}
+	| {
+		type: 'blockedModule';
+		asset: AssetId;
+		module: string;
+		self: boolean;
+	}
+	| {
+		type: 'blockedHands';
+	}
+	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
+	| {
+		type: 'invalid';
+	};
+
+export type RestrictionResult = {
+	allowed: true;
+} | {
+	allowed: false;
+	restriction: Restriction;
+};
 
 /**
  * All functions should return a stable value, or useSyncExternalStore will not work properly.
@@ -114,56 +145,71 @@ export class CharacterRestrictionsManager {
 		return _.clamp(this.getEffects().blind, 0, 10);
 	}
 
-	public canInteractWithTarget(target: RoomActionTarget): boolean {
+	public canInteractWithTarget(target: RoomActionTarget): RestrictionResult {
 		// Room inventory can always be intereacted with
 		if (target.type === 'roomInventory')
-			return true;
+			return { allowed: true };
 		// TODO: For permissions
-		return true;
+		return { allowed: true };
 	}
 
-	public canUseAsset(target: RoomActionTarget, asset: Asset): boolean {
+	public canUseAsset(target: RoomActionTarget, asset: Asset): RestrictionResult {
 		// Must be able to interact with character
-		if (!this.canInteractWithTarget(target))
-			return false;
+		const r = this.canInteractWithTarget(target);
+		if (!r.allowed)
+			return r;
 
 		// Can do all on self
 		if (target.type === 'character' && target.characterId === this.characterId)
-			return true;
+			return { allowed: true };
 
 		// Bodyparts can only be changed on self
 		if (asset.definition.bodypart != null)
-			return false;
+			return {
+				allowed: false,
+				restriction: {
+					type: 'permission',
+					missingPermission: 'modifyBodyOthers',
+				},
+			};
 
-		return true;
+		return { allowed: true };
 	}
 
-	public hasPermissionForItemContents(target: RoomActionTarget, item: Item): boolean {
+	public hasPermissionForItemContents(target: RoomActionTarget, item: Item): RestrictionResult {
 		// Iterate over whole content
 		for (const module of item.modules.keys()) {
 			for (const innerItem of item.getModuleItems(module)) {
-				if (!this.canUseItemDirect(target, [], innerItem, ItemInteractionType.ACCESS_ONLY))
-					return false;
-				if (!this.hasPermissionForItemContents(target, innerItem))
-					return false;
+				let r = this.canUseItemDirect(target, [], innerItem, ItemInteractionType.ACCESS_ONLY);
+				if (!r.allowed)
+					return r;
+				r = this.hasPermissionForItemContents(target, innerItem);
+				if (!r.allowed)
+					return r;
 			}
 		}
-		return true;
+		return { allowed: true };
 	}
 
-	public canUseItem(target: RoomActionTarget, itemPath: ItemPath, interaction: ItemInteractionType): boolean {
+	public canUseItem(target: RoomActionTarget, itemPath: ItemPath, interaction: ItemInteractionType): RestrictionResult {
 		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
-			return false;
+			return {
+				allowed: false,
+				restriction: {
+					type: 'invalid',
+				},
+			};
 
 		return this.canUseItemDirect(target, itemPath.container, item, interaction);
 	}
 
-	public canUseItemDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType): boolean {
+	public canUseItemDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType): RestrictionResult {
 		// Must be able to use item's asset
-		if (!this.canUseAsset(target, item.asset))
-			return false;
+		let r = this.canUseAsset(target, item.asset);
+		if (!r.allowed)
+			return r;
 
 		let isPhysicallyEquipped = true;
 		const isSelfAction = target.type === 'character' && target.characterId === this.characterId;
@@ -173,37 +219,57 @@ export class CharacterRestrictionsManager {
 		if (upperPath) {
 			const containingModule = target.getItem(upperPath.itemPath)?.modules.get(upperPath.module);
 			if (!containingModule)
-				return false;
+				return {
+					allowed: false,
+					restriction: {
+						type: 'invalid',
+					},
+				};
 
 			isPhysicallyEquipped = containingModule.contentsPhysicallyEquipped;
 
-			if (!this.canUseItemModule(
+			r = this.canUseItemModule(
 				target,
 				upperPath.itemPath,
 				upperPath.module,
 				interaction === ItemInteractionType.ACCESS_ONLY ? ItemInteractionType.ACCESS_ONLY : ItemInteractionType.MODIFY,
-			))
-				return false;
+			);
+			if (!r.allowed)
+				return r;
 		}
 
 		// If access is all we needed, then success
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
-			return true;
+			return { allowed: true };
 
 		// Bodyparts have different handling (we already checked we can interact with the asset)
 		if (item.asset.definition.bodypart != null) {
 			// Only characters have bodyparts
 			if (target.type !== 'character')
-				return false;
+				return {
+					allowed: false,
+					restriction: {
+						type: 'invalid',
+					},
+				};
 			// Not all rooms allow bodypart changes
 			if (this.room && !this.room.features.includes('allowBodyChanges'))
-				return false;
-			return true;
+				return {
+					allowed: false,
+					restriction: {
+						type: 'permission',
+						missingPermission: 'modifyBodyRoom',
+					},
+				};
+			return { allowed: true };
 		}
 
 		// To add or remove the item, we need to have access to all contained items
-		if (interaction === ItemInteractionType.ADD_REMOVE && !this.hasPermissionForItemContents(target, item))
-			return false;
+		if (interaction === ItemInteractionType.ADD_REMOVE) {
+			r = this.hasPermissionForItemContents(target, item);
+			if (!r.allowed)
+				return r;
+		}
 
 		const properties = item.getProperties();
 
@@ -211,34 +277,63 @@ export class CharacterRestrictionsManager {
 		if (interaction === ItemInteractionType.ADD_REMOVE && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
 			if (properties.blockAddRemove)
-				return false;
+				return {
+					allowed: false,
+					restriction: {
+						type: 'blockedAddRemove',
+						asset: item.asset.id,
+						self: false,
+					},
+				};
 
 			// If equipping on self, the asset must allow self-equip
 			if (isSelfAction && properties.blockSelfAddRemove)
-				return false;
+				return {
+					allowed: false,
+					restriction: {
+						type: 'blockedAddRemove',
+						asset: item.asset.id,
+						self: true,
+					},
+				};
 		}
 
 		// Must be able to use hands
 		if (!this.canUseHands())
-			return false;
+			return {
+				allowed: false,
+				restriction: {
+					type: 'blockedHands',
+				},
+			};
 
-		return true;
+		return { allowed: true };
 	}
 
-	public canUseItemModule(target: RoomActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): boolean {
+	public canUseItemModule(target: RoomActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
-			return false;
+			return {
+				allowed: false,
+				restriction: {
+					type: 'invalid',
+				},
+			};
 
 		return this.canUseItemModuleDirect(target, itemPath.container, item, moduleName, interaction);
 	}
 
-	public canUseItemModuleDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): boolean {
+	public canUseItemModuleDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		// The module must exist
 		const module = item.modules.get(moduleName);
 		if (!module)
-			return false;
+			return {
+				allowed: false,
+				restriction: {
+					type: 'invalid',
+				},
+			};
 
 		const isSelfAction = target.type === 'character' && target.characterId === this.characterId;
 
@@ -246,23 +341,40 @@ export class CharacterRestrictionsManager {
 		interaction ??= module.interactionType;
 
 		// Must be able to interact with this item in that way
-		if (!this.canUseItemDirect(target, container, item, interaction))
-			return false;
+		const r = this.canUseItemDirect(target, container, item, interaction);
+		if (!r.allowed)
+			return r;
 
 		// If access is all we needed, then success
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
-			return true;
+			return { allowed: true };
 
 		const properties = item.getProperties();
 
 		// If item blocks this module, fail
 		if (properties.blockModules.has(moduleName))
-			return false;
+			return {
+				allowed: false,
+				restriction: {
+					type: 'blockedModule',
+					asset: item.asset.id,
+					module: moduleName,
+					self: false,
+				},
+			};
 
 		// If accessing on self, the item must not block it
 		if (isSelfAction && properties.blockSelfModules.has(moduleName))
-			return false;
+			return {
+				allowed: false,
+				restriction: {
+					type: 'blockedModule',
+					asset: item.asset.id,
+					module: moduleName,
+					self: true,
+				},
+			};
 
-		return true;
+		return { allowed: true };
 	}
 }

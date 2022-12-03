@@ -6,7 +6,7 @@ import { ArmsPose, CharacterView } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { AppearanceActionHandler, AppearanceActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
-import { CharacterRestrictionsManager, ItemInteractionType } from '../character/restrictionsManager';
+import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { Item } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
@@ -107,7 +107,7 @@ export type AppearanceActionResult = {
 	result: 'success' | 'invalidAction';
 } | {
 	result: 'restrictionError';
-	// TODO
+	restriction: Restriction;
 } | {
 	result: 'validationError';
 	validationError: AppearanceValidationError;
@@ -142,9 +142,11 @@ export function DoAppearanceAction(
 				return { result: 'invalidAction' };
 			const item = assetManager.createItem(action.itemId, asset, null);
 			// Player adding the item must be able to use it
-			if (!player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE))
+			const r = player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed)
 				return {
 					result: 'restrictionError',
+					restriction: r.restriction,
 				};
 
 			const manipulator = target.getManipulator();
@@ -160,9 +162,11 @@ export function DoAppearanceAction(
 			if (!target)
 				return { result: 'invalidAction' };
 			// Player removing the item must be able to use it
-			if (!player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE))
+			const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed)
 				return {
 					result: 'restrictionError',
+					restriction: r.restriction,
 				};
 
 			const manipulator = target.getManipulator();
@@ -178,9 +182,11 @@ export function DoAppearanceAction(
 			if (!target)
 				return { result: 'invalidAction' };
 			// Player moving the item must be able to interact with the item
-			if (!player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE))
+			const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed)
 				return {
 					result: 'restrictionError',
+					restriction: r.restriction,
 				};
 
 			const manipulator = target.getManipulator();
@@ -196,9 +202,11 @@ export function DoAppearanceAction(
 			if (!target)
 				return { result: 'invalidAction' };
 			// Player coloring the item must be able to interact with the item
-			if (!player.canUseItem(target, action.item, ItemInteractionType.STYLING))
+			const r = player.canUseItem(target, action.item, ItemInteractionType.STYLING);
+			if (!r.allowed)
 				return {
 					result: 'restrictionError',
+					restriction: r.restriction,
 				};
 
 			const manipulator = target.getManipulator();
@@ -214,9 +222,11 @@ export function DoAppearanceAction(
 			if (!target)
 				return { result: 'invalidAction' };
 			// Player doing the action must be able to interact with the item
-			if (!player.canUseItemModule(target, action.item, action.module))
+			const r = player.canUseItemModule(target, action.item, action.module);
+			if (!r.allowed)
 				return {
 					result: 'restrictionError',
+					restriction: r.restriction,
 				};
 
 			const manipulator = target.getManipulator();
@@ -231,6 +241,10 @@ export function DoAppearanceAction(
 			if (context.player !== action.target)
 				return {
 					result: 'restrictionError',
+					restriction: {
+						type: 'permission',
+						missingPermission: 'modifyBodyOthers',
+					},
 				};
 		// falls through
 		case 'pose': {

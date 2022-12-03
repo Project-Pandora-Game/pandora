@@ -8,7 +8,28 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 	} else if (result.result === 'invalidAction') {
 		return `This action isn't possible.`;
 	} else if (result.result === 'restrictionError') {
-		return `Your character cannot do that right now.\n(details not available yet)`;
+		const e = result.restriction;
+		switch (e.type) {
+			case 'permission':
+				switch (e.missingPermission) {
+					case 'modifyBodyOthers':
+						return `You cannot modify body of other characters.`;
+					case 'modifyBodyRoom':
+						return `You cannot modify body in this room.`;
+				}
+				break;
+			case 'blockedAddRemove':
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
+			case 'blockedModule': {
+				const visibleModuleName = assetManager.getAssetById(e.asset)?.definition.modules?.[e.module]?.name ?? `[UNKNOWN MODULE '${e.module}']`;
+				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
+			}
+			case 'blockedHands':
+				return `You need to be able to use hands to do this.`;
+			case 'invalid':
+				return `The action is invalid.`;
+		}
+		AssertNever(e);
 	} else if (result.result === 'validationError') {
 		const e = result.validationError;
 		switch (e.problem) {

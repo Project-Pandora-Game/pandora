@@ -6,7 +6,8 @@ import { nanoid } from 'nanoid';
 const CLEANUP_INTERVAL = 1000 * 60 * 60 * 24; // 1 day
 
 export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
-	static readonly cleanups = new Set<() => void>();
+	/** @internal */
+	public static readonly cleanups = new Set<() => void>();
 	#tokens!: Map<string, Full<Token>>;
 	protected readonly logger: Logger;
 	protected readonly idLength: number;

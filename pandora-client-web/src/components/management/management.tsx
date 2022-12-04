@@ -21,6 +21,7 @@ export function ManagementRoutes(): ReactElement | null {
 			<div className='management-header'>
 				<Link to='/management/shards'>Shards</Link>
 				<Link to='/management/roles'>Roles</Link>
+				{ directoryStatus.betaKeyRequired && <Link to='/management/beta_keys'>Beta Keys</Link> }
 			</div>
 			<Routes>
 				<Route path='*' element={ <div /> } />

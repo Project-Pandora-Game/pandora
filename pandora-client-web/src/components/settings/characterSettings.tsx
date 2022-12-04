@@ -5,6 +5,7 @@ import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ColorInput, useColorInput } from '../common/colorInput/colorInput';
 import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
+import { useChatRoomFeatures } from '../gameContext/chatRoomContextProvider';
 
 export function CharacterSettings(): ReactElement | null {
 	const playerData = usePlayerData();
@@ -44,13 +45,15 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterData> }): R
 function Pronouns({ playerData }: { playerData: Readonly<ICharacterData> }): ReactElement {
 	const shardConnector = useShardConnector();
 	const [pronoun, setProunoun] = React.useState(playerData.settings.pronoun);
+	const fearures = useChatRoomFeatures();
+	const allowChange = fearures == null || fearures.includes('allowPronounChanges');
 
 	return (
 		<fieldset>
 			<legend>Pronouns</legend>
 			<div className='input-row'>
 				<label>Pronoun</label>
-				<select value={ pronoun } onChange={ (ev) => setProunoun(ev.target.value as PronounKey) }>
+				<select value={ pronoun } onChange={ (ev) => setProunoun(ev.target.value as PronounKey) } disabled={ !allowChange }>
 					{ Object.entries(PRONOUNS).map(([key, value]) => (
 						<option key={ key } value={ key }>
 							{ Object.values(value).join('/') }
@@ -60,7 +63,7 @@ function Pronouns({ playerData }: { playerData: Readonly<ICharacterData> }): Rea
 				<Button
 					className='slim'
 					onClick={ () => shardConnector?.sendMessage('updateSettings', { pronoun }) }
-					disabled={ pronoun === playerData.settings.pronoun }>
+					disabled={ !allowChange || pronoun === playerData.settings.pronoun }>
 					Save
 				</Button>
 			</div>

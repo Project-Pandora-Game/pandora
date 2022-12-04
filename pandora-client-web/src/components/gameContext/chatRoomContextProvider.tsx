@@ -1,4 +1,4 @@
-import { AppearanceActionRoomContext, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
+import { AppearanceActionRoomContext, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -543,6 +543,11 @@ export function useChatRoomCharacters(): (readonly Character<ICharacterRoomData>
 export function useChatRoomData(): IChatRoomClientData | null {
 	const context = useChatroom();
 	return useNullableObservable(context?.data);
+}
+
+export function useChatRoomFeatures(): ChatRoomFeature[] | null {
+	const data = useChatRoomData();
+	return useMemo(() => data?.features ?? null, [data]);
 }
 
 export function useAppearanceActionRoomContext(): AppearanceActionRoomContext | null {

@@ -179,15 +179,6 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 			return r;
 	}
 
-	// Check the pose is possible
-	if (AppearanceItemsGetPoseLimits(items) == null)
-		return {
-			success: false,
-			error: {
-				problem: 'poseConflict',
-			},
-		};
-
 	// Check requirements are met
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
@@ -216,6 +207,15 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 			};
 		assetCounts.set(item.asset.id, currentCount + 1);
 	}
+
+	// Check the pose is possible
+	if (AppearanceItemsGetPoseLimits(items) == null)
+		return {
+			success: false,
+			error: {
+				problem: 'poseConflict',
+			},
+		};
 
 	return { success: true };
 }

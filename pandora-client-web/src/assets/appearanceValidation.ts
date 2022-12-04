@@ -70,7 +70,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				}
 			}
 			case 'poseConflict':
-				return `The combination of items requires conflicting pose.`;
+				return `This item requires a pose conflicting with the added items.`;
 			case 'tooManyItems':
 				return e.asset ?
 					`At most ${e.limit} "${DescribeAsset(assetManager, e.asset)}" can be equipped.` :

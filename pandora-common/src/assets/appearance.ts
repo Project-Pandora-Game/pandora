@@ -35,7 +35,7 @@ export const SafemodeDataSchema = z.object({
 export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
 
 /** Time after entering safemode for which you cannot leave it (entering while in dev mode ignores this) */
-export const SAFEMODE_EXIT_COOLDOWN = 600_000;
+export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
 export const AppearanceBundleSchema = z.object({
 	items: z.array(ItemBundleSchema),

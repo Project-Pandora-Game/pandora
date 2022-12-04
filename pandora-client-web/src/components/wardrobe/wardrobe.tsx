@@ -57,6 +57,7 @@ import closedLock from '../../assets/icons/lock_closed.svg';
 import openLock from '../../assets/icons/lock_open.svg';
 import { AppearanceActionResultShouldHide, RenderAppearanceActionResult } from '../../assets/appearanceValidation';
 import { HoverElement } from '../hoverElement/hoverElement';
+import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -181,7 +182,9 @@ function Wardrobe(): ReactElement | null {
 		<div className='wardrobe'>
 			{
 				!inSafemode ? null : (
-					<div className='safemode'>This character is in safemode!</div>
+					<div className='safemode'>
+						<CharacterSafemodeWarningContent />
+					</div>
 				)
 			}
 			<div className='wardrobeMain'>

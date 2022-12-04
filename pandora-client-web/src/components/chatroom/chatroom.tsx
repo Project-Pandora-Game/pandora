@@ -33,6 +33,7 @@ import { Row } from '../common/container/container';
 import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 import { useNullableObservable } from '../../observable';
 import { Character, useCharacterData, useCharacterSafemode } from '../../character/character';
+import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -96,7 +97,9 @@ function DisplayCharacter({ char }: { char: Character }): ReactElement {
 			<span onClick={ () => setTarget(data.id) }>{data.name}</span>
 			<span>{data.id} / {data.accountId}</span>
 			{ !inSafemode ? null : (
-				<span className='safemode'>This character is in safemode!</span>
+				<span className='safemode'>
+					<CharacterSafemodeWarningContent />
+				</span>
 			) }
 			<br />
 			<Row>

@@ -32,7 +32,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 					case 'modifyBodyRoom':
 						return `You cannot modify body in this room.`;
 					case 'safemodeInteractOther':
-						return `You cannot touch others while either you or they are in a safemode.`;
+						return `You cannot touch others while either you or they are in safemode.`;
 				}
 				break;
 			case 'blockedAddRemove':

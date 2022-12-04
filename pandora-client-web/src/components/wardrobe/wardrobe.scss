@@ -1,46 +1,60 @@
-@import '../../styles/utils';
-@import '../../styles/constants';
+@import '../../styles/common';
 @import '../../styles/forms';
 
 $header-height: 2em;
 
 .wardrobe {
 	display: flex;
-	flex-flow: row;
-	gap: 1em;
-
+	flex-flow: column;
+	gap: 0.5em;
 	height: 100%;
 
-	.characterPreview {
-		height: 100%;
-		width: max(min(20em, 90vw), 33vw);
-		flex-shrink: 0;
+	.safemode {
+		@include center-flex;
+		background: $theme-warning;
+		border: solid black 1px;
+		padding: 0.25em;
+	}
 
-		&.disabled {
-			display: none;
-		}
+	.wardrobeMain {
+		flex: 1;
+		overflow: hidden;
+		display: flex;
+		flex-flow: row;
+		gap: 1em;
 
-		canvas {
+		.characterPreview {
+			position: relative;
 			height: 100%;
-			width: 100%;
-		}
+			width: max(min(20em, 90vw), 33vw);
+			flex-shrink: 0;
 
-		.overlay {
-			position: absolute;
-			inset: 0;
-			display: flex;
-			padding: 4em 1.5em;
-			gap: 0.5em;
-			align-items: flex-start;
-			pointer-events: none;
-
-			>* {
-				pointer-events: auto;
+			&.disabled {
+				display: none;
 			}
 
-			.iconButton {
-				min-width: 2em;
-				min-height: 2em;
+			canvas {
+				height: 100%;
+				width: 100%;
+			}
+
+			.overlay {
+				position: absolute;
+				inset: 0;
+				display: flex;
+				padding: 0.5em;
+				gap: 0.5em;
+				align-items: flex-start;
+				pointer-events: none;
+
+				>* {
+					pointer-events: auto;
+				}
+
+				.iconButton {
+					min-width: 2em;
+					min-height: 2em;
+				}
 			}
 		}
 	}

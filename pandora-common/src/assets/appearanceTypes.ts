@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { zTemplateString } from '../validation';
-import type { ChatActionId, IChatRoomMessageAction } from '../chatroom';
+import type { AppearanceActionRoomContext, ChatActionId, IChatRoomMessageAction } from '../chatroom';
 import type { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceValidationResult } from './appearanceValidation';
 import type { Item } from './item';
+import type { CharacterRestrictionsManager } from '../character';
 
 export const ItemIdSchema = zTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;
@@ -67,6 +68,7 @@ interface RoomActionTargetBase {
 export interface RoomActionTargetCharacter extends RoomActionTargetBase {
 	readonly type: 'character';
 	characterId: CharacterId;
+	getRestrictionManager(room: AppearanceActionRoomContext | null): CharacterRestrictionsManager;
 }
 
 export interface RoomActionTargetRoomInventory extends RoomActionTargetBase {

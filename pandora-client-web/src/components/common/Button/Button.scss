@@ -59,4 +59,8 @@ $button-themes: (
 	&.hideDisabled:disabled {
 		visibility: hidden !important;
 	}
+
+	&.fadeDisabled:disabled {
+		filter: grayscale(100%) opacity(50%);
+	}
 }

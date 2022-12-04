@@ -36,6 +36,12 @@
 }
 
 .character-info {
+	.safemode {
+		background: $theme-warning;
+		border: solid black 1px;
+		padding: 0.25em;
+	}
+
 	&>a {
 		padding: 0;
 	}

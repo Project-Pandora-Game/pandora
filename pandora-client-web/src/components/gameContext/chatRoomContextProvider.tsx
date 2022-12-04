@@ -554,7 +554,7 @@ export function useAppearanceActionRoomContext(): AppearanceActionRoomContext | 
 
 export function useCharacterRestrictionsManager<T>(character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
 	const roomContext = useAppearanceActionRoomContext();
-	const manager = useMemo(() => new CharacterRestrictionsManager(character.data.id, character.appearance, roomContext), [character, roomContext]);
+	const manager = useMemo(() => character.getRestrictionManager(roomContext), [character, roomContext]);
 	return useSyncExternalStore((onChange) => {
 		return character.on('appearanceUpdate', (changed) => {
 			if (changed.includes('items')) {

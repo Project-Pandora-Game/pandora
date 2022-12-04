@@ -60,7 +60,7 @@ export function CharacterSafemodeDialog({ player }: {
 			</h3>
 			<CharacterSafemodeHelpText />
 			<p>
-				Safemode should be seen as a last resort for when OOC interaction about limits fails or you<br />
+				Safemode should be seen as a last resort for when OOC interaction about limits fails, or you<br />
 				are not fine with what is happening and require a quick out to feel safe again. Please be mindful that<br />
 				there is a person behind every character. Therefore, it is recommended to communicate issues first<br />
 				Out of Character (OOC) by using the &apos;/ooc&apos; command or by prefixing a message with<br />
@@ -134,7 +134,7 @@ function CharacterSafemodeHelpText(): ReactElement {
 	return (
 		<>
 			<p>
-				Safemode is a mode in which items do not apply any restrictions to the character in this mode.<br />
+				Safemode is a mode in which items do not apply any restrictions to the character in it.<br />
 				This means that the character can modify their appearance and items without any limits<br />
 				(except if the room limits usage or spawning of certain items).<br />
 				For instance, characters in safe mode can generally open/remove any lock on themselves.

@@ -29,7 +29,7 @@ import {
 import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
+import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -158,6 +158,8 @@ function Wardrobe(): ReactElement | null {
 	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
 
+	const inSafemode = useCharacterSafemode(character) != null;
+
 	const overlay = (
 		<div className='overlay'>
 			<Button className='slim iconButton'
@@ -177,37 +179,44 @@ function Wardrobe(): ReactElement | null {
 
 	return (
 		<div className='wardrobe'>
-			<GraphicsScene className='characterPreview' divChildren={ overlay }>
-				<GraphicsCharacter appearanceContainer={ character } />
-			</GraphicsScene>
-			<TabContainer className='flex-1'>
-				<Tab name='Items'>
-					<div className='wardrobe-pane'>
-						<WardrobeItemManipulation />
-					</div>
-				</Tab>
-				<Tab name='Body'>
-					<div className='wardrobe-pane'>
-						<WardrobeBodyManipulation />
-					</div>
-				</Tab>
-				<Tab name='Poses & Expressions'>
-					<div className='wardrobe-pane'>
-						<div className='wardrobe-ui'>
-							<WardrobePoseGui character={ character } />
-							<WardrobeExpressionGui />
+			{
+				!inSafemode ? null : (
+					<div className='safemode'>This character is in safemode!</div>
+				)
+			}
+			<div className='wardrobeMain'>
+				<GraphicsScene className='characterPreview' divChildren={ overlay }>
+					<GraphicsCharacter appearanceContainer={ character } />
+				</GraphicsScene>
+				<TabContainer className='flex-1'>
+					<Tab name='Items'>
+						<div className='wardrobe-pane'>
+							<WardrobeItemManipulation />
 						</div>
-					</div>
-				</Tab>
-				<Tab name='Outfits'>
-					<div className='wardrobe-pane'>
-						<div className='center-flex flex-1'>
-							TODO
+					</Tab>
+					<Tab name='Body'>
+						<div className='wardrobe-pane'>
+							<WardrobeBodyManipulation />
 						</div>
-					</div>
-				</Tab>
-				<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
-			</TabContainer>
+					</Tab>
+					<Tab name='Poses & Expressions'>
+						<div className='wardrobe-pane'>
+							<div className='wardrobe-ui'>
+								<WardrobePoseGui character={ character } />
+								<WardrobeExpressionGui />
+							</div>
+						</div>
+					</Tab>
+					<Tab name='Outfits'>
+						<div className='wardrobe-pane'>
+							<div className='center-flex flex-1'>
+								TODO
+							</div>
+						</div>
+					</Tab>
+					<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
+				</TabContainer>
+			</div>
 		</div>
 	);
 }

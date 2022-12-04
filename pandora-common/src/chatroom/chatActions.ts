@@ -15,6 +15,10 @@ const CHAT_ACTIONS_DEF = {
 
 	//#region Action messages
 
+	// Safemode
+	safemodeEnter: `SOURCE_CHARACTER entered safemode!`,
+	safemodeLeave: `SOURCE_CHARACTER left safemode.`,
+
 	// Item changes directly on character
 	itemAdd: `SOURCE_CHARACTER used ITEM_ASSET_NAME on TARGET_CHARACTER_DYNAMIC.`,
 	itemRemove: `SOURCE_CHARACTER removed ITEM_ASSET_NAME_PREVIOUS from TARGET_CHARACTER_DYNAMIC.`,

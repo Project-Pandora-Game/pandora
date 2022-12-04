@@ -72,7 +72,10 @@ export enum ItemInteractionType {
 export type Restriction =
 	| {
 		type: 'permission';
-		missingPermission: 'modifyBodyOthers' | 'modifyBodyRoom';
+		missingPermission:
+		| 'modifyBodyOthers'
+		| 'modifyBodyRoom'
+		| 'safemodeInteractOther';
 	}
 	| {
 		type: 'blockedAddRemove';
@@ -158,11 +161,35 @@ export class CharacterRestrictionsManager {
 		return _.clamp(this.getEffects().blind, 0, 10);
 	}
 
+	public isInSafemode(): boolean {
+		return this.appearance.getSafemode() != null;
+	}
+
 	public canInteractWithTarget(target: RoomActionTarget): RestrictionResult {
 		// Room inventory can always be intereacted with
 		if (target.type === 'roomInventory')
 			return { allowed: true };
-		// TODO: For permissions
+
+		if (target.type === 'character') {
+			// Have all permissions on self
+			if (target.characterId === this.characterId)
+				return { allowed: true };
+
+			const targetCharacter = target.getRestrictionManager(this.room);
+
+			// TODO: For other permissions
+
+			// Safemode checks
+			if (this.isInSafemode() || targetCharacter.isInSafemode())
+				return {
+					allowed: false,
+					restriction: {
+						type: 'permission',
+						missingPermission: 'safemodeInteractOther',
+					},
+				};
+		}
+
 		return { allowed: true };
 	}
 
@@ -305,7 +332,7 @@ export class CharacterRestrictionsManager {
 		// If equipping there are further checks
 		if (interaction === ItemInteractionType.ADD_REMOVE && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
-			if (properties.blockAddRemove)
+			if (properties.blockAddRemove && !this.isInSafemode())
 				return {
 					allowed: false,
 					restriction: {
@@ -316,7 +343,7 @@ export class CharacterRestrictionsManager {
 				};
 
 			// If equipping on self, the asset must allow self-equip
-			if (isSelfAction && properties.blockSelfAddRemove)
+			if (isSelfAction && properties.blockSelfAddRemove && !this.isInSafemode())
 				return {
 					allowed: false,
 					restriction: {
@@ -328,7 +355,7 @@ export class CharacterRestrictionsManager {
 		}
 
 		// Must be able to use hands
-		if (!this.canUseHands())
+		if (!this.canUseHands() && !this.isInSafemode())
 			return {
 				allowed: false,
 				restriction: {
@@ -381,7 +408,7 @@ export class CharacterRestrictionsManager {
 		const properties = item.getProperties();
 
 		// If item blocks this module, fail
-		if (properties.blockModules.has(moduleName))
+		if (properties.blockModules.has(moduleName) && !this.isInSafemode())
 			return {
 				allowed: false,
 				restriction: {
@@ -393,7 +420,7 @@ export class CharacterRestrictionsManager {
 			};
 
 		// If accessing on self, the item must not block it
-		if (isSelfAction && properties.blockSelfModules.has(moduleName))
+		if (isSelfAction && properties.blockSelfModules.has(moduleName) && !this.isInSafemode())
 			return {
 				allowed: false,
 				restriction: {

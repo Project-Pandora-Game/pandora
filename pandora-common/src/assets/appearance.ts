@@ -1,6 +1,8 @@
-import _ from 'lodash';
+import _, { cloneDeep, isEqual } from 'lodash';
 import { z } from 'zod';
-import type { CharacterId } from '../character';
+import type { CharacterId } from '../character/characterTypes';
+import { CharacterRestrictionsManager } from '../character/restrictionsManager';
+import type { AppearanceActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
 import { AppearanceRootManipulator } from './appearanceHelpers';
@@ -27,11 +29,20 @@ export enum CharacterView {
 	BACK,
 }
 
+export const SafemodeDataSchema = z.object({
+	allowLeaveAt: z.number(),
+});
+export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
+
+/** Time after entering safemode for which you cannot leave it (entering while in dev mode ignores this) */
+export const SAFEMODE_EXIT_COOLDOWN = 600_000;
+
 export const AppearanceBundleSchema = z.object({
 	items: z.array(ItemBundleSchema),
 	pose: z.record(BoneNameSchema, z.number()),
 	handsPose: z.nativeEnum(ArmsPose),
 	view: z.nativeEnum(CharacterView),
+	safemode: SafemodeDataSchema.optional(),
 });
 
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
@@ -43,7 +54,7 @@ export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
 	view: CharacterView.FRONT,
 };
 
-export type AppearanceChangeType = 'items' | 'pose';
+export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
 
 export class CharacterAppearance implements RoomActionTargetCharacter {
 	public readonly type = 'character';
@@ -57,6 +68,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private fullPose: readonly BoneState[] = [];
 	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
 	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
+	private _safemode: SafemodeData | undefined;
 
 	constructor(assetMananger: AssetManager, characterId: CharacterId, onChange?: (changes: AppearanceChangeType[]) => void) {
 		this.assetMananger = assetMananger;
@@ -65,12 +77,17 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this.onChangeHandler = onChange;
 	}
 
+	public getRestrictionManager(room: AppearanceActionRoomContext | null): CharacterRestrictionsManager {
+		return new CharacterRestrictionsManager(this.characterId, this, room);
+	}
+
 	public exportToBundle(): AppearanceBundle {
 		return {
 			items: this.items.map((item) => item.exportToBundle()),
 			pose: this.exportPose(),
 			handsPose: this._armsPose,
 			view: this._view,
+			safemode: this._safemode,
 		};
 	}
 
@@ -201,7 +218,11 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			}
 		}
 		this.enforcePoseLimits();
-		this.onChange(['items', 'pose']);
+
+		// Import safemode status
+		this._safemode = bundle.safemode;
+
+		this.onChange(['items', 'pose', 'safemode']);
 	}
 
 	protected enforcePoseLimits(): boolean {
@@ -371,6 +392,28 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		if (this._view !== value) {
 			this._view = value;
 			this.onChange(['pose']);
+		}
+	}
+
+	public getSafemode(): Readonly<SafemodeData> | null {
+		return this._safemode ?? null;
+	}
+
+	public setSafemode(value: Readonly<SafemodeData> | null, context: AppearanceActionProcessingContext): void {
+		if (context.dryRun)
+			return;
+
+		const stateChange = (this._safemode != null) !== (value != null);
+		if (!isEqual(this._safemode ?? null, value)) {
+			this._safemode = cloneDeep(value) ?? undefined;
+			this.onChange(['safemode']);
+
+			if (stateChange) {
+				context.actionHandler?.({
+					id: value != null ? 'safemodeEnter' : 'safemodeLeave',
+					character: this.characterId,
+				});
+			}
 		}
 	}
 }

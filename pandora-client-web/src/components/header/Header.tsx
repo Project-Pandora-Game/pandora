@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { EMPTY, IsAuthorized } from 'pandora-common';
+import { AssertNotNullable, EMPTY, IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import friendsIcon from '../../assets/icons/friends.svg';
@@ -7,7 +7,7 @@ import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import managementIcon from '../../assets/icons/management.svg';
-import { usePlayerData } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
 import { useLogout } from '../../networking/account_manager';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
@@ -17,6 +17,8 @@ import { NotificationHeaderKeys, NotificationSource, useNotification, useNotific
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
+import { useCharacterSafemode } from '../../character/character';
+import { useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -49,6 +51,12 @@ function LeftHeader(): ReactElement {
 
 function CharacterMenu({ close }: { close: () => void }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const player = usePlayer();
+	AssertNotNullable(player);
+
+	const safemode = useCharacterSafemode(player);
+	const safemodeContext = useSafemodeDialogContext();
+
 	return (
 		<div className='characterMenu' onClick={ () => close() }>
 			<header onClick={ (ev) => ev.stopPropagation() }>Character menu</header>
@@ -57,6 +65,12 @@ function CharacterMenu({ close }: { close: () => void }): ReactElement {
 				directoryConnector.sendMessage('disconnectCharacter', EMPTY);
 			} }>
 				Change character
+			</a>
+			<a onClick={ (ev) => {
+				ev.preventDefault();
+				safemodeContext.show();
+			} }>
+				{ safemode ? 'Exit' : 'Enter' } safemode
 			</a>
 		</div>
 	);

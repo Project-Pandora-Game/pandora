@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character';
 import { AssertNever } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
-import { ArmsPose, CharacterView } from './appearance';
+import { ArmsPose, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { AppearanceActionHandler, AppearanceActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
@@ -83,6 +83,12 @@ export const AppearanceActionModuleAction = z.object({
 	action: ItemModuleActionSchema,
 });
 
+export const AppearanceActionSafemode = z.object({
+	type: z.literal('safemode'),
+	/** What to do with the safemode */
+	action: z.enum(['enter', 'exit']),
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
@@ -92,6 +98,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionMove,
 	AppearanceActionColor,
 	AppearanceActionModuleAction,
+	AppearanceActionSafemode,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -268,6 +275,32 @@ export function DoAppearanceAction(
 				target.appearance.setView(action.view);
 			}
 			return { result: 'success' };
+		}
+		case 'safemode': {
+			const current = player.appearance.getSafemode();
+			if (action.action === 'enter') {
+				// If we are already in it we cannot enter it again
+				if (current)
+					return { result: 'invalidAction' };
+
+				player.appearance.setSafemode({
+					allowLeaveAt: Date.now() + (player.room?.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
+				}, processingContext);
+				return { result: 'success' };
+			} else if (action.action === 'exit') {
+				// If we are already not in it we cannot exit it
+				if (!current)
+					return { result: 'invalidAction' };
+
+				// Check the timer to leave it passed
+				if (Date.now() < current.allowLeaveAt)
+					return { result: 'invalidAction' };
+
+				player.appearance.setSafemode(null, processingContext);
+				return { result: 'success' };
+			}
+			AssertNever(action.action);
+			break;
 		}
 		default:
 			AssertNever(action);

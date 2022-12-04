@@ -1,4 +1,4 @@
-import { AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance, CharacterRestrictionsManager } from 'pandora-common';
+import { AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -277,7 +277,7 @@ export class Character {
 				const char = this.id === id ? this : this.room?.getCharacterById(id);
 				if (!char)
 					return null;
-				return new CharacterRestrictionsManager(id, char.appearance, this.room?.getAppearanceActionRoomContext() ?? null);
+				return char.appearance.getRestrictionManager(this.room?.getAppearanceActionRoomContext() ?? null);
 			},
 			getTarget: (target) => {
 				if (target.type === 'character') {

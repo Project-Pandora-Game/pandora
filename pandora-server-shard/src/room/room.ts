@@ -337,9 +337,9 @@ export class Room extends ServerRoom<IShardClient> {
 
 		const char = this.getCharacterById(id);
 		if (!char)
-			return this.actionCache.get(id)?.result ?? { id, name: '[UNKNOWN]', pronoun: 'her', labelColor: '#ffffff' };
+			return this.actionCache.get(id)?.result ?? { id, name: '[UNKNOWN]', pronoun: 'they', labelColor: '#ffffff' };
 
-		const result: IChatRoomMessageActionCharacter = { id: char.id, name: char.name, pronoun: 'her', labelColor: char.settings.labelColor };
+		const result: IChatRoomMessageActionCharacter = { id: char.id, name: char.name, pronoun: char.settings.pronoun, labelColor: char.settings.labelColor };
 		this.actionCache.set(id, { result });
 
 		return result;

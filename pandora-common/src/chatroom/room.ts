@@ -13,6 +13,8 @@ export type RoomId = z.infer<typeof RoomIdSchema>;
 export const ChatRoomFeatureSchema = z.enum([
 	// Allows characters inside to change their body
 	'allowBodyChanges',
+	// Allows characters inside to change their pronouns
+	'allowPronounChanges',
 	// Enables development options for the room
 	'development',
 ]);

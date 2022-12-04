@@ -9,6 +9,7 @@ import { Satisfies } from '../utility';
 // Fix for pnpm resolution weirdness
 import type { } from 'zod';
 import type { } from '../assets/appearance';
+import type { } from '../character/pronouns';
 
 export type ICharacterRoomData = ICharacterPublicData & {
 	position: [number, number];

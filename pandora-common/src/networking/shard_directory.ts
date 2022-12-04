@@ -8,6 +8,7 @@ import { Satisfies } from '../utility';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/appearance';
+import type { } from '../character/pronouns';
 
 export const ShardDirectorySchema = {
 	shardRegister: {

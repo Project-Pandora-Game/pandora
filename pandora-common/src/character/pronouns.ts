@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { Satisfies } from '../utility';
 
 export type Pronouns = {
@@ -30,6 +31,8 @@ export const PRONOUNS = {
 
 export type PronounKey = keyof typeof PRONOUNS;
 
+export const PronounKeySchema = z.enum(['she', 'he', 'they']);
+
 type PronounTypes = Uppercase<keyof Pronouns>;
 
 export function AssignPronouns<K extends string, T extends Partial<Record<`${K}_${PronounTypes}`, string>>>(prefix: K, pronounKey: PronounKey, pronouns: T): void {
@@ -44,3 +47,5 @@ export function AssignPronouns<K extends string, T extends Partial<Record<`${K}_
 type __satisfies__PRONOUNS = Satisfies<typeof PRONOUNS, Record<PronounKey, Pronouns>>;
 // eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 type __satisfies__PronounKey = Satisfies<{ [K in PronounKey]: typeof PRONOUNS[K]['subjective'] }, { [K in typeof PRONOUNS[PronounKey]['subjective']]: K }>;
+// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+type __satisfies__PronounKeySchema = Satisfies<z.infer<typeof PronounKeySchema>, PronounKey>;

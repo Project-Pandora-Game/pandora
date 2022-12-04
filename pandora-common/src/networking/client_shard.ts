@@ -8,6 +8,7 @@ import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult,
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/appearance';
+import type { } from '../character/pronouns';
 
 /** Client->Shard messages */
 export const ClientShardSchema = {

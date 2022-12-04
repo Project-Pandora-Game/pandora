@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { AssetId } from '../assets';
 import { CharacterId, CharacterIdSchema } from '../character';
+import type { PronounKey } from '../character/pronouns';
 import { ChatActionId } from './chatActions';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
@@ -44,7 +45,7 @@ export type IChatRoomMessageDeleted = {
 export type IChatRoomMessageActionCharacter = {
 	id: CharacterId;
 	name: string;
-	pronoun: string;
+	pronoun: PronounKey;
 	labelColor: string;
 };
 export type IChatRoomMessageActionItem = {

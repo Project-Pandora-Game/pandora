@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, ICharacterPublicData, IChatRoomMessageChat, IChatSegment, RoomId } from 'pandora-common';
+import { CharacterId, IChatRoomMessageChat, IChatSegment, RoomId } from 'pandora-common';
 import { CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
 import React, {
 	memo,
@@ -15,7 +15,7 @@ import { GetAssetManager } from '../../assets/assetManager';
 import { Button } from '../common/Button/Button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
-import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatRoomData, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
+import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatroom, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
@@ -31,14 +31,18 @@ import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
 import { Row } from '../common/container/container';
 import { useDocumentVisibility } from '../../common/useDocumentVisibility';
+import { useNullableObservable } from '../../observable';
+import { Character, useCharacterData, useCharacterSafemode } from '../../character/character';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
-	const roomData = useChatRoomData();
+	const room = useChatroom();
+	const roomData = useNullableObservable(room?.data);
+	const roomCharacters = useNullableObservable(room?.characters);
 	const navigate = useNavigate();
 	const directoryConnector = useDirectoryConnector();
 
-	if (!roomData || !player) {
+	if (!room || !roomData || !roomCharacters || !player) {
 		return <Navigate to='/chatroom_select' />;
 	}
 
@@ -59,7 +63,7 @@ export function Chatroom(): ReactElement {
 							<div>
 								Characters in this room:<br />
 								<ul>
-									{roomData.characters.map((c) => <DisplayCharacter key={ c.id } char={ c } />)}
+									{roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)}
 								</ul>
 							</div>
 							{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
@@ -79,25 +83,31 @@ export function Chatroom(): ReactElement {
 	);
 }
 
-function DisplayCharacter({ char }: { char: ICharacterPublicData }): ReactElement {
+function DisplayCharacter({ char }: { char: Character }): ReactElement {
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
 
+	const data = useCharacterData(char);
+	const inSafemode = useCharacterSafemode(char) != null;
+
 	return (
 		<li className='character-info'>
-			<span onClick={ () => setTarget(char.id) }>{char.name}</span>
-			<span>{char.id} / {char.accountId}</span>
+			<span onClick={ () => setTarget(data.id) }>{data.name}</span>
+			<span>{data.id} / {data.accountId}</span>
+			{ !inSafemode ? null : (
+				<span className='safemode'>This character is in safemode!</span>
+			) }
 			<br />
 			<Row>
 				<Button className='slim' onClick={ () => {
-					navigate('/wardrobe', { state: { character: char.id } });
+					navigate('/wardrobe', { state: { character: data.id } });
 				} }>
 					Wardrobe
 				</Button>
-				{ char.id !== playerId && (
+				{ data.id !== playerId && (
 					<Button className='slim' onClick={ () => {
-						setTarget(char.id);
+						setTarget(data.id);
 					} }>
 						Whisper
 					</Button>

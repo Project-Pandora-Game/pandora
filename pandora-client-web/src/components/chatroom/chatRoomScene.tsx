@@ -213,19 +213,19 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 	const position = useMemo(() => {
 		if (event instanceof MouseEvent || event instanceof PointerEvent) {
 			return {
-				left: event.pageX,
-				top: event.pageY,
+				x: event.pageX,
+				y: event.pageY,
 			};
 		} else if (window.TouchEvent && event instanceof TouchEvent) {
 			// Firefox doesn't have TouchEvent defined in PC, so we need to check if it's defined
 			return {
-				left: event.touches[0].pageX,
-				top: event.touches[0].pageY,
+				x: event.touches[0].pageX,
+				y: event.touches[0].pageY,
 			};
 		}
 		return {
-			left: 0,
-			top: 0,
+			x: 0,
+			y: 0,
 		};
 	}, [event]);
 

@@ -55,11 +55,23 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 }
 
 function ValidateLock(lock: Item | null, config: IModuleConfigLockSlot): AppearanceValidationResult {
-	return lock === null || (
-		lock.validate(false) &&
-		AppearanceValidateRequirements(lock.getProperties().attributes, new Set(config.lockRequirements)) &&
-		(AssetSizeMapping[lock.asset.definition.size] ?? 99) <= AssetSizeMapping.small
-	);
+	if (lock === null)
+		return { success: true };
+
+	if (
+		(AssetSizeMapping[lock.asset.definition.size] ?? 99) > AssetSizeMapping.small ||
+		!AppearanceValidateRequirements(lock.getProperties().attributes, new Set(config.lockRequirements), null).success
+	) {
+		return {
+			success: false,
+			error: {
+				problem: 'contentNotAllowed',
+				asset: lock.asset.id,
+			},
+		};
+	}
+
+	return lock.validate(false);
 }
 
 export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
@@ -90,7 +102,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 					context,
 				);
 
-				if (context.doLoadTimeCleanup && !ValidateLock(item, this.config)) {
+				if (context.doLoadTimeCleanup && !ValidateLock(item, this.config).success) {
 					context.logger?.warning(`Skipping invalid lock ${data.lock.asset}`);
 					this.lock = null;
 				} else {

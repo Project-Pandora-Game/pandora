@@ -53,7 +53,7 @@ export type IMessageParseOptions = {
 	target?: CharacterId;
 };
 
-function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
+export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
 	const asset = assetManager.getAssetById(assetId);
 	return asset?.definition.chat?.chatDescriptor ??
 		asset?.definition.name.toLocaleLowerCase() ??

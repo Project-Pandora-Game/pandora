@@ -24,8 +24,9 @@ import {
 	RoomTargetSelector,
 	ItemPath,
 	Assert,
+	AppearanceActionResult,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
@@ -54,6 +55,8 @@ import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers
 import emptyLock from '../../assets/icons/lock_empty.svg';
 import closedLock from '../../assets/icons/lock_closed.svg';
 import openLock from '../../assets/icons/lock_open.svg';
+import { AppearanceActionResultShouldHide, RenderAppearanceActionResult } from '../../assets/appearanceValidation';
+import { HoverElement } from '../hoverElement/hoverElement';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -152,6 +155,7 @@ function useWardrobeContext(): Readonly<WardrobeContext> {
 
 function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
+	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
 
 	const overlay = (
@@ -159,7 +163,11 @@ function Wardrobe(): ReactElement | null {
 			<Button className='slim iconButton'
 				title='Toggle character view'
 				onClick={ () => {
-					character.appearance.setView(character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT);
+					shardConnector?.sendMessage('appearanceAction', {
+						type: 'setView',
+						target: character.data.id,
+						view: character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT,
+					});
 				} }
 			>
 				↷
@@ -377,6 +385,26 @@ function InventoryAssetView({ className, title, children, assets, container }: {
 	);
 }
 
+function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement> }) {
+	const assetManager = GetAssetManager();
+	const reason =  useMemo(() => check.result === 'success'
+		? ''
+		: RenderAppearanceActionResult(assetManager, check),
+	[assetManager, check]);
+
+	if (check.result === 'success') {
+		return null;
+	}
+
+	return (
+		<HoverElement parent={ parent } className='action-warning'>
+			This action isn&apos;t possible, because:
+			<br />
+			{ reason }
+		</HoverElement>
+	);
+}
+
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
 	const { actions, target } = useWardrobeContext();
 
@@ -389,13 +417,18 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 	};
 
 	const shardConnector = useShardConnector();
-	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const ref = useRef<HTMLDivElement>(null);
 	return (
-		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
-			if (shardConnector && possible) {
-				shardConnector.sendMessage('appearanceAction', action);
-			}
-		} }>
+		<div
+			className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', check.result === 'success' ? 'allowed' : 'blocked') }
+			ref={ ref }
+			onClick={ () => {
+				if (check.result === 'success') {
+					shardConnector?.sendMessage('appearanceAction', action);
+				}
+			} }>
+			<ActionWarning check={ check } parent={ ref } />
 			<div className='itemPreview' />
 			<span className='itemName'>{asset.definition.name}</span>
 		</div>
@@ -517,7 +550,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 								target,
 								item,
 								shift: 1,
-							} }>
+							} } hideReserveSpace>
 								⬇️
 							</WardrobeActionButton>
 							<WardrobeActionButton action={ {
@@ -525,7 +558,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 								target,
 								item,
 								shift: -1,
-							} }>
+							} } hideReserveSpace>
 								⬆️
 							</WardrobeActionButton>
 						</>
@@ -535,7 +568,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 					type: 'delete',
 					target,
 					item,
-				} }>
+				} } hideReserveSpace>
 					➖
 				</WardrobeActionButton>
 			</div>
@@ -548,24 +581,32 @@ function WardrobeActionButton({
 	className,
 	children,
 	action,
+	hideReserveSpace = false,
 }: CommonProps & {
 	action: AppearanceAction;
+	/** Makes the button hide if it should in a way, that occupied space is preserved */
+	hideReserveSpace?: boolean;
 }): ReactElement {
 	const { actions } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 
-	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const hide = AppearanceActionResultShouldHide(check);
+	const ref = useRef<HTMLButtonElement>(null);
 
 	return (
-		<button id={ id }
-			className={ classNames('wardrobeActionButton', className, possible ? 'allowed' : 'blocked') }
+		<button
+			id={ id }
+			ref={ ref }
+			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
-				if (shardConnector && possible) {
-					shardConnector.sendMessage('appearanceAction', action);
+				if (check.result === 'success') {
+					shardConnector?.sendMessage('appearanceAction', action);
 				}
 			} }
 		>
+			<ActionWarning check={ check } parent={ ref } />
 			{ children }
 		</button>
 	);

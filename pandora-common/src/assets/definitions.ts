@@ -123,6 +123,10 @@ export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	}[];
 }[];
 
+export type AssetAttributeDefinition = {
+	description: string;
+};
+
 export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
 	/** The unique identifier for this background */
 	id: string;
@@ -137,4 +141,5 @@ export interface AssetsDefinitionFile {
 	bodyparts: AssetBodyPart[];
 	graphicsId: string;
 	backgrounds: IChatroomBackgroundInfo[];
+	attributes: Record<string, AssetAttributeDefinition>;
 }

@@ -120,7 +120,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 
 					for (const asset of possibleAssets) {
 						const tryFix = [...newItems, this.assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
-						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
+						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix).success) {
 							newItems = tryFix;
 							break;
 						}
@@ -139,7 +139,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			}
 
 			const tryItem = [...newItems, itemToAdd];
-			if (!ValidateAppearanceItemsPrefix(this.assetMananger, tryItem)) {
+			if (!ValidateAppearanceItemsPrefix(this.assetMananger, tryItem).success) {
 				logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
 			} else {
 				newItems = tryItem;
@@ -160,7 +160,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 
 				for (const asset of possibleAssets) {
 					const tryFix = [...newItems, this.assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
-					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
+					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix).success) {
 						newItems = tryFix;
 						break;
 					}
@@ -178,7 +178,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			}
 		}
 
-		if (!ValidateAppearanceItems(this.assetMananger, newItems)) {
+		if (!ValidateAppearanceItems(this.assetMananger, newItems).success) {
 			throw new Error('Invalid appearance after load');
 		}
 
@@ -308,11 +308,12 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		const newItems = manipulator.getRootItems();
 
 		// Validate
-		if (!ValidateAppearanceItems(this.assetMananger, newItems))
-			return false;
+		const r = ValidateAppearanceItems(this.assetMananger, newItems);
+		if (!r.success)
+			return r;
 
 		if (context.dryRun)
-			return true;
+			return { success: true };
 
 		this.items = newItems;
 		const poseChanged = this.enforcePoseLimits();
@@ -326,7 +327,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			});
 		}
 
-		return true;
+		return { success: true };
 	}
 
 	public setPose(bone: string, value: number): void {

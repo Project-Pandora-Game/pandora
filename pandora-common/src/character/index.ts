@@ -1,4 +1,5 @@
 export * from './characterTypes';
+export * from './pronouns';
 export * from './restrictionsManager';
 export * from './speech';
 

@@ -1,4 +1,4 @@
-import { AppearanceActionRoomContext, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
+import { AppearanceActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -11,7 +11,6 @@ import { NotificationData } from './notificationContextProvider';
 import { TypedEventEmitter } from '../../event';
 import { useShardConnector } from './shardConnectorContextProvider';
 import { AssetManagerClient } from '../../assets/assetManager';
-import { AssignPronouns } from 'pandora-common/dist/character/pronouns';
 
 const logger = GetLogger('ChatRoom');
 
@@ -112,7 +111,7 @@ function ProcessMessage(
 	if (itemContainerPath) {
 		if (itemContainerPath.length === 0) {
 			metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
-			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_SUBJECTIVE;
+			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
 		} else if (itemContainerPath.length === 1) {
 			const asset = DescribeAsset(assetManager, itemContainerPath[0].assetId);
 

@@ -71,7 +71,7 @@ const CHAT_ACTIONS_DEF_FOLDED_EXTRA: Partial<Record<keyof typeof CHAT_ACTIONS_DE
  *
  * `TARGET_CHARACTER`: Name (c1)
  *
- * `TARGET_CHARACTER_POSSESSIVE`: Name (c1)
+ * `TARGET_CHARACTER_POSSESSIVE`: Name's (c1)
  *
  *
  * Special cases if target == source: (either name or pronoun)

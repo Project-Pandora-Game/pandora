@@ -75,7 +75,7 @@ function ProcessMessage(
 		metaDictionary.SOURCE_CHARACTER_ID = id;
 		metaDictionary.SOURCE_CHARACTER = `${name} (${id})`;
 		metaDictionary.SOURCE_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
-		AssignPronouns('SOURCE_CHARACTER', pronoun, metaDictionary);
+		AssignPronouns('SOURCE_CHARACTER_PRONOUN', pronoun, metaDictionary);
 	}
 
 	if (target) {
@@ -84,7 +84,7 @@ function ProcessMessage(
 		metaDictionary.TARGET_CHARACTER_ID = id;
 		metaDictionary.TARGET_CHARACTER = `${name} (${id})`;
 		metaDictionary.TARGET_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
-		AssignPronouns('TARGET_CHARACTER', pronoun, metaDictionary);
+		AssignPronouns('TARGET_CHARACTER_PRONOUN', pronoun, metaDictionary);
 
 		if (id === source?.id) {
 			AssignPronouns('TARGET_CHARACTER_DYNAMIC', pronoun, metaDictionary);

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { ChatActionDictionaryMetaEntry } from '../chatroom';
 import type { Satisfies } from '../utility';
 
 export type Pronouns = {
@@ -33,12 +34,11 @@ export type PronounKey = (keyof typeof PRONOUNS) & string;
 
 export const PronounKeySchema = z.enum(Object.keys(PRONOUNS) as [PronounKey, ...PronounKey[]]);
 
-type PronounTypes = Uppercase<keyof Pronouns>;
+type MetaKeys<K extends ChatActionDictionaryMetaEntry> = K extends `${infer PREFIX}_${Uppercase<keyof Pronouns>}` ? (`${PREFIX}_${Uppercase<keyof Pronouns>}` extends ChatActionDictionaryMetaEntry ? PREFIX : never) : never;
 
-export function AssignPronouns<K extends string, T extends Partial<Record<`${K}_${PronounTypes}`, string>>>(prefix: K, pronounKey: PronounKey, pronouns: T): void {
+export function AssignPronouns<K extends MetaKeys<ChatActionDictionaryMetaEntry>>(prefix: K, pronounKey: PronounKey, pronouns: Partial<Record<ChatActionDictionaryMetaEntry, string>>): void {
 	for (const [key, value] of Object.entries(PRONOUNS[pronounKey])) {
-		const newKey = `${prefix}_${key.toUpperCase()}` as `${K}_${PronounTypes}`;
-		// @ts-expect-error - We know this is a valid key
+		const newKey: ChatActionDictionaryMetaEntry = `${prefix}_${key.toUpperCase() as Uppercase<keyof Pronouns>}`;
 		pronouns[newKey] = value;
 	}
 }

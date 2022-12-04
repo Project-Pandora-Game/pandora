@@ -1,9 +1,10 @@
 import { AssertNotNullable, FormatTimeInterval, SAFEMODE_EXIT_COOLDOWN } from 'pandora-common';
-import React, { ReactElement, useContext, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useContext, useMemo, useState } from 'react';
 import { useCharacterSafemode } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useCurrentTime } from '../../common/useCurrentTime';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 import { Button } from '../common/Button/Button';
 import { Row } from '../common/container/container';
 import { Dialog } from '../dialog/dialog';
@@ -48,10 +49,15 @@ export function CharacterSafemodeDialog({ player }: {
 	const safemodeContext = useSafemodeDialogContext();
 	const safemodeState = useCharacterSafemode(player);
 	const shardConnector = useShardConnector();
-
 	const currentTime = useCurrentTime();
 
-	const canLeave = safemodeState != null && currentTime >= safemodeState.allowLeaveAt;
+	const canLeaveSafemode = safemodeState != null && currentTime >= safemodeState.allowLeaveAt;
+
+	const hide = useCallback(() => safemodeContext.hide(), [safemodeContext]);
+	useKeyDownEvent(() => {
+		hide();
+		return true;
+	}, 'Escape');
 
 	return (
 		<Dialog>
@@ -72,13 +78,13 @@ export function CharacterSafemodeDialog({ player }: {
 						<p>
 							<strong>You are currently in a safemode!</strong><br />
 							{
-								canLeave ? null : <>You need to wait { FormatTimeInterval(safemodeState.allowLeaveAt - currentTime) } before you can leave the safemode.</>
+								canLeaveSafemode ? null : <>You need to wait { FormatTimeInterval(safemodeState.allowLeaveAt - currentTime) } before you can leave the safemode.</>
 							}
 						</p>
 						<Row alignX='space-between'>
-							<Button onClick={ () => safemodeContext.hide() }>Cancel</Button>
+							<Button onClick={ hide }>Cancel</Button>
 							<Button
-								disabled={ !canLeave }
+								disabled={ !canLeaveSafemode }
 								className='fadeDisabled'
 								onClick={ () => {
 									shardConnector?.sendMessage('appearanceAction', {
@@ -98,7 +104,7 @@ export function CharacterSafemodeDialog({ player }: {
 							<strong>Warning:</strong> After entering safemode, you will not be able to leave it for { FormatTimeInterval(SAFEMODE_EXIT_COOLDOWN) }!
 						</p>
 						<Row alignX='space-between'>
-							<Button onClick={ () => safemodeContext.hide() }>Cancel</Button>
+							<Button onClick={ hide }>Cancel</Button>
 							<Button onClick={ () => {
 								shardConnector?.sendMessage('appearanceAction', {
 									type: 'safemode',

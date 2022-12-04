@@ -293,7 +293,9 @@ $header-height: 2em;
 .action-warning {
 	background: white;
 	padding: 1em;
-	border: 1px solid black;
+	border: 2px solid black;
+	border-radius: 1em;
 	line-height: 1.5em;
 	text-align: center;
+	pointer-events: none;
 }

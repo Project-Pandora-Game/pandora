@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { clamp } from 'lodash';
 import React, { ForwardedRef, ReactElement, useState, useEffect, useImperativeHandle, forwardRef, RefObject, useCallback, useRef } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
@@ -60,7 +61,7 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 		};
 	}, [onContextMenu]);
 
-	const positionRef = useContextMenuPosition({ left: anchorPoint.x, top: anchorPoint.y });
+	const positionRef = useContextMenuPosition(anchorPoint);
 	const finalRef = useCallback((div: HTMLDivElement | null) => {
 		self.current = div;
 		positionRef(div);
@@ -95,20 +96,37 @@ export function useContextMenu(): [RefObject<ContextMenuHandle>, (event: React.M
  * @param ref The element to position
  * @param position The position to use, object doesn't need to be stable
  */
-export function useContextMenuPosition({ top, left }: { top: number, left: number }): (ref: HTMLElement | null) => void {
+export function useContextMenuPosition({ x, y }: {
+	readonly x: number;
+	readonly y: number;
+}, {
+	xLocation = 'right',
+	yLocation = 'down',
+}: {
+	readonly xLocation?: 'left' | 'center' | 'right';
+	readonly yLocation?: 'up' | 'center' | 'down';
+} = {}): (ref: HTMLElement | null) => void {
 	return useCallback((ref: HTMLElement | null) => {
 		if (ref) {
 			const rect = ref.getBoundingClientRect();
-			if (top + rect.height > window.innerHeight) {
-				ref.style.top = `${window.innerHeight - rect.height}px`;
-			} else {
-				ref.style.top = `${top}px`;
+
+			let finalY = y;
+			if (yLocation === 'up') {
+				finalY -= rect.height;
+			} else if (yLocation === 'center') {
+				finalY -= Math.round(rect.height / 2);
 			}
-			if (left + rect.width > window.innerWidth) {
-				ref.style.left = `${window.innerWidth - rect.width}px`;
-			} else {
-				ref.style.left = `${left}px`;
+			finalY = clamp(finalY, 0, window.innerHeight - rect.height);
+			ref.style.top = `${finalY}px`;
+
+			let finalX = x;
+			if (xLocation === 'left') {
+				finalX -= rect.width;
+			} else if (xLocation === 'center') {
+				finalX -= Math.round(rect.width / 2);
 			}
+			finalX = clamp(finalX, 0, window.innerWidth - rect.width);
+			ref.style.left = `${finalX}px`;
 		}
-	}, [top, left]);
+	}, [x, y, xLocation, yLocation]);
 }

@@ -387,7 +387,7 @@ function InventoryAssetView({ className, title, children, assets, container }: {
 
 function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement> }) {
 	const assetManager = GetAssetManager();
-	const reson =  useMemo(() => check.result === 'success'
+	const reason =  useMemo(() => check.result === 'success'
 		? ''
 		: RenderAppearanceActionResult(assetManager, check),
 	[assetManager, check]);
@@ -400,7 +400,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 		<HoverElement parent={ parent } className='action-warning'>
 			This action isn&apos;t possible, because:
 			<br />
-			{ reson }
+			{ reason }
 		</HoverElement>
 	);
 }

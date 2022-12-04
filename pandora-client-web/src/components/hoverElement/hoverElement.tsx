@@ -21,52 +21,47 @@ export function HoverElement({ children, className, parent }: HoverElementProps)
 		const current = parent.current;
 
 		if (!IS_MOUSE_DETECTED) {
-			const start = (event: TouchEvent) => {
-				event.stopPropagation();
-				event.preventDefault();
-				setAnchorPoint({ x: event.touches[0].pageX, y: event.touches[0].pageY });
+			const hover = (event: TouchEvent) => {
+				setAnchorPoint({ x: event.touches[0].pageX, y: event.touches[0].pageY - 32 });
 				setShow(true);
 			};
-			const end = (event: TouchEvent) => {
-				event.stopPropagation();
-				event.preventDefault();
+			const end = (_event: TouchEvent) => {
 				setShow(false);
 			};
-			current.addEventListener('touchstart', start);
+			current.addEventListener('touchstart', hover);
+			current.addEventListener('touchmove', hover);
 			current.addEventListener('touchend', end);
 			return () => {
-				current.removeEventListener('touchstart', start);
+				current.removeEventListener('touchstart', hover);
+				current.addEventListener('touchmove', hover);
 				current.removeEventListener('touchend', end);
 			};
 		} else {
-			const enter = (event: MouseEvent) => {
+			const hover = (event: MouseEvent) => {
 				event.stopPropagation();
 				event.preventDefault();
-				setAnchorPoint({ x: event.pageX, y: event.pageY });
+				setAnchorPoint({ x: event.pageX, y: event.pageY - 16 });
 				setShow(true);
 			};
-			const leave = (event: MouseEvent) => {
-				event.stopPropagation();
+			const end = (event: MouseEvent) => {
 				event.preventDefault();
 				setShow(false);
 			};
-			const move = (event: MouseEvent) => {
-				event.stopPropagation();
-				event.preventDefault();
-				setAnchorPoint({ x: event.pageX, y: event.pageY });
-			};
-			current.addEventListener('mouseenter', enter);
-			current.addEventListener('mouseleave', leave);
-			current.addEventListener('mousemove', move);
+			current.addEventListener('mouseenter', hover);
+			current.addEventListener('mousemove', hover);
+			current.addEventListener('mouseleave', end);
 			return () => {
-				current.removeEventListener('mouseenter', enter);
-				current.removeEventListener('mouseleave', leave);
-				current.removeEventListener('mousemove', move);
+				current.removeEventListener('mouseenter', hover);
+				current.removeEventListener('mousemove', hover);
+				current.removeEventListener('mouseleave', end);
 			};
 		}
 	}, [parent]);
 
-	const positionRef = useContextMenuPosition({ left: anchorPoint.x, top: anchorPoint.y });
+	const positionRef = useContextMenuPosition(anchorPoint, {
+		xLocation: 'center',
+		yLocation: 'up',
+	});
 
 	if (!show)
 		return null;

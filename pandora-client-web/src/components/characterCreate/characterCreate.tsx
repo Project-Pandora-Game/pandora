@@ -21,14 +21,15 @@ export function CharacterCreate(): ReactElement | null {
 	const createCharacter = useCreateCharacter();
 
 	// On open randomize appearance
+	const shouldRandomize = player != null && playerData?.inCreation === true;
 	useEffect(() => {
-		if (player && playerData?.inCreation) {
+		if (shouldRandomize) {
 			shardConnector?.sendMessage('appearanceAction', {
 				type: 'randomize',
 				kind: 'full',
 			});
 		}
-	}, [player, playerData, shardConnector]);
+	}, [shouldRandomize, shardConnector]);
 
 	if (!player)
 		return null;

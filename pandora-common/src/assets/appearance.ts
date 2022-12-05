@@ -119,11 +119,16 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		loadedItems = AppearanceItemsFixBodypartOrder(this.assetMananger, loadedItems);
 		let newItems: readonly Item[] = [];
 		let currentBodypartIndex: number | null = this.assetMananger.bodyparts.length > 0 ? 0 : null;
-		while (loadedItems.length > 0) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const itemToAdd = loadedItems.shift()!;
+		while (true) {
+			const itemToAdd = loadedItems.shift();
 			// Check moving to next bodypart
-			while (currentBodypartIndex !== null && itemToAdd.asset.definition.bodypart !== this.assetMananger.bodyparts[currentBodypartIndex].name) {
+			while (
+				currentBodypartIndex !== null &&
+				(
+					itemToAdd == null ||
+					itemToAdd.asset.definition.bodypart !== this.assetMananger.bodyparts[currentBodypartIndex].name
+				)
+			) {
 				const bodypart = this.assetMananger.bodyparts[currentBodypartIndex];
 
 				// Check if we need to add required bodypart
@@ -131,7 +136,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 					// Find matching bodypart assets
 					const possibleAssets = this.assetMananger
 						.getAllAssets()
-						.filter((asset) => asset.definition.bodypart === bodypart.name);
+						.filter((asset) => asset.definition.bodypart === bodypart.name && asset.definition.allowRandomizerUsage === true);
 
 					ShuffleArray(possibleAssets);
 
@@ -155,43 +160,14 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 				}
 			}
 
-			const tryItem = [...newItems, itemToAdd];
+			if (itemToAdd == null)
+				break;
+
+			const tryItem: AppearanceItems = [...newItems, itemToAdd];
 			if (!ValidateAppearanceItemsPrefix(this.assetMananger, tryItem).success) {
 				logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
 			} else {
 				newItems = tryItem;
-			}
-		}
-
-		while (currentBodypartIndex !== null) {
-			const bodypart = this.assetMananger.bodyparts[currentBodypartIndex];
-
-			// Check if we need to add required bodypart
-			if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
-				// Find matching bodypart assets
-				const possibleAssets = this.assetMananger
-					.getAllAssets()
-					.filter((asset) => asset.definition.bodypart === bodypart.name);
-
-				ShuffleArray(possibleAssets);
-
-				for (const asset of possibleAssets) {
-					const tryFix = [...newItems, this.assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
-					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix).success) {
-						newItems = tryFix;
-						break;
-					}
-				}
-			}
-
-			if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
-				throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
-			}
-
-			// Move to next bodypart or end validation if all are done
-			currentBodypartIndex++;
-			if (currentBodypartIndex >= this.assetMananger.bodyparts.length) {
-				currentBodypartIndex = null;
 			}
 		}
 

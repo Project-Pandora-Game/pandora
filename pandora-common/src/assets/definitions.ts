@@ -52,6 +52,12 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	wearable?: boolean;
 
 	/**
+	 * If this asset can be used when randomly picking part needed to fit
+	 * @default false
+	 */
+	allowRandomizerUsage?: boolean;
+
+	/**
 	 * Size of this item. Affects mainly which things it can fit into.
 	 *
 	 * Sizing logic:

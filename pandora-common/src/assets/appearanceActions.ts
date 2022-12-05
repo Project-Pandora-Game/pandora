@@ -10,7 +10,7 @@ import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { Item } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
-import { AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
+import { AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset } from './asset';
@@ -564,7 +564,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 			const item = assetManager.createItem(`i/${nanoid()}`, asset, null);
 			const newItems: Item[] = [...newAppearance, item];
 
-			r = ValidateAppearanceItems(assetManager, newItems);
+			r = ValidateAppearanceItemsPrefix(assetManager, newItems);
 			if (r.success) {
 				newAppearance = newItems;
 				usedAssets.add(asset);

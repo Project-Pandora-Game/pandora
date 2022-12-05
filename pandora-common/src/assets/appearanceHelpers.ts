@@ -4,6 +4,7 @@ import type { AssetManager } from './assetManager';
 import type { Item } from './item';
 import type { IItemModule } from './modules/common';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
+import { Assert } from '../utility';
 
 export function SplitContainerPath(path: ItemContainerPath): {
 	itemPath: ItemPath;
@@ -161,6 +162,12 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 	/** Gets items, but is only present on the root of appearance to prevent accidental passing of container manipultors */
 	public getRootItems(): AppearanceItems {
 		return this.getItems();
+	}
+
+	/** Replaces all items, compeltely discarding current ones */
+	public resetItemsTo(newItems: AppearanceItems): void {
+		const r = this._applyItems(newItems);
+		Assert(r);
 	}
 
 	public getItems(): AppearanceItems {

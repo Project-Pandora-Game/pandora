@@ -39,7 +39,7 @@ export class AppearanceEditor extends CharacterAppearance {
 	}
 
 	public addItem(asset: Asset, context: AppearanceActionProcessingContext = {}): boolean {
-		const item = this.assetMananger.createItem(`i/editor/${nanoid()}`, asset, null);
+		const item = this.assetManager.createItem(`i/editor/${nanoid()}`, asset, null);
 		const manipulator = this.getManipulator();
 		return ActionAddItem(manipulator, [], item) && this.commitChanges(manipulator, context).success;
 	}

@@ -246,13 +246,13 @@ export function ValidateAppearanceItems(assetMananger: AssetManager, items: Appe
 	return { success: true };
 }
 
-export function AppearanceLoadAndValidate(assetMananger: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems {
+export function AppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems {
 	// First sort input so bodyparts are orered correctly work
-	const input = AppearanceItemsFixBodypartOrder(assetMananger, originalInput);
+	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
 
 	// Process the input one by one, skipping bad items and injecting missing required bodyparts
 	let resultItems: AppearanceItems = [];
-	let currentBodypartIndex: number | null = assetMananger.bodyparts.length > 0 ? 0 : null;
+	let currentBodypartIndex: number | null = assetManager.bodyparts.length > 0 ? 0 : null;
 	for (; ;) {
 		const itemToAdd = input.shift();
 		// Check moving to next bodypart
@@ -260,23 +260,23 @@ export function AppearanceLoadAndValidate(assetMananger: AssetManager, originalI
 			currentBodypartIndex !== null &&
 			(
 				itemToAdd == null ||
-				itemToAdd.asset.definition.bodypart !== assetMananger.bodyparts[currentBodypartIndex].name
+				itemToAdd.asset.definition.bodypart !== assetManager.bodyparts[currentBodypartIndex].name
 			)
 		) {
-			const bodypart = assetMananger.bodyparts[currentBodypartIndex];
+			const bodypart = assetManager.bodyparts[currentBodypartIndex];
 
 			// Check if we need to add required bodypart
 			if (bodypart.required && !resultItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
 				// Find matching bodypart assets
-				const possibleAssets = assetMananger
+				const possibleAssets = assetManager
 					.getAllAssets()
 					.filter((asset) => asset.definition.bodypart === bodypart.name && asset.definition.allowRandomizerUsage === true);
 
 				ShuffleArray(possibleAssets);
 
 				for (const asset of possibleAssets) {
-					const tryFix = [...resultItems, assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
-					if (ValidateAppearanceItemsPrefix(assetMananger, tryFix).success) {
+					const tryFix = [...resultItems, assetManager.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
+					if (ValidateAppearanceItemsPrefix(assetManager, tryFix).success) {
 						resultItems = tryFix;
 						break;
 					}
@@ -289,7 +289,7 @@ export function AppearanceLoadAndValidate(assetMananger: AssetManager, originalI
 
 			// Move to next bodypart or end validation if all are done
 			currentBodypartIndex++;
-			if (currentBodypartIndex >= assetMananger.bodyparts.length) {
+			if (currentBodypartIndex >= assetManager.bodyparts.length) {
 				currentBodypartIndex = null;
 			}
 		}
@@ -298,7 +298,7 @@ export function AppearanceLoadAndValidate(assetMananger: AssetManager, originalI
 			break;
 
 		const tryItem: AppearanceItems = [...resultItems, itemToAdd];
-		if (!ValidateAppearanceItemsPrefix(assetMananger, tryItem).success) {
+		if (!ValidateAppearanceItemsPrefix(assetManager, tryItem).success) {
 			logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
 		} else {
 			resultItems = tryItem;

@@ -59,7 +59,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	public readonly type = 'character';
 	public readonly characterId: CharacterId;
 
-	protected assetMananger: AssetManager;
+	protected assetManager: AssetManager;
 	public onChangeHandler: ((changes: AppearanceChangeType[]) => void) | undefined;
 
 	private items: AppearanceItems = [];
@@ -70,7 +70,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private _safemode: SafemodeData | undefined;
 
 	constructor(assetMananger: AssetManager, characterId: CharacterId, onChange?: (changes: AppearanceChangeType[]) => void) {
-		this.assetMananger = assetMananger;
+		this.assetManager = assetMananger;
 		this.characterId = characterId;
 		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;
@@ -96,34 +96,34 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			...APPEARANCE_BUNDLE_DEFAULT,
 			...bundle,
 		};
-		if (assetManager && this.assetMananger !== assetManager) {
-			this.assetMananger = assetManager;
+		if (assetManager && this.assetManager !== assetManager) {
+			this.assetManager = assetManager;
 		}
 
 		// Load all items
 		const loadedItems: Item[] = [];
 		for (const itemBundle of bundle.items) {
 			// Load asset and skip if unknown
-			const asset = this.assetMananger.getAssetById(itemBundle.asset);
+			const asset = this.assetManager.getAssetById(itemBundle.asset);
 			if (asset === undefined) {
 				logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
 				continue;
 			}
 
-			const item = this.assetMananger.createItem(itemBundle.id, asset, itemBundle, logger);
+			const item = this.assetManager.createItem(itemBundle.id, asset, itemBundle, logger);
 			loadedItems.push(item);
 		}
 
 		// Validate and add all items
-		const newItems = AppearanceLoadAndValidate(this.assetMananger, loadedItems, logger);
+		const newItems = AppearanceLoadAndValidate(this.assetManager, loadedItems, logger);
 
-		if (!ValidateAppearanceItems(this.assetMananger, newItems).success) {
+		if (!ValidateAppearanceItems(this.assetManager, newItems).success) {
 			throw new Error('Invalid appearance after load');
 		}
 
 		this.items = newItems;
 		this.pose.clear();
-		for (const bone of this.assetMananger.getAllBones()) {
+		for (const bone of this.assetManager.getAllBones()) {
 			this.pose.set(bone.name, {
 				definition: bone,
 				rotation: Number.isInteger(bundle.pose[bone.name]) ? _.clamp(bundle.pose[bone.name], BONE_MIN, BONE_MAX) : 0,
@@ -213,11 +213,15 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public reloadAssetManager(assetManager: AssetManager, logger?: Logger, force: boolean = false) {
-		if (this.assetMananger === assetManager && !force)
+		if (this.assetManager === assetManager && !force)
 			return;
 		const bundle = this.exportToBundle();
-		this.assetMananger = assetManager;
+		this.assetManager = assetManager;
 		this.importFromBundle(bundle, logger);
+	}
+
+	public getAssetManager(): AssetManager {
+		return this.assetManager;
 	}
 
 	protected onChange(changes: AppearanceChangeType[]): void {
@@ -244,14 +248,14 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public getManipulator(): AppearanceRootManipulator {
-		return new AppearanceRootManipulator(this.assetMananger, this.items, true);
+		return new AppearanceRootManipulator(this.assetManager, this.items, true);
 	}
 
 	public commitChanges(manipulator: AppearanceRootManipulator, context: AppearanceActionProcessingContext): AppearanceValidationResult {
 		const newItems = manipulator.getRootItems();
 
 		// Validate
-		const r = ValidateAppearanceItems(this.assetMananger, newItems);
+		const r = ValidateAppearanceItems(this.assetManager, newItems);
 		if (!r.success)
 			return r;
 

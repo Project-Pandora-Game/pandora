@@ -4,10 +4,9 @@ import type { CharacterId } from '../character/characterTypes';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { AppearanceActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
-import { ShuffleArray } from '../utility';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
-import { AppearanceItems, AppearanceItemsFixBodypartOrder, AppearanceItemsGetPoseLimits, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
+import { AppearanceItems, AppearanceItemsGetPoseLimits, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState, BoneType } from './graphics';
@@ -102,7 +101,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		}
 
 		// Load all items
-		let loadedItems: Item[] = [];
+		const loadedItems: Item[] = [];
 		for (const itemBundle of bundle.items) {
 			// Load asset and skip if unknown
 			const asset = this.assetMananger.getAssetById(itemBundle.asset);
@@ -116,60 +115,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		}
 
 		// Validate and add all items
-		loadedItems = AppearanceItemsFixBodypartOrder(this.assetMananger, loadedItems);
-		let newItems: readonly Item[] = [];
-		let currentBodypartIndex: number | null = this.assetMananger.bodyparts.length > 0 ? 0 : null;
-		while (true) {
-			const itemToAdd = loadedItems.shift();
-			// Check moving to next bodypart
-			while (
-				currentBodypartIndex !== null &&
-				(
-					itemToAdd == null ||
-					itemToAdd.asset.definition.bodypart !== this.assetMananger.bodyparts[currentBodypartIndex].name
-				)
-			) {
-				const bodypart = this.assetMananger.bodyparts[currentBodypartIndex];
-
-				// Check if we need to add required bodypart
-				if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
-					// Find matching bodypart assets
-					const possibleAssets = this.assetMananger
-						.getAllAssets()
-						.filter((asset) => asset.definition.bodypart === bodypart.name && asset.definition.allowRandomizerUsage === true);
-
-					ShuffleArray(possibleAssets);
-
-					for (const asset of possibleAssets) {
-						const tryFix = [...newItems, this.assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
-						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix).success) {
-							newItems = tryFix;
-							break;
-						}
-					}
-				}
-
-				if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
-					throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
-				}
-
-				// Move to next bodypart or end validation if all are done
-				currentBodypartIndex++;
-				if (currentBodypartIndex >= this.assetMananger.bodyparts.length) {
-					currentBodypartIndex = null;
-				}
-			}
-
-			if (itemToAdd == null)
-				break;
-
-			const tryItem: AppearanceItems = [...newItems, itemToAdd];
-			if (!ValidateAppearanceItemsPrefix(this.assetMananger, tryItem).success) {
-				logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
-			} else {
-				newItems = tryItem;
-			}
-		}
+		const newItems = AppearanceLoadAndValidate(this.assetMananger, loadedItems, logger);
 
 		if (!ValidateAppearanceItems(this.assetMananger, newItems).success) {
 			throw new Error('Invalid appearance after load');

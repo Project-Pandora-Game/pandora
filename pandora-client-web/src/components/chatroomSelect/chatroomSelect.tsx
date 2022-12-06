@@ -6,12 +6,16 @@ import { useErrorHandler } from '../../common/useErrorHandler';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
+import { ResolveBackground } from 'pandora-common';
+import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import './chatroomSelect.scss';
 import closedDoor from './closed-door.svg';
 import openDoor from './opened-door.svg';
+import bodyChange from './body-change.svg';
+import devMode from './developer.svg';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
@@ -43,34 +47,47 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 
 	const [show, setShow] = useState(false);
 	const room = useRoomExtendedInfo(id);
+	const accountId = useCurrentAccount()?.id;
 
 	if (room?.result === 'success') {
 		const roomDetails = room.data;
 		const characters = roomDetails.characters;
-		// const isAdmin = room.data.;
+		const admins = roomDetails.admin;
+		const background = ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl());
+		const userIsAdmin = admins.find((e) => e === accountId);
 
 		return (
 			<a className='room-list-grid' onClick={ () => void setShow(true) } >
-				<img className='room-list-entry' width='50px' src={ _roomIsProtected ? closedDoor : openDoor } alt={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
+				<img className='room-list-entry' width='50px' src={ _roomIsProtected ? closedDoor : openDoor } title={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
 				<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
-				<div className='room-list-entry'>Some icons</div>
 				<div className='room-list-entry'>{(_description.length > 50) ? `${_description.substring(0, 47).concat('\u2026')}` : `${_description}`}</div>
 				{show && (
 					<ModalDialog>
 						<div className='chatroom-details'>
-							<div>Details for room <b>{roomDetails.name}</b></div>
-							<div>Description:</div>
-							<div className='details-description'>{roomDetails.description}</div>
-							<div>Current users in this room ({characters?.length}):
-								<ul className='details-users'>
-									{characters?.map((char) => <li key={ char.id }>{ char.name }</li>)}
-								</ul>
+							<div>Details for room<br /> <b>{roomDetails.name}</b></div>
+							<img className='details-preview' src={ background.image } width='200px' height='100px' ></img>
+							<div className='details-features'>
+								{_roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room'></img>}
+								{roomDetails.features.indexOf('allowBodyChanges') >= 0 && <img className='details-features-img' src={ bodyChange } title='Body changes allowed'></img>}
+								{roomDetails.features.indexOf('development') >= 0 && <img className='details-features-img' src={ devMode } title='Developer mode'></img>}
 							</div>
-							{roomDetails.protected ? roomDetails.hasPassword ?
-								<div>Enter the password:</div> : <div>You need to be an administrator</div> : <div></div>}
+							<div className='details-description-title'>Description:</div>
+							<div className='details-description'>{roomDetails.description}</div>
+							{userIsAdmin &&
+								<div className='details-users'>Current users in this room:
+									<div className='details-users-list'>
+										{characters?.map((char) => <div key={ char.id }>{char.name}</div>)}
+										<div>Dummy 1</div>
+										<div>Dummy 2</div>
+										<div>Dummy 3</div>
+									</div>
+								</div> }
+							{(roomDetails.protected && roomDetails.hasPassword) && <div>Enter the password:</div>}
+							<div className='details-buttons'>
+								<Button className='slim' onClick={ () => void joinRoom }>Enter Room</Button>
+								<Button className='slim' onClick={ () => void close }>Close</Button>
+							</div>
 						</div>
-						<Button className='slim' onClick={ () => void joinRoom }>Enter Room</Button>
-						<Button className='slim' disabled={ true } onClick={ () => void close }>Close</Button>
 					</ModalDialog>
 				)}
 			</a>

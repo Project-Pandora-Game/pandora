@@ -1,44 +1,11 @@
 @import '../../styles/constants';
 @import '../../styles/utils';
 
-.chatroom-details {
-	width: 100%;
-	display: grid;
-}
-
-.details-description {
-	border-style: solid;
-	border-width: 0.1em;
-	background-color: darkgray;
-	padding: 0.2em;
-}
-
-.details-users {
-	columns: 2;
-}
-
-.details-close {
-	color: #aaa;
-	float: right;
-	font-size: 28px;
-	font-weight: bold;
-}
-
-.details-close:hover,
-.details-close:focus {
-	color: black;
-	text-decoration: none;
-	cursor: pointer;
-}
-
 .room-list-grid {
 	display: grid;
 	width: 80%;
 	grid-template-columns:
-		minmax(30px, 0.33fr)
-		minmax(200px, 2fr)
-		minmax(100px, 1fr)
-		minmax(500px, 5fr);
+		minmax(30px, 0.33fr) minmax(200px, 2fr) minmax(100px, 1fr) minmax(500px, 5fr);
 	grid-template-rows: auto;
 	padding-top: 0.5em;
 	padding-bottom: 0.5em;
@@ -64,4 +31,73 @@
 	vertical-align: middle;
 }
 
+.chatroom-details {
+	width: 100%;
+	display: grid;
+	column-gap: 0.2em;
+	row-gap: 0.2em;
+	grid-template-columns: auto auto auto;
+}
+
+.details-preview {
+	grid-column: 2 / 4;
+	grid-row: 1 / 3;
+	box-shadow: 0.3em 0.3em 0.2em darkgray;
+	float: right;
+}
+
+.details-features{
+	grid-column: 1;
+	grid-row: 2;
+	display: grid;
+	grid-template-columns: auto auto auto;
+	column-gap: 0.5em;
+}
+
+.details-features-img{
+	width: 40px;
+	border: 1px solid black;
+	padding: 0.1em;
+}
+
+.details-description-title {
+	grid-row: 3;
+}
+
+.details-description {
+	grid-column: 1 / 4;
+	border: 0.1em solid black;
+	padding: 0.2em;
+	background-color: darkgray;
+}
+
+.details-users {
+	grid-column: 1 / 4;
+}
+
+.details-users-list {
+	border: 0.1em solid black;
+	padding: 0.2em;
+	display: grid;
+	grid-template-columns: auto auto auto;
+}
+
+.details-buttons {
+	grid-column: 1 /span 3;
+	text-align: right;
+}
+
+.details-close {
+	color: #aaa;
+	float: right;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+.details-close:hover,
+.details-close:focus {
+	color: black;
+	text-decoration: none;
+	cursor: pointer;
+}
 

@@ -29,18 +29,22 @@ export type IClientDirectoryAuthMessage = z.infer<typeof ClientDirectoryAuthMess
 export const ShardTokenTypeSchema = z.enum(['stable', 'beta', 'testing', 'development']);
 export type IShardTokenType = z.infer<typeof ShardTokenTypeSchema>;
 
-export type IBaseTokenInfo = {
+export type IBaseTokenInfo = Readonly<{
 	id: string;
 	expires?: number;
-	created: { id: number; username: string; time: number; };
-};
+	created: Readonly<{
+		id: number;
+		username: string;
+		time: number;
+	}>;
+}>;
 
 export type IShardTokenInfo = IBaseTokenInfo & {
-	type: IShardTokenType;
+	readonly type: IShardTokenType;
 };
 
 export type IBetaKeyInfo = IBaseTokenInfo & {
-	maxUses?: number;
+	readonly maxUses?: number;
 	uses: number;
 };
 

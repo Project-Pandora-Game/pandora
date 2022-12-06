@@ -7,6 +7,8 @@ import { Button } from '../../common/Button/Button';
 import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import '../shards/shards.scss';
 
+const ONE_DAY = 1000 * 60 * 60 * 24;
+
 const BetaKeyListContext = createContext({
 	reload: () => { /** noop */ },
 	append: (_key: IBetaKeyInfo) => { /** noop */ },
@@ -102,7 +104,7 @@ function BetaKeyCreate(): ReactElement {
 	const isAdmin = account?.roles !== undefined && IsAuthorized(account.roles, 'admin');
 	const connector = useDirectoryConnector();
 	const [expires, setExpires] = useState<undefined | number>(undefined);
-	const  [maxUses, setMaxUses] = useState<undefined | number>(isAdmin ? undefined : Date.now() + 1000 * 60 * 60 * 24);
+	const [maxUses, setMaxUses] = useState<undefined | number>(isAdmin ? undefined : Date.now() + ONE_DAY);
 	const { append } = useContext(BetaKeyListContext);
 
 	const updateMaxUses = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +113,7 @@ function BetaKeyCreate(): ReactElement {
 			setMaxUses(undefined);
 		} else {
 			const num = parseInt(value, 10);
-			if (!isNaN(num) && num >= 1 && num <= 5) {
+			if (!isNaN(num) && num >= 1 && (isAdmin || num <= 5)) {
 				setMaxUses(num);
 			}
 		}
@@ -124,7 +126,7 @@ function BetaKeyCreate(): ReactElement {
 		} else {
 			const date = new Date(value).getTime();
 			const now = Date.now();
-			if (date > now && (isAdmin || date <= now + 1000 * 60 * 60 * 24 * 7)) {
+			if (date > now && (isAdmin || date <= now + ONE_DAY * 7)) {
 				setExpires(date);
 			}
 		}
@@ -155,13 +157,13 @@ function BetaKeyCreate(): ReactElement {
 			<legend>Create Beta Key</legend>
 			<div className='input-row'>
 				<label>Expires</label>
-				<input type='checkbox' checked={ expires !== undefined } onChange={ (e) => setExpires(e.target.checked ? Date.now() : undefined) } disabled={ !isAdmin } />
+				<input type='checkbox' checked={ expires !== undefined } onChange={ (e) => setExpires(e.target.checked ? Date.now() + ONE_DAY : undefined) } disabled={ !isAdmin } />
 				<input type='date' value={ expires === undefined ? '' : new Date(expires).toISOString().substring(0, 10) } onChange={ updateExpires } />
 			</div>
 			<div className='input-row'>
 				<label>Max Uses</label>
 				<input type='checkbox' checked={ maxUses !== undefined } onChange={ (e) => setMaxUses(e.target.checked ? 1 : undefined) } disabled={ !isAdmin } />
-				<input type='number' value={ maxUses === undefined ? '' : maxUses } onChange={ updateMaxUses } />
+				<input type='number' value={ maxUses === undefined ? '' : maxUses } onChange={ updateMaxUses } min={ 1 } max={ isAdmin ? undefined : 5 } />
 			</div>
 			<div className='input-row'>
 				<Button className='slim' onClick={ () => void onCreate() }>Create</Button>

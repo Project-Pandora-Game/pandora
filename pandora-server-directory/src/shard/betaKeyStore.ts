@@ -1,3 +1,4 @@
+import { customAlphabet } from 'nanoid';
 import { GetLogger, type IBetaKeyInfo, type IClientDirectoryArgument } from 'pandora-common';
 import { type Account } from '../account/account';
 import { BETA_KEY_GLOBAL } from '../config';
@@ -6,6 +7,8 @@ import { TokenStoreBase } from './tokenStoreBase';
 
 const TOKEN_ID_LENGTH = 8;
 const TOKEN_SECRET_LENGTH = 8;
+const TOKEN_MAX_USES = 5;
+const TOKEN_MAX_EXPIRE_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 const logger = GetLogger('BetaKeyStore');
 
 type IStoredBetaKeyInfo = IBetaKeyInfo & { token: string; };
@@ -13,6 +16,7 @@ type IStoredBetaKeyInfo = IBetaKeyInfo & { token: string; };
 export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaKeyInfo> {
 	constructor() {
 		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
+		this.generator = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 	}
 
 	protected onInit(): void {
@@ -34,7 +38,7 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 		});
 	}
 
-	public async unuse(token: string): Promise<void> {
+	public async free(token: string): Promise<void> {
 		await this._action(token, (info) => {
 			--info.uses;
 			return info;
@@ -55,9 +59,9 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 
 	public async create(acc: Account, { expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey']): Promise<'adminRequired' | { info: IBetaKeyInfo, token: string; }> {
 		if (!acc.roles.isAuthorized('admin')) {
-			if (maxUses === undefined || maxUses > 5)
+			if (maxUses === undefined || maxUses > TOKEN_MAX_USES)
 				return 'adminRequired';
-			if (expires === undefined || expires > 60 * 60 * 24 * 7)
+			if (expires === undefined || expires > Date.now() + TOKEN_MAX_EXPIRE_MS)
 				return 'adminRequired';
 		}
 		return await this._create(acc, { expires, maxUses, uses: 0 });

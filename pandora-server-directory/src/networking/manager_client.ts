@@ -207,7 +207,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const result = await accountManager.createAccount(username, passwordSha512, email);
 		if (typeof result === 'string') {
-			if (BETA_KEY_ENABLED) await BetaKeyStore.unuse(betaKey as string);
+			if (BETA_KEY_ENABLED && betaKey) await BetaKeyStore.free(betaKey);
 			return { result };
 		}
 
@@ -510,12 +510,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleManageInvalidateShardToken({ id }: IClientDirectoryArgument['manageInvalidateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateShardToken'] {
-		const success = await ShardTokenStore.revoke(connection.account, id);
-		return { result: success ? 'ok' : 'notFound' };
+		return { result: await ShardTokenStore.revoke(connection.account, id) };
 	}
 
-	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
-		const info = ShardTokenStore.list(connection.account);
+	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], _connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
+		const info = ShardTokenStore.list();
 		return { info };
 	}
 
@@ -530,14 +529,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private handleManageListBetaKeys(_: IClientDirectoryArgument['manageListBetaKeys'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListBetaKeys'] {
-		const keys = BetaKeyStore.list(connection.account);
+	private handleManageListBetaKeys(_: IClientDirectoryArgument['manageListBetaKeys'], _connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListBetaKeys'] {
+		const keys = BetaKeyStore.list();
 		return { keys };
 	}
 
 	private async handleManageInvalidateBetaKey({ id }: IClientDirectoryArgument['manageInvalidateBetaKey'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateBetaKey'] {
-		const success = await BetaKeyStore.revoke(connection.account, id);
-		return { result: success ? 'ok' : 'notFound' };
+		return { result: await BetaKeyStore.revoke(connection.account, id) };
 	}
 
 	//#region Direct Messages

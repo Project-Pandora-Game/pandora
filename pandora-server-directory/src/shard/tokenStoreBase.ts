@@ -1,17 +1,21 @@
-import { omit } from 'lodash';
+import { cloneDeep, debounce, omit } from 'lodash';
 import { type IBaseTokenInfo, type Logger } from 'pandora-common';
 import { type Account } from '../account/account';
 import { nanoid } from 'nanoid';
 
-const CLEANUP_INTERVAL = 1000 * 60 * 60 * 24; // 1 day
+const CLEANUP_INTERVAL = 1000 * 60 * 60 * 24 * 7; // 1 week
+const CLEANUP_DELAY = CLEANUP_INTERVAL;
+const CLEANUPS = new Set<() => void>();
+
+const SAVE_DEBOUNCE = 1000; // 1 second
 
 export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	/** @internal */
-	public static readonly cleanups = new Set<() => void>();
 	#tokens!: Map<string, Full<Token>>;
 	protected readonly logger: Logger;
 	protected readonly idLength: number;
 	protected readonly secretLength: number;
+	protected generator: (size?: number) => string = nanoid;
 
 	protected constructor(logger: Logger, idLength: number, secretLength: number) {
 		this.logger = logger;
@@ -23,7 +27,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		this.#tokens = new Map(await this.load());
 		this._cleanup();
 		await this.onInit();
-		TokenStoreBase.cleanups.add(() => this._cleanup());
+		CLEANUPS.add(() => this._cleanup());
 		this.logger.info(`Loaded ${this.#tokens.size} tokens`);
 	}
 
@@ -33,11 +37,12 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	protected abstract isValid(info: Full<Token>): boolean;
 
 	protected async _create(acc: Account, data: Omit<Token, 'created' | 'id'>): Promise<{ info: Stripped<Token>, token: string; }> {
-		let id = nanoid(this.idLength);
-		while (this.#tokens.has(id))
-			id = nanoid(this.idLength);
+		let id = '';
+		do {
+			id = this.generator(this.idLength);
+		} while (this.#tokens.has(id));
 
-		const token = `${id}${nanoid(this.secretLength)}`;
+		const token = `${id}${this.generator(this.secretLength)}`;
 		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 		const info: Full<Token> = {
 			...data,
@@ -66,25 +71,22 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		this.#tokens.set(data.id, data);
 	}
 
-	public async revoke(acc: Account, id: string): Promise<boolean> {
+	public async revoke(acc: Account, id: string): Promise<'ok' | 'notFound'> {
 		const info = this.get(id);
 		if (!info || (info.created.id !== acc.id && !acc.roles.isAuthorized('admin')))
-			return false;
+			return 'notFound';
 
 		this.#tokens.delete(id);
 		await this._save();
 
 		this.logger.info(`Token '${id}' revoked by ${acc.username} (${acc.id})`);
 
-		return true;
+		return 'ok';
 	}
 
-	public list(acc: Account): Stripped<Token>[] {
+	public list(): Stripped<Token>[] {
 		const values = [...this.#tokens.values()]
 			.map((info) => omit(info, 'token'));
-
-		if (!acc.roles.isAuthorized('admin'))
-			return values.filter((info) => info.created.id === acc.id);
 
 		return values;
 	}
@@ -106,12 +108,12 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		if (!info || info.token !== token || !this._validate(info))
 			return false;
 
-		const newInfo = action(omit(info, 'token'));
+		const newInfo = action(cloneDeep(omit(info, 'token')));
 		if (!newInfo)
 			return true;
 
 		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-		this.#tokens.set(info.id, { ...newInfo, id: info.id, token: info.token, created: info.created } as Full<Token>);
+		this.#tokens.set(info.id, { ...cloneDeep(newInfo), id: info.id, token: info.token, created: info.created } as Full<Token>);
 		await this._save();
 		return true;
 	}
@@ -125,22 +127,18 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		return true;
 	}
 
-	private async _save(): Promise<void> {
+	private _save = debounce(async () => {
 		await this.save([...this.#tokens.entries()]);
-	}
+	}, SAVE_DEBOUNCE);
 
 	private _cleanup(): void {
-		const now = Date.now();
+		const time = Date.now() - CLEANUP_DELAY;
 		let save = false;
 		for (const [key, value] of this.#tokens) {
-			if (value.expires !== undefined && value.expires < now) {
+			if (value.expires !== undefined && value.expires < time) {
 				this.#tokens.delete(key);
 				save = true;
 				this.logger.info(`Token '${key}' expired`);
-			} else if (!this.isValid(value)) {
-				this.#tokens.delete(key);
-				save = true;
-				this.logger.info(`Token '${key}' removed`);
 			}
 		}
 		if (save) {
@@ -153,6 +151,6 @@ type Full<Token extends IBaseTokenInfo> = Token & { token: string; };
 type Stripped<Token extends IBaseTokenInfo> = Omit<Token, 'token'>;
 
 setInterval(() => {
-	for (const cleanup of TokenStoreBase.cleanups)
+	for (const cleanup of CLEANUPS)
 		cleanup();
 }, CLEANUP_INTERVAL).unref();

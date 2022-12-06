@@ -27,10 +27,7 @@
 	display: grid;
 	width: 80%;
 	grid-template-columns:
-		minmax(30px, 0.33fr)
-		minmax(200px, 2fr)
-		minmax(100px, 1fr)
-		minmax(500px, 5fr);
+		minmax(30px, 0.33fr) minmax(200px, 2fr) minmax(100px, 1fr) minmax(500px, 5fr);
 	grid-template-rows: auto;
 	padding-top: 0.5em;
 	padding-bottom: 0.5em;

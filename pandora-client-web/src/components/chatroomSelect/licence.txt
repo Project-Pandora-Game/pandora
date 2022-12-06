@@ -1,6 +1,2 @@
-<<<<<<< HEAD
 All SVG files are used under the Aperture Creative commons licence
-=======
-Both SVG files are used under the Aperture Creative commons licence
->>>>>>> Initial version for a nicer listing of rooms
 https://www.svgrepo.com/page/licensing

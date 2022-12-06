@@ -1,10 +1,11 @@
 import { noop } from 'lodash';
 import { EMPTY, GetLogger, IChatRoomDirectoryInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId } from 'pandora-common';
 import React, { ReactElement, useCallback, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
+import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
@@ -19,7 +20,12 @@ import pronounChange from './male-female.svg';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
+	const roomData = useChatRoomData();
 	const roomList = useRoomList();
+
+	if (roomData) {
+		return <Navigate to='/chatroom' />;
+	}
 
 	return (
 		<div>
@@ -52,10 +58,12 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 		const userIsAdmin = admins.find((e) => e === accountId);
 
 		return (
-			<a className='room-list-grid' onClick={ () => void setShow(true) } >
-				<img className='room-list-entry' width='50px' src={ _roomIsProtected ? closedDoor : openDoor } title={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
-				<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
-				<div className='room-list-entry'>{(_description.length > 50) ? `${_description.substring(0, 47).concat('\u2026')}` : `${_description}`}</div>
+			<>
+				<a className='room-list-grid' onClick={ () => setShow(true) } >
+					<img className='room-list-entry' width='50px' src={ _roomIsProtected ? closedDoor : openDoor } title={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
+					<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
+					<div className='room-list-entry'>{(_description.length > 50) ? `${_description.substring(0, 47).concat('\u2026')}` : `${_description}`}</div>
+				</a>
 				{show && (
 					<ModalDialog>
 						<div className='chatroom-details'>
@@ -83,7 +91,7 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 						</div>
 					</ModalDialog>
 				)}
-			</a>
+			</>
 		);
 	} else return (<br></br>);
 }

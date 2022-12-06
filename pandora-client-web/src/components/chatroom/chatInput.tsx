@@ -139,11 +139,12 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	);
 }
 
-export function ChatInputArea({ messagesDiv, scroll }: { messagesDiv: RefObject<HTMLDivElement>; scroll: () => void }) {
+export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement>; scroll: () => void, newMessageCount: number }) {
 	const { ref } = useChatInput();
 	return (
 		<>
 			<AutoCompleteHint />
+			<UnreadMessagesIndicator newMessageCount={ newMessageCount } />
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
 			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
@@ -362,6 +363,20 @@ function TypingIndicator(): ReactElement {
 				</span>
 			)) }
 			{ extra }
+		</div>
+	);
+}
+
+function UnreadMessagesIndicator({ newMessageCount }: { newMessageCount: number }): ReactElement | null {
+	if (newMessageCount === 0) {
+		return null;
+	}
+
+	const indicatorText = `Unread chat message${newMessageCount > 1 ? `s (${newMessageCount})` : ''}`;
+
+	return (
+		<div className='unread-messages-indicator'>
+			{ indicatorText }
 		</div>
 	);
 }

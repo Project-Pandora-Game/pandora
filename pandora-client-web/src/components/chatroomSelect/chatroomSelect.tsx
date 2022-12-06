@@ -7,7 +7,7 @@ import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
-import { ModalDialog } from '../dialog/dialog';
+import { DialogCloseButton, ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import './chatroomSelect.scss';

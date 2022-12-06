@@ -7,7 +7,7 @@ import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/Button/Button';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
-import { DialogCloseButton, ModalDialog } from '../dialog/dialog';
+import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import './chatroomSelect.scss';
@@ -15,6 +15,7 @@ import closedDoor from './closed-door.svg';
 import openDoor from './opened-door.svg';
 import bodyChange from './body-change.svg';
 import devMode from './developer.svg';
+import pronounChange from './male-female.svg';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
@@ -58,12 +59,13 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 				{show && (
 					<ModalDialog>
 						<div className='chatroom-details'>
-							<div>Details for room<br /> <b>{roomDetails.name}</b></div>
+							<div>Details for room<br /> <b>{roomDetails.name}</b>{background.image}</div>
 							<img className='details-preview' src={ background.image } width='200px' height='100px' ></img>
 							<div className='details-features'>
 								{_roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room'></img>}
 								{roomDetails.features.indexOf('allowBodyChanges') >= 0 && <img className='details-features-img' src={ bodyChange } title='Body changes allowed'></img>}
 								{roomDetails.features.indexOf('development') >= 0 && <img className='details-features-img' src={ devMode } title='Developer mode'></img>}
+								{roomDetails.features.indexOf('allowPronounChanges') >= 0 && <img className='details-features-img' src={ pronounChange } title='Pronoun Change allowed'></img>}
 							</div>
 							<div className='details-description-title'>Description:</div>
 							<div className='details-description'>{roomDetails.description}</div>

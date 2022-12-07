@@ -72,7 +72,8 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	}
 
 	protected async devInsert(data: Full<Token>): Promise<boolean> {
-		if (this.#tokens.has(data.id))
+		const current = this.#tokens.get(data.id);
+		if (current && current.token === data.token)
 			return false;
 
 		this.#tokens.set(data.id, data);

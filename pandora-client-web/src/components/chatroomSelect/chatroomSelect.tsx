@@ -11,7 +11,6 @@ import { useConnectToShard } from '../gameContext/shardConnectorContextProvider'
 import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
-import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../common/Form/form';
 import './chatroomSelect.scss';
 import closedDoor from './closed-door.svg';
 import openDoor from './opened-door.svg';
@@ -48,6 +47,7 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 	const joinRoom = useJoinRoom();
 
 	const [show, setShow] = useState(false);
+	const [roomPassword, setPassword] = useState('');
 	const room = useRoomExtendedInfo(id);
 	const accountId = useCurrentAccount()?.id;
 
@@ -63,6 +63,7 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 				<a className='room-list-grid' onClick={ () => setShow(true) } >
 					<img className='room-list-entry' width='50px' src={ _roomIsProtected ? closedDoor : openDoor } title={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
 					<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
+					<div className='room-list-entry'></div>
 					<div className='room-list-entry'>{(_description.length > 50) ? `${_description.substring(0, 47).concat('\u2026')}` : `${_description}`}</div>
 				</a>
 				{show && (
@@ -85,18 +86,25 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 									</div>
 								</div> }
 							{(roomDetails.protected && roomDetails.hasPassword) &&
-								<FormField>
-									<label htmlFor='room-password'>Password</label>
-									<input
-										type='password'
-										id='room-password'
-									/>
-								</FormField>							}
+								<input
+									type='password'
+									value={ roomPassword }
+									onChange={ (e) => setPassword(e.target.value) }
+								/>}
+							<div>{ roomPassword }</div>
 							<div className='details-buttons'>
 								<Button className='slim' onClick={ () => {
-									joinRoom(id)
+									joinRoom(id, roomPassword)
 										.then((_joinResult) => {
 											// You can handle the result of join attempt here (including failed ones)
+											switch (_joinResult) {
+												case 'ok':
+													return;
+												default: {
+													setShow(true);
+													return (_joinResult);
+												}
+											}
 										})
 										.catch((_error: unknown) => {
 											// You can handle if joining crashed or server communication failed here

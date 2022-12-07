@@ -369,7 +369,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const allowResult = room.checkAllowEnter(connection.character);
 
-		if (allowResult !== 'ok' && allowResult !== 'noAccess') {
+		if (allowResult !== 'ok' && allowResult !== 'errFull') {
 			return { result: 'noAccess' };
 		}
 

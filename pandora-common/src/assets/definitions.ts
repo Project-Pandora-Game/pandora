@@ -130,6 +130,7 @@ export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 }[];
 
 export type AssetAttributeDefinition = {
+	name: string;
 	description: string;
 };
 

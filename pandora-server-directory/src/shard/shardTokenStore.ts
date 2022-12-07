@@ -17,16 +17,16 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
 	}
 
-	protected onInit(): void | Promise<void> {
+	protected async onInit(): Promise<void> {
 		if (SHARD_SHARED_SECRET) {
-			this.devInsert({
+			if (await this.devInsert({
 				id: SHARD_SHARED_SECRET.substring(0, TOKEN_ID_LENGTH),
 				token: SHARD_SHARED_SECRET,
 				type: 'stable',
 				created: { id: 0, username: '[[Pandora]]', time: 0 },
 				expires: undefined,
-			});
-			this.logger.info(`Token '${SHARD_SHARED_SECRET}' created`);
+			}))
+				this.logger.info(`Token '${SHARD_SHARED_SECRET}' created`);
 		}
 	}
 

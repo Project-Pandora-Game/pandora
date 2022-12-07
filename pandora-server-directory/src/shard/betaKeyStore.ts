@@ -19,15 +19,15 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 		this.generator = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 	}
 
-	protected onInit(): void {
+	protected async onInit(): Promise<void> {
 		if (BETA_KEY_GLOBAL) {
-			this.devInsert({
+			if (await this.devInsert({
 				id: BETA_KEY_GLOBAL.substring(0, TOKEN_ID_LENGTH),
 				token: BETA_KEY_GLOBAL,
 				created: { id: 0, username: '[[Pandora]]', time: 0 },
 				uses: 0,
-			});
-			this.logger.info(`Token '${BETA_KEY_GLOBAL}' created`);
+			}))
+				this.logger.info(`Token '${BETA_KEY_GLOBAL}' created`);
 		}
 	}
 

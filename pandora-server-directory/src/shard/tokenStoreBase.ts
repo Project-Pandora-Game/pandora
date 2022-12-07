@@ -71,8 +71,13 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		};
 	}
 
-	protected devInsert(data: Full<Token>): void {
+	protected async devInsert(data: Full<Token>): Promise<boolean> {
+		if (this.#tokens.has(data.id))
+			return false;
+
 		this.#tokens.set(data.id, data);
+		await this._save();
+		return true;
 	}
 
 	public async revoke(acc: Account, id: string): Promise<'ok' | 'notFound'> {

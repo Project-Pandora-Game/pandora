@@ -93,7 +93,17 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 									/>
 								</FormField>							}
 							<div className='details-buttons'>
-								<Button className='slim' onClick={ () => void joinRoom(id) }>Enter Room</Button>
+								<Button className='slim' onClick={ () => {
+									joinRoom(id)
+										.then((_joinResult) => {
+											// You can handle the result of join attempt here (including failed ones)
+										})
+										.catch((_error: unknown) => {
+											// You can handle if joining crashed or server communication failed here
+										});
+								} }>
+									Enter Room
+								</Button>
 								<Button className='slim' onClick={ () => setShow(false) }>Close</Button>
 							</div>
 						</div>
@@ -108,15 +118,15 @@ const RoomJoinProgress = new PersistentToast();
 
 type ChatRoomEnterResult = IClientDirectoryNormalResult['chatRoomEnter']['result'];
 
-function useJoinRoom(): (id: RoomId) => Promise<ChatRoomEnterResult> {
+function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnterResult> {
 	const directoryConnector = useDirectoryConnector();
 	const connectToShard = useConnectToShard();
 	const handleError = useErrorHandler();
 
-	return useCallback(async (id) => {
+	return useCallback(async (id, password) => {
 		try {
 			RoomJoinProgress.show('progress', 'Joining room...');
-			const result = await directoryConnector.awaitResponse('chatRoomEnter', { id });
+			const result = await directoryConnector.awaitResponse('chatRoomEnter', { id, password });
 			if (result.result === 'ok') {
 				await connectToShard(result);
 				RoomJoinProgress.show('success', 'Room joined!');
@@ -125,9 +135,9 @@ function useJoinRoom(): (id: RoomId) => Promise<ChatRoomEnterResult> {
 			}
 			return result.result;
 		} catch (err) {
-			GetLogger('CreateRoom').warning('Error during room creation', err);
+			GetLogger('JoinRoom').warning('Error during room join', err);
 			RoomJoinProgress.show('error',
-				`Error during room creation:\n${ err instanceof Error ? err.message : String(err) }`);
+				`Error during room join:\n${ err instanceof Error ? err.message : String(err) }`);
 			handleError(err);
 			throw err;
 		}

@@ -11,6 +11,7 @@ import { useConnectToShard } from '../gameContext/shardConnectorContextProvider'
 import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
+import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../common/Form/form';
 import './chatroomSelect.scss';
 import closedDoor from './closed-door.svg';
 import openDoor from './opened-door.svg';
@@ -67,8 +68,8 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 				{show && (
 					<ModalDialog>
 						<div className='chatroom-details'>
-							<div>Details for room<br /> <b>{roomDetails.name}</b>{background.image}</div>
-							<img className='details-preview' src={ background.image } width='200px' height='100px' ></img>
+							<div>Details for room<br /> <b>{roomDetails.name}</b></div>
+							{background.image[0] !== '#' && <img className='details-preview' src={ background.image } width='200px' height='100px' ></img>}
 							<div className='details-features'>
 								{_roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room'></img>}
 								{roomDetails.features.indexOf('allowBodyChanges') >= 0 && <img className='details-features-img' src={ bodyChange } title='Body changes allowed'></img>}
@@ -83,7 +84,14 @@ function RoomEntry({ id, name, description: _description, hasPassword: _hasPassw
 										{characters?.map((char) => <div key={ char.id }>{char.name}</div>)}
 									</div>
 								</div> }
-							{(roomDetails.protected && roomDetails.hasPassword) && <div>Enter the password:</div>}
+							{(roomDetails.protected && roomDetails.hasPassword) &&
+								<FormField>
+									<label htmlFor='room-password'>Password</label>
+									<input
+										type='password'
+										id='room-password'
+									/>
+								</FormField>							}
 							<div className='details-buttons'>
 								<Button className='slim' onClick={ () => void joinRoom(id) }>Enter Room</Button>
 								<Button className='slim' onClick={ () => setShow(false) }>Close</Button>

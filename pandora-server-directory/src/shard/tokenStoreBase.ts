@@ -11,7 +11,7 @@ const SAVE_DEBOUNCE = 1000; // 1 second
 
 export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	/** @internal */
-	#tokens!: Map<string, Full<Token>>;
+	readonly #tokens = new Map<string, Full<Token>>();
 	protected readonly logger: Logger;
 	protected readonly idLength: number;
 	protected readonly secretLength: number;
@@ -24,7 +24,11 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	}
 
 	public async init(): Promise<void> {
-		this.#tokens = new Map(await this.load());
+		for (const token of await this.load()) {
+			if (this.isValid(token)) {
+				this.#tokens.set(token.id, token);
+			}
+		}
 		this._cleanup();
 		await this.onInit();
 		CLEANUPS.add(() => this._cleanup());
@@ -32,8 +36,8 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	}
 
 	protected abstract onInit(): void | Promise<void>;
-	protected abstract load(): Promise<[string, Full<Token>][]>;
-	protected abstract save(data: [string, Full<Token>][]): Promise<void>;
+	protected abstract load(): Promise<Full<Token>[]>;
+	protected abstract save(data: Full<Token>[]): Promise<void>;
 	protected abstract isValid(info: Full<Token>): boolean;
 
 	protected async _create(acc: Account, data: Omit<Token, 'created' | 'id'>): Promise<{ info: Stripped<Token>, token: string; }> {
@@ -128,7 +132,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	}
 
 	private _save = debounce(async () => {
-		await this.save([...this.#tokens.entries()]);
+		await this.save([...this.#tokens.values()]);
 	}, SAVE_DEBOUNCE);
 
 	private _cleanup(): void {
@@ -142,7 +146,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 			}
 		}
 		if (save) {
-			this._save().catch((err) => this.logger.error(err));
+			this._save()?.catch((err) => this.logger.error(err));
 		}
 	}
 }

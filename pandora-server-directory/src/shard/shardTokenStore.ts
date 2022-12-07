@@ -30,11 +30,11 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		}
 	}
 
-	protected async load(): Promise<[string, IStoredShardTokenInfo][]> {
+	protected async load(): Promise<IStoredShardTokenInfo[]> {
 		return await GetDatabase().getConfig('shardTokens') || [];
 	}
 
-	protected save(data: [string, IStoredShardTokenInfo][]): Promise<void> {
+	protected save(data: IStoredShardTokenInfo[]): Promise<void> {
 		return GetDatabase().setConfig({ type: 'shardTokens', data });
 	}
 

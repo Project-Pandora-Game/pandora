@@ -103,8 +103,8 @@ function BetaKeyCreate(): ReactElement {
 	const account = useCurrentAccount();
 	const isAdmin = account?.roles !== undefined && IsAuthorized(account.roles, 'admin');
 	const connector = useDirectoryConnector();
-	const [expires, setExpires] = useState<undefined | number>(undefined);
-	const [maxUses, setMaxUses] = useState<undefined | number>(isAdmin ? undefined : Date.now() + ONE_DAY);
+	const [expires, setExpires] = useState<undefined | number>(isAdmin ? undefined : Date.now() + ONE_DAY);
+	const [maxUses, setMaxUses] = useState<undefined | number>(isAdmin ? undefined : 1);
 	const { append } = useContext(BetaKeyListContext);
 
 	const updateMaxUses = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {

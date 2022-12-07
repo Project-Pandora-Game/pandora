@@ -45,11 +45,11 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 		});
 	}
 
-	protected async load(): Promise<[string, IStoredBetaKeyInfo][]> {
+	protected async load(): Promise<IStoredBetaKeyInfo[]> {
 		return await GetDatabase().getConfig('betaKeys') || [];
 	}
 
-	protected save(data: [string, IStoredBetaKeyInfo][]): Promise<void> {
+	protected save(data: IStoredBetaKeyInfo[]): Promise<void> {
 		return GetDatabase().setConfig({ type: 'betaKeys', data });
 	}
 

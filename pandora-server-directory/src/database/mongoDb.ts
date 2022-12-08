@@ -45,12 +45,16 @@ export default class MongoDatabase implements PandoraDatabase {
 			throw new Error('Database already initialized');
 		}
 
+		let uri: string;
 		if (inMemory) {
 			this._inMemoryServer = await CreateInMemoryMongo({ dbPath });
-			this._client = new MongoClient(this._inMemoryServer.getUri());
+			uri = this._inMemoryServer.getUri();
 		} else {
-			this._client = new MongoClient(this._url);
+			uri = this._url;
 		}
+		this._client = new MongoClient(uri, {
+			ignoreUndefined: true,
+		});
 
 		// if connection fails, error is thrown, application will exit
 		await this._client.connect();

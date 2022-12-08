@@ -132,6 +132,8 @@ export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 export type AssetAttributeDefinition = {
 	name: string;
 	description: string;
+	icon?: string;
+	useAsWardrobeFilter?: 'item' | 'body';
 };
 
 /** Data for randomly generating sensible appearance */

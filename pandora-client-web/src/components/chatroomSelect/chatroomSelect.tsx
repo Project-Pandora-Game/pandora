@@ -1,6 +1,6 @@
 import { noop } from 'lodash';
 import { EMPTY, GetLogger, IChatRoomDirectoryInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId } from 'pandora-common';
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { PersistentToast } from '../../persistentToast';
@@ -35,7 +35,7 @@ export function ChatroomSelect(): ReactElement {
 				Existing rooms: {roomList?.length }<br />
 				{!roomList ? <div className='loading'>Loading...</div> : (
 					roomList.length > 0 ?
-						roomList.map((room) => <RoomEntry key={ room.id } { ...room } />) :
+						roomList.map((room) => <RoomEntry key={ room.id } roomInfo={ room } />) :
 						<div>No room matches your filter criteria</div>
 				)}
 			</p>
@@ -43,96 +43,111 @@ export function ChatroomSelect(): ReactElement {
 	);
 }
 
-function RoomEntry({ id, name, description: _description, hasPassword: _hasPassword, maxUsers, users, protected: _roomIsProtected }: IChatRoomDirectoryInfo): ReactElement {
+function RoomEntry({ roomInfo }: {
+	roomInfo: IChatRoomDirectoryInfo
+}): ReactElement {
 
 	const [show, setShow] = useState(false);
+
+	const { name, users, maxUsers, description, protected: roomIsProtected } = roomInfo;
 
 	return (
 		<>
 			<a className='room-list-grid' onClick={ () => setShow(true) } >
-				<img className='room-list-entry' width='50px' src={ _roomIsProtected ? closedDoor : openDoor } title={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
+				<img className='room-list-entry' width='50px' src={ roomIsProtected ? closedDoor : openDoor } title={ roomIsProtected ? 'Protected room' : 'Open room' }></img>
 				<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
 				<div className='room-list-entry'>{ show ? 'True' : 'False'}</div>
-				<div className='room-list-entry'>{(_description.length > 50) ? `${_description.substring(0, 47).concat('\u2026')}` : `${_description}`}</div>
+				<div className='room-list-entry'>{(description.length > 50) ? `${description.substring(0, 47).concat('\u2026')}` : `${description}`}</div>
 			</a>
-			{show && <RoomDetailsDialog
-				id={ id }
-				name={ name }
-				description={ _description }
-				hasPassword={ _hasPassword }
-				maxUsers={ maxUsers }
-				users={ users }
-				protected={ _roomIsProtected } />}
+			{ show && <RoomDetailsDialog
+				baseRoomInfo={ roomInfo }
+				hide={ () => setShow(false) }
+			/> }
 		</>
 	);
 }
 
-function RoomDetailsDialog({ id, name, description: _description, hasPassword: _hasPassword, protected: _roomIsProtected }: IChatRoomDirectoryInfo): ReactElement {
+function RoomDetailsDialog({ baseRoomInfo, hide }: {
+	baseRoomInfo: IChatRoomDirectoryInfo
+	hide: () => void;
+}): ReactElement | null {
 	const accountId = useCurrentAccount()?.id;
 	const [roomPassword, setPassword] = useState('');
-	const [show, setShow] = useState(false);
 	const joinRoom = useJoinRoom();
-	const room = useRoomExtendedInfo(id);
+	const room = useRoomExtendedInfo(baseRoomInfo.id);
 
-	if (room?.result !== 'notFound') {
-		const roomDetails = room?.result === 'success' ? room.data : undefined;
-		const characters = roomDetails?.characters ?? [];
-		const admins = roomDetails?.admin ?? [];
-		const background = roomDetails?.background ? ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl()).image : '';
-		const userIsAdmin = admins.find((e) => e === accountId);
+	// Close if room disappears
+	useEffect(() => {
+		if (room?.result === 'notFound') {
+			hide();
+		}
+	}, [room, hide]);
 
-		return (
-			<ModalDialog>
-				<div className='chatroom-details'>
-					<div>Details for room<br /> <b>{roomDetails?.name ? roomDetails.name : name}</b></div>
-					{(background !== '' && background[0] !== '#') && <img className='details-preview' src={ background } width='200px' height='100px' ></img>}
-					<div className='details-features'>
-						{_roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room'></img>}
-						{(roomDetails?.features && roomDetails.features.indexOf('allowBodyChanges') >= 0) && <img className='details-features-img' src={ bodyChange } title='Body changes allowed'></img>}
-						{(roomDetails?.features && roomDetails.features.indexOf('development') >= 0) && <img className='details-features-img' src={ devMode } title='Developer mode'></img>}
-						{(roomDetails?.features && roomDetails.features.indexOf('allowPronounChanges') >= 0) && <img className='details-features-img' src={ pronounChange } title='Pronoun Change allowed'></img>}
-					</div>
-					<div className='details-description-title'>Description:</div>
-					<div className='details-description'>{roomDetails?.description ? roomDetails.description : _description}</div>
-					{userIsAdmin &&
-						<div className='details-users'>Current users in this room:
-							<div className='details-users-list'>
-								{characters?.map((char) => <div key={ char.id }>{char.name}</div>)}
-							</div>
-						</div>}
-					{(!userIsAdmin && _roomIsProtected && _hasPassword) &&
-						<div className='details-users'>This room requires a password:</div>}
-					{(!userIsAdmin && _roomIsProtected && _hasPassword) &&
-						<input
-							className='details-descriptions'
-							name='roomPwd'
-							type='password'
-							value={ roomPassword }
-							onChange={ (e) => setPassword(e.target.value) }
-						/>}
-					<div className='details-buttons'>
-						<Button className='slim' onClick={ () => {
-							joinRoom(id)
-								.then((_joinResult) => {
-									// You can handle the result of join attempt here (including failed ones)
-									if (_joinResult !== 'ok') setShow(true);
-								})
-								.catch((_error: unknown) => {
-									// You can handle if joining crashed or server communication failed here
-								});
-						} }>
-							Enter Room
-						</Button>
-						<Button className='slim' onClick={ () => {
-							setShow(false);
-							close();
-						} }>Close
-						</Button>
-					</div>
+	// Do not show anything if the room doesn't exist anymore
+	// Do not show anything if we don't have account (aka WTF?)
+	if (room?.result === 'notFound' || accountId == null)
+		return null;
+
+	// Get basic info
+	const { id, name, description, protected: roomIsProtected, hasPassword } = baseRoomInfo;
+	// Get advanced info, if we can
+	const roomDetails = room?.result === 'success' ? room.data : undefined;
+	const characters = roomDetails?.characters ?? [];
+	const admins = roomDetails?.admin ?? [];
+	const background = roomDetails?.background ? ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl()).image : '';
+	const features = roomDetails?.features ?? [];
+
+	const userIsAdmin = admins.includes(accountId);
+
+	return (
+		<ModalDialog>
+			<div className='chatroom-details'>
+				<div>Details for room<br /> <b>{name}</b></div>
+				{(background !== '' && background[0] !== '#') && <img className='details-preview' src={ background } width='200px' height='100px' ></img>}
+				<div className='details-features'>
+					{roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room'></img>}
+					{features.includes('allowBodyChanges') && <img className='details-features-img' src={ bodyChange } title='Body changes allowed'></img>}
+					{features.includes('development') && <img className='details-features-img' src={ devMode } title='Developer mode'></img>}
+					{features.includes('allowPronounChanges') && <img className='details-features-img' src={ pronounChange } title='Pronoun Change allowed'></img>}
 				</div>
-			</ModalDialog>
-		);
-	} else return (<div>Something strange</div>);
+				<div className='details-description-title'>Description:</div>
+				<div className='details-description'>{description}</div>
+				{userIsAdmin &&
+					<div className='details-users'>Current users in this room:
+						<div className='details-users-list'>
+							{characters.map((char) => <div key={ char.id }>{char.name}</div>)}
+						</div>
+					</div>}
+				{(!userIsAdmin && roomIsProtected && hasPassword) &&
+					<div className='details-users'>This room requires a password:</div>}
+				{(!userIsAdmin && roomIsProtected && hasPassword) &&
+					<input
+						className='details-descriptions'
+						name='roomPwd'
+						type='password'
+						value={ roomPassword }
+						onChange={ (e) => setPassword(e.target.value) }
+					/>}
+				<div className='details-buttons'>
+					<Button className='slim' onClick={ () => {
+						joinRoom(id)
+							.then((joinResult) => {
+								if (joinResult === 'notFound')
+									hide();
+								// For any other reason of failed join we more likely want to somehow show a message
+							})
+							.catch((_error: unknown) => {
+								// You can handle if joining crashed or server communication failed here
+							});
+					} }>
+						Enter Room
+					</Button>
+					<Button className='slim' onClick={ hide }>Close
+					</Button>
+				</div>
+			</div>
+		</ModalDialog>
+	);
 }
 
 const RoomJoinProgress = new PersistentToast();

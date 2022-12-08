@@ -380,7 +380,7 @@ function InventoryAssetView({ className, title, children, assets, container, att
 					) : true
 				);
 		}));
-	}, [assets, flt, attributesFilterOptions, attribute])
+	}, [assetManager, assets, flt, attributesFilterOptions, attribute]);
 
 	useEffect(() => {
 		if (attribute !== '' && !attributesFilterOptions?.includes(attribute)) {
@@ -488,7 +488,7 @@ function AttributeButton({ attribute, ...buttonProps }: {
 				{ attributeDefinition?.description ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 			</HoverElement>
 		</>
-	)
+	);
 }
 
 function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement> }) {

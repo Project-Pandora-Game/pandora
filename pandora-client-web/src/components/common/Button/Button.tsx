@@ -29,7 +29,7 @@ function IconButtonImpl({ src, alt, className, ...buttonProps }: IconButtonProps
 		<Button { ...buttonProps } className={ classNames('IconButton', className) } ref={ ref }>
 			<img src={ src } alt={ alt } />
 		</Button>
-	)
+	);
 }
 
 export const IconButton = React.forwardRef(IconButtonImpl);

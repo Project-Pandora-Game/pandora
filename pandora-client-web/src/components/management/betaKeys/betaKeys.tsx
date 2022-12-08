@@ -1,6 +1,7 @@
 import { EMPTY, IsAuthorized, type IBetaKeyInfo } from 'pandora-common';
 import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { Button } from '../../common/Button/Button';
@@ -65,22 +66,27 @@ function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo }): ReactElement {
 	const { reload } = useContext(BetaKeyListContext);
 
 	const [onInvalidate] = useAsyncEvent(async () => {
-		if (!confirm('Are you sure you want to invalidate this token?'))
+		if (!confirm('Are you sure you want to delete this token?'))
 			return { result: 'cancelled' };
 
 		return await connector.awaitResponse('manageInvalidateBetaKey', { id: betaKey.id });
 	}, ({ result }) => {
 		if (result !== 'ok')  {
 			if (result !== 'cancelled') {
-				toast('Failed to invalidate beta key: ' + result, TOAST_OPTIONS_ERROR);
+				toast('Failed to delete beta key: ' + result, TOAST_OPTIONS_ERROR);
 			}
 		} else {
 			reload();
 		}
 	});
 
+	const now = useCurrentTime();
+
+	const valid = (betaKey.expires === undefined || betaKey.expires > now) &&
+		(betaKey.maxUses === undefined || betaKey.uses < betaKey.maxUses);
+
 	return (
-		<tr>
+		<tr className={ valid ? '' : 'invalid' }>
 			<td>{ betaKey.id }</td>
 			<td>
 				{ betaKey.expires === undefined ? 'Never' : new Date(betaKey.expires).toLocaleString() }
@@ -93,7 +99,7 @@ function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo }): ReactElement {
 				{new Date(betaKey.created.time).toLocaleString()}
 			</td>
 			<td>
-				<Button className='slim' onClick={ () => void onInvalidate() }>Invalidate</Button>
+				<Button className='slim' onClick={ () => void onInvalidate() }>Delete</Button>
 			</td>
 		</tr>
 	);

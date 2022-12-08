@@ -1,6 +1,7 @@
 import { IShardTokenInfo, EMPTY, IsAuthorized, IShardTokenType } from 'pandora-common';
 import React, { createContext, ReactElement, useState, useMemo, useEffect, useContext } from 'react';
 import { toast } from 'react-toastify';
+import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { Button } from '../../common/Button/Button';
@@ -64,25 +65,29 @@ function ShardRow({ shard }: { shard: IShardTokenInfo }): ReactElement {
 	const { reload } = useContext(ShardListContext);
 
 	const [onInvalidate] = useAsyncEvent(async () => {
-		if (!confirm('Are you sure you want to invalidate this token?'))
+		if (!confirm('Are you sure you want to delete this token?'))
 			return { result: 'cancelled' };
 
 		return await connector.awaitResponse('manageInvalidateShardToken', { id: shard.id });
 	}, ({ result }) => {
 		if (result !== 'ok')  {
 			if (result !== 'cancelled') {
-				toast('Failed to invalidate shard token: ' + result, TOAST_OPTIONS_ERROR);
+				toast('Failed to delete shard token: ' + result, TOAST_OPTIONS_ERROR);
 			}
 		} else {
 			reload();
 		}
 	});
 
+	const now = useCurrentTime();
+
+	const valid = (shard.expires === undefined || shard.expires > now);
+
 	return (
-		<tr>
+		<tr className={ valid ? '' : 'invalid' }>
 			<td>{ shard.id }</td>
 			<td>
-				<input type='text' value={ shard.type } readOnly />
+				{ shard.type }
 			</td>
 			<td>
 				{ shard.expires === undefined ? 'Never' : new Date(shard.expires).toLocaleString() }
@@ -94,7 +99,7 @@ function ShardRow({ shard }: { shard: IShardTokenInfo }): ReactElement {
 				{new Date(shard.created.time).toLocaleString()}
 			</td>
 			<td>
-				<Button className='slim' onClick={ () => void onInvalidate() }>Invalidate</Button>
+				<Button className='slim' onClick={ () => void onInvalidate() }>Delete</Button>
 			</td>
 		</tr>
 	);
@@ -111,7 +116,7 @@ function ShardCreate(): ReactElement {
 	const [onCreate] = useAsyncEvent(
 		() => connector.awaitResponse('manageCreateShardToken', {
 			type,
-			expires: expires === undefined ? undefined : expires > Date.now() ? expires : undefined,
+			expires,
 		}),
 		(data) => {
 			if (data.result !== 'ok') {

@@ -11,12 +11,10 @@ import { useConnectToShard } from '../gameContext/shardConnectorContextProvider'
 import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
+import { CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
 import './chatroomSelect.scss';
 import closedDoor from './closed-door.svg';
 import openDoor from './opened-door.svg';
-import bodyChange from './body-change.svg';
-import devMode from './developer.svg';
-import pronounChange from './male-female.svg';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
@@ -103,12 +101,10 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 		<ModalDialog>
 			<div className='chatroom-details'>
 				<div>Details for room<br /> <b>{name}</b></div>
-				{(background !== '' && background[0] !== '#') && <img className='details-preview' src={ background } width='200px' height='100px' ></img>}
+				{(background !== '' && !background.startsWith('#')) && <img className='details-preview' src={ background } width='200px' height='100px' ></img>}
 				<div className='details-features'>
-					{roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room'></img>}
-					{features.includes('allowBodyChanges') && <img className='details-features-img' src={ bodyChange } title='Body changes allowed'></img>}
-					{features.includes('development') && <img className='details-features-img' src={ devMode } title='Developer mode'></img>}
-					{features.includes('allowPronounChanges') && <img className='details-features-img' src={ pronounChange } title='Pronoun Change allowed'></img>}
+					{ roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room' /> }
+					{ CHATROOM_FEATURES.forEach((f) => <div key={ f.id }>{ features.includes(f.id) && <img className='details-features-img' src={ f.icon } title={ f.name } />}</div>)}
 				</div>
 				<div className='details-description-title'>Description:</div>
 				<div className='details-description'>{description}</div>

@@ -243,7 +243,7 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 	}, [containerPath, containerItem]);
 
 	const assetFilterAttributes: string[] = [...assetManager.attributes.entries()]
-		.filter((a) => a[1].useAsWardrobeFilter === 'item')
+		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
 		.map((a) => a[0]);
 
 	return (
@@ -323,7 +323,7 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 	}, []);
 
 	const bodyFilterAttributes: string[] = [...assetManager.attributes.entries()]
-		.filter((a) => a[1].useAsWardrobeFilter === 'body')
+		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
 		.map((a) => a[0]);
 
 	return (
@@ -360,6 +360,7 @@ function InventoryAssetView({ className, title, children, assets, container, att
 	container: ItemContainerPath;
 	attributesFilterOptions?: string[];
 }): ReactElement | null {
+	const assetManager = GetAssetManager();
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
 	const [attribute, setAttribute] = useReducer((old: string, wantToSet: string) => {
@@ -369,8 +370,15 @@ function InventoryAssetView({ className, title, children, assets, container, att
 	const flt = filter.toLowerCase().trim().split(/\s+/);
 	const filteredAssets = useMemo(() => {
 		return assets.filter((asset) => flt.every((f) => {
+			const attributeDefinition = attribute ? assetManager.getAttributeDefinition(attribute) : undefined;
 			return asset.definition.name.toLowerCase().includes(f) &&
-				((attribute !== '' && attributesFilterOptions?.includes(attribute)) ? asset.staticAttributes.has(attribute) : true);
+				((attribute !== '' && attributesFilterOptions?.includes(attribute)) ?
+					(
+						asset.staticAttributes.has(attribute) &&
+						!attributeDefinition?.useAsWardrobeFilter?.excludeAttributes
+							?.some((a) => asset.staticAttributes.has(a))
+					) : true
+				);
 		}));
 	}, [assets, flt, attributesFilterOptions, attribute])
 

@@ -129,11 +129,14 @@ export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	}[];
 }[];
 
-export type AssetAttributeDefinition = {
+export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
 	name: string;
 	description: string;
 	icon?: string;
-	useAsWardrobeFilter?: 'item' | 'body';
+	useAsWardrobeFilter?: {
+		tab: 'item' | 'body';
+		excludeAttributes?: readonly A['attributes'][];
+	};
 };
 
 /** Data for randomly generating sensible appearance */

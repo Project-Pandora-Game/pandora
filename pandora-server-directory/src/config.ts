@@ -73,6 +73,8 @@ export const CHARACTER_LIMIT_NORMAL = 5;
 /** Key needed to register, if set */
 export const BETA_KEY_GLOBAL = process.env.BETA_KEY_GLOBAL ?? '';
 export const BETA_KEY_ENABLED = process.env.BETA_KEY_ENABLED === 'true';
+/** Grants 'admin' role to account with id 1 on startup, mock db is immediately effected */
+export const AUTO_ADMIN_FIRST_USER = process.env.AUTO_ADMIN_FIRST_USER === 'true';
 
 //#endregion
 

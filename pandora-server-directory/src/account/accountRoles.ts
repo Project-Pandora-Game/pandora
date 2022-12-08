@@ -3,6 +3,7 @@ import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
 
 import _ from 'lodash';
+import { AUTO_ADMIN_FIRST_USER } from '../config';
 
 const logger = GetLogger('AccountRoles');
 
@@ -37,6 +38,21 @@ export class AccountRoles {
 			};
 		}
 		return result;
+	}
+
+	public async devSetRole(role: AccountRole): Promise<void> {
+		if (!AUTO_ADMIN_FIRST_USER) {
+			return;
+		}
+		this._roles ??= {};
+		this._roles[role] ??= {
+			expires: undefined,
+			grantedBy: { id: 0, username: '[[Pandora]]' },
+			grantedAt: Date.now(),
+		};
+		this._cleanup();
+		this._account.onAccountInfoChange();
+		await this._updateDatabase();
 	}
 
 	public async setRole(granter: Account, role: AccountRole, expires?: number): Promise<void> {

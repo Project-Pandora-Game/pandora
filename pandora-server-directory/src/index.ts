@@ -33,7 +33,7 @@ async function Start(): Promise<void> {
 	await ShardTokenStore.init();
 	await BetaKeyStore.init();
 	logger.verbose('Initializing managers...');
-	accountManager.init();
+	await accountManager.init();
 	ConnectionManagerClient.init();
 	logger.verbose('Initializing APIs...');
 	await GitHubVerifier.init();

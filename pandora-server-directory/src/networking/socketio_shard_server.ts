@@ -27,7 +27,7 @@ export class SocketIOServerShard extends SocketIOServer implements IServerSocket
 	 */
 	protected override allowRequest(req: IncomingMessage, next: (err: string | null | undefined, success: boolean) => void): void {
 		const receivedSecret = req.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
-		if (typeof receivedSecret !== 'string' || !ShardTokenStore.has(receivedSecret)) {
+		if (typeof receivedSecret !== 'string' || !ShardTokenStore.hasValidToken(receivedSecret)) {
 			next('Unauthorized: invalid secret', false);
 			logger.warning(`Rejecting shard connection from ${req.socket.remoteAddress ?? '[unknown]'}: Bad secret`);
 			return;

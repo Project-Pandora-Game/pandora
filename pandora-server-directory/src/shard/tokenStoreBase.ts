@@ -36,7 +36,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	protected abstract onInit(): void | Promise<void>;
 	protected abstract load(): Promise<Full<Token>[]>;
 	protected abstract save(data: Full<Token>[]): Promise<void>;
-	protected abstract isValid(info: Full<Token>): boolean;
+	protected abstract _validateExtra(info: Stripped<Token>): boolean;
 
 	protected async _create(acc: Account, data: Omit<Token, 'created' | 'id'>): Promise<{ info: Stripped<Token>, token: string; }> {
 		let id = '';
@@ -80,7 +80,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	}
 
 	public async revoke(acc: Account, id: string): Promise<'ok' | 'notFound' | 'adminRequired'> {
-		const info = this.get(id);
+		const info = this.getValidTokenInfo(id);
 		if (!info)
 			return 'notFound';
 
@@ -102,7 +102,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		return values;
 	}
 
-	public get(token: string): Stripped<Token> | undefined {
+	public getValidTokenInfo(token: string): Stripped<Token> | undefined {
 		const info = this.#tokens.get(token.substring(0, this.idLength));
 		if (!info || info.token !== token || !this._validate(info))
 			return undefined;
@@ -110,8 +110,8 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		return omit(info, 'token');
 	}
 
-	public has(token: string): boolean {
-		return this.get(token) !== undefined;
+	public hasValidToken(token: string): boolean {
+		return this.getValidTokenInfo(token) !== undefined;
 	}
 
 	protected async _action(token: string, action: (info: Stripped<Token>) => Stripped<Token> | null): Promise<boolean> {
@@ -121,7 +121,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 
 		const newInfo = action(cloneDeep(omit(info, 'token')));
 		if (!newInfo)
-			return true;
+			return false;
 
 		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
 		this.#tokens.set(info.id, { ...cloneDeep(newInfo), id: info.id, token: info.token, created: info.created } as Full<Token>);
@@ -129,10 +129,10 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		return true;
 	}
 
-	protected _validate(info: Full<Token>): boolean {
+	protected _validate(info: Stripped<Token>): boolean {
 		if (info.expires !== undefined && info.expires < Date.now())
 			return false;
-		if (!this.isValid(info))
+		if (!this._validateExtra(info))
 			return false;
 
 		return true;

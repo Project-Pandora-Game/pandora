@@ -33,7 +33,7 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 
 	public async use(token: string): Promise<boolean> {
 		return await this._action(token, (info) => {
-			if (info.maxUses === undefined || info.uses < info.maxUses) {
+			if (this._validate(info)) {
 				++info.uses;
 				return info;
 			}
@@ -56,7 +56,7 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 		return GetDatabase().setConfig({ type: 'betaKeys', data });
 	}
 
-	protected isValid({ maxUses, uses }: IStoredBetaKeyInfo): boolean {
+	protected _validateExtra({ maxUses, uses }: IBetaKeyInfo): boolean {
 		return maxUses === undefined || uses < maxUses;
 	}
 

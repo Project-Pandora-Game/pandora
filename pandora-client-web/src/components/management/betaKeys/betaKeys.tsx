@@ -1,3 +1,4 @@
+import { clamp } from 'lodash';
 import { EMPTY, IsAuthorized, type IBetaKeyInfo } from 'pandora-common';
 import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -132,9 +133,7 @@ function BetaKeyCreate(): ReactElement {
 		} else {
 			const date = new Date(value).getTime();
 			const now = Date.now();
-			if (date > now && (isAdmin || date <= now + ONE_DAY * 7)) {
-				setExpires(date);
-			}
+			setExpires(clamp(date, now, isAdmin ? Infinity : (now + ONE_DAY * 7)));
 		}
 	}, [isAdmin]);
 

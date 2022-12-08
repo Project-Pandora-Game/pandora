@@ -44,82 +44,95 @@ export function ChatroomSelect(): ReactElement {
 }
 
 function RoomEntry({ id, name, description: _description, hasPassword: _hasPassword, maxUsers, users, protected: _roomIsProtected }: IChatRoomDirectoryInfo): ReactElement {
-	const joinRoom = useJoinRoom();
 
 	const [show, setShow] = useState(false);
-	const [roomPassword, setPassword] = useState('');
-	const room = useRoomExtendedInfo(id);
-	const accountId = useCurrentAccount()?.id;
 
-	if (room?.result === 'success') {
-		const roomDetails = room.data;
-		const characters = roomDetails.characters;
-		const admins = roomDetails.admin;
-		const background = ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl());
+	return (
+		<>
+			<a className='room-list-grid' onClick={ () => setShow(true) } >
+				<img className='room-list-entry' width='50px' src={ _roomIsProtected ? closedDoor : openDoor } title={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
+				<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
+				<div className='room-list-entry'>{ show ? 'True' : 'False'}</div>
+				<div className='room-list-entry'>{(_description.length > 50) ? `${_description.substring(0, 47).concat('\u2026')}` : `${_description}`}</div>
+			</a>
+			{show && <RoomDetailsDialog
+				id={ id }
+				name={ name }
+				description={ _description }
+				hasPassword={ _hasPassword }
+				maxUsers={ maxUsers }
+				users={ users }
+				protected={ _roomIsProtected } />}
+		</>
+	);
+}
+
+function RoomDetailsDialog({ id, name, description: _description, hasPassword: _hasPassword, protected: _roomIsProtected }: IChatRoomDirectoryInfo): ReactElement {
+	const accountId = useCurrentAccount()?.id;
+	const [roomPassword, setPassword] = useState('');
+	const [show, setShow] = useState(false);
+	const joinRoom = useJoinRoom();
+	const room = useRoomExtendedInfo(id);
+
+	if (room?.result !== 'notFound') {
+		const roomDetails = room?.result === 'success' ? room.data : undefined;
+		const characters = roomDetails?.characters ?? [];
+		const admins = roomDetails?.admin ?? [];
+		const background = roomDetails?.background ? ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl()).image : '';
 		const userIsAdmin = admins.find((e) => e === accountId);
 
 		return (
-			<>
-				<a className='room-list-grid' onClick={ () => setShow(true) } >
-					<img className='room-list-entry' width='50px' src={ _roomIsProtected ? closedDoor : openDoor } title={ _roomIsProtected ? 'Protected room' : 'Open room' }></img>
-					<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
-					<div className='room-list-entry'></div>
-					<div className='room-list-entry'>{(_description.length > 50) ? `${_description.substring(0, 47).concat('\u2026')}` : `${_description}`}</div>
-				</a>
-				{show && (
-					<ModalDialog>
-						<div className='chatroom-details'>
-							<div>Details for room<br /> <b>{roomDetails.name}</b></div>
-							{background.image[0] !== '#' && <img className='details-preview' src={ background.image } width='200px' height='100px' ></img>}
-							<div className='details-features'>
-								{_roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room'></img>}
-								{roomDetails.features.indexOf('allowBodyChanges') >= 0 && <img className='details-features-img' src={ bodyChange } title='Body changes allowed'></img>}
-								{roomDetails.features.indexOf('development') >= 0 && <img className='details-features-img' src={ devMode } title='Developer mode'></img>}
-								{roomDetails.features.indexOf('allowPronounChanges') >= 0 && <img className='details-features-img' src={ pronounChange } title='Pronoun Change allowed'></img>}
+			<ModalDialog>
+				<div className='chatroom-details'>
+					<div>Details for room<br /> <b>{roomDetails?.name ? roomDetails.name : name}</b></div>
+					{(background !== '' && background[0] !== '#') && <img className='details-preview' src={ background } width='200px' height='100px' ></img>}
+					<div className='details-features'>
+						{_roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room'></img>}
+						{(roomDetails?.features && roomDetails.features.indexOf('allowBodyChanges') >= 0) && <img className='details-features-img' src={ bodyChange } title='Body changes allowed'></img>}
+						{(roomDetails?.features && roomDetails.features.indexOf('development') >= 0) && <img className='details-features-img' src={ devMode } title='Developer mode'></img>}
+						{(roomDetails?.features && roomDetails.features.indexOf('allowPronounChanges') >= 0) && <img className='details-features-img' src={ pronounChange } title='Pronoun Change allowed'></img>}
+					</div>
+					<div className='details-description-title'>Description:</div>
+					<div className='details-description'>{roomDetails?.description ? roomDetails.description : _description}</div>
+					{userIsAdmin &&
+						<div className='details-users'>Current users in this room:
+							<div className='details-users-list'>
+								{characters?.map((char) => <div key={ char.id }>{char.name}</div>)}
 							</div>
-							<div className='details-description-title'>Description:</div>
-							<div className='details-description'>{roomDetails.description}</div>
-							{userIsAdmin &&
-								<div className='details-users'>Current users in this room:
-									<div className='details-users-list'>
-										{characters?.map((char) => <div key={ char.id }>{char.name}</div>)}
-									</div>
-								</div> }
-							{(roomDetails.protected && roomDetails.hasPassword) &&
-								<input
-									type='password'
-									value={ roomPassword }
-									onChange={ (e) => setPassword(e.target.value) }
-								/>}
-							<div>{ roomPassword }</div>
-							<div className='details-buttons'>
-								<Button className='slim' onClick={ () => {
-									joinRoom(id, roomPassword)
-										.then((_joinResult) => {
-											// You can handle the result of join attempt here (including failed ones)
-											switch (_joinResult) {
-												case 'ok':
-													return;
-												default: {
-													setShow(true);
-													return (_joinResult);
-												}
-											}
-										})
-										.catch((_error: unknown) => {
-											// You can handle if joining crashed or server communication failed here
-										});
-								} }>
-									Enter Room
-								</Button>
-								<Button className='slim' onClick={ () => setShow(false) }>Close</Button>
-							</div>
-						</div>
-					</ModalDialog>
-				)}
-			</>
+						</div>}
+					{(!userIsAdmin && _roomIsProtected && _hasPassword) &&
+						<div className='details-users'>This room requires a password:</div>}
+					{(!userIsAdmin && _roomIsProtected && _hasPassword) &&
+						<input
+							className='details-descriptions'
+							name='roomPwd'
+							type='password'
+							value={ roomPassword }
+							onChange={ (e) => setPassword(e.target.value) }
+						/>}
+					<div className='details-buttons'>
+						<Button className='slim' onClick={ () => {
+							joinRoom(id)
+								.then((_joinResult) => {
+									// You can handle the result of join attempt here (including failed ones)
+									if (_joinResult !== 'ok') setShow(true);
+								})
+								.catch((_error: unknown) => {
+									// You can handle if joining crashed or server communication failed here
+								});
+						} }>
+							Enter Room
+						</Button>
+						<Button className='slim' onClick={ () => {
+							setShow(false);
+							close();
+						} }>Close
+						</Button>
+					</div>
+				</div>
+			</ModalDialog>
 		);
-	} else return (<br></br>);
+	} else return (<div>Something strange</div>);
 }
 
 const RoomJoinProgress = new PersistentToast();

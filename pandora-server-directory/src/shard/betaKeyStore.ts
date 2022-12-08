@@ -33,8 +33,11 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 
 	public async use(token: string): Promise<boolean> {
 		return await this._action(token, (info) => {
-			++info.uses;
-			return info;
+			if (info.maxUses === undefined || info.uses < info.maxUses) {
+				++info.uses;
+				return info;
+			}
+			return null;
 		});
 	}
 

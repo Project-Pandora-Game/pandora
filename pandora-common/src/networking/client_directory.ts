@@ -281,7 +281,7 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			id: z.string(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'notFound'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired'; }>(),
 	},
 	manageListShardTokens: {
 		request: z.object({}),
@@ -306,7 +306,7 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			id: z.string(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'notFound'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired'; }>(),
 	},
 	//#endregion
 } as const;

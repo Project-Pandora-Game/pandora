@@ -25,9 +25,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 
 	public async init(): Promise<void> {
 		for (const token of await this.load()) {
-			if (this.isValid(token)) {
-				this.#tokens.set(token.id, token);
-			}
+			this.#tokens.set(token.id, token);
 		}
 		this._cleanup();
 		await this.onInit();
@@ -61,7 +59,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 
 		this.#tokens.set(id, info);
 
-		this.logger.info(`Created shard token '${id}' for ${acc.username} (${acc.id})`, info);
+		this.logger.info(`${acc.username} (${acc.id}) created token '${id}': `, info);
 
 		await this._save();
 
@@ -81,10 +79,13 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		return true;
 	}
 
-	public async revoke(acc: Account, id: string): Promise<'ok' | 'notFound'> {
+	public async revoke(acc: Account, id: string): Promise<'ok' | 'notFound' | 'adminRequired'> {
 		const info = this.get(id);
-		if (!info || (info.created.id !== acc.id && !acc.roles.isAuthorized('admin')))
+		if (!info)
 			return 'notFound';
+
+		if (info.created.id !== acc.id && !acc.roles.isAuthorized('admin'))
+			return 'adminRequired';
 
 		this.#tokens.delete(id);
 		await this._save();
@@ -113,9 +114,9 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		return this.get(token) !== undefined;
 	}
 
-	protected async _action(token: string, action: (info: Stripped<Token>) => Stripped<Token> | undefined): Promise<boolean> {
+	protected async _action(token: string, action: (info: Stripped<Token>) => Stripped<Token> | null): Promise<boolean> {
 		const info = this.#tokens.get(token.substring(0, this.idLength));
-		if (!info || info.token !== token || !this._validate(info))
+		if (!info || info.token !== token)
 			return false;
 
 		const newInfo = action(cloneDeep(omit(info, 'token')));

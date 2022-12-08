@@ -25,8 +25,8 @@ export function BetaKeys(): ReactElement {
 
 	const context = useMemo(() => ({
 		reload,
-		append: (shard: IBetaKeyInfo) => {
-			setList((old) => [...old, shard]);
+		append: (betaKey: IBetaKeyInfo) => {
+			setList((old) => [...old, betaKey]);
 		},
 	}), [reload]);
 
@@ -68,11 +68,11 @@ function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo }): ReactElement {
 		if (!confirm('Are you sure you want to invalidate this token?'))
 			return { result: 'cancelled' };
 
-		return await connector.awaitResponse('manageInvalidateShardToken', { id: betaKey.id });
+		return await connector.awaitResponse('manageInvalidateBetaKey', { id: betaKey.id });
 	}, ({ result }) => {
 		if (result !== 'ok')  {
 			if (result !== 'cancelled') {
-				toast('Failed to invalidate shard token: ' + result, TOAST_OPTIONS_ERROR);
+				toast('Failed to invalidate beta key: ' + result, TOAST_OPTIONS_ERROR);
 			}
 		} else {
 			reload();
@@ -139,7 +139,7 @@ function BetaKeyCreate(): ReactElement {
 		});
 	}, (data) => {
 		if (data.result !== 'ok') {
-			toast('Failed to create shard token: ' + data.result, TOAST_OPTIONS_ERROR);
+			toast('Failed to create beta key: ' + data.result, TOAST_OPTIONS_ERROR);
 			return;
 		}
 		const { token, info } = data;

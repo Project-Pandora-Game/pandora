@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash';
 import type { Logger } from '../logging';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AssetAttributeDefinition, AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { Item, ItemBundle } from './item';
 
@@ -26,6 +26,15 @@ export class AssetManager {
 	private _bodyparts: readonly AssetBodyPart[] = [];
 	public get bodyparts(): readonly AssetBodyPart[] {
 		return this._bodyparts;
+	}
+
+	protected _randomization: AppearanceRandomizationData | undefined;
+	public get randomization(): AppearanceRandomizationData {
+		this._randomization ??= {
+			body: [],
+			clothes: [],
+		};
+		return this._randomization;
 	}
 
 	public getAllAssets(): Asset[] {
@@ -76,6 +85,7 @@ export class AssetManager {
 		this._graphicsId = data.graphicsId;
 		this._posePresets = data.posePresets ?? [];
 		this._backgrounds = data.backgrounds ?? [];
+		this._randomization = data.randomization;
 
 		this.loadBones(data.bones);
 		this.loadAttributes(data.attributes ?? {});

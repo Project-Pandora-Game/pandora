@@ -34,7 +34,7 @@ import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useAppearanceActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
-import { usePlayer } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
@@ -212,9 +212,7 @@ function Wardrobe(): ReactElement | null {
 					</Tab>
 					<Tab name='Outfits'>
 						<div className='wardrobe-pane'>
-							<div className='center-flex flex-1'>
-								TODO
-							</div>
+							<WardrobeOutfitGui />
 						</div>
 					</Tab>
 					<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
@@ -1156,6 +1154,48 @@ export function WardrobeExpressionGui(): ReactElement {
 								))
 						))
 				}
+			</Column>
+		</div>
+	);
+}
+
+export function WardrobeOutfitGui(): ReactElement {
+	const { character } = useWardrobeContext();
+	const playerId = usePlayerId();
+
+	return (
+		<div className='inventoryView'>
+			<Column overflowX='hidden' overflowY='auto' className='flex-1'>
+				<FieldsetToggle legend='Character randomization' open={ false }>
+					<h3>
+						WARNING: These buttons remove and DELETE ALL ITEMS currently worn!
+					</h3>
+					<Row>
+						{
+							character.data.id === playerId ? (
+								<>
+									<WardrobeActionButton action={ {
+										type: 'randomize',
+										kind: 'items',
+									} }>
+										Randomize clothes
+									</WardrobeActionButton>
+									<WardrobeActionButton action={ {
+										type: 'randomize',
+										kind: 'full',
+									} }>
+										Randomize everything
+									</WardrobeActionButton>
+								</>
+							) : (
+								<span>You cannot randomize other characters</span>
+							)
+						}
+					</Row>
+				</FieldsetToggle>
+				<div className='center-flex flex-1'>
+					TODO
+				</div>
 			</Column>
 		</div>
 	);

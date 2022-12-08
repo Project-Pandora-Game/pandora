@@ -1,11 +1,12 @@
 import { IsCharacterName } from 'pandora-common';
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCreateCharacter } from '../../character/player';
 import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
 import { Button } from '../common/Button/Button';
 import './characterCreate.scss';
 import { Form, FormErrorMessage, FormField } from '../common/Form/form';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 
 export function CharacterCreate(): ReactElement | null {
 	// React States
@@ -16,7 +17,19 @@ export function CharacterCreate(): ReactElement | null {
 
 	const player = usePlayer();
 	const playerData = usePlayerData();
+	const shardConnector = useShardConnector();
 	const createCharacter = useCreateCharacter();
+
+	// On open randomize appearance
+	const shouldRandomize = player != null && playerData?.inCreation === true;
+	useEffect(() => {
+		if (shouldRandomize) {
+			shardConnector?.sendMessage('appearanceAction', {
+				type: 'randomize',
+				kind: 'full',
+			});
+		}
+	}, [shouldRandomize, shardConnector]);
 
 	if (!player)
 		return null;

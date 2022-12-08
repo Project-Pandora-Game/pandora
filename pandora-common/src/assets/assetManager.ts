@@ -30,10 +30,11 @@ export class AssetManager {
 
 	protected _randomization: AppearanceRandomizationData | undefined;
 	public get randomization(): AppearanceRandomizationData {
-		return this._randomization ?? {
+		this._randomization ??= {
 			body: [],
 			clothes: [],
 		};
+		return this._randomization;
 	}
 
 	public getAllAssets(): Asset[] {

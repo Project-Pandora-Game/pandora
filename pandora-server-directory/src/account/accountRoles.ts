@@ -1,62 +1,67 @@
 import { AccountRole, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
+import { AUTO_ADMIN_ACCOUNTS } from '../config';
 
 import _ from 'lodash';
-import { AUTO_ADMIN_FIRST_USER } from '../config';
 
 const logger = GetLogger('AccountRoles');
 
 export class AccountRoles {
 	private readonly _account: Account;
-	private _roles?: IAccountRoleManageInfo;
+	/** Roles saved persistently into database */
+	private _roles: IAccountRoleManageInfo;
+	/** Roles created temporarily during this session, they are not saved, but have priority */
+	private _roleOverrides: IAccountRoleManageInfo = {};
 
 	constructor(account: Account, roles?: IAccountRoleManageInfo) {
 		this._account = account;
-		this._roles = roles;
+		this._roles = roles ?? {};
+		this._devSetRoles();
+		this._cleanup();
 	}
 
 	public isAuthorized(role: AccountRole): boolean {
 		this._cleanup();
-		return this._roles ? IsAuthorized(this._roles, role) : false;
+		return IsAuthorized({
+			...this._roles,
+			...this._roleOverrides,
+		}, role);
 	}
 
 	public getAdminInfo(): Readonly<IAccountRoleManageInfo> {
 		this._cleanup();
-		return _.cloneDeep(this._roles ?? {});
+		return _.cloneDeep({
+			...this._roles,
+			...this._roleOverrides,
+		});
 	}
 
 	public getSelfInfo(): IAccountRoleInfo | undefined {
-		if (!this._roles) {
-			return undefined;
-		}
 		this._cleanup();
 		const result: IAccountRoleInfo = {};
-		for (const [key, value] of Object.entries(this._roles)) {
+		for (const [key, value] of Object.entries({
+			...this._roles,
+			...this._roleOverrides,
+		})) {
 			result[key as AccountRole] = {
 				expires: value.expires,
 			};
 		}
-		return result;
+		return Object.keys(result).length > 0 ? result : undefined;
 	}
 
-	public async devSetRole(role: AccountRole): Promise<void> {
-		if (!AUTO_ADMIN_FIRST_USER) {
-			return;
+	private _devSetRoles(): void {
+		if (AUTO_ADMIN_ACCOUNTS.includes(this._account.id)) {
+			this._roleOverrides.admin = {
+				expires: undefined,
+				grantedBy: { id: 0, username: '[[Pandora]]' },
+				grantedAt: Date.now(),
+			};
 		}
-		this._roles ??= {};
-		this._roles[role] ??= {
-			expires: undefined,
-			grantedBy: { id: 0, username: '[[Pandora]]' },
-			grantedAt: Date.now(),
-		};
-		this._cleanup();
-		this._account.onAccountInfoChange();
-		await this._updateDatabase();
 	}
 
 	public async setRole(granter: Account, role: AccountRole, expires?: number): Promise<void> {
-		this._roles ??= {};
 		this._roles[role] = {
 			expires: expires ?? undefined,
 			grantedBy: { id: granter.id, username: granter.username },
@@ -70,15 +75,6 @@ export class AccountRoles {
 	}
 
 	public async setGitHubStatus(status: GitHubInfo['role'] = 'none'): Promise<void> {
-		if (!this._roles) {
-			if (status === 'none') {
-				this._account.onAccountInfoChange();
-				return;
-			}
-			this._roles = {};
-		} else {
-			this._cleanup();
-		}
 		delete this._roles.admin;
 		delete this._roles.developer;
 		delete this._roles.contributor;
@@ -102,14 +98,12 @@ export class AccountRoles {
 			default:
 				break;
 		}
+		this._cleanup();
 		this._account.onAccountInfoChange();
 		await this._updateDatabase();
 	}
 
 	private _cleanup(): void {
-		if (!this._roles) {
-			return;
-		}
 		const now = Date.now();
 		for (const [key, value] of Object.entries(this._roles)) {
 			if (value.expires !== undefined && value.expires < now) {
@@ -119,9 +113,6 @@ export class AccountRoles {
 	}
 
 	private async _updateDatabase(): Promise<void> {
-		if (this._roles && Object.keys(this._roles).length === 0) {
-			this._roles = undefined;
-		}
-		return await GetDatabase().setAccountRoles(this._account.id, this._roles);
+		return await GetDatabase().setAccountRoles(this._account.id, Object.keys(this._roles).length > 0 ? this._roles : undefined);
 	}
 }

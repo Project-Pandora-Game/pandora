@@ -30,9 +30,9 @@ export class AccountDirectMessages {
 		return this._account.secure.getPublicKey() as string;
 	}
 
-	constructor(account: Account, data: DatabaseAccount) {
+	constructor(account: Account, data: DatabaseDirectMessageInfo[] | undefined) {
 		this._account = account;
-		this._dms = data.directMessages ?? [];
+		this._dms = data ?? [];
 	}
 
 	public async action(account: Account | number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time }: { notifyClients?: boolean, time?: number; } = {}): Promise<void> {

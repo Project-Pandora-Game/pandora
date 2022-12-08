@@ -3,7 +3,6 @@ import { GetLogger } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 import promClient from 'prom-client';
 import { DiscordBot } from '../services/discord/discordBot';
-import { AUTO_ADMIN_FIRST_USER } from '../config';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
@@ -74,13 +73,9 @@ export class AccountManager {
 	private interval: NodeJS.Timeout | undefined;
 
 	/** Init the manager */
-	public async init(): Promise<void> {
+	public init(): void {
 		if (this.interval === undefined) {
 			this.interval = setInterval(this.tick.bind(this), ACCOUNTMANAGER_TICK_INTERVAL).unref();
-		}
-		if (AUTO_ADMIN_FIRST_USER) {
-			const account = await this.loadAccountById(1);
-			await account?.roles.devSetRole('admin');
 		}
 	}
 

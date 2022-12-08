@@ -29,11 +29,23 @@ export type IClientDirectoryAuthMessage = z.infer<typeof ClientDirectoryAuthMess
 export const ShardTokenTypeSchema = z.enum(['stable', 'beta', 'testing', 'development']);
 export type IShardTokenType = z.infer<typeof ShardTokenTypeSchema>;
 
-export type IShardTokenInfo = {
+export type IBaseTokenInfo = Readonly<{
 	id: string;
-	type: IShardTokenType;
 	expires?: number;
-	created: { id: number; username: string; time: number; };
+	created: Readonly<{
+		id: number;
+		username: string;
+		time: number;
+	}>;
+}>;
+
+export type IShardTokenInfo = IBaseTokenInfo & {
+	readonly type: IShardTokenType;
+};
+
+export type IBetaKeyInfo = IBaseTokenInfo & {
+	readonly maxUses?: number;
+	uses: number;
 };
 
 /** Client->Directory messages */
@@ -269,11 +281,32 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			id: z.string(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'notFound'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired'; }>(),
 	},
 	manageListShardTokens: {
 		request: z.object({}),
 		response: ZodCast<{ info: IShardTokenInfo[]; }>(),
+	},
+	manageCreateBetaKey: {
+		request: z.object({
+			expires: z.number().optional(),
+			maxUses: z.number().optional(),
+		}),
+		response: ZodCast<{ result: 'adminRequired'; } | {
+			result: 'ok';
+			info: IBetaKeyInfo;
+			token: string;
+		}>(),
+	},
+	manageListBetaKeys: {
+		request: z.object({}),
+		response: ZodCast<{ keys: IBetaKeyInfo[]; }>(),
+	},
+	manageInvalidateBetaKey: {
+		request: z.object({
+			id: z.string(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired'; }>(),
 	},
 	//#endregion
 } as const;

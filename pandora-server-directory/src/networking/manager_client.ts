@@ -2,13 +2,14 @@ import { IConnectionClient } from './common';
 import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
-import { BETA_KEY, CHARACTER_LIMIT_NORMAL } from '../config';
+import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL } from '../config';
 import { ShardManager } from '../shard/shardManager';
 import type { Account } from '../account/account';
 import { GitHubVerifier } from '../services/github/githubVerify';
 import promClient from 'prom-client';
 import { ShardTokenStore } from '../shard/shardTokenStore';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { BetaKeyStore } from '../shard/betaKeyStore';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -111,6 +112,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
 			manageInvalidateShardToken: Auth('developer', this.handleManageInvalidateShardToken.bind(this)),
 			manageListShardTokens: Auth('developer', this.handleManageListShardTokens.bind(this)),
+			manageCreateBetaKey: Auth('developer', this.handleManageCreateBetaKey.bind(this)),
+			manageListBetaKeys: Auth('developer', this.handleManageListBetaKeys.bind(this)),
+			manageInvalidateBetaKey: Auth('developer', this.handleManageInvalidateBetaKey.bind(this)),
 		});
 	}
 
@@ -198,12 +202,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (BETA_KEY && betaKey !== BETA_KEY)
+		if (BETA_KEY_ENABLED && (!betaKey || !await BetaKeyStore.use(betaKey)))
 			return { result: 'invalidBetaKey' };
 
 		const result = await accountManager.createAccount(username, passwordSha512, email);
-		if (typeof result === 'string')
+		if (typeof result === 'string') {
+			if (BETA_KEY_ENABLED && betaKey) await BetaKeyStore.free(betaKey);
 			return { result };
+		}
 
 		return { result: 'ok' };
 	}
@@ -504,13 +510,32 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleManageInvalidateShardToken({ id }: IClientDirectoryArgument['manageInvalidateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateShardToken'] {
-		const success = await ShardTokenStore.revoke(connection.account, id);
-		return { result: success ? 'ok' : 'notFound' };
+		return { result: await ShardTokenStore.revoke(connection.account, id) };
 	}
 
-	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
-		const info = ShardTokenStore.list(connection.account);
+	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], _connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
+		const info = ShardTokenStore.list();
 		return { info };
+	}
+
+	private async handleManageCreateBetaKey({ expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateBetaKey'] {
+		const result = await BetaKeyStore.create(connection.account, { expires, maxUses });
+		if (typeof result === 'string')
+			return { result };
+
+		return {
+			result: 'ok',
+			...result,
+		};
+	}
+
+	private handleManageListBetaKeys(_: IClientDirectoryArgument['manageListBetaKeys'], _connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListBetaKeys'] {
+		const keys = BetaKeyStore.list();
+		return { keys };
+	}
+
+	private async handleManageInvalidateBetaKey({ id }: IClientDirectoryArgument['manageInvalidateBetaKey'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateBetaKey'] {
+		return { result: await BetaKeyStore.revoke(connection.account, id) };
 	}
 
 	//#region Direct Messages
@@ -584,7 +609,7 @@ function MakeStatus(): IDirectoryStatus {
 	const result: IDirectoryStatus = {
 		time: Date.now(),
 	};
-	if (BETA_KEY) {
+	if (BETA_KEY_ENABLED) {
 		result.betaKeyRequired = true;
 	}
 	return result;

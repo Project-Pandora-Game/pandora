@@ -34,14 +34,18 @@ export class Account {
 
 	constructor(data: DatabaseAccountWithSecure) {
 		this.lastActivity = Date.now();
-		this.secure = new AccountSecure(this, data.secure);
-		this.roles = new AccountRoles(this, data.roles);
-		this.directMessages = new AccountDirectMessages(this, data);
 		// Shallow copy to preserve received data when cleaning up secure
 		const cleanData: DatabaseAccount = { ...data };
 		delete cleanData.secure;
 		delete cleanData.roles;
 		this.data = cleanData;
+
+		// Init subsystems
+		this.secure = new AccountSecure(this, data.secure);
+		this.roles = new AccountRoles(this, data.roles);
+		this.directMessages = new AccountDirectMessages(this, data.directMessages);
+
+		// Init characters
 		for (const characterData of this.data.characters) {
 			this.characters.set(characterData.id, new Character(characterData, this));
 		}

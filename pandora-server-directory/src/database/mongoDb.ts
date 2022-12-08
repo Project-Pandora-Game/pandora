@@ -45,12 +45,16 @@ export default class MongoDatabase implements PandoraDatabase {
 			throw new Error('Database already initialized');
 		}
 
+		let uri: string;
 		if (inMemory) {
 			this._inMemoryServer = await CreateInMemoryMongo({ dbPath });
-			this._client = new MongoClient(this._inMemoryServer.getUri());
+			uri = this._inMemoryServer.getUri();
 		} else {
-			this._client = new MongoClient(this._url);
+			uri = this._url;
 		}
+		this._client = new MongoClient(uri, {
+			ignoreUndefined: true,
+		});
 
 		// if connection fails, error is thrown, application will exit
 		await this._client.connect();
@@ -272,13 +276,17 @@ export default class MongoDatabase implements PandoraDatabase {
 		return acknowledged && matchedCount === 1;
 	}
 
-	public async getConfig<T extends DatabaseConfig['type']>(type: T): Promise<null | (DatabaseConfig & { type: T; })['data']> {
+	public async getConfig<T extends DatabaseConfigType>(type: T): Promise<null | DatabaseConfigData<T>> {
 		const result = await this._config.findOne({ type });
-		return result?.data ?? null;
+		if (!result?.data)
+			return null;
+
+		// @ts-expect-error data is unique to each config type
+		return result.data;
 	}
 
-	public async setConfig<T extends DatabaseConfig['type']>(type: T, data: (DatabaseConfig & { type: T; })['data']): Promise<void> {
-		await this._config.updateOne({ type }, { $set: { data } }, { upsert: true });
+	public async setConfig(data: DatabaseConfig): Promise<void> {
+		await this._config.updateOne({ type: data.type }, { $set: { data: data.data } }, { upsert: true });
 	}
 
 	private async _doMigrations(): Promise<void> {

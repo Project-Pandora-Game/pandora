@@ -54,7 +54,7 @@ function RoomEntry({ roomInfo }: {
 			<a className='room-list-grid' onClick={ () => setShow(true) } >
 				<img className='room-list-entry' width='50px' src={ roomIsProtected ? closedDoor : openDoor } title={ roomIsProtected ? 'Protected room' : 'Open room' }></img>
 				<div className='room-list-entry'>{`${name} (${users}/${maxUsers})`}</div>
-				<div className='room-list-entry'>{ show ? 'True' : 'False'}</div>
+				<div className='room-list-entry'></div>
 				<div className='room-list-entry'>{(description.length > 50) ? `${description.substring(0, 47).concat('\u2026')}` : `${description}`}</div>
 			</a>
 			{ show && <RoomDetailsDialog
@@ -104,21 +104,21 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 				{(background !== '' && !background.startsWith('#')) && <img className='details-preview' src={ background } width='200px' height='100px' ></img>}
 				<div className='details-features'>
 					{ roomIsProtected && <img className='details-features-img' src={ closedDoor } title='Protected Room' /> }
-					{ CHATROOM_FEATURES.forEach((f) => <div key={ f.id }>{ features.includes(f.id) && <img className='details-features-img' src={ f.icon } title={ f.name } />}</div>)}
+					{ CHATROOM_FEATURES.map((f) => <div key={ f.id }>{ features.includes(f.id) && <img className='details-features-img' src={ f.icon } title={ f.name } /> }</div>) }
 				</div>
 				<div className='details-description-title'>Description:</div>
-				<div className='details-description'>{description}</div>
+				<div className='details-widebox'>{description}</div>
 				{userIsAdmin &&
-					<div className='details-users'>Current users in this room:
+					<div className='details-title'>Current users in this room:
 						<div className='details-users-list'>
 							{characters.map((char) => <div key={ char.id }>{char.name}</div>)}
 						</div>
 					</div>}
 				{(!userIsAdmin && roomIsProtected && hasPassword) &&
-					<div className='details-users'>This room requires a password:</div>}
+					<div className='details-title'>This room requires a password:</div>}
 				{(!userIsAdmin && roomIsProtected && hasPassword) &&
 					<input
-						className='details-descriptions'
+						className='details-widebox'
 						name='roomPwd'
 						type='password'
 						value={ roomPassword }
@@ -126,7 +126,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					/>}
 				<div className='details-buttons'>
 					<Button className='slim' onClick={ () => {
-						joinRoom(id)
+						joinRoom(id, roomPassword)
 							.then((joinResult) => {
 								if (joinResult === 'notFound')
 									hide();
@@ -138,8 +138,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					} }>
 						Enter Room
 					</Button>
-					<Button className='slim' onClick={ hide }>Close
-					</Button>
+					<Button className='slim' onClick={ hide }>Close</Button>
 				</div>
 			</div>
 		</ModalDialog>

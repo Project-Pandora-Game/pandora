@@ -15,7 +15,9 @@ export default class MongoDatabase implements ShardDatabase {
 	private _characters!: Collection<ICharacterData>;
 
 	constructor() {
-		this._client = new MongoClient(DATABASE_URL);
+		this._client = new MongoClient(DATABASE_URL, {
+			ignoreUndefined: true,
+		});
 	}
 
 	public async init(): Promise<this> {

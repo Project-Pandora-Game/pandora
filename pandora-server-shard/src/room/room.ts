@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterRestrictionsManager, CharacterSize, AppearanceActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterSize, AppearanceActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -108,7 +108,7 @@ export class Room extends ServerRoom<IShardClient> {
 		}
 		// If moving self, must not be restricted by items
 		if (character.id === source.id) {
-			const restrictionManager = new CharacterRestrictionsManager(character.id, character.appearance, this.getAppearanceActionRoomContext());
+			const restrictionManager = character.appearance.getRestrictionManager(this.getAppearanceActionRoomContext());
 			if (restrictionManager.getEffects().blockRoomMovement)
 				return;
 		}
@@ -199,7 +199,7 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
 		// Handle speech muffling
-		const player = new CharacterRestrictionsManager(from.id, from.appearance, this.getAppearanceActionRoomContext());
+		const player = from.appearance.getRestrictionManager(this.getAppearanceActionRoomContext());
 		const muffler = player.getMuffler();
 		if (muffler.isActive()) {
 			for (const message of messages) {
@@ -337,9 +337,9 @@ export class Room extends ServerRoom<IShardClient> {
 
 		const char = this.getCharacterById(id);
 		if (!char)
-			return this.actionCache.get(id)?.result ?? { id, name: '[UNKNOWN]', pronoun: 'her', labelColor: '#ffffff' };
+			return this.actionCache.get(id)?.result ?? { id, name: '[UNKNOWN]', pronoun: 'they', labelColor: '#ffffff' };
 
-		const result: IChatRoomMessageActionCharacter = { id: char.id, name: char.name, pronoun: 'her', labelColor: char.settings.labelColor };
+		const result: IChatRoomMessageActionCharacter = { id: char.id, name: char.name, pronoun: char.settings.pronoun, labelColor: char.settings.labelColor };
 		this.actionCache.set(id, { result });
 
 		return result;

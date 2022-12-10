@@ -1,3 +1,5 @@
+@import '../../../styles/common';
+
 .shards {
 	display: flex;
 	flex-flow: column;
@@ -8,12 +10,22 @@
 		margin: auto;
 		border: 1px solid black;
 		border-collapse: collapse;
+		background-color: $grey-lighter;
+
+		thead {
+			background-color: $grey-light;
+		}
+
+		tr.invalid {
+			background-color: #aa0000aa;
+		}
 
 		th,
 		td {
 			text-align: center;
 			white-space: nowrap;
 			border: 1px solid black;
+			padding: 0.1em 0.2em;
 		}
 	}
 

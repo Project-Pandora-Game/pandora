@@ -1,4 +1,5 @@
 export * from './characterTypes';
+export * from './pronouns';
 export * from './restrictionsManager';
 export * from './speech';
 
@@ -6,14 +7,17 @@ import { z } from 'zod';
 import { AppearanceBundleSchema } from '../assets/appearance';
 import { HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
+import { PronounKeySchema } from './pronouns';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema,
+	pronoun: PronounKeySchema,
 });
 export type ICharacterPublicSettings = z.infer<typeof CharacterPublicSettingsSchema>;
 
 export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSettings> = {
 	labelColor: '#ffffff',
+	pronoun: 'she',
 };
 
 export const CharacterPublicDataSchema = z.object({

@@ -1,4 +1,4 @@
-import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, AppearanceActionRoomContext, ItemPath } from 'pandora-common';
+import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, AppearanceActionRoomContext, ItemPath, SafemodeData } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -45,7 +45,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 	}
 
 	public getRestrictionManager(roomContext: AppearanceActionRoomContext | null): CharacterRestrictionsManager {
-		return new CharacterRestrictionsManager(this.data.id, this.appearance, roomContext);
+		return this.appearance.getRestrictionManager(roomContext);
 	}
 }
 
@@ -105,4 +105,14 @@ export function useCharacterAppearanceView(character: AppearanceContainer): Char
 			}
 		});
 	}, () => character.appearance.getView());
+}
+
+export function useCharacterSafemode(character: AppearanceContainer): Readonly<SafemodeData> | null {
+	return useSyncExternalStore((onChange) => {
+		return character.on('appearanceUpdate', (changed) => {
+			if (changed.includes('safemode')) {
+				onChange();
+			}
+		});
+	}, () => character.appearance.getSafemode());
 }

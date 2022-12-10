@@ -283,20 +283,21 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(true);
 	}
 
-	public getConfig<T extends DatabaseConfig['type']>(type: T): Promise<null | (DatabaseConfig & { type: T; })['data']> {
+	public getConfig<T extends DatabaseConfigType>(type: T): Promise<null | DatabaseConfigData<T>> {
 		const config = this.configDb.find((dbConfig) => dbConfig.type === type);
 		if (!config)
 			return Promise.resolve(null);
 
+		// @ts-expect-error data is unique to each config type
 		return Promise.resolve(_.cloneDeep(config.data));
 	}
 
-	public setConfig<T extends DatabaseConfig['type']>(type: T, data: (DatabaseConfig & { type: T; })['data']): Promise<void> {
-		const config = this.configDb.find((dbConfig) => dbConfig.type === type);
-		if (!config) {
-			this.configDb.push({ type, data });
+	public setConfig(data: DatabaseConfig): Promise<void> {
+		const index = this.configDb.findIndex((dbConfig) => dbConfig.type === data.type);
+		if (index < 0) {
+			this.configDb.push(_.cloneDeep(data));
 		} else {
-			config.data = _.cloneDeep(data);
+			this.configDb[index] = _.cloneDeep(data);
 		}
 		return Promise.resolve();
 	}

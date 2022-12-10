@@ -24,16 +24,17 @@ import {
 	RoomTargetSelector,
 	ItemPath,
 	Assert,
+	AppearanceActionResult,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
+import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useAppearanceActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
-import { usePlayer } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
@@ -54,6 +55,9 @@ import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers
 import emptyLock from '../../assets/icons/lock_empty.svg';
 import closedLock from '../../assets/icons/lock_closed.svg';
 import openLock from '../../assets/icons/lock_open.svg';
+import { AppearanceActionResultShouldHide, RenderAppearanceActionResult } from '../../assets/appearanceValidation';
+import { HoverElement } from '../hoverElement/hoverElement';
+import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -152,14 +156,21 @@ function useWardrobeContext(): Readonly<WardrobeContext> {
 
 function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
+	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
+
+	const inSafemode = useCharacterSafemode(character) != null;
 
 	const overlay = (
 		<div className='overlay'>
 			<Button className='slim iconButton'
 				title='Toggle character view'
 				onClick={ () => {
-					character.appearance.setView(character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT);
+					shardConnector?.sendMessage('appearanceAction', {
+						type: 'setView',
+						target: character.data.id,
+						view: character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT,
+					});
 				} }
 			>
 				↷
@@ -169,37 +180,44 @@ function Wardrobe(): ReactElement | null {
 
 	return (
 		<div className='wardrobe'>
-			<GraphicsScene className='characterPreview' divChildren={ overlay }>
-				<GraphicsCharacter appearanceContainer={ character } />
-			</GraphicsScene>
-			<TabContainer className='flex-1'>
-				<Tab name='Items'>
-					<div className='wardrobe-pane'>
-						<WardrobeItemManipulation />
+			{
+				!inSafemode ? null : (
+					<div className='safemode'>
+						<CharacterSafemodeWarningContent />
 					</div>
-				</Tab>
-				<Tab name='Body'>
-					<div className='wardrobe-pane'>
-						<WardrobeBodyManipulation />
-					</div>
-				</Tab>
-				<Tab name='Poses & Expressions'>
-					<div className='wardrobe-pane'>
-						<div className='wardrobe-ui'>
-							<WardrobePoseGui character={ character } />
-							<WardrobeExpressionGui />
+				)
+			}
+			<div className='wardrobeMain'>
+				<GraphicsScene className='characterPreview' divChildren={ overlay }>
+					<GraphicsCharacter appearanceContainer={ character } />
+				</GraphicsScene>
+				<TabContainer className='flex-1'>
+					<Tab name='Items'>
+						<div className='wardrobe-pane'>
+							<WardrobeItemManipulation />
 						</div>
-					</div>
-				</Tab>
-				<Tab name='Outfits'>
-					<div className='wardrobe-pane'>
-						<div className='center-flex flex-1'>
-							TODO
+					</Tab>
+					<Tab name='Body'>
+						<div className='wardrobe-pane'>
+							<WardrobeBodyManipulation />
 						</div>
-					</div>
-				</Tab>
-				<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
-			</TabContainer>
+					</Tab>
+					<Tab name='Poses & Expressions'>
+						<div className='wardrobe-pane'>
+							<div className='wardrobe-ui'>
+								<WardrobePoseGui character={ character } />
+								<WardrobeExpressionGui />
+							</div>
+						</div>
+					</Tab>
+					<Tab name='Outfits'>
+						<div className='wardrobe-pane'>
+							<WardrobeOutfitGui />
+						</div>
+					</Tab>
+					<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
+				</TabContainer>
+			</div>
 		</div>
 	);
 }
@@ -377,6 +395,26 @@ function InventoryAssetView({ className, title, children, assets, container }: {
 	);
 }
 
+function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement> }) {
+	const assetManager = GetAssetManager();
+	const reason =  useMemo(() => check.result === 'success'
+		? ''
+		: RenderAppearanceActionResult(assetManager, check),
+	[assetManager, check]);
+
+	if (check.result === 'success') {
+		return null;
+	}
+
+	return (
+		<HoverElement parent={ parent } className='action-warning'>
+			This action isn&apos;t possible, because:
+			<br />
+			{ reason }
+		</HoverElement>
+	);
+}
+
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
 	const { actions, target } = useWardrobeContext();
 
@@ -389,13 +427,18 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 	};
 
 	const shardConnector = useShardConnector();
-	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const ref = useRef<HTMLDivElement>(null);
 	return (
-		<div className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', possible ? 'allowed' : 'blocked') } onClick={ () => {
-			if (shardConnector && possible) {
-				shardConnector.sendMessage('appearanceAction', action);
-			}
-		} }>
+		<div
+			className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', check.result === 'success' ? 'allowed' : 'blocked') }
+			ref={ ref }
+			onClick={ () => {
+				if (check.result === 'success') {
+					shardConnector?.sendMessage('appearanceAction', action);
+				}
+			} }>
+			<ActionWarning check={ check } parent={ ref } />
 			<div className='itemPreview' />
 			<span className='itemName'>{asset.definition.name}</span>
 		</div>
@@ -517,7 +560,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 								target,
 								item,
 								shift: 1,
-							} }>
+							} } hideReserveSpace>
 								⬇️
 							</WardrobeActionButton>
 							<WardrobeActionButton action={ {
@@ -525,7 +568,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 								target,
 								item,
 								shift: -1,
-							} }>
+							} } hideReserveSpace>
 								⬆️
 							</WardrobeActionButton>
 						</>
@@ -535,7 +578,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 					type: 'delete',
 					target,
 					item,
-				} }>
+				} } hideReserveSpace>
 					➖
 				</WardrobeActionButton>
 			</div>
@@ -548,24 +591,32 @@ function WardrobeActionButton({
 	className,
 	children,
 	action,
+	hideReserveSpace = false,
 }: CommonProps & {
 	action: AppearanceAction;
+	/** Makes the button hide if it should in a way, that occupied space is preserved */
+	hideReserveSpace?: boolean;
 }): ReactElement {
 	const { actions } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 
-	const possible = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const hide = AppearanceActionResultShouldHide(check);
+	const ref = useRef<HTMLButtonElement>(null);
 
 	return (
-		<button id={ id }
-			className={ classNames('wardrobeActionButton', className, possible ? 'allowed' : 'blocked') }
+		<button
+			id={ id }
+			ref={ ref }
+			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
-				if (shardConnector && possible) {
-					shardConnector.sendMessage('appearanceAction', action);
+				if (check.result === 'success') {
+					shardConnector?.sendMessage('appearanceAction', action);
 				}
 			} }
 		>
+			<ActionWarning check={ check } parent={ ref } />
 			{ children }
 		</button>
 	);
@@ -1103,6 +1154,48 @@ export function WardrobeExpressionGui(): ReactElement {
 								))
 						))
 				}
+			</Column>
+		</div>
+	);
+}
+
+export function WardrobeOutfitGui(): ReactElement {
+	const { character } = useWardrobeContext();
+	const playerId = usePlayerId();
+
+	return (
+		<div className='inventoryView'>
+			<Column overflowX='hidden' overflowY='auto' className='flex-1'>
+				<FieldsetToggle legend='Character randomization' open={ false }>
+					<h3>
+						WARNING: These buttons remove and DELETE ALL ITEMS currently worn!
+					</h3>
+					<Row>
+						{
+							character.data.id === playerId ? (
+								<>
+									<WardrobeActionButton action={ {
+										type: 'randomize',
+										kind: 'items',
+									} }>
+										Randomize clothes
+									</WardrobeActionButton>
+									<WardrobeActionButton action={ {
+										type: 'randomize',
+										kind: 'full',
+									} }>
+										Randomize everything
+									</WardrobeActionButton>
+								</>
+							) : (
+								<span>You cannot randomize other characters</span>
+							)
+						}
+					</Row>
+				</FieldsetToggle>
+				<div className='center-flex flex-1'>
+					TODO
+				</div>
 			</Column>
 		</div>
 	);

@@ -1,0 +1,12 @@
+.hover-element {
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 9999;
+	isolation: isolate;
+	pointer-events: none;
+}
+
+*:has(> .hover-element) {
+	position: relative;
+}

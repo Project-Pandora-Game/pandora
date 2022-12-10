@@ -11,6 +11,7 @@ import { ConnectionManagerClient } from './networking/manager_client';
 import { GitHubVerifier } from './services/github/githubVerify';
 import { ShardTokenStore } from './shard/shardTokenStore';
 import { DiscordBot } from './services/discord/discordBot';
+import { BetaKeyStore } from './shard/betaKeyStore';
 
 const logger = GetLogger('init');
 
@@ -30,6 +31,7 @@ async function Start(): Promise<void> {
 	logger.verbose('Initializing database...');
 	await InitDatabase();
 	await ShardTokenStore.init();
+	await BetaKeyStore.init();
 	logger.verbose('Initializing managers...');
 	accountManager.init();
 	ConnectionManagerClient.init();

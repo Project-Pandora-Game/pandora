@@ -52,6 +52,12 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	wearable?: boolean;
 
 	/**
+	 * If this asset can be used when randomly picking part needed to fit
+	 * @default false
+	 */
+	allowRandomizerUsage?: boolean;
+
+	/**
 	 * Size of this item. Affects mainly which things it can fit into.
 	 *
 	 * Sizing logic:
@@ -123,6 +129,18 @@ export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	}[];
 }[];
 
+export type AssetAttributeDefinition = {
+	description: string;
+};
+
+/** Data for randomly generating sensible appearance */
+export type AppearanceRandomizationData<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
+	/** List of attributes for generating body */
+	body: readonly A['attributes'][];
+	/** List of attributes for generating clothing */
+	clothes: readonly A['attributes'][];
+};
+
 export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
 	/** The unique identifier for this background */
 	id: string;
@@ -137,4 +155,6 @@ export interface AssetsDefinitionFile {
 	bodyparts: AssetBodyPart[];
 	graphicsId: string;
 	backgrounds: IChatroomBackgroundInfo[];
+	attributes: Record<string, AssetAttributeDefinition>;
+	randomization: AppearanceRandomizationData;
 }

@@ -1,3 +1,5 @@
+import { Logger } from '../logging';
+import { ShuffleArray } from '../utility';
 import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
 import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
@@ -8,7 +10,43 @@ import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties'
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems = readonly Item[];
 
-export type AppearanceValidationResult = boolean;
+export type AppearanceValidationError =
+	| {
+		problem: 'bodypartError';
+		problemDetail: 'incorrectOrder' | 'multipleNotAllowed' | 'missingRequired';
+	}
+	| {
+		problem: 'unsatisfiedRequirement';
+		asset: AssetId | null;
+		requirement: string;
+	}
+	| {
+		problem: 'poseConflict';
+	}
+	| {
+		problem: 'tooManyItems';
+		asset: AssetId | null;
+		limit: number;
+	}
+	| {
+		problem: 'contentNotAllowed';
+		asset: AssetId;
+	}
+	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
+	| {
+		problem: 'invalid';
+	};
+
+export type AppearanceValidationResult = {
+	success: true;
+} | {
+	success: false;
+	error: AppearanceValidationError;
+};
+
+export function AppearanceValidationCombineResults(result1: AppearanceValidationResult, result2: AppearanceValidationResult): AppearanceValidationResult {
+	return !result1.success ? result1 : result2;
+}
 
 function GetItemBodypartSortIndex(assetMananger: AssetManager, item: Item): number {
 	return item.asset.definition.bodypart === undefined ? assetMananger.bodyparts.length :
@@ -79,9 +117,22 @@ export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimits
 		.poseLimits;
 }
 
-export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>): AppearanceValidationResult {
+export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, asset: AssetId | null): AppearanceValidationResult {
 	return Array.from(requirements)
-		.every((r) => r.startsWith('!') ? !attributes.has(r.substring(1)) : attributes.has(r));
+		.map((r): AppearanceValidationResult => {
+			if (r.startsWith('!') ? !attributes.has(r.substring(1)) : attributes.has(r)) {
+				return { success: true };
+			}
+			return {
+				success: false,
+				error: {
+					problem: 'unsatisfiedRequirement',
+					asset,
+					requirement: r,
+				},
+			};
+		})
+		.reduce(AppearanceValidationCombineResults, { success: true });
 }
 
 /** Validates items prefix, ignoring required items */
@@ -91,12 +142,24 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 	// Check bodypart order
 	const correctOrder = AppearanceItemsFixBodypartOrder(assetMananger, items);
 	if (!correctOrder.every((item, index) => items[index] === item))
-		return false;
+		return {
+			success: false,
+			error: {
+				problem: 'bodypartError',
+				problemDetail: 'incorrectOrder',
+			},
+		};
 
 	// Check duplicate bodyparts
 	for (const bodypart of assetMananger.bodyparts) {
 		if (!bodypart.allowMultiple && items.filter((item) => item.asset.definition.bodypart === bodypart.name).length > 1)
-			return false;
+			return {
+				success: false,
+				error: {
+					problem: 'bodypartError',
+					problemDetail: 'multipleNotAllowed',
+				},
+			};
 	}
 
 	// Validate all items
@@ -104,17 +167,19 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 	for (const item of items) {
 		// ID must be unique
 		if (ids.has(item.id))
-			return false;
+			return {
+				success: false,
+				error: {
+					problem: 'invalid',
+				},
+			};
 		ids.add(item.id);
 
 		// Run internal item validation
-		if (!item.validate(true))
-			return false;
+		const r = item.validate(true);
+		if (!r.success)
+			return r;
 	}
-
-	// Check the pose is possible
-	if (AppearanceItemsGetPoseLimits(items) == null)
-		return false;
 
 	// Check requirements are met
 	let globalProperties = CreateAssetPropertiesResult();
@@ -122,8 +187,9 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		// Item's attributes counts into its on requirements
 		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
 
-		if (!AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements))
-			return false;
+		const r = AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements, item.asset.id);
+		if (!r.success)
+			return r;
 	}
 
 	const assetCounts = new Map<AssetId, number>();
@@ -133,26 +199,111 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		const limit = 1;
 		const currentCount = assetCounts.get(item.asset.id) ?? 0;
 		if (currentCount >= limit)
-			return false;
+			return {
+				success: false,
+				error: {
+					problem: 'tooManyItems',
+					asset: item.asset.id,
+					limit,
+				},
+			};
 		assetCounts.set(item.asset.id, currentCount + 1);
 	}
 
-	return true;
+	// Check the pose is possible
+	if (AppearanceItemsGetPoseLimits(items) == null)
+		return {
+			success: false,
+			error: {
+				problem: 'poseConflict',
+			},
+		};
+
+	return { success: true };
 }
 
 /** Validates the appearance items, including all prefixes and required items */
 export function ValidateAppearanceItems(assetMananger: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
-		if (!ValidateAppearanceItemsPrefix(assetMananger, items.slice(0, i)))
-			return false;
+		const r = ValidateAppearanceItemsPrefix(assetMananger, items.slice(0, i));
+		if (!r.success)
+			return r;
 	}
 
 	// Validate required assets
 	for (const bodypart of assetMananger.bodyparts) {
 		if (bodypart.required && !items.some((item) => item.asset.definition.bodypart === bodypart.name))
-			return false;
+			return {
+				success: false,
+				error: {
+					problem: 'bodypartError',
+					problemDetail: 'missingRequired',
+				},
+			};
 	}
 
-	return true;
+	return { success: true };
+}
+
+export function AppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems {
+	// First sort input so bodyparts are orered correctly work
+	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
+
+	// Process the input one by one, skipping bad items and injecting missing required bodyparts
+	let resultItems: AppearanceItems = [];
+	let currentBodypartIndex: number | null = assetManager.bodyparts.length > 0 ? 0 : null;
+	for (; ;) {
+		const itemToAdd = input.shift();
+		// Check moving to next bodypart
+		while (
+			currentBodypartIndex !== null &&
+			(
+				itemToAdd == null ||
+				itemToAdd.asset.definition.bodypart !== assetManager.bodyparts[currentBodypartIndex].name
+			)
+		) {
+			const bodypart = assetManager.bodyparts[currentBodypartIndex];
+
+			// Check if we need to add required bodypart
+			if (bodypart.required && !resultItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
+				// Find matching bodypart assets
+				const possibleAssets = assetManager
+					.getAllAssets()
+					.filter((asset) => asset.definition.bodypart === bodypart.name && asset.definition.allowRandomizerUsage === true);
+
+				ShuffleArray(possibleAssets);
+
+				for (const asset of possibleAssets) {
+					const tryFix = [...resultItems, assetManager.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
+					if (ValidateAppearanceItemsPrefix(assetManager, tryFix).success) {
+						resultItems = tryFix;
+						break;
+					}
+				}
+			}
+
+			if (bodypart.required && !resultItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
+				throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
+			}
+
+			// Move to next bodypart or end validation if all are done
+			currentBodypartIndex++;
+			if (currentBodypartIndex >= assetManager.bodyparts.length) {
+				currentBodypartIndex = null;
+			}
+		}
+
+		if (itemToAdd == null)
+			break;
+
+		const tryItem: AppearanceItems = [...resultItems, itemToAdd];
+		if (!ValidateAppearanceItemsPrefix(assetManager, tryItem).success) {
+			logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
+		} else {
+			resultItems = tryItem;
+		}
+	}
+
+	return resultItems;
 }

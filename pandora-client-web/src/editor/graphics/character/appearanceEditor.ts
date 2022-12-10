@@ -39,9 +39,9 @@ export class AppearanceEditor extends CharacterAppearance {
 	}
 
 	public addItem(asset: Asset, context: AppearanceActionProcessingContext = {}): boolean {
-		const item = this.assetMananger.createItem(`i/editor/${nanoid()}`, asset, null);
+		const item = this.assetManager.createItem(`i/editor/${nanoid()}`, asset, null);
 		const manipulator = this.getManipulator();
-		return ActionAddItem(manipulator, [], item) && this.commitChanges(manipulator, context);
+		return ActionAddItem(manipulator, [], item) && this.commitChanges(manipulator, context).success;
 	}
 
 	public removeItem(id: ItemId, context: AppearanceActionProcessingContext = {}): boolean {
@@ -49,7 +49,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		return ActionRemoveItem(manipulator, {
 			container: [],
 			itemId: id,
-		}) && this.commitChanges(manipulator, context);
+		}) && this.commitChanges(manipulator, context).success;
 	}
 
 	public moveItem(id: ItemId, shift: number, context: AppearanceActionProcessingContext = {}): boolean {
@@ -57,7 +57,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		return ActionMoveItem(manipulator, {
 			container: [],
 			itemId: id,
-		}, shift) && this.commitChanges(manipulator, context);
+		}, shift) && this.commitChanges(manipulator, context).success;
 	}
 }
 

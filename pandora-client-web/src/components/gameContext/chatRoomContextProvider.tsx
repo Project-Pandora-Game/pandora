@@ -1,4 +1,4 @@
-import { AppearanceActionRoomContext, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
+import { AppearanceActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -53,7 +53,7 @@ export type IMessageParseOptions = {
 	target?: CharacterId;
 };
 
-function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
+export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
 	const asset = assetManager.getAssetById(assetId);
 	return asset?.definition.chat?.chatDescriptor ??
 		asset?.definition.name.toLocaleLowerCase() ??
@@ -73,27 +73,26 @@ function ProcessMessage(
 		const { id, name, pronoun } = source;
 		metaDictionary.SOURCE_CHARACTER_NAME = name;
 		metaDictionary.SOURCE_CHARACTER_ID = id;
-		metaDictionary.SOURCE_CHARACTER_PRONOUN = pronoun;
-		metaDictionary.SOURCE_CHARACTER_PRONOUN_SELF = `${pronoun}self`;
 		metaDictionary.SOURCE_CHARACTER = `${name} (${id})`;
 		metaDictionary.SOURCE_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
+		AssignPronouns('SOURCE_CHARACTER_PRONOUN', pronoun, metaDictionary);
 	}
 
 	if (target) {
 		const { id, name, pronoun } = target;
 		metaDictionary.TARGET_CHARACTER_NAME = name;
 		metaDictionary.TARGET_CHARACTER_ID = id;
-		metaDictionary.TARGET_CHARACTER_PRONOUN = pronoun;
-		metaDictionary.TARGET_CHARACTER_PRONOUN_SELF = `${pronoun}self`;
 		metaDictionary.TARGET_CHARACTER = `${name} (${id})`;
 		metaDictionary.TARGET_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
+		AssignPronouns('TARGET_CHARACTER_PRONOUN', pronoun, metaDictionary);
 
 		if (id === source?.id) {
-			metaDictionary.TARGET_CHARACTER_DYNAMIC = metaDictionary.TARGET_CHARACTER_PRONOUN_SELF;
-			metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE = metaDictionary.TARGET_CHARACTER_PRONOUN;
+			AssignPronouns('TARGET_CHARACTER_DYNAMIC', pronoun, metaDictionary);
 		} else {
-			metaDictionary.TARGET_CHARACTER_DYNAMIC = metaDictionary.TARGET_CHARACTER;
+			metaDictionary.TARGET_CHARACTER_DYNAMIC_SUBJECTIVE = metaDictionary.TARGET_CHARACTER;
+			metaDictionary.TARGET_CHARACTER_DYNAMIC_OBJECTIVE = metaDictionary.TARGET_CHARACTER;
 			metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE = metaDictionary.TARGET_CHARACTER_POSSESSIVE;
+			metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE = metaDictionary.TARGET_CHARACTER;
 		}
 	}
 
@@ -112,7 +111,7 @@ function ProcessMessage(
 	if (itemContainerPath) {
 		if (itemContainerPath.length === 0) {
 			metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
-			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC;
+			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
 		} else if (itemContainerPath.length === 1) {
 			const asset = DescribeAsset(assetManager, itemContainerPath[0].assetId);
 
@@ -545,6 +544,11 @@ export function useChatRoomData(): IChatRoomClientData | null {
 	return useNullableObservable(context?.data);
 }
 
+export function useChatRoomFeatures(): ChatRoomFeature[] | null {
+	const data = useChatRoomData();
+	return useMemo(() => data?.features ?? null, [data]);
+}
+
 export function useAppearanceActionRoomContext(): AppearanceActionRoomContext | null {
 	const data = useChatRoomData();
 	return useMemo(() => data ? ({
@@ -554,7 +558,7 @@ export function useAppearanceActionRoomContext(): AppearanceActionRoomContext | 
 
 export function useCharacterRestrictionsManager<T>(character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
 	const roomContext = useAppearanceActionRoomContext();
-	const manager = useMemo(() => new CharacterRestrictionsManager(character.data.id, character.appearance, roomContext), [character, roomContext]);
+	const manager = useMemo(() => character.getRestrictionManager(roomContext), [character, roomContext]);
 	return useSyncExternalStore((onChange) => {
 		return character.on('appearanceUpdate', (changed) => {
 			if (changed.includes('items')) {

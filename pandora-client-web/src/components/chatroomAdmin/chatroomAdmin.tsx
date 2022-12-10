@@ -50,6 +50,10 @@ const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; }[] = [
 		name: 'Allow changes to character body',
 	},
 	{
+		id: 'allowPronounChanges',
+		name: 'Allow changes to character pronouns',
+	},
+	{
 		id: 'development',
 		name: 'Development mode',
 	},

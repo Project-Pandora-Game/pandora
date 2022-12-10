@@ -1,16 +1,20 @@
 import { z } from 'zod';
-import { CharacterId, CharacterIdSchema } from '../character';
-import { AssertNever } from '../utility';
+import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
+import { AssertNever, ShuffleArray } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
-import { ArmsPose, CharacterView } from './appearance';
+import { ArmsPose, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { AppearanceActionHandler, AppearanceActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
-import { CharacterRestrictionsManager, ItemInteractionType } from '../character/restrictionsManager';
+import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { Item } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
-import { AppearanceItems } from './appearanceValidation';
+import { AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
+import { sample } from 'lodash';
+import { nanoid } from 'nanoid';
+import { Asset } from './asset';
+import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
@@ -83,6 +87,18 @@ export const AppearanceActionModuleAction = z.object({
 	action: ItemModuleActionSchema,
 });
 
+export const AppearanceActionSafemode = z.object({
+	type: z.literal('safemode'),
+	/** What to do with the safemode */
+	action: z.enum(['enter', 'exit']),
+});
+
+export const AppearanceActionRandomize = z.object({
+	type: z.literal('randomize'),
+	/** What to randomize */
+	kind: z.enum(['items', 'full']),
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
@@ -92,6 +108,8 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionMove,
 	AppearanceActionColor,
 	AppearanceActionModuleAction,
+	AppearanceActionSafemode,
+	AppearanceActionRandomize,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -103,6 +121,16 @@ export interface AppearanceActionContext {
 	actionHandler?: AppearanceActionHandler;
 }
 
+export type AppearanceActionResult = {
+	result: 'success' | 'invalidAction';
+} | {
+	result: 'restrictionError';
+	restriction: Restriction;
+} | {
+	result: 'validationError';
+	validationError: AppearanceValidationError;
+};
+
 export function DoAppearanceAction(
 	action: AppearanceAction,
 	context: AppearanceActionContext,
@@ -112,10 +140,10 @@ export function DoAppearanceAction(
 	}: {
 		dryRun?: boolean;
 	} = {},
-): boolean {
+): AppearanceActionResult {
 	const player = context.getCharacter(context.player);
 	if (!player)
-		return false;
+		return { result: 'invalidAction' };
 
 	const processingContext: AppearanceActionProcessingContext = {
 		sourceCharacter: context.player,
@@ -129,103 +157,176 @@ export function DoAppearanceAction(
 			const asset = assetManager.getAssetById(action.asset);
 			const target = context.getTarget(action.target);
 			if (!asset || !target)
-				return false;
+				return { result: 'invalidAction' };
 			const item = assetManager.createItem(action.itemId, asset, null);
 			// Player adding the item must be able to use it
-			if (!player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE))
-				return false;
+			const r = player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed)
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
 
 			const manipulator = target.getManipulator();
 			if (!ActionAddItem(manipulator, action.container, item))
-				return false;
-			return target.commitChanges(manipulator, processingContext);
+				return { result: 'invalidAction' };
+			return AppearanceValidationResultToActionResult(
+				target.commitChanges(manipulator, processingContext),
+			);
 		}
 		// Unequip and delete an item
 		case 'delete': {
 			const target = context.getTarget(action.target);
 			if (!target)
-				return false;
+				return { result: 'invalidAction' };
 			// Player removing the item must be able to use it
-			if (!player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE))
-				return false;
+			const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed)
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
 
 			const manipulator = target.getManipulator();
 			if (!ActionRemoveItem(manipulator, action.item))
-				return false;
-			return target.commitChanges(manipulator, processingContext);
+				return { result: 'invalidAction' };
+			return AppearanceValidationResultToActionResult(
+				target.commitChanges(manipulator, processingContext),
+			);
 		}
 		// Moves an item within inventory, reordering the worn order
 		case 'move': {
 			const target = context.getTarget(action.target);
 			if (!target)
-				return false;
+				return { result: 'invalidAction' };
 			// Player moving the item must be able to interact with the item
-			if (!player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE))
-				return false;
+			const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed)
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
 
 			const manipulator = target.getManipulator();
 			if (!ActionMoveItem(manipulator, action.item, action.shift))
-				return false;
-			return target.commitChanges(manipulator, processingContext);
+				return { result: 'invalidAction' };
+			return AppearanceValidationResultToActionResult(
+				target.commitChanges(manipulator, processingContext),
+			);
 		}
 		// Changes the color of an item
 		case 'color': {
 			const target = context.getTarget(action.target);
 			if (!target)
-				return false;
+				return { result: 'invalidAction' };
 			// Player coloring the item must be able to interact with the item
-			if (!player.canUseItem(target, action.item, ItemInteractionType.STYLING))
-				return false;
+			const r = player.canUseItem(target, action.item, ItemInteractionType.STYLING);
+			if (!r.allowed)
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
 
 			const manipulator = target.getManipulator();
 			if (!ActionColorItem(manipulator, action.item, action.color))
-				return false;
-			return target.commitChanges(manipulator, processingContext);
+				return { result: 'invalidAction' };
+			return AppearanceValidationResultToActionResult(
+				target.commitChanges(manipulator, processingContext),
+			);
 		}
 		// Module-specific action
 		case 'moduleAction': {
 			const target = context.getTarget(action.target);
 			if (!target)
-				return false;
+				return { result: 'invalidAction' };
 			// Player doing the action must be able to interact with the item
-			if (!player.canUseItemModule(target, action.item, action.module))
-				return false;
+			const r = player.canUseItemModule(target, action.item, action.module);
+			if (!r.allowed)
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
 
 			const manipulator = target.getManipulator();
 			if (!ActionModuleAction(manipulator, action.item, action.module, action.action))
-				return false;
-			return target.commitChanges(manipulator, processingContext);
+				return { result: 'invalidAction' };
+			return AppearanceValidationResultToActionResult(
+				target.commitChanges(manipulator, processingContext),
+			);
 		}
 		// Resize body or change pose
 		case 'body':
 			if (context.player !== action.target)
-				return false;
+				return {
+					result: 'restrictionError',
+					restriction: {
+						type: 'permission',
+						missingPermission: 'modifyBodyOthers',
+					},
+				};
 		// falls through
 		case 'pose': {
 			const target = context.getCharacter(action.target);
 			if (!target)
-				return false;
+				return { result: 'invalidAction' };
 			if (!dryRun) {
 				target.appearance.importPose(action.pose, action.type, false);
 				if ('armsPose' in action && action.armsPose != null) {
 					target.appearance.setArmsPose(action.armsPose);
 				}
 			}
-			return true;
+			return { result: 'success' };
 		}
 		// Changes view of the character - front or back
 		case 'setView': {
 			const target = context.getCharacter(action.target);
 			if (!target)
-				return false;
+				return { result: 'invalidAction' };
 			if (!dryRun) {
 				target.appearance.setView(action.view);
 			}
-			return true;
+			return { result: 'success' };
 		}
+		case 'safemode': {
+			const current = player.appearance.getSafemode();
+			if (action.action === 'enter') {
+				// If we are already in it we cannot enter it again
+				if (current)
+					return { result: 'invalidAction' };
+
+				player.appearance.setSafemode({
+					allowLeaveAt: Date.now() + (player.room?.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
+				}, processingContext);
+				return { result: 'success' };
+			} else if (action.action === 'exit') {
+				// If we are already not in it we cannot exit it
+				if (!current)
+					return { result: 'invalidAction' };
+
+				// Check the timer to leave it passed
+				if (Date.now() < current.allowLeaveAt)
+					return { result: 'invalidAction' };
+
+				player.appearance.setSafemode(null, processingContext);
+				return { result: 'success' };
+			}
+			AssertNever(action.action);
+			break;
+		}
+		case 'randomize':
+			return ActionAppearanceRandomize(player, action.kind, processingContext);
 		default:
 			AssertNever(action);
 	}
+}
+
+export function AppearanceValidationResultToActionResult(result: AppearanceValidationResult): AppearanceActionResult {
+	return result.success ? {
+		result: 'success',
+	} : {
+		result: 'validationError',
+		validationError: result.error,
+	};
 }
 
 export function ActionAddItem(rootManipulator: AppearanceRootManipulator, container: ItemContainerPath, item: Item): boolean {
@@ -336,4 +437,147 @@ export function ActionModuleAction(rootManipulator: AppearanceRootManipulator, i
 	}
 
 	return true;
+}
+
+export function ActionAppearanceRandomize(character: CharacterRestrictionsManager, kind: 'items' | 'full', context: AppearanceActionProcessingContext): AppearanceActionResult {
+	const assetManager = character.appearance.getAssetManager();
+
+	// Must be able to remove all items currently worn, have free hands and if modifying body also be in room that allows body changes
+	const oldItems = character.appearance.getAllItems();
+	const restriction = oldItems
+		.map((i): RestrictionResult => {
+			// Ignore bodyparts if we are not changing those
+			if (kind === 'items' && i.asset.definition.bodypart != null)
+				return { allowed: true };
+			return character.canUseItemDirect(character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
+		})
+		.find((res) => !res.allowed);
+	if (restriction != null && !restriction.allowed)
+		return {
+			result: 'restrictionError',
+			restriction: restriction.restriction,
+		};
+
+	// Room must allow body changes if running full randomization
+	if (kind === 'full' && character.room && !character.room.features.includes('allowBodyChanges'))
+		return {
+			result: 'restrictionError',
+			restriction: {
+				type: 'permission',
+				missingPermission: 'modifyBodyRoom',
+			},
+		};
+
+	// Must have free hands to randomize
+	if (!character.canUseHands() && !character.isInSafemode())
+		return {
+			result: 'restrictionError',
+			restriction: {
+				type: 'blockedHands',
+			},
+		};
+
+	// Dry run can end here as everything lower is simply random
+	if (context.dryRun)
+		return { result: 'success' };
+
+	// Filter appearance to get either body or nothing
+	let newAppearance: Item[] = kind === 'items' ? oldItems.filter((i) => i.asset.definition.bodypart != null) : [];
+	// Collect info about already present items
+	const usedAssets = new Set<Asset>();
+	let properties = CreateAssetPropertiesResult();
+	newAppearance.forEach((item) => {
+		usedAssets.add(item.asset);
+		properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
+	});
+
+	// Build body if running full randomization
+	if (kind === 'full') {
+		const usedSingularBodyparts = new Set<string>();
+		// First build based on random generator
+		for (const requestedBodyAttribute of assetManager.randomization.body) {
+			// Skip already present attributes
+			if (properties.attributes.has(requestedBodyAttribute))
+				continue;
+
+			// Find possible assets (intentionally using only always-present attributes, not statically collected ones)
+			const possibleAssets = assetManager
+				.getAllAssets()
+				.filter((a) => a.definition.bodypart != null &&
+					a.definition.allowRandomizerUsage === true &&
+					a.definition.attributes?.includes(requestedBodyAttribute) &&
+					// Skip already present assets
+					!usedAssets.has(a) &&
+					// Skip already present bodyparts that don't allow multiple
+					!usedSingularBodyparts.has(a.definition.bodypart),
+				);
+
+			// Pick one and add it to the appearance
+			const asset = sample(possibleAssets);
+			if (asset && asset.definition.bodypart != null) {
+				const item = assetManager.createItem(`i/${nanoid()}`, asset, null);
+				newAppearance.push(item);
+				usedAssets.add(asset);
+				properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
+				if (!assetManager.bodyparts.find((b) => b.name === asset.definition.bodypart)?.allowMultiple) {
+					usedSingularBodyparts.add(asset.definition.bodypart);
+				}
+			}
+		}
+
+		// Re-load the appearance we have to make sure body is valid
+		newAppearance = AppearanceLoadAndValidate(assetManager, newAppearance).slice();
+	}
+
+	// Make sure the appearance is valid (required for items step)
+	let r = ValidateAppearanceItems(assetManager, newAppearance);
+	if (!r.success) {
+		return {
+			result: 'validationError',
+			validationError: r.error,
+		};
+	}
+
+	// Go through wanted attributes one-by one, always try to find matching items and try to add them in random order
+	// After each time we try the item, we validate appearance in full to see if it is possible addition
+	// Note: Yes, this is computationally costly. We might want to look into rate-limiting character randomization
+	for (const requestedAttribute of assetManager.randomization.clothes) {
+		// Skip already present attributes
+		if (properties.attributes.has(requestedAttribute))
+			continue;
+
+		// Find possible assets (intentionally using only always-present attributes, not statically collected ones)
+		const possibleAssets = assetManager
+			.getAllAssets()
+			.filter((asset) => asset.definition.bodypart == null &&
+				asset.definition.attributes?.includes(requestedAttribute) &&
+				asset.definition.allowRandomizerUsage === true &&
+				// Skip already present assets
+				!usedAssets.has(asset),
+			);
+
+		// Shuffle them so we try to add randomly
+		ShuffleArray(possibleAssets);
+
+		// Try them one by one, stopping at first successful (if we skip all, nothing bad happens)
+		for (const asset of possibleAssets) {
+			const item = assetManager.createItem(`i/${nanoid()}`, asset, null);
+			const newItems: Item[] = [...newAppearance, item];
+
+			r = ValidateAppearanceItemsPrefix(assetManager, newItems);
+			if (r.success) {
+				newAppearance = newItems;
+				usedAssets.add(asset);
+				properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
+				break;
+			}
+		}
+	}
+
+	// Try to assign the new appearance
+	const manipulator = character.appearance.getManipulator();
+	manipulator.resetItemsTo(newAppearance);
+	return AppearanceValidationResultToActionResult(
+		character.appearance.commitChanges(manipulator, context),
+	);
 }

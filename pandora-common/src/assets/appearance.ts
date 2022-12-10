@@ -1,11 +1,12 @@
-import _ from 'lodash';
+import _, { cloneDeep, isEqual } from 'lodash';
 import { z } from 'zod';
-import type { CharacterId } from '../character';
+import type { CharacterId } from '../character/characterTypes';
+import { CharacterRestrictionsManager } from '../character/restrictionsManager';
+import type { AppearanceActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
-import { ShuffleArray } from '../utility';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
-import { AppearanceItems, AppearanceItemsFixBodypartOrder, AppearanceItemsGetPoseLimits, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
+import { AppearanceItems, AppearanceItemsGetPoseLimits, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState, BoneType } from './graphics';
@@ -27,11 +28,20 @@ export enum CharacterView {
 	BACK,
 }
 
+export const SafemodeDataSchema = z.object({
+	allowLeaveAt: z.number(),
+});
+export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
+
+/** Time after entering safemode for which you cannot leave it (entering while in dev mode ignores this) */
+export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
+
 export const AppearanceBundleSchema = z.object({
 	items: z.array(ItemBundleSchema),
 	pose: z.record(BoneNameSchema, z.number()),
 	handsPose: z.nativeEnum(ArmsPose),
 	view: z.nativeEnum(CharacterView),
+	safemode: SafemodeDataSchema.optional(),
 });
 
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
@@ -43,13 +53,13 @@ export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
 	view: CharacterView.FRONT,
 };
 
-export type AppearanceChangeType = 'items' | 'pose';
+export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
 
 export class CharacterAppearance implements RoomActionTargetCharacter {
 	public readonly type = 'character';
 	public readonly characterId: CharacterId;
 
-	protected assetMananger: AssetManager;
+	protected assetManager: AssetManager;
 	public onChangeHandler: ((changes: AppearanceChangeType[]) => void) | undefined;
 
 	private items: AppearanceItems = [];
@@ -57,12 +67,17 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private fullPose: readonly BoneState[] = [];
 	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
 	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
+	private _safemode: SafemodeData | undefined;
 
 	constructor(assetMananger: AssetManager, characterId: CharacterId, onChange?: (changes: AppearanceChangeType[]) => void) {
-		this.assetMananger = assetMananger;
+		this.assetManager = assetMananger;
 		this.characterId = characterId;
 		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;
+	}
+
+	public getRestrictionManager(room: AppearanceActionRoomContext | null): CharacterRestrictionsManager {
+		return new CharacterRestrictionsManager(this.characterId, this, room);
 	}
 
 	public exportToBundle(): AppearanceBundle {
@@ -71,6 +86,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			pose: this.exportPose(),
 			handsPose: this._armsPose,
 			view: this._view,
+			safemode: this._safemode,
 		};
 	}
 
@@ -80,111 +96,34 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			...APPEARANCE_BUNDLE_DEFAULT,
 			...bundle,
 		};
-		if (assetManager && this.assetMananger !== assetManager) {
-			this.assetMananger = assetManager;
+		if (assetManager && this.assetManager !== assetManager) {
+			this.assetManager = assetManager;
 		}
 
 		// Load all items
-		let loadedItems: Item[] = [];
+		const loadedItems: Item[] = [];
 		for (const itemBundle of bundle.items) {
 			// Load asset and skip if unknown
-			const asset = this.assetMananger.getAssetById(itemBundle.asset);
+			const asset = this.assetManager.getAssetById(itemBundle.asset);
 			if (asset === undefined) {
 				logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
 				continue;
 			}
 
-			const item = this.assetMananger.createItem(itemBundle.id, asset, itemBundle, logger);
+			const item = this.assetManager.createItem(itemBundle.id, asset, itemBundle, logger);
 			loadedItems.push(item);
 		}
 
 		// Validate and add all items
-		loadedItems = AppearanceItemsFixBodypartOrder(this.assetMananger, loadedItems);
-		let newItems: readonly Item[] = [];
-		let currentBodypartIndex: number | null = this.assetMananger.bodyparts.length > 0 ? 0 : null;
-		while (loadedItems.length > 0) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const itemToAdd = loadedItems.shift()!;
-			// Check moving to next bodypart
-			while (currentBodypartIndex !== null && itemToAdd.asset.definition.bodypart !== this.assetMananger.bodyparts[currentBodypartIndex].name) {
-				const bodypart = this.assetMananger.bodyparts[currentBodypartIndex];
+		const newItems = AppearanceLoadAndValidate(this.assetManager, loadedItems, logger);
 
-				// Check if we need to add required bodypart
-				if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
-					// Find matching bodypart assets
-					const possibleAssets = this.assetMananger
-						.getAllAssets()
-						.filter((asset) => asset.definition.bodypart === bodypart.name);
-
-					ShuffleArray(possibleAssets);
-
-					for (const asset of possibleAssets) {
-						const tryFix = [...newItems, this.assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
-						if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
-							newItems = tryFix;
-							break;
-						}
-					}
-				}
-
-				if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
-					throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
-				}
-
-				// Move to next bodypart or end validation if all are done
-				currentBodypartIndex++;
-				if (currentBodypartIndex >= this.assetMananger.bodyparts.length) {
-					currentBodypartIndex = null;
-				}
-			}
-
-			const tryItem = [...newItems, itemToAdd];
-			if (!ValidateAppearanceItemsPrefix(this.assetMananger, tryItem)) {
-				logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
-			} else {
-				newItems = tryItem;
-			}
-		}
-
-		while (currentBodypartIndex !== null) {
-			const bodypart = this.assetMananger.bodyparts[currentBodypartIndex];
-
-			// Check if we need to add required bodypart
-			if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
-				// Find matching bodypart assets
-				const possibleAssets = this.assetMananger
-					.getAllAssets()
-					.filter((asset) => asset.definition.bodypart === bodypart.name);
-
-				ShuffleArray(possibleAssets);
-
-				for (const asset of possibleAssets) {
-					const tryFix = [...newItems, this.assetMananger.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
-					if (ValidateAppearanceItemsPrefix(this.assetMananger, tryFix)) {
-						newItems = tryFix;
-						break;
-					}
-				}
-			}
-
-			if (bodypart.required && !newItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
-				throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
-			}
-
-			// Move to next bodypart or end validation if all are done
-			currentBodypartIndex++;
-			if (currentBodypartIndex >= this.assetMananger.bodyparts.length) {
-				currentBodypartIndex = null;
-			}
-		}
-
-		if (!ValidateAppearanceItems(this.assetMananger, newItems)) {
+		if (!ValidateAppearanceItems(this.assetManager, newItems).success) {
 			throw new Error('Invalid appearance after load');
 		}
 
 		this.items = newItems;
 		this.pose.clear();
-		for (const bone of this.assetMananger.getAllBones()) {
+		for (const bone of this.assetManager.getAllBones()) {
 			this.pose.set(bone.name, {
 				definition: bone,
 				rotation: Number.isInteger(bundle.pose[bone.name]) ? _.clamp(bundle.pose[bone.name], BONE_MIN, BONE_MAX) : 0,
@@ -201,7 +140,11 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			}
 		}
 		this.enforcePoseLimits();
-		this.onChange(['items', 'pose']);
+
+		// Import safemode status
+		this._safemode = bundle.safemode;
+
+		this.onChange(['items', 'pose', 'safemode']);
 	}
 
 	protected enforcePoseLimits(): boolean {
@@ -270,11 +213,15 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public reloadAssetManager(assetManager: AssetManager, logger?: Logger, force: boolean = false) {
-		if (this.assetMananger === assetManager && !force)
+		if (this.assetManager === assetManager && !force)
 			return;
 		const bundle = this.exportToBundle();
-		this.assetMananger = assetManager;
+		this.assetManager = assetManager;
 		this.importFromBundle(bundle, logger);
+	}
+
+	public getAssetManager(): AssetManager {
+		return this.assetManager;
 	}
 
 	protected onChange(changes: AppearanceChangeType[]): void {
@@ -301,18 +248,19 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public getManipulator(): AppearanceRootManipulator {
-		return new AppearanceRootManipulator(this.assetMananger, this.items, true);
+		return new AppearanceRootManipulator(this.assetManager, this.items, true);
 	}
 
 	public commitChanges(manipulator: AppearanceRootManipulator, context: AppearanceActionProcessingContext): AppearanceValidationResult {
 		const newItems = manipulator.getRootItems();
 
 		// Validate
-		if (!ValidateAppearanceItems(this.assetMananger, newItems))
-			return false;
+		const r = ValidateAppearanceItems(this.assetManager, newItems);
+		if (!r.success)
+			return r;
 
 		if (context.dryRun)
-			return true;
+			return { success: true };
 
 		this.items = newItems;
 		const poseChanged = this.enforcePoseLimits();
@@ -326,7 +274,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			});
 		}
 
-		return true;
+		return { success: true };
 	}
 
 	public setPose(bone: string, value: number): void {
@@ -370,6 +318,28 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		if (this._view !== value) {
 			this._view = value;
 			this.onChange(['pose']);
+		}
+	}
+
+	public getSafemode(): Readonly<SafemodeData> | null {
+		return this._safemode ?? null;
+	}
+
+	public setSafemode(value: Readonly<SafemodeData> | null, context: AppearanceActionProcessingContext): void {
+		if (context.dryRun)
+			return;
+
+		const stateChange = (this._safemode != null) !== (value != null);
+		if (!isEqual(this._safemode ?? null, value)) {
+			this._safemode = cloneDeep(value) ?? undefined;
+			this.onChange(['safemode']);
+
+			if (stateChange) {
+				context.actionHandler?.({
+					id: value != null ? 'safemodeEnter' : 'safemodeLeave',
+					character: this.characterId,
+				});
+			}
 		}
 	}
 }

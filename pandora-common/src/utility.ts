@@ -111,3 +111,43 @@ export function LongestCommonPrefix(strings: string[]): string {
 	}
 	return strings[0].substring(0, i);
 }
+
+/** Formats time in ms into days, hours minutes and seconds - also has a short mode that only shows the largest unit, e.g. 17h */
+export function FormatTimeInterval(time: number, mode: 'full' | 'short' = 'full') {
+	let res = '';
+	if (time < 0) {
+		res = '-';
+		time *= -1;
+	}
+	const seconds = Math.floor(time / 1000);
+	const minutes = Math.floor(seconds / 60);
+	const hours = Math.floor(minutes / 60);
+	const days = Math.floor(hours / 24);
+	if (mode === 'full') {
+		const parts: string[] = [];
+		if (days > 0) {
+			parts.push(`${days} day${days > 1 ? 's' : ''}`);
+		}
+		if (hours % 60 > 0) {
+			parts.push(`${hours % 24} hour${hours > 1 ? 's' : ''}`);
+		}
+		if (minutes % 60 > 0) {
+			parts.push(`${minutes % 60} minute${minutes > 1 ? 's' : ''}`);
+		}
+		if (seconds % 60 > 0 || parts.length === 0) {
+			parts.push(`${seconds % 60} second${seconds > 1 ? 's' : ''}`);
+		}
+		res += parts.join(', ');
+	} else if (mode === 'short') {
+		if (days > 1) {
+			res += `${days}d`;
+		} else if (hours > 1) {
+			res += `${hours}h`;
+		} else if (minutes > 1) {
+			res += `${minutes}m`;
+		} else {
+			res += `${seconds}s`;
+		}
+	}
+	return res;
+}

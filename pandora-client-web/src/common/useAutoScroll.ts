@@ -22,11 +22,27 @@ export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList 
 
 	const onScroll = useEvent((ev: Event) => {
 		if (ref.current && ev.target === ref.current) {
-			const isAtEnd = ref.current.scrollTop + ref.current.offsetHeight + 1 >= ref.current.scrollHeight;
-			if (isAtEnd) {
+			const atEnd = isAtEnd();
+			if (atEnd) {
 				isScrolling.current = false;
 			}
-			setAutoScroll(isAtEnd || isScrolling.current);
+			setAutoScroll(atEnd || isScrolling.current);
+		}
+	});
+
+	const isAtEnd = useCallback(() => {
+		if (ref.current) {
+			return ref.current.scrollTop + ref.current.offsetHeight + 1 >= ref.current.scrollHeight;
+		} else {
+			return true;
+		}
+	}, []);
+
+	const onVisibilityChange = useEvent(() => {
+		if (document.visibilityState === 'hidden') {
+			setAutoScroll(false);
+		} else if (isAtEnd()) {
+			setAutoScroll(true);
 		}
 	});
 
@@ -54,6 +70,13 @@ export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList 
 			current.removeEventListener('scroll', onScroll);
 		};
 	}, [onScroll]);
+
+	useEffect(() => {
+		window.addEventListener('visibilitychange', onVisibilityChange);
+		return () => {
+			window.removeEventListener('visibilitychange', onVisibilityChange);
+		};
+	}, [onVisibilityChange]);
 
 	return [ref, scroll, autoScroll];
 }

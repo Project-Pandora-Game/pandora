@@ -344,10 +344,13 @@ export function useChatInput(): IChatInputHandler {
 
 function TypingIndicator(): ReactElement {
 	let statuses = useChatRoomStatus();
+	const playerId = usePlayerId();
+
+	statuses = statuses.filter((s) => s.status === 'typing' && s.data.id !== playerId);
 
 	const extra: ReactNode[] = [];
-	if (statuses.filter((s) => s.status === 'typing').length > 3) {
-		statuses = statuses.filter((s) => s.status !== 'typing');
+	if (statuses.length > 3) {
+		statuses = [];
 		extra.push(<span key='extra-multiple-typing'>Multiple people are typing</span>);
 	}
 

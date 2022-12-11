@@ -7,13 +7,13 @@ import { useEvent } from './useEvent';
  *
  * ref - ref to be attached to the element to be scrolled
  *
- * scroll - function to scroll to the bottom of the element, if autoScroll is true
+ * scroll - function to scroll to the bottom of the element, if autoScroll is true or directly forced
  *
  * autoScroll - boolean to indicate if the element should be scrolled automatically
  */
 export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList = []): [
 	React.RefObject<Element>,
-	() => void,
+	(forceScroll: boolean) => void,
 	boolean,
 ] {
 	const ref = useRef<Element>(null);
@@ -30,15 +30,15 @@ export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList 
 		}
 	});
 
-	const scroll = useCallback(() => {
-		if (ref.current && autoScroll && ref.current.scrollHeight > 0) {
+	const scroll = useCallback((forceScroll: boolean) => {
+		if (ref.current && (autoScroll || forceScroll) && ref.current.scrollHeight > 0) {
 			isScrolling.current = true;
 			ref.current.scrollTo({ top: ref.current.scrollHeight, behavior: 'smooth' });
 		}
 	}, [autoScroll]);
 
 	useEffect(() => {
-		scroll();
+		scroll(false);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [scroll, ...deps]);
 
@@ -55,5 +55,5 @@ export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList 
 		};
 	}, [onScroll]);
 
-	return [ref, scroll, autoScroll, atEnd];
+	return [ref, scroll, autoScroll];
 }

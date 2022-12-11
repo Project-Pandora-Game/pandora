@@ -139,12 +139,12 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	);
 }
 
-export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement>; scroll: () => void, newMessageCount: number }) {
+export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement>; scroll: (forceScroll: boolean) => void, newMessageCount: number }) {
 	const { ref } = useChatInput();
 	return (
 		<>
 			<AutoCompleteHint />
-			<UnreadMessagesIndicator newMessageCount={ newMessageCount } />
+			<UnreadMessagesIndicator newMessageCount={ newMessageCount } scroll={ scroll } />
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
 			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
@@ -367,7 +367,7 @@ function TypingIndicator(): ReactElement {
 	);
 }
 
-function UnreadMessagesIndicator({ newMessageCount }: { newMessageCount: number }): ReactElement | null {
+function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount: number, scroll: (forceScroll: boolean) => void }): ReactElement | null {
 	if (newMessageCount === 0) {
 		return null;
 	}
@@ -375,20 +375,20 @@ function UnreadMessagesIndicator({ newMessageCount }: { newMessageCount: number 
 	const indicatorText = `Unread chat message${newMessageCount > 1 ? `s (${newMessageCount})` : ''}`;
 
 	return (
-		<div className='unread-messages-indicator'>
+		<div className='unread-messages-indicator' onClick={ () => scroll(true) }>
 			{ indicatorText }
 		</div>
 	);
 }
 
-function Modifiers({ scroll }: { scroll: () => void }): ReactElement {
+function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void }): ReactElement {
 	const { target, setTarget, editing, setEditing, setValue } = useChatInput();
 	const lastHasTarget = useRef(target !== null);
 	const lastEditing = useRef(editing);
 
 	useEffect(() => {
 		if (lastHasTarget.current !== (target !== null) || lastEditing.current !== editing) {
-			scroll();
+			scroll(false);
 			lastHasTarget.current = target !== null;
 			lastEditing.current = editing;
 		}

@@ -242,9 +242,10 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 		return module?.acceptedContentFilter?.bind(module) ?? (() => true);
 	}, [containerPath, containerItem]);
 
-	const assetFilterAttributes: string[] = [...assetManager.attributes.entries()]
+	const assetFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
-		.map((a) => a[0]);
+		.map((a) => a[0])
+	, [assetManager]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -322,9 +323,10 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 		setSelectedItemId(newFocus.itemId);
 	}, []);
 
-	const bodyFilterAttributes: string[] = [...assetManager.attributes.entries()]
+	const bodyFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
-		.map((a) => a[0]);
+		.map((a) => a[0])
+	, [assetManager]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>

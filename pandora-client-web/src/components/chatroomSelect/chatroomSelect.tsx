@@ -15,6 +15,7 @@ import { CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
 import './chatroomSelect.scss';
 import closedDoor from './closed-door.svg';
 import openDoor from './opened-door.svg';
+import { Row } from '../common/container/container';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
@@ -107,11 +108,11 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					{ CHATROOM_FEATURES.map((f) => <div key={ f.id }>{ features.includes(f.id) && <img className='details-features-img' src={ f.icon } title={ f.name } /> }</div>) }
 				</div>
 				<div className='details-description-title'>Description:</div>
-				<textarea className='details-widebox'>{description}</textarea>
-				{userIsAdmin &&
+				<textarea className='details-widebox' value={ description } rows={ 20 } readOnly />
+				{characters.length > 0 &&
 					<div className='details-title'>Current users in this room:
 						<div className='details-users-list'>
-							{characters.map((char) => <div key={ char.id }>{char.name}</div>)}
+							{characters.map((char) => <div key={ char.id }>{char.name} ({char.id})</div>)}
 						</div>
 					</div>}
 				{(!userIsAdmin && roomIsProtected && hasPassword) &&
@@ -124,8 +125,8 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 						value={ roomPassword }
 						onChange={ (e) => setPassword(e.target.value) }
 					/>}
-				<div className='details-buttons'>
-					<Button className='slim' onClick={ hide } margin-right='0.2em'>Close</Button>
+				<Row className='details-buttons' alignX='end'>
+					<Button className='slim' onClick={ hide }>Close</Button>
 					<Button className='slim' onClick={ () => {
 						joinRoom(id, roomPassword)
 							.then((joinResult) => {
@@ -139,7 +140,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					} }>
 						Enter Room
 					</Button>
-				</div>
+				</Row>
 			</div>
 		</ModalDialog>
 	);

@@ -54,7 +54,7 @@
 }
 
 .chatroom-details {
-	max-width: 600px;
+	max-width: 95vw;
 	display: grid;
 	column-gap: 0.2em;
 	row-gap: 0.2em;
@@ -90,6 +90,8 @@
 	grid-column: 1 / 4;
 	border: 0.1em solid black;
 	padding: 0.2em;
+	min-width: min(50em, 95vw);
+	max-width: 95vw;
 	background-color: darkgray;
 }
 
@@ -107,7 +109,6 @@
 
 .details-buttons {
 	grid-column: 1 /span 3;
-	text-align: right;
 }
 
 .details-close {

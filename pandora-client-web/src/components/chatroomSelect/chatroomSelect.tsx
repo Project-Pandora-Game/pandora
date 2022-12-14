@@ -107,7 +107,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					{ CHATROOM_FEATURES.map((f) => <div key={ f.id }>{ features.includes(f.id) && <img className='details-features-img' src={ f.icon } title={ f.name } /> }</div>) }
 				</div>
 				<div className='details-description-title'>Description:</div>
-				<div className='details-widebox'>{description}</div>
+				<textarea className='details-widebox'>{description}</textarea>
 				{userIsAdmin &&
 					<div className='details-title'>Current users in this room:
 						<div className='details-users-list'>
@@ -125,6 +125,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 						onChange={ (e) => setPassword(e.target.value) }
 					/>}
 				<div className='details-buttons'>
+					<Button className='slim' onClick={ hide } margin-right='0.2em'>Close</Button>
 					<Button className='slim' onClick={ () => {
 						joinRoom(id, roomPassword)
 							.then((joinResult) => {
@@ -138,7 +139,6 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					} }>
 						Enter Room
 					</Button>
-					<Button className='slim' onClick={ hide }>Close</Button>
 				</div>
 			</div>
 		</ModalDialog>

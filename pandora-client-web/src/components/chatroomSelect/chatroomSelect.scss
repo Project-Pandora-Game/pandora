@@ -100,6 +100,7 @@
 .details-users-list {
 	border: 0.1em solid black;
 	padding: 0.2em;
+	overflow-y: auto;
 	display: grid;
 	grid-template-columns: auto auto auto;
 }

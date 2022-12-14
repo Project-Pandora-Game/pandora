@@ -1,128 +1,96 @@
-@import '../../styles/constants';
-@import '../../styles/utils';
+@import '../../styles/common';
 
-.chatroom-select {
-	width: 100%;
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
-	gap: 3.5em;
-}
 
-.details-close {
-	color: #aaa;
-	float: right;
-	font-size: 28px;
-	font-weight: bold;
-}
-
-.details-close:hover,
-.details-close:focus {
-	color: black;
-	text-decoration: none;
-	cursor: pointer;
-}
-
-.room-list-grid {
+.roomListGrid {
 	display: grid;
 	width: 80%;
 	grid-template-columns:
-		minmax(30px, 0.33fr) minmax(200px, 2fr) minmax(100px, 1fr) minmax(500px, 5fr);
+		minmax(30px, 0.33fr) minmax(300px, 3fr) minmax(500px, 5fr);
 	grid-template-rows: auto;
-	padding-top: 0.5em;
-	padding-bottom: 0.5em;
-	padding-left: 0.5em;
-	padding-right: 0.5em;
+	padding: 0.5em;
 	background-color: darkgray;
 	color: white;
 	border: 0.2em solid black;
+
+	&:hover {
+		background-color: grey;
+	}
+
+	.entry {
+		height: 50px;
+		padding: 0.5em;
+		text-align: left;
+		vertical-align: middle;
+		background-color: transparent;
+		border: none;
+		white-space: nowrap;
+	}
 }
 
-.room-list-grid:hover {
-	background-color: grey;
-	color: black
+.chatroomDetails {
+
+		max-width: 95vw;
+		display: grid;
+		column-gap: 0.2em;
+		row-gap: 0.2em;
+		grid-template-columns: auto auto auto;
+
+	.preview {
+		grid-column: 2 / 4;
+		grid-row: 1 / 3;
+		box-shadow: 0.3em 0.3em 0.2em darkgray;
+		float: right;
+	}
+
+	.features {
+		grid-column: 1;
+		grid-row: 2;
+		display: grid;
+		grid-template-columns: auto auto auto;
+		column-gap: 0.5em;
+	}
+
+	.features-img {
+		width: 40px;
+		border: 1px solid black;
+		padding: 0.1em;
+	}
+
+	.description-title {
+		grid-row: 3;
+	}
+
+	.widebox {
+		grid-column: 1 / 4;
+		border: 0.1em solid black;
+		padding: 0.2em;
+		min-width: min(50em, 95vw);
+		max-width: 95vw;
+		background-color: darkgray;
+	}
+
+	.title {
+		grid-column: 1 / 4;
+	}
+
+	.users-list {
+		grid-column: 1 / 4;
+		border: 0.1em solid black;
+		padding: 0.2em;
+		overflow-y: auto;
+		display: grid;
+		grid-template-columns: auto auto auto;
+	}
+
+	.buttons {
+		grid-column: 1 /span 3;
+	}
 }
 
-.room-list-entry {
-	height: 50px;
-	padding-top: 0.5em;
-	padding-bottom: 0.5em;
-	padding-left: 0.5em;
-	padding-right: 0.5em;
-	text-align: left;
-	vertical-align: middle;
-}
 
-.chatroom-details {
-	max-width: 95vw;
-	display: grid;
-	column-gap: 0.2em;
-	row-gap: 0.2em;
-	grid-template-columns: auto auto auto;
-}
 
-.details-preview {
-	grid-column: 2 / 4;
-	grid-row: 1 / 3;
-	box-shadow: 0.3em 0.3em 0.2em darkgray;
-	float: right;
-}
 
-.details-features{
-	grid-column: 1;
-	grid-row: 2;
-	display: grid;
-	grid-template-columns: auto auto auto;
-	column-gap: 0.5em;
-}
 
-.details-features-img{
-	width: 40px;
-	border: 1px solid black;
-	padding: 0.1em;
-}
 
-.details-description-title {
-	grid-row: 3;
-}
 
-.details-widebox {
-	grid-column: 1 / 4;
-	border: 0.1em solid black;
-	padding: 0.2em;
-	min-width: min(50em, 95vw);
-	max-width: 95vw;
-	background-color: darkgray;
-}
-
-.details-title {
-	grid-column: 1 / 4;
-}
-
-.details-users-list {
-	border: 0.1em solid black;
-	padding: 0.2em;
-	overflow-y: auto;
-	display: grid;
-	grid-template-columns: auto auto auto;
-}
-
-.details-buttons {
-	grid-column: 1 /span 3;
-}
-
-.details-close {
-	color: #aaa;
-	float: right;
-	font-size: 28px;
-	font-weight: bold;
-}
-
-.details-close:hover,
-.details-close:focus {
-	color: black;
-	text-decoration: none;
-	cursor: pointer;
-	vertical-align: middle;
-}
 

@@ -45,6 +45,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatRoomCharacterMove: this.handleChatRoomCharacterMove.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
+			gamblingAction: this.handleGamblingAction.bind(this),
 		});
 	}
 
@@ -150,6 +151,25 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		client.character.setPublicSettings(settings);
+	}
+
+	private handleGamblingAction(game: IClientShardArgument['gamblingAction'], client: IConnectionClient): void {
+		if (!client.character?.room)
+			throw new BadMessageError();
+
+		const room = client.character.room;
+		let flip = 0;
+		switch (game.type) {
+			case 'coinFlip':
+				flip = Math.floor(Math.random() * 2);
+				room.handleAppearanceActionMessage({
+					id: 'gamblingCoin',
+					character: client.character.id,
+					dictionary: { 'TOSS_RESULT': flip === 0 ? 'heads' : 'tails' },
+				});
+				break;
+			default: throw new BadMessageError('Unknown gambling type');
+		}
 	}
 
 	public onAssetDefinitionsChanged(): void {

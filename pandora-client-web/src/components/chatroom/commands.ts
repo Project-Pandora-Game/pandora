@@ -63,4 +63,16 @@ export const COMMANDS: readonly IClientCommand[] = [
 		// 	return target ? { status: 'whisper', target } : { status: 'none' };
 		// },
 	},
+	{
+		key: ['coinflip'],
+		description: 'Flip a coin with the result \'heads\' or \'tails\'',
+		usage: '',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector }) => {
+				shardConnector.sendMessage('gamblingAction', {
+					type: 'coinFlip',
+				});
+				return true;
+			}),
+	},
 ];

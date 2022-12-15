@@ -11,11 +11,15 @@ export class AssetManager {
 	protected readonly _bones: Map<string, BoneDefinition> = new Map();
 	protected _posePresets: AssetsPosePresets = [];
 	protected _backgrounds: IChatroomBackgroundInfo[] = [];
-	protected _attributes: Map<string, AssetAttributeDefinition> = new Map();
-	protected _definitionsHash: string = '';
 
+	protected _definitionsHash: string = '';
 	public get definitionsHash(): string {
 		return this._definitionsHash;
+	}
+
+	protected _attributes: Map<string, AssetAttributeDefinition> = new Map();
+	public get attributes(): ReadonlyMap<string, Readonly<AssetAttributeDefinition>> {
+		return this._attributes;
 	}
 
 	private _graphicsId: string = '';

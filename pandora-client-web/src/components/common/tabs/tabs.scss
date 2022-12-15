@@ -12,7 +12,7 @@ $header-height: 2em;
 		margin: 0;
 		padding: 0 0.5em;
 
-		li.tab {
+		.tab {
 			@include center-flex;
 			padding: 0.5em 1em;
 			margin: 0 -0.3em;
@@ -30,6 +30,10 @@ $header-height: 2em;
 				background-color: $black;
 				color: $white;
 				z-index: 2;
+			}
+
+			&:focus, &:active {
+				filter: brightness(80%);
 			}
 
 			&:hover:not(.active) {

@@ -13,6 +13,7 @@ import './chatroom.scss';
 import { BrowserStorage } from '../../browserStorage';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import classNames from 'classnames';
+import { Row } from '../common/container/container';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -375,9 +376,12 @@ function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount:
 	const indicatorText = `Unread chat message${newMessageCount > 1 ? `s (${newMessageCount})` : ''}`;
 
 	return (
-		<div className='unread-messages-indicator' onClick={ () => scroll(true) }>
-			{ indicatorText }
-		</div>
+		<button className='unread-messages-indicator' onClick={ () => scroll(true) }>
+			<Row className='flex-1' alignX='space-between'>
+				<span>{ indicatorText }</span>
+				<span>Click to scroll to the end</span>
+			</Row>
+		</button>
 	);
 }
 

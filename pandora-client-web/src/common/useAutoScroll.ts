@@ -34,17 +34,17 @@ export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList 
 		if (ref.current) {
 			return ref.current.scrollTop + ref.current.offsetHeight + 1 >= ref.current.scrollHeight;
 		} else {
-			return true;
+			return false;
 		}
 	}, []);
 
-	const onVisibilityChange = useEvent(() => {
+	const onVisibilityChange = useCallback(() => {
 		if (document.visibilityState === 'hidden') {
 			setAutoScroll(false);
 		} else if (isAtEnd()) {
 			setAutoScroll(true);
 		}
-	});
+	}, [isAtEnd]);
 
 	const scroll = useCallback((forceScroll: boolean) => {
 		if (ref.current && (autoScroll || forceScroll) && ref.current.scrollHeight > 0) {

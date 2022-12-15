@@ -129,6 +129,11 @@
 	white-space: nowrap;
 }
 
+.unread-messages-indicator:hover {
+	background-color: #202020;
+	cursor: pointer;
+}
+
 .autocomplete-hint {
 	position: relative;
 

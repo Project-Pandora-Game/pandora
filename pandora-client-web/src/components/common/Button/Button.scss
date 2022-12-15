@@ -1,19 +1,23 @@
-@import '../../../styles/constants';
+@import '../../../styles/utils';
 
 $button-themes: (
 	default: (
 		background: $grey-darkest,
+		border: $grey-darkest,
 		color: $white-primary,
-		background-hover: $grey-lightest,
+		background-hover: $grey-lighter,
 		color-hover: $black-primary,
-		focus-outline: $black-secondary
+		focus-outline: $white,
+		icon-filter: none
 	),
 	defaultActive: (
-		background: $grey-lightest,
-		color: $black-primary,
+		background: $grey-lighter,
+		border: $grey-darkest,
+		color: $grey-darkest,
 		background-hover: $grey-lightest,
 		color-hover: $black-primary,
-		focus-outline: $black-secondary
+		focus-outline: $white,
+		icon-filter: invert(100%)
 	),
 );
 
@@ -25,10 +29,10 @@ $button-themes: (
 	@each $theme-name, $theme-data in $button-themes {
 		&.#{$theme-name} {
 			background-color: map-get($theme-data, "background");
-			border-color: map-get($theme-data, "background");
+			border-color: map-get($theme-data, "border");
 			color: map-get($theme-data, "color");
 
-			&:hover, &:focus, &:active {
+			&:hover, &:active {
 				background-color: map-get($theme-data, "background-hover");
 				color: map-get($theme-data, "color-hover");
 			}
@@ -49,6 +53,10 @@ $button-themes: (
 					color: map-get($theme-data, "color");
 				}
 			}
+
+			&.IconButton img {
+				filter: map-get($theme-data, "icon-filter");
+			}
 		}
 	}
 
@@ -62,5 +70,16 @@ $button-themes: (
 
 	&.fadeDisabled:disabled {
 		filter: grayscale(100%) opacity(50%);
+	}
+
+	&.IconButton {
+		@include center-flex;
+
+		padding: 0.3em;
+
+		img {
+			width: 100%;
+			height: 100%;
+		}
 	}
 }

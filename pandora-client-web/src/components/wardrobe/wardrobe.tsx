@@ -26,9 +26,9 @@ import {
 	Assert,
 	AppearanceActionResult,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { GetAssetManager } from '../../assets/assetManager';
+import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
@@ -38,7 +38,7 @@ import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
-import { Button } from '../common/Button/Button';
+import { Button, ButtonProps, IconButton } from '../common/Button/Button';
 import { USER_DEBUG } from '../../config/Environment';
 import _ from 'lodash';
 import { CommonProps } from '../../common/reactTypes';
@@ -58,6 +58,8 @@ import openLock from '../../assets/icons/lock_open.svg';
 import { AppearanceActionResultShouldHide, RenderAppearanceActionResult } from '../../assets/appearanceValidation';
 import { HoverElement } from '../hoverElement/hoverElement';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
+import listIcon from '../../assets/icons/list.svg';
+import gridIcon from '../../assets/icons/grid.svg';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -224,6 +226,7 @@ function Wardrobe(): ReactElement | null {
 
 function WardrobeItemManipulation({ className }: { className?: string }): ReactElement {
 	const { character, assetList } = useWardrobeContext();
+	const assetManager = GetAssetManager();
 
 	const [currentFocus, setFocus] = useState<WardrobeFocus>({ container: [], itemId: null });
 
@@ -239,6 +242,11 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 		return module?.acceptedContentFilter?.bind(module) ?? (() => true);
 	}, [containerPath, containerItem]);
 
+	const assetFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
+		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
+		.map((a) => a[0])
+	, [assetManager]);
+
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
 			<InventoryItemView
@@ -249,9 +257,14 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 			/>
 			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
 				<Tab name='Create new item'>
-					<InventoryAssetView title='Create and use a new item' assets={ assetList.filter((asset) => {
-						return preFilter(asset) && containerContentsFilter(asset);
-					}) } container={ currentFocus.container } />
+					<InventoryAssetView
+						title='Create and use a new item'
+						assets={ assetList.filter((asset) => {
+							return preFilter(asset) && containerContentsFilter(asset);
+						}) }
+						attributesFilterOptions={ assetFilterAttributes }
+						container={ currentFocus.container }
+					/>
 				</Tab>
 				<Tab name='Room inventory'>
 					<div className='inventoryView'>
@@ -287,6 +300,7 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 
 function WardrobeBodyManipulation({ className }: { className?: string }): ReactElement {
 	const { assetList } = useWardrobeContext();
+	const assetManager = GetAssetManager();
 
 	const filter = (item: Item | Asset) => {
 		const { definition } = 'asset' in item ? item.asset : item;
@@ -309,12 +323,22 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 		setSelectedItemId(newFocus.itemId);
 	}, []);
 
+	const bodyFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
+		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
+		.map((a) => a[0])
+	, [assetManager]);
+
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
 			<InventoryItemView title='Currently worn items' filter={ filter } focus={ currentFocus } setFocus={ setFocus } />
 			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
 				<Tab name='Change body parts'>
-					<InventoryAssetView title='Add a new bodypart' assets={ assetList.filter(filter) } container={ [] } />
+					<InventoryAssetView
+						title='Add a new bodypart'
+						assets={ assetList.filter(filter) }
+						attributesFilterOptions={ bodyFilterAttributes }
+						container={ [] }
+					/>
 				</Tab>
 				<Tab name='Change body size'>
 					<WardrobeBodySizeEditor />
@@ -330,20 +354,41 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 	);
 }
 
-function InventoryAssetView({ className, title, children, assets, container }: {
+function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions }: {
 	className?: string;
 	title: string;
 	children?: ReactNode;
 	assets: readonly Asset[];
 	container: ItemContainerPath;
+	attributesFilterOptions?: string[];
 }): ReactElement | null {
+	const assetManager = GetAssetManager();
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
-	const flt = filter.toLowerCase().trim().split(/\s+/);
+	const [attribute, setAttribute] = useReducer((old: string, wantToSet: string) => {
+		return wantToSet === old ? '' : wantToSet;
+	}, '');
 
-	const filteredAssets = assets.filter((asset) => flt.every((f) => {
-		return asset.definition.name.toLowerCase().includes(f);
-	}));
+	const flt = filter.toLowerCase().trim().split(/\s+/);
+	const filteredAssets = useMemo(() => {
+		return assets.filter((asset) => flt.every((f) => {
+			const attributeDefinition = attribute ? assetManager.getAttributeDefinition(attribute) : undefined;
+			return asset.definition.name.toLowerCase().includes(f) &&
+				((attribute !== '' && attributesFilterOptions?.includes(attribute)) ?
+					(
+						asset.staticAttributes.has(attribute) &&
+						!attributeDefinition?.useAsWardrobeFilter?.excludeAttributes
+							?.some((a) => asset.staticAttributes.has(a))
+					) : true
+				);
+		}));
+	}, [assetManager, assets, flt, attributesFilterOptions, attribute]);
+
+	useEffect(() => {
+		if (attribute !== '' && !attributesFilterOptions?.includes(attribute)) {
+			setAttribute('');
+		}
+	}, [attribute, attributesFilterOptions]);
 
 	const filterInput = useRef<HTMLInputElement>(null);
 
@@ -380,18 +425,71 @@ function InventoryAssetView({ className, title, children, assets, container }: {
 				<span>{title}</span>
 				<input ref={ filterInput }
 					type='text'
-					placeholder='Filter assets'
+					placeholder='Filter by name'
 					value={ filter }
 					onChange={ (e) => setFilter(e.target.value) }
 				/>
-				<button onClick={ () => setListMode(false) } className={ listMode ? '' : 'active' }>Grid</button>
-				<button onClick={ () => setListMode(true) } className={ listMode ? 'active' : ''  }>List</button>
+				<IconButton
+					onClick={ () => setListMode(false) }
+					theme={ listMode ? 'default' : 'defaultActive' }
+					src={ gridIcon }
+					alt='Grid view mode'
+				/>
+				<IconButton
+					onClick={ () => setListMode(true) }
+					theme={ listMode ? 'defaultActive' : 'default' }
+					src={ listIcon }
+					alt='List view mode'
+				/>
 			</div>
+			{ attributesFilterOptions == null ? null : (
+				<div className='toolbar'>
+					{ attributesFilterOptions.map((a) => (
+						<AttributeButton
+							key={ a }
+							attribute={ a }
+							theme={ attribute === a ? 'defaultActive' : 'default' }
+							onClick={ () => setAttribute(a) }
+							slim
+						/>
+					)) }
+				</div>
+			) }
 			{ children }
 			<div className={ listMode ? 'list' : 'grid' }>
 				{ filteredAssets.map((a) => <InventoryAssetViewList key={ a.id } asset={ a } container={ container } listMode={ listMode } />) }
 			</div>
 		</div>
+	);
+}
+
+function AttributeButton({ attribute, ...buttonProps }: {
+	attribute: string;
+} & Omit<ButtonProps, 'children'>): ReactElement {
+	const assetManager = GetAssetManager();
+	const buttonRef = useRef<HTMLButtonElement>(null);
+
+	const attributeDefinition = assetManager.getAttributeDefinition(attribute);
+
+	const icon = attributeDefinition?.icon ? (GetAssetsSourceUrl() + attributeDefinition.icon) : undefined;
+
+	return (
+		<>
+			{ icon ? (
+				<IconButton ref={ buttonRef }
+					{ ...buttonProps }
+					src={ icon }
+					alt={ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
+				/>
+			) : (
+				<Button ref={ buttonRef } { ...buttonProps }>
+					{ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
+				</Button>
+			) }
+			<HoverElement parent={ buttonRef } className='attribute-description'>
+				{ attributeDefinition?.description ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
+			</HoverElement>
+		</>
 	);
 }
 
@@ -432,6 +530,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 	return (
 		<div
 			className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', check.result === 'success' ? 'allowed' : 'blocked') }
+			tabIndex={ 0 }
 			ref={ ref }
 			onClick={ () => {
 				if (check.result === 'success') {
@@ -494,7 +593,7 @@ function InventoryItemView({
 				{
 					focus.container.length > 0 ? (
 						<>
-							<button onClick={ () => {
+							<button className='modeButton' onClick={ () => {
 								const prev = SplitContainerPath(focus.container)?.itemPath;
 								setFocus?.(prev ?? { container: [], itemId: null });
 							} } >
@@ -541,7 +640,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 	const asset = wornItem.asset;
 
 	return (
-		<div className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', 'allowed') } onClick={ () => {
+		<div tabIndex={ 0 } className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', 'allowed') } onClick={ () => {
 			if (singleItemContainer)
 				return;
 			setFocus?.({
@@ -659,7 +758,7 @@ function WardrobeItemConfigMenu({
 			<div className='inventoryView'>
 				<div className='toolbar'>
 					<span>Editing item: [ ERROR: ITEM NOT FOUND ]</span>
-					<button onClick={ close }>✖️</button>
+					<button className='modeButton' onClick={ close }>✖️</button>
 				</div>
 			</div>
 		);
@@ -669,7 +768,7 @@ function WardrobeItemConfigMenu({
 		<div className='inventoryView'>
 			<div className='toolbar'>
 				<span>Editing item: {wornItem.asset.definition.name}</span>
-				{ !singleItemContainer && <button onClick={ close }>✖️</button> }
+				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
 			</div>
 			<Column overflowX='hidden' overflowY='auto'>
 				<Row wrap>

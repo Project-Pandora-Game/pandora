@@ -6,7 +6,7 @@ import './tabs.scss';
 interface TabProps extends ChildrenProps {
 	name: ReactNode;
 	default?: boolean;
-	onClick?: React.MouseEventHandler<HTMLLIElement>;
+	onClick?: React.MouseEventHandler;
 	className?: string;
 }
 
@@ -31,12 +31,12 @@ export function TabContainer({ children, id, className, collapsable }: {
 			<ul className={ classNames('tab-container__header', { collapsed }) }>
 				{
 					tabs.map((tab, index) => (tab &&
-						<li key={ index }
+						<button key={ index }
 							className={ classNames('tab', { active: index === currentTab }, tab.className) }
 							onClick={ tab.onClick ?? (() => setTab(index)) }
 						>
 							{tab.name}
-						</li>
+						</button>
 					))
 				}
 				{

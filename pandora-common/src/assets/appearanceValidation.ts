@@ -136,6 +136,10 @@ export function AppearanceValidateSlots(assetMananger: AssetManager, slots: Asse
 		if (slotDef.capacity < occupied)
 			return { problem: 'slotFull', slot };
 	}
+	return undefined;
+}
+
+export function AppearanceValidateSlotRequirements(slots: AssetSlotResult): undefined | AppearanceValidationError {
 	for (const slot of slots.requires) {
 		if (!slots.occupied.has(slot))
 			return { problem: 'slotRequired', slot };
@@ -143,17 +147,17 @@ export function AppearanceValidateSlots(assetMananger: AssetManager, slots: Asse
 	return undefined;
 }
 
-export function AppearanceValidateSlotBlocks(previous: AssetSlotResult, current: AssetSlotResult): string | undefined {
+export function AppearanceValidateSlotBlocks(previous: AssetSlotResult, current: AssetSlotResult): undefined | AppearanceValidationError {
 	for (const [slot, occupied] of current.occupied) {
 		if (occupied === 0 || occupied === 'invalid')
 			continue;
 		if (!previous.blocked.has(slot))
 			continue;
 		const prev = previous.occupied.get(slot);
-		if (!prev || prev === 0 || prev === 'invalid')
+		if (typeof prev === 'string' || (typeof prev === 'number' && prev > 0))
 			continue;
 
-		return slot;
+		return { problem: 'slotBlocked', slot };
 	}
 	return undefined;
 }
@@ -226,22 +230,20 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
 		const properties = item.getPropertiesParts();
-		const blocked = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
-		if (blocked) {
-			return {
-				success: false,
-				error: {
-					problem: 'slotBlocked',
-					slot: blocked,
-				},
-			};
-		}
+		let error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
+		if (error)
+			return { success: false, error };
+
 		// Item's attributes counts into its on requirements
 		globalProperties = properties.reduce(MergeAssetProperties, globalProperties);
 
 		const r = AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements, item.asset.id);
 		if (!r.success)
 			return r;
+
+		error = AppearanceValidateSlotRequirements(globalProperties.slots);
+		if (error)
+			return { success: false, error };
 	}
 
 	const assetCounts = new Map<AssetId, number>();

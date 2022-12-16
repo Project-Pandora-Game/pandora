@@ -32,6 +32,9 @@ const CHAT_ACTIONS_DEF = {
 	itemStore: `SOURCE_CHARACTER stored ITEM_ASSET_NAME in ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 	itemUnload: `SOURCE_CHARACTER removed ITEM_ASSET_NAME_PREVIOUS from ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 
+	// Gambling related
+	gamblingCoin: `SOURCE_CHARACTER flips a coin and the result is TOSS_RESULT.`,
+
 	//#endregion
 };
 

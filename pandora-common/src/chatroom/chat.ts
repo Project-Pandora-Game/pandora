@@ -92,5 +92,5 @@ export type IChatRoomMessageDirectoryAction = Omit<IChatRoomMessageAction, 'data
 	};
 };
 
-export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whisper', 'afk']);
+export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whispering', 'afk']);
 export type IChatRoomStatus = z.infer<typeof ChatRoomStatusSchema>;

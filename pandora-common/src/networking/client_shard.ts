@@ -52,6 +52,12 @@ export const ClientShardSchema = {
 		request: CharacterPublicSettingsSchema.partial(),
 		response: null,
 	},
+	gamblingAction: {
+		request: z.object({
+			type: z.enum(['coinFlip']),
+		}),
+		response: null,
+	},
 } as const;
 
 export type IClientShard = Satisfies<typeof ClientShardSchema, SocketInterfaceDefinitionVerified<typeof ClientShardSchema>>;

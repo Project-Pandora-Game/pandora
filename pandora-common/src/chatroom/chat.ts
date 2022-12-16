@@ -94,3 +94,27 @@ export type IChatRoomMessageDirectoryAction = Omit<IChatRoomMessageAction, 'data
 
 export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whisper', 'afk']);
 export type IChatRoomStatus = z.infer<typeof ChatRoomStatusSchema>;
+
+export type IChatTypeDetails = {
+	commandKeywords: string[],
+	description: string,
+};
+
+export const ChatTypeDetails: { [type in IChatType]: IChatTypeDetails; } = {
+	'chat': {
+		commandKeywords: ['say', 'chat'],
+		description: 'standard message',
+	},
+	'ooc': {
+		commandKeywords: ['ooc', 'o'],
+		description: 'out-of-character (OOC) message',
+	},
+	'me': {
+		commandKeywords: ['me', 'm', 'action'],
+		description: 'action message',
+	},
+	'emote': {
+		commandKeywords: ['emote', 'e'],
+		description: 'action message without your name',
+	},
+};

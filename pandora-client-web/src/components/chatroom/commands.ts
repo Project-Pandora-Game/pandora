@@ -1,5 +1,5 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { CommandBuilder, CreateCommand, IChatType, IEmpty } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IEmpty } from 'pandora-common';
 import { CommandSelectorCharacter } from './commandsHelpers';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
@@ -42,16 +42,19 @@ const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType,
 };
 
 /* Creates two commands for sending chat messages of a specific type, one formatted and one raw/unformatted */
-const CreateMessageTypeParsers = (names: string[], type: IChatType, description: string): IClientCommand[] => [
-	CreateMessageTypeParser(names, false, type, description), //formatted
-	CreateMessageTypeParser([names[0]], true, type, description), //raw, no alternatives
-];
+const CreateMessageTypeParsers = (type: IChatType): IClientCommand[] => {
+	const details = ChatTypeDetails[type];
+	return [
+		CreateMessageTypeParser(details.commandKeywords, false, type, details.description), //formatted
+		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.description), //raw, no alternatives
+	];
+};
 
 export const COMMANDS: readonly IClientCommand[] = [
-	...CreateMessageTypeParsers(['say', 'chat'], 'chat', 'standard message'),
-	...CreateMessageTypeParsers(['ooc', 'o'], 'ooc', 'out-of-character (OOC) message'),
-	...CreateMessageTypeParsers(['me', 'm', 'action'], 'me', 'action message'),
-	...CreateMessageTypeParsers(['emote', 'e'], 'emote', 'action message without your name'),
+	...CreateMessageTypeParsers('chat'),
+	...CreateMessageTypeParsers('ooc'),
+	...CreateMessageTypeParsers('me'),
+	...CreateMessageTypeParsers('emote'),
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',

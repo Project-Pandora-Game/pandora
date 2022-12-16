@@ -11,17 +11,24 @@ const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType,
 	return ({
 		key: names.map((name) => (raw ? 'raw' : '') + name),
 		description: `Sends ${'aeiou'.includes(desc[0]) ? 'an' : 'a'} ${desc}`,
-		usage: '[message]',
+		usage: '[message*]',
 		// TODO
 		// status: { status: 'typing' },
 		handler: CreateClientCommand()
-			.handler(({ messageSender, displayError }, _args, message) => {
+			.handler(({ messageSender, inputHandlerContext }, _args, message) => {
 				message = message.trim();
 
 				if (!message) {
-					displayError?.(`Cannot send empty message`);
-					return false;
+					if (inputHandlerContext.mode?.type === type && inputHandlerContext.mode?.raw === raw) {
+						inputHandlerContext.setMode(null);
+						return true;
+					}
 
+					inputHandlerContext.setMode({
+						type, raw,
+						description: `Sending ${desc.replace('message', 'messages')}`,
+					});
+					return true;
 				}
 
 				messageSender.sendMessage(message, {
@@ -48,7 +55,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',
-		usage: '<target> [message]',
+		usage: '<target> [message*]',
 		handler: CreateClientCommand()
 			.argument('target', CommandSelectorCharacter({ allowSelf: false }))
 			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, { target }, message) => {

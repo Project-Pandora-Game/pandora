@@ -16,6 +16,7 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 export type IClientCommand = {
 	key: [string, ...string[]];
 	description: string;
+	longDescription: string;
 	usage: string;
 	handler: CommandRunner<ICommandExecutionContextClient, IEmpty>;
 	// TODO
@@ -79,6 +80,7 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 			.map((c) => ({
 				replaceValue: c.key[0],
 				displayValue: GetCommandExplanation(c),
+				longDescription: c.longDescription,
 			}));
 		return options.length > 0 ? {
 			header: 'Commands - keywords in () are alternatives, arguments in <> are required, arguments in [] are optional',

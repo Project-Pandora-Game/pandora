@@ -441,6 +441,13 @@ function AutoCompleteHint(): ReactElement | null {
 	if (!autocompleteHint?.result)
 		return null;
 
+	let onlyShowOption = -1;
+	if (autocompleteHint.result.options.length === 1) {
+		onlyShowOption = 0;
+	} else if (ref.current) {
+		onlyShowOption = autocompleteHint.result.options.findIndex((option) => COMMAND_KEY + option.replaceValue === ref.current?.value);
+	}
+
 	return (
 		<div className='autocomplete-hint'>
 			<div>
@@ -451,6 +458,7 @@ function AutoCompleteHint(): ReactElement | null {
 							<hr />
 							{
 								autocompleteHint.result.options.map((option, index) => (
+									(onlyShowOption === -1 || onlyShowOption === index) &&
 									<span key={ index }
 										className={ classNames({ selected: index === autocompleteHint.index }) }
 										onClick={ (ev) => {
@@ -486,6 +494,13 @@ function AutoCompleteHint(): ReactElement | null {
 									</span>
 								))
 							}
+						</>
+				}
+				{
+					onlyShowOption >= 0 &&
+						<>
+							<hr />
+							{ autocompleteHint.result.options[onlyShowOption]?.longDescription }
 						</>
 				}
 			</div>

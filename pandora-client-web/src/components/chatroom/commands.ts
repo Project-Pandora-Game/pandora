@@ -1,16 +1,17 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IEmpty } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON } from 'pandora-common';
 import { CommandSelectorCharacter } from './commandsHelpers';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
 }
 
-const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType, description: string): IClientCommand => {
+const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType, description: string, longDescription: string): IClientCommand => {
 	const desc = `${description}${raw ? ', without any formatting' : ''}`;
 	return ({
 		key: names.map((name) => (raw ? 'raw' : '') + name) as [string, ...string[]],
 		description: `Sends ${'aeiou'.includes(desc[0]) ? 'an' : 'a'} ${desc}`,
+		longDescription,
 		usage: '[message]',
 		// TODO
 		// status: { status: 'typing' },
@@ -45,8 +46,8 @@ const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType,
 const CreateMessageTypeParsers = (type: IChatType): IClientCommand[] => {
 	const details = ChatTypeDetails[type];
 	return [
-		CreateMessageTypeParser(details.commandKeywords, false, type, details.description), //formatted
-		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.description), //raw, no alternatives
+		CreateMessageTypeParser(details.commandKeywords, false, type, details.description, details.longDescription), //formatted
+		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.description, details.longDescription + LONGDESC_RAW), //raw, no alternatives
 	];
 };
 
@@ -58,6 +59,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',
+		longDescription: 'Sends a message to the selected <target> character which only they will see.' + LONGDESC_THIRD_PERSON,
 		usage: '<target> [message]',
 		handler: CreateClientCommand()
 			.argument('target', CommandSelectorCharacter({ allowSelf: false }))

@@ -49,7 +49,7 @@ export function AssetsUI(): ReactElement {
 				</ContextHelpButton>
 			</h3>
 			<ul>
-				{items.map((item) => <ItemElement key={ item.id } item={ item } />)}
+				{ items.map((item) => <ItemElement key={ item.id } item={ item } />) }
 			</ul>
 			<h3>
 				Edited assets
@@ -96,7 +96,7 @@ export function AssetsUI(): ReactElement {
 			</h3>
 			<AssetCreatePrompt />
 			<ul>
-				{view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } />)}
+				{ view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } />) }
 			</ul>
 		</Scrollbar>
 	);
@@ -106,7 +106,7 @@ function AssetCategoryElement({ category }: { category: AssetTreeViewCategory; }
 	return (
 		<ToggleLi name={ category.name } state={ category }>
 			<ul>
-				{category.assets.map((asset) => <AssetElement key={ asset.id } asset={ asset } category={ category.name } />)}
+				{ category.assets.map((asset) => <AssetElement key={ asset.id } asset={ asset } category={ category.name } />) }
 			</ul>
 		</ToggleLi>
 	);
@@ -132,7 +132,7 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 
 	return (
 		<li>
-			<span>{StripAssetIdAndCategory(asset.id, category)}</span>
+			<span>{ StripAssetIdAndCategory(asset.id, category) }</span>
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
@@ -165,7 +165,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 
 	return (
 		<li>
-			<span>{StripAssetIdPrefix(assetId)}</span>
+			<span>{ StripAssetIdPrefix(assetId) }</span>
 			<div className='controls'>
 				<Button onClick={ () => {
 					editor.startEditAsset(assetId);
@@ -216,9 +216,9 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 					appearance.moveItem(item.id, -1);
 				} } title='Move item one up' style={ { fontSize: 'x-small' } } >
 					🠉
-				</Button>}
+				</Button> }
 				<Button onClick={ () => appearance.removeItem(item.id) } title='Unequip item'>-</Button>
-				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
+				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
 					if (!tabContext.activeTabs.includes('Asset')) {
@@ -230,7 +230,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 			</div>
 		}>
 			<ul>
-				{graphics && graphics.allLayers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />)}
+				{ graphics && graphics.allLayers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />) }
 			</ul>
 		</ToggleLi>
 	);
@@ -264,7 +264,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 						editor.setLayerTint(layer, Number.parseInt(event.target.value.replace(/^#/, ''), 16));
 					} }
 				/>
-				<Button className='slim' onClick={ toggleAlpha } title="Cycle layers's opacity">{EDITOR_ALPHA_ICONS[alphaIndex]}</Button>
+				<Button className='slim' onClick={ toggleAlpha } title="Cycle layers's opacity">{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
 			</div>
 		</li>
 	);
@@ -297,9 +297,9 @@ function ToggleLi<T extends { open: boolean; }>({ state, name, nameExtra, childr
 
 	return (
 		<li className={ classNames('toggle-li', className) } { ...props }>
-			<span onClick={ onClick } className={ spanClass }>{name}</span>
+			<span onClick={ onClick } className={ spanClass }>{ name }</span>
 			{ nameExtra }
-			{open && children}
+			{ open && children }
 		</li>
 	);
 }

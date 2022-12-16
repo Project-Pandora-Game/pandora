@@ -30,7 +30,7 @@ function LeftHeader(): ReactElement {
 
 	return (
 		<div className='leftHeader flex'>
-			{/*
+			{ /*
 			<div className="headerButton"><img className='avatar' src='/iconClare.png' />Clare</div>
 			<div className="headerButton">Inventory</div>
 			<div className="headerButton">Room</div>

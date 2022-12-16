@@ -17,9 +17,9 @@ export function Dialogs(): ReactElement {
 
 	return (
 		<>
-			{portals.map((node, index) => (
+			{ portals.map((node, index) => (
 				<OutPortal key={ index } node={ node } />
-			))}
+			)) }
 		</>
 	);
 }
@@ -145,7 +145,7 @@ export function DialogCloseButton({ children, ...props }: ButtonProps): ReactEle
 	const { close } = useDialogClose();
 	return (
 		<Button { ...props } onClick={ () => close() }>
-			{children}
+			{ children }
 		</Button>
 	);
 }

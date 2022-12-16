@@ -28,9 +28,9 @@ export function FieldsetToggle({ legend, children, className, open: initialState
 	return (
 		<fieldset className={ classNames('fieldset-toggle', className) }>
 			<legend className={ classNames('fieldset-toggle-legend', effectiveOpen && 'open') } onClick={ onClick }>
-				{legend}
+				{ legend }
 			</legend>
-			{effectiveOpen && children}
+			{ effectiveOpen && children }
 		</fieldset>
 	);
 }

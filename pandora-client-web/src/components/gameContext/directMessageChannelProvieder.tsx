@@ -37,7 +37,7 @@ function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps
 
 	return (
 		<directMessageContext.Provider value={ channel }>
-			{children}
+			{ children }
 		</directMessageContext.Provider>
 	);
 }
@@ -54,7 +54,7 @@ function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { 
 		}
 	}
 	return (
-		<span>{message}</span>
+		<span>{ message }</span>
 	);
 }
 
@@ -62,7 +62,7 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 	return (
 		<Suspense fallback={ <DirectMessageChannelFallback message='Loading...' /> }>
 			<DirectMessageChannelProviderImpl accountId={ accountId }>
-				{children}
+				{ children }
 			</DirectMessageChannelProviderImpl>
 		</Suspense>
 	);

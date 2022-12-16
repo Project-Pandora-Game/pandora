@@ -205,7 +205,7 @@ export function NotificationContextProvider({ children }: { children: React.Reac
 		<notificationContext.Provider value={ context }>
 			<VersionCheck />
 			<NotificationTitleUpdater />
-			{children}
+			{ children }
 		</notificationContext.Provider>
 	);
 }

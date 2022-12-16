@@ -216,7 +216,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 				🠉
 			</Button>
 			<Button className='slim' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
-				{EDITOR_ALPHA_ICONS[alphaIndex]}
+				{ EDITOR_ALPHA_ICONS[alphaIndex] }
 			</Button>
 			<Button className='slim hideDisabled' aria-label='delete' disabled={ layer.isMirror } onClick={ () => {
 				if (!confirm(`Delete layer '${name}'?`))

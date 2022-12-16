@@ -93,10 +93,10 @@ function ShardRow({ shard }: { shard: IShardTokenInfo }): ReactElement {
 				{ shard.expires === undefined ? 'Never' : new Date(shard.expires).toLocaleString() }
 			</td>
 			<td>
-				{shard.created.username} ({shard.created.id})
+				{ shard.created.username } ({ shard.created.id })
 			</td>
 			<td>
-				{new Date(shard.created.time).toLocaleString()}
+				{ new Date(shard.created.time).toLocaleString() }
 			</td>
 			<td>
 				<Button className='slim' onClick={ () => void onInvalidate() }>Delete</Button>

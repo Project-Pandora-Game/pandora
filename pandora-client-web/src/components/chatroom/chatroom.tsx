@@ -60,11 +60,11 @@ export function Chatroom(): ReactElement {
 							<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
 							<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
 							<br />
-							<p>You are in room {roomData.name}</p>
+							<p>You are in room { roomData.name }</p>
 							<div>
 								Characters in this room:<br />
 								<ul>
-									{roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)}
+									{ roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />) }
 								</ul>
 							</div>
 							{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
@@ -94,8 +94,8 @@ function DisplayCharacter({ char }: { char: Character }): ReactElement {
 
 	return (
 		<li className='character-info'>
-			<span onClick={ () => setTarget(data.id) }>{data.name}</span>
-			<span>{data.id} / {data.accountId}</span>
+			<span onClick={ () => setTarget(data.id) }>{ data.name }</span>
+			<span>{ data.id } / { data.accountId }</span>
 			{ !inSafemode ? null : (
 				<span className='safemode'>
 					<CharacterSafemodeWarningContent />
@@ -152,7 +152,7 @@ function Chat(): ReactElement | null {
 	return (
 		<div className='chatArea'>
 			<Scrollbar color='dark' className='messages' ref={ messagesDiv } tabIndex={ 1 }>
-				{messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />)}
+				{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
 			</Scrollbar>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } newMessageCount={ newMessageCount } />
 		</div>
@@ -162,11 +162,11 @@ function Chat(): ReactElement | null {
 export function RenderChatPart([type, contents]: IChatSegment, index: number): ReactElement {
 	switch (type) {
 		case 'normal':
-			return <span key={ index }>{contents}</span>;
+			return <span key={ index }>{ contents }</span>;
 		case 'italic':
-			return <em key={ index }>{contents}</em>;
+			return <em key={ index }>{ contents }</em>;
 		case 'bold':
-			return <strong key={ index }>{contents}</strong>;
+			return <strong key={ index }>{ contents }</strong>;
 	}
 }
 
@@ -259,10 +259,10 @@ function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageCh
 		<>
 			<div className={ classNames('message', message.type, isPrivate && 'private') } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
 				<DisplayInfo message={ message } />
-				{before}
+				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
 				{...message.parts.map((c, i) => RenderChatPart(c, i))}
-				{after}
+				{ after }
 			</div>
 			{ self ? (
 				<ContextMenu ref={ ref } className='opaque'>
@@ -318,7 +318,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 
 	return (
 		<>
-			{elements}
+			{ elements }
 			<button onClick={ () => {
 				close();
 			} }>
@@ -387,20 +387,20 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 	if ('to' in message && message.to) {
 		return (
 			<span className='name'>
-				{before}
-				<span className='from' data-id={ message.from.id } onClick={ onClick } style={ style }>{message.from.name}</span>
-				{' -> '}
-				<span className='to' data-id={ message.to.id } onClick={ onClick } style={ { color: message.to.labelColor } }>{message.to.name}</span>
-				{after}
+				{ before }
+				<span className='from' data-id={ message.from.id } onClick={ onClick } style={ style }>{ message.from.name }</span>
+				{ ' -> ' }
+				<span className='to' data-id={ message.to.id } onClick={ onClick } style={ { color: message.to.labelColor } }>{ message.to.name }</span>
+				{ after }
 			</span>
 		);
 	}
 
 	return (
 		<span className='name'>
-			{before}
-			<span className='from' data-id={ message.from.id } onClick={ onClick } style={ style }>{message.from.name}</span>
-			{after}
+			{ before }
+			<span className='from' data-id={ message.from.id } onClick={ onClick } style={ style }>{ message.from.name }</span>
+			{ after }
 		</span>
 	);
 }

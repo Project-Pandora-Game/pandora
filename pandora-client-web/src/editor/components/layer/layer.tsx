@@ -68,7 +68,7 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 	return (
 		<>
 			<h3>
-				Editing: { StripAssetIdPrefix(layer.asset.id) } &gt; {visibleName}
+				Editing: { StripAssetIdPrefix(layer.asset.id) } &gt; { visibleName }
 				<ContextHelpButton>
 					The "Layer"-tab lets you edit a layer of an asset by configuring various properties of the layer.<br />
 					The first line shows you the name of the asset and asset layer you are currently editing.<br />
@@ -120,11 +120,11 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 					<p>
 						{ asAlpha ?
 							'The image will be used as an alpha mask to hide parts of the images below from the same priority layer.' :
-							'The layer will show the assigned image based on the set overrides/stop points (if applicable).'}
+							'The layer will show the assigned image based on the set overrides/stop points (if applicable).' }
 						<br />
 						{ asAlpha ?
 							'Most assets do not need alpha masks. Look at existing skirt/shoe assets for examples of mask usage.' :
-							''}
+							'' }
 					</p>
 				</ContextHelpButton>
 			</label>

@@ -104,7 +104,7 @@
 		"react/destructuring-assignment": ["warn", "always"],
 		"react/jsx-closing-tag-location": "warn",
 		"react/jsx-curly-newline": ["warn", "consistent"],
-		"react/jsx-curly-spacing": ["warn", { "when":  "always"}],
+		"react/jsx-curly-spacing": ["warn", { "when": "always", "children": true }],
 		"react/jsx-equals-spacing": ["warn", "never"],
 		"react/jsx-filename-extension": ["warn", { "extensions": [".jsx", ".tsx"] }],
 		"react/jsx-indent": ["warn", "tab"],

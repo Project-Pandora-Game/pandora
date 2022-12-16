@@ -31,12 +31,12 @@ export function ChatroomSelect(): ReactElement {
 			<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
 			<Button onClick={ () => navigate('/chatroom_create') }>Create room</Button><br />
 			<p>
-				Existing rooms: {roomList?.length }<br />
-				{!roomList ? <div className='loading'>Loading...</div> : (
+				Existing rooms: { roomList?.length }<br />
+				{ !roomList ? <div className='loading'>Loading...</div> : (
 					roomList.length > 0 ?
 						roomList.map((room) => <RoomEntry key={ room.id } roomInfo={ room } />) :
 						<div>No room matches your filter criteria</div>
-				)}
+				) }
 			</p>
 		</div>
 	);
@@ -57,8 +57,8 @@ function RoomEntry({ roomInfo }: {
 					src={ roomIsProtected ? closedDoor : openDoor }
 					title={ roomIsProtected ? 'Protected room' : 'Open room' }
 					alt={ roomIsProtected ? 'Protected room' : 'Open room' } />
-				<div className='entry'>{`${name} (${users}/${maxUsers})`}</div>
-				<div className='entry'>{(description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}`}</div>
+				<div className='entry'>{ `${name} (${users}/${maxUsers})` }</div>
+				<div className='entry'>{ (description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}` }</div>
 			</a>
 			{ show && <RoomDetailsDialog
 				baseRoomInfo={ roomInfo }
@@ -104,7 +104,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 	return (
 		<ModalDialog>
 			<div className='chatroomDetails'>
-				<div>Details for room <b>{name}</b></div>
+				<div>Details for room <b>{ name }</b></div>
 				{ (background !== '' && !background.startsWith('#')) &&
 					<img className='preview' src={ background } width='200px' height='100px' /> }
 				<div className='features'>
@@ -113,25 +113,25 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 						<div key={ f.id }>{ features.includes(f.id) &&
 							<img className='features-img' src={ f.icon } title={ f.name } alt={ f.name } /> }
 						</div>
-					))}
+					)) }
 				</div>
 				<div className='description-title'>Description:</div>
 				<textarea className='widebox' value={ description } rows={ 10 } readOnly />
-				{characters.length > 0 &&
+				{ characters.length > 0 &&
 					<div className='title'>Current users in this room:
 						<div className='users-list'>
-							{characters.map((char) => <div key={ char.id }>{char.name} ({char.id})</div>)}
+							{ characters.map((char) => <div key={ char.id }>{ char.name } ({ char.id })</div>) }
 						</div>
-					</div>}
-				{(!userIsAdmin && roomIsProtected && hasPassword) &&
-					<div className='title'>This room requires a password:</div>}
-				{(!userIsAdmin && roomIsProtected && hasPassword) &&
+					</div> }
+				{ (!userIsAdmin && roomIsProtected && hasPassword) &&
+					<div className='title'>This room requires a password:</div> }
+				{ (!userIsAdmin && roomIsProtected && hasPassword) &&
 					<input className='widebox'
 						name='roomPwd'
 						type='password'
 						value={ roomPassword }
 						onChange={ (e) => setPassword(e.target.value) }
-					/>}
+					/> }
 				<Row className='buttons' alignX='end'>
 					<Button className='slim' onClick={ hide }>Close</Button>
 					<Button className='slim fadeDisabled'

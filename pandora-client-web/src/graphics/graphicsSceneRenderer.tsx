@@ -204,7 +204,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	public getChildren() {
 		const { children } = this.props;
 		AssertNotNullable(this.app);
-		return <AppProvider value={ this.app }>{children}</AppProvider>;
+		return <AppProvider value={ this.app }>{ children }</AppProvider>;
 	}
 
 	public override componentDidCatch(error: unknown, errorInfo: unknown) {
@@ -255,7 +255,7 @@ function ContextBridge({ children, contexts, render }: {
 			{ (value) => (
 				<ContextBridge contexts={ contexts.slice(1) } render={ render }>
 					<Ctx.Provider value={ value }>
-						{children}
+						{ children }
 					</Ctx.Provider>
 				</ContextBridge>
 			) }

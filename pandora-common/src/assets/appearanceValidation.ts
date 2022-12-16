@@ -217,13 +217,6 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		if (!r.success)
 			return r;
 	}
-	const slotError = AppearanceValidateSlots(assetMananger, globalProperties.slots);
-	if (slotError) {
-		return {
-			success: false,
-			error: slotError,
-		};
-	}
 
 	const assetCounts = new Map<AssetId, number>();
 	// Each asset limits count of it being added
@@ -241,6 +234,14 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 				},
 			};
 		assetCounts.set(item.asset.id, currentCount + 1);
+	}
+
+	const slotError = AppearanceValidateSlots(assetMananger, globalProperties.slots);
+	if (slotError) {
+		return {
+			success: false,
+			error: slotError,
+		};
 	}
 
 	// Check the pose is possible

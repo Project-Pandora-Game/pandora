@@ -358,7 +358,7 @@ export class CharacterRestrictionsManager {
 		}
 
 		const slot = this._getBlockedSlot(properties.slots, this.getProperties().slots.blocked);
-		if (slot) {
+		if (slot && !this.isInSafemode()) {
 			return {
 				allowed: false,
 				restriction: {

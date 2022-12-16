@@ -357,7 +357,8 @@ export class CharacterRestrictionsManager {
 				};
 		}
 
-		const slot = this._getBlockedSlot(properties.slots, this.getProperties().slots.blocked);
+		const targetProperties = AppearanceItemProperties(target.getManipulator().getItems());
+		const slot = this._getBlockedSlot(properties.slots, targetProperties.slots.blocked);
 		if (slot && !this.isInSafemode()) {
 			return {
 				allowed: false,

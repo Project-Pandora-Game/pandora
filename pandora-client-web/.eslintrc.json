@@ -122,6 +122,21 @@
 				"logical": "ignore",
 				"prop": "ignore"
 			}
+		],
+		"react/no-unescaped-entities": [
+			"warn",
+			{
+				"forbid": [
+					{
+						"char": ">",
+						"alternatives": ["&gt;"]
+					},
+					{
+						"char": "}",
+						"alternatives": ["&#125;"]
+					}
+				]
+			}
 		]
 	}
 }

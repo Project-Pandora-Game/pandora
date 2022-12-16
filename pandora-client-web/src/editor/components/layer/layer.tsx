@@ -70,7 +70,7 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 			<h3>
 				Editing: { StripAssetIdPrefix(layer.asset.id) } &gt; {visibleName}
 				<ContextHelpButton>
-					The &quot;Layer&quot;-tab lets you edit a layer of an asset by configuring various properties of the layer.<br />
+					The "Layer"-tab lets you edit a layer of an asset by configuring various properties of the layer.<br />
 					The first line shows you the name of the asset and asset layer you are currently editing.<br />
 					[category/asset-name] &gt; [layer-name]
 				</ContextHelpButton>
@@ -79,7 +79,7 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 				<label htmlFor='layer-name'>
 					Layer name:
 					<ContextHelpButton>
-						This field sets the layer&apos;s name, as shown in the &quot;Asset&quot;-tab.<br />
+						This field sets the layer's name, as shown in the "Asset"-tab.<br />
 						It affects nothing else and is purely for identifying layers later on.
 					</ContextHelpButton>
 				</label>
@@ -180,17 +180,17 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 						</p>
 						<p>
 							In the asset.ts file of the asset, you already have or will create later,<br />
-							there is a setting &apos;colorization&apos; about the default colors the asset uses.
+							there is a setting 'colorization' about the default colors the asset uses.
 						</p>
 						<p>
 							A value of 0 for the input field means that it uses the first asset color<br />
-							from the &apos;*.asset.ts&apos; file.<br />
+							from the '*.asset.ts' file.<br />
 							If you do not want this layer to be colorable by the user, set a value of -1.
 						</p>
 						<p>
 							If you know the order and amount of default colors you want to set later,<br />
-							you could set the index in advance here and later add the colors to the &apos;*.asset.ts&apos; file.<br />
-							The recommendation is to revisit layer coloring after you complete the &apos;*.asset.ts&apos; file.
+							you could set the index in advance here and later add the colors to the '*.asset.ts' file.<br />
+							The recommendation is to revisit layer coloring after you complete the '*.asset.ts' file.
 						</p>
 					</ContextHelpButton>
 				</label>
@@ -212,7 +212,7 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 					<ContextHelpButton>
 						<p>
 							This value shows the according name of the color setting from the<br />
-							&apos;*.asset.ts&apos; file based on the input value of &apos;Colorization index&apos;.<br />
+							'*.asset.ts' file based on the input value of 'Colorization index'.<br />
 							You cannot edit this field, as  you cannot define new colors and<br />
 							their name in the editor but only in the asset code (*.asset.ts file).
 						</p>
@@ -246,7 +246,7 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 						You cannot define new colors in the editor but only in the asset<br />
 						code (*.asset.ts file).<br />
 						Per default, the rectangle shows the color of the selected color index<br />
-						in the &apos;Colorization index&apos; drop-down menu.<br />
+						in the 'Colorization index' drop-down menu.<br />
 						The button on the right resets the color to the color of the selected index.
 					</p>
 				</ContextHelpButton>
@@ -338,11 +338,11 @@ function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 					<p>
 						The templates should be self-explanatory.<br />
 						If you make any asset that should change alongside body changes,<br />
-						you use &apos;body&apos; - unless it is an asset where a more specialized<br />
-						template exists, e.g. &apos;shirt&apos; for tops, or &apos;skirt_short/skirt_long&apos;.
+						you use 'body' - unless it is an asset where a more specialized<br />
+						template exists, e.g. 'shirt' for tops, or 'skirt_short/skirt_long'.
 					</p>
 					<p>
-						A special template is &apos;static&apos;. This one covers the whole canvas<br />
+						A special template is 'static'. This one covers the whole canvas<br />
 						and does not use any transformations. That way, it can be used for images<br />
 						that should always be on the same spot in the same size.
 					</p>
@@ -396,10 +396,10 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 				<ContextHelpButton>
 					<p>
 						<b>This is an advanced topic, rarely needed.</b><br />
-						The &apos;point type filter&apos; field lets you list the names of point types the image of<br />
-						this layer will touch. For instance, &apos;body&apos; is the name of all points on the body,<br />
-						whereas &apos;bodyarms&apos; are the few points that are both part of the body as well as<br />
-						the arms. The other points along the arms are of type &apos;arms&apos;.
+						The 'point type filter' field lets you list the names of point types the image of<br />
+						this layer will touch. For instance, 'body' is the name of all points on the body,<br />
+						whereas 'bodyarms' are the few points that are both part of the body as well as<br />
+						the arms. The other points along the arms are of type 'arms'.
 					</p>
 					<p>
 						The rule of thumb is that if you create an asset that uses all points,<br />
@@ -409,7 +409,7 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 					<p>
 						If your asset should only be visible partially, filtering points makes sense:<br />
 						For instance, if you want to mirror an asset and only show it on one half of the body.<br />
-						You can look at the &quot;body/eyes3&quot; asset to see how you filter for one half of the<br />
+						You can look at the "body/eyes3" asset to see how you filter for one half of the<br />
 						static point space.
 					</p>
 					<p>
@@ -417,7 +417,7 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 						asset to be visible on different priority layers, e.g. the sleeves of a jacket.<br />
 						In this case, you need two layers with the same image asset and split them over<br />
 						the two desired layers using the point filters.<br />
-						You can take a look at the &quot;top/t-shirt&quot; asset to see an example of this.
+						You can take a look at the "top/t-shirt" asset to see an example of this.
 					</p>
 					<p>
 						More point types may be introduced later on.
@@ -476,8 +476,8 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 					<p>
 						A condition follows the format [name][&lt;|=|&gt;][value] [image filename(optional)].<br />
 						The first value of a condition can either be the name of a bone or of a module defined in<br />
-						&apos;*.asset.ts&apos; file of the current asset later on.<br />
-						If it is the name of a module you need to prefix it with &apos;m_&apos; such as m_[modulename].
+						'*.asset.ts' file of the current asset later on.<br />
+						If it is the name of a module you need to prefix it with 'm_' such as m_[modulename].
 					</p>
 					<p>
 						The value of a bone can be between -180 and 180 (see Poses-tab).<br />
@@ -491,14 +491,14 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 					<ul>
 						<li>
 							m_ropeStateModule=harness&amp;breasts&gt;100 rope_harness_largest.png<br />
-							This means that if the module with the name &apos;ropeStateModule&apos; has harness selected<br />
+							This means that if the module with the name 'ropeStateModule' has harness selected<br />
 							and the breasts slider is larger than 100, the default layer image is replaced.
 						</li>
 						<li>
 							leg_l&lt;0|backView&gt;0 <br />
 							This means that if the left leg slider is in the negative OR the character is in<br />
 							the back view, we hide the current image (we replace it with no image).<br />
-							&apos;backView&apos; is a fake bone that has two states: backView&gt;0 and backView=0<br />
+							'backView' is a fake bone that has two states: backView&gt;0 and backView=0<br />
 							It is useful for some assets like shoes to stop the front or back view image<br />
 							from leaking from behind the body when undesired.
 						</li>
@@ -540,7 +540,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 						<p>
 							This drop-down menu lets you override images based on the value/state of the<br />
 							selected bone/slider (see Pose-tab). Here, you can, for instance, select the<br />
-							breasts bone and then add the predefined stop-points (aka &quot;breast-sizes&quot; in<br />
+							breasts bone and then add the predefined stop-points (aka "breast-sizes" in<br />
 							this case) for which you want to overwrite the standard layer image with<br />
 							another one. This is used, for instance, to show the asset in the proper size<br />
 							that looks realistic for how the selected bone/slider state transformed the body.
@@ -558,8 +558,8 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 						</p>
 						<p>
 							As a rule of thumb, you likely need two additional images for the stop points<br />
-							&apos;small&apos; and &apos;extreme&apos; besides the default layer image (which is implicitly<br />
-							a stop point that is called &apos;large&apos; in the body templates).
+							'small' and 'extreme' besides the default layer image (which is implicitly<br />
+							a stop point that is called 'large' in the body templates).
 						</p>
 						<p>
 							For more information on stop points, corresponding slider state values, and<br />

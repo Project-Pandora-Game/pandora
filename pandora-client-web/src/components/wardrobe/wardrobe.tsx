@@ -506,7 +506,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
-			This action isn&apos;t possible, because:
+			This action isn't possible, because:
 			<br />
 			{ reason }
 		</HoverElement>

@@ -12,10 +12,10 @@ import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
-import './chatroomSelect.scss';
-import closedDoor from './closed-door.svg';
-import openDoor from './opened-door.svg';
 import { Row } from '../common/container/container';
+import './chatroomSelect.scss';
+import closedDoor from '../icons/closed-door.svg';
+import openDoor from '../icons/opened-door.svg';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();
@@ -104,7 +104,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 	return (
 		<ModalDialog>
 			<div className='chatroomDetails'>
-				<div>Details for room<br /> <b>{name}</b></div>
+				<div>Details for room <b>{name}</b></div>
 				{ (background !== '' && !background.startsWith('#')) &&
 					<img className='preview' src={ background } width='200px' height='100px' /> }
 				<div className='features'>

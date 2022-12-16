@@ -27,9 +27,9 @@ import { useConnectToShard } from '../gameContext/shardConnectorContextProvider'
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Select } from '../common/Select/Select';
-import bodyChange from './body-change.svg';
-import devMode from './developer.svg';
-import pronounChange from './male-female.svg';
+import bodyChange from '../icons/body-change.svg';
+import devMode from '../icons/developer.svg';
+import pronounChange from '../icons/male-female.svg';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 

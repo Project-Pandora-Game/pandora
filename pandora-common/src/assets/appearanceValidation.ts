@@ -33,7 +33,7 @@ export type AppearanceValidationError =
 		asset: AssetId;
 	}
 	| {
-		problem: 'slotFull' | 'slotRequired';
+		problem: 'slotFull' | 'slotRequired' | 'slotBlocked';
 		slot: string;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
@@ -143,6 +143,21 @@ export function AppearanceValidateSlots(assetMananger: AssetManager, slots: Asse
 	return undefined;
 }
 
+export function AppearanceValidateSlotBlocks(previous: AssetSlotResult, current: AssetSlotResult): string | undefined {
+	for (const [slot, occupied] of current.occupied) {
+		if (occupied === 0 || occupied === 'invalid')
+			continue;
+		if (!previous.blocked.has(slot))
+			continue;
+		const prev = previous.occupied.get(slot);
+		if (!prev || prev === 0 || prev === 'invalid')
+			continue;
+
+		return slot;
+	}
+	return undefined;
+}
+
 export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, asset: AssetId | null): AppearanceValidationResult {
 	return Array.from(requirements)
 		.map((r): AppearanceValidationResult => {
@@ -210,8 +225,19 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 	// Check requirements are met
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
+		const properties = item.getPropertiesParts();
+		const blocked = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
+		if (blocked) {
+			return {
+				success: false,
+				error: {
+					problem: 'slotBlocked',
+					slot: blocked,
+				},
+			};
+		}
 		// Item's attributes counts into its on requirements
-		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
+		globalProperties = properties.reduce(MergeAssetProperties, globalProperties);
 
 		const r = AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements, item.asset.id);
 		if (!r.success)

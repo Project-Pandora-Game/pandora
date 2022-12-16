@@ -113,7 +113,7 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 	};
 }
 
-export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: AssetProperties): T {
+export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: Readonly<AssetProperties>): T {
 	base.poseLimits = MergePoseLimits(base.poseLimits, properties.poseLimits);
 	base.effects = MergeEffects(base.effects, properties.effects);
 	properties.attributes?.forEach((a) => base.attributes.add(a));

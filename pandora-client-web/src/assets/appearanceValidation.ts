@@ -85,6 +85,8 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				return `The ${DescribeAssetSlot(assetManager, e.slot)} is required to be occupied.`;
 			case 'slotFull':
 				return `The ${DescribeAssetSlot(assetManager, e.slot)} is already full.`;
+			case 'slotBlocked':
+				return `The ${DescribeAssetSlot(assetManager, e.slot)} is blocked.`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}

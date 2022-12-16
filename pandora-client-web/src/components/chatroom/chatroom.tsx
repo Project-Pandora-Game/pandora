@@ -125,6 +125,7 @@ function Chat(): ReactElement | null {
 	const shardConnector = useShardConnector();
 	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages]);
 	const lastMessageCount = useRef(0);
+	let newMessageCount = 0;
 
 	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);
 	const visible = useDocumentVisibility();
@@ -142,12 +143,18 @@ function Chat(): ReactElement | null {
 	if (!shardConnector)
 		return null;
 
+	if (!isScrolling) {
+		newMessageCount = messages.length - lastMessageCount.current;
+	} else {
+		lastMessageCount.current = messages.length;
+	}
+
 	return (
 		<div className='chatArea'>
 			<Scrollbar color='dark' className='messages' ref={ messagesDiv } tabIndex={ 1 }>
 				{messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />)}
 			</Scrollbar>
-			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } />
+			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } newMessageCount={ newMessageCount } />
 		</div>
 	);
 }

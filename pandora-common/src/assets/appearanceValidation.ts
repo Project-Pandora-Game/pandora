@@ -33,7 +33,7 @@ export type AppearanceValidationError =
 		asset: AssetId;
 	}
 	| {
-		problem: 'slotFull' | 'slotRequired' | 'slotBlocked';
+		problem: 'slotFull' | 'slotRequired' | 'slotBlockedOrder';
 		slot: string;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
@@ -157,7 +157,7 @@ export function AppearanceValidateSlotBlocks(previous: AssetSlotResult, current:
 		if (typeof prev === 'string' || (typeof prev === 'number' && prev > 0))
 			continue;
 
-		return { problem: 'slotBlocked', slot };
+		return { problem: 'slotBlockedOrder', slot };
 	}
 	return undefined;
 }

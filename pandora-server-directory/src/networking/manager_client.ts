@@ -96,6 +96,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			disconnectCharacter: this.handleDisconnectCharacter.bind(this),
 			shardInfo: this.handleShardInfo.bind(this),
 			listRooms: this.handleListRooms.bind(this),
+			chatRoomGetInfo: this.handleChatRoomGetInfo.bind(this),
 			chatRoomCreate: this.handleChatRoomCreate.bind(this),
 			chatRoomEnter: this.handleChatRoomEnter.bind(this),
 			chatRoomLeave: this.handleChatRoomLeave.bind(this),
@@ -353,6 +354,28 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			rooms: ShardManager.listRooms().map((r) => r.getDirectoryInfo()),
+		};
+	}
+
+	private handleChatRoomGetInfo({ id }: IClientDirectoryArgument['chatRoomGetInfo'], connection: IConnectionClient): IClientDirectoryResult['chatRoomGetInfo'] {
+		if (!connection.isLoggedIn() || !connection.character)
+			throw new BadMessageError();
+
+		const room = ShardManager.getRoom(id);
+
+		if (!room) {
+			return { result: 'notFound' };
+		}
+
+		const allowResult = room.checkAllowEnter(connection.character);
+
+		if (allowResult !== 'ok' && allowResult !== 'errFull') {
+			return { result: 'noAccess' };
+		}
+
+		return {
+			result: 'success',
+			data: room.getDirectoryExtendedInfo(),
 		};
 	}
 

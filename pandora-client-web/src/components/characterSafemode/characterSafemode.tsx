@@ -7,7 +7,7 @@ import { useCurrentTime } from '../../common/useCurrentTime';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 import { Button } from '../common/Button/Button';
 import { Row } from '../common/container/container';
-import { Dialog } from '../dialog/dialog';
+import { ModalDialog } from '../dialog/dialog';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ContextHelpButton } from '../help/contextHelpButton';
@@ -60,7 +60,7 @@ export function CharacterSafemodeDialog({ player }: {
 	}, 'Escape');
 
 	return (
-		<Dialog>
+		<ModalDialog>
 			<h3>
 				Safemode
 			</h3>
@@ -117,7 +117,7 @@ export function CharacterSafemodeDialog({ player }: {
 					</>
 				)
 			}
-		</Dialog>
+		</ModalDialog>
 	);
 }
 

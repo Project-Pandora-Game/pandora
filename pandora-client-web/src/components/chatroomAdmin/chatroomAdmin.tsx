@@ -27,6 +27,9 @@ import { useConnectToShard } from '../gameContext/shardConnectorContextProvider'
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { GetAssetManager } from '../../assets/assetManager';
 import { Select } from '../common/Select/Select';
+import bodyChange from './body-change.svg';
+import devMode from './developer.svg';
+import pronounChange from './male-female.svg';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -44,18 +47,21 @@ function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoo
 	};
 }
 
-const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; }[] = [
+export const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; icon?: string; }[] = [
 	{
 		id: 'allowBodyChanges',
 		name: 'Allow changes to character body',
+		icon: bodyChange,
 	},
 	{
 		id: 'allowPronounChanges',
 		name: 'Allow changes to character pronouns',
+		icon: pronounChange,
 	},
 	{
 		id: 'development',
 		name: 'Development mode',
+		icon: devMode,
 	},
 ];
 

@@ -3,6 +3,7 @@ import { ZodTrimedRegex, zTemplateString } from '../validation';
 import { Satisfies } from '../utility';
 import { cloneDeep } from 'lodash';
 import { AssetManager } from '../assets';
+import { CharacterId } from '../character';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
@@ -167,6 +168,14 @@ export type IChatRoomDirectoryInfo = IChatRoomBaseInfo & {
 	// 	/** The avatar of the creator */
 	// 	characterName: string;
 	// };
+};
+
+export type IChatRoomDirectoryExtendedInfo = IChatRoomDirectoryInfo & Pick<IChatRoomDirectoryConfig, 'features' | 'admin' | 'background'> & {
+	characters: {
+		id: CharacterId;
+		accountId: number;
+		name: string;
+	}[];
 };
 
 export type IChatRoomFullInfo = IChatRoomDirectoryConfig & {

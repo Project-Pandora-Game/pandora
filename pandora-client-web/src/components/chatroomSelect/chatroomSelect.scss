@@ -28,11 +28,11 @@
 
 .chatroomDetails {
 
-		max-width: 95vw;
-		display: grid;
-		column-gap: 0.2em;
-		row-gap: 0.2em;
-		grid-template-columns: auto auto auto;
+	max-width: 95vw;
+	display: grid;
+	column-gap: 0.2em;
+	row-gap: 0.2em;
+	grid-template-columns: auto auto auto;
 
 	.preview {
 		grid-column: 3 / 4;

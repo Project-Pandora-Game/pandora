@@ -2,7 +2,7 @@
 	"private": true,
 	"scripts": {
 		"postinstall": "node .hooks/postinstall.cjs",
-		"ci": "pnpm run build && pnpm lint && pnpm run type-check:test && pnpm run test",
+		"ci": "pnpm run build && pnpm lint && pnpm run type-check:test && pnpm run test --ci",
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",

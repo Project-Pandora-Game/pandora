@@ -53,12 +53,12 @@ function RoomEntry({ roomInfo }: {
 	return (
 		<>
 			<a className='roomListGrid' onClick={ () => setShow(true) } >
-				<img className='roomListGrid entry' width='50px'
+				<img className='entry' width='50px'
 					src={ roomIsProtected ? closedDoor : openDoor }
 					title={ roomIsProtected ? 'Protected room' : 'Open room' }
 					alt={ roomIsProtected ? 'Protected room' : 'Open room' } />
-				<div className='roomListGrid entry'>{`${name} (${users}/${maxUsers})`}</div>
-				<div className='roomListGrid entry'>{(description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}`}</div>
+				<div className='entry'>{`${name} (${users}/${maxUsers})`}</div>
+				<div className='entry'>{(description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}`}</div>
 			</a>
 			{ show && <RoomDetailsDialog
 				baseRoomInfo={ roomInfo }
@@ -105,32 +105,37 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 		<ModalDialog>
 			<div className='chatroomDetails'>
 				<div>Details for room<br /> <b>{name}</b></div>
-				{ (background !== '' && !background.startsWith('#')) && <img className='chatroomDetails preview' src={ background } width='200px' height='100px' />}
-				<div className='chatroomDetails features'>
-					{ roomIsProtected && <img className='chatroomDetails features-img' src={ closedDoor } title='Protected Room' /> }
-					{ CHATROOM_FEATURES.map((f) => <div key={ f.id }>{ features.includes(f.id) && <img className='chatroomDetails features-img' src={ f.icon } title={ f.name } alt={ f.name } /> }</div>) }
+				{ (background !== '' && !background.startsWith('#')) &&
+					<img className='preview' src={ background } width='200px' height='100px' /> }
+				<div className='features'>
+					{ roomIsProtected && <img className='features-img' src={ closedDoor } title='Protected Room' /> }
+					{ CHATROOM_FEATURES.map((f) => (
+						<div key={ f.id }>{ features.includes(f.id) &&
+							<img className='features-img' src={ f.icon } title={ f.name } alt={ f.name } /> }
+						</div>
+					))}
 				</div>
-				<div className='chatroomDetails description-title'>Description:</div>
-				<textarea className='chatroomDetails widebox' value={ description } rows={ 10 } readOnly />
+				<div className='description-title'>Description:</div>
+				<textarea className='widebox' value={ description } rows={ 10 } readOnly />
 				{characters.length > 0 &&
-					<div className='chatroomDetails title'>Current users in this room:
-						<div className='chatroomDetails users-list'>
+					<div className='title'>Current users in this room:
+						<div className='users-list'>
 							{characters.map((char) => <div key={ char.id }>{char.name} ({char.id})</div>)}
 						</div>
 					</div>}
 				{(!userIsAdmin && roomIsProtected && hasPassword) &&
-					<div className='chatroomDetails title'>This room requires a password:</div>}
+					<div className='title'>This room requires a password:</div>}
 				{(!userIsAdmin && roomIsProtected && hasPassword) &&
-					<input className='chatroomDetails widebox'
+					<input className='widebox'
 						name='roomPwd'
 						type='password'
 						value={ roomPassword }
 						onChange={ (e) => setPassword(e.target.value) }
 					/>}
-				<Row className='chatroomDetails buttons' alignX='end'>
+				<Row className='buttons' alignX='end'>
 					<Button className='slim' onClick={ hide }>Close</Button>
 					<Button className='slim'
-						disabled={ ((!userIsAdmin && roomIsProtected && !hasPassword) || (!userIsAdmin && roomIsProtected && roomPassword.length === 0)) ? true : false }
+						disabled={ (!userIsAdmin && roomIsProtected) && (!hasPassword || roomPassword.length === 0) }
 						onClick={ () => {
 							joinRoom(id, roomPassword)
 								.then((joinResult) => {

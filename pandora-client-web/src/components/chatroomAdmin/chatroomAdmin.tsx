@@ -26,7 +26,7 @@ import './chatroomAdmin.scss';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Select } from '../common/Select/Select';
+import { Select } from '../common/select/select';
 import bodyChange from '../../icons/body-change.svg';
 import devMode from '../../icons/developer.svg';
 import pronounChange from '../../icons/male-female.svg';

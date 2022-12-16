@@ -14,7 +14,7 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 }
 
 export type IClientCommand = {
-	key: [string, ...string[]];
+	key: string[];
 	description: string;
 	usage: string;
 	handler: CommandRunner<ICommandExecutionContextClient, IEmpty>;
@@ -78,7 +78,7 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 			.filter((c) => c.key[0].startsWith(commandName))
 			.map((c) => ({
 				replaceValue: c.key[0],
-				displayValue: `/${c.key[0]}${c.usage ? ' ' + c.usage : ''} - ${c.description}`,
+				displayValue: GetCommandExplanation(c),
 			}));
 		return options.length > 0 ? {
 			header: 'Commands',
@@ -105,6 +105,25 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 	}
 
 	return null;
+}
+
+/* Build a message explaining how to use a chat command, to appear in the command autocomplete popup */
+function GetCommandExplanation(c: IClientCommand): string {
+	let value = `/${c.key[0]}`;
+
+	if (c.key.length > 1) {
+		value += ` (`;
+		value += c.key.slice(1).map((command, index, array) => {
+			const isLast = index === array.length - 1;
+			return `/${command}${isLast ? '' : `, `}`;
+		}).join('');
+		value += `) `;
+	}
+
+	value += c.usage ? ` ${c.usage} ` : '';
+	value += `- ${c.description}`;
+
+	return value;
 }
 
 export interface AutocompleteDisplyData {

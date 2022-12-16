@@ -6,41 +6,48 @@ function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, I
 	return CreateCommand<ICommandExecutionContextClient>();
 }
 
-const CreateMessageTypeParser = (name: string, type: IChatType): IClientCommand => ({
-	key: [name],
-	description: `Sends ${'aeiou'.includes(type[0]) ? 'an' : 'a'} ${type} message${name.startsWith('raw') ? ' without any formatting' : ''}`,
-	usage: '<message>',
-	// TODO
-	// status: { status: 'typing' },
-	handler: CreateClientCommand()
-		.handler(({ commandName, messageSender, displayError }, _args, message) => {
-			message = message.trim();
-			if (!message) {
-				displayError?.(`Cannot send empty message`);
-				return false;
-			}
+const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType, description: string): IClientCommand => {
+	const desc = `${description}${raw ? ', without any formatting' : ''}`;
+	return ({
+		key: names.map((name) => (raw ? 'raw' : '') + name),
+		description: `Sends ${'aeiou'.includes(desc[0]) ? 'an' : 'a'} ${desc}`,
+		usage: '[message]',
+		// TODO
+		// status: { status: 'typing' },
+		handler: CreateClientCommand()
+			.handler(({ messageSender, displayError }, _args, message) => {
+				message = message.trim();
 
-			messageSender.sendMessage(message, {
-				type,
-				raw: commandName.startsWith('raw') || undefined,
-			});
+				if (!message) {
+					displayError?.(`Cannot send empty message`);
+					return false;
 
-			return true;
-		}),
-});
+				}
+
+				messageSender.sendMessage(message, {
+					type,
+					raw: raw ? true : undefined,
+				});
+
+				return true;
+			}),
+	});
+};
+
+/* Creates two commands for sending chat messages of a specific type, one formatted and one raw/unformatted */
+const CreateMessageTypeParsers = (names: string[], type: IChatType, description: string): IClientCommand[] => [
+	CreateMessageTypeParser(names, false, type, description), //formatted
+	CreateMessageTypeParser([names[0]], true, type, description), //raw, no alternatives
+];
 
 export const COMMANDS: readonly IClientCommand[] = [
-	CreateMessageTypeParser('say', 'chat'),
-	CreateMessageTypeParser('raw' + 'say', 'chat'),
-	CreateMessageTypeParser('ooc', 'ooc'),
-	CreateMessageTypeParser('raw' + 'ooc', 'ooc'),
-	CreateMessageTypeParser('me', 'me'),
-	CreateMessageTypeParser('raw' + 'me', 'me'),
-	CreateMessageTypeParser('emote', 'emote'),
-	CreateMessageTypeParser('raw' + 'emote', 'emote'),
+	...CreateMessageTypeParsers(['say', 'chat'], 'chat', 'standard message'),
+	...CreateMessageTypeParsers(['ooc', 'o'], 'ooc', 'out-of-character (OOC) message'),
+	...CreateMessageTypeParsers(['me', 'm', 'action'], 'me', 'action message'),
+	...CreateMessageTypeParsers(['emote', 'e'], 'emote', 'action message without your name'),
 	{
 		key: ['whisper', 'w'],
-		description: 'Send a private message to a user',
+		description: 'Sends a private message to a user',
 		usage: '<target> [message]',
 		handler: CreateClientCommand()
 			.argument('target', CommandSelectorCharacter({ allowSelf: false }))

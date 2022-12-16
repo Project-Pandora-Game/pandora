@@ -2,13 +2,13 @@ import _ from 'lodash';
 import type { CharacterId } from '.';
 import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
-import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from '../assets/properties';
+import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult } from '../assets/properties';
 import { AppearanceActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item } from '../assets/item';
 import type { Asset } from '../assets/asset';
-import type { AssetId, ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
+import { AppearanceItemProperties, AssetId, ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
 
 export enum ItemInteractionType {
 	/**
@@ -89,6 +89,11 @@ export type Restriction =
 		self: boolean;
 	}
 	| {
+		type: 'blockedSlot';
+		asset: AssetId;
+		slot: string;
+	}
+	| {
 		type: 'blockedHands';
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
@@ -125,9 +130,7 @@ export class CharacterRestrictionsManager {
 			return this._properties;
 		}
 		this._items = items;
-		this._properties = items
-			.flatMap((item) => item.getPropertiesParts())
-			.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+		this._properties = AppearanceItemProperties(items);
 
 		return this._properties;
 	}
@@ -354,6 +357,18 @@ export class CharacterRestrictionsManager {
 				};
 		}
 
+		const slot = this._getBlockedSlot(properties.slots, this.getProperties().slots.blocked);
+		if (slot) {
+			return {
+				allowed: false,
+				restriction: {
+					type: 'blockedSlot',
+					asset: item.asset.id,
+					slot,
+				},
+			};
+		}
+
 		// Must be able to use hands
 		if (!this.canUseHands() && !this.isInSafemode())
 			return {
@@ -432,5 +447,16 @@ export class CharacterRestrictionsManager {
 			};
 
 		return { allowed: true };
+	}
+
+	private _getBlockedSlot(slots: AssetSlotResult, blocked: ReadonlySet<string>): string | undefined {
+		if (slots.occupied.size === 0)
+			return undefined;
+
+		for (const [slot, current] of slots.occupied.entries()) {
+			if (current !== 0 && blocked.has(slot))
+				return slot;
+		}
+		return undefined;
 	}
 }

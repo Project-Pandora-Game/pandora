@@ -1,5 +1,5 @@
 import { AppearanceActionResult, AssertNever } from 'pandora-common';
-import { DescribeAsset } from '../components/gameContext/chatRoomContextProvider';
+import { DescribeAsset, DescribeAssetSlot } from '../components/gameContext/chatRoomContextProvider';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
@@ -41,6 +41,8 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				const visibleModuleName = assetManager.getAssetById(e.asset)?.definition.modules?.[e.module]?.name ?? `[UNKNOWN MODULE '${e.module}']`;
 				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
 			}
+			case 'blockedSlot':
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed or modified, ${DescribeAssetSlot(assetManager, e.slot)} is blocked.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'invalid':
@@ -79,6 +81,10 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 					`At most ${e.limit} items can be present.`;
 			case 'contentNotAllowed':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
+			case 'slotRequired':
+				return `The ${DescribeAssetSlot(assetManager, e.slot)} is required to be occupied.`;
+			case 'slotFull':
+				return `The ${DescribeAssetSlot(assetManager, e.slot)} is already full.`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}

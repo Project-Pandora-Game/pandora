@@ -1,11 +1,11 @@
 import { Logger } from '../logging';
-import { ShuffleArray } from '../utility';
+import { AssertNotNullable, ShuffleArray } from '../utility';
 import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
 import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { AssetDefinitionPoseLimits, AssetId } from './definitions';
 import type { Item } from './item';
-import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
+import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems = readonly Item[];
@@ -31,6 +31,10 @@ export type AppearanceValidationError =
 	| {
 		problem: 'contentNotAllowed';
 		asset: AssetId;
+	}
+	| {
+		problem: 'slotFull' | 'slotRequired';
+		slot: string;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
 	| {
@@ -105,16 +109,38 @@ export function MergePoseLimits(base: PoseLimitsResult, poseLimits: AssetDefinit
 	return base;
 }
 
+export function AppearanceItemProperties(items: AppearanceItems): AssetPropertiesResult {
+	return items
+		.flatMap((item) => item.getPropertiesParts())
+		.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+}
+
 /**
  * Calculates what pose is enforced by items
  * @param items - Items being worn
  * @returns The enforcement or `null` if the item combination is invalid
  */
 export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimitsResult {
-	return items
-		.flatMap((item) => item.getPropertiesParts())
-		.reduce(MergeAssetProperties, CreateAssetPropertiesResult())
-		.poseLimits;
+	return AppearanceItemProperties(items).poseLimits;
+}
+
+export function AppearanceValidateSlots(assetMananger: AssetManager, slots: AssetSlotResult): undefined | AppearanceValidationError {
+	for (const [slot, occupied] of slots.occupied) {
+		if (occupied === 'invalid')
+			return { problem: 'slotFull', slot };
+		if (occupied === 'all' || occupied === 0)
+			continue;
+
+		const slotDef = assetMananger.assetSlots.get(slot);
+		AssertNotNullable(slotDef);
+		if (slotDef.capacity < occupied)
+			return { problem: 'slotFull', slot };
+	}
+	for (const slot of slots.requires) {
+		if (!slots.occupied.has(slot))
+			return { problem: 'slotRequired', slot };
+	}
+	return undefined;
 }
 
 export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, asset: AssetId | null): AppearanceValidationResult {
@@ -190,6 +216,13 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		const r = AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements, item.asset.id);
 		if (!r.success)
 			return r;
+	}
+	const slotError = AppearanceValidateSlots(assetMananger, globalProperties.slots);
+	if (slotError) {
+		return {
+			success: false,
+			error: slotError,
+		};
 	}
 
 	const assetCounts = new Map<AssetId, number>();

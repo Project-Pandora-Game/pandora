@@ -50,6 +50,43 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	 * @default []
 	 */
 	blockSelfModules?: string[];
+
+	/**
+	 * Prevents listed slots from being added or removed or modified by anyone, including on oneself
+	 * @default []
+	 */
+	blockSlots?: (A['slots'])[];
+
+	/**
+	 * Unique list of slots this item occupies and or requires to be occupied
+	 * @default []
+	 *
+	 * format:
+	 * 	- `slot` - occupies this slot completely
+	 *  - `slot_<n > 0>` - occupies this slot partially, with `n` being the amount of slots occupied
+	 *  - `slot_0` - requires this slot to be occupied but doesn't occupy it
+	 */
+	occupies?: (A['slots'] | `${A['slots']}_${number}`)[];
+}
+
+export type OccupiedResult = number | 'all' | 'invalid';
+
+export function MergeAssetOccupiedResult(a: OccupiedResult, b: OccupiedResult): OccupiedResult {
+	if (a === 'invalid' || b === 'invalid')
+		return 'invalid';
+
+	if (a === 'all')
+		return (b === 0) ? 'all' : 'invalid';
+	if (b === 'all')
+		return (a === 0) ? 'all' : 'invalid';
+
+	return a + b;
+}
+
+export interface AssetSlotResult {
+	occupied: Map<string, OccupiedResult>;
+	requires: Set<string>;
+	blocked: Set<string>;
 }
 
 export interface AssetPropertiesResult {
@@ -57,6 +94,7 @@ export interface AssetPropertiesResult {
 	effects: EffectsDefinition;
 	attributes: Set<string>;
 	hides: Set<string>;
+	slots: AssetSlotResult;
 }
 
 export function CreateAssetPropertiesResult(): AssetPropertiesResult {
@@ -67,6 +105,11 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 		effects: EFFECTS_DEFAULT,
 		attributes: new Set(),
 		hides: new Set(),
+		slots: {
+			occupied: new Map(),
+			requires: new Set(),
+			blocked: new Set(),
+		},
 	};
 }
 
@@ -75,6 +118,20 @@ export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, p
 	base.effects = MergeEffects(base.effects, properties.effects);
 	properties.attributes?.forEach((a) => base.attributes.add(a));
 	properties.hides?.forEach((a) => base.hides.add(a));
+	properties.occupies?.forEach((o) => {
+		if (o.includes('_')) {
+			const [slot, amount] = o.split('_');
+			const parsed = parseInt(amount, 10);
+			if (parsed > 0) {
+				base.slots.occupied.set(slot, MergeAssetOccupiedResult(base.slots.occupied.get(slot) ?? 0, parsed));
+			} else {
+				base.slots.requires.add(slot);
+			}
+		} else {
+			base.slots.occupied.set(o, MergeAssetOccupiedResult(base.slots.occupied.get(o) ?? 0, 'all'));
+		}
+	});
+	properties.blockSlots?.forEach((s) => base.slots.blocked.add(s));
 
 	return base;
 }

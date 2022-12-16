@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash';
 import type { Logger } from '../logging';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { Item, ItemBundle } from './item';
 
@@ -41,6 +41,11 @@ export class AssetManager {
 		return this._randomization;
 	}
 
+	private readonly _assetSlots: Map<string, AssetSlotDefinition> = new Map();
+	public get assetSlots(): ReadonlyMap<string, Readonly<AssetSlotDefinition>> {
+		return this._assetSlots;
+	}
+
 	public getAllAssets(): Asset[] {
 		return [...this._assets.values()];
 	}
@@ -69,6 +74,10 @@ export class AssetManager {
 		return this._attributes.get(attribute);
 	}
 
+	public getSlotDefinition(slot: string): Readonly<AssetSlotDefinition> | undefined {
+		return this._assetSlots.get(slot);
+	}
+
 	/**
 	 * Finds the bone with the given name.
 	 * @param name - name of the bone
@@ -93,6 +102,7 @@ export class AssetManager {
 
 		this.loadBones(data.bones);
 		this.loadAttributes(data.attributes ?? {});
+		this.loadSlots(data.assetSlots ?? {});
 		this.loadAssets(data.assets);
 	}
 
@@ -113,6 +123,14 @@ export class AssetManager {
 
 		for (const [id, definition] of Object.entries(attributes)) {
 			this._attributes.set(id, definition);
+		}
+	}
+
+	private loadSlots(slots: Record<string, AssetSlotDefinition>): void {
+		this._assetSlots.clear();
+
+		for (const [id, definition] of Object.entries(slots)) {
+			this._assetSlots.set(id, definition);
 		}
 	}
 

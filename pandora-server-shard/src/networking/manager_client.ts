@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
@@ -158,17 +158,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const room = client.character.room;
-		let flip = 0;
 		switch (game.type) {
 			case 'coinFlip':
-				flip = Math.floor(Math.random() * 2);
 				room.handleAppearanceActionMessage({
 					id: 'gamblingCoin',
 					character: client.character.id,
-					dictionary: { 'TOSS_RESULT': flip === 0 ? 'heads' : 'tails' },
+					dictionary: { 'TOSS_RESULT': Math.random() < 0.5 ? 'heads' : 'tails' },
 				});
 				break;
-			default: throw new BadMessageError('Unknown gambling type');
+			default:
+				AssertNever(game.type);
 		}
 	}
 

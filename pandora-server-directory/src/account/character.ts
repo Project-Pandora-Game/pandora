@@ -10,6 +10,7 @@ import { ShardManager } from '../shard/shardManager';
 export class Character {
 	public readonly id: CharacterId;
 	public readonly account: Account;
+	public readonly data: Readonly<ICharacterSelfInfoDb>;
 
 	public accessId: string = '';
 	public connectSecret: string;
@@ -31,6 +32,7 @@ export class Character {
 	constructor(characterData: ICharacterSelfInfoDb, account: Account) {
 		this.id = characterData.id;
 		this.account = account;
+		this.data = characterData;
 		if (!account.data.characters.some((c) => c.id === this.id)) {
 			throw new Error('Mismatch in character and account');
 		}

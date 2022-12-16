@@ -310,7 +310,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
 		const trimmed = value.trim();
 		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY))) {
-			nextStatus = { status: target ? 'whisper' : 'typing', target: target?.data.id };
+			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
 		}
@@ -346,6 +346,9 @@ export function useChatInput(): IChatInputHandler {
 
 function TypingIndicator(): ReactElement {
 	let statuses = useChatRoomStatus();
+	const playerId = usePlayerId();
+
+	statuses = statuses.filter((s) => s.data.id !== playerId && (s.status === 'typing' || s.status === 'whispering'));
 
 	const extra: ReactNode[] = [];
 	if (statuses.filter((s) => s.status === 'typing').length > 3) {
@@ -359,7 +362,7 @@ function TypingIndicator(): ReactElement {
 				<span key={ data.id }>
 					<span style={ { color: data.settings.labelColor } }>{ data.name } </span>
 					({ data.id })
-					{ ' ' }
+					{ ' is ' }
 					{ status }
 				</span>
 			)) }

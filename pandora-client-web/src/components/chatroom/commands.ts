@@ -11,7 +11,7 @@ const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType,
 	return ({
 		key: names.map((name) => (raw ? 'raw' : '') + name) as [string, ...string[]],
 		description: `Sends ${'aeiou'.includes(desc[0]) ? 'an' : 'a'} ${desc}`,
-		usage: '[message*]',
+		usage: '[message]',
 		// TODO
 		// status: { status: 'typing' },
 		handler: CreateClientCommand()
@@ -58,7 +58,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',
-		usage: '<target> [message*]',
+		usage: '<target> [message]',
 		handler: CreateClientCommand()
 			.argument('target', CommandSelectorCharacter({ allowSelf: false }))
 			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, { target }, message) => {

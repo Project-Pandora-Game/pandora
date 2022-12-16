@@ -81,7 +81,7 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 				displayValue: GetCommandExplanation(c),
 			}));
 		return options.length > 0 ? {
-			header: 'Commands (omitting a * argument toggles that modifier for all messages)',
+			header: 'Commands - keywords in () are alternatives, arguments in <> are required, arguments in [] are optional',
 			options,
 		} : null;
 	}

@@ -6,9 +6,9 @@
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
-		"lint": "pnpm -r --parallel run lint",
-		"type-check:test": "pnpm -r --parallel run type-check:test",
-		"test": "pnpm -r --parallel run test",
+		"lint": "pnpm -r --no-bail --parallel run lint",
+		"type-check:test": "pnpm -r --no-bail --parallel run type-check:test",
+		"test": "pnpm -r --no-bail --parallel run test",
 		"build": "pnpm -r run build",
 		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev"
 	},

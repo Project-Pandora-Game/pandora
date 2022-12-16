@@ -9,9 +9,9 @@
 	},
 	"scripts": {
 		"clean": "rimraf dist",
-		"build": "pnpm run clean && tsc -p ./tsconfig.src.json",
-		"build:swc": "pnpm run clean && swc src -d dist",
-		"dev": "pnpm run clean && tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess \"nodemon --watch dist --watch .env --signal SIGTERM --enable-source-maps -r dotenv/config dist/index.js --development\"",
+		"build": "pnpm run --silent clean && tsc -p ./tsconfig.src.json",
+		"build:swc": "pnpm run --silent clean && swc src -d dist",
+		"dev": "pnpm run --silent clean && tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess \"nodemon --watch dist --watch .env --signal SIGTERM --enable-source-maps -r dotenv/config dist/index.js --development\"",
 		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",

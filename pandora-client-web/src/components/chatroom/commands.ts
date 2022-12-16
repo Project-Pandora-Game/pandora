@@ -9,7 +9,7 @@ function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, I
 const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType, description: string): IClientCommand => {
 	const desc = `${description}${raw ? ', without any formatting' : ''}`;
 	return ({
-		key: names.map((name) => (raw ? 'raw' : '') + name),
+		key: names.map((name) => (raw ? 'raw' : '') + name) as [string, ...string[]],
 		description: `Sends ${'aeiou'.includes(desc[0]) ? 'an' : 'a'} ${desc}`,
 		usage: '[message*]',
 		// TODO

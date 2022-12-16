@@ -14,7 +14,7 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 }
 
 export type IClientCommand = {
-	key: string[];
+	key: [string, ...string[]];
 	description: string;
 	usage: string;
 	handler: CommandRunner<ICommandExecutionContextClient, IEmpty>;

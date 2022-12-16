@@ -134,14 +134,14 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					/>}
 				<Row className='buttons' alignX='end'>
 					<Button className='slim' onClick={ hide }>Close</Button>
-					<Button className='slim'
+					<Button className='slim fadeDisabled'
 						disabled={ (!userIsAdmin && roomIsProtected) && (!hasPassword || roomPassword.length === 0) }
 						onClick={ () => {
 							joinRoom(id, roomPassword)
 								.then((joinResult) => {
 									if (joinResult === 'notFound')
 										hide();
-									// For any other reason of failed join we more likely want to somehow show a message
+									// TODO: Move error messages here from the join itself (or remove this handler)
 								})
 								.catch((_error: unknown) => {
 									// You can handle if joining crashed or server communication failed here

@@ -346,11 +346,11 @@ function TypingIndicator(): ReactElement {
 	let statuses = useChatRoomStatus();
 	const playerId = usePlayerId();
 
-	statuses = statuses.filter((s) => s.data.id !== playerId);
+	statuses = statuses.filter((s) => s.data.id !== playerId && (s.status === 'typing' || s.status === 'whispering'));
 
 	const extra: ReactNode[] = [];
-	if (statuses.filter((s) => s.status === 'typing').length > 3) {
-		statuses = statuses.filter((s) => s.status !== 'typing');
+	if (statuses.length > 3) {
+		statuses = [];
 		extra.push(<span key='extra-multiple-typing'>Multiple people are typing</span>);
 	}
 

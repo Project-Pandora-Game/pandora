@@ -81,13 +81,19 @@ export const COMMANDS: readonly IClientCommand[] = [
 		description: 'Roll a die. Without any options a single six sided die is rolled. The command /dice 20 rolls a single 20 sided die and /dice 3d 6 rolls 3 6 sided dice.',
 		usage: '[count\'d\'] [sides]',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector }, _args, _options) => {
+			.handler(({ shardConnector, displayError }, _args, _options) => {
+				const regExp = new RegExp('(^\\d+\\s*D\\s*\\d+$)|(^\\d+$)');
 				if (!_options) _options = '';
-				shardConnector.sendMessage('gamblingAction', {
-					type: 'diceRoll',
-					options: _options.toUpperCase(),
-				});
-				return true;
+				if (regExp.test(_options.toUpperCase()) || _options === '') {
+					shardConnector.sendMessage('gamblingAction', {
+						type: 'diceRoll',
+						options: _options.toUpperCase(),
+					});
+					return true;
+				} else {
+					displayError?.(`Invalid options: ${_options}`);
+					return false;
+				}
 			}),
 	},
 ];

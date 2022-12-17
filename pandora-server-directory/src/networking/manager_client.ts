@@ -101,6 +101,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatRoomEnter: this.handleChatRoomEnter.bind(this),
 			chatRoomLeave: this.handleChatRoomLeave.bind(this),
 			chatRoomUpdate: this.handleChatRoomUpdate.bind(this),
+			chatRoomAdminAction: this.handleChatRoomAdminAction.bind(this),
 
 			getDirectMessages: this.handleGetDirectMessages.bind(this),
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
@@ -446,6 +447,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = connection.character.room.update(roomConfig, connection.character);
 
 		return { result };
+	}
+
+	private handleChatRoomAdminAction({ action, targets }: IClientDirectoryArgument['chatRoomAdminAction'], connection: IConnectionClient): IClientDirectoryResult['chatRoomAdminAction'] {
+		if (!connection.isLoggedIn() || !connection.character)
+			throw new BadMessageError();
+
+		if (!connection.character.room) {
+			return;
+		}
+
+		if (!connection.character.room.isAdmin(connection.character)) {
+			return;
+		}
+
+		connection.character.room.adminAction(connection.character, action, targets);
 	}
 
 	private handleChatRoomLeave(_: IClientDirectoryArgument['chatRoomLeave'], connection: IConnectionClient): void {

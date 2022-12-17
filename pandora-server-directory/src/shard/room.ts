@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from './shard';
@@ -171,6 +171,38 @@ export class Room {
 		this.shard.update('rooms');
 		ConnectionManagerClient.onRoomListChange();
 		return 'ok';
+	}
+
+	public adminAction(source: Character, action: IClientDirectoryArgument['chatRoomAdminAction']['action'], targets: number[]) {
+		// TODO: Add all missing messages for these actions
+		targets = uniq(targets.filter((id) => id !== source.account.id));
+		switch (action) {
+			case 'kick':
+				for (const character of this.characters) {
+					if (character === source)
+						continue;
+					if (!targets.includes(character.account.id))
+						continue;
+
+					this.removeCharacter(character, 'kick');
+				}
+				break;
+			case 'ban':
+				this.config.banned = uniq([...this.config.banned, ...targets]);
+				this.removeBannedCharacters();
+				break;
+			case 'unban':
+				this.config.banned = this.config.banned.filter((id) => !targets.includes(id));
+				break;
+			case 'promote':
+				this.config.admin = uniq([...this.config.admin, ...targets]);
+				break;
+			case 'demote':
+				this.config.admin = this.config.admin.filter((id) => !targets.includes(id));
+				break;
+			default:
+				AssertNever(action);
+		}
 	}
 
 	public migrateTo(room: Room): Promise<void> {

@@ -8,7 +8,6 @@ import {
 	IDirectoryShardInfo,
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
-	IsAuthorized,
 	IChatroomBackgroundData,
 	DEFAULT_BACKGROUND,
 	IsObject,
@@ -24,7 +23,7 @@ import {
 	useDirectoryConnector,
 } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
-import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
+import { IsChatroomAdmin, useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { Select } from '../common/select/select';
 import { ModalDialog } from '../dialog/dialog';
@@ -104,12 +103,9 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	}, {});
 	const directoryConnector = useDirectoryConnector();
 	const shards = useShards();
-	const accountId = currentAccount?.id;
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
-	const isPlayerAdmin = creation
-	|| (accountId && roomData?.admin.includes(accountId))
-	|| (roomData?.development?.autoAdmin && IsAuthorized(currentAccount?.roles ?? {}, 'developer'));
+	const isPlayerAdmin = creation || IsChatroomAdmin(roomData, currentAccount);
 
 	const currentConfig: IChatRoomDirectoryConfig = {
 		...(roomData ?? DefaultRoomData(currentAccount)),

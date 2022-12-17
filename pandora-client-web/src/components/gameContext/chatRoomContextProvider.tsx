@@ -1,4 +1,4 @@
-import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, IChatType } from 'pandora-common';
+import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, IChatType, IsAuthorized, IAccountRoleInfo, Nullable } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { AppearanceContainer, Character } from '../../character/character';
@@ -591,4 +591,11 @@ export function useChatRoomStatus(): { data: ICharacterRoomData; status: IChatRo
 		}
 		return result;
 	}, [characters, status, context]);
+}
+
+export function IsChatroomAdmin(data: Nullable<IChatRoomClientData>, account: Nullable<{ id: number; roles?: IAccountRoleInfo }>): boolean {
+	if (!data || !account) return false;
+	if (data.admin.includes(account.id)) return true;
+	if (!account.roles || !data.development?.autoAdmin) return false;
+	return IsAuthorized(account.roles, 'developer');
 }

@@ -92,7 +92,7 @@ export type IChatRoomMessageDirectoryAction = Omit<IChatRoomMessageAction, 'data
 	};
 };
 
-export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whisper', 'afk']);
+export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whispering', 'afk']);
 export type IChatRoomStatus = z.infer<typeof ChatRoomStatusSchema>;
 
 export const LONGDESC_RAW = ' Symbols that usually apply formatting (e.g. _italics_) will be displayed as plaintext without any formatting.';

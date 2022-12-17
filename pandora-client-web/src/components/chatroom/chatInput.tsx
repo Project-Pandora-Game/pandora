@@ -13,6 +13,7 @@ import './chatroom.scss';
 import { BrowserStorage } from '../../browserStorage';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import classNames from 'classnames';
+import { Row } from '../common/container/container';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -152,11 +153,12 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	);
 }
 
-export function ChatInputArea({ messagesDiv, scroll }: { messagesDiv: RefObject<HTMLDivElement>; scroll: () => void }) {
+export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement>; scroll: (forceScroll: boolean) => void, newMessageCount: number }) {
 	const { ref } = useChatInput();
 	return (
 		<>
 			<AutoCompleteHint />
+			<UnreadMessagesIndicator newMessageCount={ newMessageCount } scroll={ scroll } />
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
 			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
@@ -323,7 +325,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
 		const trimmed = value.trim();
 		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY))) {
-			nextStatus = { status: target ? 'whisper' : 'typing', target: target?.data.id };
+			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
 		}
@@ -359,6 +361,9 @@ export function useChatInput(): IChatInputHandler {
 
 function TypingIndicator(): ReactElement {
 	let statuses = useChatRoomStatus();
+	const playerId = usePlayerId();
+
+	statuses = statuses.filter((s) => s.data.id !== playerId && (s.status === 'typing' || s.status === 'whispering'));
 
 	const extra: ReactNode[] = [];
 	if (statuses.filter((s) => s.status === 'typing').length > 3) {
@@ -372,7 +377,7 @@ function TypingIndicator(): ReactElement {
 				<span key={ data.id }>
 					<span style={ { color: data.settings.labelColor } }>{ data.name } </span>
 					({ data.id })
-					{ ' ' }
+					{ ' is ' }
 					{ status }
 				</span>
 			)) }
@@ -381,14 +386,31 @@ function TypingIndicator(): ReactElement {
 	);
 }
 
-function Modifiers({ scroll }: { scroll: () => void }): ReactElement {
+function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount: number, scroll: (forceScroll: boolean) => void }): ReactElement | null {
+	if (newMessageCount === 0) {
+		return null;
+	}
+
+	const indicatorText = `Unread chat message${newMessageCount > 1 ? `s (${newMessageCount})` : ''}`;
+
+	return (
+		<button className='unread-messages-indicator' onClick={ () => scroll(true) }>
+			<Row className='flex-1' alignX='space-between'>
+				<span>{ indicatorText }</span>
+				<span>Click to scroll to the end</span>
+			</Row>
+		</button>
+	);
+}
+
+function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void }): ReactElement {
 	const { target, setTarget, editing, setEditing, setValue, mode, setMode } = useChatInput();
 	const lastHasTarget = useRef(target !== null);
 	const lastEditing = useRef(editing);
 
 	useEffect(() => {
 		if (lastHasTarget.current !== (target !== null) || lastEditing.current !== editing) {
-			scroll();
+			scroll(false);
 			lastHasTarget.current = target !== null;
 			lastEditing.current = editing;
 		}

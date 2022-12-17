@@ -113,7 +113,7 @@
 	}
 }
 
-.typing-indicator, .input-modifiers {
+.typing-indicator, .input-modifiers, .unread-messages-indicator {
 	@include flex(row, wrap);
 	align-items: center;
 
@@ -123,10 +123,15 @@
 	gap: 0.5em;
 }
 
-.typing-indicator {
+.typing-indicator, .unread-messages-indicator {
 	min-height: 1.5em;
 	overflow: hidden;
 	white-space: nowrap;
+}
+
+.unread-messages-indicator:hover {
+	background-color: #202020;
+	cursor: pointer;
 }
 
 .autocomplete-hint {

@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
@@ -45,6 +45,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatRoomCharacterMove: this.handleChatRoomCharacterMove.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
+			gamblingAction: this.handleGamblingAction.bind(this),
 		});
 	}
 
@@ -150,6 +151,24 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		client.character.setPublicSettings(settings);
+	}
+
+	private handleGamblingAction(game: IClientShardArgument['gamblingAction'], client: IConnectionClient): void {
+		if (!client.character?.room)
+			throw new BadMessageError();
+
+		const room = client.character.room;
+		switch (game.type) {
+			case 'coinFlip':
+				room.handleAppearanceActionMessage({
+					id: 'gamblingCoin',
+					character: client.character.id,
+					dictionary: { 'TOSS_RESULT': Math.random() < 0.5 ? 'heads' : 'tails' },
+				});
+				break;
+			default:
+				AssertNever(game.type);
+		}
 	}
 
 	public onAssetDefinitionsChanged(): void {

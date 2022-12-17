@@ -9,7 +9,7 @@ import { Row } from '../../../components/common/container/container';
 import { Form, FormField, FormFieldError } from '../../../components/common/Form/form';
 import { Select } from '../../../components/common/Select/Select';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Dialog } from '../../../components/dialog/dialog';
+import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
@@ -374,7 +374,7 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void }): ReactE
 	});
 
 	return (
-		<Dialog>
+		<ModalDialog>
 			<Form dirty onSubmit={ onSubmit }>
 				<h3>Create a new asset</h3>
 				<FormField>
@@ -418,6 +418,6 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void }): ReactE
 					<Button type='submit'>Create</Button>
 				</Row>
 			</Form>
-		</Dialog>
+		</ModalDialog>
 	);
 }

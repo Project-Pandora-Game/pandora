@@ -32,7 +32,7 @@ const dialogCloseContext = createContext<DialogCloseContext>({
 	close: noop as () => void,
 });
 
-export class Dialog extends PureComponent<ChildrenProps> {
+export class ModalDialog extends PureComponent<ChildrenProps> {
 	private readonly _node: HtmlPortalNodeAny;
 	private readonly _context: DialogCloseContext;
 

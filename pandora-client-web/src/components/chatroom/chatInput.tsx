@@ -469,6 +469,9 @@ function AutoCompleteHint(): ReactElement | null {
 	} else if (ref.current) {
 		onlyShowOption = autocompleteHint.result.options.findIndex((option) => COMMAND_KEY + option.replaceValue === ref.current?.value);
 	}
+	if (!autocompleteHint.result.options[onlyShowOption]?.longDescription) {
+		onlyShowOption = -1;
+	}
 
 	return (
 		<div className='autocomplete-hint'>

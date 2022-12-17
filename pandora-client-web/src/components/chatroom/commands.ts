@@ -1,8 +1,8 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, CharacterView } from 'pandora-common';
 import { CommandSelectorCharacter } from './commandsHelpers';
 import { ChatMode } from './chatInput';
-import { CharacterView } from 'pandora-common';
+import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
@@ -73,11 +73,31 @@ const CreateMessageTypeParsers = (type: IChatType): IClientCommand[] => {
 	];
 };
 
+const CreateChatroomAdminAction = (action: IClientDirectoryArgument['chatRoomAdminAction']['action']): IClientCommand => ({
+	key: [action],
+	usage: '<target>',
+	description: `${action[0].toUpperCase() + action.substring(1)} user`,
+	handler: CreateClientCommand()
+		.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
+		.argument('target', CommandSelectorCharacter({ allowSelf: false }))
+		.handler(({ directoryConnector }, { target }) => {
+			directoryConnector.sendMessage('chatRoomAdminAction', {
+				action,
+				targets: [target.data.accountId],
+			});
+		}),
+});
+
 export const COMMANDS: readonly IClientCommand[] = [
 	...CreateMessageTypeParsers('chat'),
 	...CreateMessageTypeParsers('ooc'),
 	...CreateMessageTypeParsers('me'),
 	...CreateMessageTypeParsers('emote'),
+	CreateChatroomAdminAction('kick'),
+	CreateChatroomAdminAction('ban'),
+	CreateChatroomAdminAction('unban'),
+	CreateChatroomAdminAction('promote'),
+	CreateChatroomAdminAction('demote'),
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',

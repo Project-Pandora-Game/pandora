@@ -34,6 +34,8 @@ const CHAT_ACTIONS_DEF = {
 
 	// Gambling related
 	gamblingCoin: `SOURCE_CHARACTER flips a coin and the result is TOSS_RESULT.`,
+	gamblingDice: `SOURCE_CHARACTER rolls DICE_COUNT DICE_RESULT.`,
+	gamblingDiceHidden: `You roll DICE_COUNT and the result is DICE_RESULT.`,
 
 	//#endregion
 };

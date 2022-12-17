@@ -166,6 +166,39 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					dictionary: { 'TOSS_RESULT': Math.random() < 0.5 ? 'heads' : 'tails' },
 				});
 				break;
+			case 'diceRoll': {
+				const regExp = new RegExp('(^\\d+D\\s\\d+$)|(^\\d+$)');
+				if (regExp.test(game.options)) {
+					let diceCount = 1;
+					let diceSides = 6;
+					if (game.options) {
+						const gameOptions = game.options.split(' ');
+						if (gameOptions.length === 2) {
+							diceCount = parseInt(gameOptions[0].substring(0, gameOptions[0].indexOf('D')));
+							diceSides = parseInt(gameOptions[1]);
+						} else {
+							diceSides = parseInt(gameOptions[0]);
+						}
+					}
+					const rolls: number[] = [diceCount];
+					for (let i = 0; i < diceCount; i++) rolls[i] = Math.floor(Math.random() * diceSides + 1);
+					const result = rolls.length > 1 ? '(' + rolls.sort().toString() + ')' : rolls[0].toString();
+
+					room.handleAppearanceActionMessage({
+						id: 'gamblingDice',
+						character: client.character.id,
+						dictionary: {
+							'DICE_COUNT': diceCount === 1 ?
+								`a ${diceSides} sided die` :
+								`${diceCount} ${diceSides} sided dice`,
+							'DICE_RESULT': `and the result is ${result}`,
+						},
+					});
+				} else {
+					throw new BadMessageError(`Invalid options: ${game.options}`);
+				}
+				break;
+			}
 			default:
 				AssertNever(game.type);
 		}

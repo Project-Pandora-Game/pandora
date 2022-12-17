@@ -71,6 +71,21 @@ export const COMMANDS: readonly IClientCommand[] = [
 			.handler(({ shardConnector }) => {
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'coinFlip',
+					options: '',
+				});
+				return true;
+			}),
+	},
+	{
+		key: ['dice'],
+		description: 'Roll a die. Without any options a single six sided die is rolled. The command /dice 20 rolls a single 20 sided die and /dice 3d 6 rolls 3 6 sided dice.',
+		usage: '[count\'d\'] [sides]',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector }, _args, _options) => {
+				if (!_options) _options = '';
+				shardConnector.sendMessage('gamblingAction', {
+					type: 'diceRoll',
+					options: _options.toUpperCase(),
 				});
 				return true;
 			}),

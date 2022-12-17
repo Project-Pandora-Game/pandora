@@ -54,7 +54,8 @@ export const ClientShardSchema = {
 	},
 	gamblingAction: {
 		request: z.object({
-			type: z.enum(['coinFlip']),
+			type: z.enum(['coinFlip', 'diceRoll']),
+			options: z.string(),
 		}),
 		response: null,
 	},

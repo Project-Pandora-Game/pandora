@@ -1,4 +1,5 @@
 import { IEmpty } from '../networking';
+import { BoolSelect } from '../utility';
 import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, CommandExecutorOptions, ICommandExecutionContext } from './executor';
 
 interface CommandBuilderSource<
@@ -45,9 +46,11 @@ export class CommandBuilder<
 	Context extends ICommandExecutionContext,
 	EntryArguments extends Record<string, never>,
 	StartArguments extends Record<string, never>,
+	PreChecked extends boolean = false,
 > {
 
 	private readonly parent: CommandBuilderSource<Context, EntryArguments, StartArguments>;
+	private _preCheck!: BoolSelect<PreChecked, (context: Context) => boolean, undefined>;
 
 	constructor(parent: CommandBuilderSource<Context, EntryArguments, StartArguments>) {
 		this.parent = parent;
@@ -70,6 +73,14 @@ export class CommandBuilder<
 		);
 	}
 
+	public preCheck(
+		_preCheck: BoolSelect<PreChecked, never, (context: Context) => boolean>,
+	): BoolSelect<PreChecked, never, CommandBuilder<Context, EntryArguments, StartArguments, true>> {
+		const preChecked = this as CommandBuilder<Context, EntryArguments, StartArguments, true>;
+		preChecked._preCheck = _preCheck;
+		return preChecked as BoolSelect<PreChecked, never, CommandBuilder<Context, EntryArguments, StartArguments, true>>;
+	}
+
 	public handler(handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
 	public handler(options: CommandExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
 	public handler(options: CommandExecutorOptions | ((context: Context, args: EntryArguments, rest: string) => boolean | undefined | void), handler?: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments> {
@@ -78,7 +89,7 @@ export class CommandBuilder<
 			options = {};
 		}
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!);
+		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!, this._preCheck);
 		return this.parent.build(executor);
 	}
 }

@@ -6,7 +6,7 @@ function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, I
 	return CreateCommand<ICommandExecutionContextClient>();
 }
 
-const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType, description: string, longDescription: string): IClientCommand => {
+const CreateMessageTypeParser = (names: [string, ...string[]], raw: boolean, type: IChatType, description: string, longDescription: string): IClientCommand => {
 	const desc = `${description}${raw ? ', without any formatting' : ''}`;
 	return ({
 		key: names.map((name) => (raw ? 'raw' : '') + name) as [string, ...string[]],

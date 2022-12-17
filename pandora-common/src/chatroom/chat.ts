@@ -100,7 +100,7 @@ export const LONGDESC_THIRD_PERSON = ' It describes an action narrated in third-
 export const LONGDESC_TOGGLE_MODE = ' Exclude the [message] argument to toggle this mode on/off for all messages.';
 
 export type IChatTypeDetails = {
-	commandKeywords: string[],
+	commandKeywords: [string, ...string[]],
 	description: string,
 	longDescription: string;
 };

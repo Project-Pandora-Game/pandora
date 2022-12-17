@@ -97,7 +97,7 @@ export type IChatRoomStatus = z.infer<typeof ChatRoomStatusSchema>;
 
 export const LONGDESC_RAW = ' Symbols that usually apply formatting (e.g. _italics_) will be displayed as plaintext without any formatting.';
 export const LONGDESC_THIRD_PERSON = ' It describes an action narrated in third-person instead of representing spoken words.';
-export const LONGDESC_TOGGLE_MODE = ' Exclude the [message] argument to toggle this mode on/off for all subsequent messages.';
+export const LONGDESC_TOGGLE_MODE = ' Exclude the [message] argument to toggle this mode on/off for all messages.';
 
 export type IChatTypeDetails = {
 	commandKeywords: string[],

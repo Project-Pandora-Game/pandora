@@ -79,11 +79,11 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 			.filter((c) => c.key[0].startsWith(commandName))
 			.map((c) => ({
 				replaceValue: c.key[0],
-				displayValue: GetCommandExplanation(c),
+				displayValue: `/${c.key[0]}${c.usage ? ' ' + c.usage : ''} - ${c.description}`,
 				longDescription: c.longDescription,
 			}));
 		return options.length > 0 ? {
-			header: 'Commands - keywords in () are alternatives, arguments in <> are required, arguments in [] are optional',
+			header: 'Commands - arguments in <> are required, arguments in [] are optional',
 			options,
 		} : null;
 	}
@@ -107,25 +107,6 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 	}
 
 	return null;
-}
-
-/* Build a message explaining how to use a chat command, to appear in the command autocomplete popup */
-function GetCommandExplanation(c: IClientCommand): string {
-	let value = `/${c.key[0]}`;
-
-	if (c.key.length > 1) {
-		value += ` (`;
-		value += c.key.slice(1).map((command, index, array) => {
-			const isLast = index === array.length - 1;
-			return `/${command}${isLast ? '' : `, `}`;
-		}).join('');
-		value += `) `;
-	}
-
-	value += c.usage ? ` ${c.usage} ` : '';
-	value += `- ${c.description}`;
-
-	return value;
 }
 
 export interface AutocompleteDisplyData {

@@ -42,11 +42,25 @@ const CreateMessageTypeParser = (names: string[], raw: boolean, type: IChatType,
 	});
 };
 
+const BuildAlternateCommandsMessage = (keywords: string[]): string => {
+	let result = '';
+	if (keywords.length > 1) {
+		result = `Alternative command${keywords.length > 2 ? 's' : ''}: `;
+		result += keywords.slice(1).map((command, index, array) => {
+			const isLast = index === array.length - 1;
+			return `/${command}${isLast ? '' : ', '}`;
+		}).join('');
+		result += `. `;
+	}
+	return result;
+};
+
 /* Creates two commands for sending chat messages of a specific type, one formatted and one raw/unformatted */
 const CreateMessageTypeParsers = (type: IChatType): IClientCommand[] => {
 	const details = ChatTypeDetails[type];
+	const longDesc = `${BuildAlternateCommandsMessage(details.commandKeywords)}${details.longDescription}`;
 	return [
-		CreateMessageTypeParser(details.commandKeywords, false, type, details.description, details.longDescription), //formatted
+		CreateMessageTypeParser(details.commandKeywords, false, type, details.description, longDesc), //formatted
 		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.description, details.longDescription + LONGDESC_RAW), //raw, no alternatives
 	];
 };

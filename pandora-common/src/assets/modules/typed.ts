@@ -79,7 +79,7 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 export class ItemModuleTyped implements IItemModule<'typed'> {
 	public readonly type = 'typed';
 
-	private readonly assetMananger: AssetManager;
+	private readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigTyped;
 	public readonly activeVariant: Readonly<IModuleTypedOption>;
 
@@ -90,7 +90,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 	}
 
 	constructor(config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext) {
-		this.assetMananger = context.assetMananger;
+		this.assetManager = context.assetManager;
 		this.config = config;
 		// Get currently selected module
 		const activeVariant: IModuleTypedOption | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
@@ -151,7 +151,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			type: 'typed',
 			variant: newVariant.id,
 		}, {
-			assetMananger: this.assetMananger,
+			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
 	}

@@ -77,7 +77,7 @@ function ValidateLock(lock: Item | null, config: IModuleConfigLockSlot): Appeara
 export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	public readonly type = 'lockSlot';
 
-	private readonly assetMananger: AssetManager;
+	private readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigLockSlot;
 	public readonly lock: Item | null;
 
@@ -86,11 +86,11 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	}
 
 	constructor(config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext) {
-		this.assetMananger = context.assetMananger;
+		this.assetManager = context.assetManager;
 		this.config = config;
 		if (data.lock) {
 			// Load asset and skip if unknown
-			const asset = this.assetMananger.getAssetById(data.lock.asset);
+			const asset = this.assetManager.getAssetById(data.lock.asset);
 			if (asset === undefined) {
 				context.logger?.warning(`Skipping unknown lock asset ${data.lock.asset}`);
 				this.lock = null;
@@ -153,7 +153,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 			type: 'lockSlot',
 			lock: items.length === 1 ? items[0].exportToBundle() : null,
 		}, {
-			assetMananger: this.assetMananger,
+			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
 	}

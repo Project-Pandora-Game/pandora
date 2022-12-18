@@ -27,7 +27,7 @@ export const IModuleItemDataCommonSchema = z.object({
 type __satisfies__IModuleItemDataCommonSchema = Satisfies<z.infer<typeof IModuleItemDataCommonSchema>, IModuleItemDataCommon<string>>;
 
 export interface IAssetModuleDefinition<Type extends string> {
-	parseData(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, assetMananger: AssetManager): IModuleItemDataCommon<Type>;
+	parseData(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IModuleItemDataCommon<Type>;
 	loadModule(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, context: IItemLoadContext): IItemModule<Type>;
 	getStaticAttributes(config: IModuleConfigCommon<Type>): ReadonlySet<string>;
 }

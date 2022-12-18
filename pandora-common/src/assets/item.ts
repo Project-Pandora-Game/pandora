@@ -46,7 +46,7 @@ function FixupColorFromAsset(asset: Asset, color: ItemColorBundle | HexColorStri
 }
 
 export type IItemLoadContext = {
-	assetMananger: AssetManager;
+	assetManager: AssetManager;
 	doLoadTimeCleanup: boolean;
 	logger?: Logger;
 };
@@ -57,14 +57,14 @@ export type IItemLoadContext = {
  * **THIS CLASS IS IMMUTABLE**
  */
 export class Item {
-	public readonly assetMananger: AssetManager;
+	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
 	public readonly asset: Asset;
 	public readonly color: ItemColorBundle;
 	public readonly modules: ReadonlyMap<string, IItemModule>;
 
 	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
-		this.assetMananger = context.assetMananger;
+		this.assetManager = context.assetManager;
 		this.id = id;
 		this.asset = asset;
 		if (this.asset.id !== bundle.asset) {
@@ -140,7 +140,7 @@ export class Item {
 		const bundle = this.exportToBundle();
 		bundle.color = _.cloneDeep(color);
 		return new Item(this.id, this.asset, bundle, {
-			assetMananger: this.assetMananger,
+			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
 	}
@@ -160,7 +160,7 @@ export class Item {
 				[moduleName]: moduleResult.exportData(),
 			},
 		}, {
-			assetMananger: this.assetMananger,
+			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
 	}
@@ -181,7 +181,7 @@ export class Item {
 				[moduleName]: moduleResult.exportData(),
 			},
 		}, {
-			assetMananger: this.assetMananger,
+			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
 	}

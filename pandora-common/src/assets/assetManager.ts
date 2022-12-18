@@ -199,7 +199,7 @@ export class AssetManager {
 			id,
 			asset: asset.id,
 		}, {
-			assetMananger: this,
+			assetManager: this,
 			doLoadTimeCleanup: bundle !== null,
 			logger,
 		});

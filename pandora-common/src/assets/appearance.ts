@@ -69,8 +69,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
 	private _safemode: SafemodeData | undefined;
 
-	constructor(assetMananger: AssetManager, characterId: CharacterId, onChange?: (changes: AppearanceChangeType[]) => void) {
-		this.assetManager = assetMananger;
+	constructor(assetManager: AssetManager, characterId: CharacterId, onChange?: (changes: AppearanceChangeType[]) => void) {
+		this.assetManager = assetManager;
 		this.characterId = characterId;
 		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;

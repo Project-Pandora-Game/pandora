@@ -334,7 +334,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	// Do change
 	let removed: AppearanceItems = [];
 	// if this is a bodypart not allowing multiple do a swap instead, but only in root
-	if (manipulator.isCharacter && item.asset.definition.bodypart && manipulator.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
+	if (manipulator.isCharacter && item.asset.definition.bodypart && manipulator.assetManager.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
 		removed = manipulator.removeMatchingItems((oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
 	}
 	if (!manipulator.addItem(item))

@@ -58,16 +58,16 @@ export function AppearanceValidationCombineResults(result1: AppearanceValidation
 	return !result1.success ? result1 : result2;
 }
 
-function GetItemBodypartSortIndex(assetMananger: AssetManager, item: Item): number {
-	return item.asset.definition.bodypart === undefined ? assetMananger.bodyparts.length :
-		assetMananger.bodyparts.findIndex((bp) => bp.name === item.asset.definition.bodypart);
+function GetItemBodypartSortIndex(assetManager: AssetManager, item: Item): number {
+	return item.asset.definition.bodypart === undefined ? assetManager.bodyparts.length :
+		assetManager.bodyparts.findIndex((bp) => bp.name === item.asset.definition.bodypart);
 }
 
-export function AppearanceItemsFixBodypartOrder(assetMananger: AssetManager, items: AppearanceItems): Item[] {
+export function AppearanceItemsFixBodypartOrder(assetManager: AssetManager, items: AppearanceItems): Item[] {
 	return items
 		.slice()
 		.sort((a, b) =>
-			GetItemBodypartSortIndex(assetMananger, a) - GetItemBodypartSortIndex(assetMananger, b),
+			GetItemBodypartSortIndex(assetManager, a) - GetItemBodypartSortIndex(assetManager, b),
 		);
 }
 
@@ -130,12 +130,12 @@ export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimits
 	return AppearanceItemProperties(items).poseLimits;
 }
 
-export function AppearanceValidateSlots(assetMananger: AssetManager, item: Item, slots: AssetSlotResult): undefined | AppearanceValidationError {
+export function AppearanceValidateSlots(assetManager: AssetManager, item: Item, slots: AssetSlotResult): undefined | AppearanceValidationError {
 	for (const [slot, occupied] of slots.occupied) {
 		if (occupied === 0)
 			continue;
 
-		const capacity = assetMananger.assetSlots.get(slot)?.capacity ?? 0;
+		const capacity = assetManager.assetSlots.get(slot)?.capacity ?? 0;
 		if (capacity < occupied) {
 			return {
 				problem: 'slotFull',
@@ -184,11 +184,11 @@ export function AppearanceGetBlockedSlot(slots: AssetSlotResult, blocked: Readon
 }
 
 /** Validates items prefix, ignoring required items */
-export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Bodypart validation
 
 	// Check bodypart order
-	const correctOrder = AppearanceItemsFixBodypartOrder(assetMananger, items);
+	const correctOrder = AppearanceItemsFixBodypartOrder(assetManager, items);
 	if (!correctOrder.every((item, index) => items[index] === item))
 		return {
 			success: false,
@@ -199,7 +199,7 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		};
 
 	// Check duplicate bodyparts
-	for (const bodypart of assetMananger.bodyparts) {
+	for (const bodypart of assetManager.bodyparts) {
 		if (!bodypart.allowMultiple && items.filter((item) => item.asset.definition.bodypart === bodypart.name).length > 1)
 			return {
 				success: false,
@@ -259,7 +259,7 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		if (!r.success)
 			return r;
 
-		error = AppearanceValidateSlots(assetMananger, item, globalProperties.slots);
+		error = AppearanceValidateSlots(assetManager, item, globalProperties.slots);
 		if (error)
 			return { success: false, error };
 
@@ -279,16 +279,16 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 }
 
 /** Validates the appearance items, including all prefixes and required items */
-export function ValidateAppearanceItems(assetMananger: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
-		const r = ValidateAppearanceItemsPrefix(assetMananger, items.slice(0, i));
+		const r = ValidateAppearanceItemsPrefix(assetManager, items.slice(0, i));
 		if (!r.success)
 			return r;
 	}
 
 	// Validate required assets
-	for (const bodypart of assetMananger.bodyparts) {
+	for (const bodypart of assetManager.bodyparts) {
 		if (bodypart.required && !items.some((item) => item.asset.definition.bodypart === bodypart.name))
 			return {
 				success: false,

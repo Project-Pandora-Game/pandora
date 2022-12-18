@@ -14,8 +14,8 @@ import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
 import { Row } from '../common/container/container';
 import './chatroomSelect.scss';
-import closedDoor from '../icons/closed-door.svg';
-import openDoor from '../icons/opened-door.svg';
+import closedDoor from '../../../icons/closed-door.svg';
+import openDoor from '../../../icons/opened-door.svg';
 
 export function ChatroomSelect(): ReactElement {
 	const navigate = useNavigate();

@@ -1,0 +1,8 @@
+The following SVG files are used under the Aperture Creative commons licence
+https://www.svgrepo.com/page/licensing
+
+* body-change.svg
+* closed-door.svg
+* developer.svg
+* male-female.svg
+* opened-door.svg

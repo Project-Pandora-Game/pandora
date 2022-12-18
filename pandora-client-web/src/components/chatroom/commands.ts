@@ -80,7 +80,7 @@ const CreateChatroomAdminAction = (action: IClientDirectoryArgument['chatRoomAdm
 	handler: CreateClientCommand()
 		.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
 		// TODO make this accept multiple targets and accountIds
-		.argument('target', CommandSelectorCharacter({ allowSelf: false }))
+		.argument('target', CommandSelectorCharacter({ allowSelf: false, allowSelfAccount: false }))
 		.handler(({ directoryConnector }, { target }) => {
 			directoryConnector.sendMessage('chatRoomAdminAction', {
 				action,
@@ -127,7 +127,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 		longDescription: 'Sends a message to the selected <target> character which only they will see.' + LONGDESC_THIRD_PERSON,
 		usage: '<target> [message]',
 		handler: CreateClientCommand()
-			.argument('target', CommandSelectorCharacter({ allowSelf: false }))
+			.argument('target', CommandSelectorCharacter({ allowSelf: false, allowSelfAccount: false }))
 			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, { target }, message) => {
 				message = message.trim();
 				if (!message) {

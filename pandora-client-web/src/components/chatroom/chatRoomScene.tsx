@@ -330,7 +330,7 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 					)}
 				</>
 			)}
-			{(isPlayerAdmin && !character.isPlayer()) && (
+			{(isPlayerAdmin && character.data.accountId !== currentAccount?.id) && (
 				<>
 					{menu === 'main' ? (
 						<button onClick={ () => setMenu('admin') }>

@@ -77,7 +77,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 	},
 	{
 		key: ['dice'],
-		description: 'Roll up tp ten 100 sided dice. Without any options a single six sided die is rolled. The command /dice 20 rolls a single 20 sided die and /dice 3d 6 rolls three 6 sided dice.',
+		description: 'Roll up to 10 100-sided dice. Without any options a single 6-sided die is rolled. The command /dice 20 rolls a single 20-sided die and /dice 3d 6 rolls 3 6-sided dice.',
 		usage: '[count\'d\'] [sides]',
 		handler: CreateClientCommand()
 			.handler(({ shardConnector, displayError }, _args, options) => {

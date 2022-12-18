@@ -176,8 +176,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					character: client.character.id,
 					dictionary: {
 						'DICE_COUNT': game.dices === 1 ?
-							`a ${game.sides} sided die` :
-							`${game.dices} ${game.sides} sided dice`,
+							`a ${game.sides}-sided die` :
+							`${game.dices} ${game.sides}-sided dice`,
 						'DICE_RESULT': `and the result is ${result}`,
 					},
 				});

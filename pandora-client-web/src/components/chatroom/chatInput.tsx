@@ -7,7 +7,7 @@ import { useEvent } from '../../common/useEvent';
 import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { usePlayerId } from '../gameContext/playerContextProvider';
 import './chatroom.scss';
 import { BrowserStorage } from '../../browserStorage';

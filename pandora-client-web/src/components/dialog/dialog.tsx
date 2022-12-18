@@ -3,7 +3,7 @@ import React, { createContext, useContext, ReactElement, PureComponent, ReactNod
 import { Rnd } from 'react-rnd';
 import { noop } from 'lodash';
 import { ChildrenProps } from '../../common/reactTypes';
-import { Button, ButtonProps } from '../common/Button/Button';
+import { Button, ButtonProps } from '../common/button/button';
 import { Observable, useObservable } from '../../observable';
 import './dialog.scss';
 

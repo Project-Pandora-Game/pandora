@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useMounted } from '../../common/useMounted';
 import { GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { ModalDialog, DialogCloseButton } from '../dialog/dialog';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
 

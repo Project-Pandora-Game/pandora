@@ -12,7 +12,7 @@ import React, {
 } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
 import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatroom, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';

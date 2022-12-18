@@ -3,8 +3,8 @@ import { AssetGraphicsLayer, LayerToImmediateName, useLayerDefinition, useLayerN
 import { GetAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { Button } from '../../../components/common/Button/Button';
-import { Select } from '../../../components/common/Select/Select';
+import { Button } from '../../../components/common/button/button';
+import { Select } from '../../../components/common/select/select';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';

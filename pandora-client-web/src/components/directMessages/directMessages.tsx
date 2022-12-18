@@ -5,7 +5,7 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { DirectMessage } from '../directMessage/directMessage';
 import './directMessages.scss';
 import { useEvent } from '../../common/useEvent';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 
 export function DirectMessages(): React.ReactElement {

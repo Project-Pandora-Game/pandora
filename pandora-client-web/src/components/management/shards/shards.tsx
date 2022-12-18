@@ -4,8 +4,8 @@ import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
-import { Button } from '../../common/Button/Button';
-import { Select } from '../../common/Select/Select';
+import { Button } from '../../common/button/button';
+import { Select } from '../../common/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './shards.scss';
 

@@ -71,27 +71,45 @@ export const COMMANDS: readonly IClientCommand[] = [
 			.handler(({ shardConnector }) => {
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'coinFlip',
-					options: '',
 				});
 				return true;
 			}),
 	},
 	{
 		key: ['dice'],
-		description: 'Roll a die. Without any options a single six sided die is rolled. The command /dice 20 rolls a single 20 sided die and /dice 3d 6 rolls 3 6 sided dice.',
+		description: 'Roll up tp ten 100 sided dice. Without any options a single six sided die is rolled. The command /dice 20 rolls a single 20 sided die and /dice 3d 6 rolls three 6 sided dice.',
 		usage: '[count\'d\'] [sides]',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector, displayError }, _args, _options) => {
-				const regExp = new RegExp('(^\\d+\\s*D\\s*\\d+$)|(^\\d+$)');
-				if (!_options) _options = '';
-				if (regExp.test(_options.toUpperCase()) || _options === '') {
+			.handler(({ shardConnector, displayError }, _args, options) => {
+				let errorText = '';
+				let diceCount = 1;
+				let diceSides = 6;
+				if (options !== '') {
+					// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
+					const regExp = new RegExp('(^\\d+\\s*D\\s*\\d+$)|(^\\d+$)');
+					if (regExp.test(options.toUpperCase())) {
+						const gameOptions = options.toUpperCase().split('D');
+						if (gameOptions.length === 2) {
+							diceCount = parseInt(gameOptions[0]);
+							diceSides = parseInt(gameOptions[1]);
+						} else {
+							diceCount = 1;
+							diceSides = parseInt(gameOptions[0]);
+						}
+						if (diceCount > 10 || diceSides > 100) errorText = 'Maximum sides/ dice exceeded';
+					} else {
+						errorText = `Invalid Options: '${options}'`;
+					} // RegEx test
+				}
+				if (errorText === '') {
 					shardConnector.sendMessage('gamblingAction', {
 						type: 'diceRoll',
-						options: _options.toUpperCase(),
+						sides: diceSides,
+						dices: diceCount,
 					});
 					return true;
 				} else {
-					displayError?.(`Invalid options: ${_options}`);
+					displayError?.(errorText);
 					return false;
 				}
 			}),

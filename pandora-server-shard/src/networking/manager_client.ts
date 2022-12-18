@@ -167,35 +167,24 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				});
 				break;
 			case 'diceRoll': {
-				let diceCount = 1;
-				let diceSides = 6;
-				if (game.options) {
-					const gameOptions = game.options.split('D');
-					if (gameOptions.length === 2) {
-						diceCount = parseInt(gameOptions[0]);
-						diceSides = parseInt(gameOptions[1]);
-					} else {
-						diceSides = parseInt(gameOptions[0]);
-					}
-				}
-				const rolls: number[] = [diceCount];
-				for (let i = 0; i < diceCount; i++) rolls[i] = Math.floor(Math.random() * diceSides + 1);
+				const rolls: number[] = [game.dices];
+				for (let i = 0; i < game.dices; i++) rolls[i] = Math.floor(Math.random() * game.sides + 1);
 				const result = rolls.length > 1 ? '(' + rolls.sort().toString() + ')' : rolls[0].toString();
 
 				room.handleAppearanceActionMessage({
 					id: 'gamblingDice',
 					character: client.character.id,
 					dictionary: {
-						'DICE_COUNT': diceCount === 1 ?
-							`a ${diceSides} sided die` :
-							`${diceCount} ${diceSides} sided dice`,
+						'DICE_COUNT': game.dices === 1 ?
+							`a ${game.sides} sided die` :
+							`${game.dices} ${game.sides} sided dice`,
 						'DICE_RESULT': `and the result is ${result}`,
 					},
 				});
 				break;
 			}
 			default:
-				AssertNever(game.type);
+				AssertNever(game);
 		}
 	}
 

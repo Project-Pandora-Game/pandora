@@ -79,6 +79,7 @@ const CreateChatroomAdminAction = (action: IClientDirectoryArgument['chatRoomAdm
 	description: `${action[0].toUpperCase() + action.substring(1)} user`,
 	handler: CreateClientCommand()
 		.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
+		// TODO make this accept multiple targets and accountIds
 		.argument('target', CommandSelectorCharacter({ allowSelf: false }))
 		.handler(({ directoryConnector }, { target }) => {
 			directoryConnector.sendMessage('chatRoomAdminAction', {
@@ -95,7 +96,29 @@ export const COMMANDS: readonly IClientCommand[] = [
 	...CreateMessageTypeParsers('emote'),
 	CreateChatroomAdminAction('kick'),
 	CreateChatroomAdminAction('ban'),
-	CreateChatroomAdminAction('unban'),
+	{
+		key: ['unban'],
+		usage: '<target>',
+		description: 'Unban user',
+		handler: CreateClientCommand()
+			.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
+			.argument('target', {
+				preparse: 'allTrimmed',
+				parse: (input) => {
+					const value = parseInt(input);
+					if (value > 0) {
+						return { success: true, value };
+					}
+					return { success: false, error: 'Invalid account id' };
+				},
+			})
+			.handler(({ directoryConnector }, { target }) => {
+				directoryConnector.sendMessage('chatRoomAdminAction', {
+					action: 'unban',
+					targets: [target],
+				});
+			}),
+	},
 	CreateChatroomAdminAction('promote'),
 	CreateChatroomAdminAction('demote'),
 	{

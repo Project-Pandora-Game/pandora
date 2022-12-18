@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Logger } from '../logging';
 import type { Writeable } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
+import type { AppearanceActionContext } from './appearanceActions';
 import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
@@ -145,11 +146,11 @@ export class Item {
 		});
 	}
 
-	public moduleAction(moduleName: string, action: ItemModuleAction, messageHandler: ActionMessageTemplateHandler): Item | null {
+	public moduleAction(context: AppearanceActionContext, moduleName: string, action: ItemModuleAction, messageHandler: ActionMessageTemplateHandler): Item | null {
 		const module = this.modules.get(moduleName);
 		if (!module || module.type !== action.moduleType)
 			return null;
-		const moduleResult = module.doAction(action, messageHandler);
+		const moduleResult = module.doAction(context, action, messageHandler);
 		if (!moduleResult)
 			return null;
 		const bundle = this.exportToBundle();

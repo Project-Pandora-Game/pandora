@@ -8,6 +8,7 @@ import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidateRequirements, AppearanceValidationResult } from '../appearanceValidation';
 import { IItemLoadContext, Item, ItemBundle, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
+import type { AppearanceActionContext } from '../appearanceActions';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
 	/**
@@ -135,7 +136,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return false;
 	}
 
-	public doAction(_action: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
+	public doAction(_context: AppearanceActionContext, _action: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
 		return null;
 	}
 

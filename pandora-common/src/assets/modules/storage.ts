@@ -9,6 +9,7 @@ import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidati
 import { IItemLoadContext, Item, ItemBundle, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { ItemId } from '../appearanceTypes';
+import type { AppearanceActionContext } from '../appearanceActions';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface IModuleConfigStorage<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'storage'> {
@@ -162,7 +163,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		return false;
 	}
 
-	public doAction(_action: ItemModuleStorageAction): ItemModuleStorage | null {
+	public doAction(_context: AppearanceActionContext, _action: ItemModuleStorageAction): ItemModuleStorage | null {
 		return null;
 	}
 

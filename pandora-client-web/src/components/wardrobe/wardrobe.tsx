@@ -26,6 +26,7 @@ import {
 	Assert,
 	AppearanceActionResult,
 	Writeable,
+	FormatTimeInterval,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -884,26 +885,49 @@ function WardrobeModuleConfig({ m, ...props }: WardrobeModuleProps<IItemModule>)
 
 function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<ItemModuleTyped>): ReactElement {
 	const { target } = useWardrobeContext();
+	const customText = useMemo(() => {
+		if (!m.activeVariant.customText) {
+			return null;
+		}
+		return m.activeVariant.customText
+			.map((text) => text
+				.replaceAll('CHARACTER_NAME', m.data.selectedBy?.name ?? '[unknown]')
+				.replaceAll('CHARACTER_ID', m.data.selectedBy?.id ?? '[id]')
+				.replaceAll('TIME', m.data.selectedAt ? new Date(m.data.selectedAt).toLocaleString() : '[time]')
+				.replaceAll('TIME_PASSED', m.data.selectedAt ? FormatTimeInterval(Date.now() - m.data.selectedAt) : '[time passed]'),
+			)
+			.map((text, index) => <span key={ index }>{ text }</span>);
+	}, [m.activeVariant, m.data]);
 
 	return (
-		<Row wrap>
+		<Column>
+			<Row wrap>
+				{
+					m.config.variants.map((v) => (
+						<WardrobeActionButton action={ {
+							type: 'moduleAction',
+							target,
+							item,
+							module: moduleName,
+							action: {
+								moduleType: 'typed',
+								setVariant: v.id,
+							},
+						} } key={ v.id } className={ m.activeVariant.id === v.id ? 'selected' : '' }>
+							{ v.name }
+						</WardrobeActionButton>
+					))
+				}
+			</Row>
 			{
-				m.config.variants.map((v) => (
-					<WardrobeActionButton action={ {
-						type: 'moduleAction',
-						target,
-						item,
-						module: moduleName,
-						action: {
-							moduleType: 'typed',
-							setVariant: v.id,
-						},
-					} } key={ v.id } className={ m.activeVariant.id === v.id ? 'selected' : '' }>
-						{ v.name }
-					</WardrobeActionButton>
-				))
+				customText && (
+					<>
+						<br />
+						{ customText }
+					</>
+				)
 			}
-		</Row>
+		</Column>
 	);
 }
 

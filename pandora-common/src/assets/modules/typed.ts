@@ -9,12 +9,14 @@ import { AppearanceItems, AppearanceValidationResult } from '../appearanceValida
 import { IItemLoadContext } from '../item';
 import { AssetManager } from '../assetManager';
 import type { ActionMessageTemplateHandler } from '../appearanceTypes';
+import type { AppearanceActionContext } from '../appearanceActions';
+import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
 
 export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	/** ID if this variant, must be unique */
 	id: string;
 
-	/** The display name of this varint */
+	/** The display name of this variant */
 	name: string;
 
 	/** If this variant should be autoselected as default; otherwise first one is used */
@@ -27,6 +29,24 @@ export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDe
 	 * - Object which maps previous setting to message to switch from it (with `_` usable as default)
 	 */
 	switchMessage?: string | Partial<Record<string | '_', string>>;
+
+	/** Variant will store the time it was selected */
+	storeTime?: true,
+	/** Variant will store the the character that selected it */
+	storeCharacter?: true,
+
+	/**
+	 * Custom text to show when this variant is selected.
+	 *
+	 * Each element of the array is displayed on a separate line.
+	 *
+	 * Replacements:
+	 *  - CHARACTER_NAME is replaced with the name of the character - TODO: this is not implemented yet (currently it's just the ID)
+	 *  - CHARACTER_ID is replaced with the ID of the character
+	 *  - TIME is replaced with the time the variant was selected
+	 *  - TIME_PASSED is replaced with the time passed since the variant was selected
+	 */
+	customText?: string[];
 }
 
 export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'typed'> {
@@ -42,10 +62,17 @@ export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDe
 
 export interface IModuleItemDataTyped extends IModuleItemDataCommon<'typed'> {
 	variant?: string;
+	selectedAt?: number;
+	selectedBy?: { name: string; id: CharacterId; };
 }
 const ModuleItemDataTypedScheme = z.object({
 	type: z.literal('typed'),
 	variant: z.string().optional(),
+	selectedAt: z.number().optional(),
+	selectedBy: z.object({
+		name: z.string(),
+		id: CharacterIdSchema,
+	}).optional(),
 });
 
 export const ItemModuleTypedActionSchema = z.object({
@@ -82,6 +109,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 	private readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigTyped;
 	public readonly activeVariant: Readonly<IModuleTypedOption>;
+	public readonly data: Readonly<IModuleItemDataTyped>;
 
 	public get interactionType(): ItemInteractionType {
 		// Interaction can be overridden by config, but defaults to modify (unless this is an expression, then to expression)
@@ -99,17 +127,23 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			context.logger?.warning(`Unknown typed module variant '${data.variant}'`);
 		}
 		// Use the default variant if not found
-		this.activeVariant = activeVariant ??
-			// First variant marked as 'default'
-			config.variants.find((v) => v.default) ??
-			// The first variant as last resort
-			config.variants[0];
+		this.activeVariant = activeVariant ?? this._getDefaultVariant();
+
+		this.data = {
+			...data,
+			variant: this.activeVariant.id,
+			selectedAt: this.activeVariant.storeTime ? data.selectedAt : undefined,
+			selectedBy: this.activeVariant.storeCharacter ? data.selectedBy : undefined,
+		};
 	}
 
 	public exportData(): IModuleItemDataTyped {
+		const variant = this.activeVariant;
 		return {
 			type: 'typed',
-			variant: this.activeVariant.id,
+			variant: variant.id,
+			selectedAt: variant.storeTime ? this.data.selectedAt : undefined,
+			selectedBy: variant.storeCharacter ? this.data.selectedBy : undefined,
 		};
 	}
 
@@ -127,7 +161,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 				false;
 	}
 
-	public doAction(action: ItemModuleTypedAction, messageHandler: ActionMessageTemplateHandler): ItemModuleTyped | null {
+	public doAction(context: AppearanceActionContext, action: ItemModuleTypedAction, messageHandler: ActionMessageTemplateHandler): ItemModuleTyped | null {
 		const newVariant = this.config.variants.find((v) => v.id === action.setVariant);
 		if (!newVariant)
 			return null;
@@ -147,9 +181,17 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			});
 		}
 
+		const selectedBy = context.getCharacter(context.player);
+
 		return new ItemModuleTyped(this.config, {
 			type: 'typed',
 			variant: newVariant.id,
+			selectedAt: Date.now(),
+			selectedBy: selectedBy == null ? undefined : {
+				id: selectedBy.characterId,
+				/** TODO store actual character name */
+				name: selectedBy.characterId,
+			},
 		}, {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
@@ -165,5 +207,9 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 
 	public setContents(_items: AppearanceItems): ItemModuleTyped | null {
 		return null;
+	}
+
+	private _getDefaultVariant(): Readonly<IModuleTypedOption> {
+		return this.config.variants.find((v) => v.default) ?? this.config.variants[0];
 	}
 }

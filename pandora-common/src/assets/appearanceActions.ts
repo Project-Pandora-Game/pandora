@@ -247,7 +247,7 @@ export function DoAppearanceAction(
 				};
 
 			const manipulator = target.getManipulator();
-			if (!ActionModuleAction(manipulator, action.item, action.module, action.action))
+			if (!ActionModuleAction(context, manipulator, action.item, action.module, action.action))
 				return { result: 'invalidAction' };
 			return AppearanceValidationResultToActionResult(
 				target.commitChanges(manipulator, processingContext),
@@ -417,12 +417,13 @@ export function ActionColorItem(rootManipulator: AppearanceRootManipulator, item
 	return true;
 }
 
-export function ActionModuleAction(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, module: string, action: ItemModuleAction): boolean {
+export function ActionModuleAction(context: AppearanceActionContext, rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, module: string, action: ItemModuleAction): boolean {
 	const { container, itemId } = itemPath;
 	const manipulator = rootManipulator.getContainer(container);
 
 	// Do change and store chat messages
 	if (!manipulator.modifyItem(itemId, (it) => it.moduleAction(
+		context,
 		module,
 		action,
 		(m) => manipulator.queueMessage({

@@ -85,23 +85,25 @@ export const COMMANDS: readonly IClientCommand[] = [
 				parse: (input) => {
 					let dice = 1;
 					let sides = 6;
-					// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
-					const regExp = new RegExp('(^\\d+\\s*D\\s*\\d+$)|(^\\d+$)');
-					if (regExp.test(input.toUpperCase())) {
-						const gameOptions = input.toUpperCase().split('D');
-						if (gameOptions.length === 2) {
-							dice = parseInt(gameOptions[0]);
-							sides = parseInt(gameOptions[1]);
+					if (input !== '') {
+						// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
+						const regExp = new RegExp('(^\\d+\\s*D\\s*\\d+$)|(^\\d+$)');
+						if (regExp.test(input.toUpperCase())) {
+							const gameOptions = input.toUpperCase().split('D');
+							if (gameOptions.length === 2) {
+								dice = parseInt(gameOptions[0]);
+								sides = parseInt(gameOptions[1]);
+							} else {
+								dice = 1;
+								sides = parseInt(gameOptions[0]);
+							}
+							if (dice > 10 || sides > 100) {
+								return { success: false, error: 'Maximum sides/ dice exceeded' };
+							}
 						} else {
-							dice = 1;
-							sides = parseInt(gameOptions[0]);
-						}
-						if (dice > 10 || sides > 100) {
-							return { success: false, error: 'Maximum sides/ dice exceeded' };
-						}
-					} else {
-						return { success: false, error: `Invalid Options: '${input}'` };
-					} // RegEx test
+							return { success: false, error: `Invalid Options: '${input}'` };
+						} // RegEx test
+					}
 					return { success: true, value: { dice, sides } };
 				},
 			})

@@ -155,16 +155,7 @@ export class Room {
 					},
 				});
 			} else if (changeList.length === 1) {
-				this.sendMessage({
-					type: 'serverMessage',
-					id: 'roomUpdatedSingle',
-					data: {
-						character: source.id,
-					},
-					dictionary: {
-						CHANGE: changeList[0],
-					},
-				});
+				this.sendUpdateSingle(source, changeList[0]);
 			}
 		}
 
@@ -173,8 +164,20 @@ export class Room {
 		return 'ok';
 	}
 
+	private sendUpdateSingle(source: Character, change: string) {
+		this.sendMessage({
+			type: 'serverMessage',
+			id: 'roomUpdatedSingle',
+			data: {
+				character: source.id,
+			},
+			dictionary: {
+				CHANGE: change,
+			},
+		});
+	}
+
 	public adminAction(source: Character, action: IClientDirectoryArgument['chatRoomAdminAction']['action'], targets: number[]) {
-		// TODO: Add all missing messages for these actions
 		targets = uniq(targets.filter((id) => id !== source.account.id));
 		switch (action) {
 			case 'kick':
@@ -187,19 +190,39 @@ export class Room {
 					this.removeCharacter(character, 'kick', source);
 				}
 				break;
-			case 'ban':
+			case 'ban': {
+				const oldSize = this.config.banned.length;
 				this.config.banned = uniq([...this.config.banned, ...targets]);
-				this.removeBannedCharacters(source);
+				if (oldSize !== this.config.banned.length) {
+					this.removeBannedCharacters(source);
+					this.sendUpdateSingle(source, 'ban list');
+				}
 				break;
-			case 'unban':
+			}
+			case 'unban': {
+				const oldSize = this.config.banned.length;
 				this.config.banned = this.config.banned.filter((id) => !targets.includes(id));
+				if (oldSize !== this.config.banned.length)
+					this.sendUpdateSingle(source, 'ban list');
+
 				break;
-			case 'promote':
+			}
+			case 'promote': {
+				const oldSize = this.config.admin.length;
 				this.config.admin = uniq([...this.config.admin, ...targets]);
+				if (oldSize !== this.config.admin.length)
+					this.sendUpdateSingle(source, 'admins');
+
 				break;
-			case 'demote':
+			}
+			case 'demote': {
+				const oldSize = this.config.admin.length;
 				this.config.admin = this.config.admin.filter((id) => !targets.includes(id));
+				if (oldSize !== this.config.admin.length)
+					this.sendUpdateSingle(source, 'admins');
+
 				break;
+			}
 			default:
 				AssertNever(action);
 		}

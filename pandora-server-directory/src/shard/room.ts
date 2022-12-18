@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument, Nullable } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from './shard';
@@ -105,7 +105,7 @@ export class Room {
 		}
 		if (changes.banned) {
 			this.config.banned = uniq(changes.banned);
-			this.removeBannedCharacters();
+			this.removeBannedCharacters(source);
 		}
 		if (changes.protected !== undefined) {
 			if (changes.protected) {
@@ -184,12 +184,12 @@ export class Room {
 					if (!targets.includes(character.account.id))
 						continue;
 
-					this.removeCharacter(character, 'kick');
+					this.removeCharacter(character, 'kick', source);
 				}
 				break;
 			case 'ban':
 				this.config.banned = uniq([...this.config.banned, ...targets]);
-				this.removeBannedCharacters();
+				this.removeBannedCharacters(source);
 				break;
 			case 'unban':
 				this.config.banned = this.config.banned.filter((id) => !targets.includes(id));
@@ -291,7 +291,7 @@ export class Room {
 		ConnectionManagerClient.onRoomListChange();
 	}
 
-	public removeCharacter(character: Character, reason: IChatRoomLeaveReason): void {
+	public removeCharacter(character: Character, reason: IChatRoomLeaveReason, by?: Nullable<Character>): void {
 		if (character.room !== this)
 			return;
 		this.logger.debug(`Character ${character.id} removed (${reason})`);
@@ -318,7 +318,8 @@ export class Room {
 				type: 'serverMessage',
 				id: action,
 				data: {
-					character: character.id,
+					targetCharacter: character.id,
+					character: by?.id ?? character.id,
 				},
 			});
 		}
@@ -326,7 +327,7 @@ export class Room {
 		// If the reason is ban, also actually ban the account and kick any other characters of that account
 		if (reason === 'ban' && !this.config.banned.includes(character.account.id)) {
 			this.config.banned.push(character.account.id);
-			this.removeBannedCharacters();
+			this.removeBannedCharacters(by);
 		}
 
 		this.cleanupIfEmpty();
@@ -334,10 +335,10 @@ export class Room {
 		ConnectionManagerClient.onRoomListChange();
 	}
 
-	private removeBannedCharacters(): void {
+	private removeBannedCharacters(by: Nullable<Character>): void {
 		for (const character of this.characters.values()) {
 			if (this.config.banned.includes(character.account.id)) {
-				this.removeCharacter(character, 'ban');
+				this.removeCharacter(character, 'ban', by);
 			}
 		}
 	}

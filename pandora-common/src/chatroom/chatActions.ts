@@ -6,8 +6,8 @@ const CHAT_ACTIONS_DEF = {
 	characterEntered: 'SOURCE_CHARACTER entered.',
 	characterLeft: 'SOURCE_CHARACTER left.',
 	characterDisconnected: 'SOURCE_CHARACTER disconnected.',
-	characterKicked: 'TARGET_CHARACTER has been kicked.',
-	characterBanned: 'TARGET_CHARACTER has been banned.',
+	characterKicked: 'TARGET_CHARACTER has been kicked by SOURCE_CHARACTER.',
+	characterBanned: 'TARGET_CHARACTER has been banned by SOURCE_CHARACTER.',
 
 	roomUpdatedSingle: `SOURCE_CHARACTER changed the room's CHANGE.`,
 	roomUpdatedMultiple: `SOURCE_CHARACTER changed COUNT room settings:`,

@@ -255,9 +255,6 @@ function AdminActionContextMenu({ character, chatRoom, onClose, onBack }: { char
 			<button onClick={ onBack } >
 				Back
 			</button>
-			<button onClick={ onClose } >
-				Close
-			</button>
 		</>
 	);
 }
@@ -315,19 +312,23 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 			<span>
 				{characterData.name} ({characterData.id})
 			</span>
-			<button onClick={ () => {
-				onCloseActual();
-				navigate('/wardrobe', { state: { character: characterData.id } });
-			} }>
-				Wardrobe
-			</button>
-			{characterData.id !== playerId && (
-				<button onClick={ () => {
-					onClose();
-					setTarget(characterData.id);
-				} }>
-					Whisper
-				</button>
+			{menu === 'main' && (
+				<>
+					<button onClick={ () => {
+						onCloseActual();
+						navigate('/wardrobe', { state: { character: characterData.id } });
+					} }>
+						Wardrobe
+					</button>
+					{characterData.id !== playerId && (
+						<button onClick={ () => {
+							onClose();
+							setTarget(characterData.id);
+						} }>
+							Whisper
+						</button>
+					)}
+				</>
 			)}
 			{(isPlayerAdmin && !character.isPlayer()) && (
 				<>

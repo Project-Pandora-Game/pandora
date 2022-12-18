@@ -58,8 +58,8 @@ export const ClientShardSchema = {
 			z.object({
 				type: z.literal('diceRoll'),
 				sides: z.number().int().min(2).max(100),
-				dices: z.number().int().min(1).max(10),
-				hodden: z.boolean().default(false).optional(),
+				dice: z.number().int().min(1).max(10),
+				hidden: z.boolean().default(false).optional(),
 			})]),
 		response: null,
 	},

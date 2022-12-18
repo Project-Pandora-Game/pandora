@@ -167,17 +167,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				});
 				break;
 			case 'diceRoll': {
-				const rolls: number[] = [game.dices];
-				for (let i = 0; i < game.dices; i++) rolls[i] = Math.floor(Math.random() * game.sides + 1);
+				const rolls: number[] = [game.dice];
+				for (let i = 0; i < game.dice; i++) rolls[i] = Math.floor(Math.random() * game.sides + 1);
 				const result = rolls.length > 1 ? '(' + rolls.sort().toString() + ')' : rolls[0].toString();
 
 				room.handleAppearanceActionMessage({
 					id: 'gamblingDice',
 					character: client.character.id,
 					dictionary: {
-						'DICE_COUNT': game.dices === 1 ?
+						'DICE_COUNT': game.dice === 1 ?
 							`a ${game.sides}-sided die` :
-							`${game.dices} ${game.sides}-sided dice`,
+							`${game.dice} ${game.sides}-sided dice`,
 						'DICE_RESULT': `and the result is ${result}`,
 					},
 				});

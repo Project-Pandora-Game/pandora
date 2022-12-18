@@ -77,41 +77,40 @@ export const COMMANDS: readonly IClientCommand[] = [
 	},
 	{
 		key: ['dice'],
-		description: 'Roll up to 10 100-sided dice. Without any options a single 6-sided die is rolled. The command /dice 20 rolls a single 20-sided die and /dice 3d 6 rolls 3 6-sided dice.',
-		usage: '[count\'d\'] [sides]',
+		description: 'Roll up to 10 100-sided dice. Without any options a single 6-sided die is rolled. The command /dice 20 rolls a single 20-sided die and /dice 3d6 rolls 3 6-sided dice.',
+		usage: '[count\'d\'][sides]',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector, displayError }, _args, options) => {
-				let errorText = '';
-				let diceCount = 1;
-				let diceSides = 6;
-				if (options !== '') {
+			.argument('options', {
+				preparse: 'allTrimmed',
+				parse: (input) => {
+					let dice = 1;
+					let sides = 6;
 					// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
 					const regExp = new RegExp('(^\\d+\\s*D\\s*\\d+$)|(^\\d+$)');
-					if (regExp.test(options.toUpperCase())) {
-						const gameOptions = options.toUpperCase().split('D');
+					if (regExp.test(input.toUpperCase())) {
+						const gameOptions = input.toUpperCase().split('D');
 						if (gameOptions.length === 2) {
-							diceCount = parseInt(gameOptions[0]);
-							diceSides = parseInt(gameOptions[1]);
+							dice = parseInt(gameOptions[0]);
+							sides = parseInt(gameOptions[1]);
 						} else {
-							diceCount = 1;
-							diceSides = parseInt(gameOptions[0]);
+							dice = 1;
+							sides = parseInt(gameOptions[0]);
 						}
-						if (diceCount > 10 || diceSides > 100) errorText = 'Maximum sides/ dice exceeded';
+						if (dice > 10 || sides > 100) {
+							return { success: false, error: 'Maximum sides/ dice exceeded' };
+						}
 					} else {
-						errorText = `Invalid Options: '${options}'`;
+						return { success: false, error: `Invalid Options: '${input}'` };
 					} // RegEx test
-				}
-				if (errorText === '') {
-					shardConnector.sendMessage('gamblingAction', {
-						type: 'diceRoll',
-						sides: diceSides,
-						dices: diceCount,
-					});
-					return true;
-				} else {
-					displayError?.(errorText);
-					return false;
-				}
+					return { success: true, value: { dice, sides } };
+				},
+			})
+			.handler(({ shardConnector }, { options }) => {
+				shardConnector.sendMessage('gamblingAction', {
+					type: 'diceRoll',
+					...options,
+				});
+				return true;
 			}),
 	},
 ];

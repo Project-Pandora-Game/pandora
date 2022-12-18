@@ -87,7 +87,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 					let sides = 6;
 					if (input !== '') {
 						// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
-						const regExp = new RegExp('(^\\d+\\s*D\\s*\\d+$)|(^\\d+$)');
+						const regExp = new RegExp(/(^\d+\s*D\s*\d+$)|(^\d+$)/);
 						if (regExp.test(input.toUpperCase())) {
 							const gameOptions = input.toUpperCase().split('D');
 							if (gameOptions.length === 2) {

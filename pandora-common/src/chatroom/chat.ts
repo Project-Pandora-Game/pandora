@@ -96,7 +96,7 @@ export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whispering', 'afk
 export type IChatRoomStatus = z.infer<typeof ChatRoomStatusSchema>;
 
 export const LONGDESC_RAW = ' Symbols that usually apply formatting (e.g. _italics_) will be displayed as plaintext without any formatting.';
-export const LONGDESC_THIRD_PERSON = ' It describes an action narrated in third-person instead of representing spoken words.';
+export const LONGDESC_THIRD_PERSON = ' It describes events in third-person instead of representing spoken words.';
 export const LONGDESC_TOGGLE_MODE = ' Exclude the [message] argument to toggle this mode on/off for all messages.';
 
 export type IChatTypeDetails = {
@@ -114,16 +114,16 @@ export const ChatTypeDetails: { [type in IChatType]: IChatTypeDetails; } = {
 	'ooc': {
 		commandKeywords: ['ooc', 'o'],
 		description: 'out-of-character (OOC) message',
-		longDescription: 'Sends an (OOC) message which ignores effects like muffling/deafening and can be used for communicating as an aside from the main activity/discussion.' + LONGDESC_TOGGLE_MODE,
+		longDescription: 'Sends an (( OOC )) message which ignores effects like muffling/deafening and is used for communicating as an aside from the main activity/discussion.' + LONGDESC_TOGGLE_MODE,
 	},
 	'me': {
 		commandKeywords: ['me', 'm', 'action'],
 		description: 'action message',
-		longDescription: 'Sends an "action" message which is displayed in italics, with your name at the beginning.' + LONGDESC_THIRD_PERSON + LONGDESC_TOGGLE_MODE,
+		longDescription: 'Sends an *action* message, automatically including your name at the beginning.' + LONGDESC_THIRD_PERSON + LONGDESC_TOGGLE_MODE,
 	},
 	'emote': {
 		commandKeywords: ['emote', 'e'],
 		description: 'action message without your name',
-		longDescription: 'Sends an "emote" message which is displayed in italics, without including your name.' + LONGDESC_THIRD_PERSON + LONGDESC_TOGGLE_MODE,
+		longDescription: 'Sends an **emote* message, without including your name.' + LONGDESC_THIRD_PERSON + LONGDESC_TOGGLE_MODE,
 	},
 };

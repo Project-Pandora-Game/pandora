@@ -9,7 +9,9 @@
 				"command": "pnpm.cmd"
 			},
 			"args": [
-				"install"
+				"install",
+				"--frozen-lockfile",
+				"--prefer-offline"
 			],
 			"presentation": {
 				"echo": true,
@@ -24,6 +26,9 @@
 		},
 		{
 			"label": "Setup",
+			"runOptions": {
+				"runOn": "folderOpen"
+			},
 			"dependsOn": [
 				"pnpm: install"
 			],

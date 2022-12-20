@@ -28,7 +28,7 @@
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
 		"prepack": "pnpm run build",
-		"install": "pnpm run build"
+		"install": "pnpm run --silent build"
 	},
 	"dependencies": {
 		"@types/node": "^18.11.0",

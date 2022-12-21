@@ -32,7 +32,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
-		this.appearance = new CharacterAppearance(GetAssetManager(), data.id, (changes) => this.emit('appearanceUpdate', changes));
+		this.appearance = new CharacterAppearance(GetAssetManager(), data, (changes) => this.emit('appearanceUpdate', changes));
 		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
 		this.logger.verbose('Loaded');
 	}

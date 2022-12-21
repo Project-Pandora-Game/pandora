@@ -41,7 +41,7 @@ export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDe
 	 * Each element of the array is displayed on a separate line.
 	 *
 	 * Replacements:
-	 *  - CHARACTER_NAME is replaced with the name of the character - TODO: this is not implemented yet (currently it's just the ID)
+	 *  - CHARACTER_NAME is replaced with the name of the character
 	 *  - CHARACTER_ID is replaced with the ID of the character
 	 *  - TIME is replaced with the time the variant was selected
 	 *  - TIME_PASSED is replaced with the time passed since the variant was selected
@@ -188,9 +188,8 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			variant: newVariant.id,
 			selectedAt: Date.now(),
 			selectedBy: selectedBy == null ? undefined : {
-				id: selectedBy.characterId,
-				/** TODO store actual character name */
-				name: selectedBy.characterId,
+				id: selectedBy.character.id,
+				name: selectedBy.character.name,
 			},
 		}, {
 			assetManager: this.assetManager,

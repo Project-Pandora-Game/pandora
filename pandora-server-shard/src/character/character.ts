@@ -93,7 +93,7 @@ export class Character {
 	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
-		this.appearance = new CharacterAppearance(assetManager, data.id);
+		this.appearance = new CharacterAppearance(assetManager, data);
 
 		// TODO: remove this, this allow easier development so no need for DB migration
 		this.data.settings = {

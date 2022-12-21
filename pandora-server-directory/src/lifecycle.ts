@@ -1,11 +1,5 @@
 import { GetLogger } from 'pandora-common';
-import { accountManager } from './account/accountManager';
-import { CloseDatabase } from './database/databaseProvider';
-import { HttpServer } from './networking/httpServer';
-import { ConnectionManagerClient } from './networking/manager_client';
-import { ShardManager } from './shard/shardManager';
 import wtfnode from 'wtfnode';
-import { DiscordBot } from './services/discord/discordBot';
 
 const logger = GetLogger('Lifecycle');
 
@@ -19,20 +13,7 @@ const logger = GetLogger('Lifecycle');
 let stopping: Promise<void> | undefined;
 const STOP_TIMEOUT = 10_000;
 
-async function StopGracefully(): Promise<void> {
-	// Stop HTTP server
-	HttpServer.onDestroy();
-	// Stop discord bot
-	DiscordBot.onDestroy();
-	// Stop sending status updates
-	ConnectionManagerClient.onDestroy();
-	// Unload all shards
-	await ShardManager.onDestroy();
-	// Unload all accounts
-	accountManager.onDestroy();
-	// Disconnect database
-	await CloseDatabase();
-}
+let doStop: () => Promise<void> = () => Promise.reject(new Error('doStop not set'));
 
 export function Stop(): Promise<void> {
 	if (stopping !== undefined)
@@ -46,7 +27,7 @@ export function Stop(): Promise<void> {
 		process.exit(0);
 	}, STOP_TIMEOUT).unref();
 	// Graceful stop syncs everything with directory and database
-	stopping = StopGracefully()
+	stopping = doStop()
 		.catch((err) => {
 			logger.fatal('Stop errored:\n', err);
 			// Even though it is error, we exit with 0 to prevent container restart from triggering
@@ -55,7 +36,8 @@ export function Stop(): Promise<void> {
 	return stopping;
 }
 
-export function SetupSignalHandling(): void {
+export function SetupSignalHandling(stop: () => Promise<void>): void {
+	doStop = stop;
 	process.on('SIGINT', () => {
 		logger.info('Received SIGINT');
 		void Stop();

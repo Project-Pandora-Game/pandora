@@ -3,7 +3,7 @@ import { accountManager } from './account/accountManager';
 import { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } from './config';
 import { InitDatabase } from './database/databaseProvider';
 import { AddDiscordLogOutput, AddFileOutput } from './logging';
-import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
+import { GetLogger, LogLevel, ServiceManager, SetConsoleOutput } from 'pandora-common';
 import { HttpServer } from './networking/httpServer';
 import GetEmailSender from './services/email';
 import { SetupSignalHandling } from './lifecycle';
@@ -12,8 +12,17 @@ import { GitHubVerifier } from './services/github/githubVerify';
 import { ShardTokenStore } from './shard/shardTokenStore';
 import { DiscordBot } from './services/discord/discordBot';
 import { BetaKeyStore } from './shard/betaKeyStore';
+import { ShardManager } from './shard/shardManager';
 
 const logger = GetLogger('init');
+
+const manager = new ServiceManager(logger);
+
+const STOP_PHASES = {
+	ACCOUNTS: 1,
+	DATABASE: 2,
+	HTTP_SERVER: 3,
+} as const;
 
 Start().catch((error) => {
 	logger.fatal('Init failed:', error);
@@ -23,23 +32,26 @@ Start().catch((error) => {
  * Starts the application.
  */
 async function Start(): Promise<void> {
-	SetupSignalHandling();
+	SetupSignalHandling(() => manager.destroy());
 	SetupLogging();
-	logger.info(`${APP_NAME} starting...`);
-	await GetEmailSender().init();
-	await DiscordBot.init();
-	logger.verbose('Initializing database...');
-	await InitDatabase();
-	await ShardTokenStore.init();
-	await BetaKeyStore.init();
-	logger.verbose('Initializing managers...');
-	accountManager.init();
-	ConnectionManagerClient.init();
-	logger.verbose('Initializing APIs...');
-	await GitHubVerifier.init();
-	logger.verbose('Starting HTTP server...');
-	await HttpServer.init();
-	logger.alert('Ready!');
+	await manager
+		.log(LogLevel.INFO, `${APP_NAME} starting...`)
+		.add(GetEmailSender())
+		.add(DiscordBot)
+		.log(LogLevel.VERBOSE, 'Initializing database...')
+		.add(CreateDatabase(), STOP_PHASES.DATABASE)
+		.add(ShardTokenStore)
+		.add(BetaKeyStore)
+		.log(LogLevel.VERBOSE, 'Initializing managers...')
+		.add(accountManager, STOP_PHASES.ACCOUNTS)
+		.add(ConnectionManagerClient)
+		// .add(ShardManager)
+		.log(LogLevel.VERBOSE, 'Initializing APIs...')
+		.add(GitHubVerifier)
+		.log(LogLevel.VERBOSE, 'Starting HTTP server...')
+		.add(HttpServer, STOP_PHASES.HTTP_SERVER)
+		.log(LogLevel.ALERT, 'Ready!')
+		.build();
 }
 
 /**

@@ -17,7 +17,7 @@ export const HttpServer = new class HttpServer implements Service {
 	private readonly _activeConnections = new Set<Socket>();
 
 	/** Setup HTTP server and everything related to it */
-	public init(): Promise<void> {
+	public init(): Promise<HttpServer> {
 		const port = Number.parseInt(SERVER_PORT);
 		if (!Number.isInteger(port)) {
 			throw new Error('Invalid SERVER_PORT');
@@ -94,7 +94,7 @@ export const HttpServer = new class HttpServer implements Service {
 				});
 				// Finalize start
 				logger.info(`HTTP server started on port ${port}`);
-				resolve();
+				resolve(this);
 			});
 		});
 	}
@@ -106,4 +106,4 @@ export const HttpServer = new class HttpServer implements Service {
 		}
 		this._activeConnections.forEach((socket) => socket.destroy());
 	}
-}
+};

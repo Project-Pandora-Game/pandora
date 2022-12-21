@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { IChatRoomDirectoryConfig, IDirectoryShardInfo, RoomId } from 'pandora-common';
+import { IChatRoomDirectoryConfig, IDirectoryShardInfo, RoomId, Service } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from './room';
 import { Shard } from './shard';
@@ -21,13 +21,17 @@ const roomsMetric = new promClient.Gauge({
 	help: 'Current count of rooms',
 });
 
-export const ShardManager = new class ShardManager {
+export const ShardManager = new class ShardManager implements Service {
 	private readonly shards: Map<string, Shard> = new Map();
 	private readonly rooms: Map<RoomId, Room> = new Map();
 	private _stopping: boolean = false;
 
 	public get stopping(): boolean {
 		return this._stopping;
+	}
+
+	public init(): void {
+		// Nothing to do
 	}
 
 	public async deleteShard(id: string): Promise<void> {

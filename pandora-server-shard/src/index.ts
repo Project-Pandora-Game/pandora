@@ -3,7 +3,7 @@ import { APP_NAME, APP_VERSION, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION
 import { AddDiscordLogOutput, AddFileOutput } from './logging';
 import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
-import { StartHttpServer } from './networking/httpServer';
+import { HttpServer } from './networking/httpServer';
 import { InitDatabase } from './database/databaseProvider';
 import { SetupSignalHandling } from './lifecycle';
 import { LoadAssetDefinitions } from './assets/assetManager';
@@ -29,7 +29,7 @@ async function Start(): Promise<void> {
 	logger.verbose('Initializing database...');
 	await InitDatabase();
 	logger.verbose('Starting HTTP server...');
-	await StartHttpServer();
+	await HttpServer.init();
 	logger.alert('Ready!');
 }
 

@@ -1,6 +1,6 @@
 import { GetLogger, IEmpty } from 'pandora-common';
 import { CharacterManager } from './character/characterManager';
-import { StopHttpServer } from './networking/httpServer';
+import { HttpServer } from './networking/httpServer';
 import { DirectoryConnector } from './networking/socketio_directory_connector';
 import { RoomManager } from './room/roomManager';
 import wtfnode from 'wtfnode';
@@ -23,7 +23,7 @@ async function StopGracefully(): Promise<IEmpty> {
 	// Cleanup all rooms
 	RoomManager.removeAllRooms();
 	// Stop HTTP server
-	StopHttpServer();
+	HttpServer.onDestroy();
 	// TODO: Disconnect database
 	// The result of promise from graceful stop is used by Directory, disconnect afterwards
 	setTimeout(() => {

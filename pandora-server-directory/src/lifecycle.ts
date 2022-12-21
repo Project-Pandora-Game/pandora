@@ -1,7 +1,7 @@
 import { GetLogger } from 'pandora-common';
 import { accountManager } from './account/accountManager';
 import { CloseDatabase } from './database/databaseProvider';
-import { StopHttpServer } from './networking/httpServer';
+import { HttpServer } from './networking/httpServer';
 import { ConnectionManagerClient } from './networking/manager_client';
 import { ShardManager } from './shard/shardManager';
 import wtfnode from 'wtfnode';
@@ -21,7 +21,7 @@ const STOP_TIMEOUT = 10_000;
 
 async function StopGracefully(): Promise<void> {
 	// Stop HTTP server
-	StopHttpServer();
+	HttpServer.onDestroy();
 	// Stop discord bot
 	DiscordBot.onDestroy();
 	// Stop sending status updates

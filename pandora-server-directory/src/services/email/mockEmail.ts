@@ -6,9 +6,9 @@ const logger = GetLogger('MockEmailSender');
 
 export default class MockEmailSender implements IEmailSender {
 
-	public init(): Promise<void> {
+	public init(): MockEmailSender {
 		logger.info('Email transporter is ready');
-		return Promise.resolve();
+		return this;
 	}
 
 	public async sendPasswordReset(email: string, username: string, token: string): Promise<void> {

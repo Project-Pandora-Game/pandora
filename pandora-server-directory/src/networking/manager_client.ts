@@ -1,5 +1,5 @@
 import { IConnectionClient } from './common';
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, Service } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL } from '../config';
@@ -32,7 +32,7 @@ const IsIChatRoomDirectoryConfig = ZodMatcher(ChatRoomDirectoryConfigSchema);
 const IsClientDirectoryAuthMessage = ZodMatcher(ClientDirectoryAuthMessageSchema);
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, IConnectionClient> {
+export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, IConnectionClient>, Service {
 	private connectedClients: Set<IConnectionClient> = new Set();
 
 	private readonly messageHandler: MessageHandler<IClientDirectory, IConnectionClient>;
@@ -47,10 +47,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	/** Init the manager */
-	public init(): void {
+	public init(): ConnectionManagerClient {
 		if (this.statusUpdateInterval === undefined) {
 			this.statusUpdateInterval = setInterval(this.broadcastStatusUpdate.bind(this), STATUS_UPDATE_INTERVAL).unref();
 		}
+		return this;
 	}
 
 	public onDestroy(): void {

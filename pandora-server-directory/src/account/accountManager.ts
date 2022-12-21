@@ -1,5 +1,5 @@
 import { GetDatabase } from '../database/databaseProvider';
-import { GetLogger } from 'pandora-common';
+import { GetLogger, Service } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 import promClient from 'prom-client';
 import { DiscordBot } from '../services/discord/discordBot';
@@ -37,7 +37,7 @@ const inUseCharactersMetric = new promClient.Gauge({
 });
 
 /** Class that stores all currently logged in or recently used accounts, removing them when needed */
-export class AccountManager {
+export class AccountManager implements Service {
 	private onlineAccounts: Set<Account> = new Set();
 
 	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms */
@@ -73,10 +73,11 @@ export class AccountManager {
 	private interval: NodeJS.Timeout | undefined;
 
 	/** Init the manager */
-	public init(): void {
+	public init(): AccountManager {
 		if (this.interval === undefined) {
 			this.interval = setInterval(this.tick.bind(this), ACCOUNTMANAGER_TICK_INTERVAL).unref();
 		}
+		return this;
 	}
 
 	public onDestroy(): void {

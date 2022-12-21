@@ -1,11 +1,11 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo } from 'pandora-common';
+import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, Service } from 'pandora-common';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
-export interface PandoraDatabase {
+export interface PandoraDatabase extends Service {
 	/** The id in numeric form that will be assigned to next created account */
 	readonly nextAccountId: number;
 

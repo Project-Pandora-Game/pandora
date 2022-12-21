@@ -22,13 +22,14 @@ export default class SmtpEmail implements IEmailSender {
 		});
 	}
 
-	public async init(): Promise<void> {
+	public async init(): Promise<SmtpEmail> {
 		try {
 			await this._transporter.verify();
 			logger.info('Email transporter is ready');
 		} catch (err) {
 			logger.error(err);
 		}
+		return this;
 	}
 
 	public async sendPasswordReset(email: string, username: string, token: string): Promise<void> {

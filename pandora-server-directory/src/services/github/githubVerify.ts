@@ -1,4 +1,4 @@
-import { GetLogger } from 'pandora-common';
+import { GetLogger, Service } from 'pandora-common';
 import { accountManager } from '../../account/accountManager';
 
 import { Octokit } from '@octokit/rest';
@@ -26,14 +26,14 @@ const states = new Map<string, { accountId: number, login: string; }>();
 let octokitOrg!: Octokit;
 let octokitApp!: Octokit;
 
-export const GitHubVerifier = new class GitHubVerifier {
+export const GitHubVerifier = new class GitHubVerifier implements Service {
 	private _active = false;
 
 	public get active(): boolean {
 		return this._active;
 	}
 
-	public async init(): Promise<this> {
+	public async init(): Promise<GitHubVerifier> {
 		if (this.active) {
 			return this;
 		}
@@ -64,6 +64,7 @@ export const GitHubVerifier = new class GitHubVerifier {
 		this._active = true;
 
 		logger.info('GitHub Verifier API is attached');
+
 		return this;
 	}
 

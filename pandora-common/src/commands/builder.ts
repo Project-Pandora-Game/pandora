@@ -1,5 +1,5 @@
 import { IEmpty } from '../networking';
-import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, CommanExecutorOptions, ICommandExecutionContext } from './executor';
+import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, CommandExecutorOptions, ICommandExecutionContext } from './executor';
 
 interface CommandBuilderSource<
 	Context extends ICommandExecutionContext,
@@ -71,8 +71,8 @@ export class CommandBuilder<
 	}
 
 	public handler(handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
-	public handler(options: CommanExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
-	public handler(options: CommanExecutorOptions | ((context: Context, args: EntryArguments, rest: string) => boolean | undefined | void), handler?: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments> {
+	public handler(options: CommandExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
+	public handler(options: CommandExecutorOptions | ((context: Context, args: EntryArguments, rest: string) => boolean | undefined | void), handler?: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments> {
 		if (typeof options === 'function') {
 			handler = options;
 			options = {};

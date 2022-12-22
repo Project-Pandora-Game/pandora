@@ -35,7 +35,7 @@ export interface CommandRunner<
 	predictHeader(): string;
 }
 
-export interface CommanExecutorOptions {
+export interface CommandExecutorOptions {
 	restArgName?: string;
 }
 
@@ -44,10 +44,10 @@ export class CommandRunnerExecutor<
 	EntryArguments extends Record<string, never>,
 > implements CommandRunner<Context, EntryArguments> {
 
-	private readonly options: CommanExecutorOptions;
+	private readonly options: CommandExecutorOptions;
 	private readonly handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void;
 
-	constructor(options: CommanExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void) {
+	constructor(options: CommandExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void) {
 		this.options = options;
 		this.handler = handler;
 	}

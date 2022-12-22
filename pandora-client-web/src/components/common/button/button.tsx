@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React, { ButtonHTMLAttributes, DetailedHTMLProps, ReactElement } from 'react';
-import './Button.scss';
+import './button.scss';
 
 export type ButtonTheme = 'default' | 'defaultActive';
 

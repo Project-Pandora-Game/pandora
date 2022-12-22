@@ -1,4 +1,4 @@
-import { AssertNotNullable, CharacterId, IChatRoomStatus, RoomId } from 'pandora-common';
+import { AssertNotNullable, CharacterId, IChatRoomStatus, IChatType, RoomId } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
@@ -14,6 +14,7 @@ import { BrowserStorage } from '../../browserStorage';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import classNames from 'classnames';
 import { Row } from '../common/container/container';
+import { GetChatModeDescription } from './commands';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -24,6 +25,8 @@ export type IChatInputHandler = {
 	setEditing: (editing: number | null) => boolean;
 	autocompleteHint: AutocompleteDisplyData | null;
 	setAutocompleteHint: (hint: AutocompleteDisplyData | null) => void;
+	mode: ChatMode | null;
+	setMode: (mode: ChatMode | null) => void;
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
@@ -36,6 +39,8 @@ const chatInputContext = createContext<IChatInputHandler>({
 	setEditing: () => false,
 	autocompleteHint: null,
 	setAutocompleteHint: noop,
+	mode: null,
+	setMode: noop,
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
@@ -45,11 +50,17 @@ type ChatInputSave = {
 };
 const InputResore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
 
+export type ChatMode = {
+	type: IChatType,
+	raw: boolean,
+};
+
 export function ChatInputContextProvider({ children }: { children: React.ReactNode }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
 	const [editing, setEditingState] = useState<number | null>(null);
 	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplyData | null>(null);
+	const [mode, setMode] = useState<ChatMode | null>(null);
 	const characters = useChatRoomCharacters();
 	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
@@ -130,8 +141,10 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		setEditing,
 		autocompleteHint,
 		setAutocompleteHint,
+		mode,
+		setMode,
 		ref,
-	}), [target, editing, setEditing, autocompleteHint, setAutocompleteHint, playerId, characters]);
+	}), [target, editing, setEditing, autocompleteHint, setAutocompleteHint, playerId, characters, mode]);
 
 	return (
 		<chatInputContext.Provider value={ context }>
@@ -160,7 +173,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
 	const chatInput = useChatInput();
-	const { target, editing, setEditing, setValue, setAutocompleteHint } = chatInput;
+	const { target, editing, setEditing, setValue, setAutocompleteHint, mode } = chatInput;
 
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
@@ -238,6 +251,8 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 					sender.sendMessage(input, {
 						target: target?.data.id,
 						editing: editing || undefined,
+						type: mode?.type || undefined,
+						raw: mode?.raw || undefined,
 					});
 					textarea.value = '';
 					setEditing(null);
@@ -389,7 +404,7 @@ function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount:
 }
 
 function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void }): ReactElement {
-	const { target, setTarget, editing, setEditing, setValue } = useChatInput();
+	const { target, setTarget, editing, setEditing, setValue, mode, setMode } = useChatInput();
 	const lastHasTarget = useRef(target !== null);
 	const lastEditing = useRef(editing);
 
@@ -424,6 +439,14 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void }): Reac
 					</Button>
 				</span>
 			) }
+			{ mode && !(mode.type === 'chat' && !mode.raw) && (
+				<span>
+					{ 'Sending ' }
+					{ GetChatModeDescription(mode, true) }
+					{ ' ' }
+					<Button className='slim' onClick={ () => setMode(null) }>Cancel</Button>
+				</span>
+			) }
 		</div>
 	);
 }
@@ -441,6 +464,17 @@ function AutoCompleteHint(): ReactElement | null {
 	if (!autocompleteHint?.result)
 		return null;
 
+	// When only one command can/should be displayed, onlyShowOption is set to that command's index in the option array
+	let onlyShowOption = -1;
+	if (autocompleteHint.result.options.length === 1) {
+		onlyShowOption = 0;
+	} else if (ref.current) {
+		onlyShowOption = autocompleteHint.result.options.findIndex((option) => COMMAND_KEY + option.replaceValue === ref.current?.value);
+	}
+	if (onlyShowOption !== -1 && !autocompleteHint.result.options[onlyShowOption]?.longDescription) {
+		onlyShowOption = -1;
+	}
+
 	return (
 		<div className='autocomplete-hint'>
 			<div>
@@ -451,6 +485,7 @@ function AutoCompleteHint(): ReactElement | null {
 							<hr />
 							{
 								autocompleteHint.result.options.map((option, index) => (
+									(onlyShowOption === -1 || onlyShowOption === index) &&
 									<span key={ index }
 										className={ classNames({ selected: index === autocompleteHint.index }) }
 										onClick={ (ev) => {
@@ -486,6 +521,13 @@ function AutoCompleteHint(): ReactElement | null {
 									</span>
 								))
 							}
+						</>
+				}
+				{
+					onlyShowOption >= 0 &&
+						<>
+							<hr />
+							{ autocompleteHint.result.options[onlyShowOption]?.longDescription }
 						</>
 				}
 			</div>

@@ -9,7 +9,11 @@ export interface ICommandExecutionContext {
 
 export type CommandStepPreparseProcessor = ((input: string) => { value: string; spacing: string; rest: string; });
 
-export type CommandAutocompleteOption = { replaceValue: string; displayValue: string; };
+export type CommandAutocompleteOption = {
+	replaceValue: string;
+	displayValue: string;
+	longDescription?: string;
+};
 export type CommandAutocompleteResult = {
 	header: string;
 	options: CommandAutocompleteOption[];

@@ -1,4 +1,4 @@
-import { AppearanceActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId } from 'pandora-common';
+import { AppearanceActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, IChatType } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -48,7 +48,7 @@ export function IsUserMessage(message: IChatroomMessageProcessed): message is IC
 
 export type IMessageParseOptions = {
 	editing?: number;
-	type?: 'chat' | 'ooc' | 'me' | 'emote';
+	type?: IChatType;
 	raw?: true;
 	target?: CharacterId;
 };
@@ -156,7 +156,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		sent: [number, {
 			text: string;
 			time: number;
-			rawType?: 'chat' | 'ooc' | 'me' | 'emote';
+			rawType?: IChatType;
 			target?: CharacterId;
 		}][];
 	}>('chatRoomRestore', undefined);
@@ -408,7 +408,7 @@ export class ChatRoom extends TypedEventEmitter<{
 	private readonly _sent = new Map<number, {
 		text: string;
 		time: number;
-		rawType?: 'chat' | 'ooc' | 'me' | 'emote';
+		rawType?: IChatType;
 		target?: CharacterId;
 	}>();
 	public sendMessage(message: string, { editing, type, raw, target }: IMessageParseOptions = {}): void {

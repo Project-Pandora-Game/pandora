@@ -59,6 +59,7 @@ export const ClientShardSchema = {
 				type: z.literal('diceRoll'),
 				sides: z.number().int().min(2).max(100),
 				dice: z.number().int().min(1).max(10),
+				//TODO: add an option for hidden rolls to the command
 				hidden: z.boolean().default(false).optional(),
 			})]),
 		response: null,

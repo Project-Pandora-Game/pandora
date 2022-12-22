@@ -83,7 +83,7 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 				longDescription: c.longDescription,
 			}));
 		return options.length > 0 ? {
-			header: 'Commands - arguments in <> are required, arguments in [] are optional',
+			header: 'Commands (arguments in <> are required, arguments in [] are optional)',
 			options,
 		} : null;
 	}

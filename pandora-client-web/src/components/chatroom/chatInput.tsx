@@ -14,6 +14,7 @@ import { BrowserStorage } from '../../browserStorage';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import classNames from 'classnames';
 import { Row } from '../common/container/container';
+import { GetChatModeDescription } from './commands';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -49,10 +50,9 @@ type ChatInputSave = {
 };
 const InputResore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
 
-type ChatMode = {
+export type ChatMode = {
 	type: IChatType,
 	raw: boolean,
-	description: string,
 };
 
 export function ChatInputContextProvider({ children }: { children: React.ReactNode }) {
@@ -441,7 +441,8 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void }): Reac
 			) }
 			{ mode && !(mode.type === 'chat' && !mode.raw) && (
 				<span>
-					{ mode.description }
+					{ 'Sending ' }
+					{ GetChatModeDescription(mode, true) }
 					{ ' ' }
 					<Button className='slim' onClick={ () => setMode(null) }>Cancel</Button>
 				</span>
@@ -463,13 +464,14 @@ function AutoCompleteHint(): ReactElement | null {
 	if (!autocompleteHint?.result)
 		return null;
 
+	// When only one command can/should be displayed, onlyShowOption is set to that command's index in the option array
 	let onlyShowOption = -1;
 	if (autocompleteHint.result.options.length === 1) {
 		onlyShowOption = 0;
 	} else if (ref.current) {
 		onlyShowOption = autocompleteHint.result.options.findIndex((option) => COMMAND_KEY + option.replaceValue === ref.current?.value);
 	}
-	if (!autocompleteHint.result.options[onlyShowOption]?.longDescription) {
+	if (onlyShowOption !== -1 && !autocompleteHint.result.options[onlyShowOption]?.longDescription) {
 		onlyShowOption = -1;
 	}
 

@@ -1,22 +1,23 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
 import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON } from 'pandora-common';
 import { CommandSelectorCharacter } from './commandsHelpers';
+import { ChatMode } from './chatInput';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
 }
 
-const CreateMessageTypeParser = (names: [string, ...string[]], raw: boolean, type: IChatType, description: string, longDescription: string): IClientCommand => {
-	const desc = `${description}${raw ? ', without any formatting' : ''}`;
+const CreateMessageTypeParser = (names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string): IClientCommand => {
+	const description = GetChatModeDescription({ type, raw });
 	return ({
 		key: names.map((name) => (raw ? 'raw' : '') + name) as [string, ...string[]],
-		description: `Sends ${'aeiou'.includes(desc[0]) ? 'an' : 'a'} ${desc}`,
+		description: `Sends ${'aeiou'.includes(description[0]) ? 'an' : 'a'} ${description}`,
 		longDescription,
 		usage: '[message]',
 		// TODO
 		// status: { status: 'typing' },
 		handler: CreateClientCommand()
-			.handler(({ messageSender, inputHandlerContext }, _args, message) => {
+			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, _args, message) => {
 				message = message.trim();
 
 				if (!message) {
@@ -25,10 +26,7 @@ const CreateMessageTypeParser = (names: [string, ...string[]], raw: boolean, typ
 						return true;
 					}
 
-					inputHandlerContext.setMode({
-						type, raw,
-						description: `Sending ${desc.replace('message', 'messages')}`,
-					});
+					inputHandlerContext.setMode({ type, raw });
 					return true;
 				}
 
@@ -55,13 +53,22 @@ const BuildAlternativeCommandsMessage = (keywords: string[]): string => {
 	return result;
 };
 
+export function GetChatModeDescription(mode: ChatMode, plural: boolean = false) {
+	const description = ChatTypeDetails[mode.type]?.description;
+	if (description) {
+		const desc = `${description}${mode.raw ? ', without any formatting' : ''}`;
+		return plural ? desc.replace('message', 'messages') : desc;
+	}
+	return '';
+}
+
 /* Creates two commands for sending chat messages of a specific type, one formatted and one raw/unformatted */
 const CreateMessageTypeParsers = (type: IChatType): IClientCommand[] => {
 	const details = ChatTypeDetails[type];
 	const longDesc = `${BuildAlternativeCommandsMessage(details.commandKeywords)}${details.longDescription}`;
 	return [
-		CreateMessageTypeParser(details.commandKeywords, false, type, details.description, longDesc), //formatted
-		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.description, details.longDescription + LONGDESC_RAW), //raw, no alternatives
+		CreateMessageTypeParser(details.commandKeywords, false, type, longDesc), //formatted
+		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.longDescription + LONGDESC_RAW), //raw, no alternatives
 	];
 };
 

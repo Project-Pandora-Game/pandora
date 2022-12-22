@@ -105,7 +105,7 @@ export type IChatTypeDetails = {
 	longDescription: string;
 };
 
-export const ChatTypeDetails: { [type in IChatType]: IChatTypeDetails; } = {
+export const ChatTypeDetails: Record<IChatType, IChatTypeDetails> = {
 	'chat': {
 		commandKeywords: ['say', 'chat'],
 		description: 'standard message',

@@ -4,7 +4,7 @@ import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import { AssetGraphicsLayer, useLayerHasAlphaMasks, useLayerName } from '../../../assets/assetGraphics';
 import { useEvent } from '../../../common/useEvent';
-import { Button } from '../../../components/common/Button/Button';
+import { Button } from '../../../components/common/button/button';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';

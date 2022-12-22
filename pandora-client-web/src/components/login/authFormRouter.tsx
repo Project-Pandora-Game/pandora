@@ -1,7 +1,7 @@
 import { IsObject } from 'pandora-common';
 import React, { ComponentType, ReactElement, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FormErrorMessage } from '../common/Form/form';
+import { FormErrorMessage } from '../common/form/form';
 import { AuthFormDataProvider, useAuthFormData } from './authFormDataProvider';
 import './authFormRouter.scss';
 

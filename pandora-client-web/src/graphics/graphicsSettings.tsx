@@ -2,7 +2,7 @@ import { ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
-import { Select } from '../components/common/Select/Select';
+import { Select } from '../components/common/select/select';
 import { useObservable } from '../observable';
 
 export const GraphicsSettingsScheme = z.object({

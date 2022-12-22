@@ -4,10 +4,10 @@ import React, { ReactElement, useCallback, useState, useSyncExternalStore } from
 import { useForm, Validate } from 'react-hook-form';
 import { AssetGraphicsLayer, useLayerName } from '../../../assets/assetGraphics';
 import { useCharacterAppearanceItems } from '../../../character/character';
-import { Button } from '../../../components/common/Button/Button';
+import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
-import { Form, FormField, FormFieldError } from '../../../components/common/Form/form';
-import { Select } from '../../../components/common/Select/Select';
+import { Form, FormField, FormFieldError } from '../../../components/common/form/form';
+import { Select } from '../../../components/common/select/select';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';

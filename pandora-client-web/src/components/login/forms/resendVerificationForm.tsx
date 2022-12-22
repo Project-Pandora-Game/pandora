@@ -3,8 +3,8 @@ import React, { ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useDirectoryResendVerification } from '../../../networking/account_manager';
-import { Button } from '../../common/Button/Button';
-import { Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
+import { Button } from '../../common/button/button';
+import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
 
 export interface ResendVerificationFormData {
 	email: string;

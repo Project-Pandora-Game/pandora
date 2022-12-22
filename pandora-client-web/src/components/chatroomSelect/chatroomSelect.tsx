@@ -4,7 +4,7 @@ import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { PersistentToast } from '../../persistentToast';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';

@@ -3,9 +3,9 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCreateCharacter } from '../../character/player';
 import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import './characterCreate.scss';
-import { Form, FormErrorMessage, FormField } from '../common/Form/form';
+import { Form, FormErrorMessage, FormField } from '../common/form/form';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 
 export function CharacterCreate(): ReactElement | null {

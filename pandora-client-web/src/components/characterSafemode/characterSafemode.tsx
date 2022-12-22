@@ -5,7 +5,7 @@ import { PlayerCharacter } from '../../character/player';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
 import { ModalDialog } from '../dialog/dialog';
 import { usePlayer } from '../gameContext/playerContextProvider';

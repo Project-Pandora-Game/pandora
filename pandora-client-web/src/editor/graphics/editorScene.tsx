@@ -6,7 +6,7 @@ import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
-import { Button } from '../../components/common/Button/Button';
+import { Button } from '../../components/common/button/button';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/pixiViewport';
 import { useObservable } from '../../observable';

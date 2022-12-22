@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { type HexColorString, HexColorStringSchema } from 'pandora-common';
 import React, { useState, type ChangeEvent, useCallback, useMemo, type ReactElement } from 'react';
-import { Button } from '../Button/Button';
+import { Button } from '../button/button';
 
 export function ColorInput({
 	initialValue, resetValue, onChange, throttle = 0, disabled = false,

@@ -3,8 +3,8 @@ import React, { createContext, ReactElement, useContext, useMemo, useState } fro
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { Button } from '../../common/Button/Button';
-import { Select } from '../../common/Select/Select';
+import { Button } from '../../common/button/button';
+import { Select } from '../../common/select/select';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './roles.scss';
 

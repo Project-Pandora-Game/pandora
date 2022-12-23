@@ -3,9 +3,9 @@ import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager';
-import { Button } from '../../common/Button/Button';
-import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/Form/form';
-import { LocationStateMessage } from '../../common/LocationStateMessage/locationStateMessage';
+import { Button } from '../../common/button/button';
+import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
 
 const RESET_CODE_LENGTH = 6;
 

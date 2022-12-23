@@ -1,8 +1,8 @@
 import { IsUsername } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { Button } from '../../common/Button/Button';
-import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/Form/form';
-import { LocationStateMessage } from '../../common/LocationStateMessage/locationStateMessage';
+import { Button } from '../../common/button/button';
+import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
 import { useAuthToken, useCurrentAccount } from '../../gameContext/directoryConnectorContextProvider';
 import { useLoginForm } from './useLoginForm';
 

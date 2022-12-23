@@ -1,8 +1,8 @@
 import { GetLogger, IsSimpleToken, IsString, IsUsername } from 'pandora-common';
 import React, { ReactElement, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { Button } from '../../common/Button/Button';
-import { FormErrorMessage, Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
+import { Button } from '../../common/button/button';
+import { FormErrorMessage, Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { useAuthFormData } from '../authFormDataProvider';
 import { useLoginForm } from './useLoginForm';
 

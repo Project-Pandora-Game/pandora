@@ -4,7 +4,7 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { AccountRole, ACCOUNT_ROLES_CONFIG, EMPTY, IDirectoryAccountInfo, IsAuthorized } from 'pandora-common';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { uniq } from 'lodash';
 import { ColorInput, useColorInput } from '../common/colorInput/colorInput';

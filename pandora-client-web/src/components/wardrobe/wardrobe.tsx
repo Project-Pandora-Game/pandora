@@ -38,7 +38,7 @@ import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
-import { Button, ButtonProps, IconButton } from '../common/Button/Button';
+import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { USER_DEBUG } from '../../config/Environment';
 import _ from 'lodash';
 import { CommonProps } from '../../common/reactTypes';

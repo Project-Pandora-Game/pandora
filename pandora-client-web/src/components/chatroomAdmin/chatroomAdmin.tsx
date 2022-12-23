@@ -16,7 +16,7 @@ import React, { ReactElement, useCallback, useMemo, useReducer, useState } from 
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../networking/directoryConnector';
 import { PersistentToast } from '../../persistentToast';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import {
 	useCurrentAccount,
 	useDirectoryChangeListener,

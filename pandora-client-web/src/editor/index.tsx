@@ -4,7 +4,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
 import { LoadAssetsFromAssetDevServer, LoadAssetsFromFileSystem, LoadAssetsFromOfficialLink } from './assetLoader';
-import { Button } from '../components/common/Button/Button';
+import { Button } from '../components/common/button/button';
 import '../index.scss';
 import '../styles/globalUtils.scss';
 import { Editor, EditorView } from './editor';

@@ -4,8 +4,8 @@ import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { useDirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
-import { Button } from '../../common/Button/Button';
-import { Form, FormField, FormFieldError, FormLink } from '../../common/Form/form';
+import { Button } from '../../common/button/button';
+import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { useAuthFormData } from '../authFormDataProvider';
 

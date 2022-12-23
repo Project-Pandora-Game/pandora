@@ -1,12 +1,12 @@
 import { ICharacterData } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ColorInput, useColorInput } from '../common/colorInput/colorInput';
 import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
 import { useChatRoomFeatures } from '../gameContext/chatRoomContextProvider';
-import { Select } from '../common/Select/Select';
+import { Select } from '../common/select/select';
 
 export function CharacterSettings(): ReactElement | null {
 	const playerData = usePlayerData();

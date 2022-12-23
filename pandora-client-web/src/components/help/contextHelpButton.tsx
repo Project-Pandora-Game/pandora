@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
-import { Button } from '../common/Button/Button';
+import { Button } from '../common/button/button';
 import { Column } from '../common/container/container';
 import { DraggableDialog } from '../dialog/dialog';
 import helpIcon from '../../assets/icons/help.svg';

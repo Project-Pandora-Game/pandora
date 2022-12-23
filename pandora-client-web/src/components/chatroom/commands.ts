@@ -118,7 +118,8 @@ export const COMMANDS: readonly IClientCommand[] = [
 	},
 	{
 		key: ['dice'],
-		description: 'Roll up to 10 100-sided dice. Without any options a single 6-sided die is rolled. The command /dice 20 rolls a single 20-sided die and /dice 3d6 rolls 3 6-sided dice. The option /secret hides the roll result from others in the room.',
+		description: 'Roll up to 10 100-sided dice.',
+		longDescription: 'Without any options a single 6-sided die is rolled.The command / dice 20 rolls a single 20 - sided die and / dice 3d6 rolls 3 6 - sided dice.The option / secret hides the roll result from others in the room.',
 		usage: '[count\'d\'][sides] [/secret]',
 		handler: CreateClientCommand()
 			.argument('options', {

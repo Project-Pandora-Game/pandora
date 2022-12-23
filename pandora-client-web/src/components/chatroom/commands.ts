@@ -77,19 +77,25 @@ export const COMMANDS: readonly IClientCommand[] = [
 	},
 	{
 		key: ['dice'],
-		description: 'Roll up to 10 100-sided dice. Without any options a single 6-sided die is rolled. The command /dice 20 rolls a single 20-sided die and /dice 3d6 rolls 3 6-sided dice.',
-		usage: '[count\'d\'][sides]',
+		description: 'Roll up to 10 100-sided dice. Without any options a single 6-sided die is rolled. The command /dice 20 rolls a single 20-sided die and /dice 3d6 rolls 3 6-sided dice. The option /secret hides the roll result from others in the room.',
+		usage: '[count\'d\'][sides] [/secret]',
 		handler: CreateClientCommand()
 			.argument('options', {
 				preparse: 'allTrimmed',
 				parse: (input) => {
 					let dice = 1;
 					let sides = 6;
+					let hidden = false;
+					input = input.toUpperCase();
+					if (input.includes('/SECRET')) {
+						hidden = true;
+						input = input.replace('/SECRET', '').trim();
+					}
 					if (input !== '') {
 						// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
-						const regExp = /(^\d+\s*D\s*\d+$)|(^\d+$)/;
-						if (regExp.test(input.toUpperCase())) {
-							const gameOptions = input.toUpperCase().split('D');
+						const regExp = /(^\d+\s*D\s*\d+$)|(^\d+$)|\/secret$/;
+						if (regExp.test(input)) {
+							const gameOptions = input.split('D');
 							if (gameOptions.length === 2) {
 								dice = parseInt(gameOptions[0]);
 								sides = parseInt(gameOptions[1]);
@@ -104,7 +110,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 							return { success: false, error: `Invalid Options: '${input}'` };
 						} // RegEx test
 					}
-					return { success: true, value: { dice, sides } };
+					return { success: true, value: { dice, sides, hidden } };
 				},
 			})
 			.handler(({ shardConnector }, { options }) => {

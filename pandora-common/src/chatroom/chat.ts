@@ -73,6 +73,8 @@ export type IChatRoomMessageAction = {
 		itemPrevious?: IChatRoomMessageActionItem;
 		/** Path to the container possible on `character` that `item` or `itemPrevious` are in */
 		itemContainerPath?: IChatroomMessageActionContainerPath;
+		/** Array of characters the message should be sent to */
+		sendTo?: CharacterId[];
 	};
 	dictionary?: Record<string, string>;
 };

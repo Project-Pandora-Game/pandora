@@ -171,16 +171,40 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				for (let i = 0; i < game.dice; i++) rolls[i] = Math.floor(Math.random() * game.sides + 1);
 				const result = rolls.length > 1 ? '(' + rolls.sort().toString() + ')' : rolls[0].toString();
 
-				room.handleAppearanceActionMessage({
-					id: 'gamblingDice',
-					character: client.character.id,
-					dictionary: {
-						'DICE_COUNT': game.dice === 1 ?
-							`a ${game.sides}-sided die` :
-							`${game.dice} ${game.sides}-sided dice`,
-						'DICE_RESULT': `and the result is ${result}`,
-					},
-				});
+				if (game.hidden) {
+					room.handleAppearanceActionMessage({
+						id: 'gamblingDice',
+						character: client.character.id,
+						dictionary: {
+							'DICE_COUNT': game.dice === 1 ?
+								`a ${game.sides}-sided die secretely.` :
+								`${game.dice} ${game.sides}-sided dice secretely.`,
+							'DICE_RESULT': ``,
+						},
+					});
+					room.handleAppearanceActionMessage({
+						id: 'gamblingDiceHidden',
+						character: client.character.id,
+						sendTo: new Array(client.character.id),
+						dictionary: {
+							'DICE_COUNT': game.dice === 1 ?
+								`a ${game.sides}-sided die` :
+								`${game.dice} ${game.sides}-sided dice`,
+							'DICE_RESULT': `${result}`,
+						},
+					});
+				} else {
+					room.handleAppearanceActionMessage({
+						id: 'gamblingDice',
+						character: client.character.id,
+						dictionary: {
+							'DICE_COUNT': game.dice === 1 ?
+								`a ${game.sides}-sided die` :
+								`${game.dice} ${game.sides}-sided dice`,
+							'DICE_RESULT': ` and the result is ${result}.`,
+						},
+					});
+				}
 				break;
 			}
 			default:

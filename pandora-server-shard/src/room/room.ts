@@ -275,6 +275,7 @@ export class Room extends ServerRoom<IShardClient> {
 		customText,
 		character,
 		targetCharacter,
+		sendTo,
 		dictionary,
 		...data
 	}: AppearanceActionHandlerMessage): void {
@@ -287,6 +288,7 @@ export class Room extends ServerRoom<IShardClient> {
 				data: {
 					character: this._getCharacterActionInfo(character),
 					targetCharacter: targetCharacter !== character ? this._getCharacterActionInfo(targetCharacter) : undefined,
+					sendTo,
 					...data,
 				},
 				dictionary,
@@ -302,9 +304,13 @@ export class Room extends ServerRoom<IShardClient> {
 					case 'ooc':
 						return msg.to === undefined || character.id === msg.from.id || character.id === msg.to.id;
 					case 'deleted':
+						return true;
 					case 'emote':
+						return true;
 					case 'me':
+						return true;
 					case 'action':
+						return msg.data?.sendTo === undefined || msg.data?.sendTo.includes(character.id);
 					case 'serverMessage':
 						return true;
 					default:

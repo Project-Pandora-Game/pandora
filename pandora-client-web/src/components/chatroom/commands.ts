@@ -73,10 +73,11 @@ const CreateMessageTypeParsers = (type: IChatType): IClientCommand[] => {
 	];
 };
 
-const CreateChatroomAdminAction = (action: IClientDirectoryArgument['chatRoomAdminAction']['action']): IClientCommand => ({
+const CreateChatroomAdminAction = (action: IClientDirectoryArgument['chatRoomAdminAction']['action'], longDescription: string): IClientCommand => ({
 	key: [action],
 	usage: '<target>',
 	description: `${action[0].toUpperCase() + action.substring(1)} user`,
+	longDescription,
 	handler: CreateClientCommand()
 		.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
 		// TODO make this accept multiple targets and accountIds
@@ -94,12 +95,13 @@ export const COMMANDS: readonly IClientCommand[] = [
 	...CreateMessageTypeParsers('ooc'),
 	...CreateMessageTypeParsers('me'),
 	...CreateMessageTypeParsers('emote'),
-	CreateChatroomAdminAction('kick'),
-	CreateChatroomAdminAction('ban'),
+	CreateChatroomAdminAction('kick', 'Kicks a user from the current chatroom.'),
+	CreateChatroomAdminAction('ban', 'Bans a user from the current chatroom.'),
 	{
 		key: ['unban'],
-		usage: '<target>',
+		usage: '<account id>',
 		description: 'Unban user',
+		longDescription: 'Removes a user from the ban list of the current chatroom.',
 		handler: CreateClientCommand()
 			.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
 			.argument('target', {
@@ -119,8 +121,8 @@ export const COMMANDS: readonly IClientCommand[] = [
 				});
 			}),
 	},
-	CreateChatroomAdminAction('promote'),
-	CreateChatroomAdminAction('demote'),
+	CreateChatroomAdminAction('promote', 'Promotes a user to chatroom admin.'),
+	CreateChatroomAdminAction('demote', 'Demotes a user from chatroom admin.'),
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',

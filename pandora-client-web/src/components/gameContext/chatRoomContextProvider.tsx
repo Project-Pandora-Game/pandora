@@ -1,4 +1,4 @@
-import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, IChatType, IsAuthorized, Nullable, IDirectoryAccountInfo } from 'pandora-common';
+import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { AppearanceContainer, Character } from '../../character/character';
@@ -11,16 +11,34 @@ import { NotificationData } from './notificationContextProvider';
 import { TypedEventEmitter } from '../../event';
 import { useShardConnector } from './shardConnectorContextProvider';
 import { AssetManagerClient } from '../../assets/assetManager';
+import { z } from 'zod';
 
 const logger = GetLogger('ChatRoom');
 
-const MESSAGE_EDIT_TIMOUT = 1000 * 60 * 10; // 10 minutes
+const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 10; // 10 minutes
+
+const MessageParseOptionsSchema = z.object({
+	editing: z.number().optional(),
+	type: ChatTypeSchema.optional(),
+	raw: z.boolean().optional(),
+	target: CharacterIdSchema.optional(),
+});
+
+export type IMessageParseOptions = z.infer<typeof MessageParseOptionsSchema>;
+
+const SavedMessageSchema = z.object({
+	text: z.string(),
+	time: z.number(),
+	options: MessageParseOptionsSchema,
+});
+
+export type ISavedMessage = z.infer<typeof SavedMessageSchema>;
 
 export interface IChatRoomMessageSender {
 	sendMessage(message: string, options?: IMessageParseOptions): void;
 	deleteMessage(deleteId: number): void;
 	getMessageEditTimeout(id: number): number | undefined;
-	getMessageEdit(id: number): { text: string; target?: CharacterId; } | undefined;
+	getMessageEdit(id: number): ISavedMessage | undefined;
 	getLastMessageEdit(): number | undefined;
 }
 
@@ -45,13 +63,6 @@ export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatro
 export function IsUserMessage(message: IChatroomMessageProcessed): message is IChatroomMessageChatProcessed {
 	return message.type !== 'action' && message.type !== 'serverMessage';
 }
-
-export type IMessageParseOptions = {
-	editing?: number;
-	type?: IChatType;
-	raw?: true;
-	target?: CharacterId;
-};
 
 export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
 	const asset = assetManager.getAssetById(assetId);
@@ -158,13 +169,12 @@ export class ChatRoom extends TypedEventEmitter<{
 	private readonly _restore = BrowserStorage.createSession<undefined | {
 		roomId: RoomId;
 		messages: readonly IChatroomMessageProcessed[];
-		sent: [number, {
-			text: string;
-			time: number;
-			rawType?: IChatType;
-			target?: CharacterId;
-		}][];
-	}>('chatRoomRestore', undefined);
+		sent: [number, ISavedMessage][];
+	}>('chatRoomRestore', undefined, z.object({
+		roomId: RoomIdSchema,
+		messages: z.array(ZodCast<IChatroomMessageProcessed>()),
+		sent: z.array(z.tuple([z.number(), SavedMessageSchema])),
+	}));
 
 	private _setRestore(roomId?: RoomId): void {
 		if (!roomId) {
@@ -193,7 +203,7 @@ export class ChatRoom extends TypedEventEmitter<{
 	constructor(shard: ShardConnector) {
 		super();
 		this._shard = shard;
-		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMOUT / 2);
+		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
 	}
 
 	//#region Handler
@@ -216,7 +226,7 @@ export class ChatRoom extends TypedEventEmitter<{
 						this.messages.value = this._restore.value.messages;
 						const now = Date.now();
 						for (const [id, message] of this._restore.value.sent) {
-							if (message.time + MESSAGE_EDIT_TIMOUT < now) {
+							if (message.time + MESSAGE_EDIT_TIMEOUT < now) {
 								this._sent.set(id, message);
 							}
 						}
@@ -410,24 +420,21 @@ export class ChatRoom extends TypedEventEmitter<{
 
 	//#region MessageSender
 
-	private readonly _sent = new Map<number, {
-		text: string;
-		time: number;
-		rawType?: IChatType;
-		target?: CharacterId;
-	}>();
-	public sendMessage(message: string, { editing, type, raw, target }: IMessageParseOptions = {}): void {
+	private readonly _sent = new Map<number, ISavedMessage>();
+	public sendMessage(message: string, options: IMessageParseOptions = {}): void {
+		const { editing, target } = options;
+		let { type, raw } = options;
 		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
 			throw new Error('Shard is not connected');
 		}
 		if (editing !== undefined) {
 			const edit = this._sent.get(editing);
-			if (!edit || edit.time + MESSAGE_EDIT_TIMOUT < Date.now()) {
+			if (!edit || edit.time + MESSAGE_EDIT_TIMEOUT < Date.now()) {
 				throw new Error('Message not found');
 			}
-			if (edit.rawType) {
+			if (edit.options.raw) {
 				raw = true;
-				type = edit.rawType;
+				type = edit.options.type;
 			}
 		}
 		if (target !== undefined) {
@@ -453,8 +460,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		this._sent.set(id, {
 			text: message,
 			time: Date.now(),
-			rawType: raw ? type : undefined,
-			target,
+			options: { ...options, type, raw },
 		});
 		if (editing !== undefined) {
 			this._sent.delete(editing);
@@ -469,7 +475,7 @@ export class ChatRoom extends TypedEventEmitter<{
 			throw new Error('Shard is not connected');
 		}
 		const edit = this._sent.get(deleteId);
-		if (!edit || edit.time + MESSAGE_EDIT_TIMOUT < Date.now()) {
+		if (!edit || edit.time + MESSAGE_EDIT_TIMEOUT < Date.now()) {
 			throw new Error('Message not found');
 		}
 		this._sent.delete(deleteId);
@@ -483,12 +489,12 @@ export class ChatRoom extends TypedEventEmitter<{
 		if (!edit)
 			return undefined;
 
-		return edit.time + MESSAGE_EDIT_TIMOUT - Date.now();
+		return edit.time + MESSAGE_EDIT_TIMEOUT - Date.now();
 	}
 
-	public getMessageEdit(id: number): { text: string; target?: CharacterId; } | undefined {
+	public getMessageEdit(id: number): ISavedMessage | undefined {
 		const edit = this._sent.get(id);
-		if (!edit || edit.time + MESSAGE_EDIT_TIMOUT < Date.now()) {
+		if (!edit || edit.time + MESSAGE_EDIT_TIMEOUT < Date.now()) {
 			return undefined;
 		}
 
@@ -509,7 +515,7 @@ export class ChatRoom extends TypedEventEmitter<{
 	private _cleanupEdits(): void {
 		const now = Date.now();
 		for (const [id, edit] of this._sent) {
-			if (edit.time + MESSAGE_EDIT_TIMOUT < now) {
+			if (edit.time + MESSAGE_EDIT_TIMEOUT < now) {
 				this._sent.delete(id);
 			}
 		}

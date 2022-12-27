@@ -49,7 +49,7 @@ type ChatInputSave = {
 	input: string;
 	roomId: RoomId | null;
 };
-const InputResore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
+const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
 
 export type ChatMode = {
 	type: IChatType;
@@ -71,8 +71,8 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		if (!roomId)
 			return;
 
-		if (roomId !== InputResore.value.roomId) {
-			InputResore.value = { input: '', roomId };
+		if (roomId !== InputRestore.value.roomId) {
+			InputRestore.value = { input: '', roomId };
 		}
 	}, [roomId]);
 
@@ -82,16 +82,16 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			ref.current?.focus();
 			return true;
 		}
-		const { text, target: targetId } = sender.getMessageEdit(messageId) ?? {};
+		const { text, options } = sender.getMessageEdit(messageId) ?? {};
 		if (!text) {
 			return false;
 		}
-		if (targetId) {
-			const targetCharacter = characters?.find((c) => c.data.id === targetId);
+		if (options?.target) {
+			const targetCharacter = characters?.find((c) => c.data.id === options.target);
 			if (targetCharacter) {
 				setTarget(targetCharacter);
 			} else {
-				toast(`Character ${targetId} not found`, TOAST_OPTIONS_ERROR);
+				toast(`Character ${options.target} not found`, TOAST_OPTIONS_ERROR);
 			}
 		}
 		if (ref.current) {
@@ -129,7 +129,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			if (ref.current) {
 				ref.current.value = value;
 			}
-			InputResore.value = { input: value, roomId: InputResore.value.roomId };
+			InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
 		},
 		target,
 		setTarget: (t: CharacterId | null) => {
@@ -326,7 +326,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 			return;
 
 		lastInput.current = value;
-		InputResore.value = { input: value, roomId: InputResore.value.roomId };
+		InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
 		let nextStatus: null | { status: IChatRoomStatus; target?: CharacterId; } = null;
 		const trimmed = value.trim();
 		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY))) {
@@ -355,7 +355,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputResore.value.input } />;
+	return <textarea ref={ ref } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);

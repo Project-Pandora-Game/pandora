@@ -453,7 +453,9 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					{ ' ' }
 					({ target.data.id })
 					{ ' ' }
-					<Button className='slim' onClick={ () => setTarget(null) }>Cancel</Button>
+					{editing === null && (
+						<Button className='slim' onClick={ () => setTarget(null) }>Cancel</Button>
+					)}
 				</span>
 			) }
 			{ editing && (
@@ -461,6 +463,8 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					{ 'Editing message ' }
 					<Button className='slim' onClick={ () => {
 						setEditing(null);
+						setTarget(null);
+						setMode(null);
 						setValue('');
 					} }>
 						Cancel

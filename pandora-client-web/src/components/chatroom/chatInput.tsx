@@ -1,5 +1,5 @@
 import { AssertNotNullable, CharacterId, IChatRoomStatus, IChatType, RoomId } from 'pandora-common';
-import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
 import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
@@ -16,6 +16,7 @@ import classNames from 'classnames';
 import { Row } from '../common/container/container';
 import { GetChatModeDescription } from './commands';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { Select } from '../common/select/select';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -28,6 +29,8 @@ export type IChatInputHandler = {
 	setAutocompleteHint: (hint: AutocompleteDisplyData | null) => void;
 	mode: ChatMode | null;
 	setMode: (mode: ChatMode | null) => void;
+	showSelector: boolean;
+	setShowSelector: (show: boolean) => void;
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
@@ -42,6 +45,8 @@ const chatInputContext = createContext<IChatInputHandler>({
 	setAutocompleteHint: noop,
 	mode: null,
 	setMode: noop,
+	showSelector: false,
+	setShowSelector: noop,
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
@@ -62,6 +67,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const [editing, setEditingState] = useState<number | null>(null);
 	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplyData | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
+	const [showSelector, setShowSelector] = useState(false);
 	const characters = useChatRoomCharacters();
 	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
@@ -149,8 +155,10 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		setAutocompleteHint,
 		mode,
 		setMode,
+		showSelector,
+		setShowSelector,
 		ref,
-	}), [target, editing, setEditing, autocompleteHint, setAutocompleteHint, playerId, characters, mode]);
+	}), [target, editing, setEditing, autocompleteHint, showSelector, setShowSelector, setAutocompleteHint, playerId, characters, mode]);
 
 	return (
 		<chatInputContext.Provider value={ context }>
@@ -167,6 +175,7 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 			<UnreadMessagesIndicator newMessageCount={ newMessageCount } scroll={ scroll } />
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
+			<ChatModeSelector />
 			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
 		</>
 	);
@@ -372,6 +381,11 @@ export function useChatInput(): IChatInputHandler {
 function TypingIndicator(): ReactElement {
 	let statuses = useChatRoomStatus();
 	const playerId = usePlayerId();
+	const { showSelector, setShowSelector } = useChatInput();
+
+	const onClick = useCallback(() => {
+		setShowSelector(!showSelector);
+	}, [showSelector, setShowSelector]);
 
 	statuses = statuses.filter((s) => s.data.id !== playerId && (s.status === 'typing' || s.status === 'whispering'));
 
@@ -382,7 +396,7 @@ function TypingIndicator(): ReactElement {
 	}
 
 	return (
-		<div className='typing-indicator'>
+		<div className='typing-indicator' onClick={ onClick }>
 			{ statuses.map(({ data, status }) => (
 				<span key={ data.id }>
 					<span style={ { color: data.settings.labelColor } }>{ data.name } </span>
@@ -414,9 +428,13 @@ function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount:
 }
 
 function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): ReactElement {
-	const { target, setTarget, editing, setEditing, setValue, mode, setMode } = useChatInput();
+	const { target, setTarget, editing, setEditing, setValue, mode, setMode, showSelector, setShowSelector } = useChatInput();
 	const lastHasTarget = useRef(target !== null);
 	const lastEditing = useRef(editing);
+
+	const onClick = useCallback(() => {
+		setShowSelector(!showSelector);
+	}, [showSelector, setShowSelector]);
 
 	useEffect(() => {
 		if (lastHasTarget.current !== (target !== null) || lastEditing.current !== editing) {
@@ -427,7 +445,7 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 	}, [target, editing, scroll]);
 
 	return (
-		<div className='input-modifiers'>
+		<div className='input-modifiers' onClick={ onClick }>
 			{ target && (
 				<span>
 					{ 'Whispering to ' }
@@ -544,5 +562,43 @@ function AutoCompleteHint(): ReactElement | null {
 				}
 			</div>
 		</div>
+	);
+}
+
+function ChatModeSelector(): ReactElement | null {
+	const { setMode, showSelector, setShowSelector, target } = useChatInput();
+	const hasTarget = target !== null;
+
+	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+		let value = ev.target.value;
+		if (value === '') {
+			setMode(null);
+			setShowSelector(false);
+			return;
+		}
+		let raw = false;
+		if (value.startsWith('raw_')) {
+			raw = true;
+			value = value.slice(4);
+		}
+		setMode({ type: value as IChatType, raw });
+		setShowSelector(false);
+	}, [setMode, setShowSelector]);
+
+	if (!showSelector)
+		return null;
+
+	return (
+		<Select onChange={ onChange }>
+			<option value=''>None</option>
+			<option value='chat'>Chat</option>
+			<option value='raw_chat'>Raw Chat</option>
+			<option value='me' disabled={ hasTarget }>Me</option>
+			<option value='raw_me' disabled={ hasTarget }>Raw Me</option>
+			<option value='emote' disabled={ hasTarget }>Emote</option>
+			<option value='raw_emote' disabled={ hasTarget }>Raw Emote</option>
+			<option value='ooc'>OOC</option>
+			<option value='raw_ooc'>Raw OOC</option>
+		</Select>
 	);
 }

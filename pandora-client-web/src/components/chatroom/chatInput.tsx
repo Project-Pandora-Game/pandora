@@ -82,17 +82,22 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			ref.current?.focus();
 			return true;
 		}
-		const { text, options } = sender.getMessageEdit(messageId) ?? {};
+		const editingMessage = sender.getMessageEdit(messageId);
+		if (!editingMessage) return false;
+		const { text, options } = editingMessage;
 		if (!text) {
 			return false;
 		}
-		if (options?.target) {
+		if (options.target) {
 			const targetCharacter = characters?.find((c) => c.data.id === options.target);
 			if (targetCharacter) {
 				setTarget(targetCharacter);
 			} else {
 				toast(`Character ${options.target} not found`, TOAST_OPTIONS_ERROR);
 			}
+		}
+		if (options.type) {
+			setMode({ type: options.type, raw: options.raw ?? false });
 		}
 		if (ref.current) {
 			ref.current.value = text;

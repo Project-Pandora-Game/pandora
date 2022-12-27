@@ -422,8 +422,7 @@ export class ChatRoom extends TypedEventEmitter<{
 
 	private readonly _sent = new Map<number, ISavedMessage>();
 	public sendMessage(message: string, options: IMessageParseOptions = {}): void {
-		const { editing, target } = options;
-		let { type, raw } = options;
+		const { editing, type, raw, target } = options;
 		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
 			throw new Error('Shard is not connected');
 		}
@@ -431,10 +430,6 @@ export class ChatRoom extends TypedEventEmitter<{
 			const edit = this._sent.get(editing);
 			if (!edit || edit.time + MESSAGE_EDIT_TIMEOUT < Date.now()) {
 				throw new Error('Message not found');
-			}
-			if (edit.options.raw) {
-				raw = true;
-				type = edit.options.type;
 			}
 		}
 		if (target !== undefined) {

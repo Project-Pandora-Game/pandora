@@ -2,7 +2,7 @@ import { AssertNotNullable, CharacterId, IChatRoomStatus, IChatType, RoomId } fr
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
-import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { IMessageParseOptions, useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
 import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
 import { toast } from 'react-toastify';
@@ -18,12 +18,17 @@ import { GetChatModeDescription } from './commands';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { Select } from '../common/select/select';
 
+type Editing = {
+	target: number;
+	restore: IMessageParseOptions;
+};
+
 export type IChatInputHandler = {
 	focus: () => void;
 	setValue: (value: string) => void;
 	target: Character | null;
 	setTarget: (target: CharacterId | null) => void;
-	editing: number | null;
+	editing: Editing | null;
 	setEditing: (editing: number | null) => boolean;
 	autocompleteHint: AutocompleteDisplyData | null;
 	setAutocompleteHint: (hint: AutocompleteDisplyData | null) => void;
@@ -64,7 +69,7 @@ export type ChatMode = {
 export function ChatInputContextProvider({ children }: { children: React.ReactNode; }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
-	const [editing, setEditingState] = useState<number | null>(null);
+	const [editing, setEditingState] = useState<Editing | null>(null);
 	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplyData | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
 	const [showSelector, setShowSelector] = useState(false);
@@ -82,13 +87,13 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		}
 	}, [roomId]);
 
-	const setEditing = useEvent((messageId: number | null) => {
-		setEditingState(messageId);
-		if (!messageId) {
+	const setEditing = useEvent((edit: Editing | null) => {
+		setEditingState(edit);
+		if (!edit) {
 			ref.current?.focus();
 			return true;
 		}
-		const editingMessage = sender.getMessageEdit(messageId);
+		const editingMessage = sender.getMessageEdit(edit?.target);
 		if (!editingMessage) return false;
 		const { text, options } = editingMessage;
 		if (!text) {
@@ -134,31 +139,43 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		};
 	}, []);
 
-	const context = useMemo(() => ({
-		focus: () => ref.current?.focus(),
-		setValue: (value: string) => {
-			if (ref.current) {
-				ref.current.value = value;
-			}
-			InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
-		},
-		target,
-		setTarget: (t: CharacterId | null) => {
+	const context = useMemo(() => {
+		const newSetTarget = (t: CharacterId | null) => {
 			if (t === playerId) {
 				return;
 			}
 			setTarget(!t ? null : characters?.find((c) => c.data.id === t) ?? null);
-		},
-		editing,
-		setEditing,
-		autocompleteHint,
-		setAutocompleteHint,
-		mode,
-		setMode,
-		showSelector,
-		setShowSelector,
-		ref,
-	}), [target, editing, setEditing, autocompleteHint, showSelector, setShowSelector, setAutocompleteHint, playerId, characters, mode]);
+		};
+		return {
+			focus: () => ref.current?.focus(),
+			setValue: (value: string) => {
+				if (ref.current) {
+					ref.current.value = value;
+				}
+				InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
+			},
+			target,
+			setTarget: newSetTarget,
+			editing,
+			setEditing: (edit: number | null): boolean => {
+				if (edit === null) {
+					newSetTarget(editing?.restore.target ?? null);
+					setMode(editing?.restore.type ? { type: editing.restore.type, raw: editing.restore.raw ?? false } : null);
+					return setEditing(null);
+				} else if (editing)
+					return setEditing({ target: edit, restore: editing.restore });
+				else
+					return setEditing({ target: edit, restore: { target: target?.data.id, type: mode?.type, raw: mode?.raw } });
+			},
+			autocompleteHint,
+			setAutocompleteHint,
+			mode,
+			setMode,
+			showSelector,
+			setShowSelector,
+			ref,
+		};
+	}, [target, editing, setEditing, autocompleteHint, showSelector, setShowSelector, setAutocompleteHint, playerId, characters, mode]);
 
 	return (
 		<chatInputContext.Provider value={ context }>
@@ -268,7 +285,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 					// TODO ... all options
 					sender.sendMessage(input, {
 						target: target?.data.id,
-						editing: editing || undefined,
+						editing: editing?.target || undefined,
 						type: mode?.type || undefined,
 						raw: mode?.raw || undefined,
 					});
@@ -468,8 +485,6 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					<Button className='slim' onClick={ (ev) => {
 						ev.stopPropagation();
 						setEditing(null);
-						setTarget(null);
-						setMode(null);
 						setValue('');
 					} }>
 						Cancel

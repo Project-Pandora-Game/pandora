@@ -169,7 +169,7 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 
 function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>; }, ref: ForwardedRef<HTMLTextAreaElement>) {
 	const lastInput = useRef('');
-	const timeout = useRef<number>();
+	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
 	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
@@ -183,7 +183,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
 			clearTimeout(timeout.current);
-			timeout.current = 0;
+			timeout.current = null;
 		}
 		setPlayerStatus('none');
 	});
@@ -344,7 +344,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 
 		if (timeout.current) {
 			clearTimeout(timeout.current);
-			timeout.current = 0;
+			timeout.current = null;
 		}
 		timeout.current = setTimeout(() => inputEnd(), 3_000);
 	});

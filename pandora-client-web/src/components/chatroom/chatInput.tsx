@@ -454,14 +454,19 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					({ target.data.id })
 					{ ' ' }
 					{editing === null && (
-						<Button className='slim' onClick={ () => setTarget(null) }>Cancel</Button>
+						<Button className='slim' onClick={ (ev) => {
+							ev.stopPropagation();
+							setTarget(null);
+						} }>Cancel
+						</Button>
 					)}
 				</span>
 			) }
 			{ editing && (
 				<span>
 					{ 'Editing message ' }
-					<Button className='slim' onClick={ () => {
+					<Button className='slim' onClick={ (ev) => {
+						ev.stopPropagation();
 						setEditing(null);
 						setTarget(null);
 						setMode(null);
@@ -476,7 +481,12 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					{ 'Sending ' }
 					{ GetChatModeDescription(mode, true) }
 					{ ' ' }
-					<Button className='slim' onClick={ () => setMode(null) }>Cancel</Button>
+					<Button className='slim' onClick={ (ev) => {
+						ev.stopPropagation();
+						setMode(null);
+					} }>
+						Cancel
+					</Button>
 				</span>
 			) }
 		</div>

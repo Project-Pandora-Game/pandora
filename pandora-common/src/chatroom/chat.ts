@@ -62,6 +62,8 @@ export type IChatRoomMessageAction = {
 	id: ChatActionId;
 	/** Custom text is used instead of the `id` lookup result, if specified */
 	customText?: string;
+	/** The array of characters the message should be sent to */
+	sendTo?: [CharacterId];
 	data?: {
 		/** Used to generate specific dictionary entries, acts as source */
 		character?: IChatRoomMessageActionCharacter;
@@ -73,8 +75,6 @@ export type IChatRoomMessageAction = {
 		itemPrevious?: IChatRoomMessageActionItem;
 		/** Path to the container possible on `character` that `item` or `itemPrevious` are in */
 		itemContainerPath?: IChatroomMessageActionContainerPath;
-		/** Array of characters the message should be sent to */
-		sendTo?: CharacterId[];
 	};
 	dictionary?: Record<string, string>;
 };

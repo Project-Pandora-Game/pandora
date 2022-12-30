@@ -167,30 +167,30 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				});
 				break;
 			case 'diceRoll': {
-				const rolls: number[] = [game.dice];
-				for (let i = 0; i < game.dice; i++) rolls[i] = Math.floor(Math.random() * game.sides + 1);
-				const result = rolls.length > 1 ? '(' + rolls.sort().toString() + ')' : rolls[0].toString();
+				const rolls: number[] = [];
+				for (let i = 0; i < game.dice; i++)
+					rolls.push(Math.floor(Math.random() * game.sides + 1));
+				const result = rolls.length > 1 ? `(${rolls.sort().join(', ')})` : rolls[0].toString();
 
 				if (game.hidden) {
 					room.handleAppearanceActionMessage({
-						id: 'gamblingDice',
-						character: client.character.id,
-						dictionary: {
-							'DICE_COUNT': game.dice === 1 ?
-								`a ${game.sides}-sided die secretely.` :
-								`${game.dice} ${game.sides}-sided dice secretely.`,
-							'DICE_RESULT': ``,
-						},
-					});
-					room.handleAppearanceActionMessage({
 						id: 'gamblingDiceHidden',
 						character: client.character.id,
-						sendTo: new Array(client.character.id),
 						dictionary: {
 							'DICE_COUNT': game.dice === 1 ?
 								`a ${game.sides}-sided die` :
 								`${game.dice} ${game.sides}-sided dice`,
-							'DICE_RESULT': `${result}`,
+						},
+					});
+					room.handleAppearanceActionMessage({
+						id: 'gamblingDiceHiddenResult',
+						character: client.character.id,
+						sendTo: [client.character.id],
+						dictionary: {
+							'DICE_COUNT': game.dice === 1 ?
+								`a ${game.sides}-sided die` :
+								`${game.dice} ${game.sides}-sided dice`,
+							'DICE_RESULT': result,
 						},
 					});
 				} else {
@@ -201,7 +201,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							'DICE_COUNT': game.dice === 1 ?
 								`a ${game.sides}-sided die` :
 								`${game.dice} ${game.sides}-sided dice`,
-							'DICE_RESULT': ` and the result is ${result}.`,
+							'DICE_RESULT': `and the result is ${result}.`,
 						},
 					});
 				}

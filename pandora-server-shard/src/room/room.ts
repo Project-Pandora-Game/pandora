@@ -284,11 +284,11 @@ export class Room extends ServerRoom<IShardClient> {
 				type: 'action',
 				id,
 				customText,
+				sendTo,
 				time: this.nextMessageTime(),
 				data: {
 					character: this._getCharacterActionInfo(character),
 					targetCharacter: targetCharacter !== character ? this._getCharacterActionInfo(targetCharacter) : undefined,
-					sendTo,
 					...data,
 				},
 				dictionary,
@@ -310,7 +310,7 @@ export class Room extends ServerRoom<IShardClient> {
 					case 'me':
 						return true;
 					case 'action':
-						return msg.data?.sendTo === undefined || msg.data?.sendTo.includes(character.id);
+						return msg.sendTo === undefined || msg.sendTo.includes(character.id);
 					case 'serverMessage':
 						return true;
 					default:

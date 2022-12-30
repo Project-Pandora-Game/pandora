@@ -50,7 +50,7 @@ export type AppearanceActionMessageTemplateHandler = (message: AppearanceActionH
 export interface AppearanceActionHandlerMessage extends AppearanceActionHandlerMessageTemplate {
 	character?: CharacterId;
 	targetCharacter?: CharacterId;
-	sendTo?: [CharacterId];
+	sendTo?: CharacterId[];
 }
 export type AppearanceActionHandler = (message: AppearanceActionHandlerMessage) => void;
 

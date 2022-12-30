@@ -201,7 +201,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							'DICE_COUNT': game.dice === 1 ?
 								`a ${game.sides}-sided die` :
 								`${game.dice} ${game.sides}-sided dice`,
-							'DICE_RESULT': `and the result is ${result}.`,
+							'DICE_RESULT': `${result}`,
 						},
 					});
 				}

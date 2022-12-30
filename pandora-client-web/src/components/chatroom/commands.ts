@@ -135,16 +135,10 @@ export const COMMANDS: readonly IClientCommand[] = [
 					}
 					if (input !== '') {
 						// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
-						const regExp = /^(?:(\d+)\s*D)?\s*(\d+)$/i;
-						if (regExp.test(input)) {
-							const gameOptions = input.split('D');
-							if (gameOptions.length === 2) {
-								dice = parseInt(gameOptions[0]);
-								sides = parseInt(gameOptions[1]);
-							} else {
-								dice = 1;
-								sides = parseInt(gameOptions[0]);
-							}
+						const match = input.match(/^(?:(\d+)\s*D)?\s*(\d+)$/i);
+						if (match) {
+							dice = match[1] ? parseInt(match[1]) : 1;
+							sides = parseInt(match[2]);
 							if (dice > 10 || sides > 100) {
 								return { success: false, error: 'Maximum sides (100)/ dice (10) exceeded' };
 							}

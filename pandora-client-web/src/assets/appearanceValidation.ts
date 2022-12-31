@@ -81,8 +81,6 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 					`At most ${e.limit} items can be present.`;
 			case 'contentNotAllowed':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
-			case 'slotRequired':
-				return `The ${DescribeAssetSlot(assetManager, e.slot)} is required to be occupied.`;
 			case 'slotFull':
 				return `The ${DescribeAssetSlot(assetManager, e.slot)} can not fit this change.`;
 			case 'slotBlockedOrder':

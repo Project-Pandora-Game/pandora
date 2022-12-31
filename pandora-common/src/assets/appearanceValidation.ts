@@ -33,7 +33,7 @@ export type AppearanceValidationError =
 		asset: AssetId;
 	}
 	| {
-		problem: 'slotFull' | 'slotRequired' | 'slotBlockedOrder';
+		problem: 'slotFull' | 'slotBlockedOrder';
 		slot: string;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
@@ -126,9 +126,7 @@ export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimits
 
 export function AppearanceValidateSlots(assetMananger: AssetManager, slots: AssetSlotResult): undefined | AppearanceValidationError {
 	for (const [slot, occupied] of slots.occupied) {
-		if (occupied === 'invalid')
-			return { problem: 'slotFull', slot };
-		if (occupied === 'all' || occupied === 0)
+		if (occupied === 0)
 			continue;
 
 		const slotDef = assetMananger.assetSlots.get(slot);
@@ -139,22 +137,11 @@ export function AppearanceValidateSlots(assetMananger: AssetManager, slots: Asse
 	return undefined;
 }
 
-export function AppearanceValidateSlotRequirements(slots: AssetSlotResult): undefined | AppearanceValidationError {
-	for (const slot of slots.requires) {
-		if (!slots.occupied.has(slot))
-			return { problem: 'slotRequired', slot };
-	}
-	return undefined;
-}
-
 export function AppearanceValidateSlotBlocks(previous: AssetSlotResult, current: AssetSlotResult): undefined | AppearanceValidationError {
-	for (const [slot, occupied] of current.occupied) {
-		if (occupied === 0 || occupied === 'invalid')
-			continue;
+	for (const slot of current.occupied.keys()) {
 		if (!previous.blocked.has(slot))
 			continue;
-		const prev = previous.occupied.get(slot);
-		if (typeof prev === 'string' || (typeof prev === 'number' && prev > 0))
+		if (!previous.occupied.has(slot))
 			continue;
 
 		return { problem: 'slotBlockedOrder', slot };
@@ -230,7 +217,7 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
 		const properties = item.getPropertiesParts();
-		let error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
+		const error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
 		if (error)
 			return { success: false, error };
 
@@ -240,10 +227,6 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		const r = AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements, item.asset.id);
 		if (!r.success)
 			return r;
-
-		error = AppearanceValidateSlotRequirements(globalProperties.slots);
-		if (error)
-			return { success: false, error };
 	}
 
 	const assetCounts = new Map<AssetId, number>();

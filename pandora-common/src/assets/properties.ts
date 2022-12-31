@@ -63,6 +63,7 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	 *
 	 * format:
 	 *  - `<slot_n>` - occupies this slot partially, with n being how much of the slot is occupied
+	 *                 n == 0, slot is not occupied but block is still applied
 	 */
 	occupySlots?: (`${A['slots']}_${number}`)[];
 }

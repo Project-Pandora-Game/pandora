@@ -140,8 +140,7 @@ export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	};
 };
 
-export type AssetSlotDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
-	name: A['slots'];
+export type AssetSlotDefinition = {
 	description: string;
 	capacity: number;
 };

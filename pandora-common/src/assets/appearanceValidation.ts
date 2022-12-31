@@ -1,5 +1,5 @@
 import { Logger } from '../logging';
-import { AssertNotNullable, ShuffleArray } from '../utility';
+import { ShuffleArray } from '../utility';
 import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
 import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
@@ -129,9 +129,8 @@ export function AppearanceValidateSlots(assetMananger: AssetManager, slots: Asse
 		if (occupied === 0)
 			continue;
 
-		const slotDef = assetMananger.assetSlots.get(slot);
-		AssertNotNullable(slotDef);
-		if (slotDef.capacity < occupied)
+		const capacity = assetMananger.assetSlots.get(slot)?.capacity ?? 0;
+		if (capacity < occupied)
 			return { problem: 'slotFull', slot };
 	}
 	return undefined;

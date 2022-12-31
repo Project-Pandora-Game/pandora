@@ -245,7 +245,9 @@ export class CharacterRestrictionsManager {
 			return r;
 
 		let isPhysicallyEquipped = true;
-		const isSelfAction = target.type === 'character' && target.characterId === this.characterId;
+		const isCharacter = target.type === 'character';
+		const isSelfAction = isCharacter && target.characterId === this.characterId;
+		const isInSafemode = this.isInSafemode();
 
 		// Must be able to access all upper items
 		const upperPath = SplitContainerPath(container);
@@ -335,7 +337,7 @@ export class CharacterRestrictionsManager {
 		// If equipping there are further checks
 		if (interaction === ItemInteractionType.ADD_REMOVE && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
-			if (properties.blockAddRemove && !this.isInSafemode())
+			if (properties.blockAddRemove && !isInSafemode)
 				return {
 					allowed: false,
 					restriction: {
@@ -346,7 +348,7 @@ export class CharacterRestrictionsManager {
 				};
 
 			// If equipping on self, the asset must allow self-equip
-			if (isSelfAction && properties.blockSelfAddRemove && !this.isInSafemode())
+			if (isSelfAction && properties.blockSelfAddRemove && !isInSafemode)
 				return {
 					allowed: false,
 					restriction: {
@@ -357,21 +359,23 @@ export class CharacterRestrictionsManager {
 				};
 		}
 
-		const targetProperties = AppearanceItemProperties(target.getManipulator().getItems());
-		const slot = this._getBlockedSlot(properties.slots, targetProperties.slots.blocked);
-		if (slot && !this.isInSafemode()) {
-			return {
-				allowed: false,
-				restriction: {
-					type: 'blockedSlot',
-					asset: item.asset.id,
-					slot,
-				},
-			};
+		if (isCharacter && isPhysicallyEquipped && !isInSafemode) {
+			const targetProperties = target.getRestrictionManager(this.room).getProperties();
+			const slot = this._getBlockedSlot(properties.slots, targetProperties.slots.blocked);
+			if (slot) {
+				return {
+					allowed: false,
+					restriction: {
+						type: 'blockedSlot',
+						asset: item.asset.id,
+						slot,
+					},
+				};
+			}
 		}
 
 		// Must be able to use hands
-		if (!this.canUseHands() && !this.isInSafemode())
+		if (!this.canUseHands() && !isInSafemode)
 			return {
 				allowed: false,
 				restriction: {

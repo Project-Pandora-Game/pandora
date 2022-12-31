@@ -468,7 +468,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		connection.character.room?.removeCharacter(connection.character, 'leave');
+		connection.character.room?.removeCharacter(connection.character, 'leave', null);
 	}
 
 	/**

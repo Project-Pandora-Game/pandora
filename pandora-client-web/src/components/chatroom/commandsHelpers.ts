@@ -5,9 +5,10 @@ import type { ICommandExecutionContextClient } from './commandsProcessor';
 type ICommandClientNeededContext<RequiredKeys extends Exclude<keyof ICommandExecutionContextClient, keyof ICommandExecutionContext>> =
 	Pick<ICommandExecutionContextClient, (keyof ICommandExecutionContext) | RequiredKeys>;
 
-export const CommandSelectorCharacter = ({ allowSelf, allowSelfAccount }: {
-	allowSelf: boolean;
-	allowSelfAccount: boolean;
+export type SelfSelect = 'none' | 'otherCharacter' | 'any';
+
+export const CommandSelectorCharacter = ({ allowSelf }: {
+	allowSelf: SelfSelect;
 }): CommandStepProcessor<Character<ICharacterRoomData>, ICommandClientNeededContext<'chatRoom'>> => ({
 	preparse: 'quotedArgTrimmed',
 	parse(selector, { chatRoom }, _args) {
@@ -29,13 +30,13 @@ export const CommandSelectorCharacter = ({ allowSelf, allowSelfAccount }: {
 					error: `Character #${id} not found in the room.`,
 				};
 			}
-			if (!allowSelf && target.isPlayer()) {
+			if (allowSelf !== 'any' && target.isPlayer()) {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting yourself.`,
 				};
 			}
-			if (!allowSelfAccount && target.data.accountId === chatRoom.player?.data.accountId) {
+			if (allowSelf === 'none' && target.data.accountId === chatRoom.player?.data.accountId) {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting your account.`,
@@ -51,13 +52,13 @@ export const CommandSelectorCharacter = ({ allowSelf, allowSelfAccount }: {
 			targets = characters.filter((c) => c.data.name.toLowerCase() === selector.toLowerCase());
 
 		if (targets.length === 1) {
-			if (!allowSelf && targets[0].isPlayer()) {
+			if (allowSelf !== 'any' && targets[0].isPlayer()) {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting yourself.`,
 				};
 			}
-			if (!allowSelfAccount && targets[0].data.accountId === chatRoom.player?.data.accountId) {
+			if (allowSelf === 'none' && targets[0].data.accountId === chatRoom.player?.data.accountId) {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting your account.`,
@@ -81,8 +82,8 @@ export const CommandSelectorCharacter = ({ allowSelf, allowSelfAccount }: {
 	},
 	autocomplete(selector, { chatRoom }, _args) {
 		const characters = chatRoom.characters.value
-			.filter((c) => allowSelf || !c.isPlayer())
-			.filter((c) => allowSelfAccount || c.data.accountId !== chatRoom.player?.data.accountId);
+			.filter((c) => allowSelf === 'any' || !c.isPlayer())
+			.filter((c) => allowSelf !== 'none' || c.data.accountId !== chatRoom.player?.data.accountId);
 		if (/^[0-9]+$/.test(selector)) {
 			return characters
 				.filter((c) => c.data.id.startsWith(`c${selector}`))

@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument, Nullable } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from './shard';
@@ -142,21 +142,7 @@ export class Room {
 			if (changes.background)
 				changeList.push('background');
 
-			if (changeList.length >= 2) {
-				this.sendMessage({
-					type: 'serverMessage',
-					id: 'roomUpdatedMultiple',
-					data: {
-						character: source.id,
-					},
-					dictionary: {
-						COUNT: `${changeList.length}`,
-						CHANGES: changeList.map((l) => ` \u2022 ${l}`).join('\n'),
-					},
-				});
-			} else if (changeList.length === 1) {
-				this.sendUpdateSingle(source, changeList[0]);
-			}
+			this.sendUpdatedMessage(source, ...changeList);
 		}
 
 		this.shard.update('rooms');
@@ -164,67 +150,89 @@ export class Room {
 		return 'ok';
 	}
 
-	private sendUpdateSingle(source: Character, change: string) {
-		this.sendMessage({
-			type: 'serverMessage',
-			id: 'roomUpdatedSingle',
-			data: {
-				character: source.id,
-			},
-			dictionary: {
-				CHANGE: change,
-			},
-		});
+	private sendUpdatedMessage(source: Character, ...changeList: string[]) {
+		if (changeList.length >= 2) {
+			this.sendMessage({
+				type: 'serverMessage',
+				id: 'roomUpdatedMultiple',
+				data: {
+					character: source.id,
+				},
+				dictionary: {
+					COUNT: `${changeList.length}`,
+					CHANGES: changeList.map((l) => ` \u2022 ${l}`).join('\n'),
+				},
+			});
+		} else if (changeList.length === 1) {
+			this.sendMessage({
+				type: 'serverMessage',
+				id: 'roomUpdatedSingle',
+				data: {
+					character: source.id,
+				},
+				dictionary: {
+					CHANGE: changeList[0],
+				},
+			});
+		}
 	}
 
 	public adminAction(source: Character, action: IClientDirectoryArgument['chatRoomAdminAction']['action'], targets: number[]) {
-		targets = uniq(targets.filter((id) => id !== source.account.id));
+		targets = uniq(targets);
+		let updated = false;
 		switch (action) {
 			case 'kick':
 				for (const character of this.characters) {
-					if (character === source)
-						continue;
 					if (!targets.includes(character.account.id))
 						continue;
 
+					updated = true;
 					this.removeCharacter(character, 'kick', source);
 				}
 				break;
 			case 'ban': {
 				const oldSize = this.config.banned.length;
 				this.config.banned = uniq([...this.config.banned, ...targets]);
-				if (oldSize !== this.config.banned.length) {
+				updated = oldSize !== this.config.banned.length;
+				if (updated) {
 					this.removeBannedCharacters(source);
-					this.sendUpdateSingle(source, 'ban list');
+					this.sendUpdatedMessage(source, 'ban list');
 				}
 				break;
 			}
 			case 'unban': {
 				const oldSize = this.config.banned.length;
 				this.config.banned = this.config.banned.filter((id) => !targets.includes(id));
-				if (oldSize !== this.config.banned.length)
-					this.sendUpdateSingle(source, 'ban list');
+				updated = oldSize !== this.config.banned.length;
+				if (updated)
+					this.sendUpdatedMessage(source, 'ban list');
 
 				break;
 			}
 			case 'promote': {
 				const oldSize = this.config.admin.length;
 				this.config.admin = uniq([...this.config.admin, ...targets]);
-				if (oldSize !== this.config.admin.length)
-					this.sendUpdateSingle(source, 'admins');
+				updated = oldSize !== this.config.admin.length;
+				if (updated)
+					this.sendUpdatedMessage(source, 'admins');
 
 				break;
 			}
 			case 'demote': {
 				const oldSize = this.config.admin.length;
 				this.config.admin = this.config.admin.filter((id) => !targets.includes(id));
-				if (oldSize !== this.config.admin.length)
-					this.sendUpdateSingle(source, 'admins');
+				updated = oldSize !== this.config.admin.length;
+				if (updated)
+					this.sendUpdatedMessage(source, 'admins');
 
 				break;
 			}
 			default:
 				AssertNever(action);
+		}
+		if (updated) {
+			this.shard.update('rooms');
+			ConnectionManagerClient.onRoomListChange();
 		}
 	}
 
@@ -232,7 +240,7 @@ export class Room {
 		this.logger.info('Migrating to room', room.id);
 		const promises: Promise<unknown>[] = [];
 		for (const character of Array.from(this.characters.values())) {
-			this.removeCharacter(character, 'destroy');
+			this.removeCharacter(character, 'destroy', null);
 			promises.push(
 				character
 					.connectToShard({ room, sendEnterMessage: false })
@@ -248,7 +256,7 @@ export class Room {
 
 	public onDestroy(): void {
 		for (const character of Array.from(this.characters.values())) {
-			this.removeCharacter(character, 'destroy');
+			this.removeCharacter(character, 'destroy', null);
 		}
 		this.shard.rooms.delete(this);
 		this.logger.verbose('Destroyed');
@@ -314,7 +322,7 @@ export class Room {
 		ConnectionManagerClient.onRoomListChange();
 	}
 
-	public removeCharacter(character: Character, reason: IChatRoomLeaveReason, by?: Nullable<Character>): void {
+	public removeCharacter(character: Character, reason: IChatRoomLeaveReason, source: Character | null): void {
 		if (character.room !== this)
 			return;
 		this.logger.debug(`Character ${character.id} removed (${reason})`);
@@ -342,7 +350,7 @@ export class Room {
 				id: action,
 				data: {
 					targetCharacter: character.id,
-					character: by?.id ?? character.id,
+					character: source?.id ?? character.id,
 				},
 			});
 		}
@@ -350,7 +358,7 @@ export class Room {
 		// If the reason is ban, also actually ban the account and kick any other characters of that account
 		if (reason === 'ban' && !this.config.banned.includes(character.account.id)) {
 			this.config.banned.push(character.account.id);
-			this.removeBannedCharacters(by);
+			this.removeBannedCharacters(source);
 		}
 
 		this.cleanupIfEmpty();
@@ -358,10 +366,10 @@ export class Room {
 		ConnectionManagerClient.onRoomListChange();
 	}
 
-	private removeBannedCharacters(by: Nullable<Character>): void {
+	private removeBannedCharacters(source: Character | null): void {
 		for (const character of this.characters.values()) {
 			if (this.config.banned.includes(character.account.id)) {
-				this.removeCharacter(character, 'ban', by);
+				this.removeCharacter(character, 'ban', source);
 			}
 		}
 	}

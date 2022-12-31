@@ -224,16 +224,14 @@ function AdminActionContextMenu({ character, chatRoom, onClose, onBack }: { char
 	}, [character, connector, onClose]);
 
 	const promote = useCallback(() => {
-		if (isCharacterAdmin) return;
 		connector.sendMessage('chatRoomAdminAction', { action: 'promote', targets: [character.data.accountId] });
 		onClose();
-	}, [isCharacterAdmin, character, connector, onClose]);
+	}, [character, connector, onClose]);
 
 	const demote = useCallback(() => {
-		if (!isCharacterAdmin) return;
 		connector.sendMessage('chatRoomAdminAction', { action: 'demote', targets: [character.data.accountId] });
 		onClose();
-	}, [isCharacterAdmin, character, connector, onClose]);
+	}, [character, connector, onClose]);
 
 	return (
 		<>

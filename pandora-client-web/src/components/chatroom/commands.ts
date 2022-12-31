@@ -3,6 +3,7 @@ import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirec
 import { CommandSelectorCharacter } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
+import { capitalize } from 'lodash';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
@@ -76,12 +77,12 @@ const CreateMessageTypeParsers = (type: IChatType): IClientCommand[] => {
 const CreateChatroomAdminAction = (action: IClientDirectoryArgument['chatRoomAdminAction']['action'], longDescription: string): IClientCommand => ({
 	key: [action],
 	usage: '<target>',
-	description: `${action[0].toUpperCase() + action.substring(1)} user`,
+	description: `${capitalize(action)} user`,
 	longDescription,
 	handler: CreateClientCommand()
 		.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
 		// TODO make this accept multiple targets and accountIds
-		.argument('target', CommandSelectorCharacter({ allowSelf: false, allowSelfAccount: false }))
+		.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
 		.handler(({ directoryConnector }, { target }) => {
 			directoryConnector.sendMessage('chatRoomAdminAction', {
 				action,
@@ -97,30 +98,6 @@ export const COMMANDS: readonly IClientCommand[] = [
 	...CreateMessageTypeParsers('emote'),
 	CreateChatroomAdminAction('kick', 'Kicks a user from the current chatroom.'),
 	CreateChatroomAdminAction('ban', 'Bans a user from the current chatroom.'),
-	{
-		key: ['unban'],
-		usage: '<account id>',
-		description: 'Unban user',
-		longDescription: 'Removes a user from the ban list of the current chatroom.',
-		handler: CreateClientCommand()
-			.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
-			.argument('target', {
-				preparse: 'allTrimmed',
-				parse: (input) => {
-					const value = parseInt(input);
-					if (value > 0) {
-						return { success: true, value };
-					}
-					return { success: false, error: 'Invalid account id' };
-				},
-			})
-			.handler(({ directoryConnector }, { target }) => {
-				directoryConnector.sendMessage('chatRoomAdminAction', {
-					action: 'unban',
-					targets: [target],
-				});
-			}),
-	},
 	CreateChatroomAdminAction('promote', 'Promotes a user to chatroom admin.'),
 	CreateChatroomAdminAction('demote', 'Demotes a user from chatroom admin.'),
 	{
@@ -129,7 +106,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 		longDescription: 'Sends a message to the selected <target> character which only they will see.' + LONGDESC_THIRD_PERSON,
 		usage: '<target> [message]',
 		handler: CreateClientCommand()
-			.argument('target', CommandSelectorCharacter({ allowSelf: false, allowSelfAccount: false }))
+			.argument('target', CommandSelectorCharacter({ allowSelf: 'otherCharacter' }))
 			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, { target }, message) => {
 				message = message.trim();
 				if (!message) {

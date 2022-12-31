@@ -2,6 +2,7 @@ import type { IClientCommand, ICommandExecutionContextClient } from './commandsP
 import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON } from 'pandora-common';
 import { CommandSelectorCharacter } from './commandsHelpers';
 import { ChatMode } from './chatInput';
+import { CharacterView } from 'pandora-common';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
@@ -102,6 +103,26 @@ export const COMMANDS: readonly IClientCommand[] = [
 		// 	const target = undefined; // GetWhisperTarget(args);
 		// 	return target ? { status: 'whisper', target } : { status: 'none' };
 		// },
+	},
+	{
+		key: ['turn', 't'],
+		description: 'Turns yourself around',
+		longDescription: '',
+		usage: '',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector }) => {
+				const target = shardConnector.player.value;
+				if (target) {
+					shardConnector.sendMessage('appearanceAction', {
+						type: 'setView',
+						target: target.data.id,
+						view: target.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT,
+					});
+					return true;
+				} else {
+					return false;
+				}
+			}),
 	},
 	{
 		key: ['coinflip'],

@@ -2,7 +2,7 @@ import _ from 'lodash';
 import type { CharacterId } from '.';
 import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
-import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult } from '../assets/properties';
+import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
 import { AppearanceActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';

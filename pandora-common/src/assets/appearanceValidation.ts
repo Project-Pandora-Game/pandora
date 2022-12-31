@@ -233,9 +233,24 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 			return r;
 	}
 
-	// Check requirements are met
+	// Check requirements are met, and check asset count limits
+	const assetCounts = new Map<AssetId, number>();
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
+		// TODO: Let assets specify count
+		const limit = 1;
+		const currentCount = assetCounts.get(item.asset.id) ?? 0;
+		if (currentCount >= limit) {
+			return {
+				success: false,
+				error: {
+					problem: 'tooManyItems',
+					asset: item.asset.id,
+					limit,
+				},
+			};
+		}
+
 		const properties = item.getPropertiesParts();
 		let error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
 		if (error)
@@ -251,23 +266,7 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		error = AppearanceValidateSlots(assetMananger, item, globalProperties.slots);
 		if (error)
 			return { success: false, error };
-	}
 
-	const assetCounts = new Map<AssetId, number>();
-	// Each asset limits count of it being added
-	for (const item of items) {
-		// TODO: Let assets specify count
-		const limit = 1;
-		const currentCount = assetCounts.get(item.asset.id) ?? 0;
-		if (currentCount >= limit)
-			return {
-				success: false,
-				error: {
-					problem: 'tooManyItems',
-					asset: item.asset.id,
-					limit,
-				},
-			};
 		assetCounts.set(item.asset.id, currentCount + 1);
 	}
 
@@ -308,7 +307,7 @@ export function ValidateAppearanceItems(assetMananger: AssetManager, items: Appe
 }
 
 export function AppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems {
-	// First sort input so bodyparts are orered correctly work
+	// First sort input so bodyparts are ordered correctly work
 	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
 
 	// Process the input one by one, skipping bad items and injecting missing required bodyparts

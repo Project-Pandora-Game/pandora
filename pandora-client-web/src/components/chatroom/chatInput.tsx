@@ -493,7 +493,7 @@ function AutoCompleteHint(): ReactElement | null {
 								autocompleteHint.result.options.map((option, index) => (
 									(onlyShowOption === -1 || onlyShowOption === index) &&
 									<span key={ index }
-										className={ classNames({ selected: index === autocompleteHint.index }) }
+										className={ classNames({ selected: index === autocompleteHint.index, notAvailable: !option.preCheckResult }) }
 										onClick={ (ev) => {
 											const textarea = ref.current;
 											if (!textarea)

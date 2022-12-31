@@ -8,14 +8,22 @@ interface CommandBuilderSource<
 	StartArguments extends Record<string, never>,
 > {
 	build(next: CommandRunner<Context, EntryArguments>): CommandRunner<Context, StartArguments>;
+	/** @internal */
+	root(): CommandBuilderRoot<Context, IEmpty>;
 }
 
 class CommandBuilderRoot<
 	Context extends ICommandExecutionContext,
 	Arguments extends Record<string, never>,
 > implements CommandBuilderSource<Context, Arguments, Arguments> {
+	public preCheck: undefined | ((context: Context) => boolean);
+
 	public build(next: CommandRunner<Context, Arguments>): CommandRunner<Context, Arguments> {
 		return next;
+	}
+	/** @internal */
+	public root(): CommandBuilderRoot<Context, IEmpty> {
+		return this;
 	}
 }
 
@@ -40,6 +48,10 @@ class CommandBuilderStep<
 		const processor = new CommandRunnerArgParser<Context, EntryArguments, ArgumentName, ArgumentResultType>(this.name, this.processor, next);
 		return this.parent.build(processor);
 	}
+	/** @internal */
+	public root(): CommandBuilderRoot<Context, IEmpty> {
+		return this.parent.root();
+	}
 }
 
 export class CommandBuilder<
@@ -50,7 +62,6 @@ export class CommandBuilder<
 > {
 
 	private readonly parent: CommandBuilderSource<Context, EntryArguments, StartArguments>;
-	private _preCheck!: BoolSelect<PreChecked, (context: Context) => boolean, undefined>;
 
 	constructor(parent: CommandBuilderSource<Context, EntryArguments, StartArguments>) {
 		this.parent = parent;
@@ -74,10 +85,10 @@ export class CommandBuilder<
 	}
 
 	public preCheck(
-		_preCheck: BoolSelect<PreChecked, never, (context: Context) => boolean>,
+		preCheck: BoolSelect<PreChecked, never, (context: Context) => boolean>,
 	): BoolSelect<PreChecked, never, CommandBuilder<Context, EntryArguments, StartArguments, true>> {
 		const preChecked = this as CommandBuilder<Context, EntryArguments, StartArguments, true>;
-		preChecked._preCheck = _preCheck;
+		this.parent.root().preCheck = preCheck;
 		return preChecked as BoolSelect<PreChecked, never, CommandBuilder<Context, EntryArguments, StartArguments, true>>;
 	}
 
@@ -89,7 +100,7 @@ export class CommandBuilder<
 			options = {};
 		}
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!, this._preCheck);
+		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!, this.parent.root().preCheck);
 		return this.parent.build(executor);
 	}
 }

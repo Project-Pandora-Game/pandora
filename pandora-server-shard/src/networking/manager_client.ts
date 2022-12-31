@@ -166,8 +166,49 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					dictionary: { 'TOSS_RESULT': Math.random() < 0.5 ? 'heads' : 'tails' },
 				});
 				break;
+			case 'diceRoll': {
+				const rolls: number[] = [];
+				for (let i = 0; i < game.dice; i++)
+					rolls.push(Math.floor(Math.random() * game.sides + 1));
+				const result = rolls.length > 1 ? `(${rolls.sort().join(', ')})` : rolls[0].toString();
+
+				if (game.hidden) {
+					room.handleAppearanceActionMessage({
+						id: 'gamblingDiceHidden',
+						character: client.character.id,
+						dictionary: {
+							'DICE_COUNT': game.dice === 1 ?
+								`a ${game.sides}-sided die` :
+								`${game.dice} ${game.sides}-sided dice`,
+						},
+					});
+					room.handleAppearanceActionMessage({
+						id: 'gamblingDiceHiddenResult',
+						character: client.character.id,
+						sendTo: [client.character.id],
+						dictionary: {
+							'DICE_COUNT': game.dice === 1 ?
+								`a ${game.sides}-sided die` :
+								`${game.dice} ${game.sides}-sided dice`,
+							'DICE_RESULT': result,
+						},
+					});
+				} else {
+					room.handleAppearanceActionMessage({
+						id: 'gamblingDice',
+						character: client.character.id,
+						dictionary: {
+							'DICE_COUNT': game.dice === 1 ?
+								`a ${game.sides}-sided die` :
+								`${game.dice} ${game.sides}-sided dice`,
+							'DICE_RESULT': result,
+						},
+					});
+				}
+				break;
+			}
 			default:
-				AssertNever(game.type);
+				AssertNever(game);
 		}
 	}
 

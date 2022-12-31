@@ -53,9 +53,17 @@ export const ClientShardSchema = {
 		response: null,
 	},
 	gamblingAction: {
-		request: z.object({
-			type: z.enum(['coinFlip']),
-		}),
+		request: z.discriminatedUnion('type', [
+			z.object({
+				type: z.literal('coinFlip'),
+			}),
+			z.object({
+				type: z.literal('diceRoll'),
+				sides: z.number().int().min(2).max(100),
+				dice: z.number().int().min(1).max(10),
+				hidden: z.boolean().default(false).optional(),
+			}),
+		]),
 		response: null,
 	},
 } as const;

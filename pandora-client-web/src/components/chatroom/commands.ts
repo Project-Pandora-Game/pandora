@@ -137,4 +137,45 @@ export const COMMANDS: readonly IClientCommand[] = [
 				return true;
 			}),
 	},
+	{
+		key: ['dice'],
+		description: 'Roll up to 10 100-sided dice.',
+		longDescription: `Without any options a single 6-sided die is rolled. The command '/dice 20' rolls a single 20-sided die and '/dice 3d6' rolls 3 6-sided dice. The option '/secret' hides the roll result from others in the room.`,
+		usage: `([sides] | <count>d<sides>) [/secret]`,
+		handler: CreateClientCommand()
+			.argument('options', {
+				preparse: 'allTrimmed',
+				parse: (input) => {
+					let dice = 1;
+					let sides = 6;
+					let hidden = false;
+					input = input.toUpperCase();
+					if (input.includes('/SECRET')) {
+						hidden = true;
+						input = input.replace('/SECRET', '').trim();
+					}
+					if (input !== '') {
+						// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
+						const match = input.match(/^(?:(\d+)\s*D)?\s*(\d+)$/i);
+						if (match) {
+							dice = match[1] ? parseInt(match[1]) : 1;
+							sides = parseInt(match[2]);
+							if (dice > 10 || sides > 100) {
+								return { success: false, error: 'Maximum sides (100)/ dice (10) exceeded' };
+							}
+						} else {
+							return { success: false, error: `Invalid Options: '${input}'` };
+						} // RegEx test
+					}
+					return { success: true, value: { dice, sides, hidden } };
+				},
+			})
+			.handler(({ shardConnector }, { options }) => {
+				shardConnector.sendMessage('gamblingAction', {
+					type: 'diceRoll',
+					...options,
+				});
+				return true;
+			}),
+	},
 ];

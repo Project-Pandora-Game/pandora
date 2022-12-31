@@ -82,7 +82,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			case 'contentNotAllowed':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
 			case 'slotFull':
-				return `The ${DescribeAssetSlot(assetManager, e.slot)} can not fit this change.`;
+				return `The ${DescribeAssetSlot(assetManager, e.slot)} can not fit this change. TODO: ${DescribeAsset(assetManager, e.asset)}`;
 			case 'slotBlockedOrder':
 				return `The ${DescribeAssetSlot(assetManager, e.slot)} is blocked due to item order.`;
 			case 'invalid':

@@ -33,7 +33,12 @@ export type AppearanceValidationError =
 		asset: AssetId;
 	}
 	| {
-		problem: 'slotFull' | 'slotBlockedOrder';
+		problem: 'slotBlockedOrder';
+		slot: string;
+	}
+	| {
+		problem: 'slotFull';
+		asset: AssetId;
 		slot: string;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
@@ -124,14 +129,19 @@ export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimits
 	return AppearanceItemProperties(items).poseLimits;
 }
 
-export function AppearanceValidateSlots(assetMananger: AssetManager, slots: AssetSlotResult): undefined | AppearanceValidationError {
+export function AppearanceValidateSlots(assetMananger: AssetManager, item: Item, slots: AssetSlotResult): undefined | AppearanceValidationError {
 	for (const [slot, occupied] of slots.occupied) {
 		if (occupied === 0)
 			continue;
 
 		const capacity = assetMananger.assetSlots.get(slot)?.capacity ?? 0;
-		if (capacity < occupied)
-			return { problem: 'slotFull', slot };
+		if (capacity < occupied) {
+			return {
+				problem: 'slotFull',
+				slot,
+				asset: item.asset.id,
+			};
+		}
 	}
 	return undefined;
 }
@@ -227,7 +237,7 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
 		const properties = item.getPropertiesParts();
-		const error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
+		let error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
 		if (error)
 			return { success: false, error };
 
@@ -237,6 +247,10 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 		const r = AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements, item.asset.id);
 		if (!r.success)
 			return r;
+
+		error = AppearanceValidateSlots(assetMananger, item, globalProperties.slots);
+		if (error)
+			return { success: false, error };
 	}
 
 	const assetCounts = new Map<AssetId, number>();
@@ -255,14 +269,6 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 				},
 			};
 		assetCounts.set(item.asset.id, currentCount + 1);
-	}
-
-	const slotError = AppearanceValidateSlots(assetMananger, globalProperties.slots);
-	if (slotError) {
-		return {
-			success: false,
-			error: slotError,
-		};
 	}
 
 	// Check the pose is possible

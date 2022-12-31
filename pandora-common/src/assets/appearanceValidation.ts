@@ -166,6 +166,17 @@ export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, 
 		.reduce(AppearanceValidationCombineResults, { success: true });
 }
 
+export function AppearanceGetBlockedSlot(slots: AssetSlotResult, blocked: ReadonlySet<string>): string | undefined {
+	if (slots.occupied.size === 0)
+		return undefined;
+
+	for (const [slot, current] of slots.occupied.entries()) {
+		if (current !== 0 && blocked.has(slot))
+			return slot;
+	}
+	return undefined;
+}
+
 /** Validates items prefix, ignoring required items */
 export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Bodypart validation

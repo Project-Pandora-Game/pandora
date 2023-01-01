@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { IAccountRoleInfo, AccountRoleSchema } from '../account';
+import { IAccountRoleInfo, AccountRoleSchema, AccountId } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
 import { Satisfies } from '../utility';
 import { HexColorStringSchema, ZodCast } from '../validation';
+import type { IDirectoryFriendStatus, IDirectoryRelationships } from './client_directory';
 import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
 export type IDirectoryStatus = {
@@ -16,6 +17,9 @@ export const DirectoryAccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema),
 	labelColor: HexColorStringSchema.catch('#ffffff'),
 	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
+	/** Hides online status from friends */
+	hideStatusForFriends: z.boolean().default(false),
+	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']).default('all'),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
@@ -23,6 +27,8 @@ export const ACCOUNT_SETTINGS_DEFAULT: IDirectoryAccountSettings = {
 	visibleRoles: [],
 	labelColor: '#ffffff',
 	wardrobeBackground: '#aaaaaa',
+	hideStatusForFriends: false,
+	allowDirectMessagesFrom: 'all',
 };
 
 export const AccountCryptoKeySchema = z.object({
@@ -121,7 +127,7 @@ export const DirectoryClientSchema = {
 	directMessageSent: {
 		request: ZodCast<IDirectoryDirectMessage & {
 			/** Target accountId */
-			target: number;
+			target: AccountId;
 		}>(),
 		response: null,
 	},
@@ -135,12 +141,26 @@ export const DirectoryClientSchema = {
 	},
 	directMessageAction: {
 		request: ZodCast<{
-			id: number;
+			id: AccountId;
 			action: 'read' | 'close';
 		}>(),
 		response: null,
 	},
-} as const;
+	friendStatus: {
+		request: ZodCast<{
+			id: AccountId;
+			status: IDirectoryFriendStatus;
+		}>(),
+		response: null,
+	},
+	relationshipsUpdate: {
+		request: ZodCast<{
+			changed: Partial<IDirectoryRelationships>,
+			removed: Partial<Record<keyof IDirectoryRelationships, AccountId[]>>,
+		}>(),
+		response: null,
+	},
+};
 
 export type IDirectoryClient = Satisfies<typeof DirectoryClientSchema, SocketInterfaceDefinitionVerified<typeof DirectoryClientSchema>>;
 export type IDirectoryClientArgument = SocketInterfaceRequest<IDirectoryClient>;

@@ -1,8 +1,8 @@
 import type { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
-import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
-import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomIdSchema } from '../chatroom/room';
-import { ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
+import { CharacterId, CharacterIdSchema, ICharacterSelfInfo } from '../character';
+import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomId, RoomIdSchema } from '../chatroom/room';
+import { AccountId, AccountIdSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
 import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
@@ -52,6 +52,36 @@ export type IChatRoomExtendedInfoResponse = {
 	data: IChatRoomListExtendedInfo;
 };
 
+export type IDirectoryFriend = {
+	/** Account id of the friend */
+	id: AccountId;
+	/** Account name of the friend */
+	name: string;
+	/** Time the friend was added */
+	time: number;
+};
+
+export type IDirectoryFriendStatus = {
+	/** Account id of the friend */
+	id: AccountId;
+	/** If the friend is online */
+	online: boolean;
+	/** List of online characters the friend has */
+	characters?: {
+		id: CharacterId;
+		name: string;
+		inRoom?: RoomId;
+	}[],
+};
+
+export type IDirectoryRelationships = {
+	friends: IDirectoryFriend[];
+	friendStatus: IDirectoryFriendStatus[];
+	pending: IDirectoryFriend[];
+	incoming: IDirectoryFriend[];
+	blocked: AccountId[];
+};
+
 /** Client->Directory messages */
 export const ClientDirectorySchema = {
 	//#region Before Login
@@ -65,6 +95,7 @@ export const ClientDirectorySchema = {
 			result: 'ok';
 			token: { value: string; expires: number; };
 			account: IDirectoryAccountInfo;
+			relationships: IDirectoryRelationships;
 		}>(),
 	},
 	register: {
@@ -212,7 +243,7 @@ export const ClientDirectorySchema = {
 	chatRoomAdminAction: {
 		request: z.object({
 			action: z.enum(['kick', 'ban', 'unban', 'promote', 'demote']),
-			targets: z.array(z.number()),
+			targets: z.array(AccountIdSchema),
 		}),
 		response: null,
 	},
@@ -226,7 +257,7 @@ export const ClientDirectorySchema = {
 
 	getDirectMessages: {
 		request: z.object({
-			id: z.number().min(0),
+			id: AccountIdSchema,
 			until: z.number().min(0).optional(),
 		}),
 		response: ZodCast<{ result: 'notFound' | 'denied'; } | {
@@ -237,7 +268,7 @@ export const ClientDirectorySchema = {
 	},
 	sendDirectMessage: {
 		request: z.object({
-			id: z.number().min(0),
+			id: AccountIdSchema,
 			content: z.string(),
 			editing: z.number().min(0).optional(),
 		}),
@@ -245,7 +276,7 @@ export const ClientDirectorySchema = {
 	},
 	directMessage: {
 		request: z.object({
-			id: z.number().min(0),
+			id: AccountIdSchema,
 			action: z.enum(['read', 'close']),
 		}),
 		response: null,
@@ -253,6 +284,30 @@ export const ClientDirectorySchema = {
 	getDirectMessageInfo: {
 		request: z.object({}),
 		response: ZodCast<{ info: IDirectoryDirectMessageInfo[]; }>(),
+	},
+	friendRequest: {
+		request: z.object({
+			id: AccountIdSchema,
+			action: z.enum(['initiate', 'accept', 'decline', 'cancel']),
+		}),
+		response: ZodCast<{
+			result: 'ok' | 'accountNotFound' | 'requestNotFound';
+		}>(),
+	},
+	unfriend: {
+		request: z.object({
+			id: AccountIdSchema,
+		}),
+		response: ZodCast<{
+			result: 'ok' | 'accountNotFound';
+		}>(),
+	},
+	blockList: {
+		request: z.object({
+			id: AccountIdSchema,
+			action: z.enum(['add', 'remove']),
+		}),
+		response: null,
 	},
 
 	//#region Management/admin endpoints; these require specific roles to be used

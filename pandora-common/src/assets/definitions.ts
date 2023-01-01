@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexColorString, zTemplateString } from '../validation';
-import type { ArmsPose, BoneName } from './appearance';
+import type { ArmPose, BoneName } from './appearance';
 import type { BoneDefinitionCompressed } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetProperties } from './properties';
@@ -37,7 +37,7 @@ export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = 
 	 * - `number` - Must be exactly this; shorthand for min=max
 	 */
 	forcePose?: Partial<Record<A['bones'], [number, number] | number>>;
-	forceArms?: ArmsPose;
+	forceArms?: ArmPose | [ArmPose | null, ArmPose | null];
 }
 
 export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
@@ -126,7 +126,7 @@ export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	poses: {
 		name: string;
 		pose: Partial<Record<Bones, number>>;
-		armsPose?: ArmsPose;
+		armsPose?: ArmPose | [ArmPose, ArmPose];
 	}[];
 }[];
 

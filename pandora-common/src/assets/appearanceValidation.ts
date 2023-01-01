@@ -1,6 +1,6 @@
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
-import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
+import { ArmPose, BONE_MAX, BONE_MIN, IsArmsPoseEqual } from './appearance';
 import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { AssetDefinitionPoseLimits, AssetId } from './definitions';
@@ -73,7 +73,7 @@ export function AppearanceItemsFixBodypartOrder(assetMananger: AssetManager, ite
 
 export type PoseLimitsResult = {
 	forcePose: Map<string, [number, number]>;
-	forceArms?: ArmsPose;
+	forceArms: [ArmPose | null, ArmPose | null];
 } | null;
 
 export function MergePoseLimits(base: PoseLimitsResult, poseLimits: AssetDefinitionPoseLimits | undefined): PoseLimitsResult {
@@ -85,10 +85,16 @@ export function MergePoseLimits(base: PoseLimitsResult, poseLimits: AssetDefinit
 		return base;
 
 	if (poseLimits.forceArms != null) {
-		// Invalid combination of forceArms
-		if (base.forceArms != null && base.forceArms !== poseLimits.forceArms)
+		const newLimit = typeof poseLimits.forceArms === 'number'
+			? [poseLimits.forceArms, poseLimits.forceArms]
+			: poseLimits.forceArms;
+
+		if (base.forceArms[0] != null && newLimit[0] != null && base.forceArms[0] !== newLimit[0])
 			return null;
-		base.forceArms = poseLimits.forceArms;
+		if (base.forceArms[1] != null && newLimit[1] != null && base.forceArms[1] !== newLimit[1])
+			return null;
+
+		base.forceArms = [base.forceArms[0] ?? newLimit[0], base.forceArms[1] ?? newLimit[1]];
 	}
 
 	if (poseLimits.forcePose != null) {

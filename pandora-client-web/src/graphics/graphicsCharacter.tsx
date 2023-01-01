@@ -1,5 +1,5 @@
 import { Container } from '@saitonakamura/react-pixi';
-import { ArmsPose, AssertNever, AssertNotNullable, AssetId, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, LayerPriority, MergeAssetProperties } from 'pandora-common';
+import { ArmPose, AssertNever, AssertNotNullable, AssetId, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, LayerPriority, MergeAssetProperties } from 'pandora-common';
 import { Filter, InteractionEvent, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
@@ -39,18 +39,19 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 
 export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
 export type LayerStateOverrideGetter = (layer: AssetGraphicsLayer) => LayerStateOverrides | undefined;
-export type LayerGetSortOrder = (armsPose: ArmsPose, view: CharacterView) => readonly ComputedLayerPriority[];
+export type LayerGetSortOrder = (armsPose: [ArmPose, ArmPose], view: CharacterView) => readonly ComputedLayerPriority[];
 
 const GetSortOrderDefault: LayerGetSortOrder = (_armsPose, view) => {
 	const reverse = view === CharacterView.BACK;
 	return reverse ? COMPUTED_LAYER_ORDERING.slice().reverse() : COMPUTED_LAYER_ORDERING;
 };
 
-function useLayerPriorityResolver(states: readonly LayerState[], armsPose: ArmsPose): ReadonlyMap<LayerState, ComputedLayerPriority> {
+function useLayerPriorityResolver(states: readonly LayerState[], armsPose: [ArmPose, ArmPose]): ReadonlyMap<LayerState, ComputedLayerPriority> {
 	const calculate = useCallback((layers: readonly LayerState[]) => {
 		const result = new Map<LayerState, ComputedLayerPriority>();
 		for (const layer of layers) {
-			result.set(layer, ComputeLayerPriority(layer.layer.definition.value.priority, armsPose));
+			// TODO select arms pose based on layer mirroring
+			result.set(layer, ComputeLayerPriority(layer.layer.definition.value.priority, armsPose[0]));
 		}
 		return result;
 	}, [armsPose]);

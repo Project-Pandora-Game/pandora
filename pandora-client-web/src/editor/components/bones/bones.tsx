@@ -1,4 +1,4 @@
-import { ArmsPose, CharacterView } from 'pandora-common';
+import { ArmPose, CharacterView, IsArmsPoseEqual } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
@@ -45,9 +45,9 @@ export function BoneUI(): ReactElement {
 				<input
 					id='arms-front-toggle'
 					type='checkbox'
-					checked={ armsPose === ArmsPose.FRONT }
+					checked={ IsArmsPoseEqual(armsPose, ArmPose.FRONT) }
 					onChange={ (e) => {
-						character.appearance.setArmsPose(e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK);
+						character.appearance.setArmsPose(e.target.checked ? ArmPose.FRONT : ArmPose.BACK);
 					} }
 				/>
 			</div>
@@ -149,7 +149,7 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 			? acc
 			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '') }
 	},
-	armsPose: ArmsPose.${ArmsPose[arms]},
+	armsPose: ${ArmsPoseToString(arms)}},
 },`;
 	}, [pose, arms]);
 
@@ -176,4 +176,15 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 			</Column>
 		</ModalDialog>
 	);
+}
+
+function ArmPoseToString(arm: ArmPose): string {
+	return `ArmPose.${ArmPose[arm]}`
+}
+
+function ArmsPoseToString([a, b]: [ArmPose, ArmPose]): string {
+	if (a === b) {
+		return ArmPoseToString(a);
+	}
+	return `[${ArmPoseToString(a)}, ${ArmPoseToString(b)}]`;
 }

@@ -84,6 +84,7 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 	return {
 		poseLimits: {
 			forcePose: new Map<string, [number, number]>(),
+			forceArms: [null, null],
 		},
 		effects: EFFECTS_DEFAULT,
 		attributes: new Set(),

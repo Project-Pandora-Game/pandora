@@ -18,9 +18,16 @@ export type BoneName = z.infer<typeof BoneNameSchema>;
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
 
-export enum ArmsPose {
+export enum ArmPose {
 	FRONT,
 	BACK,
+}
+
+export function IsArmsPoseEqual(current: readonly [ArmPose, ArmPose], target: ArmPose | readonly [ArmPose | null, ArmPose | null]): boolean {
+	if (typeof target === 'number') {
+		return current[0] === target && current[1] === target;
+	}
+	return (target[0] == null || current[0] === target[0]) && (target[1] == null || current[1] === target[1]);
 }
 
 export enum CharacterView {
@@ -39,7 +46,7 @@ export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 export const AppearanceBundleSchema = z.object({
 	items: z.array(ItemBundleSchema),
 	pose: z.record(BoneNameSchema, z.number()),
-	handsPose: z.nativeEnum(ArmsPose),
+	handsPose: z.tuple([z.nativeEnum(ArmPose), z.nativeEnum(ArmPose)]),
 	view: z.nativeEnum(CharacterView),
 	safemode: SafemodeDataSchema.optional(),
 });
@@ -49,7 +56,7 @@ export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
 export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
 	items: [],
 	pose: {},
-	handsPose: ArmsPose.FRONT,
+	handsPose: [ArmPose.FRONT, ArmPose.FRONT],
 	view: CharacterView.FRONT,
 };
 
@@ -65,7 +72,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private items: AppearanceItems = [];
 	private readonly pose = new Map<BoneName, BoneState>();
 	private fullPose: readonly BoneState[] = [];
-	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
+	private _armsPose: [ArmPose, ArmPose] = APPEARANCE_BUNDLE_DEFAULT.handsPose;
 	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
 	private _safemode: SafemodeData | undefined;
 
@@ -153,8 +160,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			return false;
 		let change = false;
 
-		if (poseLimits.forceArms != null && this._armsPose !== poseLimits.forceArms) {
-			this._armsPose = poseLimits.forceArms;
+		if (poseLimits.forceArms != null && !IsArmsPoseEqual(this._armsPose, poseLimits.forceArms)) {
+			this._armsPose = typeof poseLimits.forceArms === 'number' ? [poseLimits.forceArms, poseLimits.forceArms] : [poseLimits.forceArms[0] ?? this._armsPose[0], poseLimits.forceArms[1] ?? this._armsPose[1]];
 			change = true;
 		}
 
@@ -298,12 +305,15 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this.fullPose;
 	}
 
-	public getArmsPose(): ArmsPose {
+	public getArmsPose(): [ArmPose, ArmPose] {
 		return this._armsPose;
 	}
 
-	public setArmsPose(value: ArmsPose): void {
-		if (this._armsPose !== value) {
+	public setArmsPose(value: ArmPose | [ArmPose, ArmPose]): void {
+		if (!Array.isArray(value)) {
+			value = [value, value];
+		}
+		if (this._armsPose[0] !== value[0] || this._armsPose[1] !== value[1]) {
 			this._armsPose = value;
 			this.enforcePoseLimits();
 			this.onChange(['pose']);

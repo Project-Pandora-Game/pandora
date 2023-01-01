@@ -6,7 +6,7 @@ import {
 	AppearanceActionContext,
 	AppearanceItems,
 	AppearanceItemsGetPoseLimits,
-	ArmsPose,
+	ArmPose,
 	AssertNotNullable,
 	Asset,
 	AssetsPosePresets,
@@ -25,6 +25,7 @@ import {
 	ItemPath,
 	Assert,
 	AppearanceActionResult,
+	IsArmsPoseEqual,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -1014,24 +1015,24 @@ type CheckedPosePreset = {
 	available: boolean;
 	name: string;
 	pose: Partial<Record<BoneName, number>>;
-	armsPose?: ArmsPose;
+	armsPose?: ArmPose | [ArmPose, ArmPose];
 };
 type CheckedAssetsPosePresets = {
 	category: string;
 	poses: CheckedPosePreset[];
 }[];
 
-function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: ArmsPose): {
+function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: [ArmPose, ArmPose]): {
 	poses: CheckedAssetsPosePresets;
 	forcePose?: Map<string, [number, number]>;
-	forceArms?: ArmsPose;
+	forceArms?: ArmPose | [ArmPose | null, ArmPose | null];
 } {
 	const presets = GetAssetManager().getPosePresets();
 	const limits = AppearanceItemsGetPoseLimits(items) || { forceArms: undefined, forcePose: undefined };
 	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
 
 	const isAvailable = ({ pose, armsPose }: AssetsPosePreset) => {
-		if (armsPose !== undefined && limits.forceArms !== undefined && armsPose !== limits.forceArms)
+		if (armsPose !== undefined && limits.forceArms !== undefined && !IsArmsPoseEqual(arms, limits.forceArms))
 			return false;
 
 		if (!limits.forcePose)
@@ -1053,7 +1054,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	};
 
 	const isActive = (preset: AssetsPosePreset) => {
-		if (preset.armsPose !== undefined && preset.armsPose !== arms)
+		if (preset.armsPose !== undefined && !IsArmsPoseEqual(arms, preset.armsPose))
 			return false;
 
 		for (const [boneName, value] of Object.entries(preset.pose)) {
@@ -1101,7 +1102,7 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 	);
 }
 
-export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => void; }): ReactElement {
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: [ArmPose, ArmPose]; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmPose | [ArmPose, ArmPose] }) => void }): ReactElement {
 	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
@@ -1115,7 +1116,7 @@ export function WardrobePoseGui({ character }: { character: AppearanceContainer;
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 
-	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => {
+	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmPose | [ArmPose, ArmPose] }) => {
 		execute({
 			type: 'pose',
 			target: character.id,
@@ -1154,12 +1155,12 @@ export function WardrobePoseGui({ character }: { character: AppearanceContainer;
 							<input
 								id='arms-front-toggle'
 								type='checkbox'
-								checked={ armsPose === ArmsPose.FRONT }
+								checked={ IsArmsPoseEqual(armsPose, ArmPose.FRONT) }
 								disabled={ forceArms !== undefined }
 								onChange={ (e) => {
 									setPose({
 										pose: {},
-										armsPose: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK,
+										armsPose: e.target.checked ? ArmPose.FRONT : ArmPose.BACK,
 									});
 								} }
 							/>

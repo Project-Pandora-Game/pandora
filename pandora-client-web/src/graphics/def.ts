@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { ArmsPose, Item, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
+import { ArmPose, Item, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 
 export type LayerStateOverrides = {
@@ -83,11 +83,11 @@ export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<ComputedLayerPriorit
 	'BELOW_ARMS_FRONT',
 ]);
 
-export function ComputeLayerPriority(priority: LayerPriority, armsPose: ArmsPose): ComputedLayerPriority {
+export function ComputeLayerPriority(priority: LayerPriority, armsPose: ArmPose): ComputedLayerPriority {
 	if (!DOUBLE_ORDERED.includes(priority as DoubleOrdered)) {
 		return priority as ComputedLayerPriority;
 	}
-	if (armsPose === ArmsPose.FRONT) {
+	if (armsPose === ArmPose.FRONT) {
 		return `${priority}_FRONT` as ComputedLayerPriority;
 	} else {
 		return `${priority}_BACK` as ComputedLayerPriority;

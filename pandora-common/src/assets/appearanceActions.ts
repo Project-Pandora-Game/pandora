@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
 import { AssertNever, ShuffleArray } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
-import { ArmsPose, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
+import { ArmPose, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
@@ -40,7 +40,7 @@ export const AppearanceActionPose = z.object({
 	type: z.literal('pose'),
 	target: CharacterIdSchema,
 	pose: z.record(z.string(), z.number().optional()),
-	armsPose: z.nativeEnum(ArmsPose).optional(),
+	armsPose: z.tuple([z.nativeEnum(ArmPose), z.nativeEnum(ArmPose)]).or(z.nativeEnum(ArmPose)).optional(),
 });
 
 export const AppearanceActionBody = z.object({

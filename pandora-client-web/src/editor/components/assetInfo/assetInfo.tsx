@@ -1,4 +1,4 @@
-import { AssetDefinition, AssetModuleDefinition } from 'pandora-common';
+import { ArmPose, AssetDefinition, AssetModuleDefinition } from 'pandora-common';
 import { EffectsDefinition, EFFECTS_DEFAULT } from 'pandora-common/dist/assets/effects';
 import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
@@ -69,6 +69,14 @@ function Colorization({ colorization }: { colorization: AssetDefinition['coloriz
 	);
 }
 
+function ForceArmsToString(forceArms?: ArmPose | [ArmPose | null, ArmPose | null]): string {
+	if (forceArms == null) return 'Any - Any';
+	if (typeof forceArms === 'number') return forceArms === ArmPose.FRONT ? 'Front - Front' : 'Back - Back';
+	return forceArms
+		.map((arm) => arm == null ? 'Any' : (arm === ArmPose.FRONT ? 'Front' : 'Back'))
+		.join(' - ');
+}
+
 function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['poseLimits']; id?: string }): ReactElement | null {
 	if (!poseLimits) {
 		return null;
@@ -77,8 +85,8 @@ function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['pose
 	return (
 		<FieldsetToggle legend='Pose limits'>
 			<div>
-				<label htmlFor={ `${id}force-arms` }>Force arms: </label>
-				<input id={ `${id}force-arms` } type='text' value={ poseLimits.forceArms ?? '' } readOnly />
+				<label htmlFor={ `${id}force-arms` }>Force arms (left - right): </label>
+				<input id={ `${id}force-arms` } type='text' value={ ForceArmsToString(poseLimits.forceArms) } readOnly />
 			</div>
 			<hr />
 			<div>

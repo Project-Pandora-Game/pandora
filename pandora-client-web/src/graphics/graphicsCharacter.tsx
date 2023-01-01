@@ -7,7 +7,7 @@ import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearanceView } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
 import { useObservable } from '../observable';
-import { LayerState, LayerStateOverrides, PRIORITY_ORDER_ARMS_BACK, PRIORITY_ORDER_ARMS_FRONT, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
+import { ComputedLayerPriority, COMPUTED_LAYER_ORDERING, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { GraphicsLayerProps, GraphicsLayer } from './graphicsLayer';
 
 export type PointLike = {
@@ -39,28 +39,23 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 
 export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
 export type LayerStateOverrideGetter = (layer: AssetGraphicsLayer) => LayerStateOverrides | undefined;
-export type LayerGetSortOrder = (armsPose: ArmsPose, view: CharacterView) => readonly LayerPriority[];
+export type LayerGetSortOrder = (armsPose: ArmsPose, view: CharacterView) => readonly ComputedLayerPriority[];
 
-const GetSortOrderDefault: LayerGetSortOrder = (armsPose, view) => {
+const GetSortOrderDefault: LayerGetSortOrder = (_armsPose, view) => {
 	const reverse = view === CharacterView.BACK;
-	if (armsPose === ArmsPose.FRONT) {
-		return reverse ? PRIORITY_ORDER_ARMS_FRONT.slice().reverse() : PRIORITY_ORDER_ARMS_FRONT;
-	} else if (armsPose === ArmsPose.BACK) {
-		return reverse ? PRIORITY_ORDER_ARMS_BACK.slice().reverse() : PRIORITY_ORDER_ARMS_BACK;
-	}
-	AssertNever(armsPose);
+	return reverse ? COMPUTED_LAYER_ORDERING.slice().reverse() : COMPUTED_LAYER_ORDERING;
 };
 
-function useLayerPriorityResolver(states: readonly LayerState[]): ReadonlyMap<LayerState, LayerPriority> {
+function useLayerPriorityResolver(states: readonly LayerState[], armsPose: ArmsPose): ReadonlyMap<LayerState, ComputedLayerPriority> {
 	const calculate = useCallback((layers: readonly LayerState[]) => {
-		const result = new Map<LayerState, LayerPriority>();
+		const result = new Map<LayerState, ComputedLayerPriority>();
 		for (const layer of layers) {
-			result.set(layer, layer.layer.definition.value.priority);
+			result.set(layer, ComputeLayerPriority(layer.layer.definition.value.priority, armsPose));
 		}
 		return result;
-	}, []);
+	}, [armsPose]);
 
-	const [actualCalculate, setActualCalculate] = useState<(layers: readonly LayerState[]) => ReadonlyMap<LayerState, LayerPriority>>(() => calculate);
+	const [actualCalculate, setActualCalculate] = useState<(layers: readonly LayerState[]) => ReadonlyMap<LayerState, ComputedLayerPriority>>(() => calculate);
 
 	useEffect(() => {
 		const cleanup: (() => void)[] = [];
@@ -149,10 +144,10 @@ export function GraphicsCharacterWithManager({
 	const armsPose = useCharacterAppearanceArmsPose(appearanceContainer);
 	const view = useCharacterAppearanceView(appearanceContainer);
 
-	const priorities = useLayerPriorityResolver(layers);
+	const priorities = useLayerPriorityResolver(layers, armsPose);
 
-	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, ReactElement>>(() => {
-		const result = new Map<LayerPriority, ReactElement>();
+	const priorityLayers = useMemo<ReadonlyMap<ComputedLayerPriority, ReactElement>>(() => {
+		const result = new Map<ComputedLayerPriority, ReactElement>();
 		for (const layerState of layers) {
 			const priority = priorities.get(layerState);
 			AssertNotNullable(priority);
@@ -180,7 +175,7 @@ export function GraphicsCharacterWithManager({
 
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === CharacterView.BACK ? -1 : 1, y: 1 }), [view, scaleExtra]);
 
-	const sortOrder = useMemo<readonly LayerPriority[]>(() => getSortOrder(armsPose, view), [getSortOrder, armsPose, view]);
+	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => getSortOrder(armsPose, view), [getSortOrder, armsPose, view]);
 
 	return (
 		<Container

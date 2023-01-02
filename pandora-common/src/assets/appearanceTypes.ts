@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { zTemplateString } from '../validation';
-import type { AppearanceActionRoomContext, ChatActionId, IChatRoomMessageAction } from '../chatroom';
+import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction } from '../chatroom';
 import type { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceValidationResult } from './appearanceValidation';
 import type { Item } from './item';
@@ -40,36 +40,36 @@ const RoomInventorySelectorSchema = z.object({
 export const RoomTargetSelectorSchema = z.discriminatedUnion('type', [RoomCharacterSelectorSchema, RoomInventorySelectorSchema]);
 export type RoomTargetSelector = z.infer<typeof RoomTargetSelectorSchema>;
 
-export interface AppearanceActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoomMessageAction['data']>, 'character' | 'targetCharacter'> {
+export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoomMessageAction['data']>, 'character' | 'targetCharacter'> {
 	id: ChatActionId;
 	/** Custom text is used instead of the `id` lookup result, if specified */
 	customText?: string;
 	dictionary?: Record<string, string>;
 }
-export type AppearanceActionMessageTemplateHandler = (message: AppearanceActionHandlerMessageTemplate) => void;
-export interface AppearanceActionHandlerMessage extends AppearanceActionHandlerMessageTemplate {
+export type ActionMessageTemplateHandler = (message: ActionHandlerMessageTemplate) => void;
+export interface ActionHandlerMessage extends ActionHandlerMessageTemplate {
 	character?: CharacterId;
 	targetCharacter?: CharacterId;
 	sendTo?: CharacterId[];
 }
-export type AppearanceActionHandler = (message: AppearanceActionHandlerMessage) => void;
+export type ActionHandler = (message: ActionHandlerMessage) => void;
 
-export interface AppearanceActionProcessingContext {
+export interface ActionProcessingContext {
 	sourceCharacter?: CharacterId;
-	actionHandler?: AppearanceActionHandler;
+	actionHandler?: ActionHandler;
 	dryRun?: boolean;
 }
 
 interface RoomActionTargetBase {
 	getManipulator(): AppearanceRootManipulator;
-	commitChanges(manipulator: AppearanceRootManipulator, context: AppearanceActionProcessingContext): AppearanceValidationResult;
+	commitChanges(manipulator: AppearanceRootManipulator, context: ActionProcessingContext): AppearanceValidationResult;
 	getItem(path: ItemPath): Item | undefined;
 }
 
 export interface RoomActionTargetCharacter extends RoomActionTargetBase {
 	readonly type: 'character';
 	characterId: CharacterId;
-	getRestrictionManager(room: AppearanceActionRoomContext | null): CharacterRestrictionsManager;
+	getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager;
 }
 
 export interface RoomActionTargetRoomInventory extends RoomActionTargetBase {

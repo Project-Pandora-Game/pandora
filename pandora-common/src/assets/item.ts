@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Logger } from '../logging';
 import { HexColorString, HexColorStringSchema } from '../validation';
-import { AppearanceActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
+import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
@@ -113,7 +113,7 @@ export class Item {
 		});
 	}
 
-	public moduleAction(moduleName: string, action: ItemModuleAction, messageHandler: AppearanceActionMessageTemplateHandler): Item | null {
+	public moduleAction(moduleName: string, action: ItemModuleAction, messageHandler: ActionMessageTemplateHandler): Item | null {
 		const module = this.modules.get(moduleName);
 		if (!module || module.type !== action.moduleType)
 			return null;

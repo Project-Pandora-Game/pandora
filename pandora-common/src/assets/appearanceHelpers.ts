@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import type { AppearanceActionHandlerMessageTemplate, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
+import type { ActionHandlerMessageTemplate, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { Item } from './item';
 import type { IItemModule } from './modules/common';
@@ -100,7 +100,7 @@ export abstract class AppearanceManipulator {
 		return this._applyItems(items);
 	}
 
-	public abstract queueMessage(message: AppearanceActionHandlerMessageTemplate): void;
+	public abstract queueMessage(message: ActionHandlerMessageTemplate): void;
 }
 
 class AppearanceContainerManipulator extends AppearanceManipulator {
@@ -139,7 +139,7 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 		return this._base.modifyItem(this._item, (it) => it.setModuleItems(this._module, items));
 	}
 
-	public queueMessage(message: AppearanceActionHandlerMessageTemplate): void {
+	public queueMessage(message: ActionHandlerMessageTemplate): void {
 		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName }));
 		this._base.queueMessage(message);
 	}
@@ -147,7 +147,7 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 
 export class AppearanceRootManipulator extends AppearanceManipulator {
 	private _items: AppearanceItems;
-	private _messages: AppearanceActionHandlerMessageTemplate[] = [];
+	private _messages: ActionHandlerMessageTemplate[] = [];
 
 	public readonly isCharacter: boolean;
 	public readonly container: null = null;
@@ -179,12 +179,12 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 		return true;
 	}
 
-	public queueMessage(message: AppearanceActionHandlerMessageTemplate): void {
+	public queueMessage(message: ActionHandlerMessageTemplate): void {
 		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName }));
 		this._messages.push(message);
 	}
 
-	public getAndClearPendingMessages(): AppearanceActionHandlerMessageTemplate[] {
+	public getAndClearPendingMessages(): ActionHandlerMessageTemplate[] {
 		const messages = this._messages;
 		this._messages = [];
 		return messages;

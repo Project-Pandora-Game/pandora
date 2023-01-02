@@ -8,7 +8,7 @@ import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { IItemLoadContext } from '../item';
 import { AssetManager } from '../assetManager';
-import type { AppearanceActionMessageTemplateHandler } from '../appearanceTypes';
+import type { ActionMessageTemplateHandler } from '../appearanceTypes';
 
 export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	/** ID if this variant, must be unique */
@@ -127,7 +127,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 				false;
 	}
 
-	public doAction(action: ItemModuleTypedAction, messageHandler: AppearanceActionMessageTemplateHandler): ItemModuleTyped | null {
+	public doAction(action: ItemModuleTypedAction, messageHandler: ActionMessageTemplateHandler): ItemModuleTyped | null {
 		const newVariant = this.config.variants.find((v) => v.id === action.setVariant);
 		if (!newVariant)
 			return null;

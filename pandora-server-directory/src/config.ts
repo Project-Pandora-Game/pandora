@@ -53,7 +53,7 @@ export const EMAIL_SMTP_PASSWORD = process.env.EMAIL_SMTP_PASSWORD ?? '';
 //#region Database
 
 /** Database type, possible values: mock, mongodb, mongodb-in-memory, mongodb-local */
-export const DATABASE_TYPE = process.env.DATABASE_TYPE ?? 'mock';
+export const DATABASE_TYPE = process.env.DATABASE_TYPE ?? 'mongodb-local';
 /** MongoDB connection string */
 export const DATABASE_URL = process.env.DATABASE_URL ?? 'mongodb://localhost:27017';
 /** Name of the db to connect to */

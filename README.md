@@ -8,20 +8,20 @@
 <div style="text-align: center;">An open-source 2D web-based game in the making.</div>
 
 ## Getting Started
-### Prerequisite
 
-1. Get [Node.js](https://nodejs.org/en/)
-2. Enable `pnpm` with (requires nodejs >= 18.x:
-	```console
-	corepack enable
-	```
-3. Install dependencies with `pnpm`:
-	```console
-	pnpm i
-	```
-### Client Web
-If you don't want to launch [Server](#server-directory) & [Shard](#server-shard) along side client, you can connect directly to the beta server by replacing:
+### Prerequisites
 
+Required software:
+ - Node.js v18+
+ - Either corepack enabled (recommended) or manually installed pnpm
+ - Git
+ - Visual Studio Code (recommended)
+
+For more detailed steps you can follow [Pandora asset creation tutorial: Development tools installation](https://github.com/Project-Pandora-Game/Documentation/blob/master/Asset_creation_tutorial.md#development-tools-installation)
+
+### Client connecting to official servers
+
+If you don't want to run your own [Server](#server-directory) & [Shard](#server-shard) alongside the client, you can connect directly to the official server by editing the [`pandora-client-web/.env`](./pandora-client-web/.env) (not the `.template`!) file, replacing
 ```
 DIRECTORY_ADDRESS="http://127.0.0.1:25560"
 ```
@@ -29,33 +29,49 @@ With:
 ```
 DIRECTORY_ADDRESS="https://project-pandora.com"
 ```
-In [.env](./pandora-client-web/.env) file.
 
-Before launching dev server:
-```console
-cd ./pandora-client-web/
+And then skip to the step 4 of the "Initial setup" section, selecting "Run Client" instead of "Local Pandora Stack".
+
+## Local Dev Server
+
+### Initial setup
+
+These steps need to only be done once to setup Pandora stack locally:
+
+1. Clone the [pandora-assets](https://github.com/Project-Pandora-Game/pandora-assets) repository to the same directory you cloned this repository into.
+
+2. Build the assets by opening `pandora-assets` in VSCode, waiting for setup to finish, then pressing Ctrl+Shift+B. __Alternatively__ you can build them by running following command in the `pandora-assets` folder:
+```
+git submodule update --init; pnpm i; pnpm build
+```
+
+3. After doing that, your folder structure should look like this (note the `out` folder in `pandora-assets`):
+```
+(Your Pandora project folder)
+├── pandora
+│   ├── pandora-client-web
+│   ├── pandora-common
+│   ├── pandora-server-directory
+│   └── pandora-server-shard
+└── pandora-assets
+    ├── out
+    └── src
+```
+
+4. Open the `pandora` folder with VSCode, select "trust" and wait for setup to finish. __Alternatively__ you can run the following command in the `pandora` folder:
+```
+pnpm i
+```
+
+### Actually running the project
+
+If you are using VSCode and the setup finished, simply press F5 and wait for all 4 components to start.
+
+If want to start Pandora in console, then run following command in the `pandora` folder and then navigate to [http://localhost:6969](http://localhost:6969/):
+```
 pnpm dev
 ```
-## Local Dev Server
-If you want to run everything locally, follow these steps:
 
-1. Get [pandora-assets](https://github.com/Project-Pandora-Game/pandora-assets) repo, follow the instruction with `git clone --recursive` to the same parent directory.
-2.  Your folder structure would look like this:
-    ```
- | parent (can be any name) |
- | ------------------------ |pandora
-	| -- | pandora-assets
-	```
-3. Build the assets `pnpm i && pnpm build` in `pandora-assets` repo. You should have now have an `out` folder.
-	```
- | parent (can be any name) |
- | ------------------------ |pandora
-	| -- | pandora-assets/out
-	```
-4. Go back to `pandora` repository and launch dev services:
-	```
-	pnpm dev
-	```
 Congratulations, you've ran the entire pandora stack locally.
 
 ### Common problems

@@ -57,6 +57,14 @@ If you want to run everything locally, follow these steps:
 	pnpm dev
 	```
 Congratulations, you've ran the entire pandora stack locally.
+
+### Common problems
+
+#### __Database fails to start__
+
+You are most likely missing C++ redistributables required by MongoDB on your computer and no other application required them yet.
+Download and install them from [here](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist).
+
 ## Specifications
 
 Please refer to the [documentation](https://github.com/Project-Pandora-Game/Documentation) repository for more details.

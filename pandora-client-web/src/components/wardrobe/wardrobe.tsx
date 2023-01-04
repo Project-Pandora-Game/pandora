@@ -624,7 +624,7 @@ function InventoryItemView({
 	);
 }
 
-function InventoryItemViewList({ item, selected=false, setFocus, singleItemContainer=false }: {
+function InventoryItemViewList({ item, selected = false, setFocus, singleItemContainer = false }: {
 	item: ItemPath;
 	selected?: boolean;
 	setFocus?: (newFocus: WardrobeFocus) => void;

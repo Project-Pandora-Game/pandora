@@ -203,7 +203,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		if (graphics) {
-			editor.setLayerAlphaOverride(graphics.allLayers, alphaIndex+1);
+			editor.setLayerAlphaOverride(graphics.allLayers, alphaIndex + 1);
 		}
 	};
 
@@ -250,7 +250,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
-		editor.setLayerAlphaOverride([layer], alphaIndex+1);
+		editor.setLayerAlphaOverride([layer], alphaIndex + 1);
 	};
 
 	return (

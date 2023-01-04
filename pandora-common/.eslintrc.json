@@ -208,6 +208,8 @@
 		"space-in-parens": "warn",
 		"switch-colon-spacing": "warn",
 		"arrow-spacing": "warn",
-		"arrow-parens": ["warn", "always"]
+		"arrow-parens": ["warn", "always"],
+		"space-infix-ops": "off",
+		"@typescript-eslint/space-infix-ops": ["warn"]
 	}
 }

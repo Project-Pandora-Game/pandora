@@ -199,7 +199,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
-		editor.setLayerAlphaOverride([layer], alphaIndex+1);
+		editor.setLayerAlphaOverride([layer], alphaIndex + 1);
 	};
 
 	const name = useLayerName(layer);

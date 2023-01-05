@@ -34,6 +34,7 @@ export type AppearanceValidationError =
 	}
 	| {
 		problem: 'slotBlockedOrder';
+		asset: AssetId;
 		slot: string;
 	}
 	| {
@@ -146,14 +147,12 @@ export function AppearanceValidateSlots(assetMananger: AssetManager, item: Item,
 	return undefined;
 }
 
-export function AppearanceValidateSlotBlocks(previous: AssetSlotResult, current: AssetSlotResult): undefined | AppearanceValidationError {
-	for (const slot of current.occupied.keys()) {
-		if (!previous.blocked.has(slot))
-			continue;
-		if (!previous.occupied.has(slot))
+export function AppearanceValidateSlotBlocks(previousSlots: AssetSlotResult, currentSlot: AssetSlotResult, asset: AssetId): undefined | AppearanceValidationError {
+	for (const slot of previousSlots.occupied.keys()) {
+		if (!currentSlot.blocked.has(slot))
 			continue;
 
-		return { problem: 'slotBlockedOrder', slot };
+		return { problem: 'slotBlockedOrder', slot, asset };
 	}
 	return undefined;
 }
@@ -177,9 +176,6 @@ export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, 
 }
 
 export function AppearanceGetBlockedSlot(slots: AssetSlotResult, blocked: ReadonlySet<string>): string | undefined {
-	if (slots.occupied.size === 0)
-		return undefined;
-
 	for (const slot of slots.occupied.keys()) {
 		if (blocked.has(slot))
 			return slot;
@@ -251,15 +247,15 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 			};
 		}
 
-		const properties = item.getPropertiesParts();
-		let error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.reduce(MergeAssetProperties, CreateAssetPropertiesResult()).slots);
+		const properties = item.getProperties();
+		let error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.slots, item.asset.id);
 		if (error)
 			return { success: false, error };
 
-		// Item's attributes counts into its on requirements
-		globalProperties = properties.reduce(MergeAssetProperties, globalProperties);
+		// Item's attributes count into its own requirements
+		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
 
-		const r = AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements, item.asset.id);
+		const r = AppearanceValidateRequirements(globalProperties.attributes, properties.requirements, item.asset.id);
 		if (!r.success)
 			return r;
 

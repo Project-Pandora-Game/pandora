@@ -42,7 +42,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
 			}
 			case 'blockedSlot':
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot added, removed, or modified, because ${DescribeAssetSlot(assetManager, e.slot)} is blocked.`;
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because ${DescribeAssetSlot(assetManager, e.slot)} is blocked.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'invalid':
@@ -82,9 +82,9 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			case 'contentNotAllowed':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
 			case 'slotFull':
-				return `The ${DescribeAssetSlot(assetManager, e.slot)} can not fit this change. TODO: ${DescribeAsset(assetManager, e.asset)}`;
+				return `${DescribeAssetSlot(assetManager, e.slot)} doesn't have enough space to fit ${DescribeAsset(assetManager, e.asset)}`;
 			case 'slotBlockedOrder':
-				return `The ${DescribeAssetSlot(assetManager, e.slot)} is blocked due to item order.`;
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be worn on top of an item that is blocking ${DescribeAssetSlot(assetManager, e.slot)}`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}

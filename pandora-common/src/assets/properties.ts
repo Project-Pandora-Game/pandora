@@ -59,13 +59,12 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 
 	/**
 	 * Unique list of slots this item occupies and or requires to be occupied
-	 * @default []
+	 * @default {}
 	 *
-	 * format:
-	 *  - `<slot_n>` - occupies this slot partially, with n being how much of the slot is occupied
+	 * { <slot>: <n> } occupies this slot partially, with n being how much of the slot is occupied
 	 *                 n == 0, slot is not occupied but block is still applied
 	 */
-	occupySlots?: Record<A['slots'], number>;
+	occupySlots?: Partial<Record<A['slots'], number>>;
 }
 
 export interface AssetSlotResult {
@@ -102,7 +101,7 @@ export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, p
 	properties.attributes?.forEach((a) => base.attributes.add(a));
 	properties.hides?.forEach((a) => base.hides.add(a));
 	for (const [slot, amount] of Object.entries(properties.occupySlots ?? {})) {
-		base.slots.occupied.set(slot, (base.slots.occupied.get(slot) ?? 0) + amount);
+		base.slots.occupied.set(slot, (base.slots.occupied.get(slot) ?? 0) + (amount ?? 0));
 	}
 	properties.blockSlots?.forEach((s) => base.slots.blocked.add(s));
 

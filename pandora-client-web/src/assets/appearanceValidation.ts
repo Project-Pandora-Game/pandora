@@ -82,9 +82,9 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			case 'contentNotAllowed':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
 			case 'slotFull':
-				return `${DescribeAssetSlot(assetManager, e.slot)} doesn't have enough space to fit ${DescribeAsset(assetManager, e.asset)}`;
+				return `${DescribeAssetSlot(assetManager, e.slot)} doesn't have enough space to fit ${DescribeAsset(assetManager, e.asset)}.`;
 			case 'slotBlockedOrder':
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot be worn on top of an item that is blocking ${DescribeAssetSlot(assetManager, e.slot)}`;
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be worn on top of an item that is blocking ${DescribeAssetSlot(assetManager, e.slot)}.`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}

@@ -148,8 +148,8 @@ export function AppearanceValidateSlots(assetMananger: AssetManager, item: Item,
 }
 
 export function AppearanceValidateSlotBlocks(previousSlots: AssetSlotResult, currentSlot: AssetSlotResult, asset: AssetId): undefined | AppearanceValidationError {
-	for (const slot of previousSlots.occupied.keys()) {
-		if (!currentSlot.blocked.has(slot))
+	for (const slot of currentSlot.occupied.keys()) {
+		if (!previousSlots.blocked.has(slot))
 			continue;
 
 		return { problem: 'slotBlockedOrder', slot, asset };

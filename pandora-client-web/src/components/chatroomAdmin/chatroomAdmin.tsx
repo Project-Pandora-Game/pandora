@@ -431,7 +431,10 @@ function BackgroundSelectDialog({ hide, current, select }: {
 
 	const availableBackgrounds = useMemo(() => GetAssetManager().getBackgrounds(), []);
 	const [nameFilter, setNameFilter] = useState('');
-	// const [tagFilter, setTagFilter] = useState('');
+	/**
+	 *  TODO: Add a tag based filter to the dialog in a later version
+	 * 	const [tagFilter, setTagFilter] = useState('');
+	 */
 
 	return (
 		<ModalDialog>
@@ -462,7 +465,8 @@ function BackgroundSelectDialog({ hide, current, select }: {
 						.map((b) => (
 							<div key={ b.id } className='details'>
 								<a onClick={ () => {
-									select(b.id); hide();
+									select(b.id);
+									hide();
 								} }>
 									{
 										(typeof current === 'string' &&b.image.startsWith(current)) ?

@@ -47,6 +47,8 @@ export function LayerUI(): ReactElement {
 			<ColorizationSetting layer={ selectedLayer } asset={ asset } />
 			<ColorPicker layer={ selectedLayer } asset={ asset } />
 			<hr />
+			<LayerOffsetSetting layer={ selectedLayer } _asset={ asset } />
+			<hr />
 			<LayerPrioritySelect layer={ selectedLayer } asset={ asset } />
 			<LayerTemplateSelect layer={ selectedLayer } asset={ asset } />
 			<LayerPointsFilterEdit layer={ selectedLayer } />
@@ -260,6 +262,70 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 			/>
 			<Button className='slim' onClick={ () => editor.setLayerTint(layer, undefined) } >↺</Button>
 		</div>
+	);
+}
+
+function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _asset: EditorAssetGraphics; }): ReactElement | null {
+	const layerXOffset = useLayerDefinition(layer).xOffset;
+	const layerYOffset = useLayerDefinition(layer).yOffset;
+
+	const onChangeX = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+		layer.setXOffset(e.target.valueAsNumber);
+	});
+
+	const onChangeY = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+		layer.setYOffset(e.target.valueAsNumber);
+	});
+
+	return (
+		<>
+			<div>
+				<label>
+					Layer Offset
+					<ContextHelpButton>
+						<p>
+							These two values define how much the curent layer is set off in the X- and Y-axis.<br />
+							This way you will be able to place an item higher higher or lower on a character.<br />
+							Per default, all values are set to 0.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+			</div>
+			<div>
+				<label htmlFor='layer-offset-x'>
+					X-Offset:
+					<ContextHelpButton>
+						<p>
+							A positive x-value will move the image to the right, a negative one to the left.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+				<input
+					id='layer-offset-x'
+					type='number'
+					value={ layerXOffset }
+					onChange={ onChangeX }
+					className='flex-1'
+				/>
+			</div>
+			<div>
+				<label htmlFor='layer-offset-y'>
+					Y-Offset:
+					<ContextHelpButton>
+						<p>
+							A positive x-value will move the image to the right, a negative one to the left.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+				<input
+					id='layer-offset-y'
+					type='number'
+					value={ layerYOffset }
+					onChange={ onChangeY }
+					className='flex-1'
+				/>
+			</div>
+		</>
 	);
 }
 

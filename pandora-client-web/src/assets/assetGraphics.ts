@@ -89,6 +89,18 @@ export class AssetGraphicsLayer {
 		});
 	}
 
+	public setXOffset(offset: number): void {
+		this._modifyDefinition((d) => {
+			d.xOffset = offset;
+		});
+	}
+
+	public setYOffset(offset: number): void {
+		this._modifyDefinition((d) => {
+			d.yOffset = offset;
+		});
+	}
+
 	public setColorizationKey(colorizationKey: string | null): void {
 		Assert(colorizationKey === null || colorizationKey.trim().length > 0, 'Colorization key must be null or non-empty');
 

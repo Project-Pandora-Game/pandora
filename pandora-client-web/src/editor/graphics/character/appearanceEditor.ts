@@ -114,6 +114,8 @@ export class EditorAssetGraphics extends AssetGraphics {
 			y: 0,
 			width: CharacterSize.WIDTH,
 			height: CharacterSize.HEIGHT,
+			xOffset: 0,
+			yOffset: 0,
 			priority: 'OVERLAY',
 			points: [],
 			mirror: LayerMirror.NONE,

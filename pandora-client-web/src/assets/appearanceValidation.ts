@@ -68,7 +68,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				const attribute = assetManager.getAttributeDefinition(attributeName);
 				const description = attribute ? `"${attribute.description}"` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
 				if (e.asset) {
-					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description}`;
+					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description}.`;
 				} else {
 					return `The item ${negative ? 'must not' : 'must'} be ${description}.`;
 				}

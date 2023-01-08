@@ -246,7 +246,7 @@ async function IsPublicKey(keyData: string): Promise<boolean> {
 			Buffer.from(keyData, 'base64'),
 			{ name: 'ECDH', namedCurve: 'P-256' },
 			true,
-			['deriveKey'],
+			[],
 		);
 		return true;
 	} catch (e) {

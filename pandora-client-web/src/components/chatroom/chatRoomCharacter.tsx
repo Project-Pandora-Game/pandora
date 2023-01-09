@@ -141,7 +141,7 @@ export function ChatRoomCharacter({
 			<Text
 				anchor={ { x: 0.5, y: 0.5 } }
 				position={ { x: labelX, y: labelY } }
-				scale={ { x: 1/scaleX, y: 1 } }
+				scale={ { x: 1 / scaleX, y: 1 } }
 				style={ {
 					fontFamily: 'Arial',
 					fontSize: 32,

@@ -241,7 +241,7 @@ importers:
       jest: ^29.0.3
       lodash: ^4.17.21
       mongodb: ^4.11.0
-      mongodb-memory-server: ^8.10.1
+      mongodb-memory-server-core: ^8.10.2
       nanoid: ^3.2.0
       nodemailer: ^6.7.2
       nodemon: ^2.0.15
@@ -265,7 +265,7 @@ importers:
       express: 4.18.2
       lodash: 4.17.21
       mongodb: 4.11.0
-      mongodb-memory-server: 8.10.1
+      mongodb-memory-server-core: 8.10.2
       nanoid: 3.3.4
       nodemailer: 6.8.0
       pandora-common: link:../pandora-common
@@ -7420,8 +7420,8 @@ packages:
       whatwg-url: 11.0.0
     dev: false
 
-  /mongodb-memory-server-core/8.10.1:
-    resolution: {integrity: sha512-Xva73v08VDojH1+423fJA6PWsoSWnkexk8/zSCdQTfKXACAgEaQ5fay89gzYn/bn/4So89hPVdLwEOt2VYMK7Q==}
+  /mongodb-memory-server-core/8.10.2:
+    resolution: {integrity: sha512-ro4k1eGcjk6p8214wFpv31dsB4eaBUMRr9WYLBcQDbmzCkM7ARn6vsJhlrKWH8eoayLZf0X6557j013t/Ld8aA==}
     engines: {node: '>=12.22.0'}
     dependencies:
       '@types/tmp': 0.2.3
@@ -7440,18 +7440,6 @@ packages:
       tslib: 2.4.1
       uuid: 8.3.2
       yauzl: 2.10.0
-    transitivePeerDependencies:
-      - aws-crt
-      - supports-color
-    dev: false
-
-  /mongodb-memory-server/8.10.1:
-    resolution: {integrity: sha512-xBo45TuU4SFjDWixOXJyTBDukYqGeCuh7RBcDm4Nqngd/2Pjja/XYYFFJk/I44mTrZ77W1HDmCA4d69XgNJUJQ==}
-    engines: {node: '>=12.22.0'}
-    requiresBuild: true
-    dependencies:
-      mongodb-memory-server-core: 8.10.1
-      tslib: 2.4.1
     transitivePeerDependencies:
       - aws-crt
       - supports-color

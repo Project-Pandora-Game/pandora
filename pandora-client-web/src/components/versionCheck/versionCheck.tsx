@@ -50,10 +50,10 @@ function VersionCheckImpl() {
 				You are running an outdated version of the application.
 			</h3>
 			<p>
-				Current version: {GIT_COMMIT_HASH}.
+				Current version: { GIT_COMMIT_HASH }.
 			</p>
 			<p>
-				New version: {nextVersion}
+				New version: { nextVersion }
 			</p>
 			<p>
 				Please reload the page.

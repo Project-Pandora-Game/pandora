@@ -1,12 +1,20 @@
 {
 	"debug.onTaskErrors": "showErrors",
 	"npm.packageManager": "pnpm",
+	"task.allowAutomaticTasks": "on",
+	"task.autoDetect": "off",
 	"editor.insertSpaces": false,
 	"files.insertFinalNewline": true,
 	"files.trimTrailingWhitespace": true,
 	"files.eol": "\n",
 	"files.encoding": "utf8",
 	"git.rebaseWhenSync": true,
+	"git.branchProtection": [
+		"master"
+	],
+	"git.branchProtectionPrompt": "alwaysCommitToNewBranch",
+	"git.branchPrefix": "feature/",
+	"git.branchRandomName.enable": true,
 	"[typescript]": {
 		"editor.defaultFormatter": "vscode.typescript-language-features",
 		"editor.formatOnSave": true
@@ -16,10 +24,12 @@
 	"typescript.preferences.importModuleSpecifierEnding": "minimal",
 	"typescript.format.enable": true,
 	"typescript.format.semicolons": "insert",
+	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
 	"typescript.preferences.quoteStyle": "single",
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": true
 	},
+	"eslint.packageManager": "pnpm",
 	"eslint.workingDirectories": [
 		"pandora-client-web",
 		"pandora-common",

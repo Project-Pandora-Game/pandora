@@ -104,7 +104,7 @@
 		"react/destructuring-assignment": ["warn", "always"],
 		"react/jsx-closing-tag-location": "warn",
 		"react/jsx-curly-newline": ["warn", "consistent"],
-		"react/jsx-curly-spacing": ["warn", { "when":  "always"}],
+		"react/jsx-curly-spacing": ["warn", { "when": "always", "children": true }],
 		"react/jsx-equals-spacing": ["warn", "never"],
 		"react/jsx-filename-extension": ["warn", { "extensions": [".jsx", ".tsx"] }],
 		"react/jsx-indent": ["warn", "tab"],
@@ -121,6 +121,21 @@
 				"condition": "ignore",
 				"logical": "ignore",
 				"prop": "ignore"
+			}
+		],
+		"react/no-unescaped-entities": [
+			"warn",
+			{
+				"forbid": [
+					{
+						"char": ">",
+						"alternatives": ["&gt;"]
+					},
+					{
+						"char": "}",
+						"alternatives": ["&#125;"]
+					}
+				]
 			}
 		]
 	}

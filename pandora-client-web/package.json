@@ -6,8 +6,8 @@
 	"license": "GPL-3.0-or-later",
 	"scripts": {
 		"clean": "rimraf dist",
-		"build": "pnpm run clean && cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack --env prod",
-		"dev": "pnpm run clean && cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack serve",
+		"build": "pnpm run --silent clean && cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack --env prod",
+		"dev": "pnpm run --silent clean && cross-env TS_NODE_PROJECT=\"webpack.tsconfig.json\" webpack serve",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "tsc -p . --noEmit",

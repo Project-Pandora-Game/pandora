@@ -517,7 +517,7 @@ function AutoCompleteHint(): ReactElement | null {
 											});
 										} }
 									>
-										{option.displayValue}
+										{ option.displayValue }
 									</span>
 								))
 							}

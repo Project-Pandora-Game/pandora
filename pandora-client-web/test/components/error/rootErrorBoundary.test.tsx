@@ -1,5 +1,6 @@
 import { render, RenderResult, screen, waitFor } from '@testing-library/react';
 import { noop } from 'lodash';
+import { Logger } from 'pandora-common';
 import React, { ReactElement, useEffect } from 'react';
 import { debugContext, DebugData } from '../../../src/components/error/debugContextProvider';
 import { MAX_ERROR_STACK_LINES } from '../../../src/components/error/errorReport';
@@ -13,14 +14,18 @@ describe('RootErrorBoundary', () => {
 	let debugData: DebugData;
 	let error: Error;
 	let consoleError: jest.SpyInstance;
+	let loggerFatal: jest.SpyInstance;
 
 	beforeAll(() => {
 		consoleError = jest.spyOn(console, 'error');
 		consoleError.mockImplementation(noop);
+		loggerFatal = jest.spyOn(Logger.prototype, 'fatal');
+		loggerFatal.mockImplementation(noop);
 	});
 
 	afterAll(() => {
 		consoleError.mockRestore();
+		loggerFatal.mockRestore();
 	});
 
 	beforeEach(() => {

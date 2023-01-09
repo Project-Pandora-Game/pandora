@@ -94,10 +94,10 @@ function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo }): ReactElement {
 			</td>
 			<td>{ betaKey.maxUses === undefined ? `${betaKey.uses} / ∞` : `${betaKey.uses} / ${betaKey.maxUses}` }</td>
 			<td>
-				{betaKey.created.username} ({betaKey.created.id})
+				{ betaKey.created.username } ({ betaKey.created.id })
 			</td>
 			<td>
-				{new Date(betaKey.created.time).toLocaleString()}
+				{ new Date(betaKey.created.time).toLocaleString() }
 			</td>
 			<td>
 				<Button className='slim' onClick={ () => void onInvalidate() }>Delete</Button>

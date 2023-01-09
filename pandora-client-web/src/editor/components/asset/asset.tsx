@@ -35,47 +35,47 @@ export function AssetUI() {
 				Editing: { StripAssetIdPrefix(selectedAsset.id) }
 				<ContextHelpButton>
 					<p>
-						The &quot;Asset&quot;-tab lets you edit, export, and import a single asset, as well as manage<br />
+						The "Asset"-tab lets you edit, export, and import a single asset, as well as manage<br />
 						its layers and the images used by the asset.
 					</p>
 					<p>
 						The first line shows you which asset you are currently editing.<br />
 						Next are buttons that allow you to export and import the graphics definition of the<br />
-						current asset. It is in a &quot;graphics.json&quot; file that every asset needs to have, as it<br />
+						current asset. It is in a "graphics.json" file that every asset needs to have, as it<br />
 						is used in the asset code to define how the asset is displayed.<br />
 						After editing the asset as desired, you can export the result as a zip file containing<br />
-						the &quot;graphics.json&quot; file and your images. This zip needs to be extracted and its contents<br />
-						placed in the same folder as the &quot;*.asset.ts&quot; file.
+						the "graphics.json" file and your images. This zip needs to be extracted and its contents<br />
+						placed in the same folder as the "*.asset.ts" file.
 					</p>
 					<p>
-						You can also import the &quot;graphics.json&quot; file again, at any time, after selecting the fitting<br />
-						asset for editing under the &quot;Items&quot;-tab.<br />
+						You can also import the "graphics.json" file again, at any time, after selecting the fitting<br />
+						asset for editing under the "Items"-tab.<br />
 						This allows you to continue working on an asset at a later point in time by importing a<br />
 						previously exported intermediate editor state, independent of whether you finished the asset<br />
-						completely or you stopped earlier and exported your current progress as &quot;graphics.json&quot; file.
+						completely or you stopped earlier and exported your current progress as "graphics.json" file.
 					</p>
 					<p>
-						Beneath the &quot;Unselect layer&quot;-button is the layer management section.<br />
+						Beneath the "Unselect layer"-button is the layer management section.<br />
 						There, you can either add new layers or select any existing ones by clicking on the<br />
 						layer name, which highlights it to show that it is selected.<br />
-						A layer must be selected in order to edit it in the &quot;Layer&quot;-tab.
+						A layer must be selected in order to edit it in the "Layer"-tab.
 					</p>
 					<p>
 						The order of layers in the list on this tab is NOT purely cosmetic for just the editor but also<br />
 						affects the priority of a layer in comparison to the other layers of the same asset:<br />
 						The higher up a layer is shown here, the closer to the body it is.<br />
-						An incorrect layer order can be spotted by visual inconsistencies in the &quot;Preview&quot;-tab.
+						An incorrect layer order can be spotted by visual inconsistencies in the "Preview"-tab.
 					</p>
 					Moreover, there are a few buttons for each layer, such as:
 					<ul>
 						<li>
-							The &quot;arrow&quot;-button allows changing the order of each layer in the editor list.
+							The "arrow"-button allows changing the order of each layer in the editor list.
 						</li>
 						<li>
-							The &quot;square&quot;-button lets you cycle the layer between solid, transparent, and invisible.
+							The "square"-button lets you cycle the layer between solid, transparent, and invisible.
 						</li>
 						<li>
-							The &quot;trash bin&quot;-button deletes a layer.
+							The "trash bin"-button deletes a layer.
 						</li>
 					</ul>
 				</ContextHelpButton>
@@ -92,10 +92,10 @@ export function AssetUI() {
 				<ContextHelpButton>
 					<p>
 						This section allows you to add or remove images (*.PNG) that you want to use in any of<br />
-						the layers of this asset. Clicking the &quot;+&quot;-button next to an image will toggle<br />
+						the layers of this asset. Clicking the "+"-button next to an image will toggle<br />
 						a preview of the picture.
 					</p>
-					<b>Note:</b> After importing a &quot;graphics.json&quot; file, you may have to add all image<br />
+					<b>Note:</b> After importing a "graphics.json" file, you may have to add all image<br />
 					files of the asset once more manually.<br />
 					<b>Note:</b> You can add multiple images at once.
 				</ContextHelpButton>
@@ -199,7 +199,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
-		editor.setLayerAlphaOverride([layer], alphaIndex+1);
+		editor.setLayerAlphaOverride([layer], alphaIndex + 1);
 	};
 
 	const name = useLayerName(layer);
@@ -216,7 +216,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 				🠉
 			</Button>
 			<Button className='slim' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
-				{EDITOR_ALPHA_ICONS[alphaIndex]}
+				{ EDITOR_ALPHA_ICONS[alphaIndex] }
 			</Button>
 			<Button className='slim hideDisabled' aria-label='delete' disabled={ layer.isMirror } onClick={ () => {
 				if (!confirm(`Delete layer '${name}'?`))

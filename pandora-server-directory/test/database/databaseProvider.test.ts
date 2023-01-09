@@ -8,9 +8,10 @@ describe('GetDatabase()', () => {
 });
 
 describe('InitDatabase()', () => {
-	it('inits mock database', async () => {
-		await InitDatabase();
+	it('sets given database', async () => {
+		const instance = await new MockDatabase().init();
+		await InitDatabase(instance);
 		expect(() => GetDatabase()).not.toThrowError();
-		expect(GetDatabase()).toBeInstanceOf(MockDatabase);
+		expect(GetDatabase()).toBe(instance);
 	});
 });

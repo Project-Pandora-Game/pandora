@@ -1,4 +1,4 @@
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { CreateAccountData } from '../../src/account/account';
 import { PrehashPassword } from '../../src/database/mockDb';
 import MongoDatabase from '../../src/database/mongoDb';

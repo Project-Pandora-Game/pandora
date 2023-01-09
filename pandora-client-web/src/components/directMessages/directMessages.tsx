@@ -30,11 +30,11 @@ export function DirectMessages(): React.ReactElement {
 			<div className='direct-messages__list'>
 				<input type='text' value={ filter } onChange={ (e) => setFilter(e.target.value) } placeholder='Filter' />
 				<Scrollbar color='dark' tag='ul'>
-					{filtered.map((i) => <DirectMessageInfo key={ i.id } info={ i } show={ setSelected } />)}
+					{ filtered.map((i) => <DirectMessageInfo key={ i.id } info={ i } show={ setSelected } />) }
 				</Scrollbar>
 				<OpenConversation show={ setSelected } />
 			</div>
-			{selected !== null && <DirectMessage accountId={ selected } key={ selected } />}
+			{ selected !== null && <DirectMessage accountId={ selected } key={ selected } /> }
 		</div>
 	);
 }
@@ -43,8 +43,8 @@ function DirectMessageInfo({ info, show }: { info: Readonly<IDirectoryDirectMess
 	const { id, account, hasUnread } = info;
 	return (
 		<li onClick={ () => show(id) }>
-			{account} ({id})
-			{hasUnread && <span>!</span>}
+			{ account } ({ id })
+			{ hasUnread && <span>!</span> }
 		</li>
 	);
 }

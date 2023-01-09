@@ -6,7 +6,7 @@ import { CreateCharacter } from './dbHelper';
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
-import type { MongoMemoryServer } from 'mongodb-memory-server';
+import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
 
 const logger = GetLogger('db');
@@ -299,7 +299,7 @@ async function CreateInMemoryMongo({
 }: {
 	dbPath?: string;
 } = {}): Promise<MongoMemoryServer> {
-	const { MongoMemoryServer } = await import('mongodb-memory-server');
+	const { MongoMemoryServer } = await import('mongodb-memory-server-core');
 	if (dbPath) {
 		const { mkdir } = await import('fs/promises');
 		await mkdir(dbPath, { recursive: true });

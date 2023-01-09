@@ -35,7 +35,7 @@ export function TabContainer({ children, id, className, collapsable }: {
 							className={ classNames('tab', { active: index === currentTab }, tab.className) }
 							onClick={ tab.onClick ?? (() => setTab(index)) }
 						>
-							{tab.name}
+							{ tab.name }
 						</button>
 					))
 				}

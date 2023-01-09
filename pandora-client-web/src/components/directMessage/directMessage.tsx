@@ -35,9 +35,9 @@ function DirectMessageList(): ReactElement | null {
 
 	return (
 		<Scrollbar ref={ ref } color='dark' className='direct-message-list'>
-			{messages.map((message) => (
+			{ messages.map((message) => (
 				<DirectMessageElement key={ message.time } message={ message } channel={ channel } account={ account } />
-			))}
+			)) }
 		</Scrollbar>
 	);
 }
@@ -62,15 +62,15 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 		<div className='direct-message-entry'>
 			<span className='direct-message-entry__info'>
 				<time>
-					{time.toLocaleDateString()} {time.toLocaleTimeString('en-IE').substring(0, 5)}
+					{ time.toLocaleDateString() } { time.toLocaleTimeString('en-IE').substring(0, 5) }
 				</time>
 				{ message.edited ? <span> [edited]</span> : null }
 				{ /* Space so copied text looks nicer */ ' ' }
 			</span>
 			<span style={ { color } } className='direct-message-entry__name'>
-				{name}
+				{ name }
 			</span>
-			{': '}
+			{ ': ' }
 			<span className='direct-message-entry__content'>
 				{...message.message.map((c, i) => RenderChatPart(c, i))}
 			</span>

@@ -98,7 +98,7 @@ function ManageRoleTr({ role, data }: { id: number, role: AccountRole, data: IRo
 			<td>
 				{ IsConfiguredAccountRole(role) && (
 					<Button className='slim' onClick={ () => void onRevoke() }>Revoke</Button>
-				)}
+				) }
 			</td>
 		</tr>
 	);

@@ -893,8 +893,8 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<
 			.map((text) => text
 				.replaceAll('CHARACTER_NAME', m.data.selectedBy?.name ?? '[unknown]')
 				.replaceAll('CHARACTER_ID', m.data.selectedBy?.id ?? '[id]')
-				.replaceAll('TIME', m.data.selectedAt ? new Date(m.data.selectedAt).toLocaleString() : '[time]')
-				.replaceAll('TIME_PASSED', m.data.selectedAt ? FormatTimeInterval(Date.now() - m.data.selectedAt) : '[time passed]'),
+				.replaceAll('TIME_PASSED', m.data.selectedAt ? FormatTimeInterval(Date.now() - m.data.selectedAt) : '[time passed]')
+				.replaceAll('TIME', m.data.selectedAt ? new Date(m.data.selectedAt).toLocaleString() : '[time]'),
 			)
 			.map((text, index) => <span key={ index }>{ text }</span>);
 	}, [m.activeVariant, m.data]);

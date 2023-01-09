@@ -151,8 +151,6 @@ export type LayerImageSetting = z.infer<typeof LayerImageSettingSchema>;
 
 export const LayerDefinitionSchema = RectangleSchema.extend({
 	name: z.string().optional(),
-	xOffset: z.number().int().default(0),
-	yOffset: z.number().int().default(0),
 	priority: LayerPrioritySchema,
 	points: z.union([z.array(PointDefinitionSchema), z.string(), z.number()]),
 	pointType: z.array(z.string()).optional(),

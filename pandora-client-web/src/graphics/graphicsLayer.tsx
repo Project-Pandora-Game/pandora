@@ -76,7 +76,7 @@ export function useLayerVertices(
 	normalize: boolean = false,
 	valueOverrides?: Record<BoneName, number>,
 ): Float64Array {
-	const { mirror, height, width } = useLayerDefinition(layer);
+	const { mirror, height, width, x, y } = useLayerDefinition(layer);
 
 	return useMemo(() => {
 		const result = new Float64Array(points
@@ -90,11 +90,11 @@ export function useLayerVertices(
 
 		if (normalize) {
 			for (let i = 0; i < result.length; i++) {
-				result[i] /= i % 2 ? height : width;
+				result[i] /= i % 2 ? (height + y) : (width + x);
 			}
 		}
 		return result;
-	}, [evaluator, mirror, height, width, item, normalize, points, valueOverrides]);
+	}, [evaluator, mirror, height, width, x, y, item, normalize, points, valueOverrides]);
 }
 
 export interface GraphicsLayerProps extends ChildrenProps {

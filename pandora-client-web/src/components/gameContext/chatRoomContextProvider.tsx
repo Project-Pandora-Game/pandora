@@ -60,6 +60,11 @@ export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId
 		`[UNKNOWN ASSET '${assetId}']`;
 }
 
+export function DescribeAssetSlot(assetManager: AssetManagerClient, slot: string): string {
+	const slotDefinition = assetManager.getSlotDefinition(slot);
+	return slotDefinition?.description ?? `[UNKNOWN SLOT '${slot}']`;
+}
+
 function ProcessMessage(
 	message: IChatRoomMessageAction & { time: number; roomId: RoomId; },
 	assetManager: AssetManagerClient,

@@ -1,5 +1,5 @@
 import { AppearanceActionResult, AssertNever } from 'pandora-common';
-import { DescribeAsset } from '../components/gameContext/chatRoomContextProvider';
+import { DescribeAsset, DescribeAssetSlot } from '../components/gameContext/chatRoomContextProvider';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
@@ -41,6 +41,8 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				const visibleModuleName = assetManager.getAssetById(e.asset)?.definition.modules?.[e.module]?.name ?? `[UNKNOWN MODULE '${e.module}']`;
 				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
 			}
+			case 'blockedSlot':
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because ${DescribeAssetSlot(assetManager, e.slot)} is blocked.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'invalid':
@@ -66,7 +68,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				const attribute = assetManager.getAttributeDefinition(attributeName);
 				const description = attribute ? `"${attribute.description}"` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
 				if (e.asset) {
-					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description}`;
+					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description}.`;
 				} else {
 					return `The item ${negative ? 'must not' : 'must'} be ${description}.`;
 				}
@@ -79,6 +81,10 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 					`At most ${e.limit} items can be present.`;
 			case 'contentNotAllowed':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
+			case 'slotFull':
+				return `${DescribeAssetSlot(assetManager, e.slot)} doesn't have enough space to fit ${DescribeAsset(assetManager, e.asset)}.`;
+			case 'slotBlockedOrder':
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be worn on top of an item that is blocking ${DescribeAssetSlot(assetManager, e.slot)}.`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}

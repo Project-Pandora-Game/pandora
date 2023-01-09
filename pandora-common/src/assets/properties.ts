@@ -50,6 +50,26 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	 * @default []
 	 */
 	blockSelfModules?: string[];
+
+	/**
+	 * Prevents listed slots from being added or removed or modified by anyone, including on oneself
+	 * @default []
+	 */
+	blockSlots?: (A['slots'])[];
+
+	/**
+	 * Unique list of slots this item occupies and or requires to be occupied
+	 * @default {}
+	 *
+	 * { <slot>: <n> } occupies this slot partially, with n being how much of the slot is occupied
+	 *                 n == 0, slot is not occupied but block is still applied
+	 */
+	occupySlots?: Partial<Record<A['slots'], number>>;
+}
+
+export interface AssetSlotResult {
+	occupied: Map<string, number>;
+	blocked: Set<string>;
 }
 
 export interface AssetPropertiesResult {
@@ -57,6 +77,7 @@ export interface AssetPropertiesResult {
 	effects: EffectsDefinition;
 	attributes: Set<string>;
 	hides: Set<string>;
+	slots: AssetSlotResult;
 }
 
 export function CreateAssetPropertiesResult(): AssetPropertiesResult {
@@ -67,14 +88,22 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 		effects: EFFECTS_DEFAULT,
 		attributes: new Set(),
 		hides: new Set(),
+		slots: {
+			occupied: new Map(),
+			blocked: new Set(),
+		},
 	};
 }
 
-export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: AssetProperties): T {
+export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: Readonly<AssetProperties>): T {
 	base.poseLimits = MergePoseLimits(base.poseLimits, properties.poseLimits);
 	base.effects = MergeEffects(base.effects, properties.effects);
 	properties.attributes?.forEach((a) => base.attributes.add(a));
 	properties.hides?.forEach((a) => base.hides.add(a));
+	for (const [slot, amount] of Object.entries(properties.occupySlots ?? {})) {
+		base.slots.occupied.set(slot, (base.slots.occupied.get(slot) ?? 0) + (amount ?? 0));
+	}
+	properties.blockSlots?.forEach((s) => base.slots.blocked.add(s));
 
 	return base;
 }

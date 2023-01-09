@@ -5,7 +5,7 @@ import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { AssetDefinitionPoseLimits, AssetId } from './definitions';
 import type { Item } from './item';
-import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
+import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems = readonly Item[];
@@ -31,6 +31,16 @@ export type AppearanceValidationError =
 	| {
 		problem: 'contentNotAllowed';
 		asset: AssetId;
+	}
+	| {
+		problem: 'slotBlockedOrder';
+		asset: AssetId;
+		slot: string;
+	}
+	| {
+		problem: 'slotFull';
+		asset: AssetId;
+		slot: string;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
 	| {
@@ -105,16 +115,46 @@ export function MergePoseLimits(base: PoseLimitsResult, poseLimits: AssetDefinit
 	return base;
 }
 
+export function AppearanceItemProperties(items: AppearanceItems): AssetPropertiesResult {
+	return items
+		.flatMap((item) => item.getPropertiesParts())
+		.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+}
+
 /**
  * Calculates what pose is enforced by items
  * @param items - Items being worn
  * @returns The enforcement or `null` if the item combination is invalid
  */
 export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimitsResult {
-	return items
-		.flatMap((item) => item.getPropertiesParts())
-		.reduce(MergeAssetProperties, CreateAssetPropertiesResult())
-		.poseLimits;
+	return AppearanceItemProperties(items).poseLimits;
+}
+
+export function AppearanceValidateSlots(assetMananger: AssetManager, item: Item, slots: AssetSlotResult): undefined | AppearanceValidationError {
+	for (const [slot, occupied] of slots.occupied) {
+		if (occupied === 0)
+			continue;
+
+		const capacity = assetMananger.assetSlots.get(slot)?.capacity ?? 0;
+		if (capacity < occupied) {
+			return {
+				problem: 'slotFull',
+				slot,
+				asset: item.asset.id,
+			};
+		}
+	}
+	return undefined;
+}
+
+export function AppearanceValidateSlotBlocks(previousSlots: AssetSlotResult, currentSlot: AssetSlotResult, asset: AssetId): undefined | AppearanceValidationError {
+	for (const slot of currentSlot.occupied.keys()) {
+		if (!previousSlots.blocked.has(slot))
+			continue;
+
+		return { problem: 'slotBlockedOrder', slot, asset };
+	}
+	return undefined;
 }
 
 export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, asset: AssetId | null): AppearanceValidationResult {
@@ -133,6 +173,14 @@ export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, 
 			};
 		})
 		.reduce(AppearanceValidationCombineResults, { success: true });
+}
+
+export function AppearanceGetBlockedSlot(slots: AssetSlotResult, blocked: ReadonlySet<string>): string | undefined {
+	for (const slot of slots.occupied.keys()) {
+		if (blocked.has(slot))
+			return slot;
+	}
+	return undefined;
 }
 
 /** Validates items prefix, ignoring required items */
@@ -181,24 +229,14 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 			return r;
 	}
 
-	// Check requirements are met
-	let globalProperties = CreateAssetPropertiesResult();
-	for (const item of items) {
-		// Item's attributes counts into its on requirements
-		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
-
-		const r = AppearanceValidateRequirements(globalProperties.attributes, item.getProperties().requirements, item.asset.id);
-		if (!r.success)
-			return r;
-	}
-
+	// Check requirements are met, and check asset count limits
 	const assetCounts = new Map<AssetId, number>();
-	// Each asset limits count of it being added
+	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
 		// TODO: Let assets specify count
 		const limit = 1;
 		const currentCount = assetCounts.get(item.asset.id) ?? 0;
-		if (currentCount >= limit)
+		if (currentCount >= limit) {
 			return {
 				success: false,
 				error: {
@@ -207,6 +245,24 @@ export function ValidateAppearanceItemsPrefix(assetMananger: AssetManager, items
 					limit,
 				},
 			};
+		}
+
+		const properties = item.getProperties();
+		let error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.slots, item.asset.id);
+		if (error)
+			return { success: false, error };
+
+		// Item's attributes count into its own requirements
+		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
+
+		const r = AppearanceValidateRequirements(globalProperties.attributes, properties.requirements, item.asset.id);
+		if (!r.success)
+			return r;
+
+		error = AppearanceValidateSlots(assetMananger, item, globalProperties.slots);
+		if (error)
+			return { success: false, error };
+
 		assetCounts.set(item.asset.id, currentCount + 1);
 	}
 
@@ -247,7 +303,7 @@ export function ValidateAppearanceItems(assetMananger: AssetManager, items: Appe
 }
 
 export function AppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems {
-	// First sort input so bodyparts are orered correctly work
+	// First sort input so bodyparts are ordered correctly work
 	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
 
 	// Process the input one by one, skipping bad items and injecting missing required bodyparts

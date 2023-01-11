@@ -1,7 +1,7 @@
 import type { CharacterId, IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import type { Account } from './account';
 import type { Shard } from '../shard/shard';
-import type { Room } from '../shard/room';
+import type { Room } from '../room/room';
 import type { IConnectionClient } from '../networking/common';
 import { GetDatabase, ICharacterSelfInfoDb } from '../database/databaseProvider';
 import { nanoid } from 'nanoid';

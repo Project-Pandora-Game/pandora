@@ -3,7 +3,8 @@ import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, L
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
-import type { Room } from './room';
+import type { Room } from '../room/room';
+import { RoomManager } from '../room/roomManager';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Sleep } from '../utility';
 import type { Account } from '../account/account';
@@ -94,7 +95,7 @@ export class Shard {
 		this._registered = true;
 
 		for (const roomData of data.rooms) {
-			ShardManager.createRoom(roomData, this, roomData.id);
+			RoomManager.createRoom(roomData, this, roomData.id);
 		}
 
 		for (const characterData of data.characters) {
@@ -112,7 +113,7 @@ export class Shard {
 				continue;
 			}
 
-			const room = characterData.room ? ShardManager.getRoom(characterData.room) : undefined;
+			const room = characterData.room ? RoomManager.getRoom(characterData.room) : undefined;
 
 			character.accessId = characterData.accessId;
 			this.connectCharacter(character, characterData.connectSecret);
@@ -201,7 +202,7 @@ export class Shard {
 			await Promise.all(
 				[...this.rooms.values()]
 					.map(async (room) => {
-						await ShardManager
+						await RoomManager
 							.migrateRoom(room)
 							.catch((error) => {
 								this.logger.warning('Room migration failed', error);

@@ -2,8 +2,8 @@ import { nanoid } from 'nanoid';
 import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
-import { Shard } from './shard';
-import { ShardManager } from './shardManager';
+import { Shard } from '../shard/shard';
+import { RoomManager } from './roomManager';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { pick, uniq } from 'lodash';
 
@@ -89,7 +89,7 @@ export class Room {
 
 	public update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): 'ok' | 'nameTaken' {
 		if (changes.name) {
-			const otherRoom = ShardManager.getRoomByName(changes.name);
+			const otherRoom = RoomManager.getRoomByName(changes.name);
 			if (otherRoom && otherRoom !== this)
 				return 'nameTaken';
 			this.config.name = changes.name;
@@ -376,7 +376,7 @@ export class Room {
 
 	public cleanupIfEmpty() {
 		if (this.characters.size === 0) {
-			ShardManager.destroyRoom(this);
+			RoomManager.destroyRoom(this);
 		}
 	}
 

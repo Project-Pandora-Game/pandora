@@ -10,6 +10,7 @@ import promClient from 'prom-client';
 import { ShardTokenStore } from '../shard/shardTokenStore';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { BetaKeyStore } from '../shard/betaKeyStore';
+import { RoomManager } from '../room/roomManager';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -354,7 +355,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		return {
-			rooms: ShardManager.listRooms().map((r) => r.getDirectoryInfo()),
+			rooms: RoomManager.listRooms().map((r) => r.getDirectoryInfo()),
 		};
 	}
 
@@ -362,7 +363,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		const room = ShardManager.getRoom(id);
+		const room = RoomManager.getRoom(id);
 
 		if (!room) {
 			return { result: 'notFound' };
@@ -384,7 +385,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character || !IsIChatRoomDirectoryConfig(roomConfig))
 			throw new BadMessageError();
 
-		const room = ShardManager.createRoom(roomConfig);
+		const room = RoomManager.createRoom(roomConfig);
 
 		if (typeof room === 'string') {
 			return { result: room };
@@ -407,7 +408,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		const room = ShardManager.getRoom(id);
+		const room = RoomManager.getRoom(id);
 
 		if (!room) {
 			return { result: 'notFound' };

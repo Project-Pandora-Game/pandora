@@ -1,7 +1,7 @@
 import { IChatRoomDirectoryConfig, RoomId } from 'pandora-common';
 import { ShardManager } from '../../src/shard/shardManager';
 import { Shard } from '../../src/shard/shard';
-import { Room } from '../../src/shard/room';
+import { Room } from '../../src/room/room';
 import { TestMockDb } from '../utils';
 
 const TEST_SHARD_ID = 'shardTestId';

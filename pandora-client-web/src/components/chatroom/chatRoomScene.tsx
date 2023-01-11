@@ -249,7 +249,7 @@ function AdminActionContextMenu({ character, chatRoom, onClose, onBack }: { char
 				<button onClick={ promote } >
 					Promote
 				</button>
-			)}
+			) }
 			<button onClick={ onBack } >
 				Back
 			</button>
@@ -308,9 +308,9 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 	return (
 		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 			<span>
-				{characterData.name} ({characterData.id})
+				{ characterData.name } ({ characterData.id })
 			</span>
-			{menu === 'main' && (
+			{ menu === 'main' && (
 				<>
 					<button onClick={ () => {
 						onCloseActual();
@@ -318,27 +318,27 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 					} }>
 						Wardrobe
 					</button>
-					{characterData.id !== playerId && (
+					{ characterData.id !== playerId && (
 						<button onClick={ () => {
 							onClose();
 							setTarget(characterData.id);
 						} }>
 							Whisper
 						</button>
-					)}
+					) }
 				</>
-			)}
-			{(isPlayerAdmin && character.data.accountId !== currentAccount?.id) && (
+			) }
+			{ (isPlayerAdmin && character.data.accountId !== currentAccount?.id) && (
 				<>
-					{menu === 'main' ? (
+					{ menu === 'main' ? (
 						<button onClick={ () => setMenu('admin') }>
 							Admin
 						</button>
 					) : (
 						<AdminActionContextMenu character={ character } chatRoom={ chatRoom } onClose={ onCloseActual } onBack={ () => setMenu('main') } />
-					)}
+					) }
 				</>
-			)}
+			) }
 			<button onClick={ () => {
 				onCloseActual();
 			} } >

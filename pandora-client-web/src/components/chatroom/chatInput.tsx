@@ -470,13 +470,13 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					{ ' ' }
 					({ target.data.id })
 					{ ' ' }
-					{editing === null && (
+					{ editing === null && (
 						<Button className='slim' onClick={ (ev) => {
 							ev.stopPropagation();
 							setTarget(null);
 						} }>Cancel
 						</Button>
-					)}
+					) }
 				</span>
 			) }
 			{ editing && (

@@ -400,7 +400,8 @@ function TypingIndicator(): ReactElement {
 	const playerId = usePlayerId();
 	const { showSelector, setShowSelector } = useChatInput();
 
-	const onClick = useCallback(() => {
+	const onClick = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
+		ev.stopPropagation();
 		setShowSelector(!showSelector);
 	}, [showSelector, setShowSelector]);
 
@@ -449,7 +450,8 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 	const lastHasTarget = useRef(target !== null);
 	const lastEditing = useRef(editing);
 
-	const onClick = useCallback(() => {
+	const onClick = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
+		ev.stopPropagation();
 		setShowSelector(!showSelector);
 	}, [showSelector, setShowSelector]);
 
@@ -596,6 +598,7 @@ function AutoCompleteHint(): ReactElement | null {
 
 function ChatModeSelector(): ReactElement | null {
 	const { setMode, showSelector, setShowSelector, target } = useChatInput();
+	const ref = useRef<HTMLSelectElement>(null);
 	const hasTarget = target !== null;
 
 	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
@@ -614,11 +617,22 @@ function ChatModeSelector(): ReactElement | null {
 		setShowSelector(false);
 	}, [setMode, setShowSelector]);
 
+	useEffect(() => {
+		const handler = (ev: MouseEvent) => {
+			if (!showSelector || ref.current == null || ref.current.contains(ev.target as Node) || ev.target === ref.current)
+				return;
+
+			setShowSelector(false);
+		};
+		window.addEventListener('click', handler);
+		return () => window.removeEventListener('click', handler);
+	}, [setShowSelector, showSelector]);
+
 	if (!showSelector)
 		return null;
 
 	return (
-		<Select onChange={ onChange }>
+		<Select onChange={ onChange } ref={ ref }>
 			<option value=''>None</option>
 			<option value='chat'>Chat</option>
 			<option value='raw_chat'>Raw Chat</option>

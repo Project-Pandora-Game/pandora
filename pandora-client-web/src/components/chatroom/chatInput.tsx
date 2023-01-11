@@ -597,7 +597,7 @@ function AutoCompleteHint(): ReactElement | null {
 }
 
 function ChatModeSelector(): ReactElement | null {
-	const { setMode, showSelector, setShowSelector, target } = useChatInput();
+	const { setMode, mode, showSelector, setShowSelector, target } = useChatInput();
 	const ref = useRef<HTMLSelectElement>(null);
 	const hasTarget = target !== null;
 
@@ -632,7 +632,7 @@ function ChatModeSelector(): ReactElement | null {
 		return null;
 
 	return (
-		<Select onChange={ onChange } ref={ ref }>
+		<Select onChange={ onChange } ref={ ref } defaultValue={ mode ? ((mode.raw ? 'raw_' : '') + mode.type) : '' }>
 			<option value=''>None</option>
 			<option value='chat'>Chat</option>
 			<option value='raw_chat'>Raw Chat</option>

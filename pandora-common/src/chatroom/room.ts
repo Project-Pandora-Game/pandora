@@ -180,7 +180,7 @@ export type IChatRoomDirectoryExtendedInfo = IChatRoomDirectoryInfo & Pick<IChat
 
 export type IChatRoomFullInfo = IChatRoomDirectoryConfig & {
 	/** The id of the room, never changes */
-	id: RoomId;
+	readonly id: RoomId;
 };
 
 export const ChatRoomFullInfoSchema = ChatRoomDirectoryConfigSchema.merge(z.object({

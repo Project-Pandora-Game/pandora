@@ -64,10 +64,13 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 
 	private handleCharacterDisconnect({ id /* TODO , reason */ }: IShardDirectoryArgument['characterDisconnect'], connection: IConnectionShard): void {
 		const shard = connection.shard;
-		if (!shard || !shard?.getConnectedCharacter(id))
+		if (!shard)
+			throw new BadMessageError();
+		const character = shard.getConnectedCharacter(id);
+		if (!character)
 			throw new BadMessageError();
 
-		shard.disconnectCharacter(id);
+		character.disconnect();
 	}
 
 	private async createCharacter({ id }: IShardDirectoryArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {

@@ -46,7 +46,7 @@ export class Character {
 	public disconnect(): void {
 		this.account.touch();
 		this.room?.removeCharacter(this, 'disconnect', null);
-		this.assignedShard?.disconnectCharacter(this.id);
+		this.assignedShard?.disconnectCharacter(this);
 	}
 
 	public async generateAccessId(): Promise<string | null> {
@@ -122,7 +122,10 @@ export class Character {
 
 		if (room) {
 			// If in a room, the room always chooses shard
-			shard = room.shard;
+			const roomShard = room.connect();
+			if (typeof roomShard === 'string')
+				return 'failed';
+			shard = roomShard;
 		} else if (!shard) {
 			throw new Error('Neither room nor shard passed');
 		}
@@ -134,7 +137,7 @@ export class Character {
 
 		// If we are on a wrong shard, we leave it
 		if (this.assignedShard !== shard) {
-			this.assignedShard?.disconnectCharacter(this.id);
+			this.assignedShard?.disconnectCharacter(this);
 			// Generate new access id for new shard
 			const accessId = await this.generateAccessId();
 			if (accessId == null)

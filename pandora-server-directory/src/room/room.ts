@@ -1,53 +1,52 @@
-import { nanoid } from 'nanoid';
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from '../shard/shard';
 import { RoomManager } from './roomManager';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { pick, uniq } from 'lodash';
+import { ShardManager } from '../shard/shardManager';
 
 export class Room {
-	public readonly id: RoomId;
-	public readonly shard: Shard;
+	private readonly config: IChatRoomFullInfo;
 
-	private config: IChatRoomDirectoryConfig;
+	public assignedShard: Shard | null = null;
+
+	public get id(): RoomId {
+		return this.config.id;
+	}
 
 	public get name(): string {
 		return this.config.name;
 	}
 
-	private logger: Logger;
+	private readonly logger: Logger;
 
-	constructor(config: IChatRoomDirectoryConfig, shard: Shard, id?: RoomId) {
-		this.id = id ?? `r${nanoid()}` as const;
-		this.logger = GetLogger('Room', `[Room ${this.id}]`);
+	constructor(config: IChatRoomFullInfo) {
 		this.config = config;
+		this.logger = GetLogger('Room', `[Room ${this.id}]`);
 
 		// Make sure things that should are unique
 		this.config.features = uniq(this.config.features);
 		this.config.admin = uniq(this.config.admin);
 		this.config.banned = uniq(this.config.banned);
 
-		this.shard = shard;
-		shard.rooms.add(this);
 		this.logger.verbose('Created');
-		shard.update('rooms');
+	}
+
+	public isInUse(): this is { assignedShard: Shard; } {
+		return this.assignedShard != null;
 	}
 
 	/** Map of character ids to account id */
-	private readonly characters: Set<Character> = new Set();
+	private readonly _characters: Set<Character> = new Set();
 
-	public get characterCount(): number {
-		return this.characters.size;
+	public get characters(): ReadonlySet<Character> {
+		return this._characters;
 	}
 
-	public getJoinedCharacter(id: CharacterId): Character | null {
-		for (const character of this.characters) {
-			if (character.id === id)
-				return character;
-		}
-		return null;
+	public get characterCount(): number {
+		return this._characters.size;
 	}
 
 	public getBaseInfo(): IChatRoomBaseInfo {
@@ -72,7 +71,7 @@ export class Room {
 		return ({
 			...this.getDirectoryInfo(),
 			...pick(this.config, ['features', 'admin', 'background']),
-			characters: Array.from(this.characters).map((c) => ({
+			characters: Array.from(this._characters).map((c) => ({
 				id: c.id,
 				accountId: c.account.id,
 				name: c.data.name,
@@ -145,7 +144,7 @@ export class Room {
 			this.sendUpdatedMessage(source, ...changeList);
 		}
 
-		this.shard.update('rooms');
+		this.assignedShard?.update('rooms');
 		ConnectionManagerClient.onRoomListChange();
 		return 'ok';
 	}
@@ -231,36 +230,19 @@ export class Room {
 				AssertNever(action);
 		}
 		if (updated) {
-			this.shard.update('rooms');
+			this.assignedShard?.update('rooms');
 			ConnectionManagerClient.onRoomListChange();
 		}
 	}
 
-	public migrateTo(room: Room): Promise<void> {
-		this.logger.info('Migrating to room', room.id);
-		const promises: Promise<unknown>[] = [];
-		for (const character of Array.from(this.characters.values())) {
-			this.removeCharacter(character, 'destroy', null);
-			promises.push(
-				character
-					.connectToShard({ room, sendEnterMessage: false })
-					.then(() => {
-						character.assignedConnection?.sendConnectionStateUpdate();
-					}, (err) => {
-						this.logger.fatal('Error reconnecting character to different room', err);
-					}),
-			);
-		}
-		return Promise.all(promises).then(() => undefined);
-	}
-
 	public onDestroy(): void {
-		for (const character of Array.from(this.characters.values())) {
+		for (const character of Array.from(this._characters.values())) {
 			this.removeCharacter(character, 'destroy', null);
 		}
-		this.shard.rooms.delete(this);
+		this.disconnect();
+		Assert(this.assignedShard == null);
+		Assert(this._characters.size === 0);
 		this.logger.verbose('Destroyed');
-		this.shard.update('rooms');
 	}
 
 	public checkAllowEnter(character: Character, password?: string): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
@@ -304,7 +286,7 @@ export class Room {
 			throw new Error('Attempt to add character that is in different room');
 		}
 		this.logger.debug(`Character ${character.id} entered`);
-		this.characters.add(character);
+		this._characters.add(character);
 		character.room = this;
 
 		// Report the enter
@@ -318,7 +300,7 @@ export class Room {
 			});
 		}
 
-		this.shard.update('characters');
+		this.assignedShard?.update('characters');
 		ConnectionManagerClient.onRoomListChange();
 	}
 
@@ -326,7 +308,7 @@ export class Room {
 		if (character.room !== this)
 			return;
 		this.logger.debug(`Character ${character.id} removed (${reason})`);
-		this.characters.delete(character);
+		this._characters.delete(character);
 		character.room = null;
 
 		// Report the leave
@@ -361,22 +343,66 @@ export class Room {
 			this.removeBannedCharacters(source);
 		}
 
+		this.assignedShard?.update('characters');
 		this.cleanupIfEmpty();
-		this.shard.update('characters');
 		ConnectionManagerClient.onRoomListChange();
 	}
 
 	private removeBannedCharacters(source: Character | null): void {
-		for (const character of this.characters.values()) {
+		for (const character of this._characters.values()) {
 			if (this.config.banned.includes(character.account.id)) {
 				this.removeCharacter(character, 'ban', source);
 			}
 		}
 	}
 
+	public disconnect(): void {
+		this.assignedShard?.disconnectRoom(this.id);
+	}
+
+	public connect(): 'noShardFound' | 'failed' | Shard {
+		if (this.assignedShard) {
+			return this.connectToShard({ shard: this.assignedShard });
+		}
+
+		let shard: Shard | null = this.assignedShard;
+		if (!shard) {
+			shard = ShardManager.getRandomShard();
+		}
+		// If there is still no shard found, then we disconnect
+		if (!shard) {
+			this.disconnect();
+			return 'noShardFound';
+		}
+		return this.connectToShard({ shard });
+	}
+
+	public connectToShard({
+		shard,
+	}: {
+		shard: Shard;
+	}): 'failed' | Shard {
+		// If we are on a wrong shard, we leave it
+		if (this.assignedShard !== shard) {
+			this.assignedShard?.disconnectRoom(this.id);
+		}
+
+		// Check that we can actually join the shard (prevent race condition on shard shutdown)
+		if (!shard.allowConnect()) {
+			return 'failed';
+		}
+
+		if (this.assignedShard !== shard) {
+			shard.connectRoom(this);
+		}
+
+		AssertNotNullable(this.assignedShard);
+		return this.assignedShard;
+	}
+
 	public cleanupIfEmpty() {
-		if (this.characters.size === 0) {
-			RoomManager.destroyRoom(this);
+		if (this._characters.size === 0) {
+			this.disconnect();
 		}
 	}
 
@@ -400,6 +426,6 @@ export class Room {
 			}),
 		);
 		this.pendingMessages.push(...processedMessages);
-		this.shard.update('messages');
+		this.assignedShard?.update('messages');
 	}
 }

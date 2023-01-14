@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { ZodTrimedRegex, zTemplateString } from '../validation';
-import { Satisfies } from '../utility';
 import { cloneDeep } from 'lodash';
 import { AssetManager } from '../assets';
 import { CharacterId } from '../character';
@@ -21,51 +20,33 @@ export const ChatRoomFeatureSchema = z.enum([
 ]);
 export type ChatRoomFeature = z.infer<typeof ChatRoomFeatureSchema>;
 
-export type IChatRoomBaseInfo = {
-	/** The name of the chat room */
-	name: string;
-	/** The description of the chat room */
-	description: string;
-	/** Protected rooms can be entered only by admins or using password (if there is one set) */
-	protected: boolean;
-	/** The maximum amount of users in the chat room */
-	maxUsers: number;
-};
-
 export type ActionRoomContext = {
 	features: readonly ChatRoomFeature[];
 };
 
 export const ChatRoomBaseInfoSchema = z.object({
+	/** The name of the chat room */
 	name: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex),
+	/** The description of the chat room */
 	description: z.string(),
+	/** Protected rooms can be entered only by admins or using password (if there is one set) */
 	protected: z.boolean(),
+	/** The maximum amount of users in the chat room */
 	maxUsers: z.number().min(2),
 });
-
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__ChatRoomBaseInfo = Satisfies<z.infer<typeof ChatRoomBaseInfoSchema>, IChatRoomBaseInfo>;
-
-export type IChatroomBackgroundData = {
-	/** The background image of the chat room */
-	image: string;
-	/** The size of the chat room */
-	size: [number, number];
-	/** Limit how high can character move */
-	maxY?: number;
-	/** The Y -> scale of the chat room */
-	scaling: number;
-};
+export type IChatRoomBaseInfo = z.infer<typeof ChatRoomBaseInfoSchema>;
 
 export const ChatRoomBackgroundDataSchema = z.object({
+	/** The background image of the chat room */
 	image: z.string(),
+	/** The size of the chat room */
 	size: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
+	/** Limit how high can character move */
 	maxY: z.number().int().min(0).optional(),
+	/** The Y -> scale of the chat room */
 	scaling: z.number().min(0),
 });
-
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__ChatRoomBackgroundData = Satisfies<z.infer<typeof ChatRoomBackgroundDataSchema>, IChatroomBackgroundData>;
+export type IChatroomBackgroundData = z.infer<typeof ChatRoomBackgroundDataSchema>;
 
 export const DEFAULT_ROOM_SIZE = [4000, 2000] as const;
 export const DEFAULT_BACKGROUND: Readonly<IChatroomBackgroundData> = {
@@ -110,45 +91,30 @@ export function CalculateCharacterMaxYForBackground(roomBackground: IChatroomBac
 	));
 }
 
-export type IChatRoomDirectoryConfig = IChatRoomBaseInfo & {
+export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.object({
 	/** The requested features */
-	features: ChatRoomFeature[];
+	features: z.array(ChatRoomFeatureSchema),
 	/**
 	 * Development options, may get ignored if requested features don't include 'development'
 	 */
-	development?: {
-		/** The id of the shard that the room will be created on */
-		shardId?: string;
-		/** Automatically grants admin to every developer on enter */
-		autoAdmin?: boolean;
-	};
-	/** The banned account ids */
-	banned: number[];
-	/** The admin account ids */
-	admin: number[];
-	/** The password of the chat room if the room is protected */
-	password: string | null;
-	/** The ID of the background or custom data */
-	background: string | IChatroomBackgroundData;
-};
-
-export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.object({
-	features: z.array(ChatRoomFeatureSchema),
 	development: z.object({
+		/** The id of the shard that the room will be created on */
 		shardId: z.string().optional(),
+		/** Automatically grants admin to every developer on enter */
 		autoAdmin: z.boolean().optional(),
 	}).optional(),
+	/** The banned account ids */
 	banned: z.array(z.number()),
+	/** The admin account ids */
 	admin: z.array(z.number()),
+	/** The password of the chat room if the room is protected */
 	password: z.string().nullable(),
+	/** The ID of the background or custom data */
 	background: z.union([z.string(), ChatRoomBackgroundDataSchema]),
 }));
-
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__ChatRoomDirectoryConfig = Satisfies<z.infer<typeof ChatRoomDirectoryConfigSchema>, IChatRoomDirectoryConfig>;
+export type IChatRoomDirectoryConfig = z.infer<typeof ChatRoomDirectoryConfigSchema>;
 
 export const ChatRoomDirectoryUpdateSchema = ChatRoomDirectoryConfigSchema.omit({ features: true, development: true }).partial();
-
 export type IChatRoomDirectoryUpdate = z.infer<typeof ChatRoomDirectoryUpdateSchema>;
 
 export type IChatRoomDirectoryInfo = IChatRoomBaseInfo & {
@@ -178,16 +144,10 @@ export type IChatRoomDirectoryExtendedInfo = IChatRoomDirectoryInfo & Pick<IChat
 	}[];
 };
 
-export type IChatRoomFullInfo = IChatRoomDirectoryConfig & {
-	/** The id of the room, never changes */
-	readonly id: RoomId;
-};
-
 export const ChatRoomFullInfoSchema = ChatRoomDirectoryConfigSchema.merge(z.object({
+	/** The id of the room, never changes */
 	id: RoomIdSchema,
 }));
-
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__ChatRoomFullInfo = Satisfies<z.infer<typeof ChatRoomFullInfoSchema>, IChatRoomFullInfo>;
+export type IChatRoomFullInfo = z.infer<typeof ChatRoomFullInfoSchema>;
 
 export type IChatRoomLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'kick' | 'ban';

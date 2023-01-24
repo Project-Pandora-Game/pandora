@@ -422,7 +422,7 @@ function InventoryAssetView({ className, title, children, assets, container, att
 	return (
 		<div className={ classNames('inventoryView', className) }>
 			<div className='toolbar'>
-				<span>{title}</span>
+				<span>{ title }</span>
 				<input ref={ filterInput }
 					type='text'
 					placeholder='Filter by name'
@@ -506,7 +506,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
-			This action isn&apos;t possible, because:
+			This action isn't possible, because:
 			<br />
 			{ reason }
 		</HoverElement>
@@ -539,7 +539,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 			} }>
 			<ActionWarning check={ check } parent={ ref } />
 			<div className='itemPreview' />
-			<span className='itemName'>{asset.definition.name}</span>
+			<span className='itemName'>{ asset.definition.name }</span>
 		</div>
 	);
 }
@@ -605,7 +605,7 @@ function InventoryItemView({
 							</div>
 						</>
 					) :
-						<span>{title}</span>
+						<span>{ title }</span>
 				}
 			</div>
 			<div className='list'>
@@ -624,7 +624,7 @@ function InventoryItemView({
 	);
 }
 
-function InventoryItemViewList({ item, selected=false, setFocus, singleItemContainer=false }: {
+function InventoryItemViewList({ item, selected = false, setFocus, singleItemContainer = false }: {
 	item: ItemPath;
 	selected?: boolean;
 	setFocus?: (newFocus: WardrobeFocus) => void;
@@ -649,7 +649,7 @@ function InventoryItemViewList({ item, selected=false, setFocus, singleItemConta
 			});
 		} }>
 			<div className='itemPreview' />
-			<span className='itemName'>{asset.definition.name}</span>
+			<span className='itemName'>{ asset.definition.name }</span>
 			<div className='quickActions'>
 				{
 					singleItemContainer ? null : (
@@ -767,7 +767,7 @@ function WardrobeItemConfigMenu({
 	return (
 		<div className='inventoryView'>
 			<div className='toolbar'>
-				<span>Editing item: {wornItem.asset.definition.name}</span>
+				<span>Editing item: { wornItem.asset.definition.name }</span>
 				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
 			</div>
 			<Column overflowX='hidden' overflowY='auto'>
@@ -808,7 +808,7 @@ function WardrobeItemConfigMenu({
 							{
 								wornItem.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
 									<div className='wardrobeColorRow' key={ colorPartIndex }>
-										<span className='flex-1'>{colorPart.name}</span>
+										<span className='flex-1'>{ colorPart.name }</span>
 										<ColorInput
 											initialValue={ wornItem.color[colorPartIndex] ?? colorPart.default }
 											resetValue={ colorPart.default }
@@ -1073,7 +1073,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
 	return (
 		<>
-			{poses.map((poseCategory, poseCategoryIndex) => (
+			{ poses.map((poseCategory, poseCategoryIndex) => (
 				<React.Fragment key={ poseCategoryIndex }>
 					<h4>{ poseCategory.category }</h4>
 					<div className='pose-row'>
@@ -1084,7 +1084,7 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 						}
 					</div>
 				</React.Fragment>
-			))}
+			)) }
 		</>
 	);
 }
@@ -1172,7 +1172,7 @@ export function WardrobePoseGui({ character }: { character: Character }): ReactE
 									} } />
 								))
 						}
-					</FieldsetToggle>}
+					</FieldsetToggle> }
 			</div>
 		</div>
 	);

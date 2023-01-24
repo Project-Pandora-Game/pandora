@@ -1,0 +1,75 @@
+{
+	"version": "0.2.0",
+	"compounds": [
+		{
+			"name": "Local Pandora Stack",
+			"configurations": [
+				"Run Directory Server",
+				"Run Shard Server",
+				"Run Client (Chrome)"
+			],
+			"preLaunchTask": "pandora-common: dev",
+			"stopAll": true,
+			"presentation": {
+				"hidden": false,
+				"group": "",
+				"order": 1
+			}
+		}
+	],
+	"configurations": [
+		{
+			"name": "Run Client (Chrome)",
+			"request": "launch",
+			"type": "chrome",
+			"linux": {
+				"runtimeExecutable": "/usr/bin/chromium",
+			},
+			"runtimeArgs": [
+				"--incognito"
+			],
+			"url": "http://localhost:6969",
+			"webRoot": "${workspaceFolder}/pandora-client-web/src",
+			"sourceMaps": true,
+			"sourceMapPathOverrides": {
+				"webpack:///./~/*": "${workspaceFolder}/pandora-client-web/node_modules/*",
+				"webpack://?:*/*": "${workspaceFolder}/pandora-client-web/*"
+			},
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/node_modules/**",
+				"!**/node_modules/pandora-common/**",
+				"!**/node_modules/.pnpm/pandora-common/**",
+			],
+			"preLaunchTask": "pandora-client-web: dev",
+		},
+		{
+			"name": "Run Directory Server",
+			"type": "node",
+			"request": "attach",
+			"restart": {
+				"delay": 200,
+			},
+			"autoAttachChildProcesses": false,
+			"attachExistingChildren": false,
+			"continueOnAttach": true,
+			"port": 25860,
+			"sourceMaps": true,
+			"internalConsoleOptions": "neverOpen",
+			"preLaunchTask": "pandora-server-directory: dev"
+		},
+		{
+			"name": "Run Shard Server",
+			"type": "node",
+			"request": "attach",
+			"restart": {
+				"delay": 200,
+			},
+			"continueOnAttach": true,
+			"port": 25861,
+			"sourceMaps": true,
+			"internalConsoleOptions": "neverOpen",
+			"preLaunchTask": "pandora-server-shard: dev"
+		},
+	]
+}

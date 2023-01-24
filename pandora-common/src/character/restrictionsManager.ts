@@ -8,7 +8,7 @@ import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item } from '../assets/item';
 import type { Asset } from '../assets/asset';
-import type { AssetId, ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
+import { AppearanceGetBlockedSlot, AppearanceItemProperties, AssetId, ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
 
 export enum ItemInteractionType {
 	/**
@@ -89,6 +89,11 @@ export type Restriction =
 		self: boolean;
 	}
 	| {
+		type: 'blockedSlot';
+		asset: AssetId;
+		slot: string;
+	}
+	| {
 		type: 'blockedHands';
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
@@ -125,9 +130,7 @@ export class CharacterRestrictionsManager {
 			return this._properties;
 		}
 		this._items = items;
-		this._properties = items
-			.flatMap((item) => item.getPropertiesParts())
-			.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
+		this._properties = AppearanceItemProperties(items);
 
 		return this._properties;
 	}
@@ -242,7 +245,9 @@ export class CharacterRestrictionsManager {
 			return r;
 
 		let isPhysicallyEquipped = true;
-		const isSelfAction = target.type === 'character' && target.characterId === this.characterId;
+		const isCharacter = target.type === 'character';
+		const isSelfAction = isCharacter && target.characterId === this.characterId;
+		const isInSafemode = this.isInSafemode();
 
 		// Must be able to access all upper items
 		const upperPath = SplitContainerPath(container);
@@ -332,7 +337,7 @@ export class CharacterRestrictionsManager {
 		// If equipping there are further checks
 		if (interaction === ItemInteractionType.ADD_REMOVE && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
-			if (properties.blockAddRemove && !this.isInSafemode())
+			if (properties.blockAddRemove && !isInSafemode)
 				return {
 					allowed: false,
 					restriction: {
@@ -343,7 +348,7 @@ export class CharacterRestrictionsManager {
 				};
 
 			// If equipping on self, the asset must allow self-equip
-			if (isSelfAction && properties.blockSelfAddRemove && !this.isInSafemode())
+			if (isSelfAction && properties.blockSelfAddRemove && !isInSafemode)
 				return {
 					allowed: false,
 					restriction: {
@@ -354,8 +359,23 @@ export class CharacterRestrictionsManager {
 				};
 		}
 
+		if (isCharacter && isPhysicallyEquipped && !isInSafemode) {
+			const targetProperties = target.getRestrictionManager(this.room).getProperties();
+			const slot = AppearanceGetBlockedSlot(properties.slots, targetProperties.slots.blocked);
+			if (slot) {
+				return {
+					allowed: false,
+					restriction: {
+						type: 'blockedSlot',
+						asset: item.asset.id,
+						slot,
+					},
+				};
+			}
+		}
+
 		// Must be able to use hands
-		if (!this.canUseHands() && !this.isInSafemode())
+		if (!this.canUseHands() && !isInSafemode)
 			return {
 				allowed: false,
 				restriction: {

@@ -27,8 +27,6 @@ describe('Muffler', () => {
 			const test = 'The quick brown fox jumps over the lazy dog';
 			expect(muffler.muffle(test.toUpperCase()).split('').every((c) => c === c.toUpperCase()));
 			expect(muffler.muffle(test.toLowerCase()).split('').every((c) => c === c.toLowerCase()));
-			// eslint-disable-next-line no-console
-			console.log(muffler.muffle(test));
 		});
 
 		it('should be word consistent', () => {

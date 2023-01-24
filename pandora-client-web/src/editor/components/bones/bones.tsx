@@ -81,7 +81,7 @@ export function BoneUI(): ReactElement {
 				Pose bones
 				<ContextHelpButton>
 					<p>
-						The &quot;Poses&quot;-tab enables you to manipulate the bones/poses of the editor character, visible in the &quot;Preview&quot;-tab.<br />
+						The "Poses"-tab enables you to manipulate the bones/poses of the editor character, visible in the "Preview"-tab.<br />
 						You can manipulate each bone in two directions via either the slider for a quick and rough movement,<br />
 						or the number field for a more fine-grained setting.<br />
 						The middle position, or number 0, is the neutral position for each slider - the position in which<br />
@@ -96,7 +96,7 @@ export function BoneUI(): ReactElement {
 					<ul>
 						<li>
 							a toggle to show the positions of bone points on the body, allowing you to see the exact<br />
-							bone position and to drag the bone directly on the &quot;Preview&quot;-tab&apos;s character model
+							bone position and to drag the bone directly on the "Preview"-tab's character model
 						</li>
 						<li>
 							a toggle to move the arms in front of or behind the body

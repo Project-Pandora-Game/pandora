@@ -146,7 +146,7 @@ export function RegistrationForm(): ReactElement {
 					}) }
 				/>
 				<FormFieldError error={ errors.betaKey } />
-			</FormField>}
+			</FormField> }
 			<Button type='submit'>Register</Button>
 			<FormLink to='/login'>Already have an account? <strong>Sign in</strong></FormLink>
 		</Form>

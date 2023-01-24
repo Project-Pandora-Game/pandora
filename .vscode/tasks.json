@@ -1,0 +1,248 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "pnpm: install",
+			"type": "process",
+			"command": "pnpm",
+			"windows": {
+				"command": "pnpm.cmd"
+			},
+			"args": [
+				"install",
+				"--frozen-lockfile",
+				"--prefer-offline"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": false,
+				"clear": false
+			},
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Setup",
+			"runOptions": {
+				"runOn": "folderOpen"
+			},
+			"dependsOn": [
+				"pnpm: install"
+			],
+			"dependsOrder": "sequence",
+			"type": "shell",
+			"command": "echo Done!",
+			"presentation": {
+				"echo": false,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"close": true,
+				"clear": false
+			},
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Build",
+			"type": "npm",
+			"script": "build",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": "$tsc"
+		},
+		{
+			"label": "pandora-common: dev",
+			"type": "npm",
+			"script": "dev",
+			"path": "pandora-common",
+			"icon": {
+				"id": "tools"
+			},
+			"isBackground": true,
+			"promptOnClose": false,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated",
+				"showReuseMessage": true,
+				"clear": true
+			},
+			"problemMatcher": {
+				"base": "$tsc",
+				"source": "tsc:common",
+				"fileLocation": [
+					"relative",
+					"${workspaceFolder}/pandora-common"
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": " File change detected\\. Starting incremental compilation\\.\\.\\.",
+					"endsPattern": " Watching for file changes\\."
+				}
+			}
+		},
+		{
+			"label": "pandora-client-web: dev",
+			"type": "npm",
+			"script": "dev",
+			"path": "pandora-client-web",
+			"dependsOn": [
+				"pandora-common: dev"
+			],
+			"icon": {
+				"id": "run"
+			},
+			"isBackground": true,
+			"promptOnClose": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated",
+				"showReuseMessage": true,
+				"clear": true
+			},
+			"problemMatcher": {
+				"owner": "Webpack",
+				"source": "webpack:client-web",
+				"fileLocation": "absolute",
+				"pattern": [
+					{
+						"regexp": "ERROR in ([^\\(]*)\\((\\d+),(\\d+)\\):?",
+						"file": 1,
+						"line": 2,
+						"column": 3
+					},
+					{
+						"regexp": "\\s*([A-Za-z0-9-]+):(.*)",
+						"message": 2,
+						"code": 1
+					}
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^assets by ",
+					"endsPattern": "webpack [\\d.]+ compiled .+ in \\d+ ms"
+				}
+			}
+		},
+		{
+			"label": "pandora-server-directory: dev",
+			"type": "npm",
+			"script": "dev:inspect",
+			"path": "pandora-server-directory",
+			"dependsOn": [
+				"pandora-common: dev"
+			],
+			"icon": {
+				"id": "run"
+			},
+			"isBackground": true,
+			"promptOnClose": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated",
+				"showReuseMessage": true,
+				"clear": true
+			},
+			"problemMatcher": {
+				"base": "$tsc",
+				"source": "tsc:server-directory",
+				"fileLocation": [
+					"relative",
+					"${workspaceFolder}/pandora-server-directory"
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": " File change detected\\. Starting incremental compilation\\.\\.\\.",
+					"endsPattern": " Watching for file changes\\."
+				}
+			}
+		},
+		{
+			"label": "pandora-server-shard: dev",
+			"type": "npm",
+			"script": "dev:inspect",
+			"path": "pandora-server-shard",
+			"dependsOn": [
+				"pandora-common: dev"
+			],
+			"icon": {
+				"id": "run"
+			},
+			"isBackground": true,
+			"promptOnClose": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "dedicated",
+				"showReuseMessage": true,
+				"clear": true
+			},
+			"problemMatcher": {
+				"base": "$tsc",
+				"source": "tsc:server-shard",
+				"fileLocation": [
+					"relative",
+					"${workspaceFolder}/pandora-server-shard"
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": " File change detected\\. Starting incremental compilation\\.\\.\\.",
+					"endsPattern": " Watching for file changes\\."
+				}
+			}
+		},
+		{
+			"label": "Start all (no-common,parallel)",
+			"hide": true,
+			"dependsOn": [
+				"pandora-server-directory: dev",
+				"pandora-server-shard: dev",
+				"pandora-client-web: dev"
+			],
+			"dependsOrder": "parallel",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Start all",
+			"icon": {
+				"id": "run-all"
+			},
+			"dependsOn": [
+				"pandora-common: dev",
+				"Start all (no-common,parallel)",
+			],
+			"dependsOrder": "sequence",
+			"group": "none",
+			"problemMatcher": []
+		},
+		{
+			"label": "Terminate All Tasks",
+			"command": "echo ${input:terminate}",
+			"type": "shell",
+			"hide": true,
+			"problemMatcher": []
+		}
+	],
+	"inputs": [
+		{
+			"id": "terminate",
+			"type": "command",
+			"command": "workbench.action.tasks.terminate",
+			"args": "terminateAll"
+		}
+	]
+}

@@ -79,7 +79,7 @@ export function ChatRoomGraphicsScene({
 			.drawPolygon([
 				0.55 * roomBackground.size[0], roomBackground.size[1],
 				0.45 * roomBackground.size[0], roomBackground.size[1],
-				0.5 * roomBackground.size[0], (1 - 1/roomBackground.scaling) * roomBackground.size[1],
+				0.5 * roomBackground.size[0], (1 - 1 / roomBackground.scaling) * roomBackground.size[1],
 			]);
 	}, [roomBackground]);
 

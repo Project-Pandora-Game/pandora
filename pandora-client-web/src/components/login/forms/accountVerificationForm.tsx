@@ -52,7 +52,7 @@ export function AccountVerificationForm(): ReactElement {
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
 			<Button type='submit'>Sign in</Button>
-			<FormLink to='/resend_verification_email'>Didn&apos;t receive a code by email?</FormLink>
+			<FormLink to='/resend_verification_email'>Didn't receive a code by email?</FormLink>
 		</Form>
 	);
 }

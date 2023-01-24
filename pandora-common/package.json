@@ -16,8 +16,8 @@
 	],
 	"scripts": {
 		"clean": "rimraf dist",
-		"build": "pnpm run clean && tsc -p ./tsconfig.src.json",
-		"build:swc": "pnpm run clean && swc src -d dist",
+		"build": "pnpm run --silent clean && tsc -p ./tsconfig.src.json",
+		"build:swc": "pnpm run --silent clean && swc src -d dist",
 		"dev": "tsc -p ./tsconfig.src.json -w",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
@@ -28,7 +28,7 @@
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
 		"prepack": "pnpm run build",
-		"install": "pnpm run build"
+		"install": "pnpm run --silent build"
 	},
 	"dependencies": {
 		"@types/node": "^18.11.0",

@@ -73,7 +73,7 @@ function GitHubIntegration({ account }: { account: IDirectoryAccountInfo }): Rea
 				<legend>GitHub Integration</legend>
 				<span>Open this link in your browser to link your GitHub account:</span>
 				<br />
-				<a href={ githubUrl } target='_blank' rel='noopener noreferrer'>{githubUrl}</a>
+				<a href={ githubUrl } target='_blank' rel='noopener noreferrer'>{ githubUrl }</a>
 			</fieldset>
 		);
 	}
@@ -94,8 +94,8 @@ function GitHubIntegration({ account }: { account: IDirectoryAccountInfo }): Rea
 	return (
 		<fieldset className='github-integration'>
 			<legend>GitHub Integration</legend>
-			<span>Login: {account.github.login}</span>
-			<span>Id: {account.github.id}</span>
+			<span>Login: { account.github.login }</span>
+			<span>Id: { account.github.id }</span>
 			<div>
 				<Button onClick={ onUnlink }>Unlink</Button>
 			</div>

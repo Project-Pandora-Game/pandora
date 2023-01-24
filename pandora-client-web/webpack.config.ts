@@ -44,7 +44,7 @@ export default function (env: WebpackEnv): Configuration {
 				],
 			},
 			hot: true,
-			open: true,
+			open: false,
 			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),
 		},
 		devtool: env.prod ? 'source-map' : 'eval-source-map',

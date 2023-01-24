@@ -27,6 +27,7 @@ export interface AssetDefinitionExtraArgs {
 	bones: BoneName;
 	bodyparts: string;
 	attributes: string;
+	slots: string;
 }
 
 export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
@@ -139,6 +140,11 @@ export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	};
 };
 
+export type AssetSlotDefinition = {
+	description: string;
+	capacity: number;
+};
+
 /** Data for randomly generating sensible appearance */
 export type AppearanceRandomizationData<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
 	/** List of attributes for generating body */
@@ -156,6 +162,7 @@ export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
 
 export interface AssetsDefinitionFile {
 	assets: Record<AssetId, AssetDefinition>;
+	assetSlots: Record<string, AssetSlotDefinition>;
 	bones: Record<string, BoneDefinitionCompressed>;
 	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];

@@ -469,7 +469,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 									hide();
 								} }>
 									{
-										(typeof current === 'string' &&b.image.startsWith(current)) ?
+										(typeof current === 'string' && b.image.startsWith(current)) ?
 											<img className='preview' src={ GetAssetsSourceUrl() + b.image } /> :
 											<img className='preview-bw' src={ GetAssetsSourceUrl() + b.image } />
 									}

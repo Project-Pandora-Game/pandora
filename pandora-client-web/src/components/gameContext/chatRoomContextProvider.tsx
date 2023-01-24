@@ -1,4 +1,4 @@
-import { AppearanceActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, IChatType } from 'pandora-common';
+import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, IChatType } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -554,7 +554,7 @@ export function useChatRoomFeatures(): ChatRoomFeature[] | null {
 	return useMemo(() => data?.features ?? null, [data]);
 }
 
-export function useAppearanceActionRoomContext(): AppearanceActionRoomContext | null {
+export function useActionRoomContext(): ActionRoomContext | null {
 	const data = useChatRoomData();
 	return useMemo(() => data ? ({
 		features: data.features,
@@ -562,7 +562,7 @@ export function useAppearanceActionRoomContext(): AppearanceActionRoomContext | 
 }
 
 export function useCharacterRestrictionsManager<T>(character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
-	const roomContext = useAppearanceActionRoomContext();
+	const roomContext = useActionRoomContext();
 	const manager = useMemo(() => character.getRestrictionManager(roomContext), [character, roomContext]);
 	return useSyncExternalStore((onChange) => {
 		return character.on('appearanceUpdate', (changed) => {

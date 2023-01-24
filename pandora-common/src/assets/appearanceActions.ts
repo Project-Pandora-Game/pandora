@@ -5,7 +5,7 @@ import { HexColorString, HexColorStringSchema } from '../validation';
 import { ArmsPose, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
-import { AppearanceActionHandler, AppearanceActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
+import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { Item } from './item';
@@ -118,7 +118,7 @@ export interface AppearanceActionContext {
 	getTarget(target: RoomTargetSelector): RoomActionTarget | null;
 	getCharacter(id: CharacterId): CharacterRestrictionsManager | null;
 	/** Handler for sending messages to chat */
-	actionHandler?: AppearanceActionHandler;
+	actionHandler?: ActionHandler;
 }
 
 export type AppearanceActionResult = {
@@ -145,7 +145,7 @@ export function DoAppearanceAction(
 	if (!player)
 		return { result: 'invalidAction' };
 
-	const processingContext: AppearanceActionProcessingContext = {
+	const processingContext: ActionProcessingContext = {
 		sourceCharacter: context.player,
 		actionHandler: context.actionHandler,
 		dryRun,
@@ -439,7 +439,7 @@ export function ActionModuleAction(rootManipulator: AppearanceRootManipulator, i
 	return true;
 }
 
-export function ActionAppearanceRandomize(character: CharacterRestrictionsManager, kind: 'items' | 'full', context: AppearanceActionProcessingContext): AppearanceActionResult {
+export function ActionAppearanceRandomize(character: CharacterRestrictionsManager, kind: 'items' | 'full', context: ActionProcessingContext): AppearanceActionResult {
 	const assetManager = character.appearance.getAssetManager();
 
 	// Must be able to remove all items currently worn, have free hands and if modifying body also be in room that allows body changes

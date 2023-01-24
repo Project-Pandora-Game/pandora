@@ -33,7 +33,7 @@ import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, 
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { useAppearanceActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { useActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -109,7 +109,7 @@ const wardrobeContext = createContext<WardrobeContext | null>(null);
 
 export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode }): ReactElement {
 	const assetList = useObservable(GetAssetManager().assetList);
-	const roomContext = useAppearanceActionRoomContext();
+	const roomContext = useActionRoomContext();
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.data.id,

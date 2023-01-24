@@ -277,7 +277,7 @@ export class Character {
 				const char = this.id === id ? this : this.room?.getCharacterById(id);
 				if (!char)
 					return null;
-				return char.appearance.getRestrictionManager(this.room?.getAppearanceActionRoomContext() ?? null);
+				return char.appearance.getRestrictionManager(this.room?.getActionRoomContext() ?? null);
 			},
 			getTarget: (target) => {
 				if (target.type === 'character') {
@@ -293,7 +293,7 @@ export class Character {
 				AssertNever(target);
 			},
 			actionHandler: (message) => {
-				this.room?.handleAppearanceActionMessage(message);
+				this.room?.handleActionMessage(message);
 			},
 		};
 	}

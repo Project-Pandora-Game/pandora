@@ -32,7 +32,7 @@ export type IChatRoomBaseInfo = {
 	maxUsers: number;
 };
 
-export type AppearanceActionRoomContext = {
+export type ActionRoomContext = {
 	features: readonly ChatRoomFeature[];
 };
 

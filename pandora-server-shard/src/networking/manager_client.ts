@@ -160,7 +160,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const room = client.character.room;
 		switch (game.type) {
 			case 'coinFlip':
-				room.handleAppearanceActionMessage({
+				room.handleActionMessage({
 					id: 'gamblingCoin',
 					character: client.character.id,
 					dictionary: { 'TOSS_RESULT': Math.random() < 0.5 ? 'heads' : 'tails' },
@@ -173,7 +173,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				const result = rolls.length > 1 ? `(${rolls.sort().join(', ')})` : rolls[0].toString();
 
 				if (game.hidden) {
-					room.handleAppearanceActionMessage({
+					room.handleActionMessage({
 						id: 'gamblingDiceHidden',
 						character: client.character.id,
 						dictionary: {
@@ -182,7 +182,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								`${game.dice} ${game.sides}-sided dice`,
 						},
 					});
-					room.handleAppearanceActionMessage({
+					room.handleActionMessage({
 						id: 'gamblingDiceHiddenResult',
 						character: client.character.id,
 						sendTo: [client.character.id],
@@ -194,7 +194,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 						},
 					});
 				} else {
-					room.handleAppearanceActionMessage({
+					room.handleActionMessage({
 						id: 'gamblingDice',
 						character: client.character.id,
 						dictionary: {

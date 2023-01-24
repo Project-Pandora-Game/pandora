@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, AppearanceActionProcessingContext, ActionRemoveItem, ActionMoveItem } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -38,13 +38,13 @@ export class AppearanceEditor extends CharacterAppearance {
 		return super.enforcePoseLimits();
 	}
 
-	public addItem(asset: Asset, context: AppearanceActionProcessingContext = {}): boolean {
+	public addItem(asset: Asset, context: ActionProcessingContext = {}): boolean {
 		const item = this.assetManager.createItem(`i/editor/${nanoid()}`, asset, null);
 		const manipulator = this.getManipulator();
 		return ActionAddItem(manipulator, [], item) && this.commitChanges(manipulator, context).success;
 	}
 
-	public removeItem(id: ItemId, context: AppearanceActionProcessingContext = {}): boolean {
+	public removeItem(id: ItemId, context: ActionProcessingContext = {}): boolean {
 		const manipulator = this.getManipulator();
 		return ActionRemoveItem(manipulator, {
 			container: [],
@@ -52,7 +52,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		}) && this.commitChanges(manipulator, context).success;
 	}
 
-	public moveItem(id: ItemId, shift: number, context: AppearanceActionProcessingContext = {}): boolean {
+	public moveItem(id: ItemId, shift: number, context: ActionProcessingContext = {}): boolean {
 		const manipulator = this.getManipulator();
 		return ActionMoveItem(manipulator, {
 			container: [],

@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, AppearanceActionHandlerMessage, CharacterSize, AppearanceActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -72,7 +72,7 @@ export class Room extends ServerRoom<IShardClient> {
 		return this.data;
 	}
 
-	public getAppearanceActionRoomContext(): AppearanceActionRoomContext {
+	public getActionRoomContext(): ActionRoomContext {
 		return {
 			features: this.data.features,
 		};
@@ -108,7 +108,7 @@ export class Room extends ServerRoom<IShardClient> {
 		}
 		// If moving self, must not be restricted by items
 		if (character.id === source.id) {
-			const restrictionManager = character.appearance.getRestrictionManager(this.getAppearanceActionRoomContext());
+			const restrictionManager = character.appearance.getRestrictionManager(this.getActionRoomContext());
 			if (restrictionManager.getEffects().blockRoomMovement)
 				return;
 		}
@@ -199,7 +199,7 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
 		// Handle speech muffling
-		const player = from.appearance.getRestrictionManager(this.getAppearanceActionRoomContext());
+		const player = from.appearance.getRestrictionManager(this.getActionRoomContext());
 		const muffler = player.getMuffler();
 		if (muffler.isActive()) {
 			for (const message of messages) {
@@ -270,7 +270,7 @@ export class Room extends ServerRoom<IShardClient> {
 		this._queueMessages(queue);
 	}
 
-	public handleAppearanceActionMessage({
+	public handleActionMessage({
 		id,
 		customText,
 		character,
@@ -278,7 +278,7 @@ export class Room extends ServerRoom<IShardClient> {
 		sendTo,
 		dictionary,
 		...data
-	}: AppearanceActionHandlerMessage): void {
+	}: ActionHandlerMessage): void {
 		this._queueMessages([
 			{
 				type: 'action',

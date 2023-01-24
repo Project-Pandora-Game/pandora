@@ -3,7 +3,7 @@ import type { CharacterId } from '.';
 import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
 import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
-import { AppearanceActionRoomContext } from '../chatroom';
+import { ActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item } from '../assets/item';
@@ -114,11 +114,11 @@ export type RestrictionResult = {
 export class CharacterRestrictionsManager {
 	public readonly characterId: CharacterId;
 	public readonly appearance: CharacterAppearance;
-	public readonly room: AppearanceActionRoomContext | null;
+	public readonly room: ActionRoomContext | null;
 	private _items: readonly Item[] = [];
 	private _properties: Readonly<AssetPropertiesResult> = CreateAssetPropertiesResult();
 
-	constructor(characterId: CharacterId, appearance: CharacterAppearance, room: AppearanceActionRoomContext | null) {
+	constructor(characterId: CharacterId, appearance: CharacterAppearance, room: ActionRoomContext | null) {
 		this.characterId = characterId;
 		this.appearance = appearance;
 		this.room = room;

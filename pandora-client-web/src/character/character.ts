@@ -1,4 +1,4 @@
-import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, AppearanceActionRoomContext, ItemPath, SafemodeData } from 'pandora-common';
+import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -44,7 +44,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		this.emit('update', data);
 	}
 
-	public getRestrictionManager(roomContext: AppearanceActionRoomContext | null): CharacterRestrictionsManager {
+	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
 		return this.appearance.getRestrictionManager(roomContext);
 	}
 }

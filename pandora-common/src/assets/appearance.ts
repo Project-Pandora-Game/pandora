@@ -2,10 +2,10 @@ import _, { cloneDeep, isEqual } from 'lodash';
 import { z } from 'zod';
 import type { CharacterId } from '../character/characterTypes';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
-import type { AppearanceActionRoomContext } from '../chatroom';
+import type { ActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
 import { AppearanceRootManipulator } from './appearanceHelpers';
-import type { AppearanceActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
+import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
 import { AppearanceItems, AppearanceItemsGetPoseLimits, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
@@ -76,7 +76,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this.onChangeHandler = onChange;
 	}
 
-	public getRestrictionManager(room: AppearanceActionRoomContext | null): CharacterRestrictionsManager {
+	public getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager {
 		return new CharacterRestrictionsManager(this.characterId, this, room);
 	}
 
@@ -251,7 +251,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return new AppearanceRootManipulator(this.assetManager, this.items, true);
 	}
 
-	public commitChanges(manipulator: AppearanceRootManipulator, context: AppearanceActionProcessingContext): AppearanceValidationResult {
+	public commitChanges(manipulator: AppearanceRootManipulator, context: ActionProcessingContext): AppearanceValidationResult {
 		const newItems = manipulator.getRootItems();
 
 		// Validate
@@ -325,7 +325,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this._safemode ?? null;
 	}
 
-	public setSafemode(value: Readonly<SafemodeData> | null, context: AppearanceActionProcessingContext): void {
+	public setSafemode(value: Readonly<SafemodeData> | null, context: ActionProcessingContext): void {
 		if (context.dryRun)
 			return;
 

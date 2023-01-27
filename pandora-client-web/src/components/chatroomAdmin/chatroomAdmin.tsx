@@ -476,7 +476,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 								</a>
 								<div className='name'>{ b.name }</div>
 							</div>
-						))}
+						)) }
 				</div>
 				<Row className='footer' alignX='end'>
 					<Button className='slim' onClick={ hide }>Close</Button>

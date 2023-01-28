@@ -1,19 +1,20 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IsObject } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomDirectoryConfig, IChatRoomData, IChatRoomDataUpdate, RoomId, Assert, CHATROOM_UPDATEABLE_PROPERTIES, IsObject } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
-import { CreateCharacter } from './dbHelper';
+import { CreateCharacter, CreateChatRoom } from './dbHelper';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
-import { isEqual } from 'lodash';
+import _ from 'lodash';
 
 const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
+const CHATROOMS_COLLECTION_NAME = 'chatrooms';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
 
 const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
@@ -29,6 +30,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _db!: Db;
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
+	private _chatrooms!: Collection<IChatRoomData>;
 	private _config!: Collection<DatabaseConfig>;
 	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
 	private _nextAccountId = 1;
@@ -115,6 +117,18 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		const [maxCharId] = await this._characters.find().sort({ id: -1 }).limit(1).toArray();
 		this._nextCharacterId = maxCharId ? maxCharId.id + 1 : 1;
+		//#endregion
+
+		//#region Chatrooms
+		this._chatrooms = this._db.collection(CHATROOMS_COLLECTION_NAME);
+
+		await this._chatrooms.createIndexes([
+			{
+				name: 'id',
+				unique: true,
+				key: { id: 1 },
+			},
+		]);
 		//#endregion
 
 		//#region Config
@@ -281,6 +295,37 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result.value?.accessId ?? null;
 	}
 
+	//#region ChatRoom
+
+	public async getChatRoomById(id: RoomId): Promise<IChatRoomData | null> {
+		return await this._chatrooms.findOne({ id });
+	}
+
+	public async getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]> {
+		return await this._chatrooms.find().project<Pick<IChatRoomDirectoryData, 'id' | 'config'>>({ id: 1, config: 1 }).toArray();
+	}
+
+	public async createChatRoom(config: IChatRoomDirectoryConfig, id?: RoomId): Promise<IChatRoomData> {
+		return await this._lock.acquire('createChatRoom', async () => {
+			const room = CreateChatRoom(config, id);
+
+			const result = await this._chatrooms.insertOne(room);
+			Assert(result.acknowledged);
+			return room;
+		});
+	}
+
+	public async updateChatRoom(data: IChatRoomDataUpdate): Promise<void> {
+		const result = await this._chatrooms.findOneAndUpdate({ 'id': data.id }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
+		Assert(result.value != null);
+	}
+
+	public async deleteChatRoom(id: RoomId): Promise<void> {
+		await this._chatrooms.deleteOne({ id });
+	}
+
+	//#endregion
+
 	public async getDirectMessages(accounts: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]> {
 		return await this._directMessages
 			.find(until ? { accounts, time: { $lt: until } } : { accounts })
@@ -409,12 +454,12 @@ async function MongoUpdateIndexes(collection: Collection<any>, indexes: (IndexDe
 
 		// Compare existing index to wanted one
 		for (const property of indexKeysToCompare) {
-			let matches = isEqual(index[property], wantedIndex[property]);
+			let matches = _.isEqual(index[property], wantedIndex[property]);
 			// Collation is compared only for partiality
 			if (!matches && property === 'collation' && wantedIndex.collation && IsObject(index.collation)) {
 				matches = true;
 				for (const k of Object.keys(wantedIndex.collation) as (keyof CollationOptions)[]) {
-					if (!isEqual(index.collation[k], wantedIndex.collation[k])) {
+					if (!_.isEqual(index.collation[k], wantedIndex.collation[k])) {
 						matches = false;
 						break;
 					}

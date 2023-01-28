@@ -97,7 +97,16 @@ export class Shard {
 		this._registered = true;
 
 		for (const roomData of data.rooms) {
-			RoomManager.createRoom(roomData, this, roomData.id);
+			const room = RoomManager.getRoom(roomData.id);
+
+			if (!room ||
+				room.isInUse()
+			) {
+				// Do not add room that loaded elsewhere meanwhile
+				continue;
+			}
+
+			this.connectRoom(room);
 		}
 
 		for (const characterData of data.characters) {

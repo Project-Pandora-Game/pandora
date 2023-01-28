@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import _ from 'lodash';
-import { logConfig, LogLevel } from 'pandora-common';
+import { Assert, logConfig, LogLevel } from 'pandora-common';
 import { CreateAccountData } from '../../src/account/account';
 import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import { PandoraDatabase } from '../../src/database/databaseProvider';
 import { PrehashPassword } from '../../src/database/mockDb';
+import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV } from '../room/testData';
 
 const TEST_USERNAME1 = 'testuser1';
 const TEST_EMAIL1 = 'test1@project-pandora.com';
@@ -452,6 +453,69 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 			// Old character not affected
 			await expect(db.getCharacter(char1.id, result!)).resolves.not.toBeNull();
+		});
+	});
+
+	describe('createChatRoom()', () => {
+		it.each([TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV])('creates new room', async (config) => {
+			const result = await db.createChatRoom(config);
+
+			// Correct result
+			expect(result.config).toEqual(config);
+
+			// Exists in character database
+			const roomData = await db.getChatRoomById(result.id);
+			// With correct data
+			expect(roomData).not.toBeNull();
+			Assert(roomData != null);
+			expect(roomData.config).toEqual(config);
+		});
+
+		it('fails if ids would have a collision', async () => {
+			const result1 = await db.createChatRoom(TEST_ROOM, 'r/id1');
+
+			// Correct result
+			expect(result1.config).toEqual(TEST_ROOM);
+			expect(result1.id).toEqual('r/id1');
+
+			// Fails to make room with same id
+			await expect(db.createChatRoom(TEST_ROOM2, 'r/id1')).rejects.toEqual(expect.anything());
+		});
+	});
+
+	describe('updateChatRoom()', () => {
+		it('updates chat room info', async () => {
+			// Test data assertion
+			expect(TEST_ROOM).not.toEqual(TEST_ROOM2);
+
+			const room = await db.createChatRoom(TEST_ROOM);
+
+			await db.updateChatRoom({
+				id: room.id,
+				config: TEST_ROOM2,
+			});
+
+			// Database has new data
+			const newData = await db.getChatRoomById(room.id);
+			expect(newData).not.toBeNull();
+			Assert(newData != null);
+			expect(newData).not.toBe(room);
+			expect(newData).toEqual({
+				...room,
+				config: TEST_ROOM2,
+			});
+		});
+	});
+
+	describe('deleteChatRoom()', () => {
+		it('deletes correct chat room', async () => {
+			const room = await db.createChatRoom(TEST_ROOM);
+
+			await expect(db.getChatRoomById(room.id)).resolves.not.toBeNull();
+
+			await db.deleteChatRoom(room.id);
+
+			await expect(db.getChatRoomById(room.id)).resolves.toBeNull();
 		});
 	});
 

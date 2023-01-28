@@ -1,7 +1,7 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT } from 'pandora-common';
-import { CreateCharacter } from './dbHelper';
+import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataUpdate, IChatRoomDirectoryConfig, IChatRoomDirectoryData, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
+import { CreateCharacter, CreateChatRoom } from './dbHelper';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
@@ -20,6 +20,7 @@ const logger = GetLogger('db');
 export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
+	private chatroomDb: Map<RoomId, IChatRoomData> = new Map();
 	private configDb: DatabaseConfig[] = [];
 	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
 	private _nextAccountId = 1;
@@ -212,6 +213,47 @@ export class MockDatabase implements PandoraDatabase {
 		char.accessId = nanoid(8);
 		return Promise.resolve(char.accessId);
 	}
+
+	//#region ChatRoom
+
+	public getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]> {
+		const array = Array.from(this.chatroomDb.values());
+		return Promise.resolve(array.map((room) => _.pick(room, ['id', 'config'])));
+	}
+
+	public getChatRoomById(id: RoomId): Promise<IChatRoomData | null> {
+		return Promise.resolve(this.chatroomDb.get(id) ?? null);
+	}
+
+	public createChatRoom(config: IChatRoomDirectoryConfig, id?: RoomId): Promise<IChatRoomData> {
+		const room = CreateChatRoom(config, id);
+
+		if (this.chatroomDb.has(room.id)) {
+			return Promise.reject('Duplicate ID');
+		}
+		this.chatroomDb.set(room.id, room);
+		return Promise.resolve(_.cloneDeep(room));
+	}
+
+	public updateChatRoom(data: IChatRoomDataUpdate): Promise<void> {
+		const room = _.cloneDeep(data);
+
+		const info = this.chatroomDb.get(room.id);
+		if (!info)
+			return Promise.reject();
+
+		if (room.config)
+			info.config = room.config;
+
+		return Promise.resolve();
+	}
+
+	public deleteChatRoom(id: RoomId): Promise<void> {
+		this.chatroomDb.delete(id);
+		return Promise.resolve();
+	}
+
+	//#endregion
 
 	public getDirectMessages(accounts: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]> {
 		const data = this.directMessagesDb.get(accounts);

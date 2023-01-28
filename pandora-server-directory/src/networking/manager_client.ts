@@ -385,7 +385,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character || !IsIChatRoomDirectoryConfig(roomConfig))
 			throw new BadMessageError();
 
-		const room = RoomManager.createRoom(roomConfig);
+		const room = await RoomManager.createRoom(roomConfig);
 
 		if (typeof room === 'string') {
 			return { result: room };
@@ -433,7 +433,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		});
 	}
 
-	private handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryResult['chatRoomUpdate'] {
+	private async handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomUpdate'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -445,7 +445,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'noAccess' };
 		}
 
-		const result = connection.character.room.update(roomConfig, connection.character);
+		const result = await connection.character.room.update(roomConfig, connection.character);
 
 		return { result };
 	}

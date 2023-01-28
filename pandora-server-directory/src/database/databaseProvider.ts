@@ -1,7 +1,7 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IChatRoomDirectoryConfig, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataUpdate, RoomId, IChatRoomDirectoryData } from 'pandora-common';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -62,6 +62,8 @@ export interface PandoraDatabase {
 	 */
 	setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void>;
 
+	//#region Character
+
 	/**
 	 * Creates a new character for the account
 	 * @param accountId - Id of account to create character for
@@ -95,6 +97,44 @@ export interface PandoraDatabase {
 	 * @return - New access id
 	 */
 	setCharacterAccess(id: CharacterId): Promise<string | null>;
+
+	//#endregion
+
+	//#region ChatRoom
+
+	/**
+	 * __TEMPORARY__
+	 *
+	 * Gets all chatrooms from database
+	 */
+	getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]>;
+
+	/**
+	 * Gets a chatroom by ID
+	 * @param id - Id of the chatroom to get
+	 */
+	getChatRoomById(id: RoomId): Promise<IChatRoomData | null>;
+
+	/**
+	 * Creates a new chatroom
+	 * @param config - Config for the new room
+	 * @param id - Id of the room (randomly generated if not set)
+	 */
+	createChatRoom(config: IChatRoomDirectoryConfig, id?: RoomId): Promise<IChatRoomData>;
+
+	/**
+	 * Update chatrooms's info
+	 * @param data - Chatroom data to update, `id` is required
+	 */
+	updateChatRoom(data: IChatRoomDataUpdate): Promise<void>;
+
+	/**
+	 * Delete a chatroom
+	 * @param id - Id of the chatroom to delete
+	 */
+	deleteChatRoom(id: RoomId): Promise<void>;
+
+	//#endregion
 
 	/**
 	 * Gets direct messages for the account

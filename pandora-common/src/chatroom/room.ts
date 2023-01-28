@@ -7,7 +7,7 @@ import { CharacterId } from '../character';
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
 
-export const RoomIdSchema = zTemplateString<`r${string}`>(z.string(), /^r/);
+export const RoomIdSchema = zTemplateString<`r/${string}`>(z.string(), /^r\//);
 export type RoomId = z.infer<typeof RoomIdSchema>;
 
 export const ChatRoomFeatureSchema = z.enum([
@@ -149,5 +149,24 @@ export const ChatRoomFullInfoSchema = ChatRoomDirectoryConfigSchema.merge(z.obje
 	id: RoomIdSchema,
 }));
 export type IChatRoomFullInfo = z.infer<typeof ChatRoomFullInfoSchema>;
+
+/** Room data stored in database */
+export const ChatRoomDataSchema = z.object({
+	id: RoomIdSchema,
+	config: ChatRoomDirectoryConfigSchema,
+});
+/** Room data stored in database */
+export type IChatRoomData = z.infer<typeof ChatRoomDataSchema>;
+
+export const CHATROOM_UPDATEABLE_PROPERTIES = ['config'] as const satisfies readonly (keyof IChatRoomData)[];
+export type IChatRoomDataUpdate = Pick<IChatRoomData, 'id'> & Partial<Pick<IChatRoomData, (typeof CHATROOM_UPDATEABLE_PROPERTIES)[number]>>;
+
+/** Room data from database, only those relevant to Directory */
+export const ChatRoomDirectoryDataSchema = ChatRoomDataSchema.pick({
+	id: true,
+	config: true,
+});
+/** Room data from database, only those relevant to Directory */
+export type IChatRoomDirectoryData = z.infer<typeof ChatRoomDirectoryDataSchema>;
 
 export type IChatRoomLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'kick' | 'ban';

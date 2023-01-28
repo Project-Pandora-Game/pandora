@@ -1,143 +1,55 @@
-import { IChatRoomDirectoryConfig, RoomId } from 'pandora-common';
+import { Assert, RoomId } from 'pandora-common';
 import { Shard } from '../../src/shard/shard';
 import { Room } from '../../src/room/room';
 import { RoomManager } from '../../src/room/roomManager';
 import { ShardManager } from '../../src/shard/shardManager';
-
-const TEST_ROOM_ID: RoomId = 'rTestId';
-
-const TEST_ROOM_DEFAULTS: Readonly<IChatRoomDirectoryConfig> = {
-	name: '',
-	description: '',
-	maxUsers: 10,
-	admin: [],
-	banned: [],
-	protected: false,
-	password: null,
-	features: [],
-	background: {
-		image: '#1099bb',
-		size: [1000, 1000],
-		scaling: 0,
-	},
-};
-
-const TEST_ROOM: IChatRoomDirectoryConfig = {
-	...TEST_ROOM_DEFAULTS,
-	name: 'test',
-	description: 'Some description',
-	admin: [1],
-	banned: [2],
-};
-
-const TEST_ROOM2: IChatRoomDirectoryConfig = {
-	...TEST_ROOM_DEFAULTS,
-	name: 'test2',
-	description: 'Another description',
-	maxUsers: 7,
-	protected: true,
-	password: 'abcd',
-	admin: [2],
-	banned: [22, 13],
-};
-const TEST_ROOM_DEV: IChatRoomDirectoryConfig = {
-	...TEST_ROOM_DEFAULTS,
-	name: 'test-dev',
-	description: 'Development room',
-	admin: [1],
-	features: ['development'],
-	development: {
-	},
-};
+import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV } from './testData';
+import { TestMockDb } from '../utils';
 
 describe('RoomManager', () => {
 	let shard: Shard;
+	let testRoomId: RoomId;
 
-	beforeAll(() => {
+	beforeAll(async () => {
+		await TestMockDb();
 		shard = ShardManager.getOrCreateShard(null);
 		jest.spyOn(shard, 'allowConnect').mockReturnValue(true);
 	});
 
 	describe('createRoom()', () => {
-		it('Uses given shard and id', () => {
-			const room = RoomManager.createRoom(TEST_ROOM, shard, TEST_ROOM_ID);
+		it.each([TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV])('Creates room', async (data) => {
+			const room = await RoomManager.createRoom(data);
 
 			expect(room).toBeInstanceOf(Room);
-			expect((room as Room).getFullInfo()).toEqual({
-				...TEST_ROOM,
-				id: TEST_ROOM_ID,
+			Assert(room instanceof Room);
+			if (!testRoomId) {
+				testRoomId = room.id;
+			}
+
+			expect(room.getFullInfo()).toEqual({
+				...data,
+				id: room.id,
 			});
-			expect((room as Room).assignedShard).toBe(shard);
+			expect(room.assignedShard).toBeNull();
 		});
 
-		it('Fails if there is room with same name', () => {
-			expect(RoomManager.createRoom(TEST_ROOM)).toBe('nameTaken');
-		});
-
-		it('Errors if there is room with same id', () => {
-			expect(() => {
-				RoomManager.createRoom(TEST_ROOM2, undefined, TEST_ROOM_ID);
-			}).toThrow();
-		});
-
-		it('Uses random shard from available ones', () => {
-			const allowConnectSpy = jest.spyOn(Shard.prototype, 'allowConnect');
-			allowConnectSpy.mockReturnValue(true);
-
-			const room = RoomManager.createRoom(TEST_ROOM2);
-
-			expect(room).toBeInstanceOf(Room);
-			expect((room as Room).getFullInfo()).toEqual({
-				...TEST_ROOM2,
-				id: (room as Room).id,
-			});
-
-			allowConnectSpy.mockRestore();
-		});
-
-		it('Fails with unknown shard id from development data', () => {
-			const room = RoomManager.createRoom({
-				...TEST_ROOM_DEV,
-				development: {
-					shardId: 'non-existent-shard',
-				},
-			});
-
-			expect(room).toBe('noShardFound');
-		});
-
-		it('Uses shard id from development data', () => {
-			const room = RoomManager.createRoom({
-				...TEST_ROOM_DEV,
-				development: {
-					shardId: shard.id,
-				},
-			});
-
-			expect(room).toBeInstanceOf(Room);
-			expect((room as Room).getFullInfo()).toEqual({
-				...TEST_ROOM_DEV,
-				development: {
-					shardId: shard.id,
-				},
-				id: (room as Room).id,
-			});
-			expect((room as Room).assignedShard).toBe(shard);
+		it('Fails if there is room with same name', async () => {
+			await expect(RoomManager.createRoom(TEST_ROOM)).resolves.toBe('nameTaken');
 		});
 	});
 
 	describe('getRoom()', () => {
 		it('Gets room by id', () => {
-			const room = RoomManager.getRoom(TEST_ROOM_ID);
+			const room = RoomManager.getRoom(testRoomId);
 			expect(room).toBeInstanceOf(Room);
 			expect((room as Room).getFullInfo()).toEqual({
 				...TEST_ROOM,
-				id: TEST_ROOM_ID,
+				id: testRoomId,
 			});
 		});
 
 		it('Returns undefined with unknown room', () => {
-			const room = RoomManager.getRoom('rNonexistentRoom');
+			const room = RoomManager.getRoom('r/NonexistentRoom');
 			expect(room).toBe(undefined);
 		});
 	});
@@ -147,22 +59,22 @@ describe('RoomManager', () => {
 			const rooms = RoomManager.listRooms();
 
 			expect(rooms).toHaveLength(3);
-			expect(rooms.map((r) => r.id)).toContain(TEST_ROOM_ID);
+			expect(rooms.map((r) => r.id)).toContain(testRoomId);
 		});
 	});
 
 	describe('destroyRoom()', () => {
-		it('Deletes room by instance', () => {
+		it('Deletes room by instance', async () => {
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const room = RoomManager.getRoom(TEST_ROOM_ID)!;
+			const room = RoomManager.getRoom(testRoomId)!;
 			expect(room).toBeInstanceOf(Room);
 
 			const roomonDestroySpy = jest.spyOn(room, 'onDestroy');
 
-			RoomManager.destroyRoom(room);
+			await RoomManager.destroyRoom(room);
 
 			// Not gettable
-			expect(RoomManager.getRoom(TEST_ROOM_ID)).toBe(undefined);
+			expect(RoomManager.getRoom(testRoomId)).toBe(undefined);
 			expect(RoomManager.listRooms()).not.toContain(room);
 			// Destructor called
 			expect(roomonDestroySpy).toHaveBeenCalledTimes(1);

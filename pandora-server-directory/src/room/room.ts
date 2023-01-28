@@ -6,15 +6,13 @@ import { RoomManager } from './roomManager';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { pick, uniq } from 'lodash';
 import { ShardManager } from '../shard/shardManager';
+import { GetDatabase } from '../database/databaseProvider';
 
 export class Room {
-	private readonly config: IChatRoomFullInfo;
+	public readonly id: RoomId;
+	private readonly config: IChatRoomDirectoryConfig;
 
 	public assignedShard: Shard | null = null;
-
-	public get id(): RoomId {
-		return this.config.id;
-	}
 
 	public get name(): string {
 		return this.config.name;
@@ -22,7 +20,8 @@ export class Room {
 
 	private readonly logger: Logger;
 
-	constructor(config: IChatRoomFullInfo) {
+	constructor(id: RoomId, config: IChatRoomDirectoryConfig) {
+		this.id = id;
 		this.config = config;
 		this.logger = GetLogger('Room', `[Room ${this.id}]`);
 
@@ -86,7 +85,7 @@ export class Room {
 		});
 	}
 
-	public update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): 'ok' | 'nameTaken' {
+	public async update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): Promise<'ok' | 'nameTaken'> {
 		if (changes.name) {
 			const otherRoom = RoomManager.getRoomByName(changes.name);
 			if (otherRoom && otherRoom !== this)
@@ -145,6 +144,9 @@ export class Room {
 		}
 
 		this.assignedShard?.update('rooms');
+
+		await GetDatabase().updateChatRoom({ id: this.id, config: this.config });
+
 		ConnectionManagerClient.onRoomListChange();
 		return 'ok';
 	}
@@ -362,26 +364,26 @@ export class Room {
 
 	public connect(): 'noShardFound' | 'failed' | Shard {
 		if (this.assignedShard) {
-			return this.connectToShard({ shard: this.assignedShard });
+			return this._connectToShard(this.assignedShard);
 		}
 
 		let shard: Shard | null = this.assignedShard;
 		if (!shard) {
-			shard = ShardManager.getRandomShard();
+			if (this.config.features.includes('development') && this.config.development?.shardId) {
+				shard = ShardManager.getShard(this.config.development.shardId);
+			} else {
+				shard = ShardManager.getRandomShard();
+			}
 		}
 		// If there is still no shard found, then we disconnect
 		if (!shard) {
 			this.disconnect();
 			return 'noShardFound';
 		}
-		return this.connectToShard({ shard });
+		return this._connectToShard(shard);
 	}
 
-	public connectToShard({
-		shard,
-	}: {
-		shard: Shard;
-	}): 'failed' | Shard {
+	protected _connectToShard(shard: Shard): 'failed' | Shard {
 		// If we are on a wrong shard, we leave it
 		if (this.assignedShard !== shard) {
 			this.assignedShard?.disconnectRoom(this.id);

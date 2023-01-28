@@ -1,10 +1,10 @@
-import { Assert, IChatRoomDirectoryConfig, RoomId } from 'pandora-common';
+import { GetLogger, IChatRoomDirectoryConfig, IChatRoomDirectoryData, RoomId } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from '../room/room';
-import { Shard } from '../shard/shard';
 import promClient from 'prom-client';
-import { ShardManager } from '../shard/shardManager';
-import { nanoid } from 'nanoid';
+import { GetDatabase } from '../database/databaseProvider';
+
+const logger = GetLogger('RoomManager');
 
 const roomsMetric = new promClient.Gauge({
 	name: 'pandora_directory_rooms',
@@ -14,6 +14,14 @@ const roomsMetric = new promClient.Gauge({
 /** Class that stores all currently or recently used rooms, removing them when needed */
 export const RoomManager = new class RoomManager {
 	private readonly rooms: Map<RoomId, Room> = new Map();
+
+	/** Init the manager */
+	public async init(): Promise<void> {
+		// TEMPORARY: Load all the chatrooms from database into memory
+		for (const room of await GetDatabase().getAllChatRoomsDirectory()) {
+			this.loadRoom(room);
+		}
+	}
 
 	public listRooms(): Room[] {
 		return Array.from(this.rooms.values());
@@ -28,34 +36,12 @@ export const RoomManager = new class RoomManager {
 		return Array.from(this.rooms.values()).find((r) => r.name.toLowerCase() === name);
 	}
 
-	public createRoom(config: IChatRoomDirectoryConfig, shard?: Shard, id?: RoomId): Room | 'nameTaken' | 'noShardFound' {
-		if (id == null) {
-			id = `r${nanoid()}`;
-		}
-		if (this.rooms.has(id)) {
-			throw new Error(`Attempt to create room while room with id already exists (${id})`);
-		}
-
+	public async createRoom(config: IChatRoomDirectoryConfig): Promise<Room | 'nameTaken'> {
 		if (this.getRoomByName(config.name))
 			return 'nameTaken';
 
-		if (!shard && config.features.includes('development') && config?.development?.shardId) {
-			shard = ShardManager.getShard(config.development.shardId) ?? undefined;
-			if (!shard)
-				return 'noShardFound';
-		}
-
-		const room = new Room({
-			...config,
-			id,
-		});
-		this.rooms.set(room.id, room);
-		roomsMetric.set(this.rooms.size);
-
-		if (shard) {
-			const result = room.connectToShard({ shard });
-			Assert(result === shard);
-		}
+		const roomData = await GetDatabase().createChatRoom(config);
+		const room = this.loadRoom(roomData);
 
 		ConnectionManagerClient.onRoomListChange();
 
@@ -66,13 +52,32 @@ export const RoomManager = new class RoomManager {
 	 * Destroy a room
 	 * @param room - The room to destroy
 	 */
-	public destroyRoom(room: Room): void {
+	public async destroyRoom(room: Room): Promise<void> {
 		if (this.rooms.get(room.id) === room) {
 			this.rooms.delete(room.id);
 			roomsMetric.set(this.rooms.size);
 		}
 		room.onDestroy();
+		await GetDatabase().deleteChatRoom(room.id);
 
 		ConnectionManagerClient.onRoomListChange();
+	}
+
+	/** Create room from received data, adding it to loaded rooms */
+	private loadRoom({ id, config }: IChatRoomDirectoryData): Room {
+		const room = new Room(id, config);
+		this.rooms.set(room.id, room);
+		roomsMetric.set(this.rooms.size);
+		logger.debug(`Loaded room ${room.id}`);
+		return room;
+	}
+
+	/** Remove room from loaded rooms, running necessary cleanup actions */
+	private unloadRoom(room: Room): void {
+		logger.debug(`Unloading room ${room.id}`);
+		if (this.rooms.get(room.id) === room) {
+			this.rooms.delete(room.id);
+			roomsMetric.set(this.rooms.size);
+		}
 	}
 };

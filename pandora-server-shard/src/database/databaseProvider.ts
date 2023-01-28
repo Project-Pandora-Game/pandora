@@ -1,4 +1,4 @@
-import type { CharacterId, ICharacterData, ICharacterDataUpdate } from 'pandora-common';
+import type { CharacterId, ICharacterData, ICharacterDataUpdate, IChatRoomData, IChatRoomDataUpdate, RoomId } from 'pandora-common';
 import { DATABASE_TYPE } from '../config';
 import DirectoryDatabase from './directoryDb';
 import MongoDatabase from './mongoDb';
@@ -15,6 +15,19 @@ export interface ShardDatabase {
 	 * @param data - Character data with id
 	 */
 	setCharacter(data: ICharacterDataUpdate): Promise<boolean>;
+
+	/**
+	 * Get a room's data
+	 * @param id - Id of room
+	 */
+	getChatRoom(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId'> | null | false>;
+
+	/**
+	 * Update a room's data
+	 * @param data - Room data with id
+	 */
+	setChatRoom(data: IChatRoomDataUpdate, accessId: string): Promise<boolean>;
+
 }
 
 /** Current database connection */

@@ -1,6 +1,6 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
 import { CharacterIdSchema } from '../character';
-import { IChatRoomFullInfo, RoomId, RoomIdSchema } from '../chatroom/room';
+import { ChatRoomDirectoryConfigSchema, RoomId, RoomIdSchema } from '../chatroom/room';
 import { IEmpty } from './empty';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 import { z } from 'zod';
@@ -23,11 +23,18 @@ export const ShardCharacterDefinitionSchema = z.object({
 });
 export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionSchema>;
 
+export const ShardChatRoomDefinitionSchema = z.object({
+	id: RoomIdSchema,
+	config: ChatRoomDirectoryConfigSchema,
+	accessId: z.string(),
+});
+export type IShardChatRoomDefinition = z.infer<typeof ShardChatRoomDefinitionSchema>;
+
 export type IDirectoryShardUpdate = {
 	/** List of characters connected to this shard (both outside and in room) */
 	characters: IShardCharacterDefinition[];
 	/** List of rooms which exist on this shard */
-	rooms: IChatRoomFullInfo[];
+	rooms: IShardChatRoomDefinition[];
 	messages: Record<RoomId, IChatRoomMessageDirectoryAction[]>;
 };
 

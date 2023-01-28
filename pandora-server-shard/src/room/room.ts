@@ -1,40 +1,53 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
+import AsyncLock from 'async-lock';
+import { GetDatabase } from '../database/databaseProvider';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
 
+/** Time (in ms) as interval when rooms's periodic actions (like saving of modified data or message cleanup) happen */
+export const ROOM_TICK_INTERVAL = 120_000;
+
 export class Room extends ServerRoom<IShardClient> {
 
-	private readonly data: IChatRoomFullInfo;
+	private readonly data: IShardChatRoomDefinition;
 	private readonly characters: Set<Character> = new Set();
 	private readonly history = new Map<CharacterId, Map<number, number>>();
 	private readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId; }>();
 	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionCharacter; leave?: number; }>();
-	private readonly cleanInterval: NodeJS.Timeout;
+	private readonly tickInterval: NodeJS.Timeout;
+
+	private readonly _lock = new AsyncLock();
+	private modified: Set<Exclude<keyof IChatRoomDataUpdate, 'id' | 'config'>> = new Set();
 
 	public get id(): RoomId {
 		return this.data.id;
 	}
 
+	public get accessId(): string {
+		return this.data.accessId;
+	}
+
 	private logger: Logger;
 
-	constructor(data: IChatRoomFullInfo) {
+	constructor(data: IShardChatRoomDefinition) {
 		super();
 		this.data = data;
 		this.logger = GetLogger('Room', `[Room ${data.id}]`);
 		this.logger.verbose('Created');
-		this.cleanInterval = setInterval(() => this._clean(), MESSAGE_EDIT_TIMEOUT / 2);
+		this.tickInterval = setInterval(() => this._tick(), ROOM_TICK_INTERVAL);
 	}
 
 	public onRemove(): void {
-		clearInterval(this.cleanInterval);
+		clearInterval(this.tickInterval);
 		this.logger.verbose('Destroyed');
 	}
 
-	private _clean(): void {
+	private _tick(): void {
+		// Cleanup of old messages
 		const now = Date.now();
 		for (const [characterId, history] of this.history) {
 			for (const [id, time] of history) {
@@ -48,17 +61,19 @@ export class Room extends ServerRoom<IShardClient> {
 		}
 	}
 
-	public update(data: IChatRoomFullInfo): void {
+	public update(data: IShardChatRoomDefinition): void {
 		if (data.id !== this.data.id) {
 			throw new Error('Chatroom id cannot change');
 		}
-		for (const key of Object.keys(data) as (keyof IChatRoomFullInfo)[]) {
-			(this.data as Record<string, unknown>)[key] = data[key];
+		if (data.accessId !== this.data.accessId) {
+			this.logger.warning('Access id changed! This could be a bug');
+			this.data.accessId = data.accessId;
 		}
+		this.data.config = data.config;
 		this.sendUpdateToAllInRoom({ info: this.getClientData() });
 
 		// Put characters into correct place if needed
-		const roomBackground = ResolveBackground(assetManager, this.data.background);
+		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		for (const character of this.characters) {
 			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
@@ -69,12 +84,15 @@ export class Room extends ServerRoom<IShardClient> {
 	}
 
 	public getInfo(): IChatRoomFullInfo {
-		return this.data;
+		return {
+			...this.data.config,
+			id: this.id,
+		};
 	}
 
 	public getActionRoomContext(): ActionRoomContext {
 		return {
-			features: this.data.features,
+			features: this.data.config.features,
 		};
 	}
 
@@ -86,17 +104,17 @@ export class Room extends ServerRoom<IShardClient> {
 	}
 
 	public isAdmin(character: Character): boolean {
-		if (this.data.admin.includes(character.accountId))
+		if (this.data.config.admin.includes(character.accountId))
 			return true;
 
-		if (this.data.development?.autoAdmin && character.isAuthorized('developer'))
+		if (this.data.config.development?.autoAdmin && character.isAuthorized('developer'))
 			return true;
 
 		return false;
 	}
 
 	public updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
-		const roomBackground = ResolveBackground(assetManager, this.data.background);
+		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 
 		if (x > roomBackground.size[0] || y > maxY) {
@@ -168,6 +186,42 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public sendUpdateToAllInRoom(data: IChatRoomUpdate): void {
 		this.sendMessage('chatRoomUpdate', data);
+	}
+
+	public save(): Promise<void> {
+		return this._lock.acquire('save', async () => {
+			const keys: (keyof Omit<IChatRoomDataUpdate, 'id' | 'config'>)[] = [...this.modified];
+			this.modified.clear();
+
+			// Nothing to save
+			if (keys.length === 0)
+				return;
+
+			const data: IChatRoomDataUpdate = {
+				id: this.data.id,
+			};
+
+			// TODO: Any update
+
+			try {
+				if (!await GetDatabase().setChatRoom(data, this.accessId)) {
+					throw new Error('Database returned failure');
+				}
+			} catch (error) {
+				for (const key of keys) {
+					this.modified.add(key);
+				}
+				this.logger.warning(`Failed to save data:`, error);
+			}
+		});
+	}
+
+	public static async load(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId'> | null> {
+		const room = await GetDatabase().getChatRoom(id, accessId);
+		if (room === false) {
+			return null;
+		}
+		return room;
 	}
 
 	private lastMessageTime: number = 0;

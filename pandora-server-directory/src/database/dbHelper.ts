@@ -30,6 +30,7 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 export function CreateChatRoom(config: IChatRoomDirectoryConfig, id?: RoomId): IChatRoomData {
 	return {
 		id: id ?? `r/${nanoid()}`,
+		accessId: '',
 		config,
 	};
 }

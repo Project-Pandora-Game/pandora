@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import _ from 'lodash';
-import { Assert, logConfig, LogLevel } from 'pandora-common';
+import { Assert, AssertNotNullable, logConfig, LogLevel } from 'pandora-common';
 import { CreateAccountData } from '../../src/account/account';
 import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import { PandoraDatabase } from '../../src/database/databaseProvider';
@@ -464,7 +464,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			expect(result.config).toEqual(config);
 
 			// Exists in character database
-			const roomData = await db.getChatRoomById(result.id);
+			const roomData = await db.getChatRoomById(result.id, null);
 			// With correct data
 			expect(roomData).not.toBeNull();
 			Assert(roomData != null);
@@ -493,10 +493,10 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			await db.updateChatRoom({
 				id: room.id,
 				config: TEST_ROOM2,
-			});
+			}, null);
 
 			// Database has new data
-			const newData = await db.getChatRoomById(room.id);
+			const newData = await db.getChatRoomById(room.id, null);
 			expect(newData).not.toBeNull();
 			Assert(newData != null);
 			expect(newData).not.toBe(room);
@@ -511,11 +511,49 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		it('deletes correct chat room', async () => {
 			const room = await db.createChatRoom(TEST_ROOM);
 
-			await expect(db.getChatRoomById(room.id)).resolves.not.toBeNull();
+			await expect(db.getChatRoomById(room.id, null)).resolves.not.toBeNull();
 
 			await db.deleteChatRoom(room.id);
 
-			await expect(db.getChatRoomById(room.id)).resolves.toBeNull();
+			await expect(db.getChatRoomById(room.id, null)).resolves.toBeNull();
+		});
+	});
+
+	describe('setChatRoomAccess()', () => {
+		it('generates new access id for character', async () => {
+			const room = await db.createChatRoom(TEST_ROOM);
+
+			const result = await db.setChatRoomAccess(room.id);
+			expect(result).not.toBeNull();
+			AssertNotNullable(result);
+
+			await expect(db.getChatRoomById(room.id, result)).resolves.not.toBeNull();
+		});
+
+		it('invalidates old access id for character', async () => {
+			const char1 = await db.createCharacter(accountId2);
+
+			const result = await db.setCharacterAccess(char1.id);
+			expect(result).not.toBeNull();
+
+			const result2 = await db.setCharacterAccess(char1.id);
+			expect(result2).not.toBeNull();
+
+			await expect(db.getCharacter(char1.id, result!)).resolves.toBeNull();
+			await expect(db.getCharacter(char1.id, result2!)).resolves.not.toBeNull();
+		});
+
+		it('fails with unknown character', async () => {
+			const char1 = await db.createCharacter(accountId2);
+
+			const result = await db.setCharacterAccess(char1.id);
+			expect(result).not.toBeNull();
+
+			// Wrong id fails
+			await expect(db.setCharacterAccess('c999')).resolves.toBeNull();
+
+			// Old character not affected
+			await expect(db.getCharacter(char1.id, result!)).resolves.not.toBeNull();
 		});
 	});
 

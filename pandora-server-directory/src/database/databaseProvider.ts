@@ -112,8 +112,9 @@ export interface PandoraDatabase {
 	/**
 	 * Gets a chatroom by ID
 	 * @param id - Id of the chatroom to get
+	 * @param accessId - Id of access to check or null to ignore the accessId check
 	 */
-	getChatRoomById(id: RoomId): Promise<IChatRoomData | null>;
+	getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null>;
 
 	/**
 	 * Creates a new chatroom
@@ -125,14 +126,23 @@ export interface PandoraDatabase {
 	/**
 	 * Update chatrooms's info
 	 * @param data - Chatroom data to update, `id` is required
+	 * @param accessId - Id of access to check or null to ignore the accessId check
+	 * @returns false if a provided accessId is not the same as in the database
 	 */
-	updateChatRoom(data: IChatRoomDataUpdate): Promise<void>;
+	updateChatRoom(data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean>;
 
 	/**
 	 * Delete a chatroom
 	 * @param id - Id of the chatroom to delete
 	 */
 	deleteChatRoom(id: RoomId): Promise<void>;
+
+	/**
+	 * Sets a new access id for the room
+	 * @param id - Id of the chatroom
+	 * @return - New access id
+	 */
+	setChatRoomAccess(id: RoomId): Promise<string | null>;
 
 	//#endregion
 

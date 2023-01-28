@@ -42,7 +42,7 @@ describe('Room', () => {
 				id: room.id,
 			});
 
-			expect(room.connect()).toBe('noShardFound');
+			await expect(room.connect()).resolves.toBe('noShardFound');
 			expect(room.assignedShard).toBe(null);
 
 			await RoomManager.destroyRoom(room);
@@ -61,7 +61,7 @@ describe('Room', () => {
 				id: room.id,
 			});
 
-			expect(room.connect()).toBe(shard);
+			await expect(room.connect()).resolves.toBe(shard);
 			expect(room.assignedShard).toBe(shard);
 
 			await RoomManager.destroyRoom(room);
@@ -82,7 +82,7 @@ describe('Room', () => {
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
 
-			expect(room.connect()).toBe('noShardFound');
+			await expect(room.connect()).resolves.toBe('noShardFound');
 			expect(room.assignedShard).toBe(null);
 
 			await RoomManager.destroyRoom(room);
@@ -110,7 +110,7 @@ describe('Room', () => {
 				id: room.id,
 			});
 
-			expect(room.connect()).toBe(shard);
+			await expect(room.connect()).resolves.toBe(shard);
 			expect(room.assignedShard).toBe(shard);
 
 			await RoomManager.destroyRoom(room);

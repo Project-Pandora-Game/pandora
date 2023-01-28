@@ -153,13 +153,20 @@ export type IChatRoomFullInfo = z.infer<typeof ChatRoomFullInfoSchema>;
 /** Room data stored in database */
 export const ChatRoomDataSchema = z.object({
 	id: RoomIdSchema,
+	accessId: z.string(),
 	config: ChatRoomDirectoryConfigSchema,
 });
 /** Room data stored in database */
 export type IChatRoomData = z.infer<typeof ChatRoomDataSchema>;
 
 export const CHATROOM_UPDATEABLE_PROPERTIES = ['config'] as const satisfies readonly (keyof IChatRoomData)[];
-export type IChatRoomDataUpdate = Pick<IChatRoomData, 'id'> & Partial<Pick<IChatRoomData, (typeof CHATROOM_UPDATEABLE_PROPERTIES)[number]>>;
+type IUpdatablePropertiesFilter = Record<(typeof CHATROOM_UPDATEABLE_PROPERTIES)[number], true>;
+export const ChatRoomDataUpdateSchema = ChatRoomDataSchema.pick({ id: true }).merge(
+	ChatRoomDataSchema.pick<IUpdatablePropertiesFilter>({
+		config: true,
+	}).partial(),
+);
+export type IChatRoomDataUpdate = z.infer<typeof ChatRoomDataUpdateSchema>;
 
 /** Room data from database, only those relevant to Directory */
 export const ChatRoomDirectoryDataSchema = ChatRoomDataSchema.pick({

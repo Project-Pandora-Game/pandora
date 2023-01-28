@@ -1,4 +1,4 @@
-import type { CharacterId, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import { Assert, CharacterId, IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import type { Account } from './account';
 import type { Shard } from '../shard/shard';
 import type { Room } from '../room/room';
@@ -73,14 +73,6 @@ export class Character {
 		};
 	}
 
-	private getShardConnectionInfoAssert(): IDirectoryCharacterConnectionInfo {
-		const info = this.getShardConnectionInfo();
-		if (!info) {
-			throw new Error('No shard connection info when expected');
-		}
-		return info;
-	}
-
 	public async connect(): Promise<'noShardFound' | 'failed' | IDirectoryCharacterConnectionInfo> {
 		if (this.room) {
 			return this.connectToShard({ room: this.room });
@@ -122,7 +114,7 @@ export class Character {
 
 		if (room) {
 			// If in a room, the room always chooses shard
-			const roomShard = room.connect();
+			const roomShard = await room.connect();
 			if (typeof roomShard === 'string')
 				return 'failed';
 			shard = roomShard;
@@ -157,6 +149,8 @@ export class Character {
 			room.addCharacter(this, sendEnterMessage !== false);
 		}
 
-		return this.getShardConnectionInfoAssert();
+		const info = this.getShardConnectionInfo();
+		Assert(info, 'No shard connection info when expected');
+		return info;
 	}
 }

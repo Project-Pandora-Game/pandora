@@ -1,5 +1,5 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IChatRoomFullInfo, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryResult, IShardDirectoryPromiseResult, Assert } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryResult, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
@@ -44,6 +44,10 @@ export class Shard {
 
 	public getConnectedCharacter(id: CharacterId): Character | undefined {
 		return this.characters.get(id);
+	}
+
+	public getConnectedRoom(id: RoomId): Room | undefined {
+		return this.rooms.get(id);
 	}
 
 	public handleReconnect(data: IShardDirectoryArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryResult['shardRegister'] {
@@ -100,7 +104,8 @@ export class Shard {
 			const room = RoomManager.getRoom(roomData.id);
 
 			if (!room ||
-				room.isInUse()
+				room.isInUse() ||
+				(room.accessId && room.accessId !== roomData.accessId)
 			) {
 				// Do not add room that loaded elsewhere meanwhile
 				continue;
@@ -213,10 +218,10 @@ export class Shard {
 		// Reassign rooms
 		await Promise.all(
 			[...this.rooms.values()]
-				.map((room) => {
+				.map(async (room) => {
 					room.disconnect();
 					if (attemptReassign) {
-						room.connect();
+						await room.connect();
 					}
 				}),
 		);
@@ -279,7 +284,7 @@ export class Shard {
 	 */
 	public disconnectCharacter(character: Character): void {
 		Assert(character.assignedShard === this);
-		Assert(this.characters.has(character.id));
+		Assert(this.characters.get(character.id) === character);
 
 		this.characters.delete(character.id);
 		character.assignedShard = null;
@@ -311,11 +316,9 @@ export class Shard {
 	 * Disconnects an character from the shard
 	 * @param id - Id of the character to disconnect
 	 */
-	public disconnectRoom(id: RoomId): void {
-		const room = this.rooms.get(id);
-		if (!room)
-			return;
+	public disconnectRoom(room: Room): void {
 		Assert(room.assignedShard === this);
+		Assert(this.rooms.get(room.id) === room);
 
 		// Disconnect all characters that are in this room, too
 		for (const character of room.characters.values()) {
@@ -324,7 +327,7 @@ export class Shard {
 			this.disconnectCharacter(character);
 		}
 
-		this.rooms.delete(id);
+		this.rooms.delete(room.id);
 		room.assignedShard = null;
 		this.update('rooms');
 
@@ -405,8 +408,12 @@ export class Shard {
 		return result;
 	}
 
-	private makeRoomSetupList(): IChatRoomFullInfo[] {
-		return Array.from(this.rooms.values()).map((r) => r.getFullInfo());
+	private makeRoomSetupList(): IShardChatRoomDefinition[] {
+		return Array.from(this.rooms.values()).map((r) => ({
+			id: r.id,
+			accessId: r.accessId,
+			config: r.getConfig(),
+		}));
 	}
 
 	private makeDirectoryActionMessages(): Record<RoomId, IChatRoomMessageDirectoryAction[]> {

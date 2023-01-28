@@ -297,7 +297,10 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	//#region ChatRoom
 
-	public async getChatRoomById(id: RoomId): Promise<IChatRoomData | null> {
+	public async getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null> {
+		if (accessId !== null) {
+			return await this._chatrooms.findOne({ id, accessId });
+		}
 		return await this._chatrooms.findOne({ id });
 	}
 
@@ -315,13 +318,24 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async updateChatRoom(data: IChatRoomDataUpdate): Promise<void> {
-		const result = await this._chatrooms.findOneAndUpdate({ 'id': data.id }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
-		Assert(result.value != null);
+	public async updateChatRoom(data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean> {
+		if (accessId !== null) {
+			const result = await this._chatrooms.findOneAndUpdate({ 'id': data.id, accessId }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
+			return result.value === null ? false : true;
+		} else {
+			const result = await this._chatrooms.findOneAndUpdate({ 'id': data.id }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
+			Assert(result.value != null);
+			return true;
+		}
 	}
 
 	public async deleteChatRoom(id: RoomId): Promise<void> {
 		await this._chatrooms.deleteOne({ id });
+	}
+
+	public async setChatRoomAccess(id: RoomId): Promise<string | null> {
+		const result = await this._chatrooms.findOneAndUpdate({ id }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
+		return result.value?.accessId ?? null;
 	}
 
 	//#endregion

@@ -21,7 +21,7 @@ async function StopGracefully(): Promise<IEmpty> {
 	// Disconnect all characters
 	await CharacterManager.removeAllCharacters();
 	// Cleanup all rooms
-	RoomManager.removeAllRooms();
+	await RoomManager.removeAllRooms();
 	// Stop HTTP server
 	StopHttpServer();
 	// TODO: Disconnect database

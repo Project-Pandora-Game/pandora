@@ -221,8 +221,15 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(array.map((room) => _.pick(room, ['id', 'config'])));
 	}
 
-	public getChatRoomById(id: RoomId): Promise<IChatRoomData | null> {
-		return Promise.resolve(this.chatroomDb.get(id) ?? null);
+	public getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null> {
+		const room = this.chatroomDb.get(id);
+		if (!room)
+			return Promise.resolve(null);
+
+		if ((accessId !== null) && (accessId !== room.accessId)) {
+			return Promise.resolve(null);
+		}
+		return Promise.resolve(_.cloneDeep(room));
 	}
 
 	public createChatRoom(config: IChatRoomDirectoryConfig, id?: RoomId): Promise<IChatRoomData> {
@@ -235,22 +242,35 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(room));
 	}
 
-	public updateChatRoom(data: IChatRoomDataUpdate): Promise<void> {
+	public updateChatRoom(data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean> {
 		const room = _.cloneDeep(data);
 
 		const info = this.chatroomDb.get(room.id);
 		if (!info)
 			return Promise.reject();
 
+		if ((accessId !== null) && (accessId !== info.accessId)) {
+			return Promise.resolve(false);
+		}
+
 		if (room.config)
 			info.config = room.config;
 
-		return Promise.resolve();
+		return Promise.resolve(true);
 	}
 
 	public deleteChatRoom(id: RoomId): Promise<void> {
 		this.chatroomDb.delete(id);
 		return Promise.resolve();
+	}
+
+	public setChatRoomAccess(id: RoomId): Promise<string | null> {
+		const room = this.chatroomDb.get(id);
+		if (!room)
+			return Promise.resolve(null);
+
+		room.accessId = nanoid(8);
+		return Promise.resolve(room.accessId);
 	}
 
 	//#endregion

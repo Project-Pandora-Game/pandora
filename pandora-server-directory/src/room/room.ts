@@ -13,6 +13,7 @@ export class Room {
 	private readonly config: IChatRoomDirectoryConfig;
 
 	public assignedShard: Shard | null = null;
+	public accessId: string = '';
 
 	public get name(): string {
 		return this.config.name;
@@ -76,6 +77,10 @@ export class Room {
 				name: c.data.name,
 			})),
 		});
+	}
+
+	public getConfig(): IChatRoomDirectoryConfig {
+		return this.config;
 	}
 
 	public getFullInfo(): IChatRoomFullInfo {
@@ -145,7 +150,7 @@ export class Room {
 
 		this.assignedShard?.update('rooms');
 
-		await GetDatabase().updateChatRoom({ id: this.id, config: this.config });
+		await GetDatabase().updateChatRoom({ id: this.id, config: this.config }, null);
 
 		ConnectionManagerClient.onRoomListChange();
 		return 'ok';
@@ -359,14 +364,18 @@ export class Room {
 	}
 
 	public disconnect(): void {
-		this.assignedShard?.disconnectRoom(this.id);
+		this.assignedShard?.disconnectRoom(this);
 	}
 
-	public connect(): 'noShardFound' | 'failed' | Shard {
-		if (this.assignedShard) {
-			return this._connectToShard(this.assignedShard);
+	public async generateAccessId(): Promise<string | null> {
+		const result = await GetDatabase().setChatRoomAccess(this.id);
+		if (result != null) {
+			this.accessId = result;
 		}
+		return result;
+	}
 
+	public async connect(): Promise<'noShardFound' | 'failed' | Shard> {
 		let shard: Shard | null = this.assignedShard;
 		if (!shard) {
 			if (this.config.features.includes('development') && this.config.development?.shardId) {
@@ -380,13 +389,18 @@ export class Room {
 			this.disconnect();
 			return 'noShardFound';
 		}
-		return this._connectToShard(shard);
+		return await this._connectToShard(shard);
 	}
 
-	protected _connectToShard(shard: Shard): 'failed' | Shard {
+	protected async _connectToShard(shard: Shard): Promise<'failed' | Shard> {
 		// If we are on a wrong shard, we leave it
 		if (this.assignedShard !== shard) {
-			this.assignedShard?.disconnectRoom(this.id);
+			this.assignedShard?.disconnectRoom(this);
+
+			// Generate new access id for new shard
+			const accessId = await this.generateAccessId();
+			if (accessId == null)
+				return 'failed';
 		}
 
 		// Check that we can actually join the shard (prevent race condition on shard shutdown)

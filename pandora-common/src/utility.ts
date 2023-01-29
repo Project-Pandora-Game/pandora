@@ -1,3 +1,5 @@
+import AsyncLock, { AsyncLockOptions } from 'async-lock';
+
 /** Checks if the two types are equal */
 export type Equals<X, Y> =
 	(<T>() => T extends X ? 1 : 2) extends
@@ -166,4 +168,29 @@ export function MessageSubstitute(originalMessage: string, substitutions: Readon
 		message = message.replaceAll(key, value);
 	}
 	return message;
+}
+
+/**
+ * Synchronizes calls to the asynchronous method.
+ *
+ * Only one call per instance runs at a time, other calls waiting in queue for the first call to finish (either resolve or reject)
+ * @param options - Options passed directly to the `async-lock` library
+ */
+export function AsyncSynchronized(options?: AsyncLockOptions) {
+	return function <Args extends unknown[], Return>(_target: object, _propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<(...args: Args) => Promise<Return>>) {
+		const original = descriptor.value;
+		AssertNotNullable(original);
+
+		const locks = new WeakMap<object, AsyncLock>();
+
+		descriptor.value = function (...args) {
+			let lock = locks.get(this);
+			if (lock == null) {
+				lock = new AsyncLock(options);
+				locks.set(this, lock);
+			}
+
+			return lock.acquire<Return>('', () => original?.apply(this, args));
+		};
+	};
 }

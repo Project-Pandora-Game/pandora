@@ -4,7 +4,7 @@ import { RoomManager } from '../../src/room/roomManager';
 import { Shard } from '../../src/shard/shard';
 import { ShardManager } from '../../src/shard/shardManager';
 import { TestMockDb } from '../utils';
-import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV } from './testData';
+import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV, TEST_ROOM_PANDORA_OWNED } from './testData';
 
 describe('Room', () => {
 	let shard: Shard;
@@ -17,7 +17,7 @@ describe('Room', () => {
 
 	describe('constructor', () => {
 		it('works', async () => {
-			const room = await RoomManager.createRoom(TEST_ROOM);
+			const room = await RoomManager.createRoom(TEST_ROOM, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
@@ -33,13 +33,14 @@ describe('Room', () => {
 
 	describe('connect()', () => {
 		it('Fails when there is no shard', async () => {
-			const room = await RoomManager.createRoom(TEST_ROOM2);
+			const room = await RoomManager.createRoom(TEST_ROOM2, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
 			expect(room.getFullInfo()).toEqual({
 				...TEST_ROOM2,
 				id: room.id,
+				owners: TEST_ROOM_PANDORA_OWNED,
 			});
 
 			await expect(room.connect()).resolves.toBe('noShardFound');
@@ -52,13 +53,14 @@ describe('Room', () => {
 			const allowConnectSpy = jest.spyOn(Shard.prototype, 'allowConnect');
 			allowConnectSpy.mockReturnValue(true);
 
-			const room = await RoomManager.createRoom(TEST_ROOM2);
+			const room = await RoomManager.createRoom(TEST_ROOM2, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
 			expect(room.getFullInfo()).toEqual({
 				...TEST_ROOM2,
 				id: room.id,
+				owners: TEST_ROOM_PANDORA_OWNED,
 			});
 
 			await expect(room.connect()).resolves.toBe(shard);
@@ -77,7 +79,7 @@ describe('Room', () => {
 				development: {
 					shardId: 'non-existent-shard',
 				},
-			});
+			}, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
@@ -98,7 +100,7 @@ describe('Room', () => {
 				development: {
 					shardId: shard.id,
 				},
-			});
+			}, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
@@ -108,6 +110,7 @@ describe('Room', () => {
 					shardId: shard.id,
 				},
 				id: room.id,
+				owners: TEST_ROOM_PANDORA_OWNED,
 			});
 
 			await expect(room.connect()).resolves.toBe(shard);

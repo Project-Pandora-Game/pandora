@@ -1,7 +1,8 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IChatRoomDirectoryConfig, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataUpdate, RoomId, IChatRoomDirectoryData } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataUpdate, RoomId, IChatRoomDirectoryData, AccountId } from 'pandora-common';
+import type { IChatRoomCreationData } from './dbHelper';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -110,6 +111,12 @@ export interface PandoraDatabase {
 	getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]>;
 
 	/**
+	 * Gets all chatrooms that have supplied account as owner
+	 * @param account - The owner of the rooms to look for
+	 */
+	getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]>;
+
+	/**
 	 * Gets a chatroom by ID
 	 * @param id - Id of the chatroom to get
 	 * @param accessId - Id of access to check or null to ignore the accessId check
@@ -121,7 +128,7 @@ export interface PandoraDatabase {
 	 * @param config - Config for the new room
 	 * @param id - Id of the room (randomly generated if not set)
 	 */
-	createChatRoom(config: IChatRoomDirectoryConfig, id?: RoomId): Promise<IChatRoomData>;
+	createChatRoom(config: IChatRoomCreationData, id?: RoomId): Promise<IChatRoomData>;
 
 	/**
 	 * Update chatrooms's info

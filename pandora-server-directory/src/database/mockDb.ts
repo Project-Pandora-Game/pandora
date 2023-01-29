@@ -1,7 +1,7 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataUpdate, IChatRoomDirectoryConfig, IChatRoomDirectoryData, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
-import { CreateCharacter, CreateChatRoom } from './dbHelper';
+import { AccountId, CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataUpdate, IChatRoomDirectoryData, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
+import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
@@ -218,7 +218,15 @@ export class MockDatabase implements PandoraDatabase {
 
 	public getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]> {
 		const array = Array.from(this.chatroomDb.values());
-		return Promise.resolve(array.map((room) => _.pick(room, ['id', 'config'])));
+		return Promise.resolve(array.map((room) => _.pick(room, ['id', 'config', 'owners'])));
+	}
+
+	public getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]> {
+		return Promise.resolve(
+			Array.from(this.chatroomDb.values())
+				.filter((room) => room.owners.includes(account))
+				.map((room) => _.pick(room, ['id', 'config', 'owners'])),
+		);
 	}
 
 	public getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null> {
@@ -232,8 +240,8 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(room));
 	}
 
-	public createChatRoom(config: IChatRoomDirectoryConfig, id?: RoomId): Promise<IChatRoomData> {
-		const room = CreateChatRoom(config, id);
+	public createChatRoom(data: IChatRoomCreationData, id?: RoomId): Promise<IChatRoomData> {
+		const room = CreateChatRoom(data, id);
 
 		if (this.chatroomDb.has(room.id)) {
 			return Promise.reject('Duplicate ID');

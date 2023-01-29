@@ -50,8 +50,10 @@ export default class MongoDatabase implements ShardDatabase {
 		return acknowledged && modifiedCount === 1;
 	}
 
-	public async getChatRoom(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId'> | null | false> {
-		const result = await this._chatrooms.find({ id, accessId }).project<Omit<IChatRoomData, 'config' | 'accessId'>>({ config: 0, accessId: 0 }).toArray();
+	public async getChatRoom(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null | false> {
+		const result = await this._chatrooms
+			.find({ id, accessId })
+			.project<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'>>({ config: 0, accessId: 0, owners: 0 }).toArray();
 		if (result.length !== 1)
 			return null;
 		return result[0];

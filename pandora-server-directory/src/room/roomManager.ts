@@ -1,4 +1,4 @@
-import { GetLogger, IChatRoomDirectoryConfig, IChatRoomDirectoryData, RoomId } from 'pandora-common';
+import { AccountId, Assert, AsyncSynchronized, GetLogger, IChatRoomDirectoryConfig, IChatRoomDirectoryData, RoomId } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from '../room/room';
 import promClient from 'prom-client';
@@ -11,8 +11,9 @@ const roomsMetric = new promClient.Gauge({
 	help: 'Current count of rooms',
 });
 
+// To use decorators the class needs to be created normally; see https://github.com/microsoft/TypeScript/issues/7342
 /** Class that stores all currently or recently used rooms, removing them when needed */
-export const RoomManager = new class RoomManager {
+class RoomManagerClass {
 	private readonly rooms: Map<RoomId, Room> = new Map();
 
 	/** Init the manager */
@@ -31,8 +32,13 @@ export const RoomManager = new class RoomManager {
 		return this.rooms.get(id);
 	}
 
-	public async createRoom(config: IChatRoomDirectoryConfig): Promise<Room> {
-		const roomData = await GetDatabase().createChatRoom(config);
+	@AsyncSynchronized()
+	public async createRoom(config: IChatRoomDirectoryConfig, owners: AccountId[]): Promise<Room> {
+		Assert(owners.length > 0, 'Room must be created with some owners');
+		const roomData = await GetDatabase().createChatRoom({
+			config,
+			owners,
+		});
 		const room = this.loadRoom(roomData);
 
 		ConnectionManagerClient.onRoomListChange();
@@ -56,8 +62,8 @@ export const RoomManager = new class RoomManager {
 	}
 
 	/** Create room from received data, adding it to loaded rooms */
-	private loadRoom({ id, config }: IChatRoomDirectoryData): Room {
-		const room = new Room(id, config);
+	private loadRoom({ id, config, owners }: IChatRoomDirectoryData): Room {
+		const room = new Room(id, config, owners);
 		this.rooms.set(room.id, room);
 		roomsMetric.set(this.rooms.size);
 		logger.debug(`Loaded room ${room.id}`);
@@ -72,4 +78,6 @@ export const RoomManager = new class RoomManager {
 			roomsMetric.set(this.rooms.size);
 		}
 	}
-};
+}
+
+export const RoomManager = new RoomManagerClass();

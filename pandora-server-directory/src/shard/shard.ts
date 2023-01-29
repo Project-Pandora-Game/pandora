@@ -413,6 +413,7 @@ export class Shard {
 			id: r.id,
 			accessId: r.accessId,
 			config: r.getConfig(),
+			owners: Array.from(r.owners),
 		}));
 	}
 

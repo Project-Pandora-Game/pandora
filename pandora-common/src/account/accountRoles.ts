@@ -67,7 +67,7 @@ export type IAccountRoleManageInfo = IAccountRoleInfoT<IRoleManageInfo>;
  * @param held - The roles the account has
  * @param required - Which role is required
  */
-export function IsAuthorized(held: IAccountRoleInfoT<{ expires?: number; }>, required: AccountRole): boolean {
+export function IsAuthorized(held: IAccountRoleInfoT<{ expires?: number; }> | undefined = {}, required: AccountRole): boolean {
 	const now = Date.now();
 	for (const [role, { expires }] of Object.entries(held)) {
 		// Skip expired roles

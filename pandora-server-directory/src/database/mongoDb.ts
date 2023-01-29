@@ -1,7 +1,7 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomDirectoryConfig, IChatRoomData, IChatRoomDataUpdate, RoomId, Assert, CHATROOM_UPDATEABLE_PROPERTIES, IsObject } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataUpdate, RoomId, Assert, CHATROOM_UPDATEABLE_PROPERTIES, AccountId, IsObject } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
-import { CreateCharacter, CreateChatRoom } from './dbHelper';
+import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
@@ -305,12 +305,22 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]> {
-		return await this._chatrooms.find().project<Pick<IChatRoomDirectoryData, 'id' | 'config'>>({ id: 1, config: 1 }).toArray();
+		return await this._chatrooms.find()
+			.project<Pick<IChatRoomDirectoryData, 'id' | 'config' | 'owners'>>({ id: 1, config: 1, owners: 1 })
+			.toArray();
 	}
 
-	public async createChatRoom(config: IChatRoomDirectoryConfig, id?: RoomId): Promise<IChatRoomData> {
+	public async getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]> {
+		return await this._chatrooms.find({
+			owners: { $elemMatch: { $in: [account] } },
+		})
+			.project<Pick<IChatRoomDirectoryData, 'id' | 'config' | 'owners'>>({ id: 1, config: 1, owners: 1 })
+			.toArray();
+	}
+
+	public async createChatRoom(data: IChatRoomCreationData, id?: RoomId): Promise<IChatRoomData> {
 		return await this._lock.acquire('createChatRoom', async () => {
-			const room = CreateChatRoom(config, id);
+			const room = CreateChatRoom(data, id);
 
 			const result = await this._chatrooms.insertOne(room);
 			Assert(result.acknowledged);

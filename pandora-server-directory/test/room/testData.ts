@@ -1,4 +1,4 @@
-import { IChatRoomDirectoryConfig } from 'pandora-common';
+import { AccountId, IChatRoomDirectoryConfig } from 'pandora-common';
 
 const TEST_ROOM_DEFAULTS: Readonly<IChatRoomDirectoryConfig> = {
 	name: '',
@@ -44,3 +44,5 @@ export const TEST_ROOM_DEV: Readonly<IChatRoomDirectoryConfig> = {
 	development: {
 	},
 };
+
+export const TEST_ROOM_PANDORA_OWNED: readonly AccountId[] = [0];

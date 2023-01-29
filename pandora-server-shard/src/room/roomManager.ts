@@ -54,6 +54,7 @@ export const RoomManager = new class RoomManager {
 			id: definition.id,
 			config: definition.config,
 			accessId: definition.accessId,
+			owners: definition.owners,
 		});
 		this._rooms.set(id, room);
 		roomsMetric.set(this._rooms.size);

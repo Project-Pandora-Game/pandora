@@ -95,11 +95,12 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 	// Get advanced info, if we can
 	const roomDetails = room?.result === 'success' ? room.data : undefined;
 	const characters = roomDetails?.characters ?? [];
+	const owners = roomDetails?.owners ?? [];
 	const admins = roomDetails?.admin ?? [];
 	const background = roomDetails?.background ? ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl()).image : '';
 	const features = roomDetails?.features ?? [];
 
-	const userIsAdmin = admins.includes(accountId);
+	const userIsAdmin = owners.includes(accountId) || admins.includes(accountId);
 
 	return (
 		<ModalDialog>

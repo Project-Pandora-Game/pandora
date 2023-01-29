@@ -385,7 +385,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character || !IsIChatRoomDirectoryConfig(roomConfig))
 			throw new BadMessageError();
 
-		const room = await RoomManager.createRoom(roomConfig);
+		const room = await RoomManager.createRoom(roomConfig, [connection.account.id]);
 
 		if (typeof room === 'string') {
 			return { result: room };

@@ -4,7 +4,7 @@ import { ChatRoomDirectoryConfigSchema, RoomId, RoomIdSchema } from '../chatroom
 import { IEmpty } from './empty';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 import { z } from 'zod';
-import { AccountRoleInfoSchema } from '../account';
+import { AccountIdSchema, AccountRoleInfoSchema } from '../account';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 
@@ -27,6 +27,7 @@ export const ShardChatRoomDefinitionSchema = z.object({
 	id: RoomIdSchema,
 	config: ChatRoomDirectoryConfigSchema,
 	accessId: z.string(),
+	owners: AccountIdSchema.array(),
 });
 export type IShardChatRoomDefinition = z.infer<typeof ShardChatRoomDefinitionSchema>;
 

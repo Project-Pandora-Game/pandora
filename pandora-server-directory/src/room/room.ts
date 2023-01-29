@@ -1,8 +1,7 @@
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert, AccountId } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from '../shard/shard';
-import { RoomManager } from './roomManager';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { pick, uniq } from 'lodash';
 import { ShardManager } from '../shard/shardManager';
@@ -11,6 +10,7 @@ import { GetDatabase } from '../database/databaseProvider';
 export class Room {
 	public readonly id: RoomId;
 	private readonly config: IChatRoomDirectoryConfig;
+	private readonly _owners: Set<AccountId>;
 
 	public assignedShard: Shard | null = null;
 	public accessId: string = '';
@@ -19,11 +19,16 @@ export class Room {
 		return this.config.name;
 	}
 
+	public get owners(): ReadonlySet<AccountId> {
+		return this._owners;
+	}
+
 	private readonly logger: Logger;
 
-	constructor(id: RoomId, config: IChatRoomDirectoryConfig) {
+	constructor(id: RoomId, config: IChatRoomDirectoryConfig, owners: AccountId[]) {
 		this.id = id;
 		this.config = config;
+		this._owners = new Set(owners);
 		this.logger = GetLogger('Room', `[Room ${this.id}]`);
 
 		// Make sure things that should are unique
@@ -71,6 +76,7 @@ export class Room {
 		return ({
 			...this.getDirectoryInfo(),
 			...pick(this.config, ['features', 'admin', 'background']),
+			owners: Array.from(this._owners),
 			characters: Array.from(this._characters).map((c) => ({
 				id: c.id,
 				accountId: c.account.id,
@@ -87,6 +93,7 @@ export class Room {
 		return ({
 			...this.config,
 			id: this.id,
+			owners: Array.from(this._owners),
 		});
 	}
 
@@ -257,7 +264,7 @@ export class Room {
 			return 'noAccess';
 
 		if (this.config.protected &&
-			!this.config.admin.includes(character.account.id) &&
+			!this.isAdmin(character) &&
 			(this.config.password === null || password !== this.config.password)
 		) {
 			return this.config.password !== null ? 'invalidPassword' : 'noAccess';
@@ -270,6 +277,9 @@ export class Room {
 	}
 
 	public isAdmin(character: Character): boolean {
+		if (this._owners.has(character.account.id))
+			return true;
+
 		if (this.config.admin.includes(character.account.id))
 			return true;
 

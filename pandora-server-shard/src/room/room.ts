@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData, AccountId } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -29,6 +29,10 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public get accessId(): string {
 		return this.data.accessId;
+	}
+
+	public get owners(): readonly AccountId[] {
+		return this.data.owners;
 	}
 
 	private logger: Logger;
@@ -87,6 +91,7 @@ export class Room extends ServerRoom<IShardClient> {
 		return {
 			...this.data.config,
 			id: this.id,
+			owners: this.owners.slice(),
 		};
 	}
 
@@ -104,6 +109,9 @@ export class Room extends ServerRoom<IShardClient> {
 	}
 
 	public isAdmin(character: Character): boolean {
+		if (this.data.owners.includes(character.accountId))
+			return true;
+
 		if (this.data.config.admin.includes(character.accountId))
 			return true;
 
@@ -216,7 +224,7 @@ export class Room extends ServerRoom<IShardClient> {
 		});
 	}
 
-	public static async load(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId'> | null> {
+	public static async load(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null> {
 		const room = await GetDatabase().getChatRoom(id, accessId);
 		if (room === false) {
 			return null;

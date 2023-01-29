@@ -4,13 +4,14 @@ import {
 	EMPTY,
 	GetLogger,
 	IChatRoomDirectoryConfig,
-	IDirectoryAccountInfo,
 	IDirectoryShardInfo,
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
 	IChatroomBackgroundData,
 	DEFAULT_BACKGROUND,
 	IsObject,
+	AccountId,
+	AssertNotNullable,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -36,12 +37,12 @@ import classNames from 'classnames';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
-function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoomDirectoryConfig {
+function DefaultRoomData(): IChatRoomDirectoryConfig {
 	return {
 		name: '',
 		description: '',
 		maxUsers: 10,
-		admin: currentAccount ? [currentAccount.id] : [],
+		admin: [],
 		banned: [],
 		protected: false,
 		password: null,
@@ -79,6 +80,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 
 	const navigate = useNavigate();
 	const currentAccount = useCurrentAccount();
+	AssertNotNullable(currentAccount);
 	const createRoom = useCreateRoom();
 	const roomData = useChatRoomData();
 	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<IChatRoomDirectoryConfig>, action: Partial<IChatRoomDirectoryConfig>) => {
@@ -103,14 +105,17 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	}, {});
 	const directoryConnector = useDirectoryConnector();
 	const shards = useShards();
+	const accountId = currentAccount.id;
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
 	const isPlayerAdmin = creation || IsChatroomAdmin(roomData, currentAccount);
 
 	const currentConfig: IChatRoomDirectoryConfig = {
-		...(roomData ?? DefaultRoomData(currentAccount)),
+		...(roomData ?? DefaultRoomData()),
 		...roomModifiedData,
 	};
+
+	const owners: readonly AccountId[] = creation ? [accountId] : (roomData?.owners ?? []);
 
 	const currentConfigBackground = currentConfig.background;
 
@@ -159,6 +164,10 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				<label>Room size</label>
 				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !isPlayerAdmin }
 					onChange={ (event) => setRoomModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
+			</div>
+			<div className='input-container'>
+				<label>Owners</label>
+				<NumberListArea values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
 			</div>
 			<div className='input-container'>
 				<label>Admins</label>
@@ -380,7 +389,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	);
 }
 
-function NumberListArea({ values, setValues, readOnly }: { values: number[]; setValues: (_: number[]) => void; readOnly: boolean; }): ReactElement {
+function NumberListArea({ values, setValues, readOnly }: { values: readonly number[]; setValues: (newValue: number[]) => void; readOnly: boolean; }): ReactElement {
 	const [text, setText] = useState(values.join(', '));
 
 	const onChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {

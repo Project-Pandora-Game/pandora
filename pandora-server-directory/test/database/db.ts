@@ -5,7 +5,7 @@ import { CreateAccountData } from '../../src/account/account';
 import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import { PandoraDatabase } from '../../src/database/databaseProvider';
 import { PrehashPassword } from '../../src/database/mockDb';
-import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV } from '../room/testData';
+import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV, TEST_ROOM_PANDORA_OWNED } from '../room/testData';
 
 const TEST_USERNAME1 = 'testuser1';
 const TEST_EMAIL1 = 'test1@project-pandora.com';
@@ -458,10 +458,14 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 	describe('createChatRoom()', () => {
 		it.each([TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV])('creates new room', async (config) => {
-			const result = await db.createChatRoom(config);
+			const result = await db.createChatRoom({
+				config,
+				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+			});
 
 			// Correct result
 			expect(result.config).toEqual(config);
+			expect(result.owners).toEqual(TEST_ROOM_PANDORA_OWNED);
 
 			// Exists in character database
 			const roomData = await db.getChatRoomById(result.id, null);
@@ -472,14 +476,21 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		});
 
 		it('fails if ids would have a collision', async () => {
-			const result1 = await db.createChatRoom(TEST_ROOM, 'r/id1');
+			const result1 = await db.createChatRoom({
+				config: TEST_ROOM,
+				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+			}, 'r/id1');
 
 			// Correct result
 			expect(result1.config).toEqual(TEST_ROOM);
+			expect(result1.owners).toEqual(TEST_ROOM_PANDORA_OWNED);
 			expect(result1.id).toEqual('r/id1');
 
 			// Fails to make room with same id
-			await expect(db.createChatRoom(TEST_ROOM2, 'r/id1')).rejects.toEqual(expect.anything());
+			await expect(db.createChatRoom({
+				config: TEST_ROOM2,
+				owners: [0],
+			}, 'r/id1')).rejects.toEqual(expect.anything());
 		});
 	});
 
@@ -488,7 +499,10 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			// Test data assertion
 			expect(TEST_ROOM).not.toEqual(TEST_ROOM2);
 
-			const room = await db.createChatRoom(TEST_ROOM);
+			const room = await db.createChatRoom({
+				config: TEST_ROOM,
+				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+			});
 
 			await db.updateChatRoom({
 				id: room.id,
@@ -509,7 +523,10 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 	describe('deleteChatRoom()', () => {
 		it('deletes correct chat room', async () => {
-			const room = await db.createChatRoom(TEST_ROOM);
+			const room = await db.createChatRoom({
+				config: TEST_ROOM,
+				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+			});
 
 			await expect(db.getChatRoomById(room.id, null)).resolves.not.toBeNull();
 
@@ -521,7 +538,10 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 	describe('setChatRoomAccess()', () => {
 		it('generates new access id for character', async () => {
-			const room = await db.createChatRoom(TEST_ROOM);
+			const room = await db.createChatRoom({
+				config: TEST_ROOM,
+				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+			});
 
 			const result = await db.setChatRoomAccess(room.id);
 			expect(result).not.toBeNull();

@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { ZodTrimedRegex, zTemplateString } from '../validation';
+import { ArrayToTruthyMap, ZodTrimedRegex, zTemplateString } from '../validation';
 import { cloneDeep } from 'lodash';
 import { AssetManager } from '../assets';
 import { CharacterId } from '../character';
+import { AccountId, AccountIdSchema } from '../account/account';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
@@ -137,6 +138,7 @@ export type IChatRoomDirectoryInfo = IChatRoomBaseInfo & {
 };
 
 export type IChatRoomDirectoryExtendedInfo = IChatRoomDirectoryInfo & Pick<IChatRoomDirectoryConfig, 'features' | 'admin' | 'background'> & {
+	owners: AccountId[];
 	characters: {
 		id: CharacterId;
 		accountId: number;
@@ -147,6 +149,8 @@ export type IChatRoomDirectoryExtendedInfo = IChatRoomDirectoryInfo & Pick<IChat
 export const ChatRoomFullInfoSchema = ChatRoomDirectoryConfigSchema.merge(z.object({
 	/** The id of the room, never changes */
 	id: RoomIdSchema,
+	/** Account IDs of accounts owning this room */
+	owners: AccountIdSchema.array(),
 }));
 export type IChatRoomFullInfo = z.infer<typeof ChatRoomFullInfoSchema>;
 
@@ -154,17 +158,16 @@ export type IChatRoomFullInfo = z.infer<typeof ChatRoomFullInfoSchema>;
 export const ChatRoomDataSchema = z.object({
 	id: RoomIdSchema,
 	accessId: z.string(),
+	/** Account IDs of accounts owning this room */
+	owners: AccountIdSchema.array(),
 	config: ChatRoomDirectoryConfigSchema,
 });
 /** Room data stored in database */
 export type IChatRoomData = z.infer<typeof ChatRoomDataSchema>;
 
-export const CHATROOM_UPDATEABLE_PROPERTIES = ['config'] as const satisfies readonly (keyof IChatRoomData)[];
-type IUpdatablePropertiesFilter = Record<(typeof CHATROOM_UPDATEABLE_PROPERTIES)[number], true>;
+export const CHATROOM_UPDATEABLE_PROPERTIES = ['config', 'owners'] as const satisfies readonly (keyof IChatRoomData)[];
 export const ChatRoomDataUpdateSchema = ChatRoomDataSchema.pick({ id: true }).merge(
-	ChatRoomDataSchema.pick<IUpdatablePropertiesFilter>({
-		config: true,
-	}).partial(),
+	ChatRoomDataSchema.pick(ArrayToTruthyMap(CHATROOM_UPDATEABLE_PROPERTIES)).partial(),
 );
 export type IChatRoomDataUpdate = z.infer<typeof ChatRoomDataUpdateSchema>;
 
@@ -172,6 +175,7 @@ export type IChatRoomDataUpdate = z.infer<typeof ChatRoomDataUpdateSchema>;
 export const ChatRoomDirectoryDataSchema = ChatRoomDataSchema.pick({
 	id: true,
 	config: true,
+	owners: true,
 });
 /** Room data from database, only those relevant to Directory */
 export type IChatRoomDirectoryData = z.infer<typeof ChatRoomDirectoryDataSchema>;

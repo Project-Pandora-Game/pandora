@@ -3,7 +3,7 @@ import { Shard } from '../../src/shard/shard';
 import { Room } from '../../src/room/room';
 import { RoomManager } from '../../src/room/roomManager';
 import { ShardManager } from '../../src/shard/shardManager';
-import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV } from './testData';
+import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV, TEST_ROOM_PANDORA_OWNED } from './testData';
 import { TestMockDb } from '../utils';
 
 describe('RoomManager', () => {
@@ -18,7 +18,7 @@ describe('RoomManager', () => {
 
 	describe('createRoom()', () => {
 		it.each([TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV])('Creates room', async (data) => {
-			const room = await RoomManager.createRoom(data);
+			const room = await RoomManager.createRoom(data, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
@@ -32,7 +32,7 @@ describe('RoomManager', () => {
 
 		it('works even if there is room with same name already', async () => {
 			expect(RoomManager.listRooms().some((r) => r.name === TEST_ROOM.name)).toBeTruthy();
-			const room = await RoomManager.createRoom(TEST_ROOM);
+			const room = await RoomManager.createRoom(TEST_ROOM, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
@@ -48,6 +48,7 @@ describe('RoomManager', () => {
 			expect((room as Room).getFullInfo()).toEqual({
 				...TEST_ROOM,
 				id: testRoomId,
+				owners: TEST_ROOM_PANDORA_OWNED,
 			});
 		});
 

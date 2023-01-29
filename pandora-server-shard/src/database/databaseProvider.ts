@@ -20,7 +20,7 @@ export interface ShardDatabase {
 	 * Get a room's data
 	 * @param id - Id of room
 	 */
-	getChatRoom(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId'> | null | false>;
+	getChatRoom(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null | false>;
 
 	/**
 	 * Update a room's data

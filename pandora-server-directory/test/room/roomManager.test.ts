@@ -22,19 +22,22 @@ describe('RoomManager', () => {
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
+			expect(room.getConfig()).toEqual(data);
+			expect(room.assignedShard).toBeNull();
+
 			if (!testRoomId) {
 				testRoomId = room.id;
 			}
-
-			expect(room.getFullInfo()).toEqual({
-				...data,
-				id: room.id,
-			});
-			expect(room.assignedShard).toBeNull();
 		});
 
-		it('Fails if there is room with same name', async () => {
-			await expect(RoomManager.createRoom(TEST_ROOM)).resolves.toBe('nameTaken');
+		it('works even if there is room with same name already', async () => {
+			expect(RoomManager.listRooms().some((r) => r.name === TEST_ROOM.name)).toBeTruthy();
+			const room = await RoomManager.createRoom(TEST_ROOM);
+
+			expect(room).toBeInstanceOf(Room);
+			Assert(room instanceof Room);
+			expect(room.getConfig()).toEqual(TEST_ROOM);
+			expect(room.assignedShard).toBeNull();
 		});
 	});
 
@@ -58,7 +61,7 @@ describe('RoomManager', () => {
 		it('Returns list of existing rooms', () => {
 			const rooms = RoomManager.listRooms();
 
-			expect(rooms).toHaveLength(3);
+			expect(rooms).toHaveLength(4);
 			expect(rooms.map((r) => r.id)).toContain(testRoomId);
 		});
 	});

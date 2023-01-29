@@ -31,15 +31,7 @@ export const RoomManager = new class RoomManager {
 		return this.rooms.get(id);
 	}
 
-	public getRoomByName(name: string): Room | undefined {
-		name = name.toLowerCase();
-		return Array.from(this.rooms.values()).find((r) => r.name.toLowerCase() === name);
-	}
-
-	public async createRoom(config: IChatRoomDirectoryConfig): Promise<Room | 'nameTaken'> {
-		if (this.getRoomByName(config.name))
-			return 'nameTaken';
-
+	public async createRoom(config: IChatRoomDirectoryConfig): Promise<Room> {
 		const roomData = await GetDatabase().createChatRoom(config);
 		const room = this.loadRoom(roomData);
 

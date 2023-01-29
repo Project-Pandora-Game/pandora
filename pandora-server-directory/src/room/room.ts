@@ -90,11 +90,8 @@ export class Room {
 		});
 	}
 
-	public async update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): Promise<'ok' | 'nameTaken'> {
+	public async update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): Promise<'ok'> {
 		if (changes.name) {
-			const otherRoom = RoomManager.getRoomByName(changes.name);
-			if (otherRoom && otherRoom !== this)
-				return 'nameTaken';
 			this.config.name = changes.name;
 		}
 		if (changes.description !== undefined) {

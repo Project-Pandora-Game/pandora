@@ -195,7 +195,7 @@ export const ClientDirectorySchema = {
 	},
 	chatRoomCreate: {
 		request: ChatRoomDirectoryConfigSchema,
-		response: ZodCast<ShardConnection<ShardError | 'nameTaken'>>(),
+		response: ZodCast<ShardConnection<ShardError>>(),
 	},
 	chatRoomEnter: {
 		request: z.object({
@@ -210,7 +210,7 @@ export const ClientDirectorySchema = {
 	},
 	chatRoomUpdate: {
 		request: ChatRoomDirectoryUpdateSchema,
-		response: ZodCast<{ result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notInRoom' | 'noAccess'; }>(),
 	},
 	chatRoomAdminAction: {
 		request: z.object({

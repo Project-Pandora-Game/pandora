@@ -90,7 +90,8 @@ export function useLayerVertices(
 
 		if (normalize) {
 			for (let i = 0; i < result.length; i++) {
-				result[i] /= i % 2 ? (height + y) : (width + x);
+				result[i] += i % 2 ? y : x;
+				result[i] /= i % 2 ? height : width;
 			}
 		}
 		return result;

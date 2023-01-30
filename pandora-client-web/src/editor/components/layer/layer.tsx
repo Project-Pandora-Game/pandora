@@ -282,14 +282,31 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 		<>
 			<div>
 				<label>
-					Height and Width
+					Width and Height
 					<ContextHelpButton>
 						<p>
-							These two values define height and width of the layer.<br />
+							These two values define width and height of the layer.<br />
 							By default they are have the same value as the character canvas.<br />
 						</p>
 					</ContextHelpButton>
 				</label>
+			</div>
+			<div>
+				<label htmlFor='width'>
+					Width:
+					<ContextHelpButton>
+						<p>
+							Sets the width of the layer.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+				<input
+					id='width'
+					type='number'
+					value={ width }
+					onChange={ onChangeWidth }
+					className='flex-1'
+				/>
 			</div>
 			<div>
 				<label htmlFor='height'>
@@ -305,23 +322,6 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 					type='number'
 					value={ height }
 					onChange={ onChangeHeight }
-					className='flex-1'
-				/>
-			</div>
-			<div>
-				<label htmlFor='width'>
-					Y-Offset:
-					<ContextHelpButton>
-						<p>
-							Sets the width of the layer.<br />
-						</p>
-					</ContextHelpButton>
-				</label>
-				<input
-					id='width'
-					type='number'
-					value={ width }
-					onChange={ onChangeWidth }
 					className='flex-1'
 				/>
 			</div>

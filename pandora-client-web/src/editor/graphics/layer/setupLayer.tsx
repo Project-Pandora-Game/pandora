@@ -109,10 +109,10 @@ export function SetupLayerSelected({
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]
 				.map((p) => triangles[i + p])
-				.flatMap((p) => [uv[2 * p] * width, uv[2 * p + 1] * height]);
+				.flatMap((p) => [uv[2 * p] * width + x, uv[2 * p + 1] * height + y]);
 			g.drawPolygon(poly);
 		}
-	}, [height, triangles, uv, width]);
+	}, [triangles, uv, x, y, width, height]);
 
 	const displayPoints = useObservable(editor.targetLayerPoints);
 
@@ -174,6 +174,8 @@ export function SetupLayerSelected({
 			<Sprite
 				x={ x }
 				y={ y }
+				width={ width }
+				height={ height }
 				texture={ texture }
 				tint={ color }
 				alpha={ alpha }

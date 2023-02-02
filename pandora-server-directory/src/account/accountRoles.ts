@@ -1,4 +1,4 @@
-import { AccountRole, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized } from 'pandora-common';
+import { AccountRole, ACCOUNT_ROLES_CONFIG, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IsAuthorized } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
 import { AUTO_ADMIN_ACCOUNTS } from '../config';
@@ -68,35 +68,61 @@ export class AccountRoles {
 			grantedAt: Date.now(),
 		};
 		const granted = (expires === undefined || expires > Date.now()) ? 'granted' : 'revoked';
-		logger.info(`${granter.username} (${granter.id}) ${granted} ${role} role to ${this._account.username} (${this._account.id})`);
+		granter.roles._log(`${granted} ${role} role to ${this._account.username} (${this._account.id})`);
 		this._cleanup();
 		this._account.onAccountInfoChange();
 		await this._updateDatabase();
 	}
 
-	public async setGitHubStatus(status: GitHubInfo['role'] = 'none'): Promise<void> {
-		delete this._roles.admin;
-		delete this._roles.developer;
-		delete this._roles.contributor;
-		const info: IRoleManageInfo = { grantedBy: 'GitHub', grantedAt: Date.now() };
+	public async setGitHubStatus(status: GitHubInfo['role'] = 'none', teams: NonNullable<GitHubInfo['teams']> = []): Promise<void> {
+		const founder = teams.includes('beta-access');
+		let allowFounder = false;
 		switch (status) {
 			case 'admin':
-				this._roles.admin = info;
-				logger.info(`${this._account.username} (${this._account.id}) granted admin role by GitHub`);
+				this._updateGitHubRole('admin');
+				allowFounder = true;
 				break;
 			case 'member':
-				this._roles.developer = info;
-				logger.info(`${this._account.username} (${this._account.id}) granted developer role by GitHub`);
+				if (teams.includes('lead-developers'))
+					this._updateGitHubRole('lead-developer');
+				else if (teams.includes('developers'))
+					this._updateGitHubRole('developer');
+				else if (!founder)
+					logger.warning(`${this._account.username} (${this._account.id}) is a GitHub member but not in developers team`);
+				/**
+				 * should be founder only, if not founder, then it's a mistake
+				 *   as any founder who contributed should be in developers team
+				 *   and any new member should also be in developers team
+				 *
+				 * no special role is granted
+				 */
+
+				allowFounder = true;
 				break;
 			case 'collaborator':
-				this._roles.contributor = info;
-				logger.info(`${this._account.username} (${this._account.id}) granted contributor role by GitHub`);
+				this._updateGitHubRole('contributor');
 				break;
-			case 'none':
-				logger.info(`${this._account.username} (${this._account.id}) revoked all roles by GitHub`);
+			case 'none': {
+				let revoked = false;
+				for (const [key, value] of Object.entries(this._roles)) {
+					if (value.grantedBy === 'GitHub') {
+						delete this._roles[key as AccountRole];
+						revoked = true;
+					}
+				}
+				if (revoked) {
+					this._log(`revoked all roles by GitHub`);
+				}
 				break;
+			}
 			default:
 				break;
+		}
+		if (founder && allowFounder) {
+			this._updateGitHubRole('founder');
+		} else if (this._roles.founder) {
+			delete this._roles.founder;
+			this._log(`revoked founder role by GitHub`);
 		}
 		this._cleanup();
 		this._account.onAccountInfoChange();
@@ -110,6 +136,29 @@ export class AccountRoles {
 				delete this._roles[key as AccountRole];
 			}
 		}
+		for (const role of Object.keys(this._roles)) {
+			for (const implied of ACCOUNT_ROLES_CONFIG[role as AccountRole].implies ?? []) {
+				if (this._roles[implied]) {
+					delete this._roles[implied];
+					this._log(`revoked ${implied} role since it was implied by ${role}`);
+				}
+			}
+		}
+	}
+
+	private _updateGitHubRole(role: AccountRole): void {
+		const original = this._roles[role];
+		if (original === undefined || original.grantedBy !== 'GitHub') {
+			this._roles[role] = {
+				grantedBy: 'GitHub',
+				grantedAt: Date.now(),
+			};
+			this._log(`granted all ${role} by GitHub`);
+		}
+	}
+
+	private _log(content: string) {
+		logger.info(`${this._account.username} (${this._account.id}) ${content}`);
 	}
 
 	private async _updateDatabase(): Promise<void> {

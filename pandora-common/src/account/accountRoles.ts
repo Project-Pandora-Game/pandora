@@ -12,11 +12,15 @@ export type IAccountRoleConfig = {
 
 const ACCOUNT_ROLES_DEFINITION = {
 	admin: {
+		implies: ['lead-developer', 'developer', 'contributor', 'moderator'],
+	},
+	'lead-developer': {
 		implies: ['developer', 'contributor', 'moderator'],
 	},
 	developer: {
 		implies: ['contributor', 'moderator'],
 	},
+	founder: {},
 	contributor: {},
 	moderator: {
 		assignable: true,

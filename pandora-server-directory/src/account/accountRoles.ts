@@ -155,6 +155,15 @@ export class AccountRoles {
 			};
 			this._log(`granted all ${role} by GitHub`);
 		}
+		for (const [key, value] of Object.entries(this._roles)) {
+			if (key === role || value.grantedBy !== 'GitHub')
+				continue;
+
+			if (ACCOUNT_ROLES_CONFIG[key as AccountRole].implies?.includes(role)) {
+				delete this._roles[key as AccountRole];
+				this._log(`overridden ${key} role by GitHub`);
+			}
+		}
 	}
 
 	private _log(content: string) {

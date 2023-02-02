@@ -12,6 +12,7 @@ interface GitHubInfo {
 	login: string;
 	role: 'admin' | 'member' | 'collaborator' | 'none';
 	date: number;
+	teams?: ('beta-access' | 'developers' | 'host' | 'lead-developers')[];
 }
 
 interface DatabaseAccountSecure {

@@ -101,6 +101,7 @@ export interface WardrobeContext {
 	target: RoomTargetSelector;
 	assetList: readonly Asset[];
 	actions: AppearanceActionContext;
+	useShard: boolean;
 }
 
 interface WardrobeFocus {
@@ -148,6 +149,7 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 		},
 		assetList,
 		actions,
+		useShard: true,
 	}), [character, assetList, actions]);
 
 	return (
@@ -521,7 +523,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 }
 
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
-	const { actions, target } = useWardrobeContext();
+	const { actions, target, useShard } = useWardrobeContext();
 
 	const action: AppearanceAction = {
 		type: 'create',
@@ -541,7 +543,11 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 			ref={ ref }
 			onClick={ () => {
 				if (check.result === 'success') {
-					shardConnector?.sendMessage('appearanceAction', action);
+					if (useShard) {
+						shardConnector?.sendMessage('appearanceAction', action);
+					} else {
+						DoAppearanceAction(action, actions, GetAssetManager());
+					}
 				}
 			} }>
 			<ActionWarning check={ check } parent={ ref } />
@@ -703,7 +709,7 @@ function WardrobeActionButton({
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
 }): ReactElement {
-	const { actions } = useWardrobeContext();
+	const { actions, useShard } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 
 	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
@@ -718,7 +724,11 @@ function WardrobeActionButton({
 			onClick={ (ev) => {
 				ev.stopPropagation();
 				if (check.result === 'success') {
-					shardConnector?.sendMessage('appearanceAction', action);
+					if (useShard) {
+						shardConnector?.sendMessage('appearanceAction', action);
+					} else {
+						DoAppearanceAction(action, actions, GetAssetManager());
+					}
 				}
 			} }
 		>
@@ -735,7 +745,7 @@ function WardrobeItemConfigMenu({
 	item: ItemPath;
 	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
-	const { target, character } = useWardrobeContext();
+	const { target, character, useShard, actions } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 	const player = usePlayer();
 	AssertNotNullable(player);
@@ -822,15 +832,18 @@ function WardrobeItemConfigMenu({
 											throttle={ 100 }
 											disabled={ !canUseHands }
 											onChange={ (color) => {
-												if (shardConnector) {
-													const newColor = wornItem.color.slice();
-													newColor[colorPartIndex] = color;
-													shardConnector.sendMessage('appearanceAction', {
-														type: 'color',
-														target,
-														item,
-														color: newColor,
-													});
+												const newColor = wornItem.color.slice();
+												newColor[colorPartIndex] = color;
+												const action = {
+													type: 'color',
+													target,
+													item,
+													color: newColor,
+												} as const;
+												if (useShard) {
+													shardConnector?.sendMessage('appearanceAction', action);
+												} else {
+													DoAppearanceAction(action, actions, GetAssetManager());
 												}
 											} }
 										/>

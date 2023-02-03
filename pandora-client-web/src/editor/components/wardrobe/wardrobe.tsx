@@ -38,6 +38,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 		assetList,
 		actions,
+		useShard: false,
 	}), [character]);
 
 	return (

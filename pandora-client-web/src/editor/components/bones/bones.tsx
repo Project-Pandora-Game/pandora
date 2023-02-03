@@ -4,7 +4,7 @@ import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacte
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { BoneRowElement, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
+import { BoneRowElement, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 
@@ -80,13 +80,16 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } open={ false }>
+			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } className='slim-padding' open={ false }>
 				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
 					character.appearance.importPose(pose.pose, 'pose', false);
 					if (pose.armsPose != null) {
 						character.appearance.setArmsPose(pose.armsPose);
 					}
 				} } />
+			</FieldsetToggle>
+			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>
+				<WardrobeExpressionGui />
 			</FieldsetToggle>
 			<hr />
 			<h4>

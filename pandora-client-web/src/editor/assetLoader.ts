@@ -70,4 +70,27 @@ class FileSystemGraphicsLoader extends GraphicsLoaderBase {
 	public loadFileArrayBuffer(path: string): Promise<ArrayBuffer> {
 		return this.monitorProgress(ReadFile(this._handle, path, false));
 	}
+
+	public loadAsUrl(path: string): Promise<string> {
+		let prefix = 'data:'
+		if (path.endsWith('.png')) {
+			prefix += 'image/png;base64,';
+		} else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {
+			prefix += 'image/jpeg;base64,';
+		} else if (path.endsWith('.gif')) {
+			prefix += 'image/gif;base64,';
+		} else if (path.endsWith('.webp')) {
+			prefix += 'image/webp;base64,';
+		} else if (path.endsWith('.svg')) {
+			prefix += 'image/svg+xml;base64,';
+		} else if (path.endsWith('.avif')) {
+			prefix += 'image/avif;base64,';
+		} else {
+			throw new Error(`Unknown file type: ${path}`);
+		}
+		return this.monitorProgress(async () => {
+			const buffer = await ReadFile(this._handle, path, false);
+			return prefix + btoa(String.fromCharCode(...new Uint8Array(buffer)));
+		});
+	}
 }

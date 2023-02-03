@@ -29,7 +29,7 @@ import {
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
+import { GetAssetManager } from '../../assets/assetManager';
 import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
@@ -61,6 +61,7 @@ import { HoverElement } from '../hoverElement/hoverElement';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 import listIcon from '../../assets/icons/list.svg';
 import gridIcon from '../../assets/icons/grid.svg';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -472,6 +473,23 @@ function InventoryAssetView({ className, title, children, assets, container, att
 	);
 }
 
+function useGraphicsUrl(url: string  | undefined): string | undefined {
+	const graphicsManger = useObservable(GraphicsManagerInstance);
+	const [graphicsUrl, setGraphicsUrl] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		if (!url || !graphicsManger) {
+			setGraphicsUrl(undefined);
+			return;
+		}
+		graphicsManger.loader.loadAsUrl(url)
+			.then(setGraphicsUrl)
+			.catch(() => setGraphicsUrl(undefined));
+	}, [url, graphicsManger]);
+
+	return graphicsUrl;
+}
+
 function AttributeButton({ attribute, ...buttonProps }: {
 	attribute: string;
 } & Omit<ButtonProps, 'children'>): ReactElement {
@@ -480,7 +498,7 @@ function AttributeButton({ attribute, ...buttonProps }: {
 
 	const attributeDefinition = assetManager.getAttributeDefinition(attribute);
 
-	const icon = attributeDefinition?.icon ? (GetAssetsSourceUrl() + attributeDefinition.icon) : undefined;
+	const icon = useGraphicsUrl(attributeDefinition?.icon);
 
 	return (
 		<>

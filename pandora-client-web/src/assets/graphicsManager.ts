@@ -8,6 +8,7 @@ export interface IGraphicsLoader {
 	getTexture(path: string): Promise<Texture>;
 	loadTextFile(path: string): Promise<string>;
 	loadFileArrayBuffer(path: string, type?: string): Promise<ArrayBuffer>;
+	loadAsUrl(path: string): Promise<string>;
 }
 
 export class GraphicsManager {
@@ -21,7 +22,7 @@ export class GraphicsManager {
 	constructor(loader: IGraphicsLoader, definitionsHash: string, data: AssetsGraphicsDefinitionFile) {
 		this.loader = loader;
 		this.definitionsHash = definitionsHash;
-		this.loadPointTemplats(data.pointTemplates);
+		this.loadPointTemplates(data.pointTemplates);
 		this.loadAssets(data.assets);
 	}
 
@@ -63,7 +64,7 @@ export class GraphicsManager {
 		}
 	}
 
-	private loadPointTemplats(pointTemplates: Record<string, PointTemplate>): void {
+	private loadPointTemplates(pointTemplates: Record<string, PointTemplate>): void {
 		this._pointTemplates.clear();
 		for (const [name, template] of Object.entries(pointTemplates)) {
 			this._pointTemplates.set(name, template);

@@ -13,6 +13,7 @@ import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 import { useEvent } from '../common/useEvent';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { EulaGate } from '../components/Eula';
+import { EditorWardrobeContextProvider } from './components/wardrobe/wardrobe';
 
 const logger = GetLogger('init');
 
@@ -75,7 +76,9 @@ function AssetLoaderElement() {
 
 	if (editor) {
 		return (
-			<EditorView />
+			<EditorWardrobeContextProvider>
+				<EditorView />
+			</EditorWardrobeContextProvider>
 		);
 	}
 

@@ -25,11 +25,12 @@ import {
 	ItemPath,
 	Assert,
 	AppearanceActionResult,
+	CharacterId,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
-import { Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
+import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -89,8 +90,14 @@ export function WardrobeScreen(): ReactElement | null {
 	);
 }
 
-interface WardrobeContext {
-	character: Character;
+export interface WardrobeCharacter extends AppearanceContainer {
+	readonly data: {
+		readonly id: CharacterId;
+	};
+}
+
+export interface WardrobeContext {
+	character: WardrobeCharacter;
 	target: RoomTargetSelector;
 	assetList: readonly Asset[];
 	actions: AppearanceActionContext;
@@ -105,7 +112,7 @@ function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
 	return focus.itemId != null;
 }
 
-const wardrobeContext = createContext<WardrobeContext | null>(null);
+export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
 export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode }): ReactElement {
 	const assetList = useObservable(GetAssetManager().assetList);
@@ -1096,7 +1103,7 @@ export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }:
 	);
 }
 
-export function WardrobePoseGui({ character }: { character: Character }): ReactElement {
+export function WardrobePoseGui({ character }: { character: WardrobeCharacter }): ReactElement {
 	const shardConnector = useShardConnector();
 
 	const bones = useCharacterAppearancePose(character);

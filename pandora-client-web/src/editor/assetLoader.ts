@@ -72,7 +72,7 @@ class FileSystemGraphicsLoader extends GraphicsLoaderBase {
 	}
 
 	public loadAsUrl(path: string): Promise<string> {
-		let prefix = 'data:'
+		let prefix = 'data:';
 		if (path.endsWith('.png')) {
 			prefix += 'image/png;base64,';
 		} else if (path.endsWith('.jpg') || path.endsWith('.jpeg')) {

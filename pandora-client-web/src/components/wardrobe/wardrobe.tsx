@@ -153,7 +153,7 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 		assetList,
 		actions,
 		useShard: true,
-	}), [character, assetList, actions]);
+	}), [character, assetList, actions, player]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -263,7 +263,7 @@ export function useWardrobeItems(): {
 	const assetFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
 		.map((a) => a[0])
-		, [assetManager]);
+	, [assetManager]);
 
 	return {
 		currentFocus,
@@ -357,7 +357,7 @@ function WardrobeBodyManipulation({ className }: { className?: string; }): React
 	const bodyFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
 		.map((a) => a[0])
-		, [assetManager]);
+	, [assetManager]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -546,7 +546,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 	const reason = useMemo(() => check.result === 'success'
 		? ''
 		: RenderAppearanceActionResult(assetManager, check),
-		[assetManager, check]);
+	[assetManager, check]);
 
 	if (check.result === 'success') {
 		return null;
@@ -1000,7 +1000,7 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 						m.lock.getProperties().blockAddRemove ? closedLock :
 							openLock
 				}
-					width='21' height='33' />
+				width='21' height='33' />
 			</button>
 			<Row alignY='center'>
 				{

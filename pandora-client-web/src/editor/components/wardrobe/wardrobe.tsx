@@ -3,7 +3,7 @@ import React, { ReactElement, ReactNode, useMemo } from 'react';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { Column } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeFocus, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
+import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 
@@ -42,7 +42,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		assetList,
 		actions,
 		useShard: false,
-	}), [character]);
+	}), [character, assetList, actions]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

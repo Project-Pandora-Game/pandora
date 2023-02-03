@@ -34,7 +34,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		}
 	}
 
-	public constructor(...args: ConstructorParameters<typeof CharacterAppearance>) {
+	constructor(...args: ConstructorParameters<typeof CharacterAppearance>) {
 		super(...args);
 		this.safemode.subscribe(() => this.onChange(['safemode']));
 	}

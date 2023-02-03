@@ -178,7 +178,7 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 				</p>
 				<textarea value={ typeScriptValue } readOnly rows={ typeScriptValue.split('\n').length } />
 				<Row>
-					<Button onClick={ () => navigator.clipboard.writeText(typeScriptValue).catch(() => { /** ignore */ }) }>Copy to clipboard</Button>
+					<Button onClick={ () => void navigator.clipboard.writeText(typeScriptValue).catch(() => { /** ignore */ }) }>Copy to clipboard</Button>
 					<Button onClick={ () => setOpen(false) }>Close</Button>
 				</Row>
 			</Column>

@@ -16,6 +16,7 @@ export function BoneUI(): ReactElement {
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 	const showBones = useObservable(editor.showBones);
+	const safemode = useObservable(character.appearance.safemode);
 
 	const [unlocked, setUnlocked] = useState(!character.appearance.enforce);
 	useEffect(() => {
@@ -65,6 +66,17 @@ export function BoneUI(): ReactElement {
 					checked={ unlocked }
 					onChange={ (e) => {
 						setUnlocked(e.target.checked);
+					} }
+				/>
+			</div>
+			<div>
+				<label htmlFor='unlocked-toggle'>Character Safemode</label>
+				<input
+					id='unlocked-toggle'
+					type='checkbox'
+					checked={ safemode }
+					onChange={ (e) => {
+						character.appearance.safemode.value = e.target.checked;
 					} }
 				/>
 			</div>

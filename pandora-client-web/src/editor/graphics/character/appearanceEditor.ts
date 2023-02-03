@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, SafemodeData } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -13,9 +13,12 @@ import { AppearanceContainer, AppearanceEvents } from '../../../character/charac
 import { GetAssetManagerEditor } from '../../assets/assetManager';
 import { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
+import { Observable } from '../../../observable';
 
 export class AppearanceEditor extends CharacterAppearance {
 	private _enforce = true;
+
+	public readonly safemode = new Observable<boolean>(true);
 
 	public get enforce(): boolean {
 		return this._enforce;
@@ -29,6 +32,11 @@ export class AppearanceEditor extends CharacterAppearance {
 		if (this._enforce) {
 			super.enforcePoseLimits();
 		}
+	}
+
+	public constructor(...args: ConstructorParameters<typeof CharacterAppearance>) {
+		super(...args);
+		this.safemode.subscribe(() => this.onChange(['safemode']));
 	}
 
 	protected override enforcePoseLimits(): boolean {
@@ -58,6 +66,14 @@ export class AppearanceEditor extends CharacterAppearance {
 			container: [],
 			itemId: id,
 		}, shift) && this.commitChanges(manipulator, context).success;
+	}
+
+	public override getSafemode(): Readonly<SafemodeData> | null {
+		return this.safemode.value ? { allowLeaveAt: 0 } : null;
+	}
+
+	public override setSafemode(value: Readonly<SafemodeData> | null): void {
+		this.safemode.value = !!value;
 	}
 }
 

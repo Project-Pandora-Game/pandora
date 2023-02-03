@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, SafemodeData } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, SafemodeData, ActionRoomContext, CharacterRestrictionsManager } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -84,6 +84,10 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 	constructor() {
 		super();
 		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), 'c0', (changes) => this.emit('appearanceUpdate', changes));
+	}
+
+	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
+		return this.appearance.getRestrictionManager(roomContext);
 	}
 }
 

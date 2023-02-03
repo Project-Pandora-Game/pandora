@@ -102,3 +102,14 @@
 		color: darkred;
 	}
 }
+
+.editor-wardrobe {
+	display: flex;
+	flex-flow: column;
+	padding: 0.5em;
+	overflow: auto;
+
+	.inventoryView {
+		overflow: unset;
+	}
+}

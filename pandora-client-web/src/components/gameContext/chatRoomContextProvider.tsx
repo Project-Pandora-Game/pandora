@@ -1,7 +1,7 @@
 import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, IChatType } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import { Character } from '../../character/character';
+import { AppearanceContainer, Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { ChatParser } from '../chatroom/chatParser';
@@ -561,7 +561,7 @@ export function useActionRoomContext(): ActionRoomContext | null {
 	}) : null, [data]);
 }
 
-export function useCharacterRestrictionsManager<T>(character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
+export function useCharacterRestrictionsManager<T>(character: AppearanceContainer, use: (manager: CharacterRestrictionsManager) => T): T {
 	const roomContext = useActionRoomContext();
 	const manager = useMemo(() => character.getRestrictionManager(roomContext), [character, roomContext]);
 	return useSyncExternalStore((onChange) => {

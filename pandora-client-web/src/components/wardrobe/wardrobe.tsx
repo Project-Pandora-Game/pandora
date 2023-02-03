@@ -99,24 +99,25 @@ export interface WardrobeCharacter extends AppearanceContainer {
 
 export interface WardrobeContext {
 	character: WardrobeCharacter;
+	player: WardrobeCharacter;
 	target: RoomTargetSelector;
 	assetList: readonly Asset[];
 	actions: AppearanceActionContext;
 	useShard: boolean;
 }
 
-interface WardrobeFocus {
+export interface WardrobeFocus {
 	container: ItemContainerPath;
 	itemId: ItemId | null;
 }
 
-function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
+export function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
 	return focus.itemId != null;
 }
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
-export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode }): ReactElement {
+export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode; }): ReactElement {
 	const assetList = useObservable(GetAssetManager().assetList);
 	const roomContext = useActionRoomContext();
 
@@ -144,6 +145,7 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 
 	const context = useMemo<WardrobeContext>(() => ({
 		character,
+		player,
 		target: {
 			type: 'character',
 			characterId: character.data.id,
@@ -160,7 +162,7 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 	);
 }
 
-function useWardrobeContext(): Readonly<WardrobeContext> {
+export function useWardrobeContext(): Readonly<WardrobeContext> {
 	const ctx = useContext(wardrobeContext);
 	AssertNotNullable(ctx);
 	return ctx;
@@ -234,8 +236,14 @@ function Wardrobe(): ReactElement | null {
 	);
 }
 
-function WardrobeItemManipulation({ className }: { className?: string }): ReactElement {
-	const { character, assetList } = useWardrobeContext();
+export function useWardrobeItems(): {
+	currentFocus: WardrobeFocus;
+	setFocus: React.Dispatch<React.SetStateAction<WardrobeFocus>>;
+	preFilter: (item: Item | Asset) => boolean;
+	containerContentsFilter: (asset: Asset) => boolean;
+	assetFilterAttributes: string[];
+} {
+	const { character } = useWardrobeContext();
 	const assetManager = GetAssetManager();
 
 	const [currentFocus, setFocus] = useState<WardrobeFocus>({ container: [], itemId: null });
@@ -255,7 +263,20 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 	const assetFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
 		.map((a) => a[0])
-	, [assetManager]);
+		, [assetManager]);
+
+	return {
+		currentFocus,
+		setFocus,
+		preFilter,
+		containerContentsFilter,
+		assetFilterAttributes,
+	};
+}
+
+function WardrobeItemManipulation({ className }: { className?: string; }): ReactElement {
+	const { assetList } = useWardrobeContext();
+	const { currentFocus, setFocus, preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems();
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -308,7 +329,7 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 	);
 }
 
-function WardrobeBodyManipulation({ className }: { className?: string }): ReactElement {
+function WardrobeBodyManipulation({ className }: { className?: string; }): ReactElement {
 	const { assetList } = useWardrobeContext();
 	const assetManager = GetAssetManager();
 
@@ -336,7 +357,7 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 	const bodyFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
 		.map((a) => a[0])
-	, [assetManager]);
+		, [assetManager]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -364,7 +385,7 @@ function WardrobeBodyManipulation({ className }: { className?: string }): ReactE
 	);
 }
 
-function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions }: {
+export function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions }: {
 	className?: string;
 	title: string;
 	children?: ReactNode;
@@ -473,7 +494,7 @@ function InventoryAssetView({ className, title, children, assets, container, att
 	);
 }
 
-function useGraphicsUrl(url: string  | undefined): string | undefined {
+function useGraphicsUrl(url: string | undefined): string | undefined {
 	const graphicsManger = useObservable(GraphicsManagerInstance);
 	const [graphicsUrl, setGraphicsUrl] = useState<string | undefined>(undefined);
 
@@ -520,12 +541,12 @@ function AttributeButton({ attribute, ...buttonProps }: {
 	);
 }
 
-function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement> }) {
+function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement>; }) {
 	const assetManager = GetAssetManager();
-	const reason =  useMemo(() => check.result === 'success'
+	const reason = useMemo(() => check.result === 'success'
 		? ''
 		: RenderAppearanceActionResult(assetManager, check),
-	[assetManager, check]);
+		[assetManager, check]);
 
 	if (check.result === 'success') {
 		return null;
@@ -575,7 +596,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 	);
 }
 
-function InventoryItemView({
+export function InventoryItemView({
 	className,
 	title,
 	filter,
@@ -756,17 +777,15 @@ function WardrobeActionButton({
 	);
 }
 
-function WardrobeItemConfigMenu({
+export function WardrobeItemConfigMenu({
 	item,
 	setFocus,
 }: {
 	item: ItemPath;
 	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
-	const { target, character, useShard, actions } = useWardrobeContext();
+	const { target, player, character, useShard, actions } = useWardrobeContext();
 	const shardConnector = useShardConnector();
-	const player = usePlayer();
-	AssertNotNullable(player);
 	const canUseHands = useCharacterRestrictionsManager(player, (manager) => manager.canUseHands());
 	const wornItem = useCharacterAppearanceItem(character, item);
 
@@ -979,17 +998,17 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 				<img src={
 					!m.lock ? emptyLock :
 						m.lock.getProperties().blockAddRemove ? closedLock :
-						openLock
+							openLock
 				}
-				width='21' height='33' />
+					width='21' height='33' />
 			</button>
 			<Row alignY='center'>
 				{
 					m.lock ?
-					m.lock.getProperties().blockAddRemove ?
-						m.lock.asset.definition.name + ': Locked' :
-						m.lock.asset.definition.name + ': Not locked' :
-					'No lock'
+						m.lock.getProperties().blockAddRemove ?
+							m.lock.asset.definition.name + ': Locked' :
+							m.lock.asset.definition.name + ': Not locked' :
+						'No lock'
 				}
 			</Row>
 		</Row>
@@ -1127,21 +1146,21 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 	);
 }
 
-export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => void }): ReactElement {
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => void; }): ReactElement {
 	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 	);
 }
 
-export function WardrobePoseGui({ character }: { character: WardrobeCharacter }): ReactElement {
+export function WardrobePoseGui({ character }: { character: WardrobeCharacter; }): ReactElement {
 	const shardConnector = useShardConnector();
 
 	const bones = useCharacterAppearancePose(character);
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 
-	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
+	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => {
 		if (shardConnector) {
 			shardConnector.sendMessage('appearanceAction', {
 				type: 'pose',

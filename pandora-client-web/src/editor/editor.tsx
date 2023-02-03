@@ -24,6 +24,7 @@ import { GetAssetManagerEditor } from './assets/assetManager';
 import { noop } from 'lodash';
 import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
 import { useEditor } from './editorContextProvider';
+import { EditorWardrobeUI } from './components/wardrobe/wardrobe';
 
 const logger = GetLogger('Editor');
 
@@ -250,6 +251,7 @@ const TABS = [
 	['Layer', 'editor-ui', LayerUI],
 	['Points', 'editor-ui', PointsUI],
 	['Asset Info', 'editor-ui', AssetInfoUI],
+	['Wardrobe', 'editor-ui', EditorWardrobeUI],
 	['Setup', 'editor-scene', EditorSetupScene],
 	['Preview', 'editor-scene', EditorResultScene],
 ] as const;

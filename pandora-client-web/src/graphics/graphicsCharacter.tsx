@@ -1,5 +1,5 @@
 import { Container } from '@saitonakamura/react-pixi';
-import { ArmPose, AssertNever, AssertNotNullable, AssetId, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, LayerPriority, MergeAssetProperties } from 'pandora-common';
+import { ArmPose, AssertNotNullable, AssetId, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
 import { Filter, InteractionEvent, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
@@ -50,11 +50,11 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: [ArmP
 	const calculate = useCallback((layers: readonly LayerState[]) => {
 		const result = new Map<LayerState, ComputedLayerPriority>();
 		for (const layer of layers) {
-			// TODO select arms pose based on layer mirroring
-			result.set(layer, ComputeLayerPriority(layer.layer.definition.value.priority, armsPose[0]));
+			result.set(layer, ComputeLayerPriority(layer.layer.definition.value.priority, armsPose, layer.layer.isMirror));
 		}
 		return result;
-	}, [armsPose]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, armsPose);
 
 	const [actualCalculate, setActualCalculate] = useState<(layers: readonly LayerState[]) => ReadonlyMap<LayerState, ComputedLayerPriority>>(() => calculate);
 

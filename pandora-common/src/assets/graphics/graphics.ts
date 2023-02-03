@@ -63,6 +63,15 @@ export const TransformDefinitionSchema = z.discriminatedUnion('type', [
 		type: z.literal('shift'),
 		value: CoordinatesSchema,
 	}),
+	TransformDefinitionBaseSchema.extend({
+		type: z.literal('const-rotate'),
+		value: z.number(),
+	}),
+	z.object({
+		type: z.literal('const-shift'),
+		value: CoordinatesSchema,
+		condition: ConditionSchema.optional(),
+	}),
 ]);
 export type TransformDefinition = z.infer<typeof TransformDefinitionSchema>;
 

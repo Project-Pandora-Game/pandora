@@ -83,52 +83,79 @@ export function ParseCondition(input: string, validBones: string[]): Condition {
 }
 
 function SerializeTransform(transform: Immutable<TransformDefinition>): string {
-	if (transform.type === 'rotate') {
-		const res = `rotate ${transform.bone} ${transform.value}`;
-		return transform.condition ? `${res} ${SerializeCondition(transform.condition)}` : res;
-	} else if (transform.type === 'shift') {
-		const res = `shift ${transform.bone} ${transform.value.x} ${transform.value.y}`;
-		return transform.condition ? `${res} ${SerializeCondition(transform.condition)}` : res;
+	switch (transform.type) {
+		case 'rotate':
+		case 'const-rotate': {
+			const res = `${transform.type} ${transform.bone} ${transform.value}`;
+			return transform.condition ? `${res} ${SerializeCondition(transform.condition)}` : res;
+		}
+		case 'shift': {
+			const res = `shift ${transform.bone} ${transform.value.x} ${transform.value.y}`;
+			return transform.condition ? `${res} ${SerializeCondition(transform.condition)}` : res;
+		}
+		case 'const-shift': {
+			const res = `const-shift ${transform.value.x} ${transform.value.y}`;
+			return transform.condition ? `${res} ${SerializeCondition(transform.condition)}` : res;
+		}
+		default:
+			AssertNever(transform);
 	}
-	AssertNever(transform);
 }
 
 function ParseTransform(input: string, validBones: string[]): TransformDefinition {
 	const columns = SplitAndClean(input, ' ');
 	const type = columns.shift();
-	if (type === 'rotate') {
-		if (columns.length < 2 || columns.length > 3) {
-			throw new Error('Rot requires 2-3 arguments');
+	switch (type) {
+		case 'rotate':
+		case 'const-rotate': {
+			if (columns.length < 2 || columns.length > 3) {
+				throw new Error('Rot requires 2-3 arguments');
+			}
+			if (!validBones.includes(columns[0])) {
+				throw new Error(`Unknown bone '${columns[0]}'`);
+			}
+			const ratio = ParseFloat(columns[1]);
+			const condition = columns.length === 3 ? ParseCondition(columns[2], validBones) : undefined;
+			return {
+				type,
+				bone: columns[0],
+				value: ratio,
+				condition,
+			};
 		}
-		if (!validBones.includes(columns[0])) {
-			throw new Error(`Unknown bone '${columns[0]}'`);
+		case 'shift': {
+			if (columns.length < 3 || columns.length > 4) {
+				throw new Error('Shift requires 3-4 arguments');
+			}
+			if (!validBones.includes(columns[0])) {
+				throw new Error(`Unknown bone '${columns[0]}'`);
+			}
+			const x = ParseFloat(columns[1]);
+			const y = ParseFloat(columns[2]);
+			const condition = columns.length === 4 ? ParseCondition(columns[3], validBones) : undefined;
+			return {
+				type,
+				bone: columns[0],
+				value: { x, y },
+				condition,
+			};
 		}
-		const ratio = ParseFloat(columns[1]);
-		const condition = columns.length === 3 ? ParseCondition(columns[2], validBones) : undefined;
-		return {
-			type: 'rotate',
-			bone: columns[0],
-			value: ratio,
-			condition,
-		};
-	} else if (type === 'shift') {
-		if (columns.length < 3 || columns.length > 4) {
-			throw new Error('Shift requires 3-4 arguments');
+		case 'const-shift': {
+			if (columns.length < 2 || columns.length > 3) {
+				throw new Error('Const-rotate requires 2-3 arguments');
+			}
+			const x = ParseFloat(columns[0]);
+			const y = ParseFloat(columns[1]);
+			const condition = columns.length === 3 ? ParseCondition(columns[2], validBones) : undefined;
+			return {
+				type,
+				value: { x, y },
+				condition,
+			};
 		}
-		if (!validBones.includes(columns[0])) {
-			throw new Error(`Unknown bone '${columns[0]}'`);
-		}
-		const x = ParseFloat(columns[1]);
-		const y = ParseFloat(columns[2]);
-		const condition = columns.length === 4 ? ParseCondition(columns[3], validBones) : undefined;
-		return {
-			type: 'shift',
-			bone: columns[0],
-			value: { x, y },
-			condition,
-		};
+		default:
+			throw new Error(`Unknown transform '${type || 'undefined'}'`);
 	}
-	throw new Error(`Unknown transform '${columns[0]}'`);
 }
 
 export function SerializeTransforms(transforms: Immutable<TransformDefinition[]>): string {

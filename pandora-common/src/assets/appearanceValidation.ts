@@ -1,6 +1,6 @@
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
-import { ArmPose, BONE_MAX, BONE_MIN, IsArmsPoseEqual } from './appearance';
+import { ArmPose, BONE_MAX, BONE_MIN } from './appearance';
 import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { AssetDefinitionPoseLimits, AssetId } from './definitions';

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { ArmPose, Item, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 

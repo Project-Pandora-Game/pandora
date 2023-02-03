@@ -9,11 +9,11 @@ export type AppearanceEvents = {
 };
 
 export type AppearanceContainer = ITypedEventEmitter<AppearanceEvents> & {
-	appearance: CharacterAppearance;
+	readonly appearance: CharacterAppearance;
 };
 
 export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements AppearanceContainer {
-	public appearance: CharacterAppearance;
+	public readonly appearance: CharacterAppearance;
 
 	protected readonly logger: Logger;
 

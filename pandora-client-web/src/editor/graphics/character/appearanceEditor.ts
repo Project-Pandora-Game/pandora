@@ -78,7 +78,7 @@ export class AppearanceEditor extends CharacterAppearance {
 }
 
 export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
-	public appearance: AppearanceEditor;
+	public readonly appearance: AppearanceEditor;
 	public readonly data = { id: 'c0' } as const;
 
 	constructor() {

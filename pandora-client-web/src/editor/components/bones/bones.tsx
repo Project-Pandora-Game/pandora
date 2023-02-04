@@ -161,8 +161,8 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 			? acc
 			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '') }
 	},
-	armsPose: ${arms === ArmsPose.FRONT ? 'ArmsPose.FRONT' : 'ArmsPose.BACK'},
-}`;
+	armsPose: ArmsPose.${ArmsPose[arms]},
+},`;
 	}, [pose, arms]);
 
 	if (!open) {

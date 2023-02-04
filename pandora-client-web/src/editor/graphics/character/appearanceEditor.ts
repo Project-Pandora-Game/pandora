@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -29,6 +29,13 @@ export class AppearanceEditor extends CharacterAppearance {
 		if (this._enforce) {
 			super.enforcePoseLimits();
 		}
+	}
+
+	constructor(...args: ConstructorParameters<typeof CharacterAppearance>) {
+		super(...args);
+		this.setSafemode({
+			allowLeaveAt: 0,
+		}, {});
 	}
 
 	protected override enforcePoseLimits(): boolean {
@@ -62,11 +69,16 @@ export class AppearanceEditor extends CharacterAppearance {
 }
 
 export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
-	public appearance: AppearanceEditor;
+	public readonly appearance: AppearanceEditor;
+	public readonly id = 'c0';
 
 	constructor() {
 		super();
-		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), 'c0', (changes) => this.emit('appearanceUpdate', changes));
+		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), this.id, (changes) => this.emit('appearanceUpdate', changes));
+	}
+
+	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
+		return this.appearance.getRestrictionManager(roomContext);
 	}
 }
 

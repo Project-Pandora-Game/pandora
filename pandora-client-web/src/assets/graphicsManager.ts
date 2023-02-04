@@ -1,6 +1,7 @@
 import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate } from 'pandora-common';
 import { Texture } from 'pixi.js';
-import { Observable } from '../observable';
+import { useState, useEffect } from 'react';
+import { Observable, useObservable } from '../observable';
 import { AssetGraphics } from './assetGraphics';
 
 export interface IGraphicsLoader {
@@ -8,6 +9,13 @@ export interface IGraphicsLoader {
 	getTexture(path: string): Promise<Texture>;
 	loadTextFile(path: string): Promise<string>;
 	loadFileArrayBuffer(path: string, type?: string): Promise<ArrayBuffer>;
+	/**
+	 * Gets source url of the path
+	 *  - for remote files it will return the original url
+	 *  - for local files it will return a base64 data url
+	 * @param path - Path to file
+	 */
+	pathToUrl(path: string): Promise<string>;
 }
 
 export class GraphicsManager {
@@ -21,7 +29,7 @@ export class GraphicsManager {
 	constructor(loader: IGraphicsLoader, definitionsHash: string, data: AssetsGraphicsDefinitionFile) {
 		this.loader = loader;
 		this.definitionsHash = definitionsHash;
-		this.loadPointTemplats(data.pointTemplates);
+		this.loadPointTemplates(data.pointTemplates);
 		this.loadAssets(data.assets);
 	}
 
@@ -63,7 +71,7 @@ export class GraphicsManager {
 		}
 	}
 
-	private loadPointTemplats(pointTemplates: Record<string, PointTemplate>): void {
+	private loadPointTemplates(pointTemplates: Record<string, PointTemplate>): void {
 		this._pointTemplates.clear();
 		for (const [name, template] of Object.entries(pointTemplates)) {
 			this._pointTemplates.set(name, template);
@@ -77,3 +85,20 @@ export class GraphicsManager {
 }
 
 export const GraphicsManagerInstance = new Observable<GraphicsManager | null>(null);
+
+export function useGraphicsUrl(path?: string): string | undefined {
+	const graphicsManger = useObservable(GraphicsManagerInstance);
+	const [graphicsUrl, setGraphicsUrl] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		if (!path || !graphicsManger) {
+			setGraphicsUrl(undefined);
+			return;
+		}
+		graphicsManger.loader.pathToUrl(path)
+			.then(setGraphicsUrl)
+			.catch(() => setGraphicsUrl(undefined));
+	}, [path, graphicsManger]);
+
+	return graphicsUrl;
+}

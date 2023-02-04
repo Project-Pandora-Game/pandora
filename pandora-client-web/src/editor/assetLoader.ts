@@ -70,4 +70,34 @@ class FileSystemGraphicsLoader extends GraphicsLoaderBase {
 	public loadFileArrayBuffer(path: string): Promise<ArrayBuffer> {
 		return this.monitorProgress(ReadFile(this._handle, path, false));
 	}
+
+	public pathToUrl(path: string): Promise<string> {
+		const prefix = `data:${FileExtensionToFormat(path)};base64,`;
+		return this.monitorProgress(async () => {
+			const buffer = await ReadFile(this._handle, path, false);
+			return prefix + btoa(String.fromCharCode(...new Uint8Array(buffer)));
+		});
+	}
+}
+
+function FileExtensionToFormat(fileName: string): string {
+	const index = fileName.lastIndexOf('.');
+	if (index === -1) {
+		throw new Error(`Invalid file name: ${fileName}`);
+	}
+	const extension = fileName.substring(index + 1).toLowerCase().trim();
+	switch (extension) {
+		case 'png':
+		case 'jpeg':
+		case 'webp':
+		case 'avif':
+		case 'gif':
+			return `image/${extension}`;
+		case 'svg':
+			return 'image/svg+xml';
+		case 'jpg':
+			return 'image/jpeg';
+		default:
+			throw new Error(`Unknown file extension: ${extension}`);
+	}
 }

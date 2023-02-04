@@ -19,4 +19,20 @@ fieldset.fieldset-toggle {
 			content: '▼';
 		}
 	}
+
+	&.slim-padding {
+		padding: 0.2em;
+	}
+
+	& &.slim-padding-inner {
+		padding: 0.2em;
+	}
+
+	&.no-padding {
+		padding: 0.2em 0 0 0;
+	}
+
+	& &.no-padding-inner {
+		padding: 0.2em 0 0 0;
+	}
 }

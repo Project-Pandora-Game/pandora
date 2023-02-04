@@ -1,12 +1,16 @@
 import { ArmsPose, CharacterView } from 'pandora-common';
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
+import { Button } from '../../../components/common/button/button';
+import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { BoneRowElement, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
+import { BoneRowElement, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
+import { EditorCharacter } from '../../graphics/character/appearanceEditor';
 
 export function BoneUI(): ReactElement {
 	const editor = useEditor();
@@ -18,6 +22,7 @@ export function BoneUI(): ReactElement {
 	const showBones = useObservable(editor.showBones);
 
 	const [unlocked, setUnlocked] = useState(!character.appearance.enforce);
+
 	useEffect(() => {
 		character.appearance.enforce = !unlocked;
 	}, [character.appearance, unlocked]);
@@ -68,7 +73,7 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } open={ false }>
+			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } className='slim-padding' open={ false }>
 				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
 					character.appearance.importPose(pose.pose, 'pose', false);
 					if (pose.armsPose != null) {
@@ -76,7 +81,11 @@ export function BoneUI(): ReactElement {
 					}
 				} } />
 			</FieldsetToggle>
+			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>
+				<WardrobeExpressionGui />
+			</FieldsetToggle>
 			<hr />
+			<PoseExportGui character={ character } />
 			<h4>
 				Pose bones
 				<ContextHelpButton>
@@ -124,5 +133,47 @@ export function BoneUI(): ReactElement {
 					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } unlocked={ unlocked } />)
 			}
 		</Scrollbar>
+	);
+}
+
+function PoseExportGui({ character }: { character: EditorCharacter; }) {
+	const [open, setOpen] = useState(false);
+
+	const pose = useCharacterAppearancePose(character);
+	const arms = useCharacterAppearanceArmsPose(character);
+
+	const typeScriptValue = useMemo(() => {
+		return `{
+	name: '[Pose Preset Name]',
+	pose: {${ pose.reduce((acc, value) => (value.rotation === 0 || value.definition.type !== 'pose')
+			? acc
+			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '') }
+	},
+	armsPose: ArmsPose.${ArmsPose[arms]},
+},`;
+	}, [pose, arms]);
+
+	if (!open) {
+		return <Button onClick={ () => setOpen(true) }>Show pose export</Button>;
+	}
+
+	return (
+		<ModalDialog>
+			<Column>
+				<h2>Pose export</h2>
+				<p>
+					You can use the following TypeScript code and insert into&nbsp;
+					<a href='https://github.com/Project-Pandora-Game/pandora-assets/blob/master/src/posePresets.ts' target='_blank' rel='noreferrer'>
+						<code>'src/posePresets.ts'</code>
+					</a>
+					&nbsp;in pandora-assets repository.
+				</p>
+				<textarea value={ typeScriptValue } readOnly rows={ typeScriptValue.split('\n').length } />
+				<Row>
+					<Button onClick={ () => void navigator.clipboard.writeText(typeScriptValue).catch(() => { /** ignore */ }) }>Copy to clipboard</Button>
+					<Button onClick={ () => setOpen(false) }>Close</Button>
+				</Row>
+			</Column>
+		</ModalDialog>
 	);
 }

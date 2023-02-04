@@ -51,7 +51,8 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 	}
 
 	private readonly _pendingPromises = new Set<Promise<unknown>>();
-	protected monitorProgress<T>(promise: Promise<T>): Promise<T> {
+	protected monitorProgress<T>(promiseFactory: Promise<T> | (() => Promise<T>)): Promise<T> {
+		let promise = typeof promiseFactory === 'function' ? promiseFactory() : promiseFactory;
 		this._pendingPromises.add(promise);
 		promise = promise.finally(() => {
 			this._pendingPromises.delete(promise);
@@ -76,6 +77,8 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 	public abstract loadTextFile(path: string): Promise<string>;
 
 	public abstract loadFileArrayBuffer(path: string): Promise<ArrayBuffer>;
+
+	public abstract pathToUrl(path: string): Promise<string>;
 }
 
 export class URLGraphicsLoader extends GraphicsLoaderBase {
@@ -96,5 +99,9 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 
 	public loadFileArrayBuffer(path: string): Promise<ArrayBuffer> {
 		return this.monitorProgress(fetch(this.prefix + path).then((r) => r.arrayBuffer()));
+	}
+
+	public pathToUrl(path: string): Promise<string> {
+		return Promise.resolve(this.prefix + path);
 	}
 }

@@ -102,7 +102,7 @@ function Effects({ effects, id = '' }: { effects: AssetDefinition['effects']; id
 	id += 'effect';
 
 	return (
-		<FieldsetToggle legend='Effects'>
+		<FieldsetToggle legend='Effects' className='slim-padding-inner'>
 			{ Object.entries(allEffects).map(([key, value]) => (
 				<div key={ key }>
 					<label htmlFor={ `${id}-${key}` }>{ key }: </label>
@@ -125,7 +125,7 @@ function Modules({ modules }: { modules: AssetDefinition['modules'] }): ReactEle
 	}
 
 	return (
-		<FieldsetToggle legend='Modules'>
+		<FieldsetToggle legend='Modules' className='slim-padding-inner'>
 			{ Object.entries(modules).map(([name, module]) => (
 				<Module key={ name } name={ name } module={ module } />
 			)) }
@@ -164,7 +164,7 @@ function UnknownModule({ module }: { module: AssetModuleDefinition }): ReactElem
 
 function TypedModule({ module }: { module: IModuleConfigTyped }): ReactElement {
 	return (
-		<FieldsetToggle legend='Variants'>
+		<FieldsetToggle legend='Variants' className='slim-padding-inner'>
 			{ module.variants.map((variant, index) => (
 				<TypedModuleOptions key={ index } options={ variant } />
 			)) }

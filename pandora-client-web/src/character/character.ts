@@ -1,4 +1,4 @@
-import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData } from 'pandora-common';
+import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -9,11 +9,17 @@ export type AppearanceEvents = {
 };
 
 export type AppearanceContainer = ITypedEventEmitter<AppearanceEvents> & {
-	appearance: CharacterAppearance;
+	readonly appearance: CharacterAppearance;
+	readonly id: CharacterId;
+	getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
 };
 
 export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements AppearanceContainer {
-	public appearance: CharacterAppearance;
+	public readonly appearance: CharacterAppearance;
+
+	public get id(): CharacterId {
+		return this.data.id;
+	}
 
 	protected readonly logger: Logger;
 

@@ -24,6 +24,7 @@ import { GetAssetManagerEditor } from './assets/assetManager';
 import { noop } from 'lodash';
 import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
 import { useEditor } from './editorContextProvider';
+import { EditorWardrobeUI } from './components/wardrobe/wardrobe';
 
 const logger = GetLogger('Editor');
 
@@ -244,6 +245,7 @@ export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: 
 }
 
 const TABS = [
+	['Wardrobe', 'editor-ui', EditorWardrobeUI],
 	['Poses', 'editor-ui', BoneUI],
 	['Items', 'editor-ui', AssetsUI],
 	['Asset', 'editor-ui', AssetUI],

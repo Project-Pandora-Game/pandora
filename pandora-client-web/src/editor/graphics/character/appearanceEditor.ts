@@ -71,11 +71,11 @@ export class AppearanceEditor extends CharacterAppearance {
 
 export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
 	public readonly appearance: AppearanceEditor;
-	public readonly data = { id: 'c0' } as const;
+	public readonly id = 'c0';
 
 	constructor() {
 		super();
-		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), 'c0', (changes) => this.emit('appearanceUpdate', changes));
+		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), this.id, (changes) => this.emit('appearanceUpdate', changes));
 	}
 
 	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {

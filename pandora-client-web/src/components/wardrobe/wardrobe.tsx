@@ -91,15 +91,9 @@ export function WardrobeScreen(): ReactElement | null {
 	);
 }
 
-export interface WardrobeCharacter extends AppearanceContainer {
-	readonly data: {
-		readonly id: CharacterId;
-	};
-}
-
 export interface WardrobeContext {
-	character: WardrobeCharacter;
-	player: WardrobeCharacter;
+	character: AppearanceContainer;
+	player: AppearanceContainer;
 	target: RoomTargetSelector;
 	assetList: readonly Asset[];
 	actions: AppearanceActionContext;
@@ -182,7 +176,7 @@ function Wardrobe(): ReactElement | null {
 				onClick={ () => {
 					shardConnector?.sendMessage('appearanceAction', {
 						type: 'setView',
-						target: character.data.id,
+						target: character.id,
 						view: character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT,
 					});
 				} }
@@ -1024,7 +1018,7 @@ function WardrobeBodySizeEditor(): ReactElement {
 		if (shardConnector) {
 			shardConnector.sendMessage('appearanceAction', {
 				type: 'body',
-				target: character.data.id,
+				target: character.id,
 				pose,
 			});
 		}
@@ -1153,7 +1147,7 @@ export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }:
 	);
 }
 
-export function WardrobePoseGui({ character }: { character: WardrobeCharacter; }): ReactElement {
+export function WardrobePoseGui({ character }: { character: AppearanceContainer; }): ReactElement {
 	const shardConnector = useShardConnector();
 
 	const bones = useCharacterAppearancePose(character);
@@ -1164,7 +1158,7 @@ export function WardrobePoseGui({ character }: { character: WardrobeCharacter; }
 		if (shardConnector) {
 			shardConnector.sendMessage('appearanceAction', {
 				type: 'pose',
-				target: character.data.id,
+				target: character.id,
 				pose,
 				armsPose: armsPoseSet,
 			});
@@ -1188,7 +1182,7 @@ export function WardrobePoseGui({ character }: { character: WardrobeCharacter; }
 							if (shardConnector) {
 								shardConnector.sendMessage('appearanceAction', {
 									type: 'setView',
-									target: character.data.id,
+									target: character.id,
 									view: e.target.checked ? CharacterView.BACK : CharacterView.FRONT,
 								});
 							}
@@ -1328,7 +1322,7 @@ export function WardrobeOutfitGui(): ReactElement {
 					</h3>
 					<Row>
 						{
-							character.data.id === playerId ? (
+							character.id === playerId ? (
 								<>
 									<WardrobeActionButton action={ {
 										type: 'randomize',

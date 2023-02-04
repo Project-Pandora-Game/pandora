@@ -1,6 +1,6 @@
 import { ArmsPose, CharacterView } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
-import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
+import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
@@ -20,7 +20,7 @@ export function BoneUI(): ReactElement {
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 	const showBones = useObservable(editor.showBones);
-	const safemode = useObservable(character.appearance.safemode);
+	const safemode = !!useCharacterSafemode(character);
 
 	const [unlocked, setUnlocked] = useState(!character.appearance.enforce);
 
@@ -81,7 +81,7 @@ export function BoneUI(): ReactElement {
 					type='checkbox'
 					checked={ safemode }
 					onChange={ (e) => {
-						character.appearance.safemode.value = e.target.checked;
+						character.appearance.setSafemode(e.target.checked ? { allowLeaveAt: 0 } : null, {});
 					} }
 				/>
 			</div>

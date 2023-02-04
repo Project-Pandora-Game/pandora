@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, SafemodeData, ActionRoomContext, CharacterRestrictionsManager } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -18,8 +18,6 @@ import { Observable } from '../../../observable';
 export class AppearanceEditor extends CharacterAppearance {
 	private _enforce = true;
 
-	public readonly safemode = new Observable<boolean>(true);
-
 	public get enforce(): boolean {
 		return this._enforce;
 	}
@@ -36,7 +34,9 @@ export class AppearanceEditor extends CharacterAppearance {
 
 	constructor(...args: ConstructorParameters<typeof CharacterAppearance>) {
 		super(...args);
-		this.safemode.subscribe(() => this.onChange(['safemode']));
+		this.setSafemode({
+			allowLeaveAt: 0,
+		}, {});
 	}
 
 	protected override enforcePoseLimits(): boolean {
@@ -66,14 +66,6 @@ export class AppearanceEditor extends CharacterAppearance {
 			container: [],
 			itemId: id,
 		}, shift) && this.commitChanges(manipulator, context).success;
-	}
-
-	public override getSafemode(): Readonly<SafemodeData> | null {
-		return this.safemode.value ? { allowLeaveAt: 0 } : null;
-	}
-
-	public override setSafemode(value: Readonly<SafemodeData> | null): void {
-		this.safemode.value = !!value;
 	}
 }
 

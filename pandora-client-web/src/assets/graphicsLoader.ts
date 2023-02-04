@@ -51,13 +51,11 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 	}
 
 	private readonly _pendingPromises = new Set<Promise<unknown>>();
-	protected monitorProgress<T>(promise: Promise<T> | (() => Promise<T>)): Promise<T> {
-		if (typeof promise === 'function')
-			promise = promise();
-
+	protected monitorProgress<T>(promiseFactory: Promise<T> | (() => Promise<T>)): Promise<T> {
+		let promise = typeof promiseFactory === 'function' ? promiseFactory() : promiseFactory;
 		this._pendingPromises.add(promise);
 		promise = promise.finally(() => {
-			this._pendingPromises.delete(promise as Promise<T>);
+			this._pendingPromises.delete(promise);
 			this.updateLoadingProgressToast();
 		});
 		this.updateLoadingProgressToast();

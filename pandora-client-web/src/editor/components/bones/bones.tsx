@@ -162,7 +162,11 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 			<Column>
 				<h2>Pose export</h2>
 				<p>
-					You can use the following TypeScript code and insert into <code>'src/posePreset.ts'</code> in pandora-assets repository.
+					You can use the following TypeScript code and insert into&nbsp;
+					<a href='https://github.com/Project-Pandora-Game/pandora-assets/blob/master/src/posePresets.ts' target='_blank' rel='noreferrer'>
+						<code>'src/posePresets.ts'</code>
+					</a>
+					&nbsp;in pandora-assets repository.
 				</p>
 				<textarea value={ typeScriptValue } readOnly rows={ typeScriptValue.split('\n').length } />
 				<Row>

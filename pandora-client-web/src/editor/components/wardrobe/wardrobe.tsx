@@ -59,6 +59,7 @@ export function EditorWardrobeUI(): ReactElement {
 
 	const assetManager = GetAssetManager();
 	const assetFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
+		.filter((a) => a[1].useAsWardrobeFilter)
 		.map((a) => a[0])
 	), [assetManager]);
 

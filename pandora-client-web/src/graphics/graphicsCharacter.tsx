@@ -53,17 +53,17 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: [ArmP
 			result.set(layer, ComputeLayerPriority(layer.layer.definition.value.priority, armsPose, layer.layer.isMirror));
 		}
 		return result;
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, armsPose);
+	}, [armsPose]);
 
 	const [actualCalculate, setActualCalculate] = useState<(layers: readonly LayerState[]) => ReadonlyMap<LayerState, ComputedLayerPriority>>(() => calculate);
 
 	useEffect(() => {
 		const cleanup: (() => void)[] = [];
+		setActualCalculate(() => calculate);
 
 		for (const state of states) {
 			cleanup.push(state.layer.definition.subscribe(() => {
-				setActualCalculate(() => (l: readonly LayerState[]) => calculate(l));
+				setActualCalculate(() => calculate);
 			}));
 		}
 

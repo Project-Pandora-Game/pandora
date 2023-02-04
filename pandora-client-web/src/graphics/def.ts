@@ -86,7 +86,7 @@ export function ComputeLayerPriority(priority: LayerPriority, armsPose: [ArmPose
 	if (!DOUBLE_ORDERED.includes(priority as DoubleOrdered)) {
 		return priority as ComputedLayerPriority;
 	}
-	const pose = mirror ? armsPose[0] : armsPose[1];
+	const pose = mirror ? armsPose[1] : armsPose[0];
 	if (pose === ArmPose.FRONT) {
 		return `${priority}_FRONT` as ComputedLayerPriority;
 	} else {

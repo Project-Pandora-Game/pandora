@@ -60,7 +60,7 @@ import { HoverElement } from '../hoverElement/hoverElement';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 import listIcon from '../../assets/icons/list.svg';
 import gridIcon from '../../assets/icons/grid.svg';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager';
+import { useGraphicsUrl } from '../../assets/graphicsManager';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -486,23 +486,6 @@ export function InventoryAssetView({ className, title, children, assets, contain
 	);
 }
 
-function useGraphicsUrl(url: string | undefined): string | undefined {
-	const graphicsManger = useObservable(GraphicsManagerInstance);
-	const [graphicsUrl, setGraphicsUrl] = useState<string | undefined>(undefined);
-
-	useEffect(() => {
-		if (!url || !graphicsManger) {
-			setGraphicsUrl(undefined);
-			return;
-		}
-		graphicsManger.loader.pathToUrl(url)
-			.then(setGraphicsUrl)
-			.catch(() => setGraphicsUrl(undefined));
-	}, [url, graphicsManger]);
-
-	return graphicsUrl;
-}
-
 function AttributeButton({ attribute, ...buttonProps }: {
 	attribute: string;
 } & Omit<ButtonProps, 'children'>): ReactElement {
@@ -522,7 +505,7 @@ function AttributeButton({ attribute, ...buttonProps }: {
 					alt={ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 				/>
 			) : (
-				<Button ref={ buttonRef } { ...buttonProps }>
+				<Button ref={ buttonRef } { ...buttonProps } className={ classNames(buttonProps.className, 'iconHeightButton') } >
 					{ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 				</Button>
 			) }

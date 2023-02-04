@@ -1,6 +1,7 @@
 import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate } from 'pandora-common';
 import { Texture } from 'pixi.js';
-import { Observable } from '../observable';
+import { useState, useEffect } from 'react';
+import { Observable, useObservable } from '../observable';
 import { AssetGraphics } from './assetGraphics';
 
 export interface IGraphicsLoader {
@@ -84,3 +85,20 @@ export class GraphicsManager {
 }
 
 export const GraphicsManagerInstance = new Observable<GraphicsManager | null>(null);
+
+export function useGraphicsUrl(path?: string): string | undefined {
+	const graphicsManger = useObservable(GraphicsManagerInstance);
+	const [graphicsUrl, setGraphicsUrl] = useState<string | undefined>(undefined);
+
+	useEffect(() => {
+		if (!path || !graphicsManger) {
+			setGraphicsUrl(undefined);
+			return;
+		}
+		graphicsManger.loader.pathToUrl(path)
+			.then(setGraphicsUrl)
+			.catch(() => setGraphicsUrl(undefined));
+	}, [path, graphicsManger]);
+
+	return graphicsUrl;
+}

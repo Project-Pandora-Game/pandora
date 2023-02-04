@@ -15,13 +15,19 @@ export function ExtractCondition(condition: ConditionCompressed): Condition {
 
 export type TransformDefinitionCompressed =
 	['rotate', string, number, ConditionCompressed?] |
-	['shift', string, CoordinatesCompressed, ConditionCompressed?];
+	['const-rotate', string, number, ConditionCompressed?] |
+	['shift', string, CoordinatesCompressed, ConditionCompressed?] |
+	['const-shift', CoordinatesCompressed, ConditionCompressed?];
 
 export function ExtractTransformDefinition(trans: TransformDefinitionCompressed): TransformDefinition {
+	if (trans[0] === 'const-shift') {
+		return { type: 'const-shift', value: { x: trans[1][0], y: trans[1][1] }, condition: trans[2] && ExtractCondition(trans[2]) };
+	}
 	const [type, bone, , compressedCond] = trans;
 	const condition = compressedCond && ExtractCondition(compressedCond);
 	let transform: TransformDefinition;
 	switch (type) {
+		case 'const-rotate':
 		case 'rotate':
 			transform = { type, bone, condition, value: trans[2] };
 			break;

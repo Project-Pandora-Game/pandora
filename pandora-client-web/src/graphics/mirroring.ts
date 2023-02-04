@@ -32,19 +32,24 @@ export function MirrorCondition(condition: Immutable<Condition> | undefined): Co
 }
 
 export function MirrorTransform(transform: Immutable<TransformDefinition>): TransformDefinition {
-	const { type, bone, condition } = transform;
-	const trans = {
-		bone: MirrorBoneLike(bone),
-		condition: MirrorCondition(condition),
-	};
+	const type = transform.type;
+	const condition = MirrorCondition(transform.condition);
 	switch (type) {
+		case 'const-rotate': {
+			const rotate = transform.value;
+			return { condition, type, value: rotate * -1, bone: MirrorBoneLike(transform.bone) };
+		}
 		case 'rotate': {
 			const rotate = transform.value;
-			return { ...trans, type, value: rotate * -1 };
+			return { condition, type, value: rotate * -1, bone: MirrorBoneLike(transform.bone) };
+		}
+		case 'const-shift': {
+			const { x, y } = transform.value;
+			return { condition, type, value: { x: x * -1, y } };
 		}
 		case 'shift': {
 			const { x, y } = transform.value;
-			return { ...trans, type, value: { x: x * -1, y } };
+			return { condition, type, value: { x: x * -1, y }, bone: MirrorBoneLike(transform.bone) };
 		}
 	}
 }

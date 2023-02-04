@@ -1,4 +1,4 @@
-import { CharacterId, IShardCharacterDefinition, GetLogger } from 'pandora-common';
+import { CharacterId, IShardCharacterDefinition, GetLogger, Service } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import { Character } from './character';
 import promClient from 'prom-client';
@@ -10,8 +10,16 @@ const charactersMetric = new promClient.Gauge({
 	help: 'Current count of characters on this shard',
 });
 
-export const CharacterManager = new class CharacterManager {
+export const CharacterManager = new class CharacterManager implements Service {
 	private readonly _characters: Map<CharacterId, Character> = new Map();
+
+	public init(): this {
+		return this;
+	}
+
+	public async onDestroy(): Promise<void> {
+		await this.removeAllCharacters();
+	}
 
 	public getCharacter(id: CharacterId): Character | undefined {
 		return this._characters.get(id);

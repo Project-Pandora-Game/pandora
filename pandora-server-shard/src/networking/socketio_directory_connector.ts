@@ -1,5 +1,5 @@
-import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema } from 'pandora-common';
+import { APP_VERSION, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE } from '../config';
+import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema, Service } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
@@ -52,7 +52,7 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class housing connection from Shard to Directory */
-export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, IDirectoryShard, Socket> {
+export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, IDirectoryShard, Socket> implements Service {
 
 	/** Current state of the connection */
 	private _state: DirectoryConnectionState = DirectoryConnectionState.NONE;
@@ -65,6 +65,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 	public shardId: string | undefined;
 
 	constructor(uri: string, secret: string = '') {
+		if (!uri) {
+			throw new Error('Missing uri');
+		}
 		super(CreateConnection(uri, secret), [ShardDirectorySchema, DirectoryShardSchema], logger);
 
 		// Setup event handlers
@@ -78,6 +81,28 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			stop: Stop,
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
+	}
+
+	public init(): Promise<this> {
+		if (DirectoryConnector) {
+			throw new Error('Connector already exists');
+		}
+		DirectoryConnector = this;
+		// Setup shutdown handlers
+		logConfig.onFatal.push(() => {
+			if (DirectoryConnector) {
+				DirectoryConnector.disconnect();
+			}
+		});
+		// Start
+		return this.connect();
+	}
+
+	public onDestroy(): Promise<void> {
+		return new Promise((resolve) => setTimeout(() => {
+			this.disconnect();
+			resolve();
+		}, 200));
 	}
 
 	protected onMessage<K extends keyof IDirectoryShard>(
@@ -262,22 +287,3 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 }
 
 export let DirectoryConnector!: SocketIODirectoryConnector;
-
-export function ConnectToDirectory(): Promise<SocketIODirectoryConnector> {
-	if (!DIRECTORY_ADDRESS) {
-		throw new Error('Missing DIRECTORY_ADDRESS');
-	}
-	if (DirectoryConnector) {
-		throw new Error('Connector already exists');
-	}
-	// Create the connection
-	DirectoryConnector = new SocketIODirectoryConnector(DIRECTORY_ADDRESS, SHARD_SHARED_SECRET);
-	// Setup shutdown handlers
-	logConfig.onFatal.push(() => {
-		if (DirectoryConnector) {
-			DirectoryConnector.disconnect();
-		}
-	});
-	// Start
-	return DirectoryConnector.connect();
-}

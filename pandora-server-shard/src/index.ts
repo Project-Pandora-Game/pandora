@@ -1,17 +1,24 @@
 import { mkdirSync } from 'fs';
-import { APP_NAME, APP_VERSION, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION, SERVER_PUBLIC_ADDRESS } from './config';
+import { APP_NAME, APP_VERSION, DIRECTORY_ADDRESS, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION, SERVER_PUBLIC_ADDRESS, SHARD_SHARED_SECRET } from './config';
 import { AddDiscordLogOutput, AddFileOutput } from './logging';
 import { GetLogger, LogLevel, ServiceManager, SetConsoleOutput } from 'pandora-common';
-import { ConnectToDirectory } from './networking/socketio_directory_connector';
+import { SocketIODirectoryConnector } from './networking/socketio_directory_connector';
 import { HttpServer } from './networking/httpServer';
 import { CreateDatabase } from './database/databaseProvider';
 import { SetupSignalHandling } from './lifecycle';
 import { LoadAssetDefinitions } from './assets/assetManager';
+import { CharacterManager } from './character/characterManager';
+import { RoomManager } from './room/roomManager';
 // get version from package.json
 
 const logger = GetLogger('init');
 
 const manager = new ServiceManager(logger);
+
+const STOP_PHASES = {
+	DATABASE: 1,
+	DIRECTORY: 2,
+} as const;
 
 Start().catch((error) => {
 	logger.fatal('Init failed:', error);
@@ -21,15 +28,17 @@ Start().catch((error) => {
  * Starts the application.
  */
 async function Start(): Promise<void> {
-	SetupSignalHandling();
+	SetupSignalHandling(() => manager.destroy());
 	SetupLogging();
 	await manager
 		.log(LogLevel.INFO, `${APP_NAME} v${APP_VERSION} starting...`)
 		.log(LogLevel.VERBOSE, 'Loading asset definitions...')
 		.action(LoadAssetDefinitions)
 		.log(LogLevel.VERBOSE, 'Connecting to Directory...')
-		.action(ConnectToDirectory)
-		.add(CreateDatabase())
+		.add(new SocketIODirectoryConnector(DIRECTORY_ADDRESS, SHARD_SHARED_SECRET), STOP_PHASES.DIRECTORY)
+		.add(CharacterManager)
+		.add(RoomManager)
+		.add(CreateDatabase(), STOP_PHASES.DATABASE)
 		.log(LogLevel.VERBOSE, 'Starting HTTP server...')
 		.add(HttpServer)
 		.log(LogLevel.ALERT, 'Ready!')

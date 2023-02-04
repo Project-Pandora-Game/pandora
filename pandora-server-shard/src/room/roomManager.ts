@@ -1,4 +1,4 @@
-import { IChatRoomFullInfo, RoomId, GetLogger } from 'pandora-common';
+import { IChatRoomFullInfo, RoomId, GetLogger, Service } from 'pandora-common';
 import { Room } from './room';
 import promClient from 'prom-client';
 
@@ -9,8 +9,16 @@ const roomsMetric = new promClient.Gauge({
 	help: 'Current count of rooms on this shard',
 });
 
-export const RoomManager = new class RoomManager {
+export const RoomManager = new class RoomManager implements Service {
 	private readonly _rooms: Map<RoomId, Room> = new Map();
+
+	public init(): this {
+		return this;
+	}
+
+	public onDestroy(): void {
+		this.removeAllRooms();
+	}
 
 	public getRoom(id: RoomId): Room | undefined {
 		return this._rooms.get(id);

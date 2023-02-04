@@ -14,25 +14,12 @@ const logger = GetLogger('Lifecycle');
 	wtfnode.setLogger('error', (...message) => wtfNodeLogger.error(...message));
 }
 
-let stopping: Promise<IEmpty> | undefined;
+let stopping: Promise<void> | undefined;
 const STOP_TIMEOUT = 10_000;
 
-async function StopGracefully(): Promise<IEmpty> {
-	// Disconnect all characters
-	await CharacterManager.removeAllCharacters();
-	// Cleanup all rooms
-	RoomManager.removeAllRooms();
-	// Stop HTTP server
-	HttpServer.onDestroy();
-	// TODO: Disconnect database
-	// The result of promise from graceful stop is used by Directory, disconnect afterwards
-	setTimeout(() => {
-		DirectoryConnector?.disconnect();
-	}, 200);
-	return {};
-}
+let doStop: () => Promise<void> = () => Promise.reject(new Error('doStop not set'));
 
-export function Stop(): Promise<IEmpty> {
+export function Stop(): Promise<void> {
 	if (stopping !== undefined)
 		return stopping;
 	logger.alert('Stopping...');
@@ -44,7 +31,7 @@ export function Stop(): Promise<IEmpty> {
 		process.exit(0);
 	}, STOP_TIMEOUT).unref();
 	// Graceful stop syncs everything with directory and database
-	stopping = StopGracefully()
+	stopping = doStop()
 		.catch((err) => {
 			logger.fatal('Stop errored:\n', err);
 			// Even though it is error, we exit with 0 to prevent container restart from triggering
@@ -73,7 +60,8 @@ export function RequestStop(): void {
 	}
 }
 
-export function SetupSignalHandling(): void {
+export function SetupSignalHandling(stop: () => Promise<void>): void {
+	doStop = stop;
 	process.on('SIGINT', () => {
 		logger.info('Received SIGINT');
 		RequestStop();

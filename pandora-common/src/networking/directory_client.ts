@@ -34,7 +34,7 @@ export type IDirectoryAccountInfo = {
 	id: number;
 	username: string;
 	created: number;
-	github?: { id: number; login: string; };
+	github?: { id: number; login: string };
 	roles?: IAccountRoleInfo;
 	settings: IDirectoryAccountSettings;
 	cryptoKey?: IAccountCryptoKey;
@@ -100,8 +100,8 @@ export const DirectoryClientSchema = {
 	},
 	connectionState: {
 		request: ZodCast<{
-			account: IDirectoryAccountInfo | null,
-			character: IDirectoryCharacterConnectionInfo | null,
+			account: IDirectoryAccountInfo | null;
+			character: IDirectoryCharacterConnectionInfo | null;
 		}>(),
 		response: null,
 	},

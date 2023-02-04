@@ -36,7 +36,7 @@ export const AccountRoleSchema = z.enum(Object.keys(ACCOUNT_ROLES_DEFINITION) as
 // Both validate and export the config
 export const ACCOUNT_ROLES_CONFIG: Readonly<Record<AccountRole, IAccountRoleConfig>> = ACCOUNT_ROLES_DEFINITION;
 
-export type ConfiguredAccountRole = KeysMatching<typeof ACCOUNT_ROLES_DEFINITION, { assignable: true; }>;
+export type ConfiguredAccountRole = KeysMatching<typeof ACCOUNT_ROLES_DEFINITION, { assignable: true }>;
 
 export const ConfiguredAccountRoleSchema = z.enum([
 	...Object
@@ -52,7 +52,7 @@ export const RoleSelfInfoSchema = z.object({
 export type IRoleSelfInfo = z.infer<typeof RoleSelfInfoSchema>;
 
 export type IRoleManageInfo = IRoleSelfInfo & {
-	grantedBy: 'GitHub' | { id: number; username: string; };
+	grantedBy: 'GitHub' | { id: number; username: string };
 	grantedAt: number;
 };
 
@@ -67,7 +67,7 @@ export type IAccountRoleManageInfo = IAccountRoleInfoT<IRoleManageInfo>;
  * @param held - The roles the account has
  * @param required - Which role is required
  */
-export function IsAuthorized(held: IAccountRoleInfoT<{ expires?: number; }>, required: AccountRole): boolean {
+export function IsAuthorized(held: IAccountRoleInfoT<{ expires?: number }>, required: AccountRole): boolean {
 	const now = Date.now();
 	for (const [role, { expires }] of Object.entries(held)) {
 		// Skip expired roles

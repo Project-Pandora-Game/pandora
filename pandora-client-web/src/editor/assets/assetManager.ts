@@ -160,7 +160,7 @@ class AssetTreeViewClass {
 }
 
 export type AssetTreeViewCategory = AssetTreeViewCategoryClass;
-class AssetTreeViewCategoryClass extends ObservableClass<{ open: boolean; }> {
+class AssetTreeViewCategoryClass extends ObservableClass<{ open: boolean }> {
 	private _assets = new Map<string, Asset>();
 
 	public get assets(): Asset[] {

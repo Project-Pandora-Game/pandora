@@ -7,7 +7,7 @@ export interface ICommandExecutionContext {
 	commandName: string;
 }
 
-export type CommandStepPreparseProcessor = ((input: string) => { value: string; spacing: string; rest: string; });
+export type CommandStepPreparseProcessor = ((input: string) => { value: string; spacing: string; rest: string });
 
 export type CommandAutocompleteOption = {
 	replaceValue: string;
@@ -21,7 +21,7 @@ export type CommandAutocompleteResult = {
 
 export interface CommandStepProcessor<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, never> = IEmpty> {
 	preparse: CommandStepPreparseProcessor | 'all' | 'allTrimmed' | 'quotedArg' | 'quotedArgTrimmed';
-	parse(input: string, context: Context, args: EntryArguments): { success: true; value: ResultType; } | { success: false; error: string; };
+	parse(input: string, context: Context, args: EntryArguments): { success: true; value: ResultType } | { success: false; error: string };
 	autocomplete?(input: string, context: Context, args: EntryArguments): CommandAutocompleteOption[];
 }
 

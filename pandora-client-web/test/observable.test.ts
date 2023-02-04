@@ -2,7 +2,7 @@ import { act, renderHook, RenderHookResult } from '@testing-library/react';
 import { observable, Observable, useObservable } from '../src/observable';
 
 describe('Observable', () => {
-	type T = { mockValue: string; };
+	type T = { mockValue: string };
 	const defValue: T = Object.freeze({ mockValue: 'mock' });
 	const updated: T = Object.freeze({ mockValue: 'updated' });
 	let mockObservable: Observable<T>;
@@ -48,7 +48,7 @@ describe('Observable', () => {
 });
 
 describe('useObservable()', () => {
-	type T = { mockValue: string; };
+	type T = { mockValue: string };
 	const defValue: T = Object.freeze({ mockValue: 'mock' });
 	const updated: T = Object.freeze({ mockValue: 'updated' });
 	let mockObservable: Observable<T>;

@@ -10,7 +10,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	lipsTouch: number,
+	lipsTouch: number;
 
 	/**
 	 * Muffle jaws related sounds (`z`, `s`)
@@ -19,7 +19,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	jawMove: number,
+	jawMove: number;
 
 	/**
 	 * Muffle tongue related sounds (`r`, `re`, `k`, `c`,...)
@@ -28,7 +28,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	tongueRoof: number,
+	tongueRoof: number;
 	/**
 	 * Muffle air breath sounds (`th`, `tph`, `ch`,...)
 	 *
@@ -36,7 +36,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	mouthBreath: number,
+	mouthBreath: number;
 	/**
 	 * Muffle strong throat vibration sounds (`gh`, `c`, `ch`, `gi`,...)
 	 *
@@ -44,7 +44,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	throatBreath: number,
+	throatBreath: number;
 	/**
 	 * Muffle hinting letters (h, j, l, r, v, w, x, y, q)
 	 *
@@ -52,7 +52,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = completely muffled
 	 */
-	coherency: number,
+	coherency: number;
 	/**
 	 * Create stutter effects for the sentence.
 	 *
@@ -60,7 +60,7 @@ export type MuffleSettings = {
 	 * - 0 = no effect
 	 * - 10 = high amounts of stutter
 	 */
-	stimulus: number,
+	stimulus: number;
 };
 
 export class Muffler {

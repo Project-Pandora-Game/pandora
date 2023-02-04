@@ -1,7 +1,7 @@
 import { act, renderHook, RenderHookResult } from '@testing-library/react';
 import { BrowserStorage, useBrowserStorage } from '../src/browserStorage';
 
-type T = { mockValue: string; };
+type T = { mockValue: string };
 const mockDefault: T = Object.freeze({ mockValue: 'mockValue' });
 const mockUpdate: T = Object.freeze({ mockValue: 'sth-different' });
 const mockValidate = jest.fn().mockReturnValue(true);

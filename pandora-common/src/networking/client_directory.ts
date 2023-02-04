@@ -64,9 +64,9 @@ export const ClientDirectorySchema = {
 			passwordSha512: PasswordSha512Schema,
 			verificationToken: SimpleTokenSchema.optional(),
 		}),
-		response: ZodCast<{ result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials'; } | {
+		response: ZodCast<{ result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials' } | {
 			result: 'ok';
-			token: { value: string; expires: number; };
+			token: { value: string; expires: number };
 			account: IDirectoryAccountInfo;
 		}>(),
 	},
@@ -77,19 +77,19 @@ export const ClientDirectorySchema = {
 			email: EmailAddressSchema,
 			betaKey: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey'; }>(),
+		response: ZodCast<{ result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey' }>(),
 	},
 	resendVerificationEmail: {
 		request: z.object({
 			email: EmailAddressSchema,
 		}),
-		response: ZodCast<{ result: 'maybeSent'; }>(),
+		response: ZodCast<{ result: 'maybeSent' }>(),
 	},
 	passwordReset: {
 		request: z.object({
 			email: EmailAddressSchema,
 		}),
-		response: ZodCast<{ result: 'maybeSent'; }>(),
+		response: ZodCast<{ result: 'maybeSent' }>(),
 	},
 	passwordResetConfirm: {
 		request: z.object({
@@ -97,7 +97,7 @@ export const ClientDirectorySchema = {
 			passwordSha512: PasswordSha512Schema,
 			token: SimpleTokenSchema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'unknownCredentials'; }>(),
+		response: ZodCast<{ result: 'ok' | 'unknownCredentials' }>(),
 	},
 	//#endregion Before Login
 
@@ -108,7 +108,7 @@ export const ClientDirectorySchema = {
 			passwordSha512New: PasswordSha512Schema,
 			cryptoKey: AccountCryptoKeySchema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'invalidPassword'; }>(),
+		response: ZodCast<{ result: 'ok' | 'invalidPassword' }>(),
 	},
 	logout: {
 		request: z.object({
@@ -120,7 +120,7 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			login: z.string(),
 		}),
-		response: ZodCast<{ url: string; }>(),
+		response: ZodCast<{ url: string }>(),
 	},
 	gitHubUnbind: {
 		request: z.object({}),
@@ -161,7 +161,7 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			id: CharacterIdSchema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'characterInUse'; }>(),
+		response: ZodCast<{ result: 'ok' | 'characterInUse' }>(),
 	},
 	//#endregion
 
@@ -178,11 +178,11 @@ export const ClientDirectorySchema = {
 	},
 	shardInfo: {
 		request: z.object({}),
-		response: ZodCast<{ shards: IDirectoryShardInfo[]; }>(),
+		response: ZodCast<{ shards: IDirectoryShardInfo[] }>(),
 	},
 	listRooms: {
 		request: z.object({}),
-		response: ZodCast<{ rooms: IChatRoomDirectoryInfo[]; }>(),
+		response: ZodCast<{ rooms: IChatRoomDirectoryInfo[] }>(),
 	},
 	chatRoomGetInfo: {
 		request: z.object({
@@ -207,7 +207,7 @@ export const ClientDirectorySchema = {
 	},
 	chatRoomUpdate: {
 		request: ChatRoomDirectoryUpdateSchema,
-		response: ZodCast<{ result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; }>(),
+		response: ZodCast<{ result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess' }>(),
 	},
 	//#endregion
 
@@ -216,7 +216,7 @@ export const ClientDirectorySchema = {
 			id: z.number().min(0),
 			until: z.number().min(0).optional(),
 		}),
-		response: ZodCast<{ result: 'notFound' | 'denied'; } | {
+		response: ZodCast<{ result: 'notFound' | 'denied' } | {
 			result: 'ok';
 			account: IDirectoryDirectMessageAccount;
 			messages: IDirectoryDirectMessage[];
@@ -228,7 +228,7 @@ export const ClientDirectorySchema = {
 			content: z.string(),
 			editing: z.number().min(0).optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'notFound' | 'denied' | 'messageNotFound'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'denied' | 'messageNotFound' }>(),
 	},
 	directMessage: {
 		request: z.object({
@@ -239,7 +239,7 @@ export const ClientDirectorySchema = {
 	},
 	getDirectMessageInfo: {
 		request: z.object({}),
-		response: ZodCast<{ info: IDirectoryDirectMessageInfo[]; }>(),
+		response: ZodCast<{ info: IDirectoryDirectMessageInfo[] }>(),
 	},
 
 	//#region Management/admin endpoints; these require specific roles to be used
@@ -249,7 +249,7 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			id: z.number(),
 		}),
-		response: ZodCast<{ result: 'notFound'; } | {
+		response: ZodCast<{ result: 'notFound' } | {
 			result: 'ok';
 			roles: IAccountRoleManageInfo;
 		}>(),
@@ -260,7 +260,7 @@ export const ClientDirectorySchema = {
 			role: ConfiguredAccountRoleSchema,
 			expires: z.number().optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'notFound'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notFound' }>(),
 	},
 
 	// Shard token management
@@ -284,7 +284,7 @@ export const ClientDirectorySchema = {
 			 */
 			expires: z.number().optional(),
 		}),
-		response: ZodCast<{ result: 'adminRequired'; } | {
+		response: ZodCast<{ result: 'adminRequired' } | {
 			result: 'ok';
 			info: IShardTokenInfo;
 			token: string;
@@ -294,18 +294,18 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			id: z.string(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired' }>(),
 	},
 	manageListShardTokens: {
 		request: z.object({}),
-		response: ZodCast<{ info: IShardTokenInfo[]; }>(),
+		response: ZodCast<{ info: IShardTokenInfo[] }>(),
 	},
 	manageCreateBetaKey: {
 		request: z.object({
 			expires: z.number().optional(),
 			maxUses: z.number().optional(),
 		}),
-		response: ZodCast<{ result: 'adminRequired'; } | {
+		response: ZodCast<{ result: 'adminRequired' } | {
 			result: 'ok';
 			info: IBetaKeyInfo;
 			token: string;
@@ -313,13 +313,13 @@ export const ClientDirectorySchema = {
 	},
 	manageListBetaKeys: {
 		request: z.object({}),
-		response: ZodCast<{ keys: IBetaKeyInfo[]; }>(),
+		response: ZodCast<{ keys: IBetaKeyInfo[] }>(),
 	},
 	manageInvalidateBetaKey: {
 		request: z.object({
 			id: z.string(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired' }>(),
 	},
 	//#endregion
 } as const;

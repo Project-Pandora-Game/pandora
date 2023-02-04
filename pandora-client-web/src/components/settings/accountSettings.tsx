@@ -135,7 +135,7 @@ function AccountRoleList({ account }: { account: IDirectoryAccountInfo }): React
 	);
 }
 
-function AccountRole({ role, data }: { role: AccountRole, data?: { expires?: number } }): ReactElement {
+function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: number } }): ReactElement {
 	const connector = useDirectoryConnector();
 	const visibleRoles = useCurrentAccount()?.settings.visibleRoles || [];
 	const visible = visibleRoles.includes(role);

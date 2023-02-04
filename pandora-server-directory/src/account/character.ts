@@ -39,7 +39,7 @@ export class Character {
 		this.connectSecret = this.generateConnectSecret();
 	}
 
-	public isInUse(): this is { assignedShard: Shard; } {
+	public isInUse(): this is { assignedShard: Shard } {
 		return this.assignedShard != null;
 	}
 

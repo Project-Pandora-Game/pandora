@@ -23,7 +23,7 @@ export const ClientMessageSchema = z.object({
 }));
 export type IClientMessage = z.infer<typeof ClientMessageSchema>;
 
-export type IChatRoomMessageChatCharacter = { id: CharacterId, name: string; labelColor: string; };
+export type IChatRoomMessageChatCharacter = { id: CharacterId; name: string; labelColor: string };
 export type IChatRoomMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
 	id: number;
 	insertId?: number;
@@ -102,8 +102,8 @@ export const LONGDESC_THIRD_PERSON = ' It describes events in third-person inste
 export const LONGDESC_TOGGLE_MODE = ' Exclude the [message] argument to toggle this mode on/off for all messages.';
 
 export type IChatTypeDetails = {
-	commandKeywords: [string, ...string[]],
-	description: string,
+	commandKeywords: [string, ...string[]];
+	description: string;
 	longDescription: string;
 };
 

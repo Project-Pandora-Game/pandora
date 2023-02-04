@@ -49,7 +49,7 @@ export const ShardDirectorySchema = {
 	},
 	setCharacter: {
 		request: CharacterDataUpdateSchema,
-		response: ZodCast<{ result: 'success' | 'invalidAccessId'; }>(),
+		response: ZodCast<{ result: 'success' | 'invalidAccessId' }>(),
 	},
 	//#endregion
 } as const;

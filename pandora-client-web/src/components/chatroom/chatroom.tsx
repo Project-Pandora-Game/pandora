@@ -226,7 +226,7 @@ function ChatroomMessageEquals(a: IChatroomMessageProcessed, b: IChatroomMessage
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
+const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null }): ReactElement | null {
 	if (!IsUserMessage(message)) {
 		return <ActionMessage message={ message } />;
 	}
@@ -238,7 +238,7 @@ const Message = memo(function Message({ message, playerId }: { message: IChatroo
 	return ChatroomMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
-function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number; roomId: RoomId; }; playerId: CharacterId | null; }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number; roomId: RoomId }; playerId: CharacterId | null }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -328,7 +328,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 	);
 }
 
-function DisplayInfo({ message }: { message: IChatroomMessageProcessed; }): ReactElement {
+function DisplayInfo({ message }: { message: IChatroomMessageProcessed }): ReactElement {
 	const time = useMemo(() => new Date(message.time), [message.time]);
 	const [full, setFull] = useState(new Date().getDate() !== time.getDate());
 
@@ -355,7 +355,7 @@ function DisplayInfo({ message }: { message: IChatroomMessageProcessed; }): Reac
 	);
 }
 
-function DisplayName({ message, color }: { message: IChatRoomMessageChat; color: string; }): ReactElement | null {
+function DisplayName({ message, color }: { message: IChatRoomMessageChat; color: string }): ReactElement | null {
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 

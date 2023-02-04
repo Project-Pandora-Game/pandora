@@ -11,7 +11,7 @@ const TOKEN_MAX_USES = 5;
 const TOKEN_MAX_EXPIRE_MS = 1000 * 60 * 60 * 24 * 7; // 1 week
 const logger = GetLogger('BetaKeyStore');
 
-type IStoredBetaKeyInfo = IBetaKeyInfo & { token: string; };
+type IStoredBetaKeyInfo = IBetaKeyInfo & { token: string };
 
 export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaKeyInfo> {
 	constructor() {
@@ -60,7 +60,7 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 		return maxUses === undefined || uses < maxUses;
 	}
 
-	public async create(acc: Account, { expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey']): Promise<'adminRequired' | { info: IBetaKeyInfo, token: string; }> {
+	public async create(acc: Account, { expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey']): Promise<'adminRequired' | { info: IBetaKeyInfo; token: string }> {
 		if (!acc.roles.isAuthorized('admin')) {
 			if (maxUses === undefined || maxUses > TOKEN_MAX_USES)
 				return 'adminRequired';

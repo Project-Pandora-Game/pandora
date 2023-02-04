@@ -124,7 +124,7 @@ export default class AccountSecure {
 		return this.#validateToken(AccountTokenReason.LOGIN, token);
 	}
 
-	public getGitHubStatus(): undefined | { id: number; login: string; } {
+	public getGitHubStatus(): undefined | { id: number; login: string } {
 		if (!this.#secure.github)
 			return undefined;
 

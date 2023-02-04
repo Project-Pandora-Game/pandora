@@ -14,7 +14,7 @@ import type { } from '../character/pronouns';
 export const ClientShardSchema = {
 	finishCharacterCreation: {
 		request: CharacterDataCreateSchema,
-		response: ZodCast<{ result: 'ok' | 'failed'; }>(),
+		response: ZodCast<{ result: 'ok' | 'failed' }>(),
 	},
 	chatRoomMessage: {
 		request: z.object({

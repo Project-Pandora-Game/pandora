@@ -20,7 +20,7 @@ export interface PixiViewportProps extends ChildrenProps {
 	setup?: PixiViewportSetupCallback;
 }
 
-const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Application; }, Viewport>('Viewport', {
+const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Application }, Viewport>('Viewport', {
 	create(props) {
 		const {
 			app,

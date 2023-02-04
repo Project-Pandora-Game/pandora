@@ -40,11 +40,11 @@ export function PointsUI(): ReactElement {
 	);
 }
 
-export function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+export function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement {
 	return <>{ useLayerName(layer) }</>;
 }
 
-export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer }): ReactElement {
 	const editor = useEditor();
 	const getCenter = useObservable(editor.getCenter);
 	const selectedPoint = useObservable(editor.targetPoint);
@@ -72,7 +72,7 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 	);
 }
 
-function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics }): ReactElement | null {
 	const layers = useEditorAssetLayers(asset, false);
 	const { points } = useLayerDefinition(layer);
 	const graphicsManger = useObservable(GraphicsManagerInstance);
@@ -144,7 +144,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 	);
 }
 
-function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement | null {
+function PointConfiguration({ point }: { point: DraggablePoint }): ReactElement | null {
 	const { pos, mirror, pointType } = useDraggablePointDefinition(point);
 	const pointX = pos[0];
 	const pointY = pos[1];
@@ -204,7 +204,7 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 	);
 }
 
-function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
+function PointTransformationsTextarea({ point }: { point: DraggablePoint }): ReactElement | null {
 	const [value, setValue] = useUpdatedUserInput(SerializeTransforms(useDraggablePointDefinition(point).transforms), [point]);
 	const [error, setError] = useState<string | null>(null);
 

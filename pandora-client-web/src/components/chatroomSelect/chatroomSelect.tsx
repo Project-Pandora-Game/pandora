@@ -43,7 +43,7 @@ export function ChatroomSelect(): ReactElement {
 }
 
 function RoomEntry({ roomInfo }: {
-	roomInfo: IChatRoomDirectoryInfo
+	roomInfo: IChatRoomDirectoryInfo;
 }): ReactElement {
 
 	const [show, setShow] = useState(false);
@@ -69,7 +69,7 @@ function RoomEntry({ roomInfo }: {
 }
 
 function RoomDetailsDialog({ baseRoomInfo, hide }: {
-	baseRoomInfo: IChatRoomDirectoryInfo
+	baseRoomInfo: IChatRoomDirectoryInfo;
 	hide: () => void;
 }): ReactElement | null {
 

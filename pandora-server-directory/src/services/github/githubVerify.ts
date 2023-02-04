@@ -22,7 +22,7 @@ const GITHUB_ORG_NAME = 'Project-Pandora-Game';
 
 const logger = GetLogger('GitHubVerifier');
 
-const states = new Map<string, { accountId: number, login: string; }>();
+const states = new Map<string, { accountId: number; login: string }>();
 
 const GitHubTeamSchema = z.enum(['beta-access', 'developers', 'host', 'lead-developers']);
 const IsGitHubTeam = ZodMatcher(GitHubTeamSchema);

@@ -1,6 +1,6 @@
 import { IS_NODE } from './utility';
 
-declare const console: { info: (...args: unknown[]) => void; };
+declare const console: { info: (...args: unknown[]) => void };
 
 /** Loglevel for log messages to determinate severity */
 export enum LogLevel {

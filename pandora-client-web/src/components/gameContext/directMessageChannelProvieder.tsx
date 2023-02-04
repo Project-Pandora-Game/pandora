@@ -42,7 +42,7 @@ function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps
 	);
 }
 
-function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { channel?: DirectMessageChannel, message?: string }): ReactElement {
+function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { channel?: DirectMessageChannel; message?: string }): ReactElement {
 	if (channel?.failed) {
 		switch (channel.failed) {
 			case 'notFound':

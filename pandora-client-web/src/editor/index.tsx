@@ -91,7 +91,7 @@ function AssetLoaderElement() {
 	);
 }
 
-function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement {
+function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void> }): ReactElement {
 	const [loading, setLoading] = useState(false);
 	const supported = 'showDirectoryPicker' in window;
 	const text = supported ? 'Load Assets From File System' : 'File System Access API Not Supported';
@@ -101,7 +101,7 @@ function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (
 	);
 }
 
-function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement | null {
+function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void> }): ReactElement | null {
 	const [loading, setLoading] = useState(false);
 
 	return (
@@ -109,7 +109,7 @@ function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setL
 	);
 }
 
-function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement {
+function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void> }): ReactElement {
 	const [loading, setLoading] = useState(false);
 
 	return (

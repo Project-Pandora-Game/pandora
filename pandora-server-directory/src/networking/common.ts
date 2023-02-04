@@ -15,7 +15,7 @@ export interface IConnectionClient extends IIncomingConnection<IDirectoryClient>
 	/** The current character this connection is using or `null` if none */
 	readonly character: Character | null;
 
-	isLoggedIn(): this is { readonly account: Account; };
+	isLoggedIn(): this is { readonly account: Account };
 
 	/**
 	 * Set or clear the account this connection is logged in as

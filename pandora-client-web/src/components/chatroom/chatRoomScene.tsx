@@ -204,7 +204,7 @@ export function ChatRoomScene(): ReactElement | null {
 	);
 }
 
-function CharacterContextMenu({ character, data, onClose }: { character: Character<ICharacterRoomData>; data: InteractionData | null; onClose: () => void; }): ReactElement | null {
+function CharacterContextMenu({ character, data, onClose }: { character: Character<ICharacterRoomData>; data: InteractionData | null; onClose: () => void }): ReactElement | null {
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();

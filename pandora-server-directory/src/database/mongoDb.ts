@@ -22,9 +22,9 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _inMemoryServer!: MongoMemoryServer;
 	private _db!: Db;
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
-	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
+	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number }>;
 	private _config!: Collection<DatabaseConfig>;
-	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
+	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts }>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -317,7 +317,7 @@ async function CreateInMemoryMongo({
 	});
 }
 
-function Id(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
+function Id(obj: Omit<ICharacterData, 'id'> & { id: number }): ICharacterData {
 	return {
 		...obj,
 		id: `c${obj.id}` as const,

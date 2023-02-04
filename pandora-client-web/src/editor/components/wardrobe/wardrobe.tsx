@@ -14,7 +14,7 @@ const ROOM_CONTEXT = {
 	features: ChatRoomFeatureSchema.options,
 } as const satisfies ActionRoomContext;
 
-export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {
+export function EditorWardrobeContextProvider({ children }: { children: ReactNode }): ReactElement {
 	const editor = useEditor();
 	const character = editor.character;
 	const assetList = useObservable(GetAssetManager().assetList);

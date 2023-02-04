@@ -20,7 +20,7 @@ export interface IChatRoomMessageSender {
 	sendMessage(message: string, options?: IMessageParseOptions): void;
 	deleteMessage(deleteId: number): void;
 	getMessageEditTimeout(id: number): number | undefined;
-	getMessageEdit(id: number): { text: string, target?: CharacterId; } | undefined;
+	getMessageEdit(id: number): { text: string; target?: CharacterId } | undefined;
 	getLastMessageEdit(): number | undefined;
 }
 
@@ -66,7 +66,7 @@ export function DescribeAssetSlot(assetManager: AssetManagerClient, slot: string
 }
 
 function ProcessMessage(
-	message: IChatRoomMessageAction & { time: number; roomId: RoomId; },
+	message: IChatRoomMessageAction & { time: number; roomId: RoomId },
 	assetManager: AssetManagerClient,
 ): IChatroomMessageActionProcessed {
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
@@ -486,7 +486,7 @@ export class ChatRoom extends TypedEventEmitter<{
 		return edit.time + MESSAGE_EDIT_TIMOUT - Date.now();
 	}
 
-	public getMessageEdit(id: number): { text: string, target?: CharacterId; } | undefined {
+	public getMessageEdit(id: number): { text: string; target?: CharacterId } | undefined {
 		const edit = this._sent.get(id);
 		if (!edit || edit.time + MESSAGE_EDIT_TIMOUT < Date.now()) {
 			return undefined;
@@ -578,12 +578,12 @@ export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?:
 	return useCallback((status: IChatRoomStatus, target?: CharacterId) => context.setPlayerStatus(status, target), [context]);
 }
 
-export function useChatRoomStatus(): { data: ICharacterRoomData, status: IChatRoomStatus; }[] {
+export function useChatRoomStatus(): { data: ICharacterRoomData; status: IChatRoomStatus }[] {
 	const context = useChatroomRequired();
 	const characters = useObservable(context.characters);
 	const status = useObservable(context.status);
 	return useMemo(() => {
-		const result: { data: ICharacterRoomData, status: IChatRoomStatus; }[] = [];
+		const result: { data: ICharacterRoomData; status: IChatRoomStatus }[] = [];
 		for (const c of characters) {
 			if (status.has(c.data.id)) {
 				result.push({ data: c.data, status: context.getStatus(c.data.id) });

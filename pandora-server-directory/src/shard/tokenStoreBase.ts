@@ -38,7 +38,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	protected abstract save(data: Full<Token>[]): Promise<void>;
 	protected abstract _validateExtra(info: Stripped<Token>): boolean;
 
-	protected async _create(acc: Account, data: Omit<Token, 'created' | 'id'>): Promise<{ info: Stripped<Token>, token: string; }> {
+	protected async _create(acc: Account, data: Omit<Token, 'created' | 'id'>): Promise<{ info: Stripped<Token>; token: string }> {
 		let id = '';
 		do {
 			id = this.generator(this.idLength);
@@ -158,7 +158,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	}
 }
 
-type Full<Token extends IBaseTokenInfo> = Token & { token: string; };
+type Full<Token extends IBaseTokenInfo> = Token & { token: string };
 type Stripped<Token extends IBaseTokenInfo> = Omit<Token, 'token'>;
 
 setInterval(() => {

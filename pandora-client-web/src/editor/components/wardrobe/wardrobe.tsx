@@ -1,6 +1,7 @@
 import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema, DoAppearanceAction } from 'pandora-common';
 import React, { ReactElement, ReactNode, useMemo } from 'react';
 import { GetAssetManager } from '../../../assets/assetManager';
+import { useCharacterSafemode } from '../../../character/character';
 import { Column } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
@@ -55,6 +56,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 
 export function EditorWardrobeUI(): ReactElement {
 	const { assetList } = useWardrobeContext();
+
+	const character = useEditor().character;
+	const safemode = !!useCharacterSafemode(character);
+
 	const { currentFocus, setFocus, containerContentsFilter } = useWardrobeItems();
 
 	const assetManager = GetAssetManager();
@@ -66,6 +71,17 @@ export function EditorWardrobeUI(): ReactElement {
 	return (
 		<Scrollbar color='dark' className='editor-wardrobe slim'>
 			<Column>
+				<div>
+					<label htmlFor='unlocked-toggle'>Character Safemode</label>
+					<input
+						id='unlocked-toggle'
+						type='checkbox'
+						checked={ safemode }
+						onChange={ (e) => {
+							character.appearance.setSafemode(e.target.checked ? { allowLeaveAt: 0 } : null, {});
+						} }
+					/>
+				</div>
 				<InventoryItemView
 					title='Currently worn items'
 					focus={ currentFocus }

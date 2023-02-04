@@ -74,16 +74,14 @@ export class AppearanceConditionEvaluator {
 			}
 			const boneName = transform.bone;
 			const bone = this.getBone(boneName);
-			const rotation = type === 'const-rotate'
-				? transform.value
-				: valueOverrides ? (valueOverrides[boneName] ?? 0) : bone.rotation;
+			const rotation = valueOverrides ? (valueOverrides[boneName] ?? 0) : bone.rotation;
 
 			switch (type) {
 				case 'const-rotate':
 				case 'rotate': {
 					let vecX = resX - bone.definition.x;
 					let vecY = resY - bone.definition.y;
-					const value = transform.value * rotation;
+					const value = type === 'const-rotate' ? transform.value : transform.value * rotation;
 					[vecX, vecY] = RotateVector(vecX, vecY, value);
 					resX = bone.definition.x + vecX;
 					resY = bone.definition.y + vecY;

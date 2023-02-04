@@ -2,6 +2,7 @@ import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema, DoAp
 import React, { ReactElement, ReactNode, useMemo } from 'react';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { Column } from '../../../components/common/container/container';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
@@ -54,14 +55,18 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 
 export function EditorWardrobeUI(): ReactElement {
 	const { assetList } = useWardrobeContext();
-	const { currentFocus, setFocus, preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems();
+	const { currentFocus, setFocus, containerContentsFilter } = useWardrobeItems();
+
+	const assetManager = GetAssetManager();
+	const assetFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
+		.map((a) => a[0])
+	), [assetManager]);
 
 	return (
 		<Scrollbar color='dark' className='editor-wardrobe slim'>
 			<Column>
 				<InventoryItemView
 					title='Currently worn items'
-					filter={ preFilter }
 					focus={ currentFocus }
 					setFocus={ setFocus }
 				/>
@@ -76,14 +81,16 @@ export function EditorWardrobeUI(): ReactElement {
 					)
 				}
 				<hr />
-				<InventoryAssetView
-					title='Create and use a new item'
-					assets={ assetList.filter((asset) => {
-						return preFilter(asset) && containerContentsFilter(asset);
-					}) }
-					attributesFilterOptions={ assetFilterAttributes }
-					container={ currentFocus.container }
-				/>
+				<FieldsetToggle legend='Add Items' className='no-padding' open={ false } persistent='wardrobe-add-items'>
+					<InventoryAssetView
+						title='Create and use a new item'
+						assets={ assetList.filter((asset) => {
+							return containerContentsFilter(asset);
+						}) }
+						attributesFilterOptions={ assetFilterAttributes }
+						container={ currentFocus.container }
+						/>
+				</FieldsetToggle>
 			</Column>
 		</Scrollbar>
 	);

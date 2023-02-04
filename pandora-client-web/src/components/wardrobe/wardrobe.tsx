@@ -236,10 +236,8 @@ export function useWardrobeItems(): {
 	setFocus: React.Dispatch<React.SetStateAction<WardrobeFocus>>;
 	preFilter: (item: Item | Asset) => boolean;
 	containerContentsFilter: (asset: Asset) => boolean;
-	assetFilterAttributes: string[];
 } {
 	const { character } = useWardrobeContext();
-	const assetManager = GetAssetManager();
 
 	const [currentFocus, setFocus] = useState<WardrobeFocus>({ container: [], itemId: null });
 
@@ -255,23 +253,23 @@ export function useWardrobeItems(): {
 		return module?.acceptedContentFilter?.bind(module) ?? (() => true);
 	}, [containerPath, containerItem]);
 
-	const assetFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
-		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
-		.map((a) => a[0])
-	, [assetManager]);
-
 	return {
 		currentFocus,
 		setFocus,
 		preFilter,
 		containerContentsFilter,
-		assetFilterAttributes,
 	};
 }
 
 function WardrobeItemManipulation({ className }: { className?: string; }): ReactElement {
 	const { assetList } = useWardrobeContext();
-	const { currentFocus, setFocus, preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems();
+	const { currentFocus, setFocus, preFilter, containerContentsFilter } = useWardrobeItems();
+
+	const assetManager = GetAssetManager();
+	const assetFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
+		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
+		.map((a) => a[0])
+	), [assetManager]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>

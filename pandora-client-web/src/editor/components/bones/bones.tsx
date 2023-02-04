@@ -171,7 +171,7 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 }
 
 function ArmPoseToString(arm: ArmPose): string {
-	return `ArmPose.${ArmPose[arm]}`
+	return `ArmPose.${ArmPose[arm]}`;
 }
 
 function ArmsPoseToString([a, b]: [ArmPose, ArmPose]): string {

@@ -27,7 +27,7 @@ import {
 	AppearanceActionResult,
 	IsArmsPoseEqual,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
@@ -349,8 +349,8 @@ function WardrobeBodyManipulation({ className }: { className?: string; }): React
 
 	const bodyFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
-		.map((a) => a[0])
-		, [assetManager]);
+		.map((a) => a[0]),
+	[assetManager]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -522,7 +522,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 	const reason = useMemo(() => check.result === 'success'
 		? ''
 		: RenderAppearanceActionResult(assetManager, check),
-		[assetManager, check]);
+	[assetManager, check]);
 
 	if (check.result === 'success') {
 		return null;
@@ -959,7 +959,7 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 						m.lock.getProperties().blockAddRemove ? closedLock :
 							openLock
 				}
-					width='21' height='33' />
+				width='21' height='33' />
 			</button>
 			<Row alignY='center'>
 				{

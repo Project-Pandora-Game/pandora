@@ -1,10 +1,11 @@
-import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema } from 'pandora-common';
+import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema, DoAppearanceAction } from 'pandora-common';
 import React, { ReactElement, ReactNode, useMemo } from 'react';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { Column } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
+import { GetAssetManagerEditor } from '../../assets/assetManager';
 import { useEditor } from '../../editorContextProvider';
 
 const ROOM_CONTEXT = {
@@ -17,15 +18,15 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const assetList = useObservable(GetAssetManager().assetList);
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
-		player: character.data.id,
+		player: character.id,
 		getCharacter: (id) => {
-			if (id === character.data.id) {
+			if (id === character.id) {
 				return character.appearance.getRestrictionManager(ROOM_CONTEXT);
 			}
 			return null;
 		},
 		getTarget: (target) => {
-			if (target.type === 'character' && target.characterId === character.data.id) {
+			if (target.type === 'character' && target.characterId === character.id) {
 				return character.appearance;
 			}
 			return null;
@@ -37,11 +38,11 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		player: character,
 		target: {
 			type: 'character',
-			characterId: character.data.id,
+			characterId: character.id,
 		},
 		assetList,
 		actions,
-		useShard: false,
+		execute: (action) => DoAppearanceAction(action, actions, GetAssetManagerEditor()),
 	}), [character, assetList, actions]);
 
 	return (

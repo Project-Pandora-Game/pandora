@@ -97,7 +97,7 @@ export interface WardrobeContext {
 	target: RoomTargetSelector;
 	assetList: readonly Asset[];
 	actions: AppearanceActionContext;
-	useShard: boolean;
+	execute: (action: AppearanceAction) => void;
 }
 
 export interface WardrobeFocus {
@@ -114,6 +114,7 @@ export const wardrobeContext = createContext<WardrobeContext | null>(null);
 export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode; }): ReactElement {
 	const assetList = useObservable(GetAssetManager().assetList);
 	const roomContext = useActionRoomContext();
+	const shardConnector = useShardConnector();
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.data.id,
@@ -146,8 +147,8 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 		},
 		assetList,
 		actions,
-		useShard: true,
-	}), [character, assetList, actions, player]);
+		execute: (action) => shardConnector?.sendMessage('appearanceAction', action),
+	}), [character, assetList, actions, player, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -556,7 +557,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 }
 
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
-	const { actions, target, useShard } = useWardrobeContext();
+	const { actions, target, execute } = useWardrobeContext();
 
 	const action: AppearanceAction = {
 		type: 'create',
@@ -566,7 +567,6 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 		container,
 	};
 
-	const shardConnector = useShardConnector();
 	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	const ref = useRef<HTMLDivElement>(null);
 	return (
@@ -576,11 +576,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 			ref={ ref }
 			onClick={ () => {
 				if (check.result === 'success') {
-					if (useShard) {
-						shardConnector?.sendMessage('appearanceAction', action);
-					} else {
-						DoAppearanceAction(action, actions, GetAssetManager());
-					}
+					execute(action);
 				}
 			} }>
 			<ActionWarning check={ check } parent={ ref } />
@@ -742,8 +738,7 @@ function WardrobeActionButton({
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
 }): ReactElement {
-	const { actions, useShard } = useWardrobeContext();
-	const shardConnector = useShardConnector();
+	const { actions, execute } = useWardrobeContext();
 
 	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	const hide = AppearanceActionResultShouldHide(check);
@@ -757,11 +752,7 @@ function WardrobeActionButton({
 			onClick={ (ev) => {
 				ev.stopPropagation();
 				if (check.result === 'success') {
-					if (useShard) {
-						shardConnector?.sendMessage('appearanceAction', action);
-					} else {
-						DoAppearanceAction(action, actions, GetAssetManager());
-					}
+					execute(action);
 				}
 			} }
 		>
@@ -778,8 +769,7 @@ export function WardrobeItemConfigMenu({
 	item: ItemPath;
 	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
-	const { target, player, character, useShard, actions } = useWardrobeContext();
-	const shardConnector = useShardConnector();
+	const { target, player, character, execute } = useWardrobeContext();
 	const canUseHands = useCharacterRestrictionsManager(player, (manager) => manager.canUseHands());
 	const wornItem = useCharacterAppearanceItem(character, item);
 
@@ -865,17 +855,12 @@ export function WardrobeItemConfigMenu({
 											onChange={ (color) => {
 												const newColor = wornItem.color.slice();
 												newColor[colorPartIndex] = color;
-												const action = {
+												execute({
 													type: 'color',
 													target,
 													item,
 													color: newColor,
-												} as const;
-												if (useShard) {
-													shardConnector?.sendMessage('appearanceAction', action);
-												} else {
-													DoAppearanceAction(action, actions, GetAssetManager());
-												}
+												});
 											} }
 										/>
 									</div>
@@ -1010,19 +995,16 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 }
 
 function WardrobeBodySizeEditor(): ReactElement {
-	const { character } = useWardrobeContext();
-	const shardConnector = useShardConnector();
+	const { character, execute } = useWardrobeContext();
 	const bones = useCharacterAppearancePose(character);
 
 	const setBodyDirect = useCallback(({ pose }: { pose: Record<BoneName, number>; }) => {
-		if (shardConnector) {
-			shardConnector.sendMessage('appearanceAction', {
-				type: 'body',
-				target: character.id,
-				pose,
-			});
-		}
-	}, [shardConnector, character]);
+		execute({
+			type: 'body',
+			target: character.id,
+			pose,
+		});
+	}, [execute, character]);
 
 	const setBody = useMemo(() => _.throttle(setBodyDirect, 100), [setBodyDirect]);
 
@@ -1148,21 +1130,19 @@ export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }:
 }
 
 export function WardrobePoseGui({ character }: { character: AppearanceContainer; }): ReactElement {
-	const shardConnector = useShardConnector();
+	const { execute } = useWardrobeContext();
 
 	const bones = useCharacterAppearancePose(character);
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 
 	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => {
-		if (shardConnector) {
-			shardConnector.sendMessage('appearanceAction', {
-				type: 'pose',
-				target: character.id,
-				pose,
-				armsPose: armsPoseSet,
-			});
-		}
+		execute({
+			type: 'pose',
+			target: character.id,
+			pose,
+			armsPose: armsPoseSet,
+		});
 	});
 
 	const { poses, forceArms, forcePose } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), bones, armsPose), [character, bones, armsPose]);
@@ -1179,13 +1159,11 @@ export function WardrobePoseGui({ character }: { character: AppearanceContainer;
 						type='checkbox'
 						checked={ view === CharacterView.BACK }
 						onChange={ (e) => {
-							if (shardConnector) {
-								shardConnector.sendMessage('appearanceAction', {
-									type: 'setView',
-									target: character.id,
-									view: e.target.checked ? CharacterView.BACK : CharacterView.FRONT,
-								});
-							}
+							execute({
+								type: 'setView',
+								target: character.id,
+								view: e.target.checked ? CharacterView.BACK : CharacterView.FRONT,
+							});
 						} }
 					/>
 				</div>
@@ -1200,12 +1178,10 @@ export function WardrobePoseGui({ character }: { character: AppearanceContainer;
 								checked={ armsPose === ArmsPose.FRONT }
 								disabled={ forceArms !== undefined }
 								onChange={ (e) => {
-									if (shardConnector) {
-										setPose({
-											pose: {},
-											armsPose: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK,
-										});
-									}
+									setPose({
+										pose: {},
+										armsPose: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK,
+									});
 								} }
 							/>
 						</div>

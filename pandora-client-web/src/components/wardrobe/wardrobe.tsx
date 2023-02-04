@@ -25,7 +25,6 @@ import {
 	ItemPath,
 	Assert,
 	AppearanceActionResult,
-	CharacterId,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';

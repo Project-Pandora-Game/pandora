@@ -89,7 +89,7 @@ export function EditorWardrobeUI(): ReactElement {
 						}) }
 						attributesFilterOptions={ assetFilterAttributes }
 						container={ currentFocus.container }
-						/>
+					/>
 				</FieldsetToggle>
 			</Column>
 		</Scrollbar>

@@ -13,7 +13,6 @@ import { AppearanceContainer, AppearanceEvents } from '../../../character/charac
 import { GetAssetManagerEditor } from '../../assets/assetManager';
 import { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
-import { Observable } from '../../../observable';
 
 export class AppearanceEditor extends CharacterAppearance {
 	private _enforce = true;

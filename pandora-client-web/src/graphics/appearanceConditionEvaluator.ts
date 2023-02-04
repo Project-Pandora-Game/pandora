@@ -63,17 +63,25 @@ export class AppearanceConditionEvaluator {
 	public evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[], _mirror: boolean, item: Item | null, valueOverrides?: Record<BoneName, number>): [number, number] {
 		let [resX, resY] = [x, y];
 		for (const transform of transforms) {
-			const { type, bone: boneName, condition } = transform;
-			const bone = this.getBone(boneName);
-			const rotation = valueOverrides ? (valueOverrides[boneName] ?? 0) : bone.rotation;
+			const { type, condition } = transform;
 			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c, item))) {
 				continue;
 			}
+			if (type === 'const-shift') {
+				resX += transform.value.x;
+				resY += transform.value.y;
+				continue;
+			}
+			const boneName = transform.bone;
+			const bone = this.getBone(boneName);
+			const rotation = valueOverrides ? (valueOverrides[boneName] ?? 0) : bone.rotation;
+
 			switch (type) {
+				case 'const-rotate':
 				case 'rotate': {
 					let vecX = resX - bone.definition.x;
 					let vecY = resY - bone.definition.y;
-					const value = transform.value * rotation;
+					const value = type === 'const-rotate' ? transform.value : transform.value * rotation;
 					[vecX, vecY] = RotateVector(vecX, vecY, value);
 					resX = bone.definition.x + vecX;
 					resY = bone.definition.y + vecY;

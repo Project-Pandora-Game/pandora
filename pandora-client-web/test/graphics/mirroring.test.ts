@@ -34,6 +34,12 @@ function SetupTransform(bone: string,
 	condition: TransformDefinition['condition'],
 	value: TransformDefinition['value']): TransformDefinition {
 	switch (type) {
+		case 'const-shift':
+			return {
+				type,
+				condition,
+				value: value as Coordinates,
+			};
 		case 'shift':
 			return {
 				bone,
@@ -41,6 +47,7 @@ function SetupTransform(bone: string,
 				condition,
 				value: value as Coordinates,
 			};
+		case 'const-rotate':
 		case 'rotate':
 			return {
 				bone,
@@ -60,10 +67,22 @@ describe('MirrorTransform()', () => {
 		['shift', 'test', { x: 1, y: 1 }, 'test', { x: -1, y: 1 }, undefined],
 		['shift', 'test', { x: -1, y: 1 }, 'test', { x: 1, y: 1 }, undefined],
 
+		['const-shift', 'test_r', { x: 1, y: 1 }, 'test_l', { x: -1, y: 1 }, undefined],
+		['const-shift', 'test_l', { x: 1, y: 1 }, 'test_r', { x: -1, y: 1 }, undefined],
+		['const-shift', 'test_r', { x: -1, y: -1 }, 'test_l', { x: 1, y: -1 }, undefined],
+		['const-shift', 'test_l', { x: -1, y: -1 }, 'test_r', { x: 1, y: -1 }, undefined],
+		['const-shift', 'test', { x: 1, y: 1 }, 'test', { x: -1, y: 1 }, undefined],
+		['const-shift', 'test', { x: -1, y: 1 }, 'test', { x: 1, y: 1 }, undefined],
+
 		['rotate', 'test_r', 100, 'test_l', -100, undefined],
 		['rotate', 'test_l', 100, 'test_r', -100, undefined],
 		['rotate', 'test_r', -100, 'test_l', 100, undefined],
 		['rotate', 'test_l', -100, 'test_r', 100, undefined],
+
+		['const-rotate', 'test_r', 100, 'test_l', -100, undefined],
+		['const-rotate', 'test_l', 100, 'test_r', -100, undefined],
+		['const-rotate', 'test_r', -100, 'test_l', 100, undefined],
+		['const-rotate', 'test_l', -100, 'test_r', 100, undefined],
 	])(
 		'should %p bone: %p, value: %p into bone: %p, value: %p',
 		(type, ibone, ivalue, ebone, evalue, condition) => {

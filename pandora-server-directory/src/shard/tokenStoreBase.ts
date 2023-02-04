@@ -23,7 +23,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Se
 		this.secretLength = secretLength;
 	}
 
-	public async init(): Promise<TokenStoreBase<Token>> {
+	public async init(): Promise<this> {
 		for (const token of await this.load()) {
 			this.#tokens.set(token.id, token);
 		}

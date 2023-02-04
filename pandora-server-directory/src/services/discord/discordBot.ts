@@ -26,7 +26,7 @@ export const DiscordBot = new class DiscordBot implements Service {
 	private _statusChannels?: Partial<Status<GuildChannel>>;
 	private _destroyed = false;
 
-	public async init(): Promise<DiscordBot> {
+	public async init(): Promise<this> {
 		if (!DISCORD_BOT_TOKEN) {
 			logger.warning('Secret is not set, Discord Bot is disabled', DISCORD_BOT_TOKEN);
 			return this;

@@ -33,7 +33,7 @@ export const GitHubVerifier = new class GitHubVerifier implements Service {
 		return this._active;
 	}
 
-	public async init(): Promise<GitHubVerifier> {
+	public async init(): Promise<this> {
 		if (this.active) {
 			return this;
 		}

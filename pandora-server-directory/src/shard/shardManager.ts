@@ -30,8 +30,9 @@ export const ShardManager = new class ShardManager implements Service {
 		return this._stopping;
 	}
 
-	public init(): void {
+	public init(): this {
 		// Nothing to do
+		return this;
 	}
 
 	public async deleteShard(id: string): Promise<void> {

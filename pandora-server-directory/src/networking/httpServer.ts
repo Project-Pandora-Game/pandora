@@ -17,7 +17,7 @@ export const HttpServer = new class HttpServer implements Service {
 	private readonly _activeConnections = new Set<Socket>();
 
 	/** Setup HTTP server and everything related to it */
-	public init(): Promise<HttpServer> {
+	public init(): Promise<this> {
 		const port = Number.parseInt(SERVER_PORT);
 		if (!Number.isInteger(port)) {
 			throw new Error('Invalid SERVER_PORT');

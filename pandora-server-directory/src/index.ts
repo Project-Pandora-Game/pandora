@@ -1,6 +1,6 @@
 import { mkdirSync } from 'fs';
 import { accountManager } from './account/accountManager';
-import { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } from './config';
+import { APP_NAME, APP_VERSION, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } from './config';
 import { CreateDatabase } from './database/databaseProvider';
 import { AddDiscordLogOutput, AddFileOutput } from './logging';
 import { GetLogger, LogLevel, ServiceManager, SetConsoleOutput } from 'pandora-common';
@@ -35,7 +35,7 @@ async function Start(): Promise<void> {
 	SetupSignalHandling(() => manager.destroy());
 	SetupLogging();
 	await manager
-		.log(LogLevel.INFO, `${APP_NAME} starting...`)
+		.log(LogLevel.INFO, `${APP_NAME} v${APP_VERSION} starting...`)
 		.add(GetEmailSender())
 		.add(DiscordBot)
 		.log(LogLevel.VERBOSE, 'Initializing database...')
@@ -45,7 +45,7 @@ async function Start(): Promise<void> {
 		.log(LogLevel.VERBOSE, 'Initializing managers...')
 		.add(accountManager, STOP_PHASES.ACCOUNTS)
 		.add(ConnectionManagerClient)
-		// .add(ShardManager)
+		.add(ShardManager)
 		.log(LogLevel.VERBOSE, 'Initializing APIs...')
 		.add(GitHubVerifier)
 		.log(LogLevel.VERBOSE, 'Starting HTTP server...')

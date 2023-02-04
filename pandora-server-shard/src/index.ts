@@ -1,7 +1,7 @@
 import { mkdirSync } from 'fs';
 import { APP_NAME, APP_VERSION, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION, SERVER_PUBLIC_ADDRESS } from './config';
 import { AddDiscordLogOutput, AddFileOutput } from './logging';
-import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
+import { GetLogger, LogLevel, ServiceManager, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
 import { HttpServer } from './networking/httpServer';
 import { CreateDatabase } from './database/databaseProvider';
@@ -10,6 +10,8 @@ import { LoadAssetDefinitions } from './assets/assetManager';
 // get version from package.json
 
 const logger = GetLogger('init');
+
+const manager = new ServiceManager(logger);
 
 Start().catch((error) => {
 	logger.fatal('Init failed:', error);
@@ -21,16 +23,17 @@ Start().catch((error) => {
 async function Start(): Promise<void> {
 	SetupSignalHandling();
 	SetupLogging();
-	logger.info(`${APP_NAME} v${APP_VERSION} starting...`);
-	logger.verbose('Loading asset definitions...');
-	LoadAssetDefinitions();
-	logger.verbose('Connecting to Directory...');
-	await ConnectToDirectory();
-	logger.verbose('Initializing database...');
-	await CreateDatabase().init();
-	logger.verbose('Starting HTTP server...');
-	await HttpServer.init();
-	logger.alert('Ready!');
+	await manager
+		.log(LogLevel.INFO, `${APP_NAME} v${APP_VERSION} starting...`)
+		.log(LogLevel.VERBOSE, 'Loading asset definitions...')
+		.action(LoadAssetDefinitions)
+		.log(LogLevel.VERBOSE, 'Connecting to Directory...')
+		.action(ConnectToDirectory)
+		.add(CreateDatabase())
+		.log(LogLevel.VERBOSE, 'Starting HTTP server...')
+		.add(HttpServer)
+		.log(LogLevel.ALERT, 'Ready!')
+		.build();
 }
 
 /**

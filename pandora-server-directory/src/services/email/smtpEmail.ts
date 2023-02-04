@@ -22,7 +22,7 @@ export default class SmtpEmail implements IEmailSender {
 		});
 	}
 
-	public async init(): Promise<SmtpEmail> {
+	public async init(): Promise<this> {
 		try {
 			await this._transporter.verify();
 			logger.info('Email transporter is ready');

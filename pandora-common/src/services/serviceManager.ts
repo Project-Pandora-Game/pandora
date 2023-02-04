@@ -29,6 +29,14 @@ export class ServiceManager {
 		return this;
 	}
 
+	public action(onStart: () => Promise<unknown> | unknown): ServiceManager {
+		this._startup.push({
+			destroyPhase: 0,
+			onStart: () => void onStart(),
+		});
+		return this;
+	}
+
 	public log(level: LogLevel, ...messages: unknown[]): ServiceManager {
 		this._startup.push({
 			destroyPhase: 0,
@@ -42,10 +50,9 @@ export class ServiceManager {
 			while (destroyPhase >= this._services.length)
 				this._services.push([]);
 
-			if (service) {
-				await service.init();
-				this._services[destroyPhase].push(service);
-			}
+			if (service)
+				this._services[destroyPhase].push(await service.init());
+
 			if (onStart)
 				await onStart();
 		}
@@ -55,7 +62,7 @@ export class ServiceManager {
 
 	public async destroy(): Promise<void> {
 		for (const phase of this._services) {
-			for (const service of phase) {
+			for (const service of phase.reverse()) {
 				if (service.onDestroy)
 					await service.onDestroy();
 			}

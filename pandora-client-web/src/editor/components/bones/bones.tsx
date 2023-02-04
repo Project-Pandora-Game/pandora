@@ -1,4 +1,4 @@
-import { ArmPose, CharacterView, IsArmsPoseEqual } from 'pandora-common';
+import { ArmPose, CharacterView } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
@@ -7,7 +7,7 @@ import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { BoneRowElement, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
+import { BoneRowElement, WardrobeArmPoses, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorCharacter } from '../../graphics/character/appearanceEditor';
@@ -40,17 +40,9 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<div>
-				<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
-				<input
-					id='arms-front-toggle'
-					type='checkbox'
-					checked={ IsArmsPoseEqual(armsPose, ArmPose.FRONT) }
-					onChange={ (e) => {
-						character.appearance.setArmsPose(e.target.checked ? ArmPose.FRONT : ArmPose.BACK);
-					} }
-				/>
-			</div>
+			<WardrobeArmPoses armsPose={ armsPose } setPose={ (pose) => {
+				character.appearance.setArmsPose(pose.armsPose);
+			} } />
 			<div>
 				<label htmlFor='back-view-toggle'>Show back view</label>
 				<input

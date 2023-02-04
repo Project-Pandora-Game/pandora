@@ -6,7 +6,11 @@ export type Service = {
 };
 
 type StartupEntry = {
-	service?: Service;
+	service?: never;
+	destroyPhase?: never;
+	onStart: () => Promise<void> | void;
+} | {
+	service: Service;
 	destroyPhase: number;
 	onStart?: () => Promise<void> | void;
 };
@@ -20,18 +24,28 @@ export class ServiceManager {
 		this._logger = logger;
 	}
 
-	public add<T extends Service>(service: T, destroyPhase = 0, onStart?: (service: T) => Promise<void> | void): ServiceManager {
+	public add<T extends Service>(service: T): ServiceManager;
+	public add<T extends Service>(service: T, destroyPhase: number): ServiceManager;
+	public add<T extends Service>(service: T, onStartWitService: (service: T) => Promise<void> | void): ServiceManager;
+	public add<T extends Service>(service: T, destroyPhase: number, onStartWitService: (service: T) => Promise<void> | void): ServiceManager;
+	public add<T extends Service>(service: T, second: number | ((service: T) => Promise<void> | void) = 0, onStartWitService?: (service: T) => Promise<void> | void): ServiceManager {
+		let destroyPhase = 0;
+		if (typeof second === 'number') {
+			destroyPhase = second;
+		} else if (typeof second === 'function') {
+			onStartWitService = second;
+		}
+		const onStart = onStartWitService?.bind(undefined, service);
 		this._startup.push({
 			service,
 			destroyPhase,
-			onStart: onStart ? () => onStart(service) : undefined,
+			onStart,
 		});
 		return this;
 	}
 
 	public action(onStart: () => Promise<unknown> | unknown): ServiceManager {
 		this._startup.push({
-			destroyPhase: 0,
 			onStart: () => void onStart(),
 		});
 		return this;
@@ -39,7 +53,6 @@ export class ServiceManager {
 
 	public log(level: LogLevel, ...messages: unknown[]): ServiceManager {
 		this._startup.push({
-			destroyPhase: 0,
 			onStart: () => this._logger.logMessage(level, messages),
 		});
 		return this;
@@ -47,12 +60,12 @@ export class ServiceManager {
 
 	public async build(): Promise<ServiceManager> {
 		for (const { service, destroyPhase, onStart } of this._startup) {
-			while (destroyPhase >= this._services.length)
-				this._services.push([]);
+			if (service) {
+				while (destroyPhase >= this._services.length)
+					this._services.push([]);
 
-			if (service)
 				this._services[destroyPhase].push(await service.init());
-
+			}
 			if (onStart)
 				await onStart();
 		}

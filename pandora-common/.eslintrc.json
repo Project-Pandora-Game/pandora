@@ -157,6 +157,7 @@
 				]
 			}
 		],
+		"no-tabs": ["warn", { "allowIndentationTabs": true }],
 		"comma-dangle": "off",
 		"@typescript-eslint/comma-dangle": ["warn", "always-multiline"],
 		"no-trailing-spaces": "warn",

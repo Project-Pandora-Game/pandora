@@ -90,7 +90,7 @@ export function AssetsUI(): ReactElement {
 						editor character, too.<br />
 						Please be aware that your asset is not saved in the editor, as the editor resets when it reloads or refreshes. Please<br />
 						make sure to export the asset you are making regularly and overwrite the "graphics.json" of the new asset with<br />
-						the	one from the exported package, <s>unless you started the editor in the "Load Assets From File System" mode</s> [autosaving not yet implemented].
+						the one from the exported package, <s>unless you started the editor in the "Load Assets From File System" mode</s> [autosaving not yet implemented].
 					</p>
 				</ContextHelpButton>
 			</h3>

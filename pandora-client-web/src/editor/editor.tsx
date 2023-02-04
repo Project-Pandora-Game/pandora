@@ -245,13 +245,13 @@ export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: 
 }
 
 const TABS = [
+	['Wardrobe', 'editor-ui', EditorWardrobeUI],
 	['Poses', 'editor-ui', BoneUI],
 	['Items', 'editor-ui', AssetsUI],
 	['Asset', 'editor-ui', AssetUI],
 	['Layer', 'editor-ui', LayerUI],
 	['Points', 'editor-ui', PointsUI],
 	['Asset Info', 'editor-ui', AssetInfoUI],
-	['Wardrobe', 'editor-ui', EditorWardrobeUI],
 	['Setup', 'editor-scene', EditorSetupScene],
 	['Preview', 'editor-scene', EditorResultScene],
 ] as const;

@@ -8,7 +8,13 @@ export interface IGraphicsLoader {
 	getTexture(path: string): Promise<Texture>;
 	loadTextFile(path: string): Promise<string>;
 	loadFileArrayBuffer(path: string, type?: string): Promise<ArrayBuffer>;
-	loadAsUrl(path: string): Promise<string>;
+	/**
+	 * Gets source url of the path
+	 *  - for remote files it will return the original url
+	 *  - for local files it will return a base64 data url
+	 * @param path - Path to file
+	 */
+	pathToUrl(path: string): Promise<string>;
 }
 
 export class GraphicsManager {

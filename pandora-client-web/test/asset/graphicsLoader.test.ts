@@ -18,7 +18,7 @@ describe('GraphicsLoaderBase', () => {
 		public loadFileArrayBuffer(_path: string): Promise<ArrayBuffer> {
 			throw new Error('Method not implemented.');
 		}
-		public loadAsUrl(_path: string): Promise<string> {
+		public pathToUrl(_path: string): Promise<string> {
 			throw new Error('Method not implemented.');
 		}
 	};

@@ -80,7 +80,7 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 
 	public abstract loadFileArrayBuffer(path: string): Promise<ArrayBuffer>;
 
-	public abstract loadAsUrl(path: string): Promise<string>;
+	public abstract pathToUrl(path: string): Promise<string>;
 }
 
 export class URLGraphicsLoader extends GraphicsLoaderBase {
@@ -103,7 +103,7 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 		return this.monitorProgress(fetch(this.prefix + path).then((r) => r.arrayBuffer()));
 	}
 
-	public loadAsUrl(path: string): Promise<string> {
+	public pathToUrl(path: string): Promise<string> {
 		return Promise.resolve(this.prefix + path);
 	}
 }

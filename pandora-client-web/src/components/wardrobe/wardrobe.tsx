@@ -497,7 +497,7 @@ function useGraphicsUrl(url: string | undefined): string | undefined {
 			setGraphicsUrl(undefined);
 			return;
 		}
-		graphicsManger.loader.loadAsUrl(url)
+		graphicsManger.loader.pathToUrl(url)
 			.then(setGraphicsUrl)
 			.catch(() => setGraphicsUrl(undefined));
 	}, [url, graphicsManger]);

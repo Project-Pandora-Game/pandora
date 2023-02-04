@@ -33,7 +33,7 @@ import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useChar
 import { useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { useActionRoomContext, useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { useActionRoomContext, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -749,8 +749,7 @@ export function WardrobeItemConfigMenu({
 	item: ItemPath;
 	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
-	const { target, player, character, execute } = useWardrobeContext();
-	const canUseHands = useCharacterRestrictionsManager(player, (manager) => manager.canUseHands());
+	const { target, character, actions, execute } = useWardrobeContext();
 	const wornItem = useCharacterAppearanceItem(character, item);
 
 	const containerPath = SplitContainerPath(item.container);
@@ -831,7 +830,7 @@ export function WardrobeItemConfigMenu({
 											initialValue={ wornItem.color[colorPartIndex] ?? colorPart.default }
 											resetValue={ colorPart.default }
 											throttle={ 100 }
-											disabled={ !canUseHands }
+											disabled={ DoAppearanceAction({ type: 'color', target, item, color: wornItem.color.slice() }, actions, GetAssetManager(), { dryRun: true }).result !== 'success' }
 											onChange={ (color) => {
 												const newColor = wornItem.color.slice();
 												newColor[colorPartIndex] = color;

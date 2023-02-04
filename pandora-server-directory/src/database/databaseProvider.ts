@@ -156,25 +156,26 @@ export interface PandoraDatabase extends Service {
 let database: MongoDatabase | MockDatabase | undefined;
 
 /** Init database connection based on configuration */
-export async function InitDatabase(setDb?: typeof database): Promise<void> {
+export function CreateDatabase(setDb?: typeof database): MongoDatabase | MockDatabase {
 	if (setDb) {
 		database = setDb;
-		return;
+		return database;
 	}
 	switch (DATABASE_TYPE) {
 		case 'mongodb':
-			database = await new MongoDatabase().init();
+			database = new MongoDatabase();
 			break;
 		case 'mongodb-in-memory':
-			database = await new MongoDatabase().init({ inMemory: true });
+			database = new MongoDatabase({ inMemory: true });
 			break;
 		case 'mongodb-local':
-			database = await new MongoDatabase().init({ inMemory: true, dbPath: './localDb' });
+			database = new MongoDatabase({ inMemory: true, dbPath: './localDb' });
 			break;
 		case 'mock':
 		default:
-			database = await new MockDatabase().init();
+			database = new MockDatabase();
 	}
+	return database;
 }
 
 export async function CloseDatabase(): Promise<void> {

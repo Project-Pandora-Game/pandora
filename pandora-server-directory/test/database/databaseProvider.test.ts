@@ -1,4 +1,4 @@
-import { InitDatabase, GetDatabase } from '../../src/database/databaseProvider';
+import { CreateDatabase, GetDatabase } from '../../src/database/databaseProvider';
 import { MockDatabase } from '../../src/database/mockDb';
 
 describe('GetDatabase()', () => {
@@ -7,10 +7,9 @@ describe('GetDatabase()', () => {
 	});
 });
 
-describe('InitDatabase()', () => {
+describe('CreateDatabase()', () => {
 	it('sets given database', async () => {
-		const instance = await new MockDatabase().init();
-		await InitDatabase(instance);
+		const instance = CreateDatabase(await new MockDatabase().init());
 		expect(() => GetDatabase()).not.toThrowError();
 		expect(GetDatabase()).toBe(instance);
 	});

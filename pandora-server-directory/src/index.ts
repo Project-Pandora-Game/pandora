@@ -1,7 +1,7 @@
 import { mkdirSync } from 'fs';
 import { accountManager } from './account/accountManager';
 import { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } from './config';
-import { InitDatabase } from './database/databaseProvider';
+import { CreateDatabase } from './database/databaseProvider';
 import { AddDiscordLogOutput, AddFileOutput } from './logging';
 import { GetLogger, LogLevel, ServiceManager, SetConsoleOutput } from 'pandora-common';
 import { HttpServer } from './networking/httpServer';

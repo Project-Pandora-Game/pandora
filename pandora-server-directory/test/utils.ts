@@ -2,15 +2,15 @@ import { nanoid } from 'nanoid';
 import { Account, CreateAccountData } from '../src/account/account';
 import { accountManager } from '../src/account/accountManager';
 import { Character } from '../src/account/character';
-import { InitDatabase } from '../src/database/databaseProvider';
+import { CreateDatabase } from '../src/database/databaseProvider';
 import { MockDatabase, PrehashPassword } from '../src/database/mockDb';
 
 let mockDb: MockDatabase | undefined;
 
 export async function TestMockDb(): Promise<MockDatabase> {
 	if (!mockDb) {
-		mockDb = await new MockDatabase().init(false);
-		await InitDatabase(mockDb);
+		mockDb = await new MockDatabase({ addTestAccounts: false }).init();
+		CreateDatabase(mockDb);
 	}
 	return mockDb;
 }

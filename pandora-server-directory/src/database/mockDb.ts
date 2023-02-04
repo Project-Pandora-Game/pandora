@@ -18,6 +18,7 @@ export function PrehashPassword(password: string): string {
 const logger = GetLogger('db');
 
 export class MockDatabase implements PandoraDatabase {
+	private readonly addTestAccounts?: false;
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
 	private configDb: DatabaseConfig[] = [];
@@ -28,12 +29,13 @@ export class MockDatabase implements PandoraDatabase {
 		return Array.from(this.accountDb.values());
 	}
 
-	constructor() {
+	constructor({ addTestAccounts }: { addTestAccounts?: false; } = {}) {
 		logger.info('Initialized mock database');
+		this.addTestAccounts = addTestAccounts;
 	}
 
-	public async init(addTestAccounts?: false): Promise<this> {
-		if (addTestAccounts === false)
+	public async init(): Promise<this> {
+		if (this.addTestAccounts === false)
 			return this;
 
 		await this.createAccount(await CreateAccountData(

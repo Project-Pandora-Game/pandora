@@ -10,7 +10,7 @@ export function useSyncUserInput<T extends string | number | boolean>(
 	return useUpdatedUserInput(originalValue, deps);
 }
 
-export function useUpdatedUserInput<T extends string | number | boolean>(
+export function useUpdatedUserInput<T extends string | number | boolean | undefined | null>(
 	originalValue: T,
 	deps: DependencyList = [],
 ): [T, (newValue: T) => void] {
@@ -20,7 +20,7 @@ export function useUpdatedUserInput<T extends string | number | boolean>(
 
 	useEffect(() => {
 		shouldUpdate.current = true;
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, deps);
 
 	useEffect(() => {

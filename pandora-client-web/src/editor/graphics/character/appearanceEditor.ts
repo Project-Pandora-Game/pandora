@@ -117,7 +117,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 			priority: 'OVERLAY',
 			points: [],
 			mirror: LayerMirror.NONE,
-			colorizationIndex: undefined,
+			colorizationKey: undefined,
 			image: {
 				image: '',
 				overrides: [],

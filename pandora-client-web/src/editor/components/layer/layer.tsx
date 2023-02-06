@@ -147,13 +147,13 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 }
 
 function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
-	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).colorizationIndex ?? -1);
+	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).colorizationKey);
 
 	const colorLayerName = useMemo(() => {
-		if (value < 0)
+		if (value == null)
 			return '[ Not colorable ]';
 		const colorization = asset.asset.definition.colorization;
-		if (!colorization || value >= colorization.length)
+		if (!colorization || !Object.keys(colorization).includes(value))
 			return '[ Invalid index ]';
 		const name = colorization[value].name;
 		if (name == null)
@@ -162,9 +162,9 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 	}, [value, asset]);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = Math.max(-1, Math.round(e.target.valueAsNumber));
-		setValue(newValue);
-		layer.setColorizationIndex(newValue < 0 ? null : newValue);
+		setValue(e.target.value);
+		const trimmed = e.target.value.trim();
+		layer.setColorizationKey(trimmed ? trimmed : null);
 	});
 
 	return (

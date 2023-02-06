@@ -25,6 +25,7 @@ import {
 	ItemPath,
 	Assert,
 	AppearanceActionResult,
+	Writeable,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -820,20 +821,20 @@ export function WardrobeItemConfigMenu({
 					</WardrobeActionButton>
 				</Row>
 				{
-					(wornItem.asset.definition.colorization && wornItem.asset.definition.colorization.length > 0) && (
+					(wornItem.asset.definition.colorization && Object.keys(wornItem.asset.definition.colorization).length > 0) && (
 						<FieldsetToggle legend='Coloring'>
 							{
-								wornItem.asset.definition.colorization?.map((colorPart, colorPartIndex) => (
-									<div className='wardrobeColorRow' key={ colorPartIndex }>
+								Object.entries(wornItem.asset.definition.colorization).map(([colorPartKey, colorPart]) => (
+									<div className='wardrobeColorRow' key={ colorPartKey }>
 										<span className='flex-1'>{ colorPart.name }</span>
 										<ColorInput
-											initialValue={ wornItem.color[colorPartIndex] ?? colorPart.default }
+											initialValue={ wornItem.color[colorPartKey] ?? colorPart.default }
 											resetValue={ colorPart.default }
 											throttle={ 100 }
-											disabled={ DoAppearanceAction({ type: 'color', target, item, color: wornItem.color.slice() }, actions, GetAssetManager(), { dryRun: true }).result !== 'success' }
+											disabled={ DoAppearanceAction({ type: 'color', target, item, color: wornItem.color }, actions, GetAssetManager(), { dryRun: true }).result !== 'success' }
 											onChange={ (color) => {
-												const newColor = wornItem.color.slice();
-												newColor[colorPartIndex] = color;
+												const newColor = _.cloneDeep<Writeable<typeof wornItem.color>>(wornItem.color);
+												newColor[colorPartKey] = color;
 												execute({
 													type: 'color',
 													target,

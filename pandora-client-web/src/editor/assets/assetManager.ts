@@ -27,12 +27,12 @@ export class AssetManagerEditor extends AssetManagerClient {
 			name,
 			size: bodypart ? 'bodypart' : 'medium',
 			bodypart: bodypart ? bodypart : undefined,
-			colorization: [
-				{
+			colorization: {
+				base: {
 					name: 'Color group',
 					default: '#FFFFFF',
 				},
-			],
+			},
 			hasGraphics: false,
 		};
 

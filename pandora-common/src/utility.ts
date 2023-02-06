@@ -24,6 +24,8 @@ export type KeysMatching<T, V> = { [K in keyof T]: T[K] extends V ? K : never }[
 
 export type Awaitable<T> = T | PromiseLike<T>;
 
+export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
+
 declare const window: unknown;
 declare const document: Record<string, unknown>;
 declare const process: Record<string, Record<string, unknown>>;

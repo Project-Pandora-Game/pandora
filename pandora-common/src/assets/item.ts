@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
 import { HexColorString, HexColorStringSchema } from '../validation';
@@ -10,25 +11,28 @@ import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule, IModuleItemDataCommonSchema } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 
+export const ItemColorBundleSchema = z.record(z.string(), HexColorStringSchema);
+export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
+
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
-	color: z.array(HexColorStringSchema).optional(),
+	color: ItemColorBundleSchema.optional(),
 	moduleData: z.record(IModuleItemDataCommonSchema).optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
-function FixupColorFromAsset(color: readonly HexColorString[], asset: Asset): readonly HexColorString[] {
-	const colorization = asset.definition.colorization ?? [];
-	// Trim if longer than wanted
-	if (color.length > colorization.length) {
-		color = color.slice(0, colorization.length);
+function FixupColorFromAsset(asset: Asset, color: ItemColorBundle = {}): ItemColorBundle {
+	const colorization = asset.definition.colorization ?? {};
+	const result: Record<string, HexColorString> = {};
+	for (const [key, value] of Object.entries(colorization)) {
+		if (color[key] !== undefined) {
+			result[key] = color[key];
+		} else {
+			result[key] = value.default;
+		}
 	}
-	// Add if missing
-	if (color.length < colorization.length) {
-		color = color.concat(colorization.map((c) => c.default).slice(color.length));
-	}
-	return color;
+	return result;
 }
 
 export type IItemLoadContext = {
@@ -46,7 +50,7 @@ export class Item {
 	public readonly assetMananger: AssetManager;
 	public readonly id: ItemId;
 	public readonly asset: Asset;
-	public readonly color: readonly HexColorString[];
+	public readonly color: ItemColorBundle;
 	public readonly modules: ReadonlyMap<string, IItemModule>;
 
 	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
@@ -57,7 +61,7 @@ export class Item {
 			throw new Error(`Attempt to import different asset bundle into item (${this.asset.id} vs ${bundle.asset})`);
 		}
 		// Load color from bundle
-		this.color = FixupColorFromAsset(bundle.color ?? [], asset);
+		this.color = FixupColorFromAsset(asset, bundle.color);
 		// Load modules
 		const modules = new Map<string, IItemModule>();
 		for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
@@ -78,7 +82,7 @@ export class Item {
 		return {
 			id: this.id,
 			asset: this.asset.id,
-			color: this.color.length > 0 ? this.color.slice() : undefined,
+			color: Object.keys(this.color).length > 0 ? _.cloneDeep(this.color) : undefined,
 			moduleData,
 		};
 	}
@@ -104,9 +108,9 @@ export class Item {
 	}
 
 	/** Colors this item with passed color, returning new item with modified color */
-	public changeColor(color: readonly HexColorString[]): Item {
+	public changeColor(color: ItemColorBundle): Item {
 		const bundle = this.exportToBundle();
-		bundle.color = color.slice();
+		bundle.color = _.cloneDeep(color);
 		return new Item(this.id, this.asset, bundle, {
 			assetMananger: this.assetMananger,
 			doLoadTimeCleanup: false,

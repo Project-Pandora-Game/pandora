@@ -8,7 +8,7 @@ import { AssetIdSchema } from './definitions';
 import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
-import { Item } from './item';
+import { Item, ItemColorBundle, ItemColorBundleSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { sample } from 'lodash';
@@ -72,7 +72,7 @@ export const AppearanceActionColor = z.object({
 	/** Path to the item to color */
 	item: ItemPathSchema,
 	/** The new color to set */
-	color: z.array(HexColorStringSchema),
+	color: ItemColorBundleSchema,
 });
 
 export const AppearanceActionModuleAction = z.object({
@@ -403,7 +403,7 @@ export function ActionMoveItem(rootManipulator: AppearanceRootManipulator, itemP
 	return true;
 }
 
-export function ActionColorItem(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, color: readonly HexColorString[]): boolean {
+export function ActionColorItem(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, color: ItemColorBundle): boolean {
 	const { container, itemId } = itemPath;
 	const manipulator = rootManipulator.getContainer(container);
 

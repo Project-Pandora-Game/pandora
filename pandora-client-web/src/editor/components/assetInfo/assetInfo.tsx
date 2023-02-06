@@ -59,10 +59,11 @@ function Colorization({ colorization }: { colorization: AssetDefinition['coloriz
 
 	return (
 		<FieldsetToggle legend='Colorization'>
-			{ colorization.map((color, index) => (
-				<div key={ index }>
-					<input id={ `color-${index}-name` } type='text' value={ color.name ?? '' } readOnly />
-					<input id={ `color-${index}-color` } type='color' value={ color.default } readOnly />
+			{ Object.entries(colorization).map(([key, color]) => (
+				<div key={ key }>
+					<label htmlFor={ `color-${key}-name` }>{ key }: </label>
+					<input id={ `color-${key}-name` } type='text' value={ color.name ?? '' } readOnly />
+					<input id={ `color-${key}-color` } type='color' value={ color.default } readOnly />
 				</div>
 			)) }
 		</FieldsetToggle>

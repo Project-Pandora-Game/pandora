@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
 import { AssertNever, ShuffleArray } from '../utility';
-import { HexColorString, HexColorStringSchema } from '../validation';
 import { ArmsPose, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';

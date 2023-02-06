@@ -6,7 +6,7 @@ import type { ActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
-import { AppearanceItems, AppearanceItemsGetPoseLimits, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
+import { AppearanceItems, AppearanceItemsGetPoseLimits, AppearanceLoadAndValidate, AppearanceValidationResult, BoneLimitsFindClosestValidValue, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState, BoneType } from './graphics';
@@ -163,7 +163,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			if (limits == null)
 				continue;
 
-			const rotation = _.clamp(state.rotation, limits[0], limits[1]);
+			const rotation = BoneLimitsFindClosestValidValue(limits, state.rotation);
 			if (rotation === state.rotation)
 				continue;
 

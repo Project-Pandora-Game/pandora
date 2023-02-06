@@ -25,6 +25,10 @@ import {
 	ItemPath,
 	Assert,
 	AppearanceActionResult,
+	ForcePoseMap,
+	BoneLimitsIsValidValue,
+	BoneLimitsFindClosestValidValue,
+	BoneLimits,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -1023,7 +1027,7 @@ type CheckedAssetsPosePresets = {
 
 function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: ArmsPose): {
 	poses: CheckedAssetsPosePresets;
-	forcePose?: Map<string, [number, number]>;
+	forcePose?: ForcePoseMap;
 	forceArms?: ArmsPose;
 } {
 	const presets = GetAssetManager().getPosePresets();
@@ -1045,7 +1049,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 			if (!limit)
 				continue;
 
-			if (value < limit[0] || value > limit[1])
+			if (!BoneLimitsIsValidValue(limit, value))
 				return false;
 		}
 
@@ -1201,19 +1205,22 @@ export function GetVisibleBoneName(name: string): string {
 		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
 }
 
-export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; unlocked?: boolean; }): ReactElement {
+export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: BoneState; onChange: (value: number) => void; forcePose?: ForcePoseMap; unlocked?: boolean; }): ReactElement {
+	const limits: BoneLimits = useMemo(() => forcePose?.get(bone.definition.name) ?? [[BONE_MIN, BONE_MAX]], [bone, forcePose]);
 	const [min, max] = useMemo(() => {
-		if (unlocked || !forcePose) {
+		if (unlocked || limits.length === 0) {
 			return [BONE_MIN, BONE_MAX];
 		}
-		return forcePose.get(bone.definition.name) ?? [BONE_MIN, BONE_MAX];
-	}, [bone, forcePose, unlocked]);
+		const limitMin = limits[0][0];
+		const limitMax = limits[limits.length - 1][1] ?? limits[limits.length - 1][0];
+		return [limitMin, limitMax];
+	}, [limits, unlocked]);
 
 	const name = useMemo(() => GetVisibleBoneName(bone.definition.name), [bone]);
 
 	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
-		const value = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(value) && value >= min && value <= max && value !== bone.rotation) {
+		const value = BoneLimitsFindClosestValidValue(limits, Math.round(parseFloat(event.target.value)));
+		if (Number.isInteger(value) && value !== bone.rotation) {
 			onChange(value);
 		}
 	});
@@ -1223,7 +1230,7 @@ export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: 
 			<div className='bone-rotation'>
 				<input type='range' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInput } />
 				<input type='number' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInput } />
-				<Button className='slim' onClick={ () => onChange(0) } disabled={ bone.rotation === 0 || min > 0 || max < 0 }>
+				<Button className='slim' onClick={ () => onChange(0) } disabled={ bone.rotation === 0 || !BoneLimitsIsValidValue(limits, 0) }>
 					↺
 				</Button>
 			</div>

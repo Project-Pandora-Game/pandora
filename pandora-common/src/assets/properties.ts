@@ -1,5 +1,5 @@
 import { MergePoseLimits, PoseLimitsResult } from './appearanceValidation';
-import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions';
+import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits, BoneLimits } from './definitions';
 import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from './effects';
 
 export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
@@ -83,7 +83,7 @@ export interface AssetPropertiesResult {
 export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 	return {
 		poseLimits: {
-			forcePose: new Map<string, [number, number]>(),
+			forcePose: new Map<string, BoneLimits>(),
 		},
 		effects: EFFECTS_DEFAULT,
 		attributes: new Set(),

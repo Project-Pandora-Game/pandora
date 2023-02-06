@@ -32,17 +32,17 @@ export interface AssetDefinitionExtraArgs {
 
 export type BoneFixed = readonly [number];
 export type BoneRange = readonly [number, number];
-export type BoneLimit = BoneFixed | BoneRange;
-export type BoneLimits = readonly BoneLimit[];
+export type BoneLimits = readonly BoneRange[];
 export type ForcePoseMap = Map<BoneName, BoneLimits>;
 
 export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	/**
-	 * Forces the bones within specific range; has two options at representation:
-	 * - `[number, number]` - Minimum and maximum for this bone
+	 * Forces the bones within specific range; has three options at representation:
 	 * - `number` - Must be exactly this; shorthand for min=max
+	 * - `BoneRange` - Minimum and maximum for this bone
+	 * - `(BoneFixed | BoneRange)[]` - Multiple ranges for this bone
 	 */
-	forcePose?: Partial<Record<A['bones'], BoneLimits | readonly [number, number] | number>>;
+	forcePose?: Partial<Record<A['bones'], readonly (BoneFixed | BoneRange)[] | readonly [number, number] | number>>;
 	forceArms?: ArmsPose;
 }
 

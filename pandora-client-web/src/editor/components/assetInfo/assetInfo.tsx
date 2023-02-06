@@ -1,4 +1,4 @@
-import { AssetDefinition, AssetModuleDefinition, BoneLimitsFromOld } from 'pandora-common';
+import { AssetDefinition, AssetModuleDefinition, BoneLimitsFromDefinition } from 'pandora-common';
 import { EffectsDefinition, EFFECTS_DEFAULT } from 'pandora-common/dist/assets/effects';
 import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
@@ -86,8 +86,8 @@ function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['pose
 					<div key={ key }>
 						<label htmlFor={ `${id}force-pose-${key}` }>{ GetVisibleBoneName(key) }: </label>
 						<input id={ `${id}force-pose-${key}` } type='text' value={
-							value === undefined ? '' : BoneLimitsFromOld(value)
-								.map((v) => v.length === 1 ? v[0].toString() : `${v[0]} - ${v[1]}`).join(', ')
+							value === undefined ? '' : BoneLimitsFromDefinition(value)
+								.map(([min, max]) => `${min} - ${max}`).join(', ')
 						} readOnly />
 					</div>
 				)) }

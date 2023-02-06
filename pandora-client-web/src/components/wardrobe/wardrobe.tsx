@@ -1212,7 +1212,7 @@ export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: 
 			return [BONE_MIN, BONE_MAX];
 		}
 		const limitMin = limits[0][0];
-		const limitMax = limits[limits.length - 1][1] ?? limits[limits.length - 1][0];
+		const limitMax = limits[limits.length - 1][1];
 		return [limitMin, limitMax];
 	}, [limits, unlocked]);
 

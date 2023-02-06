@@ -1,9 +1,9 @@
 import { Logger } from '../logging';
-import { ShuffleArray } from '../utility';
+import { IntervalSetIntersection, ShuffleArray } from '../utility';
 import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
 import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
-import type { AssetDefinitionPoseLimits, AssetId, BoneLimit, BoneLimits, ForcePoseMap } from './definitions';
+import type { AssetDefinitionPoseLimits, AssetId, BoneFixed, BoneLimits, BoneRange, ForcePoseMap } from './definitions';
 import type { Item } from './item';
 import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
@@ -76,16 +76,11 @@ export type PoseLimitsResult = {
 	forceArms?: ArmsPose;
 } | null;
 
-function BoneLimitExpand(limit: BoneLimit): readonly [number, number] {
-	return limit.length === 1 ? [limit[0], limit[0]] : limit;
-}
-
 export function BoneLimitsFindClosestValidValue(limits: BoneLimits, value: number) {
 	let minDiff = 2 * BONE_MAX;
 	let minDiffValue = value;
 
-	for (const limit of limits) {
-		const [min, max] = BoneLimitExpand(limit);
+	for (const [min, max] of limits) {
 		if (value >= min && value <= max)
 			return value;
 
@@ -105,49 +100,16 @@ export function BoneLimitsFindClosestValidValue(limits: BoneLimits, value: numbe
 }
 
 export function BoneLimitsIsValidValue(limits: BoneLimits, value: number) {
-	return limits.some((limit) => {
-		const [min, max] = BoneLimitExpand(limit);
-		return value >= min && value <= max;
-	});
+	return limits.some(([min, max]) => value >= min && value <= max);
 }
 
-export function MergeBoneLimits(base: BoneLimits, next: BoneLimits): BoneLimits {
-	if (base.length === 0)
-		return next;
-	if (next.length === 0)
-		return base;
-
-	const result: BoneLimit[] = [];
-	const expandedNext = next.map(BoneLimitExpand);
-
-	for (const [baseMin, baseMax] of base.map(BoneLimitExpand)) {
-		for (const [nextMin, nextMax] of expandedNext) {
-			const min = Math.max(baseMin, nextMin);
-			const max = Math.min(baseMax, nextMax);
-
-			if (min > max)
-				continue;
-
-			if (result.length > 0 && result[result.length - 1][0] === min && result[result.length - 1][1] === max)
-				continue;
-
-			if (min === max) {
-				result.push([min]);
-			} else {
-				result.push([min, max]);
-			}
-		}
-	}
-
-	return result;
-}
-
-export function BoneLimitsFromOld(old: BoneLimits | readonly [number, number] | number): BoneLimits {
+export function BoneLimitsFromDefinition(old: readonly (BoneFixed | BoneRange)[] | readonly [number, number] | number): BoneLimits {
 	if (typeof old === 'number')
-		return [[old]];
+		return [[old, old]];
 
 	if (old.length !== 2 || typeof old[0] !== 'number' || typeof old[1] !== 'number')
-		return old as BoneLimits;
+		return (old as readonly (BoneFixed | BoneRange)[])
+			.map<BoneRange>((limit) => (limit.length === 1 ? [limit[0], limit[0]] : limit));
 
 	return [[old[0], old[1]]];
 }
@@ -173,7 +135,7 @@ export function MergePoseLimits(base: PoseLimitsResult, poseLimits: AssetDefinit
 				continue;
 
 			const current: BoneLimits = base.forcePose.get(bone) ?? [[BONE_MIN, BONE_MAX]];
-			const next = MergeBoneLimits(current, BoneLimitsFromOld(limit));
+			const next = IntervalSetIntersection(current, BoneLimitsFromDefinition(limit));
 
 			// Invalid combination of forced bones
 			if (next.length === 0)

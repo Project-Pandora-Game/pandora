@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
+import type { Writeable } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
 import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
@@ -17,14 +18,24 @@ export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
-	color: ItemColorBundleSchema.optional(),
-	moduleData: z.record(IModuleItemDataCommonSchema).optional(),
+	color: ItemColorBundleSchema.or(z.array(HexColorStringSchema)).optional(),
+	moduleData: z.record(IModuleItemDataCommonSchema).optional()
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
-function FixupColorFromAsset(asset: Asset, color: ItemColorBundle = {}): ItemColorBundle {
+function FixupColorFromAsset(asset: Asset, color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {
 	const colorization = asset.definition.colorization ?? {};
-	const result: Record<string, HexColorString> = {};
+	if (Array.isArray(color)) {
+		const keys = Object.keys(colorization);
+		const init: Writeable<ItemColorBundle> = {};
+		color = color.reduce((acc, value, index) => {
+			if (keys.length < index)
+				acc[keys[index]] = value;
+
+			return acc;
+		}, init);
+	}
+	const result: Writeable<ItemColorBundle> = {};
 	for (const [key, value] of Object.entries(colorization)) {
 		if (color[key] !== undefined) {
 			result[key] = color[key];

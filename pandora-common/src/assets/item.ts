@@ -19,7 +19,7 @@ export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
 	color: ItemColorBundleSchema.or(z.array(HexColorStringSchema)).optional(),
-	moduleData: z.record(IModuleItemDataCommonSchema).optional()
+	moduleData: z.record(IModuleItemDataCommonSchema).optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 

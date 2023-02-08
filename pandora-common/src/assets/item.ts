@@ -93,9 +93,27 @@ export class Item {
 		return {
 			id: this.id,
 			asset: this.asset.id,
-			color: Object.keys(this.color).length > 0 ? _.cloneDeep(this.color) : undefined,
+			color: this.exportColorToBundle(),
 			moduleData,
 		};
+	}
+
+	private exportColorToBundle(): ItemColorBundle | undefined {
+		const colorization = this.asset.definition.colorization;
+		if (!colorization)
+			return undefined;
+
+		let hasKey = false;
+		const result: Writeable<ItemColorBundle> = {};
+		for (const [key, value] of Object.entries(this.color)) {
+			const def = colorization[key];
+			if (!def || def.name == null)
+				continue;
+
+			result[key] = value;
+			hasKey = true;
+		}
+		return hasKey ? result : undefined;
 	}
 
 	public validate(isWorn: boolean): AppearanceValidationResult {

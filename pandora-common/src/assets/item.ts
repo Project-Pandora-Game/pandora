@@ -37,7 +37,7 @@ function FixupColorFromAsset(asset: Asset, color: ItemColorBundle | HexColorStri
 	}
 	const result: Writeable<ItemColorBundle> = {};
 	for (const [key, value] of Object.entries(colorization)) {
-		if (color[key] !== undefined) {
+		if (color[key] != null && value.name != null) {
 			result[key] = color[key];
 		} else {
 			result[key] = value.default;

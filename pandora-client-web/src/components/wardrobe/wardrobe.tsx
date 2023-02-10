@@ -32,6 +32,7 @@ import {
 	CharacterArmsPose,
 	AppearanceArmPose,
 	ArmRotationSchema,
+	AssetColorization,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -1033,8 +1034,7 @@ export function WardrobeItemConfigMenu({
 	item: ItemPath;
 	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
-	const assetManager = useAssetManager();
-	const { target, character, actions, execute } = useWardrobeContext();
+	const { target, character } = useWardrobeContext();
 	const wornItem = useCharacterAppearanceItem(character, item);
 
 	const containerPath = SplitContainerPath(item.container);
@@ -1126,25 +1126,7 @@ export function WardrobeItemConfigMenu({
 						<FieldsetToggle legend='Coloring'>
 							{
 								Object.entries(wornItem.asset.definition.colorization).map(([colorPartKey, colorPart]) => (
-									<div className='wardrobeColorRow' key={ colorPartKey }>
-										<span className='flex-1'>{ colorPart.name }</span>
-										<ColorInput
-											initialValue={ wornItem.color[colorPartKey] ?? colorPart.default }
-											resetValue={ colorPart.default }
-											throttle={ 100 }
-											disabled={ DoAppearanceAction({ type: 'color', target, item, color: wornItem.color }, actions, assetManager, { dryRun: true }).result !== 'success' }
-											onChange={ (color) => {
-												const newColor = _.cloneDeep<Writeable<typeof wornItem.color>>(wornItem.color);
-												newColor[colorPartKey] = color;
-												execute({
-													type: 'color',
-													target,
-													item,
-													color: newColor,
-												});
-											} }
-										/>
-									</div>
+									<WardrobeColorInput key={ colorPartKey } colorKey={ colorPartKey } colorDefinition={ colorPart } item={ wornItem } action={ { type: 'color', target, item } } />
 								))
 							}
 						</FieldsetToggle>
@@ -1159,6 +1141,36 @@ export function WardrobeItemConfigMenu({
 						))
 				}
 			</Column>
+		</div>
+	);
+}
+
+function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { colorKey: string; colorDefinition: AssetColorization; action: Omit<AppearanceAction & { type: 'color'; }, 'color'>; item: Item; }): ReactElement | null {
+	const assetManager = useAssetManager();
+	const { execute, actions } = useWardrobeContext();
+	const currentColor = item.resolveColor(colorKey) ?? colorDefinition.default;
+	const currentBundle = item.exportColorToBundle();
+
+	if (!colorDefinition.name || !currentBundle)
+		return null;
+
+	return (
+		<div className='wardrobeColorRow' key={ colorKey }>
+			<span className='flex-1'>{ colorDefinition.name }</span>
+			<ColorInput
+				initialValue={ currentColor }
+				resetValue={ colorDefinition.default }
+				throttle={ 100 }
+				disabled={ DoAppearanceAction({ ...action, color: currentBundle }, actions, assetManager, { dryRun: true }).result !== 'success' }
+				onChange={ (color) => {
+					const newColor = _.cloneDeep<Writeable<typeof currentBundle>>(currentBundle);
+					newColor[colorKey] = color;
+					execute({
+						...action,
+						color: newColor,
+					});
+				} }
+			/>
 		</div>
 	);
 }

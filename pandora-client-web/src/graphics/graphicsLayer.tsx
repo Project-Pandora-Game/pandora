@@ -202,15 +202,10 @@ export function GraphicsLayer({
 
 	const texture = useTexture(image, undefined, getTexture);
 
-	const color: number = state?.color ??
-		(
-			(
-				item != null &&
-				colorizationKey != null &&
-				item.color[colorizationKey]
-			) ? Number.parseInt(item.color[colorizationKey].slice(1), 16) : undefined
-		) ??
-		0xffffff;
+	const itemColor = item?.resolveColor(colorizationKey);
+	const color: number = state?.color
+		?? (itemColor ? Number.parseInt(itemColor.slice(1), 16) : undefined)
+		?? 0xffffff;
 
 	const alpha = state?.alpha ?? 1;
 

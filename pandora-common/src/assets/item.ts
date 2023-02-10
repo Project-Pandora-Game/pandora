@@ -40,7 +40,7 @@ export class Item {
 	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
 	public readonly asset: Asset;
-	public readonly color: ItemColorBundle;
+	private readonly color: ItemColorBundle;
 	public readonly modules: ReadonlyMap<string, IItemModule>;
 
 	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
@@ -77,7 +77,7 @@ export class Item {
 		};
 	}
 
-	private exportColorToBundle(): ItemColorBundle | undefined {
+	public exportColorToBundle(): ItemColorBundle | undefined {
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return undefined;
@@ -186,6 +186,21 @@ export class Item {
 	public getProperties(): AssetPropertiesIndividualResult {
 		return this.getPropertiesParts()
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
+	}
+
+	public resolveColor(colorizationKey?: string): HexColorString | undefined {
+		if (colorizationKey == null || !this.asset.definition.colorization)
+			return undefined;
+
+		const colorization = this.asset.definition.colorization[colorizationKey];
+		if (!colorization)
+			return undefined;
+
+		const color = this.color[colorizationKey];
+		if (color)
+			return color;
+
+		return colorization.default;
 	}
 
 	private _loadColor(color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {

@@ -5,11 +5,12 @@ import { Logger } from '../logging';
 import type { Writeable } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
 import type { AppearanceActionContext } from './appearanceActions';
+import type { CharacterAppearance } from './appearance';
 import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
-import { AssetIdSchema } from './definitions';
+import { AssetColorization, AssetIdSchema } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
@@ -188,7 +189,7 @@ export class Item {
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
 	}
 
-	public resolveColor(colorizationKey?: string): HexColorString | undefined {
+	public resolveColor(container: CharacterAppearance, colorizationKey?: string): HexColorString | undefined {
 		if (colorizationKey == null || !this.asset.definition.colorization)
 			return undefined;
 
@@ -200,7 +201,33 @@ export class Item {
 		if (color)
 			return color;
 
-		return colorization.default;
+		return this._resolveColorGroup(container, colorization);
+	}
+
+	private _resolveColorGroup(container: CharacterAppearance, { group, default: defaultColor }: AssetColorization): HexColorString {
+		if (!group)
+			return defaultColor;
+
+		let color = defaultColor;
+		for (const item of container.getAllItems()) {
+			if (item.id === this.id)
+				return color;
+
+			const itemColor = item._getColorByGroup(group);
+			if (!itemColor)
+				continue;
+
+			color = itemColor;
+		}
+		return color;
+	}
+
+	private _getColorByGroup(group: string): HexColorString | undefined {
+		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
+			if (value.group === group && this.color[key])
+				return this.color[key];
+		}
+		return undefined;
 	}
 
 	private _loadColor(color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {
@@ -216,11 +243,10 @@ export class Item {
 		}
 		const result: Writeable<ItemColorBundle> = {};
 		for (const [key, value] of Object.entries(colorization)) {
-			if (color[key] != null && value.name != null) {
-				result[key] = color[key];
-			} else {
-				result[key] = value.default;
-			}
+			if (value.name == null)
+				continue;
+
+			result[key] = color[key] ?? value.default;
 		}
 		return result;
 	}

@@ -154,7 +154,7 @@ export function SetupLayerSelected({
 
 	const texture = useTexture(image, undefined, editorGetTexture);
 
-	const itemColor = item?.resolveColor(colorizationKey);
+	const itemColor = item?.resolveColor(appearanceContainer.appearance, colorizationKey);
 	const color: number = state?.color
 		?? (itemColor ? Number.parseInt(itemColor.slice(1), 16) : undefined)
 		?? 0xffffff;

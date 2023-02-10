@@ -202,7 +202,7 @@ export function GraphicsLayer({
 
 	const texture = useTexture(image, undefined, getTexture);
 
-	const itemColor = item?.resolveColor(colorizationKey);
+	const itemColor = item?.resolveColor(appearanceContainer.appearance, colorizationKey);
 	const color: number = state?.color
 		?? (itemColor ? Number.parseInt(itemColor.slice(1), 16) : undefined)
 		?? 0xffffff;

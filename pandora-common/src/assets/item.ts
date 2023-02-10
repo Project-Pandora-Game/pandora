@@ -25,28 +25,6 @@ export const ItemBundleSchema = z.object({
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
-function FixupColorFromAsset(asset: Asset, color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {
-	const colorization = asset.definition.colorization ?? {};
-	if (Array.isArray(color)) {
-		const keys = Object.keys(colorization);
-		const fixup: Writeable<ItemColorBundle> = {};
-		color.forEach((value, index) => {
-			if (index < keys.length)
-				fixup[keys[index]] = value;
-		});
-		color = fixup;
-	}
-	const result: Writeable<ItemColorBundle> = {};
-	for (const [key, value] of Object.entries(colorization)) {
-		if (color[key] != null && value.name != null) {
-			result[key] = color[key];
-		} else {
-			result[key] = value.default;
-		}
-	}
-	return result;
-}
-
 export type IItemLoadContext = {
 	assetManager: AssetManager;
 	doLoadTimeCleanup: boolean;
@@ -72,14 +50,14 @@ export class Item {
 		if (this.asset.id !== bundle.asset) {
 			throw new Error(`Attempt to import different asset bundle into item (${this.asset.id} vs ${bundle.asset})`);
 		}
-		// Load color from bundle
-		this.color = FixupColorFromAsset(asset, bundle.color);
 		// Load modules
 		const modules = new Map<string, IItemModule>();
 		for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
 			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
 		}
 		this.modules = modules;
+		// Load color from bundle
+		this.color = this._loadColor(bundle.color);
 	}
 
 	public exportToBundle(): ItemBundle {
@@ -208,5 +186,27 @@ export class Item {
 	public getProperties(): AssetPropertiesIndividualResult {
 		return this.getPropertiesParts()
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
+	}
+
+	private _loadColor(color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {
+		const colorization = this.asset.definition.colorization ?? {};
+		if (Array.isArray(color)) {
+			const keys = Object.keys(colorization);
+			const fixup: Writeable<ItemColorBundle> = {};
+			color.forEach((value, index) => {
+				if (index < keys.length)
+					fixup[keys[index]] = value;
+			});
+			color = fixup;
+		}
+		const result: Writeable<ItemColorBundle> = {};
+		for (const [key, value] of Object.entries(colorization)) {
+			if (color[key] != null && value.name != null) {
+				result[key] = color[key];
+			} else {
+				result[key] = value.default;
+			}
+		}
+		return result;
 	}
 }

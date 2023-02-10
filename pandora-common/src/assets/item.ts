@@ -209,15 +209,25 @@ export class Item {
 			return defaultColor;
 
 		let color = defaultColor;
+		let foundSelf = false;
+		let foundColor = false;
 		for (const item of container.getAllItems()) {
-			if (item.id === this.id)
-				return color;
+			if (item.id === this.id) {
+				if (foundColor)
+					return color;
+
+				foundSelf = true;
+				continue;
+			}
 
 			const itemColor = item._getColorByGroup(group);
 			if (!itemColor)
 				continue;
 
+			foundColor = true;
 			color = itemColor;
+			if (foundSelf)
+				return color;
 		}
 		return color;
 	}

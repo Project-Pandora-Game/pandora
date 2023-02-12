@@ -219,6 +219,12 @@ export const ClientDirectorySchema = {
 		}),
 		response: null,
 	},
+	chatRoomOwnershipRemove: {
+		request: z.object({
+			id: RoomIdSchema,
+		}),
+		response: ZodCast<{ result: 'ok' | 'notAnOwner'; }>(),
+	},
 	//#endregion
 
 	getDirectMessages: {

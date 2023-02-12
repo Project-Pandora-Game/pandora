@@ -12,6 +12,7 @@ import {
 	IsObject,
 	AccountId,
 	AssertNotNullable,
+	RoomId,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -108,6 +109,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const accountId = currentAccount.id;
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
+	const isPlayerOwner = !!(creation || accountId && roomData?.owners.includes(accountId));
 	const isPlayerAdmin = creation || IsChatroomAdmin(roomData, currentAccount);
 
 	const currentConfig: IChatRoomDirectoryConfig = {
@@ -167,7 +169,10 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			</div>
 			<div className='input-container'>
 				<label>Owners</label>
-				<NumberListArea values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
+				<Row padding='none'>
+					<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
+					{ !creation && roomData && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomData.id } name={ roomData.name } /> : null }
+				</Row>
 			</div>
 			<div className='input-container'>
 				<label>Admins</label>
@@ -383,13 +388,78 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					}
 				</ul>
 			</div>
-			{ isPlayerAdmin && <Button onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button> }
-			{ !isPlayerAdmin && <Button onClick={ () => navigate('/chatroom') }>Back</Button> }
+			{ isPlayerAdmin && <Button className='fill-x' onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button> }
+			{ !isPlayerAdmin && <Button className='fill-x' onClick={ () => navigate('/chatroom') }>Back</Button> }
 		</div>
 	);
 }
 
-function NumberListArea({ values, setValues, readOnly }: { values: readonly number[]; setValues: (newValue: number[]) => void; readOnly: boolean; }): ReactElement {
+export function ChatroomOwnershipRemoval({ buttonClassName, ...data }: { id: RoomId; name: string; buttonClassName?: string; }): ReactElement | null {
+	const [state, setState] = useState<boolean>(false);
+	return (
+		<>
+			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up room ownership</Button>
+			{
+				state ? (
+					<ChatroomOwnershipRemovalDialog { ...data } closeDialog={ () => setState(false) } />
+				) : (
+					null
+				)
+			}
+		</>
+	);
+}
+
+function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: RoomId; name: string; closeDialog: () => void; }): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+
+	const removeOwnership = useCallback(() => {
+		(async () => {
+			RoomAdminProgress.show('progress', 'Removing ownership...');
+			const result = await directoryConnector.awaitResponse('chatRoomOwnershipRemove', { id });
+			if (result.result === 'ok') {
+				RoomAdminProgress.show('success', 'Room ownership removed!');
+				closeDialog();
+			} else {
+				RoomAdminProgress.show('error', `Failed to remove room ownership:\n${result.result}`);
+			}
+		})()
+			.catch((err) => {
+				GetLogger('UpdateRoom').warning('Error during room ownership removal', err);
+				RoomAdminProgress.show('error', `Error during room ownership removal:\n${err instanceof Error ? err.message : String(err)}`);
+			});
+	}, [id, closeDialog, directoryConnector]);
+
+	return (
+		<ModalDialog priority={ 10 }>
+			<p>
+				<b>
+					Are you sure that you no longer want ownership of this room?
+				</b>
+			</p>
+			<p>
+				Room name: { name }<br />
+				Room id: { id }
+			</p>
+			<p>
+				Removing yourself as an owner will turn you into an admin instead and free up a room slot in your account's room count limit.<br />
+				Note that a room without any owner gets instantly deleted, kicking everyone currently inside the room in the process.<br />
+				You cannot affect other owners - only an owner can give up their own ownership of a room.
+			</p>
+			<Row alignX='space-between'>
+				<Button onClick={ closeDialog }>Cancel</Button>
+				<Button onClick={ removeOwnership }>Remove your ownership!</Button>
+			</Row>
+		</ModalDialog>
+	);
+}
+
+function NumberListArea({ values, setValues, readOnly, ...props }: {
+	values: readonly number[];
+	setValues: (newValue: number[]) => void;
+	readOnly: boolean;
+	className?: string;
+}): ReactElement {
 	const [text, setText] = useState(values.join(', '));
 
 	const onChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -426,7 +496,7 @@ function NumberListArea({ values, setValues, readOnly }: { values: readonly numb
 	}, [setValues]);
 
 	return (
-		<textarea value={ text } onChange={ onChange } readOnly={ readOnly } />
+		<textarea value={ text } onChange={ onChange } readOnly={ readOnly } { ...props } />
 	);
 }
 

@@ -11,7 +11,7 @@ import { useConnectToShard } from '../gameContext/shardConnectorContextProvider'
 import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
-import { CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
+import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
 import { Row } from '../common/container/container';
 import './chatroomSelect.scss';
 import closedDoor from '../../icons/closed-door.svg';
@@ -100,22 +100,30 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 	const background = roomDetails?.background ? ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl()).image : '';
 	const features = roomDetails?.features ?? [];
 
-	const userIsAdmin = owners.includes(accountId) || admins.includes(accountId);
+	const userIsOwner = owners.includes(accountId);
+	const userIsAdmin = userIsOwner || admins.includes(accountId);
 
 	return (
 		<ModalDialog>
 			<div className='chatroomDetails'>
-				<div>Details for room <b>{ name }</b></div>
+				<div>
+					Details for room <b>{ name }</b><br />
+				</div>
+				<Row padding='none' className='ownership' alignY='center'>
+					Owned by: { owners.join(', ') }
+				</Row>
 				{ (background !== '' && !background.startsWith('#')) &&
 					<img className='preview' src={ background } width='200px' height='100px' /> }
-				<div className='features'>
+				<Row padding='none' className='features'>
 					{ roomIsProtected && <img className='features-img' src={ closedDoor } title='Protected Room' /> }
-					{ CHATROOM_FEATURES.map((f) => (
-						<div key={ f.id }>{ features.includes(f.id) &&
-							<img className='features-img' src={ f.icon } title={ f.name } alt={ f.name } /> }
-						</div>
-					)) }
-				</div>
+					{
+						CHATROOM_FEATURES
+							.filter((f) => features.includes(f.id))
+							.map((f) => (
+								<img key={ f.id } className='features-img' src={ f.icon } title={ f.name } alt={ f.name } />
+							))
+					}
+				</Row>
 				<div className='description-title'>Description:</div>
 				<textarea className='widebox' value={ description } rows={ 10 } readOnly />
 				{ characters.length > 0 &&
@@ -133,9 +141,10 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 						value={ roomPassword }
 						onChange={ (e) => setPassword(e.target.value) }
 					/> }
-				<Row className='buttons' alignX='end'>
-					<Button className='slim' onClick={ hide }>Close</Button>
-					<Button className='slim fadeDisabled'
+				<Row className='buttons' alignX='space-between' alignY='center'>
+					<Button onClick={ hide }>Close</Button>
+					{ userIsOwner && <ChatroomOwnershipRemoval buttonClassName='slim' id={ id } name={ name } /> }
+					<Button className='fadeDisabled'
 						disabled={ (!userIsAdmin && roomIsProtected) && (!hasPassword || roomPassword.length === 0) }
 						onClick={ () => {
 							joinRoom(id, roomPassword)

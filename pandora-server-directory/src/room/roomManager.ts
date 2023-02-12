@@ -39,6 +39,7 @@ class RoomManagerClass {
 			config,
 			owners,
 		});
+		logger.verbose(`Created room ${roomData.id}, owned by ${roomData.owners.join(',')}`);
 		const room = this.loadRoom(roomData);
 
 		ConnectionManagerClient.onRoomListChange();
@@ -57,6 +58,7 @@ class RoomManagerClass {
 		}
 		room.onDestroy();
 		await GetDatabase().deleteChatRoom(room.id);
+		logger.verbose(`Destroyed room ${room.id}`);
 
 		ConnectionManagerClient.onRoomListChange();
 	}

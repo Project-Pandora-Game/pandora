@@ -103,6 +103,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatRoomLeave: this.handleChatRoomLeave.bind(this),
 			chatRoomUpdate: this.handleChatRoomUpdate.bind(this),
 			chatRoomAdminAction: this.handleChatRoomAdminAction.bind(this),
+			chatRoomOwnershipRemove: this.handleChatRoomOwnershipRemove.bind(this),
 
 			getDirectMessages: this.handleGetDirectMessages.bind(this),
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
@@ -470,6 +471,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		connection.character.room?.removeCharacter(connection.character, 'leave', connection.character);
+	}
+
+	private async handleChatRoomOwnershipRemove({ id }: IClientDirectoryArgument['chatRoomOwnershipRemove'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomOwnershipRemove'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const room = RoomManager.getRoom(id);
+
+		if (room == null || !room.owners.has(connection.account.id)) {
+			return { result: 'notAnOwner' };
+		}
+
+		const result = await room.removeOwner(connection.account.id);
+
+		return { result };
 	}
 
 	/**

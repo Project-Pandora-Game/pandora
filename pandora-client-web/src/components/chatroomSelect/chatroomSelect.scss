@@ -30,37 +30,39 @@
 
 	max-width: 95vw;
 	display: grid;
-	column-gap: 0.2em;
-	row-gap: 0.2em;
-	grid-template-columns: auto auto auto;
+	gap: spacing('normal');
+	grid-template-columns: auto 200px;
 
 	.preview {
-		grid-column: 3 / 4;
-		grid-row: 1 / 3;
+		grid-column: 2;
+		grid-row: 1 / 4;
 		box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
 		align-items: end;
 	}
 
-	.features {
+	.ownership {
 		grid-column: 1;
 		grid-row: 2;
-		display: grid;
-		grid-template-columns: auto auto auto auto auto;
-		column-gap: 0.5em;
+	}
+
+	.features {
+		grid-column: 1;
+		grid-row: 3;
 	}
 
 	.features-img {
-		width: 40px;
+		width: 2.5em;
+		height: 2.5em;
 		border: 1px solid black;
 		padding: 0.1em;
 	}
 
 	.description-title {
-		grid-row: 3;
+		grid-row: 4;
 	}
 
 	.widebox {
-		grid-column: 1 / 4;
+		grid-column: 1 / 3;
 		border: 0.1em solid black;
 		padding: 0.2em;
 		min-width: min(50em, 95vw);
@@ -69,11 +71,11 @@
 	}
 
 	.title {
-		grid-column: 1 / 4;
+		grid-column: 1 / 3;
 	}
 
 	.users-list {
-		grid-column: 1 / 4;
+		grid-column: 1 / 3;
 		border: 0.1em solid black;
 		padding: 0.2em;
 		overflow-y: auto;
@@ -82,6 +84,6 @@
 	}
 
 	.buttons {
-		grid-column: 1 /span 3;
+		grid-column: 1 / 3;
 	}
 }

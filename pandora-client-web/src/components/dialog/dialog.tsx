@@ -1,7 +1,7 @@
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import React, { createContext, useContext, ReactElement, PureComponent, ReactNode } from 'react';
 import { Rnd } from 'react-rnd';
-import { noop } from 'lodash';
+import { noop, sortBy } from 'lodash';
 import { ChildrenProps } from '../../common/reactTypes';
 import { Button, ButtonProps } from '../common/button/button';
 import { Observable, useObservable } from '../../observable';
@@ -10,14 +10,17 @@ import './dialog.scss';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HtmlPortalNodeAny = HtmlPortalNode<any>;
 
-const PORTALS = new Observable<readonly HtmlPortalNodeAny[]>([]);
+const PORTALS = new Observable<readonly ({
+	priority: number;
+	node: HtmlPortalNodeAny;
+})[]>([]);
 
 export function Dialogs(): ReactElement {
 	const portals = useObservable(PORTALS);
 
 	return (
 		<>
-			{ portals.map((node, index) => (
+			{ portals.map(({ node }, index) => (
 				<OutPortal key={ index } node={ node } />
 			)) }
 		</>
@@ -32,7 +35,14 @@ const dialogCloseContext = createContext<DialogCloseContext>({
 	close: noop as () => void,
 });
 
-export class ModalDialog extends PureComponent<ChildrenProps> {
+export class ModalDialog extends PureComponent<ChildrenProps & {
+	/**
+	 * Priority of this dialog for ordering the dialogs on screen.
+	 * Higher priority dialogs cover lower priority dialogs.
+	 * @default 0
+	 */
+	priority?: number;
+}> {
 	private readonly _node: HtmlPortalNodeAny;
 	private readonly _context: DialogCloseContext;
 
@@ -44,8 +54,28 @@ export class ModalDialog extends PureComponent<ChildrenProps> {
 		};
 	}
 
+	private _updateOwnEntry() {
+		const { priority } = this.props;
+
+		PORTALS.value = sortBy([
+			{
+				priority: priority ?? 0,
+				node: this._node,
+			},
+			...PORTALS.value.filter(({ node }) => node !== this._node),
+		], (v) => v.priority);
+	}
+
 	public override componentDidMount() {
-		PORTALS.value = [this._node, ...PORTALS.value.filter((n) => n !== this._node)];
+		this._updateOwnEntry();
+	}
+
+	public override componentDidUpdate(prevProps: Readonly<ChildrenProps & { priority?: number | undefined; }>): void {
+		const { priority } = this.props;
+
+		if (prevProps.priority !== priority) {
+			this._updateOwnEntry();
+		}
 	}
 
 	public override componentWillUnmount() {
@@ -68,7 +98,7 @@ export class ModalDialog extends PureComponent<ChildrenProps> {
 	}
 
 	private _close() {
-		PORTALS.value = PORTALS.value.filter((n) => n !== this._node);
+		PORTALS.value = PORTALS.value.filter(({ node }) => node !== this._node);
 	}
 }
 
@@ -92,8 +122,18 @@ export class DraggableDialog extends PureComponent<{
 		};
 	}
 
+	private _updateOwnEntry() {
+		PORTALS.value = sortBy([
+			{
+				priority: -1,
+				node: this._node,
+			},
+			...PORTALS.value.filter(({ node }) => node !== this._node),
+		], (v) => v.priority);
+	}
+
 	public override componentDidMount() {
-		PORTALS.value = [this._node, ...PORTALS.value.filter((n) => n !== this._node)];
+		this._updateOwnEntry();
 	}
 
 	public override componentWillUnmount() {
@@ -133,7 +173,7 @@ export class DraggableDialog extends PureComponent<{
 	}
 
 	private _close() {
-		PORTALS.value = PORTALS.value.filter((n) => n !== this._node);
+		PORTALS.value = PORTALS.value.filter(({ node }) => node !== this._node);
 	}
 }
 

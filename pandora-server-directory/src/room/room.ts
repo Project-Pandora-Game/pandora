@@ -6,6 +6,7 @@ import { ConnectionManagerClient } from '../networking/manager_client';
 import { pick, uniq } from 'lodash';
 import { ShardManager } from '../shard/shardManager';
 import { GetDatabase } from '../database/databaseProvider';
+import { RoomManager } from '../room/roomManager';
 
 export class Room {
 	public readonly id: RoomId;
@@ -95,6 +96,28 @@ export class Room {
 			id: this.id,
 			owners: Array.from(this._owners),
 		});
+	}
+
+	public async removeOwner(accountId: AccountId): Promise<'ok'> {
+		// Owners get demoted to admins
+		this._owners.delete(accountId);
+		if (!this.config.admin.includes(accountId)) {
+			this.config.admin.push(accountId);
+		}
+
+		if (this._owners.size === 0) {
+			// Room without owners gets destroyed
+			await RoomManager.destroyRoom(this);
+		} else {
+			// Room with remaining owners only propagates the change to shard and clients
+			this.assignedShard?.update('rooms');
+			// TODO: Make an announcement of the change
+
+			await GetDatabase().updateChatRoom({ id: this.id, owners: Array.from(this._owners) }, null);
+
+			ConnectionManagerClient.onRoomListChange();
+		}
+		return 'ok';
 	}
 
 	public async update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): Promise<'ok'> {

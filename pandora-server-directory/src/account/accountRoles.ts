@@ -75,29 +75,16 @@ export class AccountRoles {
 	}
 
 	public async setGitHubStatus(status: GitHubInfo['role'] = 'none', teams: NonNullable<GitHubInfo['teams']> = []): Promise<void> {
-		const founder = teams.includes('beta-access');
-		let allowFounder = false;
 		switch (status) {
 			case 'admin':
 				this._updateGitHubRole('admin');
-				allowFounder = true;
 				break;
 			case 'member':
 				if (teams.includes('lead-developers'))
 					this._updateGitHubRole('lead-developer');
 				else if (teams.includes('developers'))
 					this._updateGitHubRole('developer');
-				else if (!founder)
-					logger.warning(`${this._account.username} (${this._account.id}) is a GitHub member but not in developers team`);
-				/**
-				 * should be founder only, if not founder, then it's a mistake
-				 *   as any founder who contributed should be in developers team
-				 *   and any new member should also be in developers team
-				 *
-				 * no special role is granted
-				 */
 
-				allowFounder = true;
 				break;
 			case 'collaborator':
 				this._updateGitHubRole('contributor');
@@ -117,12 +104,6 @@ export class AccountRoles {
 			}
 			default:
 				break;
-		}
-		if (founder && allowFounder) {
-			this._updateGitHubRole('founder');
-		} else if (this._roles.founder) {
-			delete this._roles.founder;
-			this._log(`revoked founder role by GitHub`);
 		}
 		this._cleanup();
 		this._account.onAccountInfoChange();

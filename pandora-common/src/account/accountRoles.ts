@@ -20,8 +20,9 @@ const ACCOUNT_ROLES_DEFINITION = {
 	'developer': {
 		implies: ['contributor', 'moderator'],
 	},
-	'founder': {},
-	'contributor': {},
+	'contributor': {
+		assignable: true,
+	},
 	'moderator': {
 		assignable: true,
 	},

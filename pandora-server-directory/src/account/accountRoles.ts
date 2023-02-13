@@ -1,4 +1,4 @@
-import { AccountRole, ACCOUNT_ROLES_CONFIG, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IsAuthorized } from 'pandora-common';
+import { AccountRole, ACCOUNT_ROLES_CONFIG, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IsAuthorized, Logger } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
 import { AUTO_ADMIN_ACCOUNTS } from '../config';
@@ -9,6 +9,7 @@ const logger = GetLogger('AccountRoles');
 
 export class AccountRoles {
 	private readonly _account: Account;
+	private readonly _logger: Logger;
 	/** Roles saved persistently into database */
 	private _roles: IAccountRoleManageInfo;
 	/** Roles created temporarily during this session, they are not saved, but have priority */
@@ -16,6 +17,7 @@ export class AccountRoles {
 
 	constructor(account: Account, roles?: IAccountRoleManageInfo) {
 		this._account = account;
+		this._logger = logger.prefixMessages(`${this._account.username} (${this._account.id})`);
 		this._roles = roles ?? {};
 		this._devSetRoles();
 		this._cleanup();
@@ -68,7 +70,7 @@ export class AccountRoles {
 			grantedAt: Date.now(),
 		};
 		const granted = (expires === undefined || expires > Date.now()) ? 'granted' : 'revoked';
-		granter.roles._log(`${granted} ${role} role to ${this._account.username} (${this._account.id})`);
+		granter.roles._logger.info(`${granted} ${role} role to ${this._account.username} (${this._account.id})`);
 		this._cleanup();
 		this._account.onAccountInfoChange();
 		await this._updateDatabase();
@@ -98,7 +100,7 @@ export class AccountRoles {
 					}
 				}
 				if (revoked) {
-					this._log(`revoked all roles by GitHub`);
+					this._logger.info(`revoked all roles by GitHub`);
 				}
 				break;
 			}
@@ -121,7 +123,7 @@ export class AccountRoles {
 			for (const implied of ACCOUNT_ROLES_CONFIG[role as AccountRole].implies ?? []) {
 				if (this._roles[implied]) {
 					delete this._roles[implied];
-					this._log(`revoked ${implied} role since it was implied by ${role}`);
+					this._logger.info(`revoked ${implied} role since it was implied by ${role}`);
 				}
 			}
 		}
@@ -134,7 +136,7 @@ export class AccountRoles {
 				grantedBy: 'GitHub',
 				grantedAt: Date.now(),
 			};
-			this._log(`granted all ${role} by GitHub`);
+			this._logger.info(`granted role ${role} by GitHub`);
 		}
 		for (const [key, value] of Object.entries(this._roles)) {
 			if (key === role || value.grantedBy !== 'GitHub')
@@ -142,13 +144,9 @@ export class AccountRoles {
 
 			if (ACCOUNT_ROLES_CONFIG[key as AccountRole].implies?.includes(role)) {
 				delete this._roles[key as AccountRole];
-				this._log(`overridden ${key} role by GitHub`);
+				this._logger.info(`overridden ${key} role by GitHub`);
 			}
 		}
-	}
-
-	private _log(content: string) {
-		logger.info(`${this._account.username} (${this._account.id}) ${content}`);
 	}
 
 	private async _updateDatabase(): Promise<void> {

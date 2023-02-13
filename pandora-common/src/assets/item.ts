@@ -27,13 +27,12 @@ function FixupColorFromAsset(asset: Asset, color: ItemColorBundle | HexColorStri
 	const colorization = asset.definition.colorization ?? {};
 	if (Array.isArray(color)) {
 		const keys = Object.keys(colorization);
-		const init: Writeable<ItemColorBundle> = {};
-		color = color.reduce((acc, value, index) => {
+		const fixup: Writeable<ItemColorBundle> = {};
+		color.forEach((value, index) => {
 			if (keys.length < index)
-				acc[keys[index]] = value;
-
-			return acc;
-		}, init);
+				fixup[keys[index]] = value;
+		});
+		color = fixup;
 	}
 	const result: Writeable<ItemColorBundle> = {};
 	for (const [key, value] of Object.entries(colorization)) {

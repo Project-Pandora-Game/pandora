@@ -153,8 +153,8 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 		if (value == null)
 			return '[ Not colorable ]';
 		const colorization = asset.asset.definition.colorization;
-		if (!colorization || !Object.keys(colorization).includes(value))
-			return '[ Invalid index ]';
+		if (!colorization || colorization[value] == null)
+			return '[ Invalid key ]';
 		const name = colorization[value].name;
 		if (name == null)
 			return '[ Not colorable by user ]';
@@ -162,8 +162,12 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 	}, [value, asset]);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
-		setValue(e.target.value);
 		const trimmed = e.target.value.trim();
+		if (trimmed === '') {
+			setValue(undefined);
+		} else {
+			setValue(e.target.value);
+		}
 		layer.setColorizationKey(trimmed ? trimmed : null);
 	});
 

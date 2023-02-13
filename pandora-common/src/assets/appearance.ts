@@ -36,21 +36,38 @@ export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
 /** Time after entering safemode for which you cannot leave it (entering while in dev mode ignores this) */
 export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
-export const AppearanceBundleSchema = z.object({
-	items: z.array(ItemBundleSchema),
-	pose: z.record(BoneNameSchema, z.number()),
-	handsPose: z.nativeEnum(ArmsPose),
+export const AppearanceArmPoseSchema = z.object({
+	position: z.nativeEnum(ArmsPose),
+});
+export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
+
+export const AppearancePoseSchema = z.object({
+	bones: z.record(BoneNameSchema, z.number()),
+	leftArm: AppearanceArmPoseSchema,
+	rightArm: AppearanceArmPoseSchema,
 	view: z.nativeEnum(CharacterView),
+});
+export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
+
+export const AppearanceBundleSchema = AppearancePoseSchema.extend({
+	items: z.array(ItemBundleSchema),
 	safemode: SafemodeDataSchema.optional(),
 });
 
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
 
-export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
-	items: [],
-	pose: {},
-	handsPose: ArmsPose.FRONT,
-	view: CharacterView.FRONT,
+export function GetDefaultAppearanceBundle(): AppearanceBundle {
+	return {
+		items: [],
+		bones: {},
+		leftArm: {
+			position: ArmsPose.FRONT,
+		},
+		rightArm: {
+			position: ArmsPose.FRONT,
+		},
+		view: CharacterView.FRONT,
+	};
 };
 
 export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
@@ -65,8 +82,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private items: AppearanceItems = [];
 	private readonly pose = new Map<BoneName, BoneState>();
 	private fullPose: readonly BoneState[] = [];
-	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
-	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
+	private _armsPose: AppearanceArmPose = GetDefaultAppearanceBundle().leftArm;
+	private _view: CharacterView = GetDefaultAppearanceBundle().view;
 	private _safemode: SafemodeData | undefined;
 
 	public get character(): Readonly<ICharacterMinimalData> {
@@ -76,7 +93,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	constructor(assetManager: AssetManager, getCharacter: () => Readonly<ICharacterMinimalData>, onChange?: (changes: AppearanceChangeType[]) => void) {
 		this.assetManager = assetManager;
 		this.getCharacter = getCharacter;
-		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
+		this.importFromBundle(GetDefaultAppearanceBundle());
 		this.onChangeHandler = onChange;
 	}
 
@@ -87,18 +104,19 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	public exportToBundle(): AppearanceBundle {
 		return {
 			items: this.items.map((item) => item.exportToBundle()),
-			pose: this.exportPose(),
-			handsPose: this._armsPose,
+			bones: this.exportBones(),
+			leftArm: _.cloneDeep(this._armsPose),
+			rightArm: _.cloneDeep(this._armsPose),
 			view: this._view,
 			safemode: this._safemode,
 		};
 	}
 
-	public importFromBundle(bundle: AppearanceBundle, logger?: Logger, assetManager?: AssetManager): void {
+	public importFromBundle(bundle: AppearanceBundle | undefined, logger?: Logger, assetManager?: AssetManager): void {
 		// Simple migration
 		bundle = {
-			...APPEARANCE_BUNDLE_DEFAULT,
-			...bundle,
+			...GetDefaultAppearanceBundle(),
+			...(bundle ?? {}),
 		};
 		if (assetManager && this.assetManager !== assetManager) {
 			this.assetManager = assetManager;
@@ -130,14 +148,14 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		for (const bone of this.assetManager.getAllBones()) {
 			this.pose.set(bone.name, {
 				definition: bone,
-				rotation: Number.isInteger(bundle.pose[bone.name]) ? _.clamp(bundle.pose[bone.name], BONE_MIN, BONE_MAX) : 0,
+				rotation: Number.isInteger(bundle.bones[bone.name]) ? _.clamp(bundle.bones[bone.name], BONE_MIN, BONE_MAX) : 0,
 			});
 		}
-		this._armsPose = bundle.handsPose;
+		this._armsPose = bundle.leftArm;
 		this._view = bundle.view;
 		this.fullPose = Array.from(this.pose.values());
 		if (logger) {
-			for (const k of Object.keys(bundle.pose)) {
+			for (const k of Object.keys(bundle.bones)) {
 				if (!this.pose.has(k)) {
 					logger.warning(`Skipping unknown pose bone ${k}`);
 				}
@@ -157,8 +175,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			return false;
 		let change = false;
 
-		if (poseLimits.forceArms != null && this._armsPose !== poseLimits.forceArms) {
-			this._armsPose = poseLimits.forceArms;
+		if (poseLimits.forceArms != null && this._armsPose.position !== poseLimits.forceArms) {
+			this._armsPose.position = poseLimits.forceArms;
 			change = true;
 		}
 
@@ -202,7 +220,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this.onChange(['pose']);
 	}
 
-	public exportPose(type?: BoneType): Record<BoneName, number> {
+	public exportBones(type?: BoneType): Record<BoneName, number> {
 		const pose: Record<BoneName, number> = {};
 		for (const state of this.pose.values()) {
 			if (state.rotation === 0) {
@@ -309,12 +327,12 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public getArmsPose(): ArmsPose {
-		return this._armsPose;
+		return this._armsPose.position;
 	}
 
 	public setArmsPose(value: ArmsPose): void {
-		if (this._armsPose !== value) {
-			this._armsPose = value;
+		if (this._armsPose.position !== value) {
+			this._armsPose.position = value;
 			this.enforcePoseLimits();
 			this.onChange(['pose']);
 		}

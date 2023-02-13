@@ -30,6 +30,8 @@ export interface AssetDefinitionExtraArgs {
 	slots: string;
 }
 
+
+
 export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	/**
 	 * Forces the bones within specific range; has two options at representation:

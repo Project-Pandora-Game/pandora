@@ -194,3 +194,69 @@ export function AsyncSynchronized(options?: AsyncLockOptions) {
 		};
 	};
 }
+
+/**
+ * Parameters must be sorted and non-overlapping intervals (e.g. [[1, 2], [3, 4]])
+ * @param a The first interval set
+ * @param b The second interval set
+ */
+export function IntervalSetIntersection(a: readonly (readonly [number, number])[], b: readonly (readonly [number, number])[]): [number, number][] {
+	const res: [number, number][] = [];
+	let i = 0;
+	let j = 0;
+	while (i < a.length && j < b.length) {
+		const [aMin, aMax] = a[i];
+		const [bMin, bMax] = b[j];
+		if (aMax < bMin) {
+			i++;
+		} else if (bMax < aMin) {
+			j++;
+		} else {
+			res.push([Math.max(aMin, bMin), Math.min(aMax, bMax)]);
+			if (aMax < bMax) {
+				i++;
+			} else {
+				j++;
+			}
+		}
+	}
+	return res;
+}
+
+/**
+ * Parameters must be sorted and non-overlapping intervals (e.g. [[1, 2], [3, 4]])
+ * @param a The first interval set
+ * @param b The second interval set
+ */
+export function IntervalSetUnion(a: readonly (readonly [number, number])[], b: readonly (readonly [number, number])[]): [number, number][] {
+	const res: [number, number][] = [];
+	let i = 0;
+	let j = 0;
+	while (i < a.length && j < b.length) {
+		const [aMin, aMax] = a[i];
+		const [bMin, bMax] = b[j];
+		if (aMax < bMin) {
+			res.push([aMin, aMax]);
+			i++;
+		} else if (bMax < aMin) {
+			res.push([bMin, bMax]);
+			j++;
+		} else {
+			res.push([Math.min(aMin, bMin), Math.max(aMax, bMax)]);
+			if (aMax < bMax) {
+				i++;
+			} else {
+				j++;
+			}
+		}
+	}
+	while (i < a.length) {
+		res.push([...a[i]]);
+		i++;
+	}
+	while (j < b.length) {
+		res.push([...b[j]]);
+		j++;
+	}
+	return res;
+}

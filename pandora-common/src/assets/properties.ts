@@ -1,4 +1,4 @@
-import { MergePoseLimits, PoseLimitsResult } from './appearanceValidation';
+import { AppearanceLimitTree } from './appearanceLimit';
 import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions';
 import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from './effects';
 
@@ -73,7 +73,7 @@ export interface AssetSlotResult {
 }
 
 export interface AssetPropertiesResult {
-	poseLimits: PoseLimitsResult;
+	limits: AppearanceLimitTree;
 	effects: EffectsDefinition;
 	attributes: Set<string>;
 	hides: Set<string>;
@@ -82,9 +82,7 @@ export interface AssetPropertiesResult {
 
 export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 	return {
-		poseLimits: {
-			forcePose: new Map<string, [number, number]>(),
-		},
+		limits: new AppearanceLimitTree(),
 		effects: EFFECTS_DEFAULT,
 		attributes: new Set(),
 		hides: new Set(),
@@ -96,7 +94,7 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 }
 
 export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: Readonly<AssetProperties>): T {
-	base.poseLimits = MergePoseLimits(base.poseLimits, properties.poseLimits);
+	base.limits.merge(properties.poseLimits);
 	base.effects = MergeEffects(base.effects, properties.effects);
 	properties.attributes?.forEach((a) => base.attributes.add(a));
 	properties.hides?.forEach((a) => base.hides.add(a));

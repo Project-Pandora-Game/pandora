@@ -1,9 +1,8 @@
 import { Logger } from '../logging';
 import { ShuffleArray } from '../utility';
-import { ArmsPose, BONE_MAX, BONE_MIN } from './appearance';
 import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
-import type { AssetDefinitionPoseLimits, AssetId } from './definitions';
+import type { AssetId } from './definitions';
 import type { Item } from './item';
 import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
@@ -71,63 +70,10 @@ export function AppearanceItemsFixBodypartOrder(assetManager: AssetManager, item
 		);
 }
 
-export type PoseLimitsResult = {
-	forcePose: Map<string, [number, number]>;
-	forceArms?: ArmsPose;
-} | null;
-
-export function MergePoseLimits(base: PoseLimitsResult, poseLimits: AssetDefinitionPoseLimits | undefined): PoseLimitsResult {
-	// If already invalid, then invalid
-	if (base === null)
-		return null;
-
-	if (!poseLimits)
-		return base;
-
-	if (poseLimits.forceArms != null) {
-		// Invalid combination of forceArms
-		if (base.forceArms != null && base.forceArms !== poseLimits.forceArms)
-			return null;
-		base.forceArms = poseLimits.forceArms;
-	}
-
-	if (poseLimits.forcePose != null) {
-		for (const [bone, value] of Object.entries(poseLimits.forcePose)) {
-			if (value == null)
-				continue;
-
-			const limit = typeof value === 'number' ? [value, value] : value;
-			let currentLimit = base.forcePose.get(bone) ?? [BONE_MIN, BONE_MAX];
-
-			currentLimit = [
-				Math.max(currentLimit[0], limit[0]),
-				Math.min(currentLimit[1], limit[1]),
-			];
-
-			// Invalid combination of forced bones
-			if (currentLimit[0] > currentLimit[1])
-				return null;
-
-			base.forcePose.set(bone, currentLimit);
-		}
-	}
-
-	return base;
-}
-
 export function AppearanceItemProperties(items: AppearanceItems): AssetPropertiesResult {
 	return items
 		.flatMap((item) => item.getPropertiesParts())
 		.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
-}
-
-/**
- * Calculates what pose is enforced by items
- * @param items - Items being worn
- * @returns The enforcement or `null` if the item combination is invalid
- */
-export function AppearanceItemsGetPoseLimits(items: AppearanceItems): PoseLimitsResult {
-	return AppearanceItemProperties(items).poseLimits;
 }
 
 export function AppearanceValidateSlots(assetManager: AssetManager, item: Item, slots: AssetSlotResult): undefined | AppearanceValidationError {
@@ -267,7 +213,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 	}
 
 	// Check the pose is possible
-	if (AppearanceItemsGetPoseLimits(items) == null)
+	if (!AppearanceItemProperties(items).limits.valid)
 		return {
 			success: false,
 			error: {

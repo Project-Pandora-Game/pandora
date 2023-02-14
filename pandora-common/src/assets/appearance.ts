@@ -6,7 +6,7 @@ import type { ActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
-import { AppearanceItems, AppearanceItemsGetPoseLimits, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
+import { AppearanceItemProperties, AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId } from './definitions';
 import { BoneState, BoneType } from './graphics';
@@ -68,7 +68,7 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 		},
 		view: CharacterView.FRONT,
 	};
-};
+}
 
 export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
 
@@ -170,37 +170,36 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	protected enforcePoseLimits(): boolean {
-		const poseLimits = AppearanceItemsGetPoseLimits(this.items);
-		if (poseLimits == null)
+		const limits = AppearanceItemProperties(this.items).limits;
+		if (!limits || limits.isEmpty())
 			return false;
-		let change = false;
 
-		if (poseLimits.forceArms != null && this._armsPose.position !== poseLimits.forceArms) {
-			this._armsPose.position = poseLimits.forceArms;
-			change = true;
-		}
+		const { changed, pose } = limits.force({
+			bones: Object.fromEntries([...this.pose.entries()].map(([bone, state]) => [bone, state.rotation])),
+			leftArm: this._armsPose,
+			rightArm: this._armsPose,
+			view: this._view,
+		});
+		if (!changed)
+			return false;
 
+		const { bones, leftArm, view } = pose;
+
+		this._view = view;
+		this._armsPose = leftArm;
 		for (const [bone, state] of this.pose.entries()) {
-			const limits = poseLimits.forcePose.get(bone);
-			if (limits == null)
-				continue;
-
-			const rotation = _.clamp(state.rotation, limits[0], limits[1]);
-			if (rotation === state.rotation)
-				continue;
-
-			this.pose.set(bone, {
-				definition: state.definition,
-				rotation,
-			});
-			change = true;
+			const rotation = bones[bone];
+			if (rotation != null && rotation !== state.rotation) {
+				this.pose.set(bone, {
+					definition: state.definition,
+					rotation,
+				});
+			}
 		}
 
-		if (change) {
-			this.fullPose = Array.from(this.pose.values());
-		}
+		this.fullPose = Array.from(this.pose.values());
 
-		return change;
+		return true;
 	}
 
 	public importPose(pose: Partial<Record<BoneName, number>>, type: BoneType | true, missingAsZero: boolean): void {

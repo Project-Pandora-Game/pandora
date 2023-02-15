@@ -241,35 +241,41 @@ export class Item {
 			return undefined;
 
 		let color: HexColorString | undefined;
+		let colorSecondary: HexColorString | undefined;
 		let foundSelf = false;
-		let foundColor = false;
 		for (const item of items) {
 			if (item.id === this.id) {
-				if (foundColor)
+				if (color)
 					return color;
 
 				foundSelf = true;
 				continue;
 			}
 
-			const itemColor = item._getColorByGroup(group);
-			if (!itemColor)
-				continue;
+			const { primary, secondary } = item._getColorByGroup(group);
+			if (primary) {
+				if (foundSelf)
+					return primary;
 
-			foundColor = true;
-			color = itemColor;
-			if (foundSelf)
-				return color;
+				color = primary;
+			}
+			if (secondary && (!colorSecondary || !foundSelf)) {
+				colorSecondary = secondary;
+			}
 		}
-		return color;
+		return color ?? colorSecondary;
 	}
 
-	private _getColorByGroup(group: string): HexColorString | undefined {
+	private _getColorByGroup(group: string): { primary?: HexColorString, secondary?: HexColorString; } {
+		const { disableColorization } = this.getProperties();
+		const resultKey = disableColorization.has(group) ? 'secondary' : 'primary' as const;
 		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
-			if (value.group === group && this.color[key])
-				return this.color[key];
+			if (value.group !== group || !this.color[key])
+				continue;
+
+			return { [resultKey]: this.color[key] };
 		}
-		return undefined;
+		return {};
 	}
 
 	private _loadColor(color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {

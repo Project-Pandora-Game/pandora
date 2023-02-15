@@ -11,14 +11,19 @@ export type IAccountRoleConfig = {
 //#region List of account roles
 
 const ACCOUNT_ROLES_DEFINITION = {
-	admin: {
+	'admin': {
+		implies: ['lead-developer', 'developer', 'contributor', 'moderator'],
+	},
+	'lead-developer': {
 		implies: ['developer', 'contributor', 'moderator'],
 	},
-	developer: {
+	'developer': {
 		implies: ['contributor', 'moderator'],
 	},
-	contributor: {},
-	moderator: {
+	'contributor': {
+		assignable: true,
+	},
+	'moderator': {
 		assignable: true,
 	},
 } as const;

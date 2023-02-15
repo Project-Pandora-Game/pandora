@@ -1,4 +1,4 @@
-import { GetLogger } from 'pandora-common';
+import { GetLogger, ZodMatcher } from 'pandora-common';
 import { accountManager } from '../../account/accountManager';
 
 import { Octokit } from '@octokit/rest';
@@ -6,6 +6,7 @@ import { createOAuthUserAuth, createOAuthAppAuth } from '@octokit/auth-oauth-app
 import { nanoid } from 'nanoid';
 import { URL } from 'url';
 import { Request, Response, Router } from 'express';
+import { z } from 'zod';
 
 const API_PATH = 'https://github.com/login/oauth/';
 
@@ -22,6 +23,12 @@ const GITHUB_ORG_NAME = 'Project-Pandora-Game';
 const logger = GetLogger('GitHubVerifier');
 
 const states = new Map<string, { accountId: number, login: string; }>();
+
+const GitHubTeamSchema = z.enum(['beta-access', 'developers', 'host', 'lead-developers']);
+const IsGitHubTeam = ZodMatcher(GitHubTeamSchema);
+export type GitHubTeam = z.infer<typeof GitHubTeamSchema>;
+
+const invalidTeams = new Set<string>();
 
 let octokitOrg!: Octokit;
 let octokitApp!: Octokit;
@@ -67,16 +74,40 @@ export const GitHubVerifier = new class GitHubVerifier {
 		return this;
 	}
 
-	public async getGitHubRole({ id, login }: Pick<GitHubInfo, 'id' | 'login'>): Promise<GitHubInfo['role']> {
+	private async getTeamMemberships(login: string): Promise<GitHubTeam[]> {
+		const teams = await octokitOrg.teams.list({ org: GITHUB_ORG_NAME });
+		if (teams.status !== 200) {
+			return [];
+		}
+		const memberships = await Promise.all(teams.data.map(async (team) => {
+			const { status, data } = await octokitOrg.teams.listMembersInOrg({ org: GITHUB_ORG_NAME, team_slug: team.slug });
+			return status === 200 && data.some((user) => user.login === login) ? [team.slug] : [];
+		}));
+		const result = new Set<GitHubTeam>();
+		for (const team of memberships.flat()) {
+			if (IsGitHubTeam(team)) {
+				result.add(team);
+			} else if (!invalidTeams.has(team)) {
+				logger.warning(`Unknown GitHub team: '${team}'`);
+				invalidTeams.add(team);
+			}
+		}
+		return [...result];
+	}
+
+	public async getGitHubRole({ id, login }: Pick<GitHubInfo, 'id' | 'login'>): Promise<Pick<GitHubInfo, 'role' | 'teams'>> {
 		const org = await octokitOrg.orgs.getMembershipForUser({ org: GITHUB_ORG_NAME, username: login });
 		if (org.status === 200 && org.data.state === 'active' && org.data.user?.id === id) {
-			return org.data.role === 'admin' ? 'admin' : 'member';
+			return {
+				role: org.data.role === 'admin' ? 'admin' : 'member',
+				teams: await this.getTeamMemberships(login),
+			};
 		}
 		const outside = await octokitOrg.orgs.listOutsideCollaborators({ org: GITHUB_ORG_NAME });
 		if (outside.status === 200 && outside.data.some((user) => user.id === id && user.login === login)) {
-			return 'collaborator';
+			return { role: 'collaborator' };
 		}
-		return 'none';
+		return { role: 'none' };
 	}
 
 	public prepareLink(accountId: number, login: string): string | null {
@@ -167,16 +198,16 @@ async function HandleCallback(req: Request, res: Response): Promise<void> {
 
 async function UpdateGitHubRole({ login, id }: Awaited<ReturnType<Octokit['users']['getByUsername']>>['data'], accountId: number): Promise<void> {
 	try {
-		const role = await GitHubVerifier.getGitHubRole({ id, login });
+		const result = await GitHubVerifier.getGitHubRole({ id, login });
 		const account = await accountManager.loadAccountById(accountId);
 		if (!account) {
 			logger.warning(`Account ${accountId} not found`);
 			return;
 		}
 		await account.secure.setGitHubInfo({
+			...result,
 			login,
 			id,
-			role,
 		});
 	} catch (e) {
 		logger.error('Failed to get GitHub role', e);

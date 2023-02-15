@@ -145,7 +145,7 @@ export default class AccountSecure {
 			this.#secure.github.login = info.login;
 			this.#secure.github.role = info.role;
 			this.#secure.github.date = Date.now();
-			await this.#account.roles.setGitHubStatus(info.role);
+			await this.#account.roles.setGitHubStatus(info.role, info.teams);
 			await this.#updateDatabase();
 			return true;
 		}
@@ -155,7 +155,7 @@ export default class AccountSecure {
 			return false;
 
 		this.#secure.github = newInfo;
-		await this.#account.roles.setGitHubStatus(newInfo.role);
+		await this.#account.roles.setGitHubStatus(newInfo.role, newInfo.teams);
 
 		return true;
 	}

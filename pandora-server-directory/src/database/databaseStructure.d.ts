@@ -12,6 +12,7 @@ interface GitHubInfo {
 	login: string;
 	role: 'admin' | 'member' | 'collaborator' | 'none';
 	date: number;
+	teams?: import('../services/github/githubVerify').GitHubTeam[];
 }
 
 interface DatabaseAccountSecure {

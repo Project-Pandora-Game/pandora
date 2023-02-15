@@ -7,6 +7,7 @@
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
 		"lint": "pnpm -r --no-bail --parallel run lint",
+		"lint:fix": "pnpm -r --no-bail --parallel run lint:fix",
 		"type-check:test": "pnpm -r --no-bail --parallel run type-check:test",
 		"test": "pnpm -r --no-bail --parallel run test",
 		"build": "pnpm -r run build",

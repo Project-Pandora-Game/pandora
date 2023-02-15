@@ -288,4 +288,26 @@ export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet)
 		j++;
 	}
 	return res;
+
+}
+
+/**
+ * Decorates a member function so it memoizes the result of the first call, the function must take no arguments
+ */
+export function MemoizeNoArg<Return>(_target: object, _key: string, descriptor: TypedPropertyDescriptor<(...args: never[]) => Return>): TypedPropertyDescriptor<(...args: never[]) => Return> {
+	const originalMethod = descriptor.value;
+	AssertNotNullable(originalMethod);
+
+	const cache = new WeakMap<object, Return>();
+
+	descriptor.value = function (this: object): Return {
+		if (cache.has(this)) {
+			return cache.get(this) as Return;
+		}
+		const result = originalMethod.call(this);
+		cache.set(this, result);
+		return result;
+	};
+
+	return descriptor;
 }

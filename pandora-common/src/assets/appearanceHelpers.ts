@@ -101,6 +101,18 @@ export abstract class AppearanceManipulator {
 		return this._applyItems(items);
 	}
 
+	public mapItems(mapper: (item: Item) => Item | null): boolean {
+		const items = this.getItems().slice();
+		const next = items
+			.map((item) => mapper(item))
+			.filter((item): item is Item => item != null && item.id === item.id && item.asset === item.asset);
+
+		if (next.length !== items.length)
+			return false;
+
+		return this._applyItems(next);
+	}
+
 	public abstract queueMessage(message: ActionHandlerMessageTemplate): void;
 }
 

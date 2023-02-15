@@ -72,6 +72,12 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	 *                 n == 0, slot is not occupied but block is still applied
 	 */
 	occupySlots?: Partial<Record<A['slots'], number>>;
+
+	/**
+	 * Unique list of color groups that disable colorization of that group on this item
+	 * @default []
+	 */
+	disableColorization?: A['colorGroups'][];
 }
 
 export interface AssetSlotResult {
@@ -122,6 +128,7 @@ export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	blockSelfAddRemove: boolean;
 	blockModules: Set<string>;
 	blockSelfModules: Set<string>;
+	disableColorization: Set<string>;
 }
 
 export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividualResult {
@@ -132,6 +139,7 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 		blockSelfAddRemove: false,
 		blockModules: new Set(),
 		blockSelfModules: new Set(),
+		disableColorization: new Set(),
 	};
 }
 
@@ -142,6 +150,7 @@ export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualRe
 	base.blockSelfAddRemove ||= properties.blockSelfAddRemove ?? false;
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));
 	properties.blockSelfModules?.forEach((a) => base.blockSelfModules.add(a));
+	properties.disableColorization?.forEach((a) => base.disableColorization.add(a));
 
 	return base;
 }

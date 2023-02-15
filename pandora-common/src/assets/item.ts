@@ -2,10 +2,9 @@ import { Immutable } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
-import type { Writeable } from '../utility';
+import { MemoizeNoArg, Writeable } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
 import type { AppearanceActionContext } from './appearanceActions';
-import type { CharacterAppearance } from './appearance';
 import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
@@ -136,6 +135,37 @@ export class Item {
 		});
 	}
 
+	public overrideColors(items: AppearanceItems): Item {
+		const colorization = this.asset.definition.colorization;
+		if (!colorization)
+			return this;
+
+		const { disableColorization } = this.getProperties();
+		if (disableColorization.size === 0)
+			return this;
+
+		let hasGroup = false;
+		const result: Writeable<ItemColorBundle> = {};
+		for (const [key, value] of Object.entries(this.color)) {
+			const def = colorization[key];
+			if (!def || def.name == null)
+				continue;
+
+			result[key] = value;
+
+			if (!disableColorization.has(def.name))
+				continue;
+
+			const groupColor = this._resolveColorGroup(items, def);
+			if (groupColor == null)
+				continue;
+
+			hasGroup = true;
+		}
+
+		return hasGroup ? this.changeColor(result) : this;
+	}
+
 	public moduleAction(context: AppearanceActionContext, moduleName: string, action: ItemModuleAction, messageHandler: ActionMessageTemplateHandler): Item | null {
 		const module = this.modules.get(moduleName);
 		if (!module || module.type !== action.moduleType)
@@ -177,19 +207,21 @@ export class Item {
 		});
 	}
 
-	public getPropertiesParts(): Immutable<AssetProperties>[] {
+	@MemoizeNoArg
+	public getPropertiesParts(): readonly Immutable<AssetProperties>[] {
 		const propertyParts: Immutable<AssetProperties>[] = [this.asset.definition];
 		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
 
 		return propertyParts;
 	}
 
+	@MemoizeNoArg
 	public getProperties(): AssetPropertiesIndividualResult {
 		return this.getPropertiesParts()
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
 	}
 
-	public resolveColor(container: CharacterAppearance, colorizationKey?: string): HexColorString | undefined {
+	public resolveColor(items: AppearanceItems, colorizationKey?: string): HexColorString | undefined {
 		if (colorizationKey == null || !this.asset.definition.colorization)
 			return undefined;
 
@@ -201,17 +233,17 @@ export class Item {
 		if (color)
 			return color;
 
-		return this._resolveColorGroup(container, colorization);
+		return this._resolveColorGroup(items, colorization) ?? colorization.default;
 	}
 
-	private _resolveColorGroup(container: CharacterAppearance, { group, default: defaultColor }: AssetColorization): HexColorString {
+	private _resolveColorGroup(items: AppearanceItems, { group }: AssetColorization): HexColorString | undefined {
 		if (!group)
-			return defaultColor;
+			return undefined;
 
-		let color = defaultColor;
+		let color: HexColorString | undefined;
 		let foundSelf = false;
 		let foundColor = false;
-		for (const item of container.getAllItems()) {
+		for (const item of items) {
 			if (item.id === this.id) {
 				if (foundColor)
 					return color;

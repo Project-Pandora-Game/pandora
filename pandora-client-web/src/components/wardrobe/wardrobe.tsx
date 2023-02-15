@@ -1148,7 +1148,7 @@ export function WardrobeItemConfigMenu({
 function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { colorKey: string; colorDefinition: AssetColorization; action: Omit<AppearanceAction & { type: 'color'; }, 'color'>; item: Item; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const { character, execute, actions } = useWardrobeContext();
-	const currentColor = item.resolveColor(character.appearance, colorKey) ?? colorDefinition.default;
+	const currentColor = item.resolveColor(character.appearance.getAllItems(), colorKey) ?? colorDefinition.default;
 	const currentBundle = item.exportColorToBundle();
 
 	if (!colorDefinition.name || !currentBundle)

@@ -29,7 +29,7 @@ function FixupColorFromAsset(asset: Asset, color: ItemColorBundle | HexColorStri
 		const keys = Object.keys(colorization);
 		const fixup: Writeable<ItemColorBundle> = {};
 		color.forEach((value, index) => {
-			if (keys.length < index)
+			if (index < keys.length)
 				fixup[keys[index]] = value;
 		});
 		color = fixup;

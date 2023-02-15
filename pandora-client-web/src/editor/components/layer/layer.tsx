@@ -147,27 +147,23 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 }
 
 function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+	const colorization = useMemo(() => asset.asset.definition.colorization ?? {}, [asset]);
 	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).colorizationKey);
 
 	const colorLayerName = useMemo(() => {
 		if (value == null)
 			return '[ Not colorable ]';
-		const colorization = asset.asset.definition.colorization;
-		if (!colorization || colorization[value] == null)
+		if (colorization[value] == null)
 			return '[ Invalid key ]';
 		const name = colorization[value].name;
 		if (name == null)
 			return '[ Not colorable by user ]';
 		return name;
-	}, [value, asset]);
+	}, [value, colorization]);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
 		const trimmed = e.target.value.trim();
-		if (trimmed === '') {
-			setValue(undefined);
-		} else {
-			setValue(e.target.value);
-		}
+		setValue(trimmed ? trimmed : undefined);
 		layer.setColorizationKey(trimmed ? trimmed : null);
 	});
 
@@ -200,10 +196,8 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 				</label>
 				<input
 					id='layer-colorization'
-					type='number'
+					type='text'
 					value={ value }
-					min={ -1 }
-					step={ 1 }
 					onChange={ onChange }
 					className='flex-1'
 				/>

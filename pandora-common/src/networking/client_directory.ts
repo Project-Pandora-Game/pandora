@@ -1,11 +1,14 @@
 import type { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
-import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomDirectoryExtendedInfo, IChatRoomDirectoryInfo, RoomIdSchema } from '../chatroom';
+import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomDirectoryExtendedInfo, IChatRoomDirectoryInfo, RoomIdSchema } from '../chatroom/room';
 import { ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
 import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
+
+// Fix for pnpm resolution weirdness
+import type { } from '../account/accountRoles';
 
 type ShardError = 'noShardFound' | 'failed';
 

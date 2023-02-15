@@ -195,6 +195,7 @@ importers:
       typescript: ^4.9.3
       zod: ^3.19.1
     dependencies:
+      '@types/lodash': 4.14.188
       '@types/node': 18.11.9
       lodash: 4.17.21
       nanoid: 3.3.4
@@ -207,7 +208,6 @@ importers:
       '@swc/core': 1.3.14
       '@swc/jest': 0.2.23_@swc+core@1.3.14
       '@types/jest': 29.2.2
-      '@types/lodash': 4.14.188
       '@typescript-eslint/eslint-plugin': 5.44.0_vrisa4c3vavwt5zm76wmyrlx6i
       '@typescript-eslint/parser': 5.44.0_e3uo4sehh4zr4i6m57mkkxxv7y
       eslint: 8.27.0
@@ -3275,7 +3275,6 @@ packages:
 
   /@types/lodash/4.14.188:
     resolution: {integrity: sha512-zmEmF5OIM3rb7SbLCFYoQhO4dGt2FRM9AMkxvA3LaADOF1n8in/zGJlWji9fmafLoNyz+FoL6FE0SLtGIArD7w==}
-    dev: true
 
   /@types/mime/3.0.1:
     resolution: {integrity: sha512-Y4XFY5VJAuw0FgAqPNd6NNoV44jbq9Bz2L7Rh/J6jLTiHBSBJa9fxqQIvkIld4GsoDOcCbvzOUAbLPsSKKg+uA==}
@@ -4498,7 +4497,7 @@ packages:
     dev: true
 
   /concat-map/0.0.1:
-    resolution: {integrity: sha1-2Klr13/Wjfd5OnMDajug1UBdR3s=}
+    resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
   /connect-history-api-fallback/2.0.0:
     resolution: {integrity: sha512-U73+6lQFmfiNPrYbXqr6kZ1i1wiRqXnp2nhMsINseWXO8lDau0LGEffJ8kQi4EjLZympVgRdvqjAgiZ1tgzDDA==}

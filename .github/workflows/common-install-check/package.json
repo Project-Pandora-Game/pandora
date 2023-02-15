@@ -1,0 +1,10 @@
+{
+	"name": "pandora-common-install-check",
+	"version": "1.0.0",
+	"description": "A dummy package to check, that the pandora-common package can be successfully installed",
+	"private": true,
+	"license": "MIT",
+	"dependencies": {
+		"pandora-common": "file:../../../pandora-common"
+	}
+}

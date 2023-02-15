@@ -1148,22 +1148,44 @@ export function WardrobeItemConfigMenu({
 function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { colorKey: string; colorDefinition: AssetColorization; action: Omit<AppearanceAction & { type: 'color'; }, 'color'>; item: Item; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const { character, execute, actions } = useWardrobeContext();
-	const currentColor = item.resolveColor(character.appearance.getAllItems(), colorKey) ?? colorDefinition.default;
-	const currentBundle = item.exportColorToBundle();
+	const current = item.resolveColor(character.appearance.getAllItems(), colorKey) ?? colorDefinition.default;
+	const { bundle, disabled, disabledByGroup } = useMemo(() => {
+		const bundle = item.exportColorToBundle();
+		const disabled = bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success';
+		let disabledByGroup = true;
+		if (!disabled && colorDefinition.group) {
+			const { disableColorization } = item.getProperties();
+			if (disableColorization.has(colorDefinition.group)) {
+				disabledByGroup = false;
+			}
+		}
+		return {
+			bundle,
+			disabled,
+			disabledByGroup,
+		};
+	}, [colorKey, colorDefinition, action, item, actions, assetManager]);
 
-	if (!colorDefinition.name || !currentBundle)
+	if (!colorDefinition.name || !bundle)
 		return null;
 
 	return (
 		<div className='wardrobeColorRow' key={ colorKey }>
 			<span className='flex-1'>{ colorDefinition.name }</span>
+			{
+				disabledByGroup && (
+					<span title='This color controlled by a color group and cannot be changed.'>
+						🔗
+					</span>
+				)
+			}
 			<ColorInput
-				initialValue={ currentColor }
+				initialValue={ current }
 				resetValue={ colorDefinition.default }
 				throttle={ 100 }
-				disabled={ DoAppearanceAction({ ...action, color: currentBundle }, actions, assetManager, { dryRun: true }).result !== 'success' }
+				disabled={ disabled || disabledByGroup }
 				onChange={ (color) => {
-					const newColor = _.cloneDeep<Writeable<typeof currentBundle>>(currentBundle);
+					const newColor = _.cloneDeep<Writeable<typeof bundle>>(bundle);
 					newColor[colorKey] = color;
 					execute({
 						...action,

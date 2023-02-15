@@ -34,7 +34,7 @@ export function ColorInput({
 			<input type='color' value={ value } onChange={ onInputChange } disabled={ disabled } />
 			{
 				resetValue != null &&
-				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
+				<Button className='slim' onClick={ () => changeCallback(resetValue) } disabled={ disabled }>↺</Button>
 			}
 		</>
 	);

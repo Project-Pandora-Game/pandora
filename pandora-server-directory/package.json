@@ -11,8 +11,8 @@
 		"clean": "rimraf dist",
 		"build": "pnpm run --silent clean && tsc -p ./tsconfig.src.json",
 		"build:swc": "pnpm run --silent clean && swc src -d dist",
-		"dev": "pnpm run --silent clean && tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess \"nodemon --watch dist --watch .env --signal SIGTERM --enable-source-maps -r dotenv/config dist/index.js --development\"",
-		"dev:inspect": "pnpm run --silent clean && tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess \"nodemon --watch dist --watch .env --signal SIGTERM --inspect=25860 --enable-source-maps -r dotenv/config dist/index.js --development\"",
+		"dev": "pnpm run --silent clean && tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess \"nodemon --enable-source-maps -r dotenv/config dist/index.js --development\"",
+		"dev:inspect": "pnpm run --silent clean && tsc-watch -p ./tsconfig.src.json --noClear --onFirstSuccess \"nodemon --inspect=25860 --enable-source-maps -r dotenv/config dist/index.js --development\"",
 		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
@@ -22,6 +22,17 @@
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch"
+	},
+	"nodemonConfig": {
+		"watch": [
+			"dist",
+			".env",
+			"node_modules/pandora-common/dist"
+		],
+		"signal": "SIGTERM",
+		"ignoreRoot": [
+			".git"
+		]
 	},
 	"dependencies": {
 		"@octokit/auth-oauth-app": "^5.0.4",

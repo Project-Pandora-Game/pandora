@@ -159,9 +159,15 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 			return '[ Not colorable ]';
 		if (colorization[value] == null)
 			return '[ Invalid key ]';
-		const name = colorization[value].name;
-		if (name == null)
-			return '[ Not colorable by user ]';
+		const { name, group } = colorization[value];
+		if (name == null) {
+			if (group == null)
+				return '[ Not colorable by user ]';
+
+			return `[ Not colorable by user, control group: '${ group }' ]`;
+		} else if (group != null) {
+			return `${ name } (control group: '${ group }')`;
+		}
 		return name;
 	}, [value, colorization]);
 
@@ -177,29 +183,33 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 				<label
 					htmlFor='layer-colorization'
 				>
-					Colorization index:
+					Colorization key:
 					<ContextHelpButton>
 						<p>
-							This selects the index of the color this layer should use for tinting the asset image.<br />
+							This selects the key of the color this layer should use for tinting the asset image.<br />
 						</p>
 						<p>
 							In the asset.ts file of the asset, you already have or will create later,<br />
-							there is a setting 'colorization' about the default colors the asset uses.
+							there is a setting 'colorization' specifies colors the asset uses.
 						</p>
 						<p>
-							A value of 0 for the input field means that it uses the first asset color<br />
-							from the '*.asset.ts' file.<br />
-							If you do not want this layer to be colorable by the user, set a value of -1.
+							To prevent this layer from being colorable, set the value to an empty string.
 						</p>
 						<p>
-							If you know the order and amount of default colors you want to set later,<br />
-							you could set the index in advance here and later add the colors to the '*.asset.ts' file.<br />
+							This key can be set in advance even if it is not yet defined in the asset.ts file.<br />
+							Colorization name will be set to '[ Invalid key ]' in this case.<br />
 							The recommendation is to revisit layer coloring after you complete the '*.asset.ts' file.
 						</p>
 					</ContextHelpButton>
 				</label>
+				<datalist id='layer-colorization-list'>
+					{ Object.keys(colorization).map((key) => (
+						<option key={ key } value={ key } />
+					)) }
+				</datalist>
 				<input
 					id='layer-colorization'
+					list='layer-colorization-list'
 					type='text'
 					value={ value }
 					onChange={ onChange }
@@ -214,9 +224,18 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 					<ContextHelpButton>
 						<p>
 							This value shows the according name of the color setting from the<br />
-							'*.asset.ts' file based on the input value of 'Colorization index'.<br />
+							'*.asset.ts' file based on the input value of 'Colorization key'.<br />
 							You cannot edit this field, as  you cannot define new colors and<br />
 							their name in the editor but only in the asset code (*.asset.ts file).
+						</p>
+						<p>
+							If the colorization definition also has a control group,<br />
+							it will be shown here. If the color group is active, then this layer<br />
+							will inherit the color of another item with the same color group.
+						</p>
+						<p>
+							The color group will always be active if the colorization doesn't have a name.<br />
+							Otherwise, it can be activated by the 'disableColorization' asset property.
 						</p>
 					</ContextHelpButton>
 				</label>

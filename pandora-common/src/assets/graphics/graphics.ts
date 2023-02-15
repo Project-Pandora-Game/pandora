@@ -155,7 +155,7 @@ export const LayerDefinitionSchema = RectangleSchema.extend({
 	points: z.union([z.array(PointDefinitionSchema), z.string(), z.number()]),
 	pointType: z.array(z.string()).optional(),
 	mirror: LayerMirrorSchema,
-	colorizationIndex: z.number().int().nonnegative().optional(),
+	colorizationKey: z.string().optional(),
 
 	image: LayerImageSettingSchema,
 	scaling: z.object({

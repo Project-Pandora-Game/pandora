@@ -94,11 +94,11 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	bodypart?: A['bodyparts'];
 
 	/** Configuration of user-configurable asset colorization */
-	colorization?: {
+	colorization?: Record<string, {
 		/** Name that describes the meaning of this color to user, `null` if it cannot be colored by user */
 		name: string | null;
 		default: HexColorString;
-	}[];
+	}>;
 
 	/**
 	 * Modules this asset has

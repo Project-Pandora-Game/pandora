@@ -89,14 +89,14 @@ export class AssetGraphicsLayer {
 		});
 	}
 
-	public setColorizationIndex(colorizationIndex: number | null): void {
-		Assert(colorizationIndex === null || Number.isInteger(colorizationIndex) && colorizationIndex >= 0);
+	public setColorizationKey(colorizationKey: string | null): void {
+		Assert(colorizationKey === null || colorizationKey.trim().length > 0, 'Colorization key must be null or non-empty');
 
 		if (this.mirror && this.isMirror)
-			return this.mirror.setColorizationIndex(colorizationIndex);
+			return this.mirror.setColorizationKey(colorizationKey);
 
 		this._modifyDefinition((d) => {
-			d.colorizationIndex = colorizationIndex === null ? undefined : colorizationIndex;
+			d.colorizationKey = colorizationKey === null ? undefined : colorizationKey;
 		});
 	}
 

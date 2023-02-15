@@ -129,7 +129,7 @@ export function GraphicsLayer({
 	const {
 		image: scalingBaseimage,
 		scaling,
-		colorizationIndex,
+		colorizationKey,
 		x, y,
 	} = useLayerDefinition(layer);
 
@@ -184,10 +184,9 @@ export function GraphicsLayer({
 		(
 			(
 				item != null &&
-				colorizationIndex != null &&
-				colorizationIndex >= 0 &&
-				colorizationIndex < item.color.length
-			) ? Number.parseInt(item.color[colorizationIndex].slice(1), 16) : undefined
+				colorizationKey != null &&
+				item.color[colorizationKey]
+			) ? Number.parseInt(item.color[colorizationKey].slice(1), 16) : undefined
 		) ??
 		0xffffff;
 

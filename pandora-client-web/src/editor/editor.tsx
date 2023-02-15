@@ -226,14 +226,15 @@ export function useEditorLayerStateOverride(layer: AssetGraphicsLayer): LayerSta
 
 export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
 	const override = useEditorLayerStateOverride(layer);
-	const { colorizationIndex } = useLayerDefinition(layer);
+	const { colorizationKey } = useLayerDefinition(layer);
 	if (override?.color !== undefined) {
 		return override.color;
 	}
 	const { colorization } = layer.asset.asset.definition;
-	if (colorization) {
-		if (colorizationIndex != null && colorizationIndex >= 0 && colorizationIndex < colorization.length) {
-			return parseInt(colorization[colorizationIndex].default.substring(1), 16);
+	if (colorization && colorizationKey) {
+		const value = colorization[colorizationKey];
+		if (value) {
+			return parseInt(value.default.substring(1), 16);
 		}
 	}
 	return 0xffffff;

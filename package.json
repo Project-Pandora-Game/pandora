@@ -2,10 +2,11 @@
 	"private": true,
 	"scripts": {
 		"postinstall": "node .hooks/postinstall.cjs",
-		"ci": "pnpm run build && pnpm lint && pnpm run type-check:test && pnpm run test --ci",
+		"ci": "pnpm run build && pnpm run check-common-install && pnpm run lint && pnpm run type-check:test && pnpm run test --ci",
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
+		"check-common-install": "cd ./.github/workflows/common-install-check && pnpm install --force --no-lockfile",
 		"lint": "pnpm -r --no-bail --parallel run lint",
 		"lint:fix": "pnpm -r --no-bail --parallel run lint:fix",
 		"type-check:test": "pnpm -r --no-bail --parallel run type-check:test",

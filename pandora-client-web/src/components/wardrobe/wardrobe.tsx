@@ -1145,17 +1145,20 @@ export function WardrobeItemConfigMenu({
 	);
 }
 
-function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { colorKey: string; colorDefinition: AssetColorization; action: Omit<AppearanceAction & { type: 'color'; }, 'color'>; item: Item; }): ReactElement | null {
+function useColorization(
+	item: Item,
+	action: Omit<AppearanceAction & { type: 'color'; }, 'color'>,
+	colorGroup?: string,
+) {
 	const assetManager = useAssetManager();
-	const { character, execute, actions } = useWardrobeContext();
-	const current = item.resolveColor(character.appearance.getAllItems(), colorKey) ?? colorDefinition.default;
-	const { bundle, disabled, disabledByGroup } = useMemo(() => {
+	const { actions } = useWardrobeContext();
+	return useMemo(() => {
 		const bundle = item.exportColorToBundle();
 		const disabled = bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success';
 		let disabledByGroup = true;
-		if (!disabled && colorDefinition.group) {
+		if (!disabled && colorGroup) {
 			const { disableColorization } = item.getProperties();
-			if (disableColorization.has(colorDefinition.group)) {
+			if (disableColorization.has(colorGroup)) {
 				disabledByGroup = false;
 			}
 		}
@@ -1164,7 +1167,13 @@ function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { color
 			disabled,
 			disabledByGroup,
 		};
-	}, [colorKey, colorDefinition, action, item, actions, assetManager]);
+	}, [colorGroup, action, item, actions, assetManager]);
+}
+
+function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { colorKey: string; colorDefinition: AssetColorization; action: Omit<AppearanceAction & { type: 'color'; }, 'color'>; item: Item; }): ReactElement | null {
+	const { character, execute } = useWardrobeContext();
+	const current = item.resolveColor(character.appearance.getAllItems(), colorKey) ?? colorDefinition.default;
+	const { bundle, disabled, disabledByGroup } = useColorization(item, action, colorDefinition.group);
 
 	if (!colorDefinition.name || !bundle)
 		return null;

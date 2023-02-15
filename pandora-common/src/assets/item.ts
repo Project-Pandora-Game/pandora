@@ -266,7 +266,7 @@ export class Item {
 		return color ?? colorSecondary;
 	}
 
-	private _getColorByGroup(group: string): { primary?: HexColorString, secondary?: HexColorString; } {
+	private _getColorByGroup(group: string): { primary?: HexColorString; secondary?: HexColorString; } {
 		const { disableColorization } = this.getProperties();
 		const resultKey = disableColorization.has(group) ? 'secondary' : 'primary' as const;
 		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {

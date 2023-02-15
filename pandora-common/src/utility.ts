@@ -302,7 +302,8 @@ export function MemoizeNoArg<Return>(_target: object, _key: string, descriptor: 
 
 	descriptor.value = function (this: object): Return {
 		if (cache.has(this)) {
-			return cache.get(this) as Return;
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			return cache.get(this)!;
 		}
 		const result = originalMethod.call(this);
 		cache.set(this, result);

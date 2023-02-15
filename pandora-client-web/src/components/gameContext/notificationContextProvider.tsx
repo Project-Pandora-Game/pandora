@@ -4,8 +4,8 @@ import { Observable, ReadonlyObservable, useObservable } from '../../observable'
 import { VersionCheck } from '../versionCheck/versionCheck';
 
 type NotificationHeader<T extends ReadonlyObservable<readonly unknown[]> = ReadonlyObservable<readonly unknown[]>> = {
-	readonly notifications: T,
-	readonly friends: T,
+	readonly notifications: T;
+	readonly friends: T;
 };
 export type NotificationHeaderKeys = keyof NotificationHeader;
 
@@ -122,7 +122,7 @@ class NotificationHandler extends NotificationHandlerBase {
 		// NOOP
 	}
 
-	private _getSettings(_source: NotificationSource): { alert: ReadonlySet<NotificationAlert>, audio: NotificationAudio } {
+	private _getSettings(_source: NotificationSource): { alert: ReadonlySet<NotificationAlert>; audio: NotificationAudio; } {
 		if (document.visibilityState === 'visible') {
 			return { alert: new Set([NotificationAlert.HEADER]), audio: NotificationAudio.NONE };
 		}
@@ -188,7 +188,7 @@ class NotificationHandler extends NotificationHandlerBase {
 
 const notificationContext = createContext(new NotificationHandlerBase());
 
-export function NotificationContextProvider({ children }: { children: React.ReactNode }) {
+export function NotificationContextProvider({ children }: { children: React.ReactNode; }) {
 	const context = useMemo(() => new NotificationHandler(), []);
 
 	useDebugExpose('notificationHandler', context);
@@ -224,7 +224,7 @@ function NotificationTitleUpdater(): null {
 export function useNotification(source: NotificationSource): {
 	notify: (data: NotificationData) => void;
 	clear: () => void;
-	supress: () => void
+	supress: () => void;
 	unsupress: () => void;
 } {
 	const context = useContext(notificationContext);

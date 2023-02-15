@@ -14,7 +14,7 @@ import { EditorContext, useEditor } from '../editorContextProvider';
 import { ResultCharacter, SetupCharacter } from './character';
 import { ImageExporter } from './export/imageExporter';
 
-function EditorColorPicker({ throttle }: { throttle: number }): ReactElement {
+function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
 	const color = useObservable(editor.backgroundColor);
 

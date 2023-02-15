@@ -41,7 +41,7 @@ describe('AuthFormRouter', () => {
 	${ 'resend verification email form' } | ${ 'Resend email' }    | ${ ResendVerificationForm }
 	${ 'password reset form' }            | ${ 'Reset password' }  | ${ ResetPasswordForm }
 	`('should display the $formName',
-		({ component, expectedHeading }: { component: ComponentType<Record<string, never>>, expectedHeading: string }) => {
+		({ component, expectedHeading }: { component: ComponentType<Record<string, never>>; expectedHeading: string; }) => {
 			renderWithComponent(component);
 			const heading = screen.getByRole('heading');
 			expect(heading).toBeVisible();

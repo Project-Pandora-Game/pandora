@@ -265,8 +265,8 @@ const activeTabsContext = createContext({
 
 export interface EditorCurrentTabContext {
 	activeTabs: readonly TabsName[];
-	setTab(tab: TabsName): void,
-	closeTab(): void,
+	setTab(tab: TabsName): void;
+	closeTab(): void;
 }
 
 export function useEditorTabContext(): EditorCurrentTabContext {

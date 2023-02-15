@@ -110,7 +110,7 @@ export function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
-export function WardrobeContextProvider({ character, player, children }: { character: Character, player: PlayerCharacter, children: ReactNode; }): ReactElement {
+export function WardrobeContextProvider({ character, player, children }: { character: Character; player: PlayerCharacter; children: ReactNode; }): ReactElement {
 	const assetList = useObservable(GetAssetManager().assetList);
 	const roomContext = useActionRoomContext();
 	const shardConnector = useShardConnector();

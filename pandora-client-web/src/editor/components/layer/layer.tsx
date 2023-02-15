@@ -61,7 +61,7 @@ export function LayerUI(): ReactElement {
 	);
 }
 
-function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | null {
+function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | null {
 	const visibleName = useLayerName(layer);
 	const { name } = useLayerDefinition(layer);
 
@@ -376,7 +376,7 @@ function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 	);
 }
 
-function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactElement | null {
+function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | null {
 	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).pointType?.join(',') ?? '', [layer]);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {

@@ -68,6 +68,6 @@ function VersionCheckImpl() {
 
 async function GetCurrentVersion(): Promise<string> {
 	const result = await fetch(`/version.json?${Date.now()}`);
-	const json = await result.json() as { gitCommitHash: string };
+	const json = await result.json() as { gitCommitHash: string; };
 	return json.gitCommitHash;
 }

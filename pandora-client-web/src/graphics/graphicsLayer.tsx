@@ -101,8 +101,8 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	appearanceContainer: AppearanceContainer;
 	zIndex: number;
 	lowerZIndex: number;
-	layer: AssetGraphicsLayer,
-	item: Item | null,
+	layer: AssetGraphicsLayer;
+	item: Item | null;
 	verticesPoseOverride?: Record<BoneName, number>;
 	state?: LayerStateOverrides;
 	getTexture?: (path: string) => Promise<Texture>;
@@ -243,7 +243,7 @@ interface MaskContainerProps extends ChildrenProps {
 		vertices: IArrayBuffer;
 		uvs: IArrayBuffer;
 		indices: IArrayBuffer;
-	}
+	};
 	zIndex?: number;
 	getTexture?: (path: string) => Promise<Texture>;
 }

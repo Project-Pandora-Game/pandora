@@ -100,8 +100,8 @@ export const COMMANDS: readonly IClientCommand[] = [
 			}),
 		// TODO
 		// status: () => {
-		// 	const target = undefined; // GetWhisperTarget(args);
-		// 	return target ? { status: 'whisper', target } : { status: 'none' };
+		// const target = undefined; // GetWhisperTarget(args);
+		// return target ? { status: 'whisper', target } : { status: 'none' };
 		// },
 	},
 	{

@@ -157,8 +157,17 @@
 				]
 			}
 		],
+		"no-tabs": ["warn", { "allowIndentationTabs": true }],
 		"comma-dangle": "off",
 		"@typescript-eslint/comma-dangle": ["warn", "always-multiline"],
+		"@typescript-eslint/member-delimiter-style": [
+			"warn",
+			{
+				"singleline": {
+					"requireLast": true
+				}
+			}
+		],
 		"no-trailing-spaces": "warn",
 		"quotes": "off",
 		"@typescript-eslint/quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],

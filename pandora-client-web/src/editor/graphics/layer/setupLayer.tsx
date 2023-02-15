@@ -64,7 +64,7 @@ export function SetupLayerSelected({
 }: {
 	appearanceContainer: AppearanceContainer;
 	zIndex: number;
-	layer: AssetGraphicsLayer,
+	layer: AssetGraphicsLayer;
 }): ReactElement {
 	const editor = useEditor();
 	const state = useEditorLayerStateOverride(layer);

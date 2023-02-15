@@ -84,7 +84,7 @@ export function Chatroom(): ReactElement {
 	);
 }
 
-function DisplayCharacter({ char }: { char: Character }): ReactElement {
+function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
@@ -273,7 +273,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageCh
 	);
 }
 
-function DisplayContextMenuItems({ close, id }: { close: () => void; id: number }): ReactElement {
+function DisplayContextMenuItems({ close, id }: { close: () => void; id: number; }): ReactElement {
 	const sender = useChatRoomMessageSender();
 	const timeout = sender.getMessageEditTimeout(id);
 	const [edit, setEdit] = useState(timeout !== undefined && timeout > 0);
@@ -405,7 +405,7 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 	);
 }
 
-function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }): ReactElement | null {
+function ActionMessage({ message }: { message: IChatroomMessageActionProcessed; }): ReactElement | null {
 	const [folded, setFolded] = useState(true);
 
 	const [content, extraContent] = useMemo(() => RenderActionContent(message), [message]);

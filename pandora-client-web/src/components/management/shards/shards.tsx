@@ -60,7 +60,7 @@ export function Shards(): ReactElement {
 	);
 }
 
-function ShardRow({ shard }: { shard: IShardTokenInfo }): ReactElement {
+function ShardRow({ shard }: { shard: IShardTokenInfo; }): ReactElement {
 	const connector = useDirectoryConnector();
 	const { reload } = useContext(ShardListContext);
 

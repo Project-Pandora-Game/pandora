@@ -60,7 +60,7 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 		return maxUses === undefined || uses < maxUses;
 	}
 
-	public async create(acc: Account, { expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey']): Promise<'adminRequired' | { info: IBetaKeyInfo, token: string; }> {
+	public async create(acc: Account, { expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey']): Promise<'adminRequired' | { info: IBetaKeyInfo; token: string; }> {
 		if (!acc.roles.isAuthorized('admin')) {
 			if (maxUses === undefined || maxUses > TOKEN_MAX_USES)
 				return 'adminRequired';

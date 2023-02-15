@@ -161,12 +161,12 @@ export type IChatRoomDirectoryInfo = IChatRoomBaseInfo & {
 	// TODO
 	// /** Info about the creator */
 	// creator: {
-	// 	/** The id of the creator */
-	// 	id: string;
-	// 	/** The name of the creator */
-	// 	accountName: string;
-	// 	/** The avatar of the creator */
-	// 	characterName: string;
+	// /** The id of the creator */
+	// id: string;
+	// /** The name of the creator */
+	// accountName: string;
+	// /** The avatar of the creator */
+	// characterName: string;
 	// };
 };
 

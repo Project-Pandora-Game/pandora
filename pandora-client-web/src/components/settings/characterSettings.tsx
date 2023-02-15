@@ -22,7 +22,7 @@ export function CharacterSettings(): ReactElement | null {
 	);
 }
 
-function LabelColor({ playerData }: { playerData: Readonly<ICharacterData> }): ReactElement {
+function LabelColor({ playerData }: { playerData: Readonly<ICharacterData>; }): ReactElement {
 	const shardConnector = useShardConnector();
 	const [color, setColor] = useColorInput(playerData.settings.labelColor);
 
@@ -43,7 +43,7 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterData> }): R
 	);
 }
 
-function Pronouns({ playerData }: { playerData: Readonly<ICharacterData> }): ReactElement {
+function Pronouns({ playerData }: { playerData: Readonly<ICharacterData>; }): ReactElement {
 	const shardConnector = useShardConnector();
 	const [pronoun, setProunoun] = React.useState(playerData.settings.pronoun);
 	const features = useChatRoomFeatures();

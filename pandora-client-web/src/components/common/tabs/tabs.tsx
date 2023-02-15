@@ -11,7 +11,7 @@ interface TabProps extends ChildrenProps {
 }
 
 export function TabContainer({ children, id, className, collapsable }: {
-	children: (ReactElement<TabProps> | undefined | null)[]
+	children: (ReactElement<TabProps> | undefined | null)[];
 	id?: string;
 	className?: string;
 	collapsable?: true;

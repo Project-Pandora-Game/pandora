@@ -15,7 +15,7 @@ export interface DebugData {
 }
 
 export interface DebugContext {
-	debugData: DebugData,
+	debugData: DebugData;
 	setDebugData: (additionalData: DebugData) => void;
 }
 

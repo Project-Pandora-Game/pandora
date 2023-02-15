@@ -25,7 +25,7 @@ export function Dialogs(): ReactElement {
 }
 
 type DialogCloseContext = {
-	close: () => void,
+	close: () => void;
 };
 
 const dialogCloseContext = createContext<DialogCloseContext>({

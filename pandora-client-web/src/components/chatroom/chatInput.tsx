@@ -51,11 +51,11 @@ type ChatInputSave = {
 const InputResore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
 
 export type ChatMode = {
-	type: IChatType,
-	raw: boolean,
+	type: IChatType;
+	raw: boolean;
 };
 
-export function ChatInputContextProvider({ children }: { children: React.ReactNode }) {
+export function ChatInputContextProvider({ children }: { children: React.ReactNode; }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
 	const [editing, setEditingState] = useState<number | null>(null);
@@ -153,7 +153,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	);
 }
 
-export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement>; scroll: (forceScroll: boolean) => void, newMessageCount: number }) {
+export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement>; scroll: (forceScroll: boolean) => void; newMessageCount: number; }) {
 	const { ref } = useChatInput();
 	return (
 		<>
@@ -166,7 +166,7 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 	);
 }
 
-function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> }, ref: ForwardedRef<HTMLTextAreaElement>) {
+function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>; }, ref: ForwardedRef<HTMLTextAreaElement>) {
 	const lastInput = useRef('');
 	const timeout = useRef<number>();
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
@@ -322,7 +322,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement> 
 
 		lastInput.current = value;
 		InputResore.value = { input: value, roomId: InputResore.value.roomId };
-		let nextStatus: null | { status: IChatRoomStatus, target?: CharacterId } = null;
+		let nextStatus: null | { status: IChatRoomStatus; target?: CharacterId; } = null;
 		const trimmed = value.trim();
 		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY))) {
 			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
@@ -386,7 +386,7 @@ function TypingIndicator(): ReactElement {
 	);
 }
 
-function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount: number, scroll: (forceScroll: boolean) => void }): ReactElement | null {
+function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount: number; scroll: (forceScroll: boolean) => void; }): ReactElement | null {
 	if (newMessageCount === 0) {
 		return null;
 	}
@@ -403,7 +403,7 @@ function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount:
 	);
 }
 
-function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void }): ReactElement {
+function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): ReactElement {
 	const { target, setTarget, editing, setEditing, setValue, mode, setMode } = useChatInput();
 	const lastHasTarget = useRef(target !== null);
 	const lastEditing = useRef(editing);

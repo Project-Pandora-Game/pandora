@@ -42,7 +42,7 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		return true;
 	}
 
-	public async create(acc: Account, { type, expires }: IClientDirectoryArgument['manageCreateShardToken']): Promise<'adminRequired' | { info: IShardTokenInfo, token: string; }> {
+	public async create(acc: Account, { type, expires }: IClientDirectoryArgument['manageCreateShardToken']): Promise<'adminRequired' | { info: IShardTokenInfo; token: string; }> {
 		if (['stable', 'beta'].includes(type) && !acc.roles.isAuthorized('admin'))
 			return 'adminRequired';
 

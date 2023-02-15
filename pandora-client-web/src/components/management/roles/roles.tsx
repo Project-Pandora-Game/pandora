@@ -74,7 +74,7 @@ export function Roles(): ReactElement {
 	);
 }
 
-function ManageRoleTr({ role, data }: { id: number, role: AccountRole, data: IRoleManageInfo }): ReactElement {
+function ManageRoleTr({ role, data }: { id: number; role: AccountRole; data: IRoleManageInfo; }): ReactElement {
 	const connector = useDirectoryConnector();
 	const { id, reload } = useContext(RoleListContext);
 

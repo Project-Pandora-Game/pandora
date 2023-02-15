@@ -100,8 +100,8 @@ export const DirectoryClientSchema = {
 	},
 	connectionState: {
 		request: ZodCast<{
-			account: IDirectoryAccountInfo | null,
-			character: IDirectoryCharacterConnectionInfo | null,
+			account: IDirectoryAccountInfo | null;
+			character: IDirectoryCharacterConnectionInfo | null;
 		}>(),
 		response: null,
 	},

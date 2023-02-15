@@ -35,7 +35,7 @@ export class SymmetricEncryption {
 		return await subtle.unwrapKey('pkcs8', Base64ToArray(key), this.#key, GenerateIV(iv).alg, params, true, usage);
 	}
 
-	public static async generate(gen?: { password: string, salt: Uint8Array; }): Promise<SymmetricEncryption> {
+	public static async generate(gen?: { password: string; salt: Uint8Array; }): Promise<SymmetricEncryption> {
 		let key: CryptoKey | undefined;
 		if (gen === undefined) {
 			key = await subtle.generateKey(AES_GCM_PARAMS, true, AES_GCM_KEY_USAGES);

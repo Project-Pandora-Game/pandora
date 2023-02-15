@@ -49,7 +49,7 @@ function LeftHeader(): ReactElement {
 	);
 }
 
-function CharacterMenu({ close }: { close: () => void }): ReactElement {
+function CharacterMenu({ close }: { close: () => void; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const player = usePlayer();
 	AssertNotNullable(player);

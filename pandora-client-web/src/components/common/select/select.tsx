@@ -3,8 +3,8 @@ import React, { DetailedHTMLProps, ReactElement, SelectHTMLAttributes, useCallba
 
 export interface SelectProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, 'onChange'> {
 	onChange?(ev: {
-		currentTarget: HTMLSelectElement,
-		target: HTMLSelectElement,
+		currentTarget: HTMLSelectElement;
+		target: HTMLSelectElement;
 	}): void;
 }
 

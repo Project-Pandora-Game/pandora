@@ -12,7 +12,7 @@ export class Room extends ServerRoom<IShardClient> {
 	private readonly characters: Set<Character> = new Set();
 	private readonly history = new Map<CharacterId, Map<number, number>>();
 	private readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId; }>();
-	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionCharacter, leave?: number; }>();
+	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionCharacter; leave?: number; }>();
 	private readonly cleanInterval: NodeJS.Timeout;
 
 	public get id(): RoomId {

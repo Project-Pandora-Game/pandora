@@ -2,7 +2,7 @@ import { TypedEventEmitter } from '../src/event';
 
 describe('TypedEventEmitter', () => {
 	type MockEvent = {
-		event1: number,
+		event1: number;
 		event2: { value: string; };
 	};
 	const def: MockEvent = {

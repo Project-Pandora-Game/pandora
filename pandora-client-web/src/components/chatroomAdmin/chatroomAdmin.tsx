@@ -47,7 +47,7 @@ function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoo
 	};
 }
 
-export const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; icon?: string }[] = [
+export const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; icon?: string; }[] = [
 	{
 		id: 'allowBodyChanges',
 		name: 'Allow changes to character body',
@@ -71,7 +71,7 @@ export function ChatroomCreate(): ReactElement {
 	return <ChatroomAdmin creation={ true } />;
 }
 
-export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {}): ReactElement | null {
+export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}): ReactElement | null {
 	const ID_PREFIX = 'chatroom-admin';
 
 	const navigate = useNavigate();
@@ -382,7 +382,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean } = {})
 	);
 }
 
-function NumberListArea({ values, setValues, readOnly }: { values: number[]; setValues: (_: number[]) => void; readOnly: boolean }): ReactElement {
+function NumberListArea({ values, setValues, readOnly }: { values: number[]; setValues: (_: number[]) => void; readOnly: boolean; }): ReactElement {
 	const [text, setText] = useState(values.join(', '));
 
 	const onChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {

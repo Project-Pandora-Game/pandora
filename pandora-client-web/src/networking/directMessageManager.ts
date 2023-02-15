@@ -10,7 +10,7 @@ import { HashSHA256Base64 } from '../crypto/helpers';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 
-export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: number }> {
+export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: number; }> {
 	public readonly connector: DirectoryConnector;
 	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined);
 	private readonly _chats: Map<number, DirectMessageChannel> = new Map();
@@ -216,7 +216,7 @@ export class DirectMessageChannel {
 		return this._loading;
 	}
 
-	public async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<void> {
+	public async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<void> {
 		const { content, time, edited } = data;
 		if (data.account) {
 			await this._loadKey(data.account.publicKeyData);
@@ -292,7 +292,7 @@ export class DirectMessageChannel {
 		};
 	}
 
-	private _loadSingle({ time, message, sent, edited }: { time: number; message: string; sent: boolean; edited?: number }): void {
+	private _loadSingle({ time, message, sent, edited }: { time: number; message: string; sent: boolean; edited?: number; }): void {
 		if (edited !== undefined) {
 			const index = this._messages.value.findIndex((m) => m.time === edited);
 			if (index < 0) {

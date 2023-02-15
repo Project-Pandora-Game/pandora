@@ -12,7 +12,7 @@ import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameCo
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import './directMessage.scss';
 
-export function DirectMessage({ accountId }: { accountId: number }): ReactElement {
+export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
 	return (
 		<div className='direct-message'>
 			<DirectMessageChannelProvider accountId={ accountId }>
@@ -42,7 +42,7 @@ function DirectMessageList(): ReactElement | null {
 	);
 }
 
-function DirectMessageElement({ message, channel, account }: { message: DirectMessage; channel: DirectMessageChannel; account: IDirectoryAccountInfo }): ReactElement {
+function DirectMessageElement({ message, channel, account }: { message: DirectMessage; channel: DirectMessageChannel; account: IDirectoryAccountInfo; }): ReactElement {
 	const { color, name } = useMemo(() => {
 		if (message.sent) {
 			return {

@@ -23,7 +23,7 @@ export const ClientMessageSchema = z.object({
 }));
 export type IClientMessage = z.infer<typeof ClientMessageSchema>;
 
-export type IChatRoomMessageChatCharacter = { id: CharacterId; name: string; labelColor: string };
+export type IChatRoomMessageChatCharacter = { id: CharacterId; name: string; labelColor: string; };
 export type IChatRoomMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
 	id: number;
 	insertId?: number;

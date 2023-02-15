@@ -122,7 +122,7 @@ class NotificationHandler extends NotificationHandlerBase {
 		// NOOP
 	}
 
-	private _getSettings(_source: NotificationSource): { alert: ReadonlySet<NotificationAlert>; audio: NotificationAudio } {
+	private _getSettings(_source: NotificationSource): { alert: ReadonlySet<NotificationAlert>; audio: NotificationAudio; } {
 		if (document.visibilityState === 'visible') {
 			return { alert: new Set([NotificationAlert.HEADER]), audio: NotificationAudio.NONE };
 		}
@@ -188,7 +188,7 @@ class NotificationHandler extends NotificationHandlerBase {
 
 const notificationContext = createContext(new NotificationHandlerBase());
 
-export function NotificationContextProvider({ children }: { children: React.ReactNode }) {
+export function NotificationContextProvider({ children }: { children: React.ReactNode; }) {
 	const context = useMemo(() => new NotificationHandler(), []);
 
 	useDebugExpose('notificationHandler', context);

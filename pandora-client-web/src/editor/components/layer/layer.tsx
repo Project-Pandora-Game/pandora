@@ -61,7 +61,7 @@ export function LayerUI(): ReactElement {
 	);
 }
 
-function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | null {
+function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | null {
 	const visibleName = useLayerName(layer);
 	const { name } = useLayerDefinition(layer);
 
@@ -97,7 +97,7 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer }): ReactElement | nul
 	);
 }
 
-function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; asAlpha?: boolean }): ReactElement | null {
+function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; asAlpha?: boolean; }): ReactElement | null {
 	const imageList = useSyncExternalStore(asset.editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
 	const layerImage = asAlpha ? (stopSettings.alphaImage ?? '') : stopSettings.image;
@@ -146,7 +146,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 	);
 }
 
-function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics }): ReactElement | null {
+function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).colorizationIndex ?? -1);
 
 	const colorLayerName = useMemo(() => {
@@ -230,7 +230,7 @@ function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asse
 	);
 }
 
-function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics }): ReactElement | null {
+function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const editor = asset.editor;
 
 	const tint = useEditorLayerTint(layer);
@@ -265,7 +265,7 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 	);
 }
 
-function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics }): ReactElement | null {
+function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const layerPriority = useLayerDefinition(layer).priority;
 
 	const elements: ReactElement[] = [];
@@ -311,7 +311,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 	);
 }
 
-function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics }): ReactElement | null {
+function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const { points } = useLayerDefinition(layer);
 	const graphicsManger = useObservable(GraphicsManagerInstance);
 
@@ -376,7 +376,7 @@ function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 	);
 }
 
-function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactElement | null {
+function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | null {
 	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).pointType?.join(',') ?? '', [layer]);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -439,7 +439,7 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer }): ReactE
 	);
 }
 
-function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean }): ReactElement {
+function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
 	const [value, setValue] = useUpdatedUserInput(
 		SerializeLayerImageOverrides(asAlpha ? (stopSettings.alphaOverrides ?? []) : stopSettings.overrides),
@@ -516,7 +516,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 	);
 }
 
-function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics }): ReactElement {
+function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement {
 	const layerScaling = useLayerDefinition(layer).scaling;
 
 	const elements: ReactElement[] = [
@@ -586,7 +586,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 	);
 }
 
-function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics }): ReactElement | null {
+function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	// TODO: Base on actual stops; right now temporary for breasts
 	const possibleStops: [string, number][] = useMemo(() => [
 		['flat', -180],

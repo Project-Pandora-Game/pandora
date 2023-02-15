@@ -113,7 +113,7 @@ function CharacterListItem({ id, name, preview, state, onClick }: CharacterListI
 	);
 }
 
-function State({ state }: { state?: string }): ReactElement | null {
+function State({ state }: { state?: string; }): ReactElement | null {
 	if (!state)
 		return null;
 

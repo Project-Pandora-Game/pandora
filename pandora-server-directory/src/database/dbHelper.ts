@@ -4,7 +4,7 @@ import type { ICharacterSelfInfoDb } from './databaseProvider';
 import { cloneDeep } from 'lodash';
 import { nanoid } from 'nanoid';
 
-export function CreateCharacter<Id extends number | CharacterId>(accountId: number, id: Id): [ICharacterSelfInfoDb, Omit<ICharacterData, 'id'> & { id: Id }] {
+export function CreateCharacter<Id extends number | CharacterId>(accountId: number, id: Id): [ICharacterSelfInfoDb, Omit<ICharacterData, 'id'> & { id: Id; }] {
 	const infoId: CharacterId = IsNumber(id) ? `c${id}` as const : id;
 
 	const info: ICharacterSelfInfoDb = {
@@ -14,7 +14,7 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 		preview: '',
 	};
 
-	const char: Omit<ICharacterData, 'id'> & { id: Id } = {
+	const char: Omit<ICharacterData, 'id'> & { id: Id; } = {
 		inCreation: true,
 		id,
 		accountId,

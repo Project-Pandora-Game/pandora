@@ -9,7 +9,7 @@ const TOKEN_ID_LENGTH = 16;
 const TOKEN_SECRET_LENGTH = 18;
 const logger = GetLogger('ShardTokenStore');
 
-type IStoredShardTokenInfo = IShardTokenInfo & { token: string };
+type IStoredShardTokenInfo = IShardTokenInfo & { token: string; };
 
 export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<IShardTokenInfo> {
 
@@ -42,7 +42,7 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		return true;
 	}
 
-	public async create(acc: Account, { type, expires }: IClientDirectoryArgument['manageCreateShardToken']): Promise<'adminRequired' | { info: IShardTokenInfo; token: string }> {
+	public async create(acc: Account, { type, expires }: IClientDirectoryArgument['manageCreateShardToken']): Promise<'adminRequired' | { info: IShardTokenInfo; token: string; }> {
 		if (['stable', 'beta'].includes(type) && !acc.roles.isAuthorized('admin'))
 			return 'adminRequired';
 

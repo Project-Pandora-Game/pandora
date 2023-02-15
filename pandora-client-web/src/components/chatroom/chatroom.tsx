@@ -84,7 +84,7 @@ export function Chatroom(): ReactElement {
 	);
 }
 
-function DisplayCharacter({ char }: { char: Character }): ReactElement {
+function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
@@ -226,7 +226,7 @@ function ChatroomMessageEquals(a: IChatroomMessageProcessed, b: IChatroomMessage
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null }): ReactElement | null {
+const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
 	if (!IsUserMessage(message)) {
 		return <ActionMessage message={ message } />;
 	}
@@ -238,7 +238,7 @@ const Message = memo(function Message({ message, playerId }: { message: IChatroo
 	return ChatroomMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
-function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number; roomId: RoomId }; playerId: CharacterId | null }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number; roomId: RoomId; }; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -273,7 +273,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageCh
 	);
 }
 
-function DisplayContextMenuItems({ close, id }: { close: () => void; id: number }): ReactElement {
+function DisplayContextMenuItems({ close, id }: { close: () => void; id: number; }): ReactElement {
 	const sender = useChatRoomMessageSender();
 	const timeout = sender.getMessageEditTimeout(id);
 	const [edit, setEdit] = useState(timeout !== undefined && timeout > 0);
@@ -328,7 +328,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number 
 	);
 }
 
-function DisplayInfo({ message }: { message: IChatroomMessageProcessed }): ReactElement {
+function DisplayInfo({ message }: { message: IChatroomMessageProcessed; }): ReactElement {
 	const time = useMemo(() => new Date(message.time), [message.time]);
 	const [full, setFull] = useState(new Date().getDate() !== time.getDate());
 
@@ -355,7 +355,7 @@ function DisplayInfo({ message }: { message: IChatroomMessageProcessed }): React
 	);
 }
 
-function DisplayName({ message, color }: { message: IChatRoomMessageChat; color: string }): ReactElement | null {
+function DisplayName({ message, color }: { message: IChatRoomMessageChat; color: string; }): ReactElement | null {
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 
@@ -405,7 +405,7 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 	);
 }
 
-function ActionMessage({ message }: { message: IChatroomMessageActionProcessed }): ReactElement | null {
+function ActionMessage({ message }: { message: IChatroomMessageActionProcessed; }): ReactElement | null {
 	const [folded, setFolded] = useState(true);
 
 	const [content, extraContent] = useMemo(() => RenderActionContent(message), [message]);

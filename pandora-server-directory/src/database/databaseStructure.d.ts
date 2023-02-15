@@ -54,11 +54,11 @@ interface DatabaseAccountWithSecure extends DatabaseAccount {
 
 type DatabaseConfig = {
 	type: 'shardTokens';
-	data: (import('pandora-common').IShardTokenInfo & { token: string })[];
+	data: (import('pandora-common').IShardTokenInfo & { token: string; })[];
 } | {
 	type: 'betaKeys';
-	data: (import('pandora-common').IBetaKeyInfo & { token: string })[];
+	data: (import('pandora-common').IBetaKeyInfo & { token: string; })[];
 };
 
 type DatabaseConfigType = DatabaseConfig['type'];
-type DatabaseConfigData<T extends DatabaseConfigType> = Extract<DatabaseConfig, { type: T }>['data'];
+type DatabaseConfigData<T extends DatabaseConfigType> = Extract<DatabaseConfig, { type: T; }>['data'];

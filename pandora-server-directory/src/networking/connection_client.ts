@@ -21,7 +21,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 		return this._character;
 	}
 
-	public isLoggedIn(): this is { readonly account: Account } {
+	public isLoggedIn(): this is { readonly account: Account; } {
 		return this.account !== null;
 	}
 

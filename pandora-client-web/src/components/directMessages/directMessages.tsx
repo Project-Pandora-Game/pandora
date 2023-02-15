@@ -39,7 +39,7 @@ export function DirectMessages(): React.ReactElement {
 	);
 }
 
-function DirectMessageInfo({ info, show }: { info: Readonly<IDirectoryDirectMessageInfo>; show: (id: number) => void }): React.ReactElement {
+function DirectMessageInfo({ info, show }: { info: Readonly<IDirectoryDirectMessageInfo>; show: (id: number) => void; }): React.ReactElement {
 	const { id, account, hasUnread } = info;
 	return (
 		<li onClick={ () => show(id) }>
@@ -49,7 +49,7 @@ function DirectMessageInfo({ info, show }: { info: Readonly<IDirectoryDirectMess
 	);
 }
 
-function OpenConversation({ show }: { show: (id: number) => void }): React.ReactElement {
+function OpenConversation({ show }: { show: (id: number) => void; }): React.ReactElement {
 	const accountId = useCurrentAccount()?.id;
 	const [id, setId] = React.useState('');
 	const onClick = useEvent(() => {

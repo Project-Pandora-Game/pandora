@@ -125,7 +125,7 @@ export function AssetUI() {
 	);
 }
 
-function AssetExportImport({ asset }: { asset: EditorAssetGraphics }): ReactElement {
+function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
 	return (
 		<div className='exportImport'>
 			<Button onClick={ () => void asset.downloadZip() } className='flex-2' >Export</Button>
@@ -169,7 +169,7 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics }): ReactElem
 	);
 }
 
-function AssetLayerList({ asset }: { asset: EditorAssetGraphics }): ReactElement {
+function AssetLayerList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
 	const editor = useEditor();
 	const layers = useEditorAssetLayers(asset, true);
 
@@ -183,7 +183,7 @@ function AssetLayerList({ asset }: { asset: EditorAssetGraphics }): ReactElement
 	);
 }
 
-function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: AssetGraphicsLayer }): ReactElement {
+function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: AssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const isSelected = useObservable(editor.targetLayer) === layer;
 
@@ -229,7 +229,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 	);
 }
 
-function AssetImageList({ asset }: { asset: EditorAssetGraphics }): ReactElement {
+function AssetImageList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
 	const editor = useEditor();
 	const imageList = useSyncExternalStore(editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
 
@@ -247,7 +247,7 @@ function AssetImageList({ asset }: { asset: EditorAssetGraphics }): ReactElement
 	);
 }
 
-function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraphics }): ReactElement {
+function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraphics; }): ReactElement {
 	const [preview, setPreview] = useState<string>('');
 
 	const onTogglePreview = useEvent(() => {

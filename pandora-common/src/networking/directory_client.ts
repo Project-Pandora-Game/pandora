@@ -34,7 +34,7 @@ export type IDirectoryAccountInfo = {
 	id: number;
 	username: string;
 	created: number;
-	github?: { id: number; login: string };
+	github?: { id: number; login: string; };
 	roles?: IAccountRoleInfo;
 	settings: IDirectoryAccountSettings;
 	cryptoKey?: IAccountCryptoKey;

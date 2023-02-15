@@ -24,7 +24,7 @@ export function AccountSettings(): ReactElement | null {
 	);
 }
 
-function GitHubIntegration({ account }: { account: IDirectoryAccountInfo }): ReactElement {
+function GitHubIntegration({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
 	const [login, setLogin] = useState('');
 	const [githubUrl, setUrl] = useState('');
 	const mounted = useMounted();
@@ -103,7 +103,7 @@ function GitHubIntegration({ account }: { account: IDirectoryAccountInfo }): Rea
 	);
 }
 
-function AccountRoleList({ account }: { account: IDirectoryAccountInfo }): ReactElement | null {
+function AccountRoleList({ account }: { account: IDirectoryAccountInfo; }): ReactElement | null {
 	const elements = useMemo(() => {
 		if (!account.roles)
 			return [];
@@ -135,7 +135,7 @@ function AccountRoleList({ account }: { account: IDirectoryAccountInfo }): React
 	);
 }
 
-function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: number } }): ReactElement {
+function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: number; }; }): ReactElement {
 	const connector = useDirectoryConnector();
 	const visibleRoles = useCurrentAccount()?.settings.visibleRoles || [];
 	const visible = visibleRoles.includes(role);
@@ -159,7 +159,7 @@ function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: num
 	);
 }
 
-function LabelColor({ account }: { account: IDirectoryAccountInfo }): ReactElement {
+function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const [color, setColor] = useColorInput(account.settings.labelColor);
 

@@ -136,7 +136,7 @@ export function BoneUI(): ReactElement {
 	);
 }
 
-function PoseExportGui({ character }: { character: EditorCharacter }) {
+function PoseExportGui({ character }: { character: EditorCharacter; }) {
 	const [open, setOpen] = useState(false);
 
 	const pose = useCharacterAppearancePose(character);

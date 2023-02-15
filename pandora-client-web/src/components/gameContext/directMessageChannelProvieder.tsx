@@ -6,7 +6,7 @@ import { useDirectoryConnector } from './directoryConnectorContextProvider';
 
 const directMessageContext = createContext<DirectMessageChannel | null>(null);
 
-function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps & { accountId: number }): ReactElement {
+function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const [closed, setClosed] = useState(false);
 	const channel = useMemo(() => {
@@ -42,7 +42,7 @@ function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps
 	);
 }
 
-function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { channel?: DirectMessageChannel; message?: string }): ReactElement {
+function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { channel?: DirectMessageChannel; message?: string; }): ReactElement {
 	if (channel?.failed) {
 		switch (channel.failed) {
 			case 'notFound':
@@ -58,7 +58,7 @@ function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { 
 	);
 }
 
-export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number }): ReactElement {
+export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement {
 	return (
 		<Suspense fallback={ <DirectMessageChannelFallback message='Loading...' /> }>
 			<DirectMessageChannelProviderImpl accountId={ accountId }>

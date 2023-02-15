@@ -512,7 +512,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private async handleManageSetAccountRole({ id, role, expires }: IClientDirectoryArgument['manageSetAccountRole'], connection: IConnectionClient & { readonly account: Account }): IClientDirectoryPromiseResult['manageSetAccountRole'] {
+	private async handleManageSetAccountRole({ id, role, expires }: IClientDirectoryArgument['manageSetAccountRole'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageSetAccountRole'] {
 		const account = await accountManager.loadAccountById(id);
 		if (!account)
 			return { result: 'notFound' };
@@ -521,7 +521,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private async handleManageCreateShardToken({ type, expires }: IClientDirectoryArgument['manageCreateShardToken'], connection: IConnectionClient & { readonly account: Account }): IClientDirectoryPromiseResult['manageCreateShardToken'] {
+	private async handleManageCreateShardToken({ type, expires }: IClientDirectoryArgument['manageCreateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateShardToken'] {
 		const result = await ShardTokenStore.create(connection.account, { type, expires });
 		if (typeof result === 'string')
 			return { result };
@@ -532,16 +532,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private async handleManageInvalidateShardToken({ id }: IClientDirectoryArgument['manageInvalidateShardToken'], connection: IConnectionClient & { readonly account: Account }): IClientDirectoryPromiseResult['manageInvalidateShardToken'] {
+	private async handleManageInvalidateShardToken({ id }: IClientDirectoryArgument['manageInvalidateShardToken'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateShardToken'] {
 		return { result: await ShardTokenStore.revoke(connection.account, id) };
 	}
 
-	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], _connection: IConnectionClient & { readonly account: Account }): IClientDirectoryResult['manageListShardTokens'] {
+	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], _connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
 		const info = ShardTokenStore.list();
 		return { info };
 	}
 
-	private async handleManageCreateBetaKey({ expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey'], connection: IConnectionClient & { readonly account: Account }): IClientDirectoryPromiseResult['manageCreateBetaKey'] {
+	private async handleManageCreateBetaKey({ expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateBetaKey'] {
 		const result = await BetaKeyStore.create(connection.account, { expires, maxUses });
 		if (typeof result === 'string')
 			return { result };
@@ -552,12 +552,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private handleManageListBetaKeys(_: IClientDirectoryArgument['manageListBetaKeys'], _connection: IConnectionClient & { readonly account: Account }): IClientDirectoryResult['manageListBetaKeys'] {
+	private handleManageListBetaKeys(_: IClientDirectoryArgument['manageListBetaKeys'], _connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryResult['manageListBetaKeys'] {
 		const keys = BetaKeyStore.list();
 		return { keys };
 	}
 
-	private async handleManageInvalidateBetaKey({ id }: IClientDirectoryArgument['manageInvalidateBetaKey'], connection: IConnectionClient & { readonly account: Account }): IClientDirectoryPromiseResult['manageInvalidateBetaKey'] {
+	private async handleManageInvalidateBetaKey({ id }: IClientDirectoryArgument['manageInvalidateBetaKey'], connection: IConnectionClient & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateBetaKey'] {
 		return { result: await BetaKeyStore.revoke(connection.account, id) };
 	}
 
@@ -616,7 +616,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 };
 
-function Auth<T, R>(role: AccountRole, handler: (args: T, connection: IConnectionClient & { readonly account: Account }) => R): (args: T, connection: IConnectionClient) => R {
+function Auth<T, R>(role: AccountRole, handler: (args: T, connection: IConnectionClient & { readonly account: Account; }) => R): (args: T, connection: IConnectionClient) => R {
 	return (args: T, connection: IConnectionClient) => {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();

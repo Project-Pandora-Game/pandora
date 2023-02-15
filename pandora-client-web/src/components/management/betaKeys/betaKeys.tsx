@@ -62,7 +62,7 @@ export function BetaKeys(): ReactElement {
 	);
 }
 
-function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo }): ReactElement {
+function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo; }): ReactElement {
 	const connector = useDirectoryConnector();
 	const { reload } = useContext(BetaKeyListContext);
 

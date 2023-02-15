@@ -35,7 +35,7 @@ export class AccountDirectMessages {
 		this._dms = data ?? [];
 	}
 
-	public async action(account: Account | number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time }: { notifyClients?: boolean; time?: number } = {}): Promise<void> {
+	public async action(account: Account | number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time }: { notifyClients?: boolean; time?: number; } = {}): Promise<void> {
 		const id = typeof account === 'number' ? account : account.id;
 		let dm = this._dms.find((info) => info.id === id);
 		if (!dm) {

@@ -46,7 +46,7 @@ export class Editor extends TypedEventEmitter<{
 	public readonly targetPoint = new Observable<DraggablePoint | null>(null);
 
 	public readonly backgroundColor = new Observable<string>('#1099bb');
-	public readonly getCenter = new Observable<() => { x: number; y: number }>(
+	public readonly getCenter = new Observable<() => { x: number; y: number; }>(
 		() => ({ x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }),
 	);
 
@@ -279,7 +279,7 @@ const currentTabContext = createContext<EditorCurrentTabContext>({
 	closeTab: noop,
 });
 
-function Tab({ tab, index }: { tab: TabsName; index: number }): ReactElement {
+function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 	const { activeTabs, setActiveTabs } = useContext(activeTabsContext);
 	const setTab = useEvent((newSelection: TabsName) => {
 		const newTabs = activeTabs.slice();

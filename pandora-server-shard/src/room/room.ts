@@ -11,8 +11,8 @@ export class Room extends ServerRoom<IShardClient> {
 	private readonly data: IChatRoomFullInfo;
 	private readonly characters: Set<Character> = new Set();
 	private readonly history = new Map<CharacterId, Map<number, number>>();
-	private readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId }>();
-	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionCharacter; leave?: number }>();
+	private readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId; }>();
+	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionCharacter; leave?: number; }>();
 	private readonly cleanInterval: NodeJS.Timeout;
 
 	public get id(): RoomId {
@@ -363,6 +363,6 @@ export class Room extends ServerRoom<IShardClient> {
 	}
 }
 
-function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc'; parts: IChatSegment[]; to: CharacterId } {
+function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc'; parts: IChatSegment[]; to: CharacterId; } {
 	return (message.type === 'chat' || message.type === 'ooc') && message.to !== undefined;
 }

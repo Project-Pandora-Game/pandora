@@ -110,7 +110,7 @@ export function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
-export function WardrobeContextProvider({ character, player, children }: { character: Character; player: PlayerCharacter; children: ReactNode }): ReactElement {
+export function WardrobeContextProvider({ character, player, children }: { character: Character; player: PlayerCharacter; children: ReactNode; }): ReactElement {
 	const assetList = useObservable(GetAssetManager().assetList);
 	const roomContext = useActionRoomContext();
 	const shardConnector = useShardConnector();
@@ -260,7 +260,7 @@ export function useWardrobeItems(): {
 	};
 }
 
-function WardrobeItemManipulation({ className }: { className?: string }): ReactElement {
+function WardrobeItemManipulation({ className }: { className?: string; }): ReactElement {
 	const { assetList } = useWardrobeContext();
 	const { currentFocus, setFocus, preFilter, containerContentsFilter } = useWardrobeItems();
 
@@ -321,7 +321,7 @@ function WardrobeItemManipulation({ className }: { className?: string }): ReactE
 	);
 }
 
-function WardrobeBodyManipulation({ className }: { className?: string }): ReactElement {
+function WardrobeBodyManipulation({ className }: { className?: string; }): ReactElement {
 	const { assetList } = useWardrobeContext();
 	const assetManager = GetAssetManager();
 
@@ -516,7 +516,7 @@ function AttributeButton({ attribute, ...buttonProps }: {
 	);
 }
 
-function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement> }) {
+function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement>; }) {
 	const assetManager = GetAssetManager();
 	const reason = useMemo(() => check.result === 'success'
 		? ''
@@ -536,7 +536,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 	);
 }
 
-function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean }): ReactElement {
+function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
 	const { actions, target, execute } = useWardrobeContext();
 
 	const action: AppearanceAction = {
@@ -977,7 +977,7 @@ function WardrobeBodySizeEditor(): ReactElement {
 	const { character, execute } = useWardrobeContext();
 	const bones = useCharacterAppearancePose(character);
 
-	const setBodyDirect = useCallback(({ pose }: { pose: Record<BoneName, number> }) => {
+	const setBodyDirect = useCallback(({ pose }: { pose: Record<BoneName, number>; }) => {
 		execute({
 			type: 'body',
 			target: character.id,
@@ -1082,7 +1082,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	return { poses, ...limits };
 }
 
-function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: AssetsPosePreset) => void }): ReactElement {
+function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
 	return (
 		<>
 			{ poses.map((poseCategory, poseCategoryIndex) => (
@@ -1101,21 +1101,21 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 	);
 }
 
-export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => void }): ReactElement {
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => void; }): ReactElement {
 	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 	);
 }
 
-export function WardrobePoseGui({ character }: { character: AppearanceContainer }): ReactElement {
+export function WardrobePoseGui({ character }: { character: AppearanceContainer; }): ReactElement {
 	const { execute } = useWardrobeContext();
 
 	const bones = useCharacterAppearancePose(character);
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 
-	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose }) => {
+	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => {
 		execute({
 			type: 'pose',
 			target: character.id,
@@ -1184,7 +1184,7 @@ export function WardrobePoseGui({ character }: { character: AppearanceContainer 
 	);
 }
 
-function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose: AssetsPosePreset) => void }): ReactElement {
+function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
 	const { name, available, active } = pose;
 	return (
 		<Button className={ classNames('slim', { ['pose-unavailable']: !available }) } disabled={ active || !available } onClick={ () => setPose(pose) }>
@@ -1201,7 +1201,7 @@ export function GetVisibleBoneName(name: string): string {
 		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
 }
 
-export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; unlocked?: boolean }): ReactElement {
+export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; unlocked?: boolean; }): ReactElement {
 	const [min, max] = useMemo(() => {
 		if (unlocked || !forcePose) {
 			return [BONE_MIN, BONE_MAX];

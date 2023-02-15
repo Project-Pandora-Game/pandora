@@ -42,13 +42,13 @@ export function PandoraRoutes(): ReactElement {
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-function RequiresLogin({ element: Element }: { element: ComponentType<Record<string, never>> }): ReactElement {
+function RequiresLogin({ element: Element }: { element: ComponentType<Record<string, never>>; }): ReactElement {
 	useLoggedInCheck();
 	return <Element />;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
-function RequiresCharacter({ element: Element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean }): ReactElement {
+function RequiresCharacter({ element: Element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	useLoggedInCheck();
 	const shardConnector = useShardConnector();
 	const playerData = usePlayerData();
@@ -86,7 +86,7 @@ function useLoggedInCheck(preserveLocation = true): void {
 	}, [isLoggedIn, navigate, location.pathname, location.state, preserveLocation]);
 }
 
-function AuthPageFallback({ component }: { component: ComponentType<Record<string, never>> }): ReactElement {
+function AuthPageFallback({ component }: { component: ComponentType<Record<string, never>>; }): ReactElement {
 	const isLoggedIn = useCurrentAccount() != null;
 	const navigate = useNavigate();
 

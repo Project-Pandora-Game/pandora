@@ -52,7 +52,7 @@ export function AssetInfoUI(): ReactElement {
 	);
 }
 
-function Colorization({ colorization }: { colorization: AssetDefinition['colorization'] }): ReactElement | null {
+function Colorization({ colorization }: { colorization: AssetDefinition['colorization']; }): ReactElement | null {
 	if (!colorization) {
 		return null;
 	}
@@ -69,7 +69,7 @@ function Colorization({ colorization }: { colorization: AssetDefinition['coloriz
 	);
 }
 
-function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['poseLimits']; id?: string }): ReactElement | null {
+function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['poseLimits']; id?: string; }): ReactElement | null {
 	if (!poseLimits) {
 		return null;
 	}
@@ -97,7 +97,7 @@ function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['pose
 	);
 }
 
-function Effects({ effects, id = '' }: { effects: AssetDefinition['effects']; id?: string }): ReactElement {
+function Effects({ effects, id = '' }: { effects: AssetDefinition['effects']; id?: string; }): ReactElement {
 	const allEffects: EffectsDefinition = { ...EFFECTS_DEFAULT, ...effects };
 	id += 'effect';
 
@@ -119,7 +119,7 @@ function Effects({ effects, id = '' }: { effects: AssetDefinition['effects']; id
 	);
 }
 
-function Modules({ modules }: { modules: AssetDefinition['modules'] }): ReactElement | null {
+function Modules({ modules }: { modules: AssetDefinition['modules']; }): ReactElement | null {
 	if (!modules) {
 		return null;
 	}
@@ -133,7 +133,7 @@ function Modules({ modules }: { modules: AssetDefinition['modules'] }): ReactEle
 	);
 }
 
-function Module({ name, module }: { name: string; module: AssetModuleDefinition }): ReactElement {
+function Module({ name, module }: { name: string; module: AssetModuleDefinition; }): ReactElement {
 	const moduleInfo = useMemo(() => {
 		switch (module.type) {
 			case 'typed':
@@ -154,7 +154,7 @@ function Module({ name, module }: { name: string; module: AssetModuleDefinition 
 	);
 }
 
-function UnknownModule({ module }: { module: AssetModuleDefinition }): ReactElement {
+function UnknownModule({ module }: { module: AssetModuleDefinition; }): ReactElement {
 	return (
 		<div>
 			Unknown module type: { String(module.type) }
@@ -162,7 +162,7 @@ function UnknownModule({ module }: { module: AssetModuleDefinition }): ReactElem
 	);
 }
 
-function TypedModule({ module }: { module: IModuleConfigTyped }): ReactElement {
+function TypedModule({ module }: { module: IModuleConfigTyped; }): ReactElement {
 	return (
 		<FieldsetToggle legend='Variants' className='slim-padding-inner'>
 			{ module.variants.map((variant, index) => (
@@ -172,7 +172,7 @@ function TypedModule({ module }: { module: IModuleConfigTyped }): ReactElement {
 	);
 }
 
-function TypedModuleOptions({ options }: { options: IModuleTypedOption }): ReactElement {
+function TypedModuleOptions({ options }: { options: IModuleTypedOption; }): ReactElement {
 	const id = useId();
 	return (
 		<div>
@@ -194,7 +194,7 @@ function TypedModuleOptions({ options }: { options: IModuleTypedOption }): React
 	);
 }
 
-function ModuleCommon({ module }: { module: IModuleConfigCommon<string> }): ReactElement {
+function ModuleCommon({ module }: { module: IModuleConfigCommon<string>; }): ReactElement {
 	const id = useId();
 	return (
 		<>

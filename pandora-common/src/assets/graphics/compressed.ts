@@ -62,7 +62,7 @@ export function ExtractPointDefinition({ pos, pointType, transforms = [], mirror
 	};
 }
 
-export type LayerImageOverrideCompressed = ArrayCompressType<LayerImageOverride, ['image', 'condition'], { condition: ConditionCompressed }>;
+export type LayerImageOverrideCompressed = ArrayCompressType<LayerImageOverride, ['image', 'condition'], { condition: ConditionCompressed; }>;
 
 export function ExtractLayerImageOverride([image, condition]: LayerImageOverrideCompressed): LayerImageOverride {
 	return {

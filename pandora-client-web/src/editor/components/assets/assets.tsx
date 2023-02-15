@@ -102,7 +102,7 @@ export function AssetsUI(): ReactElement {
 	);
 }
 
-function AssetCategoryElement({ category }: { category: AssetTreeViewCategory }): ReactElement {
+function AssetCategoryElement({ category }: { category: AssetTreeViewCategory; }): ReactElement {
 	return (
 		<ToggleLi name={ category.name } state={ category }>
 			<ul>
@@ -120,7 +120,7 @@ function StripAssetIdAndCategory(id: AssetId, category: string) {
 	return str;
 }
 
-function AssetElement({ asset, category }: { asset: Asset; category: string }): ReactElement {
+function AssetElement({ asset, category }: { asset: Asset; category: string; }): ReactElement {
 	const editor = useEditor();
 	const tabContext = useEditorTabContext();
 
@@ -150,7 +150,7 @@ function AssetElement({ asset, category }: { asset: Asset; category: string }): 
 	);
 }
 
-function EditedAssetElement({ assetId }: { assetId: AssetId }): ReactElement {
+function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 	const editor = useEditor();
 	const tabContext = useEditorTabContext();
 	const asset = GetAssetManagerEditor().getAssetById(assetId);
@@ -184,7 +184,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId }): ReactElement {
 }
 
 const itemOpenState = new WeakMap<Item, ToggleLiState>();
-function ItemElement({ item }: { item: Item }): ReactElement {
+function ItemElement({ item }: { item: Item; }): ReactElement {
 	const editor = useEditor();
 	const tabContext = useEditorTabContext();
 	const appearance = editor.character.appearance;
@@ -236,7 +236,7 @@ function ItemElement({ item }: { item: Item }): ReactElement {
 	);
 }
 
-function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer }): ReactElement {
+function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const alphaIndex = useSyncExternalStore<number>((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {
@@ -270,7 +270,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer }): ReactEleme
 	);
 }
 
-export class ToggleLiState extends ObservableClass<{ open: boolean }> {
+export class ToggleLiState extends ObservableClass<{ open: boolean; }> {
 	@observable
 	public open: boolean;
 
@@ -280,14 +280,14 @@ export class ToggleLiState extends ObservableClass<{ open: boolean }> {
 	}
 }
 
-type ToggleLiProps<T extends { open: boolean }> = React.DetailedHTMLProps<React.LiHTMLAttributes<HTMLLIElement>, HTMLLIElement> & {
+type ToggleLiProps<T extends { open: boolean; }> = React.DetailedHTMLProps<React.LiHTMLAttributes<HTMLLIElement>, HTMLLIElement> & {
 	state: IObservableClass<T>;
 	name: string;
 	className?: string;
 	nameExtra?: ReactElement;
 };
-function ToggleLi<T extends { open: boolean }>({ state, name, nameExtra, children, className, ...props }: ToggleLiProps<T>): ReactElement {
-	const open = useObservableProperty(state as unknown as IObservableClass<{ open: boolean }>, 'open');
+function ToggleLi<T extends { open: boolean; }>({ state, name, nameExtra, children, className, ...props }: ToggleLiProps<T>): ReactElement {
+	const open = useObservableProperty(state as unknown as IObservableClass<{ open: boolean; }>, 'open');
 	const spanClass = !children ? undefined : open ? 'opened' : 'closed';
 
 	const onClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -320,7 +320,7 @@ function AssetCreatePrompt(): ReactElement {
 	);
 }
 
-function AssetCreateDialog({ closeDialog }: { closeDialog: () => void }): ReactElement {
+function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): ReactElement {
 	const editor = useEditor();
 	const tabContext = useEditorTabContext();
 	const assetManager = GetAssetManagerEditor();

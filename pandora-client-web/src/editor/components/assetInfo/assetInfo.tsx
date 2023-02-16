@@ -70,30 +70,16 @@ function Colorization({ colorization }: { colorization: AssetDefinition['coloriz
 	);
 }
 
-function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['poseLimits']; id?: string; }): ReactElement | null {
+function PoseLimits({ poseLimits }: { poseLimits: AssetDefinition['poseLimits']; id?: string; }): ReactElement | null {
 	if (!poseLimits) {
 		return null;
 	}
 
 	return (
 		<FieldsetToggle legend='Pose limits'>
-			<div>
-				<label htmlFor={ `${id}force-arms` }>Force arms: </label>
-				<input id={ `${id}force-arms` } type='text' value={ poseLimits.forceArms ?? '' } readOnly />
-			</div>
-			<hr />
-			<div>
-				{ Object.entries(poseLimits.forcePose ?? {}).map(([key, value]) => (
-					<div key={ key }>
-						<label htmlFor={ `${id}force-pose-${key}` }>{ GetVisibleBoneName(key) }: </label>
-						<input id={ `${id}force-pose-${key}` } type='text' value={
-							value === undefined ? '' :
-							typeof value === 'number' ? value.toString() :
-							`${value[0]} - ${value[1]}`
-						} readOnly />
-					</div>
-				)) }
-			</div>
+			<span>
+				TODO
+			</span>
 		</FieldsetToggle>
 	);
 }

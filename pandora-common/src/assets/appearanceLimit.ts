@@ -1,6 +1,6 @@
 import { IntervalSetIntersection } from '../utility';
 import { AppearanceArmPose, AppearancePose, ArmsPose, CharacterView, GetDefaultAppearanceBundle } from './appearance';
-import type { AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
+import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
 
 class TreeLimit {
 	private readonly limit: ReadonlyMap<string, [number, number][]>;
@@ -225,28 +225,9 @@ export class AppearanceLimitTree {
 	}
 }
 
-function CreateTreeNode(limit: AssetDefinitionPoseLimits): TreeNode {
-	const data = new Map<string, [number, number][]>();
-	const { forceArms, forcePose } = limit;
-	if (forceArms != null) {
-		if (forceArms === ArmsPose.FRONT) {
-			data.set('leftArm.position', [[0, 0]]);
-			data.set('rightArm.position', [[0, 0]]);
-		} else {
-			data.set('leftArm.position', [[1, 1]]);
-			data.set('rightArm.position', [[1, 1]]);
-		}
-	}
-	if (forcePose != null) {
-		for (const [key, value] of Object.entries(forcePose)) {
-			if (value == null)
-				continue;
-
-			const array: [number, number] = typeof value === 'number' ? [value, value] : value;
-			data.set(`bones.${key}`, [array]);
-		}
-	}
-	return new TreeNode(data);
+function CreateTreeNode({ limits, children }: AssetDefinitionPoseLimits): TreeNode {
+	const nodeChildren = children == null ? null : children.map(CreateTreeNode);
+	return new TreeNode(FromLimit(limits), nodeChildren);
 }
 
 function FromPose({ bones, leftArm, rightArm, arms, view }: PartialAppearancePose): Map<string, number> {
@@ -271,6 +252,34 @@ function FromPose({ bones, leftArm, rightArm, arms, view }: PartialAppearancePos
 function FromArmPose(data: Map<string, number>, prefix: 'leftArm' | 'rightArm', { position }: Partial<AppearanceArmPose> = {}): void {
 	if (position != null) {
 		data.set(`${prefix}.position`, position === ArmsPose.FRONT ? 0 : 1);
+	}
+}
+
+function FromLimit({ bones, leftArm, rightArm, arms, view }: AssetDefinitionPoseLimit): Map<string, [number, number][]> {
+	const data = new Map<string, [number, number][]>();
+
+	if (bones) {
+		for (const [key, value] of Object.entries(bones)) {
+			if (value == null)
+				continue;
+
+			if (typeof value === 'number')
+				data.set(`bones.${key}`, [[value, value]]);
+			else
+				data.set(`bones.${key}`, value);
+		}
+	}
+	FromArmLimit(data, 'leftArm', { ...arms, ...leftArm });
+	FromArmLimit(data, 'rightArm', { ...arms, ...rightArm });
+	if (view != null)
+		data.set('view', [[view, view]]);
+
+	return data;
+}
+
+function FromArmLimit(data: Map<string, [number, number][]>, prefix: 'leftArm' | 'rightArm', { position }: Partial<AppearanceArmPose> = {}): void {
+	if (position != null) {
+		data.set(`${prefix}.position`, [[position, position]]);
 	}
 }
 

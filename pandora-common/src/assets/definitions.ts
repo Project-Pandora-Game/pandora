@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
+import { BoolSelect } from '../utility';
 import { HexColorString, zTemplateString } from '../validation';
 import type { AppearanceArmPose, ArmsPose, BoneName, CharacterView } from './appearance';
 import type { BoneDefinitionCompressed } from './graphics';
@@ -30,14 +31,17 @@ export interface AssetDefinitionExtraArgs {
 	slots: string;
 }
 
+export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
+	bones?: Partial<Record<A['bones'], number | [number, number][]>>;
+	arms?: Partial<AppearanceArmPose>;
+	leftArm?: Partial<AppearanceArmPose>;
+	rightArm?: Partial<AppearanceArmPose>;
+	view?: CharacterView;
+}
+
 export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
-	/**
-	 * Forces the bones within specific range; has two options at representation:
-	 * - `[number, number]` - Minimum and maximum for this bone
-	 * - `number` - Must be exactly this; shorthand for min=max
-	 */
-	forcePose?: Partial<Record<A['bones'], [number, number] | number>>;
-	forceArms?: ArmsPose;
+	limits: AssetDefinitionPoseLimit<A>;
+	children?: AssetDefinitionPoseLimits<A>[];
 }
 
 export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {

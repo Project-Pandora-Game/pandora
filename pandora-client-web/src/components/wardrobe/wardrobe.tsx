@@ -1155,11 +1155,11 @@ function useColorization(
 	return useMemo(() => {
 		const bundle = item.exportColorToBundle();
 		const disabled = bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success';
-		let disabledByGroup = true;
+		let disabledByGroup = false;
 		if (!disabled && colorGroup) {
 			const { disableColorization } = item.getProperties();
 			if (disableColorization.has(colorGroup)) {
-				disabledByGroup = false;
+				disabledByGroup = true;
 			}
 		}
 		return {

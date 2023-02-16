@@ -78,6 +78,12 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	 * @default []
 	 */
 	disableColorization?: A['colorGroups'][];
+
+	/**
+	 * Unique list of color groups that are disabled to inherit from this item
+	 * @default []
+	 */
+	disableGroupInheritance?: A['colorGroups'][];
 }
 
 export interface AssetSlotResult {
@@ -129,6 +135,7 @@ export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	blockModules: Set<string>;
 	blockSelfModules: Set<string>;
 	disableColorization: Set<string>;
+	disableGroupInheritance: Set<string>;
 }
 
 export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividualResult {
@@ -140,6 +147,7 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 		blockModules: new Set(),
 		blockSelfModules: new Set(),
 		disableColorization: new Set(),
+		disableGroupInheritance: new Set(),
 	};
 }
 
@@ -151,6 +159,7 @@ export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualRe
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));
 	properties.blockSelfModules?.forEach((a) => base.blockSelfModules.add(a));
 	properties.disableColorization?.forEach((a) => base.disableColorization.add(a));
+	properties.disableGroupInheritance?.forEach((a) => base.disableGroupInheritance.add(a));
 
 	return base;
 }

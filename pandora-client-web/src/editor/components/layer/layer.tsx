@@ -237,6 +237,10 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 							The color group will always be active if the colorization doesn't have a name.<br />
 							Otherwise, it can be activated by the 'disableColorization' asset property.
 						</p>
+						<p>
+							To prevent an item to be the base of a color group inheritance,<br />
+							you can set the 'disableColorization' property to list the color group name.
+						</p>
 					</ContextHelpButton>
 				</label>
 				<input

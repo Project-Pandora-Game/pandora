@@ -1122,7 +1122,7 @@ export function WardrobeItemConfigMenu({
 					</WardrobeActionButton>
 				</Row>
 				{
-					(wornItem.asset.definition.colorization && Object.keys(wornItem.asset.definition.colorization).length > 0) && (
+					(wornItem.asset.definition.colorization && Object.values(wornItem.asset.definition.colorization).some(({ name }) => name)) && (
 						<FieldsetToggle legend='Coloring'>
 							{
 								Object.entries(wornItem.asset.definition.colorization).map(([colorPartKey, colorPart]) => (

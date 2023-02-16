@@ -153,7 +153,7 @@ export class Item {
 
 			result[key] = value;
 
-			if (!disableColorization.has(def.name))
+			if (def.group == null || !disableColorization.has(def.group))
 				continue;
 
 			const groupColor = this._resolveColorGroup(items, def);

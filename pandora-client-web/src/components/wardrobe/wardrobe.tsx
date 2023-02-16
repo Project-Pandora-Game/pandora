@@ -361,10 +361,10 @@ function WardrobeBodyManipulation({ className }: { className?: string; }): React
 		setSelectedItemId(newFocus.itemId);
 	}, []);
 
-	const bodyFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
+	const bodyFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
 		.map((a) => a[0])
-	, [assetManager]);
+	), [assetManager]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -690,10 +690,10 @@ function AttributeButton({ attribute, ...buttonProps }: {
 
 function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: HTMLElement | null; }) {
 	const assetManager = GetAssetManager();
-	const reason = useMemo(() => check.result === 'success'
+	const reason = useMemo(() => (check.result === 'success'
 		? ''
-		: RenderAppearanceActionResult(assetManager, check),
-	[assetManager, check]);
+		: RenderAppearanceActionResult(assetManager, check)
+	), [assetManager, check]);
 
 	if (check.result === 'success') {
 		return null;
@@ -1150,12 +1150,11 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 					});
 				} }
 			>
-				<img src={
+				<img width='21' height='33' src={
 					!m.lock ? emptyLock :
 						m.lock.getProperties().blockAddRemove ? closedLock :
 							openLock
-				}
-				width='21' height='33' />
+				} />
 			</button>
 			<Row alignY='center'>
 				{
@@ -1283,6 +1282,61 @@ export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }:
 	);
 }
 
+export function WardrobeArmPoses({ setPose, armsPose, limits }: {
+	armsPose: CharacterArmsPose;
+	limits?: AppearanceLimitTree;
+	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+}): ReactElement {
+	const { left, right } = armsPose;
+	return (
+		<>
+			<div>
+				<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
+				<input
+					id='arms-front-toggle'
+					type='checkbox'
+					checked={ left.position === ArmsPose.FRONT && right.position === ArmsPose.FRONT }
+					disabled={ limits == null || !limits.validate({ arms: { position: left.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					onChange={ (e) => {
+						setPose({
+							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
+							rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
+						});
+					} }
+				/>
+			</div>
+			<div>
+				<label htmlFor='arms-back-toggle'>Left arm is in front of the body</label>
+				<input
+					id='arms-left-front-toggle'
+					type='checkbox'
+					checked={ left.position === ArmsPose.FRONT }
+					disabled={ limits == null || !limits.validate({ leftArm: { position: left.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					onChange={ (e) => {
+						setPose({
+							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
+						});
+					} }
+				/>
+			</div>
+			<div>
+				<label htmlFor='arms-back-toggle'>Right arm is in front of the body</label>
+				<input
+					id='arms-right-front-toggle'
+					type='checkbox'
+					checked={ right.position === ArmsPose.FRONT }
+					disabled={ limits == null || !limits.validate({ rightArm: { position: right.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					onChange={ (e) => {
+						setPose({
+							rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
+						});
+					} }
+				/>
+			</div>
+		</>
+	);
+}
+
 export function WardrobePoseGui(): ReactElement {
 	const { character, execute } = useWardrobeContext();
 
@@ -1325,21 +1379,7 @@ export function WardrobePoseGui(): ReactElement {
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				{ USER_DEBUG &&
 					<FieldsetToggle legend='[DEV] Manual pose' persistent='bone-ui-dev-pose' open={ false }>
-						<div>
-							<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
-							<input
-								id='arms-front-toggle'
-								type='checkbox'
-								checked={ armsPose.left.position === ArmsPose.FRONT && armsPose.right.position === ArmsPose.FRONT }
-								disabled={ limits.validate({ arms: { position: armsPose.left.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
-								onChange={ (e) => {
-									setPose({
-										leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
-										rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
-									});
-								} }
-							/>
-						</div>
+						<WardrobeArmPoses armsPose={ armsPose } limits={ limits } setPose={ setPose } />
 						<br />
 						{
 							currentBones

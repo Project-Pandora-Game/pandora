@@ -7,7 +7,7 @@ import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { BoneRowElement, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
+import { BoneRowElement, WardrobeArmPoses, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorCharacter } from '../../graphics/character/appearanceEditor';
@@ -40,17 +40,9 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<div>
-				<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
-				<input
-					id='arms-front-toggle'
-					type='checkbox'
-					checked={ armsPose.left.position === ArmsPose.FRONT && armsPose.right.position === ArmsPose.FRONT }
-					onChange={ (e) => {
-						character.appearance.setArmsPose({ arms: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK } });
-					} }
-				/>
-			</div>
+			<WardrobeArmPoses armsPose={ armsPose } setPose={ (pose) => {
+				character.appearance.setArmsPose(pose);
+			} } />
 			<div>
 				<label htmlFor='back-view-toggle'>Show back view</label>
 				<input

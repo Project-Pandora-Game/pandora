@@ -545,10 +545,6 @@ export function ActionColorItem(rootManipulator: AppearanceRootManipulator, item
 	if (!manipulator.modifyItem(itemId, (it) => it.changeColor(color)))
 		return false;
 
-	const items = manipulator.getItems();
-	if (!manipulator.mapItems((it) => it.overrideColors(items)))
-		return false;
-
 	// Change message to chat
 	// TODO: Message to chat that item was colored
 	// Will need mechanism to rate-limit the messages not to send every color change

@@ -67,13 +67,13 @@ export abstract class AppearanceManipulator {
 		if (this.isCharacter) {
 			items = AppearanceItemsFixBodypartOrder(this.assetManager, items);
 		}
-		return this._applyItems(items);
+		return this._applyItemsWithColor(items);
 	}
 
 	public removeMatchingItems(predicate: (item: Item) => boolean): AppearanceItems {
 		const items = this.getItems().slice();
 		const result = _.remove(items, (item) => predicate(item));
-		return this._applyItems(items) ? result : [];
+		return this._applyItemsWithColor(items) ? result : [];
 	}
 
 	public moveItem(id: ItemId, shift: number): boolean {
@@ -86,7 +86,7 @@ export abstract class AppearanceManipulator {
 
 		const moved = items.splice(currentPos, 1);
 		items.splice(newPos, 0, ...moved);
-		return this._applyItems(items);
+		return this._applyItemsWithColor(items);
 	}
 
 	public modifyItem(id: ItemId, mutator: (item: Item) => (Item | null)): boolean {
@@ -98,22 +98,14 @@ export abstract class AppearanceManipulator {
 		if (!result || result.id !== id || result.asset !== result.asset)
 			return false;
 		items[index] = result;
-		return this._applyItems(items);
-	}
-
-	public mapItems(mapper: (item: Item) => Item | null): boolean {
-		const items = this.getItems().slice();
-		const next = items
-			.map((item) => mapper(item))
-			.filter((item): item is Item => item != null && item.id === item.id && item.asset === item.asset);
-
-		if (next.length !== items.length)
-			return false;
-
-		return this._applyItems(next);
+		return this._applyItemsWithColor(items);
 	}
 
 	public abstract queueMessage(message: ActionHandlerMessageTemplate): void;
+
+	private _applyItemsWithColor(items: AppearanceItems): boolean {
+		return this._applyItems(items.map((item) => item.overrideColors(items)));
+	}
 }
 
 class AppearanceContainerManipulator extends AppearanceManipulator {

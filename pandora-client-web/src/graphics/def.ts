@@ -7,8 +7,8 @@ export type LayerStateOverrides = {
 };
 
 export type LayerState = {
-	layer: AssetGraphicsLayer,
-	item: Item | null,
+	layer: AssetGraphicsLayer;
+	item: Item | null;
 	state?: LayerStateOverrides;
 };
 

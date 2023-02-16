@@ -1,4 +1,4 @@
-import { ArmsPose, CharacterView } from 'pandora-common';
+import { AppearanceArmPose, ArmsPose, CharacterArmsPose, CharacterView } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
@@ -139,11 +139,7 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 			? acc
 			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '')}
 	},
-${arms.left.position === arms.right.position
-				? `	arms: { position: ArmsPose.${ArmsPose[arms.left.position]} },`
-				: ` leftArm: { position: ArmsPose.${ArmsPose[arms.left.position]} },
-	rightArm: { position: ArmsPose.${ArmsPose[arms.right.position]} },`
-			}
+	${CharacterArmsPoseToString(arms)}
 },`;
 	}, [pose, arms]);
 
@@ -170,4 +166,16 @@ ${arms.left.position === arms.right.position
 			</Column>
 		</ModalDialog>
 	);
+}
+
+function AppearanceArmPoseToString({ position }: Readonly<AppearanceArmPose>): string {
+	return `{ position: ArmsPose.${ArmsPose[position]} }`;
+}
+
+function CharacterArmsPoseToString({ left, right }: CharacterArmsPose): string {
+	if (left.position === right.position)
+		return `arms: ${AppearanceArmPoseToString(left)},`;
+
+	return `leftArm: ${AppearanceArmPoseToString(left)},`
+		+ '\n\t' + `rightArm: ${AppearanceArmPoseToString(right)},`;
 }

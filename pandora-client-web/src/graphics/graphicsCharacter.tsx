@@ -53,7 +53,7 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: Chara
 			result.set(layer, ComputeLayerPriority(layer.layer.definition.value.priority, armsPose, layer.layer.isMirror));
 		}
 		return result;
-	}, []);
+	}, [armsPose]);
 
 	const [actualCalculate, setActualCalculate] = useState<(layers: readonly LayerState[]) => ReadonlyMap<LayerState, ComputedLayerPriority>>(() => calculate);
 

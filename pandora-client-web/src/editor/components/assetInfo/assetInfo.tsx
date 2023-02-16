@@ -5,7 +5,6 @@ import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/asse
 import React, { ReactElement, useId, useMemo } from 'react';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { GetVisibleBoneName } from '../../../components/wardrobe/wardrobe';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';

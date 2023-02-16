@@ -1173,11 +1173,11 @@ function WardrobeBodySizeEditor(): ReactElement {
 	const { character, execute } = useWardrobeContext();
 	const currentBones = useCharacterAppearancePose(character);
 
-	const setBodyDirect = useCallback(({ bones }: { bones: Record<BoneName, number>; }) => {
+	const setBodyDirect = useCallback(({ bones: bodyBones }: { bones: Record<BoneName, number>; }) => {
 		execute({
 			type: 'body',
 			target: character.id,
-			bones,
+			bones: bodyBones,
 		});
 	}, [execute, character]);
 
@@ -1344,11 +1344,11 @@ export function WardrobePoseGui(): ReactElement {
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 
-	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm }: Omit<AssetsPosePreset, 'name'>) => {
+	const setPoseDirect = useEvent(({ bones: poseBones, arms, leftArm, rightArm }: Omit<AssetsPosePreset, 'name'>) => {
 		execute({
 			type: 'pose',
 			target: character.id,
-			bones,
+			bones: poseBones,
 			leftArm: { ...arms, ...leftArm },
 			rightArm: { ...arms, ...rightArm },
 		});

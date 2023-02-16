@@ -160,6 +160,7 @@ export class Item {
 			if (groupColor == null)
 				continue;
 
+			result[key] = groupColor;
 			hasGroup = true;
 		}
 

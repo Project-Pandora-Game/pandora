@@ -11,7 +11,7 @@ import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefiniti
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, GetDefaultAppearanceBundle, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable, Assert, ArmsPose } from 'pandora-common';
+import { AssetId, GetLogger, GetDefaultAppearanceBundle, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable, Assert } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';

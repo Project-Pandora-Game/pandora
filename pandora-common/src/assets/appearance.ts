@@ -202,16 +202,19 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return true;
 	}
 
-	public importPose(pose: Partial<Record<BoneName, number>>, type: BoneType | true, missingAsZero: boolean): void {
+	public importBones(bones: Record<BoneName, number> | undefined, type: BoneType | true, missingAsZero: boolean): void {
+		if (!bones) {
+			return;
+		}
 		for (const [bone, state] of this.pose.entries()) {
 			if (type !== true && state.definition.type !== type)
 				continue;
-			if (!missingAsZero && pose[state.definition.name] == null)
+			if (!missingAsZero && bones[state.definition.name] == null)
 				continue;
 
 			this.pose.set(bone, {
 				definition: state.definition,
-				rotation: _.clamp(pose[state.definition.name] || 0, BONE_MIN, BONE_MAX),
+				rotation: _.clamp(bones[state.definition.name] || 0, BONE_MIN, BONE_MAX),
 			});
 		}
 		this.fullPose = Array.from(this.pose.values());
@@ -311,7 +314,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		if (!state)
 			throw new Error(`Attempt to set pose for unknown bone: ${bone}`);
 
-		this.importPose({ [bone]: value }, true, false);
+		this.importBones({ [bone]: value }, true, false);
 	}
 
 	public getPose(bone: string): BoneState {

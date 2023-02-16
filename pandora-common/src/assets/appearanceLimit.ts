@@ -1,6 +1,6 @@
 import { IntervalSetIntersection } from '../utility';
 import { AppearanceArmPose, AppearancePose, ArmsPose, CharacterView, GetDefaultAppearanceBundle } from './appearance';
-import type { AssetDefinitionPoseLimits } from './definitions';
+import type { AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
 
 class TreeLimit {
 	private readonly limit: ReadonlyMap<string, [number, number][]>;
@@ -186,13 +186,6 @@ class TreeNode {
 	}
 }
 
-export type PartialAppearancePose = {
-	bones?: Partial<AppearancePose['bones']>;
-	leftArm?: Partial<AppearanceArmPose>;
-	rightArm?: Partial<AppearanceArmPose>;
-	view?: CharacterView | null;
-};
-
 export class AppearanceLimitTree {
 	private root: TreeNode | null = new TreeNode();
 
@@ -208,7 +201,7 @@ export class AppearanceLimitTree {
 		return this.root != null && this.root.validate(FromPose(pose));
 	}
 
-	public force(pose: AppearancePose): { pose: AppearancePose, changed: boolean; } {
+	public force(pose: AppearancePose): { pose: AppearancePose; changed: boolean; } {
 		if (this.root == null)
 			return { pose, changed: false };
 
@@ -256,7 +249,7 @@ function CreateTreeNode(limit: AssetDefinitionPoseLimits): TreeNode {
 	return new TreeNode(data);
 }
 
-function FromPose({ bones, leftArm, rightArm, view }: PartialAppearancePose): Map<string, number> {
+function FromPose({ bones, leftArm, rightArm, arms, view }: PartialAppearancePose): Map<string, number> {
 	const data = new Map<string, number>();
 
 	if (bones) {
@@ -267,8 +260,8 @@ function FromPose({ bones, leftArm, rightArm, view }: PartialAppearancePose): Ma
 			data.set(`bones.${key}`, value);
 		}
 	}
-	FromArmPose(data, 'leftArm', leftArm);
-	FromArmPose(data, 'rightArm', rightArm);
+	FromArmPose(data, 'leftArm', { ...arms, ...leftArm });
+	FromArmPose(data, 'rightArm', { ...arms, ...rightArm });
 	if (view != null)
 		data.set('view', view === CharacterView.FRONT ? 0 : 1);
 

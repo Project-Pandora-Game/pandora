@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
-import { ArmsPose, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
+import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
@@ -51,14 +51,15 @@ export const AppearanceActionTransferSchema = z.object({
 export const AppearanceActionPose = z.object({
 	type: z.literal('pose'),
 	target: CharacterIdSchema,
-	pose: z.record(z.string(), z.number().optional()),
-	armsPose: z.nativeEnum(ArmsPose).optional(),
+	bones: AppearancePoseSchema.shape.bones.optional(),
+	leftArm: AppearanceArmPoseSchema.partial().optional(),
+	rightArm: AppearanceArmPoseSchema.partial().optional(),
 });
 
 export const AppearanceActionBody = z.object({
 	type: z.literal('body'),
 	target: CharacterIdSchema,
-	pose: z.record(z.string(), z.number().optional()),
+	bones: AppearancePoseSchema.shape.bones,
 });
 
 export const AppearanceActionSetView = z.object({
@@ -344,9 +345,9 @@ export function DoAppearanceAction(
 			if (!target)
 				return { result: 'invalidAction' };
 			if (!dryRun) {
-				target.appearance.importPose(action.pose, action.type, false);
-				if ('armsPose' in action && action.armsPose != null) {
-					target.appearance.setArmsPose(action.armsPose);
+				target.appearance.importBones(action.bones, action.type, false);
+				if (action.type === 'pose' && action.leftArm?.position != null) {
+					target.appearance.setArmsPose(action.leftArm.position);
 				}
 			}
 			return { result: 'success' };

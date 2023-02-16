@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexColorString, zTemplateString } from '../validation';
-import type { ArmsPose, BoneName } from './appearance';
+import type { AppearanceArmPose, ArmsPose, BoneName, CharacterView } from './appearance';
 import type { BoneDefinitionCompressed } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetProperties } from './properties';
@@ -121,13 +121,17 @@ export interface AssetBodyPart {
 	adjustable: boolean;
 }
 
+export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
+	bones?: Record<Bones, number>;
+	arms?: Partial<AppearanceArmPose>;
+	leftArm?: Partial<AppearanceArmPose>;
+	rightArm?: Partial<AppearanceArmPose>;
+	view?: CharacterView;
+};
+
 export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	category: string;
-	poses: {
-		name: string;
-		pose: Partial<Record<Bones, number>>;
-		armsPose?: ArmsPose;
-	}[];
+	poses: ({ name: string; } & PartialAppearancePose<Bones>)[];
 }[];
 
 export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {

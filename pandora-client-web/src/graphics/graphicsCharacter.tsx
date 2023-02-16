@@ -1,5 +1,5 @@
 import { Container } from '@saitonakamura/react-pixi';
-import { ArmsPose, AssertNever, AssertNotNullable, AssetId, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, LayerPriority, MergeAssetProperties } from 'pandora-common';
+import { ArmsPose, AssertNever, AssertNotNullable, AssetId, CharacterAppearance, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, LayerPriority, MergeAssetProperties } from 'pandora-common';
 import { Filter, InteractionEvent, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
@@ -39,16 +39,16 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 
 export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
 export type LayerStateOverrideGetter = (layer: AssetGraphicsLayer) => LayerStateOverrides | undefined;
-export type LayerGetSortOrder = (armsPose: ArmsPose, view: CharacterView) => readonly LayerPriority[];
+export type LayerGetSortOrder = (armsPose: CharacterArmsPose, view: CharacterView) => readonly LayerPriority[];
 
-const GetSortOrderDefault: LayerGetSortOrder = (armsPose, view) => {
+const GetSortOrderDefault: LayerGetSortOrder = ({ left }, view) => {
 	const reverse = view === CharacterView.BACK;
-	if (armsPose === ArmsPose.FRONT) {
+	if (left.position === ArmsPose.FRONT) {
 		return reverse ? PRIORITY_ORDER_ARMS_FRONT.slice().reverse() : PRIORITY_ORDER_ARMS_FRONT;
-	} else if (armsPose === ArmsPose.BACK) {
+	} else if (left.position === ArmsPose.BACK) {
 		return reverse ? PRIORITY_ORDER_ARMS_BACK.slice().reverse() : PRIORITY_ORDER_ARMS_BACK;
 	}
-	AssertNever(armsPose);
+	AssertNever(left.position);
 };
 
 function useLayerPriorityResolver(states: readonly LayerState[]): ReadonlyMap<LayerState, LayerPriority> {

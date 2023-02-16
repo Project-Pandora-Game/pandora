@@ -29,6 +29,7 @@ import {
 	MessageSubstitute,
 	AppearanceItemProperties,
 	AppearanceLimitTree,
+	CharacterArmsPose,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -1214,7 +1215,7 @@ type CheckedAssetsPosePresets = {
 	poses: CheckedPosePreset[];
 }[];
 
-function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: ArmsPose): {
+function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], { left, right }: CharacterArmsPose): {
 	poses: CheckedAssetsPosePresets;
 	limits: AppearanceLimitTree;
 } {
@@ -1224,8 +1225,10 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 
 	const isActive = (preset: AssetsPosePreset) => {
 		const leftArm = { ...preset.arms, ...preset.leftArm };
-		// const rightArm = { ...preset.arms, ...preset.rightArm };
-		if (leftArm.position != null && leftArm.position !== arms)
+		const rightArm = { ...preset.arms, ...preset.rightArm };
+		if (leftArm.position != null && leftArm.position !== left.position)
+			return false;
+		if (rightArm.position != null && rightArm.position !== right.position)
 			return false;
 
 		for (const [boneName, value] of Object.entries(preset.bones ?? {})) {
@@ -1273,7 +1276,7 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 	);
 }
 
-export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (pose: Omit<AssetsPosePreset, 'name'>) => void; }): ReactElement {
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: CharacterArmsPose; setPose: (pose: Omit<AssetsPosePreset, 'name'>) => void; }): ReactElement {
 	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
@@ -1327,8 +1330,8 @@ export function WardrobePoseGui(): ReactElement {
 							<input
 								id='arms-front-toggle'
 								type='checkbox'
-								checked={ armsPose === ArmsPose.FRONT }
-								disabled={ limits.validate({ arms: { position: armsPose === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+								checked={ armsPose.left.position === ArmsPose.FRONT && armsPose.right.position === ArmsPose.FRONT }
+								disabled={ limits.validate({ arms: { position: armsPose.left.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
 								onChange={ (e) => {
 									setPose({
 										leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },

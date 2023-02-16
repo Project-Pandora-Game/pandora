@@ -346,8 +346,8 @@ export function DoAppearanceAction(
 				return { result: 'invalidAction' };
 			if (!dryRun) {
 				target.appearance.importBones(action.bones, action.type, false);
-				if (action.type === 'pose' && action.leftArm?.position != null) {
-					target.appearance.setArmsPose(action.leftArm.position);
+				if (action.type === 'pose') {
+					target.appearance.setArmsPose(action);
 				}
 			}
 			return { result: 'success' };

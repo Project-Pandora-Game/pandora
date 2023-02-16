@@ -8,7 +8,7 @@ import { AppearanceRootManipulator } from './appearanceHelpers';
 import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
 import { AppearanceItemProperties, AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
-import { AssetId } from './definitions';
+import { AssetId, PartialAppearancePose } from './definitions';
 import { BoneState, BoneType } from './graphics';
 import { Item, ItemBundleSchema } from './item';
 
@@ -72,6 +72,11 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 
 export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
 
+export type CharacterArmsPose = {
+	readonly left: Readonly<AppearanceArmPose>;
+	readonly right: Readonly<AppearanceArmPose>;
+};
+
 export class CharacterAppearance implements RoomActionTargetCharacter {
 	public readonly type = 'character';
 	private readonly getCharacter: () => Readonly<ICharacterMinimalData>;
@@ -82,8 +87,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private items: AppearanceItems = [];
 	private readonly pose = new Map<BoneName, BoneState>();
 	private fullPose: readonly BoneState[] = [];
-	private _armsPose: AppearanceArmPose = GetDefaultAppearanceBundle().leftArm;
-	private _view: CharacterView = GetDefaultAppearanceBundle().view;
+	private _arms: CharacterArmsPose;
+	private _view: CharacterView;
 	private _safemode: SafemodeData | undefined;
 
 	public get character(): Readonly<ICharacterMinimalData> {
@@ -91,6 +96,9 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	constructor(assetManager: AssetManager, getCharacter: () => Readonly<ICharacterMinimalData>, onChange?: (changes: AppearanceChangeType[]) => void) {
+		const { leftArm, rightArm, view } = GetDefaultAppearanceBundle();
+		this._arms = { left: leftArm, right: rightArm };
+		this._view = view;
 		this.assetManager = assetManager;
 		this.getCharacter = getCharacter;
 		this.importFromBundle(GetDefaultAppearanceBundle());
@@ -105,8 +113,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return {
 			items: this.items.map((item) => item.exportToBundle()),
 			bones: this.exportBones(),
-			leftArm: _.cloneDeep(this._armsPose),
-			rightArm: _.cloneDeep(this._armsPose),
+			leftArm: _.cloneDeep(this._arms.left),
+			rightArm: _.cloneDeep(this._arms.right),
 			view: this._view,
 			safemode: this._safemode,
 		};
@@ -151,7 +159,10 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 				rotation: Number.isInteger(bundle.bones[bone.name]) ? _.clamp(bundle.bones[bone.name], BONE_MIN, BONE_MAX) : 0,
 			});
 		}
-		this._armsPose = bundle.leftArm;
+		this._arms = {
+			left: _.cloneDeep(bundle.leftArm),
+			right: _.cloneDeep(bundle.rightArm),
+		};
 		this._view = bundle.view;
 		this.fullPose = Array.from(this.pose.values());
 		if (logger) {
@@ -176,17 +187,20 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 
 		const { changed, pose } = limits.force({
 			bones: Object.fromEntries([...this.pose.entries()].map(([bone, state]) => [bone, state.rotation])),
-			leftArm: this._armsPose,
-			rightArm: this._armsPose,
+			leftArm: this._arms.left,
+			rightArm: this._arms.right,
 			view: this._view,
 		});
 		if (!changed)
 			return false;
 
-		const { bones, leftArm, view } = pose;
+		const { bones, leftArm, rightArm, view } = pose;
 
 		this._view = view;
-		this._armsPose = leftArm;
+		this._arms = {
+			left: leftArm,
+			right: rightArm,
+		};
 		for (const [bone, state] of this.pose.entries()) {
 			const rotation = bones[bone];
 			if (rotation != null && rotation !== state.rotation) {
@@ -328,13 +342,18 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this.fullPose;
 	}
 
-	public getArmsPose(): ArmsPose {
-		return this._armsPose.position;
+	public getArmsPose(): CharacterArmsPose {
+		return this._arms;
 	}
 
-	public setArmsPose(value: ArmsPose): void {
-		if (this._armsPose.position !== value) {
-			this._armsPose.position = value;
+	public setArmsPose({ arms, leftArm, rightArm }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): void {
+		const left = { ...this._arms.left, ...arms, ...leftArm };
+		const right = { ...this._arms.right, ...arms, ...rightArm };
+		const changed = this._arms.left.position !== left.position
+			|| this._arms.right.position !== right.position;
+
+		if (changed) {
+			this._arms = { left, right };
 			this.enforcePoseLimits();
 			this.onChange(['pose']);
 		}

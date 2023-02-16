@@ -45,9 +45,9 @@ export function BoneUI(): ReactElement {
 				<input
 					id='arms-front-toggle'
 					type='checkbox'
-					checked={ armsPose === ArmsPose.FRONT }
+					checked={ armsPose.left.position === ArmsPose.FRONT && armsPose.right.position === ArmsPose.FRONT }
 					onChange={ (e) => {
-						character.appearance.setArmsPose(e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK);
+						character.appearance.setArmsPose({ arms: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK } });
 					} }
 				/>
 			</div>
@@ -76,9 +76,7 @@ export function BoneUI(): ReactElement {
 			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } className='slim-padding' open={ false }>
 				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
 					character.appearance.importBones(pose.bones, 'pose', false);
-					if (pose.leftArm?.position != null) {
-						character.appearance.setArmsPose(pose.leftArm.position);
-					}
+					character.appearance.setArmsPose(pose);
 				} } />
 			</FieldsetToggle>
 			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>
@@ -145,11 +143,15 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 	const typeScriptValue = useMemo(() => {
 		return `{
 	name: '[Pose Preset Name]',
-	pose: {${ pose.reduce((acc, value) => (value.rotation === 0 || value.definition.type !== 'pose')
+	bones: {${pose.reduce((acc, value) => (value.rotation === 0 || value.definition.type !== 'pose')
 			? acc
-			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '') }
+			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '')}
 	},
-	armsPose: ArmsPose.${ArmsPose[arms]},
+${arms.left.position === arms.right.position
+				? `	arms: { position: ArmsPose.${ArmsPose[arms.left.position]} },`
+				: ` leftArm: { position: ArmsPose.${ArmsPose[arms.left.position]} },
+	rightArm: { position: ArmsPose.${ArmsPose[arms.right.position]} },`
+			}
 },`;
 	}, [pose, arms]);
 

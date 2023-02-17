@@ -225,8 +225,8 @@ export class AppearanceLimitTree {
 	}
 }
 
-function CreateTreeNode({ limits, children }: AssetDefinitionPoseLimits): TreeNode {
-	const nodeChildren = children == null ? null : children.map(CreateTreeNode);
+function CreateTreeNode(limits: AssetDefinitionPoseLimits): TreeNode {
+	const nodeChildren = limits.options == null ? null : limits.options.map(CreateTreeNode);
 	return new TreeNode(FromLimit(limits), nodeChildren);
 }
 

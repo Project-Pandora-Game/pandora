@@ -39,10 +39,9 @@ export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = A
 	view?: CharacterView;
 }
 
-export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
-	limits: AssetDefinitionPoseLimit<A>;
-	children?: AssetDefinitionPoseLimits<A>[];
-}
+export type AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = AssetDefinitionPoseLimit<A> & {
+	options?: [AssetDefinitionPoseLimits<A>, AssetDefinitionPoseLimits<A>, ...AssetDefinitionPoseLimits<A>[]];
+};
 
 export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	id: AssetId;

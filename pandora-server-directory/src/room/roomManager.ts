@@ -3,6 +3,7 @@ import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from '../room/room';
 import promClient from 'prom-client';
 import { GetDatabase } from '../database/databaseProvider';
+import { accountManager } from '../account/accountManager';
 
 const logger = GetLogger('RoomManager');
 
@@ -33,8 +34,26 @@ class RoomManagerClass {
 	}
 
 	@AsyncSynchronized()
-	public async createRoom(config: IChatRoomDirectoryConfig, owners: AccountId[]): Promise<Room> {
+	public async createRoom(config: IChatRoomDirectoryConfig, owners: AccountId[]): Promise<Room | 'failed' | 'roomOwnershipLimitReached'> {
 		Assert(owners.length > 0, 'Room must be created with some owners');
+
+		// Check, that owners are within limits
+		for (const ownerId of owners) {
+			// Meta-account Pandora has no limit
+			if (ownerId === 0)
+				continue;
+
+			const owner = await accountManager.loadAccountById(ownerId);
+			// We cannot have unknown owner on creation
+			if (!owner)
+				return 'failed';
+
+			const ownedRooms = await GetDatabase().getChatRoomsWithOwner(ownerId);
+
+			if (ownedRooms.length + 1 > owner.roomOwnershipLimit)
+				return 'roomOwnershipLimitReached';
+		}
+
 		const roomData = await GetDatabase().createChatRoom({
 			config,
 			owners,

@@ -4,7 +4,7 @@ import { Room } from '../../src/room/room';
 import { RoomManager } from '../../src/room/roomManager';
 import { ShardManager } from '../../src/shard/shardManager';
 import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV, TEST_ROOM_PANDORA_OWNED } from './testData';
-import { TestMockDb } from '../utils';
+import { TestMockAccount, TestMockDb } from '../utils';
 
 describe('RoomManager', () => {
 	let shard: Shard;
@@ -39,6 +39,33 @@ describe('RoomManager', () => {
 			expect(room.getConfig()).toEqual(TEST_ROOM);
 			expect(room.assignedShard).toBeNull();
 		});
+
+		it('Respects account room limit', async () => {
+			const account = await TestMockAccount();
+			const roomList: Room[] = [];
+
+			const create = () => RoomManager.createRoom(TEST_ROOM, [account.id]);
+
+			// Success until ownership
+			expect(account.roomOwnershipLimit).toBeGreaterThan(0);
+			for (let i = 0; i < account.roomOwnershipLimit; i++) {
+				const room = await create();
+				expect(room).toBeInstanceOf(Room);
+				Assert(room instanceof Room);
+				roomList.push(room);
+			}
+			expect(roomList).toHaveLength(account.roomOwnershipLimit);
+
+			// Fails past threshold
+			await expect(create()).resolves.toBe('roomOwnershipLimitReached');
+
+			// Success after giving up a room and trying again
+			await roomList[0].removeOwner(account.id);
+			await expect(create()).resolves.toBeInstanceOf(Room);
+
+			// Fails past reaching treshold again
+			await expect(create()).resolves.toBe('roomOwnershipLimitReached');
+		});
 	});
 
 	describe('getRoom()', () => {
@@ -62,7 +89,6 @@ describe('RoomManager', () => {
 		it('Returns list of existing rooms', () => {
 			const rooms = RoomManager.listRooms();
 
-			expect(rooms).toHaveLength(4);
 			expect(rooms.map((r) => r.id)).toContain(testRoomId);
 		});
 	});

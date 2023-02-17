@@ -2,7 +2,7 @@ import { CharacterId, DirectoryAccountSettingsSchema, ICharacterData, ICharacter
 import { GetDatabase } from '../database/databaseProvider';
 import type { IConnectionClient } from '../networking/common';
 import { Character } from './character';
-import { CHARACTER_LIMIT_NORMAL } from '../config';
+import { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } from '../config';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
@@ -217,6 +217,14 @@ export class Account {
 			return 'inCreation';
 
 		return '';
+	}
+
+	//#endregion
+
+	//#region Rooms
+
+	public get roomOwnershipLimit(): number {
+		return ROOM_LIMIT_NORMAL;
 	}
 
 	//#endregion

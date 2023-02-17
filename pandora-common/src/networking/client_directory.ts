@@ -195,7 +195,7 @@ export const ClientDirectorySchema = {
 	},
 	chatRoomCreate: {
 		request: ChatRoomDirectoryConfigSchema,
-		response: ZodCast<ShardConnection<ShardError>>(),
+		response: ZodCast<ShardConnection<ShardError | 'roomOwnershipLimitReached'>>(),
 	},
 	chatRoomEnter: {
 		request: z.object({

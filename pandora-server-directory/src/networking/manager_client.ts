@@ -356,7 +356,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		return {
-			rooms: RoomManager.listRooms().map((r) => r.getDirectoryInfo()),
+			rooms: RoomManager.listRooms().map((r) => r.getRoomListInfo(connection.account)),
 		};
 	}
 
@@ -378,7 +378,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			result: 'success',
-			data: room.getDirectoryExtendedInfo(),
+			data: room.getRoomListExtendedInfo(connection.account),
 		};
 	}
 
@@ -442,7 +442,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notInRoom' };
 		}
 
-		if (!connection.character.room.isAdmin(connection.character)) {
+		if (!connection.character.room.isAdmin(connection.account)) {
 			return { result: 'noAccess' };
 		}
 

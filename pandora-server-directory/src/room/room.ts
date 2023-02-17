@@ -1,4 +1,4 @@
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert, AccountId } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomListInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomListExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert, AccountId } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from '../shard/shard';
@@ -7,6 +7,7 @@ import { pick, uniq } from 'lodash';
 import { ShardManager } from '../shard/shardManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { RoomManager } from '../room/roomManager';
+import { Account } from '../account/account';
 
 export class Room {
 	public readonly id: RoomId;
@@ -64,20 +65,22 @@ export class Room {
 		});
 	}
 
-	public getDirectoryInfo(): IChatRoomDirectoryInfo {
+	public getRoomListInfo(queryingAccount: Account): IChatRoomListInfo {
 		return ({
 			...this.getBaseInfo(),
 			id: this.id,
 			hasPassword: this.config.password !== null,
 			users: this.characterCount,
+			isOwner: this.isOwner(queryingAccount),
 		});
 	}
 
-	public getDirectoryExtendedInfo(): IChatRoomDirectoryExtendedInfo {
+	public getRoomListExtendedInfo(queryingAccount: Account): IChatRoomListExtendedInfo {
 		return ({
-			...this.getDirectoryInfo(),
+			...this.getRoomListInfo(queryingAccount),
 			...pick(this.config, ['features', 'admin', 'background']),
 			owners: Array.from(this._owners),
+			isAdmin: this.isAdmin(queryingAccount),
 			characters: Array.from(this._characters).map((c) => ({
 				id: c.id,
 				accountId: c.account.id,
@@ -287,7 +290,7 @@ export class Room {
 			return 'noAccess';
 
 		if (this.config.protected &&
-			!this.isAdmin(character) &&
+			!this.isAdmin(character.account) &&
 			(this.config.password === null || password !== this.config.password)
 		) {
 			return this.config.password !== null ? 'invalidPassword' : 'noAccess';
@@ -299,14 +302,18 @@ export class Room {
 		return 'ok';
 	}
 
-	public isAdmin(character: Character): boolean {
-		if (this._owners.has(character.account.id))
+	public isOwner(account: Account): boolean {
+		return this._owners.has(account.id);
+	}
+
+	public isAdmin(account: Account): boolean {
+		if (this.isOwner(account))
 			return true;
 
-		if (this.config.admin.includes(character.account.id))
+		if (this.config.admin.includes(account.id))
 			return true;
 
-		if (this.config.development?.autoAdmin && character.account.roles.isAuthorized('developer'))
+		if (this.config.development?.autoAdmin && account.roles.isAuthorized('developer'))
 			return true;
 
 		return false;

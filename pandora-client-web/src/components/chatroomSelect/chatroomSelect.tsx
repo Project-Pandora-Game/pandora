@@ -1,5 +1,5 @@
 import { noop } from 'lodash';
-import { EMPTY, GetLogger, IChatRoomDirectoryInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId } from 'pandora-common';
+import { EMPTY, GetLogger, IChatRoomListInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId, AssertNotNullable } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../common/useErrorHandler';
@@ -16,9 +16,9 @@ import { Row } from '../common/container/container';
 import './chatroomSelect.scss';
 import closedDoor from '../../icons/closed-door.svg';
 import openDoor from '../../icons/opened-door.svg';
+import { ContextHelpButton } from '../help/contextHelpButton';
 
 export function ChatroomSelect(): ReactElement {
-	const navigate = useNavigate();
 	const roomData = useChatRoomData();
 	const roomList = useRoomList();
 
@@ -29,21 +29,66 @@ export function ChatroomSelect(): ReactElement {
 	return (
 		<div>
 			<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
-			<Button onClick={ () => navigate('/chatroom_create') }>Create room</Button><br />
-			<p>
-				Existing rooms: { roomList?.length }<br />
-				{ !roomList ? <div className='loading'>Loading...</div> : (
-					roomList.length > 0 ?
-						roomList.map((room) => <RoomEntry key={ room.id } roomInfo={ room } />) :
-						<div>No room matches your filter criteria</div>
-				) }
-			</p>
+			<h2>Room search</h2>
+			{ !roomList ? <div className='loading'>Loading...</div> : <ChatroomSelectRoomList roomList={ roomList } /> }
 		</div>
 	);
 }
 
+function ChatroomSelectRoomList({ roomList }: {
+	roomList: IChatRoomListInfo[];
+}): ReactElement {
+	const navigate = useNavigate();
+	const account = useCurrentAccount();
+	AssertNotNullable(account);
+
+	const ownRooms = roomList.filter((r) => r.isOwner);
+	const otherRooms = roomList.filter((r) => !r.isOwner);
+
+	return (
+		<>
+			<div>
+				<h3>
+					My rooms ({ ownRooms.length }/{ account.roomOwnershipLimit })
+					<ContextHelpButton>
+						<p>
+							Rooms are a place where you can meet other characters.
+						</p>
+						<p>
+							In Pandora each room has one or more owners. A room that looses all owners is deleted.<br />
+							Each <strong>account</strong> however has a limit on how many rooms it can own.
+							You can own at most { account.roomOwnershipLimit } rooms.<br />
+							You will always see all the rooms you are an owner of in the room search.
+						</p>
+						<p>
+							If you want to make another room past the limit of your rooms,<br />
+							you will have to select any of the rooms you own and give up ownership of that room<br />
+							(possibly deleting the room in the process, if it has no other owner).
+						</p>
+					</ContextHelpButton>
+				</h3>
+				{ ownRooms.map((room) => <RoomEntry key={ room.id } roomInfo={ room } />) }
+				{
+					ownRooms.length >= account.roomOwnershipLimit ? null : (
+						<a className='roomListGrid' onClick={ () => navigate('/chatroom_create') } >
+							<div className='icon'>➕</div>
+							<div className='entry'>Create a new room</div>
+						</a>
+					)
+				}
+			</div>
+			<hr />
+			<div>
+				<h3>Found rooms ({ otherRooms.length })</h3>
+				{ otherRooms.length === 0 ? <p>No room matches your filter criteria</p> : null }
+				{ otherRooms.map((room) => <RoomEntry key={ room.id } roomInfo={ room } />) }
+			</div>
+		</>
+	);
+}
+
 function RoomEntry({ roomInfo }: {
-	roomInfo: IChatRoomDirectoryInfo;
+	roomInfo: IChatRoomListInfo;
 }): ReactElement {
 
 	const [show, setShow] = useState(false);
@@ -53,10 +98,12 @@ function RoomEntry({ roomInfo }: {
 	return (
 		<>
 			<a className='roomListGrid' onClick={ () => setShow(true) } >
-				<img className='entry' width='50px'
-					src={ roomIsProtected ? closedDoor : openDoor }
-					title={ roomIsProtected ? 'Protected room' : 'Open room' }
-					alt={ roomIsProtected ? 'Protected room' : 'Open room' } />
+				<div className='icon'>
+					<img
+						src={ roomIsProtected ? closedDoor : openDoor }
+						title={ roomIsProtected ? 'Protected room' : 'Open room' }
+						alt={ roomIsProtected ? 'Protected room' : 'Open room' } />
+				</div>
 				<div className='entry'>{ `${name} (${users}/${maxUsers})` }</div>
 				<div className='entry'>{ (description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}` }</div>
 			</a>
@@ -69,7 +116,7 @@ function RoomEntry({ roomInfo }: {
 }
 
 function RoomDetailsDialog({ baseRoomInfo, hide }: {
-	baseRoomInfo: IChatRoomDirectoryInfo;
+	baseRoomInfo: IChatRoomListInfo;
 	hide: () => void;
 }): ReactElement | null {
 
@@ -96,12 +143,11 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 	const roomDetails = room?.result === 'success' ? room.data : undefined;
 	const characters = roomDetails?.characters ?? [];
 	const owners = roomDetails?.owners ?? [];
-	const admins = roomDetails?.admin ?? [];
 	const background = roomDetails?.background ? ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl()).image : '';
 	const features = roomDetails?.features ?? [];
 
-	const userIsOwner = owners.includes(accountId);
-	const userIsAdmin = userIsOwner || admins.includes(accountId);
+	const userIsOwner = !!roomDetails?.isOwner;
+	const userIsAdmin = !!roomDetails?.isAdmin;
 
 	return (
 		<ModalDialog>
@@ -195,8 +241,8 @@ function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnter
 	}, [directoryConnector, connectToShard, handleError]);
 }
 
-function useRoomList(): IChatRoomDirectoryInfo[] | undefined {
-	const [roomList, setRoomList] = useState<IChatRoomDirectoryInfo[]>();
+function useRoomList(): IChatRoomListInfo[] | undefined {
+	const [roomList, setRoomList] = useState<IChatRoomListInfo[]>();
 	const directoryConnector = useDirectoryConnector();
 
 	const fetchRoomList = useCallback(async () => {

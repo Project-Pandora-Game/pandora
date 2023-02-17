@@ -1,7 +1,7 @@
 import type { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
-import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomDirectoryExtendedInfo, IChatRoomDirectoryInfo, RoomIdSchema } from '../chatroom/room';
+import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomIdSchema } from '../chatroom/room';
 import { ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
 import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
 import { z } from 'zod';
@@ -55,7 +55,7 @@ export type IChatRoomExtendedInfoResponse = {
 	result: 'notFound' | 'noAccess';
 } | {
 	result: 'success';
-	data: IChatRoomDirectoryExtendedInfo;
+	data: IChatRoomListExtendedInfo;
 };
 
 /** Client->Directory messages */
@@ -185,7 +185,7 @@ export const ClientDirectorySchema = {
 	},
 	listRooms: {
 		request: z.object({}),
-		response: ZodCast<{ rooms: IChatRoomDirectoryInfo[]; }>(),
+		response: ZodCast<{ rooms: IChatRoomListInfo[]; }>(),
 	},
 	chatRoomGetInfo: {
 		request: z.object({

@@ -85,6 +85,7 @@ export class Account {
 			created: this.data.created,
 			github: this.secure.getGitHubStatus(),
 			roles: this.roles.getSelfInfo(),
+			roomOwnershipLimit: this.roomOwnershipLimit,
 			settings: _.cloneDeep(this.data.settings),
 			cryptoKey: this.secure.getCryptoKey(),
 		};

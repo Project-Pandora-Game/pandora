@@ -118,26 +118,23 @@ export type IChatRoomDirectoryConfig = z.infer<typeof ChatRoomDirectoryConfigSch
 export const ChatRoomDirectoryUpdateSchema = ChatRoomDirectoryConfigSchema.omit({ features: true, development: true }).partial();
 export type IChatRoomDirectoryUpdate = z.infer<typeof ChatRoomDirectoryUpdateSchema>;
 
-export type IChatRoomDirectoryInfo = IChatRoomBaseInfo & {
+/** Info sent to client when searching for a room */
+export type IChatRoomListInfo = IChatRoomBaseInfo & {
 	/** The id of the room, never changes */
 	id: RoomId;
 	/** Indicated if a password is available */
 	hasPassword: boolean;
 	/** The amount of users in the chat room */
 	users: number;
-	// TODO
-	// /** Info about the creator */
-	// creator: {
-	// /** The id of the creator */
-	// id: string;
-	// /** The name of the creator */
-	// accountName: string;
-	// /** The avatar of the creator */
-	// characterName: string;
-	// };
+	/** Whether the account that requested the info is owner of this room */
+	isOwner: boolean;
 };
 
-export type IChatRoomDirectoryExtendedInfo = IChatRoomDirectoryInfo & Pick<IChatRoomDirectoryConfig, 'features' | 'admin' | 'background'> & {
+/** Info sent to client when displaying details about room */
+export type IChatRoomListExtendedInfo = IChatRoomListInfo & Pick<IChatRoomDirectoryConfig, 'features' | 'admin' | 'background'> & {
+	// Note: `isAdmin` is not part of the basic info (`IChatRoomListInfo`), as it has more complex check than `isOwner` and shouldn't be done en masse
+	/** Whether the account that requested the info is admin of this room */
+	isAdmin: boolean;
 	owners: AccountId[];
 	characters: {
 		id: CharacterId;

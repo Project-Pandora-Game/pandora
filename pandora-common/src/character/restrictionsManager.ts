@@ -7,8 +7,8 @@ import { ActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item } from '../assets/item';
-import type { Asset } from '../assets/asset';
-import { AppearanceGetBlockedSlot, AppearanceItemProperties, AssetId, ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
+import type { Asset, AssetId, ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
+import { AppearanceGetBlockedSlot, AppearanceItemProperties } from '../assets/appearanceValidation';
 
 export enum ItemInteractionType {
 	/**

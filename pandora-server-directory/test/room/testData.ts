@@ -6,7 +6,7 @@ const TEST_ROOM_DEFAULTS: Readonly<IChatRoomDirectoryConfig> = {
 	maxUsers: 10,
 	admin: [],
 	banned: [],
-	protected: false,
+	public: true,
 	password: null,
 	features: [],
 	background: {
@@ -29,7 +29,6 @@ export const TEST_ROOM2: Readonly<IChatRoomDirectoryConfig> = {
 	name: 'test2',
 	description: 'Another description',
 	maxUsers: 7,
-	protected: true,
 	password: 'abcd',
 	admin: [2],
 	banned: [22, 13],

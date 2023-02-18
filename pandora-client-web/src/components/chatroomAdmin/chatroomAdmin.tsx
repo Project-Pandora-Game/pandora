@@ -33,6 +33,7 @@ import { Row } from '../common/container/container';
 import bodyChange from '../../icons/body-change.svg';
 import devMode from '../../icons/developer.svg';
 import pronounChange from '../../icons/male-female.svg';
+import { FieldsetToggle } from '../common/fieldsetToggle';
 import './chatroomAdmin.scss';
 import classNames from 'classnames';
 
@@ -45,7 +46,7 @@ function DefaultRoomData(): IChatRoomDirectoryConfig {
 		maxUsers: 10,
 		admin: [],
 		banned: [],
-		protected: false,
+		public: false,
 		password: null,
 		features: [],
 		background: cloneDeep(DEFAULT_BACKGROUND) as IChatroomBackgroundData,
@@ -98,9 +99,6 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			} else if (!result.features.includes('development')) {
 				delete result.development;
 			}
-		}
-		if (result.protected === false) {
-			result.password = null;
 		}
 		return result;
 	}, {});
@@ -158,44 +156,44 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				{ !IsChatroomName(currentConfig.name) && <div className='error'>Invalid room name</div> }
 			</div>
 			<div className='input-container'>
-				<label>Room description</label>
-				<textarea value={ currentConfig.description } readOnly={ !isPlayerAdmin }
-					onChange={ (event) => setRoomModifiedData({ description: event.target.value }) } />
-			</div>
-			<div className='input-container'>
 				<label>Room size</label>
 				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !isPlayerAdmin }
 					onChange={ (event) => setRoomModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
 			</div>
-			<div className='input-container'>
-				<label>Owners</label>
-				<Row padding='none'>
-					<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
-					{ !creation && roomData && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomData.id } name={ roomData.name } /> : null }
-				</Row>
-			</div>
-			<div className='input-container'>
-				<label>Admins</label>
-				<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setRoomModifiedData({ admin }) } readOnly={ !isPlayerAdmin } />
-			</div>
-			<div className='input-container'>
-				<label>Ban list</label>
-				<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !isPlayerAdmin } />
-			</div>
-			<div className='input-container'>
-				<label>Protected</label>
-				<Button onClick={ () => setRoomModifiedData({ protected: !currentConfig.protected }) } disabled={ !isPlayerAdmin }>{ currentConfig.protected ? 'Yes' : 'No' }</Button>
-			</div>
-			{
-				currentConfig.protected &&
+			<FieldsetToggle legend='Presentation and access'>
 				<div className='input-container'>
-					<label>Password (optional)</label>
-					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !isPlayerAdmin }
-						onChange={ (event) => setRoomModifiedData({ protected: true, password: event.target.value || null }) } />
+					<label>Room description</label>
+					<textarea value={ currentConfig.description } readOnly={ !isPlayerAdmin }
+						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) } />
 				</div>
-			}
-			<div className='input-container'>
-				<label>Background</label>
+				<div className='input-container'>
+					<label>Public</label>
+					<Button onClick={ () => setRoomModifiedData({ public: !currentConfig.public }) } disabled={ !isPlayerAdmin }>{ currentConfig.public ? 'Yes' : 'No' }</Button>
+				</div>
+				<div className='input-container'>
+					<label>Entry password (optional)</label>
+					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !isPlayerAdmin }
+						onChange={ (event) => setRoomModifiedData({ password: event.target.value || null }) } />
+				</div>
+			</FieldsetToggle>
+			<FieldsetToggle legend='Permissions'>
+				<div className='input-container'>
+					<label>Owners</label>
+					<Row padding='none'>
+						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
+						{ !creation && roomData && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomData.id } name={ roomData.name } /> : null }
+					</Row>
+				</div>
+				<div className='input-container'>
+					<label>Admins</label>
+					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setRoomModifiedData({ admin }) } readOnly={ !isPlayerAdmin } />
+				</div>
+				<div className='input-container'>
+					<label>Ban list</label>
+					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !isPlayerAdmin } />
+				</div>
+			</FieldsetToggle>
+			<FieldsetToggle legend='Background'>
 				<Button
 					onClick={ () => setShowBackgrounds(true) }
 					disabled={ !isPlayerAdmin }
@@ -207,88 +205,88 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					current={ currentConfigBackground }
 					select={ (background) => setRoomModifiedData({ background }) }
 				/> }
-			</div>
-			{
-				typeof currentConfigBackground === 'string' ? null : (
-					<>
-						<div className='input-container'>
-							<label>Background image</label>
-							<div className='row-first'>
-								<input type='text'
-									value={ currentConfigBackground.image }
-									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
-								/>
-								<input type='color'
-									value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
-									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
-								/>
+				{
+					typeof currentConfigBackground === 'string' ? null : (
+						<>
+							<div className='input-container'>
+								<label>Background image</label>
+								<div className='row-first'>
+									<input type='text'
+										value={ currentConfigBackground.image }
+										readOnly={ !isPlayerAdmin }
+										onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
+									/>
+									<input type='color'
+										value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
+										readOnly={ !isPlayerAdmin }
+										onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
+									/>
+								</div>
 							</div>
-						</div>
-						<div className='input-container'>
-							<label>Room Size: width, height</label>
-							<div className='row-half'>
+							<div className='input-container'>
+								<label>Room Size: width, height</label>
+								<div className='row-half'>
+									<input type='number'
+										autoComplete='none'
+										value={ currentConfigBackground.size[0] }
+										readOnly={ !isPlayerAdmin }
+										onChange={ (event) => setRoomModifiedData({
+											background: {
+												...currentConfigBackground,
+												size: [Number.parseInt(event.target.value, 10), currentConfigBackground.size[1]],
+											},
+										}) }
+									/>
+									<input type='number'
+										autoComplete='none'
+										value={ currentConfigBackground.size[1] }
+										readOnly={ !isPlayerAdmin }
+										onChange={ (event) => setRoomModifiedData({
+											background: {
+												...currentConfigBackground,
+												size: [currentConfigBackground.size[0], Number.parseInt(event.target.value, 10)],
+											},
+										}) }
+									/>
+								</div>
+							</div>
+							<div className='input-container'>
+								<label>Y limit</label>
 								<input type='number'
 									autoComplete='none'
-									value={ currentConfigBackground.size[0] }
+									min={ -1 }
+									value={ currentConfigBackground.maxY ?? -1 }
 									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({
-										background: {
-											...currentConfigBackground,
-											size: [Number.parseInt(event.target.value, 10), currentConfigBackground.size[1]],
-										},
-									}) }
-								/>
-								<input type='number'
-									autoComplete='none'
-									value={ currentConfigBackground.size[1] }
-									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({
-										background: {
-											...currentConfigBackground,
-											size: [currentConfigBackground.size[0], Number.parseInt(event.target.value, 10)],
-										},
-									}) }
+									onChange={ (event) => {
+										const value = Number.parseInt(event.target.value, 10);
+										setRoomModifiedData({
+											background: {
+												...currentConfigBackground,
+												maxY: isNaN(value) || value < 0 ? undefined : value,
+											},
+										});
+									} }
 								/>
 							</div>
-						</div>
-						<div className='input-container'>
-							<label>Y limit</label>
-							<input type='number'
-								autoComplete='none'
-								min={ -1 }
-								value={ currentConfigBackground.maxY ?? -1 }
-								readOnly={ !isPlayerAdmin }
-								onChange={ (event) => {
-									const value = Number.parseInt(event.target.value, 10);
-									setRoomModifiedData({
-										background: {
-											...currentConfigBackground,
-											maxY: isNaN(value) || value < 0 ? undefined : value,
-										},
-									});
-								} }
-							/>
-						</div>
-						<div className='input-container'>
-							<label>Y Scaling</label>
-							<div className='row-first'>
-								<input type='range'
-									value={ currentConfigBackground.scaling }
-									readOnly={ !isPlayerAdmin }
-									{ ...scalingProps }
-								/>
-								<input type='number'
-									value={ currentConfigBackground.scaling }
-									readOnly={ !isPlayerAdmin }
-									{ ...scalingProps }
-								/>
+							<div className='input-container'>
+								<label>Y Scaling</label>
+								<div className='row-first'>
+									<input type='range'
+										value={ currentConfigBackground.scaling }
+										readOnly={ !isPlayerAdmin }
+										{ ...scalingProps }
+									/>
+									<input type='number'
+										value={ currentConfigBackground.scaling }
+										readOnly={ !isPlayerAdmin }
+										{ ...scalingProps }
+									/>
+								</div>
 							</div>
-						</div>
-					</>
-				)
-			}
+						</>
+					)
+				}
+			</FieldsetToggle>
 		</>
 	);
 

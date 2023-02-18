@@ -355,9 +355,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		return {
-			rooms: RoomManager.listRooms().map((r) => r.getRoomListInfo(connection.account)),
-		};
+		const rooms = RoomManager.listRooms()
+			.filter((r) => r.checkVisibleTo(connection.account))
+			.map((r) => r.getRoomListInfo(connection.account));
+
+		return { rooms };
 	}
 
 	private handleChatRoomGetInfo({ id }: IClientDirectoryArgument['chatRoomGetInfo'], connection: IConnectionClient): IClientDirectoryResult['chatRoomGetInfo'] {
@@ -370,9 +372,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = room.checkAllowEnter(connection.character);
+		const allowResult = room.checkAllowEnter(connection.character, null, true);
 
-		if (allowResult !== 'ok' && allowResult !== 'errFull') {
+		if (allowResult !== 'ok') {
 			return { result: 'noAccess' };
 		}
 
@@ -415,7 +417,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = room.checkAllowEnter(connection.character, password);
+		const allowResult = room.checkAllowEnter(connection.character, password ?? null);
 
 		if (allowResult !== 'ok') {
 			return { result: allowResult };

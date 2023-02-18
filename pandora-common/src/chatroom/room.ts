@@ -30,8 +30,8 @@ export const ChatRoomBaseInfoSchema = z.object({
 	name: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex),
 	/** The description of the chat room */
 	description: z.string(),
-	/** Protected rooms can be entered only by admins or using password (if there is one set) */
-	protected: z.boolean(),
+	/** Rooms are private by default and can be published to be seen in room search. */
+	public: z.boolean(),
 	/** The maximum amount of users in the chat room */
 	maxUsers: z.number().min(2),
 });

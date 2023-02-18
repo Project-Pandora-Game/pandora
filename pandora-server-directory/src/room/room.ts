@@ -60,7 +60,7 @@ export class Room {
 		return ({
 			name: this.config.name,
 			description: this.config.description,
-			protected: this.config.protected,
+			public: this.config.public,
 			maxUsers: this.config.maxUsers,
 		});
 	}
@@ -140,16 +140,11 @@ export class Room {
 			this.config.banned = uniq(changes.banned);
 			this.removeBannedCharacters(source);
 		}
-		if (changes.protected !== undefined) {
-			if (changes.protected) {
-				this.config.protected = true;
-				if (changes.password !== undefined) {
-					this.config.password = changes.password;
-				}
-			} else {
-				this.config.protected = false;
-				this.config.password = null;
-			}
+		if (changes.public !== undefined) {
+			this.config.public = changes.public;
+		}
+		if (changes.password !== undefined) {
+			this.config.password = changes.password;
 		}
 		if (changes.background) {
 			this.config.background = changes.background;
@@ -164,8 +159,10 @@ export class Room {
 				changeList.push(`name to '${changes.name}'`);
 			if (changes.maxUsers !== undefined)
 				changeList.push(`room size to '${changes.maxUsers}'`);
-			if (changes.protected !== undefined)
-				changeList.push(`access to '${this.config.protected ? (this.config.password ? 'protected with password' : 'protected') : 'public'}'`);
+			if (changes.public !== undefined)
+				changeList.push(`visibility to '${this.config.public ? 'public' : 'private'}'`);
+			if (changes.password !== undefined)
+				changeList.push('password');
 			if (changes.description !== undefined)
 				changeList.push('description');
 			if (changes.admin)
@@ -282,24 +279,41 @@ export class Room {
 		this.logger.verbose('Destroyed');
 	}
 
-	public checkAllowEnter(character: Character, password?: string): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
+	public checkAllowEnter(character: Character, password: string | null, ignoreCharacterLimit: boolean = false): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
+		// If you are already in room, then you have rights to enter it
 		if (character.room === this)
 			return 'ok';
 
+		// If the room is full, you cannot enter the room (some checks ignore room being full)
+		if (this.characterCount >= this.config.maxUsers && !ignoreCharacterLimit)
+			return 'errFull';
+
+		// If you are an owner or admin, you can enter the room (owner implies admin)
+		if (this.isAdmin(character.account))
+			return 'ok';
+
+		// If you are banned, you cannot enter the room
 		if (this.config.banned.includes(character.account.id))
 			return 'noAccess';
 
-		if (this.config.protected &&
-			!this.isAdmin(character.account) &&
-			(this.config.password === null || password !== this.config.password)
-		) {
-			return this.config.password !== null ? 'invalidPassword' : 'noAccess';
-		}
+		// If the room is password protected and you have given valid password, you can enter the room
+		if (this.config.password !== null && password && password === this.config.password)
+			return 'ok';
 
-		if (this.characterCount >= this.config.maxUsers)
-			return 'errFull';
+		// If the room is public, you can enter the room (unless it is password protected)
+		if (this.config.public && this.config.password === null)
+			return 'ok';
 
-		return 'ok';
+		// Otherwise you cannot enter the room
+		return (this.config.password !== null && password) ? 'invalidPassword' : 'noAccess';
+	}
+
+	/** Returns if this room is visible to the specific account when searching in room search */
+	public checkVisibleTo(account: Account): boolean {
+		return (
+			this.isAdmin(account) ||
+			(this.config.public && this.hasAdminInside())
+		);
 	}
 
 	public isOwner(account: Account): boolean {
@@ -316,6 +330,15 @@ export class Room {
 		if (this.config.development?.autoAdmin && account.roles.isAuthorized('developer'))
 			return true;
 
+		return false;
+	}
+
+	public hasAdminInside(): boolean {
+		for (const c of this.characters) {
+			if (this.isAdmin(c.account)) {
+				return true;
+			}
+		}
 		return false;
 	}
 

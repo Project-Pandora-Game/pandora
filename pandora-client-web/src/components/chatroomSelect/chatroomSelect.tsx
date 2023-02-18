@@ -93,16 +93,16 @@ function RoomEntry({ roomInfo }: {
 
 	const [show, setShow] = useState(false);
 
-	const { name, users, maxUsers, description, protected: roomIsProtected } = roomInfo;
+	const { name, users, maxUsers, description, hasPassword } = roomInfo;
 
 	return (
 		<>
 			<a className='roomListGrid' onClick={ () => setShow(true) } >
 				<div className='icon'>
 					<img
-						src={ roomIsProtected ? closedDoor : openDoor }
-						title={ roomIsProtected ? 'Protected room' : 'Open room' }
-						alt={ roomIsProtected ? 'Protected room' : 'Open room' } />
+						src={ hasPassword ? closedDoor : openDoor }
+						title={ hasPassword ? 'Protected room' : 'Open room' }
+						alt={ hasPassword ? 'Protected room' : 'Open room' } />
 				</div>
 				<div className='entry'>{ `${name} (${users}/${maxUsers})` }</div>
 				<div className='entry'>{ (description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}` }</div>
@@ -138,7 +138,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 		return null;
 
 	// Get basic info
-	const { id, name, description, protected: roomIsProtected, hasPassword } = baseRoomInfo;
+	const { id, name, description, hasPassword } = baseRoomInfo;
 	// Get advanced info, if we can
 	const roomDetails = room?.result === 'success' ? room.data : undefined;
 	const characters = roomDetails?.characters ?? [];
@@ -161,7 +161,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 				{ (background !== '' && !background.startsWith('#')) &&
 					<img className='preview' src={ background } width='200px' height='100px' /> }
 				<Row padding='none' className='features'>
-					{ roomIsProtected && <img className='features-img' src={ closedDoor } title='Protected Room' /> }
+					{ hasPassword && <img className='features-img' src={ closedDoor } title='Protected Room' /> }
 					{
 						CHATROOM_FEATURES
 							.filter((f) => features.includes(f.id))
@@ -178,9 +178,9 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 							{ characters.map((char) => <div key={ char.id }>{ char.name } ({ char.id })</div>) }
 						</div>
 					</div> }
-				{ (!userIsAdmin && roomIsProtected && hasPassword) &&
+				{ (!userIsAdmin && hasPassword) &&
 					<div className='title'>This room requires a password:</div> }
-				{ (!userIsAdmin && roomIsProtected && hasPassword) &&
+				{ (!userIsAdmin && hasPassword) &&
 					<input className='widebox'
 						name='roomPwd'
 						type='password'
@@ -191,7 +191,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					<Button onClick={ hide }>Close</Button>
 					{ userIsOwner && <ChatroomOwnershipRemoval buttonClassName='slim' id={ id } name={ name } /> }
 					<Button className='fadeDisabled'
-						disabled={ (!userIsAdmin && roomIsProtected) && (!hasPassword || roomPassword.length === 0) }
+						disabled={ !userIsAdmin && hasPassword && !roomPassword }
 						onClick={ () => {
 							joinRoom(id, roomPassword)
 								.then((joinResult) => {

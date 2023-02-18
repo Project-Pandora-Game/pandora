@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { IntervalSetIntersection } from '../utility';
 import { AppearanceArmPose, AppearancePose, ArmsPose, CharacterView, GetDefaultAppearanceBundle } from './appearance';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
@@ -87,6 +88,19 @@ class TreeLimit {
 		}
 		return new TreeLimit(newLimit);
 	}
+
+	public prune(other: TreeLimit): TreeLimit {
+		const newLimit = new Map<string, [number, number][]>(this.limit);
+		for (const [key, value] of other.limit) {
+			const newValue = newLimit.get(key);
+			if (!newValue)
+				continue;
+
+			if (_.isEqual(newValue, value))
+				newLimit.delete(key);
+		}
+		return new TreeLimit(newLimit);
+	}
 }
 
 class TreeNode {
@@ -147,42 +161,46 @@ class TreeNode {
 
 		if (next.children == null) {
 			nodes.push(...other.children
-				.map((child) => child.intersectionWithLimit(next.limit))
+				.map((child) => child.intersectionWithLimit(next.limit, true))
 				.filter((child): child is TreeNode => child != null));
 		} else {
 			const children = next.children;
 			nodes.push(...other.children
 				.flatMap((otherChild) => children
-					.map((child) => child.intersectionWithLimit(next.limit)?.intersection(otherChild))
+					.map((child) => child.intersection(otherChild))
 					.filter((child): child is TreeNode => child != null)));
 		}
-		if (nodes.length === 0)
-			return null;
-		if (nodes.length === 1)
-			return new TreeNode(nodes[0].limit.extend(next.limit), nodes[0].children);
 
-		return new TreeNode(next.limit, nodes);
+		return TreeNode.fromResult(next.limit, nodes);
 	}
 
-	private intersectionWithLimit(limit: TreeLimit): TreeNode | null {
-		const newLimit = limit.intersection(this.limit)?.extend(limit);
-		if (newLimit == null)
+	private intersectionWithLimit(limit: TreeLimit, prune: boolean = false): TreeNode | null {
+		const intersection = this.limit.intersection(limit);
+		if (intersection == null)
 			return null;
+
+		const newLimit = prune
+			? intersection.extend(this.limit).prune(limit)
+			: intersection.extend(this.limit).extend(limit);
 
 		if (this.children == null)
-			return new TreeNode(newLimit.extend(this.limit));
+			return new TreeNode(newLimit);
 
 		const newChildren = this.children
-			.map((child) => child.intersectionWithLimit(newLimit))
+			.map((child) => child.intersectionWithLimit(newLimit, true))
 			.filter((child): child is TreeNode => child != null);
 
-		if (newChildren.length === 0)
+		return TreeNode.fromResult(newLimit, newChildren);
+	}
+
+	private static fromResult(limit: TreeLimit, children: TreeNode[]): TreeNode | null {
+		if (children.length === 0)
 			return null;
 
-		if (newChildren.length === 1)
-			return new TreeNode(newChildren[0].limit.extend(this.limit), newChildren[0].children);
+		if (children.length === 1)
+			return new TreeNode(children[0].limit.extend(limit), children[0].children);
 
-		return new TreeNode(newLimit.extend(this.limit), newChildren);
+		return new TreeNode(limit, children);
 	}
 }
 

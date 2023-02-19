@@ -10,6 +10,9 @@ import { RoomManager } from '../room/roomManager';
 import { Account } from '../account/account';
 
 export class Room {
+	/** Time when this room was last requested */
+	public lastActivity: number = Date.now();
+
 	public readonly id: RoomId;
 	private readonly config: IChatRoomDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
@@ -39,6 +42,11 @@ export class Room {
 		this.config.banned = uniq(this.config.banned);
 
 		this.logger.verbose('Created');
+	}
+
+	/** Update last activity timestamp to reflect last usage */
+	public touch(): void {
+		this.lastActivity = Date.now();
 	}
 
 	public isInUse(): this is { assignedShard: Shard; } {
@@ -453,6 +461,8 @@ export class Room {
 	}
 
 	protected async _connectToShard(shard: Shard): Promise<'failed' | Shard> {
+		this.touch();
+
 		// If we are on a wrong shard, we leave it
 		if (this.assignedShard !== shard) {
 			this.assignedShard?.disconnectRoom(this);

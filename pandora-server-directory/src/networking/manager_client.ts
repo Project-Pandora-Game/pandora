@@ -351,22 +351,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryResult['listRooms'] {
-		if (!connection.isLoggedIn() || !connection.character)
+	private async handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryPromiseResult['listRooms'] {
+		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const rooms = RoomManager.listRooms()
-			.filter((r) => r.checkVisibleTo(connection.account))
+		const rooms = (await RoomManager.listRoomsVisibleTo(connection.account))
 			.map((r) => r.getRoomListInfo(connection.account));
 
 		return { rooms };
 	}
 
-	private handleChatRoomGetInfo({ id }: IClientDirectoryArgument['chatRoomGetInfo'], connection: IConnectionClient): IClientDirectoryResult['chatRoomGetInfo'] {
+	private async handleChatRoomGetInfo({ id }: IClientDirectoryArgument['chatRoomGetInfo'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomGetInfo'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		const room = RoomManager.getRoom(id);
+		const room = await RoomManager.loadRoom(id);
 
 		if (!room) {
 			return { result: 'notFound' };
@@ -411,7 +410,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		const room = RoomManager.getRoom(id);
+		const room = await RoomManager.loadRoom(id);
 
 		if (!room) {
 			return { result: 'notFound' };
@@ -479,7 +478,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const room = RoomManager.getRoom(id);
+		const room = await RoomManager.loadRoom(id);
 
 		if (room == null || !room.owners.has(connection.account.id)) {
 			return { result: 'notAnOwner' };

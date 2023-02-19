@@ -304,15 +304,24 @@ export default class MongoDatabase implements PandoraDatabase {
 		return await this._chatrooms.findOne({ id });
 	}
 
-	public async getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]> {
-		return await this._chatrooms.find()
+	public async getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]> {
+		return await this._chatrooms.find({
+			owners: { $elemMatch: { $in: [account] } },
+		})
 			.project<Pick<IChatRoomDirectoryData, 'id' | 'config' | 'owners'>>({ id: 1, config: 1, owners: 1 })
 			.toArray();
 	}
 
-	public async getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]> {
+	public async getChatRoomsWithOwnerOrAdmin(account: AccountId): Promise<IChatRoomDirectoryData[]> {
 		return await this._chatrooms.find({
-			owners: { $elemMatch: { $in: [account] } },
+			$or: [
+				{
+					owners: { $elemMatch: { $in: [account] } },
+				},
+				{
+					'config.admin': { $elemMatch: { $in: [account] } },
+				},
+			],
 		})
 			.project<Pick<IChatRoomDirectoryData, 'id' | 'config' | 'owners'>>({ id: 1, config: 1, owners: 1 })
 			.toArray();

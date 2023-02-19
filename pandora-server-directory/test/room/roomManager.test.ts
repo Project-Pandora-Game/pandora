@@ -31,7 +31,7 @@ describe('RoomManager', () => {
 		});
 
 		it('works even if there is room with same name already', async () => {
-			expect(RoomManager.listRooms().some((r) => r.name === TEST_ROOM.name)).toBeTruthy();
+			expect(RoomManager.listLoadedRooms().some((r) => r.name === TEST_ROOM.name)).toBeTruthy();
 			const room = await RoomManager.createRoom(TEST_ROOM, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
@@ -68,9 +68,9 @@ describe('RoomManager', () => {
 		});
 	});
 
-	describe('getRoom()', () => {
-		it('Gets room by id', () => {
-			const room = RoomManager.getRoom(testRoomId);
+	describe('getLoadedRoom()', () => {
+		it('Gets loaded room by id', () => {
+			const room = RoomManager.getLoadedRoom(testRoomId);
 			expect(room).toBeInstanceOf(Room);
 			expect((room as Room).getFullInfo()).toEqual({
 				...TEST_ROOM,
@@ -80,14 +80,14 @@ describe('RoomManager', () => {
 		});
 
 		it('Returns undefined with unknown room', () => {
-			const room = RoomManager.getRoom('r/NonexistentRoom');
-			expect(room).toBe(undefined);
+			const room = RoomManager.getLoadedRoom('r/NonexistentRoom');
+			expect(room).toBe(null);
 		});
 	});
 
-	describe('listRooms()', () => {
-		it('Returns list of existing rooms', () => {
-			const rooms = RoomManager.listRooms();
+	describe('listLoadedRooms()', () => {
+		it('Returns list of loaded rooms', () => {
+			const rooms = RoomManager.listLoadedRooms();
 
 			expect(rooms.map((r) => r.id)).toContain(testRoomId);
 		});
@@ -95,17 +95,18 @@ describe('RoomManager', () => {
 
 	describe('destroyRoom()', () => {
 		it('Deletes room by instance', async () => {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			const room = RoomManager.getRoom(testRoomId)!;
+			const room = await RoomManager.loadRoom(testRoomId);
 			expect(room).toBeInstanceOf(Room);
+			Assert(room instanceof Room);
 
 			const roomonDestroySpy = jest.spyOn(room, 'onDestroy');
 
 			await RoomManager.destroyRoom(room);
 
 			// Not gettable
-			expect(RoomManager.getRoom(testRoomId)).toBe(undefined);
-			expect(RoomManager.listRooms()).not.toContain(room);
+			expect(RoomManager.getLoadedRoom(testRoomId)).toBe(null);
+			expect(RoomManager.listLoadedRooms()).not.toContain(room);
+			await expect(RoomManager.loadRoom(testRoomId)).resolves.toBe(null);
 			// Destructor called
 			expect(roomonDestroySpy).toHaveBeenCalledTimes(1);
 		});

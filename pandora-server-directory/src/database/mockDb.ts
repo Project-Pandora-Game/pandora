@@ -216,15 +216,18 @@ export class MockDatabase implements PandoraDatabase {
 
 	//#region ChatRoom
 
-	public getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]> {
-		const array = Array.from(this.chatroomDb.values());
-		return Promise.resolve(array.map((room) => _.pick(room, ['id', 'config', 'owners'])));
-	}
-
 	public getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]> {
 		return Promise.resolve(
 			Array.from(this.chatroomDb.values())
 				.filter((room) => room.owners.includes(account))
+				.map((room) => _.pick(room, ['id', 'config', 'owners'])),
+		);
+	}
+
+	public getChatRoomsWithOwnerOrAdmin(account: AccountId): Promise<IChatRoomDirectoryData[]> {
+		return Promise.resolve(
+			Array.from(this.chatroomDb.values())
+				.filter((room) => room.owners.includes(account) || room.config.admin.includes(account))
 				.map((room) => _.pick(room, ['id', 'config', 'owners'])),
 		);
 	}

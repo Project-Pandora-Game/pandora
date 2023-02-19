@@ -104,17 +104,16 @@ export interface PandoraDatabase {
 	//#region ChatRoom
 
 	/**
-	 * __TEMPORARY__
-	 *
-	 * Gets all chatrooms from database
-	 */
-	getAllChatRoomsDirectory(): Promise<IChatRoomDirectoryData[]>;
-
-	/**
 	 * Gets all chatrooms that have supplied account as owner
 	 * @param account - The owner of the rooms to look for
 	 */
 	getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]>;
+
+	/**
+	 * Gets all chatrooms that have supplied account as owner or admin
+	 * @param account - The owner/admin of the rooms to look for
+	 */
+	getChatRoomsWithOwnerOrAdmin(account: AccountId): Promise<IChatRoomDirectoryData[]>;
 
 	/**
 	 * Gets a chatroom by ID

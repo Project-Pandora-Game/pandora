@@ -100,19 +100,17 @@ export class Shard {
 
 		this._registered = true;
 
-		for (const roomData of data.rooms) {
-			const room = RoomManager.getRoom(roomData.id);
-
-			if (!room ||
-				room.isInUse() ||
-				(room.accessId && room.accessId !== roomData.accessId)
-			) {
-				// Do not add room that loaded elsewhere meanwhile
-				continue;
-			}
-
-			this.connectRoom(room);
-		}
+		await Promise.all(
+			uniq(data.rooms.map((r) => r.id))
+				.map((id) => RoomManager
+					.loadRoom(id)
+					.then((room) => {
+						if (room && !room.isInUse() && (!room.accessId || room.accessId === data.rooms.find((r) => r.id === room.id)?.accessId)) {
+							this.connectRoom(room);
+						}
+					}),
+				),
+		);
 
 		for (const characterData of data.characters) {
 			// Skip characters that should be disconnected anyway
@@ -129,7 +127,7 @@ export class Shard {
 				continue;
 			}
 
-			const room = characterData.room ? RoomManager.getRoom(characterData.room) : undefined;
+			const room = characterData.room ? this.rooms.get(characterData.room) : undefined;
 
 			character.accessId = characterData.accessId;
 			this.connectCharacter(character, characterData.connectSecret);

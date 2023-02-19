@@ -36,7 +36,7 @@ async function Start(): Promise<void> {
 	await BetaKeyStore.init();
 	logger.verbose('Initializing managers...');
 	accountManager.init();
-	await RoomManager.init();
+	RoomManager.init();
 	ConnectionManagerClient.init();
 	logger.verbose('Initializing APIs...');
 	await GitHubVerifier.init();

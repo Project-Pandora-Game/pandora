@@ -33,10 +33,6 @@ export default class MongoDatabase implements ShardDatabase {
 
 		this._characters = this._db.collection(CHARACTERS_COLLECTION_NAME);
 
-		await this._characters.createIndexes([
-			{ key: { id: 1 } },
-		], { unique: true });
-
 		logger.info('Initialized MongoDB database');
 
 		return this;

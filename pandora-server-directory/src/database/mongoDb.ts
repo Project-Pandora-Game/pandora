@@ -70,11 +70,31 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._accounts = this._db.collection(ACCOUNTS_COLLECTION_NAME);
 
 		await this._accounts.createIndexes([
-			{ key: { id: 1 } },
-			{ key: { username: 1 } },
-			{ key: { 'secure.emailHash': 1 } },
-			{ key: { 'secure.github.id': 1 } },
-		], { unique: true });
+			{
+				name: 'id',
+				unique: true,
+				key: { id: 1 },
+			},
+			{
+				name: 'username',
+				unique: true,
+				key: { username: 1 },
+				// Usernames are case-insensitive
+				collation: COLLATION_CASE_INSENSITIVE,
+			},
+			{
+				name: 'emailHash',
+				unique: true,
+				key: { 'secure.emailHash': 1 },
+			},
+			{
+				name: 'githubId',
+				unique: true,
+				key: { 'secure.github.id': 1 },
+				// Ignore accounts without github data
+				sparse: true,
+			},
+		]);
 
 		const [maxAccountId] = await this._accounts.find().sort({ id: -1 }).limit(1).toArray();
 		this._nextAccountId = maxAccountId ? maxAccountId.id + 1 : 1;
@@ -84,8 +104,12 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._characters = this._db.collection(CHARACTERS_COLLECTION_NAME);
 
 		await this._characters.createIndexes([
-			{ key: { id: 1 } },
-		], { unique: true });
+			{
+				name: 'id',
+				unique: true,
+				key: { id: 1 },
+			},
+		]);
 
 		const [maxCharId] = await this._characters.find().sort({ id: -1 }).limit(1).toArray();
 		this._nextCharacterId = maxCharId ? maxCharId.id + 1 : 1;
@@ -95,17 +119,27 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._config = this._db.collection('config');
 
 		await this._config.createIndexes([
-			{ key: { type: 1 } },
-		], { unique: true });
+			{
+				name: 'id',
+				unique: true,
+				key: { type: 1 },
+			},
+		]);
 		//#endregion
 
 		//#region DirectMessages
 		this._directMessages = this._db.collection(DIRECT_MESSAGES_COLLECTION_NAME);
 
 		await this._directMessages.createIndexes([
-			{ key: { accounts: 1 } },
-			{ key: { time: 1 } },
-		], { unique: false });
+			{
+				name: 'accounts',
+				key: { accounts: 1 },
+			},
+			{
+				name: 'time',
+				key: { time: 1 },
+			},
+		]);
 		//#endregion
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);

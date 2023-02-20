@@ -5,6 +5,7 @@ import { Account, CreateAccountData } from '../../src/account/account';
 import { TestMockDb } from '../utils';
 
 const TEST_USERNAME = 'testuser';
+const TEST_USERNAME_DIFFERENT_CASE = TEST_USERNAME.toUpperCase();
 const TEST_EMAIL = 'test@project-pandora.com';
 const TEST_EMAIL_HASH = GenerateEmailHash(TEST_EMAIL);
 
@@ -21,6 +22,10 @@ describe('AccountManager', () => {
 			'backgroundAccount@project-pandora.com',
 			true,
 		));
+
+		// Check data is what we expect
+		expect(TEST_USERNAME_DIFFERENT_CASE).not.toBe(TEST_USERNAME);
+		expect(TEST_USERNAME_DIFFERENT_CASE.toLowerCase()).toBe(TEST_USERNAME.toLowerCase());
 	});
 
 	beforeEach(async () => {
@@ -70,6 +75,8 @@ describe('AccountManager', () => {
 
 		it('Returns same error as database', async () => {
 			await expect(accountManager.createAccount(TEST_USERNAME, 'password', 'nonexistent@project-pandora.com'))
+				.resolves.toBe('usernameTaken');
+			await expect(accountManager.createAccount(TEST_USERNAME_DIFFERENT_CASE, 'password', 'nonexistent@project-pandora.com'))
 				.resolves.toBe('usernameTaken');
 			await expect(accountManager.createAccount('nonexistent', 'password', TEST_EMAIL))
 				.resolves.toBe('emailTaken');
@@ -156,6 +163,23 @@ describe('AccountManager', () => {
 			// Get returns loaded account
 			expect(accountManager.getAccountByUsername(TEST_USERNAME)).toBe(account);
 			await expect(accountManager.loadAccountByUsername(TEST_USERNAME)).resolves.toBe(account);
+		});
+
+		it('Is case insensitive', async () => {
+			// Not loaded at first
+			expect(accountManager.getAccountByUsername(TEST_USERNAME)).toBe(null);
+			expect(accountManager.getAccountByUsername(TEST_USERNAME_DIFFERENT_CASE)).toBe(null);
+
+			// Gets loaded by load
+			const account = await accountManager.loadAccountByUsername(TEST_USERNAME_DIFFERENT_CASE);
+			expect(account).toBeInstanceOf(Account);
+			expect((account as Account).id).toBe(testAccountId);
+
+			// Get returns loaded account
+			expect(accountManager.getAccountByUsername(TEST_USERNAME)).toBe(account);
+			expect(accountManager.getAccountByUsername(TEST_USERNAME_DIFFERENT_CASE)).toBe(account);
+			await expect(accountManager.loadAccountByUsername(TEST_USERNAME)).resolves.toBe(account);
+			await expect(accountManager.loadAccountByUsername(TEST_USERNAME_DIFFERENT_CASE)).resolves.toBe(account);
 		});
 
 		it('Avoids race conditions', async () => {

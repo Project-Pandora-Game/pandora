@@ -4,7 +4,7 @@ import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter } from './dbHelper';
 
 import AsyncLock from 'async-lock';
-import { type MatchKeysAndValues, MongoClient } from 'mongodb';
+import { type MatchKeysAndValues, MongoClient, CollationOptions } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
@@ -14,6 +14,11 @@ const logger = GetLogger('db');
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
+
+const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
+	locale: 'en',
+	strength: 2,
+});
 
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
@@ -132,7 +137,9 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async getAccountByUsername(username: string): Promise<DatabaseAccountWithSecure | null> {
-		return await this._accounts.findOne({ username });
+		return await this._accounts.findOne({ username }, {
+			collation: COLLATION_CASE_INSENSITIVE,
+		});
 	}
 
 	public async getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null> {
@@ -142,9 +149,15 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'> {
 		return await this._lock.acquire('createAccount', async () => {
 
-			const existingAccount = await this._accounts.findOne({ $or: [{ username: data.username }, { 'secure.emailHash': data.secure.emailHash }] });
-			if (existingAccount)
-				return existingAccount.username === data.username ? 'usernameTaken' : 'emailTaken';
+			const existingUsername = await this._accounts.findOne({ username: data.username }, {
+				collation: COLLATION_CASE_INSENSITIVE,
+			});
+			if (existingUsername)
+				return 'usernameTaken';
+
+			const existingEmail = await this._accounts.findOne({ 'secure.emailHash': data.secure.emailHash });
+			if (existingEmail)
+				return 'emailTaken';
 
 			data.id = this._nextAccountId++;
 			await this._accounts.insertOne(data);

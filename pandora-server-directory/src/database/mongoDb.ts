@@ -69,6 +69,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region Accounts
 		this._accounts = this._db.collection(ACCOUNTS_COLLECTION_NAME);
 
+		await this._accounts.dropIndexes().catch(() => { /* NOOP */ });
 		await this._accounts.createIndexes([
 			{
 				name: 'id',
@@ -103,6 +104,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region Characters
 		this._characters = this._db.collection(CHARACTERS_COLLECTION_NAME);
 
+		await this._characters.dropIndexes().catch(() => { /* NOOP */ });
 		await this._characters.createIndexes([
 			{
 				name: 'id',
@@ -118,6 +120,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region Config
 		this._config = this._db.collection('config');
 
+		await this._config.dropIndexes().catch(() => { /* NOOP */ });
 		await this._config.createIndexes([
 			{
 				name: 'id',
@@ -130,6 +133,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region DirectMessages
 		this._directMessages = this._db.collection(DIRECT_MESSAGES_COLLECTION_NAME);
 
+		await this._directMessages.dropIndexes().catch(() => { /* NOOP */ });
 		await this._directMessages.createIndexes([
 			{
 				name: 'accounts',

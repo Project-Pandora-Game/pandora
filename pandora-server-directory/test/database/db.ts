@@ -22,7 +22,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 	beforeAll(() => {
 		// we shouldn't see logs above ALERT level
 		logConfig.logOutputs.push({
-			logLevel: LogLevel.ALERT,
+			logLevel: LogLevel.WARNING,
 			logLevelOverrides: {},
 			supportsColor: false,
 			onMessage(...args) {

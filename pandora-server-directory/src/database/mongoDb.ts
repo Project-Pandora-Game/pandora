@@ -403,7 +403,7 @@ async function MongoUpdateIndexes(collection: Collection<any>, indexes: (IndexDe
 		const wantedIndex = indexes.find((i) => i.name === index.name);
 		if (!wantedIndex) {
 			rebuildNeeded = true;
-			logger.alert(`[DB] [Collection ${collection.collectionName}] Rebuilding indexes because of extra index:`, index.name);
+			logger.alert(`[Collection ${collection.collectionName}] Rebuilding indexes because of extra index:`, index.name);
 			break;
 		}
 
@@ -422,7 +422,7 @@ async function MongoUpdateIndexes(collection: Collection<any>, indexes: (IndexDe
 			}
 			if (!matches) {
 				rebuildNeeded = true;
-				logger.alert(`[DB] [Collection ${collection.collectionName}] Rebuilding indexes because of mismatched index`, index.name, 'property', property);
+				logger.alert(`[Collection ${collection.collectionName}] Rebuilding indexes because of mismatched index '${index.name}' property '${property}'`);
 				break;
 			}
 		}
@@ -439,7 +439,7 @@ async function MongoUpdateIndexes(collection: Collection<any>, indexes: (IndexDe
 		// Check for new indexes if we didn't need complete rebuild
 		const newIndexes = indexes.filter((i) => !currentIndexes.some((ci) => IsObject(ci) && ci.name === i.name));
 		if (newIndexes.length > 0) {
-			logger.alert(`[DB] [Collection ${collection.collectionName}] Adding missing indexes:`, newIndexes.map((i) => i.name).join(', '));
+			logger.alert(`[Collection ${collection.collectionName}] Adding missing indexes:`, newIndexes.map((i) => i.name).join(', '));
 			await collection.createIndexes(newIndexes);
 		}
 	}

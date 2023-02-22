@@ -22,7 +22,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 	beforeAll(() => {
 		// we shouldn't see logs above ALERT level
 		logConfig.logOutputs.push({
-			logLevel: LogLevel.ALERT,
+			logLevel: LogLevel.WARNING,
 			logLevelOverrides: {},
 			supportsColor: false,
 			onMessage(...args) {
@@ -48,7 +48,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		accountId2 = result2.id;
 
 		expect(accountId1).not.toBe(accountId2);
-	// Wait up to a minute; the MongoDB server might need to be downloaded
+		// Wait up to a minute; the MongoDB server might need to be downloaded
 	}, 60_000);
 
 	afterEach(async () => {
@@ -78,16 +78,30 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			expect(await db.getAccountByUsername('nonexistent')).toBeNull();
 		});
 
-		it('returns account data of known accounts', async () => {
-			const result1 = await db.getAccountByUsername(TEST_USERNAME1);
-			expect(result1).not.toBeNull();
-			expect(result1?.id).toBe(accountId1);
-			expect(result1?.username).toBe(TEST_USERNAME1);
+		it.each([
+			[TEST_USERNAME1, () => accountId1],
+			[TEST_USERNAME2, () => accountId2],
+		])('returns account data of known accounts', async (username, idGetter) => {
+			const id = idGetter();
 
-			const result2 = await db.getAccountByUsername(TEST_USERNAME2);
-			expect(result2).not.toBeNull();
-			expect(result2?.id).toBe(accountId2);
-			expect(result2?.username).toBe(TEST_USERNAME2);
+			const result = await db.getAccountByUsername(username);
+			expect(result).not.toBeNull();
+			expect(result?.id).toBe(id);
+			expect(result?.username).toBe(username);
+		});
+
+		it.each([
+			[TEST_USERNAME1],
+			[TEST_USERNAME2],
+		])('is case insensitive', async (username) => {
+			const usernameVariant = username.toUpperCase();
+			expect(usernameVariant).not.toEqual(username);
+
+			const result = await db.getAccountByUsername(usernameVariant);
+			expect(result).not.toBeNull();
+			expect(result?.username).not.toBe(usernameVariant);
+			expect(result?.username.toLowerCase()).toBe(usernameVariant.toLowerCase());
+			expect(result?.username).toBe(username);
 		});
 	});
 
@@ -165,6 +179,14 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 		it('rejects creating account with duplicate username', async () => {
 			const mockAccount = await CreateAccountData(TEST_USERNAME1, TEST_PASSWORD1, 'nonexistent@project-pandora.com');
+
+			await expect(db.createAccount(mockAccount)).resolves.toBe('usernameTaken');
+		});
+
+		it('rejects creating account with duplicate username (case insensitive)', async () => {
+			const anotherUsername = TEST_USERNAME1.toUpperCase();
+			expect(anotherUsername).not.toEqual(TEST_USERNAME1);
+			const mockAccount = await CreateAccountData(anotherUsername, TEST_PASSWORD1, 'nonexistent@project-pandora.com');
 
 			await expect(db.createAccount(mockAccount)).resolves.toBe('usernameTaken');
 		});

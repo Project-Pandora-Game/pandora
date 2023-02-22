@@ -1,19 +1,25 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IsObject } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter } from './dbHelper';
 
 import AsyncLock from 'async-lock';
-import { type MatchKeysAndValues, MongoClient } from 'mongodb';
+import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
+import { isEqual } from 'lodash';
 
 const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
+
+const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
+	locale: 'en',
+	strength: 2,
+});
 
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
@@ -49,6 +55,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (inMemory) {
 			this._inMemoryServer = await CreateInMemoryMongo({ dbPath });
 			uri = this._inMemoryServer.getUri();
+			logger.verbose('Started local MongoDB instance on', uri);
 		} else {
 			uri = this._url;
 		}
@@ -64,12 +71,32 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region Accounts
 		this._accounts = this._db.collection(ACCOUNTS_COLLECTION_NAME);
 
-		await this._accounts.createIndexes([
-			{ key: { id: 1 } },
-			{ key: { username: 1 } },
-			{ key: { 'secure.emailHash': 1 } },
-			{ key: { 'secure.github.id': 1 } },
-		], { unique: true });
+		await MongoUpdateIndexes(this._accounts, [
+			{
+				name: 'id',
+				unique: true,
+				key: { id: 1 },
+			},
+			{
+				name: 'username',
+				unique: true,
+				key: { username: 1 },
+				// Usernames are case-insensitive
+				collation: COLLATION_CASE_INSENSITIVE,
+			},
+			{
+				name: 'emailHash',
+				unique: true,
+				key: { 'secure.emailHash': 1 },
+			},
+			{
+				name: 'githubId',
+				unique: true,
+				key: { 'secure.github.id': 1 },
+				// Ignore accounts without github data
+				sparse: true,
+			},
+		]);
 
 		const [maxAccountId] = await this._accounts.find().sort({ id: -1 }).limit(1).toArray();
 		this._nextAccountId = maxAccountId ? maxAccountId.id + 1 : 1;
@@ -78,9 +105,13 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region Characters
 		this._characters = this._db.collection(CHARACTERS_COLLECTION_NAME);
 
-		await this._characters.createIndexes([
-			{ key: { id: 1 } },
-		], { unique: true });
+		await MongoUpdateIndexes(this._characters, [
+			{
+				name: 'id',
+				unique: true,
+				key: { id: 1 },
+			},
+		]);
 
 		const [maxCharId] = await this._characters.find().sort({ id: -1 }).limit(1).toArray();
 		this._nextCharacterId = maxCharId ? maxCharId.id + 1 : 1;
@@ -89,18 +120,28 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region Config
 		this._config = this._db.collection('config');
 
-		await this._config.createIndexes([
-			{ key: { type: 1 } },
-		], { unique: true });
+		await MongoUpdateIndexes(this._config, [
+			{
+				name: 'id',
+				unique: true,
+				key: { type: 1 },
+			},
+		]);
 		//#endregion
 
 		//#region DirectMessages
 		this._directMessages = this._db.collection(DIRECT_MESSAGES_COLLECTION_NAME);
 
-		await this._directMessages.createIndexes([
-			{ key: { accounts: 1 } },
-			{ key: { time: 1 } },
-		], { unique: false });
+		await MongoUpdateIndexes(this._directMessages, [
+			{
+				name: 'accounts',
+				key: { accounts: 1 },
+			},
+			{
+				name: 'time',
+				key: { time: 1 },
+			},
+		]);
 		//#endregion
 
 		logger.info(`Initialized ${this._inMemoryServer ? 'In-Memory-' : ''}MongoDB database`);
@@ -132,7 +173,9 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async getAccountByUsername(username: string): Promise<DatabaseAccountWithSecure | null> {
-		return await this._accounts.findOne({ username });
+		return await this._accounts.findOne({ username }, {
+			collation: COLLATION_CASE_INSENSITIVE,
+		});
 	}
 
 	public async getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null> {
@@ -142,9 +185,15 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'> {
 		return await this._lock.acquire('createAccount', async () => {
 
-			const existingAccount = await this._accounts.findOne({ $or: [{ username: data.username }, { 'secure.emailHash': data.secure.emailHash }] });
-			if (existingAccount)
-				return existingAccount.username === data.username ? 'usernameTaken' : 'emailTaken';
+			const existingUsername = await this._accounts.findOne({ username: data.username }, {
+				collation: COLLATION_CASE_INSENSITIVE,
+			});
+			if (existingUsername)
+				return 'usernameTaken';
+
+			const existingEmail = await this._accounts.findOne({ 'secure.emailHash': data.secure.emailHash });
+			if (existingEmail)
+				return 'emailTaken';
 
 			data.id = this._nextAccountId++;
 			await this._accounts.insertOne(data);
@@ -326,4 +375,72 @@ function Id(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
 
 function PlainId(id: CharacterId): number {
 	return parseInt(id.slice(1));
+}
+
+/**
+ * Updates indexes on a collection such that they exactly match the wanted indexes, dropping all other indexes and updating existing ones
+ *
+ * Ignores the inbuilt `_id_` index
+ * @param collection - The collection to update indexes on
+ * @param indexes - The wanted indexes
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function MongoUpdateIndexes(collection: Collection<any>, indexes: (IndexDescription & { name: string; })[]): Promise<void> {
+	// Keys that should be compared
+	const indexKeysToCompare: readonly (keyof IndexDescription)[] = ['unique', 'sparse', 'key', 'collation'];
+
+	// We catch the result and return empty index array in case the collection doesn't exist
+	const currentIndexes: unknown[] = await collection.listIndexes().toArray().catch(() => []);
+
+	let rebuildNeeded = false;
+	// Check if there is any index that is different and needs rebuild
+	for (const index of currentIndexes) {
+		// Skip indexes in unknown format and inbuilt `_id_` index
+		if (!IsObject(index) || typeof index.name !== 'string' || index.name === '_id_')
+			continue;
+
+		// Check for non-existent indexes
+		const wantedIndex = indexes.find((i) => i.name === index.name);
+		if (!wantedIndex) {
+			rebuildNeeded = true;
+			logger.alert(`[Collection ${collection.collectionName}] Rebuilding indexes because of extra index:`, index.name);
+			break;
+		}
+
+		// Compare existing index to wanted one
+		for (const property of indexKeysToCompare) {
+			let matches = isEqual(index[property], wantedIndex[property]);
+			// Collation is compared only for partiality
+			if (!matches && property === 'collation' && wantedIndex.collation && IsObject(index.collation)) {
+				matches = true;
+				for (const k of Object.keys(wantedIndex.collation) as (keyof CollationOptions)[]) {
+					if (!isEqual(index.collation[k], wantedIndex.collation[k])) {
+						matches = false;
+						break;
+					}
+				}
+			}
+			if (!matches) {
+				rebuildNeeded = true;
+				logger.alert(`[Collection ${collection.collectionName}] Rebuilding indexes because of mismatched index '${index.name}' property '${property}'`);
+				break;
+			}
+		}
+		if (rebuildNeeded)
+			break;
+	}
+
+	if (rebuildNeeded) {
+		await collection.dropIndexes().catch(() => { /* NOOP */ });
+		if (indexes.length > 0) {
+			await collection.createIndexes(indexes);
+		}
+	} else {
+		// Check for new indexes if we didn't need complete rebuild
+		const newIndexes = indexes.filter((i) => !currentIndexes.some((ci) => IsObject(ci) && ci.name === i.name));
+		if (newIndexes.length > 0) {
+			logger.alert(`[Collection ${collection.collectionName}] Adding missing indexes:`, newIndexes.map((i) => i.name).join(', '));
+			await collection.createIndexes(newIndexes);
+		}
+	}
 }

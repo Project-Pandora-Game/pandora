@@ -17,6 +17,7 @@ const logger = GetLogger('init');
 
 Start().catch((error) => {
 	logger.fatal('Init failed:', error);
+	process.exit(1);
 });
 
 /**

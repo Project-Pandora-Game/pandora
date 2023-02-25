@@ -47,6 +47,9 @@ export function LayerUI(): ReactElement {
 			<ColorizationSetting layer={ selectedLayer } asset={ asset } />
 			<ColorPicker layer={ selectedLayer } asset={ asset } />
 			<hr />
+			<LayerHeightAndWidthSetting layer={ selectedLayer } _asset={ asset } />
+			<LayerOffsetSetting layer={ selectedLayer } _asset={ asset } />
+			<hr />
 			<LayerPrioritySelect layer={ selectedLayer } asset={ asset } />
 			<LayerTemplateSelect layer={ selectedLayer } asset={ asset } />
 			<LayerPointsFilterEdit layer={ selectedLayer } />
@@ -260,6 +263,134 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 			/>
 			<Button className='slim' onClick={ () => editor.setLayerTint(layer, undefined) } >↺</Button>
 		</div>
+	);
+}
+
+function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _asset: EditorAssetGraphics; }): ReactElement | null {
+	const height = useLayerDefinition(layer).height;
+	const width = useLayerDefinition(layer).width;
+
+	const onChangeHeight = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+		layer.setHeight(e.target.valueAsNumber);
+	});
+
+	const onChangeWidth = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+		layer.setWidth(e.target.valueAsNumber);
+	});
+
+	return (
+		<>
+			<div>
+				<label>
+					Width and Height
+					<ContextHelpButton>
+						<p>
+							These two values define width and height of the layer.<br />
+							By default they are have the same value as the character canvas.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+			</div>
+			<div>
+				<label htmlFor='width'>
+					Width:
+					<ContextHelpButton>
+						<p>
+							Sets the width of the layer.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+				<input
+					id='width'
+					type='number'
+					value={ width }
+					onChange={ onChangeWidth }
+					className='flex-1'
+				/>
+			</div>
+			<div>
+				<label htmlFor='height'>
+					Height:
+					<ContextHelpButton>
+						<p>
+							Sets the height of the layer.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+				<input
+					id='height'
+					type='number'
+					value={ height }
+					onChange={ onChangeHeight }
+					className='flex-1'
+				/>
+			</div>
+		</>
+	);
+
+}
+
+function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _asset: EditorAssetGraphics; }): ReactElement | null {
+	const layerXOffset = useLayerDefinition(layer).x;
+	const layerYOffset = useLayerDefinition(layer).y;
+
+	const onChangeX = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+		layer.setXOffset(e.target.valueAsNumber);
+	});
+
+	const onChangeY = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
+		layer.setYOffset(e.target.valueAsNumber);
+	});
+
+	return (
+		<>
+			<div>
+				<label>
+					Layer Offset
+					<ContextHelpButton>
+						<p>
+							These two values define how much the curent layer is set off in the X- and Y-axis.<br />
+							This way you will be able to place an item higher higher or lower on a character.<br />
+							Per default, all values are set to 0.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+			</div>
+			<div>
+				<label htmlFor='layer-offset-x'>
+					X-Offset:
+					<ContextHelpButton>
+						<p>
+							A positive x-value will move the image to the right, a negative one to the left.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+				<input
+					id='layer-offset-x'
+					type='number'
+					value={ layerXOffset }
+					onChange={ onChangeX }
+					className='flex-1'
+				/>
+			</div>
+			<div>
+				<label htmlFor='layer-offset-y'>
+					Y-Offset:
+					<ContextHelpButton>
+						<p>
+							A positive y-value will move the image to the bottom, a negative one to the top.<br />
+						</p>
+					</ContextHelpButton>
+				</label>
+				<input
+					id='layer-offset-y'
+					type='number'
+					value={ layerYOffset }
+					onChange={ onChangeY }
+					className='flex-1'
+				/>
+			</div>
+		</>
 	);
 }
 

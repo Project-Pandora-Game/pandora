@@ -89,6 +89,34 @@ export class AssetGraphicsLayer {
 		});
 	}
 
+	public setHeight(height: number): void {
+		if (height > 0) {
+			this._modifyDefinition((d) => {
+				d.height = height;
+			});
+		}
+	}
+
+	public setWidth(width: number): void {
+		if (width > 0) {
+			this._modifyDefinition((d) => {
+				d.width = width;
+			});
+		}
+	}
+
+	public setXOffset(offset: number): void {
+		this._modifyDefinition((d) => {
+			d.x = offset;
+		});
+	}
+
+	public setYOffset(offset: number): void {
+		this._modifyDefinition((d) => {
+			d.y = offset;
+		});
+	}
+
 	public setColorizationKey(colorizationKey: string | null): void {
 		Assert(colorizationKey === null || colorizationKey.trim().length > 0, 'Colorization key must be null or non-empty');
 

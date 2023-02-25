@@ -83,7 +83,7 @@ function ProcessMessage(
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
 
 	const source = message.data?.character;
-	const target = message.data?.targetCharacter ?? source;
+	const target = message.data?.target ?? source;
 
 	if (source) {
 		const { id, name, pronoun } = source;
@@ -94,7 +94,7 @@ function ProcessMessage(
 		AssignPronouns('SOURCE_CHARACTER_PRONOUN', pronoun, metaDictionary);
 	}
 
-	if (target) {
+	if (target?.type === 'character') {
 		const { id, name, pronoun } = target;
 		metaDictionary.TARGET_CHARACTER_NAME = name;
 		metaDictionary.TARGET_CHARACTER_ID = id;
@@ -126,19 +126,34 @@ function ProcessMessage(
 
 	if (itemContainerPath) {
 		if (itemContainerPath.length === 0) {
-			metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
-			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
+			if (target?.type === 'roomInventory') {
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
+					`the room inventory`;
+			} else {
+				metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
+			}
 		} else if (itemContainerPath.length === 1) {
 			const asset = DescribeAsset(assetManager, itemContainerPath[0].assetId);
 
-			metaDictionary.ITEM_CONTAINER_SIMPLE = `${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${asset}`;
-			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
+			if (target?.type === 'roomInventory') {
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
+					`${asset} in the room inventory`;
+			} else {
+				metaDictionary.ITEM_CONTAINER_SIMPLE = `${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${asset}`;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
+			}
 		} else {
 			const assetFirst = DescribeAsset(assetManager, itemContainerPath[0].assetId);
 			const assetLast = DescribeAsset(assetManager, itemContainerPath[itemContainerPath.length - 1].assetId);
 
-			metaDictionary.ITEM_CONTAINER_SIMPLE = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${assetFirst}`;
-			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+			if (target?.type === 'roomInventory') {
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
+					`the ${assetLast} in ${assetFirst} in the room inventory`;
+			} else {
+				metaDictionary.ITEM_CONTAINER_SIMPLE = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+			}
 		}
 	}
 

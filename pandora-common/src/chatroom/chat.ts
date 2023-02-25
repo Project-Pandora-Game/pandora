@@ -42,7 +42,8 @@ export type IChatRoomMessageDeleted = {
 	from: CharacterId;
 };
 
-export type IChatRoomMessageActionCharacter = {
+export type IChatRoomMessageActionTargetCharacter = {
+	type: 'character';
 	id: CharacterId;
 	name: string;
 	pronoun: PronounKey;
@@ -56,6 +57,12 @@ export type IChatroomMessageActionContainerPath = {
 	module: string;
 }[];
 
+export type IChatRoomMessageActionTargetRoomInventory = {
+	type: 'roomInventory';
+};
+
+export type IChatRoomMessageActionTarget = IChatRoomMessageActionTargetCharacter | IChatRoomMessageActionTargetRoomInventory;
+
 export type IChatRoomMessageAction = {
 	type: 'action' | 'serverMessage';
 	/** id to be looked up in message translation database */
@@ -66,9 +73,9 @@ export type IChatRoomMessageAction = {
 	sendTo?: CharacterId[];
 	data?: {
 		/** Used to generate specific dictionary entries, acts as source */
-		character?: IChatRoomMessageActionCharacter;
+		character?: IChatRoomMessageActionTargetCharacter;
 		/** Used to generate specific dictionary entries, defaults to `character` */
-		targetCharacter?: IChatRoomMessageActionCharacter;
+		target?: IChatRoomMessageActionTarget;
 		/** The item this message is about */
 		item?: IChatRoomMessageActionItem;
 		/** The previous state of item this message is about, defaults to `item` */

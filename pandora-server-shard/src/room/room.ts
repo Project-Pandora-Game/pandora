@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData, AccountId, RoomInventory, AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData, AccountId, RoomInventory, AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -17,7 +17,7 @@ export class Room extends ServerRoom<IShardClient> {
 	private readonly characters: Set<Character> = new Set();
 	private readonly history = new Map<CharacterId, Map<number, number>>();
 	private readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId; }>();
-	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionCharacter; leave?: number; }>();
+	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionTargetCharacter; leave?: number; }>();
 	private readonly tickInterval: NodeJS.Timeout;
 
 	public readonly inventory: RoomInventory;
@@ -356,7 +356,7 @@ export class Room extends ServerRoom<IShardClient> {
 		id,
 		customText,
 		character,
-		targetCharacter,
+		target,
 		sendTo,
 		dictionary,
 		...data
@@ -369,8 +369,15 @@ export class Room extends ServerRoom<IShardClient> {
 				sendTo,
 				time: this.nextMessageTime(),
 				data: {
-					character: this._getCharacterActionInfo(character),
-					targetCharacter: targetCharacter !== character ? this._getCharacterActionInfo(targetCharacter) : undefined,
+					character: this._getCharacterActionInfo(character?.id),
+					target: target ? (
+						target.type === 'character' ? (
+							target.id !== character?.id ? this._getCharacterActionInfo(target.id) : undefined
+						) :
+							target.type === 'roomInventory' ? {
+								type: 'roomInventory',
+							} : undefined
+					) : undefined,
 					...data,
 				},
 				dictionary,
@@ -419,15 +426,27 @@ export class Room extends ServerRoom<IShardClient> {
 			.max() ?? this.lastDirectoryMessageTime;
 	}
 
-	private _getCharacterActionInfo(id?: CharacterId | null): IChatRoomMessageActionCharacter | undefined {
+	private _getCharacterActionInfo(id?: CharacterId | null): IChatRoomMessageActionTargetCharacter | undefined {
 		if (!id)
 			return undefined;
 
 		const char = this.getCharacterById(id);
 		if (!char)
-			return this.actionCache.get(id)?.result ?? { id, name: '[UNKNOWN]', pronoun: 'they', labelColor: '#ffffff' };
+			return this.actionCache.get(id)?.result ?? {
+				type: 'character',
+				id,
+				name: '[UNKNOWN]',
+				pronoun: 'they',
+				labelColor: '#ffffff',
+			};
 
-		const result: IChatRoomMessageActionCharacter = { id: char.id, name: char.name, pronoun: char.settings.pronoun, labelColor: char.settings.labelColor };
+		const result: IChatRoomMessageActionTargetCharacter = {
+			type: 'character',
+			id: char.id,
+			name: char.name,
+			pronoun: char.settings.pronoun,
+			labelColor: char.settings.labelColor,
+		};
 		this.actionCache.set(id, { result });
 
 		return result;

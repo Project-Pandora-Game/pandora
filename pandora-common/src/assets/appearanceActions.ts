@@ -409,6 +409,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 
 	// Change message to chat
 	if (removed.length > 0) {
+		Assert(rootManipulator.isCharacter);
 		manipulator.queueMessage({
 			id: 'itemReplace',
 			item: {
@@ -421,7 +422,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	} else {
 		const manipulatorContainer = manipulator.container;
 		manipulator.queueMessage({
-			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
+			id: (!manipulatorContainer && rootManipulator.isCharacter) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 			item: {
 				assetId: item.asset.id,
 			},
@@ -445,7 +446,7 @@ export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, ite
 	// Change message to chat
 	const manipulatorContainer = manipulator.container;
 	manipulator.queueMessage({
-		id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
+		id: (!manipulatorContainer && rootManipulator.isCharacter) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 		item: {
 			assetId: removedItems[0].asset.id,
 		},
@@ -473,6 +474,26 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 
 	if (!targetContainerManipulator.addItem(item))
 		return false;
+
+	// Change message to chat
+	if (sourceManipulator.isCharacter) {
+		const manipulatorContainer = sourceContainerManipulator.container;
+		sourceContainerManipulator.queueMessage({
+			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
+			item: {
+				assetId: item.asset.id,
+			},
+		});
+	}
+	if (targetManipulator.isCharacter) {
+		const manipulatorContainer = targetContainerManipulator.container;
+		targetContainerManipulator.queueMessage({
+			id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
+			item: {
+				assetId: removedItems[0].asset.id,
+			},
+		});
+	}
 
 	return true;
 }

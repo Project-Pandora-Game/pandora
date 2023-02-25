@@ -125,7 +125,13 @@ export class RoomInventory implements RoomActionTargetRoomInventory {
 		for (const message of manipulator.getAndClearPendingMessages()) {
 			context.actionHandler?.({
 				...message,
-				character: context.sourceCharacter,
+				character: context.sourceCharacter ? {
+					type: 'character',
+					id: context.sourceCharacter,
+				} : undefined,
+				target: {
+					type: 'roomInventory',
+				},
 			});
 		}
 

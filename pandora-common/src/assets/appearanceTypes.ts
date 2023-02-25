@@ -40,7 +40,7 @@ const RoomInventorySelectorSchema = z.object({
 export const RoomTargetSelectorSchema = z.discriminatedUnion('type', [RoomCharacterSelectorSchema, RoomInventorySelectorSchema]);
 export type RoomTargetSelector = z.infer<typeof RoomTargetSelectorSchema>;
 
-export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoomMessageAction['data']>, 'character' | 'targetCharacter'> {
+export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoomMessageAction['data']>, 'character' | 'target'> {
 	id: ChatActionId;
 	/** Custom text is used instead of the `id` lookup result, if specified */
 	customText?: string;
@@ -48,8 +48,16 @@ export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoom
 }
 export type ActionMessageTemplateHandler = (message: ActionHandlerMessageTemplate) => void;
 export interface ActionHandlerMessage extends ActionHandlerMessageTemplate {
-	character?: CharacterId;
-	targetCharacter?: CharacterId;
+	character?: {
+		type: 'character';
+		id: CharacterId;
+	};
+	target?: {
+		type: 'character';
+		id: CharacterId;
+	} | {
+		type: 'roomInventory';
+	};
 	sendTo?: CharacterId[];
 }
 export type ActionHandler = (message: ActionHandlerMessage) => void;

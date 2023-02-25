@@ -253,10 +253,10 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(room));
 	}
 
-	public updateChatRoom(data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean> {
+	public updateChatRoom(id: RoomId, data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean> {
 		const room = _.cloneDeep(data);
 
-		const info = this.chatroomDb.get(room.id);
+		const info = this.chatroomDb.get(id);
 		if (!info)
 			return Promise.reject();
 

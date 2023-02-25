@@ -43,11 +43,12 @@ export default class DirectoryDatabase implements ShardDatabase {
 		);
 	}
 
-	public async setChatRoom(data: IChatRoomDataUpdate, accessId: string): Promise<boolean> {
+	public async setChatRoom(id: RoomId, data: IChatRoomDataUpdate, accessId: string): Promise<boolean> {
 		if (DirectoryConnector.state !== DirectoryConnectionState.CONNECTED)
 			return false;
 
 		const { result } = await DirectoryConnector.awaitResponse('setChatRoom', {
+			id,
 			data,
 			accessId,
 		});

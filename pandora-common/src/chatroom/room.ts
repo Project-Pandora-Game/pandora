@@ -164,9 +164,7 @@ export const ChatRoomDataSchema = z.object({
 export type IChatRoomData = z.infer<typeof ChatRoomDataSchema>;
 
 export const CHATROOM_UPDATEABLE_PROPERTIES = ['config', 'owners', 'inventory'] as const satisfies readonly (keyof IChatRoomData)[];
-export const ChatRoomDataUpdateSchema = ChatRoomDataSchema.pick({ id: true }).merge(
-	ChatRoomDataSchema.pick(ArrayToTruthyMap(CHATROOM_UPDATEABLE_PROPERTIES)).partial(),
-);
+export const ChatRoomDataUpdateSchema = ChatRoomDataSchema.pick(ArrayToTruthyMap(CHATROOM_UPDATEABLE_PROPERTIES)).partial();
 export type IChatRoomDataUpdate = z.infer<typeof ChatRoomDataUpdateSchema>;
 
 export const CHATROOM_DIRECTORY_PROPERTIES = ['id', 'config', 'owners'] as const satisfies readonly (keyof IChatRoomData)[];

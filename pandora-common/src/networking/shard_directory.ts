@@ -5,6 +5,7 @@ import { ChatRoomDataSchema, ChatRoomDataUpdateSchema, CHATROOM_DIRECTORY_PROPER
 import { z } from 'zod';
 import { ArrayToTruthyMap, ZodCast } from '../validation';
 import { Satisfies } from '../utility';
+import { omit } from 'lodash';
 
 export const ChatRoomDataAccessSchema = ChatRoomDataSchema.pick({ id: true, accessId: true });
 export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
@@ -67,8 +68,9 @@ export const ShardDirectorySchema = {
 	},
 	setChatRoom: {
 		request: z.object({
-			data: ChatRoomDataUpdateSchema.omit(ArrayToTruthyMap(CHATROOM_DIRECTORY_PROPERTIES)),
+			id: RoomIdSchema,
 			accessId: z.string(),
+			data: ChatRoomDataUpdateSchema.omit(omit(ArrayToTruthyMap(CHATROOM_DIRECTORY_PROPERTIES), ['id'])),
 		}),
 		response: ZodCast<{ result: 'success' | 'invalidAccessId'; }>(),
 	},

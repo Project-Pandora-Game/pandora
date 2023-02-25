@@ -135,7 +135,7 @@ export interface PandoraDatabase {
 	 * @param accessId - Id of access to check or null to ignore the accessId check
 	 * @returns false if a provided accessId is not the same as in the database
 	 */
-	updateChatRoom(data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean>;
+	updateChatRoom(id: RoomId, data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean>;
 
 	/**
 	 * Delete a chatroom

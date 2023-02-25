@@ -504,8 +504,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 				owners: TEST_ROOM_PANDORA_OWNED.slice(),
 			});
 
-			await db.updateChatRoom({
-				id: room.id,
+			await db.updateChatRoom(room.id, {
 				config: TEST_ROOM2,
 			}, null);
 

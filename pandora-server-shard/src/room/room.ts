@@ -225,16 +225,14 @@ export class Room extends ServerRoom<IShardClient> {
 			if (keys.length === 0)
 				return;
 
-			const data: IChatRoomDataUpdate = {
-				id: this.data.id,
-			};
+			const data: IChatRoomDataUpdate = {};
 
 			if (keys.includes('inventory')) {
 				data.inventory = this.inventory.exportToBundle();
 			}
 
 			try {
-				if (!await GetDatabase().setChatRoom(data, this.accessId)) {
+				if (!await GetDatabase().setChatRoom(this.id, data, this.accessId)) {
 					throw new Error('Database returned failure');
 				}
 			} catch (error) {

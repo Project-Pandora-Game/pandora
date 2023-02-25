@@ -26,7 +26,7 @@ export interface ShardDatabase {
 	 * Update a room's data
 	 * @param data - Room data with id
 	 */
-	setChatRoom(data: IChatRoomDataUpdate, accessId: string): Promise<boolean>;
+	setChatRoom(id: RoomId, data: IChatRoomDataUpdate, accessId: string): Promise<boolean>;
 
 }
 

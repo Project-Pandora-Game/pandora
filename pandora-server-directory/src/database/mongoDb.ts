@@ -337,12 +337,12 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async updateChatRoom(data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean> {
+	public async updateChatRoom(id: RoomId, data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean> {
 		if (accessId !== null) {
-			const result = await this._chatrooms.findOneAndUpdate({ 'id': data.id, accessId }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
+			const result = await this._chatrooms.findOneAndUpdate({ id, accessId }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
 			return result.value === null ? false : true;
 		} else {
-			const result = await this._chatrooms.findOneAndUpdate({ 'id': data.id }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
+			const result = await this._chatrooms.findOneAndUpdate({ id }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
 			Assert(result.value != null);
 			return true;
 		}

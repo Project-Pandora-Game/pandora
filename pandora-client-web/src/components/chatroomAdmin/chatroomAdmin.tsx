@@ -430,6 +430,11 @@ function BackgroundSelectDialog({ hide, current, select }: {
 	current: string | IChatroomBackgroundData;
 	select: (background: string | IChatroomBackgroundData) => void;
 }): ReactElement | null {
+	const [selectedBackground, setSelectedBackground] = useState(current);
+
+	useEffect(() => {
+		setSelectedBackground(current);
+	}, [current]);
 
 	const availableBackgrounds = useMemo(() => GetAssetManager().getBackgrounds(), []);
 	const [nameFilter, setNameFilter] = useState('');
@@ -490,11 +495,11 @@ function BackgroundSelectDialog({ hide, current, select }: {
 				<div className='backgrounds'>
 					<a
 						onClick={ () => {
-							select(DEFAULT_BACKGROUND);
+							setSelectedBackground(DEFAULT_BACKGROUND);
 						} }
 					>
 						<div
-							className={ classNames('details', IsObject(current) && 'current') }
+							className={ classNames('details', IsObject(selectedBackground) && 'selected', IsObject(current) && 'current') }
 						>
 							<div className='name'>[ Custom background ]</div>
 						</div>
@@ -503,11 +508,11 @@ function BackgroundSelectDialog({ hide, current, select }: {
 						.map((b) => (
 							<a key={ b.id }
 								onClick={ () => {
-									select(b.id);
+									setSelectedBackground(b.id);
 								} }
 							>
 								<div
-									className={ classNames('details', b.id === current && 'current') }
+									className={ classNames('details', b.id === selectedBackground && 'selected', b.id === current && 'current') }
 								>
 									<div className='preview'>
 										<img src={ GetAssetsSourceUrl() + b.preview } />
@@ -517,8 +522,12 @@ function BackgroundSelectDialog({ hide, current, select }: {
 							</a>
 						)) }
 				</div>
-				<Row className='footer' alignX='end' padding='none'>
-					<Button onClick={ hide }>Confirm</Button>
+				<Row className='footer' alignX='space-between' padding='none'>
+					<Button onClick={ hide }>Cancel</Button>
+					<Button onClick={ () => {
+						select(selectedBackground);
+						hide();
+					} }>Confirm</Button>
 				</Row>
 			</div>
 		</ModalDialog>

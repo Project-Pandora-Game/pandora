@@ -131,8 +131,12 @@
 			border-radius: 0.5em;
 			height: 10em;
 
-			&.current {
+			&.selected {
 				border-color: black;
+			}
+
+			&.current:not(.selected) {
+				border-color: #888888aa;
 			}
 
 			.preview {

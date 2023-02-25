@@ -11,6 +11,7 @@ import {
 	IsAuthorized,
 	IChatroomBackgroundData,
 	DEFAULT_BACKGROUND,
+	IsObject,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -32,6 +33,7 @@ import bodyChange from '../../icons/body-change.svg';
 import devMode from '../../icons/developer.svg';
 import pronounChange from '../../icons/male-female.svg';
 import './chatroomAdmin.scss';
+import classNames from 'classnames';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -431,16 +433,23 @@ function BackgroundSelectDialog({ hide, current, select }: {
 
 	const availableBackgrounds = useMemo(() => GetAssetManager().getBackgrounds(), []);
 	const [nameFilter, setNameFilter] = useState('');
-	/**
-	 *  TODO: Add a tag based filter to the dialog in a later version
-	 * 	const [tagFilter, setTagFilter] = useState('');
+	/*
+	 * TODO: Add a tag based filter to the dialog in a later version
+	 * const [tagFilter, setTagFilter] = useState('');
 	 */
+
+	const filteredBackgrounds = useMemo(() => {
+		const filterParts = nameFilter.toLowerCase().trim().split(/\s+/);
+		return availableBackgrounds.filter((background) => filterParts.every((f) => {
+			return background.name.toLowerCase().includes(f);
+		}));
+	}, [availableBackgrounds, nameFilter]);
 
 	return (
 		<ModalDialog>
 			<div className='backgroundSelect'>
 				<div className='header'>
-					<div>Select a bckground for the room</div>
+					<div>Select a background for the room</div>
 					<input className='input-filter'
 						placeholder='Room name...'
 						onChange={ (e) => setNameFilter(e.target.value) }
@@ -452,34 +461,38 @@ function BackgroundSelectDialog({ hide, current, select }: {
 						</div>
 					</div>
 				</div>
-				<div className='backgrounds' >
-					{ availableBackgrounds
-						.filter((n) => (
-							/*
-							tagFilter === 'None' ?
-								n.name.toUpperCase().includes(nameFilter.toUpperCase()) :
-								n.name.toUpperCase().includes(nameFilter.toUpperCase()) &&
-								n.tag.includes(tagFilter))))
-							*/
-							n.name.toUpperCase().includes(nameFilter.toUpperCase())))
+				<div className='backgrounds'>
+					<a
+						onClick={ () => {
+							select(DEFAULT_BACKGROUND);
+						} }
+					>
+						<div
+							className={ classNames('details', IsObject(current) && 'current') }
+						>
+							<div className='name'>[ Custom background ]</div>
+						</div>
+					</a>
+					{ filteredBackgrounds
 						.map((b) => (
-							<div key={ b.id } className='details'>
-								<a onClick={ () => {
+							<a key={ b.id }
+								onClick={ () => {
 									select(b.id);
-									hide();
-								} }>
-									{
-										(typeof current === 'string' && b.image.startsWith(current)) ?
-											<img className='preview' src={ GetAssetsSourceUrl() + b.image } /> :
-											<img className='preview-bw' src={ GetAssetsSourceUrl() + b.image } />
-									}
-								</a>
-								<div className='name'>{ b.name }</div>
-							</div>
+								} }
+							>
+								<div
+									className={ classNames('details', b.id === current && 'current') }
+								>
+									<div className='preview'>
+										<img src={ GetAssetsSourceUrl() + b.preview } />
+									</div>
+									<div className='name'>{ b.name }</div>
+								</div>
+							</a>
 						)) }
 				</div>
-				<Row className='footer' alignX='end'>
-					<Button className='slim' onClick={ hide }>Close</Button>
+				<Row className='footer' alignX='start' padding='none'>
+					<Button onClick={ hide }>Close</Button>
 				</Row>
 			</div>
 		</ModalDialog>

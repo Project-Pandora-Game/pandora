@@ -13,7 +13,7 @@ import {
 	DEFAULT_BACKGROUND,
 	IsObject,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../networking/directoryConnector';
 import { PersistentToast } from '../../persistentToast';
@@ -445,13 +445,39 @@ function BackgroundSelectDialog({ hide, current, select }: {
 		}));
 	}, [availableBackgrounds, nameFilter]);
 
+	const nameFilterInput = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		// Handler to autofocus search
+		const keyPressHandler = (ev: KeyboardEvent) => {
+			if (
+				nameFilterInput.current &&
+				// Only if no other input is selected
+				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement)) &&
+				// Only if this isn't a special key or key combo
+				!ev.ctrlKey &&
+				!ev.metaKey &&
+				!ev.altKey &&
+				ev.key.length === 1
+			) {
+				nameFilterInput.current.focus();
+			}
+		};
+		window.addEventListener('keypress', keyPressHandler);
+		return () => {
+			window.removeEventListener('keypress', keyPressHandler);
+		};
+	}, []);
+
 	return (
 		<ModalDialog>
 			<div className='backgroundSelect'>
 				<div className='header'>
 					<div>Select a background for the room</div>
-					<input className='input-filter'
+					<input ref={ nameFilterInput }
+						className='input-filter'
 						placeholder='Room name...'
+						value={ nameFilter }
 						onChange={ (e) => setNameFilter(e.target.value) }
 					/>
 					<div className='dropdown'>

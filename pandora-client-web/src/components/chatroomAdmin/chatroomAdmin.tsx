@@ -524,10 +524,14 @@ function BackgroundSelectDialog({ hide, current, select }: {
 				</div>
 				<Row className='footer' alignX='space-between' padding='none'>
 					<Button onClick={ hide }>Cancel</Button>
-					<Button onClick={ () => {
-						select(selectedBackground);
-						hide();
-					} }>Confirm</Button>
+					<Button
+						onClick={ () => {
+							select(selectedBackground);
+							hide();
+						} }
+					>
+						Confirm
+					</Button>
 				</Row>
 			</div>
 		</ModalDialog>

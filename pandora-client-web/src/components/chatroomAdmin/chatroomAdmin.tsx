@@ -491,8 +491,8 @@ function BackgroundSelectDialog({ hide, current, select }: {
 							</a>
 						)) }
 				</div>
-				<Row className='footer' alignX='start' padding='none'>
-					<Button onClick={ hide }>Close</Button>
+				<Row className='footer' alignX='end' padding='none'>
+					<Button onClick={ hide }>Confirm</Button>
 				</Row>
 			</div>
 		</ModalDialog>

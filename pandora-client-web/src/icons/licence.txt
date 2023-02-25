@@ -6,3 +6,4 @@ https://www.svgrepo.com/page/licensing
 * developer.svg
 * male-female.svg
 * opened-door.svg
+* magnifier.svg

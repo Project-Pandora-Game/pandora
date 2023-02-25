@@ -11,8 +11,9 @@ import {
 	IsAuthorized,
 	IChatroomBackgroundData,
 	DEFAULT_BACKGROUND,
+	IsObject,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useReducer, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../networking/directoryConnector';
 import { PersistentToast } from '../../persistentToast';
@@ -22,14 +23,17 @@ import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../gameContext/directoryConnectorContextProvider';
-import './chatroomAdmin.scss';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
-import { GetAssetManager } from '../../assets/assetManager';
+import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { Select } from '../common/select/select';
+import { ModalDialog } from '../dialog/dialog';
+import { Row } from '../common/container/container';
 import bodyChange from '../../icons/body-change.svg';
 import devMode from '../../icons/developer.svg';
 import pronounChange from '../../icons/male-female.svg';
+import './chatroomAdmin.scss';
+import classNames from 'classnames';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -101,8 +105,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const directoryConnector = useDirectoryConnector();
 	const shards = useShards();
 	const accountId = currentAccount?.id;
-
-	const availableBackgrounds = useMemo(() => GetAssetManager().getBackgrounds(), []);
+	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
 	const isPlayerAdmin = creation
 	|| (accountId && roomData?.admin.includes(accountId))
@@ -183,18 +186,17 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			}
 			<div className='input-container'>
 				<label>Background</label>
-				<Select
-					value={ typeof currentConfigBackground === 'string' ? currentConfigBackground : '' }
+				<Button
+					onClick={ () => setShowBackgrounds(true) }
 					disabled={ !isPlayerAdmin }
-					onChange={ (event) => setRoomModifiedData({
-						background: event.target.value ? event.target.value : (cloneDeep(DEFAULT_BACKGROUND) as IChatroomBackgroundData),
-					}) }
 				>
-					{ availableBackgrounds.map((background) => (
-						<option key={ background.id } value={ background.id }>{ background.name }</option>
-					)) }
-					<option value=''>[ Custom ]</option>
-				</Select>
+					Select a background
+				</Button>
+				{ showBackgrounds && <BackgroundSelectDialog
+					hide={ () => setShowBackgrounds(false) }
+					current={ currentConfigBackground }
+					select={ (background) => setRoomModifiedData({ background }) }
+				/> }
 			</div>
 			{
 				typeof currentConfigBackground === 'string' ? null : (
@@ -420,6 +422,119 @@ function NumberListArea({ values, setValues, readOnly }: { values: number[]; set
 
 	return (
 		<textarea value={ text } onChange={ onChange } readOnly={ readOnly } />
+	);
+}
+
+function BackgroundSelectDialog({ hide, current, select }: {
+	hide: () => void;
+	current: string | IChatroomBackgroundData;
+	select: (background: string | IChatroomBackgroundData) => void;
+}): ReactElement | null {
+	const [selectedBackground, setSelectedBackground] = useState(current);
+
+	useEffect(() => {
+		setSelectedBackground(current);
+	}, [current]);
+
+	const availableBackgrounds = useMemo(() => GetAssetManager().getBackgrounds(), []);
+	const [nameFilter, setNameFilter] = useState('');
+	/*
+	 * TODO: Add a tag based filter to the dialog in a later version
+	 * const [tagFilter, setTagFilter] = useState('');
+	 */
+
+	const filteredBackgrounds = useMemo(() => {
+		const filterParts = nameFilter.toLowerCase().trim().split(/\s+/);
+		return availableBackgrounds.filter((background) => filterParts.every((f) => {
+			return background.name.toLowerCase().includes(f);
+		}));
+	}, [availableBackgrounds, nameFilter]);
+
+	const nameFilterInput = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		// Handler to autofocus search
+		const keyPressHandler = (ev: KeyboardEvent) => {
+			if (
+				nameFilterInput.current &&
+				// Only if no other input is selected
+				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement)) &&
+				// Only if this isn't a special key or key combo
+				!ev.ctrlKey &&
+				!ev.metaKey &&
+				!ev.altKey &&
+				ev.key.length === 1
+			) {
+				nameFilterInput.current.focus();
+			}
+		};
+		window.addEventListener('keypress', keyPressHandler);
+		return () => {
+			window.removeEventListener('keypress', keyPressHandler);
+		};
+	}, []);
+
+	return (
+		<ModalDialog>
+			<div className='backgroundSelect'>
+				<div className='header'>
+					<div>Select a background for the room</div>
+					<input ref={ nameFilterInput }
+						className='input-filter'
+						placeholder='Room name...'
+						value={ nameFilter }
+						onChange={ (e) => setNameFilter(e.target.value) }
+					/>
+					<div className='dropdown'>
+						<button className='dropdown-button'>Tag filter...</button>
+						<div className='dropdown-content'>
+							<a href='#'>None</a>
+						</div>
+					</div>
+				</div>
+				<div className='backgrounds'>
+					<a
+						onClick={ () => {
+							setSelectedBackground(DEFAULT_BACKGROUND);
+						} }
+					>
+						<div
+							className={ classNames('details', IsObject(selectedBackground) && 'selected', IsObject(current) && 'current') }
+						>
+							<div className='name'>[ Custom background ]</div>
+						</div>
+					</a>
+					{ filteredBackgrounds
+						.map((b) => (
+							<a key={ b.id }
+								onClick={ () => {
+									setSelectedBackground(b.id);
+								} }
+							>
+								<div
+									className={ classNames('details', b.id === selectedBackground && 'selected', b.id === current && 'current') }
+								>
+									<div className='preview'>
+										<img src={ GetAssetsSourceUrl() + b.preview } />
+									</div>
+									<div className='name'>{ b.name }</div>
+								</div>
+							</a>
+						)) }
+				</div>
+				<Row className='footer' alignX='space-between' padding='none'>
+					<Button onClick={ hide }>Cancel</Button>
+					<Button
+						onClick={ () => {
+							select(selectedBackground);
+							hide();
+						} }
+					>
+						Confirm
+					</Button>
+				</Row>
+			</div>
+		</ModalDialog>
 	);
 }
 

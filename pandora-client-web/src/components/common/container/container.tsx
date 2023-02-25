@@ -52,6 +52,8 @@ export function DivContainer({
 	padding,
 	gap,
 }: DivContainerProps): ReactElement {
+	padding ??= spacing;
+	gap ??= spacing;
 	return (
 		<div
 			id={ id }
@@ -65,9 +67,8 @@ export function DivContainer({
 				wrapAlign ? `wrap-align-${wrapAlign}` : null,
 				overflowX ? `overflow-x-${overflowX}` : null,
 				overflowY ? `overflow-y-${overflowY}` : null,
-				`spacing-${spacing}`,
-				padding ? `padding-${padding}` : null,
-				gap ? `gap-${gap}` : null,
+				`padding-${padding}`,
+				`gap-${gap}`,
 				className,
 			) }
 		>

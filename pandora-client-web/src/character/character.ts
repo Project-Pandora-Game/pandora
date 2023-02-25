@@ -9,12 +9,15 @@ export type AppearanceEvents = {
 };
 
 export type AppearanceContainer = ITypedEventEmitter<AppearanceEvents> & {
+	readonly type: 'character';
 	readonly appearance: CharacterAppearance;
 	readonly id: CharacterId;
 	getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
 };
 
 export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements AppearanceContainer {
+	public readonly type = 'character';
+
 	public readonly appearance: CharacterAppearance;
 
 	public get id(): CharacterId {

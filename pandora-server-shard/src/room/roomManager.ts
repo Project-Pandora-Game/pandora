@@ -1,6 +1,7 @@
 import { RoomId, GetLogger, IShardChatRoomDefinition, Assert } from 'pandora-common';
 import { Room } from './room';
 import promClient from 'prom-client';
+import { assetManager } from '../assets/assetManager';
 
 const logger = GetLogger('RoomManager');
 
@@ -79,5 +80,11 @@ export const RoomManager = new class RoomManager {
 			Array.from(this._rooms.keys())
 				.map((id) => this.removeRoom(id)),
 		);
+	}
+
+	public onAssetDefinitionsChanged() {
+		for (const room of this._rooms.values()) {
+			room.reloadAssetManager(assetManager, true);
+		}
 	}
 };

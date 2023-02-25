@@ -5,6 +5,7 @@ import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
+import { RoomInventoryBundle } from '../assets/roomInventory';
 
 // Fix for pnpm resolution weirdness
 import type { } from 'zod';
@@ -17,15 +18,17 @@ export type ICharacterRoomData = ICharacterPublicData & {
 
 export type IChatRoomClientData = IChatRoomFullInfo & {
 	characters: ICharacterRoomData[];
+	inventory: RoomInventoryBundle;
 };
 
 export type IChatRoomUpdate = {
 	room: null | IChatRoomClientData;
 } | {
-	info?: Partial<IChatRoomClientData>;
+	info?: Partial<IChatRoomFullInfo>;
 	leave?: CharacterId;
 	join?: ICharacterRoomData;
 	update?: Pick<ICharacterRoomData, 'id'> & Partial<ICharacterRoomData>;
+	roomInventoryChange?: RoomInventoryBundle;
 };
 
 /** Shard->Client messages */

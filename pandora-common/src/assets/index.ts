@@ -9,3 +9,5 @@ export * from './item';
 export * from './modules';
 export * from './properties';
 export * from './graphics';
+export * from './roomInventory';
+export * from './roomValidation';

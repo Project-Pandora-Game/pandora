@@ -5,8 +5,8 @@ import { useCharacterSafemode } from '../../../character/character';
 import { Column } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
-import { useObservable } from '../../../observable';
+import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
+import { Observable, useObservable } from '../../../observable';
 import { GetAssetManagerEditor } from '../../assets/assetManager';
 import { useEditor } from '../../editorContextProvider';
 
@@ -18,6 +18,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const editor = useEditor();
 	const character = editor.character;
 	const assetList = useObservable(GetAssetManager().assetList);
+
+	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: character.id,
@@ -38,14 +40,16 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const context = useMemo<WardrobeContext>(() => ({
 		character,
 		player: character,
+		room: null,
 		target: {
 			type: 'character',
 			characterId: character.id,
 		},
 		assetList,
+		extraItemActions,
 		actions,
 		execute: (action) => DoAppearanceAction(action, actions, GetAssetManagerEditor()),
-	}), [character, assetList, actions]);
+	}), [character, assetList, actions, extraItemActions]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

@@ -5,6 +5,7 @@ import { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } from '../config';
 import express from 'express';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { CharacterManager } from '../character/characterManager';
+import { RoomManager } from '../room/roomManager';
 
 const logger = GetLogger('AssetManager');
 
@@ -54,6 +55,7 @@ function WatchAssetDefinitionsTick(): void {
 		if (currentHash !== assetManager.definitionsHash) {
 			logger.alert('Detected asset definitions change, reloading...');
 			LoadAssetDefinitions();
+			RoomManager.onAssetDefinitionsChanged();
 			CharacterManager.onAssetDefinitionsChanged();
 			ConnectionManagerClient.onAssetDefinitionsChanged();
 			logger.info('Done sending new definitions');

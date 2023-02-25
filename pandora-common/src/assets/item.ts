@@ -127,6 +127,16 @@ export class Item {
 				},
 			};
 
+		// Check bodyparts are worn
+		if (!isWorn && this.asset.definition.bodypart != null)
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: this.asset.id,
+				},
+			};
+
 		for (const module of this.modules.values()) {
 			const r = module.validate(isWorn);
 			if (!r.success)

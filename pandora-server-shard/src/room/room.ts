@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData, AccountId } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData, AccountId, RoomInventory, AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -20,8 +20,10 @@ export class Room extends ServerRoom<IShardClient> {
 	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionCharacter; leave?: number; }>();
 	private readonly tickInterval: NodeJS.Timeout;
 
+	public readonly inventory: RoomInventory;
+
 	private readonly _lock = new AsyncLock();
-	private modified: Set<Exclude<keyof IChatRoomDataUpdate, 'id' | 'config'>> = new Set();
+	private modified: Set<Exclude<keyof IChatRoomDataUpdate, (typeof CHATROOM_DIRECTORY_PROPERTIES)[number]>> = new Set();
 
 	public get id(): RoomId {
 		return this.data.id;
@@ -37,12 +39,21 @@ export class Room extends ServerRoom<IShardClient> {
 
 	private logger: Logger;
 
-	constructor(data: IShardChatRoomDefinition) {
+	constructor(data: IChatRoomData) {
 		super();
 		this.data = data;
 		this.logger = GetLogger('Room', `[Room ${data.id}]`);
 		this.logger.verbose('Created');
+		this.inventory = new RoomInventory(assetManager);
+
+		this.inventory.importFromBundle(data.inventory ?? ROOM_INVENTORY_BUNDLE_DEFAULT, this.logger.prefixMessages('Room inventory load:'));
+		this.inventory.onChangeHandler = this.onInventoryChanged.bind(this);
+
 		this.tickInterval = setInterval(() => this._tick(), ROOM_TICK_INTERVAL);
+	}
+
+	public reloadAssetManager(manager: AssetManager, force: boolean = false) {
+		this.inventory.reloadAssetManager(manager, this.logger.prefixMessages('Asset manager reload:'), force);
 	}
 
 	public onRemove(): void {
@@ -63,6 +74,14 @@ export class Room extends ServerRoom<IShardClient> {
 				this.history.delete(characterId);
 			}
 		}
+	}
+
+	public onInventoryChanged(): void {
+		this.modified.add('inventory');
+
+		this.sendUpdateToAllInRoom({
+			roomInventoryChange: this.inventory.exportToBundle(),
+		});
 	}
 
 	public update(data: IShardChatRoomDefinition): void {
@@ -105,6 +124,7 @@ export class Room extends ServerRoom<IShardClient> {
 		return {
 			...this.getInfo(),
 			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
+			inventory: this.inventory.exportToBundle(),
 		};
 	}
 
@@ -198,7 +218,7 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public save(): Promise<void> {
 		return this._lock.acquire('save', async () => {
-			const keys: (keyof Omit<IChatRoomDataUpdate, 'id' | 'config'>)[] = [...this.modified];
+			const keys = [...this.modified];
 			this.modified.clear();
 
 			// Nothing to save
@@ -209,7 +229,9 @@ export class Room extends ServerRoom<IShardClient> {
 				id: this.data.id,
 			};
 
-			// TODO: Any update
+			if (keys.includes('inventory')) {
+				data.inventory = this.inventory.exportToBundle();
+			}
 
 			try {
 				if (!await GetDatabase().setChatRoom(data, this.accessId)) {

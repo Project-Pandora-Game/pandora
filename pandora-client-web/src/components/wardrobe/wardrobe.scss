@@ -152,7 +152,6 @@ $header-height: 2em;
 }
 
 .inventoryViewItem {
-	@extend button;
 	border: solid $black 1px;
 	background-color: $grey-lighter;
 	display: flex;

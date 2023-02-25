@@ -69,6 +69,7 @@ export class AppearanceEditor extends CharacterAppearance {
 }
 
 export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
+	public readonly type = 'character';
 	public readonly appearance: AppearanceEditor;
 	public readonly id = 'c0';
 

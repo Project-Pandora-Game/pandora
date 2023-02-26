@@ -214,7 +214,7 @@ function Wardrobe(): ReactElement | null {
 					<Tab name='Poses & Expressions'>
 						<div className='wardrobe-pane'>
 							<div className='wardrobe-ui'>
-								<WardrobePoseGui character={ character } />
+								<WardrobePoseGui />
 								<WardrobeExpressionGui />
 							</div>
 						</div>
@@ -1109,8 +1109,8 @@ export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }:
 	);
 }
 
-export function WardrobePoseGui({ character }: { character: AppearanceContainer; }): ReactElement {
-	const { execute } = useWardrobeContext();
+export function WardrobePoseGui(): ReactElement {
+	const { character, execute } = useWardrobeContext();
 
 	const bones = useCharacterAppearancePose(character);
 	const armsPose = useCharacterAppearanceArmsPose(character);

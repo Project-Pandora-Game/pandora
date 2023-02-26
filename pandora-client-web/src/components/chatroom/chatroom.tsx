@@ -71,7 +71,9 @@ export function Chatroom(): ReactElement {
 						</div>
 					</Tab>
 					<Tab name='Pose'>
-						<WardrobePoseGui character={ player } />
+						<WardrobeContextProvider player={ player } character={ player }>
+							<WardrobePoseGui />
+						</WardrobeContextProvider>
 					</Tab>
 					<Tab name='Expressions'>
 						<WardrobeContextProvider player={ player } character={ player }>

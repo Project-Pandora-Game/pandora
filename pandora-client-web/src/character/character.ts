@@ -1,4 +1,4 @@
-import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId } from 'pandora-common';
+import { CharacterAppearance, AppearanceChangeType, APPEARANCE_BUNDLE_DEFAULT, ArmsPose, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, ICharacterMinimalData } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -32,7 +32,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
-		this.appearance = new CharacterAppearance(GetAssetManager(), data, (changes) => this.emit('appearanceUpdate', changes));
+		this.appearance = new CharacterAppearance(GetAssetManager(), () => this.data, (changes) => this.emit('appearanceUpdate', changes));
 		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
 		this.logger.verbose('Loaded');
 	}

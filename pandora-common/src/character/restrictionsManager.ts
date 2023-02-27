@@ -112,14 +112,16 @@ export type RestrictionResult = {
  * All functions should return a stable value, or useSyncExternalStore will not work properly.
  */
 export class CharacterRestrictionsManager {
-	public readonly character: Readonly<ICharacterMinimalData>;
 	public readonly appearance: CharacterAppearance;
 	public readonly room: ActionRoomContext | null;
 	private _items: readonly Item[] = [];
 	private _properties: Readonly<AssetPropertiesResult> = CreateAssetPropertiesResult();
 
-	constructor(character: Readonly<ICharacterMinimalData>, appearance: CharacterAppearance, room: ActionRoomContext | null) {
-		this.character = character;
+	public get character(): Readonly<ICharacterMinimalData> {
+		return this.appearance.character;
+	}
+
+	constructor(appearance: CharacterAppearance, room: ActionRoomContext | null) {
 		this.appearance = appearance;
 		this.room = room;
 	}

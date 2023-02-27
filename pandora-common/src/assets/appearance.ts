@@ -57,7 +57,7 @@ export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
 
 export class CharacterAppearance implements RoomActionTargetCharacter {
 	public readonly type = 'character';
-	public readonly character: Readonly<ICharacterMinimalData>;
+	private readonly getCharacter: () => Readonly<ICharacterMinimalData>;
 
 	protected assetManager: AssetManager;
 	public onChangeHandler: ((changes: AppearanceChangeType[]) => void) | undefined;
@@ -69,15 +69,19 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
 	private _safemode: SafemodeData | undefined;
 
-	constructor(assetManager: AssetManager, character: Readonly<ICharacterMinimalData>, onChange?: (changes: AppearanceChangeType[]) => void) {
+	public get character(): Readonly<ICharacterMinimalData> {
+		return this.getCharacter();
+	}
+
+	constructor(assetManager: AssetManager, getCharacter: () => Readonly<ICharacterMinimalData>, onChange?: (changes: AppearanceChangeType[]) => void) {
 		this.assetManager = assetManager;
-		this.character = character;
+		this.getCharacter = getCharacter;
 		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;
 	}
 
 	public getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager {
-		return new CharacterRestrictionsManager(this.character, this, room);
+		return new CharacterRestrictionsManager(this, room);
 	}
 
 	public exportToBundle(): AppearanceBundle {

@@ -31,9 +31,9 @@ export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDe
 	switchMessage?: string | Partial<Record<string | '_', string>>;
 
 	/** Variant will store the time it was selected */
-	storeTime?: true,
+	storeTime?: true;
 	/** Variant will store the the character that selected it */
-	storeCharacter?: true,
+	storeCharacter?: true;
 
 	/**
 	 * Custom text to show when this variant is selected.

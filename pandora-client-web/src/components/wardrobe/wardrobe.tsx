@@ -891,12 +891,17 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<
 			return null;
 		}
 		const substitutes = {
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			CHARACTER_NAME: m.data.selectedBy?.name ?? '[unknown]',
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			CHARACTER_ID: m.data.selectedBy?.id ?? '[unknown id]',
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			CHARACTER: m.data.selectedBy ? `${m.data.selectedBy.name} (${m.data.selectedBy.id})` : '[unknown]',
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			TIME_PASSED: m.data.selectedAt ? FormatTimeInterval(Date.now() - m.data.selectedAt) : '[unknown time]',
+			// eslint-disable-next-line @typescript-eslint/naming-convention
 			TIME: m.data.selectedAt ? new Date(m.data.selectedAt).toLocaleString() : '[unknown date]',
-		}
+		};
 		return m.activeVariant.customText
 			.map((text) => MessageSubstitute(text, substitutes))
 			.map((text, index) => <span key={ index }>{ text }</span>);

@@ -133,8 +133,8 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 		this.data = {
 			...data,
 			variant: this.activeVariant.id,
-			selectedAt: this.activeVariant.storeTime ? data.selectedAt : undefined,
-			selectedBy: this.activeVariant.storeCharacter ? data.selectedBy : undefined,
+			selectedAt: activeVariant?.storeTime ? data.selectedAt : undefined,
+			selectedBy: activeVariant?.storeCharacter ? data.selectedBy : undefined,
 		};
 	}
 

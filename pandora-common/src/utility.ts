@@ -153,3 +153,15 @@ export function FormatTimeInterval(time: number, mode: 'full' | 'short' = 'full'
 	}
 	return res;
 }
+
+export function MessageSubstitute(originalMessage: string, substitutions: Readonly<Record<string, string>>): string {
+	let message = originalMessage;
+	for (const [key, value] of Object
+		.entries(substitutions)
+		// Do the longest substitutions first to avoid small one replacing part of large one
+		.sort(([a], [b]) => b.length - a.length)
+	) {
+		message = message.replaceAll(key, value);
+	}
+	return message;
+}

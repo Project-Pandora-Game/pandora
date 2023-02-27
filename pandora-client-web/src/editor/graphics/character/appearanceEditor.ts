@@ -74,7 +74,8 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 
 	constructor() {
 		super();
-		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), { id: this.id, accountId: 0, name: 'EditorCharacter' }, (changes) => this.emit('appearanceUpdate', changes));
+		const data = { id: this.id, accountId: 0, name: 'EditorCharacter' } as const;
+		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), () => data, (changes) => this.emit('appearanceUpdate', changes));
 	}
 
 	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {

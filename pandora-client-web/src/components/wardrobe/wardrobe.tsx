@@ -926,7 +926,7 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<
 				customText && (
 					<>
 						<br />
-						{ customText }
+						<span>{ customText }</span>
 					</>
 				)
 			}

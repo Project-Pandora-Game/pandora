@@ -277,7 +277,7 @@ export class Shard {
 	}
 
 	/**
-	 * Disconnects an character from the shard
+	 * Disconnects a character from the shard
 	 * @param id - Id of the character to disconnect
 	 */
 	public disconnectCharacter(character: Character): void {
@@ -311,7 +311,7 @@ export class Shard {
 	}
 
 	/**
-	 * Disconnects an character from the shard
+	 * Disconnects a character from the shard
 	 * @param id - Id of the character to disconnect
 	 */
 	public disconnectRoom(room: Room): void {

@@ -78,11 +78,11 @@ export const CharacterManager = new class CharacterManager {
 		return character.save();
 	}
 
-	public removeAllCharacters(): Promise<void> {
-		return Promise.allSettled(
+	public async removeAllCharacters(): Promise<void> {
+		await Promise.allSettled(
 			Array.from(this._characters.keys())
 				.map((id) => this.removeCharacter(id)),
-		).then(() => undefined);
+		);
 	}
 
 	public onAssetDefinitionsChanged() {

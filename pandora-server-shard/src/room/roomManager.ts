@@ -74,10 +74,10 @@ export const RoomManager = new class RoomManager {
 		return room.save();
 	}
 
-	public removeAllRooms(): Promise<void> {
-		return Promise.allSettled(
+	public async removeAllRooms(): Promise<void> {
+		await Promise.allSettled(
 			Array.from(this._rooms.keys())
 				.map((id) => this.removeRoom(id)),
-		).then(() => undefined);
+		);
 	}
 };

@@ -17,6 +17,15 @@ export function ZodMatcher<T extends ZodTypeAny>(validator: T, passthrough?: tru
 	return (val: unknown): val is z.infer<T> => validator.safeParse(val).success;
 }
 
+export function ArrayToTruthyMap<T extends string>(array: readonly T[]): Record<T, true> {
+	// @ts-expect-error: Created to match in loop
+	const result: Record<T, true> = {};
+
+	array.forEach((v) => result[v] = true);
+
+	return result;
+}
+
 /** A dirty thing that shouldn't really be used, but sometimes you are lazy */
 export function ZodCast<T>(): ZodType<T> {
 	return z.any();

@@ -1,4 +1,4 @@
-import { CharacterId, IShardCharacterDefinition, GetLogger } from 'pandora-common';
+import { CharacterId, IShardCharacterDefinition, GetLogger, Assert } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import { Character } from './character';
 import promClient from 'prom-client';
@@ -38,27 +38,28 @@ export const CharacterManager = new class CharacterManager {
 			.map((char) => char.id);
 	}
 
-	public async loadCharacter(character: IShardCharacterDefinition): Promise<Character | null> {
-		const id = character.id;
+	public async loadCharacter(definition: IShardCharacterDefinition): Promise<Character | null> {
+		const id = definition.id;
 
 		let char = this._characters.get(id);
 		if (char) {
-			char.update(character);
+			char.update(definition);
 			return char;
 		}
 
-		const data = await Character.load(id, character.accessId);
+		const data = await Character.load(id, definition.accessId);
 		if (!data)
 			return null;
+		Assert(data.id === definition.id);
 
 		char = this._characters.get(id);
 		if (char) {
-			char.update(character);
+			char.update(definition);
 			return char;
 		}
 
 		logger.verbose(`Adding character ${data.id}`);
-		char = new Character(data, character.account, character.connectSecret, character.room);
+		char = new Character(data, definition.account, definition.connectSecret, definition.room);
 		this._characters.set(id, char);
 		charactersMetric.set(this._characters.size);
 		return char;
@@ -77,11 +78,11 @@ export const CharacterManager = new class CharacterManager {
 		return character.save();
 	}
 
-	public removeAllCharacters(): Promise<void> {
-		return Promise.allSettled(
+	public async removeAllCharacters(): Promise<void> {
+		await Promise.allSettled(
 			Array.from(this._characters.keys())
 				.map((id) => this.removeCharacter(id)),
-		).then(() => undefined);
+		);
 	}
 
 	public onAssetDefinitionsChanged() {

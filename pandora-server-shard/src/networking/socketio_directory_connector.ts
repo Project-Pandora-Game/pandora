@@ -184,11 +184,35 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			);
 		}
 
+		// Invalidate old rooms
+		if (rooms) {
+			const roomIds = rooms.map((r) => r.id);
+			await Promise.allSettled(
+				RoomManager
+					.listRoomIds()
+					.filter((id) => !roomIds.includes(id))
+					.map((id) => RoomManager.removeRoom(id)),
+			);
+		}
+
 		// Load and update existing rooms
 		if (rooms) {
-			for (const room of rooms) {
-				RoomManager.loadRoom(room);
-			}
+			await Promise.all(
+				rooms.map((room) =>
+					RoomManager
+						.loadRoom(room)
+						.then((result) => {
+							if (!result) {
+								logger.error(`Failed to load room ${room.id} for access ${room.accessId}`);
+								// Report back that room load failed
+								this.sendMessage('roomUnload', { id: room.id, reason: 'error' });
+							}
+						})
+						.catch((err) => {
+							logger.fatal('Error processing prepareCharacters message', err);
+						}),
+				),
+			);
 		}
 
 		// Load and update existing characters
@@ -209,15 +233,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 						}),
 				),
 			);
-		}
-
-		// Invalidate old rooms
-		if (rooms) {
-			const roomIds = rooms.map((r) => r.id);
-			RoomManager
-				.listRoomIds()
-				.filter((id) => !roomIds.includes(id))
-				.forEach((id) => RoomManager.removeRoom(id));
 		}
 
 		if (messages) {

@@ -10,6 +10,7 @@ import promClient from 'prom-client';
 import { ShardTokenStore } from '../shard/shardTokenStore';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { BetaKeyStore } from '../shard/betaKeyStore';
+import { RoomManager } from '../room/roomManager';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -102,6 +103,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatRoomLeave: this.handleChatRoomLeave.bind(this),
 			chatRoomUpdate: this.handleChatRoomUpdate.bind(this),
 			chatRoomAdminAction: this.handleChatRoomAdminAction.bind(this),
+			chatRoomOwnershipRemove: this.handleChatRoomOwnershipRemove.bind(this),
 
 			getDirectMessages: this.handleGetDirectMessages.bind(this),
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
@@ -349,34 +351,35 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryResult['listRooms'] {
-		if (!connection.isLoggedIn() || !connection.character)
+	private async handleListRooms(_: IClientDirectoryArgument['listRooms'], connection: IConnectionClient): IClientDirectoryPromiseResult['listRooms'] {
+		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		return {
-			rooms: ShardManager.listRooms().map((r) => r.getDirectoryInfo()),
-		};
+		const rooms = (await RoomManager.listRoomsVisibleTo(connection.account))
+			.map((r) => r.getRoomListInfo(connection.account));
+
+		return { rooms };
 	}
 
-	private handleChatRoomGetInfo({ id }: IClientDirectoryArgument['chatRoomGetInfo'], connection: IConnectionClient): IClientDirectoryResult['chatRoomGetInfo'] {
+	private async handleChatRoomGetInfo({ id }: IClientDirectoryArgument['chatRoomGetInfo'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomGetInfo'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		const room = ShardManager.getRoom(id);
+		const room = await RoomManager.loadRoom(id);
 
 		if (!room) {
 			return { result: 'notFound' };
 		}
 
-		const allowResult = room.checkAllowEnter(connection.character);
+		const allowResult = room.checkAllowEnter(connection.character, null, true);
 
-		if (allowResult !== 'ok' && allowResult !== 'errFull') {
+		if (allowResult !== 'ok') {
 			return { result: 'noAccess' };
 		}
 
 		return {
 			result: 'success',
-			data: room.getDirectoryExtendedInfo(),
+			data: room.getRoomListExtendedInfo(connection.account),
 		};
 	}
 
@@ -384,7 +387,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character || !IsIChatRoomDirectoryConfig(roomConfig))
 			throw new BadMessageError();
 
-		const room = ShardManager.createRoom(roomConfig);
+		const room = await RoomManager.createRoom(roomConfig, [connection.account.id]);
 
 		if (typeof room === 'string') {
 			return { result: room };
@@ -407,13 +410,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		const room = ShardManager.getRoom(id);
+		const room = await RoomManager.loadRoom(id);
 
 		if (!room) {
 			return { result: 'notFound' };
 		}
 
-		const allowResult = room.checkAllowEnter(connection.character, password);
+		const allowResult = room.checkAllowEnter(connection.character, password ?? null);
 
 		if (allowResult !== 'ok') {
 			return { result: allowResult };
@@ -432,7 +435,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		});
 	}
 
-	private handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryResult['chatRoomUpdate'] {
+	private async handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomUpdate'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -440,11 +443,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notInRoom' };
 		}
 
-		if (!connection.character.room.isAdmin(connection.character)) {
+		if (!connection.character.room.isAdmin(connection.account)) {
 			return { result: 'noAccess' };
 		}
 
-		const result = connection.character.room.update(roomConfig, connection.character);
+		const result = await connection.character.room.update(roomConfig, connection.character);
 
 		return { result };
 	}
@@ -457,7 +460,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return;
 		}
 
-		if (!connection.character.room.isAdmin(connection.character)) {
+		if (!connection.character.room.isAdmin(connection.account)) {
 			return;
 		}
 
@@ -469,6 +472,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		connection.character.room?.removeCharacter(connection.character, 'leave', connection.character);
+	}
+
+	private async handleChatRoomOwnershipRemove({ id }: IClientDirectoryArgument['chatRoomOwnershipRemove'], connection: IConnectionClient): IClientDirectoryPromiseResult['chatRoomOwnershipRemove'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const room = await RoomManager.loadRoom(id);
+
+		if (room == null || !room.owners.has(connection.account.id)) {
+			return { result: 'notAnOwner' };
+		}
+
+		const result = await room.removeOwner(connection.account.id);
+
+		return { result };
 	}
 
 	/**

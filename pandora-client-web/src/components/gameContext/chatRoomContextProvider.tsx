@@ -594,9 +594,16 @@ export function useChatRoomStatus(): { data: ICharacterRoomData; status: IChatRo
 }
 
 export function IsChatroomAdmin(data: Nullable<IChatRoomClientData>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
-	if (!data || !account?.id) return false;
-	if (data.admin.includes(account.id)) return true;
-	if (!account.roles || !data.development?.autoAdmin) return false;
-	if (IsAuthorized(account.roles, 'developer')) return true;
-	return true;
+	if (!data || !account?.id)
+		return false;
+
+	if (data.owners.includes(account.id))
+		return true;
+	if (data.admin.includes(account.id))
+		return true;
+
+	if (data.development?.autoAdmin && IsAuthorized(account.roles, 'developer'))
+		return true;
+
+	return false;
 }

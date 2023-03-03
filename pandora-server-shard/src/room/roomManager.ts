@@ -1,4 +1,4 @@
-import { IChatRoomFullInfo, RoomId, GetLogger } from 'pandora-common';
+import { RoomId, GetLogger, IShardChatRoomDefinition, Assert } from 'pandora-common';
 import { Room } from './room';
 import promClient from 'prom-client';
 
@@ -16,42 +16,68 @@ export const RoomManager = new class RoomManager {
 		return this._rooms.get(id);
 	}
 
-	public listRooms(): IChatRoomFullInfo[] {
+	public listRooms(): Pick<IShardChatRoomDefinition, 'id' | 'accessId'>[] {
 		return [...this._rooms.values()]
-			.map((room) => room.getInfo());
+			.map((room) => ({
+				id: room.id,
+				accessId: room.accessId,
+			}));
 	}
 
 	public listRoomIds(): RoomId[] {
 		return Array.from(this._rooms.keys());
 	}
 
-	public loadRoom(roomData: IChatRoomFullInfo): Room {
-		const id = roomData.id;
+	public async loadRoom(definition: IShardChatRoomDefinition): Promise<Room | null> {
+		const id = definition.id;
 
 		let room = this._rooms.get(id);
 		if (room) {
-			room.update(roomData);
+			room.update(definition);
 			return room;
 		}
 
-		logger.debug(`Creating room ${id}`);
-		room = new Room(roomData);
+		const data = await Room.load(id, definition.accessId);
+		if (!data)
+			return null;
+		Assert(data.id === definition.id);
+
+		room = this._rooms.get(id);
+		if (room) {
+			room.update(definition);
+			return room;
+		}
+
+		logger.debug(`Adding room ${data.id}`);
+		room = new Room({
+			...data,
+			id: definition.id,
+			config: definition.config,
+			accessId: definition.accessId,
+			owners: definition.owners,
+		});
 		this._rooms.set(id, room);
 		roomsMetric.set(this._rooms.size);
 		return room;
 	}
 
-	public removeRoom(id: RoomId): void {
-		if (!this._rooms.has(id))
-			return;
-		logger.debug(`Removing room ${id}`);
-		this._rooms.get(id)?.onRemove();
+	public removeRoom(id: RoomId): Promise<void> {
+		const room = this._rooms.get(id);
+		if (!room)
+			return Promise.resolve();
+		logger.verbose(`Removing room ${id}`);
+		room.onRemove();
 		this._rooms.delete(id);
 		roomsMetric.set(this._rooms.size);
+
+		// Save all data after removing room
+		return room.save();
 	}
 
-	public removeAllRooms(): void {
-		Array.from(this._rooms.keys())
-			.map((id) => this.removeRoom(id));
+	public async removeAllRooms(): Promise<void> {
+		await Promise.allSettled(
+			Array.from(this._rooms.keys())
+				.map((id) => this.removeRoom(id)),
+		);
 	}
 };

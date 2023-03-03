@@ -1,4 +1,4 @@
-import { IShardDirectory, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, BadMessageError, IMessageHandler } from 'pandora-common';
+import { IShardDirectory, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, BadMessageError, IMessageHandler, AssertNotNullable } from 'pandora-common';
 import type { IConnectionShard } from './common';
 import { GetDatabase } from '../database/databaseProvider';
 import { ShardManager } from '../shard/shardManager';
@@ -28,11 +28,14 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 			shardRegister: this.handleShardRegister.bind(this),
 			shardRequestStop: this.handleShardRequestStop.bind(this),
 			characterDisconnect: this.handleCharacterDisconnect.bind(this),
+			roomUnload: this.handleRoomUnload.bind(this),
 			createCharacter: this.createCharacter.bind(this),
 
 			// Database
 			getCharacter: this.handleGetCharacter.bind(this),
 			setCharacter: this.handleSetCharacter.bind(this),
+			getChatRoom: this.handleGetChatRoom.bind(this),
+			setChatRoom: this.handleSetChatRoom.bind(this),
 		});
 	}
 
@@ -64,10 +67,24 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 
 	private handleCharacterDisconnect({ id /* TODO , reason */ }: IShardDirectoryArgument['characterDisconnect'], connection: IConnectionShard): void {
 		const shard = connection.shard;
-		if (!shard || !shard?.getConnectedCharacter(id))
+		if (!shard)
+			throw new BadMessageError();
+		const character = shard.getConnectedCharacter(id);
+		if (!character)
 			throw new BadMessageError();
 
-		shard.disconnectCharacter(id);
+		character.disconnect();
+	}
+
+	private handleRoomUnload({ id /* TODO , reason */ }: IShardDirectoryArgument['roomUnload'], connection: IConnectionShard): void {
+		const shard = connection.shard;
+		if (!shard)
+			throw new BadMessageError();
+		const room = shard.getConnectedRoom(id);
+		if (!room)
+			throw new BadMessageError();
+
+		room.disconnect();
 	}
 
 	private async createCharacter({ id }: IShardDirectoryArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {
@@ -98,6 +115,25 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 			throw new BadMessageError();
 
 		if (Object.keys(args).length > 2 && !await GetDatabase().setCharacter(args))
+			return { result: 'invalidAccessId' };
+
+		return { result: 'success' };
+	}
+
+	private async handleGetChatRoom({ id, accessId }: IShardDirectoryArgument['getChatRoom'], connection: IConnectionShard): IShardDirectoryPromiseResult['getChatRoom'] {
+		if (!connection.shard?.getConnectedRoom(id))
+			throw new BadMessageError();
+
+		const result = await GetDatabase().getChatRoomById(id, accessId);
+		AssertNotNullable(result);
+		return result;
+	}
+
+	private async handleSetChatRoom({ data, accessId }: IShardDirectoryArgument['setChatRoom'], connection: IConnectionShard): IShardDirectoryPromiseResult['setChatRoom'] {
+		if (!connection.shard)
+			throw new BadMessageError();
+
+		if (Object.keys(data).length > 2 && !await GetDatabase().updateChatRoom(data, accessId))
 			return { result: 'invalidAccessId' };
 
 		return { result: 'success' };

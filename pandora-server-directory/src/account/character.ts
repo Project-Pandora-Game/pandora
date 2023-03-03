@@ -1,7 +1,7 @@
-import type { CharacterId, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import { Assert, CharacterId, IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import type { Account } from './account';
 import type { Shard } from '../shard/shard';
-import type { Room } from '../shard/room';
+import type { Room } from '../room/room';
 import type { IConnectionClient } from '../networking/common';
 import { GetDatabase, ICharacterSelfInfoDb } from '../database/databaseProvider';
 import { nanoid } from 'nanoid';
@@ -46,7 +46,7 @@ export class Character {
 	public disconnect(): void {
 		this.account.touch();
 		this.room?.removeCharacter(this, 'disconnect', null);
-		this.assignedShard?.disconnectCharacter(this.id);
+		this.assignedShard?.disconnectCharacter(this);
 	}
 
 	public async generateAccessId(): Promise<string | null> {
@@ -71,14 +71,6 @@ export class Character {
 			characterId: this.id,
 			secret: this.connectSecret,
 		};
-	}
-
-	private getShardConnectionInfoAssert(): IDirectoryCharacterConnectionInfo {
-		const info = this.getShardConnectionInfo();
-		if (!info) {
-			throw new Error('No shard connection info when expected');
-		}
-		return info;
 	}
 
 	public async connect(): Promise<'noShardFound' | 'failed' | IDirectoryCharacterConnectionInfo> {
@@ -122,7 +114,10 @@ export class Character {
 
 		if (room) {
 			// If in a room, the room always chooses shard
-			shard = room.shard;
+			const roomShard = await room.connect();
+			if (typeof roomShard === 'string')
+				return 'failed';
+			shard = roomShard;
 		} else if (!shard) {
 			throw new Error('Neither room nor shard passed');
 		}
@@ -134,7 +129,7 @@ export class Character {
 
 		// If we are on a wrong shard, we leave it
 		if (this.assignedShard !== shard) {
-			this.assignedShard?.disconnectCharacter(this.id);
+			this.assignedShard?.disconnectCharacter(this);
 			// Generate new access id for new shard
 			const accessId = await this.generateAccessId();
 			if (accessId == null)
@@ -154,6 +149,8 @@ export class Character {
 			room.addCharacter(this, sendEnterMessage !== false);
 		}
 
-		return this.getShardConnectionInfoAssert();
+		const info = this.getShardConnectionInfo();
+		Assert(info, 'No shard connection info when expected');
+		return info;
 	}
 }

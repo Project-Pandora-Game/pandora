@@ -61,10 +61,13 @@ export const DATABASE_NAME = process.env.DATABASE_NAME ?? 'pandora-test';
 
 //#endregion
 
-//#region Character
+//#region Limits
 
 /** Character limit for normal account */
 export const CHARACTER_LIMIT_NORMAL = 5;
+
+/** Room ownership limit for normal account */
+export const ROOM_LIMIT_NORMAL = 5;
 
 //#endregion
 

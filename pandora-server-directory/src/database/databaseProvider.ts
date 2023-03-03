@@ -1,7 +1,8 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataUpdate, RoomId, IChatRoomDirectoryData, AccountId } from 'pandora-common';
+import type { IChatRoomCreationData } from './dbHelper';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -62,6 +63,8 @@ export interface PandoraDatabase {
 	 */
 	setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void>;
 
+	//#region Character
+
 	/**
 	 * Creates a new character for the account
 	 * @param accountId - Id of account to create character for
@@ -95,6 +98,59 @@ export interface PandoraDatabase {
 	 * @return - New access id
 	 */
 	setCharacterAccess(id: CharacterId): Promise<string | null>;
+
+	//#endregion
+
+	//#region ChatRoom
+
+	/**
+	 * Gets all chatrooms that have supplied account as owner
+	 * @param account - The owner of the rooms to look for
+	 */
+	getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]>;
+
+	/**
+	 * Gets all chatrooms that have supplied account as owner or admin
+	 * @param account - The owner/admin of the rooms to look for
+	 */
+	getChatRoomsWithOwnerOrAdmin(account: AccountId): Promise<IChatRoomDirectoryData[]>;
+
+	/**
+	 * Gets a chatroom by ID
+	 * @param id - Id of the chatroom to get
+	 * @param accessId - Id of access to check or null to ignore the accessId check
+	 */
+	getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null>;
+
+	/**
+	 * Creates a new chatroom
+	 * @param config - Config for the new room
+	 * @param id - Id of the room (randomly generated if not set)
+	 */
+	createChatRoom(config: IChatRoomCreationData, id?: RoomId): Promise<IChatRoomData>;
+
+	/**
+	 * Update chatrooms's info
+	 * @param data - Chatroom data to update, `id` is required
+	 * @param accessId - Id of access to check or null to ignore the accessId check
+	 * @returns false if a provided accessId is not the same as in the database
+	 */
+	updateChatRoom(data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean>;
+
+	/**
+	 * Delete a chatroom
+	 * @param id - Id of the chatroom to delete
+	 */
+	deleteChatRoom(id: RoomId): Promise<void>;
+
+	/**
+	 * Sets a new access id for the room
+	 * @param id - Id of the chatroom
+	 * @return - New access id
+	 */
+	setChatRoomAccess(id: RoomId): Promise<string | null>;
+
+	//#endregion
 
 	/**
 	 * Gets direct messages for the account

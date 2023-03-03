@@ -6,6 +6,7 @@ import { ConnectionManagerClient } from './networking/manager_client';
 import { ShardManager } from './shard/shardManager';
 import wtfnode from 'wtfnode';
 import { DiscordBot } from './services/discord/discordBot';
+import { RoomManager } from './room/roomManager';
 
 const logger = GetLogger('Lifecycle');
 
@@ -30,6 +31,8 @@ async function StopGracefully(): Promise<void> {
 	await ShardManager.onDestroy();
 	// Unload all accounts
 	accountManager.onDestroy();
+	// Unload all rooms
+	RoomManager.onDestroy();
 	// Disconnect database
 	await CloseDatabase();
 }

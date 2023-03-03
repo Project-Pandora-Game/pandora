@@ -36,6 +36,8 @@ export type IDirectoryAccountInfo = {
 	created: number;
 	github?: { id: number; login: string; };
 	roles?: IAccountRoleInfo;
+	/** Limit of how many rooms this account can own */
+	roomOwnershipLimit: number;
 	settings: IDirectoryAccountSettings;
 	cryptoKey?: IAccountCryptoKey;
 };

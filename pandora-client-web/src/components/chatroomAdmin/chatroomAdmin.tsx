@@ -4,13 +4,15 @@ import {
 	EMPTY,
 	GetLogger,
 	IChatRoomDirectoryConfig,
-	IDirectoryAccountInfo,
 	IDirectoryShardInfo,
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
 	IChatroomBackgroundData,
 	DEFAULT_BACKGROUND,
 	IsObject,
+	AccountId,
+	AssertNotNullable,
+	RoomId,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -31,19 +33,20 @@ import { Row } from '../common/container/container';
 import bodyChange from '../../icons/body-change.svg';
 import devMode from '../../icons/developer.svg';
 import pronounChange from '../../icons/male-female.svg';
+import { FieldsetToggle } from '../common/fieldsetToggle';
 import './chatroomAdmin.scss';
 import classNames from 'classnames';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
-function DefaultRoomData(currentAccount: IDirectoryAccountInfo | null): IChatRoomDirectoryConfig {
+function DefaultRoomData(): IChatRoomDirectoryConfig {
 	return {
 		name: '',
 		description: '',
 		maxUsers: 10,
-		admin: currentAccount ? [currentAccount.id] : [],
+		admin: [],
 		banned: [],
-		protected: false,
+		public: false,
 		password: null,
 		features: [],
 		background: cloneDeep(DEFAULT_BACKGROUND) as IChatroomBackgroundData,
@@ -79,6 +82,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 
 	const navigate = useNavigate();
 	const currentAccount = useCurrentAccount();
+	AssertNotNullable(currentAccount);
 	const createRoom = useCreateRoom();
 	const roomData = useChatRoomData();
 	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<IChatRoomDirectoryConfig>, action: Partial<IChatRoomDirectoryConfig>) => {
@@ -96,21 +100,22 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				delete result.development;
 			}
 		}
-		if (result.protected === false) {
-			result.password = null;
-		}
 		return result;
 	}, {});
 	const directoryConnector = useDirectoryConnector();
 	const shards = useShards();
+	const accountId = currentAccount.id;
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
+	const isPlayerOwner = !!(creation || accountId && roomData?.owners.includes(accountId));
 	const isPlayerAdmin = creation || IsChatroomAdmin(roomData, currentAccount);
 
 	const currentConfig: IChatRoomDirectoryConfig = {
-		...(roomData ?? DefaultRoomData(currentAccount)),
+		...(roomData ?? DefaultRoomData()),
 		...roomModifiedData,
 	};
+
+	const owners: readonly AccountId[] = creation ? [accountId] : (roomData?.owners ?? []);
 
 	const currentConfigBackground = currentConfig.background;
 
@@ -151,37 +156,44 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				{ !IsChatroomName(currentConfig.name) && <div className='error'>Invalid room name</div> }
 			</div>
 			<div className='input-container'>
-				<label>Room description</label>
-				<textarea value={ currentConfig.description } readOnly={ !isPlayerAdmin }
-					onChange={ (event) => setRoomModifiedData({ description: event.target.value }) } />
-			</div>
-			<div className='input-container'>
 				<label>Room size</label>
 				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !isPlayerAdmin }
 					onChange={ (event) => setRoomModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
 			</div>
-			<div className='input-container'>
-				<label>Admins</label>
-				<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setRoomModifiedData({ admin }) } readOnly={ !isPlayerAdmin } />
-			</div>
-			<div className='input-container'>
-				<label>Ban list</label>
-				<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !isPlayerAdmin } />
-			</div>
-			<div className='input-container'>
-				<label>Protected</label>
-				<Button onClick={ () => setRoomModifiedData({ protected: !currentConfig.protected }) } disabled={ !isPlayerAdmin }>{ currentConfig.protected ? 'Yes' : 'No' }</Button>
-			</div>
-			{
-				currentConfig.protected &&
+			<FieldsetToggle legend='Presentation and access'>
 				<div className='input-container'>
-					<label>Password (optional)</label>
-					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !isPlayerAdmin }
-						onChange={ (event) => setRoomModifiedData({ protected: true, password: event.target.value || null }) } />
+					<label>Room description</label>
+					<textarea value={ currentConfig.description } readOnly={ !isPlayerAdmin }
+						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) } />
 				</div>
-			}
-			<div className='input-container'>
-				<label>Background</label>
+				<div className='input-container'>
+					<label>Public</label>
+					<Button onClick={ () => setRoomModifiedData({ public: !currentConfig.public }) } disabled={ !isPlayerAdmin }>{ currentConfig.public ? 'Yes' : 'No' }</Button>
+				</div>
+				<div className='input-container'>
+					<label>Entry password (optional)</label>
+					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !isPlayerAdmin }
+						onChange={ (event) => setRoomModifiedData({ password: event.target.value || null }) } />
+				</div>
+			</FieldsetToggle>
+			<FieldsetToggle legend='Permissions'>
+				<div className='input-container'>
+					<label>Owners</label>
+					<Row padding='none'>
+						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
+						{ !creation && roomData && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomData.id } name={ roomData.name } /> : null }
+					</Row>
+				</div>
+				<div className='input-container'>
+					<label>Admins</label>
+					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setRoomModifiedData({ admin }) } readOnly={ !isPlayerAdmin } />
+				</div>
+				<div className='input-container'>
+					<label>Ban list</label>
+					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !isPlayerAdmin } />
+				</div>
+			</FieldsetToggle>
+			<FieldsetToggle legend='Background'>
 				<Button
 					onClick={ () => setShowBackgrounds(true) }
 					disabled={ !isPlayerAdmin }
@@ -193,88 +205,88 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					current={ currentConfigBackground }
 					select={ (background) => setRoomModifiedData({ background }) }
 				/> }
-			</div>
-			{
-				typeof currentConfigBackground === 'string' ? null : (
-					<>
-						<div className='input-container'>
-							<label>Background image</label>
-							<div className='row-first'>
-								<input type='text'
-									value={ currentConfigBackground.image }
-									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
-								/>
-								<input type='color'
-									value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
-									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
-								/>
+				{
+					typeof currentConfigBackground === 'string' ? null : (
+						<>
+							<div className='input-container'>
+								<label>Background image</label>
+								<div className='row-first'>
+									<input type='text'
+										value={ currentConfigBackground.image }
+										readOnly={ !isPlayerAdmin }
+										onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
+									/>
+									<input type='color'
+										value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
+										readOnly={ !isPlayerAdmin }
+										onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
+									/>
+								</div>
 							</div>
-						</div>
-						<div className='input-container'>
-							<label>Room Size: width, height</label>
-							<div className='row-half'>
+							<div className='input-container'>
+								<label>Room Size: width, height</label>
+								<div className='row-half'>
+									<input type='number'
+										autoComplete='none'
+										value={ currentConfigBackground.size[0] }
+										readOnly={ !isPlayerAdmin }
+										onChange={ (event) => setRoomModifiedData({
+											background: {
+												...currentConfigBackground,
+												size: [Number.parseInt(event.target.value, 10), currentConfigBackground.size[1]],
+											},
+										}) }
+									/>
+									<input type='number'
+										autoComplete='none'
+										value={ currentConfigBackground.size[1] }
+										readOnly={ !isPlayerAdmin }
+										onChange={ (event) => setRoomModifiedData({
+											background: {
+												...currentConfigBackground,
+												size: [currentConfigBackground.size[0], Number.parseInt(event.target.value, 10)],
+											},
+										}) }
+									/>
+								</div>
+							</div>
+							<div className='input-container'>
+								<label>Y limit</label>
 								<input type='number'
 									autoComplete='none'
-									value={ currentConfigBackground.size[0] }
+									min={ -1 }
+									value={ currentConfigBackground.maxY ?? -1 }
 									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({
-										background: {
-											...currentConfigBackground,
-											size: [Number.parseInt(event.target.value, 10), currentConfigBackground.size[1]],
-										},
-									}) }
-								/>
-								<input type='number'
-									autoComplete='none'
-									value={ currentConfigBackground.size[1] }
-									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({
-										background: {
-											...currentConfigBackground,
-											size: [currentConfigBackground.size[0], Number.parseInt(event.target.value, 10)],
-										},
-									}) }
+									onChange={ (event) => {
+										const value = Number.parseInt(event.target.value, 10);
+										setRoomModifiedData({
+											background: {
+												...currentConfigBackground,
+												maxY: isNaN(value) || value < 0 ? undefined : value,
+											},
+										});
+									} }
 								/>
 							</div>
-						</div>
-						<div className='input-container'>
-							<label>Y limit</label>
-							<input type='number'
-								autoComplete='none'
-								min={ -1 }
-								value={ currentConfigBackground.maxY ?? -1 }
-								readOnly={ !isPlayerAdmin }
-								onChange={ (event) => {
-									const value = Number.parseInt(event.target.value, 10);
-									setRoomModifiedData({
-										background: {
-											...currentConfigBackground,
-											maxY: isNaN(value) || value < 0 ? undefined : value,
-										},
-									});
-								} }
-							/>
-						</div>
-						<div className='input-container'>
-							<label>Y Scaling</label>
-							<div className='row-first'>
-								<input type='range'
-									value={ currentConfigBackground.scaling }
-									readOnly={ !isPlayerAdmin }
-									{ ...scalingProps }
-								/>
-								<input type='number'
-									value={ currentConfigBackground.scaling }
-									readOnly={ !isPlayerAdmin }
-									{ ...scalingProps }
-								/>
+							<div className='input-container'>
+								<label>Y Scaling</label>
+								<div className='row-first'>
+									<input type='range'
+										value={ currentConfigBackground.scaling }
+										readOnly={ !isPlayerAdmin }
+										{ ...scalingProps }
+									/>
+									<input type='number'
+										value={ currentConfigBackground.scaling }
+										readOnly={ !isPlayerAdmin }
+										{ ...scalingProps }
+									/>
+								</div>
 							</div>
-						</div>
-					</>
-				)
-			}
+						</>
+					)
+				}
+			</FieldsetToggle>
 		</>
 	);
 
@@ -374,13 +386,78 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					}
 				</ul>
 			</div>
-			{ isPlayerAdmin && <Button onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button> }
-			{ !isPlayerAdmin && <Button onClick={ () => navigate('/chatroom') }>Back</Button> }
+			{ isPlayerAdmin && <Button className='fill-x' onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button> }
+			{ !isPlayerAdmin && <Button className='fill-x' onClick={ () => navigate('/chatroom') }>Back</Button> }
 		</div>
 	);
 }
 
-function NumberListArea({ values, setValues, readOnly }: { values: number[]; setValues: (_: number[]) => void; readOnly: boolean; }): ReactElement {
+export function ChatroomOwnershipRemoval({ buttonClassName, ...data }: { id: RoomId; name: string; buttonClassName?: string; }): ReactElement | null {
+	const [state, setState] = useState<boolean>(false);
+	return (
+		<>
+			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up room ownership</Button>
+			{
+				state ? (
+					<ChatroomOwnershipRemovalDialog { ...data } closeDialog={ () => setState(false) } />
+				) : (
+					null
+				)
+			}
+		</>
+	);
+}
+
+function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: RoomId; name: string; closeDialog: () => void; }): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+
+	const removeOwnership = useCallback(() => {
+		(async () => {
+			RoomAdminProgress.show('progress', 'Removing ownership...');
+			const result = await directoryConnector.awaitResponse('chatRoomOwnershipRemove', { id });
+			if (result.result === 'ok') {
+				RoomAdminProgress.show('success', 'Room ownership removed!');
+				closeDialog();
+			} else {
+				RoomAdminProgress.show('error', `Failed to remove room ownership:\n${result.result}`);
+			}
+		})()
+			.catch((err) => {
+				GetLogger('UpdateRoom').warning('Error during room ownership removal', err);
+				RoomAdminProgress.show('error', `Error during room ownership removal:\n${err instanceof Error ? err.message : String(err)}`);
+			});
+	}, [id, closeDialog, directoryConnector]);
+
+	return (
+		<ModalDialog priority={ 10 }>
+			<p>
+				<b>
+					Are you sure that you no longer want ownership of this room?
+				</b>
+			</p>
+			<p>
+				Room name: { name }<br />
+				Room id: { id }
+			</p>
+			<p>
+				Removing yourself as an owner will turn you into an admin instead and free up a room slot in your account's room count limit.<br />
+				Note that a room without any owner gets instantly deleted, kicking everyone currently inside the room in the process.<br />
+				You cannot affect other owners - only an owner can give up their own ownership of a room.
+			</p>
+			<Row alignX='space-between'>
+				<Button onClick={ closeDialog }>Cancel</Button>
+				<Button onClick={ removeOwnership }>Remove your ownership!</Button>
+			</Row>
+		</ModalDialog>
+	);
+}
+
+function NumberListArea({ values, setValues, readOnly, ...props }: {
+	values: readonly number[];
+	setValues: (newValue: number[]) => void;
+	readOnly: boolean;
+	className?: string;
+}): ReactElement {
 	const [text, setText] = useState(values.join(', '));
 
 	const onChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -417,7 +494,7 @@ function NumberListArea({ values, setValues, readOnly }: { values: number[]; set
 	}, [setValues]);
 
 	return (
-		<textarea value={ text } onChange={ onChange } readOnly={ readOnly } />
+		<textarea value={ text } onChange={ onChange } readOnly={ readOnly } { ...props } />
 	);
 }
 

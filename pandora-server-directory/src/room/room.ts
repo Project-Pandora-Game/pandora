@@ -1,78 +1,95 @@
-import { nanoid } from 'nanoid';
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomDirectoryInfo, IChatRoomFullInfo, RoomId, CharacterId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomDirectoryExtendedInfo, IClientDirectoryArgument } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomListInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomListExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert, AccountId } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
-import { Shard } from './shard';
-import { ShardManager } from './shardManager';
+import { Shard } from '../shard/shard';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { pick, uniq } from 'lodash';
+import { ShardManager } from '../shard/shardManager';
+import { GetDatabase } from '../database/databaseProvider';
+import { RoomManager } from '../room/roomManager';
+import { Account } from '../account/account';
 
 export class Room {
-	public readonly id: RoomId;
-	public readonly shard: Shard;
+	/** Time when this room was last requested */
+	public lastActivity: number = Date.now();
 
-	private config: IChatRoomDirectoryConfig;
+	public readonly id: RoomId;
+	private readonly config: IChatRoomDirectoryConfig;
+	private readonly _owners: Set<AccountId>;
+
+	public assignedShard: Shard | null = null;
+	public accessId: string = '';
 
 	public get name(): string {
 		return this.config.name;
 	}
 
-	private logger: Logger;
+	public get owners(): ReadonlySet<AccountId> {
+		return this._owners;
+	}
 
-	constructor(config: IChatRoomDirectoryConfig, shard: Shard, id?: RoomId) {
-		this.id = id ?? `r${nanoid()}` as const;
-		this.logger = GetLogger('Room', `[Room ${this.id}]`);
+	private readonly logger: Logger;
+
+	constructor(id: RoomId, config: IChatRoomDirectoryConfig, owners: AccountId[]) {
+		this.id = id;
 		this.config = config;
+		this._owners = new Set(owners);
+		this.logger = GetLogger('Room', `[Room ${this.id}]`);
 
 		// Make sure things that should are unique
 		this.config.features = uniq(this.config.features);
 		this.config.admin = uniq(this.config.admin);
 		this.config.banned = uniq(this.config.banned);
 
-		this.shard = shard;
-		shard.rooms.add(this);
 		this.logger.verbose('Created');
-		shard.update('rooms');
+	}
+
+	/** Update last activity timestamp to reflect last usage */
+	public touch(): void {
+		this.lastActivity = Date.now();
+	}
+
+	public isInUse(): this is { assignedShard: Shard; } {
+		return this.assignedShard != null;
 	}
 
 	/** Map of character ids to account id */
-	private readonly characters: Set<Character> = new Set();
+	private readonly _characters: Set<Character> = new Set();
 
-	public get characterCount(): number {
-		return this.characters.size;
+	public get characters(): ReadonlySet<Character> {
+		return this._characters;
 	}
 
-	public getJoinedCharacter(id: CharacterId): Character | null {
-		for (const character of this.characters) {
-			if (character.id === id)
-				return character;
-		}
-		return null;
+	public get characterCount(): number {
+		return this._characters.size;
 	}
 
 	public getBaseInfo(): IChatRoomBaseInfo {
 		return ({
 			name: this.config.name,
 			description: this.config.description,
-			protected: this.config.protected,
+			public: this.config.public,
 			maxUsers: this.config.maxUsers,
 		});
 	}
 
-	public getDirectoryInfo(): IChatRoomDirectoryInfo {
+	public getRoomListInfo(queryingAccount: Account): IChatRoomListInfo {
 		return ({
 			...this.getBaseInfo(),
 			id: this.id,
 			hasPassword: this.config.password !== null,
 			users: this.characterCount,
+			isOwner: this.isOwner(queryingAccount),
 		});
 	}
 
-	public getDirectoryExtendedInfo(): IChatRoomDirectoryExtendedInfo {
+	public getRoomListExtendedInfo(queryingAccount: Account): IChatRoomListExtendedInfo {
 		return ({
-			...this.getDirectoryInfo(),
+			...this.getRoomListInfo(queryingAccount),
 			...pick(this.config, ['features', 'admin', 'background']),
-			characters: Array.from(this.characters).map((c) => ({
+			owners: Array.from(this._owners),
+			isAdmin: this.isAdmin(queryingAccount),
+			characters: Array.from(this._characters).map((c) => ({
 				id: c.id,
 				accountId: c.account.id,
 				name: c.data.name,
@@ -80,18 +97,42 @@ export class Room {
 		});
 	}
 
+	public getConfig(): IChatRoomDirectoryConfig {
+		return this.config;
+	}
+
 	public getFullInfo(): IChatRoomFullInfo {
 		return ({
 			...this.config,
 			id: this.id,
+			owners: Array.from(this._owners),
 		});
 	}
 
-	public update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): 'ok' | 'nameTaken' {
+	public async removeOwner(accountId: AccountId): Promise<'ok'> {
+		// Owners get demoted to admins
+		this._owners.delete(accountId);
+		if (!this.config.admin.includes(accountId)) {
+			this.config.admin.push(accountId);
+		}
+
+		if (this._owners.size === 0) {
+			// Room without owners gets destroyed
+			await RoomManager.destroyRoom(this);
+		} else {
+			// Room with remaining owners only propagates the change to shard and clients
+			this.assignedShard?.update('rooms');
+			// TODO: Make an announcement of the change
+
+			await GetDatabase().updateChatRoom({ id: this.id, owners: Array.from(this._owners) }, null);
+
+			ConnectionManagerClient.onRoomListChange();
+		}
+		return 'ok';
+	}
+
+	public async update(changes: Partial<IChatRoomDirectoryConfig>, source: Character | null): Promise<'ok'> {
 		if (changes.name) {
-			const otherRoom = ShardManager.getRoomByName(changes.name);
-			if (otherRoom && otherRoom !== this)
-				return 'nameTaken';
 			this.config.name = changes.name;
 		}
 		if (changes.description !== undefined) {
@@ -107,16 +148,11 @@ export class Room {
 			this.config.banned = uniq(changes.banned);
 			this.removeBannedCharacters(source);
 		}
-		if (changes.protected !== undefined) {
-			if (changes.protected) {
-				this.config.protected = true;
-				if (changes.password !== undefined) {
-					this.config.password = changes.password;
-				}
-			} else {
-				this.config.protected = false;
-				this.config.password = null;
-			}
+		if (changes.public !== undefined) {
+			this.config.public = changes.public;
+		}
+		if (changes.password !== undefined) {
+			this.config.password = changes.password;
 		}
 		if (changes.background) {
 			this.config.background = changes.background;
@@ -131,8 +167,10 @@ export class Room {
 				changeList.push(`name to '${changes.name}'`);
 			if (changes.maxUsers !== undefined)
 				changeList.push(`room size to '${changes.maxUsers}'`);
-			if (changes.protected !== undefined)
-				changeList.push(`access to '${this.config.protected ? (this.config.password ? 'protected with password' : 'protected') : 'public'}'`);
+			if (changes.public !== undefined)
+				changeList.push(`visibility to '${this.config.public ? 'public' : 'private'}'`);
+			if (changes.password !== undefined)
+				changeList.push('password');
 			if (changes.description !== undefined)
 				changeList.push('description');
 			if (changes.admin)
@@ -145,7 +183,10 @@ export class Room {
 			this.sendUpdatedMessage(source, ...changeList);
 		}
 
-		this.shard.update('rooms');
+		this.assignedShard?.update('rooms');
+
+		await GetDatabase().updateChatRoom({ id: this.id, config: this.config }, null);
+
 		ConnectionManagerClient.onRoomListChange();
 		return 'ok';
 	}
@@ -231,72 +272,98 @@ export class Room {
 				AssertNever(action);
 		}
 		if (updated) {
-			this.shard.update('rooms');
+			this.assignedShard?.update('rooms');
 			ConnectionManagerClient.onRoomListChange();
 		}
 	}
 
-	public migrateTo(room: Room): Promise<void> {
-		this.logger.info('Migrating to room', room.id);
-		const promises: Promise<unknown>[] = [];
-		for (const character of Array.from(this.characters.values())) {
-			this.removeCharacter(character, 'destroy', null);
-			promises.push(
-				character
-					.connectToShard({ room, sendEnterMessage: false })
-					.then(() => {
-						character.assignedConnection?.sendConnectionStateUpdate();
-					}, (err) => {
-						this.logger.fatal('Error reconnecting character to different room', err);
-					}),
-			);
-		}
-		return Promise.all(promises).then(() => undefined);
-	}
-
 	public onDestroy(): void {
-		for (const character of Array.from(this.characters.values())) {
+		for (const character of Array.from(this._characters.values())) {
 			this.removeCharacter(character, 'destroy', null);
 		}
-		this.shard.rooms.delete(this);
+		this.disconnect();
+		Assert(this.assignedShard == null);
+		Assert(this._characters.size === 0);
 		this.logger.verbose('Destroyed');
-		this.shard.update('rooms');
 	}
 
-	public checkAllowEnter(character: Character, password?: string): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
+	public checkAllowEnter(character: Character, password: string | null, ignoreCharacterLimit: boolean = false): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
+		// If you are already in room, then you have rights to enter it
 		if (character.room === this)
 			return 'ok';
 
+		// If the room is full, you cannot enter the room (some checks ignore room being full)
+		if (this.characterCount >= this.config.maxUsers && !ignoreCharacterLimit)
+			return 'errFull';
+
+		// If you are an owner or admin, you can enter the room (owner implies admin)
+		if (this.isAdmin(character.account))
+			return 'ok';
+
+		// If you are banned, you cannot enter the room
 		if (this.config.banned.includes(character.account.id))
 			return 'noAccess';
 
-		if (this.config.protected &&
-			!this.config.admin.includes(character.account.id) &&
-			(this.config.password === null || password !== this.config.password)
-		) {
-			return this.config.password !== null ? 'invalidPassword' : 'noAccess';
-		}
+		// If the room is password protected and you have given valid password, you can enter the room
+		if (this.config.password !== null && password && password === this.config.password)
+			return 'ok';
 
-		if (this.characterCount >= this.config.maxUsers)
-			return 'errFull';
+		// If the room is public, you can enter the room (unless it is password protected)
+		if (this.config.public && this.config.password === null)
+			return 'ok';
 
-		return 'ok';
+		// Otherwise you cannot enter the room
+		return (this.config.password !== null && password) ? 'invalidPassword' : 'noAccess';
 	}
 
-	public isAdmin(character: Character): boolean {
-		if (this.config.admin.includes(character.account.id))
+	/** Returns if this room is visible to the specific account when searching in room search */
+	public checkVisibleTo(account: Account): boolean {
+		return (
+			this.isAdmin(account) ||
+			(this.config.public && this.hasAdminInside())
+		);
+	}
+
+	public isOwner(account: Account): boolean {
+		return this._owners.has(account.id);
+	}
+
+	public isAdmin(account: Account): boolean {
+		if (this.isOwner(account))
 			return true;
 
-		if (this.config.development?.autoAdmin && character.account.roles.isAuthorized('developer'))
+		if (this.config.admin.includes(account.id))
 			return true;
 
+		if (this.config.development?.autoAdmin && account.roles.isAuthorized('developer'))
+			return true;
+
+		return false;
+	}
+
+	public isBanned(account: Account): boolean {
+		if (this.isAdmin(account))
+			return false;
+
+		if (this.config.banned.includes(account.id))
+			return true;
+
+		return false;
+	}
+
+	public hasAdminInside(): boolean {
+		for (const c of this.characters) {
+			if (this.isAdmin(c.account)) {
+				return true;
+			}
+		}
 		return false;
 	}
 
 	public addCharacter(character: Character, sendEnterMessage: boolean = true): void {
 		if (character.room === this)
 			return;
-		if (this.config.banned.includes(character.account.id)) {
+		if (this.isBanned(character.account)) {
 			this.logger.warning(`Refusing to add banned character id ${character.id}`);
 			return;
 		}
@@ -304,7 +371,7 @@ export class Room {
 			throw new Error('Attempt to add character that is in different room');
 		}
 		this.logger.debug(`Character ${character.id} entered`);
-		this.characters.add(character);
+		this._characters.add(character);
 		character.room = this;
 
 		// Report the enter
@@ -318,7 +385,7 @@ export class Room {
 			});
 		}
 
-		this.shard.update('characters');
+		this.assignedShard?.update('characters');
 		ConnectionManagerClient.onRoomListChange();
 	}
 
@@ -326,7 +393,7 @@ export class Room {
 		if (character.room !== this)
 			return;
 		this.logger.debug(`Character ${character.id} removed (${reason})`);
-		this.characters.delete(character);
+		this._characters.delete(character);
 		character.room = null;
 
 		// Report the leave
@@ -361,22 +428,77 @@ export class Room {
 			this.removeBannedCharacters(source);
 		}
 
+		this.assignedShard?.update('characters');
 		this.cleanupIfEmpty();
-		this.shard.update('characters');
 		ConnectionManagerClient.onRoomListChange();
 	}
 
 	private removeBannedCharacters(source: Character | null): void {
-		for (const character of this.characters.values()) {
-			if (this.config.banned.includes(character.account.id)) {
+		for (const character of this._characters.values()) {
+			if (this.isBanned(character.account)) {
 				this.removeCharacter(character, 'ban', source);
 			}
 		}
 	}
 
+	public disconnect(): void {
+		this.assignedShard?.disconnectRoom(this);
+	}
+
+	public async generateAccessId(): Promise<string | null> {
+		const result = await GetDatabase().setChatRoomAccess(this.id);
+		if (result != null) {
+			this.accessId = result;
+		}
+		return result;
+	}
+
+	public async connect(): Promise<'noShardFound' | 'failed' | Shard> {
+		let shard: Shard | null = this.assignedShard;
+		if (!shard) {
+			if (this.config.features.includes('development') && this.config.development?.shardId) {
+				shard = ShardManager.getShard(this.config.development.shardId);
+			} else {
+				shard = ShardManager.getRandomShard();
+			}
+		}
+		// If there is still no shard found, then we disconnect
+		if (!shard) {
+			this.disconnect();
+			return 'noShardFound';
+		}
+		return await this._connectToShard(shard);
+	}
+
+	protected async _connectToShard(shard: Shard): Promise<'failed' | Shard> {
+		this.touch();
+
+		// If we are on a wrong shard, we leave it
+		if (this.assignedShard !== shard) {
+			this.assignedShard?.disconnectRoom(this);
+
+			// Generate new access id for new shard
+			const accessId = await this.generateAccessId();
+			if (accessId == null)
+				return 'failed';
+		}
+
+		// Check that we can actually join the shard (prevent race condition on shard shutdown)
+		if (!shard.allowConnect()) {
+			return 'failed';
+		}
+
+		if (this.assignedShard !== shard) {
+			shard.connectRoom(this);
+		}
+
+		AssertNotNullable(this.assignedShard);
+		return this.assignedShard;
+	}
+
 	public cleanupIfEmpty() {
-		if (this.characters.size === 0) {
-			ShardManager.destroyRoom(this);
+		if (this._characters.size === 0) {
+			this.disconnect();
 		}
 	}
 
@@ -400,6 +522,6 @@ export class Room {
 			}),
 		);
 		this.pendingMessages.push(...processedMessages);
-		this.shard.update('messages');
+		this.assignedShard?.update('messages');
 	}
 }

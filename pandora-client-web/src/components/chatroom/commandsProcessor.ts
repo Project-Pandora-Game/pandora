@@ -1,4 +1,5 @@
 import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
+import { DirectoryConnector } from '../../networking/directoryConnector';
 import type { ShardConnector } from '../../networking/shardConnector';
 import type { ChatRoom, IChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import type { IChatInputHandler } from './chatInput';
@@ -8,6 +9,7 @@ export const COMMAND_KEY = '/';
 
 export interface ICommandExecutionContextClient extends ICommandExecutionContext {
 	shardConnector: ShardConnector;
+	directoryConnector: DirectoryConnector;
 	chatRoom: ChatRoom;
 	messageSender: IChatRoomMessageSender;
 	inputHandlerContext: IChatInputHandler;
@@ -73,6 +75,12 @@ export function RunCommand(originalInput: string, ctx: Omit<ICommandExecutionCon
 export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): CommandAutocompleteResult {
 	const { commandName, spacing, command, args } = GetCommand(msg);
 
+	const context: ICommandExecutionContextClient = {
+		...ctx,
+		executionType: 'autocomplete',
+		commandName,
+	};
+
 	// If there is no space after commandName, we are autocompleting the command itself
 	if (!spacing) {
 		const options = COMMANDS
@@ -87,12 +95,6 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 			options,
 		} : null;
 	}
-
-	const context: ICommandExecutionContextClient = {
-		...ctx,
-		executionType: 'autocomplete',
-		commandName,
-	};
 
 	if (command) {
 		const autocompleteResult = command.handler.autocomplete(context, {}, args);

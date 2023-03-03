@@ -273,7 +273,7 @@ export class Shard {
 		}
 
 		if (character.room?.shard === this) {
-			character.room.removeCharacter(character, 'disconnect');
+			character.room.removeCharacter(character, 'disconnect', null);
 		}
 
 		this.characters.delete(id);

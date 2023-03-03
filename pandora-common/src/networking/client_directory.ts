@@ -212,6 +212,13 @@ export const ClientDirectorySchema = {
 		request: ChatRoomDirectoryUpdateSchema,
 		response: ZodCast<{ result: 'ok' | 'nameTaken' | 'notInRoom' | 'noAccess'; }>(),
 	},
+	chatRoomAdminAction: {
+		request: z.object({
+			action: z.enum(['kick', 'ban', 'unban', 'promote', 'demote']),
+			targets: z.array(z.number()),
+		}),
+		response: null,
+	},
 	//#endregion
 
 	getDirectMessages: {

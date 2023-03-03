@@ -158,4 +158,5 @@ export class CommandRunnerArgParser<
 	public predictHeader(): string {
 		return `<${this.name}> ${this.next.predictHeader()}`;
 	}
+
 }

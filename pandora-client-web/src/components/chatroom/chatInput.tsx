@@ -161,6 +161,9 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			editing,
 			setEditing: (edit: number | null): boolean => {
 				if (edit === null) {
+					if (editing === null)
+						return setEditing(null);
+
 					newSetTarget(editing?.restore.target ?? null);
 					setMode(editing?.restore.type ? { type: editing.restore.type, raw: editing.restore.raw ?? false } : null);
 					return setEditing(null);

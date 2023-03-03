@@ -36,6 +36,7 @@ export type IChatInputHandler = {
 	setMode: (mode: ChatMode | null) => void;
 	showSelector: boolean;
 	setShowSelector: (show: boolean) => void;
+	allowCommands: boolean;
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
@@ -52,6 +53,7 @@ const chatInputContext = createContext<IChatInputHandler>({
 	setMode: noop,
 	showSelector: false,
 	setShowSelector: noop,
+	allowCommands: true,
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
@@ -173,6 +175,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			setMode,
 			showSelector,
 			setShowSelector,
+			allowCommands: editing == null && !mode?.raw,
 			ref,
 		};
 	}, [target, editing, setEditing, autocompleteHint, showSelector, setShowSelector, setAutocompleteHint, playerId, characters, mode]);
@@ -205,7 +208,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
 	const chatInput = useChatInput();
-	const { target, editing, setEditing, setValue, setAutocompleteHint, mode } = chatInput;
+	const { target, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = chatInput;
 
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
@@ -224,7 +227,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 		if (
 			input.startsWith(COMMAND_KEY) &&
 			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-			editing == null
+			allowCommands
 		) {
 			input = input.slice(1, textarea.selectionStart || textarea.value.length);
 
@@ -257,7 +260,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 				if (
 					input.startsWith(COMMAND_KEY) &&
 					!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-					editing == null
+					allowCommands
 				) {
 					// Process command
 					if (RunCommand(input.slice(1), {
@@ -274,7 +277,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 					}
 				} else {
 					// Double command key escapes itself
-					if (input.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+					if (input.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
 						input = input.slice(1);
 					}
 					input = input.trim();
@@ -299,7 +302,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 				return;
 			}
 		}
-		if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+		if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
@@ -360,7 +363,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 		InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
 		let nextStatus: null | { status: IChatRoomStatus; target?: CharacterId; } = null;
 		const trimmed = value.trim();
-		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY))) {
+		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
 			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
@@ -516,12 +519,12 @@ function AutoCompleteHint(): ReactElement | null {
 	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
 	const chatInput = useChatInput();
-	const { setAutocompleteHint } = chatInput;
+	const { setAutocompleteHint, allowCommands } = chatInput;
 
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
-	if (!autocompleteHint?.result)
+	if (!autocompleteHint?.result || !allowCommands)
 		return null;
 
 	// When only one command can/should be displayed, onlyShowOption is set to that command's index in the option array

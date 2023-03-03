@@ -499,7 +499,7 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					</Button>
 				</span>
 			) }
-			{ mode && !(mode.type === 'chat' && !mode.raw) && (
+			{ mode && (
 				<span>
 					{ 'Sending ' }
 					{ GetChatModeDescription(mode, true) }

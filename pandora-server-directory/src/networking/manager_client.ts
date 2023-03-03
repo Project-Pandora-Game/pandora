@@ -460,7 +460,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return;
 		}
 
-		if (!connection.character.room.isAdmin(connection.character)) {
+		if (!connection.character.room.isAdmin(connection.account)) {
 			return;
 		}
 

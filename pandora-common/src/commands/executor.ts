@@ -13,7 +13,6 @@ export type CommandAutocompleteOption = {
 	replaceValue: string;
 	displayValue: string;
 	longDescription?: string;
-	preCheckResult: boolean;
 };
 export type CommandAutocompleteResult = {
 	header: string;
@@ -34,7 +33,6 @@ export interface CommandRunner<
 
 	autocomplete(context: Context, args: EntryArguments, rest: string): CommandAutocompleteResult;
 	predictHeader(): string;
-	preCheck(context: Context): boolean;
 }
 
 export interface CommandExecutorOptions {
@@ -48,12 +46,10 @@ export class CommandRunnerExecutor<
 
 	private readonly options: CommandExecutorOptions;
 	private readonly handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void;
-	private readonly _preCheck?: (context: Context) => boolean;
 
-	constructor(options: CommandExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void, preCheck?: (context: Context) => boolean) {
+	constructor(options: CommandExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void) {
 		this.options = options;
 		this.handler = handler;
-		this._preCheck = preCheck;
 	}
 
 	public run(context: Context, args: EntryArguments, rest: string): boolean {
@@ -69,10 +65,6 @@ export class CommandRunnerExecutor<
 
 	public predictHeader(): string {
 		return this.options.restArgName ? `<${this.options.restArgName}>` : '';
-	}
-
-	public preCheck(context: Context): boolean {
-		return this._preCheck?.(context) ?? true;
 	}
 }
 
@@ -126,7 +118,6 @@ export class CommandRunnerArgParser<
 		const { value, spacing, rest } = this.preprocessor(input);
 
 		const isQuotedPreprocessor = this.processor.preparse === 'quotedArg' || this.processor.preparse === 'quotedArgTrimmed';
-		const preCheckResult = this.preCheck(context);
 
 		// If nothing follows, this is the thing to autocomplete
 		if (!rest && !spacing) {
@@ -139,7 +130,6 @@ export class CommandRunnerArgParser<
 				options: options.map(({ displayValue, replaceValue }) => ({
 					displayValue,
 					replaceValue: shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue,
-					preCheckResult,
 				})),
 			} : null;
 		}
@@ -160,7 +150,6 @@ export class CommandRunnerArgParser<
 			options: nextResult.options.map(({ replaceValue, displayValue }) => ({
 				replaceValue: (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) + ' ' + replaceValue,
 				displayValue,
-				preCheckResult,
 			})),
 		} : null;
 
@@ -170,7 +159,4 @@ export class CommandRunnerArgParser<
 		return `<${this.name}> ${this.next.predictHeader()}`;
 	}
 
-	public preCheck(context: Context): boolean {
-		return this.next.preCheck(context);
-	}
 }

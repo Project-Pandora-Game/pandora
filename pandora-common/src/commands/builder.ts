@@ -1,5 +1,4 @@
 import { IEmpty } from '../networking';
-import { BoolSelect } from '../utility';
 import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, CommandExecutorOptions, ICommandExecutionContext } from './executor';
 
 interface CommandBuilderSource<
@@ -8,22 +7,14 @@ interface CommandBuilderSource<
 	StartArguments extends Record<string, never>,
 > {
 	build(next: CommandRunner<Context, EntryArguments>): CommandRunner<Context, StartArguments>;
-	/** @internal */
-	root(): CommandBuilderRoot<Context, IEmpty>;
 }
 
 class CommandBuilderRoot<
 	Context extends ICommandExecutionContext,
 	Arguments extends Record<string, never>,
 > implements CommandBuilderSource<Context, Arguments, Arguments> {
-	public preCheck: undefined | ((context: Context) => boolean);
-
 	public build(next: CommandRunner<Context, Arguments>): CommandRunner<Context, Arguments> {
 		return next;
-	}
-	/** @internal */
-	public root(): CommandBuilderRoot<Context, IEmpty> {
-		return this;
 	}
 }
 
@@ -48,17 +39,12 @@ class CommandBuilderStep<
 		const processor = new CommandRunnerArgParser<Context, EntryArguments, ArgumentName, ArgumentResultType>(this.name, this.processor, next);
 		return this.parent.build(processor);
 	}
-	/** @internal */
-	public root(): CommandBuilderRoot<Context, IEmpty> {
-		return this.parent.root();
-	}
 }
 
 export class CommandBuilder<
 	Context extends ICommandExecutionContext,
 	EntryArguments extends Record<string, never>,
 	StartArguments extends Record<string, never>,
-	PreChecked extends boolean = false,
 > {
 
 	private readonly parent: CommandBuilderSource<Context, EntryArguments, StartArguments>;
@@ -84,14 +70,6 @@ export class CommandBuilder<
 		);
 	}
 
-	public preCheck(
-		preCheck: BoolSelect<PreChecked, never, (context: Context) => boolean>,
-	): BoolSelect<PreChecked, never, CommandBuilder<Context, EntryArguments, StartArguments, true>> {
-		const preChecked = this as CommandBuilder<Context, EntryArguments, StartArguments, true>;
-		this.parent.root().preCheck = preCheck;
-		return preChecked as BoolSelect<PreChecked, never, CommandBuilder<Context, EntryArguments, StartArguments, true>>;
-	}
-
 	public handler(handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
 	public handler(options: CommandExecutorOptions, handler: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments>;
 	public handler(options: CommandExecutorOptions | ((context: Context, args: EntryArguments, rest: string) => boolean | undefined | void), handler?: (context: Context, args: EntryArguments, rest: string) => boolean | undefined | void): CommandRunner<Context, StartArguments> {
@@ -100,7 +78,7 @@ export class CommandBuilder<
 			options = {};
 		}
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!, this.parent.root().preCheck);
+		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!);
 		return this.parent.build(executor);
 	}
 }

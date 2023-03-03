@@ -90,7 +90,6 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 				.map((c) => ({
 					replaceValue: c.data.id.slice(1),
 					displayValue: `${c.data.id.slice(1)} - ${c.data.name}`,
-					preCheckResult: true,
 				}));
 		}
 		return characters
@@ -99,7 +98,6 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 				// Use ID for autocomplete if there are multiple characters with matching name
 				replaceValue: characters.filter((otherChar) => otherChar.data.name.toLowerCase() === c.data.name.toLowerCase()).length > 1 ? c.data.id.slice(1) : c.data.name,
 				displayValue: `${c.data.name} (${c.data.id})`,
-				preCheckResult: true,
 			}));
 	},
 });

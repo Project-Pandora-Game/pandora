@@ -69,10 +69,6 @@ export function RunCommand(originalInput: string, ctx: Omit<ICommandExecutionCon
 		commandName,
 	};
 
-	if (!command.handler.preCheck(context)) {
-		return false;
-	}
-
 	return command.handler.run(context, {}, args);
 }
 
@@ -93,7 +89,6 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 				replaceValue: c.key[0],
 				displayValue: `/${c.key[0]}${c.usage ? ' ' + c.usage : ''} - ${c.description}`,
 				longDescription: c.longDescription,
-				preCheckResult: c.handler.preCheck(context),
 			}));
 		return options.length > 0 ? {
 			header: 'Commands (arguments in <> are required, arguments in [] are optional)',
@@ -103,14 +98,12 @@ export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionCont
 
 	if (command) {
 		const autocompleteResult = command.handler.autocomplete(context, {}, args);
-		const preCheckResult = command.handler.preCheck(context);
 
 		return autocompleteResult != null ? {
 			header: `/${commandName} ${autocompleteResult.header}`,
 			options: autocompleteResult.options.map(({ replaceValue, displayValue }) => ({
 				replaceValue: commandName + ' ' + replaceValue,
 				displayValue,
-				preCheckResult,
 			})),
 		} : null;
 	}

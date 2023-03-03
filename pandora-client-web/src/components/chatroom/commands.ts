@@ -9,7 +9,7 @@ function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, I
 	return CreateCommand<ICommandExecutionContextClient>();
 }
 
-const CreateMessageTypeParser = (names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string): IClientCommand => {
+function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string): IClientCommand {
 	const description = GetChatModeDescription({ type, raw });
 	return ({
 		key: names.map((name) => (raw ? 'raw' : '') + name) as [string, ...string[]],
@@ -40,9 +40,9 @@ const CreateMessageTypeParser = (names: [string, ...string[]], raw: boolean, typ
 				return true;
 			}),
 	});
-};
+}
 
-const BuildAlternativeCommandsMessage = (keywords: string[]): string => {
+function BuildAlternativeCommandsMessage(keywords: string[]): string {
 	let result = '';
 	if (keywords.length > 1) {
 		result = `Alternative command${keywords.length > 2 ? 's' : ''}: `;
@@ -53,7 +53,7 @@ const BuildAlternativeCommandsMessage = (keywords: string[]): string => {
 		result += `. `;
 	}
 	return result;
-};
+}
 
 export function GetChatModeDescription(mode: ChatMode, plural: boolean = false) {
 	const description = ChatTypeDetails[mode.type]?.description;
@@ -65,31 +65,35 @@ export function GetChatModeDescription(mode: ChatMode, plural: boolean = false) 
 }
 
 /* Creates two commands for sending chat messages of a specific type, one formatted and one raw/unformatted */
-const CreateMessageTypeParsers = (type: IChatType): IClientCommand[] => {
+function CreateMessageTypeParsers(type: IChatType): IClientCommand[] {
 	const details = ChatTypeDetails[type];
 	const longDesc = `${BuildAlternativeCommandsMessage(details.commandKeywords)}${details.longDescription}`;
 	return [
 		CreateMessageTypeParser(details.commandKeywords, false, type, longDesc), //formatted
 		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.longDescription + LONGDESC_RAW), //raw, no alternatives
 	];
-};
+}
 
-const CreateChatroomAdminAction = (action: IClientDirectoryArgument['chatRoomAdminAction']['action'], longDescription: string): IClientCommand => ({
-	key: [action],
-	usage: '<target>',
-	description: `${capitalize(action)} user`,
-	longDescription,
-	handler: CreateClientCommand()
-		.preCheck(({ chatRoom, directoryConnector }) => IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
-		// TODO make this accept multiple targets and accountIds
-		.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
-		.handler(({ directoryConnector }, { target }) => {
-			directoryConnector.sendMessage('chatRoomAdminAction', {
-				action,
-				targets: [target.data.accountId],
-			});
-		}),
-});
+function CreateChatroomAdminAction(action: IClientDirectoryArgument['chatRoomAdminAction']['action'], longDescription: string): IClientCommand {
+	return {
+		key: [action],
+		usage: '<target>',
+		description: `${capitalize(action)} user`,
+		longDescription,
+		handler: CreateClientCommand()
+			// TODO make this accept multiple targets and accountIds
+			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
+			.handler(({ chatRoom, directoryConnector }, { target }) => {
+				if (!IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
+					return;
+
+				directoryConnector.sendMessage('chatRoomAdminAction', {
+					action,
+					targets: [target.data.accountId],
+				});
+			}),
+	};
+}
 
 export const COMMANDS: readonly IClientCommand[] = [
 	...CreateMessageTypeParsers('chat'),

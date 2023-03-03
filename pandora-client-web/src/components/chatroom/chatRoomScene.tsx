@@ -2,12 +2,12 @@ import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, IC
 import * as PIXI from 'pixi.js';
 import { InteractionData, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@saitonakamura/react-pixi';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useChatRoomData, useChatRoomCharacters, useCharacterRestrictionsManager } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomData, useChatRoomCharacters, useCharacterRestrictionsManager, IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useChatInput } from './chatInput';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
@@ -19,6 +19,7 @@ import { useContextMenuPosition } from '../contextMenu/contextMenu';
 import { PixiViewportSetupCallback } from '../../graphics/pixiViewport';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { ChatRoomCharacter } from './chatRoomCharacter';
+import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -182,6 +183,10 @@ export function ChatRoomScene(): ReactElement | null {
 		}
 	});
 
+	const closeContextMenu = useCallback(() => {
+		setMenuActive(null);
+	}, []);
+
 	if (!data)
 		return null;
 
@@ -198,9 +203,57 @@ export function ChatRoomScene(): ReactElement | null {
 			menuOpen={ menuOpen }
 		>
 			{
-				menuActive ? <CharacterContextMenu character={ menuActive } data={ clickData } onClose={ () => setMenuActive(null) } /> : null
+				menuActive ? <CharacterContextMenu character={ menuActive } data={ clickData } onClose={ closeContextMenu } /> : null
 			}
 		</ChatRoomGraphicsScene>
+	);
+}
+
+function AdminActionContextMenu({ character, chatRoom, onClose, onBack }: { character: Character<ICharacterRoomData>; chatRoom: IChatRoomClientData; onClose: () => void; onBack: () => void; }): ReactElement {
+	const isCharacterAdmin = IsChatroomAdmin(chatRoom, { id: character.data.accountId });
+	const connector = useDirectoryConnector();
+
+	const kick = useCallback(() => {
+		connector.sendMessage('chatRoomAdminAction', { action: 'kick', targets: [character.data.accountId] });
+		onClose();
+	}, [character, connector, onClose]);
+
+	const ban = useCallback(() => {
+		connector.sendMessage('chatRoomAdminAction', { action: 'ban', targets: [character.data.accountId] });
+		onClose();
+	}, [character, connector, onClose]);
+
+	const promote = useCallback(() => {
+		connector.sendMessage('chatRoomAdminAction', { action: 'promote', targets: [character.data.accountId] });
+		onClose();
+	}, [character, connector, onClose]);
+
+	const demote = useCallback(() => {
+		connector.sendMessage('chatRoomAdminAction', { action: 'demote', targets: [character.data.accountId] });
+		onClose();
+	}, [character, connector, onClose]);
+
+	return (
+		<>
+			<button onClick={ kick } >
+				Kick
+			</button>
+			<button onClick={ ban } >
+				Ban
+			</button>
+			{ isCharacterAdmin ? (
+				<button onClick={ demote } >
+					Demote
+				</button>
+			) : (
+				<button onClick={ promote } >
+					Promote
+				</button>
+			) }
+			<button onClick={ onBack } >
+				Back
+			</button>
+		</>
 	);
 }
 
@@ -208,6 +261,8 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
+	const currentAccount = useCurrentAccount();
+	const [menu, setMenu] = useState<'main' | 'admin'>('main');
 
 	const event = data?.originalEvent;
 	const position = useMemo(() => {
@@ -232,7 +287,21 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 	const ref = useContextMenuPosition(position);
 
 	const characterData = useCharacterData(character);
-	if (!data) {
+	const chatRoom = useChatRoomData();
+	const isPlayerAdmin =  IsChatroomAdmin(chatRoom, currentAccount);
+
+	useEffect(() => {
+		if (!isPlayerAdmin && menu === 'admin') {
+			setMenu('main');
+		}
+	}, [isPlayerAdmin, menu]);
+
+	const onCloseActual = useCallback(() => {
+		setMenu('main');
+		onClose();
+	}, [onClose]);
+
+	if (!data || !chatRoom) {
 		return null;
 	}
 
@@ -241,22 +310,37 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 			<span>
 				{ characterData.name } ({ characterData.id })
 			</span>
-			<button onClick={ () => {
-				onClose();
-				navigate('/wardrobe', { state: { character: characterData.id } });
-			} }>
-				Wardrobe
-			</button>
-			{ characterData.id !== playerId && (
-				<button onClick={ () => {
-					onClose();
-					setTarget(characterData.id);
-				} }>
-					Whisper
-				</button>
+			{ menu === 'main' && (
+				<>
+					<button onClick={ () => {
+						onCloseActual();
+						navigate('/wardrobe', { state: { character: characterData.id } });
+					} }>
+						Wardrobe
+					</button>
+					{ characterData.id !== playerId && (
+						<button onClick={ () => {
+							onClose();
+							setTarget(characterData.id);
+						} }>
+							Whisper
+						</button>
+					) }
+				</>
+			) }
+			{ (isPlayerAdmin && character.data.accountId !== currentAccount?.id) && (
+				<>
+					{ menu === 'main' ? (
+						<button onClick={ () => setMenu('admin') }>
+							Admin
+						</button>
+					) : (
+						<AdminActionContextMenu character={ character } chatRoom={ chatRoom } onClose={ onCloseActual } onBack={ () => setMenu('main') } />
+					) }
+				</>
 			) }
 			<button onClick={ () => {
-				onClose();
+				onCloseActual();
 			} } >
 				Close
 			</button>

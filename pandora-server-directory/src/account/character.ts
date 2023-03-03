@@ -45,7 +45,7 @@ export class Character {
 
 	public disconnect(): void {
 		this.account.touch();
-		this.room?.removeCharacter(this, 'disconnect');
+		this.room?.removeCharacter(this, 'disconnect', null);
 		this.assignedShard?.disconnectCharacter(this.id);
 	}
 
@@ -129,7 +129,7 @@ export class Character {
 
 		// If we were in a wrong room, we leave it
 		if (this.room && this.room !== room) {
-			this.room.removeCharacter(this, 'leave');
+			this.room.removeCharacter(this, 'leave', this);
 		}
 
 		// If we are on a wrong shard, we leave it

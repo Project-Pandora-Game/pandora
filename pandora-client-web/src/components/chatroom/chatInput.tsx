@@ -15,6 +15,7 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider'
 import classNames from 'classnames';
 import { Row } from '../common/container/container';
 import { GetChatModeDescription } from './commands';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 
 export type IChatInputHandler = {
 	focus: () => void;
@@ -175,6 +176,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 	const chatInput = useChatInput();
 	const { target, editing, setEditing, setValue, setAutocompleteHint, mode } = chatInput;
 
+	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
 
@@ -197,6 +199,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 
 			const autocompleteResult = CommandAutocomplete(input, {
 				shardConnector,
+				directoryConnector,
 				chatRoom,
 				messageSender: sender,
 				inputHandlerContext: chatInput,
@@ -231,6 +234,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 							toast(error, TOAST_OPTIONS_ERROR);
 						},
 						shardConnector,
+						directoryConnector,
 						chatRoom,
 						messageSender: sender,
 						inputHandlerContext: chatInput,
@@ -277,6 +281,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 						toast(error, TOAST_OPTIONS_ERROR);
 					},
 					shardConnector,
+					directoryConnector,
 					chatRoom,
 					messageSender: sender,
 					inputHandlerContext: chatInput,
@@ -459,6 +464,7 @@ function AutoCompleteHint(): ReactElement | null {
 	const chatInput = useChatInput();
 	const { setAutocompleteHint } = chatInput;
 
+	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
 	if (!autocompleteHint?.result)
@@ -505,6 +511,7 @@ function AutoCompleteHint(): ReactElement | null {
 
 											const autocompleteResult = CommandAutocomplete(input, {
 												shardConnector,
+												directoryConnector,
 												chatRoom,
 												messageSender: sender,
 												inputHandlerContext: chatInput,

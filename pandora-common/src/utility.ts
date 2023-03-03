@@ -26,6 +26,8 @@ export type Awaitable<T> = T | PromiseLike<T>;
 
 export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
+export type Nullable<T> = T | null | undefined;
+
 declare const window: unknown;
 declare const document: Record<string, unknown>;
 declare const process: Record<string, Record<string, unknown>>;
@@ -50,7 +52,7 @@ export function AssertNever(...args: never[]): never {
 	throw new Error(`Never assertion failed with arguments: ${args.join(', ')}`);
 }
 
-export function AssertNotNullable<T>(value: T | null | undefined): asserts value is NonNullable<T> {
+export function AssertNotNullable<T>(value: Nullable<T>): asserts value is NonNullable<T> {
 	if (value === null || value === undefined) {
 		throw new Error('Value is null or undefined');
 	}

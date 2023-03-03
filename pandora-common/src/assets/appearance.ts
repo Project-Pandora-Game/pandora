@@ -1,6 +1,6 @@
 import _, { cloneDeep, isEqual } from 'lodash';
 import { z } from 'zod';
-import type { CharacterId } from '../character/characterTypes';
+import type { ICharacterMinimalData } from '../character';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { ActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
@@ -57,7 +57,7 @@ export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
 
 export class CharacterAppearance implements RoomActionTargetCharacter {
 	public readonly type = 'character';
-	public readonly characterId: CharacterId;
+	private readonly getCharacter: () => Readonly<ICharacterMinimalData>;
 
 	protected assetManager: AssetManager;
 	public onChangeHandler: ((changes: AppearanceChangeType[]) => void) | undefined;
@@ -69,15 +69,19 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
 	private _safemode: SafemodeData | undefined;
 
-	constructor(assetMananger: AssetManager, characterId: CharacterId, onChange?: (changes: AppearanceChangeType[]) => void) {
-		this.assetManager = assetMananger;
-		this.characterId = characterId;
+	public get character(): Readonly<ICharacterMinimalData> {
+		return this.getCharacter();
+	}
+
+	constructor(assetManager: AssetManager, getCharacter: () => Readonly<ICharacterMinimalData>, onChange?: (changes: AppearanceChangeType[]) => void) {
+		this.assetManager = assetManager;
+		this.getCharacter = getCharacter;
 		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;
 	}
 
 	public getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager {
-		return new CharacterRestrictionsManager(this.characterId, this, room);
+		return new CharacterRestrictionsManager(this, room);
 	}
 
 	public exportToBundle(): AppearanceBundle {
@@ -270,7 +274,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			context.actionHandler?.({
 				...message,
 				character: context.sourceCharacter,
-				targetCharacter: this.characterId,
+				targetCharacter: this.character.id,
 			});
 		}
 
@@ -337,7 +341,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			if (stateChange) {
 				context.actionHandler?.({
 					id: value != null ? 'safemodeEnter' : 'safemodeLeave',
-					character: this.characterId,
+					character: this.character.id,
 				});
 			}
 		}

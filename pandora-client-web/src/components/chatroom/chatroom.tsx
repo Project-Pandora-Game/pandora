@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, IChatRoomMessageChat, IChatSegment, RoomId } from 'pandora-common';
+import { CharacterId, IChatRoomMessageChat, IChatSegment, MessageSubstitute, RoomId } from 'pandora-common';
 import { CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
 import React, {
 	memo,
@@ -207,14 +207,9 @@ function RenderActionContent(action: IChatroomMessageActionProcessed): [IChatSeg
 	// Server messages can have extra info
 	let actionExtraText = action.type === 'serverMessage' ? CHAT_ACTIONS_FOLDED_EXTRA.get(action.id) : undefined;
 	if (action.dictionary) {
-		const substitutions = Array.from(Object.entries(action.dictionary))
-			// Do the longest substitutions first to avoid small one replacing part of large one
-			.sort((a, b) => b[0].length - a[0].length);
-		for (const [k, v] of substitutions) {
-			actionText = actionText.replaceAll(k, v);
-			if (actionExtraText !== undefined) {
-				actionExtraText = actionExtraText.replaceAll(k, v);
-			}
+		actionText = MessageSubstitute(actionText, action.dictionary);
+		if (actionExtraText !== undefined) {
+			actionExtraText = MessageSubstitute(actionExtraText, action.dictionary);
 		}
 	}
 	if (action.type === 'action' && actionText) {

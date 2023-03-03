@@ -36,10 +36,10 @@ export abstract class AppearanceManipulator {
 	public abstract readonly container: IItemModule | null;
 	public abstract readonly containerPath: IContainerPathActual | null;
 
-	public readonly assetMananger: AssetManager;
+	public readonly assetManager: AssetManager;
 
 	constructor(assetManager: AssetManager) {
-		this.assetMananger = assetManager;
+		this.assetManager = assetManager;
 	}
 
 	public getContainer(path: ItemContainerPath): AppearanceManipulator {
@@ -64,7 +64,7 @@ export abstract class AppearanceManipulator {
 			items.push(item);
 		}
 		if (this.isCharacter) {
-			items = AppearanceItemsFixBodypartOrder(this.assetMananger, items);
+			items = AppearanceItemsFixBodypartOrder(this.assetManager, items);
 		}
 		return this._applyItems(items);
 	}
@@ -124,7 +124,7 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 	}
 
 	constructor(base: AppearanceManipulator, item: ItemId, module: string) {
-		super(base.assetMananger);
+		super(base.assetManager);
 		this._base = base;
 		this._item = item;
 		this._module = module;
@@ -153,8 +153,8 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 	public readonly container: null = null;
 	public readonly containerPath: IContainerPathActual = [];
 
-	constructor(assetMananger: AssetManager, items: AppearanceItems, isCharacter: boolean) {
-		super(assetMananger);
+	constructor(assetManager: AssetManager, items: AppearanceItems, isCharacter: boolean) {
+		super(assetManager);
 		this._items = items.slice();
 		this.isCharacter = isCharacter;
 	}

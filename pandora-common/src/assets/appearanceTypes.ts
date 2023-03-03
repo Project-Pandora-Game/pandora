@@ -5,7 +5,7 @@ import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction } from '..
 import type { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceValidationResult } from './appearanceValidation';
 import type { Item } from './item';
-import type { CharacterRestrictionsManager } from '../character';
+import type { CharacterRestrictionsManager, ICharacterMinimalData } from '../character';
 
 export const ItemIdSchema = zTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;
@@ -68,7 +68,7 @@ interface RoomActionTargetBase {
 
 export interface RoomActionTargetCharacter extends RoomActionTargetBase {
 	readonly type: 'character';
-	characterId: CharacterId;
+	readonly character: Readonly<ICharacterMinimalData>;
 	getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager;
 }
 

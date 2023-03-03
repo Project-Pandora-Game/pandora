@@ -9,6 +9,7 @@ import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidati
 import { IItemLoadContext, Item, ItemBundle, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { ItemId } from '../appearanceTypes';
+import type { AppearanceActionContext } from '../appearanceActions';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface IModuleConfigStorage<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'storage'> {
@@ -93,7 +94,7 @@ function ValidateStorage(contents: AppearanceItems, config: IModuleConfigStorage
 export class ItemModuleStorage implements IItemModule<'storage'> {
 	public readonly type = 'storage';
 
-	private readonly assetMananger: AssetManager;
+	private readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigStorage;
 	private readonly contents: AppearanceItems;
 
@@ -102,13 +103,13 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 	}
 
 	constructor(config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext) {
-		this.assetMananger = context.assetMananger;
+		this.assetManager = context.assetManager;
 		this.config = config;
 		const content: Item[] = [];
 		const limitSize = AssetSizeMapping[config.maxAcceptedSize] ?? 0;
 		for (const itemBundle of data.contents) {
 			// Load asset and skip if unknown
-			const asset = this.assetMananger.getAssetById(itemBundle.asset);
+			const asset = this.assetManager.getAssetById(itemBundle.asset);
 			if (asset === undefined) {
 				context.logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
 				continue;
@@ -162,7 +163,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		return false;
 	}
 
-	public doAction(_action: ItemModuleStorageAction): ItemModuleStorage | null {
+	public doAction(_context: AppearanceActionContext, _action: ItemModuleStorageAction): ItemModuleStorage | null {
 		return null;
 	}
 
@@ -177,7 +178,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 			type: 'storage',
 			contents: items.map((item) => item.exportToBundle()),
 		}, {
-			assetMananger: this.assetMananger,
+			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
 	}

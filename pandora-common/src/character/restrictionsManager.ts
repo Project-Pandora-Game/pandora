@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import type { CharacterId } from '.';
+import type { ICharacterMinimalData } from '.';
 import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
 import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
@@ -112,14 +112,16 @@ export type RestrictionResult = {
  * All functions should return a stable value, or useSyncExternalStore will not work properly.
  */
 export class CharacterRestrictionsManager {
-	public readonly characterId: CharacterId;
 	public readonly appearance: CharacterAppearance;
 	public readonly room: ActionRoomContext | null;
 	private _items: readonly Item[] = [];
 	private _properties: Readonly<AssetPropertiesResult> = CreateAssetPropertiesResult();
 
-	constructor(characterId: CharacterId, appearance: CharacterAppearance, room: ActionRoomContext | null) {
-		this.characterId = characterId;
+	public get character(): Readonly<ICharacterMinimalData> {
+		return this.appearance.character;
+	}
+
+	constructor(appearance: CharacterAppearance, room: ActionRoomContext | null) {
 		this.appearance = appearance;
 		this.room = room;
 	}
@@ -153,7 +155,7 @@ export class CharacterRestrictionsManager {
 	 * Returns the Muffler class for this CharacterRestrictionsManager
 	 */
 	public getMuffler(): Muffler {
-		return new Muffler(this.characterId, this.getEffects());
+		return new Muffler(this.character.id, this.getEffects());
 	}
 
 	/**
@@ -169,13 +171,13 @@ export class CharacterRestrictionsManager {
 	}
 
 	public canInteractWithTarget(target: RoomActionTarget): RestrictionResult {
-		// Room inventory can always be intereacted with
+		// Room inventory can always be interacted with
 		if (target.type === 'roomInventory')
 			return { allowed: true };
 
 		if (target.type === 'character') {
 			// Have all permissions on self
-			if (target.characterId === this.characterId)
+			if (target.character.id === this.character.id)
 				return { allowed: true };
 
 			const targetCharacter = target.getRestrictionManager(this.room);
@@ -203,7 +205,7 @@ export class CharacterRestrictionsManager {
 			return r;
 
 		// Can do all on self
-		if (target.type === 'character' && target.characterId === this.characterId)
+		if (target.type === 'character' && target.character.id === this.character.id)
 			return { allowed: true };
 
 		return { allowed: true };
@@ -246,7 +248,7 @@ export class CharacterRestrictionsManager {
 
 		let isPhysicallyEquipped = true;
 		const isCharacter = target.type === 'character';
-		const isSelfAction = isCharacter && target.characterId === this.characterId;
+		const isSelfAction = isCharacter && target.character.id === this.character.id;
 		const isInSafemode = this.isInSafemode();
 
 		// Must be able to access all upper items
@@ -304,7 +306,7 @@ export class CharacterRestrictionsManager {
 			}
 
 			// Bodyparts can only be changed on self
-			if (target.characterId !== this.characterId)
+			if (target.character.id !== this.character.id)
 				return {
 					allowed: false,
 					restriction: {
@@ -411,7 +413,7 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
-		const isSelfAction = target.type === 'character' && target.characterId === this.characterId;
+		const isSelfAction = target.type === 'character' && target.character.id === this.character.id;
 
 		// The module can specify what kind of interaction it provides, unless asking for specific one
 		interaction ??= module.interactionType;

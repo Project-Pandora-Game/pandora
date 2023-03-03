@@ -89,7 +89,7 @@ export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleIt
 					moduleName,
 					moduleDefinition,
 					data,
-					context.assetMananger,
+					context.assetManager,
 				),
 				context,
 			);
@@ -103,7 +103,7 @@ export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleIt
 					moduleName,
 					moduleDefinition,
 					data,
-					context.assetMananger,
+					context.assetManager,
 				),
 				context,
 			);
@@ -117,7 +117,7 @@ export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleIt
 					moduleName,
 					moduleDefinition,
 					data,
-					context.assetMananger,
+					context.assetManager,
 				),
 				context,
 			);

@@ -8,6 +8,7 @@ import type { AppearanceItems, AppearanceValidationResult } from '../appearanceV
 import type { AssetManager } from '../assetManager';
 import type { IItemLoadContext } from '../item';
 import type { ActionMessageTemplateHandler } from '../appearanceTypes';
+import type { AppearanceActionContext } from '../appearanceActions';
 
 export interface IModuleConfigCommon<Type extends string> {
 	type: Type;
@@ -27,7 +28,7 @@ export const IModuleItemDataCommonSchema = z.object({
 type __satisfies__IModuleItemDataCommonSchema = Satisfies<z.infer<typeof IModuleItemDataCommonSchema>, IModuleItemDataCommon<string>>;
 
 export interface IAssetModuleDefinition<Type extends string> {
-	parseData(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, assetMananger: AssetManager): IModuleItemDataCommon<Type>;
+	parseData(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IModuleItemDataCommon<Type>;
 	loadModule(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, context: IItemLoadContext): IItemModule<Type>;
 	getStaticAttributes(config: IModuleConfigCommon<Type>): ReadonlySet<string>;
 }
@@ -47,7 +48,7 @@ export interface IItemModule<Type extends string = string> {
 
 	evalCondition(operator: ConditionOperator, value: string): boolean;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	doAction(action: any, messageHandler: ActionMessageTemplateHandler): IItemModule<Type> | null;
+	doAction(context: AppearanceActionContext, action: any, messageHandler: ActionMessageTemplateHandler): IItemModule<Type> | null;
 
 	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */
 	readonly contentsPhysicallyEquipped: boolean;

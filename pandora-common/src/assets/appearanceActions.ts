@@ -247,7 +247,7 @@ export function DoAppearanceAction(
 				};
 
 			const manipulator = target.getManipulator();
-			if (!ActionModuleAction(manipulator, action.item, action.module, action.action))
+			if (!ActionModuleAction(context, manipulator, action.item, action.module, action.action))
 				return { result: 'invalidAction' };
 			return AppearanceValidationResultToActionResult(
 				target.commitChanges(manipulator, processingContext),
@@ -334,7 +334,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	// Do change
 	let removed: AppearanceItems = [];
 	// if this is a bodypart not allowing multiple do a swap instead, but only in root
-	if (manipulator.isCharacter && item.asset.definition.bodypart && manipulator.assetMananger.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
+	if (manipulator.isCharacter && item.asset.definition.bodypart && manipulator.assetManager.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
 		removed = manipulator.removeMatchingItems((oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
 	}
 	if (!manipulator.addItem(item))
@@ -417,12 +417,13 @@ export function ActionColorItem(rootManipulator: AppearanceRootManipulator, item
 	return true;
 }
 
-export function ActionModuleAction(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, module: string, action: ItemModuleAction): boolean {
+export function ActionModuleAction(context: AppearanceActionContext, rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, module: string, action: ItemModuleAction): boolean {
 	const { container, itemId } = itemPath;
 	const manipulator = rootManipulator.getContainer(container);
 
 	// Do change and store chat messages
 	if (!manipulator.modifyItem(itemId, (it) => it.moduleAction(
+		context,
 		module,
 		action,
 		(m) => manipulator.queueMessage({

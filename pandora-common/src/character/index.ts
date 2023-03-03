@@ -30,6 +30,8 @@ export const CharacterPublicDataSchema = z.object({
 
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;
 
+export type ICharacterMinimalData = Pick<ICharacterPublicData, 'id' | 'name' | 'accountId'>;
+
 export const CharacterDataSchema = CharacterPublicDataSchema.merge(z.object({
 	inCreation: z.literal(true).optional(),
 	created: z.number(),

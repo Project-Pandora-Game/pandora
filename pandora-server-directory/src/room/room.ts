@@ -341,6 +341,16 @@ export class Room {
 		return false;
 	}
 
+	public isBanned(account: Account): boolean {
+		if (this.isAdmin(account))
+			return false;
+
+		if (this.config.banned.includes(account.id))
+			return true;
+
+		return false;
+	}
+
 	public hasAdminInside(): boolean {
 		for (const c of this.characters) {
 			if (this.isAdmin(c.account)) {
@@ -353,7 +363,7 @@ export class Room {
 	public addCharacter(character: Character, sendEnterMessage: boolean = true): void {
 		if (character.room === this)
 			return;
-		if (this.config.banned.includes(character.account.id)) {
+		if (this.isBanned(character.account)) {
 			this.logger.warning(`Refusing to add banned character id ${character.id}`);
 			return;
 		}
@@ -425,7 +435,7 @@ export class Room {
 
 	private removeBannedCharacters(source: Character | null): void {
 		for (const character of this._characters.values()) {
-			if (this.config.banned.includes(character.account.id)) {
+			if (this.isBanned(character.account)) {
 				this.removeCharacter(character, 'ban', source);
 			}
 		}

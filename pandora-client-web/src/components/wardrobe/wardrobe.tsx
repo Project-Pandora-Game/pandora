@@ -64,6 +64,7 @@ import { CharacterSafemodeWarningContent } from '../characterSafemode/characterS
 import listIcon from '../../assets/icons/list.svg';
 import gridIcon from '../../assets/icons/grid.svg';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
+import { useCurrentTime } from '../../common/useCurrentTime';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -886,6 +887,8 @@ function WardrobeModuleConfig({ m, ...props }: WardrobeModuleProps<IItemModule>)
 
 function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<ItemModuleTyped>): ReactElement {
 	const { target } = useWardrobeContext();
+	const now = useCurrentTime();
+
 	const customText = useMemo(() => {
 		if (!m.activeVariant.customText) {
 			return null;
@@ -898,43 +901,40 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			CHARACTER: m.data.selectedBy ? `${m.data.selectedBy.name} (${m.data.selectedBy.id})` : '[unknown]',
 			// eslint-disable-next-line @typescript-eslint/naming-convention
-			TIME_PASSED: m.data.selectedAt ? FormatTimeInterval(Date.now() - m.data.selectedAt) : '[unknown time]',
+			TIME_PASSED: m.data.selectedAt ? FormatTimeInterval(now - m.data.selectedAt) : '[unknown time]',
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			TIME: m.data.selectedAt ? new Date(m.data.selectedAt).toLocaleString() : '[unknown date]',
 		};
 		return m.activeVariant.customText
 			.map((text) => MessageSubstitute(text, substitutes))
 			.map((text, index) => <span key={ index }>{ text }</span>);
-	}, [m.activeVariant, m.data]);
+	}, [m.activeVariant, m.data, now]);
+
+	const rows = useMemo(() => m.config.variants.map((v) => (
+		<WardrobeActionButton
+			action={ {
+				type: 'moduleAction',
+				target,
+				item,
+				module: moduleName,
+				action: {
+					moduleType: 'typed',
+					setVariant: v.id,
+				},
+			} }
+			key={ v.id }
+			className={ m.activeVariant.id === v.id ? 'selected' : '' }
+		>
+			{ v.name }
+		</WardrobeActionButton>
+	)), [m.activeVariant, m.config, target, item, moduleName]);
 
 	return (
 		<Column>
 			<Row wrap>
-				{
-					m.config.variants.map((v) => (
-						<WardrobeActionButton action={ {
-							type: 'moduleAction',
-							target,
-							item,
-							module: moduleName,
-							action: {
-								moduleType: 'typed',
-								setVariant: v.id,
-							},
-						} } key={ v.id } className={ m.activeVariant.id === v.id ? 'selected' : '' }>
-							{ v.name }
-						</WardrobeActionButton>
-					))
-				}
+				{ rows }
 			</Row>
-			{
-				customText && (
-					<>
-						<br />
-						<span>{ customText }</span>
-					</>
-				)
-			}
+			{ customText }
 		</Column>
 	);
 }

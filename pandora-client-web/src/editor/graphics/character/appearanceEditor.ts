@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -74,7 +74,7 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 
 	constructor() {
 		super();
-		const data = { id: this.id, accountId: 0, name: 'EditorCharacter' } as const;
+		const data: ICharacterMinimalData = { id: this.id, accountId: 0, name: 'EditorCharacter' } as const;
 		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), () => data, (changes) => this.emit('appearanceUpdate', changes));
 	}
 

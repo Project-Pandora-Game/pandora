@@ -640,7 +640,6 @@ function ChatModeSelector(): ReactElement | null {
 	return (
 		<Select onChange={ onChange } ref={ ref } defaultValue={ mode ? ((mode.raw ? 'raw_' : '') + mode.type) : '' }>
 			<option value=''>None</option>
-			<option value='chat'>Chat</option>
 			<option value='raw_chat'>Raw Chat</option>
 			<option value='me' disabled={ hasTarget }>Me</option>
 			<option value='raw_me' disabled={ hasTarget }>Raw Me</option>

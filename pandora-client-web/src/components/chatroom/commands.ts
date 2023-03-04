@@ -1,5 +1,5 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, CharacterView } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, CharacterView, LONGDESC_TOGGLE_MODE } from 'pandora-common';
 import { CommandSelectorCharacter } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
@@ -9,7 +9,7 @@ function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, I
 	return CreateCommand<ICommandExecutionContextClient>();
 }
 
-function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string): IClientCommand {
+function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string, allowModeSet: boolean = true): IClientCommand {
 	const description = GetChatModeDescription({ type, raw });
 	return ({
 		key: names.map((name) => (raw ? 'raw' : '') + name) as [string, ...string[]],
@@ -23,6 +23,9 @@ function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, typ
 				message = message.trim();
 
 				if (!message) {
+					if (!allowModeSet)
+						return false;
+
 					if (inputHandlerContext.mode?.type === type && inputHandlerContext.mode?.raw === raw) {
 						inputHandlerContext.setMode(null);
 						return true;
@@ -65,12 +68,12 @@ export function GetChatModeDescription(mode: ChatMode, plural: boolean = false) 
 }
 
 /* Creates two commands for sending chat messages of a specific type, one formatted and one raw/unformatted */
-function CreateMessageTypeParsers(type: IChatType): IClientCommand[] {
+function CreateMessageTypeParsers(type: IChatType, allowFormattedMode: boolean = true): IClientCommand[] {
 	const details = ChatTypeDetails[type];
 	const longDesc = `${BuildAlternativeCommandsMessage(details.commandKeywords)}${details.longDescription}`;
 	return [
-		CreateMessageTypeParser(details.commandKeywords, false, type, longDesc), //formatted
-		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.longDescription + LONGDESC_RAW), //raw, no alternatives
+		CreateMessageTypeParser(details.commandKeywords, false, type, longDesc, allowFormattedMode), //formatted
+		CreateMessageTypeParser([details.commandKeywords[0]], true, type, details.longDescription + (allowFormattedMode ? '' : LONGDESC_TOGGLE_MODE) + LONGDESC_RAW), //raw, no alternatives
 	];
 }
 
@@ -96,7 +99,7 @@ function CreateChatroomAdminAction(action: IClientDirectoryArgument['chatRoomAdm
 }
 
 export const COMMANDS: readonly IClientCommand[] = [
-	...CreateMessageTypeParsers('chat'),
+	...CreateMessageTypeParsers('chat', false),
 	...CreateMessageTypeParsers('ooc'),
 	...CreateMessageTypeParsers('me'),
 	...CreateMessageTypeParsers('emote'),

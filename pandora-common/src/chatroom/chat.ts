@@ -111,7 +111,7 @@ export const ChatTypeDetails: Record<IChatType, IChatTypeDetails> = {
 	'chat': {
 		commandKeywords: ['say', 'chat'],
 		description: 'standard message',
-		longDescription: 'Sends a spoken message to everyone in the room.' + LONGDESC_TOGGLE_MODE,
+		longDescription: 'Sends a spoken message to everyone in the room.',
 	},
 	'ooc': {
 		commandKeywords: ['ooc', 'o'],

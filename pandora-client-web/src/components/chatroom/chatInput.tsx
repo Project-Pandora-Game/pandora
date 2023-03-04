@@ -1,8 +1,8 @@
 import { AssertNotNullable, CharacterId, IChatRoomStatus, IChatType, RoomId } from 'pandora-common';
-import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
-import { useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { IMessageParseOptions, useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
 import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
 import { toast } from 'react-toastify';
@@ -16,18 +16,27 @@ import classNames from 'classnames';
 import { Row } from '../common/container/container';
 import { GetChatModeDescription } from './commands';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { Select } from '../common/select/select';
+
+type Editing = {
+	target: number;
+	restore: IMessageParseOptions;
+};
 
 export type IChatInputHandler = {
 	focus: () => void;
 	setValue: (value: string) => void;
 	target: Character | null;
 	setTarget: (target: CharacterId | null) => void;
-	editing: number | null;
+	editing: Editing | null;
 	setEditing: (editing: number | null) => boolean;
 	autocompleteHint: AutocompleteDisplyData | null;
 	setAutocompleteHint: (hint: AutocompleteDisplyData | null) => void;
 	mode: ChatMode | null;
 	setMode: (mode: ChatMode | null) => void;
+	showSelector: boolean;
+	setShowSelector: (show: boolean) => void;
+	allowCommands: boolean;
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
@@ -42,6 +51,9 @@ const chatInputContext = createContext<IChatInputHandler>({
 	setAutocompleteHint: noop,
 	mode: null,
 	setMode: noop,
+	showSelector: false,
+	setShowSelector: noop,
+	allowCommands: true,
 	ref: null as unknown as RefObject<HTMLTextAreaElement>,
 });
 
@@ -49,7 +61,7 @@ type ChatInputSave = {
 	input: string;
 	roomId: RoomId | null;
 };
-const InputResore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
+const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
 
 export type ChatMode = {
 	type: IChatType;
@@ -59,9 +71,10 @@ export type ChatMode = {
 export function ChatInputContextProvider({ children }: { children: React.ReactNode; }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
-	const [editing, setEditingState] = useState<number | null>(null);
+	const [editing, setEditingState] = useState<Editing | null>(null);
 	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplyData | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
+	const [showSelector, setShowSelector] = useState(false);
 	const characters = useChatRoomCharacters();
 	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
@@ -71,28 +84,33 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		if (!roomId)
 			return;
 
-		if (roomId !== InputResore.value.roomId) {
-			InputResore.value = { input: '', roomId };
+		if (roomId !== InputRestore.value.roomId) {
+			InputRestore.value = { input: '', roomId };
 		}
 	}, [roomId]);
 
-	const setEditing = useEvent((messageId: number | null) => {
-		setEditingState(messageId);
-		if (!messageId) {
+	const setEditing = useEvent((edit: Editing | null) => {
+		setEditingState(edit);
+		if (!edit) {
 			ref.current?.focus();
 			return true;
 		}
-		const { text, target: targetId } = sender.getMessageEdit(messageId) ?? {};
+		const editingMessage = sender.getMessageEdit(edit?.target);
+		if (!editingMessage) return false;
+		const { text, options } = editingMessage;
 		if (!text) {
 			return false;
 		}
-		if (targetId) {
-			const targetCharacter = characters?.find((c) => c.data.id === targetId);
+		if (options.target) {
+			const targetCharacter = characters?.find((c) => c.data.id === options.target);
 			if (targetCharacter) {
 				setTarget(targetCharacter);
 			} else {
-				toast(`Character ${targetId} not found`, TOAST_OPTIONS_ERROR);
+				toast(`Character ${options.target} not found`, TOAST_OPTIONS_ERROR);
 			}
+		}
+		if (options.type) {
+			setMode({ type: options.type, raw: options.raw ?? false });
 		}
 		if (ref.current) {
 			ref.current.value = text;
@@ -123,29 +141,47 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		};
 	}, []);
 
-	const context = useMemo(() => ({
-		focus: () => ref.current?.focus(),
-		setValue: (value: string) => {
-			if (ref.current) {
-				ref.current.value = value;
-			}
-			InputResore.value = { input: value, roomId: InputResore.value.roomId };
-		},
-		target,
-		setTarget: (t: CharacterId | null) => {
+	const context = useMemo(() => {
+		const newSetTarget = (t: CharacterId | null) => {
 			if (t === playerId) {
 				return;
 			}
 			setTarget(!t ? null : characters?.find((c) => c.data.id === t) ?? null);
-		},
-		editing,
-		setEditing,
-		autocompleteHint,
-		setAutocompleteHint,
-		mode,
-		setMode,
-		ref,
-	}), [target, editing, setEditing, autocompleteHint, setAutocompleteHint, playerId, characters, mode]);
+		};
+		return {
+			focus: () => ref.current?.focus(),
+			setValue: (value: string) => {
+				if (ref.current) {
+					ref.current.value = value;
+				}
+				InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
+			},
+			target,
+			setTarget: newSetTarget,
+			editing,
+			setEditing: (edit: number | null): boolean => {
+				if (edit === null) {
+					if (editing === null)
+						return setEditing(null);
+
+					newSetTarget(editing?.restore.target ?? null);
+					setMode(editing?.restore.type ? { type: editing.restore.type, raw: editing.restore.raw ?? false } : null);
+					return setEditing(null);
+				} else if (editing)
+					return setEditing({ target: edit, restore: editing.restore });
+				else
+					return setEditing({ target: edit, restore: { target: target?.data.id, type: mode?.type, raw: mode?.raw } });
+			},
+			autocompleteHint,
+			setAutocompleteHint,
+			mode,
+			setMode,
+			showSelector,
+			setShowSelector,
+			allowCommands: editing == null && !mode?.raw,
+			ref,
+		};
+	}, [target, editing, setEditing, autocompleteHint, showSelector, setShowSelector, setAutocompleteHint, playerId, characters, mode]);
 
 	return (
 		<chatInputContext.Provider value={ context }>
@@ -162,6 +198,7 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 			<UnreadMessagesIndicator newMessageCount={ newMessageCount } scroll={ scroll } />
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
+			<ChatModeSelector />
 			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
 		</>
 	);
@@ -169,12 +206,12 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 
 function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>; }, ref: ForwardedRef<HTMLTextAreaElement>) {
 	const lastInput = useRef('');
-	const timeout = useRef<number>();
+	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
 	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
 	const chatInput = useChatInput();
-	const { target, editing, setEditing, setValue, setAutocompleteHint, mode } = chatInput;
+	const { target, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = chatInput;
 
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
@@ -183,7 +220,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
 			clearTimeout(timeout.current);
-			timeout.current = 0;
+			timeout.current = null;
 		}
 		setPlayerStatus('none');
 	});
@@ -193,7 +230,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 		if (
 			input.startsWith(COMMAND_KEY) &&
 			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-			editing == null
+			allowCommands
 		) {
 			input = input.slice(1, textarea.selectionStart || textarea.value.length);
 
@@ -226,7 +263,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 				if (
 					input.startsWith(COMMAND_KEY) &&
 					!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-					editing == null
+					allowCommands
 				) {
 					// Process command
 					if (RunCommand(input.slice(1), {
@@ -243,7 +280,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 					}
 				} else {
 					// Double command key escapes itself
-					if (input.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+					if (input.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
 						input = input.slice(1);
 					}
 					input = input.trim();
@@ -254,7 +291,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 					// TODO ... all options
 					sender.sendMessage(input, {
 						target: target?.data.id,
-						editing: editing || undefined,
+						editing: editing?.target || undefined,
 						type: mode?.type || undefined,
 						raw: mode?.raw || undefined,
 					});
@@ -268,7 +305,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 				return;
 			}
 		}
-		if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY)) {
+		if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
@@ -326,10 +363,10 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 			return;
 
 		lastInput.current = value;
-		InputResore.value = { input: value, roomId: InputResore.value.roomId };
+		InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
 		let nextStatus: null | { status: IChatRoomStatus; target?: CharacterId; } = null;
 		const trimmed = value.trim();
-		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY))) {
+		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
 			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
@@ -344,7 +381,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 
 		if (timeout.current) {
 			clearTimeout(timeout.current);
-			timeout.current = 0;
+			timeout.current = null;
 		}
 		timeout.current = setTimeout(() => inputEnd(), 3_000);
 	});
@@ -355,7 +392,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputResore.value.input } />;
+	return <textarea ref={ ref } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);
@@ -367,6 +404,12 @@ export function useChatInput(): IChatInputHandler {
 function TypingIndicator(): ReactElement {
 	let statuses = useChatRoomStatus();
 	const playerId = usePlayerId();
+	const { showSelector, setShowSelector } = useChatInput();
+
+	const onClick = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
+		ev.stopPropagation();
+		setShowSelector(!showSelector);
+	}, [showSelector, setShowSelector]);
 
 	statuses = statuses.filter((s) => s.data.id !== playerId && (s.status === 'typing' || s.status === 'whispering'));
 
@@ -377,7 +420,7 @@ function TypingIndicator(): ReactElement {
 	}
 
 	return (
-		<div className='typing-indicator'>
+		<div className='typing-indicator' onClick={ onClick }>
 			{ statuses.map(({ data, status }) => (
 				<span key={ data.id }>
 					<span style={ { color: data.settings.labelColor } }>{ data.name } </span>
@@ -409,9 +452,14 @@ function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount:
 }
 
 function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): ReactElement {
-	const { target, setTarget, editing, setEditing, setValue, mode, setMode } = useChatInput();
+	const { target, setTarget, editing, setEditing, setValue, mode, setMode, showSelector, setShowSelector } = useChatInput();
 	const lastHasTarget = useRef(target !== null);
 	const lastEditing = useRef(editing);
+
+	const onClick = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
+		ev.stopPropagation();
+		setShowSelector(!showSelector);
+	}, [showSelector, setShowSelector]);
 
 	useEffect(() => {
 		if (lastHasTarget.current !== (target !== null) || lastEditing.current !== editing) {
@@ -422,7 +470,7 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 	}, [target, editing, scroll]);
 
 	return (
-		<div className='input-modifiers'>
+		<div className='input-modifiers' onClick={ onClick }>
 			{ target && (
 				<span>
 					{ 'Whispering to ' }
@@ -430,13 +478,20 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					{ ' ' }
 					({ target.data.id })
 					{ ' ' }
-					<Button className='slim' onClick={ () => setTarget(null) }>Cancel</Button>
+					{ editing === null && (
+						<Button className='slim' onClick={ (ev) => {
+							ev.stopPropagation();
+							setTarget(null);
+						} }>Cancel
+						</Button>
+					) }
 				</span>
 			) }
 			{ editing && (
 				<span>
 					{ 'Editing message ' }
-					<Button className='slim' onClick={ () => {
+					<Button className='slim' onClick={ (ev) => {
+						ev.stopPropagation();
 						setEditing(null);
 						setValue('');
 					} }>
@@ -444,12 +499,17 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 					</Button>
 				</span>
 			) }
-			{ mode && !(mode.type === 'chat' && !mode.raw) && (
+			{ mode && (
 				<span>
 					{ 'Sending ' }
 					{ GetChatModeDescription(mode, true) }
 					{ ' ' }
-					<Button className='slim' onClick={ () => setMode(null) }>Cancel</Button>
+					<Button className='slim' onClick={ (ev) => {
+						ev.stopPropagation();
+						setMode(null);
+					} }>
+						Cancel
+					</Button>
 				</span>
 			) }
 		</div>
@@ -462,12 +522,12 @@ function AutoCompleteHint(): ReactElement | null {
 	const chatRoom = useChatroomRequired();
 	const sender = useChatRoomMessageSender();
 	const chatInput = useChatInput();
-	const { setAutocompleteHint } = chatInput;
+	const { setAutocompleteHint, allowCommands } = chatInput;
 
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
-	if (!autocompleteHint?.result)
+	if (!autocompleteHint?.result || !allowCommands)
 		return null;
 
 	// When only one command can/should be displayed, onlyShowOption is set to that command's index in the option array
@@ -539,5 +599,54 @@ function AutoCompleteHint(): ReactElement | null {
 				}
 			</div>
 		</div>
+	);
+}
+
+function ChatModeSelector(): ReactElement | null {
+	const { setMode, mode, showSelector, setShowSelector, target } = useChatInput();
+	const ref = useRef<HTMLSelectElement>(null);
+	const hasTarget = target !== null;
+
+	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+		let value = ev.target.value;
+		if (value === '') {
+			setMode(null);
+			setShowSelector(false);
+			return;
+		}
+		let raw = false;
+		if (value.startsWith('raw_')) {
+			raw = true;
+			value = value.slice(4);
+		}
+		setMode({ type: value as IChatType, raw });
+		setShowSelector(false);
+	}, [setMode, setShowSelector]);
+
+	useEffect(() => {
+		const handler = (ev: MouseEvent) => {
+			if (!showSelector || ref.current == null || ref.current.contains(ev.target as Node) || ev.target === ref.current)
+				return;
+
+			setShowSelector(false);
+		};
+		window.addEventListener('click', handler);
+		return () => window.removeEventListener('click', handler);
+	}, [setShowSelector, showSelector]);
+
+	if (!showSelector)
+		return null;
+
+	return (
+		<Select onChange={ onChange } ref={ ref } defaultValue={ mode ? ((mode.raw ? 'raw_' : '') + mode.type) : '' }>
+			<option value=''>None</option>
+			<option value='raw_chat'>Raw Chat</option>
+			<option value='me' disabled={ hasTarget }>Me</option>
+			<option value='raw_me' disabled={ hasTarget }>Raw Me</option>
+			<option value='emote' disabled={ hasTarget }>Emote</option>
+			<option value='raw_emote' disabled={ hasTarget }>Raw Emote</option>
+			<option value='ooc'>OOC</option>
+			<option value='raw_ooc'>Raw OOC</option>
+		</Select>
 	);
 }

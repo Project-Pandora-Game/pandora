@@ -26,9 +26,7 @@ html, body {
 
 div.main {
 	@include flex(column);
-	background-color: $grey-lighter;
-	background-image: linear-gradient(to right, #bbb 90%, rgb(174, 174, 174) 10%);
-	background-size: 3em 3em;
+	background-color: $grey-light;
 	flex: 1;
 	overflow: auto;
 

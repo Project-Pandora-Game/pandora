@@ -5,6 +5,7 @@ import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../
 import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
 import { useAuthToken, useCurrentAccount } from '../../gameContext/directoryConnectorContextProvider';
 import { useLoginForm } from './useLoginForm';
+import pandoraLogo from '../../../assets/icons/pandora.svg';
 
 export function LoginForm(): ReactElement {
 	const auth = useAuthToken();
@@ -30,7 +31,9 @@ export function LoginForm(): ReactElement {
 
 	return (
 		<Form className='LoginForm' dirty={ dirty } onSubmit={ onSubmit }>
-			<h1>Club login</h1>
+			<p>
+				<img src={ pandoraLogo } alt='Pandora Logo' width='282em' height='70em' />
+			</p>
 			<LocationStateMessage />
 			<FormField>
 				<label htmlFor='login-username'>Username</label>

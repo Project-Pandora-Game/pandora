@@ -10,7 +10,7 @@ import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
-import { IItemModule, IModuleItemDataCommonSchema } from './modules/common';
+import { IItemModule } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexColorStringSchema);
@@ -20,7 +20,7 @@ export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
 	color: ItemColorBundleSchema.or(z.array(HexColorStringSchema)).optional(),
-	moduleData: z.record(IModuleItemDataCommonSchema).optional(),
+	moduleData: z.record(z.unknown()).optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 

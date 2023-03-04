@@ -1,6 +1,4 @@
 import type { Asset } from '../asset';
-import { z } from 'zod';
-import type { Satisfies } from '../../utility';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character';
 import { AssetProperties } from '../properties';
@@ -21,11 +19,6 @@ export interface IModuleConfigCommon<Type extends string> {
 export interface IModuleItemDataCommon<Type extends string> {
 	type: Type;
 }
-export const IModuleItemDataCommonSchema = z.object({
-	type: z.string(),
-}).passthrough();
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
-type __satisfies__IModuleItemDataCommonSchema = Satisfies<z.infer<typeof IModuleItemDataCommonSchema>, IModuleItemDataCommon<string>>;
 
 export interface IAssetModuleDefinition<Type extends string> {
 	parseData(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IModuleItemDataCommon<Type>;

@@ -1,11 +1,10 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
 import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataUpdateSchema, CharacterIdSchema, ICharacterData } from '../character';
 import { IDirectoryShardUpdate, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
-import { ChatRoomDataSchema, ChatRoomDataUpdateSchema, CHATROOM_DIRECTORY_PROPERTIES, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom';
+import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom';
 import { z } from 'zod';
-import { ArrayToTruthyMap, ZodCast } from '../validation';
+import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
-import { omit } from 'lodash';
 
 export const ChatRoomDataAccessSchema = ChatRoomDataSchema.pick({ id: true, accessId: true });
 export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
@@ -70,7 +69,7 @@ export const ShardDirectorySchema = {
 		request: z.object({
 			id: RoomIdSchema,
 			accessId: z.string(),
-			data: ChatRoomDataUpdateSchema.omit(omit(ArrayToTruthyMap(CHATROOM_DIRECTORY_PROPERTIES), ['id'])),
+			data: ChatRoomDataShardUpdateSchema,
 		}),
 		response: ZodCast<{ result: 'success' | 'invalidAccessId'; }>(),
 	},

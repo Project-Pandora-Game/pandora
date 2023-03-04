@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData, AccountId, RoomInventory, AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, RoomInventory, AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -23,7 +23,7 @@ export class Room extends ServerRoom<IShardClient> {
 	public readonly inventory: RoomInventory;
 
 	private readonly _lock = new AsyncLock();
-	private modified: Set<Exclude<keyof IChatRoomDataUpdate, (typeof CHATROOM_DIRECTORY_PROPERTIES)[number]>> = new Set();
+	private modified: Set<keyof IChatRoomDataShardUpdate> = new Set();
 
 	public get id(): RoomId {
 		return this.data.id;
@@ -225,7 +225,7 @@ export class Room extends ServerRoom<IShardClient> {
 			if (keys.length === 0)
 				return;
 
-			const data: IChatRoomDataUpdate = {};
+			const data: IChatRoomDataShardUpdate = {};
 
 			if (keys.includes('inventory')) {
 				data.inventory = this.inventory.exportToBundle();

@@ -1,6 +1,6 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { AccountId, CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataUpdate, IChatRoomDirectoryData, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
+import { AccountId, CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
 
 import _ from 'lodash';
@@ -253,7 +253,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(room));
 	}
 
-	public updateChatRoom(id: RoomId, data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean> {
+	public updateChatRoom(id: RoomId, data: IChatRoomDataDirectoryUpdate & IChatRoomDataShardUpdate, accessId: string | null): Promise<boolean> {
 		const room = _.cloneDeep(data);
 
 		const info = this.chatroomDb.get(id);
@@ -264,8 +264,7 @@ export class MockDatabase implements PandoraDatabase {
 			return Promise.resolve(false);
 		}
 
-		if (room.config)
-			info.config = room.config;
+		Object.assign(info, room);
 
 		return Promise.resolve(true);
 	}

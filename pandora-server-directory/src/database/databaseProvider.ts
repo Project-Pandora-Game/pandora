@@ -1,7 +1,7 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { DATABASE_TYPE } from '../config';
-import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataUpdate, RoomId, IChatRoomDirectoryData, AccountId } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
@@ -135,7 +135,7 @@ export interface PandoraDatabase {
 	 * @param accessId - Id of access to check or null to ignore the accessId check
 	 * @returns false if a provided accessId is not the same as in the database
 	 */
-	updateChatRoom(id: RoomId, data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean>;
+	updateChatRoom(id: RoomId, data: IChatRoomDataDirectoryUpdate & IChatRoomDataShardUpdate, accessId: string | null): Promise<boolean>;
 
 	/**
 	 * Delete a chatroom

@@ -218,7 +218,8 @@ function PolicyDialog({ hide }: {
 						You can contact us by any of the following methods:
 					</p>
 					<ul>
-						<li>Using our Official Discord server: <a href='https://discord.gg/SHJMjEh9VH' rel='external nofollow noopener noreferrer' target='_blank'>https://discord.gg/SHJMjEh9VH</a></li>
+						<li>Using our Discord server: <a href='https://discord.gg/SHJMjEh9VH' rel='external nofollow noopener noreferrer' target='_blank'>https://discord.gg/SHJMjEh9VH</a></li>
+						<li>Using the email address: <a href='mailto:support@project-pandora.com'>support@project-pandora.com</a></li>
 					</ul>
 				</div>
 			</div>

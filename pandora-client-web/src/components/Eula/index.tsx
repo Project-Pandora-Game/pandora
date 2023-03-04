@@ -87,7 +87,7 @@ function PolicyDialog({ hide }: {
 					</p>
 					<ul>
 						<li>
-							Email Address: We store Your email address hashed (pseudonomized), so we are not able to see it and use it to contact you.
+							Email Address: We store Your email address hashed (pseudonymized), so we are not able to see it and use it to contact you.
 						</li>
 						<li>
 							Usage Data

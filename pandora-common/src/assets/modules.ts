@@ -3,7 +3,7 @@ import { IAssetModuleDefinition, IModuleItemDataCommon, IModuleConfigCommon, IIt
 import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema } from './modules/typed';
 import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema } from './modules/storage';
 import { z } from 'zod';
-import { ZodMatcher } from '../validation';
+import { IsObject, ZodMatcher } from '../validation';
 import { Asset } from './asset';
 import { AssetDefinitionExtraArgs } from './definitions';
 import { IItemLoadContext } from './item';
@@ -68,13 +68,13 @@ export function GetModuleStaticAttributes(moduleDefinition: AssetModuleDefinitio
 	}
 }
 
-export function LoadItemModule(asset: Asset, moduleName: string, data: IModuleItemDataCommon<string> | undefined, context: IItemLoadContext): IItemModule {
+export function LoadItemModule(asset: Asset, moduleName: string, data: unknown, context: IItemLoadContext): IItemModule {
 	const moduleDefinition = asset.definition.modules?.[moduleName];
 	if (!moduleDefinition) {
 		throw new Error('LoadItemModule called with invalid module for asset');
 	}
 
-	if (data?.type !== moduleDefinition.type) {
+	if (!IsObject(data) || data?.type !== moduleDefinition.type) {
 		data = undefined;
 	}
 

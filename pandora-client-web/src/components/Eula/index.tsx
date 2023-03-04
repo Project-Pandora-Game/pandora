@@ -134,7 +134,7 @@ function PolicyDialog({ hide }: {
 					</ul>
 					<p>We do not share Your personal information with third parties.</p>
 					<h3>How do we store the data?</h3>
-					<p>We will retain the aforementioned data potentially indefinitely so we can fulfill the purposes described in this Privacy Policy.</p>
+					<p>We will retain the aforementioned data potentially indefinitely so we can fulfill the purposes described in this Privacy Policy; typically for the lifetime of Your Pandora account.</p>
 					<p>The server that stores the data is inside the European Union.</p>
 					<h3>Cookies</h3>
 					<p>When You visit our website, We may collect information from You automatically through cookies or similar technology.</p>
@@ -163,31 +163,31 @@ function PolicyDialog({ hide }: {
 						</li>
 					</ul>
 					<h3>What are your data protection rights?</h3>
-					<p>Our Service gives You the ability to delete your Account from within the Service. Additionally, You are entitled to the following, if You can identify yourself as the individual We have collected Personal Data about:</p>
+					<p>Our Service gives You the ability to delete your Account from within the Service, as well as self-manage most other data. Additionally, You are entitled to the following, unless this proves impossible (e.g. unclear identification) or involves disproportionate effort:</p>
 					<ul>
 						<li>
 							<strong>The right to access</strong><br />
-							You have the right to request from Us a digital copy of your Personal Data, as long as it is technically feasible for Us to do so.
+							You have the right to request from Us a digital copy of your Personal Data.
 						</li>
 						<li>
 							<strong>The right to rectification</strong><br />
-							You have the right to request that We correct any information You believe is inaccurate, under certain conditions.
+							You have the right to request that We correct any information You believe is inaccurate.
 						</li>
 						<li>
 							<strong>The right to erasure</strong><br />
-							You have the right to request that We erase Your Personal Data, under certain conditions.
+							You have the right to request that We erase Your Personal Data.
 						</li>
 						<li>
 							<strong>The right to restrict processing</strong><br />
-							You have the right to request that We restrict the processing of Your Personal Data, under certain conditions.
+							You have the right to request that We restrict the processing of Your Personal Data.
 						</li>
 						<li>
 							<strong>The right to object to processing</strong><br />
-							You have the right to object to Our processing of Your Personal Data, under certain conditions.
+							You have the right to object to Our processing of Your Personal Data.
 						</li>
 						<li>
 							<strong>The right to data portability</strong><br />
-							You have the right to request that We transfer the data that we have collected to You, under certain conditions.
+							You have the right to request that We transfer the data that we have collected to You, provided that Your request does not adversely affect the rights and freedoms of others.
 						</li>
 					</ul>
 					<p>

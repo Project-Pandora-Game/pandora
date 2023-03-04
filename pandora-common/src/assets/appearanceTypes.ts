@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { zTemplateString } from '../validation';
-import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction } from '../chatroom';
+import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction, IChatRoomMessageActionTargetCharacter, IChatRoomMessageActionTargetRoomInventory } from '../chatroom';
 import type { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceValidationResult } from './appearanceValidation';
 import type { Item } from './item';
@@ -47,17 +47,14 @@ export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoom
 	dictionary?: Record<string, string>;
 }
 export type ActionMessageTemplateHandler = (message: ActionHandlerMessageTemplate) => void;
+
+export type ActionHandlerMessageTargetCharacter = Pick<IChatRoomMessageActionTargetCharacter, 'type' | 'id'>;
+export type ActionHandlerMessageTargetRoomInventory = IChatRoomMessageActionTargetRoomInventory;
+export type ActionHandlerMessageTarget = ActionHandlerMessageTargetCharacter | ActionHandlerMessageTargetRoomInventory;
+
 export interface ActionHandlerMessage extends ActionHandlerMessageTemplate {
-	character?: {
-		type: 'character';
-		id: CharacterId;
-	};
-	target?: {
-		type: 'character';
-		id: CharacterId;
-	} | {
-		type: 'roomInventory';
-	};
+	character?: ActionHandlerMessageTargetCharacter;
+	target?: ActionHandlerMessageTarget;
 	sendTo?: CharacterId[];
 }
 export type ActionHandler = (message: ActionHandlerMessage) => void;

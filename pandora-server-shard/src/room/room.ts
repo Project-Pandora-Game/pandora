@@ -1,6 +1,6 @@
 import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData, AccountId, RoomInventory, AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
 import type { Character } from '../character/character';
-import _, { omit } from 'lodash';
+import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
 import AsyncLock from 'async-lock';
 import { GetDatabase } from '../database/databaseProvider';
@@ -361,6 +361,11 @@ export class Room extends ServerRoom<IShardClient> {
 		dictionary,
 		...data
 	}: ActionHandlerMessage): void {
+		// No reason to duplicate target if it matches character
+		if (isEqual(target, character)) {
+			target = undefined;
+		}
+
 		this._queueMessages([
 			{
 				type: 'action',
@@ -370,14 +375,8 @@ export class Room extends ServerRoom<IShardClient> {
 				time: this.nextMessageTime(),
 				data: {
 					character: this._getCharacterActionInfo(character?.id),
-					target: target ? (
-						target.type === 'character' ? (
-							target.id !== character?.id ? this._getCharacterActionInfo(target.id) : undefined
-						) :
-							target.type === 'roomInventory' ? {
-								type: 'roomInventory',
-							} : undefined
-					) : undefined,
+					target: target?.type === 'character' ? this._getCharacterActionInfo(target.id) :
+						target,
 					...data,
 				},
 				dictionary,

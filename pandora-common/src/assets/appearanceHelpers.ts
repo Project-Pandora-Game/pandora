@@ -67,13 +67,13 @@ export abstract class AppearanceManipulator {
 		if (this.isCharacter) {
 			items = AppearanceItemsFixBodypartOrder(this.assetManager, items);
 		}
-		return this._applyItemsWithColor(items);
+		return this._applyItemsWithChange(items);
 	}
 
 	public removeMatchingItems(predicate: (item: Item) => boolean): AppearanceItems {
 		const items = this.getItems().slice();
 		const result = _.remove(items, (item) => predicate(item));
-		return this._applyItemsWithColor(items) ? result : [];
+		return this._applyItemsWithChange(items) ? result : [];
 	}
 
 	public moveItem(id: ItemId, shift: number): boolean {
@@ -86,7 +86,7 @@ export abstract class AppearanceManipulator {
 
 		const moved = items.splice(currentPos, 1);
 		items.splice(newPos, 0, ...moved);
-		return this._applyItemsWithColor(items);
+		return this._applyItemsWithChange(items);
 	}
 
 	public modifyItem(id: ItemId, mutator: (item: Item) => (Item | null)): boolean {
@@ -98,13 +98,13 @@ export abstract class AppearanceManipulator {
 		if (!result || result.id !== id || result.asset !== result.asset)
 			return false;
 		items[index] = result;
-		return this._applyItemsWithColor(items);
+		return this._applyItemsWithChange(items);
 	}
 
 	public abstract queueMessage(message: ActionHandlerMessageTemplate): void;
 
-	private _applyItemsWithColor(items: AppearanceItems): boolean {
-		return this._applyItems(items.map((item) => item.overrideColors(items)));
+	private _applyItemsWithChange(items: AppearanceItems): boolean {
+		return this._applyItems(items.map((item) => item.containerChanged(items, this.isCharacter)));
 	}
 }
 
@@ -164,12 +164,12 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 		this.isCharacter = isCharacter;
 	}
 
-	/** Gets items, but is only present on the root of appearance to prevent accidental passing of container manipultors */
+	/** Gets items, but is only present on the root of appearance to prevent accidental passing of container manipulators */
 	public getRootItems(): AppearanceItems {
 		return this.getItems();
 	}
 
-	/** Replaces all items, compeltely discarding current ones */
+	/** Replaces all items, completely discarding current ones */
 	public resetItemsTo(newItems: AppearanceItems): void {
 		const r = this._applyItems(newItems);
 		Assert(r);

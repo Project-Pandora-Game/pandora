@@ -135,7 +135,14 @@ export class Item {
 		});
 	}
 
-	public overrideColors(items: AppearanceItems): Item {
+	public containerChanged(items: AppearanceItems, isCharacter: boolean): Item {
+		if (!isCharacter)
+			return this;
+
+		return this.overrideColors(items);
+	}
+
+	private overrideColors(items: AppearanceItems): Item {
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return this;

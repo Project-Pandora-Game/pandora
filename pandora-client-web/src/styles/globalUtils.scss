@@ -46,10 +46,6 @@
 	gap: spacing('normal');
 }
 
-.center-header {
-	@include center-header;
-}
-
 .hidden {
 	display: none !important;
 }

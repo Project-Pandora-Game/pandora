@@ -1,5 +1,21 @@
 @import '../../styles/common';
 
+.eula {
+	@include center-flex;
+
+	.eula-header {
+		max-width: 30em;
+		overflow: hidden;
+		padding-bottom: 1em;
+
+		img {
+			object-fit: contain;
+			width: 100%;
+			height: 100%;
+		}
+	}
+}
+
 .policyDetails {
 	max-width: 85vw;
 	max-height: 80vh;

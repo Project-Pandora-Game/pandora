@@ -33,13 +33,6 @@
 	align-items: center;
 }
 
-@mixin center-header {
-	position: absolute;
-	left: 50%;
-	top: 25%;
-	transform: translate(-50%, -25%);
-}
-
 //#endregion
 
 //#region Misc

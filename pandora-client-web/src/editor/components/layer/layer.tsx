@@ -235,11 +235,11 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 						</p>
 						<p>
 							The color group will always be active if the colorization doesn't have a name.<br />
-							Otherwise, it can be activated by the 'disableColorization' asset property.
+							Otherwise, it can be activated by the 'overrideColorGroup' asset property.
 						</p>
 						<p>
 							To prevent an item to be the base of a color group inheritance,<br />
-							you can set the 'disableColorization' property to list the color group name.
+							you can set the 'overrideColorGroup' property to list the color group name.
 						</p>
 					</ContextHelpButton>
 				</label>

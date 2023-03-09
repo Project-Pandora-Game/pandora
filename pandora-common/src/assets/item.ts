@@ -147,8 +147,8 @@ export class Item {
 		if (!colorization)
 			return this;
 
-		const { disableColorization } = this.getProperties();
-		if (disableColorization.size === 0)
+		const { overrideColorGroup } = this.getProperties();
+		if (overrideColorGroup.size === 0)
 			return this;
 
 		let hasGroup = false;
@@ -160,7 +160,7 @@ export class Item {
 
 			result[key] = value;
 
-			if (def.group == null || !disableColorization.has(def.group))
+			if (def.group == null || !overrideColorGroup.has(def.group))
 				continue;
 
 			const groupColor = this._resolveColorGroup(items, def);
@@ -275,11 +275,11 @@ export class Item {
 	}
 
 	private _getColorByGroup(group: string): { primary?: HexColorString; secondary?: HexColorString; } {
-		const { disableColorization, disableGroupInheritance } = this.getProperties();
-		if (disableGroupInheritance.has(group))
+		const { overrideColorGroup, excludeFromColorInheritance } = this.getProperties();
+		if (excludeFromColorInheritance.has(group))
 			return {};
 
-		const resultKey = disableColorization.has(group) ? 'secondary' : 'primary' as const;
+		const resultKey = overrideColorGroup.has(group) ? 'secondary' : 'primary' as const;
 		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
 			if (value.group !== group || !this.color[key])
 				continue;

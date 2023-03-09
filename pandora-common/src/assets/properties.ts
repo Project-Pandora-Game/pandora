@@ -74,16 +74,23 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	occupySlots?: Partial<Record<A['slots'], number>>;
 
 	/**
-	 * Unique list of color groups that disable colorization of that group on this item
+	 * A unique list of color groups that disable user colorization.
+	 * By default, colorization that has a name is user configured,
+	 * specifying the color group in this list will make the group a higher priority
+	 * thereby disabling user colorization and the color will be inherited from the group.
+	 *
 	 * @default []
 	 */
-	disableColorization?: A['colorGroups'][];
+	overrideColorGroup?: A['colorGroups'][];
 
 	/**
-	 * Unique list of color groups that are disabled to inherit from this item
+	 * A unique list of color groups for which color inheritance is excluded.
+	 * If an item is excluded from color inheritance for a particular group,
+	 * it will not serve as a source of color for other items in that group.
+	 *
 	 * @default []
 	 */
-	disableGroupInheritance?: A['colorGroups'][];
+	excludeFromColorInheritance?: A['colorGroups'][];
 }
 
 export interface AssetSlotResult {
@@ -134,8 +141,8 @@ export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	blockSelfAddRemove: boolean;
 	blockModules: Set<string>;
 	blockSelfModules: Set<string>;
-	disableColorization: Set<string>;
-	disableGroupInheritance: Set<string>;
+	overrideColorGroup: Set<string>;
+	excludeFromColorInheritance: Set<string>;
 }
 
 export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividualResult {
@@ -146,8 +153,8 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 		blockSelfAddRemove: false,
 		blockModules: new Set(),
 		blockSelfModules: new Set(),
-		disableColorization: new Set(),
-		disableGroupInheritance: new Set(),
+		overrideColorGroup: new Set(),
+		excludeFromColorInheritance: new Set(),
 	};
 }
 
@@ -158,8 +165,8 @@ export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualRe
 	base.blockSelfAddRemove ||= properties.blockSelfAddRemove ?? false;
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));
 	properties.blockSelfModules?.forEach((a) => base.blockSelfModules.add(a));
-	properties.disableColorization?.forEach((a) => base.disableColorization.add(a));
-	properties.disableGroupInheritance?.forEach((a) => base.disableGroupInheritance.add(a));
+	properties.overrideColorGroup?.forEach((a) => base.overrideColorGroup.add(a));
+	properties.excludeFromColorInheritance?.forEach((a) => base.excludeFromColorInheritance.add(a));
 
 	return base;
 }

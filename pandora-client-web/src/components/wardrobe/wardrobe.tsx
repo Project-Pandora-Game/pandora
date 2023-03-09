@@ -1157,8 +1157,8 @@ function useColorization(
 		const disabled = bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success';
 		let disabledByGroup = false;
 		if (!disabled && colorGroup) {
-			const { disableColorization } = item.getProperties();
-			if (disableColorization.has(colorGroup)) {
+			const { overrideColorGroup } = item.getProperties();
+			if (overrideColorGroup.has(colorGroup)) {
 				disabledByGroup = true;
 			}
 		}

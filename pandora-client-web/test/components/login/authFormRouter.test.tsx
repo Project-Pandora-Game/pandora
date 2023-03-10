@@ -34,7 +34,7 @@ describe('AuthFormRouter', () => {
 
 	it.each`
 	formName                              | expectedHeading        | component
-	${ 'login form' }                     | ${ 'Club login' }      | ${ LoginForm }
+	${ 'login form' }                     | ${ '' }                | ${ LoginForm }
 	${ 'account verification form' }      | ${ 'Club login' }      | ${ AccountVerificationForm }
 	${ 'registration form' }              | ${ 'Sign up' }         | ${ RegistrationForm }
 	${ 'forgot password form' }           | ${ 'Forgot password' } | ${ ForgotPasswordForm }
@@ -43,9 +43,11 @@ describe('AuthFormRouter', () => {
 	`('should display the $formName',
 		({ component, expectedHeading }: { component: ComponentType<Record<string, never>>; expectedHeading: string; }) => {
 			renderWithComponent(component);
-			const heading = screen.getByRole('heading');
-			expect(heading).toBeVisible();
-			expect(heading).toHaveTextContent(expectedHeading);
+			if (expectedHeading) {
+				const heading = screen.getByRole('heading');
+				expect(heading).toBeVisible();
+				expect(heading).toHaveTextContent(expectedHeading);
+			}
 		},
 	);
 

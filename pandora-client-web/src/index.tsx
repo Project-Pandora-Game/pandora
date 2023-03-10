@@ -11,6 +11,7 @@ import { NODE_ENV, USER_DEBUG } from './config/Environment';
 import './index.scss';
 import './styles/globalUtils.scss';
 import { PandoraRoutes } from './routing/Routes';
+import { Dialogs } from './components/dialog/dialog';
 
 const logger = GetLogger('init');
 
@@ -29,6 +30,7 @@ function Start(): void {
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
+			<Dialogs />
 			<EulaGate>
 				<BrowserRouter>
 					<GameContextProvider>

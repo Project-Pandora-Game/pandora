@@ -6,8 +6,8 @@ import './loginTeaser.scss';
 
 const teaserContents: [string, string][] = [
 	[`Welcome to ${ GAME_NAME } (version ${ GAME_VERSION })`, pandoraEntranceImage],
-	['The content is age 18+', pandoraEntranceImage],
-	['This part will show screenshots of the club', pandoraEntranceImage],
+	[`${ GAME_NAME } is an adult roleplaying community centered around the practice of BDSM.`, pandoraEntranceImage],
+	['We aim to provide a safe and welcoming environment for like-minded individuals to explore their kinks.', pandoraEntranceImage],
 ];
 
 export function LoginTeaser(): ReactElement {

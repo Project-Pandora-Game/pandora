@@ -63,7 +63,7 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: Chara
 
 		for (const state of states) {
 			cleanup.push(state.layer.definition.subscribe(() => {
-				setActualCalculate(() => calculate);
+				setActualCalculate(() => (l: readonly LayerState[]) => calculate(l));
 			}));
 		}
 

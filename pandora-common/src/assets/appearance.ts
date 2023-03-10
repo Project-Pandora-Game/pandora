@@ -72,10 +72,7 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 
 export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
 
-export type CharacterArmsPose = {
-	readonly left: Readonly<AppearanceArmPose>;
-	readonly right: Readonly<AppearanceArmPose>;
-};
+export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'rightArm'>>;
 
 export class CharacterAppearance implements RoomActionTargetCharacter {
 	public readonly type = 'character';
@@ -97,7 +94,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 
 	constructor(assetManager: AssetManager, getCharacter: () => Readonly<ICharacterMinimalData>, onChange?: (changes: AppearanceChangeType[]) => void) {
 		const { leftArm, rightArm, view } = GetDefaultAppearanceBundle();
-		this._arms = { left: leftArm, right: rightArm };
+		this._arms = { leftArm, rightArm };
 		this._view = view;
 		this.assetManager = assetManager;
 		this.getCharacter = getCharacter;
@@ -113,8 +110,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return {
 			items: this.items.map((item) => item.exportToBundle()),
 			bones: this.exportBones(),
-			leftArm: _.cloneDeep(this._arms.left),
-			rightArm: _.cloneDeep(this._arms.right),
+			leftArm: _.cloneDeep(this._arms.leftArm),
+			rightArm: _.cloneDeep(this._arms.rightArm),
 			view: this._view,
 			safemode: this._safemode,
 		};
@@ -124,7 +121,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		// Simple migration
 		bundle = {
 			...GetDefaultAppearanceBundle(),
-			...(bundle ?? {}),
+			...bundle,
 		};
 		if (assetManager && this.assetManager !== assetManager) {
 			this.assetManager = assetManager;
@@ -160,8 +157,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			});
 		}
 		this._arms = {
-			left: _.cloneDeep(bundle.leftArm),
-			right: _.cloneDeep(bundle.rightArm),
+			leftArm: _.cloneDeep(bundle.leftArm),
+			rightArm: _.cloneDeep(bundle.rightArm),
 		};
 		this._view = bundle.view;
 		this.fullPose = Array.from(this.pose.values());
@@ -187,8 +184,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 
 		const { changed, pose } = limits.force({
 			bones: Object.fromEntries([...this.pose.entries()].map(([bone, state]) => [bone, state.rotation])),
-			leftArm: this._arms.left,
-			rightArm: this._arms.right,
+			leftArm: this._arms.leftArm,
+			rightArm: this._arms.rightArm,
 			view: this._view,
 		});
 		if (!changed)
@@ -198,8 +195,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 
 		this._view = view;
 		this._arms = {
-			left: leftArm,
-			right: rightArm,
+			leftArm,
+			rightArm,
 		};
 		for (const [bone, state] of this.pose.entries()) {
 			const rotation = bones[bone];
@@ -346,14 +343,14 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this._arms;
 	}
 
-	public setArmsPose({ arms, leftArm, rightArm }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): void {
-		const left = { ...this._arms.left, ...arms, ...leftArm };
-		const right = { ...this._arms.right, ...arms, ...rightArm };
-		const changed = this._arms.left.position !== left.position
-			|| this._arms.right.position !== right.position;
+	public setArmsPose({ arms, leftArm: left, rightArm: right }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): void {
+		const leftArm = { ...this._arms.leftArm, ...arms, ...left };
+		const rightArm = { ...this._arms.rightArm, ...arms, ...right };
+		const changed = this._arms.leftArm.position !== leftArm.position
+			|| this._arms.rightArm.position !== rightArm.position;
 
 		if (changed) {
-			this._arms = { left, right };
+			this._arms = { leftArm, rightArm };
 			this.enforcePoseLimits();
 			this.onChange(['pose']);
 		}

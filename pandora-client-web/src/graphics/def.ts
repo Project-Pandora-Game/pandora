@@ -82,11 +82,11 @@ export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<ComputedLayerPriorit
 	'BELOW_ARMS_FRONT',
 ]);
 
-export function ComputeLayerPriority(priority: LayerPriority, { left, right }: CharacterArmsPose, mirror: boolean): ComputedLayerPriority {
+export function ComputeLayerPriority(priority: LayerPriority, { leftArm, rightArm }: CharacterArmsPose, mirror: boolean): ComputedLayerPriority {
 	if (!DOUBLE_ORDERED.includes(priority as DoubleOrdered)) {
 		return priority as ComputedLayerPriority;
 	}
-	const { position } = mirror ? right : left;
+	const { position } = mirror ? rightArm : leftArm;
 	if (position === ArmsPose.FRONT) {
 		return `${priority}_FRONT` as ComputedLayerPriority;
 	} else {

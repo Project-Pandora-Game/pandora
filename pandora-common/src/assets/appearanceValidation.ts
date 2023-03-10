@@ -213,7 +213,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 	}
 
 	// Check the pose is possible
-	if (!AppearanceItemProperties(items).limits.valid)
+	if (!globalProperties.limits.valid)
 		return {
 			success: false,
 			error: {

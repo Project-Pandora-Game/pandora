@@ -1214,7 +1214,7 @@ type CheckedAssetsPosePresets = {
 	poses: CheckedPosePreset[];
 }[];
 
-function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], { left, right }: CharacterArmsPose): {
+function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose): {
 	poses: CheckedAssetsPosePresets;
 	limits: AppearanceLimitTree;
 } {
@@ -1223,11 +1223,11 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
 
 	const isActive = (preset: AssetsPosePreset) => {
-		const leftArm = { ...preset.arms, ...preset.leftArm };
-		const rightArm = { ...preset.arms, ...preset.rightArm };
-		if (leftArm.position != null && leftArm.position !== left.position)
+		const left = { ...preset.arms, ...preset.leftArm };
+		const right = { ...preset.arms, ...preset.rightArm };
+		if (left.position != null && left.position !== leftArm.position)
 			return false;
-		if (rightArm.position != null && rightArm.position !== right.position)
+		if (right.position != null && right.position !== rightArm.position)
 			return false;
 
 		for (const [boneName, value] of Object.entries(preset.bones ?? {})) {
@@ -1287,7 +1287,7 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 	limits?: AppearanceLimitTree;
 	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
 }): ReactElement {
-	const { left, right } = armsPose;
+	const { leftArm, rightArm } = armsPose;
 	return (
 		<>
 			<div>
@@ -1295,8 +1295,8 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 				<input
 					id='arms-front-toggle'
 					type='checkbox'
-					checked={ left.position === ArmsPose.FRONT && right.position === ArmsPose.FRONT }
-					disabled={ limits == null || !limits.validate({ arms: { position: left.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					checked={ leftArm.position === ArmsPose.FRONT && rightArm.position === ArmsPose.FRONT }
+					disabled={ limits == null || !limits.validate({ arms: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
 					onChange={ (e) => {
 						setPose({
 							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
@@ -1310,8 +1310,8 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 				<input
 					id='arms-left-front-toggle'
 					type='checkbox'
-					checked={ left.position === ArmsPose.FRONT }
-					disabled={ limits == null || !limits.validate({ leftArm: { position: left.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					checked={ leftArm.position === ArmsPose.FRONT }
+					disabled={ limits == null || !limits.validate({ leftArm: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
 					onChange={ (e) => {
 						setPose({
 							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
@@ -1324,8 +1324,8 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 				<input
 					id='arms-right-front-toggle'
 					type='checkbox'
-					checked={ right.position === ArmsPose.FRONT }
-					disabled={ limits == null || !limits.validate({ rightArm: { position: right.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					checked={ rightArm.position === ArmsPose.FRONT }
+					disabled={ limits == null || !limits.validate({ rightArm: { position: rightArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
 					onChange={ (e) => {
 						setPose({
 							rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },

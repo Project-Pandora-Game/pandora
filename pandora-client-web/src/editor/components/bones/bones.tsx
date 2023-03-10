@@ -172,10 +172,10 @@ function AppearanceArmPoseToString({ position }: Readonly<AppearanceArmPose>): s
 	return `{ position: ArmsPose.${ArmsPose[position]} }`;
 }
 
-function CharacterArmsPoseToString({ left, right }: CharacterArmsPose): string {
-	if (left.position === right.position)
-		return `arms: ${AppearanceArmPoseToString(left)},`;
+function CharacterArmsPoseToString({ leftArm, rightArm }: CharacterArmsPose): string {
+	if (leftArm.position === rightArm.position)
+		return `arms: ${AppearanceArmPoseToString(leftArm)},`;
 
-	return `leftArm: ${AppearanceArmPoseToString(left)},`
-		+ '\n\t' + `rightArm: ${AppearanceArmPoseToString(right)},`;
+	return `leftArm: ${AppearanceArmPoseToString(leftArm)},`
+		+ '\n\t' + `rightArm: ${AppearanceArmPoseToString(rightArm)},`;
 }

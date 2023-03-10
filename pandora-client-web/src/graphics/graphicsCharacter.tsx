@@ -39,9 +39,9 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 
 export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
 export type LayerStateOverrideGetter = (layer: AssetGraphicsLayer) => LayerStateOverrides | undefined;
-export type LayerGetSortOrder = (armsPose: CharacterArmsPose, view: CharacterView) => readonly ComputedLayerPriority[];
+export type LayerGetSortOrder = (view: CharacterView) => readonly ComputedLayerPriority[];
 
-const GetSortOrderDefault: LayerGetSortOrder = (_, view) => {
+const GetSortOrderDefault: LayerGetSortOrder = (view) => {
 	const reverse = view === CharacterView.BACK;
 	return reverse ? COMPUTED_LAYER_ORDERING.slice().reverse() : COMPUTED_LAYER_ORDERING;
 };
@@ -176,7 +176,7 @@ export function GraphicsCharacterWithManager({
 
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === CharacterView.BACK ? -1 : 1, y: 1 }), [view, scaleExtra]);
 
-	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => getSortOrder(armsPose, view), [getSortOrder, armsPose, view]);
+	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => getSortOrder(view), [getSortOrder, view]);
 
 	return (
 		<Container

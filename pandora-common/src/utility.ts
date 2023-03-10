@@ -232,30 +232,34 @@ export function IntervalSetUnion(a: readonly (readonly [number, number])[], b: r
 	const res: [number, number][] = [];
 	let i = 0;
 	let j = 0;
+	const add = (interval: [number, number]) => {
+		if (res.length === 0 || res[res.length - 1][1] < interval[0]) {
+			res.push(internal);
+		} else {
+			res[res.length - 1][1] = Math.max(res[res.length - 1][1], interval[1]);
+		}
+	};
 	while (i < a.length && j < b.length) {
 		const [aMin, aMax] = a[i];
 		const [bMin, bMax] = b[j];
 		if (aMax < bMin) {
-			res.push([aMin, aMax]);
+			add([...a[i]]);
 			i++;
 		} else if (bMax < aMin) {
-			res.push([bMin, bMax]);
+			add([...b[j]]);
 			j++;
 		} else {
-			res.push([Math.min(aMin, bMin), Math.max(aMax, bMax)]);
-			if (aMax < bMax) {
-				i++;
-			} else {
-				j++;
-			}
+			add([Math.min(aMin, bMin), Math.max(aMax, bMax)]);
+			i++;
+			j++;
 		}
 	}
 	while (i < a.length) {
-		res.push([...a[i]]);
+		add([...a[i]]);
 		i++;
 	}
 	while (j < b.length) {
-		res.push([...b[j]]);
+		add([...b[j]]);
 		j++;
 	}
 	return res;

@@ -234,7 +234,7 @@ export function IntervalSetUnion(a: readonly (readonly [number, number])[], b: r
 	let j = 0;
 	const add = (interval: [number, number]) => {
 		if (res.length === 0 || res[res.length - 1][1] < interval[0]) {
-			res.push(internal);
+			res.push(interval);
 		} else {
 			res[res.length - 1][1] = Math.max(res[res.length - 1][1], interval[1]);
 		}

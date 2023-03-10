@@ -1,11 +1,11 @@
 import classNames from 'classnames';
-import React, { ReactElement, RefObject, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useContextMenuPosition } from '../contextMenu/contextMenu';
 import './hoverElement.scss';
 
 type HoverElementProps = CommonProps & {
-	parent: RefObject<HTMLElement>;
+	parent: HTMLElement | null;
 };
 
 export function HoverElement({ children, className, parent }: HoverElementProps): ReactElement | null {
@@ -13,25 +13,24 @@ export function HoverElement({ children, className, parent }: HoverElementProps)
 	const [show, setShow] = useState(false);
 
 	useEffect(() => {
-		if (!parent.current)
+		if (!parent)
 			return;
 
-		const current = parent.current;
-
 		const hover = (event: PointerEvent) => {
-			setAnchorPoint({ x: event.pageX, y: event.pageY - (event.pointerType === 'mouse' ? 16 : 32) });
+			setAnchorPoint({ x: event.pageX, y: event.pageY - (event.pointerType === 'mouse' ? 32 : 48) });
 			setShow(true);
 		};
 		const end = (_event: PointerEvent) => {
 			setShow(false);
 		};
-		current.addEventListener('pointerover', hover);
-		current.addEventListener('pointermove', hover);
-		current.addEventListener('pointerleave', end);
+		parent.addEventListener('pointerover', hover);
+		parent.addEventListener('pointermove', hover);
+		parent.addEventListener('pointerleave', end);
 		return () => {
-			current.removeEventListener('pointerover', hover);
-			current.removeEventListener('pointermove', hover);
-			current.removeEventListener('pointerleave', end);
+			parent.removeEventListener('pointerover', hover);
+			parent.removeEventListener('pointermove', hover);
+			parent.removeEventListener('pointerleave', end);
+			setShow(false);
 		};
 	}, [parent]);
 

@@ -29,7 +29,7 @@ import {
 	FormatTimeInterval,
 	MessageSubstitute,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
@@ -494,7 +494,7 @@ function AttributeButton({ attribute, ...buttonProps }: {
 	attribute: string;
 } & Omit<ButtonProps, 'children'>): ReactElement {
 	const assetManager = GetAssetManager();
-	const buttonRef = useRef<HTMLButtonElement>(null);
+	const [buttonRef, setButtonRef] = useState<HTMLButtonElement | null>(null);
 
 	const attributeDefinition = assetManager.getAttributeDefinition(attribute);
 
@@ -503,13 +503,13 @@ function AttributeButton({ attribute, ...buttonProps }: {
 	return (
 		<>
 			{ icon ? (
-				<IconButton ref={ buttonRef }
+				<IconButton ref={ setButtonRef }
 					{ ...buttonProps }
 					src={ icon }
 					alt={ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 				/>
 			) : (
-				<Button ref={ buttonRef } { ...buttonProps } className={ classNames(buttonProps.className, 'iconHeightButton') } >
+				<Button ref={ setButtonRef } { ...buttonProps } className={ classNames(buttonProps.className, 'iconHeightButton') } >
 					{ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 				</Button>
 			) }
@@ -520,7 +520,7 @@ function AttributeButton({ attribute, ...buttonProps }: {
 	);
 }
 
-function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: RefObject<HTMLElement>; }) {
+function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: HTMLElement | null; }) {
 	const assetManager = GetAssetManager();
 	const reason = useMemo(() => check.result === 'success'
 		? ''
@@ -552,12 +552,12 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 	};
 
 	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
-	const ref = useRef<HTMLDivElement>(null);
+	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	return (
 		<div
 			className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', check.result === 'success' ? 'allowed' : 'blocked') }
 			tabIndex={ 0 }
-			ref={ ref }
+			ref={ setRef }
 			onClick={ () => {
 				if (check.result === 'success') {
 					execute(action);
@@ -726,12 +726,12 @@ function WardrobeActionButton({
 
 	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
 	const hide = AppearanceActionResultShouldHide(check);
-	const ref = useRef<HTMLButtonElement>(null);
+	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
 
 	return (
 		<button
 			id={ id }
-			ref={ ref }
+			ref={ setRef }
 			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();

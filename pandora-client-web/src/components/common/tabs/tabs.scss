@@ -15,12 +15,12 @@ $header-height: 2em;
 		.tab {
 			@include center-flex;
 			padding: 0.5em 1em;
-			margin: 0 -0.3em;
+			margin: 0 -0.2em;
 			z-index: 0;
 			flex: 1;
 
 			background-color: $white;
-			clip-path: polygon(0.75em 0%, calc(100% - 0.75em) 0%, 100% 100%, 0% 100%);
+			border-radius: 1.2em 1.2em 0em 0em;
 
 			color: $black;
 			cursor: pointer;

@@ -44,7 +44,6 @@ export function AssetInfoUI(): ReactElement {
 				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } disabled />
 			</div>
 			<Colorization colorization={ definition.colorization } />
-			<PoseLimits poseLimits={ definition.poseLimits } />
 			<Effects effects={ definition.effects } />
 			<Modules modules={ definition.modules } />
 		</Scrollbar>
@@ -65,20 +64,6 @@ function Colorization({ colorization }: { colorization: AssetDefinition['coloriz
 					<input id={ `color-${key}-color` } type='color' value={ color.default } readOnly />
 				</div>
 			)) }
-		</FieldsetToggle>
-	);
-}
-
-function PoseLimits({ poseLimits }: { poseLimits: AssetDefinition['poseLimits']; id?: string; }): ReactElement | null {
-	if (!poseLimits) {
-		return null;
-	}
-
-	return (
-		<FieldsetToggle legend='Pose limits'>
-			<span>
-				TODO
-			</span>
 		</FieldsetToggle>
 	);
 }
@@ -174,7 +159,6 @@ function TypedModuleOptions({ options }: { options: IModuleTypedOption; }): Reac
 				<label htmlFor={ `module-type-${id}-default` }>Default: </label>
 				<input id={ `module-type-${id}-default` } type='checkbox' checked={ options.default } disabled />
 			</div>
-			<PoseLimits poseLimits={ options.poseLimits } id={ `module-type-${id}-` } />
 			<Effects effects={ options.effects } id={ `module-type-${id}-` } />
 		</div>
 	);

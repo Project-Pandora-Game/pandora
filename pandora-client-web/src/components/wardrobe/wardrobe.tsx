@@ -535,7 +535,7 @@ export function RoomInventoryView({ title, container }: {
 				target: { type: 'roomInventory' },
 				container: [],
 			} } hideReserveSpace>
-				🔄
+				▷
 			</WardrobeActionButton>
 		);
 	}, [target]);
@@ -625,7 +625,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					item,
 					shift: 1,
 				} } hideReserveSpace>
-					⬇️
+					▼
 				</WardrobeActionButton>
 				<WardrobeActionButton action={ {
 					type: 'move',
@@ -633,7 +633,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					item,
 					shift: -1,
 				} } hideReserveSpace>
-					⬆️
+					▲
 				</WardrobeActionButton>
 				<WardrobeActionButton action={ {
 					type: 'delete',
@@ -649,7 +649,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					target,
 					container: characterContainer,
 				} } hideReserveSpace>
-					🔄
+					◁
 				</WardrobeActionButton>
 			</div>
 		</div>
@@ -853,7 +853,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 								item,
 								shift: 1,
 							} } hideReserveSpace>
-								⬇️
+								▼
 							</WardrobeActionButton>
 							<WardrobeActionButton action={ {
 								type: 'move',
@@ -861,7 +861,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 								item,
 								shift: -1,
 							} } hideReserveSpace>
-								⬆️
+								▲
 							</WardrobeActionButton>
 						</>
 					)
@@ -964,7 +964,7 @@ export function WardrobeItemConfigMenu({
 									item,
 									shift: 1,
 								} }>
-									⬇️ Wear on top
+									▼ Wear on top
 								</WardrobeActionButton>
 								<WardrobeActionButton action={ {
 									type: 'move',
@@ -972,7 +972,7 @@ export function WardrobeItemConfigMenu({
 									item,
 									shift: -1,
 								} }>
-									⬆️ Wear under
+									▲ Wear under
 								</WardrobeActionButton>
 							</>
 						)

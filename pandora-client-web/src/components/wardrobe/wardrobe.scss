@@ -158,14 +158,15 @@ $header-height: 2em;
 	display: flex;
 
 	&.selected {
-		background-color: #97c;
+		color: $white;
+		background-color: $grey-darker;
 	}
 
 	&.allowed:hover {
 		cursor: pointer;
 		background-color: $grey-light;
 		&.selected {
-			background-color: #86a;
+			background-color: $black;
 		}
 	}
 
@@ -239,7 +240,8 @@ $header-height: 2em;
 	background-color: $grey-lighter;
 
 	&.selected {
-		background-color: #97c;
+		color: $white;
+		background-color: $grey-darker;
 	}
 
 	&.allowed:hover {
@@ -247,7 +249,7 @@ $header-height: 2em;
 		background-color: $grey-mid;
 
 		&.selected {
-			background-color: #86a;
+			background-color: $black;
 		}
 	}
 

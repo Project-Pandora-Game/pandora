@@ -113,6 +113,20 @@
 	}
 }
 
+.typing-indicator {
+	padding-right: 0.5em;
+	cursor: pointer;
+
+	&:hover {
+		background-color: #202020;
+	}
+
+	img {
+		height: 1em;
+		filter: brightness(0) saturate(100%) invert(100%);
+	}
+}
+
 .typing-indicator, .input-modifiers, .unread-messages-indicator {
 	@include flex(row, wrap);
 	align-items: center;

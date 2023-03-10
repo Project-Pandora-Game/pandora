@@ -213,9 +213,18 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return true;
 	}
 
-	public importBones(bones: Record<BoneName, number> | undefined, type: BoneType | true, missingAsZero: boolean): void {
+	public importPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): void {
+		const [changed, arms] = this._newArmsPose(pose);
+		const { bones } = pose;
 		if (!bones) {
+			if (changed) {
+				this._arms = arms;
+				this.enforcePoseLimits();
+				this.onChange(['pose']);
+			}
 			return;
+		} else if (changed) {
+			this._arms = arms;
 		}
 		for (const [bone, state] of this.pose.entries()) {
 			if (type !== true && state.definition.type !== type)
@@ -325,7 +334,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		if (!state)
 			throw new Error(`Attempt to set pose for unknown bone: ${bone}`);
 
-		this.importBones({ [bone]: value }, true, false);
+		this.importPose({ bones: { [bone]: value } }, true, false);
 	}
 
 	public getPose(bone: string): BoneState {
@@ -343,14 +352,10 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this._arms;
 	}
 
-	public setArmsPose({ arms, leftArm: left, rightArm: right }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): void {
-		const leftArm = { ...this._arms.leftArm, ...arms, ...left };
-		const rightArm = { ...this._arms.rightArm, ...arms, ...right };
-		const changed = this._arms.leftArm.position !== leftArm.position
-			|| this._arms.rightArm.position !== rightArm.position;
-
+	public setArmsPose(pose: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): void {
+		const [changed, arms] = this._newArmsPose(pose);
 		if (changed) {
-			this._arms = { leftArm, rightArm };
+			this._arms = arms;
 			this.enforcePoseLimits();
 			this.onChange(['pose']);
 		}
@@ -390,5 +395,14 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 				});
 			}
 		}
+	}
+
+	private _newArmsPose({ arms, leftArm: left, rightArm: right }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): [boolean, CharacterArmsPose] {
+		const leftArm = { ...this._arms.leftArm, ...arms, ...left };
+		const rightArm = { ...this._arms.rightArm, ...arms, ...right };
+		const changed = this._arms.leftArm.position !== leftArm.position
+			|| this._arms.rightArm.position !== rightArm.position;
+
+		return [changed, { leftArm, rightArm }];
 	}
 }

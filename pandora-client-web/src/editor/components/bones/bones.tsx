@@ -67,8 +67,7 @@ export function BoneUI(): ReactElement {
 			</div>
 			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } className='slim-padding' open={ false }>
 				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
-					character.appearance.importBones(pose.bones, 'pose', false);
-					character.appearance.setArmsPose(pose);
+					character.appearance.importPose(pose, 'pose', false);
 				} } />
 			</FieldsetToggle>
 			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>

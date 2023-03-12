@@ -1296,7 +1296,7 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 					id='arms-front-toggle'
 					type='checkbox'
 					checked={ leftArm.position === ArmsPose.FRONT && rightArm.position === ArmsPose.FRONT }
-					disabled={ limits == null || !limits.validate({ arms: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					disabled={ limits != null && !limits.validate({ arms: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
 					onChange={ (e) => {
 						setPose({
 							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
@@ -1311,7 +1311,7 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 					id='arms-left-front-toggle'
 					type='checkbox'
 					checked={ leftArm.position === ArmsPose.FRONT }
-					disabled={ limits == null || !limits.validate({ leftArm: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					disabled={ limits != null && !limits.validate({ leftArm: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
 					onChange={ (e) => {
 						setPose({
 							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
@@ -1325,7 +1325,7 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 					id='arms-right-front-toggle'
 					type='checkbox'
 					checked={ rightArm.position === ArmsPose.FRONT }
-					disabled={ limits == null || !limits.validate({ rightArm: { position: rightArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					disabled={ limits != null && !limits.validate({ rightArm: { position: rightArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
 					onChange={ (e) => {
 						setPose({
 							rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },

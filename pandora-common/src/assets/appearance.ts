@@ -151,10 +151,10 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this.items = newItems;
 		this.pose.clear();
 		for (const bone of this.assetManager.getAllBones()) {
+			const value = bundle.bones[bone.name];
 			this.pose.set(bone.name, {
 				definition: bone,
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-				rotation: Number.isInteger(bundle.bones[bone.name]) ? _.clamp(bundle.bones[bone.name]!, BONE_MIN, BONE_MAX) : 0,
+				rotation: (value != null && Number.isInteger(value)) ? _.clamp(value, BONE_MIN, BONE_MAX) : 0,
 			});
 		}
 		this._arms = {

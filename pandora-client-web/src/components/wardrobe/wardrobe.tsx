@@ -1173,11 +1173,11 @@ function WardrobeBodySizeEditor(): ReactElement {
 	const { character, execute } = useWardrobeContext();
 	const currentBones = useCharacterAppearancePose(character);
 
-	const setBodyDirect = useCallback(({ bones: bodyBones }: { bones: Record<BoneName, number>; }) => {
+	const setBodyDirect = useCallback(({ bones }: { bones: Record<BoneName, number>; }) => {
 		execute({
 			type: 'body',
 			target: character.id,
-			bones: bodyBones,
+			bones,
 		});
 	}, [execute, character]);
 
@@ -1256,7 +1256,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	return { poses, limits };
 }
 
-function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: Omit<AssetsPosePreset, 'name'>) => void; }): ReactElement {
+function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
 	return (
 		<>
 			{ poses.map((poseCategory, poseCategoryIndex) => (
@@ -1344,11 +1344,11 @@ export function WardrobePoseGui(): ReactElement {
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 
-	const setPoseDirect = useEvent(({ bones: poseBones, arms, leftArm, rightArm }: Omit<AssetsPosePreset, 'name'>) => {
+	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm }: Omit<AssetsPosePreset, 'name'>) => {
 		execute({
 			type: 'pose',
 			target: character.id,
-			bones: poseBones,
+			bones,
 			leftArm: { ...arms, ...leftArm },
 			rightArm: { ...arms, ...rightArm },
 		});

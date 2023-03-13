@@ -146,7 +146,7 @@ class TreeNode {
 	}
 
 	public isEmpty(): boolean {
-		return this.limit.isEmpty();
+		return this.limit.isEmpty() && !this.children;
 	}
 
 	public intersection(other: TreeNode): TreeNode | null {

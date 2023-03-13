@@ -62,6 +62,9 @@ class TreeLimit {
 		return this.limit.size === 0;
 	}
 
+	/**
+	 * Selects keys that are present in both limits and calculates the intersection of their values.
+	 */
 	public intersection(other: TreeLimit): TreeLimit | null {
 		const newLimit = new Map<string, [number, number][]>();
 		for (const [key, value] of this.limit) {
@@ -78,6 +81,9 @@ class TreeLimit {
 		return new TreeLimit(newLimit);
 	}
 
+	/**
+	 * Adds all keys from other that are not present in the current limit.
+	 */
 	public extend(other: TreeLimit): TreeLimit {
 		const newLimit = new Map<string, [number, number][]>(this.limit);
 		for (const [key, value] of other.limit) {
@@ -89,6 +95,9 @@ class TreeLimit {
 		return new TreeLimit(newLimit);
 	}
 
+	/**
+	 * Removes all keys that store the same values as in other.
+	 */
 	public prune(other: TreeLimit): TreeLimit {
 		const newLimit = new Map<string, [number, number][]>(this.limit);
 		for (const [key, value] of other.limit) {
@@ -103,6 +112,9 @@ class TreeLimit {
 	}
 }
 
+/**
+ * Each node only stores a partial limit, the full limit is calculated by combining all nodes in the path from the root to the leaf node.
+ */
 class TreeNode {
 	private readonly limit: TreeLimit;
 	private readonly children: TreeNode[] | null;
@@ -174,6 +186,11 @@ class TreeNode {
 		return TreeNode.fromResult(next.limit, nodes);
 	}
 
+	/**
+	 * Calculates the intersection on the current limit on all keys present in the 'limit' parameter.
+	 * If 'prune' is true, all matching values will be removed from the resulting limit, otherwise all missing keys will be added from the 'limit' parameter.
+	 * Then all children will be intersected with the resulting limit.
+	 */
 	private intersectionWithLimit(limit: TreeLimit, prune: boolean = false): TreeNode | null {
 		const intersection = this.limit.intersection(limit);
 		if (intersection == null)
@@ -186,8 +203,9 @@ class TreeNode {
 		if (this.children == null)
 			return new TreeNode(newLimit);
 
+		const childLimiter = newLimit.prune(this.limit);
 		const newChildren = this.children
-			.map((child) => child.intersectionWithLimit(newLimit, true))
+			.map((child) => child.intersectionWithLimit(childLimiter, true))
 			.filter((child): child is TreeNode => child != null);
 
 		return TreeNode.fromResult(newLimit, newChildren);
@@ -303,8 +321,8 @@ function FromArmLimit(data: Map<string, [number, number][]>, prefix: 'leftArm' |
 
 function ToArmPose(data: ReadonlyMap<string, number>, prefix: 'leftArm' | 'rightArm', pose: AppearancePose): void {
 	const position = data.get(`${prefix}.position`);
-	if (position != null) {
-		pose[prefix].position = position === 0 ? ArmsPose.FRONT : ArmsPose.BACK;
+	if (position != null && ArmsPose[position] != null) {
+		pose[prefix].position = position;
 	}
 }
 
@@ -315,8 +333,8 @@ function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
 	ToArmPose(data, 'rightArm', pose);
 
 	const view = data.get('view');
-	if (view != null)
-		pose.view = view === 0 ? CharacterView.FRONT : CharacterView.BACK;
+	if (view != null && CharacterView[view] != null)
+		pose.view = view;
 
 	for (const [key, value] of data) {
 		if (!key.startsWith('bones.'))

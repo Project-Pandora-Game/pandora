@@ -46,7 +46,7 @@ class TreeLimit {
 					minDiffValue = min;
 				}
 				const diffMax = Math.abs(value - max);
-				if (diffMin < minDiff) {
+				if (diffMax < minDiff) {
 					minDiff = diffMax;
 					minDiffValue = max;
 				}

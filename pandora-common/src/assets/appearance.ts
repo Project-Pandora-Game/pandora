@@ -42,7 +42,7 @@ export const AppearanceArmPoseSchema = z.object({
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
 export const AppearancePoseSchema = z.object({
-	bones: z.record(BoneNameSchema, z.number()),
+	bones: z.record(BoneNameSchema, z.number().optional()),
 	leftArm: AppearanceArmPoseSchema,
 	rightArm: AppearanceArmPoseSchema,
 	view: z.nativeEnum(CharacterView),
@@ -153,7 +153,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		for (const bone of this.assetManager.getAllBones()) {
 			this.pose.set(bone.name, {
 				definition: bone,
-				rotation: Number.isInteger(bundle.bones[bone.name]) ? _.clamp(bundle.bones[bone.name], BONE_MIN, BONE_MAX) : 0,
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				rotation: Number.isInteger(bundle.bones[bone.name]) ? _.clamp(bundle.bones[bone.name]!, BONE_MIN, BONE_MAX) : 0,
 			});
 		}
 		this._arms = {

@@ -1,10 +1,10 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
 import { CharacterIdSchema } from '../character';
-import { ChatRoomDirectoryConfigSchema, RoomId, RoomIdSchema } from '../chatroom/room';
+import { ChatRoomDataSchema, RoomId, RoomIdSchema } from '../chatroom/room';
 import { IEmpty } from './empty';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 import { z } from 'zod';
-import { AccountIdSchema, AccountRoleInfoSchema } from '../account';
+import { AccountRoleInfoSchema } from '../account';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 
@@ -23,11 +23,11 @@ export const ShardCharacterDefinitionSchema = z.object({
 });
 export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionSchema>;
 
-export const ShardChatRoomDefinitionSchema = z.object({
-	id: RoomIdSchema,
-	config: ChatRoomDirectoryConfigSchema,
-	accessId: z.string(),
-	owners: AccountIdSchema.array(),
+export const ShardChatRoomDefinitionSchema = ChatRoomDataSchema.pick({
+	id: true,
+	config: true,
+	accessId: true,
+	owners: true,
 });
 export type IShardChatRoomDefinition = z.infer<typeof ShardChatRoomDefinitionSchema>;
 

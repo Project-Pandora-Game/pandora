@@ -273,8 +273,14 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		for (const message of manipulator.getAndClearPendingMessages()) {
 			context.actionHandler?.({
 				...message,
-				character: context.sourceCharacter,
-				targetCharacter: this.character.id,
+				character: context.sourceCharacter ? {
+					type: 'character',
+					id: context.sourceCharacter,
+				} : undefined,
+				target: {
+					type: 'character',
+					id: this.character.id,
+				},
 			});
 		}
 
@@ -341,7 +347,10 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			if (stateChange) {
 				context.actionHandler?.({
 					id: value != null ? 'safemodeEnter' : 'safemodeLeave',
-					character: this.character.id,
+					character: {
+						type: 'character',
+						id: this.character.id,
+					},
 				});
 			}
 		}

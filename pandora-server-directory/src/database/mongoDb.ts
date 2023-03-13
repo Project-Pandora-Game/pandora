@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataUpdate, RoomId, Assert, CHATROOM_UPDATEABLE_PROPERTIES, AccountId, IsObject } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
@@ -337,12 +337,12 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async updateChatRoom(data: IChatRoomDataUpdate, accessId: string | null): Promise<boolean> {
+	public async updateChatRoom(id: RoomId, data: IChatRoomDataDirectoryUpdate & IChatRoomDataShardUpdate, accessId: string | null): Promise<boolean> {
 		if (accessId !== null) {
-			const result = await this._chatrooms.findOneAndUpdate({ 'id': data.id, accessId }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
+			const result = await this._chatrooms.findOneAndUpdate({ id, accessId }, { $set: data });
 			return result.value === null ? false : true;
 		} else {
-			const result = await this._chatrooms.findOneAndUpdate({ 'id': data.id }, { $set: _.pick(data, CHATROOM_UPDATEABLE_PROPERTIES) });
+			const result = await this._chatrooms.findOneAndUpdate({ id }, { $set: data });
 			Assert(result.value != null);
 			return true;
 		}

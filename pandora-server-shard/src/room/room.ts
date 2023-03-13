@@ -1,6 +1,6 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataUpdate, IChatRoomData, AccountId } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, RoomInventory, AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT } from 'pandora-common';
 import type { Character } from '../character/character';
-import _, { omit } from 'lodash';
+import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
 import AsyncLock from 'async-lock';
 import { GetDatabase } from '../database/databaseProvider';
@@ -17,11 +17,13 @@ export class Room extends ServerRoom<IShardClient> {
 	private readonly characters: Set<Character> = new Set();
 	private readonly history = new Map<CharacterId, Map<number, number>>();
 	private readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId; }>();
-	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionCharacter; leave?: number; }>();
+	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionTargetCharacter; leave?: number; }>();
 	private readonly tickInterval: NodeJS.Timeout;
 
+	public readonly inventory: RoomInventory;
+
 	private readonly _lock = new AsyncLock();
-	private modified: Set<Exclude<keyof IChatRoomDataUpdate, 'id' | 'config'>> = new Set();
+	private modified: Set<keyof IChatRoomDataShardUpdate> = new Set();
 
 	public get id(): RoomId {
 		return this.data.id;
@@ -37,12 +39,21 @@ export class Room extends ServerRoom<IShardClient> {
 
 	private logger: Logger;
 
-	constructor(data: IShardChatRoomDefinition) {
+	constructor(data: IChatRoomData) {
 		super();
 		this.data = data;
 		this.logger = GetLogger('Room', `[Room ${data.id}]`);
 		this.logger.verbose('Created');
+		this.inventory = new RoomInventory(assetManager);
+
+		this.inventory.importFromBundle(data.inventory ?? ROOM_INVENTORY_BUNDLE_DEFAULT, this.logger.prefixMessages('Room inventory load:'));
+		this.inventory.onChangeHandler = this.onInventoryChanged.bind(this);
+
 		this.tickInterval = setInterval(() => this._tick(), ROOM_TICK_INTERVAL);
+	}
+
+	public reloadAssetManager(manager: AssetManager, force: boolean = false) {
+		this.inventory.reloadAssetManager(manager, this.logger.prefixMessages('Asset manager reload:'), force);
 	}
 
 	public onRemove(): void {
@@ -63,6 +74,14 @@ export class Room extends ServerRoom<IShardClient> {
 				this.history.delete(characterId);
 			}
 		}
+	}
+
+	public onInventoryChanged(): void {
+		this.modified.add('inventory');
+
+		this.sendUpdateToAllInRoom({
+			roomInventoryChange: this.inventory.exportToBundle(),
+		});
 	}
 
 	public update(data: IShardChatRoomDefinition): void {
@@ -105,6 +124,7 @@ export class Room extends ServerRoom<IShardClient> {
 		return {
 			...this.getInfo(),
 			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
+			inventory: this.inventory.exportToBundle(),
 		};
 	}
 
@@ -198,21 +218,21 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public save(): Promise<void> {
 		return this._lock.acquire('save', async () => {
-			const keys: (keyof Omit<IChatRoomDataUpdate, 'id' | 'config'>)[] = [...this.modified];
+			const keys = [...this.modified];
 			this.modified.clear();
 
 			// Nothing to save
 			if (keys.length === 0)
 				return;
 
-			const data: IChatRoomDataUpdate = {
-				id: this.data.id,
-			};
+			const data: IChatRoomDataShardUpdate = {};
 
-			// TODO: Any update
+			if (keys.includes('inventory')) {
+				data.inventory = this.inventory.exportToBundle();
+			}
 
 			try {
-				if (!await GetDatabase().setChatRoom(data, this.accessId)) {
+				if (!await GetDatabase().setChatRoom(this.id, data, this.accessId)) {
 					throw new Error('Database returned failure');
 				}
 			} catch (error) {
@@ -336,11 +356,16 @@ export class Room extends ServerRoom<IShardClient> {
 		id,
 		customText,
 		character,
-		targetCharacter,
+		target,
 		sendTo,
 		dictionary,
 		...data
 	}: ActionHandlerMessage): void {
+		// No reason to duplicate target if it matches character
+		if (isEqual(target, character)) {
+			target = undefined;
+		}
+
 		this._queueMessages([
 			{
 				type: 'action',
@@ -349,8 +374,9 @@ export class Room extends ServerRoom<IShardClient> {
 				sendTo,
 				time: this.nextMessageTime(),
 				data: {
-					character: this._getCharacterActionInfo(character),
-					targetCharacter: targetCharacter !== character ? this._getCharacterActionInfo(targetCharacter) : undefined,
+					character: this._getCharacterActionInfo(character?.id),
+					target: target?.type === 'character' ? this._getCharacterActionInfo(target.id) :
+						target,
 					...data,
 				},
 				dictionary,
@@ -399,15 +425,27 @@ export class Room extends ServerRoom<IShardClient> {
 			.max() ?? this.lastDirectoryMessageTime;
 	}
 
-	private _getCharacterActionInfo(id?: CharacterId | null): IChatRoomMessageActionCharacter | undefined {
+	private _getCharacterActionInfo(id?: CharacterId | null): IChatRoomMessageActionTargetCharacter | undefined {
 		if (!id)
 			return undefined;
 
 		const char = this.getCharacterById(id);
 		if (!char)
-			return this.actionCache.get(id)?.result ?? { id, name: '[UNKNOWN]', pronoun: 'they', labelColor: '#ffffff' };
+			return this.actionCache.get(id)?.result ?? {
+				type: 'character',
+				id,
+				name: '[UNKNOWN]',
+				pronoun: 'they',
+				labelColor: '#ffffff',
+			};
 
-		const result: IChatRoomMessageActionCharacter = { id: char.id, name: char.name, pronoun: char.settings.pronoun, labelColor: char.settings.labelColor };
+		const result: IChatRoomMessageActionTargetCharacter = {
+			type: 'character',
+			id: char.id,
+			name: char.name,
+			pronoun: char.settings.pronoun,
+			labelColor: char.settings.labelColor,
+		};
 		this.actionCache.set(id, { result });
 
 		return result;

@@ -129,11 +129,11 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		return result;
 	}
 
-	private async handleSetChatRoom({ data, accessId }: IShardDirectoryArgument['setChatRoom'], connection: IConnectionShard): IShardDirectoryPromiseResult['setChatRoom'] {
+	private async handleSetChatRoom({ id, data, accessId }: IShardDirectoryArgument['setChatRoom'], connection: IConnectionShard): IShardDirectoryPromiseResult['setChatRoom'] {
 		if (!connection.shard)
 			throw new BadMessageError();
 
-		if (Object.keys(data).length > 2 && !await GetDatabase().updateChatRoom(data, accessId))
+		if (!await GetDatabase().updateChatRoom(id, data, accessId))
 			return { result: 'invalidAccessId' };
 
 		return { result: 'success' };

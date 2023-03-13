@@ -1,4 +1,4 @@
-import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo } from 'pandora-common';
+import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventoryBundle, RoomInventory, ROOM_INVENTORY_BUNDLE_DEFAULT, Logger, ItemPath, Item } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { AppearanceContainer, Character } from '../../character/character';
@@ -8,9 +8,9 @@ import { ChatParser } from '../chatroom/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
-import { TypedEventEmitter } from '../../event';
+import { ITypedEventEmitter, TypedEventEmitter } from '../../event';
 import { useShardConnector } from './shardConnectorContextProvider';
-import { AssetManagerClient } from '../../assets/assetManager';
+import { AssetManagerClient, GetAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';
 
 const logger = GetLogger('ChatRoom');
@@ -83,7 +83,7 @@ function ProcessMessage(
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
 
 	const source = message.data?.character;
-	const target = message.data?.targetCharacter ?? source;
+	const target = message.data?.target ?? source;
 
 	if (source) {
 		const { id, name, pronoun } = source;
@@ -94,7 +94,7 @@ function ProcessMessage(
 		AssignPronouns('SOURCE_CHARACTER_PRONOUN', pronoun, metaDictionary);
 	}
 
-	if (target) {
+	if (target?.type === 'character') {
 		const { id, name, pronoun } = target;
 		metaDictionary.TARGET_CHARACTER_NAME = name;
 		metaDictionary.TARGET_CHARACTER_ID = id;
@@ -126,19 +126,34 @@ function ProcessMessage(
 
 	if (itemContainerPath) {
 		if (itemContainerPath.length === 0) {
-			metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
-			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
+			if (target?.type === 'roomInventory') {
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
+					`the room inventory`;
+			} else {
+				metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
+			}
 		} else if (itemContainerPath.length === 1) {
 			const asset = DescribeAsset(assetManager, itemContainerPath[0].assetId);
 
-			metaDictionary.ITEM_CONTAINER_SIMPLE = `${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${asset}`;
-			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
+			if (target?.type === 'roomInventory') {
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
+					`${asset} in the room inventory`;
+			} else {
+				metaDictionary.ITEM_CONTAINER_SIMPLE = `${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${asset}`;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
+			}
 		} else {
 			const assetFirst = DescribeAsset(assetManager, itemContainerPath[0].assetId);
 			const assetLast = DescribeAsset(assetManager, itemContainerPath[itemContainerPath.length - 1].assetId);
 
-			metaDictionary.ITEM_CONTAINER_SIMPLE = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${assetFirst}`;
-			metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+			if (target?.type === 'roomInventory') {
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
+					`the ${assetLast} in ${assetFirst} in the room inventory`;
+			} else {
+				metaDictionary.ITEM_CONTAINER_SIMPLE = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+			}
 		}
 	}
 
@@ -151,12 +166,24 @@ function ProcessMessage(
 	};
 }
 
-export class ChatRoom extends TypedEventEmitter<{
+export type RoomInventoryEvents = {
+	roomInventoryChange: true;
+};
+
+export type RoomInventoryContainer = ITypedEventEmitter<RoomInventoryEvents> & {
+	readonly type: 'room';
+	readonly inventory: RoomInventory;
+};
+
+export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 	messageNotify: NotificationData;
-}> implements IChatRoomMessageSender {
+}> implements IChatRoomMessageSender, RoomInventoryContainer {
+	public readonly type = 'room';
+
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
 	public readonly data = new Observable<IChatRoomClientData | null>(null);
 	public readonly characters = new Observable<readonly Character<ICharacterRoomData>[]>([]);
+	public readonly inventory: RoomInventory;
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
 	public get player(): PlayerCharacter | null {
 		return this._shard.player.value;
@@ -165,6 +192,8 @@ export class ChatRoom extends TypedEventEmitter<{
 	public get playerId() {
 		return this.player?.data.id;
 	}
+
+	protected readonly logger: Logger;
 
 	private readonly _restore = BrowserStorage.createSession<undefined | {
 		roomId: RoomId;
@@ -202,7 +231,10 @@ export class ChatRoom extends TypedEventEmitter<{
 
 	constructor(shard: ShardConnector) {
 		super();
+		this.logger = GetLogger('ChatRoom');
 		this._shard = shard;
+		this.inventory = new RoomInventory(GetAssetManager(), () => this.emit('roomInventoryChange', true));
+		this.inventory.importFromBundle(ROOM_INVENTORY_BUNDLE_DEFAULT, this.logger.prefixMessages('Inventory load:'));
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
 	}
 
@@ -237,6 +269,7 @@ export class ChatRoom extends TypedEventEmitter<{
 					}
 				}
 				this._updateCharacters(room.characters);
+				this._updateRoomInventory(room.inventory);
 				logger.debug('Loaded room data', data);
 			} else {
 				logger.debug('Left room');
@@ -244,7 +277,7 @@ export class ChatRoom extends TypedEventEmitter<{
 			}
 			return;
 		}
-		const { info, join, leave, update } = data;
+		const { info, join, leave, update, roomInventoryChange } = data;
 		if (join?.id === this.playerId) {
 			return; // Ignore self-join
 		}
@@ -283,6 +316,10 @@ export class ChatRoom extends TypedEventEmitter<{
 				this.characters.value = [...this.characters.value];
 			}
 		}
+		if (roomInventoryChange) {
+			this._updateRoomInventory(roomInventoryChange);
+			next.inventory = roomInventoryChange;
+		}
 		this.data.value = { ...next };
 		logger.debug('Updated room data', data);
 	}
@@ -290,6 +327,7 @@ export class ChatRoom extends TypedEventEmitter<{
 	private _onLeave() {
 		this.messages.value = [];
 		this._sent.clear();
+		this.inventory.importFromBundle(ROOM_INVENTORY_BUNDLE_DEFAULT, this.logger.prefixMessages('Inventory clear:'));
 		this._setRestore();
 	}
 
@@ -308,6 +346,13 @@ export class ChatRoom extends TypedEventEmitter<{
 			}
 			return char;
 		});
+	}
+
+	private _updateRoomInventory(roomInventory: RoomInventoryBundle): void {
+		if (!this.player)
+			throw new Error('Cannot update room when player is not loaded');
+
+		this.inventory.importFromBundle(roomInventory, this.logger.prefixMessages('Inventory load:'), GetAssetManager());
 	}
 
 	public onMessage(incoming: IChatRoomMessage[], assetManager: AssetManagerClient): number {
@@ -592,6 +637,22 @@ export function useChatRoomStatus(): { data: ICharacterRoomData; status: IChatRo
 		}
 		return result;
 	}, [characters, status, context]);
+}
+
+export function useRoomInventoryItem(character: RoomInventoryContainer, item: ItemPath | null | undefined): Item | undefined {
+	return useSyncExternalStore((onChange) => {
+		return character.on('roomInventoryChange', () => {
+			onChange();
+		});
+	}, () => item ? character.inventory.getItem(item) : undefined);
+}
+
+export function useRoomInventoryItems(character: RoomInventoryContainer): readonly Item[] {
+	return useSyncExternalStore((onChange) => {
+		return character.on('roomInventoryChange', () => {
+			onChange();
+		});
+	}, () => character.inventory.getAllItems());
 }
 
 export function IsChatroomAdmin(data: Nullable<IChatRoomClientData>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {

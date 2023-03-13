@@ -124,7 +124,7 @@ export class Room {
 			this.assignedShard?.update('rooms');
 			// TODO: Make an announcement of the change
 
-			await GetDatabase().updateChatRoom({ id: this.id, owners: Array.from(this._owners) }, null);
+			await GetDatabase().updateChatRoom(this.id, { owners: Array.from(this._owners) }, null);
 
 			ConnectionManagerClient.onRoomListChange();
 		}
@@ -185,7 +185,7 @@ export class Room {
 
 		this.assignedShard?.update('rooms');
 
-		await GetDatabase().updateChatRoom({ id: this.id, config: this.config }, null);
+		await GetDatabase().updateChatRoom(this.id, { config: this.config }, null);
 
 		ConnectionManagerClient.onRoomListChange();
 		return 'ok';

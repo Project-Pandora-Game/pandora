@@ -1,7 +1,7 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
 import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataUpdateSchema, CharacterIdSchema, ICharacterData } from '../character';
 import { IDirectoryShardUpdate, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
-import { ChatRoomDataSchema, ChatRoomDataUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom';
+import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom';
 import { z } from 'zod';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
@@ -67,8 +67,9 @@ export const ShardDirectorySchema = {
 	},
 	setChatRoom: {
 		request: z.object({
-			data: ChatRoomDataUpdateSchema,
+			id: RoomIdSchema,
 			accessId: z.string(),
+			data: ChatRoomDataShardUpdateSchema,
 		}),
 		response: ZodCast<{ result: 'success' | 'invalidAccessId'; }>(),
 	},

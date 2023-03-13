@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
-import { AssertNever, ShuffleArray } from '../utility';
+import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { ArmsPose, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
@@ -33,6 +33,19 @@ export const AppearanceActionDeleteSchema = z.object({
 	target: RoomTargetSelectorSchema,
 	/** Path to the item to delete */
 	item: ItemPathSchema,
+});
+
+/** Action that moves item between two containers (e.g. character and character or character and room or character and bag the charater is wearing) */
+export const AppearanceActionTransferSchema = z.object({
+	type: z.literal('transfer'),
+	/** Target with the item to get */
+	source: RoomTargetSelectorSchema,
+	/** Path to the item */
+	item: ItemPathSchema,
+	/** Target the item should be added to after removing it from original place */
+	target: RoomTargetSelectorSchema,
+	/** Container path on target where to add the item to */
+	container: ItemContainerPathSchema,
 });
 
 export const AppearanceActionPose = z.object({
@@ -101,6 +114,7 @@ export const AppearanceActionRandomize = z.object({
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
+	AppearanceActionTransferSchema,
 	AppearanceActionPose,
 	AppearanceActionBody,
 	AppearanceActionSetView,
@@ -160,11 +174,12 @@ export function DoAppearanceAction(
 			const item = assetManager.createItem(action.itemId, asset, null);
 			// Player adding the item must be able to use it
 			const r = player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE);
-			if (!r.allowed)
+			if (!r.allowed) {
 				return {
 					result: 'restrictionError',
 					restriction: r.restriction,
 				};
+			}
 
 			const manipulator = target.getManipulator();
 			if (!ActionAddItem(manipulator, action.container, item))
@@ -180,11 +195,12 @@ export function DoAppearanceAction(
 				return { result: 'invalidAction' };
 			// Player removing the item must be able to use it
 			const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
-			if (!r.allowed)
+			if (!r.allowed) {
 				return {
 					result: 'restrictionError',
 					restriction: r.restriction,
 				};
+			}
 
 			const manipulator = target.getManipulator();
 			if (!ActionRemoveItem(manipulator, action.item))
@@ -193,6 +209,61 @@ export function DoAppearanceAction(
 				target.commitChanges(manipulator, processingContext),
 			);
 		}
+		// Unequip item and equip on another target
+		case 'transfer': {
+			const source = context.getTarget(action.source);
+			const target = context.getTarget(action.target);
+			if (!source || !target)
+				return { result: 'invalidAction' };
+
+			// The item must exist
+			const item = source.getItem(action.item);
+			if (!item)
+				return { result: 'invalidAction' };
+
+			// Player removing the item must be able to use it on source
+			let r = player.canUseItemDirect(source, action.item.container, item, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed) {
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
+			}
+
+			// Player adding the item must be able to use it on target
+			r = player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed) {
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
+			}
+
+			const sourceManipulator = source.getManipulator();
+			const targetManipulator = target.getManipulator();
+
+			// Preform the transfer in manipulators
+			if (!ActionTransferItem(sourceManipulator, action.item, targetManipulator, action.container))
+				return { result: 'invalidAction' };
+
+			// Test if source would accept it (dry run)
+			let result = source.commitChanges(sourceManipulator, {
+				dryRun: true,
+			});
+			if (!result.success)
+				return AppearanceValidationResultToActionResult(result);
+
+			// Try to update target
+			result = target.commitChanges(targetManipulator, processingContext);
+			if (!result.success)
+				return AppearanceValidationResultToActionResult(result);
+
+			// Update source (it passed before)
+			result = source.commitChanges(sourceManipulator, processingContext);
+			Assert(result.success, 'Action failed after a successful dryRun');
+
+			return { result: 'success' };
+		}
 		// Moves an item within inventory, reordering the worn order
 		case 'move': {
 			const target = context.getTarget(action.target);
@@ -200,11 +271,12 @@ export function DoAppearanceAction(
 				return { result: 'invalidAction' };
 			// Player moving the item must be able to interact with the item
 			const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
-			if (!r.allowed)
+			if (!r.allowed) {
 				return {
 					result: 'restrictionError',
 					restriction: r.restriction,
 				};
+			}
 
 			const manipulator = target.getManipulator();
 			if (!ActionMoveItem(manipulator, action.item, action.shift))
@@ -220,11 +292,12 @@ export function DoAppearanceAction(
 				return { result: 'invalidAction' };
 			// Player coloring the item must be able to interact with the item
 			const r = player.canUseItem(target, action.item, ItemInteractionType.STYLING);
-			if (!r.allowed)
+			if (!r.allowed) {
 				return {
 					result: 'restrictionError',
 					restriction: r.restriction,
 				};
+			}
 
 			const manipulator = target.getManipulator();
 			if (!ActionColorItem(manipulator, action.item, action.color))
@@ -240,11 +313,12 @@ export function DoAppearanceAction(
 				return { result: 'invalidAction' };
 			// Player doing the action must be able to interact with the item
 			const r = player.canUseItemModule(target, action.item, action.module);
-			if (!r.allowed)
+			if (!r.allowed) {
 				return {
 					result: 'restrictionError',
 					restriction: r.restriction,
 				};
+			}
 
 			const manipulator = target.getManipulator();
 			if (!ActionModuleAction(context, manipulator, action.item, action.module, action.action))
@@ -255,7 +329,7 @@ export function DoAppearanceAction(
 		}
 		// Resize body or change pose
 		case 'body':
-			if (context.player !== action.target)
+			if (context.player !== action.target) {
 				return {
 					result: 'restrictionError',
 					restriction: {
@@ -263,6 +337,7 @@ export function DoAppearanceAction(
 						missingPermission: 'modifyBodyOthers',
 					},
 				};
+			}
 		// falls through
 		case 'pose': {
 			const target = context.getCharacter(action.target);
@@ -342,6 +417,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 
 	// Change message to chat
 	if (removed.length > 0) {
+		Assert(rootManipulator.isCharacter);
 		manipulator.queueMessage({
 			id: 'itemReplace',
 			item: {
@@ -354,7 +430,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	} else {
 		const manipulatorContainer = manipulator.container;
 		manipulator.queueMessage({
-			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
+			id: (!manipulatorContainer && rootManipulator.isCharacter) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 			item: {
 				assetId: item.asset.id,
 			},
@@ -378,11 +454,54 @@ export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, ite
 	// Change message to chat
 	const manipulatorContainer = manipulator.container;
 	manipulator.queueMessage({
-		id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
+		id: (!manipulatorContainer && rootManipulator.isCharacter) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 		item: {
 			assetId: removedItems[0].asset.id,
 		},
 	});
+
+	return true;
+}
+
+export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator, itemPath: ItemPath, targetManipulator: AppearanceRootManipulator, targetContainer: ItemContainerPath): boolean {
+	const { container, itemId } = itemPath;
+	const sourceContainerManipulator = sourceManipulator.getContainer(container);
+	const targetContainerManipulator = targetManipulator.getContainer(targetContainer);
+
+	// Do change
+	const removedItems = sourceContainerManipulator.removeMatchingItems((i) => i.id === itemId);
+
+	if (removedItems.length !== 1)
+		return false;
+
+	const item = removedItems[0];
+
+	// No transfering bodyparts, thank you
+	if (item.asset.definition.bodypart)
+		return false;
+
+	if (!targetContainerManipulator.addItem(item))
+		return false;
+
+	// Change message to chat
+	if (sourceManipulator.isCharacter) {
+		const manipulatorContainer = sourceContainerManipulator.container;
+		sourceContainerManipulator.queueMessage({
+			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
+			item: {
+				assetId: item.asset.id,
+			},
+		});
+	}
+	if (targetManipulator.isCharacter) {
+		const manipulatorContainer = targetContainerManipulator.container;
+		targetContainerManipulator.queueMessage({
+			id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
+			item: {
+				assetId: removedItems[0].asset.id,
+			},
+		});
+	}
 
 	return true;
 }
@@ -452,14 +571,15 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 			return character.canUseItemDirect(character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
 		})
 		.find((res) => !res.allowed);
-	if (restriction != null && !restriction.allowed)
+	if (restriction != null && !restriction.allowed) {
 		return {
 			result: 'restrictionError',
 			restriction: restriction.restriction,
 		};
+	}
 
 	// Room must allow body changes if running full randomization
-	if (kind === 'full' && character.room && !character.room.features.includes('allowBodyChanges'))
+	if (kind === 'full' && character.room && !character.room.features.includes('allowBodyChanges')) {
 		return {
 			result: 'restrictionError',
 			restriction: {
@@ -467,15 +587,17 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 				missingPermission: 'modifyBodyRoom',
 			},
 		};
+	}
 
 	// Must have free hands to randomize
-	if (!character.canUseHands() && !character.isInSafemode())
+	if (!character.canUseHands() && !character.isInSafemode()) {
 		return {
 			result: 'restrictionError',
 			restriction: {
 				type: 'blockedHands',
 			},
 		};
+	}
 
 	// Dry run can end here as everything lower is simply random
 	if (context.dryRun)

@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
@@ -157,12 +157,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!client.character?.room)
 			throw new BadMessageError();
 
+		const character: ActionHandlerMessageTargetCharacter = {
+			type: 'character',
+			id: client.character.id,
+		};
+
 		const room = client.character.room;
 		switch (game.type) {
 			case 'coinFlip':
 				room.handleActionMessage({
 					id: 'gamblingCoin',
-					character: client.character.id,
+					character,
 					dictionary: { 'TOSS_RESULT': Math.random() < 0.5 ? 'heads' : 'tails' },
 				});
 				break;
@@ -175,7 +180,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (game.hidden) {
 					room.handleActionMessage({
 						id: 'gamblingDiceHidden',
-						character: client.character.id,
+						character,
 						dictionary: {
 							'DICE_COUNT': game.dice === 1 ?
 								`a ${game.sides}-sided die` :
@@ -184,7 +189,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					});
 					room.handleActionMessage({
 						id: 'gamblingDiceHiddenResult',
-						character: client.character.id,
+						character,
 						sendTo: [client.character.id],
 						dictionary: {
 							'DICE_COUNT': game.dice === 1 ?
@@ -196,7 +201,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				} else {
 					room.handleActionMessage({
 						id: 'gamblingDice',
-						character: client.character.id,
+						character,
 						dictionary: {
 							'DICE_COUNT': game.dice === 1 ?
 								`a ${game.sides}-sided die` :

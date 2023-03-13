@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { zTemplateString } from '../validation';
-import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction } from '../chatroom';
+import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction, IChatRoomMessageActionTargetCharacter, IChatRoomMessageActionTargetRoomInventory } from '../chatroom';
 import type { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceValidationResult } from './appearanceValidation';
 import type { Item } from './item';
@@ -40,16 +40,21 @@ const RoomInventorySelectorSchema = z.object({
 export const RoomTargetSelectorSchema = z.discriminatedUnion('type', [RoomCharacterSelectorSchema, RoomInventorySelectorSchema]);
 export type RoomTargetSelector = z.infer<typeof RoomTargetSelectorSchema>;
 
-export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoomMessageAction['data']>, 'character' | 'targetCharacter'> {
+export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatRoomMessageAction['data']>, 'character' | 'target'> {
 	id: ChatActionId;
 	/** Custom text is used instead of the `id` lookup result, if specified */
 	customText?: string;
 	dictionary?: Record<string, string>;
 }
 export type ActionMessageTemplateHandler = (message: ActionHandlerMessageTemplate) => void;
+
+export type ActionHandlerMessageTargetCharacter = Pick<IChatRoomMessageActionTargetCharacter, 'type' | 'id'>;
+export type ActionHandlerMessageTargetRoomInventory = IChatRoomMessageActionTargetRoomInventory;
+export type ActionHandlerMessageTarget = ActionHandlerMessageTargetCharacter | ActionHandlerMessageTargetRoomInventory;
+
 export interface ActionHandlerMessage extends ActionHandlerMessageTemplate {
-	character?: CharacterId;
-	targetCharacter?: CharacterId;
+	character?: ActionHandlerMessageTargetCharacter;
+	target?: ActionHandlerMessageTarget;
 	sendTo?: CharacterId[];
 }
 export type ActionHandler = (message: ActionHandlerMessage) => void;

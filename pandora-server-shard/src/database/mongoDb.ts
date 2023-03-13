@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterDataUpdate, GetLogger, RoomId, IChatRoomData, IChatRoomDataUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterDataUpdate, GetLogger, RoomId, IChatRoomData, IChatRoomDataShardUpdate } from 'pandora-common';
 import type { ShardDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 
@@ -59,7 +59,7 @@ export default class MongoDatabase implements ShardDatabase {
 		return result[0];
 	}
 
-	public async setChatRoom({ id, ...data }: IChatRoomDataUpdate, accessId: string): Promise<boolean> {
+	public async setChatRoom(id: RoomId, data: IChatRoomDataShardUpdate, accessId: string): Promise<boolean> {
 		const { acknowledged, modifiedCount } = await this._characters.updateOne({ id, accessId }, { $set: data });
 		return acknowledged && modifiedCount === 1;
 	}

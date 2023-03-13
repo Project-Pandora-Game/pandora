@@ -33,10 +33,10 @@ import React, { createContext, ReactElement, ReactNode, useCallback, useContext,
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { GetAssetManager } from '../../assets/assetManager';
 import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
-import { useObservable } from '../../observable';
+import { Observable, useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { useActionRoomContext, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { ChatRoom, useActionRoomContext, useChatroom, useChatRoomCharacters, useChatRoomData, useRoomInventoryItem, useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -94,11 +94,15 @@ export function WardrobeScreen(): ReactElement | null {
 	);
 }
 
+export type WardrobeContextExtraItemActionComponent = (props: { item: ItemPath; }) => ReactElement;
+
 export interface WardrobeContext {
 	character: AppearanceContainer;
 	player: AppearanceContainer;
+	room: ChatRoom | null;
 	target: RoomTargetSelector;
 	assetList: readonly Asset[];
+	extraItemActions: Observable<readonly WardrobeContextExtraItemActionComponent[]>;
 	actions: AppearanceActionContext;
 	execute: (action: AppearanceAction) => void;
 }
@@ -116,8 +120,12 @@ export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
 export function WardrobeContextProvider({ character, player, children }: { character: Character; player: PlayerCharacter; children: ReactNode; }): ReactElement {
 	const assetList = useObservable(GetAssetManager().assetList);
+	const room = useChatroom();
+	const isInRoom = useChatRoomData() != null;
 	const roomContext = useActionRoomContext();
 	const shardConnector = useShardConnector();
+
+	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.data.id,
@@ -137,21 +145,26 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 					return character.appearance;
 				}
 			}
+			if (target.type === 'roomInventory') {
+				return isInRoom ? (room?.inventory ?? null) : null;
+			}
 			return null;
 		},
-	}), [character, player, roomContext]);
+	}), [character, player, roomContext, isInRoom, room]);
 
 	const context = useMemo<WardrobeContext>(() => ({
 		character,
 		player,
+		room,
 		target: {
 			type: 'character',
 			characterId: character.data.id,
 		},
 		assetList,
+		extraItemActions,
 		actions,
 		execute: (action) => shardConnector?.sendMessage('appearanceAction', action),
-	}), [character, assetList, actions, player, shardConnector]);
+	}), [character, assetList, actions, player, shardConnector, extraItemActions, room]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -294,11 +307,7 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 					/>
 				</Tab>
 				<Tab name='Room inventory'>
-					<div className='inventoryView'>
-						<div className='center-flex flex-1'>
-							TODO
-						</div>
-					</div>
+					<RoomInventoryView title='Use items in room inventory' container={ currentFocus.container } />
 				</Tab>
 				<Tab name='Recent items'>
 					<div className='inventoryView'>
@@ -389,6 +398,8 @@ export function InventoryAssetView({ className, title, children, assets, contain
 	container: ItemContainerPath;
 	attributesFilterOptions?: string[];
 }): ReactElement | null {
+	const { target, extraItemActions } = useWardrobeContext();
+
 	const assetManager = GetAssetManager();
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
@@ -416,6 +427,24 @@ export function InventoryAssetView({ className, title, children, assets, contain
 			setAttribute('');
 		}
 	}, [attribute, attributesFilterOptions]);
+
+	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
+		return (
+			<WardrobeActionButton action={ {
+				type: 'delete',
+				target,
+				item,
+			} } hideReserveSpace>
+				➖
+			</WardrobeActionButton>
+		);
+	}, [target]);
+	useEffect(() => {
+		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
+		return () => {
+			extraItemActions.value = extraItemActions.value.filter((a) => a !== extraItemAction);
+		};
+	}, [extraItemAction, extraItemActions]);
 
 	const filterInput = useRef<HTMLInputElement>(null);
 
@@ -485,6 +514,143 @@ export function InventoryAssetView({ className, title, children, assets, contain
 			{ children }
 			<div className={ listMode ? 'list' : 'grid' }>
 				{ filteredAssets.map((a) => <InventoryAssetViewList key={ a.id } asset={ a } container={ container } listMode={ listMode } />) }
+			</div>
+		</div>
+	);
+}
+
+export function RoomInventoryView({ title, container }: {
+	title: string;
+	container: ItemContainerPath;
+}): ReactElement | null {
+	const { room, target, extraItemActions } = useWardrobeContext();
+	const isInRoom = useChatRoomData() != null;
+
+	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
+		return (
+			<WardrobeActionButton action={ {
+				type: 'transfer',
+				source: target,
+				item,
+				target: { type: 'roomInventory' },
+				container: [],
+			} } hideReserveSpace>
+				▷
+			</WardrobeActionButton>
+		);
+	}, [target]);
+	useEffect(() => {
+		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
+		return () => {
+			extraItemActions.value = extraItemActions.value.filter((a) => a !== extraItemAction);
+		};
+	}, [extraItemAction, extraItemActions]);
+
+	return (
+		<div className='inventoryView'>
+			{
+				(room && isInRoom) ? (
+					<RoomInventoryViewList
+						title={ title }
+						room={ room }
+						characterContainer={ container }
+					/>
+				) : (
+					<div className='center-flex flex-1'>
+						Not in a room
+					</div>
+				)
+			}
+		</div>
+	);
+}
+
+export function RoomInventoryViewList({
+	title,
+	room,
+	characterContainer,
+}: {
+	title: string;
+	room: ChatRoom;
+	characterContainer: ItemContainerPath;
+}): ReactElement | null {
+	const items = useRoomInventoryItems(room);
+
+	return (
+		<>
+			<div className='toolbar'>
+				<span>{ title }</span>
+			</div>
+			<div className='list'>
+				{
+					items.map((i) => (
+						<RoomInventoryViewListItem key={ i.id }
+							room={ room }
+							item={ { container: [], itemId: i.id } }
+							characterContainer={ characterContainer }
+						/>
+					))
+				}
+			</div>
+		</>
+	);
+}
+
+function RoomInventoryViewListItem({ room, item, characterContainer }: {
+	room: ChatRoom;
+	item: ItemPath;
+	characterContainer: ItemContainerPath;
+}): ReactElement {
+	const inventoryTarget: RoomTargetSelector = {
+		type: 'roomInventory',
+	};
+
+	const { target } = useWardrobeContext();
+	const inventoryItem = useRoomInventoryItem(room, item);
+
+	if (!inventoryItem) {
+		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
+	}
+
+	const asset = inventoryItem.asset;
+
+	return (
+		<div tabIndex={ 0 } className='inventoryViewItem listMode static'>
+			<div className='itemPreview' />
+			<span className='itemName'>{ asset.definition.name }</span>
+			<div className='quickActions'>
+				<WardrobeActionButton action={ {
+					type: 'move',
+					target: inventoryTarget,
+					item,
+					shift: 1,
+				} } hideReserveSpace>
+					▼
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'move',
+					target: inventoryTarget,
+					item,
+					shift: -1,
+				} } hideReserveSpace>
+					▲
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'delete',
+					target: inventoryTarget,
+					item,
+				} } hideReserveSpace>
+					➖
+				</WardrobeActionButton>
+				<WardrobeActionButton action={ {
+					type: 'transfer',
+					source: inventoryTarget,
+					item,
+					target,
+					container: characterContainer,
+				} } hideReserveSpace>
+					◁
+				</WardrobeActionButton>
 			</div>
 		</div>
 	);
@@ -656,8 +822,9 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 	setFocus?: (newFocus: WardrobeFocus) => void;
 	singleItemContainer?: boolean;
 }): ReactElement {
-	const { target, character } = useWardrobeContext();
+	const { target, character, extraItemActions } = useWardrobeContext();
 	const wornItem = useCharacterAppearanceItem(character, item);
+	const extraActions = useObservable(extraItemActions);
 
 	if (!wornItem) {
 		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
@@ -686,7 +853,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 								item,
 								shift: 1,
 							} } hideReserveSpace>
-								⬇️
+								▼
 							</WardrobeActionButton>
 							<WardrobeActionButton action={ {
 								type: 'move',
@@ -694,18 +861,13 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 								item,
 								shift: -1,
 							} } hideReserveSpace>
-								⬆️
+								▲
 							</WardrobeActionButton>
 						</>
 					)
 				}
-				<WardrobeActionButton action={ {
-					type: 'delete',
-					target,
-					item,
-				} } hideReserveSpace>
-					➖
-				</WardrobeActionButton>
+				{ /* eslint-disable-next-line @typescript-eslint/naming-convention */ }
+				{ extraActions.map((Action, i) => <Action key={ i } item={ item } />) }
 			</div>
 		</div>
 	);
@@ -802,7 +964,7 @@ export function WardrobeItemConfigMenu({
 									item,
 									shift: 1,
 								} }>
-									⬇️ Wear on top
+									▼ Wear on top
 								</WardrobeActionButton>
 								<WardrobeActionButton action={ {
 									type: 'move',
@@ -810,7 +972,7 @@ export function WardrobeItemConfigMenu({
 									item,
 									shift: -1,
 								} }>
-									⬆️ Wear under
+									▲ Wear under
 								</WardrobeActionButton>
 							</>
 						)

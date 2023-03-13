@@ -286,8 +286,7 @@ export class Character {
 				}
 
 				if (target.type === 'roomInventory') {
-					// TODO: Not yet implemented
-					return null;
+					return this.room?.inventory ?? null;
 				}
 
 				AssertNever(target);

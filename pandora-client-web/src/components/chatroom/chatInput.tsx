@@ -17,6 +17,7 @@ import { Row } from '../common/container/container';
 import { GetChatModeDescription } from './commands';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { Select } from '../common/select/select';
+import settingsIcon from '../../assets/icons/setting.svg';
 
 type Editing = {
 	target: number;
@@ -421,15 +422,18 @@ function TypingIndicator(): ReactElement {
 
 	return (
 		<div className='typing-indicator' onClick={ onClick }>
-			{ statuses.map(({ data, status }) => (
-				<span key={ data.id }>
-					<span style={ { color: data.settings.labelColor } }>{ data.name } </span>
-					({ data.id })
-					{ ' is ' }
-					{ status }
-				</span>
-			)) }
-			{ extra }
+			<Row padding='none' className='flex-1' wrap>
+				{ statuses.map(({ data, status }) => (
+					<span key={ data.id }>
+						<span style={ { color: data.settings.labelColor } }>{ data.name } </span>
+						({ data.id })
+						{ ' is ' }
+						{ status }
+					</span>
+				)) }
+				{ extra }
+			</Row>
+			<img src={ settingsIcon } alt={ 'Change chat mode' } />
 		</div>
 	);
 }
@@ -452,14 +456,9 @@ function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount:
 }
 
 function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): ReactElement {
-	const { target, setTarget, editing, setEditing, setValue, mode, setMode, showSelector, setShowSelector } = useChatInput();
+	const { target, setTarget, editing, setEditing, setValue, mode, setMode } = useChatInput();
 	const lastHasTarget = useRef(target !== null);
 	const lastEditing = useRef(editing);
-
-	const onClick = useCallback((ev: React.MouseEvent<HTMLDivElement>) => {
-		ev.stopPropagation();
-		setShowSelector(!showSelector);
-	}, [showSelector, setShowSelector]);
 
 	useEffect(() => {
 		if (lastHasTarget.current !== (target !== null) || lastEditing.current !== editing) {
@@ -470,7 +469,7 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 	}, [target, editing, scroll]);
 
 	return (
-		<div className='input-modifiers' onClick={ onClick }>
+		<div className='input-modifiers'>
 			{ target && (
 				<span>
 					{ 'Whispering to ' }

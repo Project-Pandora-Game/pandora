@@ -8,9 +8,17 @@
 	height: 100%;
 	min-width: 0 !important;
 
+	@media only screen and (max-width: 719px) {
+		flex-flow: column;
+	}
+
 	.tab-container {
-		min-width: max(30em, 30vw);
+		min-width: min(max(25em, 30vw), 100%);
 		flex: 1;
+
+		@media only screen and (max-width: 719px) {
+			flex: 6;
+		}
 	}
 
 	.controls {
@@ -110,6 +118,20 @@
 		height: min(10em, 35%);
 		resize: none;
 		margin: 0;
+	}
+}
+
+.typing-indicator {
+	padding-right: 0.5em;
+	cursor: pointer;
+
+	&:hover {
+		background-color: #202020;
+	}
+
+	img {
+		height: 1em;
+		filter: brightness(0) saturate(100%) invert(100%);
 	}
 }
 

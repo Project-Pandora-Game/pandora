@@ -196,12 +196,25 @@ export function AsyncSynchronized(options?: AsyncLockOptions) {
 }
 
 /**
+ * List of sorted, non-overlapping intervals
+ */
+export type ReadonlyIntervalSet = readonly (readonly [number, number])[];
+
+/**
+ * List of sorted, non-overlapping intervals
+ */
+export type IntervalSet = [number, number][];
+
+// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+type __satisfies__IntervalSet = Satisfies<IntervalSet, ReadonlyIntervalSet>;
+
+/**
  * Parameters must be sorted and non-overlapping intervals (e.g. [[1, 2], [3, 4]])
  * @param a The first interval set
  * @param b The second interval set
  */
-export function IntervalSetIntersection(a: readonly (readonly [number, number])[], b: readonly (readonly [number, number])[]): [number, number][] {
-	const res: [number, number][] = [];
+export function IntervalSetIntersection(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet): IntervalSet {
+	const res: IntervalSet = [];
 	let i = 0;
 	let j = 0;
 	while (i < a.length && j < b.length) {
@@ -228,8 +241,8 @@ export function IntervalSetIntersection(a: readonly (readonly [number, number])[
  * @param a The first interval set
  * @param b The second interval set
  */
-export function IntervalSetUnion(a: readonly (readonly [number, number])[], b: readonly (readonly [number, number])[]): [number, number][] {
-	const res: [number, number][] = [];
+export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet): IntervalSet {
+	const res: IntervalSet = [];
 	let i = 0;
 	let j = 0;
 	const add = (interval: [number, number]) => {

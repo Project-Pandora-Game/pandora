@@ -49,7 +49,7 @@ import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { USER_DEBUG } from '../../config/Environment';
-import _, { isNull } from 'lodash';
+import _ from 'lodash';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
@@ -1175,9 +1175,9 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, action, overr
 }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const { actions, execute } = useWardrobeContext();
-	const current = useMemo(() => item.resolveColor(allItems, colorKey) ?? colorDefinition.default, [item, allItems, colorKey]);
+	const current = useMemo(() => item.resolveColor(allItems, colorKey) ?? colorDefinition.default, [item, allItems, colorKey, colorDefinition.default]);
 	const bundle = useMemo(() => item.exportColorToBundle(), [item]);
-	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success', [action, item, execute, assetManager]);
+	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success', [bundle, action, actions, assetManager]);
 
 	if (!colorDefinition.name || !bundle)
 		return null;
@@ -1187,7 +1187,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, action, overr
 			<span className='flex-1'>{ colorDefinition.name }</span>
 			{
 				overrideGroup && (
-					<span title={ `This color controlled by a color group and inherited from ${overrideGroup.item.asset.definition.name} (${overrideGroup.colorization.name}) and cannot be changed.` }>
+					<span title={ `This color controlled by a color group and inherited from ${overrideGroup.item.asset.definition.name} (${overrideGroup.colorization.name ?? ''}) and cannot be changed.` }>
 						🔗
 					</span>
 				)

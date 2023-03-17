@@ -175,7 +175,7 @@ export class Item {
 
 		let hasGroup = false;
 		const result: Record<string, ColorGroupResult> = {};
-		for (const [key, value] of Object.entries(this.color)) {
+		for (const key of Object.keys(this.color)) {
 			const def = colorization[key];
 			if (!def || def.name == null)
 				continue;

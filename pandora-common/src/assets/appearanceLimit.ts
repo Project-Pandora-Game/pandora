@@ -58,7 +58,7 @@ class TreeLimit {
 		return [totalDiff, newData];
 	}
 
-	public isEmpty(): boolean {
+	public hasNoLimits(): boolean {
 		return this.limit.size === 0;
 	}
 
@@ -157,8 +157,8 @@ class TreeNode {
 		return [diff + minDiff, minData];
 	}
 
-	public isEmpty(): boolean {
-		return this.limit.isEmpty() && !this.children;
+	public hasNoLimits(): boolean {
+		return this.limit.hasNoLimits() && !this.children;
 	}
 
 	public intersection(other: TreeNode): TreeNode | null {
@@ -229,8 +229,8 @@ export class AppearanceLimitTree {
 		return this.root != null;
 	}
 
-	public isEmpty(): boolean {
-		return this.root != null && this.root.isEmpty();
+	public hasNoLimits(): boolean {
+		return this.root != null && this.root.hasNoLimits();
 	}
 
 	public validate(pose: PartialAppearancePose): boolean {

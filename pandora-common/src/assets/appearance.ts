@@ -180,7 +180,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 
 	protected enforcePoseLimits(): boolean {
 		const limits = AppearanceItemProperties(this.items).limits;
-		if (!limits || limits.isEmpty())
+		if (!limits || limits.hasNoLimits())
 			return false;
 
 		const { changed, pose } = limits.force({

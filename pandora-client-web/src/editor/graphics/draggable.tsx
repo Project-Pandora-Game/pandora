@@ -1,4 +1,4 @@
-import { Texture, InteractionEvent, DisplayObject } from 'pixi.js';
+import { Texture, FederatedPointerEvent, DisplayObject } from 'pixi.js';
 import { Assert, BoneDefinition, CharacterSize, LayerDefinition, PointDefinition } from 'pandora-common';
 import { GetAngle, RotateVector } from '../../graphics/utility';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../../assets/assetGraphics';
@@ -7,7 +7,7 @@ import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import _, { cloneDeep } from 'lodash';
 import React, { ReactElement, useMemo, useRef } from 'react';
 import { useEvent } from '../../common/useEvent';
-import { Sprite } from '@saitonakamura/react-pixi';
+import { Sprite } from '@pixi/react';
 import { useEditor } from '../editorContextProvider';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
@@ -20,7 +20,7 @@ type DraggableProps = {
 	tint?: number;
 	createTexture?: () => Texture;
 	setPos: (x: number, y: number) => void;
-	dragStart?: (event: InteractionEvent) => boolean;
+	dragStart?: (event: FederatedPointerEvent) => boolean;
 };
 export function Draggable({
 	createTexture,
@@ -30,24 +30,29 @@ export function Draggable({
 }: DraggableProps): ReactElement {
 	const dragging = useRef<DisplayObject | null>(null);
 
-	const onDragStart = useEvent((event: InteractionEvent) => {
+	const onDragStart = useEvent((event: FederatedPointerEvent) => {
 		event.stopPropagation();
 		if (dragging.current) return;
+		if (!(event.currentTarget instanceof DisplayObject)) return;
 		if (dragStart?.(event) !== false) {
 			dragging.current = event.currentTarget;
+			dragging.current.hitArea = {
+				contains: () => true,
+			};
 		}
 	});
 
-	const onDragEnd = useEvent((_event: InteractionEvent) => {
+	const onDragEnd = useEvent((_event: FederatedPointerEvent) => {
+		if (dragging.current === null) return;
+		dragging.current.hitArea = null;
 		dragging.current = null;
 	});
 
-	const onDragMove = useEvent((event: InteractionEvent) => {
+	const onDragMove = useEvent((event: FederatedPointerEvent) => {
 		const obj = event.currentTarget;
 		if (dragging.current !== obj) return;
 		event.stopPropagation();
-		const dragPointerEnd = event.data.getLocalPosition(obj.parent);
-
+		const dragPointerEnd = event.getLocalPosition(dragging.current.parent);
 		setPos(
 			_.clamp(Math.round(dragPointerEnd.x), 0, CharacterSize.WIDTH),
 			_.clamp(Math.round(dragPointerEnd.y), 0, CharacterSize.HEIGHT),
@@ -63,7 +68,7 @@ export function Draggable({
 			anchor={ [0.5, 0.5] }
 			scale={ [0.5, 0.5] }
 			alpha={ 0.8 }
-			interactive
+			eventMode={ 'static' }
 			pointerdown={ onDragStart }
 			pointerup={ onDragEnd }
 			pointerupoutside={ onDragEnd }

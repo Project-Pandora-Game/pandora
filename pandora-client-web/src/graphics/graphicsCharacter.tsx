@@ -1,6 +1,6 @@
-import { Container } from '@saitonakamura/react-pixi';
+import { Container } from '@pixi/react';
 import { AssertNotNullable, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
-import { Filter, InteractionEvent, Rectangle } from 'pixi.js';
+import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
@@ -29,10 +29,10 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	filters?: Filter[];
 	zIndex?: number;
 
-	onPointerDown?: (event: InteractionEvent) => void;
-	onPointerUp?: (event: InteractionEvent) => void;
-	onPointerUpOutside?: (event: InteractionEvent) => void;
-	onPointerMove?: (event: InteractionEvent) => void;
+	onPointerDown?: (event: FederatedPointerEvent) => void;
+	onPointerUp?: (event: FederatedPointerEvent) => void;
+	onPointerUpOutside?: (event: FederatedPointerEvent) => void;
+	onPointerMove?: (event: FederatedPointerEvent) => void;
 
 	getSortOrder?: LayerGetSortOrder;
 }

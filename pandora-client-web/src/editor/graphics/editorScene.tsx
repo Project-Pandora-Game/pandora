@@ -1,4 +1,4 @@
-import { Container, Graphics } from '@saitonakamura/react-pixi';
+import { Container, Graphics } from '@pixi/react';
 import classNames from 'classnames';
 import _ from 'lodash';
 import { CharacterSize, CharacterView } from 'pandora-common';
@@ -83,11 +83,11 @@ export function EditorScene({
 		return cleanup;
 	}, [cleanup]);
 
-	const exportImage = useCallback(() => {
+	const exportImage = useCallback(async () => {
 		if (!contentRef.current)
 			return;
 		const exporter = new ImageExporter();
-		const result = exporter.imageCut(contentRef.current, {
+		const result = await exporter.imageCut(contentRef.current, {
 			x: 0,
 			y: 0,
 			height: CharacterSize.HEIGHT,

@@ -1,7 +1,7 @@
 import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, ICharacterRoomData, IChatRoomClientData, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { InteractionData, Filter, Rectangle } from 'pixi.js';
-import { Container, Graphics } from '@saitonakamura/react-pixi';
+import { FederatedEvent, FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
+import { Container, Graphics } from '@pixi/react';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
@@ -38,7 +38,7 @@ interface ChatRoomGraphicsSceneProps extends CommonProps {
 	filters: PIXI.Filter[];
 	filtersExclude?: CharacterId;
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
-	menuOpen: (character: Character<ICharacterRoomData>, data: InteractionData) => void;
+	menuOpen: (character: Character<ICharacterRoomData>, event: FederatedPointerEvent) => void;
 }
 
 export function ChatRoomGraphicsScene({
@@ -149,7 +149,7 @@ export function ChatRoomScene(): ReactElement | null {
 	const characters = useChatRoomCharacters();
 	const shard = useShardConnector();
 	const [menuActive, setMenuActive] = useState<Character<ICharacterRoomData> | null>(null);
-	const [clickData, setClickData] = useState<InteractionData | null>(null);
+	const [clickEvent, setClickEvent] = useState<FederatedPointerEvent | null>(null);
 	const player = usePlayer();
 	const debugConfig = useDebugConfig();
 
@@ -160,9 +160,9 @@ export function ChatRoomScene(): ReactElement | null {
 
 	const blindness = useCharacterRestrictionsManager(player, (manager) => manager.getBlindness());
 
-	const menuOpen = useCallback((character: Character<ICharacterRoomData> | null, eventData: InteractionData | null) => {
+	const menuOpen = useCallback((character: Character<ICharacterRoomData> | null, event: FederatedPointerEvent | null) => {
 		setMenuActive(character);
-		setClickData(eventData);
+		setClickEvent(event);
 	}, []);
 
 	const filters = useMemo<Filter[]>(() => {
@@ -176,7 +176,7 @@ export function ChatRoomScene(): ReactElement | null {
 	}, [blindness]);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
-		if (menuActive && clickData) {
+		if (menuActive && clickEvent) {
 			setMenuActive(null);
 			event.stopPropagation();
 			event.preventDefault();
@@ -203,7 +203,7 @@ export function ChatRoomScene(): ReactElement | null {
 			menuOpen={ menuOpen }
 		>
 			{
-				menuActive ? <CharacterContextMenu character={ menuActive } data={ clickData } onClose={ closeContextMenu } /> : null
+				menuActive ? <CharacterContextMenu character={ menuActive } event={ clickEvent } onClose={ closeContextMenu } /> : null
 			}
 		</ChatRoomGraphicsScene>
 	);
@@ -257,14 +257,13 @@ function AdminActionContextMenu({ character, chatRoom, onClose, onBack }: { char
 	);
 }
 
-function CharacterContextMenu({ character, data, onClose }: { character: Character<ICharacterRoomData>; data: InteractionData | null; onClose: () => void; }): ReactElement | null {
+function CharacterContextMenu({ character, event, onClose }: { character: Character<ICharacterRoomData>; event: FederatedPointerEvent | null; onClose: () => void; }): ReactElement | null {
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 	const currentAccount = useCurrentAccount();
 	const [menu, setMenu] = useState<'main' | 'admin'>('main');
 
-	const event = data?.originalEvent;
 	const position = useMemo(() => {
 		if (event instanceof MouseEvent || event instanceof PointerEvent) {
 			return {
@@ -301,7 +300,7 @@ function CharacterContextMenu({ character, data, onClose }: { character: Charact
 		onClose();
 	}, [onClose]);
 
-	if (!data || !chatRoom) {
+	if (!event || !chatRoom) {
 		return null;
 	}
 

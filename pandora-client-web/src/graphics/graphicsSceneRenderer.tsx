@@ -1,7 +1,7 @@
 import React, { Context, ReactElement, ReactNode, useMemo } from 'react';
-import { Application, IApplicationOptions, InteractionManager, Mesh, Ticker } from 'pixi.js';
+import { Application, DisplayObjectEvents, IApplicationOptions, Mesh, Ticker } from 'pixi.js';
 import { AssertNotNullable, GetLogger } from 'pandora-common';
-import { AppProvider, createRoot, ReactPixiRoot, Stage } from '@saitonakamura/react-pixi';
+import { AppProvider, createRoot, ReactPixiRoot, Stage } from '@pixi/react';
 import { cloneDeep } from 'lodash';
 import { ChildrenProps } from '../common/reactTypes';
 import { USER_DEBUG } from '../config/Environment';
@@ -11,14 +11,14 @@ Mesh.BATCHABLE_SIZE = 1000000;
 
 const SHARED_APP_MAX_COUNT = 1;
 
-export const PIXI_APPLICATION_OPTIONS: Readonly<IApplicationOptions> = {
+export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<IApplicationOptions>> = {
 	backgroundColor: 0x1099bb,
 	resolution: window.devicePixelRatio || 1,
-	// Antialias **NEEDS** to be explicitely disabled - having it enabled causes seams when using filters (such as alpha masks)
+	// Antialias **NEEDS** to be explicitly disabled - having it enabled causes seams when using filters (such as alpha masks)
 	antialias: false,
 };
 
-function CreateApplication(): Application {
+function CreateApplication(): Application<HTMLCanvasElement> {
 	return new Application({
 		...cloneDeep(PIXI_APPLICATION_OPTIONS),
 		autoDensity: true,
@@ -42,7 +42,7 @@ export function GraphicsSceneRendererDirect({
 	onUnmount,
 	forwardContexts = [],
 }: GraphicsSceneRendererProps): ReactElement {
-	const options = useMemo<IApplicationOptions>(() => ({
+	const options = useMemo<Partial<IApplicationOptions>>(() => ({
 		...cloneDeep(PIXI_APPLICATION_OPTIONS),
 		resolution,
 	}), [resolution]);
@@ -69,12 +69,12 @@ export function GraphicsSceneRendererDirect({
 // This actually has more effect than just exposing for debugging purposes:
 // It allows hot reload to reuse existing apps instead of having leak during development
 interface WindowWithSharedApps extends Window {
-	pandoraPixiApps?: Application[];
-	pandoraPixiAppsAvailable?: Application[];
+	pandoraPixiApps?: Application<HTMLCanvasElement>[];
+	pandoraPixiAppsAvailable?: Application<HTMLCanvasElement>[];
 }
 
-const SharedApps: Application[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiApps)) ? ((window as WindowWithSharedApps).pandoraPixiApps ?? []) : [];
-const AvailableApps: Application[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiAppsAvailable)) ? ((window as WindowWithSharedApps).pandoraPixiAppsAvailable ?? []) : [];
+const SharedApps: Application<HTMLCanvasElement>[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiApps)) ? ((window as WindowWithSharedApps).pandoraPixiApps ?? []) : [];
+const AvailableApps: Application<HTMLCanvasElement>[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiAppsAvailable)) ? ((window as WindowWithSharedApps).pandoraPixiAppsAvailable ?? []) : [];
 
 if (USER_DEBUG) {
 	(window as WindowWithSharedApps).pandoraPixiApps = SharedApps;
@@ -85,7 +85,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	private _ticker: Ticker | null = null;
 	private _needsUpdate: boolean = true;
 	private root: ReactPixiRoot | null = null;
-	private app: Application | null = null;
+	private app: Application<HTMLCanvasElement> | null = null;
 
 	public override render(): React.ReactNode {
 		return null;
@@ -103,7 +103,10 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 			return;
 
 		this.app = app;
-		(app.renderer.plugins.interaction as InteractionManager).resolution = app.renderer.resolution = resolution;
+		if (!(app.view instanceof HTMLCanvasElement))
+			throw new Error('Expected app.view to be an HTMLCanvasElement');
+
+		app.renderer.resolution = resolution;
 		container.appendChild(app.view);
 		this.app.resizeTo = container;
 		this.app.resize();
@@ -123,7 +126,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this._ticker = new Ticker();
 		this._ticker.autoStart = true;
 		this._ticker.add(this.renderStage);
-		this.app.stage.on('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
+		this.app.stage.on('__REACT_PIXI_REQUEST_RENDER__' as keyof DisplayObjectEvents, this.needsRenderUpdate);
 
 		this._needsUpdate = true;
 		this.renderStage();
@@ -146,7 +149,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		}
 
 		if (resolution !== oldResolution) {
-			(this.app.renderer.plugins.interaction as InteractionManager).resolution = this.app.renderer.resolution = resolution;
+			this.app.renderer.resolution = resolution;
 			this.app.resize();
 		}
 
@@ -163,7 +166,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		AssertNotNullable(this.app);
 		AssertNotNullable(this.root);
 
-		this.app.stage.off('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
+		this.app.stage.off('__REACT_PIXI_REQUEST_RENDER__' as keyof DisplayObjectEvents, this.needsRenderUpdate);
 		if (this._ticker) {
 			this._ticker.remove(this.renderStage);
 			this._ticker.destroy();

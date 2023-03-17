@@ -1,12 +1,12 @@
 import { CalculateCharacterMaxYForBackground, CharacterSize, CharacterView, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
-import PIXI, { Filter, InteractionData, InteractionEvent, Point, Rectangle } from 'pixi.js';
+import PIXI, { DisplayObject, FederatedPointerEvent, Filter, Point, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { Character, useCharacterAppearanceView } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import _ from 'lodash';
 import { ChatroomDebugConfig } from './chatroomDebug';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
-import { Container, Graphics, Text } from '@saitonakamura/react-pixi';
+import { Container, Graphics, Text } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE } from '../../graphics/graphicsLayer';
@@ -17,7 +17,7 @@ type ChatRoomCharacterProps = {
 	debugConfig: ChatroomDebugConfig;
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
-	menuOpen: (character: Character<ICharacterRoomData>, data: InteractionData) => void;
+	menuOpen: (character: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 	filters: Filter[];
 };
 
@@ -78,34 +78,36 @@ export function ChatRoomCharacter({
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
 
-	const onDragStart = useCallback((event: InteractionEvent) => {
+	const onDragStart = useCallback((event: FederatedPointerEvent) => {
 		if (dragging.current) return;
-		dragging.current = event.data.getLocalPosition<Point>(event.currentTarget.parent);
+		if (!(event.currentTarget instanceof DisplayObject)) return;
+		dragging.current = event.getLocalPosition<Point>(event.currentTarget.parent);
 	}, []);
 
-	const onDragMove = useEvent((event: InteractionEvent) => {
+	const onDragMove = useEvent((event: FederatedPointerEvent) => {
 		if (!dragging.current || !data) return;
-		const dragPointerEnd = event.data.getLocalPosition<Point>(event.currentTarget.parent);
+		if (!(event.currentTarget instanceof DisplayObject)) return;
+		const dragPointerEnd = event.getLocalPosition<Point>(event.currentTarget.parent);
 
 		const newY = (dragPointerEnd.y - height + baseScale * BOTTOM_NAME_OFFSET) / ((scaling / height) * baseScale * BOTTOM_NAME_OFFSET - 1);
 
 		setPositionThrottled(dragPointerEnd.x, newY);
 	});
 
-	const onPointerDown = useCallback((event: InteractionEvent) => {
+	const onPointerDown = useCallback((event: FederatedPointerEvent) => {
 		event.stopPropagation();
 		pointerDown.current = Date.now();
 	}, []);
 
-	const onPointerUp = useEvent((event: InteractionEvent) => {
+	const onPointerUp = useEvent((event: FederatedPointerEvent) => {
 		dragging.current = null;
 		if (pointerDown.current !== null && Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD) {
-			menuOpen(character, event.data);
+			menuOpen(character, event);
 		}
 		pointerDown.current = null;
 	});
 
-	const onPointerMove = useCallback((event: InteractionEvent) => {
+	const onPointerMove = useCallback((event: FederatedPointerEvent) => {
 		if (pointerDown.current !== null) {
 			event.stopPropagation();
 		}
@@ -149,7 +151,7 @@ export function ChatRoomCharacter({
 					align: 'center',
 					dropShadow: true,
 					dropShadowBlur: 4,
-				} }
+				} as any }
 				text={ character.data.name }
 			/>
 			{

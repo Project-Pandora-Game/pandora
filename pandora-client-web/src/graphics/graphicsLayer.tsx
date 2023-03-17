@@ -1,4 +1,4 @@
-import { Container, SimpleMesh, Sprite, useApp } from '@saitonakamura/react-pixi';
+import { Container, SimpleMesh, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { max, maxBy, min, minBy } from 'lodash';

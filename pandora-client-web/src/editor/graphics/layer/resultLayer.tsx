@@ -6,7 +6,7 @@ import { GraphicsLayerProps, useLayerPoints, useLayerVertices } from '../../../g
 import React, { ReactElement, useCallback, useMemo } from 'react';
 import { useEditor } from '../../editorContextProvider';
 import { useObservable } from '../../../observable';
-import { Container, Graphics, Sprite } from '@saitonakamura/react-pixi';
+import { Container, Graphics, Sprite } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 
 export function ResultLayer({

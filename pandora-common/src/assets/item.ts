@@ -31,6 +31,8 @@ export type IItemLoadContext = {
 	logger?: Logger;
 };
 
+export type ColorGroupResult = { item: Item; colorization: AssetColorization; color: HexColorString; };
+
 /**
  * Class representing an equipped item
  *
@@ -147,18 +149,36 @@ export class Item {
 		if (!colorization)
 			return this;
 
-		const { overrideColorGroup } = this.getProperties();
-		if (overrideColorGroup.size === 0)
+		const overrides = this.getColorOverrides(items);
+		if (!overrides)
 			return this;
 
-		let hasGroup = false;
 		const result: Writeable<ItemColorBundle> = {};
 		for (const [key, value] of Object.entries(this.color)) {
 			const def = colorization[key];
 			if (!def || def.name == null)
 				continue;
 
-			result[key] = value;
+			result[key] = overrides[key]?.color ?? value;
+		}
+		return this.changeColor(result);
+	}
+
+	public getColorOverrides(items: AppearanceItems): null | Record<string, ColorGroupResult> {
+		const colorization = this.asset.definition.colorization;
+		if (!colorization)
+			return null;
+
+		const { overrideColorGroup } = this.getProperties();
+		if (overrideColorGroup.size === 0)
+			return null;
+
+		let hasGroup = false;
+		const result: Record<string, ColorGroupResult> = {};
+		for (const [key, value] of Object.entries(this.color)) {
+			const def = colorization[key];
+			if (!def || def.name == null)
+				continue;
 
 			if (def.group == null || !overrideColorGroup.has(def.group))
 				continue;
@@ -170,8 +190,7 @@ export class Item {
 			result[key] = groupColor;
 			hasGroup = true;
 		}
-
-		return hasGroup ? this.changeColor(result) : this;
+		return hasGroup ? result : null;
 	}
 
 	public moduleAction(context: AppearanceActionContext, moduleName: string, action: ItemModuleAction, messageHandler: ActionMessageTemplateHandler): Item | null {
@@ -241,15 +260,21 @@ export class Item {
 		if (color)
 			return color;
 
-		return this._resolveColorGroup(items, colorization) ?? colorization.default;
+		return this._resolveColorGroup(items, colorization)?.color ?? colorization.default;
 	}
 
-	private _resolveColorGroup(items: AppearanceItems, { group }: AssetColorization): HexColorString | undefined {
+	/**
+	 * Color resolution order:
+	 * 1. Closest item before self that has this color group (if it is not an inherited color)
+	 * 2. Closest item after self that has this color group (if it is not an inherited color)
+	 * 3. Closest item before self that has this color group and it has an inherited color
+	 */
+	private _resolveColorGroup(items: AppearanceItems, { group }: AssetColorization): ColorGroupResult | undefined {
 		if (!group)
 			return undefined;
 
-		let color: HexColorString | undefined;
-		let colorSecondary: HexColorString | undefined;
+		let color: ColorGroupResult | undefined;
+		let colorInherited: ColorGroupResult | undefined;
 		let foundSelf = false;
 		for (const item of items) {
 			if (item.id === this.id) {
@@ -260,33 +285,40 @@ export class Item {
 				continue;
 			}
 
-			const { primary, secondary } = item._getColorByGroup(group);
-			if (primary) {
-				if (foundSelf)
-					return primary;
+			const result = item._getColorByGroup(group);
+			if (result == null)
+				continue;
 
-				color = primary;
-			}
-			if (secondary && (!colorSecondary || !foundSelf)) {
-				colorSecondary = secondary;
+			const [resultKey, colorization, resultColor] = result;
+			switch (resultKey) {
+				case 'primary':
+					if (foundSelf)
+						return { item, colorization, color: resultColor };
+
+					color = { item, colorization, color: resultColor };
+					break;
+				case 'inherited':
+					if (!colorInherited || !foundSelf)
+						colorInherited = { item, colorization, color: resultColor };
+					break;
 			}
 		}
-		return color ?? colorSecondary;
+		return color ?? colorInherited;
 	}
 
-	private _getColorByGroup(group: string): { primary?: HexColorString; secondary?: HexColorString; } {
+	private _getColorByGroup(group: string): null | ['primary' | 'inherited', AssetColorization, HexColorString] {
 		const { overrideColorGroup, excludeFromColorInheritance } = this.getProperties();
 		if (excludeFromColorInheritance.has(group))
-			return {};
+			return null;
 
-		const resultKey = overrideColorGroup.has(group) ? 'secondary' : 'primary' as const;
+		const resultKey = overrideColorGroup.has(group) ? 'inherited' : 'primary' as const;
 		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
 			if (value.group !== group || !this.color[key])
 				continue;
 
-			return { [resultKey]: this.color[key] };
+			return [resultKey, value, this.color[key]];
 		}
-		return {};
+		return null;
 	}
 
 	private _loadColor(color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {

@@ -33,6 +33,7 @@ import {
 	AppearanceArmPose,
 	ArmRotationSchema,
 	AssetColorization,
+	ColorGroupResult,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -48,7 +49,7 @@ import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { USER_DEBUG } from '../../config/Environment';
-import _ from 'lodash';
+import _, { isNull } from 'lodash';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
@@ -1121,17 +1122,7 @@ export function WardrobeItemConfigMenu({
 						</span>
 					</WardrobeActionButton>
 				</Row>
-				{
-					(wornItem.asset.definition.colorization && Object.values(wornItem.asset.definition.colorization).some(({ name }) => name)) && (
-						<FieldsetToggle legend='Coloring'>
-							{
-								Object.entries(wornItem.asset.definition.colorization).map(([colorPartKey, colorPart]) => (
-									<WardrobeColorInput key={ colorPartKey } colorKey={ colorPartKey } colorDefinition={ colorPart } item={ wornItem } action={ { type: 'color', target, item } } />
-								))
-							}
-						</FieldsetToggle>
-					)
-				}
+				<WardrobeItemColorization wornItem={ wornItem } item={ item } />
 				{
 					Array.from(wornItem.modules.entries())
 						.map(([moduleName, m]) => (
@@ -1145,35 +1136,48 @@ export function WardrobeItemConfigMenu({
 	);
 }
 
-function useColorization(
-	item: Item,
-	action: Omit<AppearanceAction & { type: 'color'; }, 'color'>,
-	colorGroup?: string,
-) {
-	const assetManager = useAssetManager();
-	const { actions } = useWardrobeContext();
-	return useMemo(() => {
-		const bundle = item.exportColorToBundle();
-		const disabled = bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success';
-		let disabledByGroup = false;
-		if (!disabled && colorGroup) {
-			const { overrideColorGroup } = item.getProperties();
-			if (overrideColorGroup.has(colorGroup)) {
-				disabledByGroup = true;
+function WardrobeItemColorization({ wornItem, item }: {
+	wornItem: Item;
+	item: ItemPath;
+}): ReactElement | null {
+	const { character, target } = useWardrobeContext();
+	const allItems = useCharacterAppearanceItems(character);
+	const overrides = useMemo(() => wornItem.getColorOverrides(allItems) ?? {}, [wornItem, allItems]);
+
+	if (!wornItem.asset.definition.colorization)
+		return null;
+
+	return (
+		<FieldsetToggle legend='Coloring'>
+			{
+				Object.entries(wornItem.asset.definition.colorization).map(([colorPartKey, colorPart]) => (
+					<WardrobeColorInput
+						key={ colorPartKey }
+						colorKey={ colorPartKey }
+						colorDefinition={ colorPart }
+						allItems={ allItems }
+						overrideGroup={ overrides[colorPartKey] }
+						item={ wornItem }
+						action={ { type: 'color', target, item } } />
+				))
 			}
-		}
-		return {
-			bundle,
-			disabled,
-			disabledByGroup,
-		};
-	}, [colorGroup, action, item, actions, assetManager]);
+		</FieldsetToggle>
+	);
 }
 
-function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { colorKey: string; colorDefinition: AssetColorization; action: Omit<AppearanceAction & { type: 'color'; }, 'color'>; item: Item; }): ReactElement | null {
-	const { character, execute } = useWardrobeContext();
-	const current = item.resolveColor(character.appearance.getAllItems(), colorKey) ?? colorDefinition.default;
-	const { bundle, disabled, disabledByGroup } = useColorization(item, action, colorDefinition.group);
+function WardrobeColorInput({ colorKey, colorDefinition, allItems, action, overrideGroup, item }: {
+	colorKey: string;
+	colorDefinition: AssetColorization;
+	action: Omit<AppearanceAction & { type: 'color'; }, 'color'>;
+	allItems: AppearanceItems;
+	overrideGroup?: ColorGroupResult;
+	item: Item;
+}): ReactElement | null {
+	const assetManager = useAssetManager();
+	const { actions, execute } = useWardrobeContext();
+	const current = useMemo(() => item.resolveColor(allItems, colorKey) ?? colorDefinition.default, [item, allItems, colorKey]);
+	const bundle = useMemo(() => item.exportColorToBundle(), [item]);
+	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success', [action, item, execute, assetManager]);
 
 	if (!colorDefinition.name || !bundle)
 		return null;
@@ -1182,8 +1186,8 @@ function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { color
 		<div className='wardrobeColorRow' key={ colorKey }>
 			<span className='flex-1'>{ colorDefinition.name }</span>
 			{
-				disabledByGroup && (
-					<span title='This color controlled by a color group and cannot be changed.'>
+				overrideGroup && (
+					<span title={ `This color controlled by a color group and inherited from ${overrideGroup.item.asset.definition.name} (${overrideGroup.colorization.name}) and cannot be changed.` }>
 						🔗
 					</span>
 				)
@@ -1192,7 +1196,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, action, item }: { color
 				initialValue={ current }
 				resetValue={ colorDefinition.default }
 				throttle={ 100 }
-				disabled={ disabled || disabledByGroup }
+				disabled={ disabled || !!overrideGroup }
 				onChange={ (color) => {
 					const newColor = _.cloneDeep<Writeable<typeof bundle>>(bundle);
 					newColor[colorKey] = color;

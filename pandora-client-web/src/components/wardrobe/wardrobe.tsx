@@ -30,8 +30,9 @@ import {
 	AppearanceItemProperties,
 	AppearanceLimitTree,
 	CharacterArmsPose,
+	AppearanceArmPose,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AssetManagerClient, useAssetManager } from '../../assets/assetManager';
 import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
@@ -1380,57 +1381,88 @@ export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }:
 	);
 }
 
+function WardrobeArmPoseSection<K extends 'position' | 'fingers'>({
+	armsPose,
+	limits,
+	setPose,
+	label,
+	arm,
+	type,
+	checked,
+	unchecked,
+}: {
+	armsPose: CharacterArmsPose;
+	label: string;
+	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+	limits?: AppearanceLimitTree;
+	arm: 'leftArm' | 'rightArm' | 'arms';
+	type: K;
+	checked: AppearanceArmPose[K];
+	unchecked: AppearanceArmPose[K];
+}): ReactElement {
+	const id = useId();
+
+	const currentlyChecked = arm !== 'arms'
+		? armsPose[arm][type] === checked
+		: armsPose.leftArm[type] === checked && armsPose.rightArm[type] === checked;
+
+	return (
+		<div>
+			<label htmlFor={ `pose-selection-${id}` }>{ label }</label>
+			<input
+				id={ `pose-selection-${id}` }
+				type='checkbox'
+				checked={ currentlyChecked }
+				disabled={ limits != null && !limits.validate({ [arm]: { [type]: currentlyChecked ? unchecked : checked } }) }
+				onChange={ (e) => {
+					setPose({
+						[arm]: { [type]: e.target.checked ? checked : unchecked },
+					});
+				} }
+			/>
+		</div>
+	);
+}
+
 export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 	armsPose: CharacterArmsPose;
 	limits?: AppearanceLimitTree;
 	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
 }): ReactElement {
-	const { leftArm, rightArm } = armsPose;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const ArmToggle = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm' | 'arms'; title: string; }): ReactElement => (
+		<WardrobeArmPoseSection
+			armsPose={ armsPose }
+			limits={ limits }
+			setPose={ setPose }
+			label={ title }
+			arm={ arm }
+			type='position'
+			checked={ ArmsPose.FRONT }
+			unchecked={ ArmsPose.BACK }
+		/>
+	), [armsPose, limits, setPose]);
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const FingersToggle = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm' | 'arms'; title: string; }): ReactElement => (
+		<WardrobeArmPoseSection
+			armsPose={ armsPose }
+			limits={ limits }
+			setPose={ setPose }
+			label={ title }
+			arm={ arm }
+			type='fingers'
+			checked={ 'fist' }
+			unchecked={ 'spread' }
+		/>
+	), [armsPose, limits, setPose]);
 	return (
 		<>
-			<div>
-				<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
-				<input
-					id='arms-front-toggle'
-					type='checkbox'
-					checked={ leftArm.position === ArmsPose.FRONT && rightArm.position === ArmsPose.FRONT }
-					disabled={ limits != null && !limits.validate({ arms: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
-					onChange={ (e) => {
-						setPose({
-							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
-							rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
-						});
-					} }
-				/>
-			</div>
-			<div>
-				<label htmlFor='arms-back-toggle'>Left arm is in front of the body</label>
-				<input
-					id='arms-left-front-toggle'
-					type='checkbox'
-					checked={ leftArm.position === ArmsPose.FRONT }
-					disabled={ limits != null && !limits.validate({ leftArm: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
-					onChange={ (e) => {
-						setPose({
-							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
-						});
-					} }
-				/>
-			</div>
-			<div>
-				<label htmlFor='arms-back-toggle'>Right arm is in front of the body</label>
-				<input
-					id='arms-right-front-toggle'
-					type='checkbox'
-					checked={ rightArm.position === ArmsPose.FRONT }
-					disabled={ limits != null && !limits.validate({ rightArm: { position: rightArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
-					onChange={ (e) => {
-						setPose({
-							rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
-						});
-					} }
-				/>
-			</div>
+			<ArmToggle arm='arms' title='Arms are in front of the body' />
+			<ArmToggle arm='leftArm' title='Left arm is in front of the body' />
+			<ArmToggle arm='rightArm' title='Right arm is in front of the body' />
+			<FingersToggle arm='arms' title='Hands are closed into fists' />
+			<FingersToggle arm='leftArm' title='Left hand is closed into a fist' />
+			<FingersToggle arm='rightArm' title='Right hand is closed into a fist' />
 		</>
 	);
 }

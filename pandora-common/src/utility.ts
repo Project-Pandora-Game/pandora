@@ -194,3 +194,86 @@ export function AsyncSynchronized(options?: AsyncLockOptions) {
 		};
 	};
 }
+
+/**
+ * List of sorted, non-overlapping intervals
+ */
+export type ReadonlyIntervalSet = readonly (readonly [number, number])[];
+
+/**
+ * List of sorted, non-overlapping intervals
+ */
+export type IntervalSet = [number, number][];
+
+// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
+type __satisfies__IntervalSet = Satisfies<IntervalSet, ReadonlyIntervalSet>;
+
+/**
+ * Parameters must be sorted and non-overlapping intervals (e.g. [[1, 2], [3, 4]])
+ * @param a The first interval set
+ * @param b The second interval set
+ */
+export function IntervalSetIntersection(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet): IntervalSet {
+	const res: IntervalSet = [];
+	let i = 0;
+	let j = 0;
+	while (i < a.length && j < b.length) {
+		const [aMin, aMax] = a[i];
+		const [bMin, bMax] = b[j];
+		if (aMax < bMin) {
+			i++;
+		} else if (bMax < aMin) {
+			j++;
+		} else {
+			res.push([Math.max(aMin, bMin), Math.min(aMax, bMax)]);
+			if (aMax < bMax) {
+				i++;
+			} else {
+				j++;
+			}
+		}
+	}
+	return res;
+}
+
+/**
+ * Parameters must be sorted and non-overlapping intervals (e.g. [[1, 2], [3, 4]])
+ * @param a The first interval set
+ * @param b The second interval set
+ */
+export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet): IntervalSet {
+	const res: IntervalSet = [];
+	let i = 0;
+	let j = 0;
+	const add = (interval: [number, number]) => {
+		if (res.length === 0 || res[res.length - 1][1] < interval[0]) {
+			res.push(interval);
+		} else {
+			res[res.length - 1][1] = Math.max(res[res.length - 1][1], interval[1]);
+		}
+	};
+	while (i < a.length && j < b.length) {
+		const [aMin, aMax] = a[i];
+		const [bMin, bMax] = b[j];
+		if (aMax < bMin) {
+			add([...a[i]]);
+			i++;
+		} else if (bMax < aMin) {
+			add([...b[j]]);
+			j++;
+		} else {
+			add([Math.min(aMin, bMin), Math.max(aMax, bMax)]);
+			i++;
+			j++;
+		}
+	}
+	while (i < a.length) {
+		add([...a[i]]);
+		i++;
+	}
+	while (j < b.length) {
+		add([...b[j]]);
+		j++;
+	}
+	return res;
+}

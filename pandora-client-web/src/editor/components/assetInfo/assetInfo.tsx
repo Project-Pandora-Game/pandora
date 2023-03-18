@@ -5,7 +5,6 @@ import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/asse
 import React, { ReactElement, useId, useMemo } from 'react';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { GetVisibleBoneName } from '../../../components/wardrobe/wardrobe';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
@@ -45,7 +44,6 @@ export function AssetInfoUI(): ReactElement {
 				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } disabled />
 			</div>
 			<Colorization colorization={ definition.colorization } />
-			<PoseLimits poseLimits={ definition.poseLimits } />
 			<Effects effects={ definition.effects } />
 			<Modules modules={ definition.modules } />
 		</Scrollbar>
@@ -66,34 +64,6 @@ function Colorization({ colorization }: { colorization: AssetDefinition['coloriz
 					<input id={ `color-${key}-color` } type='color' value={ color.default } readOnly />
 				</div>
 			)) }
-		</FieldsetToggle>
-	);
-}
-
-function PoseLimits({ poseLimits, id = '' }: { poseLimits: AssetDefinition['poseLimits']; id?: string; }): ReactElement | null {
-	if (!poseLimits) {
-		return null;
-	}
-
-	return (
-		<FieldsetToggle legend='Pose limits'>
-			<div>
-				<label htmlFor={ `${id}force-arms` }>Force arms: </label>
-				<input id={ `${id}force-arms` } type='text' value={ poseLimits.forceArms ?? '' } readOnly />
-			</div>
-			<hr />
-			<div>
-				{ Object.entries(poseLimits.forcePose ?? {}).map(([key, value]) => (
-					<div key={ key }>
-						<label htmlFor={ `${id}force-pose-${key}` }>{ GetVisibleBoneName(key) }: </label>
-						<input id={ `${id}force-pose-${key}` } type='text' value={
-							value === undefined ? '' :
-							typeof value === 'number' ? value.toString() :
-							`${value[0]} - ${value[1]}`
-						} readOnly />
-					</div>
-				)) }
-			</div>
 		</FieldsetToggle>
 	);
 }
@@ -189,7 +159,6 @@ function TypedModuleOptions({ options }: { options: IModuleTypedOption; }): Reac
 				<label htmlFor={ `module-type-${id}-default` }>Default: </label>
 				<input id={ `module-type-${id}-default` } type='checkbox' checked={ options.default } disabled />
 			</div>
-			<PoseLimits poseLimits={ options.poseLimits } id={ `module-type-${id}-` } />
 			<Effects effects={ options.effects } id={ `module-type-${id}-` } />
 		</div>
 	);

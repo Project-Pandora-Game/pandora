@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { cloneDeep } from 'lodash';
 import {
 	CharacterAppearance,
-	APPEARANCE_BUNDLE_DEFAULT,
+	GetDefaultAppearanceBundle,
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	ICharacterData,
 } from 'pandora-common';
@@ -45,7 +45,7 @@ describe('Character', () => {
 			const update: Partial<ICharacterData> = {
 				id: 'c321',
 				accessId: 'updatedId',
-				appearance: cloneDeep(APPEARANCE_BUNDLE_DEFAULT),
+				appearance: GetDefaultAppearanceBundle(),
 			};
 			const mockImport = jest.spyOn(CharacterAppearance.prototype, 'importFromBundle');
 			mock.update(update);
@@ -94,7 +94,7 @@ describe('useCharacterAppearanceItems()', () => {
 		const update: Partial<ICharacterData> = {
 			id: 'c321',
 			accessId: 'updatedId',
-			appearance: cloneDeep(APPEARANCE_BUNDLE_DEFAULT),
+			appearance: GetDefaultAppearanceBundle(),
 		};
 		act(() => {
 			mock.update(update);
@@ -119,7 +119,7 @@ describe('useCharacterAppearancePose()', () => {
 		const update: Partial<ICharacterData> = {
 			id: 'c321',
 			accessId: 'updatedId',
-			appearance: cloneDeep(APPEARANCE_BUNDLE_DEFAULT),
+			appearance: GetDefaultAppearanceBundle(),
 		};
 		act(() => {
 			mock.update(update);

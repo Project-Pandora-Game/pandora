@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexColorString, zTemplateString } from '../validation';
-import type { ArmsPose, BoneName } from './appearance';
+import type { AppearanceArmPose, BoneName, CharacterView } from './appearance';
 import type { BoneDefinitionCompressed } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetProperties } from './properties';
@@ -30,15 +30,17 @@ export interface AssetDefinitionExtraArgs {
 	slots: string;
 }
 
-export interface AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
-	/**
-	 * Forces the bones within specific range; has two options at representation:
-	 * - `[number, number]` - Minimum and maximum for this bone
-	 * - `number` - Must be exactly this; shorthand for min=max
-	 */
-	forcePose?: Partial<Record<A['bones'], [number, number] | number>>;
-	forceArms?: ArmsPose;
+export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
+	bones?: Partial<Record<A['bones'], number | [number, number][]>>;
+	arms?: Partial<AppearanceArmPose>;
+	leftArm?: Partial<AppearanceArmPose>;
+	rightArm?: Partial<AppearanceArmPose>;
+	view?: CharacterView;
 }
+
+export type AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = AssetDefinitionPoseLimit<A> & {
+	options?: [AssetDefinitionPoseLimits<A>, AssetDefinitionPoseLimits<A>, ...AssetDefinitionPoseLimits<A>[]];
+};
 
 export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	id: AssetId;
@@ -121,13 +123,17 @@ export interface AssetBodyPart {
 	adjustable: boolean;
 }
 
+export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
+	bones?: Partial<Record<Bones, number>>;
+	arms?: Partial<AppearanceArmPose>;
+	leftArm?: Partial<AppearanceArmPose>;
+	rightArm?: Partial<AppearanceArmPose>;
+	view?: CharacterView;
+};
+
 export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	category: string;
-	poses: {
-		name: string;
-		pose: Partial<Record<Bones, number>>;
-		armsPose?: ArmsPose;
-	}[];
+	poses: ({ name: string; } & PartialAppearancePose<Bones>)[];
 }[];
 
 export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {

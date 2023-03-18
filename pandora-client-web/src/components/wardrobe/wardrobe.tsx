@@ -5,7 +5,6 @@ import {
 	AppearanceAction,
 	AppearanceActionContext,
 	AppearanceItems,
-	AppearanceItemsGetPoseLimits,
 	ArmsPose,
 	AssertNotNullable,
 	Asset,
@@ -28,6 +27,9 @@ import {
 	Writeable,
 	FormatTimeInterval,
 	MessageSubstitute,
+	AppearanceItemProperties,
+	AppearanceLimitTree,
+	CharacterArmsPose,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -359,10 +361,10 @@ function WardrobeBodyManipulation({ className }: { className?: string; }): React
 		setSelectedItemId(newFocus.itemId);
 	}, []);
 
-	const bodyFilterAttributes = useMemo<string[]>(() => [...assetManager.attributes.entries()]
+	const bodyFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
 		.map((a) => a[0])
-	, [assetManager]);
+	), [assetManager]);
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -688,10 +690,10 @@ function AttributeButton({ attribute, ...buttonProps }: {
 
 function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: HTMLElement | null; }) {
 	const assetManager = GetAssetManager();
-	const reason = useMemo(() => check.result === 'success'
+	const reason = useMemo(() => (check.result === 'success'
 		? ''
-		: RenderAppearanceActionResult(assetManager, check),
-	[assetManager, check]);
+		: RenderAppearanceActionResult(assetManager, check)
+	), [assetManager, check]);
 
 	if (check.result === 'success') {
 		return null;
@@ -1148,12 +1150,11 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 					});
 				} }
 			>
-				<img src={
+				<img width='21' height='33' src={
 					!m.lock ? emptyLock :
 						m.lock.getProperties().blockAddRemove ? closedLock :
 							openLock
-				}
-				width='21' height='33' />
+				} />
 			</button>
 			<Row alignY='center'>
 				{
@@ -1170,13 +1171,13 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 
 function WardrobeBodySizeEditor(): ReactElement {
 	const { character, execute } = useWardrobeContext();
-	const bones = useCharacterAppearancePose(character);
+	const currentBones = useCharacterAppearancePose(character);
 
-	const setBodyDirect = useCallback(({ pose }: { pose: Record<BoneName, number>; }) => {
+	const setBodyDirect = useCallback(({ bones }: { bones: Record<BoneName, number>; }) => {
 		execute({
 			type: 'body',
 			target: character.id,
-			pose,
+			bones,
 		});
 	}, [execute, character]);
 
@@ -1186,12 +1187,12 @@ function WardrobeBodySizeEditor(): ReactElement {
 		<div className='inventoryView'>
 			<div className='bone-ui'>
 				{
-					bones
+					currentBones
 						.filter((bone) => bone.definition.type === 'body')
 						.map((bone) => (
 							<BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => {
 								setBody({
-									pose: {
+									bones: {
 										[bone.definition.name]: value,
 									},
 								});
@@ -1204,54 +1205,32 @@ function WardrobeBodySizeEditor(): ReactElement {
 }
 
 type AssetsPosePreset = AssetsPosePresets[number]['poses'][number];
-type CheckedPosePreset = {
+type CheckedPosePreset = AssetsPosePreset & {
 	active: boolean;
 	available: boolean;
-	name: string;
-	pose: Partial<Record<BoneName, number>>;
-	armsPose?: ArmsPose;
 };
 type CheckedAssetsPosePresets = {
 	category: string;
 	poses: CheckedPosePreset[];
 }[];
 
-function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], arms: ArmsPose): {
+function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose): {
 	poses: CheckedAssetsPosePresets;
-	forcePose?: Map<string, [number, number]>;
-	forceArms?: ArmsPose;
+	limits: AppearanceLimitTree;
 } {
 	const presets = GetAssetManager().getPosePresets();
-	const limits = AppearanceItemsGetPoseLimits(items) || { forceArms: undefined, forcePose: undefined };
+	const limits = AppearanceItemProperties(items).limits;
 	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
 
-	const isAvailable = ({ pose, armsPose }: AssetsPosePreset) => {
-		if (armsPose !== undefined && limits.forceArms !== undefined && armsPose !== limits.forceArms)
-			return false;
-
-		if (!limits.forcePose)
-			return true;
-
-		for (const [boneName, value] of Object.entries(pose)) {
-			if (value === undefined)
-				continue;
-
-			const limit = limits.forcePose.get(boneName);
-			if (!limit)
-				continue;
-
-			if (value < limit[0] || value > limit[1])
-				return false;
-		}
-
-		return true;
-	};
-
 	const isActive = (preset: AssetsPosePreset) => {
-		if (preset.armsPose !== undefined && preset.armsPose !== arms)
+		const left = { ...preset.arms, ...preset.leftArm };
+		const right = { ...preset.arms, ...preset.rightArm };
+		if (left.position != null && left.position !== leftArm.position)
+			return false;
+		if (right.position != null && right.position !== rightArm.position)
 			return false;
 
-		for (const [boneName, value] of Object.entries(preset.pose)) {
+		for (const [boneName, value] of Object.entries(preset.bones ?? {})) {
 			if (value === undefined)
 				continue;
 
@@ -1265,7 +1244,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	const poses = presets.map<CheckedAssetsPosePresets[number]>((preset) => ({
 		category: preset.category,
 		poses: preset.poses.map((pose) => {
-			const available = isAvailable(pose);
+			const available = limits.validate(pose);
 			return {
 				...pose,
 				active: available && isActive(pose),
@@ -1274,7 +1253,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 		}),
 	}));
 
-	return { poses, ...limits };
+	return { poses, limits };
 }
 
 function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
@@ -1296,30 +1275,86 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 	);
 }
 
-export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: ArmsPose; setPose: (_: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => void; }): ReactElement {
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: CharacterArmsPose; setPose: (pose: Omit<AssetsPosePreset, 'name'>) => void; }): ReactElement {
 	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 	);
 }
 
+export function WardrobeArmPoses({ setPose, armsPose, limits }: {
+	armsPose: CharacterArmsPose;
+	limits?: AppearanceLimitTree;
+	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+}): ReactElement {
+	const { leftArm, rightArm } = armsPose;
+	return (
+		<>
+			<div>
+				<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
+				<input
+					id='arms-front-toggle'
+					type='checkbox'
+					checked={ leftArm.position === ArmsPose.FRONT && rightArm.position === ArmsPose.FRONT }
+					disabled={ limits != null && !limits.validate({ arms: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					onChange={ (e) => {
+						setPose({
+							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
+							rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
+						});
+					} }
+				/>
+			</div>
+			<div>
+				<label htmlFor='arms-back-toggle'>Left arm is in front of the body</label>
+				<input
+					id='arms-left-front-toggle'
+					type='checkbox'
+					checked={ leftArm.position === ArmsPose.FRONT }
+					disabled={ limits != null && !limits.validate({ leftArm: { position: leftArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					onChange={ (e) => {
+						setPose({
+							leftArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
+						});
+					} }
+				/>
+			</div>
+			<div>
+				<label htmlFor='arms-back-toggle'>Right arm is in front of the body</label>
+				<input
+					id='arms-right-front-toggle'
+					type='checkbox'
+					checked={ rightArm.position === ArmsPose.FRONT }
+					disabled={ limits != null && !limits.validate({ rightArm: { position: rightArm.position === ArmsPose.FRONT ? ArmsPose.BACK : ArmsPose.FRONT } }) }
+					onChange={ (e) => {
+						setPose({
+							rightArm: { position: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK },
+						});
+					} }
+				/>
+			</div>
+		</>
+	);
+}
+
 export function WardrobePoseGui(): ReactElement {
 	const { character, execute } = useWardrobeContext();
 
-	const bones = useCharacterAppearancePose(character);
+	const currentBones = useCharacterAppearancePose(character);
 	const armsPose = useCharacterAppearanceArmsPose(character);
 	const view = useCharacterAppearanceView(character);
 
-	const setPoseDirect = useEvent(({ pose, armsPose: armsPoseSet }: { pose: Partial<Record<BoneName, number>>; armsPose?: ArmsPose; }) => {
+	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm }: Omit<AssetsPosePreset, 'name'>) => {
 		execute({
 			type: 'pose',
 			target: character.id,
-			pose,
-			armsPose: armsPoseSet,
+			bones,
+			leftArm: { ...arms, ...leftArm },
+			rightArm: { ...arms, ...rightArm },
 		});
 	});
 
-	const { poses, forceArms, forcePose } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), bones, armsPose), [character, bones, armsPose]);
+	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), currentBones, armsPose), [character, currentBones, armsPose]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
@@ -1344,29 +1379,15 @@ export function WardrobePoseGui(): ReactElement {
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				{ USER_DEBUG &&
 					<FieldsetToggle legend='[DEV] Manual pose' persistent='bone-ui-dev-pose' open={ false }>
-						<div>
-							<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
-							<input
-								id='arms-front-toggle'
-								type='checkbox'
-								checked={ armsPose === ArmsPose.FRONT }
-								disabled={ forceArms !== undefined }
-								onChange={ (e) => {
-									setPose({
-										pose: {},
-										armsPose: e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK,
-									});
-								} }
-							/>
-						</div>
+						<WardrobeArmPoses armsPose={ armsPose } limits={ limits } setPose={ setPose } />
 						<br />
 						{
-							bones
+							currentBones
 								.filter((bone) => bone.definition.type === 'pose')
 								.map((bone) => (
-									<BoneRowElement key={ bone.definition.name } bone={ bone } forcePose={ forcePose } onChange={ (value) => {
+									<BoneRowElement key={ bone.definition.name } bone={ bone } limits={ limits } onChange={ (value) => {
 										setPose({
-											pose: {
+											bones: {
 												[bone.definition.name]: value,
 											},
 										});
@@ -1396,19 +1417,13 @@ export function GetVisibleBoneName(name: string): string {
 		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
 }
 
-export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: BoneState; onChange: (value: number) => void; forcePose?: Map<string, [number, number]>; unlocked?: boolean; }): ReactElement {
-	const [min, max] = useMemo(() => {
-		if (unlocked || !forcePose) {
-			return [BONE_MIN, BONE_MAX];
-		}
-		return forcePose.get(bone.definition.name) ?? [BONE_MIN, BONE_MAX];
-	}, [bone, forcePose, unlocked]);
-
+export function BoneRowElement({ bone, onChange, limits, unlocked }: { bone: BoneState; onChange: (value: number) => void; limits?: AppearanceLimitTree; unlocked?: boolean; }): ReactElement {
 	const name = useMemo(() => GetVisibleBoneName(bone.definition.name), [bone]);
+	const canReset = useMemo(() => unlocked || limits == null || limits.validate({ bones: { bone: 0 } }), [unlocked, limits]);
 
 	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(value) && value >= min && value <= max && value !== bone.rotation) {
+		if (Number.isInteger(value) && value !== bone.rotation && (unlocked || limits == null || limits.validate({ bones: { bone: value } }))) {
 			onChange(value);
 		}
 	});
@@ -1416,9 +1431,9 @@ export function BoneRowElement({ bone, onChange, forcePose, unlocked }: { bone: 
 	return (
 		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + bone.definition.name }>
 			<div className='bone-rotation'>
-				<input type='range' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInput } />
-				<input type='number' min={ min } max={ max } step='1' value={ bone.rotation } onChange={ onInput } />
-				<Button className='slim' onClick={ () => onChange(0) } disabled={ bone.rotation === 0 || min > 0 || max < 0 }>
+				<input type='range' min={ BONE_MIN } max={ BONE_MAX } step='1' value={ bone.rotation } onChange={ onInput } />
+				<input type='number' min={ BONE_MIN } max={ BONE_MAX } step='1' value={ bone.rotation } onChange={ onInput } />
+				<Button className='slim' onClick={ () => onChange(0) } disabled={ bone.rotation === 0 || !canReset }>
 					↺
 				</Button>
 			</div>

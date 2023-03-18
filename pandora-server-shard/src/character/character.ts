@@ -1,4 +1,4 @@
-import { AppearanceActionContext, APPEARANCE_BUNDLE_DEFAULT, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -106,7 +106,7 @@ export class Character {
 		this.setConnection(null);
 		this.linkRoom(room);
 
-		this.appearance.importFromBundle(data.appearance ?? APPEARANCE_BUNDLE_DEFAULT, this.logger.prefixMessages('Appearance load:'));
+		this.appearance.importFromBundle(data.appearance, this.logger.prefixMessages('Appearance load:'));
 		this.appearance.onChangeHandler = this.onAppearanceChanged.bind(this, true);
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);

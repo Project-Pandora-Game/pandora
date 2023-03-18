@@ -6,9 +6,9 @@ import type { ActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
-import { AppearanceItems, AppearanceItemsGetPoseLimits, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
+import { AppearanceItemProperties, AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
-import { AssetId } from './definitions';
+import { AssetId, PartialAppearancePose } from './definitions';
 import { BoneState, BoneType } from './graphics';
 import { Item, ItemBundleSchema } from './item';
 
@@ -36,24 +36,43 @@ export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
 /** Time after entering safemode for which you cannot leave it (entering while in dev mode ignores this) */
 export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
-export const AppearanceBundleSchema = z.object({
-	items: z.array(ItemBundleSchema),
-	pose: z.record(BoneNameSchema, z.number()),
-	handsPose: z.nativeEnum(ArmsPose),
+export const AppearanceArmPoseSchema = z.object({
+	position: z.nativeEnum(ArmsPose),
+});
+export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
+
+export const AppearancePoseSchema = z.object({
+	bones: z.record(BoneNameSchema, z.number().optional()),
+	leftArm: AppearanceArmPoseSchema,
+	rightArm: AppearanceArmPoseSchema,
 	view: z.nativeEnum(CharacterView),
+});
+export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
+
+export const AppearanceBundleSchema = AppearancePoseSchema.extend({
+	items: z.array(ItemBundleSchema),
 	safemode: SafemodeDataSchema.optional(),
 });
 
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
 
-export const APPEARANCE_BUNDLE_DEFAULT: AppearanceBundle = {
-	items: [],
-	pose: {},
-	handsPose: ArmsPose.FRONT,
-	view: CharacterView.FRONT,
-};
+export function GetDefaultAppearanceBundle(): AppearanceBundle {
+	return {
+		items: [],
+		bones: {},
+		leftArm: {
+			position: ArmsPose.FRONT,
+		},
+		rightArm: {
+			position: ArmsPose.FRONT,
+		},
+		view: CharacterView.FRONT,
+	};
+}
 
 export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
+
+export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'rightArm'>>;
 
 export class CharacterAppearance implements RoomActionTargetCharacter {
 	public readonly type = 'character';
@@ -65,8 +84,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private items: AppearanceItems = [];
 	private readonly pose = new Map<BoneName, BoneState>();
 	private fullPose: readonly BoneState[] = [];
-	private _armsPose: ArmsPose = APPEARANCE_BUNDLE_DEFAULT.handsPose;
-	private _view: CharacterView = APPEARANCE_BUNDLE_DEFAULT.view;
+	private _arms: CharacterArmsPose;
+	private _view: CharacterView;
 	private _safemode: SafemodeData | undefined;
 
 	public get character(): Readonly<ICharacterMinimalData> {
@@ -74,9 +93,12 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	constructor(assetManager: AssetManager, getCharacter: () => Readonly<ICharacterMinimalData>, onChange?: (changes: AppearanceChangeType[]) => void) {
+		const { leftArm, rightArm, view } = GetDefaultAppearanceBundle();
+		this._arms = { leftArm, rightArm };
+		this._view = view;
 		this.assetManager = assetManager;
 		this.getCharacter = getCharacter;
-		this.importFromBundle(APPEARANCE_BUNDLE_DEFAULT);
+		this.importFromBundle(GetDefaultAppearanceBundle());
 		this.onChangeHandler = onChange;
 	}
 
@@ -87,17 +109,18 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	public exportToBundle(): AppearanceBundle {
 		return {
 			items: this.items.map((item) => item.exportToBundle()),
-			pose: this.exportPose(),
-			handsPose: this._armsPose,
+			bones: this.exportBones(),
+			leftArm: _.cloneDeep(this._arms.leftArm),
+			rightArm: _.cloneDeep(this._arms.rightArm),
 			view: this._view,
 			safemode: this._safemode,
 		};
 	}
 
-	public importFromBundle(bundle: AppearanceBundle, logger?: Logger, assetManager?: AssetManager): void {
+	public importFromBundle(bundle: AppearanceBundle | undefined, logger?: Logger, assetManager?: AssetManager): void {
 		// Simple migration
 		bundle = {
-			...APPEARANCE_BUNDLE_DEFAULT,
+			...GetDefaultAppearanceBundle(),
 			...bundle,
 		};
 		if (assetManager && this.assetManager !== assetManager) {
@@ -128,16 +151,20 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this.items = newItems;
 		this.pose.clear();
 		for (const bone of this.assetManager.getAllBones()) {
+			const value = bundle.bones[bone.name];
 			this.pose.set(bone.name, {
 				definition: bone,
-				rotation: Number.isInteger(bundle.pose[bone.name]) ? _.clamp(bundle.pose[bone.name], BONE_MIN, BONE_MAX) : 0,
+				rotation: (value != null && Number.isInteger(value)) ? _.clamp(value, BONE_MIN, BONE_MAX) : 0,
 			});
 		}
-		this._armsPose = bundle.handsPose;
+		this._arms = {
+			leftArm: _.cloneDeep(bundle.leftArm),
+			rightArm: _.cloneDeep(bundle.rightArm),
+		};
 		this._view = bundle.view;
 		this.fullPose = Array.from(this.pose.values());
 		if (logger) {
-			for (const k of Object.keys(bundle.pose)) {
+			for (const k of Object.keys(bundle.bones)) {
 				if (!this.pose.has(k)) {
 					logger.warning(`Skipping unknown pose bone ${k}`);
 				}
@@ -152,49 +179,63 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	protected enforcePoseLimits(): boolean {
-		const poseLimits = AppearanceItemsGetPoseLimits(this.items);
-		if (poseLimits == null)
+		const limits = AppearanceItemProperties(this.items).limits;
+		if (!limits || limits.hasNoLimits())
 			return false;
-		let change = false;
 
-		if (poseLimits.forceArms != null && this._armsPose !== poseLimits.forceArms) {
-			this._armsPose = poseLimits.forceArms;
-			change = true;
-		}
+		const { changed, pose } = limits.force({
+			bones: Object.fromEntries([...this.pose.entries()].map(([bone, state]) => [bone, state.rotation])),
+			leftArm: this._arms.leftArm,
+			rightArm: this._arms.rightArm,
+			view: this._view,
+		});
+		if (!changed)
+			return false;
 
+		const { bones, leftArm, rightArm, view } = pose;
+
+		this._view = view;
+		this._arms = {
+			leftArm,
+			rightArm,
+		};
 		for (const [bone, state] of this.pose.entries()) {
-			const limits = poseLimits.forcePose.get(bone);
-			if (limits == null)
-				continue;
-
-			const rotation = _.clamp(state.rotation, limits[0], limits[1]);
-			if (rotation === state.rotation)
-				continue;
-
-			this.pose.set(bone, {
-				definition: state.definition,
-				rotation,
-			});
-			change = true;
+			const rotation = bones[bone];
+			if (rotation != null && rotation !== state.rotation) {
+				this.pose.set(bone, {
+					definition: state.definition,
+					rotation,
+				});
+			}
 		}
 
-		if (change) {
-			this.fullPose = Array.from(this.pose.values());
-		}
+		this.fullPose = Array.from(this.pose.values());
 
-		return change;
+		return true;
 	}
 
-	public importPose(pose: Partial<Record<BoneName, number>>, type: BoneType | true, missingAsZero: boolean): void {
+	public importPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): void {
+		const [changed, arms] = this._newArmsPose(pose);
+		const { bones } = pose;
+		if (!bones) {
+			if (changed) {
+				this._arms = arms;
+				this.enforcePoseLimits();
+				this.onChange(['pose']);
+			}
+			return;
+		} else if (changed) {
+			this._arms = arms;
+		}
 		for (const [bone, state] of this.pose.entries()) {
 			if (type !== true && state.definition.type !== type)
 				continue;
-			if (!missingAsZero && pose[state.definition.name] == null)
+			if (!missingAsZero && bones[state.definition.name] == null)
 				continue;
 
 			this.pose.set(bone, {
 				definition: state.definition,
-				rotation: _.clamp(pose[state.definition.name] || 0, BONE_MIN, BONE_MAX),
+				rotation: _.clamp(bones[state.definition.name] || 0, BONE_MIN, BONE_MAX),
 			});
 		}
 		this.fullPose = Array.from(this.pose.values());
@@ -202,7 +243,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this.onChange(['pose']);
 	}
 
-	public exportPose(type?: BoneType): Record<BoneName, number> {
+	public exportBones(type?: BoneType): Record<BoneName, number> {
 		const pose: Record<BoneName, number> = {};
 		for (const state of this.pose.values()) {
 			if (state.rotation === 0) {
@@ -294,7 +335,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		if (!state)
 			throw new Error(`Attempt to set pose for unknown bone: ${bone}`);
 
-		this.importPose({ [bone]: value }, true, false);
+		this.importPose({ bones: { [bone]: value } }, true, false);
 	}
 
 	public getPose(bone: string): BoneState {
@@ -308,13 +349,14 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this.fullPose;
 	}
 
-	public getArmsPose(): ArmsPose {
-		return this._armsPose;
+	public getArmsPose(): CharacterArmsPose {
+		return this._arms;
 	}
 
-	public setArmsPose(value: ArmsPose): void {
-		if (this._armsPose !== value) {
-			this._armsPose = value;
+	public setArmsPose(pose: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): void {
+		const [changed, arms] = this._newArmsPose(pose);
+		if (changed) {
+			this._arms = arms;
 			this.enforcePoseLimits();
 			this.onChange(['pose']);
 		}
@@ -354,5 +396,14 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 				});
 			}
 		}
+	}
+
+	private _newArmsPose({ arms, leftArm: left, rightArm: right }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): [boolean, CharacterArmsPose] {
+		const leftArm = { ...this._arms.leftArm, ...arms, ...left };
+		const rightArm = { ...this._arms.rightArm, ...arms, ...right };
+		const changed = this._arms.leftArm.position !== leftArm.position
+			|| this._arms.rightArm.position !== rightArm.position;
+
+		return [changed, { leftArm, rightArm }];
 	}
 }

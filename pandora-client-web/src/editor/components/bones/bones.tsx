@@ -1,4 +1,4 @@
-import { ArmsPose, CharacterView } from 'pandora-common';
+import { AppearanceArmPose, ArmsPose, CharacterArmsPose, CharacterView } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
@@ -7,7 +7,7 @@ import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { BoneRowElement, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
+import { BoneRowElement, WardrobeArmPoses, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorCharacter } from '../../graphics/character/appearanceEditor';
@@ -40,17 +40,9 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<div>
-				<label htmlFor='arms-front-toggle'>Arms are in front of the body</label>
-				<input
-					id='arms-front-toggle'
-					type='checkbox'
-					checked={ armsPose === ArmsPose.FRONT }
-					onChange={ (e) => {
-						character.appearance.setArmsPose(e.target.checked ? ArmsPose.FRONT : ArmsPose.BACK);
-					} }
-				/>
-			</div>
+			<WardrobeArmPoses armsPose={ armsPose } setPose={ (pose) => {
+				character.appearance.setArmsPose(pose);
+			} } />
 			<div>
 				<label htmlFor='back-view-toggle'>Show back view</label>
 				<input
@@ -75,10 +67,7 @@ export function BoneUI(): ReactElement {
 			</div>
 			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } className='slim-padding' open={ false }>
 				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
-					character.appearance.importPose(pose.pose, 'pose', false);
-					if (pose.armsPose != null) {
-						character.appearance.setArmsPose(pose.armsPose);
-					}
+					character.appearance.importPose(pose, 'pose', false);
 				} } />
 			</FieldsetToggle>
 			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>
@@ -145,11 +134,11 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 	const typeScriptValue = useMemo(() => {
 		return `{
 	name: '[Pose Preset Name]',
-	pose: {${ pose.reduce((acc, value) => (value.rotation === 0 || value.definition.type !== 'pose')
+	bones: {${pose.reduce((acc, value) => (value.rotation === 0 || value.definition.type !== 'pose')
 			? acc
-			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '') }
+			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '')}
 	},
-	armsPose: ArmsPose.${ArmsPose[arms]},
+	${CharacterArmsPoseToString(arms)}
 },`;
 	}, [pose, arms]);
 
@@ -176,4 +165,16 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 			</Column>
 		</ModalDialog>
 	);
+}
+
+function AppearanceArmPoseToString({ position }: Readonly<AppearanceArmPose>): string {
+	return `{ position: ArmsPose.${ArmsPose[position]} }`;
+}
+
+function CharacterArmsPoseToString({ leftArm, rightArm }: CharacterArmsPose): string {
+	if (leftArm.position === rightArm.position)
+		return `arms: ${AppearanceArmPoseToString(leftArm)},`;
+
+	return `leftArm: ${AppearanceArmPoseToString(leftArm)},`
+		+ '\n\t' + `rightArm: ${AppearanceArmPoseToString(rightArm)},`;
 }

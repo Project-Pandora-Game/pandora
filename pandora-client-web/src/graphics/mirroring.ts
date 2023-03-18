@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition } from 'pandora-common';
+import { AssertNever, CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition } from 'pandora-common';
 import { PointDefinitionCalculated } from '../assets/assetGraphics';
 
 /** formatting for `<T extends (...)>` is different for ESLint and VS Code */
@@ -20,14 +20,19 @@ export function MirrorCondition(condition: Immutable<Condition> | undefined): Co
 				...c,
 				bone: MirrorBoneLike(c.bone),
 			};
-		}
-		if ('module' in c && c.module != null) {
+		} else if ('module' in c && c.module != null) {
 			return {
 				...c,
 				module: MirrorBoneLike(c.module),
 			};
+		} else if ('armType' in c && c.armType != null) {
+			return {
+				...c,
+				side: c.side === 'left' ? 'right' : 'left',
+			};
+		} else {
+			throw new Error(`Unknown condition type: ${JSON.stringify(c)}`);
 		}
-		return c;
 	}));
 }
 
@@ -51,6 +56,8 @@ export function MirrorTransform(transform: Immutable<TransformDefinition>): Tran
 			const { x, y } = transform.value;
 			return { condition, type, value: { x: x * -1, y }, bone: MirrorBoneLike(transform.bone) };
 		}
+		default:
+			AssertNever(type);
 	}
 }
 

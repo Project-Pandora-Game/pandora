@@ -1,6 +1,6 @@
-import { AssertNever, AtomicCondition, AtomicConditionBone, BoneName, BoneState, CharacterView, Item, TransformDefinition } from 'pandora-common';
+import { AssertNever, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
-import { AppearanceContainer, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
+import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
 import { EvaluateCondition, RotateVector } from './utility';
 
 export const FAKE_BONES: string[] = ['backView'];
@@ -8,14 +8,16 @@ export const FAKE_BONES: string[] = ['backView'];
 export class AppearanceConditionEvaluator {
 	public readonly pose: ReadonlyMap<BoneName, Readonly<BoneState>>;
 	public readonly view: CharacterView;
+	public readonly arms: CharacterArmsPose;
 
-	constructor(pose: readonly BoneState[], view: CharacterView) {
+	constructor(pose: readonly BoneState[], view: CharacterView, arms: CharacterArmsPose) {
 		const poseResult = new Map<BoneName, Readonly<BoneState>>();
 		for (const bone of pose) {
 			poseResult.set(bone.definition.name, bone);
 		}
 		this.pose = poseResult;
 		this.view = view;
+		this.arms = arms;
 	}
 
 	//#region Point transform
@@ -39,23 +41,39 @@ export class AppearanceConditionEvaluator {
 			}
 			return result;
 		}
+		if ('armType' in condition && condition.armType != null) {
+			const key = `${condition.armType}-${condition.side}-${condition.operator}-${condition.value}`;
+			let result = this._evalCache.get(key);
+			if (result === undefined) {
+				const value = this.arms[`${condition.side}Arm`][condition.armType];
+				this._evalCache.set(key, result = this._evalConditionCore(condition, value));
+			}
+			return result;
+		}
 
 		AssertNever();
 	}
-	private _evalConditionCore({ operator, value }: AtomicConditionBone, currentValue: number): boolean {
+
+	private _evalConditionCore<T extends string | number>({ operator, value }: AtomicCondition & { value: T; }, currentValue: T extends number ? number : T extends string ? string : never): boolean {
+		let diff = 0;
+		if (typeof currentValue === 'string' && typeof value === 'string') {
+			diff = currentValue.localeCompare(value);
+		} else if (typeof currentValue === 'number' && typeof value === 'number') {
+			diff = currentValue - value;
+		}
 		switch (operator) {
 			case '>':
-				return currentValue > value;
+				return diff > 0;
 			case '<':
-				return currentValue < value;
+				return diff < 0;
 			case '=':
-				return currentValue === value;
+				return diff === 0;
 			case '!=':
-				return currentValue !== value;
+				return diff !== 0;
 			case '>=':
-				return currentValue >= value;
+				return diff >= 0;
 			case '<=':
-				return currentValue <= value;
+				return diff <= 0;
 		}
 		AssertNever(operator);
 	}
@@ -117,5 +135,6 @@ export class AppearanceConditionEvaluator {
 export function useAppearanceConditionEvaluator(character: AppearanceContainer): AppearanceConditionEvaluator {
 	const pose = useCharacterAppearancePose(character);
 	const view = useCharacterAppearanceView(character);
-	return useMemo(() => new AppearanceConditionEvaluator(pose, view), [pose, view]);
+	const arms = useCharacterAppearanceArmsPose(character);
+	return useMemo(() => new AppearanceConditionEvaluator(pose, view, arms), [pose, view, arms]);
 }

@@ -99,6 +99,9 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 			});
 		}
 	},
+	config: {
+		destroy: false,
+	},
 });
 
 export type PixiViewportRef = {

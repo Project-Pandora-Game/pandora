@@ -110,6 +110,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
 			directMessage: this.handleDirectMessage.bind(this),
 			getDirectMessageInfo: this.handleGetDirectMessageInfo.bind(this),
+			friendRequest: this.handleFriendRequest.bind(this),
+			unfriend: this.handleUnfriend.bind(this),
+			blockList: this.handleBlockList.bind(this),
 
 			// Management/admin endpoints; these require specific roles to be used
 			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
@@ -183,6 +186,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 			token: { value: token.value, expires: token.expires },
 			account: account.getAccountInfo(),
+			relationships: {
+				friends: [],
+				friendStatus: [],
+				pending: [],
+				incoming: [],
+				blocked: [],
+			}
 		};
 	}
 
@@ -611,6 +621,26 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	//#endregion Direct Messages
+
+	private async handleFriendRequest(_: IClientDirectoryArgument['friendRequest'], connection: IConnectionClient): IClientDirectoryPromiseResult['friendRequest'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		return { result: 'ok' };
+	}
+
+	private async handleUnfriend(_: IClientDirectoryArgument['unfriend'], connection: IConnectionClient): IClientDirectoryPromiseResult['unfriend'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		return { result: 'ok' };
+	}
+
+	private async handleBlockList(_: IClientDirectoryArgument['blockList'], connection: IConnectionClient): IClientDirectoryPromiseResult['blockList'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+	}
 
 	public onRoomListChange(): void {
 		for (const connection of this.connectedClients) {

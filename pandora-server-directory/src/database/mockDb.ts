@@ -142,6 +142,16 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve();
 	}
 
+	public queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+		const result: Record<AccountId, string> = {};
+		return Promise.resolve(this.accountDbView.reduce((acc, dbAccount) => {
+			if (query.includes(dbAccount.id))
+				acc[dbAccount.id] = dbAccount.username;
+
+			return acc;
+		}, result));
+	}
+
 	public createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)

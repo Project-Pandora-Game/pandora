@@ -7,7 +7,7 @@ import { ActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item } from '../assets/item';
-import type { Asset, AssetId, ItemContainerPath, ItemPath, RoomActionTarget } from '../assets';
+import type { Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
 import { AppearanceGetBlockedSlot, AppearanceItemProperties } from '../assets/appearanceValidation';
 
 export enum ItemInteractionType {
@@ -135,6 +135,29 @@ export class CharacterRestrictionsManager {
 		this._properties = AppearanceItemProperties(items);
 
 		return this._properties;
+	}
+
+	/**
+	 * Calculates the properties for items between `before` and `after` (exclusive), excluding `exclude`.
+	 */
+	public getLimitedProperties({ before, after, exclude }: { before?: ItemId; after?: ItemId; exclude?: ItemId; }): Readonly<AssetPropertiesResult> {
+		const items = this.appearance.getAllItems();
+		let ignore = !!after;
+		const limitedItems: Item[] = [];
+		for (const item of items) {
+			if (item.id === before) {
+				break;
+			}
+			if (item.id === after) {
+				ignore = false;
+				continue;
+			}
+			if (ignore || item.id === exclude) {
+				continue;
+			}
+			limitedItems.push(item);
+		}
+		return AppearanceItemProperties(limitedItems);
 	}
 
 	/**
@@ -362,7 +385,7 @@ export class CharacterRestrictionsManager {
 		}
 
 		if (isCharacter && isPhysicallyEquipped && !isInSafemode) {
-			const targetProperties = target.getRestrictionManager(this.room).getProperties();
+			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({ exclude: item.id });
 			const slot = AppearanceGetBlockedSlot(properties.slots, targetProperties.slots.blocked);
 			if (slot) {
 				return {

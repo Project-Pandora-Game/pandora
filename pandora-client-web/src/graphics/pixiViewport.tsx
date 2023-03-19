@@ -1,7 +1,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import { PixiComponent, useApp, useTick } from '@saitonakamura/react-pixi';
+import { PixiComponent, useApp, useTick } from '@pixi/react';
 import { Viewport } from 'pixi-viewport';
-import { Application, InteractionManager, Point } from 'pixi.js';
+import { Application, Point } from 'pixi.js';
 import { ChildrenProps } from '../common/reactTypes';
 
 export type PixiViewportSetupCallback = (viewport: Viewport, params: {
@@ -33,7 +33,7 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 		} = props;
 
 		const viewport = new Viewport({
-			interaction: app.renderer.plugins.interaction as InteractionManager,
+			events: app.renderer.events,
 			screenWidth: width,
 			screenHeight: height,
 			worldWidth,
@@ -72,7 +72,7 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 		} = newProps;
 
 		if (app !== oldApp) {
-			viewport.options.interaction = app.renderer.plugins.interaction as InteractionManager;
+			viewport.options.events = app.renderer.events;
 		}
 
 		viewport.sortableChildren = sortableChildren === true;
@@ -98,6 +98,9 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 				worldHeight,
 			});
 		}
+	},
+	config: {
+		destroy: false,
 	},
 });
 
@@ -150,7 +153,7 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 		if (!viewPort)
 			return;
 
-		const events = ['moved', 'zoomed'];
+		const events = ['moved', 'zoomed'] as const;
 
 		for (const e of events) {
 			viewPort.on(e, update);

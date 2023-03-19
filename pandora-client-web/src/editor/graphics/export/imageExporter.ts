@@ -1,5 +1,5 @@
 import { Size, Rectangle, CharacterSize } from 'pandora-common/dist/assets';
-import { Application, Container, Extract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture, IRenderableObject } from 'pixi.js';
+import { Application, Container, IExtract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture, IRenderableObject } from 'pixi.js';
 import Delaunator from 'delaunator';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
@@ -7,9 +7,8 @@ type ImageFormat = 'png' | 'jpg' | 'webp';
 export class ImageExporter {
 	private readonly _app: Application;
 
-	private get _extract(): Extract {
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-		return this._app.renderer.plugins.extract;
+	private get _extract(): IExtract {
+		return this._app.renderer.extract;
 	}
 
 	constructor() {
@@ -20,24 +19,24 @@ export class ImageExporter {
 		});
 	}
 
-	public export(target: Container, format: ImageFormat): string {
+	public async export(target: Container, format: ImageFormat): Promise<string> {
 		this._app.renderer.resize(target.width, target.height);
 		const child = this._app.stage.addChild(target);
-		const result = this._extract.base64(target, `image/${format}`);
+		const result = await this._extract.base64(target, `image/${format}`);
 		this._app.stage.removeChild(child);
 		return result;
 	}
 
-	public textureCut(texture: Texture, size: Size, points: [number, number][], format: ImageFormat): string {
+	public async textureCut(texture: Texture, size: Size, points: [number, number][], format: ImageFormat): Promise<string> {
 		const cutter = new TextureCutter(texture, size, points);
-		return this.export(cutter, format);
+		return await this.export(cutter, format);
 	}
 
-	public imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat): string {
+	public async imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat): Promise<string> {
 		const fullSize = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT };
 		const renderTexture = RenderTexture.create(fullSize);
 		this._app.renderer.render(object, { renderTexture });
-		return this.textureCut(renderTexture, fullSize, [
+		return await this.textureCut(renderTexture, fullSize, [
 			[rect.x, rect.y],
 			[rect.x + rect.width, rect.y],
 			[rect.x + rect.width, rect.y + rect.height],

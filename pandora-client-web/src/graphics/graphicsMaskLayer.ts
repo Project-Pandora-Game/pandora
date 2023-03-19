@@ -1,12 +1,12 @@
 import { CharacterSize, Rectangle } from 'pandora-common';
-import { type AbstractRenderer, RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix } from 'pixi.js';
+import { RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix, IRenderer } from 'pixi.js';
 
 const FILTER_CONDITION = 'masky.a > 0.5 && masky.r < 0.5';
 const POLYGON_COLOR = 0xFF0000;
 const POLYGON_ALPHA = 1.0;
 
 export class GraphicsMaskLayer {
-	private readonly _renderer: AbstractRenderer;
+	private readonly _renderer: IRenderer;
 	private readonly _getTexture: (image: string) => Promise<Texture>;
 	private readonly _renderTexture: RenderTexture;
 	private _textureParent?: Sprite | MeshMaterial;
@@ -20,7 +20,7 @@ export class GraphicsMaskLayer {
 	public readonly sprite: Sprite;
 	public readonly filter: Filter;
 
-	constructor(renderer: AbstractRenderer, maskSprite: Sprite, getTexture: (image: string) => Promise<Texture>, maskSize: Readonly<Rectangle>) {
+	constructor(renderer: IRenderer, maskSprite: Sprite, getTexture: (image: string) => Promise<Texture>, maskSize: Readonly<Rectangle>) {
 		this.maskSize = maskSize;
 		this._renderer = renderer;
 		this._getTexture = getTexture;

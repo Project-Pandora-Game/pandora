@@ -1,6 +1,6 @@
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Application, Filter, Texture } from 'pixi.js';
-import { Sprite } from '@saitonakamura/react-pixi';
+import { Application, Filter, Renderer, Texture } from 'pixi.js';
+import { Sprite } from '@pixi/react';
 import { ChildrenProps } from '../common/reactTypes';
 import { useEvent } from '../common/useEvent';
 import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './pixiViewport';
@@ -127,8 +127,12 @@ function GraphicsSceneCore({
 		const app = appRef.current;
 		if (!app)
 			return;
-		app.renderer.backgroundColor = backgroundResult.backgroundColor;
-		app.renderer.backgroundAlpha = backgroundResult.backgroundAlpha;
+
+		const renderer = app.renderer;
+		Assert(renderer instanceof Renderer);
+		renderer.background.color = backgroundResult.backgroundColor;
+		renderer.background.alpha = backgroundResult.backgroundAlpha;
+		renderer.render(app.stage);
 		wantedBackground.current = backgroundResult.backgroundImage;
 		if (!backgroundResult.backgroundImage) {
 			setBackgroundTexture(null);
@@ -156,10 +160,10 @@ function GraphicsSceneCore({
 	}, []);
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	const Renderer = createPrivatePixiInstance ? GraphicsSceneRendererDirect : GraphicsSceneRendererShared;
+	const PixiRenderer = createPrivatePixiInstance ? GraphicsSceneRendererDirect : GraphicsSceneRendererShared;
 
 	return (
-		<Renderer
+		<PixiRenderer
 			container={ div }
 			forwardContexts={ forwardContexts }
 			onMount={ onMount }
@@ -187,7 +191,7 @@ function GraphicsSceneCore({
 					)
 				}
 			</PixiViewport>
-		</Renderer>
+		</PixiRenderer>
 	);
 }
 export function GraphicsScene({

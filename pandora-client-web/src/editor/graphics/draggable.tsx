@@ -1,13 +1,14 @@
-import { Texture, InteractionEvent, DisplayObject } from 'pixi.js';
+import * as PIXI from 'pixi.js';
+import { Texture, FederatedPointerEvent } from 'pixi.js';
 import { Assert, BoneDefinition, CharacterSize, LayerDefinition, PointDefinition } from 'pandora-common';
 import { GetAngle, RotateVector } from '../../graphics/utility';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../../assets/assetGraphics';
 import dotTexture from '../../assets/editor/dotTexture.png';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import _, { cloneDeep } from 'lodash';
-import React, { ReactElement, useMemo, useRef } from 'react';
+import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
 import { useEvent } from '../../common/useEvent';
-import { Sprite } from '@saitonakamura/react-pixi';
+import { Sprite, useApp } from '@pixi/react';
 import { useEditor } from '../editorContextProvider';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
@@ -20,7 +21,7 @@ type DraggableProps = {
 	tint?: number;
 	createTexture?: () => Texture;
 	setPos: (x: number, y: number) => void;
-	dragStart?: (event: InteractionEvent) => boolean;
+	dragStart?: (event: FederatedPointerEvent) => boolean;
 };
 export function Draggable({
 	createTexture,
@@ -28,46 +29,55 @@ export function Draggable({
 	dragStart,
 	...spriteProps
 }: DraggableProps): ReactElement {
-	const dragging = useRef<DisplayObject | null>(null);
+	const app = useApp();
+	const dragging = useRef<boolean>(false);
+	const sprite = useRef<PIXI.Sprite>(null);
 
-	const onDragStart = useEvent((event: InteractionEvent) => {
+	const onDragStart = useEvent((event: FederatedPointerEvent) => {
 		event.stopPropagation();
-		if (dragging.current) return;
+		if (dragging.current || !sprite.current) return;
 		if (dragStart?.(event) !== false) {
-			dragging.current = event.currentTarget;
+			dragging.current = true;
 		}
 	});
 
-	const onDragEnd = useEvent((_event: InteractionEvent) => {
-		dragging.current = null;
+	const onDragEnd = useEvent((_event: FederatedPointerEvent) => {
+		dragging.current = false;
 	});
 
-	const onDragMove = useEvent((event: InteractionEvent) => {
-		const obj = event.currentTarget;
-		if (dragging.current !== obj) return;
+	const onDragMove = useEvent((event: FederatedPointerEvent) => {
+		if (!dragging.current || !sprite.current) return;
 		event.stopPropagation();
-		const dragPointerEnd = event.data.getLocalPosition(obj.parent);
-
+		const dragPointerEnd = event.getLocalPosition(sprite.current.parent);
 		setPos(
 			_.clamp(Math.round(dragPointerEnd.x), 0, CharacterSize.WIDTH),
 			_.clamp(Math.round(dragPointerEnd.y), 0, CharacterSize.HEIGHT),
 		);
 	});
 
+	useEffect(() => {
+		// TODO: Move to globalpointermove once @pixi/react supports them
+		app.stage.eventMode = 'static';
+		app.stage.on('pointermove', onDragMove);
+		return () => {
+			app.stage.off('pointermove', onDragMove);
+		};
+	}, [app, onDragMove]);
+
 	const texture = useMemo(() => (createTexture?.() ?? Texture.WHITE), [createTexture]);
 
 	return (
 		<Sprite
 			{ ...spriteProps }
+			ref={ sprite }
 			texture={ texture }
 			anchor={ [0.5, 0.5] }
 			scale={ [0.5, 0.5] }
 			alpha={ 0.8 }
-			interactive
+			eventMode='static'
 			pointerdown={ onDragStart }
 			pointerup={ onDragEnd }
 			pointerupoutside={ onDragEnd }
-			pointermove={ onDragMove }
 		/>
 	);
 }

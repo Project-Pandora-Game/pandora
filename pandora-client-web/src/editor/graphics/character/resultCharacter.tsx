@@ -1,4 +1,4 @@
-import { Container } from '@saitonakamura/react-pixi';
+import { Container } from '@pixi/react';
 import React, { ReactElement } from 'react';
 import { GetAssetManager } from '../../../assets/assetManager';
 import { useObservable } from '../../../observable';

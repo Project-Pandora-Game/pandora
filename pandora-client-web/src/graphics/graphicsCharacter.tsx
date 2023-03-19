@@ -1,6 +1,7 @@
-import { Container } from '@saitonakamura/react-pixi';
+import { Container } from '@pixi/react';
 import { AssertNotNullable, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
-import { Filter, InteractionEvent, Rectangle } from 'pixi.js';
+import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
+import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
@@ -25,14 +26,14 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	scale?: PointLike;
 	pivot?: PointLike;
 	hitArea?: Rectangle;
-	interactive?: boolean;
+	eventMode?: PIXI.EventMode;
 	filters?: Filter[];
 	zIndex?: number;
 
-	onPointerDown?: (event: InteractionEvent) => void;
-	onPointerUp?: (event: InteractionEvent) => void;
-	onPointerUpOutside?: (event: InteractionEvent) => void;
-	onPointerMove?: (event: InteractionEvent) => void;
+	onPointerDown?: (event: FederatedPointerEvent) => void;
+	onPointerUp?: (event: FederatedPointerEvent) => void;
+	onPointerUpOutside?: (event: FederatedPointerEvent) => void;
+	onPointerMove?: (event: FederatedPointerEvent) => void;
 
 	getSortOrder?: LayerGetSortOrder;
 }
@@ -75,7 +76,7 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: Chara
 	return useMemo(() => actualCalculate(states), [actualCalculate, states]);
 }
 
-export function GraphicsCharacterWithManager({
+function GraphicsCharacterWithManagerImpl({
 	Layer,
 	appearanceContainer,
 	position: positionOffset = { x: 0, y: 0 },
@@ -94,7 +95,7 @@ export function GraphicsCharacterWithManager({
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;
 	layerStateOverrideGetter?: LayerStateOverrideGetter;
-}): ReactElement {
+}, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CharacterSize.WIDTH / 2, y: 0 }), [pivotExtra]);
 	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
 
@@ -181,6 +182,7 @@ export function GraphicsCharacterWithManager({
 	return (
 		<Container
 			{ ...graphicsProps }
+			ref={ ref }
 			pivot={ pivot }
 			position={ position }
 			scale={ scale }
@@ -202,12 +204,16 @@ export function GraphicsCharacterWithManager({
 	);
 }
 
-export function GraphicsCharacter(props: GraphicsCharacterProps): ReactElement | null {
+export const GraphicsCharacterWithManager = React.forwardRef(GraphicsCharacterWithManagerImpl);
+
+function GraphicsCharacterImpl(props: GraphicsCharacterProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement | null {
 	const manager = useObservable(GraphicsManagerInstance);
 	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => manager?.getAssetGraphicsById.bind(manager), [manager]);
 
 	if (!manager || !graphicsGetter)
 		return null;
 
-	return <GraphicsCharacterWithManager { ...props } graphicsGetter={ graphicsGetter } />;
+	return <GraphicsCharacterWithManager { ...props } graphicsGetter={ graphicsGetter } ref={ ref } />;
 }
+
+export const GraphicsCharacter = React.forwardRef(GraphicsCharacterImpl);

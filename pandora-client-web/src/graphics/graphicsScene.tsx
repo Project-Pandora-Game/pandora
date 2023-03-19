@@ -128,7 +128,8 @@ function GraphicsSceneCore({
 		if (!app)
 			return;
 
-		const renderer = app.renderer as Renderer;
+		const renderer = app.renderer;
+		Assert(renderer instanceof Renderer);
 		renderer.background.color = backgroundResult.backgroundColor;
 		renderer.background.alpha = backgroundResult.backgroundAlpha;
 		renderer.render(app.stage);
@@ -159,10 +160,10 @@ function GraphicsSceneCore({
 	}, []);
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	const Renderer = createPrivatePixiInstance ? GraphicsSceneRendererDirect : GraphicsSceneRendererShared;
+	const PixiRenderer = createPrivatePixiInstance ? GraphicsSceneRendererDirect : GraphicsSceneRendererShared;
 
 	return (
-		<Renderer
+		<PixiRenderer
 			container={ div }
 			forwardContexts={ forwardContexts }
 			onMount={ onMount }
@@ -190,7 +191,7 @@ function GraphicsSceneCore({
 					)
 				}
 			</PixiViewport>
-		</Renderer>
+		</PixiRenderer>
 	);
 }
 export function GraphicsScene({

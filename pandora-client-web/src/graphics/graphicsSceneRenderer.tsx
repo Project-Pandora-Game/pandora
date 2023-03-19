@@ -1,6 +1,6 @@
 import React, { Context, ReactElement, ReactNode, useMemo } from 'react';
-import { Application, DisplayObjectEvents, IApplicationOptions, Mesh, Ticker } from 'pixi.js';
-import { AssertNotNullable, GetLogger } from 'pandora-common';
+import { Application, IApplicationOptions, Mesh, Ticker } from 'pixi.js';
+import { Assert, AssertNotNullable, GetLogger } from 'pandora-common';
 import { AppProvider, createRoot, ReactPixiRoot, Stage } from '@pixi/react';
 import { cloneDeep } from 'lodash';
 import { ChildrenProps } from '../common/reactTypes';
@@ -103,8 +103,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 			return;
 
 		this.app = app;
-		if (!(app.view instanceof HTMLCanvasElement))
-			throw new Error('Expected app.view to be an HTMLCanvasElement');
+		Assert(app.view instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
 
 		app.renderer.resolution = resolution;
 		container.appendChild(app.view);
@@ -126,7 +125,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this._ticker = new Ticker();
 		this._ticker.autoStart = true;
 		this._ticker.add(this.renderStage);
-		this.app.stage.on('__REACT_PIXI_REQUEST_RENDER__' as keyof DisplayObjectEvents, this.needsRenderUpdate);
+		this.app.stage.on('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
 
 		this._needsUpdate = true;
 		this.renderStage();
@@ -166,7 +165,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		AssertNotNullable(this.app);
 		AssertNotNullable(this.root);
 
-		this.app.stage.off('__REACT_PIXI_REQUEST_RENDER__' as keyof DisplayObjectEvents, this.needsRenderUpdate);
+		this.app.stage.off('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
 		if (this._ticker) {
 			this._ticker.remove(this.renderStage);
 			this._ticker.destroy();

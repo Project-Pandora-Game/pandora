@@ -1,6 +1,6 @@
 import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, ICharacterRoomData, IChatRoomClientData, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { FederatedEvent, FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
+import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -265,16 +265,10 @@ function CharacterContextMenu({ character, event, onClose }: { character: Charac
 	const [menu, setMenu] = useState<'main' | 'admin'>('main');
 
 	const position = useMemo(() => {
-		if (event instanceof MouseEvent || event instanceof PointerEvent) {
+		if (event) {
 			return {
 				x: event.pageX,
 				y: event.pageY,
-			};
-		} else if (window.TouchEvent && event instanceof TouchEvent) {
-			// Firefox doesn't have TouchEvent defined in PC, so we need to check if it's defined
-			return {
-				x: event.touches[0].pageX,
-				y: event.touches[0].pageY,
 			};
 		}
 		return {

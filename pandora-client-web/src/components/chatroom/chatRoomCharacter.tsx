@@ -1,12 +1,12 @@
 import { CalculateCharacterMaxYForBackground, CharacterSize, CharacterView, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
-import PIXI, { DisplayObject, FederatedPointerEvent, Filter, Point, Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
+import PIXI, { FederatedPointerEvent, Filter, Point, Rectangle, TextStyle } from 'pixi.js';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterAppearanceView } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import _ from 'lodash';
 import { ChatroomDebugConfig } from './chatroomDebug';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
-import { Container, Graphics, Text } from '@pixi/react';
+import { Container, Graphics, Text, useApp } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE } from '../../graphics/graphicsLayer';
@@ -33,6 +33,7 @@ export function ChatRoomCharacter({
 	menuOpen,
 	filters,
 }: ChatRoomCharacterProps): ReactElement {
+	const app = useApp();
 	const evaluator = useAppearanceConditionEvaluator(character);
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
@@ -74,20 +75,19 @@ export function ChatRoomCharacter({
 
 	const hitArea = useMemo(() => new Rectangle(labelX - 100, labelY - 50, 200, 100), [labelX, labelY]);
 
+	const characterContainer = useRef<PIXI.Container>(null);
 	const dragging = useRef<Point | null>(null);
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
 
 	const onDragStart = useCallback((event: FederatedPointerEvent) => {
-		if (dragging.current) return;
-		if (!(event.currentTarget instanceof DisplayObject)) return;
-		dragging.current = event.getLocalPosition<Point>(event.currentTarget.parent);
+		if (dragging.current || !characterContainer.current) return;
+		dragging.current = event.getLocalPosition<Point>(characterContainer.current.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: FederatedPointerEvent) => {
-		if (!dragging.current || !data) return;
-		if (!(event.currentTarget instanceof DisplayObject)) return;
-		const dragPointerEnd = event.getLocalPosition<Point>(event.currentTarget.parent);
+		if (!dragging.current || !data || !characterContainer.current) return;
+		const dragPointerEnd = event.getLocalPosition<Point>(characterContainer.current.parent);
 
 		const newY = (dragPointerEnd.y - height + baseScale * BOTTOM_NAME_OFFSET) / ((scaling / height) * baseScale * BOTTOM_NAME_OFFSET - 1);
 
@@ -118,6 +118,15 @@ export function ChatRoomCharacter({
 		}
 	}, [onDragMove, onDragStart]);
 
+	useEffect(() => {
+		// TODO: Move to globalpointermove once @pixi/react supports them
+		app.stage.eventMode = 'static';
+		app.stage.on('pointermove', onPointerMove);
+		return () => {
+			app.stage.off('pointermove', onPointerMove);
+		};
+	}, [app, onPointerMove]);
+
 	// Debug graphics
 	const hotboxDebugDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
@@ -127,31 +136,31 @@ export function ChatRoomCharacter({
 
 	return (
 		<GraphicsCharacter
+			ref={ characterContainer }
 			appearanceContainer={ character }
 			position={ { x, y: height - y } }
 			scale={ { x: scaleX * scale, y: scale } }
 			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }
 			hitArea={ hitArea }
-			interactive
+			eventMode='static'
 			filters={ filters }
 			onPointerDown={ onPointerDown }
 			onPointerUp={ onPointerUp }
 			onPointerUpOutside={ onPointerUp }
-			onPointerMove={ onPointerMove }
 			zIndex={ -y }
 		>
 			<Text
 				anchor={ { x: 0.5, y: 0.5 } }
 				position={ { x: labelX, y: labelY } }
 				scale={ { x: 1 / scaleX, y: 1 } }
-				style={ {
+				style={ new TextStyle({
 					fontFamily: 'Arial',
 					fontSize: 32,
 					fill: character.data.settings.labelColor,
 					align: 'center',
 					dropShadow: true,
 					dropShadowBlur: 4,
-				} as any }
+				}) }
 				text={ character.data.name }
 			/>
 			{

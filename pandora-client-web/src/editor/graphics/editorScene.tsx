@@ -1,7 +1,7 @@
 import { Container, Graphics } from '@pixi/react';
 import classNames from 'classnames';
 import _ from 'lodash';
-import { CharacterSize, CharacterView } from 'pandora-common';
+import { CharacterSize, CharacterView, GetLogger } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CommonProps } from '../../common/reactTypes';
@@ -83,24 +83,27 @@ export function EditorScene({
 		return cleanup;
 	}, [cleanup]);
 
-	const exportImage = useCallback(async () => {
+	const exportImage = useCallback(() => {
 		if (!contentRef.current)
 			return;
 		const exporter = new ImageExporter();
-		const result = await exporter.imageCut(contentRef.current, {
+		exporter.imageCut(contentRef.current, {
 			x: 0,
 			y: 0,
 			height: CharacterSize.HEIGHT,
 			width: CharacterSize.WIDTH,
-		}, 'png');
-
-		const link = document.createElement('a');
-		link.href = result;
-		link.download = `export.png`;
-		link.style.display = 'none';
-		document.body.appendChild(link);
-		link.click();
-		link.remove();
+		}, 'png')
+			.then((result) => {
+				const link = document.createElement('a');
+				link.href = result;
+				link.download = `export.png`;
+				link.style.display = 'none';
+				document.body.appendChild(link);
+				link.click();
+				link.remove();
+			}, (error) => {
+				GetLogger('Editor').error('Error exporting image:', error);
+			});
 	}, []);
 
 	const overlay = (

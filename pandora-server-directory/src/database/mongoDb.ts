@@ -27,6 +27,7 @@ export const MONGODB_SERVER_VERSION: string = '6.0.5';
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
 	private readonly _url: string;
+	private readonly _accountNames = new Map<AccountId, string>();
 	private _client!: MongoClient;
 	private _inMemoryServer!: MongoMemoryServer;
 	private _db!: Db;
@@ -243,6 +244,30 @@ export default class MongoDatabase implements PandoraDatabase {
 		} else {
 			await this._accounts.updateOne({ id }, { $unset: { roles: '' } });
 		}
+	}
+
+	public async queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+		const result: Record<AccountId, string> = {};
+		const missing: AccountId[] = [];
+
+		for (const id of query) {
+			const name = this._accountNames.get(id);
+			if (name) {
+				result[id] = name;
+			} else {
+				missing.push(id);
+			}
+		}
+
+		if (missing.length > 0) {
+			const accounts = await this._accounts.find({ id: { $in: missing } }).toArray();
+			for (const acc of accounts) {
+				result[acc.id] = acc.username;
+				this._accountNames.set(acc.id, acc.username);
+			}
+		}
+
+		return result;
 	}
 
 	public async createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {

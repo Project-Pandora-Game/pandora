@@ -63,6 +63,8 @@ export interface PandoraDatabase {
 	 */
 	setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void>;
 
+	queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>>;
+
 	//#region Character
 
 	/**

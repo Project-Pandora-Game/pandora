@@ -20,6 +20,7 @@ import { PixiViewportSetupCallback } from '../../graphics/pixiViewport';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { ChatRoomCharacter } from './chatRoomCharacter';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { PointLike } from '../../graphics/graphicsCharacter';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -148,8 +149,7 @@ export function ChatRoomScene(): ReactElement | null {
 	const data = useChatRoomData();
 	const characters = useChatRoomCharacters();
 	const shard = useShardConnector();
-	const [menuActive, setMenuActive] = useState<Character<ICharacterRoomData> | null>(null);
-	const [clickEvent, setClickEvent] = useState<FederatedPointerEvent | null>(null);
+	const [menuActive, setMenuActive] = useState<{ character: Character<ICharacterRoomData>; position: Readonly<PointLike>; } | null>(null);
 	const player = usePlayer();
 	const debugConfig = useDebugConfig();
 
@@ -161,8 +161,17 @@ export function ChatRoomScene(): ReactElement | null {
 	const blindness = useCharacterRestrictionsManager(player, (manager) => manager.getBlindness());
 
 	const menuOpen = useCallback((character: Character<ICharacterRoomData> | null, event: FederatedPointerEvent | null) => {
-		setMenuActive(character);
-		setClickEvent(event);
+		if (!character || !event) {
+			setMenuActive(null);
+		} else {
+			setMenuActive({
+				character,
+				position: {
+					x: event.pageX,
+					y: event.pageY,
+				},
+			});
+		}
 	}, []);
 
 	const filters = useMemo<Filter[]>(() => {
@@ -176,7 +185,7 @@ export function ChatRoomScene(): ReactElement | null {
 	}, [blindness]);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
-		if (menuActive && clickEvent) {
+		if (menuActive) {
 			setMenuActive(null);
 			event.stopPropagation();
 			event.preventDefault();
@@ -203,7 +212,7 @@ export function ChatRoomScene(): ReactElement | null {
 			menuOpen={ menuOpen }
 		>
 			{
-				menuActive ? <CharacterContextMenu character={ menuActive } event={ clickEvent } onClose={ closeContextMenu } /> : null
+				menuActive ? <CharacterContextMenu character={ menuActive.character } position={ menuActive.position } onClose={ closeContextMenu } /> : null
 			}
 		</ChatRoomGraphicsScene>
 	);
@@ -257,25 +266,16 @@ function AdminActionContextMenu({ character, chatRoom, onClose, onBack }: { char
 	);
 }
 
-function CharacterContextMenu({ character, event, onClose }: { character: Character<ICharacterRoomData>; event: FederatedPointerEvent | null; onClose: () => void; }): ReactElement | null {
+function CharacterContextMenu({ character, position, onClose }: {
+	character: Character<ICharacterRoomData>;
+	position: Readonly<PointLike>;
+	onClose: () => void;
+}): ReactElement | null {
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 	const currentAccount = useCurrentAccount();
 	const [menu, setMenu] = useState<'main' | 'admin'>('main');
-
-	const position = useMemo(() => {
-		if (event) {
-			return {
-				x: event.pageX,
-				y: event.pageY,
-			};
-		}
-		return {
-			x: 0,
-			y: 0,
-		};
-	}, [event]);
 
 	const ref = useContextMenuPosition(position);
 

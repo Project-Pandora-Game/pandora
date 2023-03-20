@@ -211,12 +211,12 @@ export function NotificationContextProvider({ children }: { children: React.Reac
 }
 
 function NotificationTitleUpdater(): null {
-	const context = useContext(notificationContext);
-	const title = useObservable(context.title);
+	const { title } = useContext(notificationContext);
+	const currentTitle = useObservable(title);
 
 	useEffect(() => {
-		window.document.title = title;
-	}, [title]);
+		window.document.title = currentTitle;
+	}, [currentTitle]);
 
 	return null;
 }

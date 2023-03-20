@@ -280,6 +280,24 @@ export function DoAppearanceAction(
 			}
 
 			const manipulator = target.getManipulator();
+
+			// Player moving the item must be able to interact with the item on target position (if it is being moved in root)
+			if (action.item.container.length === 0) {
+				const items = manipulator.getRootItems();
+				const currentPos = items.findIndex((item) => item.id === action.item.itemId);
+				const newPos = currentPos + action.shift;
+
+				if (newPos >= 0 && newPos < items.length) {
+					const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
+					if (!r.allowed) {
+						return {
+							result: 'restrictionError',
+							restriction: r.restriction,
+						};
+					}
+				}
+			}
+
 			if (!ActionMoveItem(manipulator, action.item, action.shift))
 				return { result: 'invalidAction' };
 			return AppearanceValidationResultToActionResult(

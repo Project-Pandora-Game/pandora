@@ -138,24 +138,24 @@ export class CharacterRestrictionsManager {
 	}
 
 	/**
-	 * Calculates the properties for items between `before` and `after` (exclusive), excluding `exclude`.
+	 * Calculates the properties for items between `before` and `after` (inclusive), excluding `exclude`.
 	 */
 	public getLimitedProperties({ before, after, exclude }: { before?: ItemId; after?: ItemId; exclude?: ItemId; }): Readonly<AssetPropertiesResult> {
 		const items = this.appearance.getAllItems();
 		let ignore = !!after;
 		const limitedItems: Item[] = [];
 		for (const item of items) {
+			if (item.id === after) {
+				ignore = false;
+			}
+
+			if (!ignore && item.id !== exclude) {
+				limitedItems.push(item);
+			}
+
 			if (item.id === before) {
 				break;
 			}
-			if (item.id === after) {
-				ignore = false;
-				continue;
-			}
-			if (ignore || item.id === exclude) {
-				continue;
-			}
-			limitedItems.push(item);
 		}
 		return AppearanceItemProperties(limitedItems);
 	}
@@ -249,7 +249,14 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public canUseItem(target: RoomActionTarget, itemPath: ItemPath, interaction: ItemInteractionType): RestrictionResult {
+	/**
+	 * Validate if this character can use item on target in specific way, supplying the path to the item
+	 * @param target - Target on which the item is being interected with
+	 * @param itemPath - Path to the item
+	 * @param interaction - What kind of interaction to check against
+	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
+	 */
+	public canUseItem(target: RoomActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
 		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
@@ -260,10 +267,27 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
-		return this.canUseItemDirect(target, itemPath.container, item, interaction);
+		return this.canUseItemDirect(target, itemPath.container, item, interaction, insertBeforeRootItem);
 	}
 
-	public canUseItemDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType): RestrictionResult {
+	/**
+	 * Validate if this character can use item on target in specific way, supplying the item itself
+	 * @param target - Target on which the item is being interected with
+	 * @param container - Container in which the item is
+	 * @param item - The item itself, as object
+	 * @param interaction - What kind of interaction to check against
+	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
+	 */
+	public canUseItemDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
+		// Must validate insertAfter, if present
+		if (insertBeforeRootItem && target.getItem({ container: [], itemId: insertBeforeRootItem }) == null)
+			return {
+				allowed: false,
+				restriction: {
+					type: 'invalid',
+				},
+			};
+
 		// Must be able to use item's asset
 		let r = this.canUseAsset(target, item.asset);
 		if (!r.allowed)
@@ -385,7 +409,10 @@ export class CharacterRestrictionsManager {
 		}
 
 		if (isCharacter && isPhysicallyEquipped && !isInSafemode) {
-			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({ after: container.length > 0 ? container[0].item : item.id });
+			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({
+				after: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
+				exclude: container.length > 0 ? container[0].item : item.id,
+			});
 			const slot = AppearanceGetBlockedSlot(properties.slots, targetProperties.slots.covered);
 			if (slot) {
 				return {

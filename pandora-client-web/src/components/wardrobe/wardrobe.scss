@@ -170,7 +170,7 @@ $header-height: 2em;
 	}
 
 	&:focus, &:active {
-		border: 0.2em solid white;
+		border-color: white;
 	}
 
 	&.blocked {
@@ -253,7 +253,7 @@ $header-height: 2em;
 	}
 
 	&:focus, &:active {
-		border: 0.2em solid white;
+		border-color: white;
 	}
 
 	&.blocked:not(.selected) {

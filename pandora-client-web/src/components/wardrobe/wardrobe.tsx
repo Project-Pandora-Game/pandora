@@ -998,6 +998,20 @@ export function WardrobeItemConfigMenu({
 					>
 						➖ Remove and delete
 					</WardrobeActionButton>
+					<WardrobeActionButton
+						action={ {
+							type: 'transfer',
+							source: target,
+							item,
+							target: { type: 'roomInventory' },
+							container: [],
+						} }
+						onExecute={ close }
+					>
+						<span>
+							<u>▽</u> Store in room
+						</span>
+					</WardrobeActionButton>
 				</Row>
 				{
 					(wornItem.asset.definition.colorization && Object.keys(wornItem.asset.definition.colorization).length > 0) && (

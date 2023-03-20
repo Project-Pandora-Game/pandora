@@ -205,7 +205,7 @@ export interface PandoraDatabase {
 	 * Set config data
 	 * @param data
 	 */
-	setConfig(data: DatabaseConfig): Promise<void>;
+	setConfig<T extends DatabaseConfigType>(type: T, data: DatabaseConfigData<T>): Promise<void>;
 }
 
 /** Current database connection */

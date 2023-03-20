@@ -279,7 +279,7 @@ export class CharacterRestrictionsManager {
 	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
 	 */
 	public canUseItemDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
-		// Must validate insertAfter, if present
+		// Must validate insertBeforeRootItem, if present
 		if (insertBeforeRootItem && target.getItem({ container: [], itemId: insertBeforeRootItem }) == null)
 			return {
 				allowed: false,

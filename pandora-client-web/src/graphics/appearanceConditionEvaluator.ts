@@ -1,4 +1,4 @@
-import { AssertNever, AtomicCondition, BoneName, BoneState, CharacterView, Item, TransformDefinition } from 'pandora-common';
+import { AssertNever, AtomicCondition, AtomicConditionBone, BoneName, BoneState, CharacterView, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
 import { AppearanceContainer, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
 import { EvaluateCondition, RotateVector } from './utility';
@@ -42,7 +42,7 @@ export class AppearanceConditionEvaluator {
 
 		AssertNever();
 	}
-	private _evalConditionCore({ operator, value }: AtomicCondition, currentValue: number): boolean {
+	private _evalConditionCore({ operator, value }: AtomicConditionBone, currentValue: number): boolean {
 		switch (operator) {
 			case '>':
 				return currentValue > value;

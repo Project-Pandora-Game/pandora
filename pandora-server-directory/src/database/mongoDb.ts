@@ -22,6 +22,8 @@ const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
 	strength: 2,
 });
 
+export const MONGODB_SERVER_VERSION: string = '6.0.5';
+
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
 	private readonly _url: string;
@@ -31,7 +33,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
 	private _chatrooms!: Collection<IChatRoomData>;
-	private _config!: Collection<DatabaseConfig>;
+	private _config!: Collection<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>;
 	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
@@ -412,8 +414,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result.data;
 	}
 
-	public async setConfig(data: DatabaseConfig): Promise<void> {
-		await this._config.updateOne({ type: data.type }, { $set: { data: data.data } }, { upsert: true });
+	public async setConfig<T extends DatabaseConfigType>(type: T, data: DatabaseConfigData<T>): Promise<void> {
+		await this._config.updateOne({ type }, { $set: { data } }, { upsert: true });
 	}
 
 	private async _doMigrations(): Promise<void> {
@@ -433,7 +435,7 @@ async function CreateInMemoryMongo({
 	}
 	return await MongoMemoryServer.create({
 		binary: {
-			version: '6.0.3',
+			version: MONGODB_SERVER_VERSION,
 			checkMD5: false,
 		},
 		instance: {

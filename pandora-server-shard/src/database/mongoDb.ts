@@ -60,7 +60,7 @@ export default class MongoDatabase implements ShardDatabase {
 	}
 
 	public async setChatRoom(id: RoomId, data: IChatRoomDataShardUpdate, accessId: string): Promise<boolean> {
-		const { acknowledged, modifiedCount } = await this._characters.updateOne({ id, accessId }, { $set: data });
+		const { acknowledged, modifiedCount } = await this._chatrooms.updateOne({ id, accessId }, { $set: data });
 		return acknowledged && modifiedCount === 1;
 	}
 }

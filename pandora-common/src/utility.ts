@@ -1,4 +1,6 @@
 import AsyncLock, { AsyncLockOptions } from 'async-lock';
+import { castDraft, Draft } from 'immer';
+import { cloneDeep } from 'lodash';
 
 /** Checks if the two types are equal */
 export type Equals<X, Y> =
@@ -168,6 +170,16 @@ export function MessageSubstitute(originalMessage: string, substitutions: Readon
 		message = message.replaceAll(key, value);
 	}
 	return message;
+}
+
+/**
+ * Create a deep copy of the data, marking it as mutable if it was originally immutable
+ * @param data - Data to clone
+ * @returns New, mutable copy of data
+ * @note The `Draft` type on return is used as it means making data mutable, it comes from the `immer` library
+ */
+export function CloneDeepMutable<T>(data: T): Draft<T> {
+	return castDraft(cloneDeep(data));
 }
 
 /**

@@ -53,7 +53,7 @@ export const BetaKeyStore = new class BetaKeyStore extends TokenStoreBase<IBetaK
 	}
 
 	protected save(data: IStoredBetaKeyInfo[]): Promise<void> {
-		return GetDatabase().setConfig({ type: 'betaKeys', data });
+		return GetDatabase().setConfig('betaKeys', data);
 	}
 
 	protected _validateExtra({ maxUses, uses }: IBetaKeyInfo): boolean {

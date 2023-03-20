@@ -21,7 +21,7 @@ export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
 	private chatroomDb: Map<RoomId, IChatRoomData> = new Map();
-	private configDb: DatabaseConfig[] = [];
+	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
 	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
@@ -356,21 +356,16 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public getConfig<T extends DatabaseConfigType>(type: T): Promise<null | DatabaseConfigData<T>> {
-		const config = this.configDb.find((dbConfig) => dbConfig.type === type);
+		const config = this.configDb.get(type);
 		if (!config)
 			return Promise.resolve(null);
 
 		// @ts-expect-error data is unique to each config type
-		return Promise.resolve(_.cloneDeep(config.data));
+		return Promise.resolve(_.cloneDeep(config));
 	}
 
-	public setConfig(data: DatabaseConfig): Promise<void> {
-		const index = this.configDb.findIndex((dbConfig) => dbConfig.type === data.type);
-		if (index < 0) {
-			this.configDb.push(_.cloneDeep(data));
-		} else {
-			this.configDb[index] = _.cloneDeep(data);
-		}
+	public setConfig<T extends DatabaseConfigType>(type: T, data: DatabaseConfigData<T>): Promise<void> {
+		this.configDb.set(type, _.cloneDeep(data));
 		return Promise.resolve();
 	}
 }

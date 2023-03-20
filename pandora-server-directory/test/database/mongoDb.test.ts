@@ -1,7 +1,7 @@
 import { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { CreateAccountData } from '../../src/account/account';
 import { PrehashPassword } from '../../src/database/mockDb';
-import MongoDatabase from '../../src/database/mongoDb';
+import MongoDatabase, { MONGODB_SERVER_VERSION } from '../../src/database/mongoDb';
 import RunDbTests from './db';
 
 // @jest
@@ -25,7 +25,7 @@ describe('MongoDatabase extra tests', () => {
 	beforeEach(async () => {
 		server = await MongoMemoryServer.create({
 			binary: {
-				version: '6.0.3',
+				version: MONGODB_SERVER_VERSION,
 				checkMD5: false,
 			},
 		});

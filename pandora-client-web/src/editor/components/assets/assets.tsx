@@ -320,6 +320,13 @@ function AssetCreatePrompt(): ReactElement {
 	);
 }
 
+type AssetCreateDialogData = {
+	category: string;
+	id: string;
+	name: string;
+	bodypart: string;
+};
+
 function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): ReactElement {
 	const editor = useEditor();
 	const tabContext = useEditorTabContext();
@@ -331,14 +338,9 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 		handleSubmit,
 		register,
 		getValues,
-	} = useForm<{
-		category: string;
-		id: string;
-		name: string;
-		bodypart: string;
-	}>({ shouldUseNativeValidation: true });
+	} = useForm<AssetCreateDialogData>({ shouldUseNativeValidation: true });
 
-	const validateId = useCallback<Validate<string>>((id) => {
+	const validateId = useCallback<Validate<string, AssetCreateDialogData>>((id) => {
 		const category = getValues('category');
 
 		if (!view.categories.some((c) => c.name === category)) {

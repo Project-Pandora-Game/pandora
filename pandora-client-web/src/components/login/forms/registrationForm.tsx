@@ -36,7 +36,7 @@ export function RegistrationForm(): ReactElement {
 
 	const betaKeyRequired = !!directoryStatus.betaKeyRequired;
 
-	const validateUsername = useCallback<Validate<string>>((username) => {
+	const validateUsername = useCallback<Validate<string, RegistrationFormData>>((username) => {
 		if (username === usernameTaken) {
 			return 'Username already taken';
 		} else if (!IsUsername(username)) {
@@ -45,7 +45,7 @@ export function RegistrationForm(): ReactElement {
 		return true;
 	}, [usernameTaken]);
 
-	const validateEmail = useCallback<Validate<string>>((email) => {
+	const validateEmail = useCallback<Validate<string, RegistrationFormData>>((email) => {
 		if (email === emailTaken) {
 			return 'Email already in use';
 		} else if (!IsEmail(email)) {

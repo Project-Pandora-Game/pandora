@@ -22,6 +22,8 @@ const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
 	strength: 2,
 });
 
+export const MONGODB_SERVER_VERSION: string = '6.0.5';
+
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
 	private readonly _url: string;
@@ -433,7 +435,7 @@ async function CreateInMemoryMongo({
 	}
 	return await MongoMemoryServer.create({
 		binary: {
-			version: '6.0.3',
+			version: MONGODB_SERVER_VERSION,
 			checkMD5: false,
 		},
 		instance: {

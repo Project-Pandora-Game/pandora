@@ -485,7 +485,7 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 	if (sourceManipulator.isCharacter) {
 		const manipulatorContainer = sourceContainerManipulator.container;
 		sourceContainerManipulator.queueMessage({
-			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
+			id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 			item: {
 				assetId: item.asset.id,
 			},
@@ -494,7 +494,7 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 	if (targetManipulator.isCharacter) {
 		const manipulatorContainer = targetContainerManipulator.container;
 		targetContainerManipulator.queueMessage({
-			id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
+			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 			item: {
 				assetId: removedItems[0].asset.id,
 			},

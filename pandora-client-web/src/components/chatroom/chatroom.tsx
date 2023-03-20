@@ -188,8 +188,12 @@ function GetActiontext(action: IChatroomMessageActionProcessed): string | undefi
 	switch (action.id) {
 		case 'itemAdd':
 			return asset?.definition.chat?.actionAdd ?? defaultMessage;
+		case 'itemAddCreate':
+			return asset?.definition.chat?.actionAddCreate ?? defaultMessage;
 		case 'itemRemove':
 			return assetPrevious?.definition.chat?.actionRemove ?? defaultMessage;
+		case 'itemRemoveDelete':
+			return assetPrevious?.definition.chat?.actionRemoveDelete ?? defaultMessage;
 		case 'itemAttach':
 			return asset?.definition.chat?.actionAttach ?? defaultMessage;
 		case 'itemDetach':

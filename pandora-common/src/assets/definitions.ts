@@ -84,8 +84,12 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 		chatDescriptor?: string;
 		/** Message for when this item is added (defaults to `itemAdd`) */
 		actionAdd?: string;
+		/** Message for when this item is spawned and immediately added (defaults to `itemAddCreate`) */
+		actionAddCreate?: string;
 		/** Message for when this item is removed (defaults to `itemRemove`) */
 		actionRemove?: string;
+		/** Message for when this item is removed and immediately deleted (defaults to `itemRemoveDelete`) */
+		actionRemoveDelete?: string;
 		/** Message for when this item is attached to something (defaults to `itemAttach`) */
 		actionAttach?: string;
 		/** Message for when this item is removed (defaults to `itemDetach`) */

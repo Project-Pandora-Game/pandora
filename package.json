@@ -1,5 +1,6 @@
 {
 	"private": true,
+	"packageManager": "pnpm@7.27.1",
 	"scripts": {
 		"postinstall": "node .hooks/postinstall.cjs",
 		"ci": "pnpm run build && pnpm run check-common-install && pnpm run lint && pnpm run type-check:test && pnpm run test --ci",

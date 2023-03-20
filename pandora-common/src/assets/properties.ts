@@ -52,10 +52,16 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	blockSelfModules?: string[];
 
 	/**
-	 * Prevents listed slots from being added or removed or modified by anyone, including on oneself
+	 * Prevents items that use these slots from being present on top of this item
 	 * @default []
 	 */
 	blockSlots?: (A['slots'])[];
+
+	/**
+	 * Prevents items that use these slots and are below this item from being modified
+	 * @default []
+	 */
+	coverSlots?: (A['slots'])[];
 
 	/**
 	 * Unique list of slots this item occupies and or requires to be occupied
@@ -69,6 +75,7 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 
 export interface AssetSlotResult {
 	occupied: Map<string, number>;
+	covered: Set<string>;
 	blocked: Set<string>;
 }
 
@@ -88,6 +95,7 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 		hides: new Set(),
 		slots: {
 			occupied: new Map(),
+			covered: new Set(),
 			blocked: new Set(),
 		},
 	};
@@ -101,6 +109,7 @@ export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, p
 	for (const [slot, amount] of Object.entries(properties.occupySlots ?? {})) {
 		base.slots.occupied.set(slot, (base.slots.occupied.get(slot) ?? 0) + (amount ?? 0));
 	}
+	properties.coverSlots?.forEach((s) => base.slots.covered.add(s));
 	properties.blockSlots?.forEach((s) => base.slots.blocked.add(s));
 
 	return base;

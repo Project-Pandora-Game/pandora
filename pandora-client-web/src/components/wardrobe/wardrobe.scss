@@ -256,7 +256,7 @@ $header-height: 2em;
 		border: 0.2em solid white;
 	}
 
-	&.blocked {
+	&.blocked:not(.selected) {
 		cursor: default;
 		background-color: #977;
 	}

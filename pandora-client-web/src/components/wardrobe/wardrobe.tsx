@@ -881,10 +881,14 @@ function WardrobeActionButton({
 	children,
 	action,
 	hideReserveSpace = false,
+	showActionBlockedExplanation = true,
+	onExecute,
 }: CommonProps & {
 	action: AppearanceAction;
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
+	showActionBlockedExplanation?: boolean;
+	onExecute?: () => void;
 }): ReactElement {
 	const { actions, execute } = useWardrobeContext();
 
@@ -901,10 +905,15 @@ function WardrobeActionButton({
 				ev.stopPropagation();
 				if (check.result === 'success') {
 					execute(action);
+					onExecute?.();
 				}
 			} }
 		>
-			<ActionWarning check={ check } parent={ ref } />
+			{
+				showActionBlockedExplanation ? (
+					<ActionWarning check={ check } parent={ ref } />
+				) : null
+			}
 			{ children }
 		</button>
 	);
@@ -979,12 +988,29 @@ export function WardrobeItemConfigMenu({
 							</>
 						)
 					}
-					<WardrobeActionButton action={ {
-						type: 'delete',
-						target,
-						item,
-					} }>
+					<WardrobeActionButton
+						action={ {
+							type: 'delete',
+							target,
+							item,
+						} }
+						onExecute={ close }
+					>
 						➖ Remove and delete
+					</WardrobeActionButton>
+					<WardrobeActionButton
+						action={ {
+							type: 'transfer',
+							source: target,
+							item,
+							target: { type: 'roomInventory' },
+							container: [],
+						} }
+						onExecute={ close }
+					>
+						<span>
+							<u>▽</u> Store in room
+						</span>
 					</WardrobeActionButton>
 				</Row>
 				{
@@ -1074,24 +1100,29 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<
 			.map((text, index) => <span key={ index }>{ text }</span>);
 	}, [m.activeVariant, m.data, now]);
 
-	const rows = useMemo(() => m.config.variants.map((v) => (
-		<WardrobeActionButton
-			action={ {
-				type: 'moduleAction',
-				target,
-				item,
-				module: moduleName,
-				action: {
-					moduleType: 'typed',
-					setVariant: v.id,
-				},
-			} }
-			key={ v.id }
-			className={ m.activeVariant.id === v.id ? 'selected' : '' }
-		>
-			{ v.name }
-		</WardrobeActionButton>
-	)), [m.activeVariant, m.config, target, item, moduleName]);
+	const rows = useMemo(() => m.config.variants.map((v) => {
+		const isSelected = m.activeVariant.id === v.id;
+
+		return (
+			<WardrobeActionButton
+				key={ v.id }
+				action={ {
+					type: 'moduleAction',
+					target,
+					item,
+					module: moduleName,
+					action: {
+						moduleType: 'typed',
+						setVariant: v.id,
+					},
+				} }
+				className={ isSelected ? 'selected' : '' }
+				showActionBlockedExplanation={ !isSelected }
+			>
+				{ v.name }
+			</WardrobeActionButton>
+		);
+	}), [m.activeVariant, m.config, target, item, moduleName]);
 
 	return (
 		<Column>

@@ -271,7 +271,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return { result: 'invalidAction' };
 			// Player moving the item must be able to interact with the item
-			const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			let r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
 				return {
 					result: 'restrictionError',
@@ -288,7 +288,7 @@ export function DoAppearanceAction(
 				const newPos = currentPos + action.shift;
 
 				if (newPos >= 0 && newPos < items.length) {
-					const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
+					r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
 					if (!r.allowed) {
 						return {
 							result: 'restrictionError',

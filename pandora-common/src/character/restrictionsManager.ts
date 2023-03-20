@@ -138,14 +138,14 @@ export class CharacterRestrictionsManager {
 	}
 
 	/**
-	 * Calculates the properties for items between `before` and `after` (inclusive), excluding `exclude`.
+	 * Calculates the properties for items between `from` and `to` (inclusive), excluding `exclude`.
 	 */
-	public getLimitedProperties({ before, after, exclude }: { before?: ItemId; after?: ItemId; exclude?: ItemId; }): Readonly<AssetPropertiesResult> {
+	public getLimitedProperties({ from, to, exclude }: { from?: ItemId; to?: ItemId; exclude?: ItemId; }): Readonly<AssetPropertiesResult> {
 		const items = this.appearance.getAllItems();
-		let ignore = !!after;
+		let ignore = !!from;
 		const limitedItems: Item[] = [];
 		for (const item of items) {
-			if (item.id === after) {
+			if (item.id === from) {
 				ignore = false;
 			}
 
@@ -153,7 +153,7 @@ export class CharacterRestrictionsManager {
 				limitedItems.push(item);
 			}
 
-			if (item.id === before) {
+			if (item.id === to) {
 				break;
 			}
 		}
@@ -410,7 +410,7 @@ export class CharacterRestrictionsManager {
 
 		if (isCharacter && isPhysicallyEquipped && !isInSafemode) {
 			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({
-				after: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
+				from: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
 				exclude: container.length > 0 ? container[0].item : item.id,
 			});
 			const slot = AppearanceGetBlockedSlot(properties.slots, targetProperties.slots.covered);

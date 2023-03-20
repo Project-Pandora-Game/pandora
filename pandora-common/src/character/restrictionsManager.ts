@@ -385,7 +385,7 @@ export class CharacterRestrictionsManager {
 		}
 
 		if (isCharacter && isPhysicallyEquipped && !isInSafemode) {
-			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({ after: item.id });
+			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({ after: container.length > 0 ? container[0].item : item.id });
 			const slot = AppearanceGetBlockedSlot(properties.slots, targetProperties.slots.covered);
 			if (slot) {
 				return {

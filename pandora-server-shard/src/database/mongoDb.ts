@@ -13,7 +13,7 @@ const CHATROOMS_COLLECTION_NAME = 'chatrooms';
 export default class MongoDatabase implements ShardDatabase {
 	private readonly _client: MongoClient;
 	private _db!: Db;
-	private _characters!: Collection<ICharacterData>;
+	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
 	private _chatrooms!: Collection<IChatRoomData>;
 
 	constructor() {
@@ -42,11 +42,15 @@ export default class MongoDatabase implements ShardDatabase {
 	}
 
 	public async getCharacter(id: CharacterId, accessId: string): Promise<ICharacterData | null | false> {
-		return await this._characters.findOne({ id, accessId });
+		const character = await this._characters.findOne({ id: PlainId(id), accessId });
+		if (!character)
+			return null;
+
+		return Id(character);
 	}
 
 	public async setCharacter({ id, accessId, ...data }: ICharacterDataUpdate): Promise<boolean> {
-		const { acknowledged, modifiedCount } = await this._characters.updateOne({ id, accessId }, { $set: data });
+		const { acknowledged, modifiedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
 		return acknowledged && modifiedCount === 1;
 	}
 
@@ -63,4 +67,15 @@ export default class MongoDatabase implements ShardDatabase {
 		const { acknowledged, modifiedCount } = await this._chatrooms.updateOne({ id, accessId }, { $set: data });
 		return acknowledged && modifiedCount === 1;
 	}
+}
+
+function Id(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
+	return {
+		...obj,
+		id: `c${obj.id}` as const,
+	};
+}
+
+function PlainId(id: CharacterId): number {
+	return parseInt(id.slice(1));
 }

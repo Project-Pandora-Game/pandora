@@ -45,7 +45,7 @@ services:
     environment:
       - LOG_DIR=/logs
       - SERVER_PORT=25561
-      - DATABASE_TYPE=directory
+      - DATABASE_TYPE=mongodb
       - DATABASE_URL=mongodb://pandora-mongodb:27017
       - DATABASE_NAME=pandora
       - DIRECTORY_ADDRESS=http://pandora-server-directory:25560

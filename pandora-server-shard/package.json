@@ -23,6 +23,9 @@
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch"
 	},
+	"files": [
+		"dist"
+	],
 	"nodemonConfig": {
 		"watch": [
 			"dist",

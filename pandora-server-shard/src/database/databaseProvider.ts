@@ -42,6 +42,12 @@ export async function InitDatabase(): Promise<void> {
 	}
 }
 
+export async function CloseDatabase(): Promise<void> {
+	if (database instanceof MongoDatabase) {
+		await database.close();
+	}
+}
+
 /** Get currently active database connection */
 export function GetDatabase(): ShardDatabase {
 	if (!database) {

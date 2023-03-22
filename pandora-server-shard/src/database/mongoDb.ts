@@ -41,6 +41,10 @@ export default class MongoDatabase implements ShardDatabase {
 		return this;
 	}
 
+	public async close(): Promise<void> {
+		await this._client.close();
+	}
+
 	public async getCharacter(id: CharacterId, accessId: string): Promise<ICharacterData | null | false> {
 		const character = await this._characters.findOne({ id: PlainId(id), accessId });
 		if (!character)

@@ -5,7 +5,7 @@ import { max, maxBy, min, minBy } from 'lodash';
 import { Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
-import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { AppearanceContainer } from '../character/character';
@@ -110,6 +110,8 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	getTexture?: (path: string) => Promise<Texture>;
 }
 
+export const ContextCullClockwise = createContext(false);
+
 export function GraphicsLayer({
 	appearanceContainer,
 	children,
@@ -195,12 +197,23 @@ export function GraphicsLayer({
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 
+	const cullClockwise = useContext(ContextCullClockwise);
+
+	const cullingState = useMemo(() => {
+		const pixiState = PIXI.State.for2d();
+		pixiState.culling = true;
+		// There is some strange thing in Pixi, that when things go through filter, they switch direction for some strange reason
+		pixiState.clockwiseFrontFace = cullClockwise;
+		return pixiState;
+	}, [cullClockwise]);
+
 	return (
 		<Container
 			zIndex={ zIndex }
 			sortableChildren
 		>
 			<PixiMesh
+				state={ cullingState }
 				vertices={ vertices }
 				uvs={ uv }
 				indices={ triangles }
@@ -334,7 +347,9 @@ function MaskContainerPixi({
 	return (
 		<>
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
-				{ children }
+				<ContextCullClockwise.Provider value={ true }>
+					{ children }
+				</ContextCullClockwise.Provider>
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>
@@ -411,7 +426,9 @@ function MaskContainerCustom({
 	return (
 		<>
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
-				{ children }
+				<ContextCullClockwise.Provider value={ true }>
+					{ children }
+				</ContextCullClockwise.Provider>
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>

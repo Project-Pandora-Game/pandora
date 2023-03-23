@@ -1,9 +1,8 @@
-import { Container, SimpleMesh, Sprite, useApp } from '@pixi/react';
+import { Container, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { max, maxBy, min, minBy } from 'lodash';
-import { nanoid } from 'nanoid';
-import { BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
+import { Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -16,12 +15,13 @@ import { AppearanceConditionEvaluator, useAppearanceConditionEvaluator } from '.
 import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
+import { PixiMesh } from './pixiMesh';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
 	points: readonly PointDefinitionCalculated[];
-	triangles: Uint32Array;
+	triangles: Uint16Array;
 } {
 	// Note: The points should NOT be filtered before Delaunator step!
 	// Doing so would cause body and arms not to have exactly matching triangles,
@@ -29,9 +29,10 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 	// In some other cases this could lead to gaps or other visual artifacts
 	// Any optimization of unused points needs to be done *after* triangles are calculated
 	const points = useLayerCalculatedPoints(layer);
+	Assert(points.length < 65535, 'Points do not fit into indices');
 
 	const { pointType } = useLayerDefinition(layer);
-	const triangles = useMemo<Uint32Array>(() => {
+	const triangles = useMemo<Uint16Array>(() => {
 		const result: number[] = [];
 		const delaunator = new Delaunator(points.flatMap((point) => point.pos));
 		for (let i = 0; i < delaunator.triangles.length; i += 3) {
@@ -40,7 +41,7 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 				result.push(...t);
 			}
 		}
-		return new Uint32Array(result);
+		return new Uint16Array(result);
 	}, [pointType, points]);
 	return { points, triangles };
 }
@@ -194,17 +195,12 @@ export function GraphicsLayer({
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 
-	// Unfortunately `SimpleMesh` reuploads only vertices to GPU, meaning we need to recreate it whenever uvs or indices change
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const meshKey = useMemo(() => nanoid(), [uv, triangles]);
-
 	return (
 		<Container
 			zIndex={ zIndex }
 			sortableChildren
 		>
-			<SimpleMesh
-				key={ meshKey }
+			<PixiMesh
 				vertices={ vertices }
 				uvs={ uv }
 				indices={ triangles }

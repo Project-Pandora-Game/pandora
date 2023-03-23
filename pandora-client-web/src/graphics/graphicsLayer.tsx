@@ -110,7 +110,25 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	getTexture?: (path: string) => Promise<Texture>;
 }
 
-export const ContextCullClockwise = createContext(false);
+export const ContextCullClockwise = createContext<{
+	cullClockwise: boolean;
+	uniqueSwaps: readonly string[];
+}>({ cullClockwise: false, uniqueSwaps: [] });
+
+export function SwapCullingDirection({ children, swap = true, uniqueKey }: ChildrenProps & { swap?: boolean; uniqueKey?: string }): ReactElement {
+	const { cullClockwise, uniqueSwaps } = useContext(ContextCullClockwise);
+	if (uniqueKey) {
+		swap &&= !uniqueSwaps.includes(uniqueKey);
+	}
+	return (
+		<ContextCullClockwise.Provider value={ {
+			cullClockwise: swap ? !cullClockwise : cullClockwise,
+			uniqueSwaps: uniqueKey ? [...uniqueSwaps, uniqueKey] : uniqueSwaps,
+		} }>
+			{ children }
+		</ContextCullClockwise.Provider>
+	)
+}
 
 export function GraphicsLayer({
 	appearanceContainer,
@@ -197,7 +215,7 @@ export function GraphicsLayer({
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 
-	const cullClockwise = useContext(ContextCullClockwise);
+	const { cullClockwise } = useContext(ContextCullClockwise);
 
 	const cullingState = useMemo(() => {
 		const pixiState = PIXI.State.for2d();
@@ -347,9 +365,9 @@ function MaskContainerPixi({
 	return (
 		<>
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
-				<ContextCullClockwise.Provider value={ true }>
+				<SwapCullingDirection uniqueKey='filter'>
 					{ children }
-				</ContextCullClockwise.Provider>
+				</SwapCullingDirection>
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>
@@ -426,9 +444,9 @@ function MaskContainerCustom({
 	return (
 		<>
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
-				<ContextCullClockwise.Provider value={ true }>
+				<SwapCullingDirection uniqueKey='filter'>
 					{ children }
-				</ContextCullClockwise.Provider>
+				</SwapCullingDirection>
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>

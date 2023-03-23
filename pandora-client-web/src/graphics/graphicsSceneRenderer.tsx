@@ -1,13 +1,10 @@
 import React, { Context, ReactElement, ReactNode, useMemo } from 'react';
-import { Application, IApplicationOptions, Mesh, Ticker } from 'pixi.js';
+import { Application, IApplicationOptions, Ticker } from 'pixi.js';
 import { Assert, AssertNotNullable, GetLogger } from 'pandora-common';
 import { AppProvider, createRoot, ReactPixiRoot, Stage } from '@pixi/react';
 import { cloneDeep } from 'lodash';
 import { ChildrenProps } from '../common/reactTypes';
 import { USER_DEBUG } from '../config/Environment';
-
-// Static Pixi configuration
-Mesh.BATCHABLE_SIZE = 1000000;
 
 const SHARED_APP_MAX_COUNT = 1;
 

@@ -75,11 +75,11 @@ export function useLayerVertices(
 	item: Item | null,
 	normalize: boolean = false,
 	valueOverrides?: Record<BoneName, number>,
-): Float64Array {
+): Float32Array {
 	const { mirror, height, width, x, y } = useLayerDefinition(layer);
 
 	return useMemo(() => {
-		const result = new Float64Array(points
+		const result = new Float32Array(points
 			.flatMap((point) => evaluator.evalTransform(
 				MirrorPoint(point.pos, mirror, width),
 				point.transforms,

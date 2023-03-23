@@ -60,7 +60,7 @@ export function Draggable({
 		app.stage.eventMode = 'static';
 		app.stage.on('pointermove', onDragMove);
 		return () => {
-			app.stage.off('pointermove', onDragMove);
+			app.stage?.off('pointermove', onDragMove);
 		};
 	}, [app, onDragMove]);
 

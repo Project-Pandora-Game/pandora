@@ -115,19 +115,20 @@ export const ContextCullClockwise = createContext<{
 	uniqueSwaps: readonly string[];
 }>({ cullClockwise: false, uniqueSwaps: [] });
 
-export function SwapCullingDirection({ children, swap = true, uniqueKey }: ChildrenProps & { swap?: boolean; uniqueKey?: string }): ReactElement {
+export function SwapCullingDirection({ children, swap = true, uniqueKey }: ChildrenProps & { swap?: boolean; uniqueKey?: string; }): ReactElement {
 	const { cullClockwise, uniqueSwaps } = useContext(ContextCullClockwise);
 	if (uniqueKey) {
 		swap &&= !uniqueSwaps.includes(uniqueKey);
 	}
+	const newValue = useMemo(() => ({
+		cullClockwise: swap ? !cullClockwise : cullClockwise,
+		uniqueSwaps: uniqueKey ? [...uniqueSwaps, uniqueKey] : uniqueSwaps,
+	}), [cullClockwise, swap, uniqueKey, uniqueSwaps]);
 	return (
-		<ContextCullClockwise.Provider value={ {
-			cullClockwise: swap ? !cullClockwise : cullClockwise,
-			uniqueSwaps: uniqueKey ? [...uniqueSwaps, uniqueKey] : uniqueSwaps,
-		} }>
+		<ContextCullClockwise.Provider value={ newValue }>
 			{ children }
 		</ContextCullClockwise.Provider>
-	)
+	);
 }
 
 export function GraphicsLayer({

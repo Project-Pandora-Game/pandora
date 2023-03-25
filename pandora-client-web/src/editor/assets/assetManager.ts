@@ -2,6 +2,7 @@ import { downloadZip, InputWithSizeMeta } from 'client-zip';
 import { Immutable } from 'immer';
 import { Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, AssetsDefinitionFile } from 'pandora-common';
 import { AssetManagerClient, GetCurrentAssetManager, UpdateAssetManager, useAssetManager } from '../../assets/assetManager';
+import { TypedEventEmitter } from '../../event';
 import { observable, ObservableClass } from '../../observable';
 
 export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*([-_][a-z0-9]+)*$/;
@@ -39,7 +40,7 @@ export class AssetManagerEditor extends AssetManagerClient {
 			hasGraphics: false,
 		};
 
-		LoadAssetManagerEditor(currentManager.definitionsHash, {
+		EditorAssetManager.loadAssetManager(currentManager.definitionsHash, {
 			...currentManager.rawData,
 			assets: {
 				...currentManager.rawData.assets,
@@ -133,13 +134,19 @@ DefineAsset({
 	}
 }
 
-let loaded = false;
+export const EditorAssetManager = new class extends TypedEventEmitter<{
+	assetMangedChanged: AssetManagerEditor;
+}> {
+	public loadAssetManager(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>): AssetManagerEditor {
+		const manager = new AssetManagerEditor(definitionsHash, data);
+		loaded = true;
+		UpdateAssetManager(manager);
+		this.emit('assetMangedChanged', manager);
+		return manager;
+	}
+}();
 
-export function LoadAssetManagerEditor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>): AssetManagerEditor {
-	const manager = new AssetManagerEditor(definitionsHash, data);
-	UpdateAssetManager(manager);
-	return manager;
-}
+let loaded = false;
 
 export function useAssetManagerEditor(): AssetManagerEditor {
 	if (!loaded) {

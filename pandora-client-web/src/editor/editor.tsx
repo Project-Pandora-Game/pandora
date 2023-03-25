@@ -25,6 +25,7 @@ import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
 import { useEditor } from './editorContextProvider';
 import { EditorWardrobeUI } from './components/wardrobe/wardrobe';
 import { GetCurrentAssetManager } from '../assets/assetManager';
+import { EditorAssetManager } from './assets/assetManager';
 
 const logger = GetLogger('Editor');
 
@@ -94,6 +95,10 @@ export class Editor extends TypedEventEmitter<{
 
 		this.manager = manager;
 		this.character = new EditorCharacter();
+
+		EditorAssetManager.on('assetMangedChanged', (assetManager) => {
+			this.character.reloadAssetManager(assetManager);
+		});
 
 		// Prevent loosing progress
 		window.addEventListener('beforeunload', (event) => {

@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, AssetManager, GetLogger } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -73,6 +73,8 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 	public readonly appearance: AppearanceEditor;
 	public readonly id = 'c0';
 
+	protected readonly logger = GetLogger('EditorCharacter');
+
 	constructor() {
 		super();
 		const data: ICharacterMinimalData = { id: this.id, accountId: 0, name: 'EditorCharacter' } as const;
@@ -81,6 +83,10 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 
 	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
 		return this.appearance.getRestrictionManager(roomContext);
+	}
+
+	public reloadAssetManager(assetManager: AssetManager) {
+		this.appearance.reloadAssetManager(assetManager, this.logger.prefixMessages('Asset manager reload:'));
 	}
 }
 

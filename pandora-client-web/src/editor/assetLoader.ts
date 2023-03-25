@@ -2,7 +2,7 @@ import { AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'p
 import { Texture } from 'pixi.js';
 import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager';
 import { GraphicsLoaderBase, URLGraphicsLoader } from '../assets/graphicsLoader';
-import { LoadAssetManagerEditor } from './assets/assetManager';
+import { EditorAssetManager } from './assets/assetManager';
 import { LoadArrayBufferTexture } from '../graphics/utility';
 import { EDITOR_ASSETS_ADDRESS } from '../config/Environment';
 
@@ -33,7 +33,7 @@ async function Load(loader: IGraphicsLoader): Promise<GraphicsManager> {
 	}
 	const assetDefinitions = JSON.parse(await loader.loadTextFile(`assets_${hash}.json`)) as AssetsDefinitionFile;
 
-	const assetManager = LoadAssetManagerEditor(hash, assetDefinitions);
+	const assetManager = EditorAssetManager.loadAssetManager(hash, assetDefinitions);
 
 	const graphicsHash = assetManager.graphicsId;
 	const graphicsDefinitions = JSON.parse(await loader.loadTextFile(`graphics_${graphicsHash}.json`)) as AssetsGraphicsDefinitionFile;

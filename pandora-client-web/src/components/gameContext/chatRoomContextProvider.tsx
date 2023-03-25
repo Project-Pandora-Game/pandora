@@ -1,4 +1,4 @@
-import { ActionRoomContext, AssignPronouns, AssetId, CharacterId, CharacterRestrictionsManager, ChatActionDictionaryMetaEntry, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomMessageAction, IChatRoomMessageChat, IChatRoomMessageDeleted, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventoryBundle, RoomInventory, ROOM_INVENTORY_BUNDLE_DEFAULT, Logger, ItemPath, Item } from 'pandora-common';
+import { ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventoryBundle, RoomInventory, ROOM_INVENTORY_BUNDLE_DEFAULT, Logger, ItemPath, Item } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { AppearanceContainer, Character } from '../../character/character';
@@ -10,8 +10,9 @@ import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
 import { ITypedEventEmitter, TypedEventEmitter } from '../../event';
 import { useShardConnector } from './shardConnectorContextProvider';
-import { AssetManagerClient, GetCurrentAssetManager } from '../../assets/assetManager';
+import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';
+import { IChatroomMessageProcessed, IsUserMessage, ProcessMessage } from '../chatroom/chatroomMessages';
 
 const logger = GetLogger('ChatRoom');
 
@@ -40,130 +41,6 @@ export interface IChatRoomMessageSender {
 	getMessageEditTimeout(id: number): number | undefined;
 	getMessageEdit(id: number): ISavedMessage | undefined;
 	getLastMessageEdit(): number | undefined;
-}
-
-export type IChatroomMessageChatProcessed = (IChatRoomMessageChat | IChatRoomMessageDeleted) & {
-	/** Time the message was sent, guaranteed to be unique */
-	time: number;
-	roomId: RoomId;
-};
-
-export type IChatroomMessageActionProcessed = IChatRoomMessageAction & {
-	/** Time the message was sent, guaranteed to be unique */
-	time: number;
-	roomId: RoomId;
-};
-
-export type IChatroomMessageProcessed = (IChatroomMessageChatProcessed | IChatroomMessageActionProcessed) & {
-	/** Time the message was sent, guaranteed to be unique */
-	time: number;
-	edited?: boolean;
-};
-
-export function IsUserMessage(message: IChatroomMessageProcessed): message is IChatroomMessageChatProcessed {
-	return message.type !== 'action' && message.type !== 'serverMessage';
-}
-
-export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
-	const asset = assetManager.getAssetById(assetId);
-	return asset?.definition.chat?.chatDescriptor ??
-		asset?.definition.name.toLocaleLowerCase() ??
-		`[UNKNOWN ASSET '${assetId}']`;
-}
-
-export function DescribeAssetSlot(assetManager: AssetManagerClient, slot: string): string {
-	const slotDefinition = assetManager.getSlotDefinition(slot);
-	return slotDefinition?.description ?? `[UNKNOWN SLOT '${slot}']`;
-}
-
-function ProcessMessage(
-	message: IChatRoomMessageAction & { time: number; roomId: RoomId; },
-	assetManager: AssetManagerClient,
-): IChatroomMessageActionProcessed {
-	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
-
-	const source = message.data?.character;
-	const target = message.data?.target ?? source;
-
-	if (source) {
-		const { id, name, pronoun } = source;
-		metaDictionary.SOURCE_CHARACTER_NAME = name;
-		metaDictionary.SOURCE_CHARACTER_ID = id;
-		metaDictionary.SOURCE_CHARACTER = `${name} (${id})`;
-		metaDictionary.SOURCE_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
-		AssignPronouns('SOURCE_CHARACTER_PRONOUN', pronoun, metaDictionary);
-	}
-
-	if (target?.type === 'character') {
-		const { id, name, pronoun } = target;
-		metaDictionary.TARGET_CHARACTER_NAME = name;
-		metaDictionary.TARGET_CHARACTER_ID = id;
-		metaDictionary.TARGET_CHARACTER = `${name} (${id})`;
-		metaDictionary.TARGET_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
-		AssignPronouns('TARGET_CHARACTER_PRONOUN', pronoun, metaDictionary);
-
-		if (id === source?.id) {
-			AssignPronouns('TARGET_CHARACTER_DYNAMIC', pronoun, metaDictionary);
-		} else {
-			metaDictionary.TARGET_CHARACTER_DYNAMIC_SUBJECTIVE = metaDictionary.TARGET_CHARACTER;
-			metaDictionary.TARGET_CHARACTER_DYNAMIC_OBJECTIVE = metaDictionary.TARGET_CHARACTER;
-			metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE = metaDictionary.TARGET_CHARACTER_POSSESSIVE;
-			metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE = metaDictionary.TARGET_CHARACTER;
-		}
-	}
-
-	const item = message.data?.item;
-	const itemPrevious = message.data?.itemPrevious ?? item;
-	const itemContainerPath = message.data?.itemContainerPath;
-
-	if (item) {
-		metaDictionary.ITEM_ASSET_NAME = DescribeAsset(assetManager, item.assetId);
-	}
-
-	if (itemPrevious) {
-		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = DescribeAsset(assetManager, itemPrevious.assetId);
-	}
-
-	if (itemContainerPath) {
-		if (itemContainerPath.length === 0) {
-			if (target?.type === 'roomInventory') {
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					`the room inventory`;
-			} else {
-				metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
-			}
-		} else if (itemContainerPath.length === 1) {
-			const asset = DescribeAsset(assetManager, itemContainerPath[0].assetId);
-
-			if (target?.type === 'roomInventory') {
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					`${asset} in the room inventory`;
-			} else {
-				metaDictionary.ITEM_CONTAINER_SIMPLE = `${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${asset}`;
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
-			}
-		} else {
-			const assetFirst = DescribeAsset(assetManager, itemContainerPath[0].assetId);
-			const assetLast = DescribeAsset(assetManager, itemContainerPath[itemContainerPath.length - 1].assetId);
-
-			if (target?.type === 'roomInventory') {
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					`the ${assetLast} in ${assetFirst} in the room inventory`;
-			} else {
-				metaDictionary.ITEM_CONTAINER_SIMPLE = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${assetFirst}`;
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${assetFirst}`;
-			}
-		}
-	}
-
-	return {
-		...message,
-		dictionary: {
-			...metaDictionary,
-			...message.dictionary,
-		},
-	};
 }
 
 export type RoomInventoryEvents = {

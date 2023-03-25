@@ -1,7 +1,7 @@
 import { Assert, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
 import { Observable, ReadonlyObservable, useObservable } from '../observable';
-import { GetAssetManager } from './assetManager';
+import { useAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
 import produce, { Immutable, Draft, freeze } from 'immer';
 import { useMemo } from 'react';
@@ -205,21 +205,11 @@ export class AssetGraphicsLayer {
 }
 
 export class AssetGraphics {
-	private _asset?: Asset;
 	public readonly id: AssetId;
 	public layers!: readonly AssetGraphicsLayer[];
 
 	public get allLayers(): AssetGraphicsLayer[] {
 		return this.layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]);
-	}
-
-	public get asset(): Asset {
-		if (!this._asset) {
-			const managger = GetAssetManager();
-			this._asset = managger.getAssetById(this.id);
-			Assert(this._asset, 'Asset not found');
-		}
-		return this._asset;
 	}
 
 	constructor(id: AssetId, definition: Immutable<AssetGraphicsDefinition>) {
@@ -240,6 +230,13 @@ export class AssetGraphics {
 	protected createLayer(definition: Immutable<LayerDefinition>): AssetGraphicsLayer {
 		return new AssetGraphicsLayer(this, definition);
 	}
+}
+
+export function useGraphicsAsset(graphics: AssetGraphics): Asset {
+	const assetManager = useAssetManager();
+	const asset = assetManager.getAssetById(graphics.id);
+	Assert(asset, 'Asset not found');
+	return asset;
 }
 
 export function useLayerDefinition(layer: AssetGraphicsLayer): Immutable<LayerDefinition> {

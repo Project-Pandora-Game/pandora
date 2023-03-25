@@ -7,7 +7,7 @@ import './editor.scss';
 import { Button } from '../components/common/button/button';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { LayerStateOverrides } from '../graphics/def';
-import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useLayerDefinition } from '../assets/assetGraphics';
+import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
 import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
@@ -20,11 +20,11 @@ import { useBrowserStorage } from '../browserStorage';
 import z from 'zod';
 import { AssetInfoUI } from './components/assetInfo/assetInfo';
 import { Select } from '../components/common/select/select';
-import { GetAssetManagerEditor } from './assets/assetManager';
 import { noop } from 'lodash';
 import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
 import { useEditor } from './editorContextProvider';
 import { EditorWardrobeUI } from './components/wardrobe/wardrobe';
+import { GetCurrentAssetManager } from '../assets/assetManager';
 
 const logger = GetLogger('Editor');
 
@@ -198,7 +198,7 @@ export class Editor extends TypedEventEmitter<{
 
 			// Wear this asset if not currently wearing it (but only if starting edit for the first time)
 			if (this.character.appearance.listItemsByAsset(asset).length === 0) {
-				const actualAsset = GetAssetManagerEditor().getAssetById(asset);
+				const actualAsset = GetCurrentAssetManager().getAssetById(asset);
 				AssertNotNullable(actualAsset);
 				this.character.appearance.addItem(actualAsset);
 			}
@@ -226,10 +226,11 @@ export function useEditorLayerStateOverride(layer: AssetGraphicsLayer): LayerSta
 export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
 	const override = useEditorLayerStateOverride(layer);
 	const { colorizationKey } = useLayerDefinition(layer);
+	const asset = useGraphicsAsset(layer.asset);
 	if (override?.color !== undefined) {
 		return override.color;
 	}
-	const { colorization } = layer.asset.asset.definition;
+	const { colorization } = asset.definition;
 	if (colorization && colorizationKey) {
 		const value = colorization[colorizationKey];
 		if (value) {

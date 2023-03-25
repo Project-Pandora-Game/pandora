@@ -10,7 +10,7 @@ import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
 import { ITypedEventEmitter, TypedEventEmitter } from '../../event';
 import { useShardConnector } from './shardConnectorContextProvider';
-import { AssetManagerClient, GetAssetManager } from '../../assets/assetManager';
+import { AssetManagerClient, GetCurrentAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';
 
 const logger = GetLogger('ChatRoom');
@@ -233,7 +233,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		super();
 		this.logger = GetLogger('ChatRoom');
 		this._shard = shard;
-		this.inventory = new RoomInventory(GetAssetManager(), () => this.emit('roomInventoryChange', true));
+		this.inventory = new RoomInventory(GetCurrentAssetManager(), () => this.emit('roomInventoryChange', true));
 		this.inventory.importFromBundle(ROOM_INVENTORY_BUNDLE_DEFAULT, this.logger.prefixMessages('Inventory load:'));
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
 	}
@@ -352,10 +352,10 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		if (!this.player)
 			throw new Error('Cannot update room when player is not loaded');
 
-		this.inventory.importFromBundle(roomInventory, this.logger.prefixMessages('Inventory load:'), GetAssetManager());
+		this.inventory.importFromBundle(roomInventory, this.logger.prefixMessages('Inventory load:'), GetCurrentAssetManager());
 	}
 
-	public onMessage(incoming: IChatRoomMessage[], assetManager: AssetManagerClient): number {
+	public onMessage(incoming: IChatRoomMessage[]): number {
 		const roomId = this.data.value?.id;
 		if (!roomId) return 0;
 
@@ -374,7 +374,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 
 		for (const message of messages) {
 			if (!IsUserMessage(message)) {
-				nextMessages.push(ProcessMessage(message, assetManager));
+				nextMessages.push(ProcessMessage(message, GetCurrentAssetManager()));
 				if (!notified) {
 					this.emit('messageNotify', { time: Date.now() });
 					notified = true;

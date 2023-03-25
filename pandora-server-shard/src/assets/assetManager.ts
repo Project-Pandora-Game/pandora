@@ -9,9 +9,7 @@ import { RoomManager } from '../room/roomManager';
 
 const logger = GetLogger('AssetManager');
 
-export const assetManager = new AssetManager();
-
-export let RawDefinitions: AssetsDefinitionFile;
+export let assetManager = new AssetManager();
 
 // Checks asset definitions for changes every 2 seconds, if in development mode
 const ASSET_DEFINITIONS_WATCH_INTERVAL = 2_000;
@@ -36,10 +34,13 @@ export function LoadAssetDefinitions(): void {
 		throw new Error('Failed to read asset definitions');
 	}
 
-	RawDefinitions = definitions;
-	assetManager.load(currentHash, definitions);
+	assetManager = new AssetManager(currentHash, definitions);
 
 	logger.info(`Loaded asset definitions, version: ${assetManager.definitionsHash}`);
+
+	RoomManager.onAssetDefinitionsChanged();
+	CharacterManager.onAssetDefinitionsChanged();
+	ConnectionManagerClient.onAssetDefinitionsChanged();
 
 	if (SHARD_DEVELOPMENT_MODE && watcher === undefined) {
 		watcher = setInterval(WatchAssetDefinitionsTick, ASSET_DEFINITIONS_WATCH_INTERVAL).unref();
@@ -55,9 +56,6 @@ function WatchAssetDefinitionsTick(): void {
 		if (currentHash !== assetManager.definitionsHash) {
 			logger.alert('Detected asset definitions change, reloading...');
 			LoadAssetDefinitions();
-			RoomManager.onAssetDefinitionsChanged();
-			CharacterManager.onAssetDefinitionsChanged();
-			ConnectionManagerClient.onAssetDefinitionsChanged();
 			logger.info('Done sending new definitions');
 		}
 	} catch (error) {

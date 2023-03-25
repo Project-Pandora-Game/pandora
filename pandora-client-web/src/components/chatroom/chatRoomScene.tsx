@@ -13,7 +13,7 @@ import { useChatInput } from './chatInput';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import { IBounceOptions } from 'pixi-viewport';
 import { CommonProps } from '../../common/reactTypes';
-import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
+import { useAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { ChatroomDebugConfig, useDebugConfig } from './chatroomDebug';
 import { useContextMenuPosition } from '../contextMenu/contextMenu';
 import { PixiViewportSetupCallback } from '../../graphics/pixiViewport';
@@ -55,7 +55,7 @@ export function ChatRoomGraphicsScene({
 	onPointerDown,
 	menuOpen,
 }: ChatRoomGraphicsSceneProps): ReactElement {
-	const assetManager = GetAssetManager();
+	const assetManager = useAssetManager();
 
 	const roomBackground = useMemo(() => ResolveBackground(assetManager, data.background, GetAssetsSourceUrl()), [assetManager, data.background]);
 

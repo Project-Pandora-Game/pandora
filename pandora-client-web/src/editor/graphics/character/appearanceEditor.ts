@@ -10,9 +10,9 @@ import { cloneDeep } from 'lodash';
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
 import { TypedEventEmitter } from '../../../event';
 import { AppearanceContainer, AppearanceEvents } from '../../../character/character';
-import { GetAssetManagerEditor } from '../../assets/assetManager';
 import { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
+import { GetCurrentAssetManager } from '../../../assets/assetManager';
 
 export class AppearanceEditor extends CharacterAppearance {
 	private _enforce = true;
@@ -76,7 +76,7 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 	constructor() {
 		super();
 		const data: ICharacterMinimalData = { id: this.id, accountId: 0, name: 'EditorCharacter' } as const;
-		this.appearance = new AppearanceEditor(GetAssetManagerEditor(), () => data, (changes) => this.emit('appearanceUpdate', changes));
+		this.appearance = new AppearanceEditor(GetCurrentAssetManager(), () => data, (changes) => this.emit('appearanceUpdate', changes));
 	}
 
 	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {

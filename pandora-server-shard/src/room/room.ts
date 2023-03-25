@@ -52,8 +52,8 @@ export class Room extends ServerRoom<IShardClient> {
 		this.tickInterval = setInterval(() => this._tick(), ROOM_TICK_INTERVAL);
 	}
 
-	public reloadAssetManager(manager: AssetManager, force: boolean = false) {
-		this.inventory.reloadAssetManager(manager, this.logger.prefixMessages('Asset manager reload:'), force);
+	public reloadAssetManager(manager: AssetManager) {
+		this.inventory.reloadAssetManager(manager, this.logger.prefixMessages('Asset manager reload:'));
 	}
 
 	public onRemove(): void {

@@ -1,5 +1,6 @@
+import { Immutable } from 'immer';
 import _ from 'lodash';
-import { IntervalSetIntersection } from '../utility';
+import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
 import { AppearanceArmPose, AppearancePose, ArmsPose, CharacterView, GetDefaultAppearanceBundle } from './appearance';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
 
@@ -248,7 +249,7 @@ export class AppearanceLimitTree {
 		return { pose: ToPose(data), changed: true };
 	}
 
-	public merge(limits?: AssetDefinitionPoseLimits): boolean {
+	public merge(limits?: Immutable<AssetDefinitionPoseLimits>): boolean {
 		if (this.root == null)
 			return false;
 
@@ -261,7 +262,7 @@ export class AppearanceLimitTree {
 	}
 }
 
-function CreateTreeNode(limits: AssetDefinitionPoseLimits): TreeNode {
+function CreateTreeNode(limits: Immutable<AssetDefinitionPoseLimits>): TreeNode {
 	const nodeChildren = limits.options == null ? null : limits.options.map(CreateTreeNode);
 	return new TreeNode(FromLimit(limits), nodeChildren);
 }
@@ -291,7 +292,7 @@ function FromArmPose(data: Map<string, number>, prefix: 'leftArm' | 'rightArm', 
 	}
 }
 
-function FromLimit({ bones, leftArm, rightArm, arms, view }: AssetDefinitionPoseLimit): Map<string, [number, number][]> {
+function FromLimit({ bones, leftArm, rightArm, arms, view }: Immutable<AssetDefinitionPoseLimit>): Map<string, [number, number][]> {
 	const data = new Map<string, [number, number][]>();
 
 	if (bones) {
@@ -302,7 +303,7 @@ function FromLimit({ bones, leftArm, rightArm, arms, view }: AssetDefinitionPose
 			if (typeof value === 'number')
 				data.set(`bones.${key}`, [[value, value]]);
 			else
-				data.set(`bones.${key}`, value);
+				data.set(`bones.${key}`, CloneDeepMutable(value));
 		}
 	}
 	FromArmLimit(data, 'leftArm', { ...arms, ...leftArm });

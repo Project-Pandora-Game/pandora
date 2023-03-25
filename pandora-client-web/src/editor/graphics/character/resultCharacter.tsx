@@ -1,6 +1,6 @@
 import { Container } from '@pixi/react';
-import React, { ReactElement } from 'react';
-import { GetAssetManager } from '../../../assets/assetManager';
+import React, { ReactElement, useMemo } from 'react';
+import { useAssetManager } from '../../../assets/assetManager';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { DraggableBone } from '../draggable';
@@ -10,8 +10,8 @@ import { GraphicsCharacterEditor } from './editorCharacter';
 
 export function ResultCharacter(): ReactElement {
 	const editor = useEditor();
-	const assetManager = GetAssetManager();
-	const bones = assetManager.getAllBones();
+	const assetManager = useAssetManager();
+	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const showBones = useObservable(editor.showBones);
 
 	return (

@@ -11,7 +11,7 @@ import React, {
 	useState,
 } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { GetAssetManager } from '../../assets/assetManager';
+import { AssetManagerClient, useAssetManager } from '../../assets/assetManager';
 import { Button } from '../common/button/button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
@@ -172,11 +172,10 @@ export function RenderChatPart([type, contents]: IChatSegment, index: number): R
 	}
 }
 
-function GetActiontext(action: IChatroomMessageActionProcessed): string | undefined {
+function GetActiontext(action: IChatroomMessageActionProcessed, assetManager: AssetManagerClient): string | undefined {
 	if (action.customText != null)
 		return action.customText;
 
-	const assetManager = GetAssetManager();
 	const item = action.data?.item;
 	const asset = item && assetManager.getAssetById(item.assetId);
 	const itemPrevious = action.data?.itemPrevious ?? item;
@@ -203,8 +202,8 @@ function GetActiontext(action: IChatroomMessageActionProcessed): string | undefi
 	return defaultMessage;
 }
 
-function RenderActionContent(action: IChatroomMessageActionProcessed): [IChatSegment[], IChatSegment[] | null] {
-	let actionText = GetActiontext(action);
+function RenderActionContent(action: IChatroomMessageActionProcessed, assetManager: AssetManagerClient): [IChatSegment[], IChatSegment[] | null] {
+	let actionText = GetActiontext(action, assetManager);
 	if (actionText === undefined) {
 		return [ChatParser.parseStyle(`( ERROR UNKNOWN ACTION '${action.id}' )`), null];
 	}
@@ -407,9 +406,10 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 }
 
 function ActionMessage({ message }: { message: IChatroomMessageActionProcessed; }): ReactElement | null {
+	const assetManager = useAssetManager();
 	const [folded, setFolded] = useState(true);
 
-	const [content, extraContent] = useMemo(() => RenderActionContent(message), [message]);
+	const [content, extraContent] = useMemo(() => RenderActionContent(message, assetManager), [message, assetManager]);
 
 	// If there is nothing to disply, hide this message
 	if (content.length === 0 && extraContent == null)

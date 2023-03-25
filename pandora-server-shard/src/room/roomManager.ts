@@ -84,7 +84,7 @@ export const RoomManager = new class RoomManager {
 
 	public onAssetDefinitionsChanged() {
 		for (const room of this._rooms.values()) {
-			room.reloadAssetManager(assetManager, true);
+			room.reloadAssetManager(assetManager);
 		}
 	}
 };

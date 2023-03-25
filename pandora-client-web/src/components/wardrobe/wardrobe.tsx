@@ -33,7 +33,7 @@ import {
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { GetAssetManager } from '../../assets/assetManager';
+import { AssetManagerClient, useAssetManager } from '../../assets/assetManager';
 import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItem, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
 import { Observable, useObservable } from '../../observable';
 import './wardrobe.scss';
@@ -121,7 +121,7 @@ export function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
 export function WardrobeContextProvider({ character, player, children }: { character: Character; player: PlayerCharacter; children: ReactNode; }): ReactElement {
-	const assetList = useObservable(GetAssetManager().assetList);
+	const assetList = useAssetManager().assetList;
 	const room = useChatroom();
 	const isInRoom = useChatRoomData() != null;
 	const roomContext = useActionRoomContext();
@@ -283,7 +283,7 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 	const { assetList } = useWardrobeContext();
 	const { currentFocus, setFocus, preFilter, containerContentsFilter } = useWardrobeItems();
 
-	const assetManager = GetAssetManager();
+	const assetManager = useAssetManager();
 	const assetFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
 		.map((a) => a[0])
@@ -338,7 +338,7 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 
 function WardrobeBodyManipulation({ className }: { className?: string; }): ReactElement {
 	const { assetList } = useWardrobeContext();
-	const assetManager = GetAssetManager();
+	const assetManager = useAssetManager();
 
 	const filter = (item: Item | Asset) => {
 		const { definition } = 'asset' in item ? item.asset : item;
@@ -402,7 +402,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 }): ReactElement | null {
 	const { target, extraItemActions } = useWardrobeContext();
 
-	const assetManager = GetAssetManager();
+	const assetManager = useAssetManager();
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
 	const [attribute, setAttribute] = useReducer((old: string, wantToSet: string) => {
@@ -661,7 +661,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 function AttributeButton({ attribute, ...buttonProps }: {
 	attribute: string;
 } & Omit<ButtonProps, 'children'>): ReactElement {
-	const assetManager = GetAssetManager();
+	const assetManager = useAssetManager();
 	const [buttonRef, setButtonRef] = useState<HTMLButtonElement | null>(null);
 
 	const attributeDefinition = assetManager.getAttributeDefinition(attribute);
@@ -689,7 +689,7 @@ function AttributeButton({ attribute, ...buttonProps }: {
 }
 
 function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: HTMLElement | null; }) {
-	const assetManager = GetAssetManager();
+	const assetManager = useAssetManager();
 	const reason = useMemo(() => (check.result === 'success'
 		? ''
 		: RenderAppearanceActionResult(assetManager, check)
@@ -914,6 +914,7 @@ function CalculateInQueue(fn: () => void, lowPriority = false): () => void {
 }
 
 function useStaggeredAppearanceActionResult(action: AppearanceAction, context: AppearanceActionContext, lowPriority = false): AppearanceActionResult | null {
+	const assetManager = useAssetManager();
 	const [result, setResult] = useState<AppearanceActionResult | null>(null);
 
 	const resultAction = useRef<AppearanceAction | null>(null);
@@ -928,13 +929,13 @@ function useStaggeredAppearanceActionResult(action: AppearanceAction, context: A
 	useEffect(() => {
 		return CalculateInQueue(() => {
 			if (wantedAction.current === action && wantedContext.current === context) {
-				const check = DoAppearanceAction(action, context, GetAssetManager(), { dryRun: true });
+				const check = DoAppearanceAction(action, context, assetManager, { dryRun: true });
 				resultAction.current = action;
 				resultContext.current = context;
 				setResult(check);
 			}
 		}, lowPriority);
-	}, [action, context, lowPriority]);
+	}, [action, context, assetManager, lowPriority]);
 
 	return (resultAction.current === action && resultContext.current === context) ? result : null;
 }
@@ -990,6 +991,7 @@ export function WardrobeItemConfigMenu({
 	item: ItemPath;
 	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
+	const assetManager = useAssetManager();
 	const { target, character, actions, execute } = useWardrobeContext();
 	const wornItem = useCharacterAppearanceItem(character, item);
 
@@ -1088,7 +1090,7 @@ export function WardrobeItemConfigMenu({
 											initialValue={ wornItem.color[colorPartKey] ?? colorPart.default }
 											resetValue={ colorPart.default }
 											throttle={ 100 }
-											disabled={ DoAppearanceAction({ type: 'color', target, item, color: wornItem.color }, actions, GetAssetManager(), { dryRun: true }).result !== 'success' }
+											disabled={ DoAppearanceAction({ type: 'color', target, item, color: wornItem.color }, actions, assetManager, { dryRun: true }).result !== 'success' }
 											onChange={ (color) => {
 												const newColor = _.cloneDeep<Writeable<typeof wornItem.color>>(wornItem.color);
 												newColor[colorPartKey] = color;
@@ -1309,11 +1311,11 @@ type CheckedAssetsPosePresets = {
 	poses: CheckedPosePreset[];
 }[];
 
-function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose): {
+function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose, assetManager: AssetManagerClient): {
 	poses: CheckedAssetsPosePresets;
 	limits: AppearanceLimitTree;
 } {
-	const presets = GetAssetManager().getPosePresets();
+	const presets = assetManager.getPosePresets();
 	const limits = AppearanceItemProperties(items).limits;
 	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
 
@@ -1371,7 +1373,8 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 }
 
 export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: CharacterArmsPose; setPose: (pose: Omit<AssetsPosePreset, 'name'>) => void; }): ReactElement {
-	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose), [appearance, bones, armsPose]);
+	const assetManager = useAssetManager();
+	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose, assetManager), [appearance, bones, armsPose, assetManager]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 	);
@@ -1433,6 +1436,7 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 }
 
 export function WardrobePoseGui(): ReactElement {
+	const assetManager = useAssetManager();
 	const { character, execute } = useWardrobeContext();
 
 	const currentBones = useCharacterAppearancePose(character);
@@ -1449,7 +1453,7 @@ export function WardrobePoseGui(): ReactElement {
 		});
 	});
 
-	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), currentBones, armsPose), [character, currentBones, armsPose]);
+	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), currentBones, armsPose, assetManager), [character, currentBones, armsPose, assetManager]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 

@@ -1,8 +1,8 @@
 import { capitalize } from 'lodash';
 import { Assert, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
-import { AssetGraphicsLayer, useLayerImageSettingsForScalingStop, useLayerDefinition, useLayerName } from '../../../assets/assetGraphics';
-import { GetAssetManager } from '../../../assets/assetManager';
+import { AssetGraphicsLayer, useLayerImageSettingsForScalingStop, useLayerDefinition, useLayerName, useGraphicsAsset } from '../../../assets/assetGraphics';
+import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useEvent } from '../../../common/useEvent';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
@@ -44,7 +44,7 @@ export function LayerUI(): ReactElement {
 		<Scrollbar color='lighter' className='editor-setupui slim'>
 			<LayerName layer={ selectedLayer } />
 			<hr />
-			<ColorizationSetting layer={ selectedLayer } asset={ asset } />
+			<ColorizationSetting layer={ selectedLayer } graphics={ asset } />
 			<ColorPicker layer={ selectedLayer } asset={ asset } />
 			<hr />
 			<LayerHeightAndWidthSetting layer={ selectedLayer } _asset={ asset } />
@@ -149,8 +149,9 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 	);
 }
 
-function ColorizationSetting({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
-	const colorization = useMemo(() => asset.asset.definition.colorization ?? {}, [asset]);
+function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; graphics: EditorAssetGraphics; }): ReactElement | null {
+	const asset = useGraphicsAsset(graphics);
+	const colorization = useMemo(() => asset.definition.colorization ?? {}, [asset]);
 	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).colorizationKey);
 
 	const colorLayerName = useMemo(() => {
@@ -569,6 +570,7 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer; }): React
 }
 
 function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
+	const assetManager = useAssetManager();
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
 	const [value, setValue] = useUpdatedUserInput(
 		SerializeLayerImageOverrides(asAlpha ? (stopSettings.alphaOverrides ?? []) : stopSettings.overrides),
@@ -578,7 +580,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
 		try {
-			const result = ParseLayerImageOverrides(e.target.value, GetAssetManager().getAllBones().map((b) => b.name).concat(FAKE_BONES));
+			const result = ParseLayerImageOverrides(e.target.value, assetManager.getAllBones().map((b) => b.name).concat(FAKE_BONES));
 			setError(null);
 			if (asAlpha) {
 				layer.setAlphaOverrides(result, stop);
@@ -646,13 +648,14 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 }
 
 function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement {
+	const assetManager = useAssetManager();
 	const layerScaling = useLayerDefinition(layer).scaling;
 
 	const elements: ReactElement[] = [
 		<option value='' key=''>[ Nothing ]</option>,
 	];
 
-	for (const bone of GetAssetManager().getAllBones()) {
+	for (const bone of assetManager.getAllBones()) {
 		if (bone.x || bone.y)
 			continue;
 		elements.push(

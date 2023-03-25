@@ -1,27 +1,33 @@
 import { Asset, AssetManager, AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
-import { Observable } from '../observable';
 import { GraphicsManagerInstance, GraphicsManager } from './graphicsManager';
 import { URLGraphicsLoader } from './graphicsLoader';
+import { Observable, useObservable } from '../observable';
+import { Immutable } from 'immer';
 
 const logger = GetLogger('AssetManager');
 
 export class AssetManagerClient extends AssetManager {
-	public readonly assetList = new Observable<Asset[]>([]);
+	public readonly assetList: readonly Asset[];
 
-	public override load(definitionsHash: string, data: AssetsDefinitionFile): void {
-		super.load(definitionsHash, data);
-		this.assetList.value = this.getAllAssets();
+	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
+		super(definitionsHash, data);
+
+		this.assetList = this.getAllAssets();
 	}
 }
 
-let assetManager: AssetManagerClient | undefined;
+const assetManager = new Observable<AssetManagerClient>(new AssetManagerClient());
 
-export function GetAssetManager(): AssetManagerClient {
-	return assetManager ??= new AssetManagerClient();
+export function GetCurrentAssetManager(): AssetManagerClient {
+	return assetManager.value;
 }
 
-export function OverrideAssetManager(manager: AssetManagerClient) {
-	assetManager = manager;
+export function useAssetManager(): AssetManagerClient {
+	return useObservable(assetManager);
+}
+
+export function UpdateAssetManager(manager: AssetManagerClient) {
+	assetManager.value = manager;
 }
 
 let lastGraphicsHash: string | undefined;
@@ -32,9 +38,10 @@ export function GetAssetsSourceUrl(): string {
 	return assetsSource;
 }
 
-export function LoadAssetDefinitions(definitionsHash: string, data: AssetsDefinitionFile, source: string): void {
-	GetAssetManager().load(definitionsHash, data);
-	logger.info(`Loaded asset definitions, version: ${GetAssetManager().definitionsHash}`);
+export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<AssetsDefinitionFile>, source: string): void {
+	const manager = new AssetManagerClient(definitionsHash, data);
+	UpdateAssetManager(manager);
+	logger.info(`Loaded asset definitions, version: ${manager.definitionsHash}`);
 
 	if (lastGraphicsHash === data.graphicsId)
 		return;

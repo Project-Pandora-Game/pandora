@@ -1,26 +1,34 @@
+import { Immutable } from 'immer';
 import { AssetDefinition, AssetModuleDefinition } from 'pandora-common';
 import { EffectsDefinition, EFFECTS_DEFAULT } from 'pandora-common/dist/assets/effects';
 import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
 import React, { ReactElement, useId, useMemo } from 'react';
+import { useGraphicsAsset } from '../../../assets/assetGraphics';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
+import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 
 export function AssetInfoUI(): ReactElement {
 	const editor = useEditor();
 	const graphics = useObservable(editor.targetAsset);
-	const asset = graphics?.asset;
 
-	if (!asset) {
+	if (!graphics) {
 		return (
 			<div className='editor-setupui'>
 				<h3>Select an asset to display</h3>
 			</div>
 		);
 	}
+
+	return <AssetInfoUIImpl graphics={ graphics } />;
+}
+
+function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): ReactElement {
+	const asset = useGraphicsAsset(graphics);
 
 	const definition = asset.definition;
 
@@ -90,7 +98,7 @@ function Effects({ effects, id = '' }: { effects: AssetDefinition['effects']; id
 	);
 }
 
-function Modules({ modules }: { modules: AssetDefinition['modules']; }): ReactElement | null {
+function Modules({ modules }: { modules: Immutable<AssetDefinition>['modules']; }): ReactElement | null {
 	if (!modules) {
 		return null;
 	}
@@ -104,7 +112,7 @@ function Modules({ modules }: { modules: AssetDefinition['modules']; }): ReactEl
 	);
 }
 
-function Module({ name, module }: { name: string; module: AssetModuleDefinition; }): ReactElement {
+function Module({ name, module }: { name: string; module: Immutable<AssetModuleDefinition>; }): ReactElement {
 	const moduleInfo = useMemo(() => {
 		switch (module.type) {
 			case 'typed':
@@ -125,7 +133,7 @@ function Module({ name, module }: { name: string; module: AssetModuleDefinition;
 	);
 }
 
-function UnknownModule({ module }: { module: AssetModuleDefinition; }): ReactElement {
+function UnknownModule({ module }: { module: Immutable<AssetModuleDefinition>; }): ReactElement {
 	return (
 		<div>
 			Unknown module type: { String(module.type) }
@@ -133,7 +141,7 @@ function UnknownModule({ module }: { module: AssetModuleDefinition; }): ReactEle
 	);
 }
 
-function TypedModule({ module }: { module: IModuleConfigTyped; }): ReactElement {
+function TypedModule({ module }: { module: Immutable<IModuleConfigTyped>; }): ReactElement {
 	return (
 		<FieldsetToggle legend='Variants' className='slim-padding-inner'>
 			{ module.variants.map((variant, index) => (
@@ -143,7 +151,7 @@ function TypedModule({ module }: { module: IModuleConfigTyped; }): ReactElement 
 	);
 }
 
-function TypedModuleOptions({ options }: { options: IModuleTypedOption; }): ReactElement {
+function TypedModuleOptions({ options }: { options: Immutable<IModuleTypedOption>; }): ReactElement {
 	const id = useId();
 	return (
 		<div>

@@ -1,50 +1,26 @@
-import { cloneDeep } from 'lodash';
+import { freeze, Immutable } from 'immer';
 import type { Logger } from '../logging';
+import { CloneDeepMutable } from '../utility';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetDefinition, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { Item, ItemBundle } from './item';
 
 export class AssetManager {
-	protected readonly _assets: Map<AssetId, Asset> = new Map();
-	protected readonly _bones: Map<string, BoneDefinition> = new Map();
-	protected _posePresets: AssetsPosePresets = [];
-	protected _backgrounds: IChatroomBackgroundInfo[] = [];
+	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
+	protected readonly _bones: ReadonlyMap<string, BoneDefinition>;
+	protected readonly _posePresets: Immutable<AssetsPosePresets>;
+	protected readonly _backgrounds: readonly Immutable<IChatroomBackgroundInfo>[];
 
-	protected _definitionsHash: string = '';
-	public get definitionsHash(): string {
-		return this._definitionsHash;
-	}
+	public readonly definitionsHash: string;
+	public readonly graphicsId: string;
+	public readonly rawData: Immutable<AssetsDefinitionFile>;
 
-	protected _attributes: Map<string, AssetAttributeDefinition> = new Map();
-	public get attributes(): ReadonlyMap<string, Readonly<AssetAttributeDefinition>> {
-		return this._attributes;
-	}
-
-	private _graphicsId: string = '';
-	public get graphicsId(): string {
-		return this._graphicsId;
-	}
-
-	private _bodyparts: readonly AssetBodyPart[] = [];
-	public get bodyparts(): readonly AssetBodyPart[] {
-		return this._bodyparts;
-	}
-
-	protected _randomization: AppearanceRandomizationData | undefined;
-	public get randomization(): AppearanceRandomizationData {
-		this._randomization ??= {
-			body: [],
-			clothes: [],
-		};
-		return this._randomization;
-	}
-
-	private readonly _assetSlots: Map<string, AssetSlotDefinition> = new Map();
-	public get assetSlots(): ReadonlyMap<string, Readonly<AssetSlotDefinition>> {
-		return this._assetSlots;
-	}
+	public readonly attributes: ReadonlyMap<string, Readonly<AssetAttributeDefinition>>;
+	public readonly bodyparts: readonly AssetBodyPart[];
+	public readonly randomization: AppearanceRandomizationData;
+	public readonly assetSlots: ReadonlyMap<string, Readonly<AssetSlotDefinition>>;
 
 	public getAllAssets(): Asset[] {
 		return [...this._assets.values()];
@@ -59,23 +35,23 @@ export class AssetManager {
 	}
 
 	public getPosePresets(): AssetsPosePresets {
-		return cloneDeep(this._posePresets);
+		return CloneDeepMutable(this._posePresets);
 	}
 
-	public getBackgrounds(): IChatroomBackgroundInfo[] {
-		return cloneDeep(this._backgrounds);
+	public getBackgrounds(): readonly IChatroomBackgroundInfo[] {
+		return CloneDeepMutable(this._backgrounds);
 	}
 
 	public getBackgroundById(id: string): IChatroomBackgroundInfo | null {
-		return cloneDeep(this._backgrounds.find((b) => b.id === id) ?? null);
+		return CloneDeepMutable(this._backgrounds.find((b) => b.id === id) ?? null);
 	}
 
 	public getAttributeDefinition(attribute: string): Readonly<AssetAttributeDefinition> | undefined {
-		return this._attributes.get(attribute);
+		return this.attributes.get(attribute);
 	}
 
 	public getSlotDefinition(slot: string): Readonly<AssetSlotDefinition> | undefined {
-		return this._assetSlots.get(slot);
+		return this.assetSlots.get(slot);
 	}
 
 	/**
@@ -92,68 +68,45 @@ export class AssetManager {
 		return bone;
 	}
 
-	public load(definitionsHash: string, data: AssetsDefinitionFile): void {
-		this._definitionsHash = definitionsHash;
-		this._bodyparts = data.bodyparts;
-		this._graphicsId = data.graphicsId;
-		this._posePresets = data.posePresets ?? [];
-		this._backgrounds = data.backgrounds ?? [];
-		this._randomization = data.randomization;
+	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
+		this.definitionsHash = definitionsHash ?? '';
 
-		this.loadBones(data.bones);
-		this.loadAttributes(data.attributes ?? {});
-		this.loadSlots(data.assetSlots ?? {});
-		this.loadAssets(data.assets);
-	}
+		// Note: Intentionally always assigning here instead of null coalescing,
+		// to perform easy "migration" of asset data that might be missing fields
+		data = {
+			assets: {},
+			assetSlots: {},
+			bones: {},
+			posePresets: [],
+			bodyparts: [],
+			graphicsId: '',
+			backgrounds: [],
+			attributes: {},
+			randomization: {
+				body: [],
+				clothes: [],
+			},
+			...data,
+		};
 
-	private loadAssets(assets: Record<AssetId, AssetDefinition>): void {
-		this._assets.clear();
+		this.rawData = freeze(data, true);
 
-		for (const [id, definition] of Object.entries(assets)) {
-			if (!id.startsWith('a/')) {
-				throw new Error(`Asset without valid prefix: ${id}`);
-			}
-			const asset = this.createAsset(id as AssetId, definition);
-			this._assets.set(id as AssetId, asset);
-		}
-	}
+		this.bodyparts = data.bodyparts;
+		this.graphicsId = data.graphicsId;
+		this._posePresets = data.posePresets;
+		this._backgrounds = data.backgrounds;
+		this.randomization = data.randomization;
 
-	private loadAttributes(attributes: Record<string, AssetAttributeDefinition>): void {
-		this._attributes.clear();
+		//#region Load bones
+		const bones = new Map<string, BoneDefinition>();
 
-		for (const [id, definition] of Object.entries(attributes)) {
-			this._attributes.set(id, definition);
-		}
-	}
-
-	private loadSlots(slots: Record<string, AssetSlotDefinition>): void {
-		this._assetSlots.clear();
-
-		for (const [id, definition] of Object.entries(slots)) {
-			this._assetSlots.set(id, definition);
-		}
-	}
-
-	protected createAsset(id: AssetId, data: AssetDefinition): Asset {
-		return new Asset(id, data);
-	}
-
-	protected loadBones(bones: Record<string, BoneDefinitionCompressed>): void {
-		this._bones.clear();
-
-		const next: Record<string, BoneDefinitionCompressed> = {};
-		let allNext = true;
-		let hasNext = false;
-		for (const [name, bone] of Object.entries(bones)) {
-			const parent = bone.parent ? this._bones.get(bone.parent) : undefined;
+		for (const [name, bone] of Object.entries(data.bones)) {
+			const parent = bone.parent ? bones.get(bone.parent) : undefined;
 			if (bone.parent && !parent) {
-				next[name] = bone;
-				hasNext = true;
-				continue;
+				throw new Error(`Parents must be defined before bones that use them ('${name}' depends on '${bone.parent}', but parent not found)`);
 			}
-			allNext = false;
 			const newBone = this.createBone(name, bone, parent);
-			this._bones.set(name, newBone);
+			bones.set(name, newBone);
 
 			if (!bone.mirror) continue;
 			if (name.endsWith('_l') && !bone.mirror.endsWith('_r'))
@@ -163,20 +116,50 @@ export class AssetManager {
 			if (!name.endsWith('_l') && !name.endsWith('_r'))
 				throw new Error(`Mirrored bone ${name} has invalid name, name must end with _l or _r`);
 
-			this._bones.set(bone.mirror, this.createBone(bone.mirror, {
+			bones.set(bone.mirror, this.createBone(bone.mirror, {
 				...bone,
 			}, parent?.mirror ?? parent, newBone));
+		}
 
+		this._bones = bones;
+		//#endregion
+
+		//#region Load attributes
+		const attributes = new Map<string, Readonly<AssetAttributeDefinition>>();
+
+		for (const [id, definition] of Object.entries(data.attributes)) {
+			attributes.set(id, definition);
 		}
-		if (allNext && hasNext) {
-			throw new Error('Circular dependency detected');
+
+		this.attributes = attributes;
+		//#endregion
+
+		//#region Load slots
+		const assetSlots = new Map<string, Readonly<AssetSlotDefinition>>();
+
+		for (const [id, definition] of Object.entries(data.assetSlots)) {
+			assetSlots.set(id, definition);
 		}
-		if (hasNext) {
-			this.loadBones(next);
+
+		this.assetSlots = assetSlots;
+		//#endregion
+
+		//#region Load assets
+		const assets = new Map<AssetId, Asset>();
+
+		for (const [id, definition] of Object.entries(data.assets)) {
+			if (!id.startsWith('a/')) {
+				throw new Error(`Asset without valid prefix: ${id}`);
+			}
+			const asset = new Asset(id as AssetId, definition);
+			assets.set(id as AssetId, asset);
 		}
+
+		this._assets = assets;
+		//#endregion
 	}
 
-	protected createBone(name: string, bone: BoneDefinitionCompressed, parent?: BoneDefinition, mirror?: BoneDefinition): BoneDefinition {
+	protected createBone(name: string, bone: Immutable<BoneDefinitionCompressed>, parent?: BoneDefinition, mirror?: BoneDefinition): BoneDefinition {
 		const [x, y] = bone.pos ?? [0, 0];
 		const res: BoneDefinition = {
 			name,

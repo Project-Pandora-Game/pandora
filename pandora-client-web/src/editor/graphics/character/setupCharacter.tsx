@@ -1,7 +1,7 @@
 import { Container } from '@pixi/react';
 import { CharacterView } from 'pandora-common';
-import React, { ReactElement } from 'react';
-import { GetAssetManager } from '../../../assets/assetManager';
+import React, { ReactElement, useMemo } from 'react';
+import { useAssetManager } from '../../../assets/assetManager';
 import { PRIORITY_ORDER_SPRITES } from '../../../graphics/def';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
@@ -12,8 +12,8 @@ import { GraphicsCharacterEditor } from './editorCharacter';
 
 export function SetupCharacter(): ReactElement {
 	const editor = useEditor();
-	const assetManager = GetAssetManager();
-	const bones = assetManager.getAllBones();
+	const assetManager = useAssetManager();
+	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const showBones = useObservable(editor.showBones);
 	const selectedLayer = useObservable(editor.targetLayer);
 

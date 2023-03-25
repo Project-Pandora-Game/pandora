@@ -257,8 +257,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return pose;
 	}
 
-	public reloadAssetManager(assetManager: AssetManager, logger?: Logger, force: boolean = false) {
-		if (this.assetManager === assetManager && !force)
+	public reloadAssetManager(assetManager: AssetManager, logger?: Logger) {
+		if (this.assetManager === assetManager)
 			return;
 		const bundle = this.exportToBundle();
 		this.assetManager = assetManager;

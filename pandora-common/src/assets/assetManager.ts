@@ -1,6 +1,6 @@
 import { freeze, Immutable } from 'immer';
 import type { Logger } from '../logging';
-import { CloneDeepMutable } from '../utility';
+import { Assert, CloneDeepMutable } from '../utility';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
 import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
@@ -178,6 +178,7 @@ export class AssetManager {
 	}
 
 	public createItem(id: ItemId, asset: Asset, bundle: ItemBundle | null, logger?: Logger): Item {
+		Assert(this._assets.get(asset.id) === asset);
 		return new Item(id, asset, bundle ?? {
 			id,
 			asset: asset.id,

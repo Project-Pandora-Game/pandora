@@ -12,7 +12,7 @@ export class AssetManagerEditor extends AssetManagerClient {
 
 	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
 		super(definitionsHash, data);
-		this.assetTreeView.update(this.getAllAssets());
+		this.assetTreeView.update(this.assetList);
 	}
 
 	public static async createNewAsset(category: string, idPart: string, name: string, bodypart: string): Promise<void> {
@@ -159,7 +159,7 @@ class AssetTreeViewClass {
 		return [...this._categories.values()];
 	}
 
-	public update(assets: Asset[]) {
+	public update(assets: readonly Asset[]) {
 		this._categories.clear();
 		for (const asset of assets) {
 			const [, category, name] = /^a\/([^/]+)\/([^/]+)$/.exec(asset.id) || [];

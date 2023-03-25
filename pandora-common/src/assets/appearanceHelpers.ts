@@ -50,6 +50,7 @@ export abstract class AppearanceManipulator {
 	}
 
 	public addItem(item: Item, index?: number): boolean {
+		Assert(this.assetManager === item.assetManager);
 		if (item.asset.definition.bodypart != null && !this.isCharacter)
 			return false;
 

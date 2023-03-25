@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, IChatRoomMessageChat, RoomId } from 'pandora-common';
+import { CharacterId, IChatRoomMessageAction, IChatRoomMessageChat, RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -32,7 +32,7 @@ import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 import { useNullableObservable } from '../../observable';
 import { Character, useCharacterData, useCharacterSafemode } from '../../character/character';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
-import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
+import { IChatroomMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -166,7 +166,7 @@ function ChatroomMessageEquals(a: IChatroomMessageProcessed, b: IChatroomMessage
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
-	if (!IsUserMessage(message)) {
+	if (IsActionMessage(message)) {
 		return <ActionMessage message={ message } />;
 	}
 	if (message.type === 'deleted') {
@@ -344,7 +344,7 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 	);
 }
 
-function ActionMessage({ message }: { message: IChatroomMessageActionProcessed; }): ReactElement | null {
+function ActionMessage({ message }: { message: IChatroomMessageProcessed<IChatRoomMessageAction>; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [folded, setFolded] = useState(true);
 

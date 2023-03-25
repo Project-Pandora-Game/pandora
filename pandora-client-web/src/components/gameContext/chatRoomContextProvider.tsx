@@ -12,7 +12,7 @@ import { ITypedEventEmitter, TypedEventEmitter } from '../../event';
 import { useShardConnector } from './shardConnectorContextProvider';
 import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';
-import { IChatroomMessageProcessed, IsUserMessage, ProcessMessage } from '../chatroom/chatroomMessages';
+import { IChatroomMessageProcessed } from '../chatroom/chatroomMessages';
 
 const logger = GetLogger('ChatRoom');
 
@@ -250,13 +250,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		let notified = false;
 
 		for (const message of messages) {
-			if (!IsUserMessage(message)) {
-				nextMessages.push(ProcessMessage(message, GetCurrentAssetManager()));
-				if (!notified) {
-					this.emit('messageNotify', { time: Date.now() });
-					notified = true;
-				}
-			} else if (message.type === 'deleted') {
+			if (message.type === 'deleted') {
 				let found = false;
 				const acc: IChatroomMessageProcessed[] = [];
 				for (const m of nextMessages) {

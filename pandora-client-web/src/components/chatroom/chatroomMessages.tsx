@@ -131,7 +131,7 @@ export function RenderChatPart([type, contents]: IChatSegment, index: number): R
 	}
 }
 
-function GetActiontext(action: IChatroomMessageProcessed<IChatRoomMessageAction>, assetManager: AssetManagerClient): string | undefined {
+function GetActionText(action: IChatroomMessageProcessed<IChatRoomMessageAction>, assetManager: AssetManagerClient): string | undefined {
 	if (action.customText != null)
 		return action.customText;
 
@@ -164,7 +164,7 @@ function GetActiontext(action: IChatroomMessageProcessed<IChatRoomMessageAction>
 export function RenderActionContent(action: IChatroomMessageProcessed<IChatRoomMessageAction>, assetManager: AssetManagerClient): [IChatSegment[], IChatSegment[] | null] {
 	// Append implicit dictionary entries
 	action = ActionMessagePrepareDictionary(action, assetManager);
-	let actionText = GetActiontext(action, assetManager);
+	let actionText = GetActionText(action, assetManager);
 	if (actionText === undefined) {
 		return [ChatParser.parseStyle(`( ERROR UNKNOWN ACTION '${action.id}' )`), null];
 	}

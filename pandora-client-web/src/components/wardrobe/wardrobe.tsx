@@ -711,27 +711,32 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
 	const { actions, target, execute } = useWardrobeContext();
 
-	const action: AppearanceAction = {
+	const action: AppearanceAction = useMemo(() => ({
 		type: 'create',
 		target,
 		itemId: `i/${nanoid()}` as const,
 		asset: asset.id,
 		container,
-	};
+	}), [target, asset, container]);
 
-	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
+	const check = useStaggeredAppearanceActionResult(action, actions, true);
+
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	return (
 		<div
-			className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', check.result === 'success' ? 'allowed' : 'blocked') }
+			className={ classNames('inventoryViewItem', listMode ? 'listMode' : 'gridMode', check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked') }
 			tabIndex={ 0 }
 			ref={ setRef }
 			onClick={ () => {
-				if (check.result === 'success') {
+				if (check?.result === 'success') {
 					execute(action);
 				}
 			} }>
-			<ActionWarning check={ check } parent={ ref } />
+			{
+				check != null ? (
+					<ActionWarning check={ check } parent={ ref } />
+				) : null
+			}
 			<div className='itemPreview' />
 			<span className='itemName'>{ asset.definition.name }</span>
 		</div>
@@ -875,6 +880,65 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 	);
 }
 
+const calculationQueue: (() => void)[] = [];
+const calculationQueueLowPriority: (() => void)[] = [];
+const CALCULATION_DELAY = 0;
+const CALCULATION_DELAY_LOW_PRIORITY = 50;
+
+function CalculateInQueue(fn: () => void, lowPriority = false): () => void {
+	const shouldStart = calculationQueue.length === 0 && calculationQueueLowPriority.length === 0;
+	if (lowPriority) {
+		calculationQueueLowPriority.push(fn);
+	} else {
+		calculationQueue.push(fn);
+	}
+
+	if (shouldStart) {
+		const run = () => {
+			const runFn = calculationQueue.shift() ?? calculationQueueLowPriority.shift();
+			runFn?.();
+			if (calculationQueue.length > 0 || calculationQueueLowPriority.length > 0) {
+				setTimeout(run, calculationQueue.length > 0 ? CALCULATION_DELAY : CALCULATION_DELAY_LOW_PRIORITY);
+			}
+		};
+		setTimeout(run, CALCULATION_DELAY);
+	}
+
+	return () => {
+		if (lowPriority) {
+			_.remove(calculationQueueLowPriority, (i) => i === fn);
+		} else {
+			_.remove(calculationQueue, (i) => i === fn);
+		}
+	};
+}
+
+function useStaggeredAppearanceActionResult(action: AppearanceAction, context: AppearanceActionContext, lowPriority = false): AppearanceActionResult | null {
+	const [result, setResult] = useState<AppearanceActionResult | null>(null);
+
+	const resultAction = useRef<AppearanceAction | null>(null);
+	const resultContext = useRef<AppearanceActionContext | null>(null);
+
+	const wantedAction = useRef(action);
+	const wantedContext = useRef(context);
+
+	wantedAction.current = action;
+	wantedContext.current = context;
+
+	useEffect(() => {
+		return CalculateInQueue(() => {
+			if (wantedAction.current === action && wantedContext.current === context) {
+				const check = DoAppearanceAction(action, context, GetAssetManager(), { dryRun: true });
+				resultAction.current = action;
+				resultContext.current = context;
+				setResult(check);
+			}
+		}, lowPriority);
+	}, [action, context, lowPriority]);
+
+	return (resultAction.current === action && resultContext.current === context) ? result : null;
+}
+
 function WardrobeActionButton({
 	id,
 	className,
@@ -892,25 +956,25 @@ function WardrobeActionButton({
 }): ReactElement {
 	const { actions, execute } = useWardrobeContext();
 
-	const check = DoAppearanceAction(action, actions, GetAssetManager(), { dryRun: true });
-	const hide = AppearanceActionResultShouldHide(check);
+	const check = useStaggeredAppearanceActionResult(action, actions);
+	const hide = check != null && AppearanceActionResultShouldHide(check);
 	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
 
 	return (
 		<button
 			id={ id }
 			ref={ setRef }
-			className={ classNames('wardrobeActionButton', className, check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
+			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
-				if (check.result === 'success') {
+				if (check?.result === 'success') {
 					execute(action);
 					onExecute?.();
 				}
 			} }
 		>
 			{
-				showActionBlockedExplanation ? (
+				showActionBlockedExplanation && check != null ? (
 					<ActionWarning check={ check } parent={ ref } />
 				) : null
 			}

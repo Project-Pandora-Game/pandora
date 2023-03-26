@@ -54,12 +54,14 @@ export class AppearanceConditionEvaluator {
 		AssertNever();
 	}
 
-	private _evalConditionCore<T extends string | number>({ operator, value }: AtomicCondition & { value: T; }, currentValue: T extends number ? number : T extends string ? string : never): boolean {
+	private _evalConditionCore<T extends string | number>({ operator, value }: AtomicCondition & { value: T; }, currentValue: T): boolean {
 		let diff = 0;
 		if (typeof currentValue === 'string' && typeof value === 'string') {
 			diff = currentValue.localeCompare(value);
 		} else if (typeof currentValue === 'number' && typeof value === 'number') {
 			diff = currentValue - value;
+		} else {
+			AssertNever();
 		}
 		switch (operator) {
 			case '>':

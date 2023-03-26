@@ -35,9 +35,9 @@ export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
 export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
 export const AppearanceArmPoseSchema = z.object({
-	position: z.nativeEnum(ArmsPose),
-	rotation: ArmRotationSchema,
-	fingers: ArmFingersSchema,
+	position: z.nativeEnum(ArmsPose).default(ArmsPose.FRONT),
+	rotation: ArmRotationSchema.default('up'),
+	fingers: ArmFingersSchema.default('spread'),
 });
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
@@ -127,6 +127,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			...GetDefaultAppearanceBundle(),
 			...bundle,
 		};
+		bundle = AppearanceBundleSchema.parse(bundle);
 		if (assetManager && this.assetManager !== assetManager) {
 			this.assetManager = assetManager;
 		}

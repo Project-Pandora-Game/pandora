@@ -68,12 +68,12 @@ export class AssetManager {
 		return bone;
 	}
 
-	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
+	constructor(definitionsHash?: string, data?: Partial<Immutable<AssetsDefinitionFile>>) {
 		this.definitionsHash = definitionsHash ?? '';
 
 		// Note: Intentionally always assigning here instead of null coalescing,
 		// to perform easy "migration" of asset data that might be missing fields
-		data = {
+		const fullData: Immutable<AssetsDefinitionFile> = {
 			assets: {},
 			assetSlots: {},
 			bones: {},
@@ -89,18 +89,18 @@ export class AssetManager {
 			...data,
 		};
 
-		this.rawData = freeze(data, true);
+		this.rawData = freeze(fullData, true);
 
-		this.bodyparts = data.bodyparts;
-		this.graphicsId = data.graphicsId;
-		this._posePresets = data.posePresets;
-		this._backgrounds = data.backgrounds;
-		this.randomization = data.randomization;
+		this.bodyparts = fullData.bodyparts;
+		this.graphicsId = fullData.graphicsId;
+		this._posePresets = fullData.posePresets;
+		this._backgrounds = fullData.backgrounds;
+		this.randomization = fullData.randomization;
 
 		//#region Load bones
 		const bones = new Map<string, BoneDefinition>();
 
-		for (const [name, bone] of Object.entries(data.bones)) {
+		for (const [name, bone] of Object.entries(fullData.bones)) {
 			const parent = bone.parent ? bones.get(bone.parent) : undefined;
 			if (bone.parent && !parent) {
 				throw new Error(`Parents must be defined before bones that use them ('${name}' depends on '${bone.parent}', but parent not found)`);
@@ -127,7 +127,7 @@ export class AssetManager {
 		//#region Load attributes
 		const attributes = new Map<string, Readonly<AssetAttributeDefinition>>();
 
-		for (const [id, definition] of Object.entries(data.attributes)) {
+		for (const [id, definition] of Object.entries(fullData.attributes)) {
 			attributes.set(id, definition);
 		}
 
@@ -137,7 +137,7 @@ export class AssetManager {
 		//#region Load slots
 		const assetSlots = new Map<string, Readonly<AssetSlotDefinition>>();
 
-		for (const [id, definition] of Object.entries(data.assetSlots)) {
+		for (const [id, definition] of Object.entries(fullData.assetSlots)) {
 			assetSlots.set(id, definition);
 		}
 
@@ -147,7 +147,7 @@ export class AssetManager {
 		//#region Load assets
 		const assets = new Map<AssetId, Asset>();
 
-		for (const [id, definition] of Object.entries(data.assets)) {
+		for (const [id, definition] of Object.entries(fullData.assets)) {
 			if (!id.startsWith('a/')) {
 				throw new Error(`Asset without valid prefix: ${id}`);
 			}

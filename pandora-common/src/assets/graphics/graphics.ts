@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { BoneNameSchema } from '../appearance';
 import type { AssetId } from '../definitions';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
@@ -7,6 +6,9 @@ export type Coordinates = z.infer<typeof CoordinatesSchema>;
 
 export const CoordinatesCompressedSchema = z.tuple([CoordinatesSchema.shape.x, CoordinatesSchema.shape.y]);
 export type CoordinatesCompressed = z.infer<typeof CoordinatesCompressedSchema>;
+
+export const BoneNameSchema = z.string();
+export type BoneName = z.infer<typeof BoneNameSchema>;
 
 export type BoneType = 'pose' | 'body';
 
@@ -20,6 +22,12 @@ export const CharacterSize = {
 	WIDTH: 1000,
 	HEIGHT: 1500,
 } as const;
+
+export const ArmRotationSchema = z.enum(['up', 'down', 'forward', 'backward']);
+export type ArmRotation = z.infer<typeof ArmRotationSchema>;
+
+export const ArmFingersSchema = z.enum(['spread', 'fist']);
+export type ArmFingers = z.infer<typeof ArmFingersSchema>;
 
 export const RectangleSchema = CoordinatesSchema.merge(SizeSchema);
 export type Rectangle = z.infer<typeof RectangleSchema>;
@@ -39,10 +47,24 @@ export const AtomicConditionModuleSchema = z.object({
 	operator: ConditionOperatorSchema,
 	value: z.string(),
 });
+export const AtomicConditionArmRotationSchema = z.object({
+	armType: z.literal('rotation'),
+	side: z.enum(['left', 'right']),
+	operator: ConditionOperatorSchema,
+	value: ArmRotationSchema,
+});
+export const AtomicConditionArmFingersSchema = z.object({
+	armType: z.literal('fingers'),
+	side: z.enum(['left', 'right']),
+	operator: ConditionOperatorSchema,
+	value: ArmFingersSchema,
+});
 
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,
 	AtomicConditionModuleSchema,
+	AtomicConditionArmRotationSchema,
+	AtomicConditionArmFingersSchema,
 ]);
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
 

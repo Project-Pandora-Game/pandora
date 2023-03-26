@@ -10,11 +10,8 @@ import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } fro
 import { AppearanceItemProperties, AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId, PartialAppearancePose } from './definitions';
-import { BoneState, BoneType } from './graphics';
+import { ArmFingersSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
 import { Item, ItemBundleSchema } from './item';
-
-export const BoneNameSchema = z.string();
-export type BoneName = z.infer<typeof BoneNameSchema>;
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
@@ -38,7 +35,9 @@ export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
 export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
 export const AppearanceArmPoseSchema = z.object({
-	position: z.nativeEnum(ArmsPose),
+	position: z.nativeEnum(ArmsPose).default(ArmsPose.FRONT),
+	rotation: ArmRotationSchema.default('up'),
+	fingers: ArmFingersSchema.default('spread'),
 });
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
@@ -63,9 +62,13 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 		bones: {},
 		leftArm: {
 			position: ArmsPose.FRONT,
+			rotation: 'forward',
+			fingers: 'spread',
 		},
 		rightArm: {
 			position: ArmsPose.FRONT,
+			rotation: 'forward',
+			fingers: 'spread',
 		},
 		view: CharacterView.FRONT,
 	};
@@ -124,6 +127,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 			...GetDefaultAppearanceBundle(),
 			...bundle,
 		};
+		bundle = AppearanceBundleSchema.parse(bundle);
 		if (assetManager && this.assetManager !== assetManager) {
 			this.assetManager = assetManager;
 		}
@@ -403,8 +407,9 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	private _newArmsPose({ arms, leftArm: left, rightArm: right }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): [boolean, CharacterArmsPose] {
 		const leftArm = { ...this._arms.leftArm, ...arms, ...left };
 		const rightArm = { ...this._arms.rightArm, ...arms, ...right };
-		const changed = this._arms.leftArm.position !== leftArm.position
-			|| this._arms.rightArm.position !== rightArm.position;
+		const changed =
+			!_.isEqual(this._arms.leftArm, leftArm) ||
+			!_.isEqual(this._arms.rightArm, rightArm);
 
 		return [changed, { leftArm, rightArm }];
 	}

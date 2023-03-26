@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
 import { AppearanceArmPose, AppearancePose, ArmsPose, CharacterView, GetDefaultAppearanceBundle } from './appearance';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
+import { ArmFingersSchema, ArmRotationSchema } from './graphics/graphics';
 
 class TreeLimit {
 	private readonly limit: ReadonlyMap<string, [number, number][]>;
@@ -286,9 +287,15 @@ function FromPose({ bones, leftArm, rightArm, arms, view }: PartialAppearancePos
 	return data;
 }
 
-function FromArmPose(data: Map<string, number>, prefix: 'leftArm' | 'rightArm', { position }: Partial<AppearanceArmPose> = {}): void {
+function FromArmPose(data: Map<string, number>, prefix: 'leftArm' | 'rightArm', { position, rotation, fingers }: Partial<AppearanceArmPose> = {}): void {
 	if (position != null) {
-		data.set(`${prefix}.position`, position === ArmsPose.FRONT ? 0 : 1);
+		data.set(`${prefix}.position`, position);
+	}
+	if (rotation != null) {
+		data.set(`${prefix}.rotation`, ArmRotationSchema.options.indexOf(rotation));
+	}
+	if (fingers != null) {
+		data.set(`${prefix}.fingers`, ArmFingersSchema.options.indexOf(fingers));
 	}
 }
 
@@ -314,9 +321,17 @@ function FromLimit({ bones, leftArm, rightArm, arms, view }: Immutable<AssetDefi
 	return data;
 }
 
-function FromArmLimit(data: Map<string, [number, number][]>, prefix: 'leftArm' | 'rightArm', { position }: Partial<AppearanceArmPose> = {}): void {
+function FromArmLimit(data: Map<string, [number, number][]>, prefix: 'leftArm' | 'rightArm', { position, rotation, fingers }: Partial<AppearanceArmPose> = {}): void {
 	if (position != null) {
 		data.set(`${prefix}.position`, [[position, position]]);
+	}
+	if (rotation != null) {
+		const index = ArmRotationSchema.options.indexOf(rotation);
+		data.set(`${prefix}.rotation`, [[index, index]]);
+	}
+	if (fingers != null) {
+		const index = ArmFingersSchema.options.indexOf(fingers);
+		data.set(`${prefix}.fingers`, [[index, index]]);
 	}
 }
 
@@ -324,6 +339,14 @@ function ToArmPose(data: ReadonlyMap<string, number>, prefix: 'leftArm' | 'right
 	const position = data.get(`${prefix}.position`);
 	if (position != null && ArmsPose[position] != null) {
 		pose[prefix].position = position;
+	}
+	const rotation = data.get(`${prefix}.rotation`);
+	if (rotation != null && ArmRotationSchema.options[rotation] != null) {
+		pose[prefix].rotation = ArmRotationSchema.options[rotation];
+	}
+	const fingers = data.get(`${prefix}.fingers`);
+	if (fingers != null && ArmFingersSchema.options[fingers] != null) {
+		pose[prefix].fingers = ArmFingersSchema.options[fingers];
 	}
 }
 

@@ -6,7 +6,7 @@ import type { AssetManager } from './assetManager';
 export const ROOM_INVENTORY_MAX_ITEMS = 10;
 
 /** Validates items prefix, ignoring required items */
-export function ValidateRoomInventoryItemsPrefix(_assetMananger: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+export function ValidateRoomInventoryItemsPrefix(_assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 
 	// Validate all items
 	const ids = new Set<ItemId>();
@@ -42,10 +42,10 @@ export function ValidateRoomInventoryItemsPrefix(_assetMananger: AssetManager, i
 }
 
 /** Validates the room inventory items, including all prefixes */
-export function ValidateRoomInventoryItems(assetMananger: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+export function ValidateRoomInventoryItems(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
-		const r = ValidateRoomInventoryItemsPrefix(assetMananger, items.slice(0, i));
+		const r = ValidateRoomInventoryItemsPrefix(assetManager, items.slice(0, i));
 		if (!r.success)
 			return r;
 	}

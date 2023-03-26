@@ -25,8 +25,8 @@ export class RoomInventory implements RoomActionTargetRoomInventory {
 
 	private items: AppearanceItems = [];
 
-	constructor(assetMananger: AssetManager, onChange?: () => void) {
-		this.assetManager = assetMananger;
+	constructor(assetManager: AssetManager, onChange?: () => void) {
+		this.assetManager = assetManager;
 		this.importFromBundle(ROOM_INVENTORY_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;
 	}

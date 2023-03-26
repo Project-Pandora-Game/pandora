@@ -1,4 +1,4 @@
-import { z, ZodType } from 'zod';
+import { z, ZodType, ZodTypeDef } from 'zod';
 import type { KeysMatching, Awaitable } from '../utility';
 
 /** The base type for how (one-way) socket interface definition should look like */
@@ -14,8 +14,10 @@ export type SocketInterfaceDefinition = {
 /** The base type for how socket interface definition looks like, also verifying all requests and responses are objects */
 export type SocketInterfaceDefinitionVerified<T extends SocketInterfaceDefinition> = {
 	[messageType in keyof T]: {
-		request: ZodType<RecordOnlyElement<z.infer<T[messageType]['request']>>>;
-		response: T[messageType]['response'] extends ZodType<Record<never, unknown>> ? ZodType<RecordOnlyElement<z.infer<T[messageType]['response']>>> : null;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		request: ZodType<RecordOnlyElement<z.infer<T[messageType]['request']>>, ZodTypeDef, any>;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		response: T[messageType]['response'] extends ZodType<Record<never, unknown>, ZodTypeDef, any> ? ZodType<RecordOnlyElement<z.infer<T[messageType]['response']>>, ZodTypeDef, any> : null;
 	};
 };
 

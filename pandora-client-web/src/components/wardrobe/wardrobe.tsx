@@ -31,6 +31,7 @@ import {
 	AppearanceLimitTree,
 	CharacterArmsPose,
 	AppearanceArmPose,
+	ArmRotationSchema,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -68,6 +69,7 @@ import listIcon from '../../assets/icons/list.svg';
 import gridIcon from '../../assets/icons/grid.svg';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { useCurrentTime } from '../../common/useCurrentTime';
+import { Select } from '../common/select/select';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -1455,6 +1457,29 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 			unchecked={ 'spread' }
 		/>
 	), [armsPose, limits, setPose]);
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	const HandRotation = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm'; title: string; }): ReactElement => {
+		return (
+			<div>
+				<label htmlFor={ `pose-hand-rotation-${arm}` }>{ title }</label>
+				<Select value={ armsPose[arm].rotation } onChange={ (e) => {
+					setPose({
+						[arm]: {
+							rotation: ArmRotationSchema.parse(e.target.value),
+						},
+					});
+				} }>
+					{
+						ArmRotationSchema.options
+							.filter((r) => armsPose[arm].rotation === r || limits == null || limits.validate({ [arm]: { rotation: r } }))
+							.map((r) => (
+								<option key={ r } value={ r }>{ _.capitalize(r) }</option>
+							))
+					}
+				</Select>
+			</div>
+		);
+	}, [armsPose, limits, setPose]);
 	return (
 		<>
 			<ArmToggle arm='arms' title='Arms are in front of the body' />
@@ -1463,6 +1488,8 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 			<FingersToggle arm='arms' title='Hands are closed into fists' />
 			<FingersToggle arm='leftArm' title='Left hand is closed into a fist' />
 			<FingersToggle arm='rightArm' title='Right hand is closed into a fist' />
+			<HandRotation arm='leftArm' title='Left hand rotation' />
+			<HandRotation arm='rightArm' title='Right hand rotation' />
 		</>
 	);
 }

@@ -443,6 +443,8 @@ export class Room {
 
 	public disconnect(): void {
 		this.assignedShard?.disconnectRoom(this);
+		// Clear pending action messages when the room gets disconnected (this is not triggered on simple reassignment)
+		this.pendingMessages.length = 0;
 	}
 
 	public async generateAccessId(): Promise<string | null> {

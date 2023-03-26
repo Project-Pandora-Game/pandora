@@ -1,5 +1,5 @@
 import { AppearanceActionResult, AssertNever } from 'pandora-common';
-import { DescribeAsset, DescribeAssetSlot } from '../components/gameContext/chatRoomContextProvider';
+import { DescribeAsset, DescribeAssetSlot } from '../components/chatroom/chatroomMessages';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */

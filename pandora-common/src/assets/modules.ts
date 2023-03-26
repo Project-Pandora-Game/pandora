@@ -8,6 +8,7 @@ import { Asset } from './asset';
 import { AssetDefinitionExtraArgs } from './definitions';
 import { IItemLoadContext } from './item';
 import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
+import { Immutable } from 'immer';
 
 //#region Module definitions
 
@@ -55,7 +56,7 @@ type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 
 export type AssetModuleDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = IAssetModuleTypes<A>[ModuleType]['config'];
 
-export function GetModuleStaticAttributes(moduleDefinition: AssetModuleDefinition): ReadonlySet<string> {
+export function GetModuleStaticAttributes(moduleDefinition: Immutable<AssetModuleDefinition>): ReadonlySet<string> {
 	switch (moduleDefinition.type) {
 		case 'typed':
 			return MODULE_TYPES.typed.getStaticAttributes(moduleDefinition);

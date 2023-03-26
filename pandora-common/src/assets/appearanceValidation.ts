@@ -1,5 +1,5 @@
 import { Logger } from '../logging';
-import { ShuffleArray } from '../utility';
+import { Assert, ShuffleArray } from '../utility';
 import { ItemId } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { AssetId } from './definitions';
@@ -299,6 +299,7 @@ export function AppearanceLoadAndValidate(assetManager: AssetManager, originalIn
 		if (itemToAdd == null)
 			break;
 
+		Assert(assetManager === itemToAdd.assetManager);
 		const tryItem: AppearanceItems = [...resultItems, itemToAdd];
 		if (!ValidateAppearanceItemsPrefix(assetManager, tryItem).success) {
 			logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);

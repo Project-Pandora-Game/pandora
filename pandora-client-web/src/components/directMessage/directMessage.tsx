@@ -6,7 +6,7 @@ import { useEvent } from '../../common/useEvent';
 import { DirectMessage, DirectMessageChannel } from '../../networking/directMessageManager';
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { RenderChatPart } from '../chatroom/chatroom';
+import { RenderChatPart } from '../chatroom/chatroomMessages';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';

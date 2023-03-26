@@ -1,6 +1,6 @@
 import React, { ReactElement, useCallback, useState } from 'react';
 import { AssetGraphicsLayer, LayerToImmediateName, useLayerDefinition, useLayerName } from '../../../assets/assetGraphics';
-import { GetAssetManager } from '../../../assets/assetManager';
+import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
@@ -205,19 +205,20 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 }
 
 function PointTransformationsTextarea({ point }: { point: DraggablePoint; }): ReactElement | null {
+	const assetManager = useAssetManager();
 	const [value, setValue] = useUpdatedUserInput(SerializeTransforms(useDraggablePointDefinition(point).transforms), [point]);
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
 		try {
-			const result = ParseTransforms(e.target.value, GetAssetManager().getAllBones().map((b) => b.name));
+			const result = ParseTransforms(e.target.value, assetManager.getAllBones().map((b) => b.name));
 			setError(null);
 			point.setTransforms(result);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : String(err));
 		}
-	}, [point, setValue]);
+	}, [point, setValue, assetManager]);
 
 	return (
 		<>

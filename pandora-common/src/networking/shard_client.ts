@@ -6,6 +6,7 @@ import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { RoomInventoryBundle } from '../assets/roomInventory';
+import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness
 import type { } from 'zod';
@@ -37,7 +38,7 @@ export const ShardClientSchema = {
 		request: ZodCast<{
 			character: ICharacterData;
 			room: null | IChatRoomClientData;
-			assetsDefinition: AssetsDefinitionFile;
+			assetsDefinition: Immutable<AssetsDefinitionFile>;
 			assetsDefinitionHash: string;
 			assetsSource: string;
 		}>(),

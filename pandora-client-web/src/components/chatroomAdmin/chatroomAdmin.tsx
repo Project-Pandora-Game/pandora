@@ -26,7 +26,7 @@ import {
 } from '../gameContext/directoryConnectorContextProvider';
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { IsChatroomAdmin, useChatRoomData } from '../gameContext/chatRoomContextProvider';
-import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
+import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { Select } from '../common/select/select';
 import { ModalDialog } from '../dialog/dialog';
 import { Row } from '../common/container/container';
@@ -503,13 +503,14 @@ function BackgroundSelectDialog({ hide, current, select }: {
 	current: string | IChatroomBackgroundData;
 	select: (background: string | IChatroomBackgroundData) => void;
 }): ReactElement | null {
+	const assetManager = useAssetManager();
 	const [selectedBackground, setSelectedBackground] = useState(current);
 
 	useEffect(() => {
 		setSelectedBackground(current);
 	}, [current]);
 
-	const availableBackgrounds = useMemo(() => GetAssetManager().getBackgrounds(), []);
+	const availableBackgrounds = useMemo(() => assetManager.getBackgrounds(), [assetManager]);
 	const [nameFilter, setNameFilter] = useState('');
 	/*
 	 * TODO: Add a tag based filter to the dialog in a later version

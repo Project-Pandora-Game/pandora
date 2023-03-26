@@ -1,13 +1,12 @@
 import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema, DoAppearanceAction } from 'pandora-common';
 import React, { ReactElement, ReactNode, useMemo } from 'react';
-import { GetAssetManager } from '../../../assets/assetManager';
+import { useAssetManager } from '../../../assets/assetManager';
 import { useCharacterSafemode } from '../../../character/character';
 import { Column } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
-import { Observable, useObservable } from '../../../observable';
-import { GetAssetManagerEditor } from '../../assets/assetManager';
+import { Observable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 
 const ROOM_CONTEXT = {
@@ -15,9 +14,10 @@ const ROOM_CONTEXT = {
 } as const satisfies ActionRoomContext;
 
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {
+	const assetManager = useAssetManager();
 	const editor = useEditor();
 	const character = editor.character;
-	const assetList = useObservable(GetAssetManager().assetList);
+	const assetList = assetManager.assetList;
 
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 
@@ -48,8 +48,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		assetList,
 		extraItemActions,
 		actions,
-		execute: (action) => DoAppearanceAction(action, actions, GetAssetManagerEditor()),
-	}), [character, assetList, actions, extraItemActions]);
+		execute: (action) => DoAppearanceAction(action, actions, assetManager),
+	}), [character, assetList, actions, extraItemActions, assetManager]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -66,7 +66,7 @@ export function EditorWardrobeUI(): ReactElement {
 
 	const { currentFocus, setFocus, containerContentsFilter } = useWardrobeItems();
 
-	const assetManager = GetAssetManager();
+	const assetManager = useAssetManager();
 	const assetFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter)
 		.map((a) => a[0])

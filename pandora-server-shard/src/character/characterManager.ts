@@ -87,7 +87,7 @@ export const CharacterManager = new class CharacterManager {
 
 	public onAssetDefinitionsChanged() {
 		for (const character of this._characters.values()) {
-			character.reloadAssetManager(assetManager, true);
+			character.reloadAssetManager(assetManager);
 		}
 	}
 };

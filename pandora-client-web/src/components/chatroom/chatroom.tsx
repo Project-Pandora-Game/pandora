@@ -1,6 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, IChatRoomMessageChat, IChatSegment, MessageSubstitute, RoomId } from 'pandora-common';
-import { CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
+import { CharacterId, IChatRoomMessageAction, IChatRoomMessageChat, RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -11,17 +10,16 @@ import React, {
 	useState,
 } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { GetAssetManager } from '../../assets/assetManager';
+import { useAssetManager } from '../../assets/assetManager';
 import { Button } from '../common/button/button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
-import { IChatroomMessageActionProcessed, IChatroomMessageProcessed, IsUserMessage, useChatroom, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
+import { useChatroom, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
-import { ChatParser } from './chatParser';
 import { ChatRoomScene } from './chatRoomScene';
 import './chatroom.scss';
 import { WardrobeContextProvider, WardrobeExpressionGui, WardrobePoseGui } from '../wardrobe/wardrobe';
@@ -34,6 +32,7 @@ import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 import { useNullableObservable } from '../../observable';
 import { Character, useCharacterData, useCharacterSafemode } from '../../character/character';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
+import { IChatroomMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -161,74 +160,13 @@ function Chat(): ReactElement | null {
 	);
 }
 
-export function RenderChatPart([type, contents]: IChatSegment, index: number): ReactElement {
-	switch (type) {
-		case 'normal':
-			return <span key={ index }>{ contents }</span>;
-		case 'italic':
-			return <em key={ index }>{ contents }</em>;
-		case 'bold':
-			return <strong key={ index }>{ contents }</strong>;
-	}
-}
-
-function GetActiontext(action: IChatroomMessageActionProcessed): string | undefined {
-	if (action.customText != null)
-		return action.customText;
-
-	const assetManager = GetAssetManager();
-	const item = action.data?.item;
-	const asset = item && assetManager.getAssetById(item.assetId);
-	const itemPrevious = action.data?.itemPrevious ?? item;
-	const assetPrevious = itemPrevious && assetManager.getAssetById(itemPrevious.assetId);
-
-	const defaultMessage = CHAT_ACTIONS.get(action.id);
-
-	// Asset-specific message overrides
-	switch (action.id) {
-		case 'itemAdd':
-			return asset?.definition.chat?.actionAdd ?? defaultMessage;
-		case 'itemAddCreate':
-			return asset?.definition.chat?.actionAddCreate ?? defaultMessage;
-		case 'itemRemove':
-			return assetPrevious?.definition.chat?.actionRemove ?? defaultMessage;
-		case 'itemRemoveDelete':
-			return assetPrevious?.definition.chat?.actionRemoveDelete ?? defaultMessage;
-		case 'itemAttach':
-			return asset?.definition.chat?.actionAttach ?? defaultMessage;
-		case 'itemDetach':
-			return assetPrevious?.definition.chat?.actionDetach ?? defaultMessage;
-	}
-
-	return defaultMessage;
-}
-
-function RenderActionContent(action: IChatroomMessageActionProcessed): [IChatSegment[], IChatSegment[] | null] {
-	let actionText = GetActiontext(action);
-	if (actionText === undefined) {
-		return [ChatParser.parseStyle(`( ERROR UNKNOWN ACTION '${action.id}' )`), null];
-	}
-	// Server messages can have extra info
-	let actionExtraText = action.type === 'serverMessage' ? CHAT_ACTIONS_FOLDED_EXTRA.get(action.id) : undefined;
-	if (action.dictionary) {
-		actionText = MessageSubstitute(actionText, action.dictionary);
-		if (actionExtraText !== undefined) {
-			actionExtraText = MessageSubstitute(actionExtraText, action.dictionary);
-		}
-	}
-	if (action.type === 'action' && actionText) {
-		actionText = `(${actionText})`;
-	}
-	return [ChatParser.parseStyle(actionText), actionExtraText ? ChatParser.parseStyle(actionExtraText) : null];
-}
-
 function ChatroomMessageEquals(a: IChatroomMessageProcessed, b: IChatroomMessageProcessed): boolean {
 	return a.time === b.time && a.edited === b.edited && a.roomId === b.roomId;
 }
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
-	if (!IsUserMessage(message)) {
+	if (IsActionMessage(message)) {
 		return <ActionMessage message={ message } />;
 	}
 	if (message.type === 'deleted') {
@@ -406,10 +344,11 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 	);
 }
 
-function ActionMessage({ message }: { message: IChatroomMessageActionProcessed; }): ReactElement | null {
+function ActionMessage({ message }: { message: IChatroomMessageProcessed<IChatRoomMessageAction>; }): ReactElement | null {
+	const assetManager = useAssetManager();
 	const [folded, setFolded] = useState(true);
 
-	const [content, extraContent] = useMemo(() => RenderActionContent(message), [message]);
+	const [content, extraContent] = useMemo(() => RenderActionContent(message, assetManager), [message, assetManager]);
 
 	// If there is nothing to disply, hide this message
 	if (content.length === 0 && extraContent == null)

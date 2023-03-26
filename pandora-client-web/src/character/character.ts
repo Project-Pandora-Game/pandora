@@ -1,6 +1,6 @@
 import { CharacterAppearance, AppearanceChangeType, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
-import { GetAssetManager } from '../assets/assetManager';
+import { GetCurrentAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
 import type { PlayerCharacter } from './player';
 
@@ -35,7 +35,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
-		this.appearance = new CharacterAppearance(GetAssetManager(), () => this.data, (changes) => this.emit('appearanceUpdate', changes));
+		this.appearance = new CharacterAppearance(GetCurrentAssetManager(), () => this.data, (changes) => this.emit('appearanceUpdate', changes));
 		this.appearance.importFromBundle(data.appearance, this.logger.prefixMessages('Appearance load:'));
 		this.logger.verbose('Loaded');
 	}
@@ -47,7 +47,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 	public update(data: Partial<T>): void {
 		this._data = { ...this.data, ...data };
 		if (data.appearance) {
-			this.appearance.importFromBundle(data.appearance, this.logger.prefixMessages('Appearance load:'), GetAssetManager());
+			this.appearance.importFromBundle(data.appearance, this.logger.prefixMessages('Appearance load:'), GetCurrentAssetManager());
 		}
 		this.logger.debug('Updated', data);
 		this.emit('update', data);

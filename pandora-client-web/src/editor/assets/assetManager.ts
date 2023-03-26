@@ -1,6 +1,8 @@
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
+import { Immutable } from 'immer';
 import { Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, AssetsDefinitionFile } from 'pandora-common';
-import { AssetManagerClient, OverrideAssetManager, GetAssetManager as GetAssetManagerClient } from '../../assets/assetManager';
+import { AssetManagerClient, GetCurrentAssetManager, UpdateAssetManager, useAssetManager } from '../../assets/assetManager';
+import { TypedEventEmitter } from '../../event';
 import { observable, ObservableClass } from '../../observable';
 
 export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*([-_][a-z0-9]+)*$/;
@@ -9,18 +11,20 @@ export class AssetManagerEditor extends AssetManagerClient {
 
 	public readonly assetTreeView: AssetTreeView = new AssetTreeViewClass;
 
-	public override load(definitionsHash: string, data: AssetsDefinitionFile): void {
-		super.load(definitionsHash, data);
-		this.assetTreeView.update(this.getAllAssets());
+	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
+		super(definitionsHash, data);
+		this.assetTreeView.update(this.assetList);
 	}
 
-	public async createNewAsset(category: string, idPart: string, name: string, bodypart: string): Promise<void> {
+	public static async createNewAsset(category: string, idPart: string, name: string, bodypart: string): Promise<void> {
+		const currentManager = GetCurrentAssetManager();
+		Assert(currentManager instanceof AssetManagerEditor);
 		const id: AssetId = `a/${category}/${idPart}`;
 
 		Assert(ASSET_ID_PART_REGEX.test(category));
 		Assert(ASSET_ID_PART_REGEX.test(idPart));
-		Assert(!this.getAssetById(id));
-		Assert(!bodypart || this.bodyparts.some((b) => b.name === bodypart));
+		Assert(!currentManager.getAssetById(id));
+		Assert(!bodypart || currentManager.bodyparts.some((b) => b.name === bodypart));
 
 		const definition: AssetDefinition = {
 			id,
@@ -36,8 +40,13 @@ export class AssetManagerEditor extends AssetManagerClient {
 			hasGraphics: false,
 		};
 
-		const asset = this.createAsset(id, definition);
-		this._assets.set(id, asset);
+		EditorAssetManager.loadAssetManager(currentManager.definitionsHash, {
+			...currentManager.rawData,
+			assets: {
+				...currentManager.rawData.assets,
+				[id]: definition,
+			},
+		});
 
 		// Download the definition
 		const assetTemplateContent = `
@@ -125,14 +134,28 @@ DefineAsset({
 	}
 }
 
+export const EditorAssetManager = new class extends TypedEventEmitter<{
+	assetMangedChanged: AssetManagerEditor;
+}> {
+	public loadAssetManager(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>): AssetManagerEditor {
+		const manager = new AssetManagerEditor(definitionsHash, data);
+		loaded = true;
+		UpdateAssetManager(manager);
+		this.emit('assetMangedChanged', manager);
+		return manager;
+	}
+}();
+
 let loaded = false;
 
-export function GetAssetManagerEditor(): AssetManagerEditor {
+export function useAssetManagerEditor(): AssetManagerEditor {
 	if (!loaded) {
-		OverrideAssetManager(new AssetManagerEditor());
+		UpdateAssetManager(new AssetManagerEditor());
 		loaded = true;
 	}
-	return GetAssetManagerClient() as AssetManagerEditor;
+	const assetManager = useAssetManager();
+	Assert(assetManager instanceof AssetManagerEditor);
+	return assetManager;
 }
 
 export type AssetTreeView = AssetTreeViewClass;
@@ -143,7 +166,7 @@ class AssetTreeViewClass {
 		return [...this._categories.values()];
 	}
 
-	public update(assets: Asset[]) {
+	public update(assets: readonly Asset[]) {
 		this._categories.clear();
 		for (const asset of assets) {
 			const [, category, name] = /^a\/([^/]+)\/([^/]+)$/.exec(asset.id) || [];

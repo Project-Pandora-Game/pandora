@@ -1,7 +1,7 @@
 import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter } from 'pandora-common';
 import { IConnectionClient } from './common';
 import { CharacterManager } from '../character/characterManager';
-import { assetManager, RawDefinitions as RawAssetsDefinitions } from '../assets/assetManager';
+import { assetManager } from '../assets/assetManager';
 import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
 import promClient from 'prom-client';
 import { DoAppearanceAction } from 'pandora-common';
@@ -59,7 +59,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		connection.sendMessage('load', {
 			character: connection.character.getData(),
 			room: connection.character.room ? connection.character.room.getClientData() : null,
-			assetsDefinition: RawAssetsDefinitions,
+			assetsDefinition: assetManager.rawData,
 			assetsDefinitionHash: assetManager.definitionsHash,
 			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
 		});
@@ -225,7 +225,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			connection.sendMessage('load', {
 				character: connection.character.getData(),
 				room: connection.character.room ? connection.character.room.getClientData() : null,
-				assetsDefinition: RawAssetsDefinitions,
+				assetsDefinition: assetManager.rawData,
 				assetsDefinitionHash: assetManager.definitionsHash,
 				assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
 			});

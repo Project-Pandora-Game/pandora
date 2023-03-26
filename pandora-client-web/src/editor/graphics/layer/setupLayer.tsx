@@ -69,7 +69,7 @@ export function SetupLayerSelected({
 	const editor = useEditor();
 	const state = useEditorLayerStateOverride(layer);
 	const items = useCharacterAppearanceItems(appearanceContainer);
-	const item = items.find((i) => i.asset.id === layer.asset.asset.id) ?? null;
+	const item = items.find((i) => i.asset.id === layer.asset.id) ?? null;
 
 	const { points, triangles } = useLayerPoints(layer);
 

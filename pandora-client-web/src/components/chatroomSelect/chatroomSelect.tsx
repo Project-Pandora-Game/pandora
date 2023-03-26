@@ -10,7 +10,7 @@ import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } 
 import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
-import { GetAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
+import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
 import { Row } from '../common/container/container';
 import './chatroomSelect.scss';
@@ -120,6 +120,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 	hide: () => void;
 }): ReactElement | null {
 
+	const assetManager = useAssetManager();
 	const accountId = useCurrentAccount()?.id;
 	const [roomPassword, setPassword] = useState('');
 	const joinRoom = useJoinRoom();
@@ -143,7 +144,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 	const roomDetails = room?.result === 'success' ? room.data : undefined;
 	const characters = roomDetails?.characters ?? [];
 	const owners = roomDetails?.owners ?? [];
-	const background = roomDetails?.background ? ResolveBackground(GetAssetManager(), roomDetails.background, GetAssetsSourceUrl()).image : '';
+	const background = roomDetails?.background ? ResolveBackground(assetManager, roomDetails.background, GetAssetsSourceUrl()).image : '';
 	const features = roomDetails?.features ?? [];
 
 	const userIsOwner = !!roomDetails?.isOwner;

@@ -4,6 +4,7 @@ import type { ICharacterMinimalData } from '../character';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { ActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
+import { Assert } from '../utility';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
 import { AppearanceItemProperties, AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
@@ -257,8 +258,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return pose;
 	}
 
-	public reloadAssetManager(assetManager: AssetManager, logger?: Logger, force: boolean = false) {
-		if (this.assetManager === assetManager && !force)
+	public reloadAssetManager(assetManager: AssetManager, logger?: Logger) {
+		if (this.assetManager === assetManager)
 			return;
 		const bundle = this.exportToBundle();
 		this.assetManager = assetManager;
@@ -297,6 +298,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public commitChanges(manipulator: AppearanceRootManipulator, context: ActionProcessingContext): AppearanceValidationResult {
+		Assert(this.assetManager === manipulator.assetManager);
 		const newItems = manipulator.getRootItems();
 
 		// Validate

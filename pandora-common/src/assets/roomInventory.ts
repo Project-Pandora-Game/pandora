@@ -25,8 +25,8 @@ export class RoomInventory implements RoomActionTargetRoomInventory {
 
 	private items: AppearanceItems = [];
 
-	constructor(assetMananger: AssetManager, onChange?: () => void) {
-		this.assetManager = assetMananger;
+	constructor(assetManager: AssetManager, onChange?: () => void) {
+		this.assetManager = assetManager;
 		this.importFromBundle(ROOM_INVENTORY_BUNDLE_DEFAULT);
 		this.onChangeHandler = onChange;
 	}
@@ -73,8 +73,8 @@ export class RoomInventory implements RoomActionTargetRoomInventory {
 		this.onChange();
 	}
 
-	public reloadAssetManager(assetManager: AssetManager, logger?: Logger, force: boolean = false) {
-		if (this.assetManager === assetManager && !force)
+	public reloadAssetManager(assetManager: AssetManager, logger?: Logger) {
+		if (this.assetManager === assetManager)
 			return;
 		const bundle = this.exportToBundle();
 		this.assetManager = assetManager;

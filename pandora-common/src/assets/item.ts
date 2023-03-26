@@ -1,3 +1,4 @@
+import { Immutable } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
@@ -197,8 +198,8 @@ export class Item {
 		});
 	}
 
-	public getPropertiesParts(): AssetProperties[] {
-		const propertyParts: AssetProperties[] = [this.asset.definition];
+	public getPropertiesParts(): Immutable<AssetProperties>[] {
+		const propertyParts: Immutable<AssetProperties>[] = [this.asset.definition];
 		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
 
 		return propertyParts;

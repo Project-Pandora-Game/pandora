@@ -1,28 +1,29 @@
 import { AssetsDefinitionFile } from 'pandora-common/dist/assets/definitions';
-import { AssetManagerClient, GetAssetManager, LoadAssetDefinitions, OverrideAssetManager } from '../../src/assets/assetManager';
+import { AssetManagerClient, GetCurrentAssetManager, LoadAssetDefinitions, UpdateAssetManager } from '../../src/assets/assetManager';
 
-describe('GetAssetManager()', () => {
+describe('GetCurrentAssetManager()', () => {
 	it('should return instance of AssetManagerClient', () => {
-		expect(GetAssetManager()).toBeInstanceOf(AssetManagerClient);
+		expect(GetCurrentAssetManager()).toBeInstanceOf(AssetManagerClient);
 	});
 });
 
-describe('OverrideAssetManager()', () => {
+describe('UpdateAssetManager()', () => {
 	it('should override the current assetManager reference', () => {
 		const newManager = new AssetManagerClient();
-		const oldManager = GetAssetManager();
-		expect(GetAssetManager()).toBe(oldManager);
-		OverrideAssetManager(newManager);
-		expect(GetAssetManager()).toBe(newManager);
-		expect(GetAssetManager()).not.toBe(oldManager);
+		const oldManager = GetCurrentAssetManager();
+		expect(GetCurrentAssetManager()).toBe(oldManager);
+		UpdateAssetManager(newManager);
+		expect(GetCurrentAssetManager()).toBe(newManager);
+		expect(GetCurrentAssetManager()).not.toBe(oldManager);
 	});
 });
 
 describe('LoadAssetDefinitions()', () => {
-	it('should load asset definition into manager', () => {
-		const mock = jest.spyOn(GetAssetManager(), 'load').mockImplementation();
-		LoadAssetDefinitions('mock hash', 'mock data' as unknown as AssetsDefinitionFile, 'mock source');
-		expect(mock).nthCalledWith(1, 'mock hash', 'mock data');
-		mock.mockRestore();
+	it('should load asset definition', () => {
+		const oldManager = GetCurrentAssetManager();
+		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+		LoadAssetDefinitions('mock hash', {} as AssetsDefinitionFile, 'mock source');
+		const newManager = GetCurrentAssetManager();
+		expect(newManager).not.toBe(oldManager);
 	});
 });

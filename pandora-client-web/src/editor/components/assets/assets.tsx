@@ -13,7 +13,7 @@ import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
-import { AssetTreeViewCategory, ASSET_ID_PART_REGEX, GetAssetManagerEditor } from '../../assets/assetManager';
+import { AssetManagerEditor, AssetTreeViewCategory, ASSET_ID_PART_REGEX, useAssetManagerEditor } from '../../assets/assetManager';
 import { EDITOR_ALPHA_ICONS, useEditorLayerTint, useEditorTabContext } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import './assets.scss';
@@ -22,7 +22,7 @@ import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 
 export function AssetsUI(): ReactElement {
 	const editor = useEditor();
-	const view = GetAssetManagerEditor().assetTreeView;
+	const view = useAssetManagerEditor().assetTreeView;
 	const items = useCharacterAppearanceItems(editor.character);
 	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
 
@@ -153,7 +153,7 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 	const editor = useEditor();
 	const tabContext = useEditorTabContext();
-	const asset = GetAssetManagerEditor().getAssetById(assetId);
+	const asset = useAssetManagerEditor().getAssetById(assetId);
 	AssertNotNullable(asset);
 
 	function add() {
@@ -330,7 +330,7 @@ type AssetCreateDialogData = {
 function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): ReactElement {
 	const editor = useEditor();
 	const tabContext = useEditorTabContext();
-	const assetManager = GetAssetManagerEditor();
+	const assetManager = useAssetManagerEditor();
 	const view = assetManager.assetTreeView;
 
 	const {
@@ -366,7 +366,7 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 		const resultId: AssetId = `a/${category}/${id}`;
 		Assert(!assetManager.getAssetById(resultId));
 
-		await assetManager.createNewAsset(category, id, name, bodypart);
+		await AssetManagerEditor.createNewAsset(category, id, name, bodypart);
 		editor.startEditAsset(resultId);
 
 		closeDialog();

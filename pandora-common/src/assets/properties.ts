@@ -1,3 +1,4 @@
+import { Immutable } from 'immer';
 import { AppearanceLimitTree } from './appearanceLimit';
 import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions';
 import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from './effects';
@@ -101,7 +102,7 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 	};
 }
 
-export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: Readonly<AssetProperties>): T {
+export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: Immutable<AssetProperties>): T {
 	base.limits.merge(properties.poseLimits);
 	base.effects = MergeEffects(base.effects, properties.effects);
 	properties.attributes?.forEach((a) => base.attributes.add(a));
@@ -134,7 +135,7 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 	};
 }
 
-export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualResult, properties: AssetProperties): AssetPropertiesIndividualResult {
+export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualResult, properties: Immutable<AssetProperties>): AssetPropertiesIndividualResult {
 	base = MergeAssetProperties(base, properties);
 	properties.requirements?.forEach((a) => base.requirements.add(a));
 	base.blockAddRemove ||= properties.blockAddRemove ?? false;

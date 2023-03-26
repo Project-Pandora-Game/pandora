@@ -123,7 +123,7 @@ export function ChatRoomCharacter({
 		app.stage.eventMode = 'static';
 		app.stage.on('pointermove', onPointerMove);
 		return () => {
-			app.stage.off('pointermove', onPointerMove);
+			app.stage?.off('pointermove', onPointerMove);
 		};
 	}, [app, onPointerMove]);
 

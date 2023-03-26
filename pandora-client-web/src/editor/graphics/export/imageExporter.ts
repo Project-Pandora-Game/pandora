@@ -48,8 +48,8 @@ export class ImageExporter {
 class TextureCutter extends Container {
 	constructor(texture: Texture, { width, height }: Size, points: [number, number][]) {
 		super();
-		const vertices = new Float64Array(points.flat());
-		const uv = new Float64Array(points.flatMap((point) => ([
+		const vertices = new Float32Array(points.flat());
+		const uv = new Float32Array(points.flatMap((point) => ([
 			point[0] / width,
 			point[1] / height,
 		])));

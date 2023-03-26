@@ -1,12 +1,11 @@
-import { Container, SimpleMesh, Sprite, useApp } from '@pixi/react';
+import { Container, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { max, maxBy, min, minBy } from 'lodash';
-import { nanoid } from 'nanoid';
-import { BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
+import { Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
-import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { AppearanceContainer } from '../character/character';
@@ -16,12 +15,13 @@ import { AppearanceConditionEvaluator, useAppearanceConditionEvaluator } from '.
 import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
+import { PixiMesh } from './pixiMesh';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
 	points: readonly PointDefinitionCalculated[];
-	triangles: Uint32Array;
+	triangles: Uint16Array;
 } {
 	// Note: The points should NOT be filtered before Delaunator step!
 	// Doing so would cause body and arms not to have exactly matching triangles,
@@ -29,9 +29,10 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 	// In some other cases this could lead to gaps or other visual artifacts
 	// Any optimization of unused points needs to be done *after* triangles are calculated
 	const points = useLayerCalculatedPoints(layer);
+	Assert(points.length < 65535, 'Points do not fit into indices');
 
 	const { pointType } = useLayerDefinition(layer);
-	const triangles = useMemo<Uint32Array>(() => {
+	const triangles = useMemo<Uint16Array>(() => {
 		const result: number[] = [];
 		const delaunator = new Delaunator(points.flatMap((point) => point.pos));
 		for (let i = 0; i < delaunator.triangles.length; i += 3) {
@@ -40,7 +41,7 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 				result.push(...t);
 			}
 		}
-		return new Uint32Array(result);
+		return new Uint16Array(result);
 	}, [pointType, points]);
 	return { points, triangles };
 }
@@ -75,11 +76,11 @@ export function useLayerVertices(
 	item: Item | null,
 	normalize: boolean = false,
 	valueOverrides?: Record<BoneName, number>,
-): Float64Array {
+): Float32Array {
 	const { mirror, height, width, x, y } = useLayerDefinition(layer);
 
 	return useMemo(() => {
-		const result = new Float64Array(points
+		const result = new Float32Array(points
 			.flatMap((point) => evaluator.evalTransform(
 				MirrorPoint(point.pos, mirror, width),
 				point.transforms,
@@ -107,6 +108,27 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	verticesPoseOverride?: Record<BoneName, number>;
 	state?: LayerStateOverrides;
 	getTexture?: (path: string) => Promise<Texture>;
+}
+
+export const ContextCullClockwise = createContext<{
+	cullClockwise: boolean;
+	uniqueSwaps: readonly string[];
+}>({ cullClockwise: false, uniqueSwaps: [] });
+
+export function SwapCullingDirection({ children, swap = true, uniqueKey }: ChildrenProps & { swap?: boolean; uniqueKey?: string; }): ReactElement {
+	const { cullClockwise, uniqueSwaps } = useContext(ContextCullClockwise);
+	if (uniqueKey) {
+		swap &&= !uniqueSwaps.includes(uniqueKey);
+	}
+	const newValue = useMemo(() => ({
+		cullClockwise: swap ? !cullClockwise : cullClockwise,
+		uniqueSwaps: uniqueKey ? [...uniqueSwaps, uniqueKey] : uniqueSwaps,
+	}), [cullClockwise, swap, uniqueKey, uniqueSwaps]);
+	return (
+		<ContextCullClockwise.Provider value={ newValue }>
+			{ children }
+		</ContextCullClockwise.Provider>
+	);
 }
 
 export function GraphicsLayer({
@@ -194,17 +216,23 @@ export function GraphicsLayer({
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 
-	// Unfortunately `SimpleMesh` reuploads only vertices to GPU, meaning we need to recreate it whenever uvs or indices change
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	const meshKey = useMemo(() => nanoid(), [uv, triangles]);
+	const { cullClockwise } = useContext(ContextCullClockwise);
+
+	const cullingState = useMemo(() => {
+		const pixiState = PIXI.State.for2d();
+		pixiState.culling = true;
+		// There is some strange thing in Pixi, that when things go through filter, they switch direction for some strange reason
+		pixiState.clockwiseFrontFace = cullClockwise;
+		return pixiState;
+	}, [cullClockwise]);
 
 	return (
 		<Container
 			zIndex={ zIndex }
 			sortableChildren
 		>
-			<SimpleMesh
-				key={ meshKey }
+			<PixiMesh
+				state={ cullingState }
 				vertices={ vertices }
 				uvs={ uv }
 				indices={ triangles }
@@ -338,7 +366,9 @@ function MaskContainerPixi({
 	return (
 		<>
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
-				{ children }
+				<SwapCullingDirection uniqueKey='filter'>
+					{ children }
+				</SwapCullingDirection>
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>
@@ -415,7 +445,9 @@ function MaskContainerCustom({
 	return (
 		<>
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
-				{ children }
+				<SwapCullingDirection uniqueKey='filter'>
+					{ children }
+				</SwapCullingDirection>
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>

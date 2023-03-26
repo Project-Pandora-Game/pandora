@@ -9,7 +9,7 @@ import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppear
 import { ChildrenProps } from '../common/reactTypes';
 import { useObservable } from '../observable';
 import { ComputedLayerPriority, COMPUTED_LAYER_ORDERING, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
-import { GraphicsLayerProps, GraphicsLayer } from './graphicsLayer';
+import { GraphicsLayerProps, GraphicsLayer, SwapCullingDirection } from './graphicsLayer';
 
 export type PointLike = {
 	x: number;
@@ -193,13 +193,15 @@ function GraphicsCharacterWithManagerImpl({
 			pointerupoutside={ onPointerUpOutside }
 			pointermove={ onPointerMove }
 		>
-			{
-				sortOrder.map((priority, i) => {
-					const layer = priorityLayers.get(priority);
-					return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
-				})
-			}
-			{ children }
+			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
+				{
+					sortOrder.map((priority, i) => {
+						const layer = priorityLayers.get(priority);
+						return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
+					})
+				}
+				{ children }
+			</SwapCullingDirection>
 		</Container>
 	);
 }

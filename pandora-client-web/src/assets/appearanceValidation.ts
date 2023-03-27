@@ -21,7 +21,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 	if (result.result === 'success') {
 		return 'No problem.';
 	} else if (result.result === 'invalidAction') {
-		return `This action creates invalid state.`;
+		return `This action is not possible.`;
 	} else if (result.result === 'restrictionError') {
 		const e = result.restriction;
 		switch (e.type) {

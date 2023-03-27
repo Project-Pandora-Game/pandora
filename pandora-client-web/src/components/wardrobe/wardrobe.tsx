@@ -439,7 +439,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 				type: 'delete',
 				target,
 				item,
-			} } hideReserveSpace>
+			} }>
 				➖
 			</WardrobeActionButton>
 		);
@@ -539,7 +539,7 @@ export function RoomInventoryView({ title, container }: {
 				item,
 				target: { type: 'roomInventory' },
 				container: [],
-			} } hideReserveSpace>
+			} }>
 				▷
 			</WardrobeActionButton>
 		);
@@ -629,7 +629,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					target: inventoryTarget,
 					item,
 					shift: 1,
-				} } hideReserveSpace>
+				} } autohide hideReserveSpace>
 					▼
 				</WardrobeActionButton>
 				<WardrobeActionButton action={ {
@@ -637,14 +637,14 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					target: inventoryTarget,
 					item,
 					shift: -1,
-				} } hideReserveSpace>
+				} } autohide hideReserveSpace>
 					▲
 				</WardrobeActionButton>
 				<WardrobeActionButton action={ {
 					type: 'delete',
 					target: inventoryTarget,
 					item,
-				} } hideReserveSpace>
+				} }>
 					➖
 				</WardrobeActionButton>
 				<WardrobeActionButton action={ {
@@ -653,7 +653,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					item,
 					target,
 					container: characterContainer,
-				} } hideReserveSpace>
+				} }>
 					◁
 				</WardrobeActionButton>
 			</div>
@@ -704,9 +704,18 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
-			This action isn't possible, because:
-			<br />
-			{ reason }
+			{
+				check.result === 'invalidAction' ? (
+					<>
+						This action isn't possible.
+					</>
+				) : (
+					<>
+						This action isn't possible, because:<br />
+						{ reason }
+					</>
+				)
+			}
 		</HoverElement>
 	);
 }
@@ -862,7 +871,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 								target,
 								item,
 								shift: 1,
-							} } hideReserveSpace>
+							} } autohide hideReserveSpace>
 								▼
 							</WardrobeActionButton>
 							<WardrobeActionButton action={ {
@@ -870,7 +879,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 								target,
 								item,
 								shift: -1,
-							} } hideReserveSpace>
+							} } autohide hideReserveSpace>
 								▲
 							</WardrobeActionButton>
 						</>
@@ -948,11 +957,14 @@ function WardrobeActionButton({
 	className,
 	children,
 	action,
+	autohide = false,
 	hideReserveSpace = false,
 	showActionBlockedExplanation = true,
 	onExecute,
 }: CommonProps & {
 	action: AppearanceAction;
+	/** If the button should hide on certain invalid states */
+	autohide?: boolean;
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
 	showActionBlockedExplanation?: boolean;
@@ -961,7 +973,7 @@ function WardrobeActionButton({
 	const { actions, execute } = useWardrobeContext();
 
 	const check = useStaggeredAppearanceActionResult(action, actions);
-	const hide = check != null && AppearanceActionResultShouldHide(check);
+	const hide = check != null && autohide && AppearanceActionResultShouldHide(check);
 	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
 
 	return (

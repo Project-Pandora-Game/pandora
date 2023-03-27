@@ -177,6 +177,10 @@ $header-height: 2em;
 		background-color: #977;
 	}
 
+	&.pending {
+		background-color: #999;
+	}
+
 	&.listMode {
 		padding: 3px 0.5em;
 		height: 3em;
@@ -259,6 +263,10 @@ $header-height: 2em;
 	&.blocked:not(.selected) {
 		cursor: default;
 		background-color: #977;
+	}
+
+	&.pending:not(.selected) {
+		background-color: #999;
 	}
 }
 

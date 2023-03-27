@@ -15,6 +15,8 @@ export default class SmtpEmail implements IEmailSender {
 		this._transporter = createTransport({
 			service,
 			host,
+			port: 465,
+			secure: true,
 			auth: {
 				user,
 				pass: EMAIL_SMTP_PASSWORD,

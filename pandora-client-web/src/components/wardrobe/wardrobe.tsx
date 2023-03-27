@@ -940,7 +940,7 @@ function useStaggeredAppearanceActionResult(action: AppearanceAction, context: A
 		}, lowPriority);
 	}, [action, context, assetManager, lowPriority]);
 
-	return (resultAction.current === action && resultContext.current === context) ? result : null;
+	return result;
 }
 
 function WardrobeActionButton({

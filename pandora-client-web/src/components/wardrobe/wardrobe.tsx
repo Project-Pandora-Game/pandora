@@ -132,6 +132,20 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 
+	const [playerChangeMarker, updatePlayer] = useReducer(() => ({}), {});
+	const [characterChangeMarker, updateCharacter] = useReducer(() => ({}), {});
+	const [roomInventoryChangeMarker, updateRoomInventory] = useReducer(() => ({}), {});
+
+	useEffect(() => {
+		return player.on('appearanceUpdate', () => updatePlayer());
+	}, [player]);
+	useEffect(() => {
+		return character.on('appearanceUpdate', () => updateCharacter());
+	}, [character]);
+	useEffect(() => {
+		return room?.on('roomInventoryChange', () => updateRoomInventory());
+	}, [room]);
+
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.data.id,
 		getCharacter: (id) => {
@@ -155,7 +169,8 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 			}
 			return null;
 		},
-	}), [character, player, roomContext, isInRoom, room]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}), [character, player, roomContext, isInRoom, room, playerChangeMarker, characterChangeMarker, roomInventoryChangeMarker]);
 
 	const context = useMemo<WardrobeContext>(() => ({
 		character,

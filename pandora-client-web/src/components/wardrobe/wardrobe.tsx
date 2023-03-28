@@ -156,15 +156,15 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 			}
 			return null;
 		},
-		getTarget: (target) => {
-			if (target.type === 'character') {
-				if (target.characterId === player.data.id) {
+		getTarget: (actionTarget) => {
+			if (actionTarget.type === 'character') {
+				if (actionTarget.characterId === player.data.id) {
 					return player.appearance;
-				} else if (target.characterId === character.data.id) {
+				} else if (actionTarget.characterId === character.data.id) {
 					return character.appearance;
 				}
 			}
-			if (target.type === 'roomInventory') {
+			if (actionTarget.type === 'roomInventory') {
 				return isInRoom ? (room?.inventory ?? null) : null;
 			}
 			return null;
@@ -172,19 +172,21 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}), [character, player, roomContext, isInRoom, room, playerChangeMarker, characterChangeMarker, roomInventoryChangeMarker]);
 
+	const target = useMemo<RoomTargetSelector>(() => ({
+		type: 'character',
+		characterId: character.data.id,
+	}), [character]);
+
 	const context = useMemo<WardrobeContext>(() => ({
 		character,
 		player,
 		room,
-		target: {
-			type: 'character',
-			characterId: character.data.id,
-		},
+		target,
 		assetList,
 		extraItemActions,
 		actions,
 		execute: (action) => shardConnector?.sendMessage('appearanceAction', action),
-	}), [character, assetList, actions, player, shardConnector, extraItemActions, room]);
+	}), [character, player, room, target, assetList, extraItemActions, actions, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

@@ -700,6 +700,10 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 		: RenderAppearanceActionResult(assetManager, check)
 	), [assetManager, check]);
 
+	const isInvalidAction = check.result === 'invalidAction' ||
+		check.result === 'restrictionError' && check.restriction.type === 'invalid' ||
+		check.result === 'validationError' && check.validationError.problem === 'invalid';
+
 	if (check.result === 'success') {
 		return null;
 	}
@@ -707,7 +711,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
 			{
-				check.result === 'invalidAction' ? (
+				isInvalidAction ? (
 					<>
 						This action isn't possible.
 					</>

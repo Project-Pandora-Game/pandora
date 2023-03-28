@@ -142,34 +142,36 @@ export function WardrobeContextProvider({ character, player, children }: { chara
 			}
 			return null;
 		},
-		getTarget: (target) => {
-			if (target.type === 'character') {
-				if (target.characterId === player.data.id) {
+		getTarget: (actionTarget) => {
+			if (actionTarget.type === 'character') {
+				if (actionTarget.characterId === player.data.id) {
 					return player.appearance;
-				} else if (target.characterId === character.data.id) {
+				} else if (actionTarget.characterId === character.data.id) {
 					return character.appearance;
 				}
 			}
-			if (target.type === 'roomInventory') {
+			if (actionTarget.type === 'roomInventory') {
 				return isInRoom ? (room?.inventory ?? null) : null;
 			}
 			return null;
 		},
 	}), [character, player, roomContext, isInRoom, room]);
 
+	const target = useMemo<RoomTargetSelector>(() => ({
+		type: 'character',
+		characterId: character.data.id,
+	}), [character]);
+
 	const context = useMemo<WardrobeContext>(() => ({
 		character,
 		player,
 		room,
-		target: {
-			type: 'character',
-			characterId: character.data.id,
-		},
+		target,
 		assetList,
 		extraItemActions,
 		actions,
 		execute: (action) => shardConnector?.sendMessage('appearanceAction', action),
-	}), [character, assetList, actions, player, shardConnector, extraItemActions, room]);
+	}), [character, player, room, target, assetList, extraItemActions, actions, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -439,7 +441,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 				type: 'delete',
 				target,
 				item,
-			} } hideReserveSpace>
+			} }>
 				➖
 			</WardrobeActionButton>
 		);
@@ -539,7 +541,7 @@ export function RoomInventoryView({ title, container }: {
 				item,
 				target: { type: 'roomInventory' },
 				container: [],
-			} } hideReserveSpace>
+			} }>
 				▷
 			</WardrobeActionButton>
 		);
@@ -629,7 +631,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					target: inventoryTarget,
 					item,
 					shift: 1,
-				} } hideReserveSpace>
+				} } autohide hideReserveSpace>
 					▼
 				</WardrobeActionButton>
 				<WardrobeActionButton action={ {
@@ -637,14 +639,14 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					target: inventoryTarget,
 					item,
 					shift: -1,
-				} } hideReserveSpace>
+				} } autohide hideReserveSpace>
 					▲
 				</WardrobeActionButton>
 				<WardrobeActionButton action={ {
 					type: 'delete',
 					target: inventoryTarget,
 					item,
-				} } hideReserveSpace>
+				} }>
 					➖
 				</WardrobeActionButton>
 				<WardrobeActionButton action={ {
@@ -653,7 +655,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					item,
 					target,
 					container: characterContainer,
-				} } hideReserveSpace>
+				} }>
 					◁
 				</WardrobeActionButton>
 			</div>
@@ -698,21 +700,34 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 		: RenderAppearanceActionResult(assetManager, check)
 	), [assetManager, check]);
 
+	const isInvalidAction = check.result === 'invalidAction' ||
+		check.result === 'restrictionError' && check.restriction.type === 'invalid' ||
+		check.result === 'validationError' && check.validationError.problem === 'invalid';
+
 	if (check.result === 'success') {
 		return null;
 	}
 
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
-			This action isn't possible, because:
-			<br />
-			{ reason }
+			{
+				isInvalidAction ? (
+					<>
+						This action isn't possible.
+					</>
+				) : (
+					<>
+						This action isn't possible, because:<br />
+						{ reason }
+					</>
+				)
+			}
 		</HoverElement>
 	);
 }
 
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
-	const { actions, target, execute } = useWardrobeContext();
+	const { target, execute } = useWardrobeContext();
 
 	const action: AppearanceAction = useMemo(() => ({
 		type: 'create',
@@ -722,7 +737,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 		container,
 	}), [target, asset, container]);
 
-	const check = useStaggeredAppearanceActionResult(action, actions, true);
+	const check = useStaggeredAppearanceActionResult(action, true);
 
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	return (
@@ -862,7 +877,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 								target,
 								item,
 								shift: 1,
-							} } hideReserveSpace>
+							} } autohide hideReserveSpace>
 								▼
 							</WardrobeActionButton>
 							<WardrobeActionButton action={ {
@@ -870,7 +885,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 								target,
 								item,
 								shift: -1,
-							} } hideReserveSpace>
+							} } autohide hideReserveSpace>
 								▲
 							</WardrobeActionButton>
 						</>
@@ -916,52 +931,76 @@ function CalculateInQueue(fn: () => void, lowPriority = false): () => void {
 	};
 }
 
-function useStaggeredAppearanceActionResult(action: AppearanceAction, context: AppearanceActionContext, lowPriority = false): AppearanceActionResult | null {
+function useStaggeredAppearanceActionResult(action: AppearanceAction, lowPriority = false): AppearanceActionResult | null {
 	const assetManager = useAssetManager();
+	const { actions, player, character, room } = useWardrobeContext();
 	const [result, setResult] = useState<AppearanceActionResult | null>(null);
 
 	const resultAction = useRef<AppearanceAction | null>(null);
 	const resultContext = useRef<AppearanceActionContext | null>(null);
 
 	const wantedAction = useRef(action);
-	const wantedContext = useRef(context);
+	const wantedContext = useRef(actions);
 
 	wantedAction.current = action;
-	wantedContext.current = context;
+	wantedContext.current = actions;
 
 	useEffect(() => {
-		return CalculateInQueue(() => {
-			if (wantedAction.current === action && wantedContext.current === context) {
-				const check = DoAppearanceAction(action, context, assetManager, { dryRun: true });
-				resultAction.current = action;
-				resultContext.current = context;
-				setResult(check);
-			}
-		}, lowPriority);
-	}, [action, context, assetManager, lowPriority]);
+		let cancelCalculate: (() => void) | undefined;
 
-	return (resultAction.current === action && resultContext.current === context) ? result : null;
+		const doCalculate = () => {
+			cancelCalculate?.();
+			cancelCalculate = CalculateInQueue(() => {
+				if (wantedAction.current === action && wantedContext.current === actions) {
+					const check = DoAppearanceAction(action, actions, assetManager, { dryRun: true });
+					resultAction.current = action;
+					resultContext.current = actions;
+					setResult(check);
+				}
+			}, lowPriority);
+		};
+
+		const cleanup = [
+			player.on('appearanceUpdate', doCalculate),
+			character.on('appearanceUpdate', doCalculate),
+			room?.on('roomInventoryChange', doCalculate),
+			() => cancelCalculate?.(),
+		];
+
+		doCalculate();
+
+		return () => {
+			cleanup.forEach((c) => c?.());
+		};
+	}, [action, actions, assetManager, character, lowPriority, player, room]);
+
+	const valid = lowPriority ? (resultAction.current === action && resultContext.current === actions) :
+		(resultAction.current?.type === action.type);
+
+	return valid ? result : null;
 }
-
 function WardrobeActionButton({
 	id,
 	className,
 	children,
 	action,
+	autohide = false,
 	hideReserveSpace = false,
 	showActionBlockedExplanation = true,
 	onExecute,
 }: CommonProps & {
 	action: AppearanceAction;
+	/** If the button should hide on certain invalid states */
+	autohide?: boolean;
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
 	showActionBlockedExplanation?: boolean;
 	onExecute?: () => void;
 }): ReactElement {
-	const { actions, execute } = useWardrobeContext();
+	const { execute } = useWardrobeContext();
 
-	const check = useStaggeredAppearanceActionResult(action, actions);
-	const hide = check != null && AppearanceActionResultShouldHide(check);
+	const check = useStaggeredAppearanceActionResult(action);
+	const hide = check != null && autohide && AppearanceActionResultShouldHide(check);
 	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
 
 	return (

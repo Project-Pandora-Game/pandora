@@ -944,6 +944,9 @@ function useStaggeredAppearanceActionResult(action: AppearanceAction, context: A
 	const assetManager = useAssetManager();
 	const [result, setResult] = useState<AppearanceActionResult | null>(null);
 
+	const resultAction = useRef<AppearanceAction | null>(null);
+	const resultContext = useRef<AppearanceActionContext | null>(null);
+
 	const wantedAction = useRef(action);
 	const wantedContext = useRef(context);
 
@@ -954,14 +957,18 @@ function useStaggeredAppearanceActionResult(action: AppearanceAction, context: A
 		return CalculateInQueue(() => {
 			if (wantedAction.current === action && wantedContext.current === context) {
 				const check = DoAppearanceAction(action, context, assetManager, { dryRun: true });
+				resultAction.current = action;
+				resultContext.current = context;
 				setResult(check);
 			}
 		}, lowPriority);
 	}, [action, context, assetManager, lowPriority]);
 
-	return result;
-}
+	const valid = lowPriority ? (resultAction.current === action && resultContext.current === context) :
+		(resultAction.current?.type === action.type);
 
+	return valid ? result : null;
+}
 function WardrobeActionButton({
 	id,
 	className,

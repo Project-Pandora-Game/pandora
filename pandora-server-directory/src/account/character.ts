@@ -2,7 +2,7 @@ import { Assert, CharacterId, IDirectoryCharacterConnectionInfo } from 'pandora-
 import type { Account } from './account';
 import type { Shard } from '../shard/shard';
 import type { Room } from '../room/room';
-import type { IConnectionClient } from '../networking/common';
+import type { ClientConnection } from '../networking/connection_client';
 import { GetDatabase, ICharacterSelfInfoDb } from '../database/databaseProvider';
 import { nanoid } from 'nanoid';
 import { ShardManager } from '../shard/shardManager';
@@ -25,7 +25,7 @@ export class Character {
 
 	public assignedShard: Shard | null = null;
 
-	public assignedConnection: IConnectionClient | null = null;
+	public assignedConnection: ClientConnection | null = null;
 
 	public room: Room | null = null;
 

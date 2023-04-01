@@ -1,11 +1,11 @@
 import { CharacterId, DirectoryAccountSettingsSchema, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, IsObject, ACCOUNT_SETTINGS_DEFAULT } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
-import type { IConnectionClient } from '../networking/common';
 import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } from '../config';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
+import type { ClientConnection } from '../networking/connection_client';
 
 import _, { cloneDeep } from 'lodash';
 
@@ -16,7 +16,7 @@ export class Account {
 	/** The account's saved data */
 	public data: Omit<DatabaseAccount, 'secure'>;
 	/** List of connections logged in as this account */
-	public associatedConnections: Set<IConnectionClient> = new Set();
+	public associatedConnections: Set<ClientConnection> = new Set();
 
 	public readonly characters: Map<CharacterId, Character> = new Map();
 

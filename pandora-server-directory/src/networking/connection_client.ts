@@ -2,13 +2,10 @@ import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirec
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
-import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
 
 /** Class housing connection from a client */
-export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> implements IConnectionClient {
-	public readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
-
+export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> {
 	/** The current account this connection is logged in as or `null` if it isn't */
 	private _account: Account | null = null;
 	public get account(): Account | null {
@@ -35,6 +32,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	protected override onDisconnect(reason: string): void {
 		this.logger.debug('Disconnected, reason:', reason);
 		ConnectionManagerClient.onDisconnect(this);
+		super.onDisconnect(reason);
 	}
 
 	/**

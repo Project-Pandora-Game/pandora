@@ -196,7 +196,7 @@ export class Account {
 		}
 		// Update shards
 		for (const character of this.characters.values()) {
-			character.assignedShard?.update('characters');
+			character.onAccountInfoChange();
 		}
 	}
 

@@ -7,7 +7,6 @@ import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/button/button';
 import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
@@ -271,7 +270,6 @@ type ChatRoomEnterResult = IClientDirectoryNormalResult['chatRoomEnter']['result
 
 function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnterResult> {
 	const directoryConnector = useDirectoryConnector();
-	const connectToShard = useConnectToShard();
 	const handleError = useErrorHandler();
 
 	return useCallback(async (id, password) => {
@@ -279,7 +277,6 @@ function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnter
 			RoomJoinProgress.show('progress', 'Joining room...');
 			const result = await directoryConnector.awaitResponse('chatRoomEnter', { id, password });
 			if (result.result === 'ok') {
-				await connectToShard(result);
 				RoomJoinProgress.show('success', 'Room joined!');
 			} else {
 				RoomJoinProgress.show('error', `Failed to join room:\n${ result.result }`);
@@ -292,7 +289,7 @@ function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnter
 			handleError(err);
 			throw err;
 		}
-	}, [directoryConnector, connectToShard, handleError]);
+	}, [directoryConnector, handleError]);
 }
 
 function useRoomList(): IChatRoomListInfo[] | undefined {

@@ -1,4 +1,4 @@
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL } from '../config';
@@ -149,7 +149,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		this.connectedClients.delete(connection);
 		connectedClientsMetric.set(this.connectedClients.size);
 		connection.setAccount(null);
-		connection.setCharacter(null);
 	}
 
 	/**
@@ -191,15 +190,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const account = connection.account;
+		const character = connection.character;
 
 		connection.setAccount(null);
-		connection.character?.disconnect();
-		connection.setCharacter(null);
+		connection.sendConnectionStateUpdate();
 		logger.verbose(`${connection.id} logged out`);
 
 		if (invalidateToken) {
 			await account.secure.invalidateLoginToken(invalidateToken);
 		}
+		await character?.disconnect();
 	}
 
 	private async handleRegister({ username, email, passwordSha512, betaKey }: IClientDirectoryArgument['register'], connection: ClientConnection): IClientDirectoryPromiseResult['register'] {
@@ -275,19 +275,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!char)
 			return { result: 'maxCharactersReached' };
 
-		const result = await char.connect();
+		const result = await char.connect(connection);
 
-		if (typeof result === 'string') {
-			connection.setCharacter(null);
-			return { result };
-		}
-
-		connection.setCharacter(char);
-		return ({
-			...result,
-			characterId: char.id,
-			result: 'ok',
-		});
+		return { result };
 	}
 
 	private async handleUpdateCharacter(arg: IClientDirectoryArgument['updateCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['updateCharacter'] {
@@ -313,34 +303,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleConnectCharacter({ id }: IClientDirectoryArgument['connectCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['connectCharacter'] {
-		// TODO: move character, allow connecting to an already connected character
 		if (!connection.isLoggedIn() || !connection.account.hasCharacter(id))
 			throw new BadMessageError();
 
 		const char = connection.account.characters.get(id);
-		if (!char) {
-			throw new Error('Assertion failed');
-		}
+		AssertNotNullable(char);
 
-		const result = await char.connect();
+		const result = await char.connect(connection);
 
-		if (typeof result === 'string') {
-			connection.setCharacter(null);
-			return { result };
-		}
-
-		connection.setCharacter(char);
-		return ({
-			...result,
-			result: 'ok',
-		});
+		return { result };
 	}
 
-	private handleDisconnectCharacter(_: IClientDirectoryArgument['disconnectCharacter'], connection: ClientConnection): void {
+	private async handleDisconnectCharacter(_: IClientDirectoryArgument['disconnectCharacter'], connection: ClientConnection): Promise<void> {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		connection.character?.disconnect();
+		await connection.character?.disconnect();
 		connection.setCharacter(null);
 		connection.sendConnectionStateUpdate();
 	}
@@ -387,28 +365,24 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character || !IsIChatRoomDirectoryConfig(roomConfig))
 			throw new BadMessageError();
 
+		const character = connection.character;
+
 		const room = await RoomManager.createRoom(roomConfig, [connection.account.id]);
 
 		if (typeof room === 'string') {
 			return { result: room };
 		}
 
-		const result = await connection.character.connectToShard({ room, refreshSecret: false });
+		const result = await character.joinRoom(room, true);
 
-		if (typeof result === 'string') {
-			connection.setCharacter(null);
-			return { result };
-		}
-
-		return ({
-			...result,
-			result: 'ok',
-		});
+		return { result };
 	}
 
 	private async handleChatRoomEnter({ id, password }: IClientDirectoryArgument['chatRoomEnter'], connection: ClientConnection): IClientDirectoryPromiseResult['chatRoomEnter'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
+
+		const character = connection.character;
 
 		const room = await RoomManager.loadRoom(id);
 
@@ -416,23 +390,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = room.checkAllowEnter(connection.character, password ?? null);
+		const allowResult = room.checkAllowEnter(character, password ?? null);
 
 		if (allowResult !== 'ok') {
 			return { result: allowResult };
 		}
 
-		const result = await connection.character.connectToShard({ room, refreshSecret: false });
+		const result = await character.joinRoom(room, true);
 
-		if (typeof result === 'string') {
-			connection.setCharacter(null);
-			return { result };
-		}
-
-		return ({
-			...result,
-			result: 'ok',
-		});
+		return { result };
 	}
 
 	private async handleChatRoomUpdate(roomConfig: IClientDirectoryArgument['chatRoomUpdate'], connection: ClientConnection): IClientDirectoryPromiseResult['chatRoomUpdate'] {
@@ -452,7 +418,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result };
 	}
 
-	private handleChatRoomAdminAction({ action, targets }: IClientDirectoryArgument['chatRoomAdminAction'], connection: ClientConnection): IClientDirectoryResult['chatRoomAdminAction'] {
+	private async handleChatRoomAdminAction({ action, targets }: IClientDirectoryArgument['chatRoomAdminAction'], connection: ClientConnection): IClientDirectoryPromiseResult['chatRoomAdminAction'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -464,14 +430,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return;
 		}
 
-		connection.character.room.adminAction(connection.character, action, targets);
+		await connection.character.room.adminAction(connection.character, action, targets);
 	}
 
-	private handleChatRoomLeave(_: IClientDirectoryArgument['chatRoomLeave'], connection: ClientConnection): void {
+	private async handleChatRoomLeave(_: IClientDirectoryArgument['chatRoomLeave'], connection: ClientConnection): Promise<void> {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		connection.character.room?.removeCharacter(connection.character, 'leave', connection.character);
+		await connection.character.leaveRoom();
 	}
 
 	private async handleChatRoomOwnershipRemove({ id }: IClientDirectoryArgument['chatRoomOwnershipRemove'], connection: ClientConnection): IClientDirectoryPromiseResult['chatRoomOwnershipRemove'] {

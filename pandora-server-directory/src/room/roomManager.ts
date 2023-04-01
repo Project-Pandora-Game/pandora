@@ -166,7 +166,7 @@ class RoomManagerClass {
 	 */
 	public async destroyRoom(room: Room): Promise<void> {
 		await GetDatabase().deleteChatRoom(room.id);
-		room.onDestroy();
+		await room.onDestroy();
 		this._unloadRoom(room);
 		logger.verbose(`Destroyed room ${room.id}`);
 

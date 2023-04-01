@@ -17,7 +17,11 @@ export class Room {
 	private readonly config: IChatRoomDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
 
-	public assignedShard: Shard | null = null;
+	private _assignedShard: Shard | null = null;
+	public get assignedShard(): Shard | null {
+		return this._assignedShard;
+	}
+
 	public accessId: string = '';
 
 	public get name(): string {
@@ -49,8 +53,8 @@ export class Room {
 		this.lastActivity = Date.now();
 	}
 
-	public isInUse(): this is { assignedShard: Shard; } {
-		return this.assignedShard != null;
+	public isInUse(): boolean {
+		return this._assignedShard != null;
 	}
 
 	/** Map of character ids to account id */
@@ -121,7 +125,7 @@ export class Room {
 			await RoomManager.destroyRoom(this);
 		} else {
 			// Room with remaining owners only propagates the change to shard and clients
-			this.assignedShard?.update('rooms');
+			this._assignedShard?.update('rooms');
 			// TODO: Make an announcement of the change
 
 			await GetDatabase().updateChatRoom(this.id, { owners: Array.from(this._owners) }, null);
@@ -146,7 +150,7 @@ export class Room {
 		}
 		if (changes.banned) {
 			this.config.banned = uniq(changes.banned);
-			this.removeBannedCharacters(source);
+			await this.removeBannedCharacters(source);
 		}
 		if (changes.public !== undefined) {
 			this.config.public = changes.public;
@@ -183,7 +187,7 @@ export class Room {
 			this.sendUpdatedMessage(source, ...changeList);
 		}
 
-		this.assignedShard?.update('rooms');
+		this._assignedShard?.update('rooms');
 
 		await GetDatabase().updateChatRoom(this.id, { config: this.config }, null);
 
@@ -218,7 +222,7 @@ export class Room {
 		}
 	}
 
-	public adminAction(source: Character, action: IClientDirectoryArgument['chatRoomAdminAction']['action'], targets: number[]) {
+	public async adminAction(source: Character, action: IClientDirectoryArgument['chatRoomAdminAction']['action'], targets: number[]): Promise<void> {
 		targets = uniq(targets);
 		let updated = false;
 		switch (action) {
@@ -228,7 +232,7 @@ export class Room {
 						continue;
 
 					updated = true;
-					this.removeCharacter(character, 'kick', source);
+					await this.removeCharacter(character, 'kick', source);
 				}
 				break;
 			case 'ban': {
@@ -236,7 +240,7 @@ export class Room {
 				this.config.banned = uniq([...this.config.banned, ...targets]);
 				updated = oldSize !== this.config.banned.length;
 				if (updated) {
-					this.removeBannedCharacters(source);
+					await this.removeBannedCharacters(source);
 					this.sendUpdatedMessage(source, 'ban list');
 				}
 				break;
@@ -272,17 +276,17 @@ export class Room {
 				AssertNever(action);
 		}
 		if (updated) {
-			this.assignedShard?.update('rooms');
+			this._assignedShard?.update('rooms');
 			ConnectionManagerClient.onRoomListChange();
 		}
 	}
 
-	public onDestroy(): void {
+	public async onDestroy(): Promise<void> {
 		for (const character of Array.from(this._characters.values())) {
-			this.removeCharacter(character, 'destroy', null);
+			await this.removeCharacter(character, 'destroy', null);
 		}
-		this.disconnect();
-		Assert(this.assignedShard == null);
+		await this.disconnect();
+		Assert(this._assignedShard == null);
 		Assert(this._characters.size === 0);
 		this.logger.verbose('Destroyed');
 	}
@@ -385,11 +389,11 @@ export class Room {
 			});
 		}
 
-		this.assignedShard?.update('characters');
+		this._assignedShard?.update('characters');
 		ConnectionManagerClient.onRoomListChange();
 	}
 
-	public removeCharacter(character: Character, reason: IChatRoomLeaveReason, source: Character | null): void {
+	public async removeCharacter(character: Character, reason: IChatRoomLeaveReason, source: Character | null): Promise<void> {
 		if (character.room !== this)
 			return;
 		this.logger.debug(`Character ${character.id} removed (${reason})`);
@@ -425,24 +429,24 @@ export class Room {
 		// If the reason is ban, also actually ban the account and kick any other characters of that account
 		if (reason === 'ban' && !this.config.banned.includes(character.account.id)) {
 			this.config.banned.push(character.account.id);
-			this.removeBannedCharacters(source);
+			await this.removeBannedCharacters(source);
 		}
 
-		this.assignedShard?.update('characters');
-		this.cleanupIfEmpty();
+		this._assignedShard?.update('characters');
+		await this.cleanupIfEmpty();
 		ConnectionManagerClient.onRoomListChange();
 	}
 
-	private removeBannedCharacters(source: Character | null): void {
+	private async removeBannedCharacters(source: Character | null): Promise<void> {
 		for (const character of this._characters.values()) {
 			if (this.isBanned(character.account)) {
-				this.removeCharacter(character, 'ban', source);
+				await this.removeCharacter(character, 'ban', source);
 			}
 		}
 	}
 
-	public disconnect(): void {
-		this.assignedShard?.disconnectRoom(this);
+	public async disconnect(): Promise<void> {
+		await this.setShard(null);
 		// Clear pending action messages when the room gets disconnected (this is not triggered on simple reassignment)
 		this.pendingMessages.length = 0;
 	}
@@ -456,7 +460,7 @@ export class Room {
 	}
 
 	public async connect(): Promise<'noShardFound' | 'failed' | Shard> {
-		let shard: Shard | null = this.assignedShard;
+		let shard: Shard | null = this._assignedShard;
 		if (!shard) {
 			if (this.config.features.includes('development') && this.config.development?.shardId) {
 				shard = ShardManager.getShard(this.config.development.shardId);
@@ -466,18 +470,26 @@ export class Room {
 		}
 		// If there is still no shard found, then we disconnect
 		if (!shard) {
-			this.disconnect();
+			await this.disconnect();
 			return 'noShardFound';
 		}
 		return await this._connectToShard(shard);
 	}
 
-	protected async _connectToShard(shard: Shard): Promise<'failed' | Shard> {
+	public async shardReconnect(shard: Shard, accessId: string): Promise<void> {
+		if (this.isInUse() || (this.accessId && this.accessId !== accessId))
+			return;
+
+		this.accessId = accessId;
+		await this.setShard(shard);
+	}
+
+	private async _connectToShard(shard: Shard): Promise<'failed' | Shard> {
 		this.touch();
 
 		// If we are on a wrong shard, we leave it
-		if (this.assignedShard !== shard) {
-			this.assignedShard?.disconnectRoom(this);
+		if (this._assignedShard !== shard) {
+			await this.setShard(null);
 
 			// Generate new access id for new shard
 			const accessId = await this.generateAccessId();
@@ -490,17 +502,54 @@ export class Room {
 			return 'failed';
 		}
 
-		if (this.assignedShard !== shard) {
-			shard.connectRoom(this);
+		if (this._assignedShard !== shard) {
+			await this.setShard(shard);
 		}
 
-		AssertNotNullable(this.assignedShard);
-		return this.assignedShard;
+		AssertNotNullable(this._assignedShard);
+		return this._assignedShard;
 	}
 
-	public cleanupIfEmpty() {
+	private async setShard(shard: Shard | null): Promise<void> {
+		if (this._assignedShard === shard)
+			return;
+		if (this._assignedShard) {
+			Assert(this._assignedShard.rooms.get(this.id) === this);
+
+			// Disconnect all characters that are in this room, too
+			for (const character of this.characters.values()) {
+				await character.setShard(null);
+			}
+
+			this._assignedShard.rooms.delete(this.id);
+			this._assignedShard.update('rooms');
+
+			this._assignedShard = null;
+
+			this.logger.debug('Disconnected from shard');
+		}
+		if (shard) {
+			Assert(this._assignedShard === null);
+			Assert(shard.allowConnect(), 'Connecting to shard that doesn\'t allow connections');
+
+			this._assignedShard = shard;
+
+			shard.rooms.set(this.id, this);
+			shard.update('rooms');
+
+			// Reconnect all characters that are in this room, too
+			for (const character of this.characters.values()) {
+				await character.setShard(shard);
+			}
+
+			this.logger.debug('Connected to shard', shard.id);
+		}
+		ConnectionManagerClient.onRoomListChange();
+	}
+
+	public async cleanupIfEmpty(): Promise<void> {
 		if (this._characters.size === 0) {
-			this.disconnect();
+			await this.disconnect();
 		}
 	}
 
@@ -524,6 +573,6 @@ export class Room {
 			}),
 		);
 		this.pendingMessages.push(...processedMessages);
-		this.assignedShard?.update('messages');
+		this._assignedShard?.update('messages');
 	}
 }

@@ -176,7 +176,7 @@ describe('ClientConnection', () => {
 			await account.deleteCharacter(character2.id);
 		});
 
-		it('Takes character over', async () => {
+		it('Fails when character is in use', async () => {
 			const account = await TestMockAccount();
 			const character = await TestMockCharacter(account);
 			const client = new ClientConnection(server, connection.connect(), {});
@@ -193,21 +193,16 @@ describe('ClientConnection', () => {
 			expect(character.assignedConnection).toBe(client);
 			expect(connectionOnMessage).not.toHaveBeenCalled();
 
-			// Set to second connection
-			client2.setCharacter(character);
-			expect(client.character).toBe(null);
-			expect(client2.character).toBe(character);
-			expect(character.assignedConnection).toBe(client2);
-
-			// Also notifies other client that character was taken away
-			expect(connectionOnMessage).toHaveBeenCalledTimes(1);
-			expect(connectionOnMessage).toHaveBeenNthCalledWith(1, 'connectionState', {
-				account: account.getAccountInfo(),
-				character: null,
-			}, connection);
+			// Fails to set the second connection
+			expect(() => {
+				client2.setCharacter(character);
+			}).toThrow();
+			expect(client.character).toBe(character);
+			expect(client2.character).toBe(null);
+			expect(character.assignedConnection).toBe(client);
 
 			// Cleanup
-			client2.setCharacter(null);
+			client.setCharacter(null);
 			await account.deleteCharacter(character.id);
 		});
 

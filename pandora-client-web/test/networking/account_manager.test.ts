@@ -1,5 +1,5 @@
 import { RenderHookResult } from '@testing-library/react';
-import { EMPTY, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import { EMPTY } from 'pandora-common';
 import {
 	RegisterResponse,
 	useConnectToCharacter,
@@ -12,7 +12,7 @@ import {
 	useLogout,
 } from '../../src/networking/account_manager';
 import { MockDirectoryConnector } from '../mocks/networking/mockDirectoryConnector';
-import { MockConnectionInfo, MockShardConnector } from '../mocks/networking/mockShardConnector';
+import { MockShardConnector } from '../mocks/networking/mockShardConnector';
 import { ProvidersProps, RenderHookWithProviders } from '../testUtils';
 
 describe('Account Manager', () => {
@@ -81,16 +81,14 @@ describe('Account Manager', () => {
 			expect(await result.current()).toBe(false);
 		});
 
-		it('should create a new character successfully and connect to the given shard', async () => {
-			const connectionInfo = { ...MockConnectionInfo({ id: 'useCreateNewCharacter' }), result: 'ok' };
-			directoryConnector.awaitResponse.mockResolvedValue(connectionInfo);
+		it('should create a new character successfully', async () => {
+			directoryConnector.awaitResponse.mockResolvedValue({ result: 'ok' });
 			const { result } = renderHookWithTestProviders(useCreateNewCharacter, { setShardConnector });
 
 			const success = await result.current();
 			expect(success).toBe(true);
 			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
 			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('createCharacter', EMPTY);
-			expectNewShardConnection(connectionInfo);
 		});
 	});
 
@@ -103,16 +101,14 @@ describe('Account Manager', () => {
 			expect(await result.current(characterId)).toBe(false);
 		});
 
-		it('should connect to the given character successfully and connect to the provided shard', async () => {
-			const connectionInfo = { ...MockConnectionInfo({ characterId }), result: 'ok' };
-			directoryConnector.awaitResponse.mockResolvedValue(connectionInfo);
+		it('should connect to the given character successfully', async () => {
+			directoryConnector.awaitResponse.mockResolvedValue({ result: 'ok' });
 			const { result } = renderHookWithTestProviders(useConnectToCharacter);
 
 			const success = await result.current(characterId);
 			expect(success).toBe(true);
 			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
 			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('connectCharacter', { id: characterId });
-			expectNewShardConnection(connectionInfo);
 		});
 	});
 
@@ -227,17 +223,4 @@ describe('Account Manager', () => {
 		const props = { directoryConnector, shardConnector, setShardConnector, ...providerPropOverrides };
 		return RenderHookWithProviders(hook, props);
 	}
-
-	function expectNewShardConnection(connectionInfo: IDirectoryCharacterConnectionInfo): void {
-		expect(directoryConnector.setShardConnectionInfo).toHaveBeenCalledTimes(1);
-		expect(directoryConnector.setShardConnectionInfo).toHaveBeenCalledWith(connectionInfo);
-		expect(setShardConnector).toHaveBeenCalledTimes(2);
-		const setShardConnectorCalls = setShardConnector.mock.calls;
-		expect(setShardConnectorCalls).toEqual([[null], [expect.any(MockShardConnector)]]);
-		const newShardConnector = (setShardConnectorCalls[1] as [MockShardConnector])[0];
-		expect(newShardConnector).not.toBe(shardConnector);
-		expect(newShardConnector.connectionInfo.value).toBe(connectionInfo);
-		expect(newShardConnector.connect).toHaveBeenCalledTimes(1);
-	}
 });
-

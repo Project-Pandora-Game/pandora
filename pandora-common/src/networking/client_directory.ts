@@ -1,5 +1,5 @@
 import type { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
-import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryCharacterConnectionInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
+import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterIdSchema, ICharacterSelfInfo } from '../character';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomIdSchema } from '../chatroom/room';
 import { ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
@@ -11,12 +11,6 @@ import { Satisfies } from '../utility';
 import type { } from '../account/accountRoles';
 
 type ShardError = 'noShardFound' | 'failed';
-
-type ShardConnection<T = ShardError> = {
-	result: T;
-} | ({
-	result: 'ok';
-} & IDirectoryCharacterConnectionInfo);
 
 export const ClientDirectoryAuthMessageSchema = z.object({
 	username: UserNameSchema,
@@ -151,7 +145,7 @@ export const ClientDirectorySchema = {
 	},
 	createCharacter: {
 		request: z.object({}),
-		response: ZodCast<ShardConnection<ShardError | 'maxCharactersReached'>>(),
+		response: ZodCast<{ result: 'ok' | 'maxCharactersReached' | ShardError; }>(),
 	},
 	updateCharacter: {
 		request: z.object({
@@ -173,7 +167,7 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			id: CharacterIdSchema,
 		}),
-		response: ZodCast<ShardConnection>(),
+		response: ZodCast<{ result: 'ok' | ShardError; }>(),
 	},
 	disconnectCharacter: {
 		request: z.object({}),
@@ -195,14 +189,14 @@ export const ClientDirectorySchema = {
 	},
 	chatRoomCreate: {
 		request: ChatRoomDirectoryConfigSchema,
-		response: ZodCast<ShardConnection<ShardError | 'roomOwnershipLimitReached'>>(),
+		response: ZodCast<{ result: 'ok' | 'roomOwnershipLimitReached' | ShardError; }>(),
 	},
 	chatRoomEnter: {
 		request: z.object({
 			id: RoomIdSchema,
 			password: z.string().optional(),
 		}),
-		response: ZodCast<ShardConnection<'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'>>(),
+		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'; }>(),
 	},
 	chatRoomLeave: {
 		request: z.object({}),

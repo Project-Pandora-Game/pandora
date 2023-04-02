@@ -632,8 +632,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		switch (action) {
 			case 'initiate': {
-				const success = await connection.account.relationship.initiateFriendRequest(id);
-				return { result: success ? 'ok' : 'accountNotFound' };
+				const result = await connection.account.relationship.initiateFriendRequest(id);
+				return { result };
 			}
 			case 'accept': {
 				const success = await connection.account.relationship.acceptFriendRequest(id);

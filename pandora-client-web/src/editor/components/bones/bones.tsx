@@ -1,4 +1,4 @@
-import { AppearanceArmPose, ArmsPose, CharacterArmsPose, CharacterView } from 'pandora-common';
+import { AppearanceArmPose, CharacterArmsPose, CharacterView } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
@@ -168,7 +168,7 @@ function PoseExportGui({ character }: { character: EditorCharacter; }) {
 }
 
 function AppearanceArmPoseToString({ position }: Readonly<AppearanceArmPose>): string {
-	return `{ position: ArmsPose.${ArmsPose[position]} }`;
+	return `{ position: '${position}' }`;
 }
 
 function CharacterArmsPoseToString({ leftArm, rightArm }: CharacterArmsPose): string {

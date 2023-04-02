@@ -23,6 +23,9 @@ export const CharacterSize = {
 	HEIGHT: 1500,
 } as const;
 
+export const ArmPoseSchema = z.enum(['front', 'back']);
+export type ArmPose = z.infer<typeof ArmPoseSchema>;
+
 export const ArmRotationSchema = z.enum(['up', 'down', 'forward', 'backward']);
 export type ArmRotation = z.infer<typeof ArmRotationSchema>;
 

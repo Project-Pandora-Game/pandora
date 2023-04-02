@@ -10,16 +10,11 @@ import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } fro
 import { AppearanceItemProperties, AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId, PartialAppearancePose } from './definitions';
-import { ArmFingersSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
 import { Item, ItemBundleSchema } from './item';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
-
-export enum ArmsPose {
-	FRONT,
-	BACK,
-}
 
 export enum CharacterView {
 	FRONT,
@@ -35,7 +30,7 @@ export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
 export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
 export const AppearanceArmPoseSchema = z.object({
-	position: z.nativeEnum(ArmsPose).default(ArmsPose.FRONT),
+	position: ArmPoseSchema.default('front'),
 	rotation: ArmRotationSchema.default('up'),
 	fingers: ArmFingersSchema.default('spread'),
 });
@@ -61,12 +56,12 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 		items: [],
 		bones: {},
 		leftArm: {
-			position: ArmsPose.FRONT,
+			position: 'front',
 			rotation: 'forward',
 			fingers: 'spread',
 		},
 		rightArm: {
-			position: ArmsPose.FRONT,
+			position: 'front',
 			rotation: 'forward',
 			fingers: 'spread',
 		},

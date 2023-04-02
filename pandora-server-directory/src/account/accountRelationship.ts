@@ -30,6 +30,22 @@ export class AccountRelationship {
 			.map(CastMutualToSimple);
 	}
 
+	public async canReceiveDM(from: Account): Promise<boolean> {
+		await this.load();
+		const rel = this.get(from.id);
+		if (rel?.type.startsWith('block') ?? false) {
+			return false;
+		}
+		if (this.account.data.settings.allowDirectMessagesFrom === 'all') {
+			return true;
+		}
+		if (rel?.type === 'friend') {
+			return true;
+		}
+		// TODO: check if same room
+		return false;
+	}
+
 	@Synchronized()
 	public async initiateFriendRequest(id: AccountId): Promise<'ok' | 'accountNotFound' | 'blocked' | 'requestAlreadyExists'> {
 		const existing = this.get(id);

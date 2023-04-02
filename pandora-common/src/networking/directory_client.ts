@@ -4,7 +4,7 @@ import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
 import { Satisfies } from '../utility';
 import { HexColorStringSchema, ZodCast } from '../validation';
-import type { IDirectoryFriendStatus, IDirectoryRelationships } from './client_directory';
+import type { IAccountRelationship, IAccountFriendStatus } from './client_directory';
 import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
 export type IDirectoryStatus = {
@@ -147,17 +147,11 @@ export const DirectoryClientSchema = {
 		response: null,
 	},
 	friendStatus: {
-		request: ZodCast<{
-			id: AccountId;
-			status: IDirectoryFriendStatus;
-		}>(),
+		request: ZodCast<IAccountFriendStatus>(),
 		response: null,
 	},
 	relationshipsUpdate: {
-		request: ZodCast<{
-			changed: Partial<IDirectoryRelationships>,
-			removed: Partial<Record<keyof IDirectoryRelationships, AccountId[]>>,
-		}>(),
+		request: ZodCast<IAccountRelationship | { id: AccountId; }>(),
 		response: null,
 	},
 };

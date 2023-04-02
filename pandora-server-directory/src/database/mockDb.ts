@@ -23,6 +23,7 @@ export class MockDatabase implements PandoraDatabase {
 	private chatroomDb: Map<RoomId, IChatRoomData> = new Map();
 	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
 	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
+	private relationshipDb: DatabaseRelationship[] = [];
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 	private get accountDbView(): DatabaseAccountWithSecure[] {
@@ -364,6 +365,32 @@ export class MockDatabase implements PandoraDatabase {
 
 		_.assign(char, _.cloneDeep(data));
 		return Promise.resolve(true);
+	}
+
+	public getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {
+		return Promise.resolve(this.relationshipDb
+			.filter((rel) => rel.accountIdA === accountId || rel.accountIdB === accountId)
+			.map((rel) => _.cloneDeep(rel)));
+	}
+
+	public setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: Omit<DatabaseRelationship, 'accountIdA' | 'accountIdB' | 'updated'>): Promise<DatabaseRelationship> {
+		const newData = { ..._.cloneDeep(data), accountIdA, accountIdB, updated: Date.now() };
+		const index = this.relationshipDb.findIndex((rel) => rel.accountIdA === accountIdA && rel.accountIdB === accountIdB);
+		if (index < 0) {
+			this.relationshipDb.push(newData);
+		} else {
+			this.relationshipDb[index] = newData;
+		}
+		return Promise.resolve(_.cloneDeep(newData));
+	}
+
+	public removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
+		const index = this.relationshipDb.findIndex((rel) => rel.accountIdA === accountIdA && rel.accountIdB === accountIdB);
+		if (index < 0)
+			return Promise.resolve();
+
+		this.relationshipDb.splice(index, 1);
+		return Promise.resolve();
 	}
 
 	public getConfig<T extends DatabaseConfigType>(type: T): Promise<null | DatabaseConfigData<T>> {

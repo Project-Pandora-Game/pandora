@@ -43,7 +43,7 @@ export type LayerStateOverrideGetter = (layer: AssetGraphicsLayer) => LayerState
 export type LayerGetSortOrder = (view: CharacterView) => readonly ComputedLayerPriority[];
 
 const GetSortOrderDefault: LayerGetSortOrder = (view) => {
-	const reverse = view === CharacterView.BACK;
+	const reverse = view === 'back';
 	return reverse ? COMPUTED_LAYER_ORDERING.slice().reverse() : COMPUTED_LAYER_ORDERING;
 };
 
@@ -153,7 +153,7 @@ function GraphicsCharacterWithManagerImpl({
 		for (const layerState of layers) {
 			const priority = priorities.get(layerState);
 			AssertNotNullable(priority);
-			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === CharacterView.BACK);
+			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === 'back');
 			const lowerLayer = result.get(priority);
 			// eslint-disable-next-line @typescript-eslint/naming-convention
 			const LayerElement = Layer ?? GraphicsLayer;
@@ -175,7 +175,7 @@ function GraphicsCharacterWithManagerImpl({
 		return result;
 	}, [Layer, appearanceContainer, layers, priorities, view]);
 
-	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === CharacterView.BACK ? -1 : 1, y: 1 }), [view, scaleExtra]);
+	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
 
 	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => getSortOrder(view), [getSortOrder, view]);
 

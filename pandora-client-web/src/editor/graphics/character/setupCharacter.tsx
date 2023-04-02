@@ -1,5 +1,4 @@
 import { Container } from '@pixi/react';
-import { CharacterView } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { PRIORITY_ORDER_SPRITES } from '../../../graphics/def';
@@ -19,7 +18,7 @@ export function SetupCharacter(): ReactElement {
 
 	return (
 		<GraphicsCharacterEditor Layer={ SetupLayer } getSortOrder={ (view) => {
-			const reverse = view === CharacterView.BACK;
+			const reverse = view === 'back';
 			return reverse ? PRIORITY_ORDER_SPRITES.slice().reverse() : PRIORITY_ORDER_SPRITES;
 		} } >
 			{

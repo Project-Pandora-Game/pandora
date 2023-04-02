@@ -2,7 +2,7 @@ import { Immutable } from 'immer';
 import _ from 'lodash';
 import { ZodEnum } from 'zod';
 import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
-import { AppearanceArmPose, AppearancePose, CharacterView, GetDefaultAppearanceBundle } from './appearance';
+import { AppearanceArmPose, AppearancePose, CharacterViewSchema, GetDefaultAppearanceBundle } from './appearance';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema } from './graphics/graphics';
 
@@ -282,8 +282,7 @@ function FromPose({ bones, leftArm, rightArm, arms, view }: PartialAppearancePos
 	}
 	FromArmPose(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmPose(data, 'rightArm', { ...arms, ...rightArm });
-	if (view != null)
-		data.set('view', view === CharacterView.FRONT ? 0 : 1);
+	EnumToIndex(CharacterViewSchema, view, (index) => data.set('view', index));
 
 	return data;
 }
@@ -310,8 +309,7 @@ function FromLimit({ bones, leftArm, rightArm, arms, view }: Immutable<AssetDefi
 	}
 	FromArmLimit(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmLimit(data, 'rightArm', { ...arms, ...rightArm });
-	if (view != null)
-		data.set('view', [[view, view]]);
+	EnumToIndex(CharacterViewSchema, view, (index) => data.set('view', [[index, index]]));
 
 	return data;
 }
@@ -334,9 +332,7 @@ function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
 	ToArmPose(data, 'leftArm', pose);
 	ToArmPose(data, 'rightArm', pose);
 
-	const view = data.get('view');
-	if (view != null && CharacterView[view] != null)
-		pose.view = view;
+	IndexToEnum(CharacterViewSchema, data.get('view'), (value) => pose.view = value);
 
 	for (const [key, value] of data) {
 		if (!key.startsWith('bones.'))

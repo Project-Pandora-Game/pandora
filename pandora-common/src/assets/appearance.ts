@@ -16,10 +16,8 @@ import { Item, ItemBundleSchema } from './item';
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
 
-export enum CharacterView {
-	FRONT,
-	BACK,
-}
+export const CharacterViewSchema = z.enum(['front', 'back']);
+export type CharacterView = z.infer<typeof CharacterViewSchema>;
 
 export const SafemodeDataSchema = z.object({
 	allowLeaveAt: z.number(),
@@ -40,7 +38,7 @@ export const AppearancePoseSchema = z.object({
 	bones: z.record(BoneNameSchema, z.number().optional()),
 	leftArm: AppearanceArmPoseSchema,
 	rightArm: AppearanceArmPoseSchema,
-	view: z.nativeEnum(CharacterView),
+	view: CharacterViewSchema.default('front'),
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
 
@@ -65,7 +63,7 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 			rotation: 'forward',
 			fingers: 'spread',
 		},
-		view: CharacterView.FRONT,
+		view: 'front',
 	};
 }
 

@@ -1,4 +1,4 @@
-import { AppearanceArmPose, CharacterArmsPose, CharacterView } from 'pandora-common';
+import { AppearanceArmPose, CharacterArmsPose } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
@@ -48,9 +48,9 @@ export function BoneUI(): ReactElement {
 				<input
 					id='back-view-toggle'
 					type='checkbox'
-					checked={ view === CharacterView.BACK }
+					checked={ view === 'back' }
 					onChange={ (e) => {
-						character.appearance.setView(e.target.checked ? CharacterView.BACK : CharacterView.FRONT);
+						character.appearance.setView(e.target.checked ? 'back' : 'front');
 					} }
 				/>
 			</div>

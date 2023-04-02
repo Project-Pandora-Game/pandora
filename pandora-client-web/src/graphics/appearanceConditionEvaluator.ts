@@ -128,7 +128,7 @@ export class AppearanceConditionEvaluator {
 
 	public getBoneLikeValue(name: string): number {
 		if (name === 'backView') {
-			return this.view === CharacterView.BACK ? 1 : 0;
+			return this.view === 'back' ? 1 : 0;
 		}
 		return this.getBone(name).rotation;
 	}

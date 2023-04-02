@@ -1,4 +1,4 @@
-import { ArmsPose, CharacterArmsPose, Item, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
+import { CharacterArmsPose, Item, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 
 export type LayerStateOverrides = {
@@ -87,7 +87,7 @@ export function ComputeLayerPriority(priority: LayerPriority, { leftArm, rightAr
 		return priority as ComputedLayerPriority;
 	}
 	const { position } = mirror ? rightArm : leftArm;
-	if (position === ArmsPose.FRONT) {
+	if (position === 'front') {
 		return `${priority}_FRONT` as ComputedLayerPriority;
 	} else {
 		return `${priority}_BACK` as ComputedLayerPriority;

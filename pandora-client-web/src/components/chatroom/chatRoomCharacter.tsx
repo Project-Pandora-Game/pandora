@@ -1,4 +1,4 @@
-import { CalculateCharacterMaxYForBackground, CharacterSize, CharacterView, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
+import { CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
 import PIXI, { FederatedPointerEvent, Filter, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterAppearanceView } from '../../character/character';
@@ -61,7 +61,7 @@ export function ChatRoomCharacter({
 
 	const scale = baseScale * (1 - (y * scaling) / height);
 
-	const backView = useCharacterAppearanceView(character) === CharacterView.BACK;
+	const backView = useCharacterAppearanceView(character) === 'back';
 
 	const scaleX = backView ? -1 : 1;
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
-import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterView, SAFEMODE_EXIT_COOLDOWN } from './appearance';
+import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterViewSchema, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema } from './definitions';
 import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
@@ -65,7 +65,7 @@ export const AppearanceActionBody = z.object({
 export const AppearanceActionSetView = z.object({
 	type: z.literal('setView'),
 	target: CharacterIdSchema,
-	view: z.nativeEnum(CharacterView),
+	view: CharacterViewSchema,
 });
 
 export const AppearanceActionMove = z.object({

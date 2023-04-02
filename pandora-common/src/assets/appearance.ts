@@ -10,21 +10,14 @@ import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } fro
 import { AppearanceItemProperties, AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId, PartialAppearancePose } from './definitions';
-import { ArmFingersSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
 import { Item, ItemBundleSchema } from './item';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
 
-export enum ArmsPose {
-	FRONT,
-	BACK,
-}
-
-export enum CharacterView {
-	FRONT,
-	BACK,
-}
+export const CharacterViewSchema = z.enum(['front', 'back']);
+export type CharacterView = z.infer<typeof CharacterViewSchema>;
 
 export const SafemodeDataSchema = z.object({
 	allowLeaveAt: z.number(),
@@ -35,9 +28,9 @@ export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
 export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
 export const AppearanceArmPoseSchema = z.object({
-	position: z.nativeEnum(ArmsPose).default(ArmsPose.FRONT),
-	rotation: ArmRotationSchema.default('up'),
-	fingers: ArmFingersSchema.default('spread'),
+	position: ArmPoseSchema.catch('front'),
+	rotation: ArmRotationSchema.catch('up'),
+	fingers: ArmFingersSchema.catch('spread'),
 });
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
@@ -45,7 +38,7 @@ export const AppearancePoseSchema = z.object({
 	bones: z.record(BoneNameSchema, z.number().optional()),
 	leftArm: AppearanceArmPoseSchema,
 	rightArm: AppearanceArmPoseSchema,
-	view: z.nativeEnum(CharacterView),
+	view: CharacterViewSchema.catch('front'),
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
 
@@ -61,16 +54,16 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 		items: [],
 		bones: {},
 		leftArm: {
-			position: ArmsPose.FRONT,
+			position: 'front',
 			rotation: 'forward',
 			fingers: 'spread',
 		},
 		rightArm: {
-			position: ArmsPose.FRONT,
+			position: 'front',
 			rotation: 'forward',
 			fingers: 'spread',
 		},
-		view: CharacterView.FRONT,
+		view: 'front',
 	};
 }
 

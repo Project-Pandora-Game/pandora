@@ -1,7 +1,7 @@
 import { Container, Graphics } from '@pixi/react';
 import classNames from 'classnames';
 import _ from 'lodash';
-import { CharacterSize, CharacterView, GetLogger } from 'pandora-common';
+import { CharacterSize, GetLogger } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CommonProps } from '../../common/reactTypes';
@@ -111,7 +111,7 @@ export function EditorScene({
 			<Button className='slim iconButton'
 				title='Toggle character view'
 				onClick={ () => {
-					character.appearance.setView(character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT);
+					character.appearance.setView(character.appearance.getView() === 'front' ? 'back' : 'front');
 				} }
 			>
 				↷

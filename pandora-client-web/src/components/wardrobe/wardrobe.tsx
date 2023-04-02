@@ -5,7 +5,6 @@ import {
 	AppearanceAction,
 	AppearanceActionContext,
 	AppearanceItems,
-	ArmsPose,
 	AssertNotNullable,
 	Asset,
 	AssetsPosePresets,
@@ -13,7 +12,6 @@ import {
 	BoneState,
 	BONE_MAX,
 	BONE_MIN,
-	CharacterView,
 	DoAppearanceAction,
 	IsCharacterId,
 	IsObject,
@@ -201,7 +199,7 @@ function Wardrobe(): ReactElement | null {
 					shardConnector?.sendMessage('appearanceAction', {
 						type: 'setView',
 						target: character.id,
-						view: character.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT,
+						view: character.appearance.getView() === 'front' ? 'back' : 'front',
 					});
 				} }
 			>
@@ -1479,8 +1477,8 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 			label={ title }
 			arm={ arm }
 			type='position'
-			checked={ ArmsPose.FRONT }
-			unchecked={ ArmsPose.BACK }
+			checked='front'
+			unchecked='back'
 		/>
 	), [armsPose, limits, setPose]);
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -1563,12 +1561,12 @@ export function WardrobePoseGui(): ReactElement {
 					<input
 						id='back-view-toggle'
 						type='checkbox'
-						checked={ view === CharacterView.BACK }
+						checked={ view === 'back' }
 						onChange={ (e) => {
 							execute({
 								type: 'setView',
 								target: character.id,
-								view: e.target.checked ? CharacterView.BACK : CharacterView.FRONT,
+								view: e.target.checked ? 'back' : 'front',
 							});
 						} }
 					/>

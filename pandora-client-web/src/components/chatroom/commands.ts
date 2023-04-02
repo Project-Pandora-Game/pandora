@@ -1,5 +1,5 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, CharacterView, LONGDESC_TOGGLE_MODE } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
 import { CommandSelectorCharacter } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
@@ -145,7 +145,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 					shardConnector.sendMessage('appearanceAction', {
 						type: 'setView',
 						target: target.data.id,
-						view: target.appearance.getView() === CharacterView.FRONT ? CharacterView.BACK : CharacterView.FRONT,
+						view: target.appearance.getView() === 'front' ? 'back' : 'front',
 					});
 					return true;
 				} else {

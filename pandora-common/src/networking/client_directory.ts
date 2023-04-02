@@ -56,16 +56,18 @@ export type IChatRoomExtendedInfoResponse = {
 	data: IChatRoomListExtendedInfo;
 };
 
-export type IDirectoryFriend = {
-	/** Account id of the friend */
+export type IAccountRelationship<ExtraType = never> = {
+	/** Account id of the other account */
 	id: AccountId;
-	/** Account name of the friend */
+	/** Account name of the other account */
 	name: string;
-	/** Time the friend was added */
+	/** Time the relationship was updated */
 	time: number;
+	/** Type of relationship */
+	type: 'friend' | 'pending' | 'incoming' | 'blocked' | ExtraType;
 };
 
-export type IDirectoryFriendStatus = {
+export type IAccountFriendStatus = {
 	/** Account id of the friend */
 	id: AccountId;
 	/** If the friend is online */
@@ -75,15 +77,7 @@ export type IDirectoryFriendStatus = {
 		id: CharacterId;
 		name: string;
 		inRoom?: RoomId;
-	}[],
-};
-
-export type IDirectoryRelationships = {
-	friends: IDirectoryFriend[];
-	friendStatus: IDirectoryFriendStatus[];
-	pending: IDirectoryFriend[];
-	incoming: IDirectoryFriend[];
-	blocked: AccountId[];
+	}[];
 };
 
 /** Client->Directory messages */
@@ -99,7 +93,8 @@ export const ClientDirectorySchema = {
 			result: 'ok';
 			token: { value: string; expires: number; };
 			account: IDirectoryAccountInfo;
-			relationships: IDirectoryRelationships;
+			relationships: IAccountRelationship[];
+			friends: IAccountFriendStatus[];
 		}>(),
 	},
 	register: {
@@ -297,7 +292,7 @@ export const ClientDirectorySchema = {
 			action: z.enum(['initiate', 'accept', 'decline', 'cancel']),
 		}),
 		response: ZodCast<{
-			result: 'ok' | 'accountNotFound' | 'requestNotFound';
+			result: 'ok' | 'accountNotFound' | 'requestNotFound' | 'blocked' | 'requestAlreadyExists';
 		}>(),
 	},
 	unfriend: {

@@ -1,4 +1,4 @@
-import { CharacterId, DirectoryAccountSettingsSchema, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, IsObject, ACCOUNT_SETTINGS_DEFAULT } from 'pandora-common';
+import { CharacterId, DirectoryAccountSettingsSchema, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, IsObject, ACCOUNT_SETTINGS_DEFAULT, AccountId } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } from '../config';
@@ -6,13 +6,14 @@ import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
 import type { ClientConnection } from '../networking/connection_client';
+import { AccountRelationship } from './accountRelationship';
 
 import _, { cloneDeep, omit } from 'lodash';
 
 /** Currently logged in or recently used account */
 export class Account {
 	/** Time when this account was last used */
-	public lastActivity: number;
+	public lastActivity: AccountId;
 	/** The account's saved data */
 	public data: Omit<DatabaseAccount, 'secure' | 'characters'>;
 	/** List of connections logged in as this account */
@@ -23,8 +24,9 @@ export class Account {
 	public readonly secure: AccountSecure;
 	public readonly roles: AccountRoles;
 	public readonly directMessages: AccountDirectMessages;
+	public readonly relationship: AccountRelationship;
 
-	public get id(): number {
+	public get id(): AccountId {
 		return this.data.id;
 	}
 
@@ -41,6 +43,7 @@ export class Account {
 		this.secure = new AccountSecure(this, data.secure);
 		this.roles = new AccountRoles(this, data.roles);
 		this.directMessages = new AccountDirectMessages(this, data.directMessages);
+		this.relationship = new AccountRelationship(this);
 
 		// Init characters
 		for (const characterData of data.characters) {

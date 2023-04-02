@@ -1,4 +1,4 @@
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, IShardTokenConnectInfo } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } from '../config';
@@ -186,13 +186,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 			token: { value: token.value, expires: token.expires },
 			account: account.getAccountInfo(),
-			relationships: {
-				friends: [],
-				friendStatus: [],
-				pending: [],
-				incoming: [],
-				blocked: [],
-			}
+			relationships: await account.relationship.getAll(),
+			friends: [],
 		};
 	}
 
@@ -631,24 +626,54 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	//#endregion Direct Messages
 
-	private async handleFriendRequest(_: IClientDirectoryArgument['friendRequest'], connection: IConnectionClient): IClientDirectoryPromiseResult['friendRequest'] {
+	private async handleFriendRequest({ id, action }: IClientDirectoryArgument['friendRequest'], connection: ClientConnection): IClientDirectoryPromiseResult['friendRequest'] {
 		if (!connection.account)
 			throw new BadMessageError();
 
-		return { result: 'ok' };
+		switch (action) {
+			case 'initiate': {
+				const success = await connection.account.relationship.initiateFriendRequest(id);
+				return { result: success ? 'ok' : 'accountNotFound' };
+			}
+			case 'accept': {
+				const success = await connection.account.relationship.acceptFriendRequest(id);
+				return { result: success ? 'ok' : 'requestNotFound' };
+			}
+			case 'decline': {
+				const success = await connection.account.relationship.declineFriendRequest(id);
+				return { result: success ? 'ok' : 'requestNotFound' };
+			}
+			case 'cancel': {
+				const success = await connection.account.relationship.cancelFriendRequest(id);
+				return { result: success ? 'ok' : 'requestNotFound' };
+			}
+			default:
+				AssertNever(action);
+		}
 	}
 
-	private async handleUnfriend(_: IClientDirectoryArgument['unfriend'], connection: IConnectionClient): IClientDirectoryPromiseResult['unfriend'] {
+	private async handleUnfriend({ id }: IClientDirectoryArgument['unfriend'], connection: ClientConnection): IClientDirectoryPromiseResult['unfriend'] {
 		if (!connection.account)
 			throw new BadMessageError();
 
-		return { result: 'ok' };
+		const success = await connection.account.relationship.removeFriend(id);
+		return { result: success ? 'ok' : 'accountNotFound' };
 	}
 
-	private async handleBlockList(_: IClientDirectoryArgument['blockList'], connection: IConnectionClient): IClientDirectoryPromiseResult['blockList'] {
+	private async handleBlockList({ id, action }: IClientDirectoryArgument['blockList'], connection: ClientConnection): IClientDirectoryPromiseResult['blockList'] {
 		if (!connection.account)
 			throw new BadMessageError();
 
+		switch (action) {
+			case 'add':
+				await connection.account.relationship.block(id);
+				break;
+			case 'remove':
+				await connection.account.relationship.unblock(id);
+				break;
+			default:
+				AssertNever(action);
+		}
 	}
 
 	public onRoomListChange(): void {

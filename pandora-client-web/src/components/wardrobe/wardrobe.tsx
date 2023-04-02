@@ -1477,8 +1477,8 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 			label={ title }
 			arm={ arm }
 			type='position'
-			checked={ 'front' }
-			unchecked={ 'back' }
+			checked='front'
+			unchecked='back'
 		/>
 	), [armsPose, limits, setPose]);
 	// eslint-disable-next-line @typescript-eslint/naming-convention

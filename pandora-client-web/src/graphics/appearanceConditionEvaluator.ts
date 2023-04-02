@@ -1,4 +1,4 @@
-import { AssertNever, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, CharacterViewSchema, Item, TransformDefinition } from 'pandora-common';
+import { AssertNever, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
 import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
 import { EvaluateCondition, RotateVector } from './utility';
@@ -128,7 +128,7 @@ export class AppearanceConditionEvaluator {
 
 	public getBoneLikeValue(name: string): number {
 		if (name === 'backView') {
-			return CharacterViewSchema.options.indexOf(this.view);
+			return this.view === 'back' ? 1 : 0;
 		}
 		return this.getBone(name).rotation;
 	}

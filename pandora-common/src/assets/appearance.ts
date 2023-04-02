@@ -28,9 +28,9 @@ export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
 export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
 export const AppearanceArmPoseSchema = z.object({
-	position: ArmPoseSchema.default('front'),
-	rotation: ArmRotationSchema.default('up'),
-	fingers: ArmFingersSchema.default('spread'),
+	position: ArmPoseSchema.catch('front'),
+	rotation: ArmRotationSchema.catch('up'),
+	fingers: ArmFingersSchema.catch('spread'),
 });
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
@@ -38,7 +38,7 @@ export const AppearancePoseSchema = z.object({
 	bones: z.record(BoneNameSchema, z.number().optional()),
 	leftArm: AppearanceArmPoseSchema,
 	rightArm: AppearanceArmPoseSchema,
-	view: CharacterViewSchema.default('front'),
+	view: CharacterViewSchema.catch('front'),
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
 

@@ -123,6 +123,10 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			directMessageAction: (data) => {
 				this.directMessageHandler.handleDirectMessageAction(data);
 			},
+			friendStatus: (_data) => {
+			},
+			relationshipsUpdate: (_data) => {
+			},
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}

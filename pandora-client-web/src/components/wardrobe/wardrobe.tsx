@@ -1033,8 +1033,7 @@ export function WardrobeItemConfigMenu({
 	item: ItemPath;
 	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
-	const assetManager = useAssetManager();
-	const { target, character, actions, execute } = useWardrobeContext();
+	const { target, character } = useWardrobeContext();
 	const wornItem = useCharacterAppearanceItem(character, item);
 
 	const containerPath = SplitContainerPath(item.container);

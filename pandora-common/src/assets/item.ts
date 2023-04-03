@@ -117,6 +117,10 @@ export class Item {
 		return hasKey ? result : undefined;
 	}
 
+	public containerChanged(_items: AppearanceItems, _isCharacter: boolean): Item {
+		return this;
+	}
+
 	public validate(isWorn: boolean): AppearanceValidationResult {
 		// Check the asset can actually be worn
 		if (isWorn && this.asset.definition.wearable === false)

@@ -28,6 +28,7 @@ export interface AssetDefinitionExtraArgs {
 	bodyparts: string;
 	attributes: string;
 	slots: string;
+	colorGroups: string;
 }
 
 export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
@@ -41,6 +42,17 @@ export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = A
 export type AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = AssetDefinitionPoseLimit<A> & {
 	options?: [AssetDefinitionPoseLimits<A>, AssetDefinitionPoseLimits<A>, ...AssetDefinitionPoseLimits<A>[]];
 };
+
+export interface AssetColorization<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
+	/** Name that describes the meaning of this color to user, `null` if it cannot be colored by user */
+	name: string | null;
+	default: HexColorString;
+	/**
+	 * Color inheritance group
+	 * If name is `null`, the color will always be inherited from this group, otherwise it depends on the item properties
+	 */
+	group?: A['colorGroups'];
+}
 
 export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	id: AssetId;
@@ -100,11 +112,7 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	bodypart?: A['bodyparts'];
 
 	/** Configuration of user-configurable asset colorization */
-	colorization?: Record<string, {
-		/** Name that describes the meaning of this color to user, `null` if it cannot be colored by user */
-		name: string | null;
-		default: HexColorString;
-	}>;
+	colorization?: Record<string, AssetColorization<A>>;
 
 	/**
 	 * Modules this asset has

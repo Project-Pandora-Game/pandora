@@ -30,6 +30,7 @@ import {
 	CharacterArmsPose,
 	AppearanceArmPose,
 	ArmRotationSchema,
+	AssetColorization,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -1119,35 +1120,7 @@ export function WardrobeItemConfigMenu({
 						</span>
 					</WardrobeActionButton>
 				</Row>
-				{
-					(wornItem.asset.definition.colorization && Object.keys(wornItem.asset.definition.colorization).length > 0) && (
-						<FieldsetToggle legend='Coloring'>
-							{
-								Object.entries(wornItem.asset.definition.colorization).map(([colorPartKey, colorPart]) => (
-									<div className='wardrobeColorRow' key={ colorPartKey }>
-										<span className='flex-1'>{ colorPart.name }</span>
-										<ColorInput
-											initialValue={ wornItem.color[colorPartKey] ?? colorPart.default }
-											resetValue={ colorPart.default }
-											throttle={ 100 }
-											disabled={ DoAppearanceAction({ type: 'color', target, item, color: wornItem.color }, actions, assetManager, { dryRun: true }).result !== 'success' }
-											onChange={ (color) => {
-												const newColor = _.cloneDeep<Writeable<typeof wornItem.color>>(wornItem.color);
-												newColor[colorPartKey] = color;
-												execute({
-													type: 'color',
-													target,
-													item,
-													color: newColor,
-												});
-											} }
-										/>
-									</div>
-								))
-							}
-						</FieldsetToggle>
-					)
-				}
+				<WardrobeItemColorization wornItem={ wornItem } item={ item } />
 				{
 					Array.from(wornItem.modules.entries())
 						.map(([moduleName, m]) => (
@@ -1157,6 +1130,71 @@ export function WardrobeItemConfigMenu({
 						))
 				}
 			</Column>
+		</div>
+	);
+}
+
+function WardrobeItemColorization({ wornItem, item }: {
+	wornItem: Item;
+	item: ItemPath;
+}): ReactElement | null {
+	const { character, target } = useWardrobeContext();
+	const allItems = useCharacterAppearanceItems(character);
+	const action: Omit<AppearanceAction & { type: 'color'; }, 'color'> = useMemo(() => ({ type: 'color', target, item }), [target, item])
+
+	if (!wornItem.asset.definition.colorization)
+		return null;
+
+	return (
+		<FieldsetToggle legend='Coloring'>
+			{
+				Object.entries(wornItem.asset.definition.colorization).map(([colorPartKey, colorPart]) => (
+					<WardrobeColorInput
+						key={ colorPartKey }
+						colorKey={ colorPartKey }
+						colorDefinition={ colorPart }
+						allItems={ allItems }
+						item={ wornItem }
+						action={ action } />
+				))
+			}
+		</FieldsetToggle>
+	);
+}
+
+function WardrobeColorInput({ colorKey, colorDefinition, allItems, action, item }: {
+	colorKey: string;
+	colorDefinition: AssetColorization;
+	action: Omit<AppearanceAction & { type: 'color'; }, 'color'>;
+	allItems: AppearanceItems;
+	item: Item;
+}): ReactElement | null {
+	const assetManager = useAssetManager();
+	const { actions, execute } = useWardrobeContext();
+	const current = useMemo(() => item.resolveColor(allItems, colorKey) ?? colorDefinition.default, [item, allItems, colorKey, colorDefinition.default]);
+	const bundle = useMemo(() => item.exportColorToBundle(), [item]);
+	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success', [bundle, action, actions, assetManager]);
+
+	if (!colorDefinition.name || !bundle)
+		return null;
+
+	return (
+		<div className='wardrobeColorRow' key={ colorKey }>
+			<span className='flex-1'>{ colorDefinition.name }</span>
+			<ColorInput
+				initialValue={ current }
+				resetValue={ colorDefinition.default }
+				throttle={ 100 }
+				disabled={ disabled }
+				onChange={ (color) => {
+					const newColor = _.cloneDeep<Writeable<typeof bundle>>(bundle);
+					newColor[colorKey] = color;
+					execute({
+						...action,
+						color: newColor,
+					});
+				} }
+			/>
 		</div>
 	);
 }

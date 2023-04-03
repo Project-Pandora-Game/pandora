@@ -9,7 +9,7 @@ import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearance
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
-import { AssetIdSchema } from './definitions';
+import { AssetColorization, AssetIdSchema } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
@@ -31,6 +31,12 @@ export type IItemLoadContext = {
 	logger?: Logger;
 };
 
+export type ColorGroupResult = {
+	item: Item;
+	colorization: AssetColorization;
+	color: HexColorString;
+};
+
 /**
  * Class representing an equipped item
  *
@@ -40,7 +46,7 @@ export class Item {
 	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
 	public readonly asset: Asset;
-	public readonly color: ItemColorBundle;
+	private readonly color: ItemColorBundle;
 	public readonly modules: ReadonlyMap<string, IItemModule>;
 
 	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
@@ -77,7 +83,7 @@ export class Item {
 		};
 	}
 
-	private exportColorToBundle(): ItemColorBundle | undefined {
+	public exportColorToBundle(): ItemColorBundle | undefined {
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return undefined;
@@ -192,6 +198,87 @@ export class Item {
 	public getProperties(): AssetPropertiesIndividualResult {
 		return this.getPropertiesParts()
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
+	}
+
+	public resolveColor(items: AppearanceItems, colorizationKey?: string | null): HexColorString | undefined {
+		if (colorizationKey == null || !this.asset.definition.colorization)
+			return undefined;
+
+		const colorization = this.asset.definition.colorization[colorizationKey];
+		if (!colorization)
+			return undefined;
+
+		const color = this.color[colorizationKey];
+		if (color)
+			return color;
+
+		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
+	}
+
+	/**
+	 * Color resolution order:
+	 * 1. Self (if it is not an inherited color)
+	 * 2. Closest item before self that has this color group (if it is not an inherited color)
+	 * 3. Closest item after self that has this color group (if it is not an inherited color)
+	 * 4. Closest item from self (inclusive) that has this color group and it has an inherited color
+	 */
+	private _resolveColorGroup(items: AppearanceItems, ignoreKey: string, { group }: AssetColorization): ColorGroupResult | undefined {
+		if (!group)
+			return undefined;
+
+		const selfResult = this._getColorByGroup(group, ignoreKey);
+		if (selfResult?.[0] === 'primary')
+			return { item: this, colorization: selfResult[1], color: selfResult[2] };
+
+		let color: ColorGroupResult | undefined;
+		let colorInherited: ColorGroupResult | undefined = selfResult ? { item: this, colorization: selfResult[1], color: selfResult[2] } : undefined;
+		let foundSelf = false;
+		for (const item of items) {
+			if (item.id === this.id) {
+				if (color)
+					return color;
+
+				foundSelf = true;
+				continue;
+			}
+
+			const result = item._getColorByGroup(group);
+			if (result == null)
+				continue;
+
+			const [resultKey, colorization, resultColor] = result;
+			switch (resultKey) {
+				case 'primary':
+					if (foundSelf)
+						return { item, colorization, color: resultColor };
+
+					color = { item, colorization, color: resultColor };
+					break;
+				case 'inherited':
+					if (!colorInherited || !foundSelf)
+						colorInherited = { item, colorization, color: resultColor };
+					break;
+			}
+		}
+		return color ?? colorInherited;
+	}
+
+	private _getColorByGroup(group: string, ignoreKey?: string): null | ['primary' | 'inherited', AssetColorization, HexColorString] {
+		const { overrideColorKey, excludeFromColorInheritance } = this.getProperties();
+		let inherited: [AssetColorization, HexColorString] | undefined;
+		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
+			if (value.group !== group || !this.color[key])
+				continue;
+			if (key === ignoreKey || excludeFromColorInheritance.has(key))
+				continue;
+
+			if (overrideColorKey.has(key))
+				return ['primary', value, this.color[key]];
+
+			if (!inherited)
+				inherited = [value, this.color[key]];
+		}
+		return inherited ? ['inherited', ...inherited] : null;
 	}
 
 	private _loadColor(color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {

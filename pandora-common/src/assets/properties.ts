@@ -72,6 +72,25 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	 *                 n == 0, slot is not occupied but block is still applied
 	 */
 	occupySlots?: Partial<Record<A['slots'], number>>;
+
+	/**
+	 * A unique list of color keys that disable user colorization.
+	 * By default, colorization that has a name is user configured,
+	 * specifying the color key in this list will make the inheritance group a higher priority
+	 * thereby disabling user colorization and the color will be inherited from the group.
+	 *
+	 * @default []
+	 */
+	overrideColorKey?: string[];
+
+	/**
+	 * A unique list of color keys for which color inheritance is excluded.
+	 * If an item is excluded from color inheritance for a particular key,
+	 * it will not serve as a source of color for other items with that inheritance group.
+	 *
+	 * @default []
+	 */
+	excludeFromColorInheritance?: string[];
 }
 
 export interface AssetSlotResult {
@@ -122,6 +141,8 @@ export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	blockSelfAddRemove: boolean;
 	blockModules: Set<string>;
 	blockSelfModules: Set<string>;
+	overrideColorKey: Set<string>;
+	excludeFromColorInheritance: Set<string>;
 }
 
 export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividualResult {
@@ -132,6 +153,8 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 		blockSelfAddRemove: false,
 		blockModules: new Set(),
 		blockSelfModules: new Set(),
+		overrideColorKey: new Set(),
+		excludeFromColorInheritance: new Set(),
 	};
 }
 
@@ -142,6 +165,8 @@ export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualRe
 	base.blockSelfAddRemove ||= properties.blockSelfAddRemove ?? false;
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));
 	properties.blockSelfModules?.forEach((a) => base.blockSelfModules.add(a));
+	properties.overrideColorKey?.forEach((a) => base.overrideColorKey.add(a));
+	properties.excludeFromColorInheritance?.forEach((a) => base.excludeFromColorInheritance.add(a));
 
 	return base;
 }

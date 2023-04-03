@@ -2,7 +2,7 @@ import { Immutable } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
-import type { Writeable } from '../utility';
+import { MemoizeNoArg, Writeable } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
 import type { AppearanceActionContext } from './appearanceActions';
 import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
@@ -24,28 +24,6 @@ export const ItemBundleSchema = z.object({
 	moduleData: z.record(z.unknown()).optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
-
-function FixupColorFromAsset(asset: Asset, color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {
-	const colorization = asset.definition.colorization ?? {};
-	if (Array.isArray(color)) {
-		const keys = Object.keys(colorization);
-		const fixup: Writeable<ItemColorBundle> = {};
-		color.forEach((value, index) => {
-			if (index < keys.length)
-				fixup[keys[index]] = value;
-		});
-		color = fixup;
-	}
-	const result: Writeable<ItemColorBundle> = {};
-	for (const [key, value] of Object.entries(colorization)) {
-		if (color[key] != null && value.name != null) {
-			result[key] = color[key];
-		} else {
-			result[key] = value.default;
-		}
-	}
-	return result;
-}
 
 export type IItemLoadContext = {
 	assetManager: AssetManager;
@@ -72,14 +50,14 @@ export class Item {
 		if (this.asset.id !== bundle.asset) {
 			throw new Error(`Attempt to import different asset bundle into item (${this.asset.id} vs ${bundle.asset})`);
 		}
-		// Load color from bundle
-		this.color = FixupColorFromAsset(asset, bundle.color);
 		// Load modules
 		const modules = new Map<string, IItemModule>();
 		for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
 			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
 		}
 		this.modules = modules;
+		// Load color from bundle
+		this.color = this._loadColor(bundle.color);
 	}
 
 	public exportToBundle(): ItemBundle {
@@ -202,6 +180,7 @@ export class Item {
 		});
 	}
 
+	@MemoizeNoArg
 	public getPropertiesParts(): Immutable<AssetProperties>[] {
 		const propertyParts: Immutable<AssetProperties>[] = [this.asset.definition];
 		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
@@ -209,8 +188,30 @@ export class Item {
 		return propertyParts;
 	}
 
+	@MemoizeNoArg
 	public getProperties(): AssetPropertiesIndividualResult {
 		return this.getPropertiesParts()
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
+	}
+
+	private _loadColor(color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {
+		const colorization = this.asset.definition.colorization ?? {};
+		if (Array.isArray(color)) {
+			const keys = Object.keys(colorization);
+			const fixup: Writeable<ItemColorBundle> = {};
+			color.forEach((value, index) => {
+				if (index < keys.length)
+					fixup[keys[index]] = value;
+			});
+			color = fixup;
+		}
+		const result: Writeable<ItemColorBundle> = {};
+		for (const [key, value] of Object.entries(colorization)) {
+			if (value.name == null)
+				continue;
+
+			result[key] = color[key] ?? value.default;
+		}
+		return result;
 	}
 }

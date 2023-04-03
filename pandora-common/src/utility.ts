@@ -289,3 +289,25 @@ export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet)
 	}
 	return res;
 }
+
+/**
+ * Decorates a member function so it memoizes the result of the first call, the function must take no arguments
+ */
+export function MemoizeNoArg<Return>(_target: object, _key: string, descriptor: TypedPropertyDescriptor<(...args: never[]) => Return>): TypedPropertyDescriptor<(...args: never[]) => Return> {
+	const originalMethod = descriptor.value;
+	AssertNotNullable(originalMethod);
+
+	const cache = new WeakMap<object, Return>();
+
+	descriptor.value = function (this: object): Return {
+		if (cache.has(this)) {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			return cache.get(this)!;
+		}
+		const result = originalMethod.call(this);
+		cache.set(this, result);
+		return result;
+	};
+
+	return descriptor;
+}

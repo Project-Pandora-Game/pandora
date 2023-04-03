@@ -202,17 +202,7 @@ export function GraphicsLayer({
 
 	const texture = useTexture(image, undefined, getTexture);
 
-	const color: number = state?.color ??
-		(
-			(
-				item != null &&
-				colorizationKey != null &&
-				item.color[colorizationKey]
-			) ? Number.parseInt(item.color[colorizationKey].slice(1), 16) : undefined
-		) ??
-		0xffffff;
-
-	const alpha = state?.alpha ?? 1;
+	const { color, alpha } = useItemColor(item, colorizationKey, state);
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 
@@ -253,6 +243,15 @@ export function GraphicsLayer({
 			}
 		</Container>
 	);
+}
+
+export function useItemColor(item: Item | null, colorizationKey?: string | null, state?: LayerStateOverrides): { color: number; alpha: number; } {
+	const itemColor = colorizationKey != null && item?.color[colorizationKey];
+	const color: number = state?.color
+		?? (itemColor ? Number.parseInt(itemColor.slice(1), 16) : undefined)
+		?? 0xffffff;
+	const alpha = state?.alpha ?? 1;
+	return { color, alpha };
 }
 
 const MASK_X_OVERSCAN = 250;

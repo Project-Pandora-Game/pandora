@@ -2,7 +2,7 @@ import * as PIXI from 'pixi.js';
 import { DraggablePointDisplay } from '../draggable';
 import { EditorLayer, EDITOR_LAYER_Z_INDEX_EXTRA } from './editorLayer';
 import { BoneName, LayerImageSetting } from 'pandora-common';
-import { GraphicsLayerProps, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
+import { GraphicsLayerProps, useItemColor, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useEditor } from '../../editorContextProvider';
 import { useObservable } from '../../../observable';
@@ -125,7 +125,7 @@ export function SetupLayerSelected({
 		if (asset instanceof EditorAssetGraphics)
 			return (i) => asset.getTexture(i);
 		return undefined;
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [layer, editorGettersVersion]);
 
 	useEffect(() => {
@@ -154,17 +154,7 @@ export function SetupLayerSelected({
 
 	const texture = useTexture(image, undefined, editorGetTexture);
 
-	const color: number = state?.color ??
-		(
-			(
-				item != null &&
-				colorizationKey != null &&
-				item.color[colorizationKey]
-			) ? Number.parseInt(item.color[colorizationKey].slice(1), 16) : undefined
-		) ??
-		0xffffff;
-
-	const alpha = state?.alpha ?? 1;
+	const { color, alpha } = useItemColor(item, colorizationKey, state);
 
 	return (
 		<Container

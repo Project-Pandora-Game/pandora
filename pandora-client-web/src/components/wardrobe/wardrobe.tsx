@@ -31,6 +31,7 @@ import {
 	AppearanceArmPose,
 	ArmRotationSchema,
 	AssetColorization,
+	ColorGroupResult,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -1140,7 +1141,8 @@ function WardrobeItemColorization({ wornItem, item }: {
 }): ReactElement | null {
 	const { character, target } = useWardrobeContext();
 	const allItems = useCharacterAppearanceItems(character);
-	const action: Omit<AppearanceAction & { type: 'color'; }, 'color'> = useMemo(() => ({ type: 'color', target, item }), [target, item])
+	const action: Omit<AppearanceAction & { type: 'color'; }, 'color'> = useMemo(() => ({ type: 'color', target, item }), [target, item]);
+	const overrides = useMemo(() => wornItem.getColorOverrides(allItems) ?? {}, [wornItem, allItems]);
 
 	if (!wornItem.asset.definition.colorization)
 		return null;
@@ -1154,6 +1156,7 @@ function WardrobeItemColorization({ wornItem, item }: {
 						colorKey={ colorPartKey }
 						colorDefinition={ colorPart }
 						allItems={ allItems }
+						overrideGroup={ overrides[colorPartKey] }
 						item={ wornItem }
 						action={ action } />
 				))
@@ -1162,11 +1165,12 @@ function WardrobeItemColorization({ wornItem, item }: {
 	);
 }
 
-function WardrobeColorInput({ colorKey, colorDefinition, allItems, action, item }: {
+function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup, action, item }: {
 	colorKey: string;
 	colorDefinition: AssetColorization;
 	action: Omit<AppearanceAction & { type: 'color'; }, 'color'>;
 	allItems: AppearanceItems;
+	overrideGroup?: ColorGroupResult;
 	item: Item;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
@@ -1181,11 +1185,18 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, action, item 
 	return (
 		<div className='wardrobeColorRow' key={ colorKey }>
 			<span className='flex-1'>{ colorDefinition.name }</span>
+			{
+				overrideGroup && (
+					<span title={ `This color controlled by a color group and inherited from ${overrideGroup.item.asset.definition.name} (${overrideGroup.colorization.name ?? ''}) and cannot be changed.` }>
+						🔗
+					</span>
+				)
+			}
 			<ColorInput
 				initialValue={ current }
 				resetValue={ colorDefinition.default }
 				throttle={ 100 }
-				disabled={ disabled }
+				disabled={ disabled || !!overrideGroup }
 				onChange={ (color) => {
 					const newColor = _.cloneDeep<Writeable<typeof bundle>>(bundle);
 					newColor[colorKey] = color;

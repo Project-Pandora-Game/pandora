@@ -101,8 +101,40 @@ export class Item {
 		return hasKey ? result : undefined;
 	}
 
-	public containerChanged(_items: AppearanceItems, _isCharacter: boolean): Item {
-		return this;
+	public containerChanged(items: AppearanceItems, isCharacter: boolean): Item {
+		if (!isCharacter)
+			return this;
+
+		return this._overrideColors(items);
+	}
+
+	public getColorOverrides(items: AppearanceItems): null | Record<string, ColorGroupResult> {
+		const colorization = this.asset.definition.colorization;
+		if (!colorization)
+			return null;
+
+		const { overrideColorKey } = this.getProperties();
+		if (overrideColorKey.size === 0)
+			return null;
+
+		let hasGroup = false;
+		const result: Record<string, ColorGroupResult> = {};
+		for (const key of Object.keys(this.color)) {
+			const def = colorization[key];
+			if (!def || def.name == null)
+				continue;
+
+			if (!overrideColorKey.has(key))
+				continue;
+
+			const groupColor = this._resolveColorGroup(items, key, def);
+			if (groupColor == null)
+				continue;
+
+			result[key] = groupColor;
+			hasGroup = true;
+		}
+		return hasGroup ? result : null;
 	}
 
 	public validate(isWorn: boolean): AppearanceValidationResult {
@@ -213,6 +245,26 @@ export class Item {
 			return color;
 
 		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
+	}
+
+	private _overrideColors(items: AppearanceItems): Item {
+		const colorization = this.asset.definition.colorization;
+		if (!colorization)
+			return this;
+
+		const overrides = this.getColorOverrides(items);
+		if (!overrides)
+			return this;
+
+		const result: Writeable<ItemColorBundle> = {};
+		for (const [key, value] of Object.entries(this.color)) {
+			const def = colorization[key];
+			if (!def || def.name == null)
+				continue;
+
+			result[key] = overrides[key]?.color ?? value;
+		}
+		return this.changeColor(result);
 	}
 
 	/**

@@ -24,7 +24,7 @@ export type GraphicsSceneProps = {
 	createPrivatePixiInstance?: boolean;
 };
 
-const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
+export const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
 
 function GraphicsSceneCore({
 	children,

@@ -4,13 +4,14 @@ import React, { useState, type ChangeEvent, useCallback, useMemo, type ReactElem
 import { Button } from '../button/button';
 
 export function ColorInput({
-	initialValue, resetValue, onChange, throttle = 0, disabled = false,
+	initialValue, resetValue, onChange, throttle = 0, disabled = false, hideTextInput = false,
 }: {
 	initialValue: HexColorString;
 	resetValue?: HexColorString;
 	onChange?: (value: HexColorString) => void;
 	throttle?: number;
 	disabled?: boolean;
+	hideTextInput?: boolean;
 }): ReactElement {
 	const [value, setInput] = useState<HexColorString>(initialValue.toUpperCase() as HexColorString);
 
@@ -30,7 +31,7 @@ export function ColorInput({
 
 	return (
 		<>
-			<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ 7 } />
+			{ !hideTextInput && <input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ 7 } /> }
 			<input type='color' value={ value } onChange={ onInputChange } disabled={ disabled } />
 			{
 				resetValue != null &&

@@ -1,37 +1,38 @@
 import classNames from 'classnames';
 import { nanoid } from 'nanoid';
 import {
-	CharacterAppearance,
 	AppearanceAction,
 	AppearanceActionContext,
+	AppearanceActionResult,
+	AppearanceArmPose,
+	AppearanceItemProperties,
 	AppearanceItems,
+	AppearanceLimitTree,
+	ArmRotationSchema,
+	Assert,
 	AssertNotNullable,
 	Asset,
+	AssetColorization,
 	AssetsPosePresets,
-	BoneName,
-	BoneState,
 	BONE_MAX,
 	BONE_MIN,
+	BoneName,
+	BoneState,
+	CharacterAppearance,
+	CharacterArmsPose,
+	ColorGroupResult,
 	DoAppearanceAction,
+	FormatTimeInterval,
+	HexColorString,
 	IsCharacterId,
 	IsObject,
 	Item,
-	ItemId,
 	ItemContainerPath,
-	RoomTargetSelector,
+	ItemId,
 	ItemPath,
-	Assert,
-	AppearanceActionResult,
-	Writeable,
-	FormatTimeInterval,
 	MessageSubstitute,
-	AppearanceItemProperties,
-	AppearanceLimitTree,
-	CharacterArmsPose,
-	AppearanceArmPose,
-	ArmRotationSchema,
-	AssetColorization,
-	ColorGroupResult,
+	RoomTargetSelector,
+	Writeable,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -52,7 +53,7 @@ import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
-import { GraphicsScene } from '../../graphics/graphicsScene';
+import { DEFAULT_BACKGROUND_COLOR, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { Column, Row } from '../common/container/container';
@@ -70,6 +71,7 @@ import gridIcon from '../../assets/icons/grid.svg';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { Select } from '../common/select/select';
+import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -186,12 +188,34 @@ export function useWardrobeContext(): Readonly<WardrobeContext> {
 	return ctx;
 }
 
+function WardrobeBackgroundColorPicker(): ReactElement {
+	const account = useCurrentAccount();
+	const directory = useDirectoryConnector();
+
+	const onChange = useEvent((newColor: HexColorString) => {
+		directory.sendMessage('changeSettings', { wardrobeBackground: newColor });
+	});
+
+	return (
+		<ColorInput
+			initialValue={ account?.settings.wardrobeBackground ?? `#${DEFAULT_BACKGROUND_COLOR.toString(16)}` }
+			onChange={ onChange }
+			throttle={ 100 }
+			hideTextInput={ true }
+		/>
+	);
+}
+
 function Wardrobe(): ReactElement | null {
 	const { character } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
 
 	const inSafemode = useCharacterSafemode(character) != null;
+	const account = useCurrentAccount();
+	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
+		background: account ? account.settings.wardrobeBackground : `#${DEFAULT_BACKGROUND_COLOR.toString(16)}`,
+	}), [account]);
 
 	const overlay = (
 		<div className='overlay'>
@@ -207,6 +231,7 @@ function Wardrobe(): ReactElement | null {
 			>
 				↷
 			</Button>
+			<WardrobeBackgroundColorPicker />
 		</div>
 	);
 
@@ -220,7 +245,7 @@ function Wardrobe(): ReactElement | null {
 				)
 			}
 			<div className='wardrobeMain'>
-				<GraphicsScene className='characterPreview' divChildren={ overlay }>
+				<GraphicsScene className='characterPreview' divChildren={ overlay } sceneOptions={ sceneOptions }>
 					<GraphicsCharacter appearanceContainer={ character } />
 				</GraphicsScene>
 				<TabContainer className='flex-1'>

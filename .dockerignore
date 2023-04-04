@@ -1,0 +1,40 @@
+# Docker build instructions
+/.dockerignore
+/Dockerfile
+/docker-compose.yaml
+
+# Version management and CI
+/.git
+/.gitignore
+/*/.gitignore
+/.gitattributes
+/.github
+/.hooks
+
+# IDE configs
+/.vscode
+
+# Persistent data
+/data
+/docker.env
+/docker.env.template
+/*/.env
+/*/.env.template
+
+# Dependencies, build and test data
+/node_modules
+/*/node_modules
+/*/dist
+/*/coverage
+
+# pandora-server-directory
+/pandora-server-directory/localDb
+/pandora-server-directory/logs
+/pandora-server-directory/globalConfig.json
+/pandora-server-directory/.persistent
+
+# pandora-server-shard
+/pandora-server-shard/logs
+
+# Otherwise ignored data, but required for build
+!/.hooks/postinstall.cjs

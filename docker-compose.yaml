@@ -1,0 +1,65 @@
+services:
+
+  pandora-server-directory:
+    build:
+      context: .
+      target: pandora-server-directory
+    container_name: pandora-server-directory
+    restart: unless-stopped
+    depends_on:
+      pandora-mongodb:
+        condition: service_started
+    ports:
+      - 25560:25560
+    expose:
+      - 25560
+    volumes:
+      - "./data/logs/directory:/logs"
+    environment:
+      - LOG_DIR=/logs
+      - SERVER_PORT=25560
+      - DATABASE_TYPE=mongodb
+      - DATABASE_URL=mongodb://pandora-mongodb:27017
+      - DATABASE_NAME=pandora
+    env_file:
+      - docker.env
+
+  pandora-server-shard:
+    build:
+      context: .
+      target: pandora-server-shard
+    container_name: pandora-server-shard
+    restart: unless-stopped
+    depends_on:
+      pandora-mongodb:
+        condition: service_started
+      pandora-server-directory:
+        condition: service_started
+    ports:
+      - 25561:25561
+    expose:
+      - 25561
+    volumes:
+      - "./data/logs/shard:/logs"
+      - "../pandora-assets/out:/assets:ro"
+    environment:
+      - LOG_DIR=/logs
+      - SERVER_PORT=25561
+      - DATABASE_TYPE=mongodb
+      - DATABASE_URL=mongodb://pandora-mongodb:27017
+      - DATABASE_NAME=pandora
+      - DIRECTORY_ADDRESS=http://pandora-server-directory:25560
+      - ASSETS_DEFINITION_PATH=/assets
+      - SERVER_PUBLIC_ADDRESS=http://127.0.0.1:25561
+    env_file:
+      - docker.env
+
+  pandora-mongodb:
+    image: docker.io/mongo
+    restart: unless-stopped
+    command:
+      - '--logpath'
+      - '/data/db/docker_mongodb_log/mongod.log'
+    volumes:
+      - "./data/db:/data/db"
+      - "./data/logs/mongodb:/data/db/docker_mongodb_log"

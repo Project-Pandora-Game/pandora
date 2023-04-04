@@ -4,6 +4,7 @@ import { StopHttpServer } from './networking/httpServer';
 import { DirectoryConnector } from './networking/socketio_directory_connector';
 import { RoomManager } from './room/roomManager';
 import wtfnode from 'wtfnode';
+import { CloseDatabase } from './database/databaseProvider';
 
 const logger = GetLogger('Lifecycle');
 
@@ -24,7 +25,8 @@ async function StopGracefully(): Promise<IEmpty> {
 	await RoomManager.removeAllRooms();
 	// Stop HTTP server
 	StopHttpServer();
-	// TODO: Disconnect database
+	// Disconnect database
+	await CloseDatabase();
 	// The result of promise from graceful stop is used by Directory, disconnect afterwards
 	setTimeout(() => {
 		DirectoryConnector?.disconnect();

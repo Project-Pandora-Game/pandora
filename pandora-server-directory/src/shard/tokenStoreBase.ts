@@ -80,7 +80,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 	}
 
 	public async revoke(acc: Account, id: string): Promise<'ok' | 'notFound' | 'adminRequired'> {
-		const info = this.getValidTokenInfo(id);
+		const info = this.#tokens.get(id);
 		if (!info)
 			return 'notFound';
 

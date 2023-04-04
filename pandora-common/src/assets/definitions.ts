@@ -327,6 +327,8 @@ export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
 	name: string;
 	/** The preview image for this background */
 	preview: string;
+	/** The tags that apply to this background */
+	tags: string[];
 };
 
 export interface AssetsDefinitionFile {

@@ -27,5 +27,8 @@
 	},
 	"dependencies": {
 		"js-yaml": "^4.1.0"
+	},
+	"devDependencies": {
+		"jest": "^29.5.0"
 	}
 }

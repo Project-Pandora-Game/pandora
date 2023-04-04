@@ -324,7 +324,7 @@ export class Item {
 			if (key === ignoreKey || excludeFromColorInheritance.has(key))
 				continue;
 
-			if (overrideColorKey.has(key))
+			if (!overrideColorKey.has(key))
 				return ['primary', value, this.color[key]];
 
 			if (!inherited)

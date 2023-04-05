@@ -5,41 +5,49 @@ export interface IServerSocket<OutboundT extends SocketInterfaceDefinition> {
 	sendToAll<K extends SocketInterfaceOneshotMessages<OutboundT>>(client: ReadonlySet<IIncomingConnection<OutboundT>>, messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void;
 }
 
-export class ServerRoom<OutboundT extends SocketInterfaceDefinition> {
-	private readonly servers = new Map<IServerSocket<OutboundT>, Set<IIncomingConnection<OutboundT>>>();
-	private readonly clients = new Map<string, IServerSocket<OutboundT>>();
+export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT extends IIncomingConnection<OutboundT> = IIncomingConnection<OutboundT>> {
+	private readonly _servers = new Map<IServerSocket<OutboundT>, Set<ClientT>>();
+	private readonly _clients = new Map<string, IServerSocket<OutboundT>>();
 
-	public join(server: IServerSocket<OutboundT>, client: IIncomingConnection<OutboundT>): void {
-		if (this.clients.has(client.id)) {
+	public get clients(): ClientT[] {
+		return [...this._servers.values()].flatMap((clients) => [...clients.values()]);
+	}
+
+	public hasClients(): boolean {
+		return this._servers.size > 0;
+	}
+
+	public join(server: IServerSocket<OutboundT>, client: ClientT): void {
+		if (this._clients.has(client.id)) {
 			return;
 		}
-		const clients = this.servers.get(server);
+		const clients = this._servers.get(server);
 		if (!clients) {
-			this.servers.set(server, new Set([client]));
+			this._servers.set(server, new Set([client]));
 		} else {
 			clients.add(client);
 		}
-		this.clients.set(client.id, server);
+		this._clients.set(client.id, server);
 	}
 
-	public leave(client: IIncomingConnection<OutboundT>): void {
-		const serverId = this.clients.get(client.id);
+	public leave(client: ClientT): void {
+		const serverId = this._clients.get(client.id);
 		if (!serverId) {
 			return;
 		}
-		this.clients.delete(client.id);
-		const clients = this.servers.get(serverId);
+		this._clients.delete(client.id);
+		const clients = this._servers.get(serverId);
 		if (!clients) {
 			return;
 		}
 		clients.delete(client);
 		if (clients.size === 0) {
-			this.servers.delete(serverId);
+			this._servers.delete(serverId);
 		}
 	}
 
 	public sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void {
-		for (const [server, clients] of this.servers) {
+		for (const [server, clients] of this._servers) {
 			server.sendToAll(clients, messageType, message);
 		}
 	}

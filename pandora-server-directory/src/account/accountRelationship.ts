@@ -36,6 +36,7 @@ export class AccountRelationship {
 			id: this.account.id,
 			online: this.account.associatedConnections.hasClients(),
 			characters: [...this.account.characters.values()]
+				.filter((char) => !!char.assignedConnection)
 				.map((char) => ({
 					id: char.id,
 					name: char.data.name,
@@ -292,7 +293,7 @@ export class AccountRelationship {
 		this.updateStatus();
 	}
 
-	private updateStatus(): void {
+	public updateStatus(): void {
 		const status = this.getStatus();
 		if (_.isEqual(status, this.lastStatus)) {
 			return;

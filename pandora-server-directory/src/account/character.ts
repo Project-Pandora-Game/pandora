@@ -32,11 +32,33 @@ export class Character {
 	public accessId: string = '';
 	public connectSecret: string;
 
+	private _assignedConnection: ClientConnection | null = null;
+
 	/** Which client is assigned to this character and receives updates from it; only passive listener to what happens to the character */
-	public assignedConnection: ClientConnection | null = null;
+	public get assignedConnection(): ClientConnection | null {
+		return this._assignedConnection;
+	}
+
+	public set assignedConnection(value: ClientConnection | null) {
+		if (this._assignedConnection !== value) {
+			this._assignedConnection = value;
+			this.account.relationship.updateStatus();
+		}
+	}
+
+	private _room: Room | null = null;
 
 	/** Which room this character is in */
-	public room: Room | null = null;
+	public get room(): Room | null {
+		return this._room;
+	}
+
+	public set room(value: Room | null) {
+		if (this._room !== value) {
+			this._room = value;
+			this.account.relationship.updateStatus();
+		}
+	}
 
 	/**
 	 * Selector for which shard this character wants to follow.

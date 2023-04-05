@@ -63,7 +63,14 @@ export class AccountRelationship {
 		if (rel?.type === 'friend') {
 			return true;
 		}
-		// TODO: check if same room
+		for (const char of this.account.characters.values()) {
+			if (!char.room) continue;
+			for (const char2 of from.characters.values()) {
+				if (char.room.id === char2.room?.id) {
+					return true;
+				}
+			}
+		}
 		return false;
 	}
 

@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { AccountId, AssertNever, AssertNotNullable, GetLogger, IAccountRelationship, Logger } from 'pandora-common';
+import { AccountId, AssertNever, AssertNotNullable, GetLogger, IAccountFriendStatus, IAccountRelationship, Logger } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
@@ -13,14 +13,35 @@ export class AccountRelationship {
 	public readonly account: Account;
 	private readonly relationships: Map<AccountId, IAccountRelationship<'blockedBy' | 'blockMutual'>> = new Map();
 	private readonly logger: Logger;
+	private lastStatus: IAccountFriendStatus | null = null;
 
 	constructor(account: Account) {
 		this.account = account;
 		this.logger = logger.prefixMessages(`[${account.id}]`);
+		this.account.associatedConnections.subscribe(this.onConnection.bind(this));
 	}
 
 	private get(id: AccountId): IAccountRelationship<'blockedBy' | 'blockMutual'> | undefined {
 		return this.relationships.get(id);
+	}
+
+	public getStatus(): IAccountFriendStatus | null {
+		if (!this.loaded) {
+			return null;
+		}
+		if (this.account.data.settings.hideStatusForFriends) {
+			return null;
+		}
+		return {
+			id: this.account.id,
+			online: this.account.associatedConnections.hasClients(),
+			characters: [...this.account.characters.values()]
+				.map((char) => ({
+					id: char.id,
+					name: char.data.name,
+					inRoom: char.room?.isPublic ? char.room.id : undefined,
+				})),
+		};
 	}
 
 	public async getAll(): Promise<IAccountRelationship[]> {
@@ -228,6 +249,7 @@ export class AccountRelationship {
 			this.setRelationship(id, name, rel.updated, rel.type, rel.source);
 		}
 		this.loaded = true;
+		this.updateStatus();
 	}
 
 	private setRelationship(id: AccountId, name: string, time: number, type: DatabaseRelationship['type'], source?: AccountId): void {
@@ -253,6 +275,32 @@ export class AccountRelationship {
 				break;
 			default:
 				AssertNever(type);
+		}
+	}
+
+	private onConnection(): void {
+		if (!this.loaded) {
+			return;
+		}
+		this.updateStatus();
+	}
+
+	private updateStatus(): void {
+		const status = this.getStatus();
+		if (_.isEqual(status, this.lastStatus)) {
+			return;
+		}
+		this.lastStatus = status;
+		const data = status == null ? { id: this.account.id } : status;
+		for (const account of accountManager.onlineAccounts) {
+			if (account.id === this.account.id) {
+				continue;
+			}
+			const rel = this.get(account.id);
+			if (!rel || rel.type !== 'friend') {
+				continue;
+			}
+			account.associatedConnections.sendMessage('friendStatus', data);
 		}
 	}
 }

@@ -8,6 +8,7 @@ export interface IServerSocket<OutboundT extends SocketInterfaceDefinition> {
 export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT extends IIncomingConnection<OutboundT> = IIncomingConnection<OutboundT>> {
 	private readonly _servers = new Map<IServerSocket<OutboundT>, Set<ClientT>>();
 	private readonly _clients = new Map<string, IServerSocket<OutboundT>>();
+	private readonly _eventSubscriptions = new Set<(action: 'join' | 'leave', client: ClientT) => void>();
 
 	public get clients(): ClientT[] {
 		return [...this._servers.values()].flatMap((clients) => [...clients.values()]);
@@ -28,6 +29,9 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 			clients.add(client);
 		}
 		this._clients.set(client.id, server);
+		for (const subscription of this._eventSubscriptions) {
+			subscription('join', client);
+		}
 	}
 
 	public leave(client: ClientT): void {
@@ -35,7 +39,11 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 		if (!serverId) {
 			return;
 		}
-		this._clients.delete(client.id);
+		if (this._clients.delete(client.id)) {
+			for (const subscription of this._eventSubscriptions) {
+				subscription('leave', client);
+			}
+		}
 		const clients = this._servers.get(serverId);
 		if (!clients) {
 			return;
@@ -50,5 +58,12 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 		for (const [server, clients] of this._servers) {
 			server.sendToAll(clients, messageType, message);
 		}
+	}
+
+	public subscribe(subscription: (action: 'join' | 'leave', client: ClientT) => void): () => void {
+		this._eventSubscriptions.add(subscription);
+		return () => {
+			this._eventSubscriptions.delete(subscription);
+		};
 	}
 }

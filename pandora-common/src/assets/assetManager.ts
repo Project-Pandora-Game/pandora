@@ -3,7 +3,7 @@ import type { Logger } from '../logging';
 import { Assert, CloneDeepMutable } from '../utility';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, AssetType, IChatroomBackgroundInfo } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, AssetType, BackgroundTagDefinition, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { CreateItem, Item, ItemBundle } from './item';
 
@@ -17,6 +17,7 @@ export class AssetManager {
 	public readonly graphicsId: string;
 	public readonly rawData: Immutable<AssetsDefinitionFile>;
 
+	public readonly backgroundTags: ReadonlyMap<string, BackgroundTagDefinition>;
 	public readonly attributes: ReadonlyMap<string, Readonly<AssetAttributeDefinition>>;
 	public readonly bodyparts: readonly AssetBodyPart[];
 	public readonly randomization: AppearanceRandomizationData;
@@ -80,6 +81,7 @@ export class AssetManager {
 			posePresets: [],
 			bodyparts: [],
 			graphicsId: '',
+			backgroundTags: {},
 			backgrounds: [],
 			attributes: {},
 			randomization: {
@@ -96,6 +98,16 @@ export class AssetManager {
 		this._posePresets = fullData.posePresets;
 		this._backgrounds = fullData.backgrounds;
 		this.randomization = fullData.randomization;
+
+		//#region Load Background Tags
+		const tags = new Map<string, Readonly<BackgroundTagDefinition>>();
+
+		for (const [id, definition] of Object.entries(fullData.backgroundTags)) {
+			tags.set(id, definition);
+		}
+
+		this.backgroundTags = tags;
+		//#endregion
 
 		//#region Load bones
 		const bones = new Map<string, BoneDefinition>();

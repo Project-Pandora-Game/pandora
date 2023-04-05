@@ -331,6 +331,11 @@ export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
 	tags: string[];
 };
 
+export interface BackgroundTagDefinition {
+	name: string;
+	category: 'Time' | 'Ambiance' | 'Location' | 'Item' | 'Space';
+}
+
 export interface AssetsDefinitionFile {
 	assets: Record<AssetId, AssetDefinition>;
 	assetSlots: Record<string, AssetSlotDefinition>;
@@ -338,6 +343,7 @@ export interface AssetsDefinitionFile {
 	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];
 	graphicsId: string;
+	backgroundTags: Record<string, BackgroundTagDefinition>;
 	backgrounds: IChatroomBackgroundInfo[];
 	attributes: Record<string, AssetAttributeDefinition>;
 	randomization: AppearanceRandomizationData;

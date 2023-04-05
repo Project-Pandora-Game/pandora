@@ -32,6 +32,10 @@ export class Room {
 		return this._owners;
 	}
 
+	public get isPublic(): boolean {
+		return this.config.public;
+	}
+
 	private readonly logger: Logger;
 
 	constructor(id: RoomId, config: IChatRoomDirectoryConfig, owners: AccountId[]) {

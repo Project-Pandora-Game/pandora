@@ -147,7 +147,7 @@ export const DirectoryClientSchema = {
 		response: null,
 	},
 	friendStatus: {
-		request: ZodCast<IAccountFriendStatus>(),
+		request: ZodCast<IAccountFriendStatus | { id: AccountId; }>(),
 		response: null,
 	},
 	relationshipsUpdate: {

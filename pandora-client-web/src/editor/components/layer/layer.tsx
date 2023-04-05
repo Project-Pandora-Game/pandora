@@ -223,7 +223,7 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 							their names in the editor but only in the asset code (*.asset.ts file).
 						</p>
 						<p>
-							If the colorization definition also has a inheritance group,<br />
+							If the colorization definition also has an inheritance group,<br />
 							it will be shown here. If the group is active, then this layer<br />
 							will inherit the color of any item with the same group.
 						</p>

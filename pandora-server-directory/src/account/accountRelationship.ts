@@ -179,14 +179,10 @@ export class AccountRelationship {
 			return;
 		}
 		if (oldType === 'blockMutual' && newType === 'blockedBy') {
-			for (const connection of this.account.associatedConnections.values()) {
-				connection.sendMessage('relationshipsUpdate', { id });
-			}
+			this.account.associatedConnections.sendMessage('relationshipsUpdate', { id });
 			return;
 		}
-		for (const connection of this.account.associatedConnections.values()) {
-			connection.sendMessage('relationshipsUpdate', newRel);
-		}
+		this.account.associatedConnections.sendMessage('relationshipsUpdate', newRel);
 	}
 
 	private remove(id: AccountId): void {
@@ -195,9 +191,7 @@ export class AccountRelationship {
 		if (existing?.type === 'blockedBy') {
 			return;
 		}
-		for (const connection of this.account.associatedConnections.values()) {
-			connection.sendMessage('relationshipsUpdate', { id });
-		}
+		this.account.associatedConnections.sendMessage('relationshipsUpdate', { id });
 	}
 
 	private loaded = false;

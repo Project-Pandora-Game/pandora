@@ -82,13 +82,13 @@ describe('ClientConnection', () => {
 			// Set
 			client.setAccount(account);
 			expect(client.account).toBe(account);
-			expect(account.associatedConnections).toContain(client);
+			expect(account.associatedConnections.clients).toContain(client);
 			expect(client.isLoggedIn()).toBe(true);
 
 			// Remove
 			client.setAccount(null);
 			expect(client.account).toBe(null);
-			expect(account.associatedConnections).not.toContain(client);
+			expect(account.associatedConnections.clients).not.toContain(client);
 			expect(client.isLoggedIn()).toBe(false);
 		});
 
@@ -100,14 +100,14 @@ describe('ClientConnection', () => {
 			// Set first
 			client.setAccount(account1);
 			expect(client.account).toBe(account1);
-			expect(account1.associatedConnections).toContain(client);
-			expect(account2.associatedConnections).not.toContain(client);
+			expect(account1.associatedConnections.clients).toContain(client);
+			expect(account2.associatedConnections.clients).not.toContain(client);
 
 			// Swap to second
 			client.setAccount(account2);
 			expect(client.account).toBe(account2);
-			expect(account1.associatedConnections).not.toContain(client);
-			expect(account2.associatedConnections).toContain(client);
+			expect(account1.associatedConnections.clients).not.toContain(client);
+			expect(account2.associatedConnections.clients).toContain(client);
 		});
 
 		it('Removes account after disconnect', async () => {
@@ -121,7 +121,7 @@ describe('ClientConnection', () => {
 			connection.disconnect();
 
 			expect(client.account).toBe(null);
-			expect(account.associatedConnections).not.toContain(client);
+			expect(account.associatedConnections.clients).not.toContain(client);
 		});
 	});
 

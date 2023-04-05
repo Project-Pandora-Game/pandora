@@ -56,16 +56,16 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 		if (this._account === account)
 			return;
 		if (this._account) {
-			Assert(this._account.associatedConnections.has(this));
+			Assert(this.rooms.has(this._account.associatedConnections));
 			this.setCharacter(null);
 			this._account.touch();
-			this._account.associatedConnections.delete(this);
+			this.leaveRoom(this._account.associatedConnections);
 			this._account = null;
 		}
 		if (account) {
 			account.touch();
 			this._account = account;
-			account.associatedConnections.add(this);
+			this.joinRoom(account.associatedConnections);
 		}
 	}
 

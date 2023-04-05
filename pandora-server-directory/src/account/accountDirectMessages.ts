@@ -69,9 +69,7 @@ export class AccountDirectMessages {
 				break;
 		}
 		if (notifyClients && action !== 'new' && action !== 'open') {
-			for (const connection of this._account.associatedConnections) {
-				connection.sendMessage('directMessageAction', { id, action });
-			}
+			this._account.associatedConnections.sendMessage('directMessageAction', { id, action });
 		}
 		await GetDatabase().setDirectMessageInfo(this._account.id, this._dms);
 	}
@@ -109,15 +107,11 @@ export class AccountDirectMessages {
 	}
 
 	private directMessageGet(message: IDirectoryClientArgument['directMessageGet']): void {
-		for (const connection of this._account.associatedConnections) {
-			connection.sendMessage('directMessageGet', message);
-		}
+		this._account.associatedConnections.sendMessage('directMessageGet', message);
 	}
 
 	private directMessageSent(message: IDirectoryClientArgument['directMessageSent']): void {
-		for (const connection of this._account.associatedConnections) {
-			connection.sendMessage('directMessageSent', message);
-		}
+		this._account.associatedConnections.sendMessage('directMessageSent', message);
 	}
 
 	public async getMessages(id: number, until?: number): IClientDirectoryPromiseResult['getDirectMessages'] {

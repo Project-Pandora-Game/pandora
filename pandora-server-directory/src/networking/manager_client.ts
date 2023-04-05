@@ -187,7 +187,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			token: { value: token.value, expires: token.expires },
 			account: account.getAccountInfo(),
 			relationships: await account.relationship.getAll(),
-			friends: [],
+			friends: await account.relationship.getAllStatus(),
 		};
 	}
 

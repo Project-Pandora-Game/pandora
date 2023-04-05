@@ -507,17 +507,20 @@ function BackgroundSelectDialog({ hide, current, select }: {
 
 	const availableBackgrounds = useMemo(() => assetManager.getBackgrounds(), [assetManager]);
 	const [nameFilter, setNameFilter] = useState('');
-	/*
-	 * TODO: Add a tag based filter to the dialog in a later version
-	 * const [tagFilter, setTagFilter] = useState('');
-	 */
+	const [tagFilter, setTagFilter] = useState('');
+
+	const knownTags = useMemo(() => assetManager.backgroundTags, [assetManager]);
 
 	const filteredBackgrounds = useMemo(() => {
+		const tags = tagFilter.split(/\s+/);
 		const filterParts = nameFilter.toLowerCase().trim().split(/\s+/);
-		return availableBackgrounds.filter((background) => filterParts.every((f) => {
-			return background.name.toLowerCase().includes(f);
-		}));
-	}, [availableBackgrounds, nameFilter]);
+		return availableBackgrounds.filter((background) => {
+			// Filter background by making sure they have all requested tags
+			const matchesAllTags = tags.length === 0 || tags.some((tag) => background.tags.includes(tag));
+			const matchesName = filterParts.every((f) => background.name.toLowerCase().includes(f));
+			return matchesName && matchesAllTags;
+		});
+	}, [availableBackgrounds, nameFilter, tagFilter]);
 
 	const nameFilterInput = useRef<HTMLInputElement>(null);
 
@@ -550,14 +553,23 @@ function BackgroundSelectDialog({ hide, current, select }: {
 					<div>Select a background for the room</div>
 					<input ref={ nameFilterInput }
 						className='input-filter'
-						placeholder='Room name...'
+						placeholder='Background name…'
 						value={ nameFilter }
 						onChange={ (e) => setNameFilter(e.target.value) }
 					/>
 					<div className='dropdown'>
-						<button className='dropdown-button'>Tag filter...</button>
+						<button className='dropdown-button'>Tag filter…</button>
 						<div className='dropdown-content'>
-							<a href='#'>None</a>
+							{ Array.from(knownTags)
+								.map(([id, tag]) => (
+									<a key={ id }
+										onClick={ () => {
+											setTagFilter(id);
+										} }
+									>
+										{ `${tag.category}: ${tag.name}` }
+									</a>
+								)) }
 						</div>
 					</div>
 				</div>

@@ -16,6 +16,7 @@ import { PandoraLobby } from '../components/pandoraLobby/pandoraLobby';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 import { DirectMessages } from '../components/directMessages/directMessages';
+import { Relationships } from '../components/releationships/relationships';
 
 export function PandoraRoutes(): ReactElement {
 	return (
@@ -30,6 +31,7 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
 			<Route path='/settings' element={ <RequiresLogin element={ Settings } /> } />
 			<Route path='/direct_messages' element={ <RequiresLogin element={ DirectMessages } /> } />
+			<Route path='/relationships' element={ <RequiresLogin element={ Relationships } /> } />
 			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
 			<Route path='/chatroom_select' element={ <RequiresCharacter element={ ChatroomSelect } /> } />
 			<Route path='/chatroom_create' element={ <RequiresCharacter element={ ChatroomCreate } /> } />

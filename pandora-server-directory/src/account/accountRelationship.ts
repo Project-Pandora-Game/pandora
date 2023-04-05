@@ -52,6 +52,15 @@ export class AccountRelationship {
 			.map(CastMutualToSimple);
 	}
 
+	public async getAllStatus(): Promise<IAccountFriendStatus[]> {
+		await this.load();
+		return [...this.relationships.values()]
+			.filter((rel) => rel.type === 'friend')
+			.map((rel) => accountManager.getAccountById(rel.id))
+			.map((acc) => acc?.relationship.getStatus())
+			.filter((status): status is IAccountFriendStatus => !!status);
+	}
+
 	public async canReceiveDM(from: Account): Promise<boolean> {
 		await this.load();
 		const rel = this.get(from.id);

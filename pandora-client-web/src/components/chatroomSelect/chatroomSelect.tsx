@@ -1,6 +1,6 @@
 import { noop } from 'lodash';
 import { EMPTY, GetLogger, IChatRoomListInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId, AssertNotNullable } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { PersistentToast } from '../../persistentToast';
@@ -18,9 +18,32 @@ import closedDoor from '../../icons/closed-door.svg';
 import openDoor from '../../icons/opened-door.svg';
 import { ContextHelpButton } from '../help/contextHelpButton';
 
+const tips: [string][] = [
+	[`You can move your character inside a room by dragging the character name below her.`],
+	[`Careful! Your rooms are set to private as default when you first create them.`],
+	[`Press "arrow up" or right-click on a chat message to edit or delete it in the chat.`],
+	[`Your character can turn around for everyone in a chat room in the "Pose" tab or with "/turn".`],
+	[`Chat commands start with a "/" and typing just this character shows a help menu.`],
+	[`You can use your browser's "back" and "forward" buttons to navigate between screens.`],
+];
+
 export function ChatroomSelect(): ReactElement {
 	const roomData = useChatRoomData();
 	const roomList = useRoomList();
+
+	const [index, setIndex] = useReducer((oldState: number) => {
+		return (oldState + 1) % tips.length;
+	}, 0);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setIndex();
+		}, 8000);
+
+		return () => {
+			clearInterval(interval);
+		};
+	});
 
 	if (roomData) {
 		return <Navigate to='/chatroom' />;
@@ -28,7 +51,12 @@ export function ChatroomSelect(): ReactElement {
 
 	return (
 		<div>
-			<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
+			<Row wrap className='topRow'>
+				<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
+				<span className='infoBox'>
+					🛈 Tip: { tips[index] }
+				</span>
+			</Row>
 			<h2>Room search</h2>
 			{ !roomList ? <div className='loading'>Loading...</div> : <ChatroomSelectRoomList roomList={ roomList } /> }
 		</div>

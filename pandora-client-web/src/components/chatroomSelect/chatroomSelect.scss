@@ -101,3 +101,13 @@
 		grid-column: 1 / 3;
 	}
 }
+
+.topRow {
+	justify-content: space-between;
+}
+
+.infoBox {
+	border-radius: 10px;
+	border: 2px solid grey;
+	padding: 5px;
+}

@@ -41,7 +41,7 @@ export function Relationships() {
 
 function useRelationships(type: IAccountRelationship['type']) {
 	const rel = useObservable(RELATIONSHIPS);
-	return useMemo(() => rel.filter((rel) => rel.type === type), [rel, type]);
+	return useMemo(() => rel.filter((r) => r.type === type), [rel, type]);
 }
 
 function ShowRelationships({ type }: { type: IAccountRelationship['type']; }) {
@@ -54,8 +54,8 @@ function ShowRelationships({ type }: { type: IAccountRelationship['type']; }) {
 				<span>Created</span>
 				<span>Actions</span>
 			</Row>
-			{ rel.map((rel) => (
-				<RelationshipsRow key={ rel.id } { ...rel } />
+			{ rel.map((r) => (
+				<RelationshipsRow key={ r.id } { ...r } />
 			)) }
 		</Column>
 	);
@@ -79,23 +79,27 @@ function RelationshipsRow({
 				return (
 					<Button className='slim' onClick={
 						() => directory.sendMessage('blockList', { id, action: 'remove' })
-					}>Unblock</Button>
+					}>Unblock
+					</Button>
 				);
 			case 'pending':
 				return (
 					<Button className='slim' onClick={
 						() => void directory.awaitResponse('friendRequest', { id, action: 'cancel' }).catch(() => { /* ignore */ })
-					}>Cancel</Button>
+					}>Cancel
+					</Button>
 				);
 			case 'incoming':
 				return (
 					<>
 						<Button className='slim' onClick={
 							() => void directory.awaitResponse('friendRequest', { id, action: 'accept' }).catch(() => { /* ignore */ })
-						}>Accept</Button>
+						}>Accept
+						</Button>
 						<Button className='slim' onClick={
 							() => void directory.awaitResponse('friendRequest', { id, action: 'decline' }).catch(() => { /* ignore */ })
-						}>Decline</Button>
+						}>Decline
+						</Button>
 					</>
 				);
 			default:
@@ -169,7 +173,8 @@ function FriendRow({
 			<span>
 				<Button className='slim' onClick={
 					() => void directory.awaitResponse('unfriend', { id }).catch(() => { /* ignore */ })
-				}>Remove</Button>
+				}>Remove
+				</Button>
 			</span>
 		</Row>
 	);

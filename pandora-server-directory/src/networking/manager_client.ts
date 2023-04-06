@@ -627,7 +627,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	//#endregion Direct Messages
 
 	private async handleFriendRequest({ id, action }: IClientDirectoryArgument['friendRequest'], connection: ClientConnection): IClientDirectoryPromiseResult['friendRequest'] {
-		if (!connection.account)
+		if (!connection.account || id === connection.account.id)
 			throw new BadMessageError();
 
 		switch (action) {
@@ -653,7 +653,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleUnfriend({ id }: IClientDirectoryArgument['unfriend'], connection: ClientConnection): IClientDirectoryPromiseResult['unfriend'] {
-		if (!connection.account)
+		if (!connection.account || id === connection.account.id)
 			throw new BadMessageError();
 
 		const success = await connection.account.relationship.removeFriend(id);
@@ -661,7 +661,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleBlockList({ id, action }: IClientDirectoryArgument['blockList'], connection: ClientConnection): IClientDirectoryPromiseResult['blockList'] {
-		if (!connection.account)
+		if (!connection.account || id === connection.account.id)
 			throw new BadMessageError();
 
 		switch (action) {

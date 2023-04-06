@@ -8,6 +8,9 @@ import { DirectMessages } from '../directMessages/directMessages';
 import './relationships.scss';
 import { Button } from '../common/button/button';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useAsyncEvent } from '../../common/useEvent';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 
 export const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
 export const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
@@ -78,30 +81,15 @@ function RelationshipsRow({
 			case 'blocked':
 				return (
 					<Button className='slim' onClick={
-						() => directory.sendMessage('blockList', { id, action: 'remove' })
-					}>Unblock
+						() => confirm(`Unblock ${name}?`) && directory.sendMessage('blockList', { id, action: 'remove' })
+					}>
+						Unblock
 					</Button>
 				);
 			case 'pending':
-				return (
-					<Button className='slim' onClick={
-						() => void directory.awaitResponse('friendRequest', { id, action: 'cancel' }).catch(() => { /* ignore */ })
-					}>Cancel
-					</Button>
-				);
+				return <PendingRequestActions id={ id } />;
 			case 'incoming':
-				return (
-					<>
-						<Button className='slim' onClick={
-							() => void directory.awaitResponse('friendRequest', { id, action: 'accept' }).catch(() => { /* ignore */ })
-						}>Accept
-						</Button>
-						<Button className='slim' onClick={
-							() => void directory.awaitResponse('friendRequest', { id, action: 'decline' }).catch(() => { /* ignore */ })
-						}>Decline
-						</Button>
-					</>
-				);
+				return <IncomingRequestActions id={ id } />;
 			default:
 				return null;
 		}
@@ -113,6 +101,38 @@ function RelationshipsRow({
 			<span>{ new Date(time).toLocaleString() }</span>
 			<span>{ actions }</span>
 		</Row>
+	);
+}
+
+function PendingRequestActions({ id }: { id: AccountId; }) {
+	const directory = useDirectoryConnector();
+	const [cancel, cancelInProgress] = useAsyncEvent(async () => {
+		return await directory.awaitResponse('friendRequest', { id, action: 'cancel' });
+	}, (r) => HandleResult(r?.result));
+	return (
+		<Button className='slim' onClick={ cancel } disabled={ cancelInProgress }>Cancel</Button>
+	);
+}
+
+function IncomingRequestActions({ id }: { id: AccountId; }) {
+	const directory = useDirectoryConnector();
+	const [accept, acceptInProgress] = useAsyncEvent(async () => {
+		if (confirm(`Accept friend request from ${id}?`)) {
+			return await directory.awaitResponse('friendRequest', { id, action: 'accept' });
+		}
+		return undefined;
+	}, (r) => HandleResult(r?.result));
+	const [decline, declineInProgress] = useAsyncEvent(async () => {
+		if (confirm(`Decline friend request from ${id}?`)) {
+			return await directory.awaitResponse('friendRequest', { id, action: 'decline' });
+		}
+		return undefined;
+	}, (r) => HandleResult(r?.result));
+	return (
+		<>
+			<Button className='slim' onClick={ accept } disabled={ acceptInProgress }>Accept</Button>
+			<Button className='slim' onClick={ decline } disabled={ declineInProgress }>Decline</Button>
+		</>
 	);
 }
 
@@ -163,6 +183,14 @@ function FriendRow({
 	characters?: IAccountFriendStatus['characters'];
 }) {
 	const directory = useDirectoryConnector();
+
+	const [unfriend, processing] = useAsyncEvent(async () => {
+		if (confirm(`Are you sure you want to remove ${name} from your friends list?`)) {
+			return await directory.awaitResponse('unfriend', { id });
+		}
+		return undefined;
+	}, (r) => HandleResult(r?.result));
+
 	return (
 		<Row>
 			<span>{ id }</span>
@@ -171,11 +199,33 @@ function FriendRow({
 			<span>{ status }</span>
 			<span>{ characters?.length !== 0 ? 'yes' : 'no' }</span>
 			<span>
-				<Button className='slim' onClick={
-					() => void directory.awaitResponse('unfriend', { id }).catch(() => { /* ignore */ })
-				}>Remove
+				<Button className='slim' onClick={ unfriend } disabled={ processing }>
+					Remove
 				</Button>
 			</span>
 		</Row>
 	);
+}
+
+function HandleResult(result: 'ok' | 'accountNotFound' | 'requestNotFound' | 'blocked' | 'requestAlreadyExists' | undefined) {
+	switch (result) {
+		case undefined:
+		case 'ok':
+			return;
+		case 'accountNotFound':
+			toast('Account not found', TOAST_OPTIONS_ERROR);
+			return;
+		case 'requestNotFound':
+			toast('Request not found', TOAST_OPTIONS_ERROR);
+			return;
+		case 'blocked':
+			toast('Account is blocked', TOAST_OPTIONS_ERROR);
+			return;
+		case 'requestAlreadyExists':
+			toast('Request already exists', TOAST_OPTIONS_ERROR);
+			return;
+		default:
+			toast('Unknown error', TOAST_OPTIONS_ERROR);
+			return;
+	}
 }

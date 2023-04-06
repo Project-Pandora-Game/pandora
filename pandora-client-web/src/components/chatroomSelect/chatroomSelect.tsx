@@ -18,13 +18,13 @@ import closedDoor from '../../icons/closed-door.svg';
 import openDoor from '../../icons/opened-door.svg';
 import { ContextHelpButton } from '../help/contextHelpButton';
 
-const tips: [string][] = [
-	[`You can move your character inside a room by dragging the character name below her.`],
-	[`Careful! Your rooms are set to private as default when you first create them.`],
-	[`Press "arrow up" or right-click on a chat message to edit or delete it in the chat.`],
-	[`Your character can turn around for everyone in a chat room in the "Pose" tab or with "/turn".`],
-	[`Chat commands start with a "/" and typing just this character shows a help menu.`],
-	[`You can use your browser's "back" and "forward" buttons to navigate between screens.`],
+const TIPS: readonly string[] = [
+	`You can move your character inside a room by dragging the character name below her.`,
+	`Careful! Your rooms are set to private as default when you first create them.`,
+	`Press "arrow up" or right-click on a chat message to edit or delete it in the chat.`,
+	`Your character can turn around for everyone in a chat room in the "Pose" tab or with "/turn".`,
+	`Chat commands start with a "/" and typing just this character shows a help menu.`,
+	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 ];
 
 export function ChatroomSelect(): ReactElement {
@@ -32,8 +32,8 @@ export function ChatroomSelect(): ReactElement {
 	const roomList = useRoomList();
 
 	const [index, setIndex] = useReducer((oldState: number) => {
-		return (oldState + 1) % tips.length;
-	}, 0);
+		return (oldState + 1) % TIPS.length;
+	}, Math.floor(Math.random() * TIPS.length));
 
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -51,10 +51,10 @@ export function ChatroomSelect(): ReactElement {
 
 	return (
 		<div>
-			<Row wrap className='topRow'>
+			<Row wrap alignX='space-between'>
 				<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
 				<span className='infoBox'>
-					🛈 Tip: { tips[index] }
+					🛈 Tip: { TIPS[index] }
 				</span>
 			</Row>
 			<h2>Room search</h2>

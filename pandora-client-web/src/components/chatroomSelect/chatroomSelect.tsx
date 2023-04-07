@@ -14,22 +14,26 @@ import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
 import { Row } from '../common/container/container';
 import './chatroomSelect.scss';
+import '../Eula/eula.scss'
 import closedDoor from '../../icons/closed-door.svg';
 import openDoor from '../../icons/opened-door.svg';
 import { ContextHelpButton } from '../help/contextHelpButton';
+import { Scrollbar } from '../common/scrollbar/scrollbar';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
 	`Careful! Your rooms are set to private as default when you first create them.`,
 	`Press "arrow up" or right-click on a chat message to edit or delete it in the chat.`,
 	`Your character can turn around for everyone in a chat room in the "Pose" tab or with "/turn".`,
-	`Chat commands start with a "/" and typing just this character shows a help menu.`,
+	`Chat commands start with a "/" and typing just this one character shows a help menu.`,
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 ];
 
 export function ChatroomSelect(): ReactElement {
 	const roomData = useChatRoomData();
 	const roomList = useRoomList();
+
+	const [showTips, setShowTips] = useState(false);
 
 	const [index, setIndex] = useReducer((oldState: number) => {
 		return (oldState + 1) % TIPS.length;
@@ -53,13 +57,37 @@ export function ChatroomSelect(): ReactElement {
 		<div>
 			<Row wrap alignX='space-between'>
 				<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
-				<span className='infoBox'>
+				<span className='infoBox' onClick={ () => setShowTips(true) } >
 					🛈 Tip: { TIPS[index] }
 				</span>
 			</Row>
 			<h2>Room search</h2>
 			{ !roomList ? <div className='loading'>Loading...</div> : <ChatroomSelectRoomList roomList={ roomList } /> }
+			{ showTips && <TipsListDialog
+				hide={ () => setShowTips(false) }
+			/> }
 		</div>
+	);
+}
+
+function TipsListDialog({ hide }: {
+	hide: () => void;
+}): ReactElement | null {
+
+	return (
+		<ModalDialog>
+			<Scrollbar color='dark' className='policyDetails'>
+				<h2>🛈 Full list of Pandora tips:</h2>
+				<ul>
+					{ TIPS.map((tip) =>
+						<><li>{ tip }</li></>
+					) }
+				</ul>
+			</Scrollbar>
+			<Row alignX='center'>
+				<Button onClick={ hide }>Close</Button>
+			</Row>
+		</ModalDialog>
 	);
 }
 

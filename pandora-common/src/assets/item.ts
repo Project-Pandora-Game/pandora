@@ -2,14 +2,14 @@ import { Immutable } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
-import type { Writeable } from '../utility';
+import { MemoizeNoArg, Writeable } from '../utility';
 import { HexColorString, HexColorStringSchema } from '../validation';
 import type { AppearanceActionContext } from './appearanceActions';
 import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
-import { AssetIdSchema } from './definitions';
+import { AssetColorization, AssetIdSchema } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
@@ -25,32 +25,16 @@ export const ItemBundleSchema = z.object({
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
-function FixupColorFromAsset(asset: Asset, color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {
-	const colorization = asset.definition.colorization ?? {};
-	if (Array.isArray(color)) {
-		const keys = Object.keys(colorization);
-		const fixup: Writeable<ItemColorBundle> = {};
-		color.forEach((value, index) => {
-			if (index < keys.length)
-				fixup[keys[index]] = value;
-		});
-		color = fixup;
-	}
-	const result: Writeable<ItemColorBundle> = {};
-	for (const [key, value] of Object.entries(colorization)) {
-		if (color[key] != null && value.name != null) {
-			result[key] = color[key];
-		} else {
-			result[key] = value.default;
-		}
-	}
-	return result;
-}
-
 export type IItemLoadContext = {
 	assetManager: AssetManager;
 	doLoadTimeCleanup: boolean;
 	logger?: Logger;
+};
+
+export type ColorGroupResult = {
+	item: Item;
+	colorization: AssetColorization;
+	color: HexColorString;
 };
 
 /**
@@ -62,7 +46,7 @@ export class Item {
 	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
 	public readonly asset: Asset;
-	public readonly color: ItemColorBundle;
+	private readonly color: ItemColorBundle;
 	public readonly modules: ReadonlyMap<string, IItemModule>;
 
 	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
@@ -72,14 +56,14 @@ export class Item {
 		if (this.asset.id !== bundle.asset) {
 			throw new Error(`Attempt to import different asset bundle into item (${this.asset.id} vs ${bundle.asset})`);
 		}
-		// Load color from bundle
-		this.color = FixupColorFromAsset(asset, bundle.color);
 		// Load modules
 		const modules = new Map<string, IItemModule>();
 		for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
 			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
 		}
 		this.modules = modules;
+		// Load color from bundle
+		this.color = this._loadColor(bundle.color);
 	}
 
 	public exportToBundle(): ItemBundle {
@@ -99,7 +83,7 @@ export class Item {
 		};
 	}
 
-	private exportColorToBundle(): ItemColorBundle | undefined {
+	public exportColorToBundle(): ItemColorBundle | undefined {
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return undefined;
@@ -115,6 +99,42 @@ export class Item {
 			hasKey = true;
 		}
 		return hasKey ? result : undefined;
+	}
+
+	public containerChanged(items: AppearanceItems, isCharacter: boolean): Item {
+		if (!isCharacter)
+			return this;
+
+		return this._overrideColors(items);
+	}
+
+	public getColorOverrides(items: AppearanceItems): null | Record<string, ColorGroupResult> {
+		const colorization = this.asset.definition.colorization;
+		if (!colorization)
+			return null;
+
+		const { overrideColorKey } = this.getProperties();
+		if (overrideColorKey.size === 0)
+			return null;
+
+		let hasGroup = false;
+		const result: Record<string, ColorGroupResult> = {};
+		for (const key of Object.keys(this.color)) {
+			const def = colorization[key];
+			if (!def || def.name == null)
+				continue;
+
+			if (!overrideColorKey.has(key))
+				continue;
+
+			const groupColor = this._resolveColorGroup(items, key, def);
+			if (groupColor == null)
+				continue;
+
+			result[key] = groupColor;
+			hasGroup = true;
+		}
+		return hasGroup ? result : null;
 	}
 
 	public validate(isWorn: boolean): AppearanceValidationResult {
@@ -198,6 +218,7 @@ export class Item {
 		});
 	}
 
+	@MemoizeNoArg
 	public getPropertiesParts(): Immutable<AssetProperties>[] {
 		const propertyParts: Immutable<AssetProperties>[] = [this.asset.definition];
 		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
@@ -205,8 +226,131 @@ export class Item {
 		return propertyParts;
 	}
 
+	@MemoizeNoArg
 	public getProperties(): AssetPropertiesIndividualResult {
 		return this.getPropertiesParts()
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
+	}
+
+	public resolveColor(items: AppearanceItems, colorizationKey?: string | null): HexColorString | undefined {
+		if (colorizationKey == null || !this.asset.definition.colorization)
+			return undefined;
+
+		const colorization = this.asset.definition.colorization[colorizationKey];
+		if (!colorization)
+			return undefined;
+
+		const color = this.color[colorizationKey];
+		if (color)
+			return color;
+
+		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
+	}
+
+	private _overrideColors(items: AppearanceItems): Item {
+		const colorization = this.asset.definition.colorization;
+		if (!colorization)
+			return this;
+
+		const overrides = this.getColorOverrides(items);
+		if (!overrides)
+			return this;
+
+		const result: Writeable<ItemColorBundle> = {};
+		for (const [key, value] of Object.entries(this.color)) {
+			const def = colorization[key];
+			if (!def || def.name == null)
+				continue;
+
+			result[key] = overrides[key]?.color ?? value;
+		}
+		return this.changeColor(result);
+	}
+
+	/**
+	 * Color resolution order:
+	 * 1. Self (if it is not an inherited color)
+	 * 2. Closest item before self that has this color group (if it is not an inherited color)
+	 * 3. Closest item after self that has this color group (if it is not an inherited color)
+	 * 4. Closest item from self (inclusive) that has this color group and it has an inherited color
+	 */
+	private _resolveColorGroup(items: AppearanceItems, ignoreKey: string, { group }: AssetColorization): ColorGroupResult | undefined {
+		if (!group)
+			return undefined;
+
+		const selfResult = this._getColorByGroup(group, ignoreKey);
+		if (selfResult?.[0] === 'primary')
+			return { item: this, colorization: selfResult[1], color: selfResult[2] };
+
+		let color: ColorGroupResult | undefined;
+		let colorInherited: ColorGroupResult | undefined = selfResult ? { item: this, colorization: selfResult[1], color: selfResult[2] } : undefined;
+		let foundSelf = false;
+		for (const item of items) {
+			if (item.id === this.id) {
+				if (color)
+					return color;
+
+				foundSelf = true;
+				continue;
+			}
+
+			const result = item._getColorByGroup(group);
+			if (result == null)
+				continue;
+
+			const [resultKey, colorization, resultColor] = result;
+			switch (resultKey) {
+				case 'primary':
+					if (foundSelf)
+						return { item, colorization, color: resultColor };
+
+					color = { item, colorization, color: resultColor };
+					break;
+				case 'inherited':
+					if (!colorInherited || !foundSelf)
+						colorInherited = { item, colorization, color: resultColor };
+					break;
+			}
+		}
+		return color ?? colorInherited;
+	}
+
+	private _getColorByGroup(group: string, ignoreKey?: string): null | ['primary' | 'inherited', AssetColorization, HexColorString] {
+		const { overrideColorKey, excludeFromColorInheritance } = this.getProperties();
+		let inherited: [AssetColorization, HexColorString] | undefined;
+		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
+			if (value.group !== group || !this.color[key])
+				continue;
+			if (key === ignoreKey || excludeFromColorInheritance.has(key))
+				continue;
+
+			if (!overrideColorKey.has(key))
+				return ['primary', value, this.color[key]];
+
+			if (!inherited)
+				inherited = [value, this.color[key]];
+		}
+		return inherited ? ['inherited', ...inherited] : null;
+	}
+
+	private _loadColor(color: ItemColorBundle | HexColorString[] = {}): ItemColorBundle {
+		const colorization = this.asset.definition.colorization ?? {};
+		if (Array.isArray(color)) {
+			const keys = Object.keys(colorization);
+			const fixup: Writeable<ItemColorBundle> = {};
+			color.forEach((value, index) => {
+				if (index < keys.length)
+					fixup[keys[index]] = value;
+			});
+			color = fixup;
+		}
+		const result: Writeable<ItemColorBundle> = {};
+		for (const [key, value] of Object.entries(colorization)) {
+			if (value.name == null)
+				continue;
+
+			result[key] = color[key] ?? value.default;
+		}
+		return result;
 	}
 }

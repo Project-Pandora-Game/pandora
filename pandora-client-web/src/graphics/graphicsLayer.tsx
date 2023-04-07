@@ -2,7 +2,7 @@ import { Container, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { max, maxBy, min, minBy } from 'lodash';
-import { Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
+import { AppearanceItems, Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -202,17 +202,7 @@ export function GraphicsLayer({
 
 	const texture = useTexture(image, undefined, getTexture);
 
-	const color: number = state?.color ??
-		(
-			(
-				item != null &&
-				colorizationKey != null &&
-				item.color[colorizationKey]
-			) ? Number.parseInt(item.color[colorizationKey].slice(1), 16) : undefined
-		) ??
-		0xffffff;
-
-	const alpha = state?.alpha ?? 1;
+	const { color, alpha } = useItemColor(appearanceContainer.appearance.getAllItems(), item, colorizationKey, state);
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 
@@ -253,6 +243,15 @@ export function GraphicsLayer({
 			}
 		</Container>
 	);
+}
+
+export function useItemColor(items: AppearanceItems, item: Item | null, colorizationKey?: string | null, state?: LayerStateOverrides): { color: number; alpha: number; } {
+	const itemColor = item?.resolveColor(items, colorizationKey);
+	const color: number = state?.color
+		?? (itemColor ? Number.parseInt(itemColor.slice(1), 16) : undefined)
+		?? 0xffffff;
+	const alpha = state?.alpha ?? 1;
+	return { color, alpha };
 }
 
 const MASK_X_OVERSCAN = 250;

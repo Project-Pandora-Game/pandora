@@ -445,11 +445,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		await connection.character.room.adminAction(connection.character, action, targets);
 	}
 
-	private async handleChatRoomLeave(_: IClientDirectoryArgument['chatRoomLeave'], connection: ClientConnection): Promise<void> {
+	private async handleChatRoomLeave(_: IClientDirectoryArgument['chatRoomLeave'], connection: ClientConnection): IClientDirectoryPromiseResult['chatRoomLeave'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
-		await connection.character.leaveRoom();
+		const result = await connection.character.leaveRoom();
+
+		return { result };
 	}
 
 	private async handleChatRoomOwnershipRemove({ id }: IClientDirectoryArgument['chatRoomOwnershipRemove'], connection: ClientConnection): IClientDirectoryPromiseResult['chatRoomOwnershipRemove'] {

@@ -365,6 +365,22 @@ export class Character {
 		if (selectorResult !== 'ok')
 			return selectorResult;
 
+		// Must be allowed to join room based on character restrictions (ask shard)
+		Assert(this._assignedShard != null && this._assignedShard === room.assignedShard);
+		const restrictionResult = await room.assignedShard.shardConnection?.awaitResponse('roomCheckCanEnter', {
+			character: this.id,
+			room: room.id,
+		}).catch(() => undefined);
+		// Check if the query was successful
+		if (restrictionResult == null)
+			return 'failed';
+		Assert(restrictionResult.result !== 'targetNotFound');
+		if (restrictionResult.result === 'ok') {
+			// NOOP (fallthough)
+		} else {
+			AssertNever(restrictionResult.result);
+		}
+
 		// Must be allowed to join the room (second check to prevent race conditions)
 		const allowResult2 = room.checkAllowEnter(this, password);
 
@@ -378,10 +394,26 @@ export class Character {
 	}
 
 	@AsyncSynchronized('object')
-	public async leaveRoom(): Promise<'ok' | 'failed'> {
+	public async leaveRoom(): Promise<'ok' | 'failed' | 'restricted'> {
 		// Must be in a room (otherwise success)
 		if (this.room == null)
 			return 'ok';
+
+		// Must be allowed to leave room based on character restrictions (ask shard)
+		const restrictionResult = await this.room.assignedShard?.shardConnection?.awaitResponse('roomCheckCanLeave', {
+			character: this.id,
+		}).catch(() => undefined);
+		// Check if the query was successful
+		if (restrictionResult == null)
+			return 'failed';
+		Assert(restrictionResult.result !== 'targetNotFound');
+		if (restrictionResult.result === 'ok') {
+			// NOOP (fallthough)
+		} else if (restrictionResult.result === 'restricted') {
+			return 'restricted';
+		} else {
+			AssertNever(restrictionResult.result);
+		}
 
 		await this.room.removeCharacter(this, 'leave', this);
 

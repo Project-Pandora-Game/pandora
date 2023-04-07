@@ -14,6 +14,7 @@ describe('Room', () => {
 		await TestMockDb();
 		mockShard = await TestMockShard({
 			messageHandler: {
+				// @ts-expect-error: Mock that handles only part of the messages
 				onMessage: async (messageType, _message, _context) => {
 					// Break current call stack
 					await Sleep(50);

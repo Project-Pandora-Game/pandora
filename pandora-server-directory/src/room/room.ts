@@ -125,7 +125,7 @@ export class Room {
 			await RoomManager.destroyRoom(this);
 		} else {
 			// Room with remaining owners only propagates the change to shard and clients
-			this._assignedShard?.update('rooms');
+			await this._assignedShard?.update('rooms');
 			// TODO: Make an announcement of the change
 
 			await GetDatabase().updateChatRoom(this.id, { owners: Array.from(this._owners) }, null);
@@ -187,9 +187,10 @@ export class Room {
 			this.sendUpdatedMessage(source, ...changeList);
 		}
 
-		this._assignedShard?.update('rooms');
-
-		await GetDatabase().updateChatRoom(this.id, { config: this.config }, null);
+		await Promise.all([
+			this._assignedShard?.update('rooms'),
+			GetDatabase().updateChatRoom(this.id, { config: this.config }, null),
+		]);
 
 		ConnectionManagerClient.onRoomListChange();
 		return 'ok';
@@ -276,8 +277,8 @@ export class Room {
 				AssertNever(action);
 		}
 		if (updated) {
-			this._assignedShard?.update('rooms');
 			ConnectionManagerClient.onRoomListChange();
+			await this._assignedShard?.update('rooms');
 		}
 	}
 
@@ -364,15 +365,15 @@ export class Room {
 		return false;
 	}
 
-	public addCharacter(character: Character, sendEnterMessage: boolean = true): void {
+	public async addCharacter(character: Character, sendEnterMessage: boolean = true): Promise<void> {
+		Assert(character.shardSelector?.type === 'room' && character.shardSelector.room === this);
 		if (character.room === this)
 			return;
+		Assert(character.room == null);
+
 		if (this.isBanned(character.account)) {
 			this.logger.warning(`Refusing to add banned character id ${character.id}`);
 			return;
-		}
-		if (character.room !== null) {
-			throw new Error('Attempt to add character that is in different room');
 		}
 		this.logger.debug(`Character ${character.id} entered`);
 		this._characters.add(character);
@@ -389,8 +390,8 @@ export class Room {
 			});
 		}
 
-		this._assignedShard?.update('characters');
 		ConnectionManagerClient.onRoomListChange();
+		await this._assignedShard?.update('characters');
 	}
 
 	public async removeCharacter(character: Character, reason: IChatRoomLeaveReason, source: Character | null): Promise<void> {
@@ -432,7 +433,7 @@ export class Room {
 			await this.removeBannedCharacters(source);
 		}
 
-		this._assignedShard?.update('characters');
+		await this._assignedShard?.update('characters');
 		await this.cleanupIfEmpty();
 		ConnectionManagerClient.onRoomListChange();
 	}
@@ -522,7 +523,7 @@ export class Room {
 			}
 
 			this._assignedShard.rooms.delete(this.id);
-			this._assignedShard.update('rooms');
+			await this._assignedShard.update('rooms');
 
 			this._assignedShard = null;
 
@@ -535,7 +536,7 @@ export class Room {
 			this._assignedShard = shard;
 
 			shard.rooms.set(this.id, this);
-			shard.update('rooms');
+			await shard.update('rooms');
 
 			// Reconnect all characters that are in this room, too
 			for (const character of this.characters.values()) {
@@ -573,6 +574,6 @@ export class Room {
 			}),
 		);
 		this.pendingMessages.push(...processedMessages);
-		this._assignedShard?.update('messages');
+		this._assignedShard?.update('messages').catch(() => { /* NOOP */ });
 	}
 }

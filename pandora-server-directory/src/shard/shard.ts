@@ -169,12 +169,10 @@ export class Shard {
 		if (connection) {
 			connection.shard = this;
 			this.shardConnection = connection;
-		} else if (!this.stopping) {
+		} else {
 			// Do not trigger timeout if we are already stopping
-			this.timeout = setTimeout(this.handleTimeout.bind(this), SHARD_TIMEOUT);
-			if (this.updateTimeout) {
-				clearTimeout(this.updateTimeout);
-				this.updateTimeout = null;
+			if (!this.stopping) {
+				this.timeout = setTimeout(this.handleTimeout.bind(this), SHARD_TIMEOUT);
 			}
 		}
 	}
@@ -245,23 +243,32 @@ export class Shard {
 		});
 	}
 
-	private updateTimeout: NodeJS.Timeout | null = null;
 	private updateReasons = new Set<keyof IDirectoryShardUpdate>();
+	private updatePending: Promise<void> | null = null;
 
-	public update(...reasons: (keyof IDirectoryShardUpdate)[]): void {
+	public update(...reasons: (keyof IDirectoryShardUpdate)[]): Promise<void> {
+		if (this.stopping)
+			return Promise.resolve();
+
 		reasons.forEach((r) => this.updateReasons.add(r));
-		if (!this.shardConnection || this.updateTimeout != null)
-			return;
+		if (this.updatePending == null) {
+			this.updatePending = new Promise((resolve, reject) => {
+				setTimeout(() => {
+					this.updatePending = null;
+					this._sendUpdate()
+						.then(resolve, reject);
+				}, 100);
+			});
+		}
 
-		this.updateTimeout = setTimeout(() => {
-			this.updateTimeout = null;
-			void this.sendUpdate();
-		}, 100).unref();
+		return this.updatePending;
 	}
 
-	private sendUpdate(): Promise<void> {
-		if (this.stopping || !this.shardConnection || this.updateReasons.size === 0)
-			return Promise.resolve();
+	private async _sendUpdate(): Promise<void> {
+		if (this.stopping)
+			return;
+		Assert(this.updateReasons.size > 0);
+		Assert(this.shardConnection, 'No connection');
 
 		const update: Partial<IDirectoryShardUpdate> = {};
 		const updateReasons = Array.from(this.updateReasons);
@@ -277,30 +284,27 @@ export class Shard {
 			update.messages = this.makeDirectoryActionMessages();
 		}
 
-		return this.shardConnection
-			.awaitResponse('update', update, 10_000)
-			.then(
-				() => {
-					// Cleanup pending messages
-					if (update.messages) {
-						for (const room of this.rooms.values()) {
-							if (!update.messages[room.id])
-								continue;
-							const lastMessage = last(update.messages[room.id]);
-							if (lastMessage !== undefined) {
-								const index = room.pendingMessages.indexOf(lastMessage);
-								if (index >= 0) {
-									room.pendingMessages.splice(0, index + 1);
-								}
-							}
+		try {
+			await this.shardConnection.awaitResponse('update', update, 10_000);
+			// Cleanup pending messages
+			if (update.messages) {
+				for (const room of this.rooms.values()) {
+					if (!update.messages[room.id])
+						continue;
+					const lastMessage = last(update.messages[room.id]);
+					if (lastMessage !== undefined) {
+						const index = room.pendingMessages.indexOf(lastMessage);
+						if (index >= 0) {
+							room.pendingMessages.splice(0, index + 1);
 						}
 					}
-				},
-				(err) => {
-					this.logger.warning('Failed to update shard:', err);
-					updateReasons.forEach((r) => this.updateReasons.add(r));
-				},
-			);
+				}
+			}
+		} catch (error) {
+			this.logger.warning('Failed to update shard:', error);
+			updateReasons.forEach((r) => this.updateReasons.add(r));
+			throw error;
+		}
 	}
 
 	private makeCharacterSetupList(): IShardCharacterDefinition[] {

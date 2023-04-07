@@ -94,7 +94,7 @@ export class Character {
 	}
 
 	public onAccountInfoChange(): void {
-		this._assignedShard?.update('characters');
+		this._assignedShard?.update('characters').catch(() => { /* NOOP */ });
 	}
 
 	@AsyncSynchronized('object')
@@ -108,14 +108,16 @@ export class Character {
 
 		// Assign new connection
 		this.connectSecret = GenerateConnectSecret();
+
+		// If we are already on shard, update the secret on the shard
+		await this._assignedShard?.update('characters');
+
 		connection.setCharacter(this);
 		connection.sendConnectionStateUpdate();
 
-		// If we are already on shard, simply update the shard's connection secret and we are done
-		if (this._assignedShard) {
-			this._assignedShard.update('characters');
+		// If we are already on shard, we are done
+		if (this._assignedShard)
 			return 'ok';
-		}
 
 		return await this._autoconnect();
 	}
@@ -250,12 +252,15 @@ export class Character {
 		if (this._assignedShard === shard)
 			return;
 		if (this._assignedShard) {
-			Assert(this._assignedShard.getConnectedCharacter(this.id) === this);
+			const oldShard = this._assignedShard;
+			Assert(oldShard.getConnectedCharacter(this.id) === this);
 
-			this._assignedShard.characters.delete(this.id);
-			this._assignedShard.update('characters');
-
+			oldShard.characters.delete(this.id);
 			this._assignedShard = null;
+			this.account.onCharacterListChange();
+			this.assignedConnection?.sendConnectionStateUpdate();
+
+			await oldShard.update('characters');
 
 			this.logger.debug('Disconnected from shard');
 		}
@@ -275,14 +280,14 @@ export class Character {
 			}
 
 			this._assignedShard = shard;
-
 			shard.characters.set(this.id, this);
-			shard.update('characters');
+			this.account.onCharacterListChange();
+
+			await shard.update('characters');
+			this.assignedConnection?.sendConnectionStateUpdate();
 
 			this.logger.debug('Connected to shard', shard.id);
 		}
-		this.account.onCharacterListChange();
-		this.assignedConnection?.sendConnectionStateUpdate();
 	}
 
 	@AsyncSynchronized('object')
@@ -300,7 +305,7 @@ export class Character {
 		if (selectorResult !== 'ok')
 			return selectorResult;
 
-		room.addCharacter(this, sendEnterMessage);
+		await room.addCharacter(this, sendEnterMessage);
 
 		return 'ok';
 	}

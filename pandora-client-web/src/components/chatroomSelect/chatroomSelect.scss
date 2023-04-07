@@ -101,3 +101,14 @@
 		grid-column: 1 / 3;
 	}
 }
+
+.infoBox {
+	border-radius: 0.6em;
+	border: 2px solid $grey-dark;
+	padding: 0.4em;
+
+	&:hover {
+		cursor: pointer;
+		border: 2px solid $white;
+	}
+}

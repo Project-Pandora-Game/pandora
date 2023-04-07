@@ -154,15 +154,16 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(info));
 	}
 
-	public finalizeCharacter(accountId: number): Promise<ICharacterData | null> {
+	public finalizeCharacter(accountId: number, characterId: CharacterId): Promise<ICharacterData | null> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.resolve(null);
 
-		if (acc.characters.length === 0)
+		const info = acc.characters.find((c) => c.id === characterId);
+
+		if (!info)
 			return Promise.resolve(null);
 
-		const info = acc.characters[acc.characters.length - 1];
 		const char = this.characterDb.get(info.id);
 		if (!char?.inCreation)
 			return Promise.resolve(null);

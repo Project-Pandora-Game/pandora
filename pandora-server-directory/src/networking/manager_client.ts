@@ -281,10 +281,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleUpdateCharacter(arg: IClientDirectoryArgument['updateCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['updateCharacter'] {
-		if (!connection.isLoggedIn() || !connection.account.hasCharacter(arg.id))
+		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const info = await connection.account.updateCharacter(arg);
+		const character = connection.account.characters.get(arg.id);
+
+		if (!character)
+			throw new BadMessageError();
+
+		const info = await character.updateSelfData(arg);
 		if (!info)
 			throw new Error(`Failed to update character ${arg.id}`);
 

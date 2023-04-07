@@ -76,7 +76,7 @@ export interface PandoraDatabase {
 	 * Finish the character creation process
 	 * @param accountId - Id of account to create character for
 	 */
-	finalizeCharacter(accountId: number): Promise<ICharacterData | null>;
+	finalizeCharacter(accountId: number, characterId: CharacterId): Promise<ICharacterData | null>;
 
 	/**
 	 * Update character's self info

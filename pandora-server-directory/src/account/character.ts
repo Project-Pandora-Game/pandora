@@ -1,4 +1,4 @@
-import { Assert, AssertNever, AssertNotNullable, AsyncSynchronized, CharacterId, GetLogger, IDirectoryCharacterConnectionInfo, Logger } from 'pandora-common';
+import { Assert, AssertNever, AssertNotNullable, AsyncSynchronized, CharacterId, CloneDeepMutable, GetLogger, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryCharacterConnectionInfo, Logger } from 'pandora-common';
 import type { Account } from './account';
 import type { Shard } from '../shard/shard';
 import type { Room } from '../room/room';
@@ -22,19 +22,15 @@ function GenerateConnectSecret(): string {
 export class Character {
 	public readonly id: CharacterId;
 	public readonly account: Account;
-	public readonly data: Readonly<ICharacterSelfInfoDb>;
 	protected readonly logger: Logger;
+
+	protected _data: Readonly<ICharacterSelfInfoDb>;
+	public get data(): Readonly<ICharacterSelfInfoDb> {
+		return this._data;
+	}
 
 	public accessId: string = '';
 	public connectSecret: string;
-
-	public get accountCharacterIndex(): number {
-		const result = this.account.data.characters.findIndex((c) => c.id === this.id);
-		if (result < 0) {
-			throw new Error(`Character index not found for ${this.id}`);
-		}
-		return result;
-	}
 
 	/** Which client is assigned to this character and receives updates from it; only passive listener to what happens to the character */
 	public assignedConnection: ClientConnection | null = null;
@@ -59,15 +55,16 @@ export class Character {
 		this.logger = GetLogger('Character', `[Character ${characterData.id}]`);
 		this.id = characterData.id;
 		this.account = account;
-		this.data = characterData;
-		if (!account.data.characters.some((c) => c.id === this.id)) {
-			throw new Error('Mismatch in character and account');
-		}
+		this._data = characterData;
 		this.connectSecret = GenerateConnectSecret();
 	}
 
 	public isInUse(): boolean {
 		return this._assignedShard != null;
+	}
+
+	public get inCreation(): boolean {
+		return !!this.data.inCreation;
 	}
 
 	public async disconnect(): Promise<void> {
@@ -95,6 +92,52 @@ export class Character {
 
 	public onAccountInfoChange(): void {
 		this._assignedShard?.update('characters').catch(() => { /* NOOP */ });
+	}
+
+	public getInfoState(): string {
+		if (this.isInUse())
+			return 'connected';
+
+		if (this.inCreation)
+			return 'inCreation';
+
+		return '';
+	}
+
+	@AsyncSynchronized('object')
+	public async finishCharacterCreation(): Promise<ICharacterData | null> {
+		if (!this.inCreation)
+			return null;
+
+		const char = await GetDatabase().finalizeCharacter(this.account.id, this.id);
+		if (!char)
+			return null;
+
+		const newData = CloneDeepMutable(this._data);
+		newData.name = char.name;
+		delete newData.inCreation;
+		this._data = newData;
+
+		this.account.onCharacterListChange();
+
+		return char;
+	}
+
+	@AsyncSynchronized('object')
+	public async updateSelfData(update: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfo | null> {
+		const info = await GetDatabase().updateCharacter(this.account.id, update);
+		if (!info)
+			return null;
+
+		this._data = {
+			...this._data,
+			...update,
+		};
+
+		return ({
+			...info,
+			state: this.getInfoState(),
+		});
 	}
 
 	@AsyncSynchronized('object')

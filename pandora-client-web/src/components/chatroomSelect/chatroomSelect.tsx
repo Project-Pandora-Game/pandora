@@ -14,7 +14,6 @@ import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
 import { Row } from '../common/container/container';
 import './chatroomSelect.scss';
-import '../Eula/eula.scss';
 import closedDoor from '../../icons/closed-door.svg';
 import openDoor from '../../icons/opened-door.svg';
 import { ContextHelpButton } from '../help/contextHelpButton';
@@ -47,7 +46,7 @@ export function ChatroomSelect(): ReactElement {
 		return () => {
 			clearInterval(interval);
 		};
-	});
+	}, []);
 
 	if (roomData) {
 		return <Navigate to='/chatroom' />;

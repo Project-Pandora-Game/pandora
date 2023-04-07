@@ -14,7 +14,7 @@ import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
 import { Row } from '../common/container/container';
 import './chatroomSelect.scss';
-import '../Eula/eula.scss'
+import '../Eula/eula.scss';
 import closedDoor from '../../icons/closed-door.svg';
 import openDoor from '../../icons/opened-door.svg';
 import { ContextHelpButton } from '../help/contextHelpButton';
@@ -79,9 +79,7 @@ function TipsListDialog({ hide }: {
 			<Scrollbar color='dark' className='policyDetails'>
 				<h2>🛈 Full list of Pandora tips:</h2>
 				<ul>
-					{ TIPS.map((tip) =>
-						<><li>{ tip }</li></>
-					) }
+					{ TIPS.map((tip, index) => <li key={ index }>{ tip }</li>) }
 				</ul>
 			</Scrollbar>
 			<Row alignX='center'>

@@ -2,7 +2,7 @@ import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, EM
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
-import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { Character, useCharacterData } from '../../character/character';
@@ -25,6 +25,9 @@ import { ChatRoomDevice } from './chatRoomDevice';
 import { useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
 import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
+import { HandleResult, useRelationship } from '../releationships/relationships';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -249,7 +252,7 @@ export function ChatRoomScene(): ReactElement | null {
 	);
 }
 
-type MenuType = 'main' | 'admin';
+type MenuType = 'main' | 'admin' | 'relationship';
 
 const characterMenuContext = createContext<{
 	isPlayerAdmin: boolean;
@@ -336,6 +339,117 @@ function AdminActionContextMenu(): ReactElement | null {
 	}
 }
 
+function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const { character } = useCharacterMenuContext();
+
+	const block = useCallback(() => {
+		if (confirm(`Are you sure you want to ${action} ${character.data.name} from your block list?`))
+			directory.sendMessage('blockList', { action, id: character.data.accountId });
+	}, [action, character, directory]);
+
+	return (
+		<button onClick={ block } >
+			{ text }
+		</button>
+	);
+}
+
+function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | 'decline' | 'cancel'; text: ReactNode; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const { character } = useCharacterMenuContext();
+
+	const request = useCallback(() => {
+		if (confirm(`Are you sure you want to ${action} a friend request with ${character.data.name}?`)) {
+			directory.awaitResponse('friendRequest', { action, id: character.data.accountId })
+				.then(({ result }) => HandleResult(result))
+				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
+		}
+	}, [action, character, directory]);
+
+	return (
+		<button onClick={ request } >
+			{ text }
+		</button>
+	);
+}
+
+function UnfriendRequestMenu(): ReactElement {
+	const directory = useDirectoryConnector();
+	const { character } = useCharacterMenuContext();
+
+	const request = useCallback(() => {
+		if (confirm(`Are you sure you want to unfriend ${character.data.name}?`)) {
+			directory.awaitResponse('unfriend', { id: character.data.accountId })
+				.then(({ result }) => HandleResult(result))
+				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
+		}
+	}, [character, directory]);
+
+	return (
+		<button onClick={ request } >
+			Unfriend
+		</button>
+	);
+}
+
+function RelationshipActionContextMenuInner(): ReactElement | null {
+	const { character } = useCharacterMenuContext();
+	const rel = useRelationship(character.data.accountId);
+
+	switch (rel?.type) {
+		case undefined:
+			return (
+				<>
+					<FriendRequestMenu action='initiate' text='Add Friend' />
+					<BlockMenu action='add' text='Block' />
+				</>
+			);
+		case 'pending':
+			return <FriendRequestMenu action='cancel' text='Cancel Request' />;
+		case 'incoming':
+			return (
+				<>
+					<FriendRequestMenu action='accept' text='Accept Request' />
+					<FriendRequestMenu action='decline' text='Decline Request' />
+					<BlockMenu action='add' text='Block' />
+				</>
+			);
+		case 'friend':
+			return <UnfriendRequestMenu />;
+		case 'blocked':
+			return <BlockMenu action='remove' text='Unblock' />;
+		default:
+			return null;
+	}
+}
+
+function RelationshipActionContextMenu(): ReactElement | null {
+	const { currentAccount, character, menu, setMenu } = useCharacterMenuContext();
+	if (character.data.accountId !== currentAccount?.id)
+		return null;
+
+	switch (menu) {
+		case 'main':
+			return (
+				<button onClick={ () => setMenu('relationship') }>
+					Relationship
+				</button>
+			);
+		case 'relationship':
+			return (
+				<>
+					<RelationshipActionContextMenuInner />
+					<button onClick={ () => setMenu('main') } >
+						Back
+					</button>
+				</>
+			);
+		default:
+			return null;
+	}
+}
+
 function CharacterContextMenu({ character, position, onClose }: {
 	character: Character<ICharacterRoomData>;
 	position: Readonly<PointLike>;
@@ -406,6 +520,7 @@ function CharacterContextMenu({ character, position, onClose }: {
 					</>
 				) }
 				<AdminActionContextMenu />
+				<RelationshipActionContextMenu />
 				<button onClick={ onCloseActual } >
 					Close
 				</button>

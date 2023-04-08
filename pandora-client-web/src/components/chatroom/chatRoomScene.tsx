@@ -255,4 +255,3 @@ export function ChatRoomScene(): ReactElement | null {
 		</ChatRoomGraphicsScene>
 	);
 }
-useMemouseMemouseMemouseMemouseMemo

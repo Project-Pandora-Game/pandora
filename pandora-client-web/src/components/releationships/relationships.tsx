@@ -47,6 +47,11 @@ function useRelationships(type: IAccountRelationship['type']) {
 	return useMemo(() => rel.filter((r) => r.type === type), [rel, type]);
 }
 
+export function useRelationship(id: AccountId): IAccountRelationship | undefined {
+	const rel = useObservable(RELATIONSHIPS);
+	return useMemo(() => rel.find((r) => r.id === id), [rel, id]);
+}
+
 function ShowRelationships({ type }: { type: IAccountRelationship['type']; }) {
 	const rel = useRelationships(type);
 	return (
@@ -207,7 +212,7 @@ function FriendRow({
 	);
 }
 
-function HandleResult(result: 'ok' | 'accountNotFound' | 'requestNotFound' | 'blocked' | 'requestAlreadyExists' | undefined) {
+export function HandleResult(result: 'ok' | 'accountNotFound' | 'requestNotFound' | 'blocked' | 'requestAlreadyExists' | undefined) {
 	switch (result) {
 		case undefined:
 		case 'ok':

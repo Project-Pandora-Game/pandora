@@ -58,7 +58,7 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 	);
 }
 
-function Colorization({ colorization }: { colorization: AssetDefinition['colorization']; }): ReactElement | null {
+function Colorization({ colorization }: { colorization: Immutable<AssetDefinition['colorization']>; }): ReactElement | null {
 	if (!colorization) {
 		return null;
 	}

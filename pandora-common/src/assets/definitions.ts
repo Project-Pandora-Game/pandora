@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
-import { HexColorString, ZodTemplateString } from '../validation';
+import { HexFullColorString, ZodTemplateString } from '../validation';
 import type { AppearanceArmPose, CharacterView } from './appearance';
 import type { BoneDefinitionCompressed, BoneName } from './graphics';
 import { AssetModuleDefinition } from './modules';
@@ -46,12 +46,20 @@ export type AssetDefinitionPoseLimits<A extends AssetDefinitionExtraArgs = Asset
 export interface AssetColorization<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	/** Name that describes the meaning of this color to user, `null` if it cannot be colored by user */
 	name: string | null;
-	default: HexColorString;
+	default: HexFullColorString;
 	/**
 	 * Color inheritance group
 	 * If name is `null`, the color will always be inherited from this group, otherwise it depends on the item properties
 	 */
 	group?: A['colorGroups'];
+	/**
+	 * Controls how low can the alpha of this color be
+	 *  - if the value is not present this color cannot be transparent
+	 *  - range: [0, 255]
+	 *
+	 * @default 255
+	 */
+	minAlpha?: number;
 }
 
 export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {

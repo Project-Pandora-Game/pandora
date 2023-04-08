@@ -74,6 +74,7 @@ import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { Select } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { Immutable } from 'immer';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -1329,7 +1330,7 @@ function WardrobeItemColorization({ wornItem, item }: {
 
 function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup, action, item }: {
 	colorKey: string;
-	colorDefinition: AssetColorization;
+	colorDefinition: Immutable<AssetColorization>;
 	action: Omit<AppearanceAction & { type: 'color'; }, 'color'>;
 	allItems: AppearanceItems;
 	overrideGroup?: ColorGroupResult;

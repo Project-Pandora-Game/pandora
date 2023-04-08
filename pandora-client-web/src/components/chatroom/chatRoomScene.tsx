@@ -1,4 +1,4 @@
-import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IDirectoryAccountInfo, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -255,3 +255,4 @@ export function ChatRoomScene(): ReactElement | null {
 		</ChatRoomGraphicsScene>
 	);
 }
+useMemouseMemouseMemouseMemouseMemo

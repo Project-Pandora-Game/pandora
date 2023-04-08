@@ -445,7 +445,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			$or: [
 				{ accountIdA, accountIdB },
 				{ accountIdA: accountIdB, accountIdB: accountIdA },
-			],
+			],useMemouseMemo
 		}, {
 			$set: {
 				...data,

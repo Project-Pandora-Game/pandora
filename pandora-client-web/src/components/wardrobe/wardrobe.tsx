@@ -57,7 +57,7 @@ import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { DEFAULT_BACKGROUND_COLOR, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
-import { ColorInput } from '../common/colorInput/colorInput';
+import { ColorInput, ColorInputFull } from '../common/colorInput/colorInput';
 import { Column, Row } from '../common/container/container';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
@@ -1355,7 +1355,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 					</span>
 				)
 			}
-			<ColorInput
+			<ColorInputFull
 				initialValue={ current }
 				resetValue={ colorDefinition.default }
 				throttle={ 100 }
@@ -1368,6 +1368,8 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 						color: newColor,
 					});
 				} }
+				minAlpha={ colorDefinition.minAlpha }
+				title={ colorDefinition.name }
 			/>
 		</div>
 	);

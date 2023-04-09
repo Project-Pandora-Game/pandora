@@ -4,7 +4,13 @@ import React, { useState, type ChangeEvent, useCallback, useMemo, type ReactElem
 import { Button } from '../button/button';
 
 export function ColorInput({
-	initialValue, resetValue, onChange, throttle = 0, disabled = false, hideTextInput = false,
+	initialValue,
+	resetValue,
+	onChange,
+	throttle = 0,
+	disabled = false,
+	hideTextInput = false,
+	inputColorTitle,
 }: {
 	initialValue: HexColorString;
 	resetValue?: HexColorString;
@@ -12,6 +18,7 @@ export function ColorInput({
 	throttle?: number;
 	disabled?: boolean;
 	hideTextInput?: boolean;
+	inputColorTitle?: string;
 }): ReactElement {
 	const [value, setInput] = useState<HexColorString>(initialValue.toUpperCase() as HexColorString);
 
@@ -32,7 +39,7 @@ export function ColorInput({
 	return (
 		<>
 			{ !hideTextInput && <input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ 7 } /> }
-			<input type='color' value={ value } onChange={ onInputChange } disabled={ disabled } />
+			<input type='color' value={ value } onChange={ onInputChange } disabled={ disabled } title={ inputColorTitle } />
 			{
 				resetValue != null &&
 				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>

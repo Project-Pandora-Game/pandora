@@ -202,6 +202,7 @@ function WardrobeBackgroundColorPicker(): ReactElement {
 			onChange={ onChange }
 			throttle={ 100 }
 			hideTextInput={ true }
+			inputColorTitle='Change background color'
 		/>
 	);
 }

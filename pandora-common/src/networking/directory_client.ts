@@ -13,13 +13,15 @@ export type IDirectoryStatus = {
 
 export const DirectoryAccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema),
-	labelColor: HexColorStringSchema,
+	labelColor: HexColorStringSchema.catch('#ffffff'),
+	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
 export const ACCOUNT_SETTINGS_DEFAULT: IDirectoryAccountSettings = {
 	visibleRoles: [],
 	labelColor: '#ffffff',
+	wardrobeBackground: '#aaaaaa',
 };
 
 export const AccountCryptoKeySchema = z.object({

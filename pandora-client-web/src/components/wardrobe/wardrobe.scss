@@ -56,6 +56,18 @@ $header-height: 2em;
 					min-height: 2em;
 				}
 			}
+
+			input[type='color'] {
+				width: 2em;
+				height: 2em;
+				border-radius: 0.2em;
+				cursor: pointer;
+				background-color: $grey-darkest;
+
+				&:hover {
+					background-color: $grey-lightest;
+				}
+			}
 		}
 	}
 }

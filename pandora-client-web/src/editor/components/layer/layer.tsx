@@ -635,6 +635,12 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 						You can find the names of all bones in the file /pandora-assets/src/bones.ts<br />
 						Note that arm_r means only the right arm but there is also arm_l for the left one.
 					</p>
+					<p>
+						Hand rotation and finger positions can also be specified: <br />
+						`hand_&lt;'rotation' | 'fingers'&gt;_&lt;'left' | 'right'&gt;` <br />
+						For rotation, the options are: up, down, forward, backward.<br />
+						For fingers, the options are: fist and spread.
+					</p>
 					Every line in the input field is one condition. Some examples:
 					<ul>
 						<li>
@@ -649,6 +655,14 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 							'backView' is a fake bone that has two states: backView&gt;0 and backView=0<br />
 							It is useful for some assets like shoes to stop the front or back view image<br />
 							from leaking from behind the body when undesired.
+						</li>
+						<li>
+							hand_rotation_left=up <br />
+							This means that if the left hand is rotated up, the default layer image is replaced.
+						</li>
+						<li>
+							hand_fingers_right=spread <br />
+							This means that if the right hand fingers are in a spread position, the default layer image is replaced.
 						</li>
 					</ul>
 				</ContextHelpButton>

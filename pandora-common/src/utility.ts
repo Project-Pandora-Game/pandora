@@ -234,7 +234,10 @@ export function AsyncSynchronized(options?: AsyncLockOptions | 'object') {
 		descriptor.value = function (...args) {
 			let lock = locks.get(this);
 			if (lock == null) {
-				lock = new AsyncLock(options);
+				lock = new AsyncLock({
+					maxExecutionTime: 60_000,
+					...options,
+				});
 				locks.set(this, lock);
 			}
 

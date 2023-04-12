@@ -178,17 +178,13 @@ export class Character {
 		this.connectSecret = connectionSecret;
 		this.assignedConnection?.sendConnectionStateUpdate();
 
-		const selector: CharacterShardSelector = room ? {
-			type: 'room',
-			room,
-		} : {
-			type: 'shard',
-			shard,
-		};
-
-		await this._setShardSelector(selector, accessId);
 		if (room) {
-			await this.joinRoom(room, false);
+			await this._joinRoom(room, false, accessId);
+		} else {
+			await this._setShardSelector({
+				type: 'shard',
+				shard,
+			}, accessId);
 		}
 	}
 
@@ -335,6 +331,10 @@ export class Character {
 
 	@AsyncSynchronized('object')
 	public async joinRoom(room: Room, sendEnterMessage: boolean): Promise<'failed' | 'ok'> {
+		return await this._joinRoom(room, sendEnterMessage);
+	}
+
+	private async _joinRoom(room: Room, sendEnterMessage: boolean, forceAccessId?: string): Promise<'failed' | 'ok'> {
 		// Must not be in a different room (TODO: Shift the logic here)
 		if (this.room != null)
 			return 'failed';
@@ -343,7 +343,7 @@ export class Character {
 		const selectorResult = await this._setShardSelector({
 			type: 'room',
 			room,
-		});
+		}, forceAccessId);
 
 		if (selectorResult !== 'ok')
 			return selectorResult;

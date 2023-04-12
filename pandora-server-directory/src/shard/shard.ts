@@ -20,6 +20,7 @@ export class Shard {
 		return this._registered;
 	}
 	private stopping: boolean = false;
+	private reconnecting: boolean = false;
 
 	private publicURL = '';
 	private features: IDirectoryShardInfo['features'] = [];
@@ -56,6 +57,8 @@ export class Shard {
 			this.setConnection(null);
 		}
 
+		this.reconnecting = true;
+
 		Assert(this.publicURL === data.publicURL, `Shard's publicURL cannot change`);
 		Assert(this.features === data.features, `Shard's features cannot change`);
 		Assert(this.version === data.version, `Shard's version cannot change`);
@@ -75,6 +78,7 @@ export class Shard {
 		if (this.updatePending != null) {
 			const update = this.updatePending;
 			this.updatePending = null;
+			this.updateReasons.clear();
 			setTimeout(() => {
 				update.resolve();
 			}, 100);
@@ -92,6 +96,8 @@ export class Shard {
 		if (this._registered) {
 			throw new Error('Cannot re-register shard');
 		}
+
+		this.reconnecting = true;
 
 		this.publicURL = data.publicURL;
 		this.features = data.features;
@@ -168,6 +174,7 @@ export class Shard {
 	}
 
 	public setConnection(connection: IConnectionShard | null): void {
+		this.reconnecting = false;
 		if (this.timeout !== null) {
 			clearTimeout(this.timeout);
 			this.timeout = null;
@@ -291,7 +298,7 @@ export class Shard {
 
 	@AsyncSynchronized()
 	private async _sendUpdate(): Promise<boolean> {
-		if (this.stopping || this.updateReasons.size === 0)
+		if (this.stopping || this.reconnecting || this.updateReasons.size === 0)
 			return true;
 		if (!this.shardConnection)
 			return false;

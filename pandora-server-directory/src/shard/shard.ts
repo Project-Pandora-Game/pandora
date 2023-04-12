@@ -1,5 +1,5 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition, AsyncSynchronized, ManuallyResolvedPromise, CreateManuallyResolvedPromise } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
@@ -71,6 +71,15 @@ export class Shard {
 		this.logger.info('Reconnected');
 		ConnectionManagerClient.onShardListChange();
 
+		// If anyone is waiting for update, resolve it after sending data back
+		if (this.updatePending != null) {
+			const update = this.updatePending;
+			this.updatePending = null;
+			setTimeout(() => {
+				update.resolve();
+			}, 100);
+		}
+
 		return {
 			shardId: this.id,
 			characters: this.makeCharacterSetupList(),
@@ -100,6 +109,9 @@ export class Shard {
 					}),
 				),
 		);
+
+		// We should have no requests for the shard before it registered
+		Assert(this.updatePending == null);
 
 		this._registered = true;
 
@@ -201,6 +213,13 @@ export class Shard {
 		this.stopping = true;
 		this.setConnection(null);
 
+		// Force-reject any pending updates that were scheduled before shard's stop
+		if (this.updatePending) {
+			const update = this.updatePending;
+			this.updatePending = null;
+			update.reject('Shard deleted');
+		}
+
 		// Development shards wait for another shard to be present before reassign (for up to 60 seconds)
 		if (attemptReassign && this.features.includes('development')) {
 			const end = Date.now() + 60_000;
@@ -244,31 +263,38 @@ export class Shard {
 	}
 
 	private updateReasons = new Set<keyof IDirectoryShardUpdate>();
-	private updatePending: Promise<void> | null = null;
+	private updatePending: ManuallyResolvedPromise<void> | null = null;
 
 	public update(...reasons: (keyof IDirectoryShardUpdate)[]): Promise<void> {
+		Assert(this._registered);
 		if (this.stopping)
 			return Promise.resolve();
 
 		reasons.forEach((r) => this.updateReasons.add(r));
 		if (this.updatePending == null) {
-			this.updatePending = new Promise((resolve, reject) => {
-				setTimeout(() => {
-					this.updatePending = null;
-					this._sendUpdate()
-						.then(resolve, reject);
-				}, 100);
-			});
+			const update = this.updatePending = CreateManuallyResolvedPromise();
+			setTimeout(() => {
+				this._sendUpdate()
+					.then((result) => {
+						if (result && this.updatePending === update) {
+							this.updatePending = null;
+							update.resolve();
+						}
+					}, (error) => {
+						this.logger.fatal('Error while running sendUpdate:', error);
+					});
+			}, 100);
 		}
 
-		return this.updatePending;
+		return this.updatePending.promise;
 	}
 
-	private async _sendUpdate(): Promise<void> {
-		if (this.stopping)
-			return;
-		Assert(this.updateReasons.size > 0);
-		Assert(this.shardConnection, 'No connection');
+	@AsyncSynchronized()
+	private async _sendUpdate(): Promise<boolean> {
+		if (this.stopping || this.updateReasons.size === 0)
+			return true;
+		if (!this.shardConnection)
+			return false;
 
 		const update: Partial<IDirectoryShardUpdate> = {};
 		const updateReasons = Array.from(this.updateReasons);
@@ -303,8 +329,9 @@ export class Shard {
 		} catch (error) {
 			this.logger.warning('Failed to update shard:', error);
 			updateReasons.forEach((r) => this.updateReasons.add(r));
-			throw error;
+			return false;
 		}
+		return true;
 	}
 
 	private makeCharacterSetupList(): IShardCharacterDefinition[] {

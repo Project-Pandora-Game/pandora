@@ -182,6 +182,22 @@ export function CloneDeepMutable<T>(data: T): Draft<T> {
 	return castDraft(cloneDeep(data));
 }
 
+export type ManuallyResolvedPromise<T> = {
+	promise: Promise<T>;
+	resolve: (value: T | PromiseLike<T>) => void;
+	reject: (reason?: unknown) => void;
+};
+
+export function CreateManuallyResolvedPromise<T>(): ManuallyResolvedPromise<T> {
+	let resolve!: ManuallyResolvedPromise<T>['resolve'];
+	let reject!: ManuallyResolvedPromise<T>['reject'];
+	const promise = new Promise<T>((promiseResolve, promiseReject) => {
+		resolve = promiseResolve;
+		reject = promiseReject;
+	});
+	return { promise, resolve, reject };
+}
+
 const AsyncSynchronizedObjectLocks = new WeakMap<object, AsyncLock>();
 
 /**

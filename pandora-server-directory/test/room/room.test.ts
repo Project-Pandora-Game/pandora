@@ -1,18 +1,35 @@
-import { Assert } from 'pandora-common';
+import { Assert, AssertNever } from 'pandora-common';
 import { Room } from '../../src/room/room';
 import { RoomManager } from '../../src/room/roomManager';
 import { Shard } from '../../src/shard/shard';
-import { ShardManager } from '../../src/shard/shardManager';
-import { TestMockDb } from '../utils';
+import { TestMockDb, TestMockShard, TestShardData } from '../utils';
 import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV, TEST_ROOM_PANDORA_OWNED } from './testData';
+import { Sleep } from '../../src/utility';
 
 describe('Room', () => {
-	let shard: Shard;
+	let mockShard: TestShardData;
 	let testRoom: Room;
 
 	beforeAll(async () => {
 		await TestMockDb();
-		shard = ShardManager.getOrCreateShard(null);
+		mockShard = await TestMockShard({
+			messageHandler: {
+				onMessage: async (messageType, _message, _context) => {
+					// Break current call stack
+					await Sleep(50);
+
+					if (messageType === 'update') {
+						return {};
+					}
+
+					AssertNever();
+				},
+			},
+		});
+	});
+
+	afterAll(() => {
+		mockShard.connection.disconnect();
 	});
 
 	describe('constructor', () => {
@@ -33,6 +50,9 @@ describe('Room', () => {
 
 	describe('connect()', () => {
 		it('Fails when there is no shard', async () => {
+			const allowConnectSpy = jest.spyOn(Shard.prototype, 'allowConnect');
+			allowConnectSpy.mockReturnValue(false);
+
 			const room = await RoomManager.createRoom(TEST_ROOM2, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
@@ -42,17 +62,16 @@ describe('Room', () => {
 				id: room.id,
 				owners: TEST_ROOM_PANDORA_OWNED,
 			});
+			expect(room.assignedShard).toBe(null);
 
 			await expect(room.connect()).resolves.toBe('noShardFound');
 			expect(room.assignedShard).toBe(null);
 
 			await RoomManager.destroyRoom(room);
+			allowConnectSpy.mockRestore();
 		});
 
 		it('Uses random shard from available ones', async () => {
-			const allowConnectSpy = jest.spyOn(Shard.prototype, 'allowConnect');
-			allowConnectSpy.mockReturnValue(true);
-
 			const room = await RoomManager.createRoom(TEST_ROOM2, TEST_ROOM_PANDORA_OWNED.slice());
 
 			expect(room).toBeInstanceOf(Room);
@@ -62,18 +81,17 @@ describe('Room', () => {
 				id: room.id,
 				owners: TEST_ROOM_PANDORA_OWNED,
 			});
+			expect(room.assignedShard).toBe(null);
 
-			await expect(room.connect()).resolves.toBe(shard);
-			expect(room.assignedShard).toBe(shard);
+			const connectedShard = await room.connect();
+			expect(connectedShard).toBe(mockShard.shard);
+			expect(room.assignedShard).toBe(mockShard.shard);
+			expect(mockShard.messageHandlerSpy).toHaveBeenCalledWith('update', expect.anything(), expect.anything());
 
 			await RoomManager.destroyRoom(room);
-			allowConnectSpy.mockRestore();
 		});
 
 		it('Fails with unknown shard id from development data', async () => {
-			const allowConnectSpy = jest.spyOn(Shard.prototype, 'allowConnect');
-			allowConnectSpy.mockReturnValue(true);
-
 			const room = await RoomManager.createRoom({
 				...TEST_ROOM_DEV,
 				development: {
@@ -83,22 +101,19 @@ describe('Room', () => {
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
+			expect(room.assignedShard).toBe(null);
 
 			await expect(room.connect()).resolves.toBe('noShardFound');
 			expect(room.assignedShard).toBe(null);
 
 			await RoomManager.destroyRoom(room);
-			allowConnectSpy.mockRestore();
 		});
 
 		it('Uses shard id from development data', async () => {
-			const allowConnectSpy = jest.spyOn(Shard.prototype, 'allowConnect');
-			allowConnectSpy.mockReturnValue(true);
-
 			const room = await RoomManager.createRoom({
 				...TEST_ROOM_DEV,
 				development: {
-					shardId: shard.id,
+					shardId: mockShard.shard.id,
 				},
 			}, TEST_ROOM_PANDORA_OWNED.slice());
 
@@ -107,17 +122,19 @@ describe('Room', () => {
 			expect(room.getFullInfo()).toEqual({
 				...TEST_ROOM_DEV,
 				development: {
-					shardId: shard.id,
+					shardId: mockShard.shard.id,
 				},
 				id: room.id,
 				owners: TEST_ROOM_PANDORA_OWNED,
 			});
+			expect(room.assignedShard).toBe(null);
 
-			await expect(room.connect()).resolves.toBe(shard);
-			expect(room.assignedShard).toBe(shard);
+			const connectedShard = await room.connect();
+			expect(connectedShard).toBe(mockShard.shard);
+			expect(room.assignedShard).toBe(mockShard.shard);
+			expect(mockShard.messageHandlerSpy).toHaveBeenCalledWith('update', expect.anything(), expect.anything());
 
 			await RoomManager.destroyRoom(room);
-			allowConnectSpy.mockRestore();
 		});
 	});
 });

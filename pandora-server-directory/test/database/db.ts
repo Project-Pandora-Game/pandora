@@ -279,11 +279,11 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 	describe('finalizeCharacter()', () => {
 		it('fails on unknown account', async () => {
-			await expect(db.finalizeCharacter(999)).resolves.toBeNull();
+			await expect(db.finalizeCharacter(999, 'c0')).resolves.toBeNull();
 		});
 
-		it('fails on account without characters', async () => {
-			await expect(db.finalizeCharacter(accountId1)).resolves.toBeNull();
+		it('fails on unknown character', async () => {
+			await expect(db.finalizeCharacter(accountId1, 'c-1')).resolves.toBeNull();
 		});
 
 		it('finalizes character and fails on second finalize', async () => {
@@ -297,7 +297,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			const characterData1 = await db.getCharacter(char.id, false);
 			expect(characterData1?.inCreation).toBe(true);
 
-			const result = await db.finalizeCharacter(accountId2);
+			const result = await db.finalizeCharacter(accountId2, char.id);
 			expect(result).not.toBeNull();
 
 			// Character not in creation after finalize
@@ -313,7 +313,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			expect(result).toStrictEqual(characterData2);
 
 			// Fails on second finalize
-			await expect(db.finalizeCharacter(accountId2)).resolves.toBeNull();
+			await expect(db.finalizeCharacter(accountId2, char.id)).resolves.toBeNull();
 		});
 	});
 

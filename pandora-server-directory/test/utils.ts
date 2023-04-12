@@ -4,6 +4,10 @@ import { accountManager } from '../src/account/accountManager';
 import { Character } from '../src/account/character';
 import { InitDatabase } from '../src/database/databaseProvider';
 import { MockDatabase, PrehashPassword } from '../src/database/mockDb';
+import { Shard } from '../src/shard/shard';
+import { ShardManager } from '../src/shard/shardManager';
+import { ShardConnection } from '../src/networking/connection_shard';
+import { IDirectoryShard, IMessageHandler, IShardDirectory, IShardDirectoryNormalResult, MockConnection, MockServerSocket, ShardFeature } from 'pandora-common';
 
 let mockDb: MockDatabase | undefined;
 
@@ -80,10 +84,66 @@ export async function TestMockCharacter(account: Account, finalize: {
 			throw new Error(`Failed to set name for character`);
 		}
 
-		if (await account.finishCharacterCreation(character.id) == null) {
+		if (await character.finishCharacterCreation() == null) {
 			throw new Error(`Failed to finish character creation`);
 		}
 	}
 
 	return character;
+}
+
+export type JestFunctionSpy<T extends jest.Func> = jest.SpyInstance<ReturnType<T>, jest.ArgsType<T>>;
+
+export interface TestShardData {
+	shard: Shard;
+	connection: MockConnection<IShardDirectory, IDirectoryShard>;
+	messageHandlerSpy: JestFunctionSpy<IMessageHandler<IDirectoryShard, MockConnection<IShardDirectory, IDirectoryShard>>['onMessage']>;
+}
+
+export async function TestMockShard({
+	id = null,
+	register = true,
+	features = [],
+	version = '0.0.42-test',
+	messageHandler,
+}: {
+	id?: string | null;
+	register?: boolean;
+	features?: ShardFeature[];
+	version?: string;
+	messageHandler: IMessageHandler<IDirectoryShard, MockConnection<IShardDirectory, IDirectoryShard>>;
+}): Promise<TestShardData> {
+	const shard = ShardManager.getOrCreateShard(id);
+
+	const server = new MockServerSocket();
+	const connection = new MockConnection<IShardDirectory, IDirectoryShard>(messageHandler);
+	// Side effect: It connects to manager
+	new ShardConnection(server, connection.connect());
+
+	// Do register
+	if (register) {
+		const registerResult = await connection.awaitResponse('shardRegister', {
+			shardId: shard.id,
+			publicURL: `http://${shard.id}.shard.pandora.localhost`,
+			features,
+			version,
+			characters: [],
+			disconnectCharacters: [],
+			rooms: [],
+		});
+		const expectedRegisterResult: IShardDirectoryNormalResult['shardRegister'] = {
+			shardId: shard.id,
+			characters: [],
+			rooms: [],
+			messages: {},
+		};
+		expect(registerResult).toStrictEqual(expectedRegisterResult);
+		expect(shard.registered).toBeTruthy();
+	}
+
+	return {
+		shard,
+		connection,
+		messageHandlerSpy: jest.spyOn(messageHandler, 'onMessage'),
+	};
 }

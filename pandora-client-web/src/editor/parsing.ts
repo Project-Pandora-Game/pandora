@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher } from 'pandora-common';
+import { ArmFingersSchema, ArmRotationSchema, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher } from 'pandora-common';
 
 const IsConditionOperator = ZodMatcher(ConditionOperatorSchema);
 
@@ -30,6 +30,9 @@ export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>):
 	if ('module' in condition && condition.module != null)
 		return `m_${condition.module}${condition.operator}${condition.value}`;
 
+	if ('armType' in condition && condition.armType != null)
+		return `hand_${condition.armType}_${condition.side}${condition.operator}${condition.value}`;
+
 	AssertNever();
 }
 
@@ -48,6 +51,29 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 			operator: parsed[2],
 			value: parsed[3],
 		};
+	}
+	if (parsed[1].startsWith('hand_')) {
+		const [, armType, side] = parsed[1].split('_');
+		if (side !== 'left' && side !== 'right') {
+			throw new Error(`Invalid arm side in condition '${input}'`);
+		}
+		if (armType === 'rotation') {
+			return {
+				armType,
+				side,
+				operator: parsed[2],
+				value: ArmRotationSchema.parse(parsed[3]),
+			};
+		}
+		if (armType === 'fingers') {
+			return {
+				armType,
+				side,
+				operator: parsed[2],
+				value: ArmFingersSchema.parse(parsed[3]),
+			};
+		}
+		throw new Error(`Invalid arm type in condition '${input}'`);
 	}
 
 	const value = ParseFloat(parsed[3]);

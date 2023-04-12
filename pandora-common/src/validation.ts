@@ -47,8 +47,8 @@ export function ZodCast<T>(): ZodType<T> {
 export const HexColorStringSchema = ZodTemplateString<`#${string}`>(z.string(), /^#[0-9a-f]{6}$/i);
 export type HexColorString = z.infer<typeof HexColorStringSchema>;
 
-export const HexFullColorStringSchema = zTemplateString<`#${string}`>(z.string(), /^#[0-9a-f]{6}([0-9a-f]{2})?$/i);
-export type HexFullColorString = z.infer<typeof HexFullColorStringSchema>;
+export const HexRGBAColorStringSchema = ZodTemplateString<`#${string}`>(z.string(), /^#[0-9a-f]{6}([0-9a-f]{2})?$/i);
+export type HexRGBAColorString = z.infer<typeof HexRGBAColorStringSchema>;
 
 /** Checks if the `obj` is an object (not null, not array) */
 export function IsObject(obj: unknown): obj is Record<string, unknown> {

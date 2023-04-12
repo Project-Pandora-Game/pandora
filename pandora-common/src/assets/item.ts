@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
 import { MemoizeNoArg, Writeable } from '../utility';
-import { HexFullColorString, HexFullColorStringSchema } from '../validation';
+import { HexRGBAColorString, HexRGBAColorStringSchema } from '../validation';
 import type { AppearanceActionContext } from './appearanceActions';
 import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
@@ -14,13 +14,13 @@ import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 
-export const ItemColorBundleSchema = z.record(z.string(), HexFullColorStringSchema);
+export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
-	color: ItemColorBundleSchema.or(z.array(HexFullColorStringSchema)).optional(),
+	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	moduleData: z.record(z.unknown()).optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
@@ -34,7 +34,7 @@ export type IItemLoadContext = {
 export type ColorGroupResult = {
 	item: Item;
 	colorization: Immutable<AssetColorization>;
-	color: HexFullColorString;
+	color: HexRGBAColorString;
 };
 
 /**
@@ -232,7 +232,7 @@ export class Item {
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
 	}
 
-	public resolveColor(items: AppearanceItems, colorizationKey: string): HexFullColorString | undefined {
+	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {
 		const colorization = this.asset.definition.colorization?.[colorizationKey];
 		if (!colorization)
 			return undefined;
@@ -312,9 +312,9 @@ export class Item {
 		return color ?? colorInherited;
 	}
 
-	private _getColorByGroup(group: string, ignoreKey?: string): null | ['primary' | 'inherited', Immutable<AssetColorization>, HexFullColorString] {
+	private _getColorByGroup(group: string, ignoreKey?: string): null | ['primary' | 'inherited', Immutable<AssetColorization>, HexRGBAColorString] {
 		const { overrideColorKey, excludeFromColorInheritance } = this.getProperties();
-		let inherited: [Immutable<AssetColorization>, HexFullColorString] | undefined;
+		let inherited: [Immutable<AssetColorization>, HexRGBAColorString] | undefined;
 		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
 			if (value.group !== group || !this.color[key])
 				continue;
@@ -330,7 +330,7 @@ export class Item {
 		return inherited ? ['inherited', ...inherited] : null;
 	}
 
-	private _loadColor(color: ItemColorBundle | HexFullColorString[] = {}): ItemColorBundle {
+	private _loadColor(color: ItemColorBundle | HexRGBAColorString[] = {}): ItemColorBundle {
 		const colorization = this.asset.definition.colorization ?? {};
 		if (Array.isArray(color)) {
 			const keys = Object.keys(colorization);
@@ -352,13 +352,13 @@ export class Item {
 	}
 }
 
-function LimitColorAlpha(color: HexFullColorString, minAlpha: number = 255): HexFullColorString {
+function LimitColorAlpha(color: HexRGBAColorString, minAlpha: number = 255): HexRGBAColorString {
 	if (color.length === 7)
 		return color;
 
 	if (minAlpha === 255)
-		return color.substring(0, 7) as HexFullColorString;
+		return color.substring(0, 7) as HexRGBAColorString;
 
 	const alpha = Math.min(parseInt(color.substring(7), 16), minAlpha);
-	return color.substring(0, 7) + alpha.toString(16).padStart(2, '0') as HexFullColorString;
+	return color.substring(0, 7) + alpha.toString(16).padStart(2, '0') as HexRGBAColorString;
 }

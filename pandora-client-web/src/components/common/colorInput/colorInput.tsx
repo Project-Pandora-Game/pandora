@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { type HexColorString, HexColorStringSchema, HexFullColorString, HexFullColorStringSchema } from 'pandora-common';
+import { type HexColorString, HexColorStringSchema, HexRGBAColorString, HexRGBAColorStringSchema } from 'pandora-common';
 import React, { useState, type ChangeEvent, useCallback, useMemo, type ReactElement, useEffect, useRef } from 'react';
 import { Button } from '../button/button';
 import './colorInput.scss';
@@ -54,29 +54,29 @@ export function useColorInput(initialValue?: HexColorString) {
 	return useState((initialValue ?? '#ffffff').toUpperCase() as HexColorString);
 }
 
-export function ColorInputFull({
+export function ColorInputRGBA({
 	initialValue, resetValue, onChange, throttle = 0, disabled = false, minAlpha = 255, title,
 }: {
-	initialValue: HexFullColorString;
-	resetValue?: HexFullColorString;
-	onChange?: (value: HexFullColorString) => void;
+	initialValue: HexRGBAColorString;
+	resetValue?: HexRGBAColorString;
+	onChange?: (value: HexRGBAColorString) => void;
 	throttle?: number;
 	disabled?: boolean;
 	minAlpha?: number;
 	title: string;
 }): ReactElement {
-	const [value, setInput] = useState<HexFullColorString>(initialValue.toUpperCase() as HexFullColorString);
+	const [value, setInput] = useState<HexRGBAColorString>(initialValue.toUpperCase() as HexRGBAColorString);
 	const [showEditor, setShowEditor] = useState(false);
 
-	const onChangeCaller = useCallback((color: HexFullColorString) => onChange?.(color), [onChange]);
+	const onChangeCaller = useCallback((color: HexRGBAColorString) => onChange?.(color), [onChange]);
 	const onChangeCallerThrottled = useMemo(() => throttle <= 0 ? onChangeCaller : _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
 
 	const changeCallback = useCallback((input: string) => {
 		input = '#' + input.replace(/[^0-9a-f]/gi, '').toUpperCase();
-		setInput(input as HexFullColorString);
-		const valid = HexFullColorStringSchema.safeParse(input).success;
+		setInput(input as HexRGBAColorString);
+		const valid = HexRGBAColorStringSchema.safeParse(input).success;
 		if (valid) {
-			onChangeCallerThrottled(input as HexFullColorString);
+			onChangeCallerThrottled(input as HexRGBAColorString);
 		}
 	}, [setInput, onChangeCallerThrottled]);
 
@@ -110,8 +110,8 @@ function ColorEditor({
 	close,
 	title,
 }: {
-	initialValue: HexFullColorString;
-	onChange: (value: HexFullColorString) => void;
+	initialValue: HexRGBAColorString;
+	onChange: (value: HexRGBAColorString) => void;
 	minAlpha: number;
 	close: () => void;
 	title: string;
@@ -174,9 +174,9 @@ function ColorEditor({
 	}, [color, setState]);
 
 	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		const value = '#' + ev.target.value.replace(/[^0-9a-f]/gi, '').toUpperCase() as HexFullColorString;
+		const value = '#' + ev.target.value.replace(/[^0-9a-f]/gi, '').toUpperCase() as HexRGBAColorString;
 		setInput(value);
-		const result = HexFullColorStringSchema.safeParse(value);
+		const result = HexRGBAColorStringSchema.safeParse(value);
 		if (result.success) {
 			let newColor = new Color(result.data);
 			if (color.alpha < minAlpha / 255) {
@@ -276,18 +276,18 @@ class Color {
 		});
 	}
 
-	public toHex(): HexFullColorString {
+	public toHex(): HexRGBAColorString {
 		const [r, g, b, a] = this.rbga;
 		if (a === 1) {
 			return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}` as HexColorString;
 		}
-		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(a * 255))}` as HexFullColorString;
+		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(a * 255))}` as HexRGBAColorString;
 	}
 
 	constructor(color: Color);
-	constructor(color: HexColorString | HexFullColorString);
+	constructor(color: HexColorString | HexRGBAColorString);
 	constructor(color: { rgba?: [number, number, number, number]; hsla: [number, number, number, number]; } | { rgba: [number, number, number, number]; hsla?: [number, number, number, number]; });
-	constructor(color: HexColorString | HexFullColorString | Color | { rgba?: [number, number, number, number]; hsla?: [number, number, number, number]; }) {
+	constructor(color: HexColorString | HexRGBAColorString | Color | { rgba?: [number, number, number, number]; hsla?: [number, number, number, number]; }) {
 		if (color instanceof Color) {
 			this.rbga = [...color.rbga];
 			this.hsla = [...color.hsla];

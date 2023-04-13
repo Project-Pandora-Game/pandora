@@ -67,10 +67,14 @@ export class Character {
 		return !!this.data.inCreation;
 	}
 
+	@AsyncSynchronized('object')
 	public async disconnect(): Promise<void> {
 		this.account.touch();
-		await this.room?.removeCharacter(this, 'disconnect', null);
-		await this.setShard(null);
+		if (this.room) {
+			await this.room.removeCharacter(this, 'disconnect', null);
+		}
+		const disconnectRes = await this._setShardSelector(null);
+		Assert(disconnectRes === 'ok');
 	}
 
 	private async generateAccessId(): Promise<void> {
@@ -178,13 +182,18 @@ export class Character {
 		this.connectSecret = connectionSecret;
 		this.assignedConnection?.sendConnectionStateUpdate();
 
-		if (room) {
-			await this._joinRoom(room, false, accessId);
-		} else {
-			await this._setShardSelector({
-				type: 'shard',
-				shard,
-			}, accessId);
+		const selector: CharacterShardSelector = room ? {
+			type: 'room',
+			room,
+		} : {
+			type: 'shard',
+			shard,
+		};
+
+		const connectRes = await this._setShardSelector(selector, accessId);
+		if (room && connectRes === 'ok') {
+			// On shard reconnect we ignore most checks, as shard says user already is in the room
+			await room.addCharacter(this, false);
 		}
 	}
 
@@ -230,11 +239,11 @@ export class Character {
 
 		let shard: Shard | null;
 
-		if (selector?.type === 'room') {
-			// If we are in a room, the selector's room must match it
-			if (this.room != null && selector.room !== this.room)
-				return 'failed';
+		// If we are in a room, the selector's room must match it
+		if (this.room != null && (selector?.type !== 'room' || selector.room !== this.room))
+			return 'failed';
 
+		if (selector?.type === 'room') {
 			// If in a room, the room always chooses shard
 			const roomShard = await selector.room.connect();
 			if (typeof roomShard === 'string')
@@ -269,6 +278,7 @@ export class Character {
 		}
 
 		// Set the selector
+		Assert(this._assignedShard == null || shard === this._assignedShard);
 		this._shardSelector = selector;
 
 		// Connect to the wanted shard
@@ -330,23 +340,37 @@ export class Character {
 	}
 
 	@AsyncSynchronized('object')
-	public async joinRoom(room: Room, sendEnterMessage: boolean): Promise<'failed' | 'ok'> {
-		return await this._joinRoom(room, sendEnterMessage);
+	public async joinRoom(room: Room, sendEnterMessage: boolean, password: string | null): Promise<'failed' | 'ok' | 'errFull' | 'noAccess' | 'invalidPassword'> {
+		return await this._joinRoom(room, sendEnterMessage, password);
 	}
 
-	private async _joinRoom(room: Room, sendEnterMessage: boolean, forceAccessId?: string): Promise<'failed' | 'ok'> {
+	private async _joinRoom(room: Room, sendEnterMessage: boolean, password: string | null): Promise<'failed' | 'ok' | 'errFull' | 'noAccess' | 'invalidPassword'> {
 		// Must not be in a different room (TODO: Shift the logic here)
 		if (this.room != null)
 			return 'failed';
+
+		// Must be allowed to join the room (quick check before attempt, also ignores full room, as that will be handled by second check)
+		const allowResult1 = room.checkAllowEnter(this, password, true);
+
+		if (allowResult1 !== 'ok') {
+			return allowResult1;
+		}
 
 		// Must already be tracking the correct room
 		const selectorResult = await this._setShardSelector({
 			type: 'room',
 			room,
-		}, forceAccessId);
+		});
 
 		if (selectorResult !== 'ok')
 			return selectorResult;
+
+		// Must be allowed to join the room (second check to prevent race conditions)
+		const allowResult2 = room.checkAllowEnter(this, password);
+
+		if (allowResult2 !== 'ok') {
+			return allowResult2;
+		}
 
 		await room.addCharacter(this, sendEnterMessage);
 
@@ -354,7 +378,7 @@ export class Character {
 	}
 
 	@AsyncSynchronized('object')
-	public async leaveRoom(): Promise<'failed' | 'ok'> {
+	public async leaveRoom(): Promise<'ok' | 'failed'> {
 		// Must be in a room (otherwise success)
 		if (this.room == null)
 			return 'ok';

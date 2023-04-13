@@ -1,4 +1,4 @@
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL } from '../config';
@@ -378,7 +378,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: room };
 		}
 
-		const result = await character.joinRoom(room, true);
+		const result = await character.joinRoom(room, true, null);
+		Assert(result !== 'noAccess');
+		Assert(result !== 'errFull');
+		Assert(result !== 'invalidPassword');
 
 		return { result };
 	}
@@ -395,13 +398,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = room.checkAllowEnter(character, password ?? null);
-
-		if (allowResult !== 'ok') {
-			return { result: allowResult };
-		}
-
-		const result = await character.joinRoom(room, true);
+		const result = await character.joinRoom(room, true, password ?? null);
 
 		return { result };
 	}

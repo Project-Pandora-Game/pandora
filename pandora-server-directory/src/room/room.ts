@@ -395,8 +395,7 @@ export class Room {
 	}
 
 	public async removeCharacter(character: Character, reason: IChatRoomLeaveReason, source: Character | null): Promise<void> {
-		if (character.room !== this)
-			return;
+		Assert(character.room === this);
 		this.logger.debug(`Character ${character.id} removed (${reason})`);
 		this._characters.delete(character);
 		character.room = null;

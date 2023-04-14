@@ -1,14 +1,11 @@
-import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema } from 'pandora-common';
+import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
-import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
 
 /** Class housing connection from a client */
-export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> implements IConnectionClient {
-	public readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
-
+export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> {
 	/** The current account this connection is logged in as or `null` if it isn't */
 	private _account: Account | null = null;
 	public get account(): Account | null {
@@ -35,6 +32,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	protected override onDisconnect(reason: string): void {
 		this.logger.debug('Disconnected, reason:', reason);
 		ConnectionManagerClient.onDisconnect(this);
+		super.onDisconnect(reason);
 	}
 
 	/**
@@ -55,14 +53,19 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	 * @param account - The account to set or `null` to clear
 	 */
 	public setAccount(account: Account | null): void {
+		if (this._account === account)
+			return;
 		if (this._account) {
-			this._account.associatedConnections.delete(this);
+			Assert(this._account.associatedConnections.has(this));
+			this.setCharacter(null);
 			this._account.touch();
+			this._account.associatedConnections.delete(this);
+			this._account = null;
 		}
-		this._account = account;
 		if (account) {
-			account.associatedConnections.add(this);
 			account.touch();
+			this._account = account;
+			account.associatedConnections.add(this);
 		}
 	}
 
@@ -71,19 +74,18 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	 * @param character - The character to set or `null` to clear
 	 */
 	public setCharacter(character: Character | null): void {
-		if (this._character?.assignedConnection === this) {
+		if (this._character === character)
+			return;
+		if (this._character) {
+			Assert(this._character.assignedConnection === this);
 			this._character.assignedConnection = null;
-			this._character.account.touch();
+			this._character = null;
 		}
-		this._character = character;
 		if (character) {
-			const otherCharacter = character.assignedConnection;
-			if (otherCharacter && otherCharacter !== this) {
-				otherCharacter.setCharacter(null);
-				otherCharacter.sendConnectionStateUpdate();
-			}
+			Assert(this._account === character.account);
+			Assert(character.assignedConnection == null);
+			this._character = character;
 			character.assignedConnection = this;
-			character.account.touch();
 		}
 	}
 

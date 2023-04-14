@@ -52,7 +52,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 
 		const shard = ShardManager.getOrCreateShard(args.shardId);
 
-		const result = shard.registered ? shard.handleReconnect(args, connection) : await shard.register(args, connection);
+		const result = await (shard.registered ? shard.handleReconnect(args, connection) : shard.register(args, connection));
 
 		return result;
 	}
@@ -65,7 +65,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		return shard.stop();
 	}
 
-	private handleCharacterDisconnect({ id /* TODO , reason */ }: IShardDirectoryArgument['characterDisconnect'], connection: IConnectionShard): void {
+	private async handleCharacterDisconnect({ id /* TODO , reason */ }: IShardDirectoryArgument['characterDisconnect'], connection: IConnectionShard): Promise<void> {
 		const shard = connection.shard;
 		if (!shard)
 			throw new BadMessageError();
@@ -73,10 +73,10 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (!character)
 			throw new BadMessageError();
 
-		character.disconnect();
+		await character.disconnect();
 	}
 
-	private handleRoomUnload({ id /* TODO , reason */ }: IShardDirectoryArgument['roomUnload'], connection: IConnectionShard): void {
+	private async handleRoomUnload({ id /* TODO , reason */ }: IShardDirectoryArgument['roomUnload'], connection: IConnectionShard): Promise<void> {
 		const shard = connection.shard;
 		if (!shard)
 			throw new BadMessageError();
@@ -84,7 +84,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (!room)
 			throw new BadMessageError();
 
-		room.disconnect();
+		await room.disconnect();
 	}
 
 	private async createCharacter({ id }: IShardDirectoryArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {
@@ -96,7 +96,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (!character)
 			throw new BadMessageError();
 
-		const char = await character.account.finishCharacterCreation(id);
+		const char = await character.finishCharacterCreation();
 		if (!char)
 			throw new BadMessageError();
 

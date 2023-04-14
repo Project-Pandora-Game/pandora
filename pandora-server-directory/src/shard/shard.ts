@@ -1,5 +1,5 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryResult, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition, AsyncSynchronized, ManuallyResolvedPromise, CreateManuallyResolvedPromise } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
@@ -20,6 +20,7 @@ export class Shard {
 		return this._registered;
 	}
 	private stopping: boolean = false;
+	private reconnecting: boolean = false;
 
 	private publicURL = '';
 	private features: IDirectoryShardInfo['features'] = [];
@@ -37,10 +38,10 @@ export class Shard {
 	}
 
 	/** Map of character ids to characters */
-	private readonly characters: Map<CharacterId, Character> = new Map();
+	public readonly characters: Map<CharacterId, Character> = new Map();
 
 	/** Map of room ids to rooms */
-	private readonly rooms: Map<RoomId, Room> = new Map();
+	public readonly rooms: Map<RoomId, Room> = new Map();
 
 	public getConnectedCharacter(id: CharacterId): Character | undefined {
 		return this.characters.get(id);
@@ -50,25 +51,38 @@ export class Shard {
 		return this.rooms.get(id);
 	}
 
-	public handleReconnect(data: IShardDirectoryArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryResult['shardRegister'] {
+	public async handleReconnect(data: IShardDirectoryArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRegister'] {
 		// Invalidate current connection (when shard reconnects quicker than old connection times out)
 		if (this.shardConnection) {
 			this.setConnection(null);
 		}
 
-		this.updateInfo(data);
+		this.reconnecting = true;
+
+		Assert(this.publicURL === data.publicURL, `Shard's publicURL cannot change`);
+		Assert(this.features === data.features, `Shard's features cannot change`);
+		Assert(this.version === data.version, `Shard's version cannot change`);
 
 		// Characters and rooms from shard are ignored, Directory is source of truth on reconnect
 
 		// Remove characters that should be connected but are not anymore
-		for (const id of data.disconnectCharacters) {
-			const character = this.getConnectedCharacter(id);
-			character?.disconnect();
-		}
+		await Promise.all(
+			data.disconnectCharacters.map((id) => this.getConnectedCharacter(id)?.disconnect()),
+		);
 
 		this.setConnection(connection);
 		this.logger.info('Reconnected');
 		ConnectionManagerClient.onShardListChange();
+
+		// If anyone is waiting for update, resolve it after sending data back
+		if (this.updatePending != null) {
+			const update = this.updatePending;
+			this.updatePending = null;
+			this.updateReasons.clear();
+			setTimeout(() => {
+				update.resolve();
+			}, 100);
+		}
 
 		return {
 			shardId: this.id,
@@ -83,7 +97,11 @@ export class Shard {
 			throw new Error('Cannot re-register shard');
 		}
 
-		this.updateInfo(data);
+		this.reconnecting = true;
+
+		this.publicURL = data.publicURL;
+		this.features = data.features;
+		this.version = data.version;
 
 		const accounts = new Map<number, Account>();
 		await Promise.all(
@@ -98,18 +116,21 @@ export class Shard {
 				),
 		);
 
+		// We should have no requests for the shard before it registered
+		Assert(this.updatePending == null);
+
 		this._registered = true;
 
+		// Room ids should be unique in received data
+		Assert(uniq(data.rooms.map((r) => r.id)).length === data.rooms.length);
+
 		await Promise.all(
-			uniq(data.rooms.map((r) => r.id))
-				.map((id) => RoomManager
-					.loadRoom(id)
-					.then((room) => {
-						if (room && !room.isInUse() && (!room.accessId || room.accessId === data.rooms.find((r) => r.id === room.id)?.accessId)) {
-							this.connectRoom(room);
-						}
-					}),
-				),
+			data.rooms.map((roomData) => RoomManager
+				.loadRoom(roomData.id)
+				.then((room) => {
+					return room?.shardReconnect(this, roomData.accessId);
+				}),
+			),
 		);
 
 		for (const characterData of data.characters) {
@@ -119,28 +140,25 @@ export class Shard {
 			const account = accounts.get(characterData.account.id);
 			const character = account?.characters.get(characterData.id);
 
-			if (!character ||
-				character.isInUse() ||
-				(character.accessId && character.accessId !== characterData.accessId)
-			) {
+			if (!character) {
 				// Do not load in character that loaded elsewhere meanwhile
 				continue;
 			}
 
 			const room = characterData.room ? this.rooms.get(characterData.room) : undefined;
 
-			character.accessId = characterData.accessId;
-			this.connectCharacter(character, characterData.connectSecret);
-			room?.addCharacter(character, false);
-
-			character.assignedConnection?.sendConnectionStateUpdate();
-			character.account.onCharacterListChange();
+			await character.shardReconnect({
+				shard: this,
+				accessId: characterData.accessId,
+				connectionSecret: characterData.connectSecret,
+				room,
+			});
 
 			this.logger.debug('Added character during registration', character.id);
 		}
 
 		for (const room of this.rooms.values()) {
-			room.cleanupIfEmpty();
+			await room.cleanupIfEmpty();
 		}
 
 		this.setConnection(connection);
@@ -156,6 +174,7 @@ export class Shard {
 	}
 
 	public setConnection(connection: IConnectionShard | null): void {
+		this.reconnecting = false;
 		if (this.timeout !== null) {
 			clearTimeout(this.timeout);
 			this.timeout = null;
@@ -169,12 +188,10 @@ export class Shard {
 		if (connection) {
 			connection.shard = this;
 			this.shardConnection = connection;
-		} else if (!this.stopping) {
+		} else {
 			// Do not trigger timeout if we are already stopping
-			this.timeout = setTimeout(this.handleTimeout.bind(this), SHARD_TIMEOUT);
-			if (this.updateTimeout) {
-				clearTimeout(this.updateTimeout);
-				this.updateTimeout = null;
+			if (!this.stopping) {
+				this.timeout = setTimeout(this.handleTimeout.bind(this), SHARD_TIMEOUT);
 			}
 		}
 	}
@@ -203,6 +220,13 @@ export class Shard {
 		this.stopping = true;
 		this.setConnection(null);
 
+		// Force-reject any pending updates that were scheduled before shard's stop
+		if (this.updatePending) {
+			const update = this.updatePending;
+			this.updatePending = null;
+			update.reject('Shard deleted');
+		}
+
 		// Development shards wait for another shard to be present before reassign (for up to 60 seconds)
 		if (attemptReassign && this.features.includes('development')) {
 			const end = Date.now() + 60_000;
@@ -212,12 +236,11 @@ export class Shard {
 			}
 		}
 
-		const characters = [...this.characters.values()];
 		// Reassign rooms
 		await Promise.all(
 			[...this.rooms.values()]
 				.map(async (room) => {
-					room.disconnect();
+					await room.disconnect();
 					if (attemptReassign) {
 						await room.connect();
 					}
@@ -225,24 +248,16 @@ export class Shard {
 		);
 		// Reassign characters
 		await Promise.all(
-			characters
+			[...this.characters.values()]
 				.map(async (character) => {
-					if (character.assignedShard === this) {
-						this.disconnectCharacter(character);
-					}
+					await character.setShard(null);
 					if (attemptReassign) {
-						await character.connect();
+						await character.autoconnect();
 						character.assignedConnection?.sendConnectionStateUpdate();
 					}
 				}),
 		);
 		this.logger.info('Deleted');
-	}
-
-	public updateInfo(info: IShardDirectoryArgument['shardRegister']): void {
-		this.publicURL = info.publicURL;
-		this.features = info.features;
-		this.version = info.version;
 	}
 
 	public getInfo(): IDirectoryShardInfo {
@@ -254,103 +269,39 @@ export class Shard {
 		});
 	}
 
-	public connectCharacter(character: Character, connectSecret?: string): void {
-		if (character.assignedShard !== null && character.assignedShard !== this) {
-			throw new Error('Character already in use');
-		}
-		if (!this.allowConnect()) {
-			throw new Error('Connecting to this shard is not allowed');
-		}
-
-		this.characters.set(character.id, character);
-		character.assignedShard = this;
-		if (connectSecret) {
-			character.connectSecret = connectSecret;
-		} else {
-			character.generateConnectSecret();
-		}
-		this.update('characters');
-
-		character.account.onCharacterListChange();
-
-		this.logger.debug('Connected character', character.id);
-	}
-
-	/**
-	 * Disconnects a character from the shard
-	 * @param id - Id of the character to disconnect
-	 */
-	public disconnectCharacter(character: Character): void {
-		Assert(character.assignedShard === this);
-		Assert(this.characters.get(character.id) === character);
-
-		this.characters.delete(character.id);
-		character.assignedShard = null;
-		this.update('characters');
-
-		character.account.onCharacterListChange();
-
-		this.logger.debug('Disconnected character', character.id);
-	}
-
-	public connectRoom(room: Room): void {
-		if (room.assignedShard !== null && room.assignedShard !== this) {
-			throw new Error('Room already in use');
-		}
-		if (!this.allowConnect()) {
-			throw new Error('Connecting to this shard is not allowed');
-		}
-
-		this.rooms.set(room.id, room);
-		room.assignedShard = this;
-		this.update('rooms');
-
-		ConnectionManagerClient.onRoomListChange();
-
-		this.logger.debug('Connected room', room.id);
-	}
-
-	/**
-	 * Disconnects a character from the shard
-	 * @param id - Id of the character to disconnect
-	 */
-	public disconnectRoom(room: Room): void {
-		Assert(room.assignedShard === this);
-		Assert(this.rooms.get(room.id) === room);
-
-		// Disconnect all characters that are in this room, too
-		for (const character of room.characters.values()) {
-			if (!character.assignedShard)
-				continue;
-			this.disconnectCharacter(character);
-		}
-
-		this.rooms.delete(room.id);
-		room.assignedShard = null;
-		this.update('rooms');
-
-		ConnectionManagerClient.onRoomListChange();
-
-		this.logger.debug('Disconnected room', room.id);
-	}
-
-	private updateTimeout: NodeJS.Timeout | null = null;
 	private updateReasons = new Set<keyof IDirectoryShardUpdate>();
+	private updatePending: ManuallyResolvedPromise<void> | null = null;
 
-	public update(...reasons: (keyof IDirectoryShardUpdate)[]): void {
+	public update(...reasons: (keyof IDirectoryShardUpdate)[]): Promise<void> {
+		Assert(this._registered);
+		if (this.stopping)
+			return Promise.resolve();
+
 		reasons.forEach((r) => this.updateReasons.add(r));
-		if (!this.shardConnection || this.updateTimeout != null)
-			return;
+		if (this.updatePending == null) {
+			const update = this.updatePending = CreateManuallyResolvedPromise();
+			setTimeout(() => {
+				this._sendUpdate()
+					.then((result) => {
+						if (result && this.updatePending === update) {
+							this.updatePending = null;
+							update.resolve();
+						}
+					}, (error) => {
+						this.logger.fatal('Error while running sendUpdate:', error);
+					});
+			}, 100);
+		}
 
-		this.updateTimeout = setTimeout(() => {
-			this.updateTimeout = null;
-			void this.sendUpdate();
-		}, 100).unref();
+		return this.updatePending.promise;
 	}
 
-	private sendUpdate(): Promise<void> {
-		if (this.stopping || !this.shardConnection || this.updateReasons.size === 0)
-			return Promise.resolve();
+	@AsyncSynchronized()
+	private async _sendUpdate(): Promise<boolean> {
+		if (this.stopping || this.reconnecting || this.updateReasons.size === 0)
+			return true;
+		if (!this.shardConnection)
+			return false;
 
 		const update: Partial<IDirectoryShardUpdate> = {};
 		const updateReasons = Array.from(this.updateReasons);
@@ -366,30 +317,28 @@ export class Shard {
 			update.messages = this.makeDirectoryActionMessages();
 		}
 
-		return this.shardConnection
-			.awaitResponse('update', update, 10_000)
-			.then(
-				() => {
-					// Cleanup pending messages
-					if (update.messages) {
-						for (const room of this.rooms.values()) {
-							if (!update.messages[room.id])
-								continue;
-							const lastMessage = last(update.messages[room.id]);
-							if (lastMessage !== undefined) {
-								const index = room.pendingMessages.indexOf(lastMessage);
-								if (index >= 0) {
-									room.pendingMessages.splice(0, index + 1);
-								}
-							}
+		try {
+			await this.shardConnection.awaitResponse('update', update, 10_000);
+			// Cleanup pending messages
+			if (update.messages) {
+				for (const room of this.rooms.values()) {
+					if (!update.messages[room.id])
+						continue;
+					const lastMessage = last(update.messages[room.id]);
+					if (lastMessage !== undefined) {
+						const index = room.pendingMessages.indexOf(lastMessage);
+						if (index >= 0) {
+							room.pendingMessages.splice(0, index + 1);
 						}
 					}
-				},
-				(err) => {
-					this.logger.warning('Failed to update shard:', err);
-					updateReasons.forEach((r) => this.updateReasons.add(r));
-				},
-			);
+				}
+			}
+		} catch (error) {
+			this.logger.warning('Failed to update shard:', error);
+			updateReasons.forEach((r) => this.updateReasons.add(r));
+			return false;
+		}
+		return true;
 	}
 
 	private makeCharacterSetupList(): IShardCharacterDefinition[] {

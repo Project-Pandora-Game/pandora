@@ -2,9 +2,9 @@ import { CharacterId, EMPTY, GetLogger } from 'pandora-common';
 import { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
-import { useConnectToShard } from '../components/gameContext/shardConnectorContextProvider';
 import { PrehashPassword } from '../crypto/helpers';
 import { LoginResponse } from './directoryConnector';
+import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 
 //#region Callback type definitions
 
@@ -91,46 +91,30 @@ export function useLogout(): () => void {
 
 export function useCreateNewCharacter(): CreateNewCharacterCallback {
 	const directoryConnector = useDirectoryConnector();
-	const connectToShard = useConnectToShard();
 
 	return useCallback(async () => {
 		const data = await directoryConnector.awaitResponse('createCharacter', EMPTY);
 		if (data.result !== 'ok') {
 			GetLogger('useCreateNewCharacter').error('Failed to create character:', data);
-			toast(`Failed to create character:\n${ data.result }`, {
-				type: 'error',
-				autoClose: 10_000,
-				closeOnClick: true,
-				closeButton: true,
-				draggable: true,
-			});
+			toast(`Failed to create character:\n${data.result}`, TOAST_OPTIONS_ERROR);
 			return false;
 		}
-		await connectToShard(data);
 		return true;
-	}, [directoryConnector, connectToShard]);
+	}, [directoryConnector]);
 }
 
 export function useConnectToCharacter(): ConnectToCharacterCallback {
 	const directoryConnector = useDirectoryConnector();
-	const connectToShard = useConnectToShard();
 
 	return useCallback(async (id) => {
 		const data = await directoryConnector.awaitResponse('connectCharacter', { id });
 		if (data.result !== 'ok') {
 			GetLogger('useConnectToCharacter').error('Failed to connect to character:', data);
-			toast(`Failed to connect to character:\n${ data.result }`, {
-				type: 'error',
-				autoClose: 10_000,
-				closeOnClick: true,
-				closeButton: true,
-				draggable: true,
-			});
+			toast(`Failed to connect to character:\n${data.result}`, TOAST_OPTIONS_ERROR);
 			return false;
 		}
-		await connectToShard(data);
 		return true;
-	}, [directoryConnector, connectToShard]);
+	}, [directoryConnector]);
 }
 
 export function useDirectoryRegister(): RegisterCallback {

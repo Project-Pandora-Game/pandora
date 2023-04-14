@@ -182,13 +182,49 @@ export function CloneDeepMutable<T>(data: T): Draft<T> {
 	return castDraft(cloneDeep(data));
 }
 
+export type ManuallyResolvedPromise<T> = {
+	promise: Promise<T>;
+	resolve: (value: T | PromiseLike<T>) => void;
+	reject: (reason?: unknown) => void;
+};
+
+export function CreateManuallyResolvedPromise<T>(): ManuallyResolvedPromise<T> {
+	let resolve!: ManuallyResolvedPromise<T>['resolve'];
+	let reject!: ManuallyResolvedPromise<T>['reject'];
+	const promise = new Promise<T>((promiseResolve, promiseReject) => {
+		resolve = promiseResolve;
+		reject = promiseReject;
+	});
+	return { promise, resolve, reject };
+}
+
+const AsyncSynchronizedObjectLocks = new WeakMap<object, AsyncLock>();
+
 /**
  * Synchronizes calls to the asynchronous method.
  *
  * Only one call per instance runs at a time, other calls waiting in queue for the first call to finish (either resolve or reject)
- * @param options - Options passed directly to the `async-lock` library
+ * @param options - Options passed directly to the `async-lock` library, or if `object` that the method synchronizes with all 'object' synchronized methods within instance
  */
-export function AsyncSynchronized(options?: AsyncLockOptions) {
+export function AsyncSynchronized(options?: AsyncLockOptions | 'object') {
+	if (options === 'object') {
+		return function <Args extends unknown[], Return>(_target: object, _propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<(...args: Args) => Promise<Return>>) {
+			const original = descriptor.value;
+			AssertNotNullable(original);
+
+			descriptor.value = function (...args) {
+				let lock = AsyncSynchronizedObjectLocks.get(this);
+				if (lock == null) {
+					lock = new AsyncLock({
+						maxExecutionTime: 60_000,
+					});
+					AsyncSynchronizedObjectLocks.set(this, lock);
+				}
+
+				return lock.acquire<Return>('', () => original?.apply(this, args));
+			};
+		};
+	}
 	return function <Args extends unknown[], Return>(_target: object, _propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<(...args: Args) => Promise<Return>>) {
 		const original = descriptor.value;
 		AssertNotNullable(original);
@@ -198,7 +234,10 @@ export function AsyncSynchronized(options?: AsyncLockOptions) {
 		descriptor.value = function (...args) {
 			let lock = locks.get(this);
 			if (lock == null) {
-				lock = new AsyncLock(options);
+				lock = new AsyncLock({
+					maxExecutionTime: 60_000,
+					...options,
+				});
 				locks.set(this, lock);
 			}
 

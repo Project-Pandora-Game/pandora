@@ -1,5 +1,5 @@
 import { noop } from 'lodash';
-import { EMPTY, ICharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
+import { EMPTY, GetLogger, ICharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { usePlayerData } from '../gameContext/playerContextProvider';
@@ -8,6 +8,8 @@ import { useConnectToCharacter, useCreateNewCharacter } from '../../networking/a
 import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import './characterSelect.scss';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 
 /**
  * @todo
@@ -77,7 +79,12 @@ export function CharacterSelect(): ReactElement {
 						<CharacterListItem
 							key={ character.id }
 							{ ...character }
-							onClick={ () => void connectToCharacter(character.id) }
+							onClick={ () => {
+								connectToCharacter(character.id).catch((err) => {
+									GetLogger('connectToCharacter').error('Error connecting to character:', err);
+									toast(`Error connecting to character`, TOAST_OPTIONS_ERROR);
+								});
+							} }
 						/>
 					)) }
 					</>
@@ -87,7 +94,12 @@ export function CharacterSelect(): ReactElement {
 					<CharacterListItem
 						key='create'
 						name={ 'Create new character' }
-						onClick={ () => void createNewCharacterAndRefreshList() }
+						onClick={ () => {
+							createNewCharacterAndRefreshList().catch((err) => {
+								GetLogger('createNewCharacter').error('Error creating new character:', err);
+								toast(`Error creating new character`, TOAST_OPTIONS_ERROR);
+							});
+						} }
 					/>
 				) }
 			</ul>
@@ -136,8 +148,8 @@ function Preview({ name, preview }: PreviewProps): ReactElement | null {
 			<div className='frame'>
 				<img
 					className='character-image'
-					src={ `data:image/png;base64,${ preview }` }
-					alt={ `Preview image for ${ name }` }
+					src={ `data:image/png;base64,${preview}` }
+					alt={ `Preview image for ${name}` }
 				/>
 			</div>
 		</div>

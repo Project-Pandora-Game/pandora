@@ -24,7 +24,6 @@ import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../gameContext/directoryConnectorContextProvider';
-import { useConnectToShard } from '../gameContext/shardConnectorContextProvider';
 import { IsChatroomAdmin, useChatRoomData } from '../gameContext/chatRoomContextProvider';
 import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { Select } from '../common/select/select';
@@ -616,14 +615,11 @@ const RoomAdminProgress = new PersistentToast();
 
 function useCreateRoom(): (config: IChatRoomDirectoryConfig) => Promise<void> {
 	const directoryConnector = useDirectoryConnector();
-	const connectToShard = useConnectToShard();
 	return useCallback(async (config) => {
 		try {
 			RoomAdminProgress.show('progress', 'Creating room...');
 			const result = await directoryConnector.awaitResponse('chatRoomCreate', config);
 			if (result.result === 'ok') {
-				RoomAdminProgress.show('progress', 'Joining room...');
-				await connectToShard(result);
 				RoomAdminProgress.show('success', 'Room created!');
 			} else {
 				RoomAdminProgress.show('error', `Failed to create room:\n${result.result}`);
@@ -632,7 +628,7 @@ function useCreateRoom(): (config: IChatRoomDirectoryConfig) => Promise<void> {
 			GetLogger('CreateRoom').warning('Error during room creation', err);
 			RoomAdminProgress.show('error', `Error during room creation:\n${err instanceof Error ? err.message : String(err)}`);
 		}
-	}, [directoryConnector, connectToShard]);
+	}, [directoryConnector]);
 }
 
 function UpdateRoom(directoryConnector: DirectoryConnector, config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () => void): void {

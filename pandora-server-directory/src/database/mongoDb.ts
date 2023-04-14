@@ -259,20 +259,12 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async finalizeCharacter(accountId: number): Promise<ICharacterData | null> {
-		const acc = await this.getAccountById(accountId);
-		if (!acc)
-			return null;
-
-		const info = acc.characters[acc.characters.length - 1];
-		if (!info)
-			return null;
-
-		const result = await this._characters.findOneAndUpdate({ id: PlainId(info.id), inCreation: true }, { $set: { created: Date.now() }, $unset: { inCreation: '' } }, { returnDocument: 'after' });
+	public async finalizeCharacter(accountId: number, characterId: CharacterId): Promise<ICharacterData | null> {
+		const result = await this._characters.findOneAndUpdate({ id: PlainId(characterId), inCreation: true }, { $set: { created: Date.now() }, $unset: { inCreation: '' } }, { returnDocument: 'after' });
 		if (!result.value || result.value.inCreation !== undefined)
 			return null;
 
-		await this._accounts.updateOne({ 'id': accountId, 'characters.id': info.id }, { $set: { 'characters.$.name': result.value.name }, $unset: { 'characters.$.inCreation': '' } });
+		await this._accounts.updateOne({ 'id': accountId, 'characters.id': characterId }, { $set: { 'characters.$.name': result.value.name }, $unset: { 'characters.$.inCreation': '' } });
 
 		return Id(result.value);
 	}

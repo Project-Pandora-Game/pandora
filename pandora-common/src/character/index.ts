@@ -4,6 +4,7 @@ export * from './restrictionsManager';
 export * from './speech';
 
 import { z } from 'zod';
+import _ from 'lodash';
 import { AppearanceBundleSchema } from '../assets/appearance';
 import { HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
@@ -36,7 +37,15 @@ export const CharacterDataSchema = CharacterPublicDataSchema.merge(z.object({
 	inCreation: z.literal(true).optional(),
 	created: z.number(),
 	accessId: z.string(),
+	roomId: z.string().optional(),
+	position: z.tuple([z.number(), z.number()]),
 }));
+
+export function FixupCharacterData(data: ICharacterData): void {
+	if (!_.isArray(data.position)) {
+		data.position = [-1, -1];
+	}
+}
 
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;
 

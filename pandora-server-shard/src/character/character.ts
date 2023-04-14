@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance, FixupCharacterData } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -88,10 +88,28 @@ export class Character {
 
 	private logger: Logger;
 
-	public position: [number, number] = [CharacterSize.WIDTH / 2, 0];
+	public set position(value: readonly [number, number]) {
+		this.data.position = [...value];
+		this.modified.add('position');
+	}
+
+	public get position(): readonly [number, number] {
+		return this.data.position;
+	}
+
+	public initRoomPosition(roomId: RoomId, value: readonly [number, number]) {
+		if (this.data.roomId === roomId) {
+			return;
+		}
+		this.data.roomId = roomId;
+		this.data.position = [...value];
+		this.modified.add('roomId');
+		this.modified.add('position');
+	}
 
 	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
+		FixupCharacterData(data);
 		this.data = data;
 		this.appearance = new CharacterAppearance(assetManager, () => this.data);
 
@@ -120,7 +138,7 @@ export class Character {
 			const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 			if (this.position[0] > roomBackground.size[0] || this.position[1] > maxY) {
 				this.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
-				this.room.sendUpdateToAllInRoom({ update: { id: this.id, position: this.position } });
+				this.room.sendUpdateToAllInRoom({ update: { id: this.id, position: this.data.position } });
 			}
 		}
 	}

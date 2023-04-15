@@ -1,6 +1,6 @@
 import type { Socket } from 'socket.io';
 import type { IncomingMessage, Server as HttpServer } from 'http';
-import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IDirectoryShard, IIncomingConnection } from 'pandora-common';
+import { GetLogger, HTTP_SOCKET_IO_SHARD_PATH, IDirectoryShard, IIncomingConnection } from 'pandora-common';
 import { SocketIOServer } from './socketio_common_server';
 import { ShardConnection } from './connection_shard';
 import { SocketIOSocket } from './socketio_common_socket';
@@ -26,8 +26,7 @@ export class SocketIOServerShard extends SocketIOServer implements IServerSocket
 	 * @param next - Callback for accept/reject
 	 */
 	protected override allowRequest(req: IncomingMessage, next: (err: string | null | undefined, success: boolean) => void): void {
-		const receivedSecret = req.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
-		if (typeof receivedSecret !== 'string' || !ShardTokenStore.hasValidToken(receivedSecret)) {
+		if (!ShardTokenStore.allowRequest(req)) {
 			next('Unauthorized: invalid secret', false);
 			logger.warning(`Rejecting shard connection from ${req.socket.remoteAddress ?? '[unknown]'}: Bad secret`);
 			return;
@@ -45,7 +44,13 @@ export class SocketIOServerShard extends SocketIOServer implements IServerSocket
 		socket.once('disconnect', () => {
 			logger.debug(`Shard disconnected; id: ${socket.id}`);
 		});
-		const connection = new ShardConnection(this, new SocketIOSocket(socket));
+		const info = ShardTokenStore.allowConnect(socket.handshake);
+		if (!info) {
+			logger.warning(`Rejecting shard connection from ${socket.request.socket.remoteAddress ?? '[unknown]'}: Bad secret`);
+			socket.disconnect(true);
+			return;
+		}
+		const connection = new ShardConnection(this, new SocketIOSocket(socket), info);
 		if (!connection.isConnected()) {
 			logger.fatal('Assertion failed: client disconnect before onConnect finished');
 		}

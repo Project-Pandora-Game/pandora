@@ -3,16 +3,16 @@ import { ConnectionType, IConnectionShard } from './common';
 import { ConnectionManagerShard } from './manager_shard';
 import { Shard } from '../shard/shard';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
-import type { ConnectedTokenInfo, IConnectedTokenInfo } from '../shard/shardTokenStore';
+import type { IConnectedTokenInfoHandle, IConnectedTokenInfo } from '../shard/shardTokenStore';
 
 /** Class housing connection from a shard */
 export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardDirectory, IncomingSocket> implements IConnectionShard {
 	public readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
-	private readonly info: ConnectedTokenInfo;
+	private readonly info: IConnectedTokenInfoHandle;
 
 	public shard: Shard | null = null;
 
-	constructor(server: IServerSocket<IDirectoryShard>, socket: IncomingSocket, info: ConnectedTokenInfo) {
+	constructor(server: IServerSocket<IDirectoryShard>, socket: IncomingSocket, info: IConnectedTokenInfoHandle) {
 		super(server, socket, [DirectoryShardSchema, ShardDirectorySchema], GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`));
 		this.info = info;
 		this.logger.verbose(`Connected type: '${info.type}', token: ${info.id}`);

@@ -13,21 +13,22 @@ describe('ShardManager', () => {
 	});
 
 	describe('getOrCreateShard()', () => {
-		it('Creates shard if passed null', () => {
-			shard1 = ShardManager.getOrCreateShard(null);
+		it('Creates shard with id', () => {
+			shard1 = ShardManager.getOrCreateShard({
+				id: TEST_SHARD_ID,
+				type: 'stable',
+			});
 			expect(shard1).toBeInstanceOf(Shard);
-		});
-
-		it('Creates shard with unknown id', () => {
-			shard2 = ShardManager.getOrCreateShard(TEST_SHARD_ID);
-			expect(shard2).toBeInstanceOf(Shard);
-			expect(shard2).not.toBe(shard1);
-			expect(shard2.id).toBe(TEST_SHARD_ID);
+			expect(shard1.id).toBe(TEST_SHARD_ID);
 		});
 
 		it('Returns existing shard with known id', () => {
-			expect(ShardManager.getOrCreateShard(shard1.id)).toBe(shard1);
-			expect(ShardManager.getOrCreateShard(shard2.id)).toBe(shard2);
+			shard2 = ShardManager.getOrCreateShard({
+				id: TEST_SHARD_ID + '2',
+				type: 'stable',
+			});
+			expect(ShardManager.getOrCreateShard({ id: shard1.id, type: 'stable' })).toBe(shard1);
+			expect(ShardManager.getOrCreateShard({ id: shard2.id, type: 'stable' })).toBe(shard2);
 		});
 	});
 

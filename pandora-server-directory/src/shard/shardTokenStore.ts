@@ -1,4 +1,4 @@
-import { GetLogger, HTTP_HEADER_SHARD_SECRET, IClientDirectoryArgument, IShardTokenInfo, IShardTokenType } from 'pandora-common';
+import { GetLogger, HTTP_HEADER_SHARD_SECRET, IClientDirectoryArgument, IShardTokenConnectInfo, IShardTokenInfo, IShardTokenType } from 'pandora-common';
 import type { Account } from '../account/account';
 import { SHARD_SHARED_SECRET } from '../config';
 
@@ -74,6 +74,17 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 
 		return info;
 	}
+
+	public listShads(): IShardTokenConnectInfo[] {
+		return this.list()
+			.map((token) => {
+				const connection = this.#connections.get(token.id);
+				return {
+					...token,
+					connected: connection?.handshake.issued,
+				};
+			});
+	}
 };
 
 export interface IConnectedTokenInfo {
@@ -84,11 +95,13 @@ export interface IConnectedTokenInfo {
 export class ConnectedTokenInfo implements IConnectedTokenInfo {
 	readonly type: IShardTokenType;
 	readonly id: string;
+	readonly handshake: Readonly<Socket['handshake']>;
 	readonly remove: () => void;
 
-	constructor(token: IShardTokenInfo, _handshake: Readonly<Socket['handshake']>, remove: () => void = () => undefined) {
+	constructor(token: IShardTokenInfo, handshake: Readonly<Socket['handshake']>, remove: () => void = () => undefined) {
 		this.type = token.type;
 		this.id = token.id;
+		this.handshake = handshake;
 
 		let once = false;
 		this.remove = () => {

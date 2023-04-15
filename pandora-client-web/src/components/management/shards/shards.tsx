@@ -1,4 +1,4 @@
-import { IShardTokenInfo, EMPTY, IsAuthorized, IShardTokenType } from 'pandora-common';
+import { EMPTY, IsAuthorized, IShardTokenType, IShardTokenConnectInfo } from 'pandora-common';
 import React, { createContext, ReactElement, useState, useMemo, useEffect, useContext } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
@@ -11,12 +11,12 @@ import './shards.scss';
 
 const ShardListContext = createContext({
 	reload: () => { /** noop */ },
-	append: (_shard: IShardTokenInfo) => { /** noop */ },
+	append: (_shard: IShardTokenConnectInfo) => { /** noop */ },
 });
 
 export function Shards(): ReactElement {
 	const connector = useDirectoryConnector();
-	const [list, setList] = useState<IShardTokenInfo[]>([]);
+	const [list, setList] = useState<IShardTokenConnectInfo[]>([]);
 
 	const [reload] = useAsyncEvent(
 		() => connector.awaitResponse('manageListShardTokens', EMPTY),
@@ -25,7 +25,7 @@ export function Shards(): ReactElement {
 
 	const context = useMemo(() => ({
 		reload,
-		append: (shard: IShardTokenInfo) => {
+		append: (shard: IShardTokenConnectInfo) => {
 			setList((old) => [...old, shard]);
 		},
 	}), [reload]);
@@ -45,6 +45,7 @@ export function Shards(): ReactElement {
 							<th>Expires</th>
 							<th>Created By</th>
 							<th>Created At</th>
+							<th>Connected</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -60,7 +61,7 @@ export function Shards(): ReactElement {
 	);
 }
 
-function ShardRow({ shard }: { shard: IShardTokenInfo; }): ReactElement {
+function ShardRow({ shard }: { shard: IShardTokenConnectInfo; }): ReactElement {
 	const connector = useDirectoryConnector();
 	const { reload } = useContext(ShardListContext);
 
@@ -97,6 +98,9 @@ function ShardRow({ shard }: { shard: IShardTokenInfo; }): ReactElement {
 			</td>
 			<td>
 				{ new Date(shard.created.time).toLocaleString() }
+			</td>
+			<td>
+				{ shard.connected ? new Date(shard.connected).toLocaleString() : 'No' }
 			</td>
 			<td>
 				<Button className='slim' onClick={ () => void onInvalidate() }>Delete</Button>

@@ -93,10 +93,10 @@ export interface IConnectedTokenInfo {
 }
 
 export class ConnectedTokenInfo implements IConnectedTokenInfo {
-	readonly type: IShardTokenType;
-	readonly id: string;
-	readonly handshake: Readonly<Socket['handshake']>;
-	readonly remove: () => void;
+	public readonly type: IShardTokenType;
+	public readonly id: string;
+	public readonly handshake: Readonly<Socket['handshake']>;
+	public readonly remove: () => void;
 
 	constructor(token: IShardTokenInfo, handshake: Readonly<Socket['handshake']>, remove: () => void = () => undefined) {
 		this.type = token.type;

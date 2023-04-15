@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid';
 import { Assert, IDirectoryShardInfo, IShardTokenType } from 'pandora-common';
 import { Shard } from './shard';
 import promClient from 'prom-client';

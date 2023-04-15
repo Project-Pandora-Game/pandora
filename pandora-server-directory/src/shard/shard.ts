@@ -13,7 +13,7 @@ import type { IConnectedTokenInfo } from './shardTokenStore';
 
 export class Shard {
 	public readonly id;
-	readonly type: IShardTokenType;
+	public readonly type: IShardTokenType;
 	public shardConnection: IConnectionShard | null = null;
 	private timeout: NodeJS.Timeout | null = null;
 

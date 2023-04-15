@@ -8,7 +8,7 @@ import type { ConnectedTokenInfo, IConnectedTokenInfo } from '../shard/shardToke
 /** Class housing connection from a shard */
 export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardDirectory, IncomingSocket> implements IConnectionShard {
 	public readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
-	readonly info: ConnectedTokenInfo;
+	private readonly info: ConnectedTokenInfo;
 
 	public shard: Shard | null = null;
 

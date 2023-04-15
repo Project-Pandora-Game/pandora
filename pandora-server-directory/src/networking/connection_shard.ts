@@ -15,7 +15,7 @@ export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardD
 	constructor(server: IServerSocket<IDirectoryShard>, socket: IncomingSocket, info: ConnectedTokenInfo) {
 		super(server, socket, [DirectoryShardSchema, ShardDirectorySchema], GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`));
 		this.info = info;
-		this.logger.verbose('Connected');
+		this.logger.verbose(`Connected type: '${info.type}', token: ${info.id}`);
 	}
 
 	protected override onDisconnect(reason: string): void {

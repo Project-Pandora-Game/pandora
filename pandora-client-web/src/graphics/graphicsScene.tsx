@@ -1,5 +1,5 @@
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Application, Filter, Renderer, Texture } from 'pixi.js';
+import { Application, Filter, Texture } from 'pixi.js';
 import { Sprite } from '@pixi/react';
 import { ChildrenProps } from '../common/reactTypes';
 import { useEvent } from '../common/useEvent';
@@ -129,7 +129,6 @@ function GraphicsSceneCore({
 			return;
 
 		const renderer = app.renderer;
-		Assert(renderer instanceof Renderer);
 		renderer.background.color = backgroundResult.backgroundColor;
 		renderer.background.alpha = backgroundResult.backgroundAlpha;
 		renderer.render(app.stage);

@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance, FixupCharacterData } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance, CharacterDataSchema } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -97,8 +97,12 @@ export class Character {
 		return this.data.position;
 	}
 
-	public initRoomPosition(roomId: RoomId, value: readonly [number, number]) {
+	public initRoomPosition(roomId: RoomId, value: readonly [number, number], [maxX, maxY]: readonly [number, number]) {
 		if (this.data.roomId === roomId) {
+			if (this.data.position[0] > maxX || this.data.position[1] > maxY) {
+				this.data.position = [...value];
+				this.modified.add('position');
+			}
 			return;
 		}
 		this.data.roomId = roomId;
@@ -109,8 +113,7 @@ export class Character {
 
 	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
-		FixupCharacterData(data);
-		this.data = data;
+		this.data = CharacterDataSchema.parse(data);
 		this.appearance = new CharacterAppearance(assetManager, () => this.data);
 
 		// TODO: remove this, this allow easier development so no need for DB migration

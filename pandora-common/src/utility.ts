@@ -350,3 +350,7 @@ export function MemoizeNoArg<Return>(_target: object, _key: string, descriptor: 
 
 	return descriptor;
 }
+
+export function ZodTransformReadonly<T>(value: T): Readonly<T> {
+	return Object.freeze(value);
+}

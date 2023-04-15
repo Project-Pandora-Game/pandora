@@ -1,5 +1,5 @@
 import { Size, Rectangle, CharacterSize } from 'pandora-common/dist/assets';
-import { Application, Container, IExtract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture, IRenderableObject } from 'pixi.js';
+import { Application, Container, IExtract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture, IRenderableObject, DisplayObject, Shader } from 'pixi.js';
 import Delaunator from 'delaunator';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
@@ -35,7 +35,9 @@ export class ImageExporter {
 	public async imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat): Promise<string> {
 		const fullSize = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT };
 		const renderTexture = RenderTexture.create(fullSize);
-		this._app.renderer.render(object, { renderTexture });
+		WithCullingDisabled(object, () => {
+			this._app.renderer.render(object, { renderTexture });
+		});
 		return await this.textureCut(renderTexture, fullSize, [
 			[rect.x, rect.y],
 			[rect.x + rect.width, rect.y],
@@ -66,5 +68,36 @@ class TextureCutter extends Container {
 		mesh.y = points.reduce((y, point) => Math.min(y, point[1]), Infinity) * -1;
 		this.width = points.reduce((w, point) => Math.max(w, point[0]), 0) - this.x;
 		this.height = points.reduce((h, point) => Math.max(h, point[1]), 0) - this.y;
+	}
+}
+
+/**
+ * TODO: Remove this function when pixi.js fixes the bug or if we find a better way to do this.
+ */
+function WithCullingDisabled(object: unknown, action: () => void) {
+	const visited = new Set<DisplayObject>();
+	const restore: Mesh<Shader>[] = [];
+	const disableCulling = (target: unknown) => {
+		if (target instanceof DisplayObject) {
+			if (visited.has(target)) {
+				return;
+			}
+			visited.add(target);
+			if (target instanceof Mesh) {
+				if (target.state.culling) {
+					restore.push(target as Mesh<Shader>);
+					target.state.culling = false;
+				}
+			}
+			target.children?.forEach(disableCulling);
+		}
+	};
+	disableCulling(object);
+	try {
+		action();
+	} finally {
+		restore.forEach((mesh) => {
+			mesh.state.culling = true;
+		});
 	}
 }

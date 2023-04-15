@@ -16,7 +16,6 @@ import type { } from '../character/pronouns';
 export const ShardDirectorySchema = {
 	shardRegister: {
 		request: z.object({
-			shardId: z.string().nullable(),
 			publicURL: z.string(),
 			features: z.array(ShardFeatureSchema),
 			version: z.string(),

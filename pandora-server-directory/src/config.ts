@@ -91,3 +91,12 @@ export const DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID = process.env.DISCORD_BOT_ACC
 export const DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID = process.env.DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID || '';
 
 //#endregion
+
+//#region Captcha
+
+/** hCaptcha secret key */
+export const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY || '';
+/** hCaptcha site key */
+export const HCAPTCHA_SITE_KEY = process.env.HCAPTCHA_SITE_KEY || '';
+
+//#endregion

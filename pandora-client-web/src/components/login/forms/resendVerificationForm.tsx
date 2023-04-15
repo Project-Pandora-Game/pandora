@@ -1,10 +1,10 @@
 import { AssertNever, IsEmail } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useDirectoryResendVerification } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
-import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
 
 export interface ResendVerificationFormData {
 	email: string;
@@ -13,6 +13,8 @@ export interface ResendVerificationFormData {
 export function ResendVerificationForm(): ReactElement {
 	const navigate = useNavigate();
 	const resendVerification = useDirectoryResendVerification();
+	const [captchaToken, setCaptchaToken] = useState('');
+	const [captchaFailed, setCaptchaFailed] = useState(false);
 
 	const {
 		formState: { errors, submitCount },
@@ -22,7 +24,9 @@ export function ResendVerificationForm(): ReactElement {
 
 	const onSubmit = handleSubmit(({ email }) => {
 		void (async () => {
-			const result = await resendVerification(email);
+			setCaptchaFailed(false);
+
+			const result = await resendVerification(email, captchaToken);
 
 			if (result === 'maybeSent') {
 				navigate('/login', {
@@ -31,6 +35,8 @@ export function ResendVerificationForm(): ReactElement {
 					},
 				});
 				return;
+			} else if (result === 'invalidCaptcha') {
+				setCaptchaFailed(true);
 			} else {
 				AssertNever(result);
 			}
@@ -53,6 +59,7 @@ export function ResendVerificationForm(): ReactElement {
 				/>
 				<FormFieldError error={ errors.email } />
 			</FormField>
+			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
 			<Button type='submit'>Resend verification email</Button>
 			<FormLink to='/login'>◄ Return to login</FormLink>
 		</Form>

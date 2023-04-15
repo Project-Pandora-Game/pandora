@@ -73,20 +73,23 @@ export const ClientDirectorySchema = {
 			passwordSha512: PasswordSha512Schema,
 			email: EmailAddressSchema,
 			betaKey: z.string().optional(),
+			captchaToken: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey'; }>(),
+		response: ZodCast<{ result: 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey' | 'invalidCaptcha'; }>(),
 	},
 	resendVerificationEmail: {
 		request: z.object({
 			email: EmailAddressSchema,
+			captchaToken: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'maybeSent'; }>(),
+		response: ZodCast<{ result: 'maybeSent' | 'invalidCaptcha'; }>(),
 	},
 	passwordReset: {
 		request: z.object({
 			email: EmailAddressSchema,
+			captchaToken: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'maybeSent'; }>(),
+		response: ZodCast<{ result: 'maybeSent' | 'invalidCaptcha'; }>(),
 	},
 	passwordResetConfirm: {
 		request: z.object({

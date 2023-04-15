@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router';
 import { useDirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
-import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { useAuthFormData } from '../authFormDataProvider';
 
@@ -15,6 +15,7 @@ export interface RegistrationFormData {
 	password: string;
 	passwordConfirm: string;
 	betaKey: string;
+	captchaToken: string;
 }
 
 export function RegistrationForm(): ReactElement {
@@ -24,6 +25,8 @@ export function RegistrationForm(): ReactElement {
 	const [usernameTaken, setUsernameTaken] = useState('');
 	const [emailTaken, setEmailTaken] = useState('');
 	const [invalidBetaKey, setInvalidBetaKey] = useState('');
+	const [captchaToken, setCaptchaToken] = useState('');
+	const [captchaFailed, setCaptchaFailed] = useState(false);
 	const navigate = useNavigate();
 	const { setState: setAuthData } = useAuthFormData();
 	const {
@@ -64,7 +67,9 @@ export function RegistrationForm(): ReactElement {
 		void (async () => {
 			setUsernameTaken('');
 			setEmailTaken('');
-			const result = await directoryRegister(username, password, email, betaKey || undefined);
+			setCaptchaFailed(false);
+
+			const result = await directoryRegister(username, password, email, betaKey || undefined, captchaToken);
 
 			if (result === 'ok') {
 				setAuthData({ username, password, justRegistered: true });
@@ -76,6 +81,8 @@ export function RegistrationForm(): ReactElement {
 				setEmailTaken(email);
 			} else if (result === 'invalidBetaKey') {
 				setInvalidBetaKey(betaKey);
+			} else if (result === 'invalidCaptcha') {
+				setCaptchaFailed(true);
 			} else {
 				AssertNever(result);
 			}
@@ -134,19 +141,20 @@ export function RegistrationForm(): ReactElement {
 				<FormFieldError error={ errors.passwordConfirm } />
 			</FormField>
 			{ betaKeyRequired &&
-			<FormField>
-				<label htmlFor='registration-beta-key'>Beta key</label>
-				<input
-					type='text'
-					id='registration-beta-key'
-					autoComplete='off'
-					{ ...register('betaKey', {
-						required: 'Beta key is required',
-						validate: (betaKey) => (betaKey !== invalidBetaKey) || 'Invalid beta key provided',
-					}) }
-				/>
-				<FormFieldError error={ errors.betaKey } />
-			</FormField> }
+				<FormField>
+					<label htmlFor='registration-beta-key'>Beta key</label>
+					<input
+						type='text'
+						id='registration-beta-key'
+						autoComplete='off'
+						{ ...register('betaKey', {
+							required: 'Beta key is required',
+							validate: (betaKey) => (betaKey !== invalidBetaKey) || 'Invalid beta key provided',
+						}) }
+					/>
+					<FormFieldError error={ errors.betaKey } />
+				</FormField> }
+			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
 			<Button type='submit'>Register</Button>
 			<FormLink to='/login'>Already have an account? <strong>Sign in</strong></FormLink>
 		</Form>

@@ -30,7 +30,7 @@ type CreateNewCharacterCallback = () => Promise<boolean>;
  */
 type ConnectToCharacterCallback = (id: CharacterId) => Promise<boolean>;
 
-export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey';
+export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey' | 'invalidCaptcha';
 
 /**
  * Attempt to register a new account with the directory
@@ -38,6 +38,7 @@ export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidB
  * @param password - The plaintext password
  * @param email - A plaintext email
  * @param betaKey - Beta key string, if required
+ * @param captchaToken - Captcha token, if required
  * @returns Promise of the response from the directory
  */
 type RegisterCallback = (
@@ -45,21 +46,24 @@ type RegisterCallback = (
 	password: string,
 	email: string,
 	betaKey?: string,
+	captchaToken?: string,
 ) => Promise<RegisterResponse>;
 
 /**
  * Attempt to request a new verification email
  * @param email - A plaintext email
+ * @param captchaToken - Captcha token, if required
  * @returns Promise of response from the directory
  */
-type ResendVerificationCallback = (email: string) => Promise<'maybeSent'>;
+type ResendVerificationCallback = (email: string, captchaToken?: string) => Promise<'maybeSent' | 'invalidCaptcha'>;
 
 /**
  * Attempt to request a password reset
  * @param email - A plaintext email
+ * @param captchaToken - Captcha token, if required
  * @returns Promise of response from the directory
  */
-type PasswordResetCallback = (email: string) => Promise<'maybeSent'>;
+type PasswordResetCallback = (email: string, captchaToken?: string) => Promise<'maybeSent' | 'invalidCaptcha'>;
 
 /**
  * Reset a password using a token
@@ -119,25 +123,25 @@ export function useConnectToCharacter(): ConnectToCharacterCallback {
 
 export function useDirectoryRegister(): RegisterCallback {
 	const directoryConnector = useDirectoryConnector();
-	return useCallback(async (username, password, email, betaKey) => {
+	return useCallback(async (username, password, email, betaKey, captchaToken) => {
 		const passwordSha512 = await PrehashPassword(password);
-		const result = await directoryConnector.awaitResponse('register', { username, passwordSha512, email, betaKey });
+		const result = await directoryConnector.awaitResponse('register', { username, passwordSha512, email, betaKey, captchaToken });
 		return result.result;
 	}, [directoryConnector]);
 }
 
 export function useDirectoryResendVerification(): ResendVerificationCallback {
 	const directoryConnector = useDirectoryConnector();
-	return useCallback(async (email) => {
-		const result = await directoryConnector.awaitResponse('resendVerificationEmail', { email });
+	return useCallback(async (email, captchaToken) => {
+		const result = await directoryConnector.awaitResponse('resendVerificationEmail', { email, captchaToken });
 		return result.result;
 	}, [directoryConnector]);
 }
 
 export function useDirectoryPasswordReset(): PasswordResetCallback {
 	const directoryConnector = useDirectoryConnector();
-	return useCallback(async (email) => {
-		const result = await directoryConnector.awaitResponse('passwordReset', { email });
+	return useCallback(async (email, captchaToken) => {
+		const result = await directoryConnector.awaitResponse('passwordReset', { email, captchaToken });
 		return result.result;
 	}, [directoryConnector]);
 }

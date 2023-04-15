@@ -2,6 +2,7 @@ import { nanoid } from 'nanoid';
 import { IDirectoryShardInfo } from 'pandora-common';
 import { Shard } from './shard';
 import promClient from 'prom-client';
+import { IConnectedTokenInfo } from './shardTokenStore';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const SHARD_TIMEOUT = 10_000;
@@ -30,7 +31,7 @@ export const ShardManager = new class ShardManager {
 		await shard.onDelete(true);
 	}
 
-	public getOrCreateShard(id: string | null): Shard {
+	public getOrCreateShard({ id  }:  Readonly<IConnectedTokenInfo>): Shard {
 		let shard = id && this.shards.get(id);
 		if (!shard) {
 			shard = new Shard(id ?? nanoid());

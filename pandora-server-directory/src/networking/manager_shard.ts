@@ -50,7 +50,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (connection.shard)
 			throw new BadMessageError();
 
-		const shard = ShardManager.getOrCreateShard(args.shardId);
+		const shard = ShardManager.getOrCreateShard(connection.getTokenInfo());
 
 		const result = await (shard.registered ? shard.handleReconnect(args, connection) : shard.register(args, connection));
 

@@ -14,6 +14,7 @@ const logger = GetLogger('ShardTokenStore');
 type IStoredShardTokenInfo = IShardTokenInfo & { token: string; };
 
 export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<IShardTokenInfo> {
+	readonly #connections = new Map<string, ConnectedTokenInfo>();
 
 	constructor() {
 		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
@@ -53,7 +54,11 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 
 	public allowRequest(req: Readonly<IncomingMessage>): boolean {
 		const secret = req.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
-		return typeof secret === 'string' && this.hasValidToken(secret);
+		if (typeof secret !== 'string')
+			return false;
+
+		const token = this.getValidTokenInfo(secret);
+		return token != null && !this.#connections.has(token.id);
 	}
 
 	public allowConnect(handshake: Readonly<Socket['handshake']>): ConnectedTokenInfo | undefined {
@@ -61,8 +66,11 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		const token = typeof secret === 'string' ? this.getValidTokenInfo(secret) : undefined;
 		if (!token)
 			return undefined;
+		if (this.#connections.has(token.id))
+			return undefined;
 
-		const info = new ConnectedTokenInfo(token, handshake);
+		const info = new ConnectedTokenInfo(token, handshake, () => this.#connections.delete(token.id));
+		this.#connections.set(token.id, info);
 
 		return info;
 	}
@@ -70,14 +78,25 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 
 export interface IConnectedTokenInfo {
 	readonly type: IShardTokenType;
+	readonly id: string;
 }
 
 export class ConnectedTokenInfo implements IConnectedTokenInfo {
 	readonly type: IShardTokenType;
+	readonly id: string;
 	readonly remove: () => void;
 
 	constructor(token: IShardTokenInfo, _handshake: Readonly<Socket['handshake']>, remove: () => void = () => undefined) {
 		this.type = token.type;
-		this.remove = remove;
+		this.id = token.id;
+
+		let once = false;
+		this.remove = () => {
+			if (once)
+				return;
+
+			once = true;
+			remove();
+		};
 	}
 }

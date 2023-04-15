@@ -92,7 +92,11 @@ export interface IConnectedTokenInfo {
 	readonly id: string;
 }
 
-export class ConnectedTokenInfo implements IConnectedTokenInfo {
+export interface IConnectedTokenInfoHandle extends IConnectedTokenInfo {
+	readonly remove: () => void;
+}
+
+class ConnectedTokenInfo implements IConnectedTokenInfoHandle {
 	public readonly type: IShardTokenType;
 	public readonly id: string;
 	public readonly handshake: Readonly<Socket['handshake']>;

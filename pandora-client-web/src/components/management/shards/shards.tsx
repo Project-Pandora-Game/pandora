@@ -103,7 +103,7 @@ function ShardRow({ shard }: { shard: IShardTokenConnectInfo; }): ReactElement {
 				{ shard.connected ? new Date(shard.connected).toLocaleString() : 'No' }
 			</td>
 			<td>
-				<Button className='slim' onClick={ () => void onInvalidate() }>Delete</Button>
+				<Button className='slim' onClick={ onInvalidate }>Delete</Button>
 			</td>
 		</tr>
 	);
@@ -160,7 +160,7 @@ function ShardCreate(): ReactElement {
 				<input type='date' value={ expires === undefined ? '' : new Date(expires).toISOString().substring(0, 10) } onChange={ (e) => setExpires(e.target.value === '' ? undefined : new Date(e.target.value).getTime()) } />
 			</div>
 			<div className='input-row'>
-				<Button className='slim' onClick={ () => void onCreate() }>Create</Button>
+				<Button className='slim' onClick={ onCreate }>Create</Button>
 			</div>
 		</fieldset>
 	);

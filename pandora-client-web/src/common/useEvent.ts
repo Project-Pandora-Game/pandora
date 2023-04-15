@@ -29,34 +29,28 @@ export function useEvent<T extends AnyFunction>(callback: T): T {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type PromiseFunction = () => Promise<any>;
 
-export function useAsyncEvent<T extends PromiseFunction>(callback: T, updateComponent: (result: Awaited<ReturnType<T>>) => void, { errorHandler }: { errorHandler?: (error: unknown) => void; } = {}): [() => Promise<void>, boolean] {
+export function useAsyncEvent<T extends PromiseFunction>(callback: T, updateComponent: (result: Awaited<ReturnType<T>>) => void, { errorHandler }: { errorHandler?: (error: unknown) => void; } = {}): [() => void, boolean] {
 	const [processing, setProcessing] = useState(false);
 	const mounted = useMounted();
 
-	return [useEvent(async () => {
+	return [useEvent(() => {
 		if (processing)
 			return;
 
 		setProcessing(true);
 
-		let success = false;
-		let result: Awaited<ReturnType<T>>;
-		try {
-			result = await callback() as Awaited<ReturnType<T>>;
-			success = true;
-		} catch (e) {
-			if (mounted.current) {
-				setProcessing(false);
-				errorHandler?.(e);
-			}
-			return;
-		}
-		if (!mounted.current) {
-			return;
-		}
-		setProcessing(false);
-
-		if (success)
-			updateComponent(result);
+		callback()
+			.then((result: Awaited<ReturnType<T>>) => {
+				if (mounted.current) {
+					setProcessing(false);
+					updateComponent(result);
+				}
+			})
+			.catch((e) => {
+				if (mounted.current) {
+					setProcessing(false);
+					errorHandler?.(e);
+				}
+			});
 	}), processing];
 }

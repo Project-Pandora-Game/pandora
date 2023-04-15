@@ -45,7 +45,7 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterData>; }): 
 
 function Pronouns({ playerData }: { playerData: Readonly<ICharacterData>; }): ReactElement {
 	const shardConnector = useShardConnector();
-	const [pronoun, setProunoun] = React.useState(playerData.settings.pronoun);
+	const [pronoun, setPronoun] = React.useState(playerData.settings.pronoun);
 	const features = useChatRoomFeatures();
 	const allowChange = features == null || features.includes('allowPronounChanges');
 
@@ -54,7 +54,7 @@ function Pronouns({ playerData }: { playerData: Readonly<ICharacterData>; }): Re
 			<legend>Pronouns</legend>
 			<div className='input-row'>
 				<label>Pronoun</label>
-				<Select value={ pronoun } onChange={ (ev) => setProunoun(ev.target.value as PronounKey) } disabled={ !allowChange }>
+				<Select value={ pronoun } onChange={ (ev) => setPronoun(ev.target.value as PronounKey) } disabled={ !allowChange }>
 					{ Object.entries(PRONOUNS).map(([key, value]) => (
 						<option key={ key } value={ key }>
 							{ Object.values(value).join('/') }

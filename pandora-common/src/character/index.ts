@@ -8,6 +8,7 @@ import { AppearanceBundleSchema } from '../assets/appearance';
 import { HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
+import { ZodTransformReadonly } from '../utility';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema,
@@ -36,6 +37,10 @@ export const CharacterDataSchema = CharacterPublicDataSchema.merge(z.object({
 	inCreation: z.literal(true).optional(),
 	created: z.number(),
 	accessId: z.string(),
+	roomId: z.string().optional(),
+	position: z.tuple([z.number(), z.number()])
+		.default([-1, -1])
+		.transform(ZodTransformReadonly),
 }));
 
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;

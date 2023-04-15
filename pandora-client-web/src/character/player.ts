@@ -40,4 +40,3 @@ export function useCreateCharacter(): CharacterCreationCallback {
 		return result;
 	}, [shardConnector]);
 }
-

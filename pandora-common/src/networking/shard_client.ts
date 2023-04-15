@@ -14,7 +14,7 @@ import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 
 export type ICharacterRoomData = ICharacterPublicData & {
-	position: [number, number];
+	position: readonly [number, number];
 };
 
 export type IChatRoomClientData = IChatRoomFullInfo & {

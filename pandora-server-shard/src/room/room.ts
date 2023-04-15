@@ -187,7 +187,9 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public characterEnter(character: Character): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
-		character.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
+		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
+		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
+		character.initRoomPosition(this.id, [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0], [roomBackground.size[0], maxY]);
 		this.characters.add(character);
 		character.setRoom(this);
 		this.sendUpdateTo(character, { room: this.getClientData() });

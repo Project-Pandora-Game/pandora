@@ -1,4 +1,4 @@
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomListInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomListExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert, AccountId } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomListInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomListExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert, AccountId, IShardTokenType } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from '../shard/shard';
@@ -12,6 +12,7 @@ import { Account } from '../account/account';
 export class Room {
 	/** Time when this room was last requested */
 	public lastActivity: number = Date.now();
+	private _lastShardTokenType: IShardTokenType = 'stable';
 
 	public readonly id: RoomId;
 	private readonly config: IChatRoomDirectoryConfig;
@@ -325,7 +326,7 @@ export class Room {
 	public checkVisibleTo(account: Account): boolean {
 		return (
 			this.isAdmin(account) ||
-			(this.config.public && this.hasAdminInside())
+			(this.config.public && this.hasAdminInside() && this._lastShardTokenType === 'stable')
 		);
 	}
 
@@ -533,6 +534,7 @@ export class Room {
 			Assert(shard.allowConnect(), 'Connecting to shard that doesn\'t allow connections');
 
 			this._assignedShard = shard;
+			this._lastShardTokenType = shard.type;
 
 			shard.rooms.set(this.id, this);
 			await shard.update('rooms');

@@ -89,7 +89,7 @@ export class Character {
 	private logger: Logger;
 
 	public set position(value: readonly [number, number]) {
-		this.data.position = [...value];
+		this.data.position = value;
 		this.modified.add('position');
 	}
 
@@ -100,13 +100,13 @@ export class Character {
 	public initRoomPosition(roomId: RoomId, value: readonly [number, number], [maxX, maxY]: readonly [number, number]) {
 		if (this.data.roomId === roomId) {
 			if (this.data.position[0] > maxX || this.data.position[1] > maxY) {
-				this.data.position = [...value];
+				this.data.position = value;
 				this.modified.add('position');
 			}
 			return;
 		}
 		this.data.roomId = roomId;
-		this.data.position = [...value];
+		this.data.position = value;
 		this.modified.add('roomId');
 		this.modified.add('position');
 	}

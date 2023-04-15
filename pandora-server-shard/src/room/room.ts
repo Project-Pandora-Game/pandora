@@ -173,7 +173,7 @@ export class Room extends ServerRoom<IShardClient> {
 			accountId: c.accountId,
 			appearance: c.appearance.exportToBundle(),
 			settings: c.settings,
-			position: [...c.position],
+			position: c.position,
 		};
 	}
 
@@ -188,7 +188,8 @@ export class Room extends ServerRoom<IShardClient> {
 	public characterEnter(character: Character): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
 		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
-		character.initRoomPosition(this.id, [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0], roomBackground.size);
+		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
+		character.initRoomPosition(this.id, [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0], [roomBackground.size[0], maxY]);
 		this.characters.add(character);
 		character.setRoom(this);
 		this.sendUpdateTo(character, { room: this.getClientData() });

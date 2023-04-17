@@ -105,7 +105,7 @@ export class RoomInventory implements RoomActionTargetRoomInventory {
 	}
 
 	public getManipulator(): AppearanceRootManipulator {
-		return new AppearanceRootManipulator(this.assetManager, this.items, false);
+		return new AppearanceRootManipulator(this.assetManager, this.items);
 	}
 
 	public commitChanges(manipulator: AppearanceRootManipulator, context: ActionProcessingContext): AppearanceValidationResult {

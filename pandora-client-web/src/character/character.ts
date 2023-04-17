@@ -1,4 +1,4 @@
-import { CharacterAppearance, AppearanceChangeType, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose } from 'pandora-common';
+import { CharacterAppearance, AppearanceChangeType, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose, AppearanceItems, WearableAssetType } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetCurrentAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -76,7 +76,7 @@ export function useCharacterAppearanceItem(character: AppearanceContainer, item:
 	}, () => item ? character.appearance.getItem(item) : undefined);
 }
 
-export function useCharacterAppearanceItems(character: AppearanceContainer): readonly Item[] {
+export function useCharacterAppearanceItems(character: AppearanceContainer): AppearanceItems<WearableAssetType> {
 	return useSyncExternalStore((onChange) => {
 		return character.on('appearanceUpdate', (changed) => {
 			if (changed.includes('items')) {

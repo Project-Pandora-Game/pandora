@@ -9,7 +9,7 @@ import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearance
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
-import { AssetColorization, AssetIdSchema } from './definitions';
+import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
@@ -42,14 +42,22 @@ export type ColorGroupResult = {
  *
  * **THIS CLASS IS IMMUTABLE**
  */
-export class Item {
+export class Item<Type extends AssetType = AssetType> {
 	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
-	public readonly asset: Asset;
+	public readonly asset: Asset<Type>;
 	public readonly color: Immutable<ItemColorBundle>;
 	public readonly modules: ReadonlyMap<string, IItemModule>;
 
-	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
+	public isType<T extends AssetType>(kind: T): this is Item<T> {
+		return this.asset.isType(kind);
+	}
+
+	public isWearable(): this is Item<WearableAssetType> {
+		return this.asset.isWearable();
+	}
+
+	constructor(id: ItemId, asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext) {
 		this.assetManager = context.assetManager;
 		this.id = id;
 		this.asset = asset;
@@ -58,8 +66,10 @@ export class Item {
 		}
 		// Load modules
 		const modules = new Map<string, IItemModule>();
-		for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
-			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
+		if (asset.isType('personal')) {
+			for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
+				modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
+			}
 		}
 		this.modules = modules;
 		// Load color from bundle
@@ -84,6 +94,8 @@ export class Item {
 	}
 
 	public exportColorToBundle(): ItemColorBundle | undefined {
+		if (!this.isType('personal'))
+			return undefined;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return undefined;
@@ -101,7 +113,7 @@ export class Item {
 		return hasKey ? result : undefined;
 	}
 
-	public containerChanged(items: AppearanceItems, isCharacter: boolean): Item {
+	public containerChanged(items: AppearanceItems, isCharacter: boolean): Item<Type> {
 		if (!isCharacter)
 			return this;
 
@@ -109,6 +121,8 @@ export class Item {
 	}
 
 	public getColorOverrides(items: AppearanceItems): null | Partial<Record<string, ColorGroupResult>> {
+		if (!this.isType('personal'))
+			return null;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return null;
@@ -139,7 +153,7 @@ export class Item {
 
 	public validate(isWorn: boolean): AppearanceValidationResult {
 		// Check the asset can actually be worn
-		if (isWorn && this.asset.definition.wearable === false)
+		if (isWorn && (!this.isWearable() || (this.isType('personal') && this.asset.definition.wearable === false)))
 			return {
 				success: false,
 				error: {
@@ -149,7 +163,7 @@ export class Item {
 			};
 
 		// Check bodyparts are worn
-		if (!isWorn && this.asset.definition.bodypart != null)
+		if (!isWorn && this.isType('personal') && this.asset.definition.bodypart != null)
 			return {
 				success: false,
 				error: {
@@ -168,7 +182,7 @@ export class Item {
 	}
 
 	/** Colors this item with passed color, returning new item with modified color */
-	public changeColor(color: ItemColorBundle): Item {
+	public changeColor(color: ItemColorBundle): Item<Type> {
 		const bundle = this.exportToBundle();
 		bundle.color = _.cloneDeep(color);
 		return new Item(this.id, this.asset, bundle, {
@@ -220,7 +234,7 @@ export class Item {
 
 	@MemoizeNoArg
 	public getPropertiesParts(): Immutable<AssetProperties>[] {
-		const propertyParts: Immutable<AssetProperties>[] = [this.asset.definition];
+		const propertyParts: Immutable<AssetProperties>[] = (this.isWearable()) ? [this.asset.definition] : [];
 		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
 
 		return propertyParts;
@@ -233,6 +247,9 @@ export class Item {
 	}
 
 	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {
+		if (!this.isType('personal'))
+			return undefined;
+
 		const colorization = this.asset.definition.colorization?.[colorizationKey];
 		if (!colorization)
 			return undefined;
@@ -244,7 +261,9 @@ export class Item {
 		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
 	}
 
-	private _overrideColors(items: AppearanceItems): Item {
+	private _overrideColors(items: AppearanceItems): Item<Type> {
+		if (!this.isType('personal'))
+			return this;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return this;
@@ -319,23 +338,25 @@ export class Item {
 	private _getColorByGroup(group: string, ignoreKey?: string): null | ['primary' | 'inherited', Immutable<AssetColorization>, HexRGBAColorString] {
 		const { overrideColorKey, excludeFromColorInheritance } = this.getProperties();
 		let inherited: [Immutable<AssetColorization>, HexRGBAColorString] | undefined;
-		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
-			if (value.group !== group || !this.color[key])
-				continue;
-			if (key === ignoreKey || excludeFromColorInheritance.has(key))
-				continue;
+		if (this.isType('personal') && this.asset.definition.colorization) {
+			for (const [key, value] of Object.entries(this.asset.definition.colorization)) {
+				if (value.group !== group || !this.color[key])
+					continue;
+				if (key === ignoreKey || excludeFromColorInheritance.has(key))
+					continue;
 
-			if (!overrideColorKey.has(key))
-				return ['primary', value, this.color[key]];
+				if (!overrideColorKey.has(key))
+					return ['primary', value, this.color[key]];
 
-			if (!inherited)
-				inherited = [value, this.color[key]];
+				if (!inherited)
+					inherited = [value, this.color[key]];
+			}
 		}
 		return inherited ? ['inherited', ...inherited] : null;
 	}
 
 	private _loadColor(color: ItemColorBundle | HexRGBAColorString[] = {}): ItemColorBundle {
-		const colorization = this.asset.definition.colorization ?? {};
+		const colorization = this.isType('personal') ? (this.asset.definition.colorization ?? {}) : {};
 		if (Array.isArray(color)) {
 			const keys = Object.keys(colorization);
 			const fixup: Writeable<ItemColorBundle> = {};
@@ -365,4 +386,12 @@ function LimitColorAlpha(color: HexRGBAColorString, minAlpha: number = 255): Hex
 
 	const alpha = Math.max(parseInt(color.substring(7), 16), minAlpha);
 	return color.substring(0, 7) + alpha.toString(16).padStart(2, '0') as HexRGBAColorString;
+}
+
+export function FilterItemType<T extends AssetType>(type: T): (item: Item) => item is Item<T> {
+	return (item): item is Item<T> => item.isType(type);
+}
+
+export function FilterItemWearable(item: Item): item is Item<WearableAssetType> {
+	return item.isWearable();
 }

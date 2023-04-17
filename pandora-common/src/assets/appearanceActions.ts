@@ -3,16 +3,16 @@ import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character'
 import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterViewSchema, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
-import { AssetIdSchema } from './definitions';
+import { AssetIdSchema, WearableAssetType } from './definitions';
 import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { Item, ItemColorBundle, ItemColorBundleSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
-import { AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
+import { AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { sample } from 'lodash';
 import { nanoid } from 'nanoid';
-import { Asset } from './asset';
+import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
 export const AppearanceActionCreateSchema = z.object({
@@ -432,15 +432,22 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	// Do change
 	let removed: AppearanceItems = [];
 	// if this is a bodypart not allowing multiple do a swap instead, but only in root
-	if (manipulator.isCharacter && item.asset.definition.bodypart && manipulator.assetManager.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false) {
-		removed = manipulator.removeMatchingItems((oldItem) => oldItem.asset.definition.bodypart === item.asset.definition.bodypart);
+	if (manipulator.isCharacter() &&
+		item.isType('personal') &&
+		item.asset.definition.bodypart &&
+		manipulator.assetManager.bodyparts.find((bp) => item.isType('personal') &&
+			bp.name === item.asset.definition.bodypart)?.allowMultiple === false
+	) {
+		removed = manipulator.removeMatchingItems((oldItem) => oldItem.isType('personal') &&
+			oldItem.asset.definition.bodypart === item.asset.definition.bodypart,
+		);
 	}
 	if (!manipulator.addItem(item))
 		return false;
 
 	// Change message to chat
 	if (removed.length > 0) {
-		Assert(rootManipulator.isCharacter);
+		Assert(rootManipulator.isCharacter());
 		manipulator.queueMessage({
 			id: 'itemReplace',
 			item: {
@@ -453,7 +460,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	} else {
 		const manipulatorContainer = manipulator.container;
 		manipulator.queueMessage({
-			id: (!manipulatorContainer && rootManipulator.isCharacter) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
+			id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 			item: {
 				assetId: item.asset.id,
 			},
@@ -477,7 +484,7 @@ export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, ite
 	// Change message to chat
 	const manipulatorContainer = manipulator.container;
 	manipulator.queueMessage({
-		id: (!manipulatorContainer && rootManipulator.isCharacter) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
+		id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 		item: {
 			assetId: removedItems[0].asset.id,
 		},
@@ -500,14 +507,14 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 	const item = removedItems[0];
 
 	// No transfering bodyparts, thank you
-	if (item.asset.definition.bodypart)
+	if (item.isType('personal') && item.asset.definition.bodypart)
 		return false;
 
 	if (!targetContainerManipulator.addItem(item))
 		return false;
 
 	// Change message to chat
-	if (sourceManipulator.isCharacter) {
+	if (sourceManipulator.isCharacter()) {
 		const manipulatorContainer = sourceContainerManipulator.container;
 		sourceContainerManipulator.queueMessage({
 			id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
@@ -516,7 +523,7 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 			},
 		});
 	}
-	if (targetManipulator.isCharacter) {
+	if (targetManipulator.isCharacter()) {
 		const manipulatorContainer = targetContainerManipulator.container;
 		targetContainerManipulator.queueMessage({
 			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
@@ -589,7 +596,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 	const restriction = oldItems
 		.map((i): RestrictionResult => {
 			// Ignore bodyparts if we are not changing those
-			if (kind === 'items' && i.asset.definition.bodypart != null)
+			if (kind === 'items' && i.isType('personal') && i.asset.definition.bodypart != null)
 				return { allowed: true };
 			return character.canUseItemDirect(character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
 		})
@@ -627,7 +634,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 		return { result: 'success' };
 
 	// Filter appearance to get either body or nothing
-	let newAppearance: Item[] = kind === 'items' ? oldItems.filter((i) => i.asset.definition.bodypart != null) : [];
+	let newAppearance: Item<WearableAssetType>[] = kind === 'items' ? oldItems.filter((i) => !i.isType('personal') || i.asset.definition.bodypart != null) : [];
 	// Collect info about already present items
 	const usedAssets = new Set<Asset>();
 	let properties = CreateAssetPropertiesResult();
@@ -648,7 +655,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 			// Find possible assets (intentionally using only always-present attributes, not statically collected ones)
 			const possibleAssets = assetManager
 				.getAllAssets()
-				.filter((a) => a.definition.bodypart != null &&
+				.filter((a) => a.isType('personal') && a.definition.bodypart != null &&
 					a.definition.allowRandomizerUsage === true &&
 					a.definition.attributes?.includes(requestedBodyAttribute) &&
 					// Skip already present assets
@@ -659,7 +666,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 
 			// Pick one and add it to the appearance
 			const asset = sample(possibleAssets);
-			if (asset && asset.definition.bodypart != null) {
+			if (asset && asset.isType('personal') && asset.definition.bodypart != null) {
 				const item = assetManager.createItem(`i/${nanoid()}`, asset, null);
 				newAppearance.push(item);
 				usedAssets.add(asset);
@@ -671,7 +678,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 		}
 
 		// Re-load the appearance we have to make sure body is valid
-		newAppearance = AppearanceLoadAndValidate(assetManager, newAppearance).slice();
+		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance).slice();
 	}
 
 	// Make sure the appearance is valid (required for items step)
@@ -694,6 +701,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 		// Find possible assets (intentionally using only always-present attributes, not statically collected ones)
 		const possibleAssets = assetManager
 			.getAllAssets()
+			.filter(FilterAssetType('personal'))
 			.filter((asset) => asset.definition.bodypart == null &&
 				asset.definition.attributes?.includes(requestedAttribute) &&
 				asset.definition.allowRandomizerUsage === true &&
@@ -707,7 +715,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 		// Try them one by one, stopping at first successful (if we skip all, nothing bad happens)
 		for (const asset of possibleAssets) {
 			const item = assetManager.createItem(`i/${nanoid()}`, asset, null);
-			const newItems: Item[] = [...newAppearance, item];
+			const newItems: Item<WearableAssetType>[] = [...newAppearance, item];
 
 			r = ValidateAppearanceItemsPrefix(assetManager, newItems);
 			if (r.success) {

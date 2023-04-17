@@ -411,10 +411,11 @@ export function useWardrobeItems(): {
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
 		if (target.type === 'room') {
-			return asset.definition.bodypart == null;
+			return !asset.isType('personal') || asset.definition.bodypart == null;
 		}
 		if (target.type === 'character') {
-			return asset.definition.bodypart == null &&
+			return asset.isType('personal') &&
+				asset.definition.bodypart == null &&
 				(currentFocus.container.length !== 0 || asset.definition.wearable !== false);
 		}
 		AssertNever(target);
@@ -504,7 +505,7 @@ function WardrobeBodyManipulation({ className, character }: {
 
 	const filter = (item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
-		return asset.definition.bodypart != null;
+		return asset.isType('personal') && asset.definition.bodypart !== undefined;
 	};
 
 	const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
@@ -1280,7 +1281,11 @@ export function WardrobeItemConfigMenu({
 						</span>
 					</WardrobeActionButton>
 				</Row>
-				<WardrobeItemColorization wornItem={ wornItem } item={ item } />
+				{
+					wornItem.isType('personal') ? (
+						<WardrobeItemColorization wornItem={ wornItem } item={ item } />
+					) : null
+				}
 				{
 					Array.from(wornItem.modules.entries())
 						.map(([moduleName, m]) => (
@@ -1295,7 +1300,7 @@ export function WardrobeItemConfigMenu({
 }
 
 function WardrobeItemColorization({ wornItem, item }: {
-	wornItem: Item;
+	wornItem: Item<'personal'>;
 	item: ItemPath;
 }): ReactElement | null {
 	const { target, targetSelector } = useWardrobeContext();

@@ -26,7 +26,8 @@ export class AssetManagerEditor extends AssetManagerClient {
 		Assert(!currentManager.getAssetById(id));
 		Assert(!bodypart || currentManager.bodyparts.some((b) => b.name === bodypart));
 
-		const definition: AssetDefinition = {
+		const definition: AssetDefinition<'personal'> = {
+			type: 'personal',
 			id,
 			name,
 			size: bodypart ? 'bodypart' : 'medium',

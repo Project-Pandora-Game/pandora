@@ -235,11 +235,13 @@ export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
 	if (override?.color !== undefined) {
 		return override.color;
 	}
-	const { colorization } = asset.definition;
-	if (colorization && colorizationKey) {
-		const value = colorization[colorizationKey];
-		if (value) {
-			return parseInt(value.default.substring(1), 16);
+	if (asset.isType('personal')) {
+		const { colorization } = asset.definition;
+		if (colorization && colorizationKey) {
+			const value = colorization[colorizationKey];
+			if (value) {
+				return parseInt(value.default.substring(1), 16);
+			}
 		}
 	}
 	return 0xffffff;

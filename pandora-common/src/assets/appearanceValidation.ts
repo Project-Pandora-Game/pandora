@@ -1,13 +1,14 @@
 import { Logger } from '../logging';
 import { Assert, ShuffleArray } from '../utility';
 import { ItemId } from './appearanceTypes';
+import { FilterAssetType } from './asset';
 import type { AssetManager } from './assetManager';
-import type { AssetId } from './definitions';
+import type { AssetId, AssetType, WearableAssetType } from './definitions';
 import type { Item } from './item';
 import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
-export type AppearanceItems = readonly Item[];
+export type AppearanceItems<Type extends AssetType = AssetType> = readonly Item<Type>[];
 
 export type AppearanceValidationError =
 	| {
@@ -58,7 +59,7 @@ export function AppearanceValidationCombineResults(result1: AppearanceValidation
 }
 
 function GetItemBodypartSortIndex(assetManager: AssetManager, item: Item): number {
-	return item.asset.definition.bodypart === undefined ? assetManager.bodyparts.length :
+	return (!item.isType('personal') || item.asset.definition.bodypart === undefined) ? assetManager.bodyparts.length :
 		assetManager.bodyparts.findIndex((bp) => bp.name === item.asset.definition.bodypart);
 }
 
@@ -130,7 +131,7 @@ export function AppearanceGetBlockedSlot(slots: AssetSlotResult, blocked: Readon
 }
 
 /** Validates items prefix, ignoring required items */
-export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>): AppearanceValidationResult {
 	// Bodypart validation
 
 	// Check bodypart order
@@ -146,7 +147,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 
 	// Check duplicate bodyparts
 	for (const bodypart of assetManager.bodyparts) {
-		if (!bodypart.allowMultiple && items.filter((item) => item.asset.definition.bodypart === bodypart.name).length > 1)
+		if (!bodypart.allowMultiple && items.filter((item) => item.isType('personal') && item.asset.definition.bodypart === bodypart.name).length > 1)
 			return {
 				success: false,
 				error: {
@@ -225,7 +226,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 }
 
 /** Validates the appearance items, including all prefixes and required items */
-export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
 		const r = ValidateAppearanceItemsPrefix(assetManager, items.slice(0, i));
@@ -235,7 +236,7 @@ export function ValidateAppearanceItems(assetManager: AssetManager, items: Appea
 
 	// Validate required assets
 	for (const bodypart of assetManager.bodyparts) {
-		if (bodypart.required && !items.some((item) => item.asset.definition.bodypart === bodypart.name))
+		if (bodypart.required && !items.some((item) => item.isType('personal') && item.asset.definition.bodypart === bodypart.name))
 			return {
 				success: false,
 				error: {
@@ -248,30 +249,33 @@ export function ValidateAppearanceItems(assetManager: AssetManager, items: Appea
 	return { success: true };
 }
 
-export function AppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems {
+export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems<WearableAssetType> {
 	// First sort input so bodyparts are ordered correctly work
 	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
 
 	// Process the input one by one, skipping bad items and injecting missing required bodyparts
-	let resultItems: AppearanceItems = [];
+	let resultItems: AppearanceItems<WearableAssetType> = [];
 	let currentBodypartIndex: number | null = assetManager.bodyparts.length > 0 ? 0 : null;
 	for (; ;) {
 		const itemToAdd = input.shift();
+
 		// Check moving to next bodypart
 		while (
 			currentBodypartIndex !== null &&
 			(
 				itemToAdd == null ||
+				!itemToAdd.isType('personal') ||
 				itemToAdd.asset.definition.bodypart !== assetManager.bodyparts[currentBodypartIndex].name
 			)
 		) {
 			const bodypart = assetManager.bodyparts[currentBodypartIndex];
 
 			// Check if we need to add required bodypart
-			if (bodypart.required && !resultItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
+			if (bodypart.required && !resultItems.some((item) => item.isType('personal') && item.asset.definition.bodypart === bodypart.name)) {
 				// Find matching bodypart assets
 				const possibleAssets = assetManager
 					.getAllAssets()
+					.filter(FilterAssetType('personal'))
 					.filter((asset) => asset.definition.bodypart === bodypart.name && asset.definition.allowRandomizerUsage === true);
 
 				ShuffleArray(possibleAssets);
@@ -285,7 +289,7 @@ export function AppearanceLoadAndValidate(assetManager: AssetManager, originalIn
 				}
 			}
 
-			if (bodypart.required && !resultItems.some((item) => item.asset.definition.bodypart === bodypart.name)) {
+			if (bodypart.required && !resultItems.some((item) => item.isType('personal') && item.asset.definition.bodypart === bodypart.name)) {
 				throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
 			}
 
@@ -300,7 +304,13 @@ export function AppearanceLoadAndValidate(assetManager: AssetManager, originalIn
 			break;
 
 		Assert(assetManager === itemToAdd.assetManager);
-		const tryItem: AppearanceItems = [...resultItems, itemToAdd];
+		// Skip non-wearable items
+		if (!itemToAdd.isWearable()) {
+			logger?.warning(`Skipping non-wearable item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
+			continue;
+		}
+
+		const tryItem: AppearanceItems<WearableAssetType> = [...resultItems, itemToAdd];
 		if (!ValidateAppearanceItemsPrefix(assetManager, tryItem).success) {
 			logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
 		} else {

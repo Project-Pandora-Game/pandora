@@ -27,8 +27,11 @@ export function AssetInfoUI(): ReactElement {
 	return <AssetInfoUIImpl graphics={ graphics } />;
 }
 
-function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): ReactElement {
+function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): ReactElement | null {
 	const asset = useGraphicsAsset(graphics);
+
+	if (!asset.isType('personal'))
+		return null;
 
 	const definition = asset.definition;
 
@@ -58,7 +61,7 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 	);
 }
 
-function Colorization({ colorization }: { colorization: Immutable<AssetDefinition['colorization']>; }): ReactElement | null {
+function Colorization({ colorization }: { colorization: Immutable<AssetDefinition<'personal'>['colorization']>; }): ReactElement | null {
 	if (!colorization) {
 		return null;
 	}
@@ -76,7 +79,7 @@ function Colorization({ colorization }: { colorization: Immutable<AssetDefinitio
 	);
 }
 
-function Effects({ effects, id = '' }: { effects: AssetDefinition['effects']; id?: string; }): ReactElement {
+function Effects({ effects, id = '' }: { effects: AssetDefinition<'personal'>['effects']; id?: string; }): ReactElement {
 	const allEffects: EffectsDefinition = { ...EFFECTS_DEFAULT, ...effects };
 	id += 'effect';
 
@@ -98,7 +101,7 @@ function Effects({ effects, id = '' }: { effects: AssetDefinition['effects']; id
 	);
 }
 
-function Modules({ modules }: { modules: Immutable<AssetDefinition>['modules']; }): ReactElement | null {
+function Modules({ modules }: { modules: Immutable<AssetDefinition<'personal'>>['modules']; }): ReactElement | null {
 	if (!modules) {
 		return null;
 	}

@@ -38,7 +38,8 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			case 'blockedAddRemove':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
 			case 'blockedModule': {
-				const visibleModuleName = assetManager.getAssetById(e.asset)?.definition.modules?.[e.module]?.name ?? `[UNKNOWN MODULE '${e.module}']`;
+				const asset = assetManager.getAssetById(e.asset);
+				const visibleModuleName: string = (asset?.isType('personal') && asset.definition.modules?.[e.module]?.name) || `[UNKNOWN MODULE '${e.module}']`;
 				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
 			}
 			case 'blockedSlot':

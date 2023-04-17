@@ -5,6 +5,8 @@ import type { AppearanceArmPose, CharacterView } from './appearance';
 import type { BoneDefinitionCompressed, BoneName } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetProperties } from './properties';
+import { Satisfies } from '../utility';
+import { Immutable } from 'immer';
 
 export const AssetIdSchema = ZodTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
@@ -62,23 +64,26 @@ export interface AssetColorization<A extends AssetDefinitionExtraArgs = AssetDef
 	minAlpha?: number;
 }
 
-export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
+export type AssetType =
+	// Personal items are items worn on person, not spanning multiple persons or interacting with a room
+	'personal' |
+	// Room devices are items placed in the room
+	'roomDevice' |
+	// Room device wearable parts are hidden items applied on character when they enter device
+	'roomDeviceWearablePart';
+
+export const WEARABLE_ASSET_TYPES = ['personal', 'roomDeviceWearablePart'] as const satisfies readonly AssetType[];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
+	/** Unique id of this asset */
 	id: AssetId;
 
 	/** The visible name of this asset */
 	name: string;
 
-	/**
-	 * If this asset can be worn on body directly.
-	 * @default true
-	 */
-	wearable?: boolean;
-
-	/**
-	 * If this asset can be used when randomly picking part needed to fit
-	 * @default false
-	 */
-	allowRandomizerUsage?: boolean;
+	/** What type of asset this asset is */
+	type: Type;
 
 	/**
 	 * Size of this item. Affects mainly which things it can fit into.
@@ -93,6 +98,20 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	 * If this item is a bodypart, then and **only** then the size **must** be `'bodypart'`
 	 */
 	size: AssetSize;
+}
+
+export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {
+	/**
+	 * If this asset can be worn on body directly.
+	 * @default true
+	 */
+	wearable?: boolean;
+
+	/**
+	 * If this asset can be used when randomly picking part needed to fit
+	 * @default false
+	 */
+	allowRandomizerUsage?: boolean;
 
 	/**
 	 * Chat specific settings for this asset
@@ -130,6 +149,56 @@ export interface AssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefin
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
 }
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export type RoomDeviceSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
+	virtualItem: AssetId;
+};
+
+export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'roomDevice', A> {
+	slots: Record<string, RoomDeviceSlot<A>>;
+}
+
+export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
+	/**
+	 * Chat specific settings for this asset
+	 *
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 */
+	chat?: {
+		/** How items of this asset are referred to in chat (defaults to asset's name) */
+		chatDescriptor?: string;
+		/** Message for when character enters a device slot using this item */
+		actionEnter?: string;
+		/** Message for when character leaves a device slot using this item */
+		actionLeave?: string;
+	};
+
+	/** If this item has any graphics to be loaded or is only virtual */
+	hasGraphics: boolean;
+}
+
+export type AssetDefinitionTypeMap<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> =
+	Satisfies<
+	{
+		personal: PersonalAssetDefinition<A>;
+		roomDevice: RoomDeviceAssetDefinition<A>;
+		roomDeviceWearablePart: RoomDeviceWearablePartAssetDefinition<A>;
+	},
+	{
+		[type in AssetType]: AssetBaseDefinition<type, A>;
+	}
+	>;
+
+//#region Typing helpers
+export type AssetDefinition<Type extends AssetType = AssetType, A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = AssetDefinitionTypeMap<A>[Type];
+
+export type WearableAssetType = (typeof WEARABLE_ASSET_TYPES)[number];
+export function IsWearableAssetDefinition(definition: Immutable<AssetDefinition>): definition is AssetDefinition<WearableAssetType> {
+	const arr: readonly AssetType[] = WEARABLE_ASSET_TYPES;
+	return arr.includes(definition.type);
+}
+//#endregion
 
 /** Definition of bodypart */
 export interface AssetBodyPart {

@@ -108,7 +108,7 @@ export class Item {
 		return this._overrideColors(items);
 	}
 
-	public getColorOverrides(items: AppearanceItems): null | Record<string, ColorGroupResult> {
+	public getColorOverrides(items: AppearanceItems): null | Partial<Record<string, ColorGroupResult>> {
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return null;
@@ -259,7 +259,11 @@ export class Item {
 			if (!def || def.name == null)
 				continue;
 
-			result[key] = LimitColorAlpha(overrides[key]?.color, def.minAlpha) ?? value;
+			const override = overrides[key];
+			if (override == null)
+				continue;
+
+			result[key] = LimitColorAlpha(override.color, def.minAlpha) ?? value;
 		}
 		return this.changeColor(result);
 	}

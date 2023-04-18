@@ -360,9 +360,9 @@ function LimitColorAlpha(color: HexRGBAColorString, minAlpha: number = 255): Hex
 	if (color.length === 7)
 		return color;
 
-	if (minAlpha === 255)
+	if (minAlpha >= 255)
 		return color.substring(0, 7) as HexRGBAColorString;
 
-	const alpha = Math.min(parseInt(color.substring(7), 16), minAlpha);
+	const alpha = Math.max(parseInt(color.substring(7), 16), minAlpha);
 	return color.substring(0, 7) + alpha.toString(16).padStart(2, '0') as HexRGBAColorString;
 }

@@ -90,14 +90,14 @@ export function ColorInputRGBA({
 	return (
 		<>
 			<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === 255 ? 7 : 9 } />
-			<input type='color' value={ value.substring(0, 7) } disabled={ disabled } onClick={ onClick } />
+			<input type='color' value={ value.substring(0, 7) } disabled={ disabled } onClick={ onClick } readOnly />
 			{
 				resetValue != null &&
 				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
 			}
 			{
 				showEditor &&
-				<ColorEditor initialValue={ value } onChange={ onChangeCallerThrottled } minAlpha={ 0 } close={ () => setShowEditor(false) } title={ title } />
+				<ColorEditor initialValue={ value } onChange={ onChangeCallerThrottled } minAlpha={ minAlpha } close={ () => setShowEditor(false) } title={ title } />
 			}
 		</>
 	);
@@ -129,6 +129,7 @@ function ColorEditor({
 		}
 		if (newHex !== lastUpdate.current) {
 			lastUpdate.current = newHex;
+			setInput(newHex);
 			onChange(newHex);
 		}
 	}, [color, onChange, minAlpha]);
@@ -170,8 +171,12 @@ function ColorEditor({
 		setState(color.setLightness(Number(ev.target.value) / 100));
 	}, [color, setState]);
 	const setAlpha = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		setState(color.setAlpha(Number(ev.target.value) / 255));
-	}, [color, setState]);
+		const value = Number(ev.target.value);
+		if (value < minAlpha) {
+			return;
+		}
+		setState(color.setAlpha(value / 255));
+	}, [minAlpha, color, setState]);
 
 	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
 		const value = '#' + ev.target.value.replace(/[^0-9a-f]/gi, '').toUpperCase() as HexRGBAColorString;
@@ -222,7 +227,7 @@ function ColorEditor({
 				<input className='color-editor__lightness' type='range' min='0' max='100' value={ Math.round(color.lightness * 100) } onChange={ setLightness } />
 				{
 					minAlpha < 255 &&
-					<input className='color-editor__alpha' type='range' min={ minAlpha } max='255' value={ Math.round(color.alpha * 255) } onChange={ setAlpha } />
+					<input className='color-editor__alpha' type='range' min='0' max='255' value={ Math.round(color.alpha * 255) } onChange={ setAlpha } />
 				}
 				<input className='color-editor_hex' type='text' value={ input } maxLength={ minAlpha === 255 ? 7 : 9 } onChange={ onInputChange } />
 			</div>

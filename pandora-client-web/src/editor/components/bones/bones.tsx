@@ -71,7 +71,7 @@ export function BoneUI(): ReactElement {
 				} } />
 			</FieldsetToggle>
 			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>
-				<WardrobeExpressionGui />
+				<WardrobeExpressionGui character={ character } />
 			</FieldsetToggle>
 			<hr />
 			<PoseExportGui character={ character } />

@@ -27,7 +27,7 @@ import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
-import { Row } from '../common/container/container';
+import { Column, Row } from '../common/container/container';
 import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 import { useNullableObservable } from '../../observable';
 import { Character, useCharacterData, useCharacterSafemode } from '../../character/character';
@@ -55,10 +55,18 @@ export function Chatroom(): ReactElement {
 						<Chat />
 					</Tab>
 					<Tab name='Controls'>
-						<div className='controls'>
-							<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
-							<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
-							<br />
+						<Column className='controls'>
+							<Row>
+								<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
+								<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
+							</Row>
+							<Row>
+								<Button onClick={ () => {
+									navigate('/wardrobe', { state: { target: 'room' } });
+								} }>
+									Room inventory
+								</Button>
+							</Row>
 							<p>You are in room { roomData.name }</p>
 							<div>
 								Characters in this room:<br />
@@ -67,16 +75,16 @@ export function Chatroom(): ReactElement {
 								</ul>
 							</div>
 							{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
-						</div>
+						</Column>
 					</Tab>
 					<Tab name='Pose'>
-						<WardrobeContextProvider player={ player } character={ player }>
-							<WardrobePoseGui />
+						<WardrobeContextProvider player={ player } target={ player }>
+							<WardrobePoseGui character={ player } />
 						</WardrobeContextProvider>
 					</Tab>
 					<Tab name='Expressions'>
-						<WardrobeContextProvider player={ player } character={ player }>
-							<WardrobeExpressionGui />
+						<WardrobeContextProvider player={ player } target={ player }>
+							<WardrobeExpressionGui character={ player } />
 						</WardrobeContextProvider>
 					</Tab>
 				</TabContainer>

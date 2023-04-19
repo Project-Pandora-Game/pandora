@@ -38,13 +38,13 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	}), [character]);
 
 	const context = useMemo<WardrobeContext>(() => ({
-		character,
-		player: character,
-		room: null,
-		target: {
+		target: character,
+		targetSelector: {
 			type: 'character',
 			characterId: character.id,
 		},
+		player: character,
+		room: null,
 		assetList,
 		extraItemActions,
 		actions,

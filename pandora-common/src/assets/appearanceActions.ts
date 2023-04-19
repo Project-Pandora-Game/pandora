@@ -241,11 +241,18 @@ export function DoAppearanceAction(
 			}
 
 			const sourceManipulator = source.getManipulator();
-			const targetManipulator = target.getManipulator();
+			const targetManipulator = target === source ? sourceManipulator : target.getManipulator();
 
 			// Preform the transfer in manipulators
 			if (!ActionTransferItem(sourceManipulator, action.item, targetManipulator, action.container))
 				return { result: 'invalidAction' };
+
+			// If target is the source, update only once
+			if (sourceManipulator === targetManipulator) {
+				return AppearanceValidationResultToActionResult(
+					target.commitChanges(sourceManipulator, processingContext),
+				);
+			}
 
 			// Test if source would accept it (dry run)
 			let result = source.commitChanges(sourceManipulator, {

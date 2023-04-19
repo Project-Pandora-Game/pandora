@@ -153,6 +153,7 @@
 				"ignoredNodes": [
 					"ConditionalExpression",
 					"PropertyDefinition[decorators]",
+					"TSTypeParameterInstantiation",
 					"TSUnionType"
 				]
 			}

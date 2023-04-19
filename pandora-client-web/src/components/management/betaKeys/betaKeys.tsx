@@ -72,7 +72,7 @@ function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo; }): ReactElement {
 
 		return await connector.awaitResponse('manageInvalidateBetaKey', { id: betaKey.id });
 	}, ({ result }) => {
-		if (result !== 'ok')  {
+		if (result !== 'ok') {
 			if (result !== 'cancelled') {
 				toast('Failed to delete beta key: ' + result, TOAST_OPTIONS_ERROR);
 			}

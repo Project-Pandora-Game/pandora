@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ArrayToTruthyMap, ZodTrimedRegex, zTemplateString } from '../validation';
+import { ArrayToTruthyMap, ZodTrimedRegex, ZodTemplateString } from '../validation';
 import { cloneDeep } from 'lodash';
 import { AssetManager, RoomInventoryBundleSchema } from '../assets';
 import { CharacterId } from '../character';
@@ -8,7 +8,7 @@ import { AccountId, AccountIdSchema } from '../account/account';
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
 
-export const RoomIdSchema = zTemplateString<`r/${string}`>(z.string(), /^r\//);
+export const RoomIdSchema = ZodTemplateString<`r/${string}`>(z.string(), /^r\//);
 export type RoomId = z.infer<typeof RoomIdSchema>;
 
 export const ChatRoomFeatureSchema = z.enum([

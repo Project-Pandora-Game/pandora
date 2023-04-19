@@ -341,7 +341,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 		if (ev.key === 'ArrowUp' && !textarea.value.trim()) {
 			ev.preventDefault();
 			ev.stopPropagation();
-			const edit =  sender.getLastMessageEdit();
+			const edit = sender.getLastMessageEdit();
 			if (edit) {
 				setEditing(edit);
 				return;

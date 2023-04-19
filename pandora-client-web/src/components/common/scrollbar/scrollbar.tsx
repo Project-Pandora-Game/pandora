@@ -10,7 +10,6 @@ export type ScrollbarProps<K extends keyof HTMLElementTagNameMap> = DetailedHTML
 };
 
 function ScrollbarImpl<K extends keyof HTMLElementTagNameMap = 'div'>({ color, children, className, tag, ...props }: ScrollbarProps<K>, ref: ForwardedRef<HTMLElementTagNameMap[K]>): ReactElement {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const Element = (tag as 'div') ?? 'div';
 	const elementProps = props as DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
 	return (

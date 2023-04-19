@@ -120,7 +120,7 @@ function NotificationButton({ icon, title, type, onClick }: {
 			iconAlt={ `${ notification.length } ${ title }` }
 			title={ title }
 			badge={ notification.length }
-			onClick={ onNotificationClick }  />
+			onClick={ onNotificationClick } />
 	);
 }
 

@@ -1,5 +1,5 @@
 import { act, renderHook, RenderHookResult } from '@testing-library/react';
-import { observable, Observable, useObservable } from '../src/observable';
+import { ObservableProperty, Observable, useObservable } from '../src/observable';
 
 describe('Observable', () => {
 	type T = { mockValue: string; };
@@ -72,17 +72,17 @@ describe('useObservable()', () => {
 });
 
 // decorator use case isn\'t tested due to TS & babel not working the same
-describe('@observable()', () => {
+describe('@ObservableProperty()', () => {
 	it.todo('decorator use case isn\'t tested due to TS & babel not working the same');
 
 	it('should return decorator factory function', () => {
-		expect(typeof observable).toBe('function');
+		expect(typeof ObservableProperty).toBe('function');
 		const mock = {
 			test: 'one',
 			test2: 2,
 			emit: jest.fn(),
 		};
-		const decorator = observable;
+		const decorator = ObservableProperty;
 		// @ts-expect-error: mock is not an ObservableClass
 		decorator(mock, 'test');
 		mock.test = 'updated';

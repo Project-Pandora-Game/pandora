@@ -15,7 +15,7 @@ export function ResultCharacter(): ReactElement {
 	const showBones = useObservable(editor.showBones);
 
 	return (
-		<GraphicsCharacterEditor Layer={ ResultLayer } >
+		<GraphicsCharacterEditor layer={ ResultLayer } >
 			{
 				!showBones ? null :
 				(

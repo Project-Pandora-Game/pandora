@@ -12,7 +12,7 @@ import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
-import { IObservableClass, observable, ObservableClass, useObservableProperty } from '../../../observable';
+import { IObservableClass, ObservableProperty, ObservableClass, useObservableProperty } from '../../../observable';
 import { AssetManagerEditor, AssetTreeViewCategory, ASSET_ID_PART_REGEX, useAssetManagerEditor } from '../../assets/assetManager';
 import { EDITOR_ALPHA_ICONS, useEditorLayerTint, useEditorTabContext } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
@@ -271,7 +271,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 }
 
 export class ToggleLiState extends ObservableClass<{ open: boolean; }> {
-	@observable
+	@ObservableProperty
 	public open: boolean;
 
 	constructor(initialState: boolean) {

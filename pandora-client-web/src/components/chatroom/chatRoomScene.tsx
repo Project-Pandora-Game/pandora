@@ -281,7 +281,7 @@ function CharacterContextMenu({ character, position, onClose }: {
 
 	const characterData = useCharacterData(character);
 	const chatRoom = useChatRoomData();
-	const isPlayerAdmin =  IsChatroomAdmin(chatRoom, currentAccount);
+	const isPlayerAdmin = IsChatroomAdmin(chatRoom, currentAccount);
 
 	useEffect(() => {
 		if (!isPlayerAdmin && menu === 'admin') {

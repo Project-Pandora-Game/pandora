@@ -46,7 +46,6 @@ export type ModuleType = keyof IAssetModuleTypes;
 export const ModuleTypeSchema = z.enum(Object.keys(MODULE_TYPES) as [ModuleType, ...ModuleType[]]);
 export const IsModuleType = ZodMatcher(ModuleTypeSchema);
 
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 	[Type in ModuleType]: {
 		config: IModuleConfigCommon<Type>;

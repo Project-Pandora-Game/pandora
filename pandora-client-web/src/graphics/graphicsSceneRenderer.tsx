@@ -246,18 +246,17 @@ function ContextBridge({ children, contexts, render }: {
 		return <>{ render(children) }</>;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	const Ctx = contexts[0];
+	const { Consumer, Provider } = contexts[0];
 
 	return (
-		<Ctx.Consumer>
+		<Consumer>
 			{ (value) => (
 				<ContextBridge contexts={ contexts.slice(1) } render={ render }>
-					<Ctx.Provider value={ value }>
+					<Provider value={ value }>
 						{ children }
-					</Ctx.Provider>
+					</Provider>
 				</ContextBridge>
 			) }
-		</Ctx.Consumer>
+		</Consumer>
 	);
 }

@@ -29,16 +29,27 @@
 						"trailingUnderscore": "allow"
 					},
 					{
+						"selector": "variableLike",
+						"format": ["camelCase", "PascalCase"],
+						"leadingUnderscore": "forbid"
+					},
+					{
 						"selector": "variable",
-						"format": ["camelCase", "UPPER_CASE"],
+						"modifiers": ["const"],
+						"format": ["camelCase", "PascalCase", "UPPER_CASE"],
 						"leadingUnderscore": "forbid"
 					},
 					{
 						"selector": "function",
 						"modifiers": ["global"],
-						"format": null,
-						"custom": {
-							"regex": "^(use)?[A-Z][a-zA-Z0-9]*$",
+						"format": ["PascalCase"]
+					},
+					{
+						"selector": "function",
+						"modifiers": ["global"],
+						"format": ["camelCase"],
+						"filter": {
+							"regex": "^use",
 							"match": true
 						}
 					},
@@ -66,9 +77,21 @@
 					},
 					{
 						"selector": "parameter",
-						"format": ["camelCase"],
 						"modifiers": ["unused"],
+						"format": ["camelCase"],
 						"leadingUnderscore": "require"
+					},
+					{
+						"selector": "objectLiteralProperty",
+						"format": null
+					},
+					{
+						"selector": "typeLike",
+						"format": null,
+						"filter": {
+							"regex": "^__satisfies__",
+							"match": true
+						}
 					},
 					{
 						"selector": "typeLike",

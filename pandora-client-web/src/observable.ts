@@ -66,8 +66,7 @@ export function useNullableObservable<T>(obs: ReadonlyObservable<T> | null | und
 export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEmitter<T> {
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function observable<T extends TypedEvent, K extends keyof T>(target: ObservableClass<T> & T, key: K) {
+export function ObservableProperty<T extends TypedEvent, K extends keyof T>(target: ObservableClass<T> & T, key: K) {
 	const symbol: unique symbol = Symbol(key as string);
 	type Accessor = { [S in typeof symbol]: T[K] };
 	Object.defineProperty(target, symbol, {

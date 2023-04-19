@@ -19,8 +19,7 @@ export type PointLike = {
 const logger = GetLogger('GraphicsCharacter');
 
 export interface GraphicsCharacterProps extends ChildrenProps {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
-	Layer?: (props: GraphicsLayerProps) => ReactElement;
+	layer?: (props: GraphicsLayerProps) => ReactElement;
 	appearanceContainer: AppearanceContainer;
 	position?: PointLike;
 	scale?: PointLike;
@@ -77,7 +76,7 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: Chara
 }
 
 function GraphicsCharacterWithManagerImpl({
-	Layer,
+	layer: Layer,
 	appearanceContainer,
 	position: positionOffset = { x: 0, y: 0 },
 	scale: scaleExtra,
@@ -155,7 +154,6 @@ function GraphicsCharacterWithManagerImpl({
 			AssertNotNullable(priority);
 			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === 'back');
 			const lowerLayer = result.get(priority);
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			const LayerElement = Layer ?? GraphicsLayer;
 
 			result.set(priority, (

@@ -43,5 +43,4 @@ export function AssignPronouns<K extends MetaKeys<ChatActionDictionaryMetaEntry>
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 type __satisfies__PRONOUNS = Satisfies<typeof PRONOUNS, Record<PronounKey, Pronouns>>;

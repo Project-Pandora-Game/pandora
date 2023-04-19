@@ -172,7 +172,6 @@ function ChatroomMessageEquals(a: IChatroomMessageProcessed, b: IChatroomMessage
 	return a.time === b.time && a.edited === b.edited && a.roomId === b.roomId;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
 	if (IsActionMessage(message)) {
 		return <ActionMessage message={ message } />;

@@ -304,7 +304,6 @@ function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 	});
 
 	const currentTab = TABS.find((t) => t[0] === tab) ?? TABS[0];
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const CurrentTabComponent = currentTab[2];
 
 	const context = useMemo<EditorCurrentTabContext>(() => ({

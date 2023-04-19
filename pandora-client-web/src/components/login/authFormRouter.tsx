@@ -19,7 +19,6 @@ export function AuthFormRouter({ component }: AuthFormRouterProps): ReactElement
 	);
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 function AuthFormContent({ component: Component }: AuthFormRouterProps): ReactElement | null {
 	const location = useLocation();
 	const locationState = location.state as unknown;

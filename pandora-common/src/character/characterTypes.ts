@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { ZodMatcher, zTemplateString } from '../validation';
+import { ZodMatcher, ZodTemplateString } from '../validation';
 
-export const CharacterIdSchema = zTemplateString<`c${number}`>(z.string(), /^c[1-9][0-9]{0,15}$/);
+export const CharacterIdSchema = ZodTemplateString<`c${number}`>(z.string(), /^c[1-9][0-9]{0,15}$/);
 export type CharacterId = z.infer<typeof CharacterIdSchema>;
 
 /**

@@ -1,7 +1,6 @@
 import { z, ZodObject, ZodString, ZodType, ZodTypeAny } from 'zod';
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export function zTemplateString<T extends string>(validator: ZodString, regex: RegExp): ZodType<T> & ZodString {
+export function ZodTemplateString<T extends string>(validator: ZodString, regex: RegExp): ZodType<T> & ZodString {
 	return validator.regex(regex) as unknown as ZodType<T> & ZodString;
 }
 
@@ -31,7 +30,7 @@ export function ZodCast<T>(): ZodType<T> {
 	return z.any();
 }
 
-export const HexColorStringSchema = zTemplateString<`#${string}`>(z.string(), /^#[0-9a-f]{6}$/i);
+export const HexColorStringSchema = ZodTemplateString<`#${string}`>(z.string(), /^#[0-9a-f]{6}$/i);
 export type HexColorString = z.infer<typeof HexColorStringSchema>;
 
 /** Checks if the `obj` is an object (not null, not array) */

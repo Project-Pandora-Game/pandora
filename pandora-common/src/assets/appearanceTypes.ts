@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
-import { zTemplateString } from '../validation';
+import { ZodTemplateString } from '../validation';
 import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction, IChatRoomMessageActionTargetCharacter, IChatRoomMessageActionTargetRoomInventory } from '../chatroom';
 import type { AppearanceRootManipulator } from './appearanceHelpers';
 import type { AppearanceValidationResult } from './appearanceValidation';
 import type { Item } from './item';
 import type { CharacterRestrictionsManager, ICharacterMinimalData } from '../character';
 
-export const ItemIdSchema = zTemplateString<`i/${string}`>(z.string(), /^i\//);
+export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;
 
 export const ItemContainerPathSchema = z.array(

@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
-import { HexColorString, zTemplateString } from '../validation';
+import { HexColorString, ZodTemplateString } from '../validation';
 import type { AppearanceArmPose, CharacterView } from './appearance';
 import type { BoneDefinitionCompressed, BoneName } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetProperties } from './properties';
 
-export const AssetIdSchema = zTemplateString<`a/${string}`>(z.string(), /^a\//);
+export const AssetIdSchema = ZodTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)

@@ -45,6 +45,7 @@
 					},
 					{
 						"selector": "variable",
+						"modifiers": ["const"],
 						"format": ["camelCase", "UPPER_CASE"],
 						"leadingUnderscore": "forbid"
 					},
@@ -77,8 +78,8 @@
 					},
 					{
 						"selector": "parameter",
-						"format": ["camelCase"],
 						"modifiers": ["unused"],
+						"format": ["camelCase"],
 						"leadingUnderscore": "require"
 					},
 					{
@@ -88,6 +89,14 @@
 					{
 						"selector": "typeLike",
 						"format": ["PascalCase"]
+					},
+					{
+						"selector": "typeLike",
+						"format": null,
+						"filter": {
+							"regex": "^__satisfies__",
+							"match": true
+						}
 					},
 					{
 						"selector": "enumMember",
@@ -130,7 +139,13 @@
 		"no-var": "error",
 		"unicode-bom": "error",
 		// Warnings
-		"@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+		"@typescript-eslint/no-unused-vars": [
+			"warn",
+			{
+				"varsIgnorePattern": "^__satisfies__",
+				"argsIgnorePattern": "^_"
+			}
+		],
 		"no-unused-expressions": "off",
 		"@typescript-eslint/no-unused-expressions": "warn",
 		"@typescript-eslint/prefer-for-of": "warn",

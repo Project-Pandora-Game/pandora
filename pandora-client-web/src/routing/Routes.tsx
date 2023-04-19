@@ -41,13 +41,11 @@ export function PandoraRoutes(): ReactElement {
 	);
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 function RequiresLogin({ element: Element }: { element: ComponentType<Record<string, never>>; }): ReactElement {
 	useLoggedInCheck();
 	return <Element />;
 }
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
 function RequiresCharacter({ element: Element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	useLoggedInCheck();
 	const shardConnector = useShardConnector();

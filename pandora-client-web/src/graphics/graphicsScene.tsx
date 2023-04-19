@@ -158,7 +158,6 @@ function GraphicsSceneCore({
 		appRef.current = null;
 	}, []);
 
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const PixiRenderer = createPrivatePixiInstance ? GraphicsSceneRendererDirect : GraphicsSceneRendererShared;
 
 	return (

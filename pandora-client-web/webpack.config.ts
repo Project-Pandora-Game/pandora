@@ -50,7 +50,6 @@ export default function (env: WebpackEnv): Configuration {
 		devtool: env.prod ? 'source-map' : 'eval-source-map',
 		entry: {
 			'index': join(SRC_DIR, 'index.tsx'),
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			'editor/index': join(SRC_DIR, 'editor', 'index.tsx'),
 		},
 		mode,
@@ -76,7 +75,6 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 	const plugins: WebpackPluginInstance[] = [
 		new CleanWebpackPlugin({ verbose: true }),
 		new DefinePlugin({
-			/* eslint-disable @typescript-eslint/naming-convention */
 			'process.env': JSON.stringify({
 				NODE_ENV: env.prod ? 'production' : 'development',
 				VERSION: packageJson.version,
@@ -87,7 +85,6 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 				GIT_COMMIT_HASH,
 				GIT_DESCRIBE,
 			}),
-			/* eslint-enable @typescript-eslint/naming-convention */
 		}),
 		new HtmlWebpackPlugin({
 			template: join(SRC_DIR, 'index.ejs'),

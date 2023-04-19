@@ -1047,7 +1047,6 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 						</>
 					)
 				}
-				{ /* eslint-disable-next-line @typescript-eslint/naming-convention */ }
 				{ extraActions.map((Action, i) => <Action key={ i } item={ item } />) }
 			</div>
 		</div>
@@ -1402,15 +1401,10 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<
 			return null;
 		}
 		const substitutes = {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			CHARACTER_NAME: m.data.selectedBy?.name ?? '[unknown]',
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			CHARACTER_ID: m.data.selectedBy?.id ?? '[unknown id]',
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			CHARACTER: m.data.selectedBy ? `${m.data.selectedBy.name} (${m.data.selectedBy.id})` : '[unknown]',
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			TIME_PASSED: m.data.selectedAt ? FormatTimeInterval(now - m.data.selectedAt) : '[unknown time]',
-			// eslint-disable-next-line @typescript-eslint/naming-convention
 			TIME: m.data.selectedAt ? new Date(m.data.selectedAt).toLocaleString() : '[unknown date]',
 		};
 		return m.activeVariant.customText
@@ -1682,7 +1676,6 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 	limits?: AppearanceLimitTree;
 	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
 }): ReactElement {
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const ArmToggle = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm' | 'arms'; title: string; }): ReactElement => (
 		<WardrobeArmPoseSection
 			armsPose={ armsPose }
@@ -1695,7 +1688,6 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 			unchecked='back'
 		/>
 	), [armsPose, limits, setPose]);
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const FingersToggle = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm' | 'arms'; title: string; }): ReactElement => (
 		<WardrobeArmPoseSection
 			armsPose={ armsPose }
@@ -1708,7 +1700,6 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 			unchecked={ 'spread' }
 		/>
 	), [armsPose, limits, setPose]);
-	// eslint-disable-next-line @typescript-eslint/naming-convention
 	const HandRotation = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm'; title: string; }): ReactElement => {
 		return (
 			<div>

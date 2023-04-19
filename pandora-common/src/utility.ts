@@ -259,7 +259,6 @@ export type ReadonlyIntervalSet = readonly (readonly [number, number])[];
  */
 export type IntervalSet = [number, number][];
 
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 type __satisfies__IntervalSet = Satisfies<IntervalSet, ReadonlyIntervalSet>;
 
 /**

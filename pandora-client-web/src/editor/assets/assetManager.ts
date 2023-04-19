@@ -3,7 +3,7 @@ import { Immutable } from 'immer';
 import { Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, AssetsDefinitionFile } from 'pandora-common';
 import { AssetManagerClient, GetCurrentAssetManager, UpdateAssetManager, useAssetManager } from '../../assets/assetManager';
 import { TypedEventEmitter } from '../../event';
-import { observable, ObservableClass } from '../../observable';
+import { ObservableProperty, ObservableClass } from '../../observable';
 
 export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*([-_][a-z0-9]+)*$/;
 
@@ -191,7 +191,7 @@ class AssetTreeViewCategoryClass extends ObservableClass<{ open: boolean; }> {
 	}
 	public readonly name: string;
 
-	@observable
+	@ObservableProperty
 	public open: boolean = false;
 
 	constructor(name: string) {

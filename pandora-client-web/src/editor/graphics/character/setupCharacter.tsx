@@ -17,7 +17,7 @@ export function SetupCharacter(): ReactElement {
 	const selectedLayer = useObservable(editor.targetLayer);
 
 	return (
-		<GraphicsCharacterEditor Layer={ SetupLayer } getSortOrder={ (view) => {
+		<GraphicsCharacterEditor layer={ SetupLayer } getSortOrder={ (view) => {
 			const reverse = view === 'back';
 			return reverse ? PRIORITY_ORDER_SPRITES.slice().reverse() : PRIORITY_ORDER_SPRITES;
 		} } >

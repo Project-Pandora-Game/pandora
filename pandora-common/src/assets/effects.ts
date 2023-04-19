@@ -49,10 +49,7 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 
 export type EffectName = keyof EffectsDefinition;
 
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 type __satisfies__EffectsDefinition = Satisfies<EffectsDefinition, Record<EffectName, number | boolean>>;
-
-// eslint-disable-next-line @typescript-eslint/naming-convention, @typescript-eslint/no-unused-vars
 type __satisfies__EFFECTS_DEFAULT = Satisfies<typeof EFFECTS_DEFAULT, EffectsDefinition>;
 
 type EffectsDefault = {

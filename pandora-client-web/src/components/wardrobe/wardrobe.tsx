@@ -347,34 +347,8 @@ function WardrobeCharacterPreview({ character }: {
 	);
 }
 
-export function useWardrobeTargetItem(target: WardrobeTarget, item: ItemPath | null | undefined): Item | undefined {
-	return useSyncExternalStore((onChange) => {
-		if (target.type === 'character') {
-			return target.on('appearanceUpdate', (changed) => {
-				if (changed.includes('items')) {
-					onChange();
-				}
-			});
-		} else if (target.type === 'room') {
-			return target.on('roomInventoryChange', () => {
-				onChange();
-			});
-		}
-		AssertNever(target);
-	}, () => {
-		if (!item)
-			return undefined;
-		if (target.type === 'character') {
-			return target.appearance.getItem(item);
-		} else if (target.type === 'room') {
-			return target.inventory.getItem(item);
-		}
-		AssertNever(target);
-	});
-}
-
-export function useWardrobeTargetItems(target: WardrobeTarget | null): AppearanceItems {
-	return useSyncExternalStore<AppearanceItems>((onChange) => {
+export function useWardrobeTargetValue<T>(target: WardrobeTarget | null, use: (target: WardrobeTarget | null) => T, extraDeps: unknown[] = []): T {
+	const subscriber = useCallback<(onStoreChange: () => void) => () => void>((onChange) => {
 		if (target == null) {
 			return () => { /* Noop */ };
 		} else if (target.type === 'character') {
@@ -389,15 +363,37 @@ export function useWardrobeTargetItems(target: WardrobeTarget | null): Appearanc
 			});
 		}
 		AssertNever(target);
-	}, () => {
-		if (target == null) {
-			return EMPTY_ARRAY;
-		} else if (target.type === 'character') {
-			return target.appearance.getAllItems();
-		} else if (target.type === 'room') {
-			return target.inventory.getAllItems();
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [target, ...extraDeps]);
+
+	return useSyncExternalStore(subscriber, () => {
+		return use(target);
+	});
+}
+
+export function useWardrobeTargetItem(target: WardrobeTarget | null, item: ItemPath | null | undefined): Item | undefined {
+	return useWardrobeTargetValue(target, (t) => {
+		if (!item || !t)
+			return undefined;
+		if (t.type === 'character') {
+			return t.appearance.getItem(item);
+		} else if (t.type === 'room') {
+			return t.inventory.getItem(item);
 		}
-		AssertNever(target);
+		AssertNever(t);
+	}, [item]);
+}
+
+export function useWardrobeTargetItems(target: WardrobeTarget | null): AppearanceItems {
+	return useWardrobeTargetValue(target, (t) => {
+		if (t == null) {
+			return EMPTY_ARRAY;
+		} else if (t.type === 'character') {
+			return t.appearance.getAllItems();
+		} else if (t.type === 'room') {
+			return t.inventory.getAllItems();
+		}
+		AssertNever(t);
 	});
 }
 

@@ -41,6 +41,9 @@ export const IS_BROWSER = typeof window === 'object' && typeof document === 'obj
 /** True if the environment is a node */
 export const IS_NODE = !IS_BROWSER;
 
+/** Immutable, always empty array */
+export const EMPTY_ARRAY: readonly never[] = Object.freeze([]);
+
 export function Assert(condition: unknown, msg?: string): asserts condition {
 	if (!condition) {
 		throw new Error(msg ? `Assetion failed: ${msg}` : 'Assertion failed');

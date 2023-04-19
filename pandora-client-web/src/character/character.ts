@@ -116,14 +116,12 @@ export function useCharacterAppearanceView(character: AppearanceContainer): Char
 	}, () => character.appearance.getView());
 }
 
-export function useCharacterSafemode(character: AppearanceContainer | null): Readonly<SafemodeData> | null {
+export function useCharacterSafemode(character: AppearanceContainer): Readonly<SafemodeData> | null {
 	return useSyncExternalStore((onChange) => {
-		if (character == null)
-			return () => { /* NOOP */ };
 		return character.on('appearanceUpdate', (changed) => {
 			if (changed.includes('safemode')) {
 				onChange();
 			}
 		});
-	}, () => (character?.appearance.getSafemode() ?? null));
+	}, () => character.appearance.getSafemode());
 }

@@ -83,7 +83,7 @@ export function WardrobeScreen(): ReactElement | null {
 	const chatRoomCharacters = useChatRoomCharacters();
 
 	const characterId = IsObject(locationState) && IsCharacterId(locationState.character) ? locationState.character : null;
-	const targetsRoomInventory = IsObject(locationState) && locationState.target === 'room';
+	const targetIsRoomInventory = IsObject(locationState) && locationState.target === 'room';
 
 	const [character, setCharacter] = useState<Character | null>(null);
 
@@ -97,7 +97,7 @@ export function WardrobeScreen(): ReactElement | null {
 	}, [setCharacter, characterId, player, chatRoomCharacters]);
 
 	const target: WardrobeTarget | null =
-		targetsRoomInventory ? (
+		targetIsRoomInventory ? (
 			isInRoom ? chatRoom : null
 		) : (
 			character?.data ? character : null
@@ -233,9 +233,42 @@ function WardrobeBackgroundColorPicker(): ReactElement {
 
 function Wardrobe(): ReactElement | null {
 	const { target } = useWardrobeContext();
+
+	if (target.type === 'room') {
+		return <WardrobeRoom room={ target } />;
+	} else if (target.type === 'character') {
+		return <WardrobeCharacter character={ target } />;
+	}
+	AssertNever(target);
+}
+
+function WardrobeRoom({ room: _room }: {
+	room: RoomInventoryContainer;
+}): ReactElement {
 	const navigate = useNavigate();
 
-	const inSafemode = useCharacterSafemode(target.type === 'character' ? target : null) != null;
+	return (
+		<div className='wardrobe'>
+			<div className='wardrobeMain'>
+				<TabContainer className='flex-1'>
+					<Tab name='Room inventory'>
+						<div className='wardrobe-pane'>
+							<WardrobeItemManipulation />
+						</div>
+					</Tab>
+					<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
+				</TabContainer>
+			</div>
+		</div>
+	);
+}
+
+function WardrobeCharacter({ character }: {
+	character: AppearanceContainer;
+}): ReactElement {
+	const navigate = useNavigate();
+
+	const inSafemode = useCharacterSafemode(character) != null;
 
 	return (
 		<div className='wardrobe'>
@@ -247,47 +280,31 @@ function Wardrobe(): ReactElement | null {
 				)
 			}
 			<div className='wardrobeMain'>
-				{
-					target.type === 'character' ? (
-						<WardrobeCharacterPreview character={ target } />
-					) : null
-				}
+				<WardrobeCharacterPreview character={ character } />
 				<TabContainer className='flex-1'>
 					<Tab name='Items'>
 						<div className='wardrobe-pane'>
 							<WardrobeItemManipulation />
 						</div>
 					</Tab>
-					{
-						target.type === 'character' ? (
-							<Tab name='Body'>
-								<div className='wardrobe-pane'>
-									<WardrobeBodyManipulation character={ target } />
-								</div>
-							</Tab>
-						) : null
-					}
-					{
-						target.type === 'character' ? (
-							<Tab name='Poses & Expressions'>
-								<div className='wardrobe-pane'>
-									<div className='wardrobe-ui'>
-										<WardrobePoseGui character={ target } />
-										<WardrobeExpressionGui character={ target } />
-									</div>
-								</div>
-							</Tab>
-						) : null
-					}
-					{
-						target.type === 'character' ? (
-							<Tab name='Outfits'>
-								<div className='wardrobe-pane'>
-									<WardrobeOutfitGui character={ target } />
-								</div>
-							</Tab>
-						) : null
-					}
+					<Tab name='Body'>
+						<div className='wardrobe-pane'>
+							<WardrobeBodyManipulation character={ character } />
+						</div>
+					</Tab>
+					<Tab name='Poses & Expressions'>
+						<div className='wardrobe-pane'>
+							<div className='wardrobe-ui'>
+								<WardrobePoseGui character={ character } />
+								<WardrobeExpressionGui character={ character } />
+							</div>
+						</div>
+					</Tab>
+					<Tab name='Outfits'>
+						<div className='wardrobe-pane'>
+							<WardrobeOutfitGui character={ character } />
+						</div>
+					</Tab>
 					<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
 				</TabContainer>
 			</div>

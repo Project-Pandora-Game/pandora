@@ -212,6 +212,7 @@
 		"array-bracket-spacing": ["warn", "never"],
 		"comma-spacing": "off",
 		"@typescript-eslint/comma-spacing": "warn",
+		"no-multi-spaces": "warn",
 		"comma-style": "warn",
 		"computed-property-spacing": "warn",
 		"eol-last": "warn",

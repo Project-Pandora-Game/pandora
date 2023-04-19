@@ -67,7 +67,7 @@ function GitHubIntegration({ account }: { account: IDirectoryAccountInfo; }): Re
 			connection.sendMessage('gitHubUnbind', EMPTY);
 	});
 
-	if (githubUrl && !account.github)  {
+	if (githubUrl && !account.github) {
 		return (
 			<fieldset className='github-integration'>
 				<legend>GitHub Integration</legend>

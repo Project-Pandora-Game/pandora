@@ -70,7 +70,7 @@ function ShardRow({ shard }: { shard: IShardTokenInfo; }): ReactElement {
 
 		return await connector.awaitResponse('manageInvalidateShardToken', { id: shard.id });
 	}, ({ result }) => {
-		if (result !== 'ok')  {
+		if (result !== 'ok') {
 			if (result !== 'cancelled') {
 				toast('Failed to delete shard token: ' + result, TOAST_OPTIONS_ERROR);
 			}

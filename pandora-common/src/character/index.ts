@@ -11,8 +11,8 @@ import { PronounKeySchema } from './pronouns';
 import { ZodTransformReadonly } from '../utility';
 
 export const CharacterPublicSettingsSchema = z.object({
-	labelColor: HexColorStringSchema,
-	pronoun: PronounKeySchema,
+	labelColor: HexColorStringSchema.catch('#ffffff'),
+	pronoun: PronounKeySchema.catch('she'),
 });
 export type ICharacterPublicSettings = z.infer<typeof CharacterPublicSettingsSchema>;
 

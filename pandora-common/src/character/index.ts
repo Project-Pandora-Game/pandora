@@ -26,7 +26,7 @@ export const CharacterPublicDataSchema = z.object({
 	accountId: z.number(),
 	name: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
-	settings: CharacterPublicSettingsSchema,
+	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 });
 
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;

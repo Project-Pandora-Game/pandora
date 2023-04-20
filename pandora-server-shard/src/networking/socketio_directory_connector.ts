@@ -229,7 +229,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 							}
 						})
 						.catch((err) => {
-							logger.fatal('Error processing prepareCharacters message', err);
+							logger.error(`Failed to load character ${character.id} for access ${character.accessId}:\n`, err);
+							// Report back that character load failed
+							this.sendMessage('characterDisconnect', { id: character.id, reason: 'error' });
 						}),
 				),
 			);

@@ -7,7 +7,7 @@ import { AssetIdSchema, WearableAssetType } from './definitions';
 import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
-import { Item, ItemColorBundle, ItemColorBundleSchema } from './item';
+import { Item, ItemColorBundle, ItemColorBundleSchema, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { sample } from 'lodash';
@@ -112,6 +112,16 @@ export const AppearanceActionRandomize = z.object({
 	kind: z.enum(['items', 'full']),
 });
 
+export const AppearanceActionRoomDeviceDeploy = z.object({
+	type: z.literal('roomDeviceDeploy'),
+	/** Target with the item to color */
+	target: RoomTargetSelectorSchema,
+	/** Path to the item to interact with */
+	item: ItemPathSchema,
+	/** The resulting deployment we want */
+	deployment: RoomDeviceDeploymentSchema,
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
@@ -124,6 +134,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionModuleAction,
 	AppearanceActionSafemode,
 	AppearanceActionRandomize,
+	AppearanceActionRoomDeviceDeploy,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -171,6 +182,8 @@ export function DoAppearanceAction(
 			const asset = assetManager.getAssetById(action.asset);
 			const target = context.getTarget(action.target);
 			if (!asset || !target)
+				return { result: 'invalidAction' };
+			if (!asset.canBeSpawned())
 				return { result: 'invalidAction' };
 			const item = assetManager.createItem(action.itemId, asset, null);
 			// Player adding the item must be able to use it
@@ -412,6 +425,27 @@ export function DoAppearanceAction(
 		}
 		case 'randomize':
 			return ActionAppearanceRandomize(player, action.kind, processingContext);
+		case 'roomDeviceDeploy': {
+			const target = context.getTarget(action.target);
+			if (!target)
+				return { result: 'invalidAction' };
+			// Player coloring the item must be able to interact with the item
+			const r = player.canUseItem(target, action.item, ItemInteractionType.MODIFY);
+			if (!r.allowed) {
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
+			}
+
+			const manipulator = target.getManipulator();
+			if (!ActionRoomDeviceDeploy(manipulator, action.item, action.deployment))
+				return { result: 'invalidAction' };
+
+			return AppearanceValidationResultToActionResult(
+				target.commitChanges(manipulator, processingContext),
+			);
+		}
 		default:
 			AssertNever(action);
 	}
@@ -506,8 +540,8 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 
 	const item = removedItems[0];
 
-	// No transfering bodyparts, thank you
-	if (item.isType('personal') && item.asset.definition.bodypart)
+	// Check if item allows being transferred
+	if (!item.canBeTransferred())
 		return false;
 
 	if (!targetContainerManipulator.addItem(item))
@@ -733,4 +767,23 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 	return AppearanceValidationResultToActionResult(
 		character.appearance.commitChanges(manipulator, context),
 	);
+}
+
+export function ActionRoomDeviceDeploy(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, deployment: RoomDeviceDeployment): boolean {
+	const { container, itemId } = itemPath;
+	const manipulator = rootManipulator.getContainer(container);
+
+	// Do change
+	if (!manipulator.modifyItem(itemId, (it) => {
+		if (!it.isType('roomDevice'))
+			return null;
+		return it.changeDeployment(deployment);
+	}))
+		return false;
+
+	// Change message to chat
+	// TODO: Message to chat that room device was deployed or packed
+	// Will need mechanism to rate-limit the messages not to send every move
+
+	return true;
 }

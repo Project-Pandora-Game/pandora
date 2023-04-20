@@ -6,7 +6,7 @@ import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemLoadContext, Item, ItemBundle, ItemBundleSchema } from '../item';
+import { CreateItem, IItemLoadContext, IItemLocationDescriptor, Item, ItemBundle, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { ItemId } from '../appearanceTypes';
 import type { AppearanceActionContext } from '../appearanceActions';
@@ -87,7 +87,7 @@ function ValidateStorage(contents: AppearanceItems, config: IModuleConfigStorage
 			},
 		};
 
-	return contents.map((i) => i.validate(false))
+	return contents.map((i) => i.validate('stored'))
 		.reduce(AppearanceValidationCombineResults, { success: true });
 }
 
@@ -114,7 +114,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 				context.logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
 				continue;
 			}
-			const item = new Item(
+			const item = CreateItem(
 				itemBundle.id,
 				asset,
 				itemBundle,
@@ -133,7 +133,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 					continue;
 				}
 				// Skip if invalid
-				if (!item.validate(false).success) {
+				if (!item.validate('stored').success) {
 					context.logger?.warning(`Skipping stored item reporting invalid ${itemBundle.asset}`);
 					continue;
 				}
@@ -151,7 +151,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		};
 	}
 
-	public validate(_isWorn: boolean): AppearanceValidationResult {
+	public validate(_location: IItemLocationDescriptor): AppearanceValidationResult {
 		return ValidateStorage(this.contents, this.config);
 	}
 

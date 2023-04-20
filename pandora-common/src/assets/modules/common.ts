@@ -4,7 +4,7 @@ import { ItemInteractionType } from '../../character';
 import { AssetProperties } from '../properties';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
-import type { IItemLoadContext } from '../item';
+import type { IItemLoadContext, IItemLocationDescriptor } from '../item';
 import type { ActionMessageTemplateHandler } from '../appearanceTypes';
 import type { AppearanceActionContext } from '../appearanceActions';
 
@@ -35,7 +35,7 @@ export interface IItemModule<Type extends string = string> {
 
 	exportData(): IModuleItemDataCommon<Type>;
 
-	validate(isWorn: boolean): AppearanceValidationResult;
+	validate(location: IItemLocationDescriptor): AppearanceValidationResult;
 
 	getProperties(): AssetProperties;
 

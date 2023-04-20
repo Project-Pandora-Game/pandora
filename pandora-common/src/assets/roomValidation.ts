@@ -22,7 +22,7 @@ export function ValidateRoomInventoryItemsPrefix(_assetManager: AssetManager, it
 		ids.add(item.id);
 
 		// Run internal item validation
-		const r = item.validate(false);
+		const r = item.validate('roomInventory');
 		if (!r.success)
 			return r;
 	}

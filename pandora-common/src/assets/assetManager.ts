@@ -5,7 +5,7 @@ import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
 import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, AssetType, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
-import { Item, ItemBundle } from './item';
+import { CreateItem, Item, ItemBundle } from './item';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
@@ -179,7 +179,7 @@ export class AssetManager {
 
 	public createItem<T extends AssetType>(id: ItemId, asset: Asset<T>, bundle: ItemBundle | null, logger?: Logger): Item<T> {
 		Assert(this._assets.get(asset.id) === asset);
-		return new Item<T>(id, asset, bundle ?? {
+		return CreateItem<T>(id, asset, bundle ?? {
 			id,
 			asset: asset.id,
 		}, {

@@ -9,6 +9,10 @@ export class Asset<Type extends AssetType = AssetType> {
 	/** Attributes this asset can have statically, including reported by modules */
 	public readonly staticAttributes: ReadonlySet<string>;
 
+	public get type(): Type {
+		return this.definition.type as Type;
+	}
+
 	public isType<T extends AssetType>(type: T): this is Asset<T> {
 		return this.definition.type === type;
 	}
@@ -29,6 +33,11 @@ export class Asset<Type extends AssetType = AssetType> {
 				GetModuleStaticAttributes(module).forEach((a) => staticAttributes.add(a));
 			}
 		}
+	}
+
+	/** Returns if this asset can be manually spawned */
+	public canBeSpawned(): boolean {
+		return !this.isType('roomDeviceWearablePart');
 	}
 }
 

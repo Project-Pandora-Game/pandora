@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexRGBAColorString, ZodTemplateString } from '../validation';
 import type { AppearanceArmPose, CharacterView } from './appearance';
-import type { BoneDefinitionCompressed, BoneName } from './graphics';
+import type { BoneDefinitionCompressed, BoneName, Coordinates } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetProperties } from './properties';
 import { Satisfies } from '../utility';
@@ -152,11 +152,46 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type RoomDeviceSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
-	virtualItem: AssetId;
+	wearableAsset: AssetId;
 };
 
+export type IRoomDeviceGraphicsLayerSprite = {
+	type: 'sprite';
+	image: string;
+	/**
+	 * Horizontal offset of this sprite relative to cage's origin point
+	 * @default 0
+	 */
+	offsetX?: number;
+	/**
+	 * Vertical offset of this sprite relative to cage's origin point
+	 * @default 0
+	 */
+	offsetY?: number;
+};
+
+export type IRoomDeviceGraphicsLayerSlot = {
+	type: 'slot';
+	/**
+	 * Is the name of the character slot that is drawn on this layer.
+	 */
+	slot: string;
+	characterPosition: {
+		offsetX: number;
+		offsetY: number;
+		/**
+		 * Is the factor by which the character is made bigger or smaller inside the room device slot compared to this room device scaled inside the room
+		 */
+		relativeScale: number;
+	};
+};
+
+export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDeviceGraphicsLayerSlot;
+
 export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'roomDevice', A> {
+	pivot: Coordinates;
 	slots: Record<string, RoomDeviceSlot<A>>;
+	graphicsLayers: IRoomDeviceGraphicsLayer[];
 }
 
 export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
@@ -180,14 +215,14 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 
 export type AssetDefinitionTypeMap<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> =
 	Satisfies<
-	{
-		personal: PersonalAssetDefinition<A>;
-		roomDevice: RoomDeviceAssetDefinition<A>;
-		roomDeviceWearablePart: RoomDeviceWearablePartAssetDefinition<A>;
-	},
-	{
-		[type in AssetType]: AssetBaseDefinition<type, A>;
-	}
+		{
+			personal: PersonalAssetDefinition<A>;
+			roomDevice: RoomDeviceAssetDefinition<A>;
+			roomDeviceWearablePart: RoomDeviceWearablePartAssetDefinition<A>;
+		},
+		{
+			[type in AssetType]: AssetBaseDefinition<type, A>;
+		}
 	>;
 
 //#region Typing helpers

@@ -6,7 +6,7 @@ import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidateRequirements, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemLoadContext, Item, ItemBundle, ItemBundleSchema } from '../item';
+import { CreateItem, IItemLoadContext, IItemLocationDescriptor, Item, ItemBundle, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceActionContext } from '../appearanceActions';
 
@@ -72,7 +72,7 @@ function ValidateLock(lock: Item | null, config: IModuleConfigLockSlot): Appeara
 		};
 	}
 
-	return lock.validate(false);
+	return lock.validate('attached');
 }
 
 export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
@@ -96,7 +96,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 				context.logger?.warning(`Skipping unknown lock asset ${data.lock.asset}`);
 				this.lock = null;
 			} else {
-				const item = new Item(
+				const item = CreateItem(
 					data.lock.id,
 					asset,
 					data.lock,
@@ -122,7 +122,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		};
 	}
 
-	public validate(_isWorn: boolean): AppearanceValidationResult {
+	public validate(_location: IItemLocationDescriptor): AppearanceValidationResult {
 		return ValidateLock(this.lock, this.config);
 	}
 

@@ -33,6 +33,7 @@ import {
 	ItemId,
 	ItemPath,
 	MessageSubstitute,
+	RoomDeviceDeployment,
 	RoomTargetSelector,
 	Writeable,
 } from 'pandora-common';
@@ -75,6 +76,7 @@ import { useCurrentTime } from '../../common/useCurrentTime';
 import { Select } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { Immutable } from 'immer';
+import { useUpdatedUserInput } from '../../common/useSyncUserInput';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -411,12 +413,14 @@ export function useWardrobeItems(): {
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
 		if (target.type === 'room') {
-			return !asset.isType('personal') || asset.definition.bodypart == null;
+			return (!asset.isType('personal') || asset.definition.bodypart == null) &&
+				!asset.isType('roomDeviceWearablePart');
 		}
 		if (target.type === 'character') {
-			return asset.isType('personal') &&
+			return !asset.isType('personal') || (
 				asset.definition.bodypart == null &&
-				(currentFocus.container.length !== 0 || asset.definition.wearable !== false);
+				(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
+			);
 		}
 		AssertNever(target);
 	}, [target, currentFocus]);
@@ -573,19 +577,22 @@ export function InventoryAssetView({ className, title, children, assets, contain
 	}, '');
 
 	const flt = filter.toLowerCase().trim().split(/\s+/);
-	const filteredAssets = useMemo(() => {
-		return assets.filter((asset) => flt.every((f) => {
-			const attributeDefinition = attribute ? assetManager.getAttributeDefinition(attribute) : undefined;
-			return asset.definition.name.toLowerCase().includes(f) &&
-				((attribute !== '' && attributesFilterOptions?.includes(attribute)) ?
-					(
-						asset.staticAttributes.has(attribute) &&
-						!attributeDefinition?.useAsWardrobeFilter?.excludeAttributes
-							?.some((a) => asset.staticAttributes.has(a))
-					) : true
-				);
-		}));
-	}, [assetManager, assets, flt, attributesFilterOptions, attribute]);
+	const filteredAssets = useMemo(() => (
+		assets
+			// Some assets cannot be manually spawned, so ignore those
+			.filter((asset) => asset.canBeSpawned())
+			.filter((asset) => flt.every((f) => {
+				const attributeDefinition = attribute ? assetManager.getAttributeDefinition(attribute) : undefined;
+				return asset.definition.name.toLowerCase().includes(f) &&
+					((attribute !== '' && attributesFilterOptions?.includes(attribute)) ?
+						(
+							asset.staticAttributes.has(attribute) &&
+							!attributeDefinition?.useAsWardrobeFilter?.excludeAttributes
+								?.some((a) => asset.staticAttributes.has(a))
+						) : true
+					);
+			}))
+	), [assetManager, assets, flt, attributesFilterOptions, attribute]);
 
 	useEffect(() => {
 		if (attribute !== '' && !attributesFilterOptions?.includes(attribute)) {
@@ -1287,6 +1294,11 @@ export function WardrobeItemConfigMenu({
 					) : null
 				}
 				{
+					wornItem.isType('roomDevice') ? (
+						<WardrobeRoomDeviceDeployment roomDevice={ wornItem } item={ item } />
+					) : null
+				}
+				{
 					Array.from(wornItem.modules.entries())
 						.map(([moduleName, m]) => (
 							<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
@@ -1925,5 +1937,112 @@ export function WardrobeOutfitGui({ character }: {
 				</div>
 			</Column>
 		</div>
+	);
+}
+
+function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
+	roomDevice: Item<'roomDevice'>;
+	item: ItemPath;
+}): ReactElement | null {
+	const { targetSelector } = useWardrobeContext();
+
+	let contents: ReactElement | undefined;
+
+	if (roomDevice.deployment != null) {
+		contents = (
+			<>
+				<WardrobeActionButton action={ {
+					type: 'roomDeviceDeploy',
+					target: targetSelector,
+					item,
+					deployment: null,
+				} }>
+					Store the device
+				</WardrobeActionButton>
+				<WardrobeRoomDeviceDeploymentPosition deployment={ roomDevice.deployment } item={ item } />
+			</>
+		);
+	} else {
+		contents = (
+			<WardrobeActionButton action={ {
+				type: 'roomDeviceDeploy',
+				target: targetSelector,
+				item,
+				deployment: {
+					x: 0,
+					y: 0,
+				},
+			} }>
+				Deploy the device
+			</WardrobeActionButton>
+		);
+	}
+
+	return (
+		<FieldsetToggle legend='Deployment'>
+			<Column>
+				{ contents }
+			</Column>
+		</FieldsetToggle>
+	);
+}
+
+function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
+	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
+	item: ItemPath;
+}): ReactElement | null {
+	const throttle = 100;
+
+	const { targetSelector, execute } = useWardrobeContext();
+
+	const [positionX, setPositionX] = useUpdatedUserInput(deployment.x, [item]);
+	const [positionY, setPositionY] = useUpdatedUserInput(deployment.y, [item]);
+
+	const disabled = useStaggeredAppearanceActionResult({
+		type: 'roomDeviceDeploy',
+		target: targetSelector,
+		item,
+		deployment,
+	})?.result !== 'success';
+
+	const onChangeCaller = useCallback((newPosition: Immutable<RoomDeviceDeployment>) => {
+		execute({
+			type: 'roomDeviceDeploy',
+			target: targetSelector,
+			item,
+			deployment: newPosition,
+		});
+	}, [execute, targetSelector, item]);
+	const onChangeCallerThrottled = useMemo(() => throttle <= 0 ? onChangeCaller : _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
+
+	const changeCallback = useCallback((positionChange: Partial<RoomDeviceDeployment>) => {
+		const newPosition: Immutable<RoomDeviceDeployment> = {
+			...deployment,
+			...positionChange,
+		};
+		setPositionX(newPosition.x);
+		setPositionY(newPosition.y);
+		onChangeCallerThrottled(newPosition);
+	}, [deployment, setPositionX, setPositionY, onChangeCallerThrottled]);
+
+	return (
+		<Row alignY='center'>
+			<label>X:</label>
+			<input type='number'
+				value={ positionX }
+				onChange={ (ev) => {
+					changeCallback({ x: ev.target.valueAsNumber });
+				} }
+				disabled={ disabled }
+			/>
+			<label>Y:</label>
+			<input type='number'
+				value={ positionY }
+				onChange={ (ev) => {
+					changeCallback({ y: ev.target.valueAsNumber });
+				} }
+				disabled={ disabled }
+			/>
+		</Row>
 	);
 }

@@ -171,7 +171,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 		ids.add(item.id);
 
 		// Run internal item validation
-		const r = item.validate(true);
+		const r = item.validate('worn');
 		if (!r.success)
 			return r;
 	}

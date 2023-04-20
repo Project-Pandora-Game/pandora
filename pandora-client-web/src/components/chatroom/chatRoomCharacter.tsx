@@ -18,7 +18,7 @@ type ChatRoomCharacterProps = {
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
 	menuOpen: (character: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
-	filters: Filter[];
+	filters: readonly Filter[];
 };
 
 const BOTTOM_NAME_OFFSET = 100;

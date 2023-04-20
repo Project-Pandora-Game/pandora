@@ -1,4 +1,4 @@
-import { GetLogger } from 'pandora-common';
+import { GetLogger, logConfig } from 'pandora-common';
 import { accountManager } from './account/accountManager';
 import { CloseDatabase } from './database/databaseProvider';
 import { StopHttpServer } from './networking/httpServer';
@@ -45,15 +45,15 @@ export function Stop(): Promise<void> {
 		logger.fatal('Stop timed out!');
 		// Dump what is running
 		wtfnode.dump();
-		// Even though it is error, we exit with 0 to prevent container restart from triggering
-		process.exit(0);
+		// Force exit the process
+		process.exit();
 	}, STOP_TIMEOUT).unref();
 	// Graceful stop syncs everything with directory and database
 	stopping = StopGracefully()
 		.catch((err) => {
 			logger.fatal('Stop errored:\n', err);
-			// Even though it is error, we exit with 0 to prevent container restart from triggering
-			process.exit(0);
+			// Force exit the process
+			process.exit();
 		});
 	return stopping;
 }
@@ -71,5 +71,11 @@ export function SetupSignalHandling(): void {
 
 	process.on('exit', () => {
 		logger.alert('Stopped.');
+	});
+
+	logConfig.onFatal.push(() => {
+		logger.info('Fatal error detected, stopping');
+		process.exitCode = 2;
+		void Stop();
 	});
 }

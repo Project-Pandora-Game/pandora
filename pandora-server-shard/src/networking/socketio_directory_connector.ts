@@ -1,5 +1,5 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, logConfig, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema } from 'pandora-common';
+import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
@@ -289,12 +289,6 @@ export function ConnectToDirectory(): Promise<SocketIODirectoryConnector> {
 	}
 	// Create the connection
 	DirectoryConnector = new SocketIODirectoryConnector(DIRECTORY_ADDRESS, SHARD_SHARED_SECRET);
-	// Setup shutdown handlers
-	logConfig.onFatal.push(() => {
-		if (DirectoryConnector) {
-			DirectoryConnector.disconnect();
-		}
-	});
 	// Start
 	return DirectoryConnector.connect();
 }

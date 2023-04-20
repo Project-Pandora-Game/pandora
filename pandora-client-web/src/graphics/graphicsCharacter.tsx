@@ -191,14 +191,16 @@ function GraphicsCharacterWithManagerImpl({
 			pointerupoutside={ onPointerUpOutside }
 			pointermove={ onPointerMove }
 		>
-			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
-				{
-					sortOrder.map((priority, i) => {
-						const layer = priorityLayers.get(priority);
-						return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
-					})
-				}
-				{ children }
+			<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
+				<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
+					{
+						sortOrder.map((priority, i) => {
+							const layer = priorityLayers.get(priority);
+							return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
+						})
+					}
+					{ children }
+				</SwapCullingDirection>
 			</SwapCullingDirection>
 		</Container>
 	);

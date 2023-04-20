@@ -52,7 +52,18 @@
 		@include center-flex;
 		padding: 0.2em 1em;
 		background-color: $grey-light;
+		position: relative;
 		cursor: move;
+
+		.dialog-close {
+			position: absolute;
+			right: 0.6em;
+			cursor: pointer;
+
+			&:hover {
+				color: red;
+			}
+		}
 	}
 
 	>.dialog-content {

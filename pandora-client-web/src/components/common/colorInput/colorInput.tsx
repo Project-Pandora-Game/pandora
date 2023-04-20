@@ -50,10 +50,6 @@ export function ColorInput({
 	);
 }
 
-export function useColorInput(initialValue?: HexColorString) {
-	return useState((initialValue ?? '#ffffff').toUpperCase() as HexColorString);
-}
-
 export function ColorInputRGBA({
 	initialValue, resetValue, onChange, throttle = 0, disabled = false, minAlpha = 255, title,
 }: {
@@ -80,6 +76,11 @@ export function ColorInputRGBA({
 		}
 	}, [setInput, onChangeCallerThrottled]);
 
+	const onEdit = useCallback((color: HexRGBAColorString) => {
+		onChangeCallerThrottled(color);
+		setInput(color);
+	}, [onChangeCallerThrottled]);
+
 	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => changeCallback(ev.target.value), [changeCallback]);
 	const onClick = useCallback((ev: React.MouseEvent) => {
 		ev.stopPropagation();
@@ -97,7 +98,7 @@ export function ColorInputRGBA({
 			}
 			{
 				showEditor &&
-				<ColorEditor initialValue={ value } onChange={ onChangeCallerThrottled } minAlpha={ minAlpha } close={ () => setShowEditor(false) } title={ title } />
+				<ColorEditor initialValue={ value } onChange={ onEdit } minAlpha={ minAlpha } close={ () => setShowEditor(false) } title={ title } />
 			}
 		</>
 	);
@@ -140,23 +141,17 @@ function ColorEditor({
 		ref.current.style.setProperty('--saturation', color.saturation.toString());
 		ref.current.style.setProperty('--lightness', color.lightness.toString());
 		ref.current.style.setProperty('--alpha', color.alpha.toString());
+		ref.current.style.setProperty('--value', color.hsvaValue.toString());
 	}, [color, ref]);
 
 	useEffect(() => {
-		const handler = (ev: MouseEvent) => {
-			if (ref.current && !ref.current.contains(ev.target as Node)) {
-				close();
-			}
-		};
 		const onEscape = (ev: KeyboardEvent) => {
 			if (ev.key === 'Escape') {
 				close();
 			}
 		};
-		document.addEventListener('click', handler);
 		document.addEventListener('keydown', onEscape);
 		return () => {
-			document.removeEventListener('click', handler);
 			document.removeEventListener('keydown', onEscape);
 		};
 	}, [close]);
@@ -171,9 +166,9 @@ function ColorEditor({
 		setState(color.setLightness(Number(ev.target.value) / 100));
 	}, [color, setState]);
 	const setAlpha = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		const value = Number(ev.target.value);
+		let value = Number(ev.target.value);
 		if (value < minAlpha) {
-			return;
+			value = minAlpha;
 		}
 		setState(color.setAlpha(value / 255));
 	}, [minAlpha, color, setState]);
@@ -210,11 +205,11 @@ function ColorEditor({
 		const y = ev.clientY - rect.top;
 		setState(color
 			.setSaturation(x / rect.width)
-			.setLightness(1 - (1 - y / rect.height)));
+			.setHsvaValue(1 - y / rect.height));
 	}, [dragging, color, setState]);
 
 	return (
-		<DraggableDialog title={ title }>
+		<DraggableDialog title={ title } close={ close }>
 			<div className='color-editor' ref={ ref }>
 				<div className='color-editor__rect'>
 					<div className='color-editor__rect__color'
@@ -238,6 +233,7 @@ function ColorEditor({
 class Color {
 	public readonly rbga: readonly [number, number, number, number];
 	public readonly hsla: readonly [number, number, number, number];
+	public readonly hsvaValue: number;
 
 	public get hue(): number {
 		return this.hsla[0];
@@ -281,6 +277,12 @@ class Color {
 		});
 	}
 
+	public setHsvaValue(value: number) {
+		return new Color({
+			hsla: [this.hsla[0], this.hsla[1], Color.hsvToHslLightness([this.hsla[0], this.hsla[1], _.clamp(value, 0, 1)]), this.hsla[3]],
+		});
+	}
+
 	public toHex(): HexRGBAColorString {
 		const [r, g, b, a] = this.rbga;
 		if (a === 1) {
@@ -296,15 +298,18 @@ class Color {
 		if (color instanceof Color) {
 			this.rbga = [...color.rbga];
 			this.hsla = [...color.hsla];
+			this.hsvaValue = color.hsvaValue;
 			return;
 		}
 		if (typeof color === 'string') {
 			this.rbga = Color.hexToRgba(color);
 			this.hsla = Color.rgbaToHsla(this.rbga);
+			this.hsvaValue = Color.hslToHsvValue(this.hsla);
 			return;
 		}
 		this.rbga = color.rgba ?? (color.hsla ? Color.hslaToRgba(color.hsla) : [0, 0, 0, 1]);
 		this.hsla = color.hsla ?? Color.rgbaToHsla(this.rbga);
+		this.hsvaValue = Color.hslToHsvValue(this.hsla);
 	}
 
 	public static hexToRgba(hex: string): [number, number, number, number] {
@@ -365,6 +370,18 @@ class Color {
 			Math.round(Color.hueToRgb(p, q, h - 1 / 3) * 255),
 			a,
 		];
+	}
+
+	public static hslToHsvValue(hsla: readonly [number, number, number, number] | readonly [number, number, number]): number {
+		const [, s, l] = hsla;
+		const v = l + s * Math.min(l, 1 - l);
+		return v;
+	}
+
+	public static hsvToHslLightness(hsva: readonly [number, number, number, number] | readonly [number, number, number]): number {
+		const [, s, v] = hsva;
+		const l = v * (1 - s / 2);
+		return l;
 	}
 
 	private static toHexPart(value: number) {

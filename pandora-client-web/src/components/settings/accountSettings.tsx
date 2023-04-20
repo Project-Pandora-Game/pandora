@@ -7,7 +7,8 @@ import { useMounted } from '../../common/useMounted';
 import { Button } from '../common/button/button';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { uniq } from 'lodash';
-import { ColorInput, useColorInput } from '../common/colorInput/colorInput';
+import { ColorInput } from '../common/colorInput/colorInput';
+import { useColorInput } from '../../common/useColorInput';
 
 export function AccountSettings(): ReactElement | null {
 	const account = useCurrentAccount();

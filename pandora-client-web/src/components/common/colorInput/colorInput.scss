@@ -5,11 +5,15 @@
 	align-items: center;
 	gap: 10px;
 
+	--sat: calc(var(--saturation) * 100%);
+	--lig: calc(var(--lightness) * 100%);
+
 	&__rect {
 		position: relative;
 		width: 200px;
 		height: 200px;
 		background-color: hsla(var(--hue), 100%, 50%, 1);
+		margin-bottom: 0.5em;
 
 		&__color {
 			position: absolute;
@@ -27,10 +31,16 @@
 			width: 1.3em;
 			height: 1.3em;
 			left: calc(var(--saturation) * 100%);
-			top: calc(var(--lightness) * 100%);
+			top: calc(calc(1 - var(--value)) * 100%);
 			border-radius: 50%;
-			border: 0.3em solid hsl(var(--hue), calc(var(--saturation) * 100%), calc(var(--lightness) * 100%));
-			box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+			border: 0.3em solid hsl(var(--hue), var(--sat), var(--lig));
+			box-shadow:
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
 			transform: translate(-50%, -50%);
 			cursor: crosshair;
 		}
@@ -41,71 +51,55 @@
 		width: 200px;
 		height: 1em;
 		margin-bottom: 0.5em;
+		padding: 0;
 
 		&::-webkit-slider-thumb {
 			-webkit-appearance: none;
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
+			background-color: hsla(var(--hue), var(--sat), var(--lig), var(--alpha));
+			box-shadow:
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
 			cursor: pointer;
+			position: relative;
 		}
 
 		&::-moz-range-thumb {
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
+			background-color: hsla(var(--hue), var(--sat), var(--lig), var(--alpha));
+			box-shadow:
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
 			cursor: pointer;
 		}
 	}
 
 	&__hue {
 		background-image: linear-gradient(90deg, red, yellow, lime, cyan, blue, magenta, red) !important;
-
-
-
-		&::-webkit-slider-thumb {
-			background-color: hsl(var(--hue), 100%, 50%);
-		}
-
-		&::-moz-range-thumb {
-			background-color: hsl(var(--hue), 100%, 50%);
-		}
 	}
 
 	&__saturation {
-		background: linear-gradient(90deg, hsl(var(--hue), 0%, 50%), hsl(var(--hue), 100%, 50%)) !important;
-
-		&::-webkit-slider-thumb {
-			background-color: hsl(var(--hue), calc(var(--saturation) * 100%), 50%);
-		}
-
-		&::-moz-range-thumb {
-			background-color: hsl(var(--hue), calc(var(--saturation) * 100%), 50%);
-		}
+		background: linear-gradient(90deg, hsl(var(--hue), 0%, var(--lig)), hsl(var(--hue), 100%, var(--lig))) !important;
 	}
 
 	&__lightness {
-		background: linear-gradient(90deg, black, hsl(var(--hue), 100%, 50%), white) !important;
-
-		&::-webkit-slider-thumb {
-			background-color: hsl(var(--hue), 100%, calc(var(--lightness) * 100%));
-		}
-
-		&::-moz-range-thumb {
-			background-color: hsl(var(--hue), 100%, calc(var(--lightness) * 100%));
-		}
+		background: linear-gradient(90deg, hsl(var(--hue), var(--sat), 0%), hsl(var(--hue), var(--sat), 50%), hsl(var(--hue), var(--sat), 100%)) !important;
 	}
 
 	&__alpha {
-		background: linear-gradient(90deg, #000 0%, transparent 100%) !important;
-
-		&::-webkit-slider-thumb {
-			background-color: hsla(var(--hue), 100%, 50%, calc(var(--alpha) * 100%));
-		}
-
-		&::-moz-range-thumb {
-			background-color: hsla(var(--hue), 100%, 50%, calc(var(--alpha) * 100%));
-		}
+		background: linear-gradient(90deg, transparent, hsla(var(--hue), var(--sat), var(--lig), 1)) !important;
 	}
 
 	&__hex {

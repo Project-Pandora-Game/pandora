@@ -122,7 +122,7 @@ export function SwapCullingDirection({ children, swap = true, uniqueKey }: Child
 	}
 	const newValue = useMemo(() => ({
 		cullClockwise: swap ? !cullClockwise : cullClockwise,
-		uniqueSwaps: uniqueKey ? [...uniqueSwaps, uniqueKey] : uniqueSwaps,
+		uniqueSwaps: (swap && uniqueKey) ? [...uniqueSwaps, uniqueKey] : uniqueSwaps,
 	}), [cullClockwise, swap, uniqueKey, uniqueSwaps]);
 	return (
 		<ContextCullClockwise.Provider value={ newValue }>

@@ -1,4 +1,4 @@
-import { GetLogger, logConfig } from 'pandora-common';
+import { GetLogger } from 'pandora-common';
 import { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } from '../config';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
@@ -81,17 +81,6 @@ export function StartHttpServer(): Promise<void> {
 			server.on('error', (error) => {
 				logger.error('HTTP server Error:', error);
 			});
-			// Setup shutdown handlers
-			logConfig.onFatal.push(() => {
-				logger.verbose('Stopping HTTP server');
-				server.close((err) => {
-					if (err) {
-						logger.error('Failed to close HTTP server', err);
-					} else {
-						logger.info('HTTP server closed');
-					}
-				});
-			});
 			// Finalize start
 			logger.info(`HTTP server started on port ${port}`);
 			resolve();
@@ -102,7 +91,13 @@ export function StartHttpServer(): Promise<void> {
 export function StopHttpServer(): void {
 	if (server) {
 		server.unref();
-		server.close();
+		server.close((err) => {
+			if (err) {
+				logger.error('Failed to close HTTP server', err);
+			} else {
+				logger.info('HTTP server closed');
+			}
+		});
 	}
 	activeConnections.forEach((socket) => socket.destroy());
 }

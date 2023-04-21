@@ -1,9 +1,10 @@
-import { GetLogger, logConfig } from 'pandora-common';
+import { GetLogger } from 'pandora-common';
 import { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } from '../config';
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
 import * as fs from 'fs';
 import { SocketIOServerClient } from './socketio_client_server';
+import { Socket } from 'net';
 import express from 'express';
 import { AssetsServe } from '../assets/assetManager';
 import { MetricsServe } from '../metrics';
@@ -11,6 +12,8 @@ import { MetricsServe } from '../metrics';
 const logger = GetLogger('Server');
 
 let server: HttpServer;
+
+const activeConnections = new Set<Socket>();
 
 /** Setup HTTP server and everything related to it */
 export function StartHttpServer(): Promise<void> {
@@ -73,6 +76,13 @@ export function StartHttpServer(): Promise<void> {
 	expressApp.use('/metrics', MetricsServe());
 	// Attach socket.io server
 	new SocketIOServerClient(server);
+	// Keep track of existing connection
+	server.on('connection', (socket) => {
+		activeConnections.add(socket);
+		socket.once('close', () => {
+			activeConnections.delete(socket);
+		});
+	});
 	// Start listening
 	return new Promise((resolve, reject) => {
 		// Catch error during port open
@@ -84,17 +94,6 @@ export function StartHttpServer(): Promise<void> {
 			server.on('error', (error) => {
 				logger.error('HTTP server Error:', error);
 			});
-			// Setup shutdown handlers
-			logConfig.onFatal.push(() => {
-				logger.verbose('Stopping HTTP server');
-				server.close((err) => {
-					if (err) {
-						logger.error('Failed to close HTTP server', err);
-					} else {
-						logger.info('HTTP server closed');
-					}
-				});
-			});
 			// Finalize start
 			logger.info(`HTTP server started on port ${port}`);
 			resolve();
@@ -105,6 +104,13 @@ export function StartHttpServer(): Promise<void> {
 export function StopHttpServer(): void {
 	if (server) {
 		server.unref();
-		server.close();
+		server.close((err) => {
+			if (err) {
+				logger.error('Failed to close HTTP server', err);
+			} else {
+				logger.info('HTTP server closed');
+			}
+		});
 	}
+	activeConnections.forEach((socket) => socket.destroy());
 }

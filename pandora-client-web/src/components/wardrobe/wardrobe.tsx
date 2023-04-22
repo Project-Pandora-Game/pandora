@@ -80,6 +80,7 @@ import { Select } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { Immutable } from 'immer';
 import { useUpdatedUserInput } from '../../common/useSyncUserInput';
+import { useItemColorString } from '../../graphics/graphicsLayer';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -1299,7 +1300,7 @@ export function WardrobeItemConfigMenu({
 					</WardrobeActionButton>
 				</Row>
 				{
-					wornItem.isType('personal') ? (
+					(wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
 						<WardrobeItemColorization wornItem={ wornItem } item={ item } />
 					) : null
 				}
@@ -1332,7 +1333,7 @@ export function WardrobeItemConfigMenu({
 }
 
 function WardrobeItemColorization({ wornItem, item }: {
-	wornItem: Item<'personal'>;
+	wornItem: Item<'personal' | 'roomDevice'>;
 	item: ItemPath;
 }): ReactElement | null {
 	const { target, targetSelector } = useWardrobeContext();
@@ -1375,7 +1376,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const { actions, execute } = useWardrobeContext();
-	const current = useMemo(() => item.resolveColor(allItems, colorKey) ?? colorDefinition.default, [item, allItems, colorKey, colorDefinition.default]);
+	const current = useItemColorString(allItems, item, colorKey) ?? colorDefinition.default;
 	const bundle = useMemo(() => item.exportColorToBundle(), [item]);
 	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success', [bundle, action, actions, assetManager]);
 

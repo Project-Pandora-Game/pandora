@@ -160,6 +160,8 @@ export type RoomDeviceSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionE
 export type IRoomDeviceGraphicsLayerSprite = {
 	type: 'sprite';
 	image: string;
+	/** Name of colorization key used to color this sprite layer */
+	colorizationKey?: string;
 	/**
 	 * Horizontal offset of this sprite relative to cage's origin point
 	 * @default 0
@@ -191,8 +193,13 @@ export type IRoomDeviceGraphicsLayerSlot = {
 export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDeviceGraphicsLayerSlot;
 
 export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'roomDevice', A> {
+	/** Configuration of user-configurable asset colorization */
+	colorization?: Record<string, Omit<AssetColorization<A>, 'group'>>;
+	/** Position of centerpoint relative to top-left corner of assets */
 	pivot: Coordinates;
+	/** Slots that can be entered by characters */
 	slots: Record<string, RoomDeviceSlot<A>>;
+	/** The graphical display of the device */
 	graphicsLayers: IRoomDeviceGraphicsLayer[];
 }
 

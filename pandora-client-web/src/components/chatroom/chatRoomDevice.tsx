@@ -1,4 +1,4 @@
-import { AssertNever, CalculateCharacterMaxYForBackground, CharacterSize, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
+import { AssertNever, CalculateCharacterMaxYForBackground, CharacterSize, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -8,7 +8,7 @@ import { GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
 import { Container, Graphics, Sprite, useApp } from '@pixi/react';
 import { useTexture } from '../../graphics/useTexture';
 import { ChatroomDebugConfig } from './chatroomDebug';
-import { SwapCullingDirection } from '../../graphics/graphicsLayer';
+import { SwapCullingDirection, useItemColor } from '../../graphics/graphicsLayer';
 import { Immutable } from 'immer';
 import { useEvent } from '../../common/useEvent';
 import _ from 'lodash';
@@ -27,6 +27,8 @@ type ChatRoomDeviceProps = {
 	shard: ShardConnector | null;
 	filters: readonly PIXI.Filter[];
 };
+
+export const RoomDeviceRenderContext = React.createContext<ItemRoomDevice | null>(null);
 
 export function ChatRoomDevice({
 	item,
@@ -134,30 +136,32 @@ export function ChatRoomDevice({
 	}, [hitArea]);
 
 	return (
-		<RoomDeviceGraphics
-			ref={ roomDeviceContainer }
-			item={ item }
-			position={ { x, y: height - y } }
-			scale={ { x: scale, y: scale } }
-			pivot={ pivot }
-			hitArea={ hitArea }
-			eventMode='static'
-			filters={ filters }
-			onPointerDown={ onPointerDown }
-			onPointerUp={ onPointerUp }
-			onPointerUpOutside={ onPointerUp }
-			zIndex={ -y }
-		>
-			{
-				!debugConfig?.characterDebugOverlay ? null : (
-					<Container
-						zIndex={ 99999 }
-					>
-						<Graphics draw={ hitboxDebugDraw } />
-					</Container>
-				)
-			}
-		</RoomDeviceGraphics>
+		<RoomDeviceRenderContext.Provider value={ item }>
+			<RoomDeviceGraphics
+				ref={ roomDeviceContainer }
+				item={ item }
+				position={ { x, y: height - y } }
+				scale={ { x: scale, y: scale } }
+				pivot={ pivot }
+				hitArea={ hitArea }
+				eventMode='static'
+				filters={ filters }
+				onPointerDown={ onPointerDown }
+				onPointerUp={ onPointerUp }
+				onPointerUpOutside={ onPointerUp }
+				zIndex={ -y }
+			>
+				{
+					!debugConfig?.characterDebugOverlay ? null : (
+						<Container
+							zIndex={ 99999 }
+						>
+							<Graphics draw={ hitboxDebugDraw } />
+						</Container>
+					)
+				}
+			</RoomDeviceGraphics>
+		</RoomDeviceRenderContext.Provider>
 	);
 }
 
@@ -221,7 +225,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 						asset.definition.graphicsLayers.map((layer, i) => {
 							let graphics: ReactElement;
 							if (layer.type === 'sprite') {
-								graphics = <RoomDeviceGraphicsLayerSprite layer={ layer } />;
+								graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } />;
 							} else if (layer.type === 'slot') {
 								graphics = <RoomDeviceGraphicsLayerSlot item={ item } layer={ layer } />;
 							} else {
@@ -250,7 +254,8 @@ function RoomDeviceGraphicsImpl(props: RoomDeviceGraphicsProps, ref: React.Forwa
 
 export const RoomDeviceGraphics = React.forwardRef(RoomDeviceGraphicsImpl);
 
-function RoomDeviceGraphicsLayerSprite({ layer, getTexture }: {
+function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
+	item: ItemRoomDevice;
 	layer: IRoomDeviceGraphicsLayerSprite;
 	getTexture?: (path: string) => Promise<PIXI.Texture>;
 }): ReactElement | null {
@@ -261,15 +266,16 @@ function RoomDeviceGraphicsLayerSprite({ layer, getTexture }: {
 
 	const texture = useTexture(image, undefined, getTexture);
 
+	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
+
 	return (
 		<Sprite
 			x={ layer.offsetX ?? 0 }
 			y={ layer.offsetY ?? 0 }
 			scale={ 1 }
 			texture={ texture }
-			// TODO
-			// tint={ color }
-			// alpha={ alpha }
+			tint={ color }
+			alpha={ alpha }
 		/>
 	);
 }

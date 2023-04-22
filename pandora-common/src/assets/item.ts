@@ -122,7 +122,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 	}
 
 	public exportColorToBundle(): ItemColorBundle | undefined {
-		if (!this.isType('personal'))
+		if (!this.isType('personal') && !this.isType('roomDevice'))
 			return undefined;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
@@ -284,21 +284,6 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
 	}
 
-	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {
-		if (!this.isType('personal'))
-			return undefined;
-
-		const colorization = this.asset.definition.colorization?.[colorizationKey];
-		if (!colorization)
-			return undefined;
-
-		const color = this.color[colorizationKey];
-		if (color)
-			return color;
-
-		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
-	}
-
 	private _overrideColors(items: AppearanceItems): Item<Type> {
 		Assert(this.isType(this.type));
 		if (!this.isType('personal'))
@@ -333,7 +318,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 	 * 3. Closest item after self that has this color group (if it is not an inherited color)
 	 * 4. Closest item from self (inclusive) that has this color group and it has an inherited color
 	 */
-	private _resolveColorGroup(items: AppearanceItems, ignoreKey: string, { group }: Immutable<AssetColorization>): ColorGroupResult | undefined {
+	protected _resolveColorGroup(items: AppearanceItems, ignoreKey: string, { group }: Immutable<AssetColorization>): ColorGroupResult | undefined {
 		Assert(this.isType(this.type));
 		if (!group)
 			return undefined;
@@ -396,7 +381,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 	}
 
 	private _loadColor(color: ItemColorBundle | HexRGBAColorString[] = {}): ItemColorBundle {
-		const colorization = this.isType('personal') ? (this.asset.definition.colorization ?? {}) : {};
+		const colorization = (this.isType('personal') || this.isType('roomDevice')) ? (this.asset.definition.colorization ?? {}) : {};
 		if (Array.isArray(color)) {
 			const keys = Object.keys(colorization);
 			const fixup: Writeable<ItemColorBundle> = {};
@@ -439,7 +424,17 @@ export function FilterItemWearable(item: Item): item is Item<WearableAssetType> 
 export type IItemLocationDescriptor = 'worn' | 'attached' | 'stored' | 'roomInventory';
 
 export class ItemPersonal extends ItemBase<'personal'> {
+	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {
+		const colorization = this.asset.definition.colorization?.[colorizationKey];
+		if (!colorization)
+			return undefined;
 
+		const color = this.color[colorizationKey];
+		if (color)
+			return color;
+
+		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
+	}
 }
 
 export class ItemRoomDevice extends ItemBase<'roomDevice'> {
@@ -526,6 +521,18 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 			doLoadTimeCleanup: false,
 		});
 	}
+
+	public resolveColor(colorizationKey: string): HexRGBAColorString | undefined {
+		const colorization = this.asset.definition.colorization?.[colorizationKey];
+		if (!colorization)
+			return undefined;
+
+		const color = this.color[colorizationKey];
+		if (color)
+			return color;
+
+		return colorization.default;
+	}
 }
 
 export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart'> {
@@ -583,6 +590,10 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
+	}
+
+	public resolveColor(colorizationKey: string, roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
+		return roomDevice?.resolveColor(colorizationKey);
 	}
 }
 

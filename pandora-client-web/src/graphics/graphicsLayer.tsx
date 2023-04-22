@@ -2,7 +2,7 @@ import { Container, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { max, maxBy, min, minBy } from 'lodash';
-import { AppearanceItems, Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle } from 'pandora-common';
+import { AppearanceItems, Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle, HexColorString, AssertNever } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -18,6 +18,7 @@ import { useGraphicsSettings } from './graphicsSettings';
 import { PixiMesh } from './pixiMesh';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
+import { RoomDeviceRenderContext } from '../components/chatroom/chatRoomDevice';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
 	points: readonly PointDefinitionCalculated[];
@@ -245,16 +246,29 @@ export function GraphicsLayer({
 	);
 }
 
+export function useItemColorString(items: AppearanceItems, item: Item | null, colorizationKey?: string | null): HexColorString | undefined {
+	const currentRoomDevice = useContext(RoomDeviceRenderContext);
+
+	if (item == null || colorizationKey == null) {
+		return undefined;
+	} else if (item.isType('personal')) {
+		return item.resolveColor(items, colorizationKey);
+	} else if (item.isType('roomDevice')) {
+		return item.resolveColor(colorizationKey);
+	} else if (item.isType('roomDeviceWearablePart')) {
+		return item.resolveColor(colorizationKey, currentRoomDevice);
+	}
+	AssertNever(item);
+}
+
 export function useItemColor(items: AppearanceItems, item: Item | null, colorizationKey?: string | null, state?: LayerStateOverrides): { color: number; alpha: number; } {
 	let color = 0xffffff;
 	let alpha = 1;
-	if (item && colorizationKey) {
-		const itemColor = item.resolveColor(items, colorizationKey);
-		if (itemColor) {
-			color = Number.parseInt(itemColor.substring(1, 7), 16);
-			if (itemColor.length > 7) {
-				alpha = Number.parseInt(itemColor.substring(7, 9), 16) / 255;
-			}
+	const itemColor = useItemColorString(items, item, colorizationKey);
+	if (itemColor) {
+		color = Number.parseInt(itemColor.substring(1, 7), 16);
+		if (itemColor.length > 7) {
+			alpha = Number.parseInt(itemColor.substring(7, 9), 16) / 255;
 		}
 	}
 	if (state) {

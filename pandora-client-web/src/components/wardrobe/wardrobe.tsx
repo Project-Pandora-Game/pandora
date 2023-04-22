@@ -2095,7 +2095,7 @@ function WardrobeRoomDeviceSlots({ roomDevice, item }: {
 	);
 }
 
-function WardrobeRoomDeviceSlot({ slotName, occupancy, item }: {
+function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 	slotName: string;
 	slotDefinition: RoomDeviceSlot;
 	occupancy: CharacterId | null;
@@ -2161,7 +2161,7 @@ function WardrobeRoomDeviceSlot({ slotName, occupancy, item }: {
 
 	return (
 		<Row alignY='center'>
-			<span>{ slotName }:</span>
+			<span>{ slotDefinition.name }:</span>
 			{ contents }
 		</Row>
 	);

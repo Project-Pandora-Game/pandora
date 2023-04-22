@@ -152,6 +152,8 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export type RoomDeviceSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
+	/** Visible name of this slot */
+	name: string;
 	wearableAsset: AssetId;
 };
 

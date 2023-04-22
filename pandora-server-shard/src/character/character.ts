@@ -278,7 +278,7 @@ export class Character {
 		}
 		const result = await CharacterDataSchema.safeParseAsync(character);
 		if (!result.success) {
-			logger.error(`Failed to load character ${id}: ${result.error}`);
+			logger.error(`Failed to load character ${id}: `, result.error);
 			return null;
 		}
 		if (!_.isEqual(result.data, character)) {

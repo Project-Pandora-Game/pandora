@@ -22,6 +22,7 @@ export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck
 		for (const value of values) {
 			const parsed = shape.safeParse(value);
 			if (parsed.success) {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 				res.push(parsed.data);
 			}
 		}

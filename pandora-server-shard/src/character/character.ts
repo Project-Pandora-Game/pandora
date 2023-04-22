@@ -18,6 +18,8 @@ export const CHARACTER_TICK_INTERVAL = 60_000;
 /** Time (in ms) for how long is update delayed before being sent; used for batching changes before updating room */
 const UPDATE_DEBOUNCE = 50;
 
+const logger = GetLogger('Character');
+
 type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id' | 'appearance'>;
 type ICharacterPublicDataChange = Omit<ICharacterPublicData, 'id' | 'appearance'>;
 type ICharacterPrivateDataChange = Omit<ICharacterDataUpdate, keyof ICharacterPublicData>;
@@ -113,7 +115,7 @@ export class Character {
 
 	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
-		this.data = CharacterDataSchema.parse(data);
+		this.data = data;
 		this.appearance = new CharacterAppearance(assetManager, () => this.data);
 
 		// TODO: remove this, this allow easier development so no need for DB migration
@@ -281,7 +283,16 @@ export class Character {
 		if (character === false) {
 			return null;
 		}
-		return character;
+		const result = await CharacterDataSchema.safeParseAsync(character);
+		if (!result.success) {
+			logger.error(`Failed to load character ${id}: ${result.error}`);
+			return null;
+		}
+		if (!_.isEqual(result.data, character)) {
+			logger.warning(`Character ${id} has invalid data, fixing...`);
+			await GetDatabase().setCharacter(_.omit(result.data, 'inCreation', 'accountId', 'created'));
+		}
+		return result.data;
 	}
 
 	public getData(): ICharacterData {

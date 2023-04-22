@@ -104,7 +104,7 @@ export class ModalDialog extends PureComponent<ChildrenProps & {
 
 export class DraggableDialog extends PureComponent<{
 	children?: ReactNode;
-	title: ReactNode;
+	title: string;
 	rawContent?: boolean;
 	close?: () => void;
 }> {
@@ -113,7 +113,7 @@ export class DraggableDialog extends PureComponent<{
 
 	constructor(props: {
 		children?: ReactNode;
-		title: ReactNode;
+		title: string;
 		rawContent?: boolean;
 		close?: () => void;
 	}) {

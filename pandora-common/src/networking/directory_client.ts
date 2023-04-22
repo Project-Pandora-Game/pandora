@@ -9,6 +9,7 @@ import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult,
 export type IDirectoryStatus = {
 	time: number;
 	betaKeyRequired?: true;
+	captchaSiteKey?: string;
 };
 
 export const DirectoryAccountSettingsSchema = z.object({

@@ -1,7 +1,7 @@
 import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
-import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL } from '../config';
+import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } from '../config';
 import { ShardManager } from '../shard/shardManager';
 import type { Account } from '../account/account';
 import { GitHubVerifier } from '../services/github/githubVerify';
@@ -11,6 +11,7 @@ import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/
 import { BetaKeyStore } from '../shard/betaKeyStore';
 import { RoomManager } from '../room/roomManager';
 import type { ClientConnection } from './connection_client';
+import { z } from 'zod';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -202,9 +203,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		await character?.disconnect();
 	}
 
-	private async handleRegister({ username, email, passwordSha512, betaKey }: IClientDirectoryArgument['register'], connection: ClientConnection): IClientDirectoryPromiseResult['register'] {
+	private async handleRegister({ username, email, passwordSha512, betaKey, captchaToken }: IClientDirectoryArgument['register'], connection: ClientConnection): IClientDirectoryPromiseResult['register'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (!await TestCaptcha(captchaToken))
+			return { result: 'invalidCaptcha' };
 
 		if (BETA_KEY_ENABLED && (!betaKey || !await BetaKeyStore.use(betaKey)))
 			return { result: 'invalidBetaKey' };
@@ -218,18 +222,24 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private async handleResendVerificationEmail({ email }: IClientDirectoryArgument['resendVerificationEmail'], connection: ClientConnection): IClientDirectoryPromiseResult['resendVerificationEmail'] {
+	private async handleResendVerificationEmail({ email, captchaToken }: IClientDirectoryArgument['resendVerificationEmail'], connection: ClientConnection): IClientDirectoryPromiseResult['resendVerificationEmail'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (!await TestCaptcha(captchaToken))
+			return { result: 'invalidCaptcha' };
 
 		await AccountProcedureResendVerifyEmail(email);
 
 		return { result: 'maybeSent' };
 	}
 
-	private async handlePasswordReset({ email }: IClientDirectoryArgument['passwordReset'], connection: ClientConnection): IClientDirectoryPromiseResult['passwordReset'] {
+	private async handlePasswordReset({ email, captchaToken }: IClientDirectoryArgument['passwordReset'], connection: ClientConnection): IClientDirectoryPromiseResult['passwordReset'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
+
+		if (!await TestCaptcha(captchaToken))
+			return { result: 'invalidCaptcha' };
 
 		await AccountProcedurePasswordReset(email);
 
@@ -637,5 +647,43 @@ function MakeStatus(): IDirectoryStatus {
 	if (BETA_KEY_ENABLED) {
 		result.betaKeyRequired = true;
 	}
+	if (HCAPTCHA_SECRET_KEY && HCAPTCHA_SECRET_KEY) {
+		result.captchaSiteKey = HCAPTCHA_SITE_KEY;
+	}
 	return result;
+}
+
+const VerifyResponseSchema = z.object({
+	success: z.boolean(),
+}).passthrough();
+
+async function TestCaptcha(token?: string): Promise<boolean> {
+	if (!HCAPTCHA_SECRET_KEY || !HCAPTCHA_SITE_KEY)
+		return true;
+
+	if (!token)
+		return false;
+
+	try {
+		const response = await fetch('https://hcaptcha.com/siteverify', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+			},
+			body: new URLSearchParams({
+				secret: HCAPTCHA_SECRET_KEY,
+				sitekey: HCAPTCHA_SITE_KEY,
+				response: token,
+			}),
+		});
+		const data = await response.json() as unknown;
+		const result = await VerifyResponseSchema.safeParseAsync(data);
+		if (!result.success)
+			return false;
+
+		return result.data.success;
+	} catch (e) {
+		logger.error('Error verifying captcha', e);
+		return false;
+	}
 }

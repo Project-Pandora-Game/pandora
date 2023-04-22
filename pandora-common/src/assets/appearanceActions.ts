@@ -4,7 +4,7 @@ import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterViewSchema, SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema, WearableAssetType } from './definitions';
-import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
+import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { Item, ItemColorBundle, ItemColorBundleSchema, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
@@ -114,12 +114,36 @@ export const AppearanceActionRandomize = z.object({
 
 export const AppearanceActionRoomDeviceDeploy = z.object({
 	type: z.literal('roomDeviceDeploy'),
-	/** Target with the item to color */
+	/** Target with the room device (so room) */
 	target: RoomTargetSelectorSchema,
-	/** Path to the item to interact with */
+	/** Path to the room device */
 	item: ItemPathSchema,
 	/** The resulting deployment we want */
 	deployment: RoomDeviceDeploymentSchema,
+});
+
+export const AppearanceActionRoomDeviceEnter = z.object({
+	type: z.literal('roomDeviceEnter'),
+	/** Target with the room device (so room) */
+	target: RoomTargetSelectorSchema,
+	/** Path to the room device */
+	item: ItemPathSchema,
+	/** The slot the character wants to enter */
+	slot: z.string(),
+	/** The target character to enter the device */
+	character: RoomCharacterSelectorSchema,
+	/** ID to give the new wearable part item */
+	itemId: ItemIdSchema,
+});
+
+export const AppearanceActionRoomDeviceLeave = z.object({
+	type: z.literal('roomDeviceLeave'),
+	/** Target with the room device (so room) */
+	target: RoomTargetSelectorSchema,
+	/** Path to the room device */
+	item: ItemPathSchema,
+	/** The slot that should be cleared */
+	slot: z.string(),
 });
 
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
@@ -135,6 +159,8 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionSafemode,
 	AppearanceActionRandomize,
 	AppearanceActionRoomDeviceDeploy,
+	AppearanceActionRoomDeviceEnter,
+	AppearanceActionRoomDeviceLeave,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -147,7 +173,10 @@ export interface AppearanceActionContext {
 }
 
 export type AppearanceActionResult = {
-	result: 'success' | 'invalidAction';
+	result: 'success';
+} | {
+	result: 'invalidAction';
+	reason?: 'noDeleteRoomDeviceWearable';
 } | {
 	result: 'restrictionError';
 	restriction: Restriction;
@@ -155,6 +184,14 @@ export type AppearanceActionResult = {
 	result: 'validationError';
 	validationError: AppearanceValidationError;
 };
+
+export interface AppearanceActionHandlerArg<Action extends AppearanceAction = AppearanceAction> {
+	action: Action;
+	context: AppearanceActionContext;
+	assetManager: AssetManager;
+	player: CharacterRestrictionsManager;
+	processingContext: ActionProcessingContext;
+}
 
 export function DoAppearanceAction(
 	action: AppearanceAction,
@@ -174,6 +211,13 @@ export function DoAppearanceAction(
 		sourceCharacter: context.player,
 		actionHandler: context.actionHandler,
 		dryRun,
+	};
+
+	const arg: Omit<AppearanceActionHandlerArg, 'action'> = {
+		context,
+		assetManager,
+		player,
+		processingContext,
 	};
 
 	switch (action.type) {
@@ -213,6 +257,15 @@ export function DoAppearanceAction(
 				return {
 					result: 'restrictionError',
 					restriction: r.restriction,
+				};
+			}
+
+			// Room device wearable parts cannot be deleted, you have to leave the device instead
+			const item = target.getItem(action.item);
+			if (item?.isType('roomDeviceWearablePart')) {
+				return {
+					result: 'invalidAction',
+					reason: 'noDeleteRoomDeviceWearable',
 				};
 			}
 
@@ -260,30 +313,10 @@ export function DoAppearanceAction(
 			if (!ActionTransferItem(sourceManipulator, action.item, targetManipulator, action.container))
 				return { result: 'invalidAction' };
 
-			// If target is the source, update only once
-			if (sourceManipulator === targetManipulator) {
-				return AppearanceValidationResultToActionResult(
-					target.commitChanges(sourceManipulator, processingContext),
-				);
-			}
-
-			// Test if source would accept it (dry run)
-			let result = source.commitChanges(sourceManipulator, {
-				dryRun: true,
-			});
-			if (!result.success)
-				return AppearanceValidationResultToActionResult(result);
-
-			// Try to update target
-			result = target.commitChanges(targetManipulator, processingContext);
-			if (!result.success)
-				return AppearanceValidationResultToActionResult(result);
-
-			// Update source (it passed before)
-			result = source.commitChanges(sourceManipulator, processingContext);
-			Assert(result.success, 'Action failed after a successful dryRun');
-
-			return { result: 'success' };
+			return AppearanceCommitMultiple(processingContext, [
+				{ target, manipulator: targetManipulator },
+				{ target: source, manipulator: sourceManipulator },
+			]);
 		}
 		// Moves an item within inventory, reordering the worn order
 		case 'move': {
@@ -429,7 +462,7 @@ export function DoAppearanceAction(
 			const target = context.getTarget(action.target);
 			if (!target)
 				return { result: 'invalidAction' };
-			// Player coloring the item must be able to interact with the item
+			// Player deploying the device must be able to interact with it
 			const r = player.canUseItem(target, action.item, ItemInteractionType.MODIFY);
 			if (!r.allowed) {
 				return {
@@ -446,6 +479,16 @@ export function DoAppearanceAction(
 				target.commitChanges(manipulator, processingContext),
 			);
 		}
+		case 'roomDeviceEnter':
+			return ActionRoomDeviceEnter({
+				...arg,
+				action,
+			});
+		case 'roomDeviceLeave':
+			return ActionRoomDeviceLeave({
+				...arg,
+				action,
+			});
 		default:
 			AssertNever(action);
 	}
@@ -458,6 +501,59 @@ export function AppearanceValidationResultToActionResult(result: AppearanceValid
 		result: 'validationError',
 		validationError: result.error,
 	};
+}
+
+/**
+ * Commit multiple pairs of target and manipulator.
+ *
+ * Either all are committed or none is. If any pair is present multiple times, it is deduplicated safely.
+ */
+export function AppearanceCommitMultiple(processingContext: ActionProcessingContext, pairs: {
+	target: RoomActionTarget;
+	manipulator: AppearanceRootManipulator;
+}[]): AppearanceActionResult {
+	if (pairs.length === 0)
+		return { result: 'success' };
+
+	// Deduplicate
+	const seenTargets = new Map<RoomActionTarget, AppearanceRootManipulator>();
+	pairs = pairs.filter(({ target, manipulator }) => {
+		const seenManipulator = seenTargets.get(target);
+		if (seenManipulator == null) {
+			seenTargets.set(target, manipulator);
+			return true;
+		}
+		if (seenManipulator !== manipulator) {
+			throw new Error(`Attempting to update one target (${target.type}) with multiple different manipulators`);
+		}
+		return false;
+	});
+
+	Assert(pairs.length > 0);
+
+	let result: AppearanceValidationResult;
+
+	// Test if any but first pair accepts
+	for (let i = 1; i < pairs.length; i++) {
+		result = pairs[i].target.commitChanges(pairs[i].manipulator, {
+			dryRun: true,
+		});
+		if (!result.success)
+			return AppearanceValidationResultToActionResult(result);
+	}
+
+	// Update first target
+	result = pairs[0].target.commitChanges(pairs[0].manipulator, processingContext);
+	if (!result.success)
+		return AppearanceValidationResultToActionResult(result);
+
+	// Update remaining targets
+	for (let i = 1; i < pairs.length; i++) {
+		result = pairs[i].target.commitChanges(pairs[i].manipulator, processingContext);
+		Assert(result.success, 'Action failed after a successful dryRun');
+	}
+
+	return { result: 'success' };
 }
 
 export function ActionAddItem(rootManipulator: AppearanceRootManipulator, container: ItemContainerPath, item: Item): boolean {
@@ -786,4 +882,191 @@ export function ActionRoomDeviceDeploy(rootManipulator: AppearanceRootManipulato
 	// Will need mechanism to rate-limit the messages not to send every move
 
 	return true;
+}
+
+export function ActionRoomDeviceEnter({
+	action,
+	context,
+	assetManager,
+	player,
+	processingContext,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceEnter>>): AppearanceActionResult {
+	const target = context.getTarget(action.target);
+	if (!target)
+		return { result: 'invalidAction' };
+
+	// The device must exist and be a device
+	const item = target.getItem(action.item);
+	if (!item || !item.isType('roomDevice'))
+		return { result: 'invalidAction' };
+
+	// The slot must exist
+	const slot = item.asset.definition.slots[action.slot];
+	if (!slot)
+		return { result: 'invalidAction' };
+
+	// We must know asset bound to the slot
+	const asset = assetManager.getAssetById(slot.wearableAsset);
+	if (!asset || !asset.isType('roomDeviceWearablePart'))
+		return { result: 'invalidAction' };
+
+	// Player must be able to interact with the device
+	let r = player.canUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	if (!r.allowed) {
+		return {
+			result: 'restrictionError',
+			restriction: r.restriction,
+		};
+	}
+
+	// We must have target character
+	const targetCharacter = context.getTarget(action.character);
+	if (!targetCharacter)
+		return { result: 'invalidAction' };
+
+	const wearableItem = assetManager
+		.createItem(action.itemId, asset, null)
+		.withLink({
+			device: item.id,
+			slot: action.slot,
+		});
+	// Player adding the item must be able to use it
+	r = player.canUseItemDirect(targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
+	if (!r.allowed) {
+		return {
+			result: 'restrictionError',
+			restriction: r.restriction,
+		};
+	}
+
+	// Actual action
+
+	if (target === targetCharacter)
+		return { result: 'invalidAction' };
+
+	const roomManipulator = target.getManipulator();
+	const manipulator = roomManipulator.getContainer(action.item.container);
+	const characterManipulator = targetCharacter.getManipulator();
+
+	// Do change
+	if (!manipulator.modifyItem(action.item.itemId, (it) => {
+		if (!it.isType('roomDevice'))
+			return null;
+		return it.changeSlotOccupancy(action.slot, action.character.characterId);
+	}))
+		return { result: 'invalidAction' };
+
+	if (!characterManipulator.addItem(wearableItem))
+		return { result: 'invalidAction' };
+
+	// Change message to chat
+	// TODO: Message to chat that room device was entered
+
+	return AppearanceCommitMultiple(processingContext, [
+		{ target: targetCharacter, manipulator: characterManipulator },
+		{ target, manipulator: roomManipulator },
+	]);
+}
+
+export function ActionRoomDeviceLeave({
+	action,
+	context,
+	assetManager,
+	player,
+	processingContext,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceLeave>>): AppearanceActionResult {
+	const target = context.getTarget(action.target);
+	if (!target)
+		return { result: 'invalidAction' };
+
+	// The device must exist and be a device
+	const item = target.getItem(action.item);
+	if (!item || !item.isType('roomDevice'))
+		return { result: 'invalidAction' };
+
+	// The slot must exist and be occupied
+	const slot = item.asset.definition.slots[action.slot];
+	const occupyingCharacterId = item.slotOccupancy.get(action.slot);
+	if (!slot || !occupyingCharacterId)
+		return { result: 'invalidAction' };
+
+	// We must know asset bound to the slot
+	const asset = assetManager.getAssetById(slot.wearableAsset);
+	if (!asset || !asset.isType('roomDeviceWearablePart'))
+		return { result: 'invalidAction' };
+
+	// Player must be able to interact with the device
+	let r = player.canUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	if (!r.allowed) {
+		return {
+			result: 'restrictionError',
+			restriction: r.restriction,
+		};
+	}
+
+	// Actual action
+
+	const roomManipulator = target.getManipulator();
+	const manipulator = roomManipulator.getContainer(action.item.container);
+
+	// Do change
+	if (!manipulator.modifyItem(action.item.itemId, (it) => {
+		if (!it.isType('roomDevice'))
+			return null;
+		return it.changeSlotOccupancy(action.slot, null);
+	}))
+		return { result: 'invalidAction' };
+
+	// We try to find the character and remove the device cleanly.
+	// If character is not found, we ignore it (assuming cleanup-style instead of freeing character)
+	const targetCharacter = context.getTarget({
+		type: 'character',
+		characterId: occupyingCharacterId,
+	});
+
+	if (targetCharacter) {
+		if (target === targetCharacter)
+			return { result: 'invalidAction' };
+
+		const characterManipulator = targetCharacter.getManipulator();
+
+		const removedItems = characterManipulator.removeMatchingItems((i) => i.asset === asset);
+
+		// If we did actually remove something, run checks (free, not cleanup)
+		if (removedItems.length > 0) {
+			Assert(removedItems.length === 1);
+			const removedItem = removedItems[0];
+
+			// Player must be able to remove the item (runs before commit, so it doesn't matter we did manipulation before)
+			r = player.canUseItem(targetCharacter, {
+				container: [],
+				itemId: removedItem.id,
+			}, ItemInteractionType.ADD_REMOVE);
+			if (!r.allowed) {
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
+			}
+
+			// Change message to chat
+			// TODO: Message to chat that room device was entered
+
+			// We must successfully commit both at the same time
+			return AppearanceCommitMultiple(processingContext, [
+				{ target: targetCharacter, manipulator: characterManipulator },
+				{ target, manipulator: roomManipulator },
+			]);
+		}
+	}
+
+	// We didn't end up removing worn part from character, so this is only cleanup of the slot
+	// That means we only modify the room device
+
+	// Change message to chat
+	// TODO: Message to chat that room device was entered
+
+	return AppearanceValidationResultToActionResult(
+		target.commitChanges(roomManipulator, processingContext),
+	);
 }

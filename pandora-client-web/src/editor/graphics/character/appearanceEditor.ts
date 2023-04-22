@@ -72,6 +72,7 @@ export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> impleme
 	public readonly type = 'character';
 	public readonly appearance: AppearanceEditor;
 	public readonly id = 'c0';
+	public readonly name = 'Editor character';
 
 	protected readonly logger = GetLogger('EditorCharacter');
 

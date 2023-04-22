@@ -24,6 +24,7 @@ import { PointLike } from '../../graphics/graphicsCharacter';
 import { ChatRoomDevice } from './chatRoomDevice';
 import { useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
+import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -103,6 +104,7 @@ export function ChatRoomGraphicsScene({
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		viewportConfig,
+		forwardContexts: [shardConnectorContext],
 		worldWidth: roomBackground.size[0],
 		worldHeight: roomBackground.size[1],
 		background: roomBackground.image,
@@ -141,8 +143,7 @@ export function ChatRoomGraphicsScene({
 					roomDevices.map((device) => (device.deployment != null ? (
 						<ChatRoomDevice
 							key={ device.id }
-							itemId={ device.id }
-							asset={ device.asset }
+							item={ device }
 							deployment={ device.deployment }
 							debugConfig={ debugConfig }
 							background={ roomBackground }

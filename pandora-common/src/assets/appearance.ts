@@ -13,6 +13,7 @@ import { AssetId, PartialAppearancePose, WearableAssetType } from './definitions
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
 import { FilterItemWearable, Item, ItemBundleSchema } from './item';
 import { ZodArrayWithInvalidDrop } from '../validation';
+import { RoomInventory } from './roomInventory';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
@@ -175,6 +176,43 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this._safemode = bundle.safemode;
 
 		this.onChange(['items', 'pose', 'safemode']);
+	}
+
+	public cleanupRoomDeviceWearables(roomInventory: RoomInventory | null, logger?: Logger): void {
+		const cleanedUpItems = this.items.filter((item) => {
+			if (item.isType('roomDeviceWearablePart')) {
+				if (!roomInventory || !item.roomDeviceLink)
+					return false;
+
+				// Target device must exist
+				const device = roomInventory.getItem({
+					container: [],
+					itemId: item.roomDeviceLink.device,
+				});
+				if (!device || !device.isType('roomDevice'))
+					return false;
+
+				// The device must have a matching slot
+				if (device.asset.definition.slots[item.roomDeviceLink.slot]?.wearableAsset !== item.asset.id)
+					return false;
+
+				// The device must be deployed with this character in target slot
+				if (!device.deployment || device.slotOccupancy.get(item.roomDeviceLink.slot) !== this.character.id)
+					return false;
+			}
+			return true;
+		});
+
+		if (cleanedUpItems.length === this.items.length)
+			return;
+
+		// Re-validate items as forceful removal might have broken dependencies
+		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, cleanedUpItems, logger);
+		Assert(ValidateAppearanceItems(this.assetManager, newItems).success);
+		this.items = newItems;
+
+		const poseChanged = this.enforcePoseLimits();
+		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
 	}
 
 	protected enforcePoseLimits(): boolean {

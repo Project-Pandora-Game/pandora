@@ -21,6 +21,8 @@ import {
 	BoneState,
 	CharacterAppearance,
 	CharacterArmsPose,
+	CharacterId,
+	CharacterIdSchema,
 	ColorGroupResult,
 	DoAppearanceAction,
 	EMPTY_ARRAY,
@@ -34,6 +36,7 @@ import {
 	ItemPath,
 	MessageSubstitute,
 	RoomDeviceDeployment,
+	RoomDeviceSlot,
 	RoomTargetSelector,
 	Writeable,
 } from 'pandora-common';
@@ -147,6 +150,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const isInRoom = useChatRoomData() != null;
 	const roomContext = useActionRoomContext();
 	const shardConnector = useShardConnector();
+	const chatroomCharacters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? EMPTY_ARRAY;
 
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 
@@ -157,6 +161,11 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 				return player.getRestrictionManager(roomContext);
 			} else if (target.type === 'character' && id === target.id) {
 				return target.getRestrictionManager(roomContext);
+			} else {
+				const targetCharacter = chatroomCharacters.find((c) => c.id === id);
+				if (targetCharacter) {
+					return targetCharacter.getRestrictionManager(roomContext);
+				}
 			}
 			return null;
 		},
@@ -166,6 +175,11 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 					return player.appearance;
 				} else if (target.type === 'character' && actionTarget.characterId === target.id) {
 					return target.appearance;
+				} else {
+					const targetCharacter = chatroomCharacters.find((c) => c.id === actionTarget.characterId);
+					if (targetCharacter) {
+						return targetCharacter.appearance;
+					}
 				}
 			}
 			if (actionTarget.type === 'roomInventory') {
@@ -175,7 +189,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 			}
 			return null;
 		},
-	}), [target, player, roomContext, isInRoom, room]);
+	}), [target, player, roomContext, isInRoom, room, chatroomCharacters]);
 
 	const targetSelector = useMemo<RoomTargetSelector>(() => {
 		if (target.type === 'character') {
@@ -865,10 +879,6 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 		: RenderAppearanceActionResult(assetManager, check)
 	), [assetManager, check]);
 
-	const isInvalidAction = check.result === 'invalidAction' ||
-		check.result === 'restrictionError' && check.restriction.type === 'invalid' ||
-		check.result === 'validationError' && check.validationError.problem === 'invalid';
-
 	if (check.result === 'success') {
 		return null;
 	}
@@ -876,7 +886,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
 			{
-				isInvalidAction ? (
+				!reason ? (
 					<>
 						This action isn't possible.
 					</>
@@ -1296,6 +1306,16 @@ export function WardrobeItemConfigMenu({
 				{
 					wornItem.isType('roomDevice') ? (
 						<WardrobeRoomDeviceDeployment roomDevice={ wornItem } item={ item } />
+					) : null
+				}
+				{
+					wornItem.isType('roomDevice') ? (
+						<WardrobeRoomDeviceSlots roomDevice={ wornItem } item={ item } />
+					) : null
+				}
+				{
+					wornItem.isType('roomDeviceWearablePart') ? (
+						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } />
 					) : null
 				}
 				{
@@ -2044,5 +2064,138 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 				disabled={ disabled }
 			/>
 		</Row>
+	);
+}
+
+function WardrobeRoomDeviceSlots({ roomDevice, item }: {
+	roomDevice: Item<'roomDevice'>;
+	item: ItemPath;
+}): ReactElement | null {
+	let contents: ReactNode;
+
+	if (roomDevice.deployment != null) {
+		contents = Object.entries(roomDevice.asset.definition.slots).map(([slotName, slotDefinition]) => (
+			<WardrobeRoomDeviceSlot key={ slotName }
+				item={ item }
+				slotName={ slotName }
+				slotDefinition={ slotDefinition }
+				occupancy={ roomDevice.slotOccupancy.get(slotName) ?? null }
+			/>
+		));
+	} else {
+		contents = 'Device must be deployed to interact with slots';
+	}
+
+	return (
+		<FieldsetToggle legend='Slots'>
+			<Column>
+				{ contents }
+			</Column>
+		</FieldsetToggle>
+	);
+}
+
+function WardrobeRoomDeviceSlot({ slotName, occupancy, item }: {
+	slotName: string;
+	slotDefinition: RoomDeviceSlot;
+	occupancy: CharacterId | null;
+	item: ItemPath;
+}): ReactElement | null {
+	const { targetSelector, player } = useWardrobeContext();
+
+	const characters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? [player];
+
+	let contents: ReactNode;
+
+	const [selectedCharacter, setSelectedCharacter] = useState<CharacterId>(player.id);
+
+	if (occupancy == null) {
+		contents = (
+			<>
+				<span>Empty</span>
+				<Select value={ selectedCharacter } onChange={
+					(event) => {
+						const characterId = CharacterIdSchema.parse(event.target.value);
+						setSelectedCharacter(characterId);
+					}
+				}>
+					{
+						characters.map((character) => <option key={ character.id } value={ character.id }>{ character.name } ({ character.id })</option>)
+					}
+				</Select>
+				<WardrobeActionButton action={ {
+					type: 'roomDeviceEnter',
+					target: targetSelector,
+					item,
+					slot: slotName,
+					character: {
+						type: 'character',
+						characterId: selectedCharacter,
+					},
+					itemId: `i/${nanoid()}` as const,
+				} }>
+					Enter the device
+				</WardrobeActionButton>
+			</>
+		);
+
+	} else {
+		const character = characters.find((c) => c.id === occupancy);
+
+		const characterDescriptor = character ? `${character.name} (${character.id})` : `[UNKNOWN] (${occupancy}) [Character not in the room]`;
+
+		contents = (
+			<>
+				<span>Occupied by { characterDescriptor }</span>
+				<WardrobeActionButton action={ {
+					type: 'roomDeviceLeave',
+					target: targetSelector,
+					item,
+					slot: slotName,
+				} }>
+					{ character ? 'Exit the device' : 'Clear occupancy of the slot' }
+				</WardrobeActionButton>
+			</>
+		);
+	}
+
+	return (
+		<Row alignY='center'>
+			<span>{ slotName }:</span>
+			{ contents }
+		</Row>
+	);
+}
+
+function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
+	roomDeviceWearable: Item<'roomDeviceWearablePart'>;
+	item: ItemPath;
+}): ReactElement | null {
+	let contents: ReactNode;
+
+	if (roomDeviceWearable.roomDeviceLink != null) {
+		contents = (
+			<WardrobeActionButton action={ {
+				type: 'roomDeviceLeave',
+				target: { type: 'roomInventory' },
+				item: {
+					container: [],
+					itemId: roomDeviceWearable.roomDeviceLink.device,
+				},
+				slot: roomDeviceWearable.roomDeviceLink.slot,
+			} }>
+				Exit the device
+			</WardrobeActionButton>
+		);
+	} else {
+		contents = '[ERROR]';
+	}
+
+	return (
+		<FieldsetToggle legend='Slots'>
+			<Column>
+				{ contents }
+			</Column>
+		</FieldsetToggle>
 	);
 }

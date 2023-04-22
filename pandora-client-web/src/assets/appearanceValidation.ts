@@ -21,7 +21,14 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 	if (result.result === 'success') {
 		return 'No problem.';
 	} else if (result.result === 'invalidAction') {
-		return `This action is not possible.`;
+		if (result.reason != null) {
+			switch (result.reason) {
+				case 'noDeleteRoomDeviceWearable':
+					return `You cannot delete manifestation of a room device. Use the device's menu to exit it instead.`;
+			}
+			AssertNever(result.reason);
+		}
+		return '';
 	} else if (result.result === 'restrictionError') {
 		const e = result.restriction;
 		switch (e.type) {
@@ -47,7 +54,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'invalid':
-				return `The action is invalid.`;
+				return '';
 		}
 		AssertNever(e);
 	} else if (result.result === 'validationError') {
@@ -86,10 +93,12 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				return `${DescribeAssetSlot(assetManager, e.slot)} doesn't have enough space to fit ${DescribeAsset(assetManager, e.asset)}.`;
 			case 'slotBlockedOrder':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be worn on top of an item that is blocking ${DescribeAssetSlot(assetManager, e.slot)}.`;
+			case 'canOnlyBeInOneDevice':
+				return `Character can only be in a single device at a time.`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}
 		AssertNever(e);
 	}
-	AssertNever(result.result);
+	AssertNever(result);
 }

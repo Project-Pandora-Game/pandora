@@ -42,6 +42,9 @@ export type AppearanceValidationError =
 		asset: AssetId;
 		slot: string;
 	}
+	| {
+		problem: 'canOnlyBeInOneDevice';
+	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
 	| {
 		problem: 'invalid';
@@ -159,6 +162,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 
 	// Validate all items
 	const ids = new Set<ItemId>();
+	let hasDevicePart = false;
 	for (const item of items) {
 		// ID must be unique
 		if (ids.has(item.id))
@@ -174,6 +178,19 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 		const r = item.validate('worn');
 		if (!r.success)
 			return r;
+
+		// Check that characer is in at most once device
+		if (item.isType('roomDeviceWearablePart')) {
+			if (hasDevicePart) {
+				return {
+					success: false,
+					error: {
+						problem: 'canOnlyBeInOneDevice',
+					},
+				};
+			}
+			hasDevicePart = true;
+		}
 	}
 
 	// Check requirements are met, and check asset count limits

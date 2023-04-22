@@ -117,14 +117,16 @@ export class Character {
 	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
-		this.appearance = new CharacterAppearance(assetManager, () => this.data);
 		this.accountData = account;
 		this.connectSecret = connectSecret;
-		this.setConnection(null);
-		this.linkRoom(room);
 
+		this.setConnection(null);
+
+		this.appearance = new CharacterAppearance(assetManager, () => this.data);
 		this.appearance.importFromBundle(data.appearance, this.logger.prefixMessages('Appearance load:'));
 		this.appearance.onChangeHandler = this.onAppearanceChanged.bind(this, true);
+
+		this.linkRoom(room);
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
@@ -180,6 +182,9 @@ export class Character {
 			this.room?.characterLeave(this);
 			room?.characterEnter(this);
 		}
+
+		// Cleanup linked wearables
+		this.appearance.cleanupRoomDeviceWearables(room?.inventory ?? null, this.logger.prefixMessages(`Chatroom link:`));
 	}
 
 	public isInUse(): boolean {

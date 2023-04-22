@@ -6,9 +6,10 @@ import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/pr
 import { ActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
-import type { Item } from '../assets/item';
+import type { Item, RoomDeviceLink } from '../assets/item';
 import type { Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
 import { AppearanceGetBlockedSlot, AppearanceItemProperties } from '../assets/appearanceValidation';
+import { Immutable } from 'immer';
 
 export enum ItemInteractionType {
 	/**
@@ -115,7 +116,8 @@ export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;
 	public readonly room: ActionRoomContext | null;
 	private _items: readonly Item[] = [];
-	private _properties: Readonly<AssetPropertiesResult> = CreateAssetPropertiesResult();
+	private _properties: Immutable<AssetPropertiesResult> = CreateAssetPropertiesResult();
+	private _roomDeviceLink: Immutable<RoomDeviceLink> | null = null;
 
 	public get character(): Readonly<ICharacterMinimalData> {
 		return this.appearance.character;
@@ -126,15 +128,28 @@ export class CharacterRestrictionsManager {
 		this.room = room;
 	}
 
-	public getProperties(): Readonly<AssetPropertiesResult> {
+	private updateCachedData(): void {
 		const items = this.appearance.getAllItems();
-		if (items === this._items) {
-			return this._properties;
-		}
+		if (items === this._items)
+			return;
+
 		this._items = items;
 		this._properties = AppearanceItemProperties(items);
 
+		const roomDeviceWearable = items.find((i) => i.isType('roomDeviceWearablePart'));
+		this._roomDeviceLink = roomDeviceWearable?.isType('roomDeviceWearablePart') ? roomDeviceWearable.roomDeviceLink : null;
+	}
+
+	public getProperties(): Immutable<AssetPropertiesResult> {
+		this.updateCachedData();
+
 		return this._properties;
+	}
+
+	public getRoomDeviceLink(): Immutable<RoomDeviceLink> | null {
+		this.updateCachedData();
+
+		return this._roomDeviceLink;
 	}
 
 	/**

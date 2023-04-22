@@ -12,6 +12,7 @@ export type AppearanceContainer = ITypedEventEmitter<AppearanceEvents> & {
 	readonly type: 'character';
 	readonly appearance: CharacterAppearance;
 	readonly id: CharacterId;
+	readonly name: string;
 	getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
 };
 
@@ -22,6 +23,10 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 
 	public get id(): CharacterId {
 		return this.data.id;
+	}
+
+	public get name(): string {
+		return this.data.name;
 	}
 
 	protected readonly logger: Logger;

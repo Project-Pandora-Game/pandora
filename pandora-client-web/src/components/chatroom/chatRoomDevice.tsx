@@ -1,10 +1,10 @@
-import { AssertNever, Asset, CalculateCharacterMaxYForBackground, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemId, RoomDeviceDeployment } from 'pandora-common';
+import { AssertNever, CalculateCharacterMaxYForBackground, CharacterSize, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
 import { ChildrenProps } from '../../common/reactTypes';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import { PointLike } from '../../graphics/graphicsCharacter';
+import { GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
 import { Container, Graphics, Sprite, useApp } from '@pixi/react';
 import { useTexture } from '../../graphics/useTexture';
 import { ChatroomDebugConfig } from './chatroomDebug';
@@ -13,12 +13,14 @@ import { Immutable } from 'immer';
 import { useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
+import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
+import { AppearanceContainer, useCharacterAppearanceView } from '../../character/character';
+import { useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 
 const DEVICE_WAIT_DRAG_THRESHOLD = 100; // ms
 
 type ChatRoomDeviceProps = {
-	itemId: ItemId;
-	asset: Immutable<Asset<'roomDevice'>>;
+	item: ItemRoomDevice;
 	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
 	debugConfig: ChatroomDebugConfig;
 	background: IChatroomBackgroundData;
@@ -27,14 +29,14 @@ type ChatRoomDeviceProps = {
 };
 
 export function ChatRoomDevice({
-	itemId,
-	asset,
+	item,
 	deployment,
 	debugConfig,
 	background,
 	shard,
 	filters,
 }: ChatRoomDeviceProps): ReactElement | null {
+	const asset = item.asset;
 	const app = useApp();
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
@@ -49,7 +51,7 @@ export function ChatRoomDevice({
 			},
 			item: {
 				container: [],
-				itemId,
+				itemId: item.id,
 			},
 			deployment: {
 				...deployment,
@@ -134,8 +136,7 @@ export function ChatRoomDevice({
 	return (
 		<RoomDeviceGraphics
 			ref={ roomDeviceContainer }
-			itemId={ itemId }
-			asset={ asset }
+			item={ item }
 			position={ { x, y: height - y } }
 			scale={ { x: scale, y: scale } }
 			pivot={ pivot }
@@ -161,8 +162,7 @@ export function ChatRoomDevice({
 }
 
 export interface RoomDeviceGraphicsProps extends ChildrenProps {
-	itemId: ItemId;
-	asset: Immutable<Asset<'roomDevice'>>;
+	item: ItemRoomDevice;
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
@@ -178,8 +178,7 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 }
 
 function RoomDeviceGraphicsWithManagerImpl({
-	itemId,
-	asset,
+	item,
 	position: positionOffset,
 	scale: scaleExtra,
 	pivot: pivotExtra,
@@ -191,6 +190,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 	children,
 	...graphicsProps
 }: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
+	const asset = item.asset;
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: 0, y: 0 }), [pivotExtra]);
 	const position = useMemo<PointLike>(() => ({
 		x: positionOffset?.x ?? 0,
@@ -223,7 +223,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 							if (layer.type === 'sprite') {
 								graphics = <RoomDeviceGraphicsLayerSprite layer={ layer } />;
 							} else if (layer.type === 'slot') {
-								graphics = <RoomDeviceGraphicsLayerSlot itemId={ itemId } layer={ layer } />;
+								graphics = <RoomDeviceGraphicsLayerSlot item={ item } layer={ layer } />;
 							} else {
 								AssertNever(layer);
 							}
@@ -274,11 +274,70 @@ function RoomDeviceGraphicsLayerSprite({ layer, getTexture }: {
 	);
 }
 
-function RoomDeviceGraphicsLayerSlot(_props: {
-	itemId: ItemId;
+function RoomDeviceGraphicsLayerSlot({ item, layer }: {
+	item: ItemRoomDevice;
 	layer: IRoomDeviceGraphicsLayerSlot;
 }): ReactElement | null {
-	// TODO
+	const characterId = item.slotOccupancy.get(layer.slot);
+	const chatroomCharacters = useChatRoomCharacters();
 
-	return null;
+	if (!characterId)
+		return null;
+
+	const character = chatroomCharacters?.find((c) => c.id === characterId);
+
+	if (!character)
+		return null;
+
+	return (
+		<RoomDeviceGraphicsLayerSlotCharacter
+			item={ item }
+			layer={ layer }
+			character={ character }
+		/>
+	);
+}
+
+function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character }: {
+	item: ItemRoomDevice;
+	layer: IRoomDeviceGraphicsLayerSlot;
+	character: AppearanceContainer;
+}): ReactElement | null {
+	const evaluator = useAppearanceConditionEvaluator(character);
+
+	const devicePivot = item.asset.definition.pivot;
+	const x = devicePivot.x + layer.characterPosition.offsetX;
+	const y = devicePivot.y + layer.characterPosition.offsetY;
+
+	let baseScale = 1;
+	if (evaluator.getBoneLikeValue('sitting') > 0) {
+		baseScale *= 0.9;
+	}
+
+	const scale = baseScale * layer.characterPosition.relativeScale;
+
+	const backView = useCharacterAppearanceView(character) === 'back';
+
+	const scaleX = backView ? -1 : 1;
+
+	const yOffset = 0
+		+ 1.75 * evaluator.getBoneLikeValue('kneeling')
+		+ 0.75 * evaluator.getBoneLikeValue('sitting')
+		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? -0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+
+	// Character must be in this device, otherwise we skip rendering it here
+	// (could happen if character left and rejoined the room without device equipped)
+	const roomDeviceLink = useCharacterRestrictionsManager(character, (rm) => rm.getRoomDeviceLink());
+	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot)
+		return null;
+
+	return (
+		<GraphicsCharacter
+			appearanceContainer={ character }
+			position={ { x, y } }
+			scale={ { x: scaleX * scale, y: scale } }
+			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }
+		>
+		</GraphicsCharacter>
+	);
 }

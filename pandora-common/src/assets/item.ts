@@ -13,6 +13,7 @@ import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from '
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
+import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
@@ -22,6 +23,13 @@ export const RoomDeviceDeploymentSchema = z.object({
 	y: z.number(),
 }).nullable();
 export type RoomDeviceDeployment = z.infer<typeof RoomDeviceDeploymentSchema>;
+
+export const RoomDeviceBundleSchema = z.object({
+	deployment: RoomDeviceDeploymentSchema,
+	/** Which characters have which slots reserved */
+	slotOccupancy: z.record(z.string(), CharacterIdSchema),
+});
+export type RoomDeviceBundle = z.infer<typeof RoomDeviceBundleSchema>;
 
 export const RoomDeviceLinkSchema = z.object({
 	device: ItemIdSchema,
@@ -34,8 +42,8 @@ export const ItemBundleSchema = z.object({
 	asset: AssetIdSchema,
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	moduleData: z.record(z.unknown()).optional(),
-	/** Room device specific data about the device being deployed in the room */
-	roomDeviceDeployment: RoomDeviceDeploymentSchema.optional(),
+	/** Room device specific data */
+	roomDeviceData: RoomDeviceBundleSchema.optional(),
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
 	roomDeviceLink: RoomDeviceLinkSchema.optional(),
 });
@@ -436,11 +444,28 @@ export class ItemPersonal extends ItemBase<'personal'> {
 
 export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 	public readonly deployment: Immutable<RoomDeviceDeployment>;
+	public readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
 
 	constructor(id: ItemId, asset: Asset<'roomDevice'>, bundle: ItemBundle, context: IItemLoadContext) {
 		super(id, asset, bundle, context);
 
-		this.deployment = bundle.roomDeviceDeployment ?? null;
+		const roomDeviceData: RoomDeviceBundle = bundle.roomDeviceData ?? {
+			deployment: null,
+			slotOccupancy: {},
+		};
+
+		this.deployment = roomDeviceData.deployment;
+
+		const slotOccupancy = new Map<string, CharacterId>();
+		// Skip occupied slots if we are not deployed
+		if (this.deployment != null) {
+			for (const slot of Object.keys(asset.definition.slots)) {
+				if (roomDeviceData.slotOccupancy[slot] != null) {
+					slotOccupancy.set(slot, roomDeviceData.slotOccupancy[slot]);
+				}
+			}
+		}
+		this.slotOccupancy = slotOccupancy;
 	}
 
 	public override validate(location: IItemLocationDescriptor): AppearanceValidationResult {
@@ -461,17 +486,41 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 		return { success: true };
 	}
 
-	public override exportToBundle(): ItemBundle {
+	public override exportToBundle(): ItemBundle & { roomDeviceData: RoomDeviceBundle; } {
+		const slotOccupancy: RoomDeviceBundle['slotOccupancy'] = {};
+		for (const [slot, character] of this.slotOccupancy.entries()) {
+			slotOccupancy[slot] = character;
+		}
 		return {
 			...super.exportToBundle(),
-			roomDeviceDeployment: this.deployment,
+			roomDeviceData: {
+				deployment: this.deployment,
+				slotOccupancy,
+			},
 		};
 	}
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeDeployment(newDeployment: RoomDeviceDeployment): ItemRoomDevice {
 		const bundle = this.exportToBundle();
-		bundle.roomDeviceDeployment = newDeployment;
+		bundle.roomDeviceData.deployment = newDeployment;
+		return CreateItem(this.id, this.asset, bundle, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	public changeSlotOccupancy(slot: string, character: CharacterId | null): ItemRoomDevice | null {
+		// The slot must exist and the device must be deployed
+		if (this.asset.definition.slots[slot] == null || this.deployment == null)
+			return null;
+
+		const bundle = this.exportToBundle();
+		if (character == null) {
+			delete bundle.roomDeviceData.slotOccupancy[slot];
+		} else {
+			bundle.roomDeviceData.slotOccupancy[slot] = character;
+		}
 		return CreateItem(this.id, this.asset, bundle, {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
@@ -525,6 +574,15 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 			...super.exportToBundle(),
 			roomDeviceLink: this.roomDeviceLink ?? undefined,
 		};
+	}
+
+	public withLink(link: RoomDeviceLink): ItemRoomDeviceWearablePart {
+		const bundle = this.exportToBundle();
+		bundle.roomDeviceLink = link;
+		return CreateItem(this.id, this.asset, bundle, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
 	}
 }
 

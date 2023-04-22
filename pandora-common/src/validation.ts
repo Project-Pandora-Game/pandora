@@ -16,6 +16,19 @@ export function ZodMatcher<T extends ZodTypeAny>(validator: T, passthrough?: tru
 	return (val: unknown): val is z.infer<T> => validator.safeParse(val).success;
 }
 
+export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck extends ZodTypeAny>(shape: ZodShape, preCheck: ZodPreCheck) {
+	return z.array(preCheck).transform((values) => {
+		const res: z.output<ZodShape>[] = [];
+		for (const value of values) {
+			const parsed = shape.safeParse(value);
+			if (parsed.success) {
+				res.push(parsed.data);
+			}
+		}
+		return res;
+	});
+}
+
 export function ArrayToTruthyMap<T extends string>(array: readonly T[]): Record<T, true> {
 	// @ts-expect-error: Created to match in loop
 	const result: Record<T, true> = {};

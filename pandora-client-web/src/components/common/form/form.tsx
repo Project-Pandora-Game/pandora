@@ -79,7 +79,7 @@ export function FormFieldCaptcha({
 				reCaptchaCompat={ false }
 				theme='dark'
 			/>
-			<FormFieldError error={ invalidCaptcha ? { type: 'invalidCaptcha' } : undefined } />
+			<FormFieldError error={ invalidCaptcha ? { type: 'invalidCaptcha', message: 'Invalid captcha' } : undefined } />
 		</FormField>
 	);
 }

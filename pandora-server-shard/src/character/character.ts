@@ -8,6 +8,7 @@ import { assetManager } from '../assets/assetManager';
 
 import _ from 'lodash';
 import AsyncLock from 'async-lock';
+import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;
@@ -282,7 +283,8 @@ export class Character {
 			return null;
 		}
 		if (!_.isEqual(result.data, character)) {
-			logger.warning(`Character ${id} has invalid data, fixing...`);
+			const diff = diffString(character, result.data);
+			logger.warning(`Character ${id} has invalid data, fixing...\n`, diff);
 			await GetDatabase().setCharacter(_.omit(result.data, 'inCreation', 'accountId', 'created'));
 		}
 		return result.data;

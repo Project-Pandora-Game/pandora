@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance, CharacterDataSchema } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance, CharacterDataSchema } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -8,6 +8,7 @@ import { assetManager } from '../assets/assetManager';
 
 import _ from 'lodash';
 import AsyncLock from 'async-lock';
+import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;
@@ -17,6 +18,8 @@ export const CHARACTER_TICK_INTERVAL = 60_000;
 
 /** Time (in ms) for how long is update delayed before being sent; used for batching changes before updating room */
 const UPDATE_DEBOUNCE = 50;
+
+const logger = GetLogger('Character');
 
 type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id' | 'appearance'>;
 type ICharacterPublicDataChange = Omit<ICharacterPublicData, 'id' | 'appearance'>;
@@ -113,15 +116,8 @@ export class Character {
 
 	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
-		this.data = CharacterDataSchema.parse(data);
+		this.data = data;
 		this.appearance = new CharacterAppearance(assetManager, () => this.data);
-
-		// TODO: remove this, this allow easier development so no need for DB migration
-		this.data.settings = {
-			..._.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-			...(this.data.settings ?? {}),
-		};
-
 		this.accountData = account;
 		this.connectSecret = connectSecret;
 		this.setConnection(null);
@@ -281,7 +277,17 @@ export class Character {
 		if (character === false) {
 			return null;
 		}
-		return character;
+		const result = await CharacterDataSchema.safeParseAsync(character);
+		if (!result.success) {
+			logger.error(`Failed to load character ${id}: `, result.error);
+			return null;
+		}
+		if (!_.isEqual(result.data, character)) {
+			const diff = diffString(character, result.data);
+			logger.warning(`Character ${id} has invalid data, fixing...\n`, diff);
+			await GetDatabase().setCharacter(_.omit(result.data, 'inCreation', 'accountId', 'created'));
+		}
+		return result.data;
 	}
 
 	public getData(): ICharacterData {

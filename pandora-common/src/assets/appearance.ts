@@ -12,6 +12,7 @@ import { AssetManager } from './assetManager';
 import { AssetId, PartialAppearancePose } from './definitions';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
 import { Item, ItemBundleSchema } from './item';
+import { ZodArrayWithInvalidDrop } from '../validation';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
@@ -43,7 +44,7 @@ export const AppearancePoseSchema = z.object({
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
 
 export const AppearanceBundleSchema = AppearancePoseSchema.extend({
-	items: z.array(ItemBundleSchema),
+	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	safemode: SafemodeDataSchema.optional(),
 });
 

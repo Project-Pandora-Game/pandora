@@ -1,0 +1,112 @@
+.color-editor {
+	display: flex;
+	position: relative;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+
+	--sat: calc(var(--saturation) * 100%);
+	--lig: calc(var(--lightness) * 100%);
+
+	&__rect {
+		position: relative;
+		width: 200px;
+		height: 200px;
+		background-color: hsla(var(--hue), 100%, 50%, 1);
+		margin-bottom: 0.5em;
+
+		&__color {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background:
+				linear-gradient(0deg, #000 0%, transparent 100%),
+				linear-gradient(90deg, #fff 0%, transparent 100%);
+		}
+
+		&__color__pointer {
+			position: absolute;
+			width: 1.3em;
+			height: 1.3em;
+			left: calc(var(--saturation) * 100%);
+			top: calc(calc(1 - var(--value)) * 100%);
+			border-radius: 50%;
+			border: 0.3em solid hsl(var(--hue), var(--sat), var(--lig));
+			box-shadow:
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
+			transform: translate(-50%, -50%);
+			cursor: crosshair;
+		}
+	}
+
+	input[type='range'] {
+		-webkit-appearance: none;
+		width: 200px;
+		height: 1em;
+		margin-bottom: 0.5em;
+		padding: 0;
+
+		&::-webkit-slider-thumb {
+			-webkit-appearance: none;
+			width: 1.5em;
+			height: 1.5em;
+			border-radius: 50%;
+			background-color: hsla(var(--hue), var(--sat), var(--lig), var(--alpha));
+			box-shadow:
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
+			cursor: pointer;
+			position: relative;
+		}
+
+		&::-moz-range-thumb {
+			width: 1.5em;
+			height: 1.5em;
+			border-radius: 50%;
+			background-color: hsla(var(--hue), var(--sat), var(--lig), var(--alpha));
+			box-shadow:
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
+			cursor: pointer;
+		}
+	}
+
+	&__hue {
+		background-image: linear-gradient(90deg, red, yellow, lime, cyan, blue, magenta, red) !important;
+	}
+
+	&__saturation {
+		background: linear-gradient(90deg, hsl(var(--hue), 0%, var(--lig)), hsl(var(--hue), 100%, var(--lig))) !important;
+	}
+
+	&__lightness {
+		background: linear-gradient(90deg, hsl(var(--hue), var(--sat), 0%), hsl(var(--hue), var(--sat), 50%), hsl(var(--hue), var(--sat), 100%)) !important;
+	}
+
+	&__alpha {
+		background: linear-gradient(90deg, transparent, hsla(var(--hue), var(--sat), var(--lig), 1)) !important;
+	}
+
+	&__hex {
+		width: 200px;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		padding: 5px;
+		font-size: 14px;
+	}
+}

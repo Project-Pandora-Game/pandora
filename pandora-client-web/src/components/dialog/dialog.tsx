@@ -106,6 +106,7 @@ export class DraggableDialog extends PureComponent<{
 	children?: ReactNode;
 	title: string;
 	rawContent?: boolean;
+	close?: () => void;
 }> {
 	private readonly _node: HtmlPortalNodeAny;
 	private readonly _context: DialogCloseContext;
@@ -114,6 +115,7 @@ export class DraggableDialog extends PureComponent<{
 		children?: ReactNode;
 		title: string;
 		rawContent?: boolean;
+		close?: () => void;
 	}) {
 		super(props);
 		this._node = createHtmlPortalNode();
@@ -141,7 +143,7 @@ export class DraggableDialog extends PureComponent<{
 	}
 
 	public override render() {
-		const { children, title, rawContent } = this.props;
+		const { children, title, rawContent, close } = this.props;
 		return (
 			<InPortal node={ this._node }>
 				<div className='overlay-bounding-box'>
@@ -157,7 +159,14 @@ export class DraggableDialog extends PureComponent<{
 						bounds='parent'
 					>
 						<dialogCloseContext.Provider value={ this._context }>
-							<header className='drag-handle'>{ title }</header>
+							<header className='drag-handle'>
+								{ title }
+								{ close ? (
+									<span className='dialog-close' onClick={ close }>
+										×
+									</span>
+								) : null }
+							</header>
 							{
 								rawContent ? children : (
 									<div className='dialog-content'>

@@ -246,11 +246,21 @@ export function GraphicsLayer({
 }
 
 export function useItemColor(items: AppearanceItems, item: Item | null, colorizationKey?: string | null, state?: LayerStateOverrides): { color: number; alpha: number; } {
-	const itemColor = item?.resolveColor(items, colorizationKey);
-	const color: number = state?.color
-		?? (itemColor ? Number.parseInt(itemColor.slice(1), 16) : undefined)
-		?? 0xffffff;
-	const alpha = state?.alpha ?? 1;
+	let color = 0xffffff;
+	let alpha = 1;
+	if (item && colorizationKey) {
+		const itemColor = item.resolveColor(items, colorizationKey);
+		if (itemColor) {
+			color = Number.parseInt(itemColor.substring(1, 7), 16);
+			if (itemColor.length > 7) {
+				alpha = Number.parseInt(itemColor.substring(7, 9), 16) / 255;
+			}
+		}
+	}
+	if (state) {
+		color = state.color ?? color;
+		alpha = state.alpha ?? alpha;
+	}
 	return { color, alpha };
 }
 

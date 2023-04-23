@@ -57,7 +57,7 @@ import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { DEFAULT_BACKGROUND_COLOR, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
-import { ColorInput } from '../common/colorInput/colorInput';
+import { ColorInput, ColorInputRGBA } from '../common/colorInput/colorInput';
 import { Column, Row } from '../common/container/container';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
@@ -74,6 +74,7 @@ import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { Select } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { Immutable } from 'immer';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -1329,7 +1330,7 @@ function WardrobeItemColorization({ wornItem, item }: {
 
 function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup, action, item }: {
 	colorKey: string;
-	colorDefinition: AssetColorization;
+	colorDefinition: Immutable<AssetColorization>;
 	action: Omit<AppearanceAction & { type: 'color'; }, 'color'>;
 	allItems: AppearanceItems;
 	overrideGroup?: ColorGroupResult;
@@ -1354,7 +1355,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 					</span>
 				)
 			}
-			<ColorInput
+			<ColorInputRGBA
 				initialValue={ current }
 				resetValue={ colorDefinition.default }
 				throttle={ 100 }
@@ -1367,6 +1368,8 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 						color: newColor,
 					});
 				} }
+				minAlpha={ colorDefinition.minAlpha }
+				title={ colorDefinition.name }
 			/>
 		</div>
 	);

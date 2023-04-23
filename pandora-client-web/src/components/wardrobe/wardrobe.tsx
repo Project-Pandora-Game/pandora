@@ -467,6 +467,7 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 
 	const assetFilterAttributes: string[] = target.type === 'character' ? assetFilterCharacterAttributes : [];
 	const title: string = target.type === 'character' ? 'Currently worn items' : 'Room inventory';
+	const isRoomInventory = target.type === 'room' && currentFocus.container.length === 0;
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -487,9 +488,13 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 						container={ currentFocus.container }
 					/>
 				</Tab>
-				<Tab name='Room inventory'>
-					<RoomInventoryView title='Use items in room inventory' container={ currentFocus.container } />
-				</Tab>
+				{
+					!isRoomInventory ? (
+						<Tab name='Room inventory'>
+							<RoomInventoryView title='Use items in room inventory' container={ currentFocus.container } />
+						</Tab>
+					) : null
+				}
 				<Tab name='Recent items'>
 					<div className='inventoryView'>
 						<div className='center-flex flex-1'>
@@ -1219,6 +1224,7 @@ export function WardrobeItemConfigMenu({
 	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
 	const containerModule = containerPath != null ? containerItem?.modules.get(containerPath.module) : undefined;
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
+	const isRoomInventory = target.type === 'room' && item.container.length === 0;
 
 	const close = useCallback(() => {
 		setFocus({
@@ -1284,20 +1290,24 @@ export function WardrobeItemConfigMenu({
 					>
 						➖ Remove and delete
 					</WardrobeActionButton>
-					<WardrobeActionButton
-						action={ {
-							type: 'transfer',
-							source: targetSelector,
-							item,
-							target: { type: 'roomInventory' },
-							container: [],
-						} }
-						onExecute={ close }
-					>
-						<span>
-							<u>▽</u> Store in room
-						</span>
-					</WardrobeActionButton>
+					{
+						!isRoomInventory ? (
+							<WardrobeActionButton
+								action={ {
+									type: 'transfer',
+									source: targetSelector,
+									item,
+									target: { type: 'roomInventory' },
+									container: [],
+								} }
+								onExecute={ close }
+							>
+								<span>
+									<u>▽</u> Store in room
+								</span>
+							</WardrobeActionButton>
+						) : null
+					}
 				</Row>
 				{
 					(wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (

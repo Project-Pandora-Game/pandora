@@ -201,9 +201,6 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	slots: Record<string, RoomDeviceSlot<A>>;
 	/** The graphical display of the device */
 	graphicsLayers: IRoomDeviceGraphicsLayer[];
-}
-
-export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
 	/**
 	 * Chat specific settings for this asset
 	 *
@@ -212,14 +209,35 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
 		chatDescriptor?: string;
-		/** Message for when character enters a device slot using this item */
-		actionEnter?: string;
-		/** Message for when character leaves a device slot using this item */
-		actionLeave?: string;
+		/** Message for when this device is deployed inside the room */
+		actionDeploy?: string;
+		/** Message for when this device is stored from the room */
+		actionStore?: string;
+		/**
+		 * Message for when character enters a this device's slot
+		 * @note You can use `ROOM_DEVICE_SLOT` to get name of the slot
+		 */
+		actionSlotEnter?: string;
+		/**
+		 * Message for when character leaves a this device's slot
+		 * @note You can use `ROOM_DEVICE_SLOT` to get name of the slot
+		 */
+		actionSlotLeave?: string;
 	};
+}
 
+export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
+	/**
+	 * Chat specific settings for this asset
+	 *
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 */
+	chat?: {
+		/** How items of this asset are referred to in chat (defaults to asset's name) */
+		chatDescriptor?: string;
+	};
 }
 
 export type AssetDefinitionTypeMap<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> =

@@ -113,7 +113,7 @@ export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId
 	if (!asset)
 		return `[UNKNOWN ASSET '${assetId}']`;
 
-	if (asset.isWearable() && asset.definition.chat?.chatDescriptor)
+	if (asset.definition.chat?.chatDescriptor)
 		return asset.definition.chat.chatDescriptor;
 
 	return asset.definition.name.toLocaleLowerCase();
@@ -155,6 +155,17 @@ function GetActionText(action: IChatroomMessageProcessed<IChatRoomMessageAction>
 				return asset?.definition.chat?.actionAddCreate ?? defaultMessage;
 			case 'itemAttach':
 				return asset?.definition.chat?.actionAttach ?? defaultMessage;
+		}
+	} else if (asset?.isType('roomDevice')) {
+		switch (action.id) {
+			case 'roomDeviceDeploy':
+				return asset?.definition.chat?.actionDeploy ?? defaultMessage;
+			case 'roomDeviceStore':
+				return asset?.definition.chat?.actionStore ?? defaultMessage;
+			case 'roomDeviceSlotEnter':
+				return asset?.definition.chat?.actionSlotEnter ?? defaultMessage;
+			case 'roomDeviceSlotLeave':
+				return asset?.definition.chat?.actionSlotLeave ?? defaultMessage;
 		}
 	}
 	if (assetPrevious?.isType('personal')) {

@@ -30,15 +30,15 @@ export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),
-	rotation: ArmRotationSchema.catch('up'),
+	rotation: ArmRotationSchema.catch('forward'),
 	fingers: ArmFingersSchema.catch('spread'),
 });
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
 export const AppearancePoseSchema = z.object({
-	bones: z.record(BoneNameSchema, z.number().optional()),
-	leftArm: AppearanceArmPoseSchema,
-	rightArm: AppearanceArmPoseSchema,
+	bones: z.record(BoneNameSchema, z.number().optional()).default({}),
+	leftArm: AppearanceArmPoseSchema.default({}),
+	rightArm: AppearanceArmPoseSchema.default({}),
 	view: CharacterViewSchema.catch('front'),
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
@@ -50,20 +50,20 @@ export const AppearanceBundleSchema = AppearancePoseSchema.extend({
 
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
 
+function GetDefaultAppearanceArmPose(): AppearanceArmPose {
+	return {
+		position: 'front',
+		rotation: 'forward',
+		fingers: 'spread',
+	};
+}
+
 export function GetDefaultAppearanceBundle(): AppearanceBundle {
 	return {
 		items: [],
 		bones: {},
-		leftArm: {
-			position: 'front',
-			rotation: 'forward',
-			fingers: 'spread',
-		},
-		rightArm: {
-			position: 'front',
-			rotation: 'forward',
-			fingers: 'spread',
-		},
+		leftArm: GetDefaultAppearanceArmPose(),
+		rightArm: GetDefaultAppearanceArmPose(),
 		view: 'front',
 	};
 }

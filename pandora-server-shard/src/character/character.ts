@@ -6,7 +6,7 @@ import { GetDatabase } from '../database/databaseProvider';
 import { IConnectionClient } from '../networking/common';
 import { assetManager } from '../assets/assetManager';
 
-import _ from 'lodash';
+import _, { omit } from 'lodash';
 import AsyncLock from 'async-lock';
 import { diffString } from 'json-diff';
 
@@ -282,8 +282,9 @@ export class Character {
 			logger.error(`Failed to load character ${id}: `, result.error);
 			return null;
 		}
-		if (!_.isEqual(result.data, character)) {
-			const diff = diffString(character, result.data);
+		const characterWithoutDbData = omit(character, '_id');
+		if (!_.isEqual(result.data, characterWithoutDbData)) {
+			const diff = diffString(characterWithoutDbData, result.data, { color: false });
 			logger.warning(`Character ${id} has invalid data, fixing...\n`, diff);
 			await GetDatabase().setCharacter(_.omit(result.data, 'inCreation', 'accountId', 'created'));
 		}

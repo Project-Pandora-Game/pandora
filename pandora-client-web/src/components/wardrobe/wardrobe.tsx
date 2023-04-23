@@ -82,6 +82,10 @@ import { Immutable } from 'immer';
 import { useUpdatedUserInput } from '../../common/useSyncUserInput';
 import { useItemColorString } from '../../graphics/graphicsLayer';
 
+export function GenerateRandomItemId(): ItemId {
+	return `i/${nanoid()}` as const;
+}
+
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
 	const player = usePlayer();
@@ -910,13 +914,15 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
 	const { targetSelector, execute } = useWardrobeContext();
 
+	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
+
 	const action: AppearanceAction = useMemo(() => ({
 		type: 'create',
 		target: targetSelector,
-		itemId: `i/${nanoid()}` as const,
+		itemId: newItemId,
 		asset: asset.id,
 		container,
-	}), [targetSelector, asset, container]);
+	}), [targetSelector, newItemId, asset, container]);
 
 	const check = useStaggeredAppearanceActionResult(action, true);
 
@@ -929,6 +935,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 			onClick={ () => {
 				if (check?.result === 'success') {
 					execute(action);
+					refreshNewItemId();
 				}
 			} }>
 			{

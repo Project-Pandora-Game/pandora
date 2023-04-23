@@ -25,6 +25,8 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			switch (result.reason) {
 				case 'noDeleteRoomDeviceWearable':
 					return `You cannot delete manifestation of a room device. Use the device's menu to exit it instead.`;
+				case 'noDeleteDeployedRoomDevice':
+					return `You cannot delete a deployed room device. Use the device's menu to store it first.`;
 			}
 			AssertNever(result.reason);
 		}

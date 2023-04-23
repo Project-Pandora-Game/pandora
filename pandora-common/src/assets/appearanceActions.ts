@@ -176,7 +176,7 @@ export type AppearanceActionResult = {
 	result: 'success';
 } | {
 	result: 'invalidAction';
-	reason?: 'noDeleteRoomDeviceWearable';
+	reason?: 'noDeleteRoomDeviceWearable' | 'noDeleteDeployedRoomDevice';
 } | {
 	result: 'restrictionError';
 	restriction: Restriction;
@@ -266,6 +266,13 @@ export function DoAppearanceAction(
 				return {
 					result: 'invalidAction',
 					reason: 'noDeleteRoomDeviceWearable',
+				};
+			}
+			// Deployed room devices cannot be deleted, you must store them first
+			if (item?.isType('roomDevice') && item.deployment != null) {
+				return {
+					result: 'invalidAction',
+					reason: 'noDeleteDeployedRoomDevice',
 				};
 			}
 

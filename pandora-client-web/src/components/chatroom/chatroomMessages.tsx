@@ -156,11 +156,6 @@ function GetActionText(action: IChatroomMessageProcessed<IChatRoomMessageAction>
 			case 'itemAttach':
 				return asset?.definition.chat?.actionAttach ?? defaultMessage;
 		}
-	} else if (asset?.isType('roomDeviceWearablePart')) {
-		switch (action.id) {
-			case 'roomDeviceEnter':
-				return asset?.definition.chat?.actionEnter ?? defaultMessage;
-		}
 	}
 	if (assetPrevious?.isType('personal')) {
 		switch (action.id) {
@@ -170,11 +165,6 @@ function GetActionText(action: IChatroomMessageProcessed<IChatRoomMessageAction>
 				return assetPrevious?.definition.chat?.actionRemoveDelete ?? defaultMessage;
 			case 'itemDetach':
 				return assetPrevious?.definition.chat?.actionDetach ?? defaultMessage;
-		}
-	} else if (asset?.isType('roomDeviceWearablePart')) {
-		switch (action.id) {
-			case 'roomDeviceLeave':
-				return asset?.definition.chat?.actionLeave ?? defaultMessage;
 		}
 	}
 

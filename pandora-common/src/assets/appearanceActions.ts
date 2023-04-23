@@ -7,7 +7,7 @@ import { AssetIdSchema, WearableAssetType } from './definitions';
 import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
-import { Item, ItemColorBundle, ItemColorBundleSchema, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
+import { Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { sample } from 'lodash';
@@ -876,17 +876,26 @@ export function ActionRoomDeviceDeploy(rootManipulator: AppearanceRootManipulato
 	const { container, itemId } = itemPath;
 	const manipulator = rootManipulator.getContainer(container);
 
+	let previousDeviceState: ItemRoomDevice | undefined;
+
 	// Do change
 	if (!manipulator.modifyItem(itemId, (it) => {
 		if (!it.isType('roomDevice'))
 			return null;
+		previousDeviceState = it;
 		return it.changeDeployment(deployment);
 	}))
 		return false;
 
 	// Change message to chat
-	// TODO: Message to chat that room device was deployed or packed
-	// Will need mechanism to rate-limit the messages not to send every move
+	if (previousDeviceState != null && (deployment == null) !== (previousDeviceState.deployment == null)) {
+		manipulator.queueMessage({
+			id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',
+			item: {
+				assetId: previousDeviceState.asset.id,
+			},
+		});
+	}
 
 	return true;
 }
@@ -967,7 +976,15 @@ export function ActionRoomDeviceEnter({
 		return { result: 'invalidAction' };
 
 	// Change message to chat
-	// TODO: Message to chat that room device was entered
+	characterManipulator.queueMessage({
+		id: 'roomDeviceSlotEnter',
+		item: {
+			assetId: item.asset.id,
+		},
+		dictionary: {
+			ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+		},
+	});
 
 	return AppearanceCommitMultiple(processingContext, [
 		{ target: targetCharacter, manipulator: characterManipulator },
@@ -1057,7 +1074,15 @@ export function ActionRoomDeviceLeave({
 			}
 
 			// Change message to chat
-			// TODO: Message to chat that room device was entered
+			characterManipulator.queueMessage({
+				id: 'roomDeviceSlotLeave',
+				item: {
+					assetId: item.asset.id,
+				},
+				dictionary: {
+					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+				},
+			});
 
 			// We must successfully commit both at the same time
 			return AppearanceCommitMultiple(processingContext, [
@@ -1071,7 +1096,15 @@ export function ActionRoomDeviceLeave({
 	// That means we only modify the room device
 
 	// Change message to chat
-	// TODO: Message to chat that room device was entered
+	roomManipulator.queueMessage({
+		id: 'roomDeviceSlotClear',
+		item: {
+			assetId: item.asset.id,
+		},
+		dictionary: {
+			ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+		},
+	});
 
 	return AppearanceValidationResultToActionResult(
 		target.commitChanges(roomManipulator, processingContext),

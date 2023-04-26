@@ -2,26 +2,50 @@ import { Immutable } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
-import { MemoizeNoArg, Writeable } from '../utility';
+import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
 import { HexRGBAColorString, HexRGBAColorStringSchema } from '../validation';
 import type { AppearanceActionContext } from './appearanceActions';
 import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
-import { AssetColorization, AssetIdSchema } from './definitions';
+import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
+import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
+
+export const RoomDeviceDeploymentSchema = z.object({
+	x: z.number(),
+	y: z.number(),
+}).nullable();
+export type RoomDeviceDeployment = z.infer<typeof RoomDeviceDeploymentSchema>;
+
+export const RoomDeviceBundleSchema = z.object({
+	deployment: RoomDeviceDeploymentSchema,
+	/** Which characters have which slots reserved */
+	slotOccupancy: z.record(z.string(), CharacterIdSchema),
+});
+export type RoomDeviceBundle = z.infer<typeof RoomDeviceBundleSchema>;
+
+export const RoomDeviceLinkSchema = z.object({
+	device: ItemIdSchema,
+	slot: z.string(),
+});
+export type RoomDeviceLink = z.infer<typeof RoomDeviceLinkSchema>;
 
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	moduleData: z.record(z.unknown()).optional(),
+	/** Room device specific data */
+	roomDeviceData: RoomDeviceBundleSchema.optional(),
+	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
+	roomDeviceLink: RoomDeviceLinkSchema.optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
@@ -42,14 +66,26 @@ export type ColorGroupResult = {
  *
  * **THIS CLASS IS IMMUTABLE**
  */
-export class Item {
+abstract class ItemBase<Type extends AssetType = AssetType> {
 	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
-	public readonly asset: Asset;
+	public readonly asset: Asset<Type>;
 	public readonly color: Immutable<ItemColorBundle>;
 	public readonly modules: ReadonlyMap<string, IItemModule>;
 
-	constructor(id: ItemId, asset: Asset, bundle: ItemBundle, context: IItemLoadContext) {
+	public get type(): Type {
+		return this.asset.type;
+	}
+
+	public isType<T extends AssetType>(kind: T): this is Item<T> {
+		return this.asset.isType(kind);
+	}
+
+	public isWearable(): this is Item<WearableAssetType> {
+		return this.asset.isWearable();
+	}
+
+	constructor(id: ItemId, asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext) {
 		this.assetManager = context.assetManager;
 		this.id = id;
 		this.asset = asset;
@@ -58,8 +94,10 @@ export class Item {
 		}
 		// Load modules
 		const modules = new Map<string, IItemModule>();
-		for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
-			modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
+		if (asset.isType('personal')) {
+			for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
+				modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
+			}
 		}
 		this.modules = modules;
 		// Load color from bundle
@@ -84,6 +122,8 @@ export class Item {
 	}
 
 	public exportColorToBundle(): ItemColorBundle | undefined {
+		if (!this.isType('personal') && !this.isType('roomDevice'))
+			return undefined;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return undefined;
@@ -101,7 +141,8 @@ export class Item {
 		return hasKey ? result : undefined;
 	}
 
-	public containerChanged(items: AppearanceItems, isCharacter: boolean): Item {
+	public containerChanged(items: AppearanceItems, isCharacter: boolean): Item<Type> {
+		Assert(this.isType(this.type));
 		if (!isCharacter)
 			return this;
 
@@ -109,6 +150,8 @@ export class Item {
 	}
 
 	public getColorOverrides(items: AppearanceItems): null | Partial<Record<string, ColorGroupResult>> {
+		if (!this.isType('personal'))
+			return null;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return null;
@@ -137,9 +180,9 @@ export class Item {
 		return hasGroup ? result : null;
 	}
 
-	public validate(isWorn: boolean): AppearanceValidationResult {
+	public validate(location: IItemLocationDescriptor): AppearanceValidationResult {
 		// Check the asset can actually be worn
-		if (isWorn && this.asset.definition.wearable === false)
+		if (location === 'worn' && (!this.isWearable() || (this.isType('personal') && this.asset.definition.wearable === false)))
 			return {
 				success: false,
 				error: {
@@ -149,7 +192,7 @@ export class Item {
 			};
 
 		// Check bodyparts are worn
-		if (!isWorn && this.asset.definition.bodypart != null)
+		if (this.isType('personal') && this.asset.definition.bodypart != null && location !== 'worn')
 			return {
 				success: false,
 				error: {
@@ -159,7 +202,7 @@ export class Item {
 			};
 
 		for (const module of this.modules.values()) {
-			const r = module.validate(isWorn);
+			const r = module.validate(location);
 			if (!r.success)
 				return r;
 		}
@@ -167,11 +210,20 @@ export class Item {
 		return { success: true };
 	}
 
+	/** Returns if this item can be transferred between inventories */
+	public canBeTransferred(): boolean {
+		// No transfering bodyparts, thank you
+		if (this.isType('personal') && this.asset.definition.bodypart)
+			return false;
+
+		return true;
+	}
+
 	/** Colors this item with passed color, returning new item with modified color */
-	public changeColor(color: ItemColorBundle): Item {
+	public changeColor(color: ItemColorBundle): Item<Type> {
 		const bundle = this.exportToBundle();
 		bundle.color = _.cloneDeep(color);
-		return new Item(this.id, this.asset, bundle, {
+		return CreateItem(this.id, this.asset, bundle, {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
@@ -185,7 +237,7 @@ export class Item {
 		if (!moduleResult)
 			return null;
 		const bundle = this.exportToBundle();
-		return new Item(this.id, this.asset, {
+		return CreateItem(this.id, this.asset, {
 			...bundle,
 			moduleData: {
 				...bundle.moduleData,
@@ -206,7 +258,7 @@ export class Item {
 		if (!moduleResult)
 			return null;
 		const bundle = this.exportToBundle();
-		return new Item(this.id, this.asset, {
+		return CreateItem(this.id, this.asset, {
 			...bundle,
 			moduleData: {
 				...bundle.moduleData,
@@ -220,7 +272,7 @@ export class Item {
 
 	@MemoizeNoArg
 	public getPropertiesParts(): Immutable<AssetProperties>[] {
-		const propertyParts: Immutable<AssetProperties>[] = [this.asset.definition];
+		const propertyParts: Immutable<AssetProperties>[] = (this.isWearable()) ? [this.asset.definition] : [];
 		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
 
 		return propertyParts;
@@ -232,19 +284,10 @@ export class Item {
 			.reduce(MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult());
 	}
 
-	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {
-		const colorization = this.asset.definition.colorization?.[colorizationKey];
-		if (!colorization)
-			return undefined;
-
-		const color = this.color[colorizationKey];
-		if (color)
-			return color;
-
-		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
-	}
-
-	private _overrideColors(items: AppearanceItems): Item {
+	private _overrideColors(items: AppearanceItems): Item<Type> {
+		Assert(this.isType(this.type));
+		if (!this.isType('personal'))
+			return this;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
 			return this;
@@ -275,7 +318,8 @@ export class Item {
 	 * 3. Closest item after self that has this color group (if it is not an inherited color)
 	 * 4. Closest item from self (inclusive) that has this color group and it has an inherited color
 	 */
-	private _resolveColorGroup(items: AppearanceItems, ignoreKey: string, { group }: Immutable<AssetColorization>): ColorGroupResult | undefined {
+	protected _resolveColorGroup(items: AppearanceItems, ignoreKey: string, { group }: Immutable<AssetColorization>): ColorGroupResult | undefined {
+		Assert(this.isType(this.type));
 		if (!group)
 			return undefined;
 
@@ -319,23 +363,25 @@ export class Item {
 	private _getColorByGroup(group: string, ignoreKey?: string): null | ['primary' | 'inherited', Immutable<AssetColorization>, HexRGBAColorString] {
 		const { overrideColorKey, excludeFromColorInheritance } = this.getProperties();
 		let inherited: [Immutable<AssetColorization>, HexRGBAColorString] | undefined;
-		for (const [key, value] of Object.entries(this.asset.definition.colorization ?? {})) {
-			if (value.group !== group || !this.color[key])
-				continue;
-			if (key === ignoreKey || excludeFromColorInheritance.has(key))
-				continue;
+		if (this.isType('personal') && this.asset.definition.colorization) {
+			for (const [key, value] of Object.entries(this.asset.definition.colorization)) {
+				if (value.group !== group || !this.color[key])
+					continue;
+				if (key === ignoreKey || excludeFromColorInheritance.has(key))
+					continue;
 
-			if (!overrideColorKey.has(key))
-				return ['primary', value, this.color[key]];
+				if (!overrideColorKey.has(key))
+					return ['primary', value, this.color[key]];
 
-			if (!inherited)
-				inherited = [value, this.color[key]];
+				if (!inherited)
+					inherited = [value, this.color[key]];
+			}
 		}
 		return inherited ? ['inherited', ...inherited] : null;
 	}
 
 	private _loadColor(color: ItemColorBundle | HexRGBAColorString[] = {}): ItemColorBundle {
-		const colorization = this.asset.definition.colorization ?? {};
+		const colorization = (this.isType('personal') || this.isType('roomDevice')) ? (this.asset.definition.colorization ?? {}) : {};
 		if (Array.isArray(color)) {
 			const keys = Object.keys(colorization);
 			const fixup: Writeable<ItemColorBundle> = {};
@@ -365,4 +411,225 @@ function LimitColorAlpha(color: HexRGBAColorString, minAlpha: number = 255): Hex
 
 	const alpha = Math.max(parseInt(color.substring(7), 16), minAlpha);
 	return color.substring(0, 7) + alpha.toString(16).padStart(2, '0') as HexRGBAColorString;
+}
+
+export function FilterItemType<T extends AssetType>(type: T): (item: Item) => item is Item<T> {
+	return (item): item is Item<T> => item.isType(type);
+}
+
+export function FilterItemWearable(item: Item): item is Item<WearableAssetType> {
+	return item.isWearable();
+}
+
+export type IItemLocationDescriptor = 'worn' | 'attached' | 'stored' | 'roomInventory';
+
+export class ItemPersonal extends ItemBase<'personal'> {
+	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {
+		const colorization = this.asset.definition.colorization?.[colorizationKey];
+		if (!colorization)
+			return undefined;
+
+		const color = this.color[colorizationKey];
+		if (color)
+			return color;
+
+		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
+	}
+}
+
+export class ItemRoomDevice extends ItemBase<'roomDevice'> {
+	public readonly deployment: Immutable<RoomDeviceDeployment>;
+	public readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
+
+	constructor(id: ItemId, asset: Asset<'roomDevice'>, bundle: ItemBundle, context: IItemLoadContext) {
+		super(id, asset, bundle, context);
+
+		const roomDeviceData: RoomDeviceBundle = bundle.roomDeviceData ?? {
+			deployment: null,
+			slotOccupancy: {},
+		};
+
+		this.deployment = roomDeviceData.deployment;
+
+		const slotOccupancy = new Map<string, CharacterId>();
+		// Skip occupied slots if we are not deployed
+		if (this.deployment != null) {
+			for (const slot of Object.keys(asset.definition.slots)) {
+				if (roomDeviceData.slotOccupancy[slot] != null) {
+					slotOccupancy.set(slot, roomDeviceData.slotOccupancy[slot]);
+				}
+			}
+		}
+		this.slotOccupancy = slotOccupancy;
+	}
+
+	public override validate(location: IItemLocationDescriptor): AppearanceValidationResult {
+		const parentResult = super.validate(location);
+		if (!parentResult.success)
+			return parentResult;
+
+		// Deployed room devices must be in a room
+		if (this.deployment != null && location !== 'roomInventory')
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: this.asset.id,
+				},
+			};
+
+		return { success: true };
+	}
+
+	public override exportToBundle(): ItemBundle & { roomDeviceData: RoomDeviceBundle; } {
+		const slotOccupancy: RoomDeviceBundle['slotOccupancy'] = {};
+		for (const [slot, character] of this.slotOccupancy.entries()) {
+			slotOccupancy[slot] = character;
+		}
+		return {
+			...super.exportToBundle(),
+			roomDeviceData: {
+				deployment: this.deployment,
+				slotOccupancy,
+			},
+		};
+	}
+
+	/** Colors this item with passed color, returning new item with modified color */
+	public changeDeployment(newDeployment: RoomDeviceDeployment): ItemRoomDevice {
+		const bundle = this.exportToBundle();
+		bundle.roomDeviceData.deployment = newDeployment;
+		return CreateItem(this.id, this.asset, bundle, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	public changeSlotOccupancy(slot: string, character: CharacterId | null): ItemRoomDevice | null {
+		// The slot must exist and the device must be deployed
+		if (this.asset.definition.slots[slot] == null || this.deployment == null)
+			return null;
+
+		const bundle = this.exportToBundle();
+		if (character == null) {
+			delete bundle.roomDeviceData.slotOccupancy[slot];
+		} else {
+			bundle.roomDeviceData.slotOccupancy[slot] = character;
+		}
+		return CreateItem(this.id, this.asset, bundle, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	public resolveColor(colorizationKey: string): HexRGBAColorString | undefined {
+		const colorization = this.asset.definition.colorization?.[colorizationKey];
+		if (!colorization)
+			return undefined;
+
+		const color = this.color[colorizationKey];
+		if (color)
+			return color;
+
+		return colorization.default;
+	}
+}
+
+export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart'> {
+	public readonly roomDeviceLink: Immutable<RoomDeviceLink> | null;
+
+	constructor(id: ItemId, asset: Asset<'roomDeviceWearablePart'>, bundle: ItemBundle, context: IItemLoadContext) {
+		super(id, asset, bundle, context);
+
+		this.roomDeviceLink = bundle.roomDeviceLink ?? null;
+	}
+
+	public override validate(location: IItemLocationDescriptor): AppearanceValidationResult {
+		const parentResult = super.validate(location);
+		if (!parentResult.success)
+			return parentResult;
+
+		// Room device wearable parts must be worn
+		if (location !== 'worn')
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: this.asset.id,
+				},
+			};
+
+		// We must have a valid link
+		if (this.roomDeviceLink == null)
+			return {
+				success: false,
+				error: {
+					problem: 'invalid',
+				},
+			};
+
+		return { success: true };
+	}
+
+	/** Returns if this item can be transferred between inventories */
+	public override canBeTransferred(): boolean {
+		return false;
+	}
+
+	public override exportToBundle(): ItemBundle {
+		return {
+			...super.exportToBundle(),
+			roomDeviceLink: this.roomDeviceLink ?? undefined,
+		};
+	}
+
+	public withLink(link: RoomDeviceLink): ItemRoomDeviceWearablePart {
+		const bundle = this.exportToBundle();
+		bundle.roomDeviceLink = link;
+		return CreateItem(this.id, this.asset, bundle, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	public resolveColor(colorizationKey: string, roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
+		return roomDevice?.resolveColor(colorizationKey);
+	}
+}
+
+export type ItemTypeMap =
+	Satisfies<
+		{
+			personal: ItemPersonal;
+			roomDevice: ItemRoomDevice;
+			roomDeviceWearablePart: ItemRoomDeviceWearablePart;
+		},
+		{
+			[type in AssetType]: ItemBase<type>;
+		}
+	>;
+
+export type Item<Type extends AssetType = AssetType> = ItemTypeMap[Type];
+
+export function CreateItem<Type extends AssetType>(id: ItemId, asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext): Item<Type> {
+	const type = asset.type;
+	let result: Item;
+	switch (type) {
+		case 'personal':
+			Assert(asset.isType('personal'));
+			result = new ItemPersonal(id, asset, bundle, context);
+			break;
+		case 'roomDevice':
+			Assert(asset.isType('roomDevice'));
+			result = new ItemRoomDevice(id, asset, bundle, context);
+			break;
+		case 'roomDeviceWearablePart':
+			Assert(asset.isType('roomDeviceWearablePart'));
+			result = new ItemRoomDeviceWearablePart(id, asset, bundle, context);
+			break;
+		default:
+			AssertNever(type);
+	}
+	// @ts-expect-error: The type is narrowed manually
+	return result;
 }

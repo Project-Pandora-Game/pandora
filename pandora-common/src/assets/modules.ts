@@ -68,7 +68,7 @@ export function GetModuleStaticAttributes(moduleDefinition: Immutable<AssetModul
 	}
 }
 
-export function LoadItemModule(asset: Asset, moduleName: string, data: unknown, context: IItemLoadContext): IItemModule {
+export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, data: unknown, context: IItemLoadContext): IItemModule {
 	const moduleDefinition = asset.definition.modules?.[moduleName];
 	if (!moduleDefinition) {
 		throw new Error('LoadItemModule called with invalid module for asset');

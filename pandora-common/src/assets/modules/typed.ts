@@ -6,7 +6,7 @@ import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemLoadContext } from '../item';
+import { IItemLoadContext, IItemLocationDescriptor } from '../item';
 import { AssetManager } from '../assetManager';
 import type { ActionMessageTemplateHandler } from '../appearanceTypes';
 import type { AppearanceActionContext } from '../appearanceActions';
@@ -148,7 +148,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 		};
 	}
 
-	public validate(_isWorn: boolean): AppearanceValidationResult {
+	public validate(_location: IItemLocationDescriptor): AppearanceValidationResult {
 		return { success: true };
 	}
 

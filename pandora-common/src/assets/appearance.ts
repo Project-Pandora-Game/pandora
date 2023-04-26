@@ -4,15 +4,16 @@ import type { ICharacterMinimalData } from '../character';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { ActionRoomContext } from '../chatroom';
 import { Logger } from '../logging';
-import { Assert } from '../utility';
-import { AppearanceRootManipulator } from './appearanceHelpers';
+import { Assert, AssertNotNullable } from '../utility';
+import { AppearanceCharacterManipulator } from './appearanceHelpers';
 import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
-import { AppearanceItemProperties, AppearanceItems, AppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
+import { AppearanceItemProperties, AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
-import { AssetId, PartialAppearancePose } from './definitions';
+import { AssetId, PartialAppearancePose, WearableAssetType } from './definitions';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
-import { Item, ItemBundleSchema } from './item';
+import { FilterItemWearable, Item, ItemBundleSchema } from './item';
 import { ZodArrayWithInvalidDrop } from '../validation';
+import { RoomInventory } from './roomInventory';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
@@ -79,7 +80,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	protected assetManager: AssetManager;
 	public onChangeHandler: ((changes: AppearanceChangeType[]) => void) | undefined;
 
-	private items: AppearanceItems = [];
+	private items: AppearanceItems<WearableAssetType> = [];
 	private readonly pose = new Map<BoneName, BoneState>();
 	private fullPose: readonly BoneState[] = [];
 	private _arms: CharacterArmsPose;
@@ -141,7 +142,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		}
 
 		// Validate and add all items
-		const newItems = AppearanceLoadAndValidate(this.assetManager, loadedItems, logger);
+		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, loadedItems, logger);
 
 		if (!ValidateAppearanceItems(this.assetManager, newItems).success) {
 			throw new Error('Invalid appearance after load');
@@ -175,6 +176,43 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this._safemode = bundle.safemode;
 
 		this.onChange(['items', 'pose', 'safemode']);
+	}
+
+	public cleanupRoomDeviceWearables(roomInventory: RoomInventory | null, logger?: Logger): void {
+		const cleanedUpItems = this.items.filter((item) => {
+			if (item.isType('roomDeviceWearablePart')) {
+				if (!roomInventory || !item.roomDeviceLink)
+					return false;
+
+				// Target device must exist
+				const device = roomInventory.getItem({
+					container: [],
+					itemId: item.roomDeviceLink.device,
+				});
+				if (!device || !device.isType('roomDevice'))
+					return false;
+
+				// The device must have a matching slot
+				if (device.asset.definition.slots[item.roomDeviceLink.slot]?.wearableAsset !== item.asset.id)
+					return false;
+
+				// The device must be deployed with this character in target slot
+				if (!device.deployment || device.slotOccupancy.get(item.roomDeviceLink.slot) !== this.character.id)
+					return false;
+			}
+			return true;
+		});
+
+		if (cleanedUpItems.length === this.items.length)
+			return;
+
+		// Re-validate items as forceful removal might have broken dependencies
+		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, cleanedUpItems, logger);
+		Assert(ValidateAppearanceItems(this.assetManager, newItems).success);
+		this.items = newItems;
+
+		const poseChanged = this.enforcePoseLimits();
+		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
 	}
 
 	protected enforcePoseLimits(): boolean {
@@ -273,7 +311,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public getItem({ container, itemId }: ItemPath): Item | undefined {
-		let current = this.items;
+		let current: AppearanceItems = this.items;
 		for (const step of container) {
 			const item = current.find((it) => it.id === step.item);
 			if (!item)
@@ -287,27 +325,41 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this.items.filter((i) => i.asset.id === asset);
 	}
 
-	public getAllItems(): readonly Item[] {
+	public getAllItems(): AppearanceItems<WearableAssetType> {
 		return this.items;
 	}
 
-	public getManipulator(): AppearanceRootManipulator {
-		return new AppearanceRootManipulator(this.assetManager, this.items, true);
+	public getManipulator(): AppearanceCharacterManipulator {
+		return new AppearanceCharacterManipulator(this.assetManager, this.items);
 	}
 
-	public commitChanges(manipulator: AppearanceRootManipulator, context: ActionProcessingContext): AppearanceValidationResult {
+	public commitChanges(manipulator: AppearanceCharacterManipulator, context: ActionProcessingContext): AppearanceValidationResult {
 		Assert(this.assetManager === manipulator.assetManager);
 		const newItems = manipulator.getRootItems();
 
+		// Check only wearable items are being applied
+		const wearableItems = newItems.filter(FilterItemWearable);
+		if (wearableItems.length !== newItems.length) {
+			const badItem = newItems.find((i) => !i.isWearable());
+			AssertNotNullable(badItem);
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: badItem.asset.id,
+				},
+			};
+		}
+
 		// Validate
-		const r = ValidateAppearanceItems(this.assetManager, newItems);
+		const r = ValidateAppearanceItems(this.assetManager, wearableItems);
 		if (!r.success)
 			return r;
 
 		if (context.dryRun)
 			return { success: true };
 
-		this.items = newItems;
+		this.items = wearableItems;
 		const poseChanged = this.enforcePoseLimits();
 		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
 

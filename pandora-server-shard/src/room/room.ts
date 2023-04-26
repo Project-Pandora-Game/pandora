@@ -82,6 +82,11 @@ export class Room extends ServerRoom<IShardClient> {
 		this.sendUpdateToAllInRoom({
 			roomInventoryChange: this.inventory.exportToBundle(),
 		});
+
+		// Do cleanup of character devices
+		for (const character of this.characters) {
+			character.appearance.cleanupRoomDeviceWearables(this.inventory, this.logger.prefixMessages(`Character ${character.id} cleanup on inventory change:`));
+		}
 	}
 
 	public update(data: IShardChatRoomDefinition): void {

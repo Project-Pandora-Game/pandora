@@ -26,13 +26,13 @@ export const ItemPathSchema = z.object({
 });
 export type ItemPath = z.infer<typeof ItemPathSchema>;
 
-const RoomCharacterSelectorSchema = z.object({
+export const RoomCharacterSelectorSchema = z.object({
 	/** The item is to be found on character */
 	type: z.literal('character'),
 	characterId: CharacterIdSchema,
 });
 
-const RoomInventorySelectorSchema = z.object({
+export const RoomInventorySelectorSchema = z.object({
 	/** The item is to be found in room inventory */
 	type: z.literal('roomInventory'),
 });

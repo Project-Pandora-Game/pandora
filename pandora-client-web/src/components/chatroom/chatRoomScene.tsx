@@ -1,4 +1,4 @@
-import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, ICharacterRoomData, IChatRoomClientData, ResolveBackground } from 'pandora-common';
+import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomClientData, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -21,6 +21,10 @@ import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene'
 import { ChatRoomCharacter } from './chatRoomCharacter';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { PointLike } from '../../graphics/graphicsCharacter';
+import { ChatRoomDevice } from './chatRoomDevice';
+import { useChatroomRequired } from '../gameContext/chatRoomContextProvider';
+import { useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
+import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -33,11 +37,12 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 
 interface ChatRoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
+	roomDevices: readonly ItemRoomDevice[];
 	shard: ShardConnector | null;
 	data: IChatRoomClientData;
 	debugConfig: ChatroomDebugConfig;
 	filters: PIXI.Filter[];
-	filtersExclude?: CharacterId;
+	filtersExclude?: readonly (CharacterId | ItemId)[];
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
 	menuOpen: (character: Character<ICharacterRoomData>, event: FederatedPointerEvent) => void;
 }
@@ -47,11 +52,12 @@ export function ChatRoomGraphicsScene({
 	className,
 	children,
 	characters,
+	roomDevices,
 	shard,
 	data,
 	debugConfig,
 	filters,
-	filtersExclude,
+	filtersExclude = EMPTY_ARRAY,
 	onPointerDown,
 	menuOpen,
 }: ChatRoomGraphicsSceneProps): ReactElement {
@@ -98,6 +104,7 @@ export function ChatRoomGraphicsScene({
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		viewportConfig,
+		forwardContexts: [shardConnectorContext],
 		worldWidth: roomBackground.size[0],
 		worldHeight: roomBackground.size[1],
 		background: roomBackground.image,
@@ -128,9 +135,22 @@ export function ChatRoomGraphicsScene({
 							background={ roomBackground }
 							shard={ shard }
 							menuOpen={ menuOpen }
-							filters={ character.data.id === filtersExclude ? [] : filters }
+							filters={ filtersExclude.includes(character.id) ? EMPTY_ARRAY : filters }
 						/>
 					))
+				}
+				{
+					roomDevices.map((device) => (device.deployment != null ? (
+						<ChatRoomDevice
+							key={ device.id }
+							item={ device }
+							deployment={ device.deployment }
+							debugConfig={ debugConfig }
+							background={ roomBackground }
+							shard={ shard }
+							filters={ filtersExclude.includes(device.id) ? EMPTY_ARRAY : filters }
+						/>
+					) : null))
 				}
 			</Container>
 			{
@@ -146,12 +166,16 @@ export function ChatRoomGraphicsScene({
 }
 
 export function ChatRoomScene(): ReactElement | null {
+	const chatRoom = useChatroomRequired();
 	const data = useChatRoomData();
 	const characters = useChatRoomCharacters();
 	const shard = useShardConnector();
 	const [menuActive, setMenuActive] = useState<{ character: Character<ICharacterRoomData>; position: Readonly<PointLike>; } | null>(null);
 	const player = usePlayer();
 	const debugConfig = useDebugConfig();
+
+	const roomInventoryItems = useRoomInventoryItems(chatRoom);
+	const roomDevices = useMemo(() => roomInventoryItems.filter(FilterItemType('roomDevice')), [roomInventoryItems]);
 
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
@@ -203,11 +227,12 @@ export function ChatRoomScene(): ReactElement | null {
 		<ChatRoomGraphicsScene
 			className='chatroom-scene'
 			characters={ characters }
+			roomDevices={ roomDevices }
 			shard={ shard }
 			data={ data }
 			debugConfig={ debugConfig }
 			filters={ filters }
-			filtersExclude={ playerData.id }
+			filtersExclude={ [playerData.id] }
 			onPointerDown={ onPointerDown }
 			menuOpen={ menuOpen }
 		>

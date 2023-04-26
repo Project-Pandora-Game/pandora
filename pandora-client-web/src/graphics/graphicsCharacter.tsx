@@ -26,7 +26,7 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	pivot?: PointLike;
 	hitArea?: Rectangle;
 	eventMode?: PIXI.EventMode;
-	filters?: Filter[];
+	filters?: readonly Filter[];
 	zIndex?: number;
 
 	onPointerDown?: (event: FederatedPointerEvent) => void;
@@ -177,6 +177,8 @@ function GraphicsCharacterWithManagerImpl({
 
 	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => getSortOrder(view), [getSortOrder, view]);
 
+	const actualFilters = useMemo<PIXI.Filter[] | null>(() => filters?.slice() ?? null, [filters]);
+
 	return (
 		<Container
 			{ ...graphicsProps }
@@ -185,7 +187,7 @@ function GraphicsCharacterWithManagerImpl({
 			position={ position }
 			scale={ scale }
 			sortableChildren
-			filters={ filters ?? null }
+			filters={ actualFilters }
 			pointerdown={ onPointerDown }
 			pointerup={ onPointerUp }
 			pointerupoutside={ onPointerUpOutside }

@@ -21,6 +21,8 @@ import {
 	BoneState,
 	CharacterAppearance,
 	CharacterArmsPose,
+	CharacterId,
+	CharacterIdSchema,
 	ColorGroupResult,
 	DoAppearanceAction,
 	EMPTY_ARRAY,
@@ -33,6 +35,8 @@ import {
 	ItemId,
 	ItemPath,
 	MessageSubstitute,
+	RoomDeviceDeployment,
+	RoomDeviceSlot,
 	RoomTargetSelector,
 	Writeable,
 } from 'pandora-common';
@@ -75,6 +79,12 @@ import { useCurrentTime } from '../../common/useCurrentTime';
 import { Select } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { Immutable } from 'immer';
+import { useUpdatedUserInput } from '../../common/useSyncUserInput';
+import { useItemColorString } from '../../graphics/graphicsLayer';
+
+export function GenerateRandomItemId(): ItemId {
+	return `i/${nanoid()}` as const;
+}
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -145,6 +155,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const isInRoom = useChatRoomData() != null;
 	const roomContext = useActionRoomContext();
 	const shardConnector = useShardConnector();
+	const chatroomCharacters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? EMPTY_ARRAY;
 
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 
@@ -155,6 +166,11 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 				return player.getRestrictionManager(roomContext);
 			} else if (target.type === 'character' && id === target.id) {
 				return target.getRestrictionManager(roomContext);
+			} else {
+				const targetCharacter = chatroomCharacters.find((c) => c.id === id);
+				if (targetCharacter) {
+					return targetCharacter.getRestrictionManager(roomContext);
+				}
 			}
 			return null;
 		},
@@ -164,6 +180,11 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 					return player.appearance;
 				} else if (target.type === 'character' && actionTarget.characterId === target.id) {
 					return target.appearance;
+				} else {
+					const targetCharacter = chatroomCharacters.find((c) => c.id === actionTarget.characterId);
+					if (targetCharacter) {
+						return targetCharacter.appearance;
+					}
 				}
 			}
 			if (actionTarget.type === 'roomInventory') {
@@ -173,7 +194,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 			}
 			return null;
 		},
-	}), [target, player, roomContext, isInRoom, room]);
+	}), [target, player, roomContext, isInRoom, room, chatroomCharacters]);
 
 	const targetSelector = useMemo<RoomTargetSelector>(() => {
 		if (target.type === 'character') {
@@ -411,11 +432,14 @@ export function useWardrobeItems(): {
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
 		if (target.type === 'room') {
-			return asset.definition.bodypart == null;
+			return (!asset.isType('personal') || asset.definition.bodypart == null) &&
+				!asset.isType('roomDeviceWearablePart');
 		}
 		if (target.type === 'character') {
-			return asset.definition.bodypart == null &&
-				(currentFocus.container.length !== 0 || asset.definition.wearable !== false);
+			return !asset.isType('personal') || (
+				asset.definition.bodypart == null &&
+				(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
+			);
 		}
 		AssertNever(target);
 	}, [target, currentFocus]);
@@ -447,6 +471,7 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 
 	const assetFilterAttributes: string[] = target.type === 'character' ? assetFilterCharacterAttributes : [];
 	const title: string = target.type === 'character' ? 'Currently worn items' : 'Room inventory';
+	const isRoomInventory = target.type === 'room' && currentFocus.container.length === 0;
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
@@ -467,9 +492,13 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 						container={ currentFocus.container }
 					/>
 				</Tab>
-				<Tab name='Room inventory'>
-					<RoomInventoryView title='Use items in room inventory' container={ currentFocus.container } />
-				</Tab>
+				{
+					!isRoomInventory ? (
+						<Tab name='Room inventory'>
+							<RoomInventoryView title='Use items in room inventory' container={ currentFocus.container } />
+						</Tab>
+					) : null
+				}
 				<Tab name='Recent items'>
 					<div className='inventoryView'>
 						<div className='center-flex flex-1'>
@@ -504,7 +533,7 @@ function WardrobeBodyManipulation({ className, character }: {
 
 	const filter = (item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
-		return asset.definition.bodypart != null;
+		return asset.isType('personal') && asset.definition.bodypart !== undefined;
 	};
 
 	const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
@@ -572,19 +601,22 @@ export function InventoryAssetView({ className, title, children, assets, contain
 	}, '');
 
 	const flt = filter.toLowerCase().trim().split(/\s+/);
-	const filteredAssets = useMemo(() => {
-		return assets.filter((asset) => flt.every((f) => {
-			const attributeDefinition = attribute ? assetManager.getAttributeDefinition(attribute) : undefined;
-			return asset.definition.name.toLowerCase().includes(f) &&
-				((attribute !== '' && attributesFilterOptions?.includes(attribute)) ?
-					(
-						asset.staticAttributes.has(attribute) &&
-						!attributeDefinition?.useAsWardrobeFilter?.excludeAttributes
-							?.some((a) => asset.staticAttributes.has(a))
-					) : true
-				);
-		}));
-	}, [assetManager, assets, flt, attributesFilterOptions, attribute]);
+	const filteredAssets = useMemo(() => (
+		assets
+			// Some assets cannot be manually spawned, so ignore those
+			.filter((asset) => asset.canBeSpawned())
+			.filter((asset) => flt.every((f) => {
+				const attributeDefinition = attribute ? assetManager.getAttributeDefinition(attribute) : undefined;
+				return asset.definition.name.toLowerCase().includes(f) &&
+					((attribute !== '' && attributesFilterOptions?.includes(attribute)) ?
+						(
+							asset.staticAttributes.has(attribute) &&
+							!attributeDefinition?.useAsWardrobeFilter?.excludeAttributes
+								?.some((a) => asset.staticAttributes.has(a))
+						) : true
+					);
+			}))
+	), [assetManager, assets, flt, attributesFilterOptions, attribute]);
 
 	useEffect(() => {
 		if (attribute !== '' && !attributesFilterOptions?.includes(attribute)) {
@@ -857,10 +889,6 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 		: RenderAppearanceActionResult(assetManager, check)
 	), [assetManager, check]);
 
-	const isInvalidAction = check.result === 'invalidAction' ||
-		check.result === 'restrictionError' && check.restriction.type === 'invalid' ||
-		check.result === 'validationError' && check.validationError.problem === 'invalid';
-
 	if (check.result === 'success') {
 		return null;
 	}
@@ -868,7 +896,7 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
 			{
-				isInvalidAction ? (
+				!reason ? (
 					<>
 						This action isn't possible.
 					</>
@@ -886,13 +914,15 @@ function ActionWarning({ check, parent }: { check: AppearanceActionResult; paren
 function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; container: ItemContainerPath; listMode: boolean; }): ReactElement {
 	const { targetSelector, execute } = useWardrobeContext();
 
+	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
+
 	const action: AppearanceAction = useMemo(() => ({
 		type: 'create',
 		target: targetSelector,
-		itemId: `i/${nanoid()}` as const,
+		itemId: newItemId,
 		asset: asset.id,
 		container,
-	}), [targetSelector, asset, container]);
+	}), [targetSelector, newItemId, asset, container]);
 
 	const check = useStaggeredAppearanceActionResult(action, true);
 
@@ -905,6 +935,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 			onClick={ () => {
 				if (check?.result === 'success') {
 					execute(action);
+					refreshNewItemId();
 				}
 			} }>
 			{
@@ -1200,6 +1231,7 @@ export function WardrobeItemConfigMenu({
 	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
 	const containerModule = containerPath != null ? containerItem?.modules.get(containerPath.module) : undefined;
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
+	const isRoomInventory = target.type === 'room' && item.container.length === 0;
 
 	const close = useCallback(() => {
 		setFocus({
@@ -1265,22 +1297,45 @@ export function WardrobeItemConfigMenu({
 					>
 						➖ Remove and delete
 					</WardrobeActionButton>
-					<WardrobeActionButton
-						action={ {
-							type: 'transfer',
-							source: targetSelector,
-							item,
-							target: { type: 'roomInventory' },
-							container: [],
-						} }
-						onExecute={ close }
-					>
-						<span>
-							<u>▽</u> Store in room
-						</span>
-					</WardrobeActionButton>
+					{
+						!isRoomInventory ? (
+							<WardrobeActionButton
+								action={ {
+									type: 'transfer',
+									source: targetSelector,
+									item,
+									target: { type: 'roomInventory' },
+									container: [],
+								} }
+								onExecute={ close }
+							>
+								<span>
+									<u>▽</u> Store in room
+								</span>
+							</WardrobeActionButton>
+						) : null
+					}
 				</Row>
-				<WardrobeItemColorization wornItem={ wornItem } item={ item } />
+				{
+					(wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
+						<WardrobeItemColorization wornItem={ wornItem } item={ item } />
+					) : null
+				}
+				{
+					wornItem.isType('roomDevice') ? (
+						<WardrobeRoomDeviceDeployment roomDevice={ wornItem } item={ item } />
+					) : null
+				}
+				{
+					wornItem.isType('roomDevice') ? (
+						<WardrobeRoomDeviceSlots roomDevice={ wornItem } item={ item } />
+					) : null
+				}
+				{
+					wornItem.isType('roomDeviceWearablePart') ? (
+						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } />
+					) : null
+				}
 				{
 					Array.from(wornItem.modules.entries())
 						.map(([moduleName, m]) => (
@@ -1295,7 +1350,7 @@ export function WardrobeItemConfigMenu({
 }
 
 function WardrobeItemColorization({ wornItem, item }: {
-	wornItem: Item;
+	wornItem: Item<'personal' | 'roomDevice'>;
 	item: ItemPath;
 }): ReactElement | null {
 	const { target, targetSelector } = useWardrobeContext();
@@ -1338,7 +1393,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const { actions, execute } = useWardrobeContext();
-	const current = useMemo(() => item.resolveColor(allItems, colorKey) ?? colorDefinition.default, [item, allItems, colorKey, colorDefinition.default]);
+	const current = useItemColorString(allItems, item, colorKey) ?? colorDefinition.default;
 	const bundle = useMemo(() => item.exportColorToBundle(), [item]);
 	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success', [bundle, action, actions, assetManager]);
 
@@ -1920,5 +1975,245 @@ export function WardrobeOutfitGui({ character }: {
 				</div>
 			</Column>
 		</div>
+	);
+}
+
+function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
+	roomDevice: Item<'roomDevice'>;
+	item: ItemPath;
+}): ReactElement | null {
+	const { targetSelector } = useWardrobeContext();
+
+	let contents: ReactElement | undefined;
+
+	if (roomDevice.deployment != null) {
+		contents = (
+			<>
+				<WardrobeActionButton action={ {
+					type: 'roomDeviceDeploy',
+					target: targetSelector,
+					item,
+					deployment: null,
+				} }>
+					Store the device
+				</WardrobeActionButton>
+				<WardrobeRoomDeviceDeploymentPosition deployment={ roomDevice.deployment } item={ item } />
+			</>
+		);
+	} else {
+		contents = (
+			<WardrobeActionButton action={ {
+				type: 'roomDeviceDeploy',
+				target: targetSelector,
+				item,
+				deployment: {
+					x: 0,
+					y: 0,
+				},
+			} }>
+				Deploy the device
+			</WardrobeActionButton>
+		);
+	}
+
+	return (
+		<FieldsetToggle legend='Deployment'>
+			<Column>
+				{ contents }
+			</Column>
+		</FieldsetToggle>
+	);
+}
+
+function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
+	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
+	item: ItemPath;
+}): ReactElement | null {
+	const throttle = 100;
+
+	const { targetSelector, execute } = useWardrobeContext();
+
+	const [positionX, setPositionX] = useUpdatedUserInput(deployment.x, [item]);
+	const [positionY, setPositionY] = useUpdatedUserInput(deployment.y, [item]);
+
+	const disabled = useStaggeredAppearanceActionResult({
+		type: 'roomDeviceDeploy',
+		target: targetSelector,
+		item,
+		deployment,
+	})?.result !== 'success';
+
+	const onChangeCaller = useCallback((newPosition: Immutable<RoomDeviceDeployment>) => {
+		execute({
+			type: 'roomDeviceDeploy',
+			target: targetSelector,
+			item,
+			deployment: newPosition,
+		});
+	}, [execute, targetSelector, item]);
+	const onChangeCallerThrottled = useMemo(() => throttle <= 0 ? onChangeCaller : _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
+
+	const changeCallback = useCallback((positionChange: Partial<RoomDeviceDeployment>) => {
+		const newPosition: Immutable<RoomDeviceDeployment> = {
+			...deployment,
+			...positionChange,
+		};
+		setPositionX(newPosition.x);
+		setPositionY(newPosition.y);
+		onChangeCallerThrottled(newPosition);
+	}, [deployment, setPositionX, setPositionY, onChangeCallerThrottled]);
+
+	return (
+		<Row alignY='center'>
+			<label>X:</label>
+			<input type='number'
+				value={ positionX }
+				onChange={ (ev) => {
+					changeCallback({ x: ev.target.valueAsNumber });
+				} }
+				disabled={ disabled }
+			/>
+			<label>Y:</label>
+			<input type='number'
+				value={ positionY }
+				onChange={ (ev) => {
+					changeCallback({ y: ev.target.valueAsNumber });
+				} }
+				disabled={ disabled }
+			/>
+		</Row>
+	);
+}
+
+function WardrobeRoomDeviceSlots({ roomDevice, item }: {
+	roomDevice: Item<'roomDevice'>;
+	item: ItemPath;
+}): ReactElement | null {
+	let contents: ReactNode;
+
+	if (roomDevice.deployment != null) {
+		contents = Object.entries(roomDevice.asset.definition.slots).map(([slotName, slotDefinition]) => (
+			<WardrobeRoomDeviceSlot key={ slotName }
+				item={ item }
+				slotName={ slotName }
+				slotDefinition={ slotDefinition }
+				occupancy={ roomDevice.slotOccupancy.get(slotName) ?? null }
+			/>
+		));
+	} else {
+		contents = 'Device must be deployed to interact with slots';
+	}
+
+	return (
+		<FieldsetToggle legend='Slots'>
+			<Column>
+				{ contents }
+			</Column>
+		</FieldsetToggle>
+	);
+}
+
+function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
+	slotName: string;
+	slotDefinition: RoomDeviceSlot;
+	occupancy: CharacterId | null;
+	item: ItemPath;
+}): ReactElement | null {
+	const { targetSelector, player } = useWardrobeContext();
+
+	const characters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? [player];
+
+	let contents: ReactNode;
+
+	const [selectedCharacter, setSelectedCharacter] = useState<CharacterId>(player.id);
+
+	if (occupancy == null) {
+		contents = (
+			<>
+				<span>Empty</span>
+				<Select value={ selectedCharacter } onChange={
+					(event) => {
+						const characterId = CharacterIdSchema.parse(event.target.value);
+						setSelectedCharacter(characterId);
+					}
+				}>
+					{
+						characters.map((character) => <option key={ character.id } value={ character.id }>{ character.name } ({ character.id })</option>)
+					}
+				</Select>
+				<WardrobeActionButton action={ {
+					type: 'roomDeviceEnter',
+					target: targetSelector,
+					item,
+					slot: slotName,
+					character: {
+						type: 'character',
+						characterId: selectedCharacter,
+					},
+					itemId: `i/${nanoid()}` as const,
+				} }>
+					Enter the device
+				</WardrobeActionButton>
+			</>
+		);
+
+	} else {
+		const character = characters.find((c) => c.id === occupancy);
+
+		const characterDescriptor = character ? `${character.name} (${character.id})` : `[UNKNOWN] (${occupancy}) [Character not in the room]`;
+
+		contents = (
+			<>
+				<span>Occupied by { characterDescriptor }</span>
+				<WardrobeActionButton action={ {
+					type: 'roomDeviceLeave',
+					target: targetSelector,
+					item,
+					slot: slotName,
+				} }>
+					{ character ? 'Exit the device' : 'Clear occupancy of the slot' }
+				</WardrobeActionButton>
+			</>
+		);
+	}
+
+	return (
+		<Row alignY='center'>
+			<span>{ slotDefinition.name }:</span>
+			{ contents }
+		</Row>
+	);
+}
+
+function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
+	roomDeviceWearable: Item<'roomDeviceWearablePart'>;
+	item: ItemPath;
+}): ReactElement | null {
+	let contents: ReactNode;
+
+	if (roomDeviceWearable.roomDeviceLink != null) {
+		contents = (
+			<WardrobeActionButton action={ {
+				type: 'roomDeviceLeave',
+				target: { type: 'roomInventory' },
+				item: {
+					container: [],
+					itemId: roomDeviceWearable.roomDeviceLink.device,
+				},
+				slot: roomDeviceWearable.roomDeviceLink.slot,
+			} }>
+				Exit the device
+			</WardrobeActionButton>
+		);
+	} else {
+		contents = '[ERROR]';
+	}
+
+	return (
+		<FieldsetToggle legend='Slots'>
+			<Column>
+				{ contents }
+			</Column>
+		</FieldsetToggle>
 	);
 }

@@ -3,9 +3,9 @@ import type { Logger } from '../logging';
 import { Assert, CloneDeepMutable } from '../utility';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, IChatroomBackgroundInfo } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, AssetType, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
-import { Item, ItemBundle } from './item';
+import { CreateItem, Item, ItemBundle } from './item';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
@@ -177,9 +177,9 @@ export class AssetManager {
 		return res;
 	}
 
-	public createItem(id: ItemId, asset: Asset, bundle: ItemBundle | null, logger?: Logger): Item {
+	public createItem<T extends AssetType>(id: ItemId, asset: Asset<T>, bundle: ItemBundle | null, logger?: Logger): Item<T> {
 		Assert(this._assets.get(asset.id) === asset);
-		return new Item(id, asset, bundle ?? {
+		return CreateItem<T>(id, asset, bundle ?? {
 			id,
 			asset: asset.id,
 		}, {

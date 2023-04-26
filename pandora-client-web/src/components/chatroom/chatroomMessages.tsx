@@ -110,9 +110,13 @@ function ActionMessagePrepareDictionary(
 
 export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
 	const asset = assetManager.getAssetById(assetId);
-	return asset?.definition.chat?.chatDescriptor ??
-		asset?.definition.name.toLocaleLowerCase() ??
-		`[UNKNOWN ASSET '${assetId}']`;
+	if (!asset)
+		return `[UNKNOWN ASSET '${assetId}']`;
+
+	if (asset.definition.chat?.chatDescriptor)
+		return asset.definition.chat.chatDescriptor;
+
+	return asset.definition.name.toLocaleLowerCase();
 }
 
 export function DescribeAssetSlot(assetManager: AssetManagerClient, slot: string): string {
@@ -143,19 +147,36 @@ function GetActionText(action: IChatroomMessageProcessed<IChatRoomMessageAction>
 	const defaultMessage = CHAT_ACTIONS.get(action.id);
 
 	// Asset-specific message overrides
-	switch (action.id) {
-		case 'itemAdd':
-			return asset?.definition.chat?.actionAdd ?? defaultMessage;
-		case 'itemAddCreate':
-			return asset?.definition.chat?.actionAddCreate ?? defaultMessage;
-		case 'itemRemove':
-			return assetPrevious?.definition.chat?.actionRemove ?? defaultMessage;
-		case 'itemRemoveDelete':
-			return assetPrevious?.definition.chat?.actionRemoveDelete ?? defaultMessage;
-		case 'itemAttach':
-			return asset?.definition.chat?.actionAttach ?? defaultMessage;
-		case 'itemDetach':
-			return assetPrevious?.definition.chat?.actionDetach ?? defaultMessage;
+	if (asset?.isType('personal')) {
+		switch (action.id) {
+			case 'itemAdd':
+				return asset?.definition.chat?.actionAdd ?? defaultMessage;
+			case 'itemAddCreate':
+				return asset?.definition.chat?.actionAddCreate ?? defaultMessage;
+			case 'itemAttach':
+				return asset?.definition.chat?.actionAttach ?? defaultMessage;
+		}
+	} else if (asset?.isType('roomDevice')) {
+		switch (action.id) {
+			case 'roomDeviceDeploy':
+				return asset?.definition.chat?.actionDeploy ?? defaultMessage;
+			case 'roomDeviceStore':
+				return asset?.definition.chat?.actionStore ?? defaultMessage;
+			case 'roomDeviceSlotEnter':
+				return asset?.definition.chat?.actionSlotEnter ?? defaultMessage;
+			case 'roomDeviceSlotLeave':
+				return asset?.definition.chat?.actionSlotLeave ?? defaultMessage;
+		}
+	}
+	if (assetPrevious?.isType('personal')) {
+		switch (action.id) {
+			case 'itemRemove':
+				return assetPrevious?.definition.chat?.actionRemove ?? defaultMessage;
+			case 'itemRemoveDelete':
+				return assetPrevious?.definition.chat?.actionRemoveDelete ?? defaultMessage;
+			case 'itemDetach':
+				return assetPrevious?.definition.chat?.actionDetach ?? defaultMessage;
+		}
 	}
 
 	return defaultMessage;

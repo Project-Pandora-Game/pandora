@@ -1,4 +1,4 @@
-import { CharacterAppearance, AppearanceChangeType, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose } from 'pandora-common';
+import { CharacterAppearance, AppearanceChangeType, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose, AppearanceItems, WearableAssetType } from 'pandora-common';
 import { useSyncExternalStore } from 'react';
 import { GetCurrentAssetManager } from '../assets/assetManager';
 import { ITypedEventEmitter, TypedEventEmitter } from '../event';
@@ -12,6 +12,7 @@ export type AppearanceContainer = ITypedEventEmitter<AppearanceEvents> & {
 	readonly type: 'character';
 	readonly appearance: CharacterAppearance;
 	readonly id: CharacterId;
+	readonly name: string;
 	getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
 };
 
@@ -22,6 +23,10 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 
 	public get id(): CharacterId {
 		return this.data.id;
+	}
+
+	public get name(): string {
+		return this.data.name;
 	}
 
 	protected readonly logger: Logger;
@@ -76,7 +81,7 @@ export function useCharacterAppearanceItem(character: AppearanceContainer, item:
 	}, () => item ? character.appearance.getItem(item) : undefined);
 }
 
-export function useCharacterAppearanceItems(character: AppearanceContainer): readonly Item[] {
+export function useCharacterAppearanceItems(character: AppearanceContainer): AppearanceItems<WearableAssetType> {
 	return useSyncExternalStore((onChange) => {
 		return character.on('appearanceUpdate', (changed) => {
 			if (changed.includes('items')) {

@@ -34,6 +34,18 @@ const CHAT_ACTIONS_DEF = {
 	itemStore: `SOURCE_CHARACTER stored ITEM_ASSET_NAME in ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 	itemUnload: `SOURCE_CHARACTER removed ITEM_ASSET_NAME_PREVIOUS from ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 
+	// Room device interaction
+	/** User deploys a previously stored device into the room */
+	roomDeviceDeploy: `SOURCE_CHARACTER put ITEM_ASSET_NAME into the room.`,
+	/** User turns deployed device into stored item */
+	roomDeviceStore: `SOURCE_CHARACTER removed ITEM_ASSET_NAME from the room.`,
+	/** Character enters into a room device slot */
+	roomDeviceSlotEnter: `SOURCE_CHARACTER put TARGET_CHARACTER_DYNAMIC_REFLEXIVE into ITEM_ASSET_NAME.`,
+	/** Character leaves from room device slot */
+	roomDeviceSlotLeave: `SOURCE_CHARACTER let TARGET_CHARACTER_DYNAMIC_REFLEXIVE out of ITEM_ASSET_NAME.`,
+	/** Room admin clears saved character id from slot, while target character is not in the room */
+	roomDeviceSlotClear: `SOURCE_CHARACTER freed up ITEM_ASSET_NAME for new usage.`,
+
 	// Gambling related
 	gamblingCoin: `SOURCE_CHARACTER flips a coin and the result is TOSS_RESULT.`,
 	gamblingDice: `SOURCE_CHARACTER rolls DICE_COUNT and the result is DICE_RESULT.`,

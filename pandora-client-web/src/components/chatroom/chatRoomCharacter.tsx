@@ -10,6 +10,7 @@ import { Container, Graphics, Text, useApp } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE } from '../../graphics/graphicsLayer';
+import { useCharacterRestrictionsManager } from '../gameContext/chatRoomContextProvider';
 
 type ChatRoomCharacterProps = {
 	character: Character<ICharacterRoomData>;
@@ -18,7 +19,7 @@ type ChatRoomCharacterProps = {
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
 	menuOpen: (character: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
-	filters: Filter[];
+	filters: readonly Filter[];
 };
 
 const BOTTOM_NAME_OFFSET = 100;
@@ -32,7 +33,7 @@ export function ChatRoomCharacter({
 	shard,
 	menuOpen,
 	filters,
-}: ChatRoomCharacterProps): ReactElement {
+}: ChatRoomCharacterProps): ReactElement | null {
 	const app = useApp();
 	const evaluator = useAppearanceConditionEvaluator(character);
 
@@ -133,6 +134,12 @@ export function ChatRoomCharacter({
 			.beginFill(0xff0000, 0.25)
 			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
 	}, [hitArea]);
+
+	// If character is in a device, do not render it here, it will be rendered by the device
+	const roomDeviceLink = useCharacterRestrictionsManager(character, (rm) => rm.getRoomDeviceLink());
+
+	if (roomDeviceLink != null)
+		return null;
 
 	return (
 		<GraphicsCharacter

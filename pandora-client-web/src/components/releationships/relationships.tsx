@@ -55,17 +55,21 @@ export function useRelationship(id: AccountId): IAccountRelationship | undefined
 function ShowRelationships({ type }: { type: IAccountRelationship['type']; }) {
 	const rel = useRelationships(type);
 	return (
-		<Column>
-			<Row>
-				<span>ID</span>
-				<span>Name</span>
-				<span>Created</span>
-				<span>Actions</span>
-			</Row>
-			{ rel.map((r) => (
-				<RelationshipsRow key={ r.id } { ...r } />
-			)) }
-		</Column>
+		<table>
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Created</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{ rel.map((r) => (
+					<RelationshipsRow key={ r.id } { ...r } />
+				)) }
+			</tbody>
+		</table>
 	);
 }
 
@@ -100,12 +104,12 @@ function RelationshipsRow({
 		}
 	}, [type, name, id, directory]);
 	return (
-		<Row>
-			<span>{ id }</span>
-			<span>{ name }</span>
-			<span>{ new Date(time).toLocaleString() }</span>
-			<span>{ actions }</span>
-		</Row>
+		<tr>
+			<td>{ id }</td>
+			<td>{ name }</td>
+			<td>{ new Date(time).toLocaleString() }</td>
+			<td>{ actions }</td>
+		</tr>
 	);
 }
 
@@ -158,19 +162,23 @@ function ShowFriends() {
 	}, [friends, status]);
 
 	return (
-		<Column>
-			<Row>
-				<span>ID</span>
-				<span>Name</span>
-				<span>Created</span>
-				<span>Status</span>
-				<span>Online Characters</span>
-				<span>Actions</span>
-			</Row>
-			{ friendsWithStatus.map((friend) => (
-				<FriendRow key={ friend.id } { ...friend } />
-			)) }
-		</Column>
+		<table>
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Created</th>
+					<th>Status</th>
+					<th>Online Characters</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{ friendsWithStatus.map((friend) => (
+					<FriendRow key={ friend.id } { ...friend } />
+				)) }
+			</tbody>
+		</table>
 	);
 }
 
@@ -197,18 +205,18 @@ function FriendRow({
 	}, (r) => HandleResult(r?.result));
 
 	return (
-		<Row>
-			<span>{ id }</span>
-			<span>{ name }</span>
-			<span>{ new Date(time).toLocaleString() }</span>
-			<span>{ status }</span>
-			<span>{ characters?.length !== 0 ? 'yes' : 'no' }</span>
-			<span>
+		<tr>
+			<td>{ id }</td>
+			<td>{ name }</td>
+			<td>{ new Date(time).toLocaleString() }</td>
+			<td>{ status }</td>
+			<td>{ characters?.length !== 0 ? 'yes' : 'no' }</td>
+			<td>
 				<Button className='slim' onClick={ unfriend } disabled={ processing }>
 					Remove
 				</Button>
-			</span>
-		</Row>
+			</td>
+		</tr>
 	);
 }
 

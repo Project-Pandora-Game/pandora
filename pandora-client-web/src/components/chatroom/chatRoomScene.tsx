@@ -426,7 +426,7 @@ function RelationshipActionContextMenuInner(): ReactElement | null {
 
 function RelationshipActionContextMenu(): ReactElement | null {
 	const { currentAccount, character, menu, setMenu } = useCharacterMenuContext();
-	if (character.data.accountId !== currentAccount?.id)
+	if (character.data.accountId === currentAccount?.id)
 		return null;
 
 	switch (menu) {

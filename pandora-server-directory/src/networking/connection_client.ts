@@ -1,4 +1,4 @@
-import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert } from 'pandora-common';
+import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert, IDirectoryClientArgument } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
@@ -93,10 +93,29 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 		throw new Error('Invalid operation');
 	}
 
-	public sendConnectionStateUpdate(): void {
-		this.sendMessage('connectionState', {
+	public sendConnectionStateUpdate(withRelationships: boolean = false): void {
+		const response: IDirectoryClientArgument['connectionState'] = {
 			account: this.account ? this.account.getAccountInfo() : null,
 			character: this.character ? this.character.getShardConnectionInfo() : null,
-		});
+		};
+		if (withRelationships && this.account) {
+			Promise
+				.all([
+					this.account.relationship.getAll(),
+					this.account.relationship.getAllStatus()
+				])
+				.then(([relationships, friends]) => {
+					response.relationships = {
+						relationships,
+						friends,
+					};
+					this.sendMessage('connectionState', response);
+				})
+				.catch((e) => {
+					this.logger.warning(`Failed to get relationships for account`, e);
+				});
+		} else {
+			this.sendMessage('connectionState', response);
+		}
 	}
 }

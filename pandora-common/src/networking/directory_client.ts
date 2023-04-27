@@ -113,6 +113,10 @@ export const DirectoryClientSchema = {
 		request: ZodCast<{
 			account: IDirectoryAccountInfo | null;
 			character: IDirectoryCharacterConnectionInfo | null;
+			relationships?: {
+				relationships: IAccountRelationship[];
+				friends: IAccountFriendStatus[];
+			};
 		}>(),
 		response: null,
 	},

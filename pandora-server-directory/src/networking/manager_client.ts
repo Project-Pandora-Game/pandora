@@ -495,7 +495,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			}
 		}
 		// Notify the client of the result
-		connection.sendConnectionStateUpdate();
+		connection.sendConnectionStateUpdate(true);
 	}
 
 	private handleGitHubBind({ login }: IClientDirectoryArgument['gitHubBind'], connection: ClientConnection): IClientDirectoryResult['gitHubBind'] {

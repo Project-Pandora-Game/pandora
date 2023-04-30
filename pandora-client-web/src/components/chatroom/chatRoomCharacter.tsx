@@ -19,7 +19,7 @@ type ChatRoomCharacterProps = {
 	debugConfig: ChatroomDebugConfig;
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
-	menuOpen: (character: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
+	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 	filters: readonly Filter[];
 };
 

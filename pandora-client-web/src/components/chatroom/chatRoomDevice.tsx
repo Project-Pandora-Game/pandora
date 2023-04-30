@@ -16,6 +16,7 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { Character, useCharacterAppearanceView } from '../../character/character';
 import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacters, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
+import type { FederatedPointerEvent } from 'pixi.js';
 
 const DEVICE_WAIT_DRAG_THRESHOLD = 100; // ms
 
@@ -25,6 +26,7 @@ type ChatRoomDeviceProps = {
 	debugConfig: ChatroomDebugConfig;
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
+	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
 	filters: readonly PIXI.Filter[];
 };
 
@@ -36,6 +38,7 @@ export function ChatRoomDevice({
 	debugConfig,
 	background,
 	shard,
+	menuOpen,
 	filters,
 }: ChatRoomDeviceProps): ReactElement | null {
 	const asset = item.asset;
@@ -103,8 +106,11 @@ export function ChatRoomDevice({
 		pointerDown.current = Date.now();
 	}, []);
 
-	const onPointerUp = useEvent((_event: PIXI.FederatedPointerEvent) => {
+	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
 		dragging.current = null;
+		if (pointerDown.current !== null && Date.now() < pointerDown.current + DEVICE_WAIT_DRAG_THRESHOLD) {
+			menuOpen(item, event);
+		}
 		pointerDown.current = null;
 	});
 

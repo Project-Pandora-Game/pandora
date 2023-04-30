@@ -45,7 +45,7 @@ interface ChatRoomGraphicsSceneProps extends CommonProps {
 	filters: PIXI.Filter[];
 	filtersExclude?: readonly (CharacterId | ItemId)[];
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
-	menuOpen: (character: Character<ICharacterRoomData>, event: FederatedPointerEvent) => void;
+	menuOpen: (target: Character<ICharacterRoomData> | ItemRoomDevice, event: FederatedPointerEvent) => void;
 }
 
 export function ChatRoomGraphicsScene({
@@ -151,6 +151,7 @@ export function ChatRoomGraphicsScene({
 							debugConfig={ debugConfig }
 							background={ roomBackground }
 							shard={ shard }
+							menuOpen={ menuOpen }
 							filters={ filtersExclude.includes(device.id) ? EMPTY_ARRAY : filters }
 						/>
 					) : null))
@@ -173,7 +174,11 @@ export function ChatRoomScene(): ReactElement | null {
 	const info = useChatRoomInfo();
 	const characters = useChatRoomCharacters();
 	const shard = useShardConnector();
-	const [menuActive, setMenuActive] = useState<{ character: Character<ICharacterRoomData>; position: Readonly<PointLike>; } | null>(null);
+	const [menuActive, setMenuActive] = useState<{
+		character?: Character<ICharacterRoomData>;
+		device?: ItemRoomDevice;
+		position: Readonly<PointLike>;
+	} | null>(null);
 	const player = usePlayer();
 	const debugConfig = useDebugConfig();
 
@@ -189,12 +194,13 @@ export function ChatRoomScene(): ReactElement | null {
 
 	const blindness = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getBlindness());
 
-	const menuOpen = useCallback((character: Character<ICharacterRoomData> | null, event: FederatedPointerEvent | null) => {
-		if (!character || !event) {
+	const menuOpen = useCallback((target: Character<ICharacterRoomData> | ItemRoomDevice | null, event: FederatedPointerEvent | null) => {
+		if (!target || !event) {
 			setMenuActive(null);
 		} else {
 			setMenuActive({
-				character,
+				character: target instanceof Character ? target : undefined,
+				device: target instanceof ItemRoomDevice ? target : undefined,
 				position: {
 					x: event.pageX,
 					y: event.pageY,
@@ -243,7 +249,10 @@ export function ChatRoomScene(): ReactElement | null {
 			menuOpen={ menuOpen }
 		>
 			{
-				menuActive ? <CharacterContextMenu character={ menuActive.character } position={ menuActive.position } onClose={ closeContextMenu } /> : null
+				menuActive && menuActive.character ? <CharacterContextMenu character={ menuActive.character } position={ menuActive.position } onClose={ closeContextMenu } /> : null
+			}
+			{
+				menuActive && menuActive.device ? <DeviceContextMenu device={ menuActive.device } position={ menuActive.position } onClose={ closeContextMenu } /> : null
 			}
 		</ChatRoomGraphicsScene>
 	);
@@ -365,6 +374,27 @@ function CharacterContextMenu({ character, position, onClose }: {
 			) }
 			<button onClick={ () => {
 				onCloseActual();
+			} } >
+				Close
+			</button>
+		</div>
+	);
+}
+
+function DeviceContextMenu({ device, position, onClose }: {
+	device: ItemRoomDevice;
+	position: Readonly<PointLike>;
+	onClose: () => void;
+}): ReactElement | null {
+	const ref = useContextMenuPosition(position);
+
+	return (
+		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
+			<span>
+				{ device.asset.definition.name }
+			</span>
+			<button onClick={ () => {
+				onClose();
 			} } >
 				Close
 			</button>

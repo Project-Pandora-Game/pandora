@@ -3,7 +3,7 @@ import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
 import { GetDatabase } from '../database/databaseProvider';
-import { IConnectionClient } from '../networking/common';
+import { ClientConnection } from '../networking/connection_client';
 import { assetManager } from '../assets/assetManager';
 
 import _, { omit } from 'lodash';
@@ -40,8 +40,8 @@ export class Character {
 	private invalid: null | 'timeout' | 'error' | 'remove' = null;
 	private timeout: NodeJS.Timeout | null = null;
 
-	private _connection: IConnectionClient | null = null;
-	public get connection(): IConnectionClient | null {
+	private _connection: ClientConnection | null = null;
+	public get connection(): ClientConnection | null {
 		return this._connection;
 	}
 
@@ -191,7 +191,7 @@ export class Character {
 		return this.connection !== undefined;
 	}
 
-	public setConnection(connection: IConnectionClient | null): void {
+	public setConnection(connection: ClientConnection | null): void {
 		if (this.invalid) {
 			AssertNever();
 		}

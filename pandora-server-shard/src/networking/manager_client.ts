@@ -1,5 +1,5 @@
 import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter } from 'pandora-common';
-import { IConnectionClient } from './common';
+import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
 import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
@@ -22,22 +22,22 @@ const messagesMetric = new promClient.Counter({
 });
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientShard, IConnectionClient> {
-	private readonly _connectedClients: Set<IConnectionClient> = new Set();
+export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientShard, ClientConnection> {
+	private readonly _connectedClients: Set<ClientConnection> = new Set();
 
-	private readonly messageHandler: MessageHandler<IClientShard, IConnectionClient>;
+	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
 		message: SocketInterfaceRequest<IClientShard>[K],
-		context: IConnectionClient,
+		context: ClientConnection,
 	): Promise<SocketInterfaceResponse<IClientShard>[K]> {
 		messagesMetric.inc({ messageType });
 		return this.messageHandler.onMessage(messageType, message, context);
 	}
 
 	constructor() {
-		this.messageHandler = new MessageHandler<IClientShard, IConnectionClient>({
+		this.messageHandler = new MessageHandler<IClientShard, ClientConnection>({
 			finishCharacterCreation: this.handleFinishCharacterCreation.bind(this),
 			chatRoomMessage: this.handleChatRoomMessage.bind(this),
 			chatRoomStatus: this.handleChatRoomStatus.bind(this),
@@ -50,7 +50,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	/** Handle new incoming connection */
-	public onConnect(connection: IConnectionClient): void {
+	public onConnect(connection: ClientConnection): void {
 		const [characterId] = (connection.headers.authorization || '').split(' ');
 		this._connectedClients.add(connection);
 		connectedClientsMetric.set(this._connectedClients.size);
@@ -69,7 +69,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	/** Handle disconnecting client */
-	public onDisconnect(connection: IConnectionClient): void {
+	public onDisconnect(connection: ClientConnection): void {
 		if (!this._connectedClients.has(connection) && !connection.aborted) {
 			logger.fatal('Asserting failed: client disconnect while not in connectedClients', connection);
 			return;
@@ -83,7 +83,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return character != null && character.isValid && character.connectSecret === secret;
 	}
 
-	private async handleFinishCharacterCreation({ name }: IClientShardArgument['finishCharacterCreation'], client: IConnectionClient): IClientShardPromiseResult['finishCharacterCreation'] {
+	private async handleFinishCharacterCreation({ name }: IClientShardArgument['finishCharacterCreation'], client: ClientConnection): IClientShardPromiseResult['finishCharacterCreation'] {
 		if (!client.character)
 			throw new BadMessageError();
 
@@ -97,7 +97,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private handleChatRoomMessage({ messages, id, editId }: IClientShardArgument['chatRoomMessage'], client: IConnectionClient): void {
+	private handleChatRoomMessage({ messages, id, editId }: IClientShardArgument['chatRoomMessage'], client: ClientConnection): void {
 		if (!client.character?.room)
 			throw new BadMessageError();
 
@@ -110,14 +110,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		room.handleMessages(character, messages, id, editId);
 	}
 
-	private handleChatRoomMessageAck({ lastTime }: IClientShardArgument['chatRoomMessageAck'], client: IConnectionClient): void {
+	private handleChatRoomMessageAck({ lastTime }: IClientShardArgument['chatRoomMessageAck'], client: ClientConnection): void {
 		if (!client.character?.room)
 			throw new BadMessageError();
 
 		client.character.onMessageAck(lastTime);
 	}
 
-	private handleChatRoomStatus({ status, target }: IClientShardArgument['chatRoomStatus'], client: IConnectionClient): void {
+	private handleChatRoomStatus({ status, target }: IClientShardArgument['chatRoomStatus'], client: ClientConnection): void {
 		if (!client.character?.room)
 			throw new BadMessageError();
 
@@ -127,7 +127,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		room.updateStatus(character, status, target);
 	}
 
-	private handleChatRoomCharacterMove({ id, position }: IClientShardArgument['chatRoomCharacterMove'], client: IConnectionClient): void {
+	private handleChatRoomCharacterMove({ id, position }: IClientShardArgument['chatRoomCharacterMove'], client: ClientConnection): void {
 		if (!client.character?.room)
 			throw new BadMessageError();
 
@@ -137,7 +137,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		room.updateCharacterPosition(character, id ?? character.id, position);
 	}
 
-	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: IConnectionClient): void {
+	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
 
@@ -146,14 +146,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 	}
 
-	private handleUpdateSettings(settings: IClientShardArgument['updateSettings'], client: IConnectionClient): void {
+	private handleUpdateSettings(settings: IClientShardArgument['updateSettings'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
 
 		client.character.setPublicSettings(settings);
 	}
 
-	private handleGamblingAction(game: IClientShardArgument['gamblingAction'], client: IConnectionClient): void {
+	private handleGamblingAction(game: IClientShardArgument['gamblingAction'], client: ClientConnection): void {
 		if (!client.character?.room)
 			throw new BadMessageError();
 

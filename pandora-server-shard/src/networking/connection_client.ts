@@ -2,12 +2,11 @@ import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, Cl
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
-import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
+import type { IncomingHttpHeaders } from 'http';
 
 /** Class housing connection from a client */
-export class ClientConnection extends IncomingConnection<IShardClient, IClientShard, IncomingSocket> implements IConnectionClient {
-	public readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
+export class ClientConnection extends IncomingConnection<IShardClient, IClientShard, IncomingSocket> {
 
 	private _aborted: boolean = false;
 	public get aborted(): boolean {
@@ -17,7 +16,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 	/** Character of the connection, always set by `Character` class */
 	public character: Character | null = null;
 
-	public readonly headers: Record<string, undefined | string | string[]>;
+	public readonly headers: IncomingHttpHeaders;
 
 	constructor(server: IServerSocket<IShardClient>, socket: IncomingSocket, headers: Record<string, undefined | string | string[]>) {
 		super(server, socket, [ShardClientSchema, ClientShardSchema], GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));

@@ -47,9 +47,6 @@
 	"devDependencies": {
 		"@pmmmwh/react-refresh-webpack-plugin": "^0.5.10",
 		"@project-pandora-game/sass-loader": "^13.2.0",
-		"@swc/cli": "^0.1.62",
-		"@swc/core": "^1.3.41",
-		"@swc/jest": "^0.2.24",
 		"@testing-library/jest-dom": "^5.16.5",
 		"@testing-library/react": "^14.0.0",
 		"@testing-library/user-event": "^14.4.3",
@@ -92,6 +89,7 @@
 		"sass": "^1.59.3",
 		"source-map-loader": "^4.0.1",
 		"style-loader": "^3.3.2",
+		"ts-jest": "^29.1.0",
 		"ts-loader": "^9.4.2",
 		"ts-mockito": "^2.6.1",
 		"ts-node": "^10.9.1",

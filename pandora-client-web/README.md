@@ -66,7 +66,7 @@ When using JSX (inline HTML) syntax inside a file (i.e. React components), the f
 Elsewhere, `.ts` extensions are sufficient.
 
 ### Testing
-The repository uses [Jest][jest] with [SWC][swc] to run tests on `Typescript` & `React`.
+The repository uses [Jest][jest] to run tests on `Typescript` & `React`.
 To run the tests:
 ```
 pnpm test
@@ -132,7 +132,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 [eslint]: https://eslint.org/ "ESLint website"
 [jest]: https://jestjs.io/ "Jest website"
 [babel]: https://babeljs.io/ "Babel website"
-[swc]: https://swc.rs/ "Swc website"
 [pandora-server-directory]: https://github.com/Project-Pandora-Game/pandora-server-directory
 [pandora-server-shard]: https://github.com/Project-Pandora-Game/pandora-server-shard
 

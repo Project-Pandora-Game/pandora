@@ -1,7 +1,15 @@
 {
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"types": ["@types/jest"]
+		"noEmit": false,
+		"outDir": "./dist",
+		"isolatedModules": true,
+		"incremental": true,
+		"declaration": true,
+		"declarationMap": true,
+		"removeComments": false
 	},
-	"include": ["./src/**/*", "./test/**/*"]
+	"include": [
+		"./src/**/*"
+	]
 }

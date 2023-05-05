@@ -5,6 +5,7 @@ const path = require('path');
  * @param {string} dir - Path to the subproject
  */
 function loadProjectConfig(dir) {
+	/** @type { Exclude<import('jest').Config['projects'], undefined>[number] } */
 	const config = require(`./${dir}/jest.config.js`);
 
 	/** @type { Exclude<import('jest').Config['projects'], undefined>[number] } */
@@ -13,6 +14,21 @@ function loadProjectConfig(dir) {
 		displayName: dir,
 		rootDir: path.join('./', dir, config.rootDir ?? '.'),
 	};
+
+	// Fixup ts-jest project links
+	if (typeof resultConfig !== 'string' && resultConfig.transform) {
+		for (const transformConfig of Object.values(resultConfig.transform)) {
+			if (
+				typeof transformConfig !== 'string' &&
+				transformConfig[0] === 'ts-jest' &&
+				transformConfig[1] != null &&
+				typeof transformConfig[1] === 'object' &&
+				typeof transformConfig[1].tsconfig === 'string'
+			) {
+				transformConfig[1].tsconfig = path.resolve('./', dir, transformConfig[1].tsconfig);
+			}
+		}
+	}
 
 	delete resultConfig.collectCoverageFrom;
 	delete resultConfig.coverageDirectory;

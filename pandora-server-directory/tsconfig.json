@@ -1,7 +1,9 @@
 {
 	"extends": "pandora-common/tsconfig.base.json",
 	"compilerOptions": {
-		"types": ["@types/node", "@types/jest"]
+		"types": ["@types/node"],
+		"noEmit": false,
+		"outDir": "./dist"
 	},
-	"include": ["./src/**/*", "./test/**/*"]
+	"include": ["./src/**/*"]
 }

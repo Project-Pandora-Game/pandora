@@ -126,7 +126,7 @@ function GenerateRules(env: WebpackEnv): RuleSetRule[] {
 			use: [{
 				loader: 'ts-loader',
 				options: {
-					configFile: 'tsconfig.src.json',
+					configFile: 'tsconfig.json',
 					getCustomTransformers: () => ({
 						before: [!env.prod && ReactRefreshTypeScript()].filter(Boolean),
 					}),

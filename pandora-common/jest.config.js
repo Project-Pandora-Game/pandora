@@ -2,7 +2,7 @@
 /**
  * For a detailed explanation regarding each configuration property and type check, visit:
  * https://jestjs.io/docs/configuration
- * @type { import('jest').Config }
+ * @type { import('ts-jest').JestConfigWithTsJest }
  */
 module.exports = {
 	clearMocks: true,
@@ -11,6 +11,9 @@ module.exports = {
 	errorOnDeprecated: true,
 	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
 	transform: {
-		'^.+\\.(t|j)sx?$': ['@swc/jest'],
+		'^.+\\.tsx?$': ['ts-jest', {
+			tsconfig: './test/tsconfig.json',
+			isolatedModules: true,
+		}],
 	},
 };

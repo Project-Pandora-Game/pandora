@@ -17,7 +17,7 @@
 			"files": ["*.ts", "*.tsx"],
 			"parser": "@typescript-eslint/parser",
 			"parserOptions": {
-				"project": ["./tsconfig.src.json", "./tsconfig.test.json"],
+				"project": ["./tsconfig.json", "./test/tsconfig.json"],
 				"sourceType": "module"
 			},
 			"rules": {

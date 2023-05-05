@@ -1,4 +1,5 @@
 /* eslint-disable */
+/// <reference types="@types/node" />
 import '@testing-library/jest-dom';
 import { Assert, logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { webcrypto } from 'crypto';

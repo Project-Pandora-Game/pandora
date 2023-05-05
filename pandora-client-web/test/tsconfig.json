@@ -6,14 +6,13 @@
 			"DOM"
 		],
 		"types": [
+			"@types/jest",
 			"offscreencanvas"
 		],
-		"jsx": "react",
-		"module": "ESNext",
-		"noEmit": false,
-		"target": "ES6"
+		"jsx": "react"
 	},
 	"include": [
-		"./src/**/*"
+		"../src/**/*.d.ts",
+		"./**/*"
 	]
 }

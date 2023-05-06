@@ -102,7 +102,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			Promise
 				.all([
 					this.account.relationship.getAll(),
-					this.account.relationship.getAllStatus()
+					this.account.relationship.getAllStatus(),
 				])
 				.then(([relationships, friends]) => {
 					response.relationships = {

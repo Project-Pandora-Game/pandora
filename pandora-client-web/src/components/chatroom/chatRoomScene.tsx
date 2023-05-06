@@ -414,6 +414,41 @@ function StoreDeviceMenu({ device, close }: {
 	);
 }
 
+function LeaveDeviceMenu({ device, close }: {
+	device: ItemRoomDevice;
+	close: () => void;
+}) {
+	const assetManager = useAssetManager();
+	const { player, actions, execute } = useWardrobeContext();
+	const slot = useMemo(() => [...device.slotOccupancy.entries()].find(([, id]) => id === player.id)?.[0], [device, player]);
+	const action = useMemo<AppearanceAction | undefined>(() => slot ? ({
+		type: 'roomDeviceLeave',
+		item: {
+			container: [],
+			itemId: device.id,
+		},
+		target: { type: 'roomInventory' },
+		slot,
+	}) : undefined, [device, slot]);
+	const available = useMemo(() => action && DoAppearanceAction(action, actions, assetManager, { dryRun: true }).result === 'success', [action, actions, assetManager]);
+	const onClick = useCallback(() => {
+		if (action)
+			execute(action);
+
+		close();
+	}, [action, execute, close]);
+
+	if (!available) {
+		return null;
+	}
+
+	return (
+		<button onClick={ onClick }>
+			Leave the device
+		</button>
+	);
+}
+
 function DeviceContextMenu({ device, position, onClose }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
@@ -434,6 +469,7 @@ function DeviceContextMenu({ device, position, onClose }: {
 			</span>
 			<WardrobeContextProvider target={ chatRoom } player={ player }>
 				<StoreDeviceMenu device={ device } close={ onClose } />
+				<LeaveDeviceMenu device={ device } close={ onClose } />
 			</WardrobeContextProvider>
 			<button onClick={ onClose } >
 				Close

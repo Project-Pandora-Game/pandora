@@ -1,4 +1,4 @@
-import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import { AppearanceAction, AssertNotNullable, CalculateCharacterMaxYForBackground, DoAppearanceAction, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, IsChatroomAdmin, ChatRoom, useCharacterState } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, IsChatroomAdmin, ChatRoom, useCharacterState, useChatroom } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useChatInput } from './chatInput';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
@@ -25,6 +25,7 @@ import { ChatRoomDevice } from './chatRoomDevice';
 import { useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
 import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
+import { WardrobeContextProvider, useWardrobeContext } from '../wardrobe/wardrobe';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -381,21 +382,60 @@ function CharacterContextMenu({ character, position, onClose }: {
 	);
 }
 
+function StoreDeviceMenu({ device, close }: {
+	device: ItemRoomDevice;
+	close: () => void;
+}) {
+	const assetManager = useAssetManager();
+	const { actions, execute } = useWardrobeContext();
+	const action = useMemo<AppearanceAction>(() => ({
+		type: 'roomDeviceDeploy',
+		item: {
+			container: [],
+			itemId: device.id,
+		},
+		target: { type: 'roomInventory' },
+		deployment: null,
+	}), [device]);
+	const available = useMemo(() => DoAppearanceAction(action, actions, assetManager, { dryRun: true }).result === 'success', [action, actions, assetManager]);
+	const onClick = useCallback(() => {
+		execute(action);
+		close();
+	}, [action, execute, close]);
+
+	if (!available) {
+		return null;
+	}
+
+	return (
+		<button onClick={ onClick }>
+			Store the device
+		</button>
+	);
+}
+
 function DeviceContextMenu({ device, position, onClose }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
 	onClose: () => void;
 }): ReactElement | null {
 	const ref = useContextMenuPosition(position);
+	const player = usePlayer();
+	const chatRoom = useChatroom();
+
+	if (!player || !chatRoom) {
+		return null;
+	}
 
 	return (
 		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 			<span>
 				{ device.asset.definition.name }
 			</span>
-			<button onClick={ () => {
-				onClose();
-			} } >
+			<WardrobeContextProvider target={ chatRoom } player={ player }>
+				<StoreDeviceMenu device={ device } close={ onClose } />
+			</WardrobeContextProvider>
+			<button onClick={ onClose } >
 				Close
 			</button>
 		</div>

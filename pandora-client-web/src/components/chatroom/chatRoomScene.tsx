@@ -449,6 +449,31 @@ function LeaveDeviceMenu({ device, close }: {
 	);
 }
 
+function DeviceSlotsMenu({ device }: {
+	device: ItemRoomDevice;
+	close: () => void;
+}) {
+	const [slot, setSlot] = useState<string | null>(null);
+
+	if (slot) {
+		return (
+			<button onClick={ () => setSlot(null) }>
+				TODO
+			</button>
+		);
+	}
+
+	return (
+		<>
+			{ Object.entries(device.asset.definition.slots).map(([name, definition]) => (
+				<button key={ name } onClick={ () => setSlot(name) }>
+					{ definition.name }
+				</button>
+			)) }
+		</>
+	);
+}
+
 function DeviceContextMenu({ device, position, onClose }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
@@ -457,6 +482,7 @@ function DeviceContextMenu({ device, position, onClose }: {
 	const ref = useContextMenuPosition(position);
 	const player = usePlayer();
 	const chatRoom = useChatroom();
+	const [menu, setMenu] = useState<'main' | 'slots'>('main');
 
 	if (!player || !chatRoom) {
 		return null;
@@ -468,8 +494,23 @@ function DeviceContextMenu({ device, position, onClose }: {
 				{ device.asset.definition.name }
 			</span>
 			<WardrobeContextProvider target={ chatRoom } player={ player }>
-				<StoreDeviceMenu device={ device } close={ onClose } />
-				<LeaveDeviceMenu device={ device } close={ onClose } />
+				{ menu === 'main' && (
+					<>
+						<StoreDeviceMenu device={ device } close={ onClose } />
+						<LeaveDeviceMenu device={ device } close={ onClose } />
+						<button onClick={ () => setMenu('slots') }>
+							Slots
+						</button>
+					</>
+				) }
+				{ menu === 'slots' && (
+					<>
+						<DeviceSlotsMenu device={ device } close={ onClose } />
+						<button onClick={ () => setMenu('main') }>
+							Back
+						</button>
+					</>
+				) }
 			</WardrobeContextProvider>
 			<button onClick={ onClose } >
 				Close

@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
-import { Column, Row } from '../common/container/container';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
 import './relationships.scss';

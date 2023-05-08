@@ -1,0 +1,17 @@
+{
+	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
+	"extends": [
+		"config:base",
+		":disableDependencyDashboard",
+		"group:recommended",
+		"group:allNonMajor"
+	],
+	"autoApprove": true,
+	"onboardingPrTitle": "[DEV] Configure Renovate",
+	"semanticCommits": "disabled",
+	"commitMessagePrefix": "[CHORE]",
+	"configMigration": true,
+	"labels": [
+		"Component: Tooling"
+	]
+}

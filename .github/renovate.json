@@ -3,10 +3,13 @@
 	"extends": [
 		"config:base",
 		":disableDependencyDashboard",
+		":prHourlyLimitNone",
+		":rebaseStalePrs",
 		"group:recommended",
 		"group:allNonMajor"
 	],
 	"autoApprove": true,
+	"rangeStrategy": "bump",
 	"onboardingPrTitle": "[DEV] Configure Renovate",
 	"semanticCommits": "disabled",
 	"commitMessagePrefix": "[CHORE]",

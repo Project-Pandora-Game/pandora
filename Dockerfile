@@ -1,4 +1,4 @@
-FROM docker.io/node:18-alpine AS builder
+FROM docker.io/node:20-alpine AS builder
 
 RUN corepack enable
 WORKDIR /app
@@ -22,7 +22,7 @@ RUN pnpm deploy --filter=pandora-server-directory --prod /app/deploy/directory
 RUN pnpm deploy --filter=pandora-server-shard --prod /app/deploy/shard
 
 # Directory production image
-FROM docker.io/node:18-alpine AS pandora-server-directory
+FROM docker.io/node:20-alpine AS pandora-server-directory
 
 WORKDIR /app
 
@@ -31,7 +31,7 @@ COPY --from=builder /app/deploy/directory /app
 CMD ["node", "--enable-source-maps", "dist/index.js"]
 
 # Shard production image
-FROM docker.io/node:18-alpine AS pandora-server-shard
+FROM docker.io/node:20-alpine AS pandora-server-shard
 
 WORKDIR /app
 

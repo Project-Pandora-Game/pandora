@@ -16,5 +16,20 @@
 	"configMigration": true,
 	"labels": [
 		"Component: Tooling"
+	],
+	"packageRules": [
+		{
+			"matchDepTypes": [
+				"engines"
+			],
+			"enabled": false
+		},
+		{
+			"matchPackageNames": [
+				"docker.io/node",
+				"@types/node"
+			],
+			"allowedVersions": "^18.x"
+		}
 	]
 }

@@ -5,7 +5,7 @@
 	"repository": "github:Project-Pandora-Game/pandora-server-directory",
 	"license": "GPL-3.0-or-later",
 	"engines": {
-		"node": ">=16.x"
+		"node": ">=18.x"
 	},
 	"scripts": {
 		"clean": "rimraf dist",

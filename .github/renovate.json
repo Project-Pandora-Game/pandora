@@ -9,7 +9,7 @@
 		"group:allNonMajor"
 	],
 	"autoApprove": true,
-	"rangeStrategy": "bump",
+	"rangeStrategy": "pin",
 	"onboardingPrTitle": "[DEV] Configure Renovate",
 	"semanticCommits": "disabled",
 	"commitMessagePrefix": "[CHORE]",

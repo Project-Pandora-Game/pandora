@@ -81,7 +81,7 @@ importers:
         specifier: ^9.1.1
         version: 9.1.1(react-dom@18.2.0)(react@18.2.0)
       socket.io-client:
-        specifier: ^4.6.1
+        specifier: 4.6.1
         version: 4.6.1
       zod:
         specifier: ^3.21.4
@@ -359,7 +359,7 @@ importers:
         specifier: ^14.2.0
         version: 14.2.0
       socket.io:
-        specifier: ^4.6.1
+        specifier: 4.6.1
         version: 4.6.1
       wtfnode:
         specifier: ^0.9.1
@@ -459,10 +459,10 @@ importers:
         specifier: ^14.2.0
         version: 14.2.0
       socket.io:
-        specifier: ^4.6.1
+        specifier: 4.6.1
         version: 4.6.1
       socket.io-client:
-        specifier: ~4.6.1
+        specifier: 4.6.1
         version: 4.6.1
       wtfnode:
         specifier: ^0.9.1

@@ -8,7 +8,7 @@ import { RoomManager } from '../room/roomManager';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Sleep } from '../utility';
 import type { Account } from '../account/account';
-import { last, uniq } from 'lodash';
+import { isEqual, last, uniq } from 'lodash';
 
 export class Shard {
 	public readonly id;
@@ -60,7 +60,7 @@ export class Shard {
 		this.reconnecting = true;
 
 		Assert(this.publicURL === data.publicURL, `Shard's publicURL cannot change`);
-		Assert(this.features === data.features, `Shard's features cannot change`);
+		Assert(isEqual(this.features, data.features), `Shard's features cannot change`);
 		Assert(this.version === data.version, `Shard's version cannot change`);
 
 		// Characters and rooms from shard are ignored, Directory is source of truth on reconnect

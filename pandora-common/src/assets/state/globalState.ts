@@ -4,10 +4,10 @@ import { AssetManager } from '../assetManager';
 import { freeze } from 'immer';
 import { AppearanceBundleSchema, AssetFrameworkCharacterState } from './characterState';
 import { z } from 'zod';
-import { Assert, AssertNotNullable, MemoizeNoArg } from '../../utility';
-import { AppearanceValidationResult } from '../appearanceValidation';
+import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { AssetFrameworkGlobalStateManipulator } from '../manipulators/globalStateManipulator';
-import { ActionProcessingContext } from '../appearanceTypes';
+import { ActionProcessingContext, RoomTargetSelector } from '../appearanceTypes';
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema } from './roomState';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
@@ -22,10 +22,16 @@ export type AssetFrameworkGlobalStateBundle = z.infer<typeof AssetFrameworkGloba
  * The class is immutable.
  */
 export class AssetFrameworkGlobalState {
+	public readonly assetManager: AssetManager;
 	public readonly characters: ReadonlyMap<CharacterId, AssetFrameworkCharacterState>;
 	public readonly room: AssetFrameworkRoomState | null;
 
-	private constructor(characters: ReadonlyMap<CharacterId, AssetFrameworkCharacterState>, room: AssetFrameworkRoomState | null) {
+	private constructor(
+		assetManager: AssetManager,
+		characters: ReadonlyMap<CharacterId, AssetFrameworkCharacterState>,
+		room: AssetFrameworkRoomState | null,
+	) {
+		this.assetManager = assetManager;
 		this.characters = characters;
 		this.room = room;
 	}
@@ -57,6 +63,20 @@ export class AssetFrameworkGlobalState {
 		};
 	}
 
+	public getItems(target: RoomTargetSelector): AppearanceItems | null {
+		if (target.type === 'character') {
+			const character = this.getCharacterState(target.characterId);
+			if (!character)
+				return null;
+
+			return character.items;
+		} else if (target.type === 'roomInventory') {
+			const room = this.room;
+			return room == null ? null : room.items;
+		}
+		AssertNever(target);
+	}
+
 	public exportToBundle(): AssetFrameworkGlobalStateBundle {
 		const result: AssetFrameworkGlobalStateBundle = {
 			characters: {},
@@ -83,6 +103,7 @@ export class AssetFrameworkGlobalState {
 		newCharacters.set(character, newState);
 
 		return new AssetFrameworkGlobalState(
+			this.assetManager,
 			newCharacters,
 			this.room,
 		);
@@ -109,6 +130,7 @@ export class AssetFrameworkGlobalState {
 		}
 
 		return new AssetFrameworkGlobalState(
+			this.assetManager,
 			newCharacters,
 			newState,
 		);
@@ -124,6 +146,7 @@ export class AssetFrameworkGlobalState {
 		}
 
 		return new AssetFrameworkGlobalState(
+			this.assetManager,
 			newCharacters,
 			this.room,
 		);
@@ -155,8 +178,9 @@ export class AssetFrameworkGlobalState {
 		};
 	}
 
-	public static createDefault(): AssetFrameworkGlobalState {
+	public static createDefault(assetManager: AssetManager): AssetFrameworkGlobalState {
 		const instance = new AssetFrameworkGlobalState(
+			assetManager,
 			new Map(),
 			null,
 		);
@@ -179,6 +203,7 @@ export class AssetFrameworkGlobalState {
 		const room = bundle.room == null ? null : AssetFrameworkRoomState.loadFromBundle(assetManager, bundle.room, logger);
 
 		const resultState = new AssetFrameworkGlobalState(
+			assetManager,
 			characters,
 			room,
 		);
@@ -214,7 +239,7 @@ export class AssetFrameworkGlobalStateContainer {
 		this._logger = logger;
 		this._onChangeHandler = onChangeHandler;
 
-		this._currentState = initialState ?? AssetFrameworkGlobalState.createDefault();
+		this._currentState = initialState ?? AssetFrameworkGlobalState.createDefault(assetManager);
 		Assert(this._currentState.isValid());
 	}
 

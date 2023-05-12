@@ -53,17 +53,7 @@ export class AssetFrameworkGlobalStateManipulator {
 	}
 
 	public getItems(target: RoomTargetSelector): AppearanceItems {
-		if (target.type === 'character') {
-			const character = this.currentState.getCharacterState(target.characterId);
-			if (!character)
-				return [];
-
-			return character.items;
-		} else if (target.type === 'roomInventory') {
-			const room = this.currentState.room;
-			return room == null ? [] : room.items;
-		}
-		AssertNever(target);
+		return this.currentState.getItems(target) ?? [];
 	}
 
 	public setItems(target: RoomTargetSelector, newItems: AppearanceItems): boolean {

@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, RoomInventory, ICharacterPrivateData, CharacterRestrictionsManager } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -154,7 +154,7 @@ export class Character {
 			assetManager,
 			this.logger,
 			this.onAppearanceChanged.bind(this),
-			AssetFrameworkGlobalState.createDefault()
+			AssetFrameworkGlobalState.createDefault(assetManager)
 				.withCharacter(
 					this.id,
 					AssetFrameworkCharacterState
@@ -350,7 +350,10 @@ export class Character {
 	}
 
 	public getAppearance(): CharacterAppearance {
-		return new CharacterAppearance(this.getGlobalState(), () => this.data);
+		const state = this.getGlobalState().currentState.characters.get(this.id);
+		AssertNotNullable(state);
+
+		return new CharacterAppearance(state, () => this.data);
 	}
 
 	public getRestrictionManager(): CharacterRestrictionsManager {
@@ -373,10 +376,7 @@ export class Character {
 				}
 
 				if (target.type === 'roomInventory') {
-					if (!this.room)
-						return null;
-
-					return new RoomInventory(globalState);
+					return this.room?.getRoomInventory() ?? null;
 				}
 
 				AssertNever(target);

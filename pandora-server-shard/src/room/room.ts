@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -45,7 +45,7 @@ export class Room extends ServerRoom<IShardClient> {
 		this.logger = GetLogger('Room', `[Room ${data.id}]`);
 		this.logger.verbose('Created');
 
-		const initialState = AssetFrameworkGlobalState.createDefault()
+		const initialState = AssetFrameworkGlobalState.createDefault(assetManager)
 			.withRoomState(
 				AssetFrameworkRoomState
 					.loadFromBundle(assetManager, data.inventory, this.logger.prefixMessages('Room inventory load:')),
@@ -241,6 +241,12 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public getCharacterById(id: CharacterId): Character | null {
 		return Array.from(this.characters.values()).find((c) => c.id === id) ?? null;
+	}
+
+	public getRoomInventory(): RoomInventory {
+		const state = this.roomState.currentState.room;
+		AssertNotNullable(state);
+		return new RoomInventory(state);
 	}
 
 	public characterEnter(character: Character, appearance: AppearanceBundle): void {

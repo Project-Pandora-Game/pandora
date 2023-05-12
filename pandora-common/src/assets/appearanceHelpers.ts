@@ -23,6 +23,17 @@ export function SplitContainerPath(path: ItemContainerPath): {
 	};
 }
 
+export function EvalItemPath(items: AppearanceItems, { container, itemId }: ItemPath): Item | undefined {
+	let current = items;
+	for (const step of container) {
+		const item = current.find((it) => it.id === step.item);
+		if (!item)
+			return undefined;
+		current = item.getModuleItems(step.module);
+	}
+	return current.find((it) => it.id === itemId);
+}
+
 export type IContainerPathActual = readonly {
 	readonly item: Item;
 	readonly moduleName: string;

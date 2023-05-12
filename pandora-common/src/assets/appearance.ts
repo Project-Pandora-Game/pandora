@@ -2,13 +2,13 @@ import type { CharacterId, ICharacterMinimalData } from '../character';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { ActionRoomContext } from '../chatroom';
 import { Assert } from '../utility';
+import { EvalItemPath } from './appearanceHelpers';
 import type { ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
 import { AppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId, WearableAssetType } from './definitions';
 import { BoneState } from './graphics';
 import { Item } from './item';
-import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { AppearanceArmPose, AppearanceBundle, AppearancePose, AssetFrameworkCharacterState, CharacterView, SafemodeData } from './state/characterState';
 
 export const BONE_MIN = -180;
@@ -43,33 +43,29 @@ export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'right
  * A helper wrapper around a global state that allows easy access and manipulation of specific character.
  */
 export class CharacterAppearance implements RoomActionTargetCharacter {
-	public readonly globalStateContainer: AssetFrameworkGlobalStateContainer;
+	public readonly characterState: AssetFrameworkCharacterState;
 
 	public readonly type = 'character';
 	public readonly id: CharacterId;
 	private readonly getCharacter: () => Readonly<ICharacterMinimalData>;
 
 	protected get assetManager(): AssetManager {
-		return this.globalStateContainer.assetManager;
-	}
-
-	private get _state(): AssetFrameworkCharacterState {
-		const state = this.globalStateContainer.currentState.getCharacterState(this.id);
-		Assert(state != null, 'Attempting to edit appearance of character outside of current state');
-		return state;
+		return this.characterState.assetManager;
 	}
 
 	private get _items(): AppearanceItems<WearableAssetType> {
-		return this._state.items;
+		return this.characterState.items;
 	}
 
 	public get character(): Readonly<ICharacterMinimalData> {
-		return this.getCharacter();
+		const character = this.getCharacter();
+		Assert(character.id === this.id);
+		return character;
 	}
 
-	constructor(globalStateContainer: AssetFrameworkGlobalStateContainer, getCharacter: () => Readonly<ICharacterMinimalData>) {
-		this.globalStateContainer = globalStateContainer;
-		this.id = getCharacter().id;
+	constructor(characterState: AssetFrameworkCharacterState, getCharacter: () => Readonly<ICharacterMinimalData>) {
+		this.characterState = characterState;
+		this.id = characterState.id;
 		this.getCharacter = getCharacter;
 	}
 
@@ -81,15 +77,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this.assetManager;
 	}
 
-	public getItem({ container, itemId }: ItemPath): Item | undefined {
-		let current: AppearanceItems = this._items;
-		for (const step of container) {
-			const item = current.find((it) => it.id === step.item);
-			if (!item)
-				return undefined;
-			current = item.getModuleItems(step.module);
-		}
-		return current.find((it) => it.id === itemId);
+	public getItem(path: ItemPath): Item | undefined {
+		return EvalItemPath(this._items, path);
 	}
 
 	public listItemsByAsset(asset: AssetId) {
@@ -101,21 +90,21 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public getPose(bone: string): BoneState {
-		const state = this._state.pose.get(bone);
+		const state = this.characterState.pose.get(bone);
 		if (!state)
 			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
 		return { ...state };
 	}
 
 	public getArmsPose(): CharacterArmsPose {
-		return this._state.arms;
+		return this.characterState.arms;
 	}
 
 	public getView(): CharacterView {
-		return this._state.view;
+		return this.characterState.view;
 	}
 
 	public getSafemode(): Readonly<SafemodeData> | null {
-		return this._state.safemode ?? null;
+		return this.characterState.safemode ?? null;
 	}
 }

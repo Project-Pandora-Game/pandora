@@ -5,7 +5,6 @@ import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
-import { RoomInventoryBundle } from '../assets/state/roomState';
 import { AssetFrameworkGlobalStateBundle } from '../assets/state/globalState';
 import { Immutable } from 'immer';
 
@@ -21,13 +20,13 @@ export type ICharacterRoomData = ICharacterPublicData & {
 export type IChatRoomUpdate = {
 	globalState: AssetFrameworkGlobalStateBundle;
 	room: null | IChatRoomFullInfo;
+	characters: ICharacterRoomData[];
 } | {
 	globalState?: AssetFrameworkGlobalStateBundle;
 	info?: Partial<IChatRoomFullInfo>;
 	leave?: CharacterId;
 	join?: ICharacterRoomData;
 	characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
-	roomInventoryChange?: RoomInventoryBundle;
 };
 
 /** Shard->Client messages */

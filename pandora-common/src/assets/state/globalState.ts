@@ -96,10 +96,63 @@ export class AssetFrameworkGlobalState {
 		if (!newState)
 			return null;
 
+		return this.withRoomState(newState);
+	}
+
+	public withRoomState(newState: AssetFrameworkRoomState | null): AssetFrameworkGlobalState {
+		const newCharacters = new Map(this.characters);
+		for (const [id, character] of newCharacters) {
+			newCharacters.set(
+				id,
+				character.cleanupRoomDeviceWearables(newState),
+			);
+		}
+
 		return new AssetFrameworkGlobalState(
-			this.characters,
+			newCharacters,
 			newState,
 		);
+	}
+
+	public withCharacter(characterId: CharacterId, characterState: AssetFrameworkCharacterState | null): AssetFrameworkGlobalState {
+		const newCharacters = new Map(this.characters);
+
+		if (characterState == null) {
+			newCharacters.delete(characterId);
+		} else {
+			newCharacters.set(characterId, characterState);
+		}
+
+		return new AssetFrameworkGlobalState(
+			newCharacters,
+			this.room,
+		);
+	}
+
+	public listChanges(oldState: AssetFrameworkGlobalState): {
+		room: boolean;
+		characters: Set<CharacterId>;
+	} {
+		const characters = new Set<CharacterId>();
+
+		// Check changed and added characters
+		for (const [characterId, character] of this.characters) {
+			if (oldState.characters.get(characterId) !== character) {
+				characters.add(characterId);
+			}
+		}
+
+		// Check removed characters
+		for (const characterId of oldState.characters.keys()) {
+			if (!this.characters.has(characterId)) {
+				characters.add(characterId);
+			}
+		}
+
+		return {
+			room: this.room !== oldState.room,
+			characters,
+		};
 	}
 
 	public static createDefault(): AssetFrameworkGlobalState {
@@ -136,6 +189,8 @@ export class AssetFrameworkGlobalState {
 	}
 }
 
+export type AssetFrameworkGlobalStateContainerEventHandler = (newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState) => void;
+
 /**
  * Mutable class that contains current global state and ensures the state is always valid.
  */
@@ -152,29 +207,43 @@ export class AssetFrameworkGlobalStateContainer {
 		return this._currentState;
 	}
 
-	constructor(assetManager: AssetManager, logger: Logger) {
+	private readonly _onChangeHandler: AssetFrameworkGlobalStateContainerEventHandler;
+
+	constructor(assetManager: AssetManager, logger: Logger, onChangeHandler: AssetFrameworkGlobalStateContainerEventHandler, initialState?: AssetFrameworkGlobalState) {
 		this._assetManager = assetManager;
 		this._logger = logger;
+		this._onChangeHandler = onChangeHandler;
 
-		this._currentState = AssetFrameworkGlobalState.createDefault();
+		this._currentState = initialState ?? AssetFrameworkGlobalState.createDefault();
 		Assert(this._currentState.isValid());
 	}
 
 	public reloadAssetManager(assetManager: AssetManager) {
 		if (this._assetManager === assetManager)
 			return;
-		const bundle = this.currentState.exportToBundle();
+		const oldState = this._currentState;
+		const bundle = oldState.exportToBundle();
 		this._assetManager = assetManager;
 
-		this._currentState = AssetFrameworkGlobalState.loadFromBundle(assetManager, bundle, this._logger);
-		Assert(this._currentState.isValid());
+		const newState = AssetFrameworkGlobalState.loadFromBundle(assetManager, bundle, this._logger);
+		Assert(newState.isValid());
+		this._currentState = newState;
+		this._onChange(newState, oldState);
 	}
 
 	public getManipulator(): AssetFrameworkGlobalStateManipulator {
 		return new AssetFrameworkGlobalStateManipulator(this._assetManager, this._currentState);
 	}
 
+	public setState(newState: AssetFrameworkGlobalState): void {
+		Assert(newState.isValid(), 'Attempt to set invalid state');
+		const oldState = this._currentState;
+		this._currentState = newState;
+		this._onChange(newState, oldState);
+	}
+
 	public commitChanges(manipulator: AssetFrameworkGlobalStateManipulator, context: ActionProcessingContext): AppearanceValidationResult {
+		const oldState = this._currentState;
 		Assert(this.assetManager === manipulator.assetManager);
 		const newState = manipulator.currentState;
 
@@ -187,6 +256,7 @@ export class AssetFrameworkGlobalStateContainer {
 			return { success: true };
 
 		this._currentState = newState;
+		this._onChange(newState, oldState);
 
 		for (const message of manipulator.getAndClearPendingMessages()) {
 			context.actionHandler?.({
@@ -199,5 +269,9 @@ export class AssetFrameworkGlobalStateContainer {
 		}
 
 		return { success: true };
+	}
+
+	private _onChange(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState) {
+		this._onChangeHandler(newState, oldState);
 	}
 }

@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, CharacterSize, IsAuthorized, AccountRole, IShardAccountDefinition, ResolveBackground, CalculateCharacterMaxYForBackground, CharacterAppearance, CharacterDataSchema } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, RoomInventory, ICharacterPrivateData, CharacterRestrictionsManager } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -30,8 +30,6 @@ export class Character {
 	public accountData: IShardAccountDefinition;
 	public connectSecret: string;
 
-	public readonly appearance: CharacterAppearance;
-
 	private modified: Set<keyof ICharacterDataChange | 'appearance'> = new Set();
 
 	private readonly _lock = new AsyncLock();
@@ -45,11 +43,19 @@ export class Character {
 		return this._connection;
 	}
 
-	public _room: Room | null = null;
+	private _context: {
+		inRoom: false;
+		globalState: AssetFrameworkGlobalStateContainer;
+	} | {
+		inRoom: true;
+		room: Room;
+	};
+
 	public get room(): Room | null {
-		return this._room;
+		return this._context.inRoom ? this._context.room : null;
 	}
-	public setRoom(room: Room | null): void {
+
+	public setRoom(room: Room | null, appearance: AppearanceBundle): void {
 		if (this.connection) {
 			if (this.room) {
 				this.connection.leaveRoom(this.room);
@@ -58,7 +64,17 @@ export class Character {
 				this.connection.joinRoom(room);
 			}
 		}
-		this._room = room;
+		if (room) {
+			this._context = {
+				inRoom: true,
+				room,
+			};
+		} else {
+			this._context = {
+				inRoom: false,
+				globalState: this._createIsolatedState(appearance),
+			};
+		}
 	}
 
 	public get id(): CharacterId {
@@ -122,25 +138,35 @@ export class Character {
 
 		this.setConnection(null);
 
-		this.appearance = new CharacterAppearance(assetManager, () => this.data);
-		this.appearance.importFromBundle(data.appearance, this.logger.prefixMessages('Appearance load:'));
-		this.appearance.onChangeHandler = this.onAppearanceChanged.bind(this, true);
+		this._context = {
+			inRoom: false,
+			globalState: this._createIsolatedState(data.appearance),
+		};
 
 		this.linkRoom(room);
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
 
+	/** Creates an isolated framework sate, for when the character is not in a room */
+	private _createIsolatedState(appearance: AppearanceBundle | undefined): AssetFrameworkGlobalStateContainer {
+		return new AssetFrameworkGlobalStateContainer(
+			assetManager,
+			this.logger,
+			this.onAppearanceChanged.bind(this),
+			AssetFrameworkGlobalState.createDefault()
+				.withCharacter(
+					this.id,
+					AssetFrameworkCharacterState
+						.loadFromBundle(assetManager, this.id, appearance, this.logger.prefixMessages('Appearance load:'))
+						.cleanupRoomDeviceWearables(null),
+				),
+		);
+	}
+
 	public reloadAssetManager(manager: AssetManager) {
-		this.appearance.reloadAssetManager(manager, this.logger.prefixMessages('Appearance manager reload:'));
-		// Background definition might have changed, make sure character is still inside range
-		if (this.room) {
-			const roomBackground = ResolveBackground(assetManager, this.room.getClientData().background);
-			const maxY = CalculateCharacterMaxYForBackground(roomBackground);
-			if (this.position[0] > roomBackground.size[0] || this.position[1] > maxY) {
-				this.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
-				this.room.sendUpdateToAllInRoom({ update: { id: this.id, position: this.data.position } });
-			}
+		if (!this._context.inRoom) {
+			this._context.globalState.reloadAssetManager(manager);
 		}
 	}
 
@@ -180,11 +206,17 @@ export class Character {
 		}
 		if (this.room !== room) {
 			this.room?.characterLeave(this);
-			room?.characterEnter(this);
-		}
 
-		// Cleanup linked wearables
-		this.appearance.cleanupRoomDeviceWearables(room?.inventory ?? null, this.logger.prefixMessages(`Chatroom link:`));
+			if (room) {
+				Assert(!this._context.inRoom);
+				const characterAppearance = this._context.globalState.currentState.characters.get(this.id)?.exportToBundle();
+				AssertNotNullable(characterAppearance);
+				room.characterEnter(
+					this,
+					characterAppearance,
+				);
+			}
+		}
 	}
 
 	public isInUse(): boolean {
@@ -296,30 +328,55 @@ export class Character {
 		return result.data;
 	}
 
-	public getData(): ICharacterData {
+	public getPublicData(): ICharacterPublicData {
 		return {
-			...this.data,
-			appearance: this.appearance.exportToBundle(),
+			id: this.data.id,
+			accountId: this.data.accountId,
+			name: this.data.name,
+			settings: this.data.settings,
 		};
 	}
 
+	public getPrivateData(): ICharacterPrivateData {
+		return {
+			...this.getPublicData(),
+			inCreation: this.data.inCreation,
+			created: this.data.created,
+		};
+	}
+
+	public getGlobalState(): AssetFrameworkGlobalStateContainer {
+		return this._context.inRoom ? this._context.room.roomState : this._context.globalState;
+	}
+
+	public getAppearance(): CharacterAppearance {
+		return new CharacterAppearance(this.getGlobalState(), () => this.data);
+	}
+
+	public getRestrictionManager(): CharacterRestrictionsManager {
+		return this.getAppearance().getRestrictionManager(this.room?.getActionRoomContext() ?? null);
+	}
+
 	public getAppearanceActionContext(): AppearanceActionContext {
+		const globalState = this.getGlobalState();
 		return {
 			player: this.id,
+			globalState,
 			getCharacter: (id) => {
 				const char = this.id === id ? this : this.room?.getCharacterById(id);
-				if (!char)
-					return null;
-				return char.appearance.getRestrictionManager(this.room?.getActionRoomContext() ?? null);
+				return char?.getRestrictionManager() ?? null;
 			},
 			getTarget: (target) => {
 				if (target.type === 'character') {
 					const char = this.id === target.characterId ? this : this.room?.getCharacterById(target.characterId);
-					return char?.appearance ?? null;
+					return char?.getAppearance() ?? null;
 				}
 
 				if (target.type === 'roomInventory') {
-					return this.room?.inventory ?? null;
+					if (!this.room)
+						return null;
+
+					return new RoomInventory(globalState);
 				}
 
 				AssertNever(target);
@@ -346,7 +403,9 @@ export class Character {
 
 			for (const key of keys) {
 				if (key === 'appearance') {
-					data.appearance = this.appearance.exportToBundle();
+					const characterState = this.getGlobalState().currentState.getCharacterState(this.id);
+					AssertNotNullable(characterState);
+					data.appearance = characterState.exportToBundle();
 				} else {
 					(data as Record<string, unknown>)[key] = this.data[key];
 				}
@@ -376,34 +435,33 @@ export class Character {
 		this.modified.add(key);
 
 		if (room && this.room) {
-			this.room.sendUpdateToAllInRoom({ update: { id: this.id, [key]: value } });
+			this.room.sendUpdateToAllInRoom({
+				characters: {
+					[this.id]: {
+						[key]: value,
+					},
+				},
+			});
 		} else {
 			this.connection?.sendMessage('updateCharacter', { [key]: value });
 		}
 	}
 
-	public onAppearanceChanged(changed = true): void {
-		if (changed) {
-			this.modified.add('appearance');
-		}
+	public onAppearanceChanged(): void {
+		this.modified.add('appearance');
 
-		this.sendUpdateHasChanges ||= changed;
 		this.sendUpdateDebounced();
 	}
 
-	private sendUpdateHasChanges: boolean = false;
 	private readonly sendUpdateDebounced = _.debounce(this.sendUpdate.bind(this), UPDATE_DEBOUNCE, { maxWait: 5 * UPDATE_DEBOUNCE });
 	private sendUpdate(): void {
-		if (this.room) {
-			if (this.sendUpdateHasChanges) {
-				this.room.sendUpdateToAllInRoom({ update: { id: this.id, appearance: this.appearance.exportToBundle() } });
-			} else {
-				this.room.sendUpdateTo(this, { update: { id: this.id, appearance: this.appearance.exportToBundle() } });
-			}
-		} else {
-			this.connection?.sendMessage('updateCharacter', { appearance: this.appearance.exportToBundle() });
+		// Only send update if not in room, as otherwise the room handles it
+		if (!this._context.inRoom) {
+			this.connection?.sendMessage('chatRoomUpdate', {
+				room: null,
+				globalState: this._context.globalState.currentState.exportToBundle(),
+			});
 		}
-		this.sendUpdateHasChanges = false;
 	}
 
 	public setPublicSettings(settings: Partial<ICharacterPublicSettings>): void {

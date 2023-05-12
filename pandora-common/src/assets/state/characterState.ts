@@ -288,7 +288,7 @@ export class AssetFrameworkCharacterState {
 		);
 	}
 
-	public cleanupRoomDeviceWearables(roomInventory: AssetFrameworkRoomState | null, logger: Logger | undefined): AssetFrameworkCharacterState {
+	public cleanupRoomDeviceWearables(roomInventory: AssetFrameworkRoomState | null): AssetFrameworkCharacterState {
 		const cleanedUpItems = this.items.filter((item) => {
 			if (item.isType('roomDeviceWearablePart')) {
 				const link = item.roomDeviceLink;
@@ -315,7 +315,7 @@ export class AssetFrameworkCharacterState {
 			return this;
 
 		// Re-validate items as forceful removal might have broken dependencies
-		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, cleanedUpItems, logger);
+		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, cleanedUpItems);
 		Assert(ValidateAppearanceItems(this.assetManager, newItems).success);
 
 		return new AssetFrameworkCharacterState(
@@ -331,11 +331,11 @@ export class AssetFrameworkCharacterState {
 	}
 
 	public static createDefault(assetManager: AssetManager, characterId: CharacterId): AssetFrameworkCharacterState {
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, GetDefaultAppearanceBundle(), undefined);
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, undefined);
 	}
 
-	public static loadFromBundle(assetManager: AssetManager, characterId: CharacterId, bundle: AppearanceBundle, logger: Logger | undefined): AssetFrameworkCharacterState {
-		bundle = AppearanceBundleSchema.parse(bundle);
+	public static loadFromBundle(assetManager: AssetManager, characterId: CharacterId, bundle: AppearanceBundle | undefined, logger: Logger | undefined): AssetFrameworkCharacterState {
+		bundle = AppearanceBundleSchema.parse(bundle ?? GetDefaultAppearanceBundle());
 
 		// Load all items
 		const loadedItems: Item[] = [];

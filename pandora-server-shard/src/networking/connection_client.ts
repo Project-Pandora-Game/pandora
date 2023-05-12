@@ -1,9 +1,11 @@
-import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema } from 'pandora-common';
+import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema, AssertNotNullable } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
 import { ConnectionManagerClient } from './manager_client';
 import type { IncomingHttpHeaders } from 'http';
+import { assetManager } from '../assets/assetManager';
+import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
 
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IShardClient, IClientShard, IncomingSocket> {
@@ -49,6 +51,18 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 		}
 		character.setConnection(this);
 		return true;
+	}
+
+	public sendLoadMessage(): void {
+		AssertNotNullable(this.character);
+		this.sendMessage('load', {
+			character: this.character.getPrivateData(),
+			globalState: this.character.getGlobalState().currentState.exportToBundle(),
+			room: this.character.room?.getInfo() ?? null,
+			assetsDefinition: assetManager.rawData,
+			assetsDefinitionHash: assetManager.definitionsHash,
+			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
+		});
 	}
 
 	/**

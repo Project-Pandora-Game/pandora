@@ -2,7 +2,6 @@ import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, Characte
 import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
-import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
 import promClient from 'prom-client';
 import { DoAppearanceAction } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
@@ -56,13 +55,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		connectedClientsMetric.set(this._connectedClients.size);
 		if (!connection.loadCharacter(characterId as CharacterId) || !connection.character)
 			return;
-		connection.sendMessage('load', {
-			character: connection.character.getData(),
-			room: connection.character.room ? connection.character.room.getClientData() : null,
-			assetsDefinition: assetManager.rawData,
-			assetsDefinitionHash: assetManager.definitionsHash,
-			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
-		});
+		connection.sendLoadMessage();
 		connection.character.sendAllPendingMessages();
 
 		logger.debug(`Client ${connection.id} connected to character ${connection.character.id}`);
@@ -142,7 +135,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		if (DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager).result !== 'success') {
-			client.character.onAppearanceChanged(false);
+			// If the action failed, client might be out of sync, force-send full reload
+			client.sendLoadMessage();
 		}
 	}
 
@@ -222,13 +216,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		for (const connection of this._connectedClients.values()) {
 			if (!connection.character)
 				continue;
-			connection.sendMessage('load', {
-				character: connection.character.getData(),
-				room: connection.character.room ? connection.character.room.getClientData() : null,
-				assetsDefinition: assetManager.rawData,
-				assetsDefinitionHash: assetManager.definitionsHash,
-				assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
-			});
+			connection.sendLoadMessage();
 		}
 	}
 };

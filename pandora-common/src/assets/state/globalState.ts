@@ -222,11 +222,6 @@ export type AssetFrameworkGlobalStateContainerEventHandler = (newState: AssetFra
 export class AssetFrameworkGlobalStateContainer {
 	private readonly _logger: Logger;
 
-	private _assetManager: AssetManager;
-	public get assetManager(): AssetManager {
-		return this._assetManager;
-	}
-
 	private _currentState: AssetFrameworkGlobalState;
 	public get currentState(): AssetFrameworkGlobalState {
 		return this._currentState;
@@ -235,20 +230,20 @@ export class AssetFrameworkGlobalStateContainer {
 	private readonly _onChangeHandler: AssetFrameworkGlobalStateContainerEventHandler;
 
 	constructor(assetManager: AssetManager, logger: Logger, onChangeHandler: AssetFrameworkGlobalStateContainerEventHandler, initialState?: AssetFrameworkGlobalState) {
-		this._assetManager = assetManager;
 		this._logger = logger;
 		this._onChangeHandler = onChangeHandler;
+
+		Assert(initialState == null || initialState.assetManager === assetManager);
 
 		this._currentState = initialState ?? AssetFrameworkGlobalState.createDefault(assetManager);
 		Assert(this._currentState.isValid());
 	}
 
 	public reloadAssetManager(assetManager: AssetManager) {
-		if (this._assetManager === assetManager)
+		if (this.currentState.assetManager === assetManager)
 			return;
 		const oldState = this._currentState;
 		const bundle = oldState.exportToBundle();
-		this._assetManager = assetManager;
 
 		const newState = AssetFrameworkGlobalState.loadFromBundle(assetManager, bundle, this._logger);
 		Assert(newState.isValid());
@@ -257,7 +252,7 @@ export class AssetFrameworkGlobalStateContainer {
 	}
 
 	public getManipulator(): AssetFrameworkGlobalStateManipulator {
-		return new AssetFrameworkGlobalStateManipulator(this._assetManager, this._currentState);
+		return new AssetFrameworkGlobalStateManipulator(this._currentState);
 	}
 
 	public setState(newState: AssetFrameworkGlobalState): void {
@@ -269,7 +264,6 @@ export class AssetFrameworkGlobalStateContainer {
 
 	public commitChanges(manipulator: AssetFrameworkGlobalStateManipulator, context: ActionProcessingContext): AppearanceValidationResult {
 		const oldState = this._currentState;
-		Assert(this.assetManager === manipulator.assetManager);
 		const newState = manipulator.currentState;
 
 		// Validate

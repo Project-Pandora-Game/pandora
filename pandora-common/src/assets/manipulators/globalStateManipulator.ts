@@ -15,8 +15,8 @@ export class AssetFrameworkGlobalStateManipulator {
 
 	private _messages: ActionHandlerMessageWithTarget[] = [];
 
-	constructor(assetManager: AssetManager, originState: AssetFrameworkGlobalState) {
-		this.assetManager = assetManager;
+	constructor(originState: AssetFrameworkGlobalState) {
+		this.assetManager = originState.assetManager;
 		this.currentState = originState;
 	}
 

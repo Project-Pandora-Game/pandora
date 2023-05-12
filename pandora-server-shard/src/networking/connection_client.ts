@@ -58,7 +58,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 		this.sendMessage('load', {
 			character: this.character.getPrivateData(),
 			globalState: this.character.getGlobalState().currentState.exportToBundle(),
-			room: this.character.room?.getInfo() ?? null,
+			room: this.character.room?.getLoadData() ?? null,
 			assetsDefinition: assetManager.rawData,
 			assetsDefinitionHash: assetManager.definitionsHash,
 			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),

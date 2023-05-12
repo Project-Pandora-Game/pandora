@@ -457,7 +457,7 @@ export class Character {
 	private sendUpdate(): void {
 		// Only send update if not in room, as otherwise the room handles it
 		if (!this._context.inRoom) {
-			this.connection?.sendMessage('chatRoomUpdate', {
+			this.connection?.sendMessage('chatRoomLoad', {
 				room: null,
 				globalState: this._context.globalState.currentState.exportToBundle(),
 			});

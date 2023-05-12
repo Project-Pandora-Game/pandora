@@ -175,6 +175,13 @@ export class Room extends ServerRoom<IShardClient> {
 		};
 	}
 
+	public getLoadData() {
+		return {
+			info: this.getInfo(),
+			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
+		};
+	}
+
 	public getActionRoomContext(): ActionRoomContext {
 		return {
 			features: this.data.config.features,
@@ -275,9 +282,9 @@ export class Room extends ServerRoom<IShardClient> {
 			});
 			// Send update to joining character
 			character.setRoom(this, appearance);
-			this.sendUpdateTo(character, {
+			character.connection?.sendMessage('chatRoomLoad', {
 				globalState,
-				room: this.getInfo(),
+				room: this.getLoadData(),
 			});
 		});
 
@@ -313,10 +320,6 @@ export class Room extends ServerRoom<IShardClient> {
 			this._cleanActionCache(character.id);
 		});
 		this.logger.debug(`Character ${character.id} left`);
-	}
-
-	public sendUpdateTo(character: Character, data: IChatRoomUpdate): void {
-		character.connection?.sendMessage('chatRoomUpdate', data);
 	}
 
 	public sendUpdateToAllInRoom(data: IChatRoomUpdate): void {

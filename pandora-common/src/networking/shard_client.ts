@@ -17,11 +17,15 @@ export type ICharacterRoomData = ICharacterPublicData & {
 	position: readonly [number, number];
 };
 
-export type IChatRoomUpdate = {
+export type IChatRoomLoad = {
 	globalState: AssetFrameworkGlobalStateBundle;
-	room: null | IChatRoomFullInfo;
-	characters: ICharacterRoomData[];
-} | {
+	room: null | {
+		info: IChatRoomFullInfo;
+		characters: ICharacterRoomData[];
+	};
+};
+
+export type IChatRoomUpdate = {
 	globalState?: AssetFrameworkGlobalStateBundle;
 	info?: Partial<IChatRoomFullInfo>;
 	leave?: CharacterId;
@@ -35,7 +39,10 @@ export const ShardClientSchema = {
 		request: ZodCast<{
 			character: ICharacterPrivateData;
 			globalState: AssetFrameworkGlobalStateBundle;
-			room: null | IChatRoomFullInfo;
+			room: null | {
+				info: IChatRoomFullInfo;
+				characters: ICharacterRoomData[];
+			};
 			assetsDefinition: Immutable<AssetsDefinitionFile>;
 			assetsDefinitionHash: string;
 			assetsSource: string;
@@ -44,6 +51,10 @@ export const ShardClientSchema = {
 	},
 	updateCharacter: {
 		request: ZodCast<Partial<ICharacterPrivateData>>(),
+		response: null,
+	},
+	chatRoomLoad: {
+		request: ZodCast<IChatRoomLoad>(),
 		response: null,
 	},
 	chatRoomUpdate: {

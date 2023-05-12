@@ -2,9 +2,10 @@ import { Immutable } from 'immer';
 import _ from 'lodash';
 import { ZodEnum } from 'zod';
 import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
-import { AppearanceArmPose, AppearancePose, CharacterViewSchema, GetDefaultAppearanceBundle } from './appearance';
+import { GetDefaultAppearanceBundle } from './appearance';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema } from './graphics/graphics';
+import { AppearanceArmPose, AppearancePose, CharacterViewSchema } from './state/characterState';
 
 class TreeLimit {
 	private readonly limit: ReadonlyMap<string, [number, number][]>;

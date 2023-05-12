@@ -5,7 +5,7 @@ import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
-import { RoomInventoryBundle } from '../assets/roomInventory';
+import { RoomInventoryBundle } from '../assets/state/roomState';
 import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness

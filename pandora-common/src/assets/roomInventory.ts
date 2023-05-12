@@ -1,96 +1,44 @@
-import { z } from 'zod';
-import { Logger } from '../logging';
-import { AppearanceRootManipulator } from './appearanceHelpers';
-import type { ActionProcessingContext, ItemPath, RoomActionTargetRoomInventory } from './appearanceTypes';
-import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
+import type { ItemPath, RoomActionTargetRoomInventory } from './appearanceTypes';
+import { AppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
-import { Item, ItemBundleSchema } from './item';
-import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from './roomValidation';
-
-export const RoomInventoryBundleSchema = z.object({
-	items: z.array(ItemBundleSchema),
-});
-
-export type RoomInventoryBundle = z.infer<typeof RoomInventoryBundleSchema>;
+import { Item } from './item';
+import { AssetFrameworkGlobalStateContainer } from './state/globalState';
+import { AssetFrameworkRoomState, RoomInventoryBundle } from './state/roomState';
+import { Assert } from '../utility';
 
 export const ROOM_INVENTORY_BUNDLE_DEFAULT: RoomInventoryBundle = {
 	items: [],
 };
 
 export class RoomInventory implements RoomActionTargetRoomInventory {
+	public readonly globalStateContainer: AssetFrameworkGlobalStateContainer;
+
 	public readonly type = 'roomInventory';
 
-	protected assetManager: AssetManager;
-	public onChangeHandler: (() => void) | undefined;
-
-	private items: AppearanceItems = [];
-
-	constructor(assetManager: AssetManager, onChange?: () => void) {
-		this.assetManager = assetManager;
-		this.importFromBundle(ROOM_INVENTORY_BUNDLE_DEFAULT);
-		this.onChangeHandler = onChange;
+	protected get assetManager(): AssetManager {
+		return this.globalStateContainer.assetManager;
 	}
 
-	public exportToBundle(): RoomInventoryBundle {
-		return {
-			items: this.items.map((item) => item.exportToBundle()),
-		};
+	private get _state(): AssetFrameworkRoomState {
+		const state = this.globalStateContainer.currentState.room;
+		Assert(state != null, 'Attempting to edit room inventory when not in room');
+		return state;
 	}
 
-	public importFromBundle(bundle: RoomInventoryBundle, logger?: Logger, assetManager?: AssetManager): void {
-		// Simple migration
-		bundle = {
-			...ROOM_INVENTORY_BUNDLE_DEFAULT,
-			...bundle,
-		};
-		if (assetManager && this.assetManager !== assetManager) {
-			this.assetManager = assetManager;
-		}
-
-		// Load all items
-		const loadedItems: Item[] = [];
-		for (const itemBundle of bundle.items) {
-			// Load asset and skip if unknown
-			const asset = this.assetManager.getAssetById(itemBundle.asset);
-			if (asset === undefined) {
-				logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
-				continue;
-			}
-
-			const item = this.assetManager.createItem(itemBundle.id, asset, itemBundle, logger);
-			loadedItems.push(item);
-		}
-
-		// Validate and add all items
-		const newItems = RoomInventoryLoadAndValidate(this.assetManager, loadedItems, logger);
-
-		if (!ValidateRoomInventoryItems(this.assetManager, newItems).success) {
-			throw new Error('Invalid appearance after load');
-		}
-
-		this.items = newItems;
-
-		this.onChange();
+	private get _items(): AppearanceItems {
+		return this._state.items;
 	}
 
-	public reloadAssetManager(assetManager: AssetManager, logger?: Logger) {
-		if (this.assetManager === assetManager)
-			return;
-		const bundle = this.exportToBundle();
-		this.assetManager = assetManager;
-		this.importFromBundle(bundle, logger);
+	constructor(globalStateContainer: AssetFrameworkGlobalStateContainer) {
+		this.globalStateContainer = globalStateContainer;
 	}
 
 	public getAssetManager(): AssetManager {
 		return this.assetManager;
 	}
 
-	protected onChange(): void {
-		this.onChangeHandler?.();
-	}
-
 	public getItem({ container, itemId }: ItemPath): Item | undefined {
-		let current = this.items;
+		let current = this._items;
 		for (const step of container) {
 			const item = current.find((it) => it.id === step.item);
 			if (!item)
@@ -101,41 +49,6 @@ export class RoomInventory implements RoomActionTargetRoomInventory {
 	}
 
 	public getAllItems(): readonly Item[] {
-		return this.items;
+		return this._items;
 	}
-
-	public getManipulator(): AppearanceRootManipulator {
-		return new AppearanceRootManipulator(this.assetManager, this.items);
-	}
-
-	public commitChanges(manipulator: AppearanceRootManipulator, context: ActionProcessingContext): AppearanceValidationResult {
-		const newItems = manipulator.getRootItems();
-
-		// Validate
-		const r = ValidateRoomInventoryItems(this.assetManager, newItems);
-		if (!r.success)
-			return r;
-
-		if (context.dryRun)
-			return { success: true };
-
-		this.items = newItems;
-		this.onChange();
-
-		for (const message of manipulator.getAndClearPendingMessages()) {
-			context.actionHandler?.({
-				...message,
-				character: context.sourceCharacter ? {
-					type: 'character',
-					id: context.sourceCharacter,
-				} : undefined,
-				target: {
-					type: 'roomInventory',
-				},
-			});
-		}
-
-		return { success: true };
-	}
-
 }

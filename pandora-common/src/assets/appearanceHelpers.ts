@@ -1,10 +1,11 @@
 import _ from 'lodash';
-import type { ActionHandlerMessageTemplate, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
+import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ItemContainerPath, ItemId, ItemPath, RoomTargetSelector } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { Item } from './item';
 import type { IItemModule } from './modules/common';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
-import { Assert } from '../utility';
+import { Assert, AssertNever } from '../utility';
+import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 
 export function SplitContainerPath(path: ItemContainerPath): {
 	itemPath: ItemPath;
@@ -148,15 +149,16 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 }
 
 export class AppearanceRootManipulator extends AppearanceManipulator {
-	private _items: AppearanceItems;
-	private _messages: ActionHandlerMessageTemplate[] = [];
+	private readonly _base: AssetFrameworkGlobalStateManipulator;
+	private readonly _target: RoomTargetSelector;
 
 	public readonly container: null = null;
 	public readonly containerPath: IContainerPathActual = [];
 
-	constructor(assetManager: AssetManager, items: AppearanceItems) {
-		super(assetManager);
-		this._items = items.slice();
+	constructor(base: AssetFrameworkGlobalStateManipulator, target: RoomTargetSelector) {
+		super(base.assetManager);
+		this._base = base;
+		this._target = target;
 	}
 
 	/** Gets items, but is only present on the root of appearance to prevent accidental passing of container manipulators */
@@ -171,23 +173,34 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 	}
 
 	public getItems(): AppearanceItems {
-		return this._items;
+		return this._base.getItems(this._target);
 	}
 
 	protected _applyItems(items: AppearanceItems): boolean {
-		this._items = items;
-		return true;
+		return this._base.setItems(this._target, items);
 	}
 
 	public queueMessage(message: ActionHandlerMessageTemplate): void {
 		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName }));
-		this._messages.push(message);
-	}
 
-	public getAndClearPendingMessages(): ActionHandlerMessageTemplate[] {
-		const messages = this._messages;
-		this._messages = [];
-		return messages;
+		let target: ActionHandlerMessageTarget;
+		if (this._target.type === 'character') {
+			target = {
+				type: 'character',
+				id: this._target.characterId,
+			};
+		} else if (this._target.type === 'roomInventory') {
+			target = {
+				type: 'roomInventory',
+			};
+		} else {
+			AssertNever(this._target);
+		}
+
+		this._base.queueMessage({
+			...message,
+			target,
+		});
 	}
 }
 

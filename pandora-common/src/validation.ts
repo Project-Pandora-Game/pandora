@@ -1,4 +1,7 @@
+import { enableMapSet } from 'immer';
 import { z, ZodObject, ZodString, ZodType, ZodTypeAny } from 'zod';
+
+enableMapSet();
 
 export function ZodTemplateString<T extends string>(validator: ZodString, regex: RegExp): ZodType<T> & ZodString {
 	return validator.regex(regex) as unknown as ZodType<T> & ZodString;

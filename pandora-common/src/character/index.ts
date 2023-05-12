@@ -4,7 +4,7 @@ export * from './restrictionsManager';
 export * from './speech';
 
 import { z } from 'zod';
-import { AppearanceBundleSchema } from '../assets/appearance';
+import { AppearanceBundleSchema } from '../assets/state/characterState';
 import { HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';

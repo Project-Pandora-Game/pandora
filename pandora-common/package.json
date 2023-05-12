@@ -11,8 +11,10 @@
 	"types": "./dist/index.d.ts",
 	"files": [
 		"/dist/**/*",
+		"/src/**/*",
 		".eslintrc.json",
-		"tsconfig.base.json"
+		"tsconfig.base.json",
+		"tsconfig.json"
 	],
 	"scripts": {
 		"clean": "rimraf dist",

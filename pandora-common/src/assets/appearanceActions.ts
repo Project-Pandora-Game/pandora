@@ -471,9 +471,7 @@ export function DoAppearanceAction(
 					return { result: 'invalidAction' };
 
 				if (!manipulator.produceCharacterState(player.appearance.id, (character) => {
-					return character.produceWithSafemode({
-						allowLeaveAt: Date.now() + (player.room?.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
-					});
+					return character.produceWithSafemode(null);
 				})) {
 					return { result: 'invalidAction' };
 				}

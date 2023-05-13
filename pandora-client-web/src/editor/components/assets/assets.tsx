@@ -19,11 +19,13 @@ import { useEditor } from '../../editorContextProvider';
 import './assets.scss';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 
 export function AssetsUI(): ReactElement {
 	const editor = useEditor();
+	const editorCharacterState = useEditorCharacterState();
 	const view = useAssetManagerEditor().assetTreeView;
-	const items = useCharacterAppearanceItems(editor.character);
+	const items = useCharacterAppearanceItems(editorCharacterState);
 	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
 
 	return (
@@ -125,7 +127,7 @@ function AssetElement({ asset, category }: { asset: Asset; category: string; }):
 	const tabContext = useEditorTabContext();
 
 	function add() {
-		if (!editor.character.appearance.addItem(asset)) {
+		if (!editor.character.getAppearance().addItem(asset)) {
 			toast('Failed to add item', TOAST_OPTIONS_ERROR);
 		}
 	}
@@ -158,7 +160,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 
 	function add() {
 		AssertNotNullable(asset);
-		if (!editor.character.appearance.addItem(asset)) {
+		if (!editor.character.getAppearance().addItem(asset)) {
 			toast('Failed to add item', TOAST_OPTIONS_ERROR);
 		}
 	}
@@ -187,7 +189,7 @@ const itemOpenState = new WeakMap<Item, ToggleLiState>();
 function ItemElement({ item }: { item: Item; }): ReactElement {
 	const editor = useEditor();
 	const tabContext = useEditorTabContext();
-	const appearance = editor.character.appearance;
+	const appearance = editor.character.getAppearance();
 
 	let toggleState = itemOpenState.get(item);
 	if (!toggleState) {

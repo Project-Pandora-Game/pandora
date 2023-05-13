@@ -1,10 +1,10 @@
 import React, { ReactElement } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 
 export function PandoraLobby(): ReactElement {
-	const roomData = useChatRoomData();
-	if (roomData) {
+	const roomInfo = useChatRoomInfo();
+	if (roomInfo) {
 		return <Navigate to='/chatroom' />;
 	}
 	return (

@@ -1,5 +1,5 @@
-import { AppearanceArmPose, CharacterArmsPose } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo, useState } from 'react';
+import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose } from 'pandora-common';
+import React, { ReactElement, useMemo, useState } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
@@ -10,22 +10,17 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { BoneRowElement, WardrobeArmPoses, WardrobeExpressionGui, WardrobePoseCategories } from '../../../components/wardrobe/wardrobe';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
-import { EditorCharacter } from '../../graphics/character/appearanceEditor';
+import { EditorCharacter, useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 
 export function BoneUI(): ReactElement {
 	const editor = useEditor();
+	const characterState = useEditorCharacterState();
 	const character = editor.character;
 
-	const bones = useCharacterAppearancePose(character);
-	const armsPose = useCharacterAppearanceArmsPose(character);
-	const view = useCharacterAppearanceView(character);
+	const bones = useCharacterAppearancePose(characterState);
+	const armsPose = useCharacterAppearanceArmsPose(characterState);
+	const view = useCharacterAppearanceView(characterState);
 	const showBones = useObservable(editor.showBones);
-
-	const [unlocked, setUnlocked] = useState(!character.appearance.enforce);
-
-	useEffect(() => {
-		character.appearance.enforce = !unlocked;
-	}, [character.appearance, unlocked]);
 
 	return (
 		<Scrollbar color='lighter' className='bone-ui slim'>
@@ -41,7 +36,7 @@ export function BoneUI(): ReactElement {
 				/>
 			</div>
 			<WardrobeArmPoses armsPose={ armsPose } setPose={ (pose) => {
-				character.appearance.setArmsPose(pose);
+				character.getAppearance().produceState((state) => state.produceWithArmsPose(pose));
 			} } />
 			<div>
 				<label htmlFor='back-view-toggle'>Show back view</label>
@@ -50,31 +45,20 @@ export function BoneUI(): ReactElement {
 					type='checkbox'
 					checked={ view === 'back' }
 					onChange={ (e) => {
-						character.appearance.setView(e.target.checked ? 'back' : 'front');
-					} }
-				/>
-			</div>
-			<div>
-				<label htmlFor='unlocked-toggle'>Ignore bone limits from items</label>
-				<input
-					id='unlocked-toggle'
-					type='checkbox'
-					checked={ unlocked }
-					onChange={ (e) => {
-						setUnlocked(e.target.checked);
+						character.getAppearance().setView(e.target.checked ? 'back' : 'front');
 					} }
 				/>
 			</div>
 			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } className='slim-padding' open={ false }>
-				<WardrobePoseCategories appearance={ character.appearance } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
-					character.appearance.importPose(pose, 'pose', false);
+				<WardrobePoseCategories appearance={ character.getAppearance() } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
+					character.getAppearance().produceState((state) => state.produceWithPose(pose, 'pose', false));
 				} } />
 			</FieldsetToggle>
 			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>
-				<WardrobeExpressionGui character={ character } />
+				<WardrobeExpressionGui character={ character } characterState={ characterState } />
 			</FieldsetToggle>
 			<hr />
-			<PoseExportGui character={ character } />
+			<PoseExportGui character={ character } characterState={ characterState } />
 			<h4>
 				Pose bones
 				<ContextHelpButton>
@@ -112,24 +96,24 @@ export function BoneUI(): ReactElement {
 			{
 				bones
 					.filter((bone) => bone.definition.type === 'pose')
-					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } unlocked={ unlocked } />)
+					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.getAppearance().setPose(bone.definition.name, value) } />)
 			}
 			<hr />
 			<h4>Body bones</h4>
 			{
 				bones
 					.filter((bone) => bone.definition.type === 'body')
-					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.appearance.setPose(bone.definition.name, value) } unlocked={ unlocked } />)
+					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.getAppearance().setPose(bone.definition.name, value) } />)
 			}
 		</Scrollbar>
 	);
 }
 
-function PoseExportGui({ character }: { character: EditorCharacter; }) {
+function PoseExportGui({ characterState }: { character: EditorCharacter; characterState: AssetFrameworkCharacterState; }) {
 	const [open, setOpen] = useState(false);
 
-	const pose = useCharacterAppearancePose(character);
-	const arms = useCharacterAppearanceArmsPose(character);
+	const pose = useCharacterAppearancePose(characterState);
+	const arms = useCharacterAppearanceArmsPose(characterState);
 
 	const typeScriptValue = useMemo(() => {
 		return `{

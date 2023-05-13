@@ -85,6 +85,8 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			}
 			case 'poseConflict':
 				return `This item requires a pose conflicting with the added items.`;
+			case 'invalidPose':
+				return `This action results in an invalid pose.`;
 			case 'tooManyItems':
 				return e.asset ?
 					`At most ${e.limit} "${DescribeAsset(assetManager, e.asset)}" can be equipped.` :

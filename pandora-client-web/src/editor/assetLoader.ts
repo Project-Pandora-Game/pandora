@@ -2,11 +2,11 @@ import { AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'p
 import { Texture } from 'pixi.js';
 import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager';
 import { GraphicsLoaderBase, URLGraphicsLoader } from '../assets/graphicsLoader';
-import { EditorAssetManager } from './assets/assetManager';
+import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
 import { LoadArrayBufferTexture } from '../graphics/utility';
 import { EDITOR_ASSETS_ADDRESS } from '../config/Environment';
 
-export async function LoadAssetsFromFileSystem(): Promise<GraphicsManager> {
+export async function LoadAssetsFromFileSystem(): Promise<[AssetManagerEditor, GraphicsManager]> {
 	const dirHandle = await showDirectoryPicker();
 	if (!dirHandle) {
 		throw new Error('No directory selected');
@@ -15,15 +15,15 @@ export async function LoadAssetsFromFileSystem(): Promise<GraphicsManager> {
 	return Load(new FileSystemGraphicsLoader(dirHandle));
 }
 
-export async function LoadAssetsFromAssetDevServer(): Promise<GraphicsManager> {
+export async function LoadAssetsFromAssetDevServer(): Promise<[AssetManagerEditor, GraphicsManager]> {
 	return Load(new URLGraphicsLoader(EDITOR_ASSETS_ADDRESS + '/'));
 }
 
-export async function LoadAssetsFromOfficialLink(): Promise<GraphicsManager> {
+export async function LoadAssetsFromOfficialLink(): Promise<[AssetManagerEditor, GraphicsManager]> {
 	return Load(new URLGraphicsLoader('https://project-pandora.com/pandora-assets/'));
 }
 
-async function Load(loader: IGraphicsLoader): Promise<GraphicsManager> {
+async function Load(loader: IGraphicsLoader): Promise<[AssetManagerEditor, GraphicsManager]> {
 	let hash: string;
 	try {
 		hash = (await loader.loadTextFile('current')).trim();
@@ -41,7 +41,7 @@ async function Load(loader: IGraphicsLoader): Promise<GraphicsManager> {
 	const graphicsManager = new GraphicsManager(loader, graphicsHash, graphicsDefinitions);
 	GraphicsManagerInstance.value = graphicsManager;
 
-	return graphicsManager;
+	return [assetManager, graphicsManager];
 }
 
 async function ReadFile<T extends boolean>(dir: FileSystemDirectoryHandle, path: string, asText: T): Promise<T extends true ? string : ArrayBuffer> {

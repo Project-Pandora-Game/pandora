@@ -1,13 +1,13 @@
-import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema, DoAppearanceAction } from 'pandora-common';
+import { ActionRoomContext, AppearanceActionContext, AssertNever, ChatRoomFeatureSchema, DoAppearanceAction, RoomInventory } from 'pandora-common';
 import React, { ReactElement, ReactNode, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
-import { useCharacterSafemode } from '../../../character/character';
 import { Column } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
 import { Observable } from '../../../observable';
-import { useEditor } from '../../editorContextProvider';
+import { useEditor, useEditorState } from '../../editorContextProvider';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 
 const ROOM_CONTEXT = {
 	features: ChatRoomFeatureSchema.options,
@@ -16,6 +16,7 @@ const ROOM_CONTEXT = {
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {
 	const assetManager = useAssetManager();
 	const editor = useEditor();
+	const globalState = useEditorState();
 	const character = editor.character;
 	const assetList = assetManager.assetList;
 
@@ -23,19 +24,33 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: character.id,
+		globalState: editor.globalState,
 		getCharacter: (id) => {
 			if (id === character.id) {
-				return character.appearance.getRestrictionManager(ROOM_CONTEXT);
+				return character.getRestrictionManager(undefined, ROOM_CONTEXT);
 			}
 			return null;
 		},
 		getTarget: (target) => {
-			if (target.type === 'character' && target.characterId === character.id) {
-				return character.appearance;
+			if (target.type === 'character') {
+				if (target.characterId === character.id) {
+					return character.getAppearance();
+				}
+
+				return null;
 			}
-			return null;
+
+			if (target.type === 'roomInventory') {
+				const roomState = editor.globalState.currentState.room;
+				if (!roomState)
+					return null;
+
+				return new RoomInventory(roomState);
+			}
+
+			AssertNever(target);
 		},
-	}), [character]);
+	}), [character, editor]);
 
 	const context = useMemo<WardrobeContext>(() => ({
 		target: character,
@@ -43,13 +58,13 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 			type: 'character',
 			characterId: character.id,
 		},
+		globalState,
 		player: character,
-		room: null,
 		assetList,
 		extraItemActions,
 		actions,
 		execute: (action) => DoAppearanceAction(action, actions, assetManager),
-	}), [character, assetList, actions, extraItemActions, assetManager]);
+	}), [character, globalState, assetList, extraItemActions, actions, assetManager]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -62,7 +77,9 @@ export function EditorWardrobeUI(): ReactElement {
 	const { assetList } = useWardrobeContext();
 
 	const character = useEditor().character;
-	const safemode = !!useCharacterSafemode(character);
+	const characterState = useEditorCharacterState();
+
+	const safemode = characterState.safemode != null;
 
 	const { currentFocus, setFocus, containerContentsFilter } = useWardrobeItems();
 
@@ -82,7 +99,7 @@ export function EditorWardrobeUI(): ReactElement {
 						type='checkbox'
 						checked={ safemode }
 						onChange={ (e) => {
-							character.appearance.setSafemode(e.target.checked ? { allowLeaveAt: 0 } : null, {});
+							character.getAppearance().produceState((state) => state.produceWithSafemode(e.target.checked ? { allowLeaveAt: 0 } : null));
 						} }
 					/>
 				</div>

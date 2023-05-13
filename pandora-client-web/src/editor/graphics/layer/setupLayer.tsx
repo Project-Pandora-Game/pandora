@@ -1,7 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { DraggablePointDisplay } from '../draggable';
 import { EditorLayer, EDITOR_LAYER_Z_INDEX_EXTRA } from './editorLayer';
-import { BoneName, LayerImageSetting } from 'pandora-common';
+import { AssetFrameworkCharacterState, BoneName, LayerImageSetting } from 'pandora-common';
 import { GraphicsLayerProps, useItemColor, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useEditor } from '../../editorContextProvider';
@@ -10,7 +10,7 @@ import { Container, Graphics, Sprite } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { max, maxBy, min, minBy } from 'lodash';
 import { AssetGraphicsLayer, useLayerDefinition } from '../../../assets/assetGraphics';
-import { AppearanceContainer, useCharacterAppearanceItems } from '../../../character/character';
+import { useCharacterAppearanceItems } from '../../../character/character';
 import { Texture } from 'pixi.js';
 import { EditorAssetGraphics } from '../character/appearanceEditor';
 import { useTexture } from '../../../graphics/useTexture';
@@ -21,10 +21,10 @@ import { useEditorLayerStateOverride } from '../../editor';
 export function SetupLayer({
 	layer,
 	item,
-	appearanceContainer,
+	characterState,
 	...props
 }: GraphicsLayerProps): ReactElement {
-	const evaluator = useAppearanceConditionEvaluator(appearanceContainer);
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const { scaling } = useLayerDefinition(layer);
 
@@ -52,28 +52,28 @@ export function SetupLayer({
 			layer={ layer }
 			item={ item }
 			verticesPoseOverride={ uvPose }
-			appearanceContainer={ appearanceContainer }
+			characterState={ characterState }
 		/>
 	);
 }
 
 export function SetupLayerSelected({
-	appearanceContainer,
+	characterState,
 	zIndex,
 	layer,
 }: {
-	appearanceContainer: AppearanceContainer;
+	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
 	layer: AssetGraphicsLayer;
 }): ReactElement {
 	const editor = useEditor();
 	const state = useEditorLayerStateOverride(layer);
-	const items = useCharacterAppearanceItems(appearanceContainer);
+	const items = useCharacterAppearanceItems(characterState);
 	const item = items.find((i) => i.asset.id === layer.asset.id) ?? null;
 
 	const { points, triangles } = useLayerPoints(layer);
 
-	const evaluator = useAppearanceConditionEvaluator(appearanceContainer);
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const {
 		image: scalingBaseimage,
@@ -154,7 +154,7 @@ export function SetupLayerSelected({
 
 	const texture = useTexture(image, undefined, editorGetTexture);
 
-	const { color, alpha } = useItemColor(appearanceContainer.appearance.getAllItems(), item, colorizationKey, state);
+	const { color, alpha } = useItemColor(characterState.items, item, colorizationKey, state);
 
 	return (
 		<Container

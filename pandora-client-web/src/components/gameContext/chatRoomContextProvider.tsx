@@ -1,7 +1,7 @@
-import { ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomClientData, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventoryBundle, RoomInventory, ROOM_INVENTORY_BUNDLE_DEFAULT, Logger, ItemPath, Item } from 'pandora-common';
+import { ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomFullInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalStateBundle, AssetFrameworkGlobalState, AssetFrameworkCharacterState, IChatRoomLoad } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import { AppearanceContainer, Character } from '../../character/character';
+import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { ChatParser } from '../chatroom/chatParser';
@@ -44,23 +44,24 @@ export interface IChatRoomMessageSender {
 }
 
 export type RoomInventoryEvents = {
-	roomInventoryChange: true;
+	globalStateChange: true;
 };
 
-export type RoomInventoryContainer = ITypedEventEmitter<RoomInventoryEvents> & {
+export type IChatRoomContext = ITypedEventEmitter<RoomInventoryEvents> & {
 	readonly type: 'room';
-	readonly inventory: RoomInventory;
+	readonly globalState: AssetFrameworkGlobalStateContainer;
 };
 
 export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 	messageNotify: NotificationData;
-}> implements IChatRoomMessageSender, RoomInventoryContainer {
+}> implements IChatRoomMessageSender, IChatRoomContext {
 	public readonly type = 'room';
 
+	public readonly globalState: AssetFrameworkGlobalStateContainer;
+
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
-	public readonly data = new Observable<IChatRoomClientData | null>(null);
+	public readonly info = new Observable<IChatRoomFullInfo | null>(null);
 	public readonly characters = new Observable<readonly Character<ICharacterRoomData>[]>([]);
-	public readonly inventory: RoomInventory;
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
 	public get player(): PlayerCharacter | null {
 		return this._shard.player.value;
@@ -84,8 +85,8 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 
 	private _setRestore(roomId?: RoomId): void {
 		if (!roomId) {
-			if (this.data.value) {
-				roomId = this.data.value.id;
+			if (this.info.value) {
+				roomId = this.info.value.id;
 			} else {
 				return;
 			}
@@ -110,101 +111,101 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		super();
 		this.logger = GetLogger('ChatRoom');
 		this._shard = shard;
-		this.inventory = new RoomInventory(GetCurrentAssetManager(), () => this.emit('roomInventoryChange', true));
-		this.inventory.importFromBundle(ROOM_INVENTORY_BUNDLE_DEFAULT, this.logger.prefixMessages('Inventory load:'));
+
+		this.globalState = new AssetFrameworkGlobalStateContainer(GetCurrentAssetManager(), this.logger, () => this.emit('globalStateChange', true));
+
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
 	}
 
 	//#region Handler
 
+	public onLoad(data: IChatRoomLoad): void {
+		if (!this.player) {
+			throw new Error('Cannot update room when player is not loaded');
+		}
+		const oldInfo = this.info.value;
+		if (data.room) {
+			const { info, characters } = data.room;
+			this.info.value = info;
+			if (oldInfo && oldInfo.id !== info.id) {
+				logger.debug('Changed room');
+				this._onLeave();
+			}
+			if (oldInfo?.id !== info.id && this._restore.value?.roomId === info.id) {
+				this.messages.value = this._restore.value.messages;
+				const now = Date.now();
+				for (const [id, message] of this._restore.value.sent) {
+					if (message.time + MESSAGE_EDIT_TIMEOUT < now) {
+						this._sent.set(id, message);
+					}
+				}
+			}
+			this._updateCharacters(characters);
+			logger.debug('Loaded room data', data);
+		} else {
+			this.info.value = null;
+			logger.debug('Left room');
+			this._onLeave();
+		}
+		this._updateGlobalState(data.globalState);
+	}
+
 	public onUpdate(data: IChatRoomUpdate): void {
 		if (!this.player) {
 			throw new Error('Cannot update room when player is not loaded');
 		}
-		const oldData = this.data.value;
-		if ('room' in data) {
-			const room = data.room;
-			this.data.value = room;
-			if (room) {
-				if (oldData && oldData.id !== room.id) {
-					logger.debug('Changed room');
-					this._onLeave();
-				}
-				if (oldData?.id !== room.id && this._restore.value?.roomId === room.id) {
-					if (this._restore.value?.roomId === room.id) {
-						this.messages.value = this._restore.value.messages;
-						const now = Date.now();
-						for (const [id, message] of this._restore.value.sent) {
-							if (message.time + MESSAGE_EDIT_TIMEOUT < now) {
-								this._sent.set(id, message);
-							}
-						}
-					} else {
-						this.messages.value = [];
-						this._sent.clear();
-						this._setRestore(room.id);
-					}
-				}
-				this._updateCharacters(room.characters);
-				this._updateRoomInventory(room.inventory);
-				logger.debug('Loaded room data', data);
-			} else {
-				logger.debug('Left room');
-				this._onLeave();
-			}
-			return;
-		}
-		const { info, join, leave, update, roomInventoryChange } = data;
+		const { info, globalState, join, leave, characters } = data;
 		if (join?.id === this.playerId) {
 			return; // Ignore self-join
 		}
-		if (!this.data.value) {
+		if (!this.info.value) {
 			logger.error('Cannot update room when it is not loaded');
 			return;
 		}
-		let next = this.data.value;
 
 		if (info) {
-			next = { ...next, ...info };
+			this.info.value = {
+				...this.info.value,
+				...info,
+			};
 		}
 		if (join) {
 			let char = this.characters.value.find((oc) => oc.data.id === join.id);
 			if (!char) {
 				this.characters.value = [...this.characters.value, char = new Character(join)];
-				next.characters.push(join);
 			} else {
 				char.update(join);
-				next.characters = next.characters.map((c) => c.id === join.id ? join : c);
 				this.characters.value = [...this.characters.value];
 			}
 		}
 		if (leave) {
-			next.characters = next.characters.filter((c) => c.id !== leave);
 			this.characters.value = this.characters.value.filter((oc) => oc.data.id !== leave);
 			this._status.delete(leave);
 		}
-		if (update) {
-			const char = this.characters.value.find((oc) => oc.data.id === update.id);
-			if (!char) {
-				logger.error('Character not found', update);
-			} else {
-				char.update(update);
-				next.characters = next.characters.map((c) => c.id === update.id ? { ...c, ...update } : c);
-				this.characters.value = [...this.characters.value];
+		if (characters) {
+			for (const [id, characterData] of Object.entries(characters)) {
+				const char = this.characters.value.find((oc) => oc.data.id === id);
+				if (!char) {
+					logger.error('Character not found', id);
+				} else {
+					char.update(characterData);
+					this.characters.value = [...this.characters.value];
+				}
 			}
 		}
-		if (roomInventoryChange) {
-			this._updateRoomInventory(roomInventoryChange);
-			next.inventory = roomInventoryChange;
+		if (globalState) {
+			this._updateGlobalState(globalState);
 		}
-		this.data.value = { ...next };
 		logger.debug('Updated room data', data);
 	}
 
 	private _onLeave() {
+		if (!this.player)
+			throw new Error('Cannot update room when player is not loaded');
+
 		this.messages.value = [];
+		this.characters.value = [this.player];
 		this._sent.clear();
-		this.inventory.importFromBundle(ROOM_INVENTORY_BUNDLE_DEFAULT, this.logger.prefixMessages('Inventory clear:'));
 		this._setRestore();
 	}
 
@@ -225,15 +226,15 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		});
 	}
 
-	private _updateRoomInventory(roomInventory: RoomInventoryBundle): void {
-		if (!this.player)
-			throw new Error('Cannot update room when player is not loaded');
-
-		this.inventory.importFromBundle(roomInventory, this.logger.prefixMessages('Inventory load:'), GetCurrentAssetManager());
+	private _updateGlobalState(bundle: AssetFrameworkGlobalStateBundle): void {
+		this.globalState.setState(
+			AssetFrameworkGlobalState
+				.loadFromBundle(GetCurrentAssetManager(), bundle, this.logger.prefixMessages('State bundle load:')),
+		);
 	}
 
 	public onMessage(incoming: IChatRoomMessage[]): number {
-		const roomId = this.data.value?.id;
+		const roomId = this.info.value?.id;
 		if (!roomId) return 0;
 
 		const messages = incoming
@@ -461,33 +462,27 @@ export function useChatRoomCharacters(): (readonly Character<ICharacterRoomData>
 	return useNullableObservable(context?.characters);
 }
 
-export function useChatRoomData(): IChatRoomClientData | null {
+export function useChatRoomInfo(): IChatRoomFullInfo | null {
 	const context = useChatroom();
-	return useNullableObservable(context?.data);
+	return useNullableObservable(context?.info);
 }
 
 export function useChatRoomFeatures(): ChatRoomFeature[] | null {
-	const data = useChatRoomData();
-	return useMemo(() => data?.features ?? null, [data]);
+	const info = useChatRoomInfo();
+	return useMemo(() => info?.features ?? null, [info]);
 }
 
 export function useActionRoomContext(): ActionRoomContext | null {
-	const data = useChatRoomData();
-	return useMemo(() => data ? ({
-		features: data.features,
-	}) : null, [data]);
+	const info = useChatRoomInfo();
+	return useMemo(() => info ? ({
+		features: info.features,
+	}) : null, [info]);
 }
 
-export function useCharacterRestrictionsManager<T>(character: AppearanceContainer, use: (manager: CharacterRestrictionsManager) => T): T {
+export function useCharacterRestrictionsManager<T>(characterState: AssetFrameworkCharacterState, character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
 	const roomContext = useActionRoomContext();
-	const manager = useMemo(() => character.getRestrictionManager(roomContext), [character, roomContext]);
-	return useSyncExternalStore((onChange) => {
-		return character.on('appearanceUpdate', (changed) => {
-			if (changed.includes('items')) {
-				onChange();
-			}
-		});
-	}, () => use(manager));
+	const manager = useMemo(() => character.getRestrictionManager(characterState, roomContext), [character, characterState, roomContext]);
+	return useMemo(() => use(manager), [use, manager]);
 }
 
 export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {
@@ -510,23 +505,39 @@ export function useChatRoomStatus(): { data: ICharacterRoomData; status: IChatRo
 	}, [characters, status, context]);
 }
 
-export function useRoomInventoryItem(character: RoomInventoryContainer, item: ItemPath | null | undefined): Item | undefined {
+export function useRoomState(context: IChatRoomContext): AssetFrameworkGlobalState {
 	return useSyncExternalStore((onChange) => {
-		return character.on('roomInventoryChange', () => {
+		return context.on('globalStateChange', () => {
 			onChange();
 		});
-	}, () => item ? character.inventory.getItem(item) : undefined);
+	}, () => context.globalState.currentState);
 }
 
-export function useRoomInventoryItems(character: RoomInventoryContainer): readonly Item[] {
-	return useSyncExternalStore((onChange) => {
-		return character.on('roomInventoryChange', () => {
-			onChange();
-		});
-	}, () => character.inventory.getAllItems());
+export function useCharacterState(context: IChatRoomContext, id: CharacterId | null): AssetFrameworkCharacterState | null {
+	const globalState = useRoomState(context);
+
+	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
 }
 
-export function IsChatroomAdmin(data: Nullable<IChatRoomClientData>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
+export function useRoomInventory(context: IChatRoomContext): RoomInventory | null {
+	const state = useRoomState(context);
+
+	return useMemo(() => (state.room ? new RoomInventory(state.room) : null), [state]);
+}
+
+export function useRoomInventoryItem(context: IChatRoomContext, item: ItemPath | null | undefined): Item | undefined {
+	const roomInventory = useRoomInventory(context);
+
+	return useMemo(() => (item ? roomInventory?.getItem(item) : undefined), [roomInventory, item]);
+}
+
+export function useRoomInventoryItems(context: IChatRoomContext): readonly Item[] {
+	const roomInventory = useRoomInventory(context);
+
+	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
+}
+
+export function IsChatroomAdmin(data: Nullable<IChatRoomFullInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
 	if (!data || !account?.id)
 		return false;
 

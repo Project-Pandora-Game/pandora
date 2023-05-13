@@ -14,10 +14,10 @@ import { useAssetManager } from '../../assets/assetManager';
 import { Button } from '../common/button/button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
-import { useChatroom, useChatRoomMessages, useChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
+import { useCharacterState, useChatRoomInfo, useChatRoomMessages, useChatRoomMessageSender, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
-import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerId, usePlayerState } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
 import { ChatRoomScene } from './chatRoomScene';
@@ -30,19 +30,20 @@ import { useAutoScroll } from '../../common/useAutoScroll';
 import { Column, Row } from '../common/container/container';
 import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 import { useNullableObservable } from '../../observable';
-import { Character, useCharacterData, useCharacterSafemode } from '../../character/character';
+import { Character, useCharacterData } from '../../character/character';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 import { IChatroomMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
-	const room = useChatroom();
-	const roomData = useNullableObservable(room?.data);
+	const playerState = usePlayerState();
+	const room = useChatroomRequired();
+	const roomInfo = useChatRoomInfo();
 	const roomCharacters = useNullableObservable(room?.characters);
 	const navigate = useNavigate();
 	const directoryConnector = useDirectoryConnector();
 
-	if (!room || !roomData || !roomCharacters || !player) {
+	if (!roomInfo || !roomCharacters || !player) {
 		return <Navigate to='/chatroom_select' />;
 	}
 
@@ -67,7 +68,7 @@ export function Chatroom(): ReactElement {
 									Room inventory
 								</Button>
 							</Row>
-							<p>You are in room { roomData.name }</p>
+							<p>You are in room { roomInfo.name }</p>
 							<div>
 								Characters in this room:<br />
 								<ul>
@@ -79,12 +80,12 @@ export function Chatroom(): ReactElement {
 					</Tab>
 					<Tab name='Pose'>
 						<WardrobeContextProvider player={ player } target={ player }>
-							<WardrobePoseGui character={ player } />
+							<WardrobePoseGui character={ player } characterState={ playerState } />
 						</WardrobeContextProvider>
 					</Tab>
 					<Tab name='Expressions'>
 						<WardrobeContextProvider player={ player } target={ player }>
-							<WardrobeExpressionGui character={ player } />
+							<WardrobeExpressionGui character={ player } characterState={ playerState } />
 						</WardrobeContextProvider>
 					</Tab>
 				</TabContainer>
@@ -97,9 +98,11 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
+	const chatroom = useChatroomRequired();
 
 	const data = useCharacterData(char);
-	const inSafemode = useCharacterSafemode(char) != null;
+	const state = useCharacterState(chatroom, char.id);
+	const inSafemode = state?.safemode != null;
 
 	return (
 		<li className='character-info'>

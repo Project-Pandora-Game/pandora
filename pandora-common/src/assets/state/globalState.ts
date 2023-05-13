@@ -142,6 +142,7 @@ export class AssetFrameworkGlobalState {
 		if (characterState == null) {
 			newCharacters.delete(characterId);
 		} else {
+			Assert(characterId === characterState.id);
 			newCharacters.set(characterId, characterState);
 		}
 

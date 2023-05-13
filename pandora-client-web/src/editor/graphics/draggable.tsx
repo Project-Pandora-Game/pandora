@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { Texture, FederatedPointerEvent } from 'pixi.js';
-import { Assert, BoneDefinition, CharacterSize, LayerDefinition, PointDefinition } from 'pandora-common';
+import { Assert, AssetFrameworkCharacterState, BoneDefinition, CharacterSize, LayerDefinition, PointDefinition } from 'pandora-common';
 import { GetAngle, RotateVector } from '../../graphics/utility';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../../assets/assetGraphics';
 import dotTexture from '../../assets/editor/dotTexture.png';
@@ -12,8 +12,8 @@ import { Sprite, useApp } from '@pixi/react';
 import { useEditor } from '../editorContextProvider';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
-import { AppearanceContainer } from '../../character/character';
 import { Draft, Immutable } from 'immer';
+import { EditorCharacter } from './character/appearanceEditor';
 
 type DraggableProps = {
 	x: number;
@@ -235,13 +235,15 @@ export function useDraggablePointDefinition(point: DraggablePoint): Immutable<Po
 export function DraggableBone({
 	definition,
 	character,
+	characterState,
 	type,
 }: {
 	definition: BoneDefinition;
-	character: AppearanceContainer;
+	character: EditorCharacter;
+	characterState: AssetFrameworkCharacterState;
 	type: 'setup' | 'result';
 }): ReactElement {
-	const evaluator = useAppearanceConditionEvaluator(character);
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const setPos = useEvent((x: number, y: number): void => {
 		if (type === 'result') {
@@ -262,7 +264,7 @@ export function DraggableBone({
 			if (rotation > 180) {
 				rotation -= 360;
 			}
-			character.appearance.setPose(definition.name, rotation);
+			character.getAppearance().setPose(definition.name, rotation);
 		}
 	});
 

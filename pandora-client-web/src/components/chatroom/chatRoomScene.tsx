@@ -1,4 +1,4 @@
-import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomClientData, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useChatRoomData, useChatRoomCharacters, useCharacterRestrictionsManager, IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, IsChatroomAdmin, ChatRoom, useCharacterState } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useChatInput } from './chatInput';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
@@ -39,7 +39,8 @@ interface ChatRoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	roomDevices: readonly ItemRoomDevice[];
 	shard: ShardConnector | null;
-	data: IChatRoomClientData;
+	room: ChatRoom;
+	info: IChatRoomFullInfo;
 	debugConfig: ChatroomDebugConfig;
 	filters: PIXI.Filter[];
 	filtersExclude?: readonly (CharacterId | ItemId)[];
@@ -54,7 +55,8 @@ export function ChatRoomGraphicsScene({
 	characters,
 	roomDevices,
 	shard,
-	data,
+	room,
+	info,
 	debugConfig,
 	filters,
 	filtersExclude = EMPTY_ARRAY,
@@ -63,7 +65,7 @@ export function ChatRoomGraphicsScene({
 }: ChatRoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
 
-	const roomBackground = useMemo(() => ResolveBackground(assetManager, data.background, GetAssetsSourceUrl()), [assetManager, data.background]);
+	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background, GetAssetsSourceUrl()), [assetManager, info.background]);
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
@@ -129,8 +131,9 @@ export function ChatRoomGraphicsScene({
 					characters.map((character) => (
 						<ChatRoomCharacter
 							key={ character.data.id }
+							room={ room }
 							character={ character }
-							data={ data }
+							roomInfo={ info }
 							debugConfig={ debugConfig }
 							background={ roomBackground }
 							shard={ shard }
@@ -167,7 +170,7 @@ export function ChatRoomGraphicsScene({
 
 export function ChatRoomScene(): ReactElement | null {
 	const chatRoom = useChatroomRequired();
-	const data = useChatRoomData();
+	const info = useChatRoomInfo();
 	const characters = useChatRoomCharacters();
 	const shard = useShardConnector();
 	const [menuActive, setMenuActive] = useState<{ character: Character<ICharacterRoomData>; position: Readonly<PointLike>; } | null>(null);
@@ -181,8 +184,10 @@ export function ChatRoomScene(): ReactElement | null {
 	AssertNotNullable(player);
 
 	const playerData = useCharacterData(player);
+	const playerState = useCharacterState(chatRoom, player.id);
+	AssertNotNullable(playerState);
 
-	const blindness = useCharacterRestrictionsManager(player, (manager) => manager.getBlindness());
+	const blindness = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getBlindness());
 
 	const menuOpen = useCallback((character: Character<ICharacterRoomData> | null, event: FederatedPointerEvent | null) => {
 		if (!character || !event) {
@@ -220,7 +225,7 @@ export function ChatRoomScene(): ReactElement | null {
 		setMenuActive(null);
 	}, []);
 
-	if (!data)
+	if (!info)
 		return null;
 
 	return (
@@ -229,7 +234,8 @@ export function ChatRoomScene(): ReactElement | null {
 			characters={ characters }
 			roomDevices={ roomDevices }
 			shard={ shard }
-			data={ data }
+			room={ chatRoom }
+			info={ info }
 			debugConfig={ debugConfig }
 			filters={ filters }
 			filtersExclude={ [playerData.id] }
@@ -243,8 +249,8 @@ export function ChatRoomScene(): ReactElement | null {
 	);
 }
 
-function AdminActionContextMenu({ character, chatRoom, onClose, onBack }: { character: Character<ICharacterRoomData>; chatRoom: IChatRoomClientData; onClose: () => void; onBack: () => void; }): ReactElement {
-	const isCharacterAdmin = IsChatroomAdmin(chatRoom, { id: character.data.accountId });
+function AdminActionContextMenu({ character, chatRoomInfo, onClose, onBack }: { character: Character<ICharacterRoomData>; chatRoomInfo: IChatRoomFullInfo; onClose: () => void; onBack: () => void; }): ReactElement {
+	const isCharacterAdmin = IsChatroomAdmin(chatRoomInfo, { id: character.data.accountId });
 	const connector = useDirectoryConnector();
 
 	const kick = useCallback(() => {
@@ -305,8 +311,8 @@ function CharacterContextMenu({ character, position, onClose }: {
 	const ref = useContextMenuPosition(position);
 
 	const characterData = useCharacterData(character);
-	const chatRoom = useChatRoomData();
-	const isPlayerAdmin = IsChatroomAdmin(chatRoom, currentAccount);
+	const chatRoomInfo = useChatRoomInfo();
+	const isPlayerAdmin = IsChatroomAdmin(chatRoomInfo, currentAccount);
 
 	useEffect(() => {
 		if (!isPlayerAdmin && menu === 'admin') {
@@ -319,7 +325,7 @@ function CharacterContextMenu({ character, position, onClose }: {
 		onClose();
 	}, [onClose]);
 
-	if (!event || !chatRoom) {
+	if (!event || !chatRoomInfo) {
 		return null;
 	}
 
@@ -353,7 +359,7 @@ function CharacterContextMenu({ character, position, onClose }: {
 							Admin
 						</button>
 					) : (
-						<AdminActionContextMenu character={ character } chatRoom={ chatRoom } onClose={ onCloseActual } onBack={ () => setMenu('main') } />
+						<AdminActionContextMenu character={ character } chatRoomInfo={ chatRoomInfo } onClose={ onCloseActual } onBack={ () => setMenu('main') } />
 					) }
 				</>
 			) }

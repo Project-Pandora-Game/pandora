@@ -8,9 +8,11 @@ import { DraggableBone } from '../draggable';
 import { SetupLayer, SetupLayerSelected } from '../layer';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer';
 import { GraphicsCharacterEditor } from './editorCharacter';
+import { useEditorCharacterState } from './appearanceEditor';
 
 export function SetupCharacter(): ReactElement {
 	const editor = useEditor();
+	const editorCharacterState = useEditorCharacterState();
 	const assetManager = useAssetManager();
 	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const showBones = useObservable(editor.showBones);
@@ -25,7 +27,7 @@ export function SetupCharacter(): ReactElement {
 				!selectedLayer ? null :
 				(
 					<SetupLayerSelected
-						appearanceContainer={ editor.character }
+						characterState={ editorCharacterState }
 						layer={ selectedLayer }
 						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 					/>
@@ -38,7 +40,15 @@ export function SetupCharacter(): ReactElement {
 						{
 							bones
 								.filter((b) => b.x !== 0 && b.y !== 0)
-								.map((b) => <DraggableBone type='setup' character={ editor.character } definition={ b } key={ b.name } />)
+								.map((b) => (
+									<DraggableBone
+										key={ b.name }
+										type='setup'
+										character={ editor.character }
+										characterState={ editorCharacterState }
+										definition={ b }
+									/>
+								))
 						}
 					</Container>
 				)

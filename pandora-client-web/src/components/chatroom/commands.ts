@@ -87,7 +87,7 @@ function CreateChatroomAdminAction(action: IClientDirectoryArgument['chatRoomAdm
 			// TODO make this accept multiple targets and accountIds
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
 			.handler(({ chatRoom, directoryConnector }, { target }) => {
-				if (!IsChatroomAdmin(chatRoom.data.value, directoryConnector.currentAccount.value))
+				if (!IsChatroomAdmin(chatRoom.info.value, directoryConnector.currentAccount.value))
 					return;
 
 				directoryConnector.sendMessage('chatRoomAdminAction', {
@@ -139,18 +139,21 @@ export const COMMANDS: readonly IClientCommand[] = [
 		longDescription: '',
 		usage: '',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector }) => {
-				const target = shardConnector.player.value;
-				if (target) {
-					shardConnector.sendMessage('appearanceAction', {
-						type: 'setView',
-						target: target.data.id,
-						view: target.appearance.getView() === 'front' ? 'back' : 'front',
-					});
-					return true;
-				} else {
+			.handler(({ shardConnector, chatRoom }) => {
+				const player = shardConnector.player.value;
+				if (!player)
 					return false;
-				}
+
+				const playerState = chatRoom.globalState.currentState.characters.get(player.id);
+				if (!playerState)
+					return false;
+
+				shardConnector.sendMessage('appearanceAction', {
+					type: 'setView',
+					target: player.data.id,
+					view: playerState.view === 'front' ? 'back' : 'front',
+				});
+				return true;
 			}),
 	},
 	{

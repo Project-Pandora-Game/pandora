@@ -14,6 +14,7 @@ import { useEvent } from '../common/useEvent';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { EulaGate } from '../components/Eula';
 import { EditorWardrobeContextProvider } from './components/wardrobe/wardrobe';
+import { AssetManagerEditor } from './assets/assetManager';
 
 const logger = GetLogger('init');
 
@@ -52,7 +53,7 @@ function AssetLoaderElement() {
 	const setEditor = useSetEditor();
 	const [pending, setPending] = useState(false);
 
-	const load = useEvent(async (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => {
+	const load = useEvent(async (setLoading: (loading: boolean) => void, loadManager: () => Promise<[AssetManagerEditor, GraphicsManager]>) => {
 		if (pending)
 			return;
 
@@ -60,8 +61,8 @@ function AssetLoaderElement() {
 		setLoading(true);
 
 		try {
-			const manager = await loadManager();
-			setEditor(new Editor(manager));
+			const [assetManager, graphicsManager] = await loadManager();
+			setEditor(new Editor(assetManager, graphicsManager));
 		} catch (e) {
 			if (e instanceof Error) {
 				toast.error(`Failed to load:\n${e.message}`, TOAST_OPTIONS_ERROR);
@@ -91,7 +92,7 @@ function AssetLoaderElement() {
 	);
 }
 
-function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement {
+function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<[AssetManagerEditor, GraphicsManager]>) => Promise<void>; }): ReactElement {
 	const [loading, setLoading] = useState(false);
 	const supported = 'showDirectoryPicker' in window;
 	const text = supported ? 'Load Assets From File System' : 'File System Access API Not Supported';
@@ -101,7 +102,7 @@ function ButtonLoadFromFileSystem({ pending, load }: { pending: boolean; load: (
 	);
 }
 
-function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement | null {
+function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<[AssetManagerEditor, GraphicsManager]>) => Promise<void>; }): ReactElement | null {
 	const [loading, setLoading] = useState(false);
 
 	return (
@@ -109,7 +110,7 @@ function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setL
 	);
 }
 
-function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<GraphicsManager>) => Promise<void>; }): ReactElement {
+function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<[AssetManagerEditor, GraphicsManager]>) => Promise<void>; }): ReactElement {
 	const [loading, setLoading] = useState(false);
 
 	return (

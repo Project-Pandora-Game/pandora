@@ -1,6 +1,5 @@
 import { AssertNotNullable, FormatTimeInterval, SAFEMODE_EXIT_COOLDOWN } from 'pandora-common';
 import React, { ReactElement, useCallback, useContext, useMemo, useState } from 'react';
-import { useCharacterSafemode } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useCurrentTime } from '../../common/useCurrentTime';
@@ -11,6 +10,7 @@ import { ModalDialog } from '../dialog/dialog';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ContextHelpButton } from '../help/contextHelpButton';
+import { useCharacterState, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 
 export type SafemodeDialogContext = {
 	show: () => void;
@@ -47,7 +47,9 @@ export function CharacterSafemodeDialog({ player }: {
 	player: PlayerCharacter;
 }): ReactElement {
 	const safemodeContext = useSafemodeDialogContext();
-	const safemodeState = useCharacterSafemode(player);
+	const roomContext = useChatroomRequired();
+	const state = useCharacterState(roomContext, player.id);
+	const safemodeState = state?.safemode ?? null;
 	const shardConnector = useShardConnector();
 	const currentTime = useCurrentTime();
 

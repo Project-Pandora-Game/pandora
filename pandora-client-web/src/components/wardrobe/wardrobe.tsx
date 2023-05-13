@@ -14,6 +14,9 @@ import {
 	AssertNotNullable,
 	Asset,
 	AssetColorization,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalState,
+	AssetFrameworkRoomState,
 	AssetsPosePresets,
 	BONE_MAX,
 	BONE_MIN,
@@ -37,17 +40,18 @@ import {
 	MessageSubstitute,
 	RoomDeviceDeployment,
 	RoomDeviceSlot,
+	RoomInventory,
 	RoomTargetSelector,
 	Writeable,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AssetManagerClient, useAssetManager } from '../../assets/assetManager';
-import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterSafemode } from '../../character/character';
+import { AppearanceContainer, Character, useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearancePose, useCharacterAppearanceView } from '../../character/character';
 import { Observable, useObservable } from '../../observable';
 import './wardrobe.scss';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { ChatRoom, RoomInventoryContainer, useActionRoomContext, useChatroom, useChatRoomCharacters, useChatRoomData, useRoomInventoryItem, useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
+import { IChatRoomContext, useActionRoomContext, useChatroom, useChatRoomCharacters, useChatRoomInfo, useChatroomRequired, useRoomState } from '../gameContext/chatRoomContextProvider';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -65,7 +69,7 @@ import { ColorInput, ColorInputRGBA } from '../common/colorInput/colorInput';
 import { Column, Row } from '../common/container/container';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import { EvalItemPath, SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import emptyLock from '../../assets/icons/lock_empty.svg';
 import closedLock from '../../assets/icons/lock_closed.svg';
 import openLock from '../../assets/icons/lock_open.svg';
@@ -90,7 +94,7 @@ export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
 	const player = usePlayer();
 	const chatRoom = useChatroom();
-	const isInRoom = useChatRoomData() != null;
+	const isInRoom = useChatRoomInfo() != null;
 	const chatRoomCharacters = useChatRoomCharacters();
 
 	const characterId = IsObject(locationState) && IsCharacterId(locationState.character) ? locationState.character : null;
@@ -125,13 +129,13 @@ export function WardrobeScreen(): ReactElement | null {
 }
 
 export type WardrobeContextExtraItemActionComponent = (props: { item: ItemPath; }) => ReactElement;
-export type WardrobeTarget = AppearanceContainer | RoomInventoryContainer;
+export type WardrobeTarget = AppearanceContainer | IChatRoomContext;
 
 export interface WardrobeContext {
 	target: WardrobeTarget;
 	targetSelector: RoomTargetSelector;
 	player: AppearanceContainer;
-	room: ChatRoom | null;
+	globalState: AssetFrameworkGlobalState;
 	assetList: readonly Asset[];
 	extraItemActions: Observable<readonly WardrobeContextExtraItemActionComponent[]>;
 	actions: AppearanceActionContext;
@@ -151,8 +155,8 @@ export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
 export function WardrobeContextProvider({ target, player, children }: { target: WardrobeTarget; player: PlayerCharacter; children: ReactNode; }): ReactElement {
 	const assetList = useAssetManager().assetList;
-	const room = useChatroom();
-	const isInRoom = useChatRoomData() != null;
+	const room = useChatroomRequired();
+	const globalStateContainer = room.globalState;
 	const roomContext = useActionRoomContext();
 	const shardConnector = useShardConnector();
 	const chatroomCharacters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? EMPTY_ARRAY;
@@ -161,40 +165,36 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.data.id,
+		globalState: globalStateContainer,
 		getCharacter: (id) => {
-			if (id === player.id) {
-				return player.getRestrictionManager(roomContext);
-			} else if (target.type === 'character' && id === target.id) {
-				return target.getRestrictionManager(roomContext);
-			} else {
-				const targetCharacter = chatroomCharacters.find((c) => c.id === id);
-				if (targetCharacter) {
-					return targetCharacter.getRestrictionManager(roomContext);
-				}
-			}
-			return null;
+			const state = globalStateContainer.currentState.getCharacterState(id);
+			const character = chatroomCharacters.find((c) => c.id === id);
+			if (!state || !character)
+				return null;
+
+			return character.getRestrictionManager(state, roomContext);
 		},
 		getTarget: (actionTarget) => {
 			if (actionTarget.type === 'character') {
-				if (actionTarget.characterId === player.id) {
-					return player.appearance;
-				} else if (target.type === 'character' && actionTarget.characterId === target.id) {
-					return target.appearance;
-				} else {
-					const targetCharacter = chatroomCharacters.find((c) => c.id === actionTarget.characterId);
-					if (targetCharacter) {
-						return targetCharacter.appearance;
-					}
-				}
+				const state = globalStateContainer.currentState.getCharacterState(actionTarget.characterId);
+				const character = chatroomCharacters.find((c) => c.id === actionTarget.characterId);
+				if (!state || !character)
+					return null;
+
+				return character.getAppearance(state);
 			}
+
 			if (actionTarget.type === 'roomInventory') {
-				if (target.type === 'room')
-					return target.inventory;
-				return isInRoom ? (room?.inventory ?? null) : null;
+				const roomState = globalStateContainer.currentState.room;
+				if (!roomState)
+					return null;
+
+				return new RoomInventory(roomState);
 			}
-			return null;
+
+			AssertNever(actionTarget);
 		},
-	}), [target, player, roomContext, isInRoom, room, chatroomCharacters]);
+	}), [player, globalStateContainer, roomContext, chatroomCharacters]);
 
 	const targetSelector = useMemo<RoomTargetSelector>(() => {
 		if (target.type === 'character') {
@@ -210,16 +210,18 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		AssertNever(target);
 	}, [target]);
 
+	const globalState = useRoomState(room);
+
 	const context = useMemo<WardrobeContext>(() => ({
 		target,
 		targetSelector,
 		player,
-		room,
+		globalState,
 		assetList,
 		extraItemActions,
 		actions,
 		execute: (action) => shardConnector?.sendMessage('appearanceAction', action),
-	}), [target, targetSelector, player, room, assetList, extraItemActions, actions, shardConnector]);
+	}), [target, targetSelector, player, globalState, assetList, extraItemActions, actions, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -265,7 +267,7 @@ function Wardrobe(): ReactElement | null {
 }
 
 function WardrobeRoom({ room: _room }: {
-	room: RoomInventoryContainer;
+	room: IChatRoomContext;
 }): ReactElement {
 	const navigate = useNavigate();
 
@@ -289,8 +291,13 @@ function WardrobeCharacter({ character }: {
 	character: AppearanceContainer;
 }): ReactElement {
 	const navigate = useNavigate();
+	const { globalState } = useWardrobeContext();
+	const characterState = globalState.characters.get(character.id);
 
-	const inSafemode = useCharacterSafemode(character) != null;
+	if (characterState == null)
+		return <Link to='/pandora_lobby'>◄ Back</Link>;
+
+	const inSafemode = characterState.safemode != null;
 
 	return (
 		<div className='wardrobe'>
@@ -302,7 +309,7 @@ function WardrobeCharacter({ character }: {
 				)
 			}
 			<div className='wardrobeMain'>
-				<WardrobeCharacterPreview character={ character } />
+				<WardrobeCharacterPreview character={ character } characterState={ characterState } />
 				<TabContainer className='flex-1'>
 					<Tab name='Items'>
 						<div className='wardrobe-pane'>
@@ -311,14 +318,14 @@ function WardrobeCharacter({ character }: {
 					</Tab>
 					<Tab name='Body'>
 						<div className='wardrobe-pane'>
-							<WardrobeBodyManipulation character={ character } />
+							<WardrobeBodyManipulation character={ character } characterState={ characterState } />
 						</div>
 					</Tab>
 					<Tab name='Poses & Expressions'>
 						<div className='wardrobe-pane'>
 							<div className='wardrobe-ui'>
-								<WardrobePoseGui character={ character } />
-								<WardrobeExpressionGui character={ character } />
+								<WardrobePoseGui character={ character } characterState={ characterState } />
+								<WardrobeExpressionGui character={ character } characterState={ characterState } />
 							</div>
 						</div>
 					</Tab>
@@ -334,8 +341,9 @@ function WardrobeCharacter({ character }: {
 	);
 }
 
-function WardrobeCharacterPreview({ character }: {
+function WardrobeCharacterPreview({ character, characterState }: {
 	character: AppearanceContainer;
+	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const shardConnector = useShardConnector();
 	const account = useCurrentAccount();
@@ -352,7 +360,7 @@ function WardrobeCharacterPreview({ character }: {
 					shardConnector?.sendMessage('appearanceAction', {
 						type: 'setView',
 						target: character.id,
-						view: character.appearance.getView() === 'front' ? 'back' : 'front',
+						view: characterState.view === 'front' ? 'back' : 'front',
 					});
 				} }
 			>
@@ -364,59 +372,51 @@ function WardrobeCharacterPreview({ character }: {
 
 	return (
 		<GraphicsScene className='characterPreview' divChildren={ overlay } sceneOptions={ sceneOptions }>
-			<GraphicsCharacter appearanceContainer={ character } />
+			<GraphicsCharacter characterState={ characterState } />
 		</GraphicsScene>
 	);
 }
 
-export function useWardrobeTargetValue<T>(target: WardrobeTarget | null, use: (target: WardrobeTarget | null) => T, extraDeps: unknown[] = []): T {
-	const subscriber = useCallback<(onStoreChange: () => void) => () => void>((onChange) => {
+export function useWardrobeTargetItems(target: WardrobeTarget | null): AppearanceItems {
+	const { globalState } = useWardrobeContext();
+
+	const items = useMemo<AppearanceItems | null>(() => {
 		if (target == null) {
-			return () => { /* Noop */ };
+			return null;
 		} else if (target.type === 'character') {
-			return target.on('appearanceUpdate', (changed) => {
-				if (changed.includes('items')) {
-					onChange();
-				}
+			return globalState.getItems({
+				type: 'character',
+				characterId: target.id,
 			});
 		} else if (target.type === 'room') {
-			return target.on('roomInventoryChange', () => {
-				onChange();
+			return globalState.getItems({
+				type: 'roomInventory',
 			});
 		}
 		AssertNever(target);
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [target, ...extraDeps]);
+	}, [globalState, target]);
 
-	return useSyncExternalStore(subscriber, () => {
-		return use(target);
-	});
+	return items ?? EMPTY_ARRAY;
 }
 
-export function useWardrobeTargetItem(target: WardrobeTarget | null, item: ItemPath | null | undefined): Item | undefined {
-	return useWardrobeTargetValue(target, (t) => {
-		if (!item || !t)
+export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: ItemPath | null | undefined): Item | undefined {
+	const items = useWardrobeTargetItems(target);
+
+	return useMemo(() => {
+		if (!itemPath)
 			return undefined;
-		if (t.type === 'character') {
-			return t.appearance.getItem(item);
-		} else if (t.type === 'room') {
-			return t.inventory.getItem(item);
-		}
-		AssertNever(t);
-	}, [item]);
-}
 
-export function useWardrobeTargetItems(target: WardrobeTarget | null): AppearanceItems {
-	return useWardrobeTargetValue(target, (t) => {
-		if (t == null) {
-			return EMPTY_ARRAY;
-		} else if (t.type === 'character') {
-			return t.appearance.getAllItems();
-		} else if (t.type === 'room') {
-			return t.inventory.getAllItems();
+		const { container, itemId } = itemPath;
+
+		let current: AppearanceItems = items;
+		for (const step of container) {
+			const item = current.find((it) => it.id === step.item);
+			if (!item)
+				return undefined;
+			current = item.getModuleItems(step.module);
 		}
-		AssertNever(t);
-	});
+		return current.find((it) => it.id === itemId);
+	}, [items, itemPath]);
 }
 
 export function useWardrobeItems(): {
@@ -524,9 +524,10 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 	);
 }
 
-function WardrobeBodyManipulation({ className, character }: {
+function WardrobeBodyManipulation({ className, character, characterState }: {
 	className?: string;
 	character: AppearanceContainer;
+	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const { assetList } = useWardrobeContext();
 	const assetManager = useAssetManager();
@@ -570,7 +571,7 @@ function WardrobeBodyManipulation({ className, character }: {
 					/>
 				</Tab>
 				<Tab name='Change body size'>
-					<WardrobeBodySizeEditor character={ character } />
+					<WardrobeBodySizeEditor character={ character } characterState={ characterState } />
 				</Tab>
 			</TabContainer>
 			{
@@ -719,8 +720,7 @@ export function RoomInventoryView({ title, container }: {
 	title: string;
 	container: ItemContainerPath;
 }): ReactElement | null {
-	const { room, targetSelector, extraItemActions } = useWardrobeContext();
-	const isInRoom = useChatRoomData() != null;
+	const { globalState, targetSelector, extraItemActions } = useWardrobeContext();
 
 	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
 		return (
@@ -745,10 +745,10 @@ export function RoomInventoryView({ title, container }: {
 	return (
 		<div className='inventoryView'>
 			{
-				(room && isInRoom) ? (
+				globalState.room != null ? (
 					<RoomInventoryViewList
 						title={ title }
-						room={ room }
+						room={ globalState.room }
 						characterContainer={ container }
 					/>
 				) : (
@@ -767,10 +767,10 @@ export function RoomInventoryViewList({
 	characterContainer,
 }: {
 	title: string;
-	room: ChatRoom;
+	room: AssetFrameworkRoomState;
 	characterContainer: ItemContainerPath;
 }): ReactElement | null {
-	const items = useRoomInventoryItems(room);
+	const items = room.items;
 
 	return (
 		<>
@@ -793,7 +793,7 @@ export function RoomInventoryViewList({
 }
 
 function RoomInventoryViewListItem({ room, item, characterContainer }: {
-	room: ChatRoom;
+	room: AssetFrameworkRoomState;
 	item: ItemPath;
 	characterContainer: ItemContainerPath;
 }): ReactElement {
@@ -802,7 +802,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 	};
 
 	const { targetSelector } = useWardrobeContext();
-	const inventoryItem = useRoomInventoryItem(room, item);
+	const inventoryItem = EvalItemPath(room.items, item);
 
 	if (!inventoryItem) {
 		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
@@ -1119,8 +1119,7 @@ function CalculateInQueue(fn: () => void, lowPriority = false): () => void {
 }
 
 function useStaggeredAppearanceActionResult(action: AppearanceAction, lowPriority = false): AppearanceActionResult | null {
-	const assetManager = useAssetManager();
-	const { actions, player, target, room } = useWardrobeContext();
+	const { actions, player, target, globalState } = useWardrobeContext();
 	const [result, setResult] = useState<AppearanceActionResult | null>(null);
 
 	const resultAction = useRef<AppearanceAction | null>(null);
@@ -1139,7 +1138,7 @@ function useStaggeredAppearanceActionResult(action: AppearanceAction, lowPriorit
 			cancelCalculate?.();
 			cancelCalculate = CalculateInQueue(() => {
 				if (wantedAction.current === action && wantedContext.current === actions) {
-					const check = DoAppearanceAction(action, actions, assetManager, { dryRun: true });
+					const check = DoAppearanceAction(action, actions, globalState.assetManager, { dryRun: true });
 					resultAction.current = action;
 					resultContext.current = actions;
 					setResult(check);
@@ -1147,23 +1146,14 @@ function useStaggeredAppearanceActionResult(action: AppearanceAction, lowPriorit
 			}, lowPriority);
 		};
 
-		const cleanup = [
-			player.on('appearanceUpdate', doCalculate),
-			(
-				target.type === 'character' ?
-				target.on('appearanceUpdate', doCalculate) :
-				null
-			),
-			room?.on('roomInventoryChange', doCalculate),
-			() => cancelCalculate?.(),
-		];
-
 		doCalculate();
 
 		return () => {
-			cleanup.forEach((c) => c?.());
+			cancelCalculate?.();
 		};
-	}, [action, actions, assetManager, target, lowPriority, player, room]);
+		// Note, the presence of `globalState` here is more important than just for assetManager
+		// Its purpose is to recalculate requirements when the state changes
+	}, [action, actions, target, lowPriority, player, globalState]);
 
 	const valid = lowPriority ? (resultAction.current === action && resultContext.current === actions) :
 		(resultAction.current?.type === action.type);
@@ -1570,11 +1560,12 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 	);
 }
 
-function WardrobeBodySizeEditor({ character }: {
+function WardrobeBodySizeEditor({ character, characterState }: {
 	character: AppearanceContainer;
+	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const { execute } = useWardrobeContext();
-	const currentBones = useCharacterAppearancePose(character);
+	const currentBones = useCharacterAppearancePose(characterState);
 
 	const setBodyDirect = useCallback(({ bones }: { bones: Record<BoneName, number>; }) => {
 		execute({
@@ -1794,15 +1785,16 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 	);
 }
 
-export function WardrobePoseGui({ character }: {
+export function WardrobePoseGui({ character, characterState }: {
 	character: AppearanceContainer;
+	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const assetManager = useAssetManager();
 	const { execute } = useWardrobeContext();
 
-	const currentBones = useCharacterAppearancePose(character);
-	const armsPose = useCharacterAppearanceArmsPose(character);
-	const view = useCharacterAppearanceView(character);
+	const currentBones = useCharacterAppearancePose(characterState);
+	const armsPose = useCharacterAppearanceArmsPose(characterState);
+	const view = useCharacterAppearanceView(characterState);
 
 	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm }: Omit<AssetsPosePreset, 'name'>) => {
 		execute({
@@ -1814,7 +1806,7 @@ export function WardrobePoseGui({ character }: {
 		});
 	});
 
-	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(character.appearance.getAllItems(), currentBones, armsPose, assetManager), [character, currentBones, armsPose, assetManager]);
+	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(characterState.items, currentBones, armsPose, assetManager), [characterState, currentBones, armsPose, assetManager]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
@@ -1877,13 +1869,13 @@ export function GetVisibleBoneName(name: string): string {
 		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
 }
 
-export function BoneRowElement({ bone, onChange, limits, unlocked }: { bone: BoneState; onChange: (value: number) => void; limits?: AppearanceLimitTree; unlocked?: boolean; }): ReactElement {
+export function BoneRowElement({ bone, onChange, limits }: { bone: BoneState; onChange: (value: number) => void; limits?: AppearanceLimitTree; }): ReactElement {
 	const name = useMemo(() => GetVisibleBoneName(bone.definition.name), [bone]);
-	const canReset = useMemo(() => unlocked || limits == null || limits.validate({ bones: { bone: 0 } }), [unlocked, limits]);
+	const canReset = useMemo(() => limits == null || limits.validate({ bones: { bone: 0 } }), [limits]);
 
 	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(value) && value !== bone.rotation && (unlocked || limits == null || limits.validate({ bones: { bone: value } }))) {
+		if (Number.isInteger(value) && value !== bone.rotation && (limits == null || limits.validate({ bones: { bone: value } }))) {
 			onChange(value);
 		}
 	});
@@ -1901,10 +1893,11 @@ export function BoneRowElement({ bone, onChange, limits, unlocked }: { bone: Bon
 	);
 }
 
-export function WardrobeExpressionGui({ character }: {
+export function WardrobeExpressionGui({ characterState }: {
 	character: AppearanceContainer;
+	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const appearance = useCharacterAppearanceItems(character);
+	const appearance = useCharacterAppearanceItems(characterState);
 
 	const setFocus = useCallback(() => {
 		Assert(false, 'Expressions cannot focus container!');

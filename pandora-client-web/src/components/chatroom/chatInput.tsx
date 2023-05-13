@@ -2,7 +2,7 @@ import { AssertNotNullable, CharacterId, IChatRoomStatus, IChatType, RoomId } fr
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { noop } from 'lodash';
 import { Character } from '../../character/character';
-import { IMessageParseOptions, useChatRoomCharacters, useChatRoomData, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { IMessageParseOptions, useChatRoomCharacters, useChatRoomInfo, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
 import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
 import { toast } from 'react-toastify';
@@ -79,7 +79,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const characters = useChatRoomCharacters();
 	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
-	const roomId = useChatRoomData()?.id;
+	const roomId = useChatRoomInfo()?.id;
 
 	useEffect(() => {
 		if (!roomId)

@@ -24,7 +24,7 @@ import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../gameContext/directoryConnectorContextProvider';
-import { IsChatroomAdmin, useChatRoomData } from '../gameContext/chatRoomContextProvider';
+import { IsChatroomAdmin, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { Select } from '../common/select/select';
 import { ModalDialog } from '../dialog/dialog';
@@ -83,7 +83,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const currentAccount = useCurrentAccount();
 	AssertNotNullable(currentAccount);
 	const createRoom = useCreateRoom();
-	const roomData = useChatRoomData();
+	const roomInfo = useChatRoomInfo();
 	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<IChatRoomDirectoryConfig>, action: Partial<IChatRoomDirectoryConfig>) => {
 		const result: Partial<IChatRoomDirectoryConfig> = {
 			...oldState,
@@ -106,15 +106,15 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const accountId = currentAccount.id;
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
-	const isPlayerOwner = !!(creation || accountId && roomData?.owners.includes(accountId));
-	const isPlayerAdmin = creation || IsChatroomAdmin(roomData, currentAccount);
+	const isPlayerOwner = !!(creation || accountId && roomInfo?.owners.includes(accountId));
+	const isPlayerAdmin = creation || IsChatroomAdmin(roomInfo, currentAccount);
 
 	const currentConfig: IChatRoomDirectoryConfig = {
-		...(roomData ?? DefaultRoomData()),
+		...(roomInfo ?? DefaultRoomData()),
 		...roomModifiedData,
 	};
 
-	const owners: readonly AccountId[] = creation ? [accountId] : (roomData?.owners ?? []);
+	const owners: readonly AccountId[] = creation ? [accountId] : (roomInfo?.owners ?? []);
 
 	const currentConfigBackground = currentConfig.background;
 
@@ -136,9 +136,9 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 		},
 	}), [setRoomModifiedData, currentConfigBackground]);
 
-	if (!creation && !roomData) {
+	if (!creation && !roomInfo) {
 		return <Navigate to='/chatroom_select' />;
-	} else if (creation && roomData) {
+	} else if (creation && roomInfo) {
 		return <Navigate to='/chatroom' />;
 	}
 
@@ -180,7 +180,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					<label>Owners</label>
 					<Row padding='none'>
 						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
-						{ !creation && roomData && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomData.id } name={ roomData.name } /> : null }
+						{ !creation && roomInfo && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomInfo.id } name={ roomInfo.name } /> : null }
 					</Row>
 				</div>
 				<div className='input-container'>
@@ -289,7 +289,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 		</>
 	);
 
-	if (!roomData) {
+	if (!roomInfo) {
 		return (
 			<div className='roomAdminScreen creation'>
 				<Link to='/chatroom_select'>◄ Back</Link>
@@ -371,7 +371,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	return (
 		<div className='roomAdminScreen configuration'>
 			<Link to='/chatroom'>◄ Back</Link>
-			<p>Current room ID: <span className='selectable'>{ roomData.id }</span></p>
+			<p>Current room ID: <span className='selectable'>{ roomInfo.id }</span></p>
 			{ configurableElements }
 			<div className='input-container'>
 				<label>Features (cannot be changed after creation)</label>

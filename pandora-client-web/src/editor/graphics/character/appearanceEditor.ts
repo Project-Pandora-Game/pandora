@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, AssetManager, GetLogger } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -8,87 +8,130 @@ import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Editor } from '../../editor';
 import { cloneDeep } from 'lodash';
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
-import { TypedEventEmitter } from '../../../event';
-import { AppearanceContainer, AppearanceEvents } from '../../../character/character';
+import { AppearanceContainer } from '../../../character/character';
 import { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
-import { GetCurrentAssetManager } from '../../../assets/assetManager';
+import { useEditorState } from '../../editorContextProvider';
+import { AppearanceCharacterManipulator } from 'pandora-common/dist/assets/appearanceHelpers';
+import { AssetFrameworkGlobalStateManipulator } from 'pandora-common/dist/assets/manipulators/globalStateManipulator';
 
 export class AppearanceEditor extends CharacterAppearance {
-	private _enforce = true;
+	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
-	public get enforce(): boolean {
-		return this._enforce;
+	constructor(characterState: AssetFrameworkCharacterState, getCharacter: () => Readonly<ICharacterMinimalData>, globalState: AssetFrameworkGlobalStateContainer) {
+		super(characterState, getCharacter);
+		this.globalState = globalState;
 	}
 
-	public set enforce(value: boolean) {
-		if (this._enforce === value) {
-			return;
-		}
-		this._enforce = value;
-		if (this._enforce) {
-			super.enforcePoseLimits();
-		}
-	}
-
-	constructor(...args: ConstructorParameters<typeof CharacterAppearance>) {
-		super(...args);
-		this.setSafemode({
-			allowLeaveAt: 0,
-		}, {});
-	}
-
-	protected override enforcePoseLimits(): boolean {
-		if (!this._enforce)
+	protected _manipulateGlobalState(action: (manipulator: AssetFrameworkGlobalStateManipulator) => boolean, context: ActionProcessingContext): boolean {
+		const manipulator = this.globalState.getManipulator();
+		if (!action(manipulator)) {
 			return false;
+		}
 
-		return super.enforcePoseLimits();
+		return this.globalState.commitChanges(manipulator, context).success;
+	}
+
+	protected _manipulateState(action: (manipulator: AppearanceCharacterManipulator) => boolean, context: ActionProcessingContext): boolean {
+		return this._manipulateGlobalState((manipulator) => {
+			return action(manipulator.getManipulatorFor({
+				type: 'character',
+				characterId: this.id,
+			}));
+		}, context);
+	}
+
+	public produceState(producer: (currentState: AssetFrameworkCharacterState) => AssetFrameworkCharacterState | null, context: ActionProcessingContext = {}): boolean {
+		return this._manipulateGlobalState((manipulator) => {
+			return manipulator.produceCharacterState(this.id, producer);
+		}, context);
+	}
+
+	public setPose(bone: string, value: number): boolean {
+		if (!Number.isInteger(value))
+			throw new Error('Attempt to set non-int pose value');
+
+		// This asserts existence of bone
+		this.getPose(bone);
+
+		return this.produceState((state) => state.produceWithPose({ bones: { [bone]: value } }, true, false));
 	}
 
 	public addItem(asset: Asset, context: ActionProcessingContext = {}): boolean {
-		const item = this.assetManager.createItem(`i/editor/${nanoid()}`, asset, null);
-		const manipulator = this.getManipulator();
-		return ActionAddItem(manipulator, [], item) && this.commitChanges(manipulator, context).success;
+		return this._manipulateState((manipulator) => {
+			const item = this.assetManager.createItem(`i/editor/${nanoid()}`, asset, null);
+			return ActionAddItem(
+				manipulator,
+				[],
+				item,
+			);
+		}, context);
 	}
 
 	public removeItem(id: ItemId, context: ActionProcessingContext = {}): boolean {
-		const manipulator = this.getManipulator();
-		return ActionRemoveItem(manipulator, {
-			container: [],
-			itemId: id,
-		}) && this.commitChanges(manipulator, context).success;
+		return this._manipulateState((manipulator) => {
+			return ActionRemoveItem(
+				manipulator,
+				{
+					container: [],
+					itemId: id,
+				},
+			);
+		}, context);
 	}
 
 	public moveItem(id: ItemId, shift: number, context: ActionProcessingContext = {}): boolean {
-		const manipulator = this.getManipulator();
-		return ActionMoveItem(manipulator, {
-			container: [],
-			itemId: id,
-		}, shift) && this.commitChanges(manipulator, context).success;
+		return this._manipulateState((manipulator) => {
+			return ActionMoveItem(
+				manipulator,
+				{
+					container: [],
+					itemId: id,
+				},
+				shift,
+			);
+		}, context);
+	}
+
+	public setView(view: CharacterView, context: ActionProcessingContext = {}): boolean {
+		return this.produceState((state) => state.produceWithView(view), context);
 	}
 }
 
-export class EditorCharacter extends TypedEventEmitter<AppearanceEvents> implements AppearanceContainer {
+export const EDITOR_CHARACTER_ID: CharacterId = 'c0';
+
+export class EditorCharacter implements AppearanceContainer {
 	public readonly type = 'character';
-	public readonly appearance: AppearanceEditor;
-	public readonly id = 'c0';
+	public readonly id = EDITOR_CHARACTER_ID;
 	public readonly name = 'Editor character';
 
+	public readonly editor: Editor;
 	protected readonly logger = GetLogger('EditorCharacter');
 
-	constructor() {
-		super();
-		const data: ICharacterMinimalData = { id: this.id, accountId: 0, name: 'EditorCharacter' } as const;
-		this.appearance = new AppearanceEditor(GetCurrentAssetManager(), () => data, (changes) => this.emit('appearanceUpdate', changes));
+	private readonly data: ICharacterMinimalData;
+
+	constructor(editor: Editor) {
+		this.editor = editor;
+		this.data = { id: this.id, accountId: 0, name: 'EditorCharacter' };
 	}
 
-	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
-		return this.appearance.getRestrictionManager(roomContext);
+	public getAppearance(state?: AssetFrameworkCharacterState): AppearanceEditor {
+		state ??= this.editor.globalState.currentState.getCharacterState(this.id) ?? undefined;
+		Assert(state != null && state.id === this.id);
+		return new AppearanceEditor(state, () => this.data, this.editor.globalState);
 	}
 
-	public reloadAssetManager(assetManager: AssetManager) {
-		this.appearance.reloadAssetManager(assetManager, this.logger.prefixMessages('Asset manager reload:'));
+	public getRestrictionManager(state: AssetFrameworkCharacterState | undefined, roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
+		return this.getAppearance(state).getRestrictionManager(roomContext);
 	}
+}
+
+export function useEditorCharacterState(): AssetFrameworkCharacterState {
+	const globalState = useEditorState();
+	const characterState = globalState.characters.get(EDITOR_CHARACTER_ID);
+	AssertNotNullable(characterState);
+
+	return characterState;
 }
 
 export class EditorAssetGraphics extends AssetGraphics {

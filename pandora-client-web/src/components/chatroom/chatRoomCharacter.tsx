@@ -1,4 +1,4 @@
-import { CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientData } from 'pandora-common';
+import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo } from 'pandora-common';
 import PIXI, { FederatedPointerEvent, Filter, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterAppearanceView } from '../../character/character';
@@ -10,11 +10,12 @@ import { Container, Graphics, Text, useApp } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE } from '../../graphics/graphicsLayer';
-import { useCharacterRestrictionsManager } from '../gameContext/chatRoomContextProvider';
+import { ChatRoom, useCharacterRestrictionsManager, useCharacterState } from '../gameContext/chatRoomContextProvider';
 
 type ChatRoomCharacterProps = {
 	character: Character<ICharacterRoomData>;
-	data: IChatRoomClientData | null;
+	room: ChatRoom;
+	roomInfo: IChatRoomFullInfo | null;
 	debugConfig: ChatroomDebugConfig;
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
@@ -22,20 +23,25 @@ type ChatRoomCharacterProps = {
 	filters: readonly Filter[];
 };
 
+type ChatRoomCharacterPropsWithState = ChatRoomCharacterProps & {
+	characterState: AssetFrameworkCharacterState;
+};
+
 const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
 
-export function ChatRoomCharacter({
+function ChatRoomCharacterDisplay({
 	character,
-	data,
+	characterState,
+	roomInfo,
 	debugConfig,
 	background,
 	shard,
 	menuOpen,
 	filters,
-}: ChatRoomCharacterProps): ReactElement | null {
+}: ChatRoomCharacterPropsWithState): ReactElement | null {
 	const app = useApp();
-	const evaluator = useAppearanceConditionEvaluator(character);
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
 		const maxY = CalculateCharacterMaxYForBackground(background);
@@ -62,7 +68,7 @@ export function ChatRoomCharacter({
 
 	const scale = baseScale * (1 - (y * scaling) / height);
 
-	const backView = useCharacterAppearanceView(character) === 'back';
+	const backView = useCharacterAppearanceView(characterState) === 'back';
 
 	const scaleX = backView ? -1 : 1;
 
@@ -87,7 +93,7 @@ export function ChatRoomCharacter({
 	}, []);
 
 	const onDragMove = useEvent((event: FederatedPointerEvent) => {
-		if (!dragging.current || !data || !characterContainer.current) return;
+		if (!dragging.current || !roomInfo || !characterContainer.current) return;
 		const dragPointerEnd = event.getLocalPosition<Point>(characterContainer.current.parent);
 
 		const newY = (dragPointerEnd.y - height + baseScale * BOTTOM_NAME_OFFSET) / ((scaling / height) * baseScale * BOTTOM_NAME_OFFSET - 1);
@@ -136,7 +142,7 @@ export function ChatRoomCharacter({
 	}, [hitArea]);
 
 	// If character is in a device, do not render it here, it will be rendered by the device
-	const roomDeviceLink = useCharacterRestrictionsManager(character, (rm) => rm.getRoomDeviceLink());
+	const roomDeviceLink = useCharacterRestrictionsManager(characterState, character, (rm) => rm.getRoomDeviceLink());
 
 	if (roomDeviceLink != null)
 		return null;
@@ -144,7 +150,7 @@ export function ChatRoomCharacter({
 	return (
 		<GraphicsCharacter
 			ref={ characterContainer }
-			appearanceContainer={ character }
+			characterState={ characterState }
 			position={ { x, y: height - y } }
 			scale={ { x: scaleX * scale, y: scale } }
 			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }
@@ -196,5 +202,25 @@ export function ChatRoomCharacter({
 				)
 			}
 		</GraphicsCharacter>
+	);
+}
+
+export function ChatRoomCharacter({
+	room,
+	character,
+	...props
+}: ChatRoomCharacterProps): ReactElement | null {
+	const characterState = useCharacterState(room, character.id);
+
+	if (!characterState)
+		return null;
+
+	return (
+		<ChatRoomCharacterDisplay
+			{ ...props }
+			room={ room }
+			character={ character }
+			characterState={ characterState }
+		/>
 	);
 }

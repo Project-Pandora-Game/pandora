@@ -1,25 +1,19 @@
-import { CharacterAppearance, AppearanceChangeType, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose, AppearanceItems, WearableAssetType } from 'pandora-common';
-import { useSyncExternalStore } from 'react';
-import { GetCurrentAssetManager } from '../assets/assetManager';
-import { ITypedEventEmitter, TypedEventEmitter } from '../event';
+import { CharacterAppearance, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose, AppearanceItems, WearableAssetType, AssetFrameworkCharacterState, Assert } from 'pandora-common';
+import { useMemo, useSyncExternalStore } from 'react';
+import { TypedEventEmitter } from '../event';
 import type { PlayerCharacter } from './player';
+import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 
-export type AppearanceEvents = {
-	'appearanceUpdate': AppearanceChangeType[];
-};
-
-export type AppearanceContainer = ITypedEventEmitter<AppearanceEvents> & {
+export type AppearanceContainer = {
 	readonly type: 'character';
-	readonly appearance: CharacterAppearance;
 	readonly id: CharacterId;
 	readonly name: string;
-	getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
+	getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance;
+	getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
 };
 
 export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements AppearanceContainer {
 	public readonly type = 'character';
-
-	public readonly appearance: CharacterAppearance;
 
 	public get id(): CharacterId {
 		return this.data.id;
@@ -40,8 +34,6 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
-		this.appearance = new CharacterAppearance(GetCurrentAssetManager(), () => this.data, (changes) => this.emit('appearanceUpdate', changes));
-		this.appearance.importFromBundle(data.appearance, this.logger.prefixMessages('Appearance load:'));
 		this.logger.verbose('Loaded');
 	}
 
@@ -51,19 +43,21 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 
 	public update(data: Partial<T>): void {
 		this._data = { ...this.data, ...data };
-		if (data.appearance) {
-			this.appearance.importFromBundle(data.appearance, this.logger.prefixMessages('Appearance load:'), GetCurrentAssetManager());
-		}
 		this.logger.debug('Updated', data);
 		this.emit('update', data);
 	}
 
-	public getRestrictionManager(roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
-		return this.appearance.getRestrictionManager(roomContext);
+	public getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance {
+		Assert(state.id === this.id);
+		return new CharacterAppearance(state, () => this.data);
+	}
+
+	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
+		return this.getAppearance(state).getRestrictionManager(roomContext);
 	}
 }
 
-type CharacterEvents<T extends ICharacterPublicData> = AppearanceEvents & {
+type CharacterEvents<T extends ICharacterPublicData> = {
 	'update': Partial<T>;
 };
 
@@ -71,62 +65,32 @@ export function useCharacterData<T extends ICharacterPublicData>(character: Char
 	return useSyncExternalStore(character.getSubscriber('update'), () => character.data);
 }
 
-export function useCharacterAppearanceItem(character: AppearanceContainer, item: ItemPath | null | undefined): Item | undefined {
-	return useSyncExternalStore((onChange) => {
-		return character.on('appearanceUpdate', (changed) => {
-			if (changed.includes('items')) {
-				onChange();
-			}
-		});
-	}, () => item ? character.appearance.getItem(item) : undefined);
+export function useCharacterAppearance(characterState: AssetFrameworkCharacterState, character: Character): CharacterAppearance {
+	return useMemo(() => character.getAppearance(characterState), [characterState, character]);
 }
 
-export function useCharacterAppearanceItems(character: AppearanceContainer): AppearanceItems<WearableAssetType> {
-	return useSyncExternalStore((onChange) => {
-		return character.on('appearanceUpdate', (changed) => {
-			if (changed.includes('items')) {
-				onChange();
-			}
-		});
-	}, () => character.appearance.getAllItems());
+export function useCharacterAppearanceItems(characterState: AssetFrameworkCharacterState): AppearanceItems<WearableAssetType> {
+	return characterState.items;
 }
 
-export function useCharacterAppearancePose(character: AppearanceContainer): readonly BoneState[] {
-	return useSyncExternalStore((onChange) => {
-		return character.on('appearanceUpdate', (changed) => {
-			if (changed.includes('pose')) {
-				onChange();
-			}
-		});
-	}, () => character.appearance.getFullPose());
+export function useCharacterAppearanceItem(characterState: AssetFrameworkCharacterState, path: ItemPath | null | undefined): Item | undefined {
+	const items = useCharacterAppearanceItems(characterState);
+
+	return useMemo(() => (items && path) ? EvalItemPath(items, path) : undefined, [items, path]);
 }
 
-export function useCharacterAppearanceArmsPose(character: AppearanceContainer): CharacterArmsPose {
-	return useSyncExternalStore((onChange) => {
-		return character.on('appearanceUpdate', (changed) => {
-			if (changed.includes('pose')) {
-				onChange();
-			}
-		});
-	}, () => character.appearance.getArmsPose());
+export function useCharacterAppearancePose(characterState: AssetFrameworkCharacterState): readonly BoneState[] {
+	return useMemo(() => Array.from(characterState.pose.values()), [characterState.pose]);
 }
 
-export function useCharacterAppearanceView(character: AppearanceContainer): CharacterView {
-	return useSyncExternalStore((onChange) => {
-		return character.on('appearanceUpdate', (changed) => {
-			if (changed.includes('pose')) {
-				onChange();
-			}
-		});
-	}, () => character.appearance.getView());
+export function useCharacterAppearanceArmsPose(characterState: AssetFrameworkCharacterState): CharacterArmsPose {
+	return characterState.arms;
 }
 
-export function useCharacterSafemode(character: AppearanceContainer): Readonly<SafemodeData> | null {
-	return useSyncExternalStore((onChange) => {
-		return character.on('appearanceUpdate', (changed) => {
-			if (changed.includes('safemode')) {
-				onChange();
-			}
-		});
-	}, () => character.appearance.getSafemode());
+export function useCharacterAppearanceView(characterState: AssetFrameworkCharacterState): CharacterView {
+	return characterState.view;
+}
+
+export function useCharacterSafemode(characterState: AssetFrameworkCharacterState): Readonly<SafemodeData> | null {
+	return characterState.safemode ?? null;
 }

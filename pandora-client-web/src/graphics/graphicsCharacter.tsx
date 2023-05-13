@@ -1,11 +1,11 @@
 import { Container } from '@pixi/react';
-import { AssertNotNullable, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
+import { AssertNotNullable, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
-import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearanceView } from '../character/character';
+import { useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearanceView } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
 import { useObservable } from '../observable';
 import { ComputedLayerPriority, COMPUTED_LAYER_ORDERING, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
@@ -20,7 +20,7 @@ const logger = GetLogger('GraphicsCharacter');
 
 export interface GraphicsCharacterProps extends ChildrenProps {
 	layer?: (props: GraphicsLayerProps) => ReactElement;
-	appearanceContainer: AppearanceContainer;
+	characterState: AssetFrameworkCharacterState;
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
@@ -77,7 +77,7 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: Chara
 
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
-	appearanceContainer,
+	characterState,
 	position: positionOffset = { x: 0, y: 0 },
 	scale: scaleExtra,
 	pivot: pivotExtra,
@@ -98,7 +98,7 @@ function GraphicsCharacterWithManagerImpl({
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CharacterSize.WIDTH / 2, y: 0 }), [pivotExtra]);
 	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
 
-	const items = useCharacterAppearanceItems(appearanceContainer);
+	const items = useCharacterAppearanceItems(characterState);
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();
@@ -142,8 +142,8 @@ function GraphicsCharacterWithManagerImpl({
 		return result;
 	}, [items, graphicsGetter, layerStateOverrideGetter]);
 
-	const armsPose = useCharacterAppearanceArmsPose(appearanceContainer);
-	const view = useCharacterAppearanceView(appearanceContainer);
+	const armsPose = useCharacterAppearanceArmsPose(characterState);
+	const view = useCharacterAppearanceView(characterState);
 
 	const priorities = useLayerPriorityResolver(layers, armsPose);
 
@@ -164,14 +164,14 @@ function GraphicsCharacterWithManagerImpl({
 					layer={ layerState.layer }
 					item={ layerState.item }
 					state={ layerState.state }
-					appearanceContainer={ appearanceContainer }
+					characterState={ characterState }
 				>
 					{ lowerLayer }
 				</LayerElement>
 			));
 		}
 		return result;
-	}, [Layer, appearanceContainer, layers, priorities, view]);
+	}, [Layer, characterState, layers, priorities, view]);
 
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
 

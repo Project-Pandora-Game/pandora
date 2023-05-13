@@ -1,16 +1,27 @@
 import { useState, useEffect } from 'react';
-import type { CharacterId, ICharacterData } from 'pandora-common';
+import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacterPrivateData } from 'pandora-common';
 import { PlayerCharacter } from '../../character/player';
 import { useNullableObservable } from '../../observable';
 import { useShardConnector } from './shardConnectorContextProvider';
+import { useCharacterState, useChatroomRequired } from './chatRoomContextProvider';
 
 export function usePlayer(): PlayerCharacter | null {
 	return useNullableObservable(useShardConnector()?.player);
 }
 
-export function usePlayerData() {
+export function usePlayerState(): AssetFrameworkCharacterState {
 	const player = usePlayer();
-	const [data, setData] = useState<Readonly<ICharacterData> | null>(player ? player.data : null);
+	const chatRoom = useChatroomRequired();
+	AssertNotNullable(player);
+	const playerState = useCharacterState(chatRoom, player.id);
+	AssertNotNullable(playerState);
+
+	return playerState;
+}
+
+export function usePlayerData(): Readonly<ICharacterPrivateData> | null {
+	const player = usePlayer();
+	const [data, setData] = useState<Readonly<ICharacterPrivateData> | null>(player ? player.data : null);
 	useEffect(() => {
 		setData(player ? player.data : null);
 		return player?.onAny((ev) => {

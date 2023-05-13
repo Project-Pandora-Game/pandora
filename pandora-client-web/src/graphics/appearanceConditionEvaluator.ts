@@ -1,6 +1,6 @@
-import { AssertNever, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, Item, TransformDefinition } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
-import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
+import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
 import { EvaluateCondition, RotateVector } from './utility';
 
 export const FAKE_BONES: string[] = ['backView'];
@@ -134,9 +134,9 @@ export class AppearanceConditionEvaluator {
 	}
 }
 
-export function useAppearanceConditionEvaluator(character: AppearanceContainer): AppearanceConditionEvaluator {
-	const pose = useCharacterAppearancePose(character);
-	const view = useCharacterAppearanceView(character);
-	const arms = useCharacterAppearanceArmsPose(character);
+export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState): AppearanceConditionEvaluator {
+	const pose = useCharacterAppearancePose(characterState);
+	const view = useCharacterAppearanceView(characterState);
+	const arms = useCharacterAppearanceArmsPose(characterState);
 	return useMemo(() => new AppearanceConditionEvaluator(pose, view, arms), [pose, view, arms]);
 }

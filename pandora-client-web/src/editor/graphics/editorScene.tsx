@@ -111,7 +111,8 @@ export function EditorScene({
 			<Button className='slim iconButton'
 				title='Toggle character view'
 				onClick={ () => {
-					character.appearance.setView(character.appearance.getView() === 'front' ? 'back' : 'front');
+					const appearance = character.getAppearance();
+					appearance.setView(appearance.getView() === 'front' ? 'back' : 'front');
 				} }
 			>
 				↷

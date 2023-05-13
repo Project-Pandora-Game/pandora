@@ -1,14 +1,16 @@
 import React, { ReactElement, useCallback, useEffect, useReducer } from 'react';
 import { GraphicsCharacterProps, GraphicsCharacterWithManager, GraphicsGetterFunction, LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter';
 import { useEditor } from '../../editorContextProvider';
+import { useEditorCharacterState } from './appearanceEditor';
 
-export type GraphicsCharacterEditorProps = Omit<GraphicsCharacterProps, 'appearanceContainer'>;
+export type GraphicsCharacterEditorProps = Omit<GraphicsCharacterProps, 'characterState'>;
 
 export function GraphicsCharacterEditor({
 	children,
 	...props
 }: GraphicsCharacterEditorProps): ReactElement {
 	const editor = useEditor();
+	const editorCharacterState = useEditorCharacterState();
 
 	const [editorGettersVersion, editorGettersUpdate] = useReducer((s: number) => s + 1, 0);
 
@@ -33,7 +35,7 @@ export function GraphicsCharacterEditor({
 	return (
 		<GraphicsCharacterWithManager
 			{ ...props }
-			appearanceContainer={ editor.character }
+			characterState={ editorCharacterState }
 			graphicsGetter={ graphicsGetter }
 			layerStateOverrideGetter={ layerStateOverrideGetter }
 		>

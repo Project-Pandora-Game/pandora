@@ -1,19 +1,22 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
-import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterViewSchema, SAFEMODE_EXIT_COOLDOWN } from './appearance';
+import { SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema, WearableAssetType } from './definitions';
 import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
-import { Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
+import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
+import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterViewSchema } from './state/characterState';
+import { AssetFrameworkGlobalStateContainer } from './state/globalState';
+import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
@@ -166,6 +169,7 @@ export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
 export interface AppearanceActionContext {
 	player: CharacterId;
+	globalState: AssetFrameworkGlobalStateContainer;
 	getTarget(target: RoomTargetSelector): RoomActionTarget | null;
 	getCharacter(id: CharacterId): CharacterRestrictionsManager | null;
 	/** Handler for sending messages to chat */
@@ -187,6 +191,7 @@ export type AppearanceActionResult = {
 
 export interface AppearanceActionHandlerArg<Action extends AppearanceAction = AppearanceAction> {
 	action: Action;
+	manipulator: AssetFrameworkGlobalStateManipulator;
 	context: AppearanceActionContext;
 	assetManager: AssetManager;
 	player: CharacterRestrictionsManager;
@@ -213,8 +218,11 @@ export function DoAppearanceAction(
 		dryRun,
 	};
 
+	const manipulator = context.globalState.getManipulator();
+
 	const arg: Omit<AppearanceActionHandlerArg, 'action'> = {
 		context,
+		manipulator,
 		assetManager,
 		player,
 		processingContext,
@@ -239,12 +247,13 @@ export function DoAppearanceAction(
 				};
 			}
 
-			const manipulator = target.getManipulator();
-			if (!ActionAddItem(manipulator, action.container, item))
+			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			if (!targetManipulator)
 				return { result: 'invalidAction' };
-			return AppearanceValidationResultToActionResult(
-				target.commitChanges(manipulator, processingContext),
-			);
+			if (!ActionAddItem(targetManipulator, action.container, item))
+				return { result: 'invalidAction' };
+
+			break;
 		}
 		// Unequip and delete an item
 		case 'delete': {
@@ -276,12 +285,11 @@ export function DoAppearanceAction(
 				};
 			}
 
-			const manipulator = target.getManipulator();
-			if (!ActionRemoveItem(manipulator, action.item))
+			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			if (!ActionRemoveItem(targetManipulator, action.item))
 				return { result: 'invalidAction' };
-			return AppearanceValidationResultToActionResult(
-				target.commitChanges(manipulator, processingContext),
-			);
+
+			break;
 		}
 		// Unequip item and equip on another target
 		case 'transfer': {
@@ -313,17 +321,14 @@ export function DoAppearanceAction(
 				};
 			}
 
-			const sourceManipulator = source.getManipulator();
-			const targetManipulator = target === source ? sourceManipulator : target.getManipulator();
+			const sourceManipulator = manipulator.getManipulatorFor(action.source);
+			const targetManipulator = manipulator.getManipulatorFor(action.target);
 
 			// Preform the transfer in manipulators
 			if (!ActionTransferItem(sourceManipulator, action.item, targetManipulator, action.container))
 				return { result: 'invalidAction' };
 
-			return AppearanceCommitMultiple(processingContext, [
-				{ target, manipulator: targetManipulator },
-				{ target: source, manipulator: sourceManipulator },
-			]);
+			break;
 		}
 		// Moves an item within inventory, reordering the worn order
 		case 'move': {
@@ -339,11 +344,11 @@ export function DoAppearanceAction(
 				};
 			}
 
-			const manipulator = target.getManipulator();
+			const targetManipulator = manipulator.getManipulatorFor(action.target);
 
 			// Player moving the item must be able to interact with the item on target position (if it is being moved in root)
 			if (action.item.container.length === 0) {
-				const items = manipulator.getRootItems();
+				const items = targetManipulator.getRootItems();
 				const currentPos = items.findIndex((item) => item.id === action.item.itemId);
 				const newPos = currentPos + action.shift;
 
@@ -358,11 +363,10 @@ export function DoAppearanceAction(
 				}
 			}
 
-			if (!ActionMoveItem(manipulator, action.item, action.shift))
+			if (!ActionMoveItem(targetManipulator, action.item, action.shift))
 				return { result: 'invalidAction' };
-			return AppearanceValidationResultToActionResult(
-				target.commitChanges(manipulator, processingContext),
-			);
+
+			break;
 		}
 		// Changes the color of an item
 		case 'color': {
@@ -378,12 +382,11 @@ export function DoAppearanceAction(
 				};
 			}
 
-			const manipulator = target.getManipulator();
-			if (!ActionColorItem(manipulator, action.item, action.color))
+			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			if (!ActionColorItem(targetManipulator, action.item, action.color))
 				return { result: 'invalidAction' };
-			return AppearanceValidationResultToActionResult(
-				target.commitChanges(manipulator, processingContext),
-			);
+
+			break;
 		}
 		// Module-specific action
 		case 'moduleAction': {
@@ -399,12 +402,11 @@ export function DoAppearanceAction(
 				};
 			}
 
-			const manipulator = target.getManipulator();
-			if (!ActionModuleAction(context, manipulator, action.item, action.module, action.action))
+			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			if (!ActionModuleAction(context, targetManipulator, action.item, action.module, action.action))
 				return { result: 'invalidAction' };
-			return AppearanceValidationResultToActionResult(
-				target.commitChanges(manipulator, processingContext),
-			);
+
+			break;
 		}
 		// Resize body or change pose
 		case 'body':
@@ -419,23 +421,23 @@ export function DoAppearanceAction(
 			}
 		// falls through
 		case 'pose': {
-			const target = context.getCharacter(action.target);
-			if (!target)
+			if (!manipulator.produceCharacterState(action.target, (character) => {
+				return character.produceWithPose(action, action.type, false);
+			})) {
 				return { result: 'invalidAction' };
-			if (!dryRun) {
-				target.appearance.importPose(action, action.type, false);
 			}
-			return { result: 'success' };
+
+			break;
 		}
 		// Changes view of the character - front or back
 		case 'setView': {
-			const target = context.getCharacter(action.target);
-			if (!target)
+			if (!manipulator.produceCharacterState(action.target, (character) => {
+				return character.produceWithView(action.view);
+			})) {
 				return { result: 'invalidAction' };
-			if (!dryRun) {
-				target.appearance.setView(action.view);
 			}
-			return { result: 'success' };
+
+			break;
 		}
 		case 'safemode': {
 			const current = player.appearance.getSafemode();
@@ -444,10 +446,21 @@ export function DoAppearanceAction(
 				if (current)
 					return { result: 'invalidAction' };
 
-				player.appearance.setSafemode({
-					allowLeaveAt: Date.now() + (player.room?.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
-				}, processingContext);
-				return { result: 'success' };
+				if (!manipulator.produceCharacterState(player.appearance.id, (character) => {
+					return character.produceWithSafemode({
+						allowLeaveAt: Date.now() + (player.room?.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
+					});
+				})) {
+					return { result: 'invalidAction' };
+				}
+
+				processingContext.actionHandler?.({
+					id: 'safemodeEnter',
+					character: {
+						type: 'character',
+						id: player.appearance.id,
+					},
+				});
 			} else if (action.action === 'exit') {
 				// If we are already not in it we cannot exit it
 				if (!current)
@@ -457,14 +470,35 @@ export function DoAppearanceAction(
 				if (Date.now() < current.allowLeaveAt)
 					return { result: 'invalidAction' };
 
-				player.appearance.setSafemode(null, processingContext);
-				return { result: 'success' };
+				if (!manipulator.produceCharacterState(player.appearance.id, (character) => {
+					return character.produceWithSafemode(null);
+				})) {
+					return { result: 'invalidAction' };
+				}
+
+				processingContext.actionHandler?.({
+					id: 'safemodeLeave',
+					character: {
+						type: 'character',
+						id: player.appearance.id,
+					},
+				});
+			} else {
+				AssertNever(action.action);
 			}
-			AssertNever(action.action);
 			break;
 		}
-		case 'randomize':
-			return ActionAppearanceRandomize(player, action.kind, processingContext);
+		case 'randomize': {
+			const r = ActionAppearanceRandomize({
+				...arg,
+				action,
+			});
+
+			if (r.result !== 'success')
+				return r;
+
+			break;
+		}
 		case 'roomDeviceDeploy': {
 			const target = context.getTarget(action.target);
 			if (!target)
@@ -478,27 +512,39 @@ export function DoAppearanceAction(
 				};
 			}
 
-			const manipulator = target.getManipulator();
-			if (!ActionRoomDeviceDeploy(manipulator, action.item, action.deployment))
+			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			if (!ActionRoomDeviceDeploy(targetManipulator, action.item, action.deployment))
 				return { result: 'invalidAction' };
 
-			return AppearanceValidationResultToActionResult(
-				target.commitChanges(manipulator, processingContext),
-			);
+			break;
 		}
-		case 'roomDeviceEnter':
-			return ActionRoomDeviceEnter({
+		case 'roomDeviceEnter': {
+			const r = ActionRoomDeviceEnter({
 				...arg,
 				action,
 			});
-		case 'roomDeviceLeave':
-			return ActionRoomDeviceLeave({
+			if (r.result !== 'success')
+				return r;
+
+			break;
+		}
+		case 'roomDeviceLeave': {
+			const r = ActionRoomDeviceLeave({
 				...arg,
 				action,
 			});
+			if (r.result !== 'success')
+				return r;
+
+			break;
+		}
 		default:
 			AssertNever(action);
 	}
+
+	return AppearanceValidationResultToActionResult(
+		context.globalState.commitChanges(manipulator, processingContext),
+	);
 }
 
 export function AppearanceValidationResultToActionResult(result: AppearanceValidationResult): AppearanceActionResult {
@@ -508,59 +554,6 @@ export function AppearanceValidationResultToActionResult(result: AppearanceValid
 		result: 'validationError',
 		validationError: result.error,
 	};
-}
-
-/**
- * Commit multiple pairs of target and manipulator.
- *
- * Either all are committed or none is. If any pair is present multiple times, it is deduplicated safely.
- */
-export function AppearanceCommitMultiple(processingContext: ActionProcessingContext, pairs: {
-	target: RoomActionTarget;
-	manipulator: AppearanceRootManipulator;
-}[]): AppearanceActionResult {
-	if (pairs.length === 0)
-		return { result: 'success' };
-
-	// Deduplicate
-	const seenTargets = new Map<RoomActionTarget, AppearanceRootManipulator>();
-	pairs = pairs.filter(({ target, manipulator }) => {
-		const seenManipulator = seenTargets.get(target);
-		if (seenManipulator == null) {
-			seenTargets.set(target, manipulator);
-			return true;
-		}
-		if (seenManipulator !== manipulator) {
-			throw new Error(`Attempting to update one target (${target.type}) with multiple different manipulators`);
-		}
-		return false;
-	});
-
-	Assert(pairs.length > 0);
-
-	let result: AppearanceValidationResult;
-
-	// Test if any but first pair accepts
-	for (let i = 1; i < pairs.length; i++) {
-		result = pairs[i].target.commitChanges(pairs[i].manipulator, {
-			dryRun: true,
-		});
-		if (!result.success)
-			return AppearanceValidationResultToActionResult(result);
-	}
-
-	// Update first target
-	result = pairs[0].target.commitChanges(pairs[0].manipulator, processingContext);
-	if (!result.success)
-		return AppearanceValidationResultToActionResult(result);
-
-	// Update remaining targets
-	for (let i = 1; i < pairs.length; i++) {
-		result = pairs[i].target.commitChanges(pairs[i].manipulator, processingContext);
-		Assert(result.success, 'Action failed after a successful dryRun');
-	}
-
-	return { result: 'success' };
 }
 
 export function ActionAddItem(rootManipulator: AppearanceRootManipulator, container: ItemContainerPath, item: Item): boolean {
@@ -725,11 +718,22 @@ export function ActionModuleAction(context: AppearanceActionContext, rootManipul
 	return true;
 }
 
-export function ActionAppearanceRandomize(character: CharacterRestrictionsManager, kind: 'items' | 'full', context: ActionProcessingContext): AppearanceActionResult {
-	const assetManager = character.appearance.getAssetManager();
+export function ActionAppearanceRandomize({
+	action,
+	manipulator,
+	processingContext,
+	assetManager,
+	player,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRandomize>>): AppearanceActionResult {
+	const kind = action.kind;
+	const character = player;
+	const characterManipulator = manipulator.getManipulatorFor({
+		type: 'character',
+		characterId: character.appearance.id,
+	});
 
 	// Must be able to remove all items currently worn, have free hands and if modifying body also be in room that allows body changes
-	const oldItems = character.appearance.getAllItems();
+	const oldItems = characterManipulator.getRootItems().filter(FilterItemWearable);
 	const restriction = oldItems
 		.map((i): RestrictionResult => {
 			// Ignore bodyparts if we are not changing those
@@ -767,7 +771,7 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 	}
 
 	// Dry run can end here as everything lower is simply random
-	if (context.dryRun)
+	if (processingContext.dryRun)
 		return { result: 'success' };
 
 	// Filter appearance to get either body or nothing
@@ -865,11 +869,11 @@ export function ActionAppearanceRandomize(character: CharacterRestrictionsManage
 	}
 
 	// Try to assign the new appearance
-	const manipulator = character.appearance.getManipulator();
-	manipulator.resetItemsTo(newAppearance);
-	return AppearanceValidationResultToActionResult(
-		character.appearance.commitChanges(manipulator, context),
-	);
+	characterManipulator.resetItemsTo(newAppearance);
+
+	return {
+		result: 'success',
+	};
 }
 
 export function ActionRoomDeviceDeploy(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, deployment: RoomDeviceDeployment): boolean {
@@ -902,10 +906,10 @@ export function ActionRoomDeviceDeploy(rootManipulator: AppearanceRootManipulato
 
 export function ActionRoomDeviceEnter({
 	action,
+	manipulator,
 	context,
 	assetManager,
 	player,
-	processingContext,
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceEnter>>): AppearanceActionResult {
 	const target = context.getTarget(action.target);
 	if (!target)
@@ -960,12 +964,12 @@ export function ActionRoomDeviceEnter({
 	if (target === targetCharacter)
 		return { result: 'invalidAction' };
 
-	const roomManipulator = target.getManipulator();
-	const manipulator = roomManipulator.getContainer(action.item.container);
-	const characterManipulator = targetCharacter.getManipulator();
+	const roomManipulator = manipulator.getManipulatorFor(action.target);
+	const containerManipulator = roomManipulator.getContainer(action.item.container);
+	const characterManipulator = manipulator.getManipulatorFor(action.character);
 
 	// Do change
-	if (!manipulator.modifyItem(action.item.itemId, (it) => {
+	if (!containerManipulator.modifyItem(action.item.itemId, (it) => {
 		if (!it.isType('roomDevice'))
 			return null;
 		return it.changeSlotOccupancy(action.slot, action.character.characterId);
@@ -986,18 +990,17 @@ export function ActionRoomDeviceEnter({
 		},
 	});
 
-	return AppearanceCommitMultiple(processingContext, [
-		{ target: targetCharacter, manipulator: characterManipulator },
-		{ target, manipulator: roomManipulator },
-	]);
+	return {
+		result: 'success',
+	};
 }
 
 export function ActionRoomDeviceLeave({
 	action,
+	manipulator,
 	context,
 	assetManager,
 	player,
-	processingContext,
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceLeave>>): AppearanceActionResult {
 	const target = context.getTarget(action.target);
 	if (!target)
@@ -1030,11 +1033,11 @@ export function ActionRoomDeviceLeave({
 
 	// Actual action
 
-	const roomManipulator = target.getManipulator();
-	const manipulator = roomManipulator.getContainer(action.item.container);
+	const roomManipulator = manipulator.getManipulatorFor(action.target);
+	const containerManipulator = roomManipulator.getContainer(action.item.container);
 
 	// Do change
-	if (!manipulator.modifyItem(action.item.itemId, (it) => {
+	if (!containerManipulator.modifyItem(action.item.itemId, (it) => {
 		if (!it.isType('roomDevice'))
 			return null;
 		return it.changeSlotOccupancy(action.slot, null);
@@ -1052,7 +1055,10 @@ export function ActionRoomDeviceLeave({
 		if (target === targetCharacter)
 			return { result: 'invalidAction' };
 
-		const characterManipulator = targetCharacter.getManipulator();
+		const characterManipulator = manipulator.getManipulatorFor({
+			type: 'character',
+			characterId: occupyingCharacterId,
+		});
 
 		const removedItems = characterManipulator.removeMatchingItems((i) => i.asset === asset);
 
@@ -1084,11 +1090,9 @@ export function ActionRoomDeviceLeave({
 				},
 			});
 
-			// We must successfully commit both at the same time
-			return AppearanceCommitMultiple(processingContext, [
-				{ target: targetCharacter, manipulator: characterManipulator },
-				{ target, manipulator: roomManipulator },
-			]);
+			return {
+				result: 'success',
+			};
 		}
 	}
 
@@ -1106,7 +1110,7 @@ export function ActionRoomDeviceLeave({
 		},
 	});
 
-	return AppearanceValidationResultToActionResult(
-		target.commitChanges(roomManipulator, processingContext),
-	);
+	return {
+		result: 'success',
+	};
 }

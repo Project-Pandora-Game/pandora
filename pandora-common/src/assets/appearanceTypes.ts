@@ -2,8 +2,6 @@ import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ZodTemplateString } from '../validation';
 import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction, IChatRoomMessageActionTargetCharacter, IChatRoomMessageActionTargetRoomInventory } from '../chatroom';
-import type { AppearanceRootManipulator } from './appearanceHelpers';
-import type { AppearanceValidationResult } from './appearanceValidation';
 import type { Item } from './item';
 import type { CharacterRestrictionsManager, ICharacterMinimalData } from '../character';
 
@@ -52,9 +50,12 @@ export type ActionHandlerMessageTargetCharacter = Pick<IChatRoomMessageActionTar
 export type ActionHandlerMessageTargetRoomInventory = IChatRoomMessageActionTargetRoomInventory;
 export type ActionHandlerMessageTarget = ActionHandlerMessageTargetCharacter | ActionHandlerMessageTargetRoomInventory;
 
-export interface ActionHandlerMessage extends ActionHandlerMessageTemplate {
-	character?: ActionHandlerMessageTargetCharacter;
+export interface ActionHandlerMessageWithTarget extends ActionHandlerMessageTemplate {
 	target?: ActionHandlerMessageTarget;
+}
+
+export interface ActionHandlerMessage extends ActionHandlerMessageWithTarget {
+	character?: ActionHandlerMessageTargetCharacter;
 	sendTo?: CharacterId[];
 }
 export type ActionHandler = (message: ActionHandlerMessage) => void;
@@ -66,8 +67,6 @@ export interface ActionProcessingContext {
 }
 
 interface RoomActionTargetBase {
-	getManipulator(): AppearanceRootManipulator;
-	commitChanges(manipulator: AppearanceRootManipulator, context: ActionProcessingContext): AppearanceValidationResult;
 	getItem(path: ItemPath): Item | undefined;
 }
 

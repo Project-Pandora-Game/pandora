@@ -10,8 +10,8 @@ import { LayerStateOverrides } from '../graphics/def';
 import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphics';
 import { TypedEventEmitter } from '../event';
 import { Observable } from '../observable';
-import { EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
-import { AssetId, GetLogger, GetDefaultAppearanceBundle, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable, Assert } from 'pandora-common';
+import { EDITOR_CHARACTER_ID, EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
+import { AssetId, GetLogger, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable, Assert, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
@@ -25,7 +25,7 @@ import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
 import { useEditor } from './editorContextProvider';
 import { EditorWardrobeUI } from './components/wardrobe/wardrobe';
 import { GetCurrentAssetManager } from '../assets/assetManager';
-import { EditorAssetManager } from './assets/assetManager';
+import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
 
 const logger = GetLogger('Editor');
 
@@ -35,8 +35,10 @@ export const EDITOR_ALPHA_ICONS = ['⯀', '⬕', '⬚'];
 export class Editor extends TypedEventEmitter<{
 	layerOverrideChange: AssetGraphicsLayer;
 	modifiedAssetsChange: undefined;
+	globalStateChange: true;
 }> {
 	public readonly manager: GraphicsManager;
+	public readonly globalState: AssetFrameworkGlobalStateContainer;
 	public readonly character: EditorCharacter;
 
 	public readonly showBones = new Observable<boolean>(false);
@@ -51,7 +53,7 @@ export class Editor extends TypedEventEmitter<{
 		() => ({ x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }),
 	);
 
-	constructor(manager: GraphicsManager) {
+	constructor(assetManager: AssetManagerEditor, graphicsManager: GraphicsManager) {
 		super();
 
 		this.targetAsset.subscribe((asset) => {
@@ -93,11 +95,28 @@ export class Editor extends TypedEventEmitter<{
 			}
 		});
 
-		this.manager = manager;
-		this.character = new EditorCharacter();
+		this.manager = graphicsManager;
 
-		EditorAssetManager.on('assetMangedChanged', (assetManager) => {
-			this.character.reloadAssetManager(assetManager);
+		this.globalState = new AssetFrameworkGlobalStateContainer(
+			assetManager,
+			logger.prefixMessages('[Asset framework state]'),
+			() => {
+				this.emit('globalStateChange', true);
+			},
+			AssetFrameworkGlobalState
+				.createDefault(assetManager)
+				.withCharacter(
+					EDITOR_CHARACTER_ID,
+					AssetFrameworkCharacterState
+						.createDefault(assetManager, EDITOR_CHARACTER_ID)
+						.produceWithSafemode({ allowLeaveAt: 0 }),
+				),
+		);
+
+		this.character = new EditorCharacter(this);
+
+		EditorAssetManager.on('assetMangedChanged', (newAssetManager) => {
+			this.globalState.reloadAssetManager(newAssetManager);
 		});
 
 		// Prevent loosing progress
@@ -108,13 +127,6 @@ export class Editor extends TypedEventEmitter<{
 			}
 			return undefined;
 		}, { capture: true });
-
-		this.character.appearance.importFromBundle({
-			...GetDefaultAppearanceBundle(),
-			items: [
-				{ id: 'i/body', asset: 'a/body/base' },
-			],
-		});
 	}
 
 	private readonly editorGraphics = new Map<AssetId, EditorAssetGraphics>();
@@ -202,10 +214,10 @@ export class Editor extends TypedEventEmitter<{
 				.catch((err) => logger.error('Error importing asset for editing', err));
 
 			// Wear this asset if not currently wearing it (but only if starting edit for the first time)
-			if (this.character.appearance.listItemsByAsset(asset).length === 0) {
+			if (this.character.getAppearance().listItemsByAsset(asset).length === 0) {
 				const actualAsset = GetCurrentAssetManager().getAssetById(asset);
 				AssertNotNullable(actualAsset);
-				this.character.appearance.addItem(actualAsset);
+				this.character.getAppearance().addItem(actualAsset);
 			}
 		}
 		this.targetAsset.value = graphics;

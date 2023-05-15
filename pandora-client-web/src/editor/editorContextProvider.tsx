@@ -1,11 +1,12 @@
 import { noop } from 'lodash';
-import React, { createContext, ReactElement, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, ReactElement, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { ChildrenProps } from '../common/reactTypes';
 import { useDebugExpose } from '../common/useDebugExpose';
 import { Dialogs } from '../components/dialog/dialog';
 import { DebugContextProvider, useDebugContext } from '../components/error/debugContextProvider';
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
 import { Editor } from './editor';
+import { AssetFrameworkGlobalState } from 'pandora-common';
 
 export const EditorContext = createContext({
 	editor: null as Editor | null,
@@ -57,6 +58,16 @@ export function useEditor(): Editor {
 		throw new Error('No editor available');
 	}
 	return editor;
+}
+
+export function useEditorState(): AssetFrameworkGlobalState {
+	const editor = useEditor();
+
+	return useSyncExternalStore((onChange) => {
+		return editor.on('globalStateChange', () => {
+			onChange();
+		});
+	}, () => editor.globalState.currentState);
 }
 
 export function useSetEditor(): (editor: Editor | null) => void {

@@ -1,4 +1,4 @@
-import { ZodMatcher } from 'pandora-common';
+import { ICharacterRoomData, ZodMatcher } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import z from 'zod';
 import { BrowserStorage } from '../../browserStorage';
@@ -6,7 +6,8 @@ import { useEvent } from '../../common/useEvent';
 import { USER_DEBUG } from '../../config/Environment';
 import { useObservable } from '../../observable';
 import { FieldsetToggle } from '../common/fieldsetToggle';
-import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomCharacters, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
+import { Character, useCharacterData } from '../../character/character';
 
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean(),
@@ -45,7 +46,8 @@ export function ChatroomDebugConfigView(): ReactElement {
 		});
 	});
 
-	const roomData = useChatRoomData();
+	const roomInfo = useChatRoomInfo();
+	const roomCharacters = useChatRoomCharacters();
 
 	return (
 		<FieldsetToggle legend='[DEV] Debug options' forceOpen={ chatroomDebugConfig.enabled } onChange={ setOpen }>
@@ -77,23 +79,35 @@ export function ChatroomDebugConfigView(): ReactElement {
 			</div>
 			<h3>Chatroom details</h3>
 			{
-				!roomData ? <div>Not in a chatroom</div> : (
+				(!roomInfo || !roomCharacters) ? <div>Not in a chatroom</div> : (
 					<>
 						<h4>Characters</h4>
 						<div className='flex-col'>
-							{ roomData.characters.map((c) => (
-								<React.Fragment key={ c.id }>
-									<span>Name: { c.name }</span>
-									<span>Character ID: { c.id }</span>
-									<span>Account ID: { c.accountId }</span>
-									<span>Position: { `[${c.position[0]}, ${c.position[1]}]` }</span>
-									<br />
-								</React.Fragment>
+							{ roomCharacters.map((c) => (
+								<ChatroomDebugCharacterView key={ c.id } character={ c } />
 							)) }
 						</div>
 					</>
 				)
 			}
 		</FieldsetToggle>
+	);
+}
+
+function ChatroomDebugCharacterView({
+	character,
+}: {
+	character: Character<ICharacterRoomData>;
+}): ReactElement {
+	const characterData = useCharacterData(character);
+
+	return (
+		<>
+			<span>Name: { characterData.name }</span>
+			<span>Character ID: { characterData.id }</span>
+			<span>Account ID: { characterData.accountId }</span>
+			<span>Position: { `[${characterData.position[0]}, ${characterData.position[1]}]` }</span>
+			<br />
+		</>
 	);
 }

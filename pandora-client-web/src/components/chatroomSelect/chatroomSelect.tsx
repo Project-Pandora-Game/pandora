@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/button/button';
-import { useChatRoomData } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
@@ -28,7 +28,7 @@ const TIPS: readonly string[] = [
 ];
 
 export function ChatroomSelect(): ReactElement {
-	const roomData = useChatRoomData();
+	const roomInfo = useChatRoomInfo();
 	const roomList = useRoomList();
 
 	const [showTips, setShowTips] = useState(false);
@@ -47,7 +47,7 @@ export function ChatroomSelect(): ReactElement {
 		};
 	}, []);
 
-	if (roomData) {
+	if (roomInfo) {
 		return <Navigate to='/chatroom' />;
 	}
 

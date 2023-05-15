@@ -12,7 +12,7 @@ import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceCon
 export function ResultLayer({
 	layer,
 	item,
-	appearanceContainer,
+	characterState,
 	...props
 }: GraphicsLayerProps): ReactElement {
 	const editor = useEditor();
@@ -20,7 +20,7 @@ export function ResultLayer({
 
 	const { points, triangles } = useLayerPoints(layer);
 
-	const evaluator = useAppearanceConditionEvaluator(appearanceContainer);
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const vertices = useLayerVertices(evaluator, points, layer, item);
 
@@ -49,7 +49,7 @@ export function ResultLayer({
 				{ ...props }
 				layer={ layer }
 				item={ item }
-				appearanceContainer={ appearanceContainer }
+				characterState={ characterState }
 			/>
 			{
 				!showHelpers ? null : (

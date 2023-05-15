@@ -1,55 +1,21 @@
-import _, { cloneDeep, isEqual } from 'lodash';
-import { z } from 'zod';
-import type { ICharacterMinimalData } from '../character';
+import type { CharacterId, ICharacterMinimalData } from '../character';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { ActionRoomContext } from '../chatroom';
-import { Logger } from '../logging';
-import { Assert, AssertNotNullable } from '../utility';
-import { AppearanceCharacterManipulator } from './appearanceHelpers';
-import type { ActionProcessingContext, ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
-import { AppearanceItemProperties, AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationResult, ValidateAppearanceItems } from './appearanceValidation';
+import { Assert } from '../utility';
+import { EvalItemPath } from './appearanceHelpers';
+import type { ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
+import { AppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
-import { AssetId, PartialAppearancePose, WearableAssetType } from './definitions';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from './graphics';
-import { FilterItemWearable, Item, ItemBundleSchema } from './item';
-import { ZodArrayWithInvalidDrop } from '../validation';
-import { RoomInventory } from './roomInventory';
+import { AssetId, WearableAssetType } from './definitions';
+import { BoneState } from './graphics';
+import { Item } from './item';
+import { AppearanceArmPose, AppearanceBundle, AppearancePose, AssetFrameworkCharacterState, CharacterView, SafemodeData } from './state/characterState';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
 
-export const CharacterViewSchema = z.enum(['front', 'back']);
-export type CharacterView = z.infer<typeof CharacterViewSchema>;
-
-export const SafemodeDataSchema = z.object({
-	allowLeaveAt: z.number(),
-});
-export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
-
 /** Time after entering safemode for which you cannot leave it (entering while in dev mode ignores this) */
 export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
-
-export const AppearanceArmPoseSchema = z.object({
-	position: ArmPoseSchema.catch('front'),
-	rotation: ArmRotationSchema.catch('forward'),
-	fingers: ArmFingersSchema.catch('spread'),
-});
-export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
-
-export const AppearancePoseSchema = z.object({
-	bones: z.record(BoneNameSchema, z.number().optional()).default({}),
-	leftArm: AppearanceArmPoseSchema.default({}),
-	rightArm: AppearanceArmPoseSchema.default({}),
-	view: CharacterViewSchema.catch('front'),
-});
-export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
-
-export const AppearanceBundleSchema = AppearancePoseSchema.extend({
-	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
-	safemode: SafemodeDataSchema.optional(),
-});
-
-export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
 
 function GetDefaultAppearanceArmPose(): AppearanceArmPose {
 	return {
@@ -73,390 +39,72 @@ export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
 
 export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'rightArm'>>;
 
+/**
+ * A helper wrapper around a global state that allows easy access and manipulation of specific character.
+ */
 export class CharacterAppearance implements RoomActionTargetCharacter {
+	public readonly characterState: AssetFrameworkCharacterState;
+
 	public readonly type = 'character';
+	public readonly id: CharacterId;
 	private readonly getCharacter: () => Readonly<ICharacterMinimalData>;
 
-	protected assetManager: AssetManager;
-	public onChangeHandler: ((changes: AppearanceChangeType[]) => void) | undefined;
-
-	private items: AppearanceItems<WearableAssetType> = [];
-	private readonly pose = new Map<BoneName, BoneState>();
-	private fullPose: readonly BoneState[] = [];
-	private _arms: CharacterArmsPose;
-	private _view: CharacterView;
-	private _safemode: SafemodeData | undefined;
-
-	public get character(): Readonly<ICharacterMinimalData> {
-		return this.getCharacter();
+	protected get assetManager(): AssetManager {
+		return this.characterState.assetManager;
 	}
 
-	constructor(assetManager: AssetManager, getCharacter: () => Readonly<ICharacterMinimalData>, onChange?: (changes: AppearanceChangeType[]) => void) {
-		const { leftArm, rightArm, view } = GetDefaultAppearanceBundle();
-		this._arms = { leftArm, rightArm };
-		this._view = view;
-		this.assetManager = assetManager;
+	private get _items(): AppearanceItems<WearableAssetType> {
+		return this.characterState.items;
+	}
+
+	public get character(): Readonly<ICharacterMinimalData> {
+		const character = this.getCharacter();
+		Assert(character.id === this.id);
+		return character;
+	}
+
+	constructor(characterState: AssetFrameworkCharacterState, getCharacter: () => Readonly<ICharacterMinimalData>) {
+		this.characterState = characterState;
+		this.id = characterState.id;
 		this.getCharacter = getCharacter;
-		this.importFromBundle(GetDefaultAppearanceBundle());
-		this.onChangeHandler = onChange;
 	}
 
 	public getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager {
 		return new CharacterRestrictionsManager(this, room);
 	}
 
-	public exportToBundle(): AppearanceBundle {
-		return {
-			items: this.items.map((item) => item.exportToBundle()),
-			bones: this.exportBones(),
-			leftArm: _.cloneDeep(this._arms.leftArm),
-			rightArm: _.cloneDeep(this._arms.rightArm),
-			view: this._view,
-			safemode: this._safemode,
-		};
-	}
-
-	public importFromBundle(bundle: AppearanceBundle | undefined, logger?: Logger, assetManager?: AssetManager): void {
-		// Simple migration
-		bundle = {
-			...GetDefaultAppearanceBundle(),
-			...bundle,
-		};
-		bundle = AppearanceBundleSchema.parse(bundle);
-		if (assetManager && this.assetManager !== assetManager) {
-			this.assetManager = assetManager;
-		}
-
-		// Load all items
-		const loadedItems: Item[] = [];
-		for (const itemBundle of bundle.items) {
-			// Load asset and skip if unknown
-			const asset = this.assetManager.getAssetById(itemBundle.asset);
-			if (asset === undefined) {
-				logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
-				continue;
-			}
-
-			const item = this.assetManager.createItem(itemBundle.id, asset, itemBundle, logger);
-			loadedItems.push(item);
-		}
-
-		// Validate and add all items
-		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, loadedItems, logger);
-
-		if (!ValidateAppearanceItems(this.assetManager, newItems).success) {
-			throw new Error('Invalid appearance after load');
-		}
-
-		this.items = newItems;
-		this.pose.clear();
-		for (const bone of this.assetManager.getAllBones()) {
-			const value = bundle.bones[bone.name];
-			this.pose.set(bone.name, {
-				definition: bone,
-				rotation: (value != null && Number.isInteger(value)) ? _.clamp(value, BONE_MIN, BONE_MAX) : 0,
-			});
-		}
-		this._arms = {
-			leftArm: _.cloneDeep(bundle.leftArm),
-			rightArm: _.cloneDeep(bundle.rightArm),
-		};
-		this._view = bundle.view;
-		this.fullPose = Array.from(this.pose.values());
-		if (logger) {
-			for (const k of Object.keys(bundle.bones)) {
-				if (!this.pose.has(k)) {
-					logger.warning(`Skipping unknown pose bone ${k}`);
-				}
-			}
-		}
-		this.enforcePoseLimits();
-
-		// Import safemode status
-		this._safemode = bundle.safemode;
-
-		this.onChange(['items', 'pose', 'safemode']);
-	}
-
-	public cleanupRoomDeviceWearables(roomInventory: RoomInventory | null, logger?: Logger): void {
-		const cleanedUpItems = this.items.filter((item) => {
-			if (item.isType('roomDeviceWearablePart')) {
-				if (!roomInventory || !item.roomDeviceLink)
-					return false;
-
-				// Target device must exist
-				const device = roomInventory.getItem({
-					container: [],
-					itemId: item.roomDeviceLink.device,
-				});
-				if (!device || !device.isType('roomDevice'))
-					return false;
-
-				// The device must have a matching slot
-				if (device.asset.definition.slots[item.roomDeviceLink.slot]?.wearableAsset !== item.asset.id)
-					return false;
-
-				// The device must be deployed with this character in target slot
-				if (!device.deployment || device.slotOccupancy.get(item.roomDeviceLink.slot) !== this.character.id)
-					return false;
-			}
-			return true;
-		});
-
-		if (cleanedUpItems.length === this.items.length)
-			return;
-
-		// Re-validate items as forceful removal might have broken dependencies
-		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, cleanedUpItems, logger);
-		Assert(ValidateAppearanceItems(this.assetManager, newItems).success);
-		this.items = newItems;
-
-		const poseChanged = this.enforcePoseLimits();
-		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
-	}
-
-	protected enforcePoseLimits(): boolean {
-		const limits = AppearanceItemProperties(this.items).limits;
-		if (!limits || limits.hasNoLimits())
-			return false;
-
-		const { changed, pose } = limits.force({
-			bones: Object.fromEntries([...this.pose.entries()].map(([bone, state]) => [bone, state.rotation])),
-			leftArm: this._arms.leftArm,
-			rightArm: this._arms.rightArm,
-			view: this._view,
-		});
-		if (!changed)
-			return false;
-
-		const { bones, leftArm, rightArm, view } = pose;
-
-		this._view = view;
-		this._arms = {
-			leftArm,
-			rightArm,
-		};
-		for (const [bone, state] of this.pose.entries()) {
-			const rotation = bones[bone];
-			if (rotation != null && rotation !== state.rotation) {
-				this.pose.set(bone, {
-					definition: state.definition,
-					rotation,
-				});
-			}
-		}
-
-		this.fullPose = Array.from(this.pose.values());
-
-		return true;
-	}
-
-	public importPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): void {
-		const [changed, arms] = this._newArmsPose(pose);
-		const { bones } = pose;
-		if (!bones) {
-			if (changed) {
-				this._arms = arms;
-				this.enforcePoseLimits();
-				this.onChange(['pose']);
-			}
-			return;
-		} else if (changed) {
-			this._arms = arms;
-		}
-		for (const [bone, state] of this.pose.entries()) {
-			if (type !== true && state.definition.type !== type)
-				continue;
-			if (!missingAsZero && bones[state.definition.name] == null)
-				continue;
-
-			this.pose.set(bone, {
-				definition: state.definition,
-				rotation: _.clamp(bones[state.definition.name] || 0, BONE_MIN, BONE_MAX),
-			});
-		}
-		this.fullPose = Array.from(this.pose.values());
-		this.enforcePoseLimits();
-		this.onChange(['pose']);
-	}
-
-	public exportBones(type?: BoneType): Record<BoneName, number> {
-		const pose: Record<BoneName, number> = {};
-		for (const state of this.pose.values()) {
-			if (state.rotation === 0) {
-				continue;
-			}
-			if (type && state.definition.type !== type) {
-				continue;
-			}
-			pose[state.definition.name] = state.rotation;
-		}
-		return pose;
-	}
-
-	public reloadAssetManager(assetManager: AssetManager, logger?: Logger) {
-		if (this.assetManager === assetManager)
-			return;
-		const bundle = this.exportToBundle();
-		this.assetManager = assetManager;
-		this.importFromBundle(bundle, logger);
-	}
-
 	public getAssetManager(): AssetManager {
 		return this.assetManager;
 	}
 
-	protected onChange(changes: AppearanceChangeType[]): void {
-		this.onChangeHandler?.(changes);
-	}
-
-	public getItem({ container, itemId }: ItemPath): Item | undefined {
-		let current: AppearanceItems = this.items;
-		for (const step of container) {
-			const item = current.find((it) => it.id === step.item);
-			if (!item)
-				return undefined;
-			current = item.getModuleItems(step.module);
-		}
-		return current.find((it) => it.id === itemId);
+	public getItem(path: ItemPath): Item | undefined {
+		return EvalItemPath(this._items, path);
 	}
 
 	public listItemsByAsset(asset: AssetId) {
-		return this.items.filter((i) => i.asset.id === asset);
+		return this._items.filter((i) => i.asset.id === asset);
 	}
 
 	public getAllItems(): AppearanceItems<WearableAssetType> {
-		return this.items;
-	}
-
-	public getManipulator(): AppearanceCharacterManipulator {
-		return new AppearanceCharacterManipulator(this.assetManager, this.items);
-	}
-
-	public commitChanges(manipulator: AppearanceCharacterManipulator, context: ActionProcessingContext): AppearanceValidationResult {
-		Assert(this.assetManager === manipulator.assetManager);
-		const newItems = manipulator.getRootItems();
-
-		// Check only wearable items are being applied
-		const wearableItems = newItems.filter(FilterItemWearable);
-		if (wearableItems.length !== newItems.length) {
-			const badItem = newItems.find((i) => !i.isWearable());
-			AssertNotNullable(badItem);
-			return {
-				success: false,
-				error: {
-					problem: 'contentNotAllowed',
-					asset: badItem.asset.id,
-				},
-			};
-		}
-
-		// Validate
-		const r = ValidateAppearanceItems(this.assetManager, wearableItems);
-		if (!r.success)
-			return r;
-
-		if (context.dryRun)
-			return { success: true };
-
-		this.items = wearableItems;
-		const poseChanged = this.enforcePoseLimits();
-		this.onChange(poseChanged ? ['items', 'pose'] : ['items']);
-
-		for (const message of manipulator.getAndClearPendingMessages()) {
-			context.actionHandler?.({
-				...message,
-				character: context.sourceCharacter ? {
-					type: 'character',
-					id: context.sourceCharacter,
-				} : undefined,
-				target: {
-					type: 'character',
-					id: this.character.id,
-				},
-			});
-		}
-
-		return { success: true };
-	}
-
-	public setPose(bone: string, value: number): void {
-		if (!Number.isInteger(value))
-			throw new Error('Attempt to set non-int pose value');
-		const state = this.pose.get(bone);
-		if (!state)
-			throw new Error(`Attempt to set pose for unknown bone: ${bone}`);
-
-		this.importPose({ bones: { [bone]: value } }, true, false);
+		return this._items;
 	}
 
 	public getPose(bone: string): BoneState {
-		const state = this.pose.get(bone);
+		const state = this.characterState.pose.get(bone);
 		if (!state)
 			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
 		return { ...state };
 	}
 
-	public getFullPose(): readonly BoneState[] {
-		return this.fullPose;
-	}
-
 	public getArmsPose(): CharacterArmsPose {
-		return this._arms;
-	}
-
-	public setArmsPose(pose: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): void {
-		const [changed, arms] = this._newArmsPose(pose);
-		if (changed) {
-			this._arms = arms;
-			this.enforcePoseLimits();
-			this.onChange(['pose']);
-		}
+		return this.characterState.arms;
 	}
 
 	public getView(): CharacterView {
-		return this._view;
-	}
-
-	public setView(value: CharacterView): void {
-		if (this._view !== value) {
-			this._view = value;
-			this.onChange(['pose']);
-		}
+		return this.characterState.view;
 	}
 
 	public getSafemode(): Readonly<SafemodeData> | null {
-		return this._safemode ?? null;
-	}
-
-	public setSafemode(value: Readonly<SafemodeData> | null, context: ActionProcessingContext): void {
-		if (context.dryRun)
-			return;
-
-		const stateChange = (this._safemode != null) !== (value != null);
-		if (!isEqual(this._safemode ?? null, value)) {
-			this._safemode = cloneDeep(value) ?? undefined;
-			this.onChange(['safemode']);
-
-			if (stateChange) {
-				context.actionHandler?.({
-					id: value != null ? 'safemodeEnter' : 'safemodeLeave',
-					character: {
-						type: 'character',
-						id: this.character.id,
-					},
-				});
-			}
-		}
-	}
-
-	private _newArmsPose({ arms, leftArm: left, rightArm: right }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): [boolean, CharacterArmsPose] {
-		const leftArm = { ...this._arms.leftArm, ...arms, ...left };
-		const rightArm = { ...this._arms.rightArm, ...arms, ...right };
-		const changed =
-			!_.isEqual(this._arms.leftArm, leftArm) ||
-			!_.isEqual(this._arms.rightArm, rightArm);
-
-		return [changed, { leftArm, rightArm }];
+		return this.characterState.safemode ?? null;
 	}
 }

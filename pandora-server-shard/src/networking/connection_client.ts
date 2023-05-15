@@ -1,13 +1,14 @@
-import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema } from 'pandora-common';
+import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema, AssertNotNullable } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
-import { ConnectionType, IConnectionClient } from './common';
 import { ConnectionManagerClient } from './manager_client';
+import type { IncomingHttpHeaders } from 'http';
+import { assetManager } from '../assets/assetManager';
+import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
 
 /** Class housing connection from a client */
-export class ClientConnection extends IncomingConnection<IShardClient, IClientShard, IncomingSocket> implements IConnectionClient {
-	public readonly type: ConnectionType.CLIENT = ConnectionType.CLIENT;
+export class ClientConnection extends IncomingConnection<IShardClient, IClientShard, IncomingSocket> {
 
 	private _aborted: boolean = false;
 	public get aborted(): boolean {
@@ -17,7 +18,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 	/** Character of the connection, always set by `Character` class */
 	public character: Character | null = null;
 
-	public readonly headers: Record<string, undefined | string | string[]>;
+	public readonly headers: IncomingHttpHeaders;
 
 	constructor(server: IServerSocket<IShardClient>, socket: IncomingSocket, headers: Record<string, undefined | string | string[]>) {
 		super(server, socket, [ShardClientSchema, ClientShardSchema], GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
@@ -50,6 +51,18 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 		}
 		character.setConnection(this);
 		return true;
+	}
+
+	public sendLoadMessage(): void {
+		AssertNotNullable(this.character);
+		this.sendMessage('load', {
+			character: this.character.getPrivateData(),
+			globalState: this.character.getGlobalState().currentState.exportToBundle(),
+			room: this.character.room?.getLoadData() ?? null,
+			assetsDefinition: assetManager.rawData,
+			assetsDefinitionHash: assetManager.definitionsHash,
+			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
+		});
 	}
 
 	/**

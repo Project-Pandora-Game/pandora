@@ -1,4 +1,4 @@
-import { AssertNever, CalculateCharacterMaxYForBackground, CharacterSize, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -14,8 +14,8 @@ import { useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
-import { AppearanceContainer, useCharacterAppearanceView } from '../../character/character';
-import { useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { Character, useCharacterAppearanceView } from '../../character/character';
+import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacters, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 
 const DEVICE_WAIT_DRAG_THRESHOLD = 100; // ms
 
@@ -285,14 +285,16 @@ function RoomDeviceGraphicsLayerSlot({ item, layer }: {
 	layer: IRoomDeviceGraphicsLayerSlot;
 }): ReactElement | null {
 	const characterId = item.slotOccupancy.get(layer.slot);
+	const chatRoom = useChatroomRequired();
 	const chatroomCharacters = useChatRoomCharacters();
+	const characterState = useCharacterState(chatRoom, characterId ?? null);
 
 	if (!characterId)
 		return null;
 
 	const character = chatroomCharacters?.find((c) => c.id === characterId);
 
-	if (!character)
+	if (!character || !characterState)
 		return null;
 
 	return (
@@ -300,16 +302,18 @@ function RoomDeviceGraphicsLayerSlot({ item, layer }: {
 			item={ item }
 			layer={ layer }
 			character={ character }
+			characterState={ characterState }
 		/>
 	);
 }
 
-function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character }: {
+function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characterState }: {
 	item: ItemRoomDevice;
 	layer: IRoomDeviceGraphicsLayerSlot;
-	character: AppearanceContainer;
+	character: Character;
+	characterState: AssetFrameworkCharacterState;
 }): ReactElement | null {
-	const evaluator = useAppearanceConditionEvaluator(character);
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const devicePivot = item.asset.definition.pivot;
 	const x = devicePivot.x + layer.characterPosition.offsetX;
@@ -322,7 +326,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character }: {
 
 	const scale = baseScale * layer.characterPosition.relativeScale;
 
-	const backView = useCharacterAppearanceView(character) === 'back';
+	const backView = useCharacterAppearanceView(characterState) === 'back';
 
 	const scaleX = backView ? -1 : 1;
 
@@ -333,13 +337,13 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character }: {
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
-	const roomDeviceLink = useCharacterRestrictionsManager(character, (rm) => rm.getRoomDeviceLink());
+	const roomDeviceLink = useCharacterRestrictionsManager(characterState, character, (rm) => rm.getRoomDeviceLink());
 	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot)
 		return null;
 
 	return (
 		<GraphicsCharacter
-			appearanceContainer={ character }
+			characterState={ characterState }
 			position={ { x, y } }
 			scale={ { x: scaleX * scale, y: scale } }
 			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }

@@ -2,13 +2,12 @@ import { Container, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { max, maxBy, min, minBy } from 'lodash';
-import { AppearanceItems, Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle, HexColorString, AssertNever } from 'pandora-common';
+import { AppearanceItems, Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle, HexColorString, AssertNever, AssetFrameworkCharacterState } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
-import { AppearanceContainer } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
 import { useObservable } from '../observable';
 import { AppearanceConditionEvaluator, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
@@ -101,7 +100,7 @@ export function useLayerVertices(
 }
 
 export interface GraphicsLayerProps extends ChildrenProps {
-	appearanceContainer: AppearanceContainer;
+	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
 	lowerZIndex: number;
 	layer: AssetGraphicsLayer;
@@ -133,7 +132,7 @@ export function SwapCullingDirection({ children, swap = true, uniqueKey }: Child
 }
 
 export function GraphicsLayer({
-	appearanceContainer,
+	characterState,
 	children,
 	zIndex,
 	lowerZIndex,
@@ -146,7 +145,7 @@ export function GraphicsLayer({
 
 	const { points, triangles } = useLayerPoints(layer);
 
-	const evaluator = useAppearanceConditionEvaluator(appearanceContainer);
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const vertices = useLayerVertices(evaluator, points, layer, item, false, verticesPoseOverride);
 
@@ -203,7 +202,7 @@ export function GraphicsLayer({
 
 	const texture = useTexture(image, undefined, getTexture);
 
-	const { color, alpha } = useItemColor(appearanceContainer.appearance.getAllItems(), item, colorizationKey, state);
+	const { color, alpha } = useItemColor(characterState.items, item, colorizationKey, state);
 
 	const hasAlphaMasks = useLayerHasAlphaMasks(layer);
 

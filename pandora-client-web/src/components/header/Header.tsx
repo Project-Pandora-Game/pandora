@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { AssertNotNullable, EMPTY, IsAuthorized } from 'pandora-common';
+import { EMPTY, IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import friendsIcon from '../../assets/icons/friends.svg';
@@ -7,7 +7,7 @@ import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import managementIcon from '../../assets/icons/management.svg';
-import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
+import { usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
 import { useLogout } from '../../networking/account_manager';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
@@ -51,10 +51,9 @@ function LeftHeader(): ReactElement {
 
 function CharacterMenu({ close }: { close: () => void; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const player = usePlayer();
-	AssertNotNullable(player);
+	const playerState = usePlayerState();
 
-	const safemode = useCharacterSafemode(player);
+	const safemode = useCharacterSafemode(playerState);
 	const safemodeContext = useSafemodeDialogContext();
 
 	return (

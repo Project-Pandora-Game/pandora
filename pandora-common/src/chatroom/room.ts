@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { ArrayToTruthyMap, ZodTrimedRegex, ZodTemplateString } from '../validation';
 import { cloneDeep } from 'lodash';
-import { AssetManager, RoomInventoryBundleSchema } from '../assets';
+import { AssetManager } from '../assets';
 import { CharacterId } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
+import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;

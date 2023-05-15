@@ -1,4 +1,4 @@
-import { ICharacterData } from 'pandora-common';
+import { ICharacterPrivateData } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { Button } from '../common/button/button';
 import { usePlayerData } from '../gameContext/playerContextProvider';
@@ -23,7 +23,7 @@ export function CharacterSettings(): ReactElement | null {
 	);
 }
 
-function LabelColor({ playerData }: { playerData: Readonly<ICharacterData>; }): ReactElement {
+function LabelColor({ playerData }: { playerData: Readonly<ICharacterPrivateData>; }): ReactElement {
 	const shardConnector = useShardConnector();
 	const [color, setColor] = useColorInput(playerData.settings.labelColor);
 
@@ -44,7 +44,7 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterData>; }): 
 	);
 }
 
-function Pronouns({ playerData }: { playerData: Readonly<ICharacterData>; }): ReactElement {
+function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>; }): ReactElement {
 	const shardConnector = useShardConnector();
 	const [pronoun, setPronoun] = React.useState(playerData.settings.pronoun);
 	const features = useChatRoomFeatures();

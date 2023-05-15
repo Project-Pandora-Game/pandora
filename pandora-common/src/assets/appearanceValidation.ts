@@ -21,7 +21,12 @@ export type AppearanceValidationError =
 		requirement: string;
 	}
 	| {
+		// The combination of items doesn't allow for a valid pose
 		problem: 'poseConflict';
+	}
+	| {
+		// There is a possible valid pose, but the current pose is not valid
+		problem: 'invalidPose';
 	}
 	| {
 		problem: 'tooManyItems';

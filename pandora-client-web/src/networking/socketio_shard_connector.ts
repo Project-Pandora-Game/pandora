@@ -83,6 +83,9 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		this._messageHandler = new MessageHandler<IShardClient>({
 			load: this.onLoad.bind(this),
 			updateCharacter: this.onUpdateCharacter.bind(this),
+			chatRoomLoad: (data: IShardClientArgument['chatRoomLoad']) => {
+				this._room.onLoad(data);
+			},
 			chatRoomUpdate: (data: IShardClientArgument['chatRoomUpdate']) => {
 				this._room.onUpdate(data);
 			},
@@ -200,7 +203,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		logger.warning('Connection to Shard failed:', err.message);
 	}
 
-	private onLoad({ character, room, assetsDefinition, assetsDefinitionHash, assetsSource }: IShardClientArgument['load']): void {
+	private onLoad({ character, room, globalState, assetsDefinition, assetsDefinitionHash, assetsSource }: IShardClientArgument['load']): void {
 		const currentState = this._state.value;
 		LoadAssetDefinitions(assetsDefinitionHash, assetsDefinition, assetsSource);
 		if (this._player.value?.data.id === character.id) {
@@ -208,7 +211,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		} else {
 			this._player.value = new PlayerCharacter(character);
 		}
-		this._room.onUpdate({ room });
+		this._room.onLoad({ globalState, room });
 		if (currentState === ShardConnectionState.CONNECTED) {
 			// Ignore reloads from shard
 		} else if (currentState === ShardConnectionState.WAIT_FOR_DATA) {

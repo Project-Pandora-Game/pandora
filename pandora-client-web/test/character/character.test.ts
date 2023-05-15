@@ -1,15 +1,11 @@
 import { act, renderHook } from '@testing-library/react';
 import { cloneDeep } from 'lodash';
 import {
-	CharacterAppearance,
-	GetDefaultAppearanceBundle,
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	ICharacterData,
 } from 'pandora-common';
 import {
 	Character,
-	useCharacterAppearanceItems,
-	useCharacterAppearancePose,
 	useCharacterData,
 } from '../../src/character/character';
 
@@ -41,18 +37,6 @@ describe('Character', () => {
 			mock.update(update);
 			expect(mock.data).toStrictEqual({ ...mockData, ...update });
 		});
-
-		it('should update appearance when passed in appearance', () => {
-			const update: Partial<ICharacterData> = {
-				id: 'c321',
-				accessId: 'updatedId',
-				appearance: GetDefaultAppearanceBundle(),
-			};
-			const mockImport = jest.spyOn(CharacterAppearance.prototype, 'importFromBundle');
-			mock.update(update);
-			expect(mock.data).toStrictEqual({ ...mockData, ...update });
-			expect(mockImport).nthCalledWith(1, update.appearance, expect.anything(), expect.anything());
-		});
 	});
 });
 
@@ -79,52 +63,3 @@ describe('useCharacterData()', () => {
 	});
 });
 
-describe('useCharacterAppearanceItems()', () => {
-	let mock: Character;
-	beforeEach(() => {
-		mock = new Character(mockData);
-	});
-	it('should return character appearance', () => {
-		const { result } = renderHook(() => useCharacterAppearanceItems(mock));
-
-		expect(result.current).toBe(mock.appearance.getAllItems());
-
-	});
-	it('should update on character update event', () => {
-		const { result } = renderHook(() => useCharacterAppearanceItems(mock));
-		const update: Partial<ICharacterData> = {
-			id: 'c321',
-			accessId: 'updatedId',
-			appearance: GetDefaultAppearanceBundle(),
-		};
-		act(() => {
-			mock.update(update);
-		});
-		expect(result.current).toBe(mock.appearance.getAllItems());
-	});
-});
-
-describe('useCharacterAppearancePose()', () => {
-	let mock: Character;
-	beforeEach(() => {
-		mock = new Character(mockData);
-	});
-	it('should return character appearance', () => {
-		const { result } = renderHook(() => useCharacterAppearancePose(mock));
-
-		expect(result.current).toBe(mock.appearance.getFullPose());
-
-	});
-	it('should update on character update event', () => {
-		const { result } = renderHook(() => useCharacterAppearancePose(mock));
-		const update: Partial<ICharacterData> = {
-			id: 'c321',
-			accessId: 'updatedId',
-			appearance: GetDefaultAppearanceBundle(),
-		};
-		act(() => {
-			mock.update(update);
-		});
-		expect(result.current).toBe(mock.appearance.getFullPose());
-	});
-});

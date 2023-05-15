@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomClientData, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, RoomInventory, AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -20,7 +20,7 @@ export class Room extends ServerRoom<IShardClient> {
 	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionTargetCharacter; leave?: number; }>();
 	private readonly tickInterval: NodeJS.Timeout;
 
-	public readonly inventory: RoomInventory;
+	public readonly roomState: AssetFrameworkGlobalStateContainer;
 
 	private readonly _lock = new AsyncLock();
 	private modified: Set<keyof IChatRoomDataShardUpdate> = new Set();
@@ -44,16 +44,46 @@ export class Room extends ServerRoom<IShardClient> {
 		this.data = data;
 		this.logger = GetLogger('Room', `[Room ${data.id}]`);
 		this.logger.verbose('Created');
-		this.inventory = new RoomInventory(assetManager);
 
-		this.inventory.importFromBundle(data.inventory ?? ROOM_INVENTORY_BUNDLE_DEFAULT, this.logger.prefixMessages('Room inventory load:'));
-		this.inventory.onChangeHandler = this.onInventoryChanged.bind(this);
+		const initialState = AssetFrameworkGlobalState.createDefault(assetManager)
+			.withRoomState(
+				AssetFrameworkRoomState
+					.loadFromBundle(assetManager, data.inventory, this.logger.prefixMessages('Room inventory load:')),
+			);
+
+		this.roomState = new AssetFrameworkGlobalStateContainer(
+			assetManager,
+			this.logger,
+			this.onStateChanged.bind(this),
+			initialState,
+		);
 
 		this.tickInterval = setInterval(() => this._tick(), ROOM_TICK_INTERVAL);
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
-		this.inventory.reloadAssetManager(manager, this.logger.prefixMessages('Asset manager reload:'));
+		this.roomState.reloadAssetManager(manager);
+
+		// Background definition might have changed, make sure all characters are still inside range
+		const update: IChatRoomUpdate = {};
+
+		// Put characters into correct place if needed
+		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
+		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
+		for (const character of this.characters) {
+			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
+				character.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
+
+				update.characters ??= {};
+				update.characters[character.id] = {
+					position: character.position,
+				};
+			}
+		}
+
+		if (update.characters) {
+			this.sendUpdateToAllInRoom(update);
+		}
 	}
 
 	public onRemove(): void {
@@ -76,17 +106,34 @@ export class Room extends ServerRoom<IShardClient> {
 		}
 	}
 
-	public onInventoryChanged(): void {
-		this.modified.add('inventory');
+	private _suppressUpdates: boolean = false;
+	/** Immediately invokes passed function, but suppresses sending any automated updates */
+	private runWithSuppressedUpdates(fn: () => void): void {
+		try {
+			this._suppressUpdates = true;
+			fn();
+		} finally {
+			this._suppressUpdates = false;
+		}
+	}
+
+	public onStateChanged(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState): void {
+		const changes = newState.listChanges(oldState);
+
+		if (changes.room) {
+			this.modified.add('inventory');
+		}
+
+		for (const character of changes.characters) {
+			this.getCharacterById(character)?.onAppearanceChanged();
+		}
+
+		if (this._suppressUpdates)
+			return;
 
 		this.sendUpdateToAllInRoom({
-			roomInventoryChange: this.inventory.exportToBundle(),
+			globalState: newState.exportToBundle(),
 		});
-
-		// Do cleanup of character devices
-		for (const character of this.characters) {
-			character.appearance.cleanupRoomDeviceWearables(this.inventory, this.logger.prefixMessages(`Character ${character.id} cleanup on inventory change:`));
-		}
 	}
 
 	public update(data: IShardChatRoomDefinition): void {
@@ -98,7 +145,10 @@ export class Room extends ServerRoom<IShardClient> {
 			this.data.accessId = data.accessId;
 		}
 		this.data.config = data.config;
-		this.sendUpdateToAllInRoom({ info: this.getClientData() });
+
+		const update: IChatRoomUpdate = {
+			info: this.getInfo(),
+		};
 
 		// Put characters into correct place if needed
 		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
@@ -106,9 +156,15 @@ export class Room extends ServerRoom<IShardClient> {
 		for (const character of this.characters) {
 			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
 				character.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
-				this.sendUpdateToAllInRoom({ update: { id: character.id, position: character.position } });
+
+				update.characters ??= {};
+				update.characters[character.id] = {
+					position: character.position,
+				};
 			}
 		}
+
+		this.sendUpdateToAllInRoom(update);
 	}
 
 	public getInfo(): IChatRoomFullInfo {
@@ -119,17 +175,16 @@ export class Room extends ServerRoom<IShardClient> {
 		};
 	}
 
-	public getActionRoomContext(): ActionRoomContext {
+	public getLoadData() {
 		return {
-			features: this.data.config.features,
+			info: this.getInfo(),
+			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
 		};
 	}
 
-	public getClientData(): IChatRoomClientData {
+	public getActionRoomContext(): ActionRoomContext {
 		return {
-			...this.getInfo(),
-			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
-			inventory: this.inventory.exportToBundle(),
+			features: this.data.config.features,
 		};
 	}
 
@@ -159,7 +214,7 @@ export class Room extends ServerRoom<IShardClient> {
 		}
 		// If moving self, must not be restricted by items
 		if (character.id === source.id) {
-			const restrictionManager = character.appearance.getRestrictionManager(this.getActionRoomContext());
+			const restrictionManager = character.getRestrictionManager();
 			if (restrictionManager.getEffects().blockRoomMovement)
 				return;
 		}
@@ -168,7 +223,13 @@ export class Room extends ServerRoom<IShardClient> {
 			return;
 		}
 		character.position = [x, y];
-		this.sendUpdateToAllInRoom({ update: { id: character.id, position: character.position } });
+		this.sendUpdateToAllInRoom({
+			characters: {
+				[character.id]: {
+					position: character.position,
+				},
+			},
+		});
 	}
 
 	public getCharacterData(c: Character): ICharacterRoomData {
@@ -176,7 +237,6 @@ export class Room extends ServerRoom<IShardClient> {
 			name: c.name,
 			id: c.id,
 			accountId: c.accountId,
-			appearance: c.appearance.exportToBundle(),
 			settings: c.settings,
 			position: c.position,
 		};
@@ -190,33 +250,76 @@ export class Room extends ServerRoom<IShardClient> {
 		return Array.from(this.characters.values()).find((c) => c.id === id) ?? null;
 	}
 
-	public characterEnter(character: Character): void {
+	public getRoomInventory(): RoomInventory {
+		const state = this.roomState.currentState.room;
+		AssertNotNullable(state);
+		return new RoomInventory(state);
+	}
+
+	public characterEnter(character: Character, appearance: AppearanceBundle): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
 		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		character.initRoomPosition(this.id, [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0], [roomBackground.size[0], maxY]);
-		this.characters.add(character);
-		character.setRoom(this);
-		this.sendUpdateTo(character, { room: this.getClientData() });
-		this.sendUpdateToAllInRoom({ join: this.getCharacterData(character) });
-		this.logger.debug(`Character ${character.id} entered`);
 
-		this._getCharacterActionInfo(character.id); // make sure it is added to the cache
+		this.runWithSuppressedUpdates(() => {
+			let roomState = this.roomState.currentState;
+
+			// Add the character to the room
+			this.characters.add(character);
+			const characterState = AssetFrameworkCharacterState
+				.loadFromBundle(assetManager, character.id, appearance, this.logger.prefixMessages(`Character ${character.id} join:`))
+				.cleanupRoomDeviceWearables(roomState.room);
+			roomState = roomState.withCharacter(character.id, characterState);
+
+			this.roomState.setState(roomState);
+
+			// Send update to current characters
+			const globalState = this.roomState.currentState.exportToBundle();
+			this.sendUpdateToAllInRoom({
+				globalState,
+				join: this.getCharacterData(character),
+			});
+			// Send update to joining character
+			character.setRoom(this, appearance);
+			character.connection?.sendMessage('chatRoomLoad', {
+				globalState,
+				room: this.getLoadData(),
+			});
+		});
+
+		this.logger.debug(`Character ${character.id} entered`);
+		// Make sure action info is in cache
+		this._getCharacterActionInfo(character.id);
 	}
 
 	public characterLeave(character: Character): void {
-		this.characters.delete(character);
-		character.setRoom(null);
-		this.history.delete(character.id);
-		this.status.delete(character.id);
-		this._cleanActionCache(character.id);
-		character.connection?.sendMessage('chatRoomUpdate', { room: null });
-		this.logger.debug(`Character ${character.id} left`);
-		this.sendUpdateToAllInRoom({ leave: character.id });
-	}
+		this.runWithSuppressedUpdates(() => {
+			// Remove character
+			let roomState = this.roomState.currentState;
+			const characterAppearance = roomState.characters.get(character.id)?.exportToBundle();
+			AssertNotNullable(characterAppearance);
 
-	public sendUpdateTo(character: Character, data: IChatRoomUpdate): void {
-		character.connection?.sendMessage('chatRoomUpdate', data);
+			this.characters.delete(character);
+			roomState = roomState.withCharacter(character.id, null);
+
+			// Update the target character
+			character.setRoom(null, characterAppearance);
+			character.onAppearanceChanged();
+
+			// Update anyone remaining in the room
+			this.roomState.setState(roomState);
+			this.sendUpdateToAllInRoom({
+				globalState: this.roomState.currentState.exportToBundle(),
+				leave: character.id,
+			});
+
+			// Cleanup character data
+			this.history.delete(character.id);
+			this.status.delete(character.id);
+			this._cleanActionCache(character.id);
+		});
+		this.logger.debug(`Character ${character.id} left`);
 	}
 
 	public sendUpdateToAllInRoom(data: IChatRoomUpdate): void {
@@ -235,7 +338,9 @@ export class Room extends ServerRoom<IShardClient> {
 			const data: IChatRoomDataShardUpdate = {};
 
 			if (keys.includes('inventory')) {
-				data.inventory = this.inventory.exportToBundle();
+				const roomState = this.roomState.currentState.room;
+				AssertNotNullable(roomState);
+				data.inventory = roomState.exportToBundle();
 			}
 
 			try {
@@ -288,7 +393,7 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
 		// Handle speech muffling
-		const player = from.appearance.getRestrictionManager(this.getActionRoomContext());
+		const player = from.getRestrictionManager();
 		const muffler = player.getMuffler();
 		if (muffler.isActive()) {
 			for (const message of messages) {

@@ -4,7 +4,7 @@ export * from './restrictionsManager';
 export * from './speech';
 
 import { z } from 'zod';
-import { AppearanceBundleSchema } from '../assets/appearance';
+import { AppearanceBundleSchema } from '../assets/state/characterState';
 import { HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
@@ -21,28 +21,36 @@ export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSetting
 	pronoun: 'she',
 };
 
+/** Data about character, that is visible to everyone in same room */
 export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
 	accountId: z.number(),
 	name: z.string(),
-	appearance: AppearanceBundleSchema.optional(),
 	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 });
-
+/** Data about character, that is visible to everyone in same room */
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;
 
 export type ICharacterMinimalData = Pick<ICharacterPublicData, 'id' | 'name' | 'accountId'>;
 
-export const CharacterDataSchema = CharacterPublicDataSchema.merge(z.object({
+/** Data about character, that is visible only to the character itself */
+export const CharacterPrivateDataSchema = CharacterPublicDataSchema.extend({
 	inCreation: z.literal(true).optional(),
 	created: z.number(),
+});
+/** Data about character, that is visible only to the character itself */
+export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;
+
+/** Data about character, as seen by server */
+export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
+	appearance: AppearanceBundleSchema.optional(),
 	roomId: z.string().optional(),
 	position: z.tuple([z.number(), z.number()])
 		.default([-1, -1])
 		.transform(ZodTransformReadonly),
-}));
-
+});
+/** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;
 
 export const CharacterDataCreateSchema = CharacterDataSchema.pick({ name: true });

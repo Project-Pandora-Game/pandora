@@ -8,6 +8,7 @@ export * from './assetManager';
 export * from './definitions';
 export * from './item';
 export * from './modules';
+export * from './state/_index';
 export * from './properties';
 export * from './graphics';
 export * from './roomInventory';

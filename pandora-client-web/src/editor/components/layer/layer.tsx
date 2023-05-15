@@ -153,7 +153,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; graphics: EditorAssetGraphics; }): ReactElement | null {
 	const asset = useGraphicsAsset(graphics);
 	const colorization = useMemo(() => asset.isType('personal') ? (asset.definition.colorization ?? {}) : {}, [asset]);
-	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).colorizationKey);
+	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).colorizationKey, [layer]);
 
 	const colorLayerName = useMemo(() => {
 		if (value == null)
@@ -206,7 +206,7 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 				<input
 					id='layer-colorization'
 					type='text'
-					value={ value }
+					value={ value ?? '' }
 					onChange={ onChange }
 					className='flex-1'
 				/>

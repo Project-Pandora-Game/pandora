@@ -11,6 +11,7 @@ import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
+import { Row } from '../../../components/common/container/container';
 
 export function AssetInfoUI(): ReactElement {
 	const editor = useEditor();
@@ -38,22 +39,22 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 	return (
 		<Scrollbar color='lighter' className='editor-setupui slim'>
 			<h3>Asset: { StripAssetIdPrefix(asset.id) }</h3>
-			<div>
+			<Row padding='none' alignY='center'>
 				<label htmlFor='id'>ID: </label>
 				<input id='id' type='text' value={ definition.id } readOnly />
-			</div>
-			<div>
+			</Row>
+			<Row padding='none' alignY='center'>
 				<label htmlFor='name'>Name: </label>
 				<input id='name' type='text' value={ definition.name } readOnly />
-			</div>
-			<div>
+			</Row>
+			<Row padding='none' alignY='center'>
 				<label htmlFor='bodypart'>Body part: </label>
 				<input id='bodypart' type='text' value={ definition.bodypart } readOnly />
-			</div>
-			<div>
+			</Row>
+			<Row padding='none' alignY='center'>
 				<label htmlFor='graphics'>Has graphics: </label>
 				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } disabled />
-			</div>
+			</Row>
 			<Colorization colorization={ definition.colorization } />
 			<Effects effects={ definition.effects } />
 			<Modules modules={ definition.modules } />

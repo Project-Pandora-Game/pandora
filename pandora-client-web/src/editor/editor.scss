@@ -85,14 +85,6 @@
 	padding: 0.5em;
 	overflow: auto;
 
-	& > div {
-		display: flex;
-		flex-flow: row wrap;
-		gap: 0.3em;
-
-		align-items: center;
-	}
-
 	textarea {
 		height: unset;
 		resize: vertical;

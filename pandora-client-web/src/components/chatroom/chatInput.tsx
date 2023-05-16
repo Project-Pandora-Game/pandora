@@ -205,12 +205,15 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
 			<ChatModeSelector />
-			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
+			<TextArea ref={ ref } messagesDiv={ messagesDiv } scrollMessagesView={ scroll } />
 		</>
 	);
 }
 
-function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>; }, ref: ForwardedRef<HTMLTextAreaElement>) {
+function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
+	messagesDiv: RefObject<HTMLDivElement>;
+	scrollMessagesView: (forceScroll: boolean) => void;
+}, ref: ForwardedRef<HTMLTextAreaElement>) {
 	const lastInput = useRef('');
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
@@ -424,11 +427,19 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 			return;
 		}
 
-		if (ev.key === 'Escape' && editing) {
+		if (ev.key === 'Escape') {
 			ev.preventDefault();
 			ev.stopPropagation();
-			setEditing(null);
-			setValue('');
+
+			if (editing) {
+				// When editing, Esc cancels editing
+				setEditing(null);
+				setValue('');
+			} else {
+				// Otherwise scroll to end of messages view
+				scrollMessagesView(true);
+			}
+
 			return;
 		}
 

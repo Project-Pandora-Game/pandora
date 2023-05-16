@@ -1031,18 +1031,7 @@ export function ActionRoomDeviceLeave({
 		};
 	}
 
-	// Actual action
-
 	const roomManipulator = manipulator.getManipulatorFor(action.target);
-	const containerManipulator = roomManipulator.getContainer(action.item.container);
-
-	// Do change
-	if (!containerManipulator.modifyItem(action.item.itemId, (it) => {
-		if (!it.isType('roomDevice'))
-			return null;
-		return it.changeSlotOccupancy(action.slot, null);
-	}))
-		return { result: 'invalidAction' };
 
 	// We try to find the character and remove the device cleanly.
 	// If character is not found, we ignore it (assuming cleanup-style instead of freeing character)
@@ -1051,26 +1040,24 @@ export function ActionRoomDeviceLeave({
 		characterId: occupyingCharacterId,
 	});
 
-	if (targetCharacter) {
-		if (target === targetCharacter)
-			return { result: 'invalidAction' };
+	let isCleanup = true;
 
+	if (targetCharacter) {
 		const characterManipulator = manipulator.getManipulatorFor({
 			type: 'character',
 			characterId: occupyingCharacterId,
 		});
 
-		const removedItems = characterManipulator.removeMatchingItems((i) => i.asset === asset);
+		// Find matching wearable part
+		const wearablePart = characterManipulator.getRootItems().find((i) => i.asset === asset);
 
-		// If we did actually remove something, run checks (free, not cleanup)
-		if (removedItems.length > 0) {
-			Assert(removedItems.length === 1);
-			const removedItem = removedItems[0];
+		// If we have a part to remove this is a free, not just cleanup
+		if (wearablePart != null) {
 
-			// Player must be able to remove the item (runs before commit, so it doesn't matter we did manipulation before)
+			// Player must be able to remove the item
 			r = player.canUseItem(targetCharacter, {
 				container: [],
-				itemId: removedItem.id,
+				itemId: wearablePart.id,
 			}, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
 				return {
@@ -1078,6 +1065,11 @@ export function ActionRoomDeviceLeave({
 					restriction: r.restriction,
 				};
 			}
+
+			// Actually remove the item
+			const removed = characterManipulator.removeMatchingItems((i) => i.asset === asset);
+			Assert(removed.length === 1 && removed[0] === wearablePart);
+			isCleanup = false;
 
 			// Change message to chat
 			characterManipulator.queueMessage({
@@ -1089,26 +1081,30 @@ export function ActionRoomDeviceLeave({
 					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
 				},
 			});
-
-			return {
-				result: 'success',
-			};
 		}
 	}
 
-	// We didn't end up removing worn part from character, so this is only cleanup of the slot
-	// That means we only modify the room device
+	// Only after freeing character remove the reservation from the device - to do things in opposite order of putting character into it
+	if (!roomManipulator.getContainer(action.item.container).modifyItem(action.item.itemId, (it) => {
+		if (!it.isType('roomDevice'))
+			return null;
+		return it.changeSlotOccupancy(action.slot, null);
+	})) {
+		return { result: 'invalidAction' };
+	}
 
-	// Change message to chat
-	roomManipulator.queueMessage({
-		id: 'roomDeviceSlotClear',
-		item: {
-			assetId: item.asset.id,
-		},
-		dictionary: {
-			ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
-		},
-	});
+	// If we didn't remove item from character, then this is just a cleanup, so send cleanup message
+	if (isCleanup) {
+		roomManipulator.queueMessage({
+			id: 'roomDeviceSlotClear',
+			item: {
+				assetId: item.asset.id,
+			},
+			dictionary: {
+				ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+			},
+		});
+	}
 
 	return {
 		result: 'success',

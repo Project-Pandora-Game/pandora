@@ -1,6 +1,7 @@
 import { noop } from 'lodash';
 import { useSyncExternalStore } from 'react';
 import { TypedEvent, TypedEventEmitter } from './event';
+import produce, { Draft } from 'immer';
 
 export type Observer<T> = (value: T) => void;
 export type UnsubscribeCallback = () => void;
@@ -38,6 +39,14 @@ export class Observable<T> implements ReadonlyObservable<T> {
 			observer(this._value);
 		}
 		return () => this._observers.delete(observer);
+	}
+
+	public produce(producer: (value: T) => T): void {
+		this.value = producer(this.value);
+	}
+
+	public produceImmer<D = Draft<T>>(producer: (value: D) => D | void | undefined): void {
+		this.value = produce(this.value, producer);
 	}
 }
 

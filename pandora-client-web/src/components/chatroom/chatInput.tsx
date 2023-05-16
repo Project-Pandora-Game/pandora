@@ -1,6 +1,6 @@
 import { AssertNotNullable, CharacterId, EMPTY_ARRAY, IChatRoomStatus, IChatType, RoomId, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { noop } from 'lodash';
+import { clamp, noop } from 'lodash';
 import { Character } from '../../character/character';
 import { IMessageParseOptions, useChatRoomCharacters, useChatRoomInfo, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
@@ -360,13 +360,27 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 				return;
 			}
 		}
-		// On PageUp/Down without shift we scroll chat window
-		if ((ev.key === 'PageUp' || ev.key === 'PageDown') && !ev.shiftKey) {
-			messagesDiv.current?.focus();
+		// On PageUp/Down with shift we scroll chat window
+		if ((ev.key === 'PageUp' || ev.key === 'PageDown') && ev.shiftKey) {
+			ev.preventDefault();
+			ev.stopPropagation();
+
+			if (messagesDiv.current) {
+				messagesDiv.current.scrollTo({
+					top: clamp(
+						messagesDiv.current.scrollTop + Math.round((ev.key === 'PageUp' ? -0.5 : 0.5) * messagesDiv.current.clientHeight),
+						0,
+						messagesDiv.current.scrollHeight,
+					),
+					behavior: 'smooth',
+				});
+			}
+
 			return;
 		}
-		// On page up with shift, we show the previous sent message
-		if (ev.key === 'PageUp' && ev.shiftKey) {
+
+		// On page up without shift, we show the previous sent message
+		if (ev.key === 'PageUp' && !ev.shiftKey) {
 			ev.preventDefault();
 			ev.stopPropagation();
 
@@ -387,10 +401,11 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 				inputHistoryIndex.current++;
 				textarea.value = InputHistory.value[inputHistoryIndex.current];
 			}
+			return;
 		}
 
-		// On page down with shift, we show the next sent message (after going to previous)
-		if (ev.key === 'PageDown' && ev.shiftKey) {
+		// On page down without shift, we show the next sent message (after going to previous)
+		if (ev.key === 'PageDown' && !ev.shiftKey) {
 			ev.preventDefault();
 			ev.stopPropagation();
 
@@ -406,6 +421,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 				inputHistoryIndex.current--;
 				textarea.value = inputHistoryIndex.current < 0 ? '' : InputHistory.value[inputHistoryIndex.current];
 			}
+			return;
 		}
 
 		if (ev.key === 'Escape' && editing) {

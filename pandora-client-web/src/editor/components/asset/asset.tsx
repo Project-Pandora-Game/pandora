@@ -14,6 +14,7 @@ import { EDITOR_ALPHA_ICONS, useEditorAssetLayers } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import './asset.scss';
+import { Column, Row } from '../../../components/common/container/container';
 
 const IsAssetGraphicsDefinition = ZodMatcher(AssetGraphicsDefinitionSchema);
 
@@ -127,45 +128,48 @@ export function AssetUI() {
 
 function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
 	return (
-		<div className='exportImport'>
-			<Button onClick={ () => void asset.downloadZip() } className='flex-2' >Export</Button>
-			<label htmlFor='asset-import-button' className='flex-1 hiddenUpload'>
-				<input
-					accept='application/json'
-					id='asset-import-button'
-					type='file'
-					onChange={ (e) => {
-						const files = e.target.files;
-						if (files && files.length === 1) {
-							const file = files.item(0);
-							if (!file || !file.name.endsWith('.json'))
-								return;
-							file
-								.text()
-								.then((content) => {
-									const definition = JSON.parse(
-										content
-											.split('\n')
-											.filter((line) => !line.trimStart().startsWith('//'))
-											.join('\n'),
-									) as AssetGraphicsDefinition;
-									if (!IsAssetGraphicsDefinition(definition)) {
-										throw new Error('Invalid format');
-									}
-									asset.load(definition);
-								})
-								.catch((err) => {
-									toast(`Import failed:\n${String(err)}`, TOAST_OPTIONS_ERROR);
-									GetLogger('AssetImport').error(err);
-								});
-						}
-					} }
-				/>
-				<span className='Button default'>
-					Import
-				</span>
-			</label>
-		</div>
+		<Column padding='none'>
+			<Button onClick={ () => void asset.downloadZip() } className='flex-2' >Export archive</Button>
+			<Row padding='none'>
+				<Button onClick={ () => void asset.exportDefinitionToClipboard() } className='flex-2' >Export definition to clipboard</Button>
+				<label htmlFor='asset-import-button' className='flex-1 hiddenUpload'>
+					<input
+						accept='application/json'
+						id='asset-import-button'
+						type='file'
+						onChange={ (e) => {
+							const files = e.target.files;
+							if (files && files.length === 1) {
+								const file = files.item(0);
+								if (!file || !file.name.endsWith('.json'))
+									return;
+								file
+									.text()
+									.then((content) => {
+										const definition = JSON.parse(
+											content
+												.split('\n')
+												.filter((line) => !line.trimStart().startsWith('//'))
+												.join('\n'),
+										) as AssetGraphicsDefinition;
+										if (!IsAssetGraphicsDefinition(definition)) {
+											throw new Error('Invalid format');
+										}
+										asset.load(definition);
+									})
+									.catch((err) => {
+										toast(`Import failed:\n${String(err)}`, TOAST_OPTIONS_ERROR);
+										GetLogger('AssetImport').error(err);
+									});
+							}
+						} }
+					/>
+					<span className='Button default'>
+						Import
+					</span>
+				</label>
+			</Row>
+		</Column>
 	);
 }
 

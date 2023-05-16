@@ -13,6 +13,7 @@ import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { DraggablePoint, useDraggablePointDefinition } from '../../graphics/draggable';
 import { ParseTransforms, SerializeTransforms } from '../../parsing';
+import { Row } from '../../../components/common/container/container';
 
 export function PointsUI(): ReactElement {
 	const editor = useEditor();
@@ -66,7 +67,7 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 			{
 				selectedPoint ?
 					<PointConfiguration point={ selectedPoint } /> :
-					<div>No point selected</div>
+					<Row padding='none' alignY='center'>No point selected</Row>
 			}
 		</>
 	);
@@ -99,7 +100,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 	}
 	return (
 		<>
-			<div>
+			<Row padding='none' alignY='center'>
 				<label htmlFor='mirror-points-from-layer'>Mirror all points from selected layer:</label>
 				<br />
 				<Select
@@ -117,11 +118,11 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 				>
 					{ elements }
 				</Select>
-			</div>
+			</Row>
 			{
 				typeof points === 'number' &&
 				<>
-					<div>Points are mirrored from layer: { pointSourceLayerName }</div>
+					<Row padding='none' alignY='center'>Points are mirrored from layer: { pointSourceLayerName }</Row>
 					<Button onClick={ () => {
 						asset.layerMirrorFrom(layer, null);
 					} }>
@@ -132,7 +133,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 			{
 				typeof points === 'string' &&
 				<>
-					<div>Points are from template: { points }</div>
+					<Row padding='none' alignY='center'>Points are from template: { points }</Row>
 					<Button onClick={ () => {
 						asset.layerMirrorFrom(layer, null);
 					} }>

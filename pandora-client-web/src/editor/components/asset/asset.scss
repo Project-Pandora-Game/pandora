@@ -1,17 +1,13 @@
 @import '../../../styles/utils';
 
 .editor .editor-ui .editor-assetui {
-	.exportImport {
-		display: flex;
-		flex-flow: row;
-		margin-bottom: 1em;
-		gap: 0.5em;
-	}
+	gap: 0.3em;
 
 	.layerList, .assetImageList {
 		display: flex;
 		flex-flow: column;
 		align-items: stretch;
+		gap: 0.3em;
 
 		ul {
 			padding: 0 0.5em;

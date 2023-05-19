@@ -55,7 +55,9 @@ export function GetCommand(input: string): {
 	};
 }
 
-export function RunCommand(originalInput: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): boolean {
+export type ICommandInvokeContext = Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>;
+
+export function RunCommand(originalInput: string, ctx: ICommandInvokeContext): boolean {
 	const { commandName, command, args } = GetCommand(originalInput);
 
 	if (!command) {
@@ -72,7 +74,7 @@ export function RunCommand(originalInput: string, ctx: Omit<ICommandExecutionCon
 	return command.handler.run(context, {}, args);
 }
 
-export function CommandAutocomplete(msg: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): CommandAutocompleteResult {
+export function CommandAutocomplete(msg: string, ctx: ICommandInvokeContext): CommandAutocompleteResult {
 	const { commandName, spacing, command, args } = GetCommand(msg);
 
 	const context: ICommandExecutionContextClient = {
@@ -121,7 +123,7 @@ let autocompleteLastQuery: string | null = null;
 let autocompleteLastResult: CommandAutocompleteResult = null;
 let autocompleteNextIndex = 0;
 
-export function CommandAutocompleteCycle(msg: string, ctx: Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>): AutocompleteDisplyData {
+export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext): AutocompleteDisplyData {
 	if (autocompleteLastQuery === msg && autocompleteLastResult && autocompleteNextIndex < autocompleteLastResult.options.length) {
 		const index = autocompleteNextIndex;
 		const replace = autocompleteLastResult.options[index].replaceValue.trim();

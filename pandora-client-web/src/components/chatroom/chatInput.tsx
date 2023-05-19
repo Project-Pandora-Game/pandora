@@ -1,10 +1,10 @@
-import { AssertNotNullable, CharacterId, IChatRoomStatus, IChatType, RoomId } from 'pandora-common';
+import { AssertNotNullable, CharacterId, EMPTY_ARRAY, IChatRoomStatus, IChatType, RoomId, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { noop } from 'lodash';
+import { clamp, noop } from 'lodash';
 import { Character } from '../../character/character';
 import { IMessageParseOptions, useChatRoomCharacters, useChatRoomInfo, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
-import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand } from './commandsProcessor';
+import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext } from './commandsProcessor';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Button } from '../common/button/button';
@@ -18,6 +18,7 @@ import { GetChatModeDescription } from './commands';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { Select } from '../common/select/select';
 import settingsIcon from '../../assets/icons/setting.svg';
+import { z } from 'zod';
 
 type Editing = {
 	target: number;
@@ -63,6 +64,10 @@ type ChatInputSave = {
 	roomId: RoomId | null;
 };
 const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
+/** List of recently sent chat messages (both commands and actually sent). Newest is first. */
+const InputHistory = BrowserStorage.createSession<readonly string[]>('saveChatInputHistory', EMPTY_ARRAY, z.string().array().transform(ZodTransformReadonly));
+/** How many last sent messages are remembered in the session storage */
+const INPUT_HISTORY_MAX_LENGTH = 64;
 
 export type ChatMode = {
 	type: IChatType;
@@ -142,7 +147,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 		};
 	}, []);
 
-	const context = useMemo(() => {
+	const context = useMemo<IChatInputHandler>(() => {
 		const newSetTarget = (t: CharacterId | null) => {
 			if (t === playerId) {
 				return;
@@ -200,12 +205,15 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
 			<ChatModeSelector />
-			<TextArea ref={ ref } messagesDiv={ messagesDiv } />
+			<TextArea ref={ ref } messagesDiv={ messagesDiv } scrollMessagesView={ scroll } />
 		</>
 	);
 }
 
-function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>; }, ref: ForwardedRef<HTMLTextAreaElement>) {
+function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
+	messagesDiv: RefObject<HTMLDivElement>;
+	scrollMessagesView: (forceScroll: boolean) => void;
+}, ref: ForwardedRef<HTMLTextAreaElement>) {
 	const lastInput = useRef('');
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setPlayerStatus = useChatRoomSetPlayerStatus();
@@ -217,6 +225,24 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
+
+	/**
+	 * Index of currently selected "recently sent" message.
+	 * -1 for when writing a new message.
+	 * @see InputHistory
+	 */
+	const inputHistoryIndex = useRef(-1);
+
+	const commandInvokeContext = useMemo<ICommandInvokeContext>(() => ({
+		displayError(error) {
+			toast(error, TOAST_OPTIONS_ERROR);
+		},
+		shardConnector,
+		directoryConnector,
+		chatRoom,
+		messageSender: sender,
+		inputHandlerContext: chatInput,
+	}), [chatInput, chatRoom, directoryConnector, sender, shardConnector]);
 
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
@@ -235,13 +261,7 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 		) {
 			input = input.slice(1, textarea.selectionStart || textarea.value.length);
 
-			const autocompleteResult = CommandAutocomplete(input, {
-				shardConnector,
-				directoryConnector,
-				chatRoom,
-				messageSender: sender,
-				inputHandlerContext: chatInput,
-			});
+			const autocompleteResult = CommandAutocomplete(input, commandInvokeContext);
 
 			setAutocompleteHint({
 				replace: textarea.value,
@@ -253,51 +273,56 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 		}
 	});
 
+	const handleSend = useCallback((input: string): boolean => {
+		setAutocompleteHint(null);
+		if (
+			input.startsWith(COMMAND_KEY) &&
+			!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
+			allowCommands
+		) {
+			// Process command
+			return RunCommand(input.slice(1), commandInvokeContext);
+		} else {
+			// Double command key escapes itself
+			if (input.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
+				input = input.slice(1);
+			}
+			input = input.trim();
+			// Ignore empty input, unless editing
+			if (editing == null && !input) {
+				return false;
+			}
+			// TODO ... all options
+			sender.sendMessage(input, {
+				target: target?.data.id,
+				editing: editing?.target || undefined,
+				type: mode?.type || undefined,
+				raw: mode?.raw || undefined,
+			});
+			return true;
+		}
+	}, [allowCommands, commandInvokeContext, editing, mode, sender, setAutocompleteHint, target]);
+
 	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		const textarea = ev.currentTarget;
+		const input = textarea.value;
 		if (ev.key === 'Enter' && !ev.shiftKey) {
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
-				setAutocompleteHint(null);
-				let input = textarea.value;
-				if (
-					input.startsWith(COMMAND_KEY) &&
-					!input.startsWith(COMMAND_KEY + COMMAND_KEY) &&
-					allowCommands
-				) {
-					// Process command
-					if (RunCommand(input.slice(1), {
-						displayError(error) {
-							toast(error, TOAST_OPTIONS_ERROR);
-						},
-						shardConnector,
-						directoryConnector,
-						chatRoom,
-						messageSender: sender,
-						inputHandlerContext: chatInput,
-					})) {
-						textarea.value = '';
-					}
-				} else {
-					// Double command key escapes itself
-					if (input.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
-						input = input.slice(1);
-					}
-					input = input.trim();
-					// Ignore empty input, unless editing
-					if (editing == null && !input) {
-						return;
-					}
-					// TODO ... all options
-					sender.sendMessage(input, {
-						target: target?.data.id,
-						editing: editing?.target || undefined,
-						type: mode?.type || undefined,
-						raw: mode?.raw || undefined,
-					});
+				if (handleSend(input)) {
 					textarea.value = '';
+					inputHistoryIndex.current = -1;
 					setEditing(null);
+
+					if (input && (InputHistory.value.length === 0 || InputHistory.value[0] !== input)) {
+						InputHistory.produceImmer((arr) => {
+							arr.unshift(input);
+							if (arr.length > INPUT_HISTORY_MAX_LENGTH) {
+								arr.splice(INPUT_HISTORY_MAX_LENGTH, arr.length - INPUT_HISTORY_MAX_LENGTH);
+							}
+						});
+					}
 				}
 			} catch (error) {
 				if (error instanceof Error) {
@@ -312,18 +337,9 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 			try {
 				// Process command
 				const inputPosition = textarea.selectionStart || textarea.value.length;
-				const input = textarea.value.slice(1, textarea.selectionStart);
+				const command = textarea.value.slice(1, textarea.selectionStart);
 
-				const autocompleteResult = CommandAutocompleteCycle(input, {
-					displayError(error) {
-						toast(error, TOAST_OPTIONS_ERROR);
-					},
-					shardConnector,
-					directoryConnector,
-					chatRoom,
-					messageSender: sender,
-					inputHandlerContext: chatInput,
-				});
+				const autocompleteResult = CommandAutocompleteCycle(command, commandInvokeContext);
 
 				const replacementStart = COMMAND_KEY + autocompleteResult.replace;
 
@@ -347,15 +363,83 @@ function TextAreaImpl({ messagesDiv }: { messagesDiv: RefObject<HTMLDivElement>;
 				return;
 			}
 		}
-		if ((ev.key === 'PageUp' || ev.key === 'PageDown') && !ev.shiftKey) {
-			messagesDiv.current?.focus();
-			return;
-		}
-		if (ev.key === 'Escape' && editing) {
+		// On PageUp/Down with shift we scroll chat window
+		if ((ev.key === 'PageUp' || ev.key === 'PageDown') && ev.shiftKey) {
 			ev.preventDefault();
 			ev.stopPropagation();
-			setEditing(null);
-			setValue('');
+
+			if (messagesDiv.current) {
+				messagesDiv.current.scrollTo({
+					top: clamp(
+						messagesDiv.current.scrollTop + Math.round((ev.key === 'PageUp' ? -0.5 : 0.5) * messagesDiv.current.clientHeight),
+						0,
+						messagesDiv.current.scrollHeight,
+					),
+					behavior: 'smooth',
+				});
+			}
+
+			return;
+		}
+
+		// On page up without shift, we show the previous sent message
+		if (ev.key === 'PageUp' && !ev.shiftKey) {
+			ev.preventDefault();
+			ev.stopPropagation();
+
+			if (inputHistoryIndex.current + 1 < InputHistory.value.length) {
+				// Save the current input, if it has been modified
+				if (input && inputHistoryIndex.current < 0) {
+					InputHistory.produceImmer((arr) => {
+						arr.unshift(input);
+					});
+					inputHistoryIndex.current = 0;
+				} else if (input && InputHistory.value[inputHistoryIndex.current] !== input) {
+					InputHistory.produceImmer((arr) => {
+						arr.splice(inputHistoryIndex.current, 0, input);
+					});
+				}
+
+				// Replace current value with one from history
+				inputHistoryIndex.current++;
+				textarea.value = InputHistory.value[inputHistoryIndex.current];
+			}
+			return;
+		}
+
+		// On page down without shift, we show the next sent message (after going to previous)
+		if (ev.key === 'PageDown' && !ev.shiftKey) {
+			ev.preventDefault();
+			ev.stopPropagation();
+
+			if (inputHistoryIndex.current >= 0) {
+				// Save the current input, if it has been modified
+				if (input !== '' && InputHistory.value[inputHistoryIndex.current] !== input) {
+					InputHistory.produceImmer((arr) => {
+						arr.splice(inputHistoryIndex.current, 0, input);
+					});
+				}
+
+				// Replace current value with one from history
+				inputHistoryIndex.current--;
+				textarea.value = inputHistoryIndex.current < 0 ? '' : InputHistory.value[inputHistoryIndex.current];
+			}
+			return;
+		}
+
+		if (ev.key === 'Escape') {
+			ev.preventDefault();
+			ev.stopPropagation();
+
+			if (editing) {
+				// When editing, Esc cancels editing
+				setEditing(null);
+				setValue('');
+			} else {
+				// Otherwise scroll to end of messages view
+				scrollMessagesView(true);
+			}
+
 			return;
 		}
 

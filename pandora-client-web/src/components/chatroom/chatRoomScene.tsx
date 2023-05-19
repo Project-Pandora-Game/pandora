@@ -26,6 +26,7 @@ import { useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
 import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
 import { WardrobeContextProvider, useWardrobeContext } from '../wardrobe/wardrobe';
+import { nanoid } from 'nanoid';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -465,6 +466,46 @@ function LeaveDeviceMenu({ device, close }: {
 	);
 }
 
+function OccupyDeviceSlotMenu({ device, slot, character, close }: {
+	device: ItemRoomDevice;
+	slot: string;
+	character: AppearanceContainer;
+	close: () => void;
+}) {
+	const assetManager = useAssetManager();
+	const { actions, execute } = useWardrobeContext();
+	const action = useMemo<AppearanceAction>(() => ({
+		type: 'roomDeviceEnter',
+		item: {
+			container: [],
+			itemId: device.id,
+		},
+		target: { type: 'roomInventory' },
+		slot,
+		character: {
+			type: 'character',
+			characterId: character.id,
+		},
+		itemId: `i/${nanoid()}` as const,
+	}), [device, slot, character]);
+	const available = useMemo(() => DoAppearanceAction(action, actions, assetManager, { dryRun: true }).result === 'success', [action, actions, assetManager]);
+	const onClick = useCallback(() => {
+		execute(action);
+		close();
+	}
+		, [action, execute, close]);
+
+	if (!available) {
+		return null;
+	}
+
+	return (
+		<button onClick={ onClick }>
+			{ character.name } ({ character.id })
+		</button>
+	);
+}
+
 function DeviceSlotsMenu({ device }: {
 	device: ItemRoomDevice;
 	close: () => void;
@@ -491,25 +532,39 @@ function DeviceSlotsMenu({ device }: {
 		return (
 			<>
 				<span>
+					{ device.asset.definition.slots[slot].name }
+				</span>
+				<span>
 					{ character?.name } ({ character?.id })
 				</span>
-				<DeviceSlotClear device={ device } slot={ slot } close={ () => setSlot(null) }>
+				<DeviceSlotClear device={ device } slot={ slot } close={ close }>
 					{ (occupancy === player.id)
 						? 'Exit the device'
 						: 'Clear occupancy of the slot'
 					}
 				</DeviceSlotClear>
 				<button onClick={ () => setSlot(null) }>
-					Back
+					Back to slots
 				</button>
 			</>
 		);
 	}
 
 	return (
-		<button onClick={ () => setSlot(null) }>
-			TODO
-		</button>
+		<>
+			<span>
+				{ device.asset.definition.slots[slot].name }
+			</span>
+			<span>
+				Enter:
+			</span>
+			{ characters.map((character) => (
+				<OccupyDeviceSlotMenu key={ character.id } device={ device } slot={ slot } character={ character } close={ close } />
+			)) }
+			<button onClick={ () => setSlot(null) }>
+				Back to slots
+			</button>
+		</>
 	);
 }
 

@@ -2,17 +2,17 @@ import { AppearanceAction, AssertNotNullable, CalculateCharacterMaxYForBackgroun
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Children, ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
-import { Character, useCharacterData } from '../../character/character';
+import { AppearanceContainer, Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, IsChatroomAdmin, ChatRoom, useCharacterState, useChatroom } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useChatInput } from './chatInput';
 import { usePlayer, usePlayerId } from '../gameContext/playerContextProvider';
 import { IBounceOptions } from 'pixi-viewport';
-import { CommonProps } from '../../common/reactTypes';
+import { ChildrenProps, CommonProps } from '../../common/reactTypes';
 import { useAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
 import { ChatroomDebugConfig, useDebugConfig } from './chatroomDebug';
 import { useContextMenuPosition } from '../contextMenu/contextMenu';
@@ -414,13 +414,13 @@ function StoreDeviceMenu({ device, close }: {
 	);
 }
 
-function LeaveDeviceMenu({ device, close }: {
+function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 	device: ItemRoomDevice;
+	slot: string;
 	close: () => void;
 }) {
 	const assetManager = useAssetManager();
-	const { player, actions, execute } = useWardrobeContext();
-	const slot = useMemo(() => [...device.slotOccupancy.entries()].find(([, id]) => id === player.id)?.[0], [device, player]);
+	const { actions, execute } = useWardrobeContext();
 	const action = useMemo<AppearanceAction | undefined>(() => slot ? ({
 		type: 'roomDeviceLeave',
 		item: {
@@ -444,8 +444,24 @@ function LeaveDeviceMenu({ device, close }: {
 
 	return (
 		<button onClick={ onClick }>
-			Leave the device
+			{ children }
 		</button>
+	);
+}
+
+function LeaveDeviceMenu({ device, close }: {
+	device: ItemRoomDevice;
+	close: () => void;
+}) {
+	const { player } = useWardrobeContext();
+	const slot = useMemo(() => [...device.slotOccupancy.entries()].find(([, id]) => id === player.id)?.[0], [device, player]);
+	if (!slot)
+		return null;
+
+	return (
+		<DeviceSlotClear device={ device } slot={ slot } close={ close }>
+			Exit the device
+		</DeviceSlotClear>
 	);
 }
 
@@ -454,23 +470,46 @@ function DeviceSlotsMenu({ device }: {
 	close: () => void;
 }) {
 	const [slot, setSlot] = useState<string | null>(null);
+	const occupancy = useMemo(() => slot && device.slotOccupancy.get(slot), [device, slot]);
+	const { player } = useWardrobeContext();
+	const characters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? [player];
+	const character = useMemo(() => characters.find(({ id }) => id === occupancy), [characters, occupancy]);
 
-	if (slot) {
+	if (!slot) {
 		return (
-			<button onClick={ () => setSlot(null) }>
-				TODO
-			</button>
+			<>
+				{ Object.entries(device.asset.definition.slots).map(([name, definition]) => (
+					<button key={ name } onClick={ () => setSlot(name) }>
+						{ definition.name }
+					</button>
+				)) }
+			</>
+		);
+	}
+
+	if (occupancy) {
+		return (
+			<>
+				<span>
+					{ character?.name } ({ character?.id })
+				</span>
+				<DeviceSlotClear device={ device } slot={ slot } close={ () => setSlot(null) }>
+					{ (occupancy === player.id)
+						? 'Exit the device'
+						: 'Clear occupancy of the slot'
+					}
+				</DeviceSlotClear>
+				<button onClick={ () => setSlot(null) }>
+					Back
+				</button>
+			</>
 		);
 	}
 
 	return (
-		<>
-			{ Object.entries(device.asset.definition.slots).map(([name, definition]) => (
-				<button key={ name } onClick={ () => setSlot(name) }>
-					{ definition.name }
-				</button>
-			)) }
-		</>
+		<button onClick={ () => setSlot(null) }>
+			TODO
+		</button>
 	);
 }
 

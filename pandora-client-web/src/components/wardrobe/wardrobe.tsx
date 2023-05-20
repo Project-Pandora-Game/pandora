@@ -433,11 +433,14 @@ export function useWardrobeItems(): {
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
 		if (target.type === 'room') {
-			return (!asset.isType('personal') || asset.definition.bodypart == null) &&
-				!asset.isType('roomDeviceWearablePart');
+			return asset.isType('roomDevice') || (
+				asset.isType('personal') &&
+				asset.definition.bodypart == null
+			);
 		}
 		if (target.type === 'character') {
-			return !asset.isType('personal') || (
+			return asset.isType('roomDeviceWearablePart') || (
+				asset.isType('personal') &&
 				asset.definition.bodypart == null &&
 				(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
 			);

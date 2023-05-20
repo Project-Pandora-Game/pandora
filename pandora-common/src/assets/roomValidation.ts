@@ -3,7 +3,7 @@ import { ItemId } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
 
-export const ROOM_INVENTORY_MAX_ITEMS = 10;
+export const ROOM_INVENTORY_MAX_ITEMS = 100;
 
 /** Validates items prefix, ignoring required items */
 export function ValidateRoomInventoryItemsPrefix(_assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {

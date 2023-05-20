@@ -292,7 +292,7 @@ export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	description: string;
 	icon?: string;
 	useAsWardrobeFilter?: {
-		tab: 'item' | 'body';
+		tab: 'item' | 'body' | 'room';
 		excludeAttributes?: readonly A['attributes'][];
 	};
 };

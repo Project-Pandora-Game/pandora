@@ -34,6 +34,8 @@ export class Asset<Type extends AssetType = AssetType> {
 			}
 		} else if (definition.type === 'roomDevice') {
 			definition.staticAttributes?.forEach((a) => staticAttributes.add(a));
+		} else if (definition.type === 'roomDeviceWearablePart') {
+			definition.attributes?.forEach((a) => staticAttributes.add(a));
 		}
 	}
 

@@ -32,6 +32,7 @@ import {
 	FormatTimeInterval,
 	HexColorString,
 	IsCharacterId,
+	IsNotNullable,
 	IsObject,
 	Item,
 	ItemContainerPath,
@@ -468,8 +469,12 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
 		.map((a) => a[0])
 	), [assetManager]);
+	const assetFilterRoomAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
+		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'room')
+		.map((a) => a[0])
+	), [assetManager]);
 
-	const assetFilterAttributes: string[] = target.type === 'character' ? assetFilterCharacterAttributes : [];
+	const assetFilterAttributes: string[] = target.type === 'character' ? assetFilterCharacterAttributes : assetFilterRoomAttributes;
 	const title: string = target.type === 'character' ? 'Currently worn items' : 'Room inventory';
 	const isRoomInventory = target.type === 'room' && currentFocus.container.length === 0;
 
@@ -812,7 +817,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 
 	return (
 		<div tabIndex={ 0 } className='inventoryViewItem listMode static'>
-			<div className='itemPreview' />
+			<InventoryAssetPreview asset={ asset } />
 			<span className='itemName'>{ asset.definition.name }</span>
 			<div className='quickActions'>
 				<WardrobeActionButton action={ {
@@ -943,7 +948,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 					<ActionWarning check={ check } parent={ ref } />
 				) : null
 			}
-			<div className='itemPreview' />
+			<InventoryAssetPreview asset={ asset } />
 			<span className='itemName'>{ asset.definition.name }</span>
 		</div>
 	);
@@ -1054,7 +1059,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 				itemId: selected ? null : item.itemId,
 			});
 		} }>
-			<div className='itemPreview' />
+			<InventoryAssetPreview asset={ asset } />
 			<span className='itemName'>{ asset.definition.name }</span>
 			<div className='quickActions'>
 				{
@@ -1082,6 +1087,40 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 				{ extraActions.map((Action, i) => <Action key={ i } item={ item } />) }
 			</div>
 		</div>
+	);
+}
+
+function InventoryAssetPreview({ asset }: {
+	asset: Asset
+}): ReactElement {
+	const assetManager = useAssetManager();
+
+	const iconAttribute = useMemo(() => Array.from(asset.staticAttributes)
+		.map((attributeName) => assetManager.getAttributeDefinition(attributeName))
+		.filter(IsNotNullable)
+		.find((attribute) =>
+			attribute.icon != null &&
+			attribute.useAsWardrobeFilter != null &&
+			!attribute.useAsWardrobeFilter.excludeAttributes?.some((a) => asset.staticAttributes.has(a))
+		)
+	, [asset, assetManager]);
+
+	const icon = useGraphicsUrl(iconAttribute?.icon);
+
+	if (icon) {
+		return (
+			<div className='itemPreview'>
+				<img
+					className='black'
+					src={ icon }
+					alt='Item preview'
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<div className='itemPreview missing'>?</div>
 	);
 }
 

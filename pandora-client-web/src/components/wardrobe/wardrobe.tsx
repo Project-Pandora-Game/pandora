@@ -1094,7 +1094,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 }
 
 function InventoryAssetPreview({ asset }: {
-	asset: Asset
+	asset: Asset;
 }): ReactElement {
 	const assetManager = useAssetManager();
 
@@ -1104,7 +1104,7 @@ function InventoryAssetPreview({ asset }: {
 		.find((attribute) =>
 			attribute.icon != null &&
 			attribute.useAsWardrobeFilter != null &&
-			!attribute.useAsWardrobeFilter.excludeAttributes?.some((a) => asset.staticAttributes.has(a))
+			!attribute.useAsWardrobeFilter.excludeAttributes?.some((a) => asset.staticAttributes.has(a)),
 		)
 	, [asset, assetManager]);
 

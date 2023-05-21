@@ -1,13 +1,14 @@
-import { ActionRoomContext, AppearanceActionContext, AssertNever, ChatRoomFeatureSchema, DoAppearanceAction, RoomInventory } from 'pandora-common';
-import React, { ReactElement, ReactNode, useMemo } from 'react';
+import { ActionRoomContext, AppearanceActionContext, AssertNever, ChatRoomFeatureSchema, DoAppearanceAction, EMPTY_ARRAY, RoomInventory } from 'pandora-common';
+import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Column } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocusesItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
+import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocusesItem, WardrobeHeldItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
 import { Observable } from '../../../observable';
 import { useEditor, useEditorState } from '../../editorContextProvider';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
+import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 
 const ROOM_CONTEXT = {
 	features: ChatRoomFeatureSchema.options,
@@ -21,6 +22,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const assetList = assetManager.assetList;
 
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
+	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: character.id,
@@ -52,6 +54,16 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 	}), [character, editor]);
 
+	useEffect(() => {
+		if (heldItem.type === 'item') {
+			const rootItems = globalState.getItems(heldItem.target);
+			const item = EvalItemPath(rootItems ?? EMPTY_ARRAY, heldItem.path);
+			if (!item) {
+				setHeldItem({ type: 'nothing' });
+			}
+		}
+	}, [heldItem, globalState]);
+
 	const context = useMemo<WardrobeContext>(() => ({
 		target: character,
 		targetSelector: {
@@ -61,10 +73,12 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		globalState,
 		player: character,
 		assetList,
+		heldItem,
+		setHeldItem,
 		extraItemActions,
 		actions,
 		execute: (action) => DoAppearanceAction(action, actions, assetManager),
-	}), [character, globalState, assetList, extraItemActions, actions, assetManager]);
+	}), [character, globalState, assetList, heldItem, extraItemActions, actions, assetManager]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -127,6 +141,7 @@ export function EditorWardrobeUI(): ReactElement {
 						}) }
 						attributesFilterOptions={ assetFilterAttributes }
 						container={ currentFocus.container }
+						spawnStyle='spawn'
 					/>
 				</FieldsetToggle>
 			</Column>

@@ -59,6 +59,10 @@ export function AssertNever(...args: never[]): never {
 	throw new Error(`Never assertion failed with arguments: ${args.join(', ')}`);
 }
 
+export function IsNotNullable<T>(value: T): value is NonNullable<T> {
+	return value != null;
+}
+
 export function AssertNotNullable<T>(value: Nullable<T>): asserts value is NonNullable<T> {
 	if (value === null || value === undefined) {
 		throw new Error('Value is null or undefined');

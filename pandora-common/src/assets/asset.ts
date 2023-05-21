@@ -32,6 +32,10 @@ export class Asset<Type extends AssetType = AssetType> {
 			for (const module of Object.values(definition.modules ?? {})) {
 				GetModuleStaticAttributes(module).forEach((a) => staticAttributes.add(a));
 			}
+		} else if (definition.type === 'roomDevice') {
+			definition.staticAttributes?.forEach((a) => staticAttributes.add(a));
+		} else if (definition.type === 'roomDeviceWearablePart') {
+			definition.attributes?.forEach((a) => staticAttributes.add(a));
 		}
 	}
 

@@ -201,6 +201,8 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	slots: Record<string, RoomDeviceSlot<A>>;
 	/** The graphical display of the device */
 	graphicsLayers: IRoomDeviceGraphicsLayer[];
+	/** Attributes that are used strictly for filtering, no effect on character */
+	staticAttributes?: (A['attributes'])[];
 	/**
 	 * Chat specific settings for this asset
 	 *
@@ -292,7 +294,7 @@ export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	description: string;
 	icon?: string;
 	useAsWardrobeFilter?: {
-		tab: 'item' | 'body';
+		tab: 'item' | 'body' | 'room';
 		excludeAttributes?: readonly A['attributes'][];
 	};
 };

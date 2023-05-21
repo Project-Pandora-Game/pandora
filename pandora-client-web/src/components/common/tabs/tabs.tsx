@@ -19,7 +19,7 @@ export function TabContainer({ children, id, className, collapsable }: {
 
 	const [currentTab, setTab] = useState(() => {
 		const defaultTab = children.findIndex((c) => c && c.props.default);
-		return defaultTab < 0 ? 0 : defaultTab;
+		return defaultTab >= 0 ? defaultTab : children.findIndex((c) => !!c);
 	});
 
 	const [collapsed, setCollapsed] = useState(false);

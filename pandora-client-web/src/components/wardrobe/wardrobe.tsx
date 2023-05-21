@@ -460,7 +460,7 @@ export function useWardrobeItems(): {
 }
 
 function WardrobeItemManipulation({ className }: { className?: string; }): ReactElement {
-	const { target, assetList } = useWardrobeContext();
+	const { globalState, target, assetList } = useWardrobeContext();
 	const { currentFocus, setFocus, preFilter, containerContentsFilter } = useWardrobeItems();
 
 	const assetManager = useAssetManager();
@@ -482,6 +482,13 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 				setFocus={ setFocus }
 			/>
 			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
+				{
+					globalState.room != null && !isRoomInventory ? (
+						<Tab name='Room inventory'>
+							<RoomInventoryView title='Use items in room inventory' container={ currentFocus.container } />
+						</Tab>
+					) : null
+				}
 				<Tab name='Create new item'>
 					<InventoryAssetView
 						title='Create and use a new item'
@@ -492,13 +499,6 @@ function WardrobeItemManipulation({ className }: { className?: string; }): React
 						container={ currentFocus.container }
 					/>
 				</Tab>
-				{
-					!isRoomInventory ? (
-						<Tab name='Room inventory'>
-							<RoomInventoryView title='Use items in room inventory' container={ currentFocus.container } />
-						</Tab>
-					) : null
-				}
 				<Tab name='Recent items'>
 					<div className='inventoryView'>
 						<div className='center-flex flex-1'>

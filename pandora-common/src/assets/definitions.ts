@@ -184,9 +184,17 @@ export type IRoomDeviceGraphicsLayerSlot = {
 		offsetX: number;
 		offsetY: number;
 		/**
-		 * Is the factor by which the character is made bigger or smaller inside the room device slot compared to this room device scaled inside the room
+		 * Is the factor by which the character is made bigger or smaller inside the room device slot,
+		 * compared to this room device scaled inside the room
+		 * @default 1
 		 */
-		relativeScale: number;
+		relativeScale?: number;
+		/**
+		 * Prevents pose from changing character's offset while inside this room device slot
+		 * (for slots that allow different poses, but require precision)
+		 * @default false
+		 */
+		disablePoseOffset?: boolean;
 	};
 };
 

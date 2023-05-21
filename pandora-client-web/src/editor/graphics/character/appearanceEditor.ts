@@ -37,7 +37,7 @@ export class AppearanceEditor extends CharacterAppearance {
 			return action(manipulator.getManipulatorFor({
 				type: 'character',
 				characterId: this.id,
-			}));
+			}) as AppearanceCharacterManipulator);
 		}, context);
 	}
 
@@ -64,6 +64,7 @@ export class AppearanceEditor extends CharacterAppearance {
 				manipulator,
 				[],
 				item,
+				null,
 			);
 		}, context);
 	}

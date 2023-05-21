@@ -587,6 +587,15 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	if (!manipulator.addItem(item, targetIndex))
 		return false;
 
+	// if this is a bodypart, we sort bodyparts to be valid, to be more friendly
+	if (manipulator.isCharacter() &&
+		item.isType('personal') &&
+		item.asset.definition.bodypart
+	) {
+		if (!manipulator.fixBodypartOrder())
+			return false;
+	}
+
 	// Change message to chat
 	if (removed.length > 0) {
 		Assert(rootManipulator.isCharacter());

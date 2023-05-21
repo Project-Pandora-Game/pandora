@@ -6,6 +6,7 @@ import type { IItemModule } from './modules/common';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
 import { Assert, AssertNever } from '../utility';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
+import { CharacterId } from '../character';
 
 export function SplitContainerPath(path: ItemContainerPath): {
 	itemPath: ItemPath;
@@ -23,7 +24,7 @@ export function SplitContainerPath(path: ItemContainerPath): {
 	};
 }
 
-export function EvalItemPath(items: AppearanceItems, { container, itemId }: ItemPath): Item | undefined {
+export function EvalContainerPath(items: AppearanceItems, container: ItemContainerPath): AppearanceItems | undefined {
 	let current = items;
 	for (const step of container) {
 		const item = current.find((it) => it.id === step.item);
@@ -31,7 +32,12 @@ export function EvalItemPath(items: AppearanceItems, { container, itemId }: Item
 			return undefined;
 		current = item.getModuleItems(step.module);
 	}
-	return current.find((it) => it.id === itemId);
+	return current;
+}
+
+export function EvalItemPath(items: AppearanceItems, { container, itemId }: ItemPath): Item | undefined {
+	const containerItems = EvalContainerPath(items, container);
+	return containerItems?.find((it) => it.id === itemId);
 }
 
 export type IContainerPathActual = readonly {
@@ -160,8 +166,12 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 }
 
 export class AppearanceRootManipulator extends AppearanceManipulator {
-	private readonly _base: AssetFrameworkGlobalStateManipulator;
-	private readonly _target: RoomTargetSelector;
+	protected readonly _base: AssetFrameworkGlobalStateManipulator;
+	protected readonly _target: RoomTargetSelector;
+
+	public get target(): Readonly<RoomTargetSelector> {
+		return this._target;
+	}
 
 	public readonly container: null = null;
 	public readonly containerPath: IContainerPathActual = [];
@@ -220,22 +230,14 @@ export class AppearanceCharacterManipulator extends AppearanceRootManipulator {
 		return true;
 	}
 
-	public override addItem(item: Item, index?: number): boolean {
-		Assert(this.assetManager === item.assetManager);
+	public get characterId(): CharacterId {
+		Assert(this._target.type === 'character');
 
-		let items = this.getItems().slice();
-		if (items.some((it) => it.id === item.id))
-			return false;
-		if (index != null) {
-			if (!Number.isInteger(index) || index < 0 || index > items.length)
-				return false;
-			items.splice(index, 0, item);
-		} else {
-			items.push(item);
-		}
-		if (this.isCharacter()) {
-			items = AppearanceItemsFixBodypartOrder(this.assetManager, items);
-		}
+		return this._target.characterId;
+	}
+
+	public fixBodypartOrder(): boolean {
+		const items = AppearanceItemsFixBodypartOrder(this.assetManager, this.getItems());
 		return this._applyItemsWithChange(items);
 	}
 }

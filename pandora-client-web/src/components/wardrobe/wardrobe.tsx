@@ -1098,15 +1098,22 @@ function InventoryAssetPreview({ asset }: {
 }): ReactElement {
 	const assetManager = useAssetManager();
 
-	const iconAttribute = useMemo(() => Array.from(asset.staticAttributes)
-		.map((attributeName) => assetManager.getAttributeDefinition(attributeName))
-		.filter(IsNotNullable)
-		.find((attribute) =>
-			attribute.icon != null &&
+	const iconAttribute = useMemo(() => {
+		const validAttributes = Array.from(asset.staticAttributes)
+			.map((attributeName) => assetManager.getAttributeDefinition(attributeName))
+			.filter(IsNotNullable)
+			.filter((attribute) => attribute.icon != null);
+
+		const filterAttribute = validAttributes.find((attribute) =>
 			attribute.useAsWardrobeFilter != null &&
 			!attribute.useAsWardrobeFilter.excludeAttributes?.some((a) => asset.staticAttributes.has(a)),
-		)
-	, [asset, assetManager]);
+		);
+
+		if (filterAttribute)
+			return filterAttribute;
+
+		return validAttributes.length > 0 ? validAttributes[0] : undefined;
+	}, [asset, assetManager]);
 
 	const icon = useGraphicsUrl(iconAttribute?.icon);
 

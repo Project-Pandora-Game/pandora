@@ -324,16 +324,18 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 		baseScale *= 0.9;
 	}
 
-	const scale = baseScale * layer.characterPosition.relativeScale;
+	const scale = baseScale * (layer.characterPosition.relativeScale ?? 1);
 
 	const backView = useCharacterAppearanceView(characterState) === 'back';
 
 	const scaleX = backView ? -1 : 1;
 
-	const yOffset = 0
+	const yOffsetPose = 0
 		+ 1.75 * evaluator.getBoneLikeValue('kneeling')
 		+ 0.75 * evaluator.getBoneLikeValue('sitting')
 		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? -0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+
+	const yOffset = layer.characterPosition.disablePoseOffset ? 0 : yOffsetPose;
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)

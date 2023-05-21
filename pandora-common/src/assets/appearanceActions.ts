@@ -605,7 +605,7 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	if (insertBefore != null) {
 		targetIndex = manipulator.getItems().findIndex((anchor) => anchor.id === insertBefore);
 		if (targetIndex < 0)
-		return false;
+			return false;
 	}
 
 	if (!manipulator.addItem(item, targetIndex))
@@ -682,8 +682,15 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 	const item = removedItems[0];
 
 	// Check if item allows being transferred
-	if (!item.canBeTransferred())
-		return false;
+	if (!item.canBeTransferred()) {
+		// If not, then check this is actually a transfer (moving not between targets nor containers is fine, as then it is essentially a move)
+		if (!isEqual(sourceManipulator.target, targetManipulator.target) ||
+			!isEqual(itemPath.container, targetContainer)
+		) {
+			return false;
+		}
+	}
+
 	let targetIndex: number | undefined;
 	if (insertBefore != null) {
 		targetIndex = targetContainerManipulator.getItems().findIndex((anchor) => anchor.id === insertBefore);

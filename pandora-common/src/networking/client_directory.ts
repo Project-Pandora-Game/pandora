@@ -56,7 +56,7 @@ export type IChatRoomExtendedInfoResponse = {
 	data: IChatRoomListExtendedInfo;
 };
 
-export type IAccountRelationship<ExtraType = never> = {
+export type IAccountRelationship<ExtraType extends string = never> = {
 	/** Account id of the other account */
 	id: AccountId;
 	/** Account name of the other account */

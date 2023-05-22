@@ -25,11 +25,11 @@ export class AccountRelationship {
 		return this.relationships.get(id);
 	}
 
-	public getStatus(): IAccountFriendStatus | null {
+	private getStatus(): IAccountFriendStatus | null {
 		if (!this.loaded) {
 			return null;
 		}
-		if (this.account.data.settings.hideStatusForFriends) {
+		if (this.account.data.settings.hideOnlineStatus) {
 			return null;
 		}
 		return {
@@ -48,7 +48,7 @@ export class AccountRelationship {
 	public async getAll(): Promise<IAccountRelationship[]> {
 		await this.load();
 		return [...this.relationships.values()]
-			.filter(RemoveBlockedBy)
+			.filter(IsNotBlockedBy)
 			.map(CastMutualToSimple);
 	}
 
@@ -336,7 +336,7 @@ function Synchronized() {
 	};
 }
 
-function RemoveBlockedBy(data: IAccountRelationship<'blockMutual' | 'blockedBy'>): data is IAccountRelationship<'blockMutual'> {
+function IsNotBlockedBy(data: IAccountRelationship<'blockMutual' | 'blockedBy'>): data is IAccountRelationship<'blockMutual'> {
 	return data.type !== 'blockedBy';
 }
 

@@ -196,7 +196,7 @@ export interface PandoraDatabase {
 	//#endregion
 
 	getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]>;
-	setRelationship(accountIdA: AccountId, accountIdB: AccountId, data?: Omit<DatabaseRelationship, 'accountIdA' | 'accountIdB' | 'updated'>): Promise<DatabaseRelationship>;
+	setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: Omit<DatabaseRelationship, 'accountIdA' | 'accountIdB' | 'updated'>): Promise<DatabaseRelationship>;
 	removeRelationship(accountIdA: AccountId, accountIdB: AccountId): Promise<void>;
 
 	//#region Config

@@ -28,7 +28,6 @@ export const MONGODB_SERVER_VERSION: string = '6.0.5';
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
 	private readonly _url: string;
-	private readonly _accountNames = new Map<AccountId, string>();
 	private _client!: MongoClient;
 	private _inMemoryServer!: MongoMemoryServer;
 	private _db!: Db;
@@ -125,7 +124,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#endregion
 
 		this._relationships = this._db.collection(RELATIONSHIPS_COLLECTION_NAME);
-		await MongoUpdateIndexes(this._characters, [
+		await MongoUpdateIndexes(this._relationships, [
 			{
 				name: 'accountIdA',
 				key: { accountIdA: 1 },
@@ -262,25 +261,14 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
 		const result: Record<AccountId, string> = {};
-		const missing: AccountId[] = [];
+		const accounts = await this._accounts
+			.find({ id: { $in: query } })
+			.project<Pick<DatabaseAccount, 'id' | 'username'>>({ id: 1, username: 1 })
+			.toArray();
 
-		for (const id of query) {
-			const name = this._accountNames.get(id);
-			if (name) {
-				result[id] = name;
-			} else {
-				missing.push(id);
-			}
+		for (const acc of accounts) {
+			result[acc.id] = acc.username;
 		}
-
-		if (missing.length > 0) {
-			const accounts = await this._accounts.find({ id: { $in: missing } }).toArray();
-			for (const acc of accounts) {
-				result[acc.id] = acc.username;
-				this._accountNames.set(acc.id, acc.username);
-			}
-		}
-
 		return result;
 	}
 

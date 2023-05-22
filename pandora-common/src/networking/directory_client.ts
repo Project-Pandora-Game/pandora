@@ -18,7 +18,12 @@ export const DirectoryAccountSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),
 	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
 	/** Hides online status from friends */
-	hideStatusForFriends: z.boolean().default(false),
+	hideOnlineStatus: z.boolean().default(false),
+	/**
+	 * - 'all' - Allow direct messages from anyone
+	 * - 'room' - Allow direct messages from people in the same room
+	 * - 'friends' - Only allow direct messages from friends
+	 */
 	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']).default('all'),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
@@ -27,7 +32,7 @@ export const ACCOUNT_SETTINGS_DEFAULT: IDirectoryAccountSettings = {
 	visibleRoles: [],
 	labelColor: '#ffffff',
 	wardrobeBackground: '#aaaaaa',
-	hideStatusForFriends: false,
+	hideOnlineStatus: false,
 	allowDirectMessagesFrom: 'all',
 };
 
@@ -158,7 +163,7 @@ export const DirectoryClientSchema = {
 		request: ZodCast<IAccountRelationship | { id: AccountId; }>(),
 		response: null,
 	},
-};
+} as const;
 
 export type IDirectoryClient = Satisfies<typeof DirectoryClientSchema, SocketInterfaceDefinitionVerified<typeof DirectoryClientSchema>>;
 export type IDirectoryClientArgument = SocketInterfaceRequest<IDirectoryClient>;

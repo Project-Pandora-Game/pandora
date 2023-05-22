@@ -589,11 +589,11 @@ function DeviceContextMenu({ device, position, onClose }: {
 			<WardrobeContextProvider target={ chatRoom } player={ player }>
 				{ menu === 'main' && (
 					<>
-						<StoreDeviceMenu device={ device } close={ onClose } />
 						<LeaveDeviceMenu device={ device } close={ onClose } />
 						<button onClick={ () => setMenu('slots') }>
 							Slots
 						</button>
+						<StoreDeviceMenu device={ device } close={ onClose } />
 					</>
 				) }
 				{ menu === 'slots' && (

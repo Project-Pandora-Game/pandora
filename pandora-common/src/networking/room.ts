@@ -1,3 +1,4 @@
+import { TypedEventEmitter } from '../event';
 import type { IIncomingConnection } from './connection';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest } from './helpers';
 
@@ -5,10 +6,12 @@ export interface IServerSocket<OutboundT extends SocketInterfaceDefinition> {
 	sendToAll<K extends SocketInterfaceOneshotMessages<OutboundT>>(client: ReadonlySet<IIncomingConnection<OutboundT>>, messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void;
 }
 
-export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT extends IIncomingConnection<OutboundT> = IIncomingConnection<OutboundT>> {
+export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT extends IIncomingConnection<OutboundT> = IIncomingConnection<OutboundT>> extends TypedEventEmitter<{
+	join: ClientT;
+	leave: ClientT;
+}>{
 	private readonly _servers = new Map<IServerSocket<OutboundT>, Set<ClientT>>();
 	private readonly _clients = new Map<string, IServerSocket<OutboundT>>();
-	private readonly _eventSubscriptions = new Set<(action: 'join' | 'leave', client: ClientT) => void>();
 
 	public get clients(): ClientT[] {
 		return [...this._servers.values()].flatMap((clients) => [...clients.values()]);
@@ -29,9 +32,7 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 			clients.add(client);
 		}
 		this._clients.set(client.id, server);
-		for (const subscription of this._eventSubscriptions) {
-			subscription('join', client);
-		}
+		this.emit('join', client);
 	}
 
 	public leave(client: ClientT): void {
@@ -40,9 +41,7 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 			return;
 		}
 		if (this._clients.delete(client.id)) {
-			for (const subscription of this._eventSubscriptions) {
-				subscription('leave', client);
-			}
+			this.emit('leave', client);
 		}
 		const clients = this._servers.get(serverId);
 		if (!clients) {
@@ -58,12 +57,5 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 		for (const [server, clients] of this._servers) {
 			server.sendToAll(clients, messageType, message);
 		}
-	}
-
-	public subscribe(subscription: (action: 'join' | 'leave', client: ClientT) => void): () => void {
-		this._eventSubscriptions.add(subscription);
-		return () => {
-			this._eventSubscriptions.delete(subscription);
-		};
 	}
 }

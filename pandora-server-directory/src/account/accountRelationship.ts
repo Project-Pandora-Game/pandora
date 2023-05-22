@@ -25,7 +25,7 @@ export class AccountRelationship {
 	constructor(account: Account) {
 		this.account = account;
 		this.logger = logger.prefixMessages(`[${account.id}]`);
-		this.account.associatedConnections.subscribe(this.onConnection.bind(this));
+		this.account.associatedConnections.onAny(this.onConnection.bind(this));
 	}
 
 	private get(id: AccountId): RelationshipCache | undefined {

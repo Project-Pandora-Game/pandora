@@ -362,10 +362,10 @@ export function ZodTransformReadonly<T>(value: T): Readonly<T> {
 }
 
 export function PromiseOnce<T>(promise: () => Promise<T>): () => Promise<T> {
-	let result: [] | [T] = [];
+	let result: null | [T] = null;
 	let promiseResult: Promise<T> | null = null;
 	return async () => {
-		if (result.length === 1) {
+		if (result) {
 			return result[0];
 		}
 		if (promiseResult != null) {
@@ -375,8 +375,9 @@ export function PromiseOnce<T>(promise: () => Promise<T>): () => Promise<T> {
 		try {
 			result = [await promiseResult];
 		} catch (e) {
-			promiseResult = null;
 			throw e;
+		} finally {
+			promiseResult = null;
 		}
 		return result[0];
 	};

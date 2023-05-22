@@ -5,7 +5,7 @@ import { KeyExchange } from '../crypto/keyExchange';
 import { BrowserStorage } from '../browserStorage';
 import { Observable, ReadonlyObservable } from '../observable';
 import { ChatParser } from '../components/chatroom/chatParser';
-import { TypedEventEmitter } from '../event';
+import { TypedEventEmitter } from 'pandora-common/src/event';
 import { HashSHA256Base64 } from '../crypto/helpers';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';

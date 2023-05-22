@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { AccountId, AssertNever, AssertNotNullable, GetLogger, IAccountFriendStatus, IAccountRelationship, Logger } from 'pandora-common';
+import { AccountId, AssertNever, AssertNotNullable, GetLogger, IAccountFriendStatus, IAccountRelationship, Logger, PromiseOnce } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
@@ -271,24 +271,10 @@ export class AccountRelationship {
 	}
 
 	private loaded = false;
-	private loading: Promise<void> | undefined;
-	private load(): Promise<void> {
-		if (this.loaded) {
-			return Promise.resolve();
-		}
-		if (this.loading) {
-			return this.loading;
-		}
-		this.loading = this._load();
-		return this.loading;
-	}
+	private load = PromiseOnce(() => this._load());
 
 	private async _load(): Promise<void> {
 		if (this.loaded) {
-			return;
-		}
-		if (this.loading) {
-			await this.loading;
 			return;
 		}
 		const relationships = await GetDatabase().getRelationships(this.account.id);

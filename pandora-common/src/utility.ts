@@ -360,3 +360,24 @@ export function MemoizeNoArg<Return>(_target: object, _key: string, descriptor: 
 export function ZodTransformReadonly<T>(value: T): Readonly<T> {
 	return Object.freeze(value);
 }
+
+export function PromiseOnce<T>(promise: () => Promise<T>): () => Promise<T> {
+	let result: [] | [T] = [];
+	let promiseResult: Promise<T> | null = null;
+	return async () => {
+		if (result.length === 1) {
+			return result[0];
+		}
+		if (promiseResult != null) {
+			return promiseResult;
+		}
+		promiseResult = promise();
+		try {
+			result = [await promiseResult];
+		} catch (e) {
+			promiseResult = null;
+			throw e;
+		}
+		return result[0];
+	};
+}

@@ -33,7 +33,7 @@ export class Room {
 	}
 
 	public get isPublic(): boolean {
-		return this.config.public;
+		return this.config.public && this.hasAdminInside();
 	}
 
 	private readonly logger: Logger;
@@ -327,10 +327,7 @@ export class Room {
 
 	/** Returns if this room is visible to the specific account when searching in room search */
 	public checkVisibleTo(account: Account): boolean {
-		return (
-			this.isAdmin(account) ||
-			(this.config.public && this.hasAdminInside())
-		);
+		return this.isAdmin(account) || this.isPublic;
 	}
 
 	public isOwner(account: Account): boolean {

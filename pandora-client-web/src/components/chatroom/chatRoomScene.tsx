@@ -2,7 +2,7 @@ import { AppearanceAction, AssertNotNullable, CalculateCharacterMaxYForBackgroun
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
-import React, { Children, ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useEvent } from '../../common/useEvent';
 import { AppearanceContainer, Character, useCharacterData } from '../../character/character';
@@ -492,8 +492,7 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	const onClick = useCallback(() => {
 		execute(action);
 		close();
-	}
-		, [action, execute, close]);
+	}, [action, execute, close]);
 
 	if (!available) {
 		return null;
@@ -513,7 +512,8 @@ function DeviceSlotsMenu({ device }: {
 	const [slot, setSlot] = useState<string | null>(null);
 	const occupancy = useMemo(() => slot && device.slotOccupancy.get(slot), [device, slot]);
 	const { player } = useWardrobeContext();
-	const characters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? [player];
+	const chatRoomCharacters = useChatRoomCharacters();
+	const characters = useMemo<readonly AppearanceContainer[]>(() => chatRoomCharacters || [player], [chatRoomCharacters, player]);
 	const character = useMemo(() => characters.find(({ id }) => id === occupancy), [characters, occupancy]);
 
 	if (!slot) {
@@ -540,8 +540,7 @@ function DeviceSlotsMenu({ device }: {
 				<DeviceSlotClear device={ device } slot={ slot } close={ close }>
 					{ (occupancy === player.id)
 						? 'Exit the device'
-						: 'Clear occupancy of the slot'
-					}
+						: 'Clear occupancy of the slot' }
 				</DeviceSlotClear>
 				<button onClick={ () => setSlot(null) }>
 					Back to slots
@@ -558,8 +557,8 @@ function DeviceSlotsMenu({ device }: {
 			<span>
 				Enter:
 			</span>
-			{ characters.map((character) => (
-				<OccupyDeviceSlotMenu key={ character.id } device={ device } slot={ slot } character={ character } close={ close } />
+			{ characters.map((char) => (
+				<OccupyDeviceSlotMenu key={ char.id } device={ device } slot={ slot } character={ char } close={ close } />
 			)) }
 			<button onClick={ () => setSlot(null) }>
 				Back to slots

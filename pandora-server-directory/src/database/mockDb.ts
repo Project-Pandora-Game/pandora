@@ -373,8 +373,8 @@ export class MockDatabase implements PandoraDatabase {
 			.map((rel) => _.cloneDeep(rel)));
 	}
 
-	public setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: Omit<DatabaseRelationship, 'accountIdA' | 'accountIdB' | 'updated'>): Promise<DatabaseRelationship> {
-		const newData = { ..._.cloneDeep(data), accountIdA, accountIdB, updated: Date.now() };
+	public setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
+		const newData: DatabaseRelationship = { accounts: [accountIdA, accountIdB], updated: Date.now(), relationship: _.cloneDeep(data) };
 		const index = this.relationshipDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		if (index < 0) {
 			this.relationshipDb.push(newData);

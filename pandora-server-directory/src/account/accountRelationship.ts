@@ -9,9 +9,16 @@ const logger = GetLogger('AccountRelationship');
 
 const GLOBAL_LOCK = new AsyncLock();
 
+type RelationshipCache = {
+	id: AccountId;
+	name: string;
+	updated: number;
+	relationship: DatabaseAccountRelationship;
+};
+
 export class AccountRelationship {
 	public readonly account: Account;
-	private readonly relationships: Map<AccountId, IAccountRelationship<'blockedBy' | 'blockMutual'>> = new Map();
+	private readonly relationships: Map<AccountId, RelationshipCache> = new Map();
 	private readonly logger: Logger;
 	private lastStatus: IAccountFriendStatus | null = null;
 
@@ -21,7 +28,7 @@ export class AccountRelationship {
 		this.account.associatedConnections.subscribe(this.onConnection.bind(this));
 	}
 
-	private get(id: AccountId): IAccountRelationship<'blockedBy' | 'blockMutual'> | undefined {
+	private get(id: AccountId): RelationshipCache | undefined {
 		return this.relationships.get(id);
 	}
 
@@ -47,15 +54,41 @@ export class AccountRelationship {
 
 	public async getAll(): Promise<IAccountRelationship[]> {
 		await this.load();
+		const isNotBlockedBy = ({ relationship }: RelationshipCache) => {
+			return relationship.type !== 'oneSidedBlock' || relationship.from === this.account.id;
+		};
+		const cacheToClientData = ({ id, name, updated, relationship }: RelationshipCache): IAccountRelationship => {
+			let type: IAccountRelationship['type'];
+			switch (relationship.type) {
+				case 'friend':
+					type = 'friend';
+					break;
+				case 'oneSidedBlock':
+				case 'mutualBlock':
+					type = 'blocked';
+					break;
+				case 'request':
+					type = relationship.from === this.account.id ? 'pending' : 'incoming';
+					break;
+				default:
+					AssertNever(relationship);
+			}
+			return {
+				id,
+				name,
+				time: updated,
+				type,
+			};
+		};
 		return [...this.relationships.values()]
-			.filter(IsNotBlockedBy)
-			.map(CastMutualToSimple);
+			.filter(isNotBlockedBy)
+			.map(cacheToClientData);
 	}
 
 	public async getAllStatus(): Promise<IAccountFriendStatus[]> {
 		await this.load();
 		return [...this.relationships.values()]
-			.filter((rel) => rel.type === 'friend')
+			.filter((rel) => rel.relationship.type === 'friend')
 			.map((rel) => accountManager.getAccountById(rel.id))
 			.map((acc) => acc?.relationship.getStatus())
 			.filter((status): status is IAccountFriendStatus => !!status);
@@ -64,13 +97,13 @@ export class AccountRelationship {
 	public async canReceiveDM(from: Account): Promise<boolean> {
 		await this.load();
 		const rel = this.get(from.id);
-		if (rel?.type.startsWith('block') ?? false) {
+		if (rel?.relationship && (rel.relationship.type === 'mutualBlock' || rel.relationship.type === 'oneSidedBlock')) {
 			return false;
 		}
 		if (this.account.data.settings.allowDirectMessagesFrom === 'all') {
 			return true;
 		}
-		if (rel?.type === 'friend') {
+		if (rel?.relationship.type === 'friend') {
 			return true;
 		}
 		for (const char of this.account.characters.values()) {
@@ -88,25 +121,23 @@ export class AccountRelationship {
 	public async initiateFriendRequest(id: AccountId): Promise<'ok' | 'accountNotFound' | 'blocked' | 'requestAlreadyExists'> {
 		const existing = this.get(id);
 		if (existing) {
-			switch (existing.type) {
+			switch (existing.relationship.type) {
 				case 'friend':
-				case 'pending':
 					return 'ok';
-				case 'incoming':
-					return 'requestAlreadyExists';
-				case 'blocked':
-				case 'blockedBy':
-				case 'blockMutual':
+				case 'request':
+					return existing.relationship.from === this.account.id ? 'ok' : 'requestAlreadyExists';
+				case 'mutualBlock':
+				case 'oneSidedBlock':
 					return 'blocked';
 				default:
-					AssertNever(existing.type);
+					AssertNever(existing.relationship);
 			}
 		}
 		const names = await GetDatabase().queryAccountNames([id]);
 		if (!names[id]) {
 			return 'accountNotFound';
 		}
-		const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'request', source: this.account.id });
+		const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'request', from: this.account.id });
 		await this.update(rel, names[id]);
 		await accountManager.getAccountById(id)?.relationship.update(rel, this.account.username);
 		return 'ok';
@@ -115,7 +146,7 @@ export class AccountRelationship {
 	@Synchronized()
 	public async acceptFriendRequest(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
-		if (existing?.type !== 'incoming') {
+		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
 			return false;
 		}
 		const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'friend' });
@@ -127,7 +158,7 @@ export class AccountRelationship {
 	@Synchronized()
 	public async declineFriendRequest(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
-		if (existing?.type !== 'incoming') {
+		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
 			return false;
 		}
 		await GetDatabase().removeRelationship(this.account.id, id);
@@ -139,7 +170,7 @@ export class AccountRelationship {
 	@Synchronized()
 	public async cancelFriendRequest(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
-		if (existing?.type !== 'pending') {
+		if (existing?.relationship.type !== 'request' || existing.relationship.from !== this.account.id) {
 			return false;
 		}
 		await GetDatabase().removeRelationship(this.account.id, id);
@@ -151,7 +182,7 @@ export class AccountRelationship {
 	@Synchronized()
 	public async removeFriend(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
-		if (existing?.type !== 'friend') {
+		if (existing?.relationship.type !== 'friend') {
 			return false;
 		}
 		await GetDatabase().removeRelationship(this.account.id, id);
@@ -164,16 +195,19 @@ export class AccountRelationship {
 	public async block(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
 		if (existing) {
-			if (existing.type === 'blocked' || existing.type === 'blockMutual')
-				return true;
-			if (existing.type === 'friend') {
+			if (existing.relationship.type === 'friend')
 				return false;
-			}
+			if (existing.relationship.type === 'mutualBlock')
+				return true;
+			if (existing.relationship.type === 'oneSidedBlock' && existing.relationship.from === this.account.id)
+				return true;
 		} else if (await GetDatabase().getAccountById(id) == null) {
 			return false;
 		}
-		const hasSource = existing?.type === 'blockedBy';
-		const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'block', source: hasSource ? this.account.id : undefined });
+		const hasSource = existing?.relationship.type !== 'oneSidedBlock';
+		const rel = await GetDatabase().setRelationship(this.account.id, id, hasSource
+			? { type: 'oneSidedBlock', from: this.account.id }
+			: { type: 'mutualBlock' });
 		await this.update(rel);
 		await accountManager.getAccountById(id)?.relationship.update(rel, this.account.username);
 		return true;
@@ -182,15 +216,19 @@ export class AccountRelationship {
 	@Synchronized()
 	public async unblock(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
-		if (!existing || (existing.type !== 'blocked' && existing.type !== 'blockMutual')) {
+		if (!existing)
 			return false;
-		}
-		if (existing.type === 'blocked') {
+		if (existing.relationship.type !== 'mutualBlock' && existing.relationship.type !== 'oneSidedBlock')
+			return false;
+		if (existing.relationship.type === 'oneSidedBlock' && existing.relationship.from !== this.account.id)
+			return false;
+
+		if (existing.relationship.type === 'oneSidedBlock') {
 			await GetDatabase().removeRelationship(this.account.id, id);
 			this.remove(id);
 			accountManager.getAccountById(id)?.relationship.remove(this.account.id);
 		} else {
-			const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'block', source: id });
+			const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'oneSidedBlock', from: id });
 			await this.update(rel);
 			await accountManager.getAccountById(id)?.relationship.update(rel, this.account.username);
 		}
@@ -198,25 +236,25 @@ export class AccountRelationship {
 	}
 
 	private async update(rel: DatabaseRelationship, name?: string): Promise<void> {
-		const id = rel.accountIdA === this.account.id ? rel.accountIdB : rel.accountIdA;
+		const id = rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0];
 		const existing = this.get(id);
 		name ??= existing ? existing.name : (await GetDatabase().queryAccountNames([id]))[id];
 		if (!name) {
 			this.logger.warning(`Could not find name for account ${id}`);
 			return;
 		}
-		this.setRelationship(id, name, rel.updated, rel.type, rel.source);
-		const oldType = existing?.type;
+		this.setRelationship(id, name, rel.updated, rel.relationship);
 		const newRel = this.get(id);
-		const newType = newRel?.type;
-		if (!newType
-			|| (oldType === 'blocked' && newType === 'blockMutual')
-			|| (oldType === 'blockMutual' && newType === 'blocked')
-			|| (!oldType && newType === 'blockedBy')
-		) {
+		if (!newRel)
 			return;
-		}
-		if (oldType === 'blockMutual' && newType === 'blockedBy') {
+		if (existing?.relationship.type === 'oneSidedBlock' && existing.relationship.from === this.account.id && newRel.relationship.type === 'mutualBlock')
+			return;
+		if (newRel.relationship.type === 'oneSidedBlock' && newRel.relationship.from === this.account.id && existing?.relationship.type === 'mutualBlock')
+			return;
+		if (!existing && newRel.relationship.type === 'oneSidedBlock' && newRel.relationship.from !== this.account.id)
+			return;
+
+		if (existing?.relationship.type === 'mutualBlock' && newRel.relationship.type === 'oneSidedBlock') {
 			this.account.associatedConnections.sendMessage('relationshipsUpdate', { id });
 			return;
 		}
@@ -226,7 +264,7 @@ export class AccountRelationship {
 	private remove(id: AccountId): void {
 		const existing = this.get(id);
 		this.relationships.delete(id);
-		if (existing?.type === 'blockedBy') {
+		if (existing?.relationship.type === 'oneSidedBlock' && existing.relationship.from === id) {
 			return;
 		}
 		this.account.associatedConnections.sendMessage('relationshipsUpdate', { id });
@@ -254,45 +292,28 @@ export class AccountRelationship {
 			return;
 		}
 		const relationships = await GetDatabase().getRelationships(this.account.id);
-		const ids = relationships.map((rel) => rel.accountIdA === this.account.id ? rel.accountIdB : rel.accountIdA);
+		const ids = relationships.map((rel) => rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0]);
 		const names = await GetDatabase().queryAccountNames(_.uniq(ids));
 		for (const rel of relationships) {
-			const id = rel.accountIdA === this.account.id ? rel.accountIdB : rel.accountIdA;
+			const id = rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0];
 			const name = names[id];
 			if (!name) {
 				this.logger.warning(`Could not find name for account ${id}`);
 				continue;
 			}
-			this.setRelationship(id, name, rel.updated, rel.type, rel.source);
+			this.setRelationship(id, name, rel.updated, rel.relationship);
 		}
 		this.loaded = true;
 		this.updateStatus();
 	}
 
-	private setRelationship(id: AccountId, name: string, time: number, type: DatabaseRelationship['type'], source?: AccountId): void {
-		switch (type) {
-			case 'friend':
-				this.relationships.set(id, { id, name, time, type: 'friend' });
-				break;
-			case 'request':
-				if (source === this.account.id) {
-					this.relationships.set(id, { id, name, time, type: 'pending' });
-				} else {
-					this.relationships.set(id, { id, name, time, type: 'incoming' });
-				}
-				break;
-			case 'block':
-				if (source === this.account.id) {
-					this.relationships.set(id, { id, name, time, type: 'blocked' });
-				} else if (source === id) {
-					this.relationships.set(id, { id, name, time, type: 'blockedBy' });
-				} else {
-					this.relationships.set(id, { id, name, time, type: 'blockMutual' });
-				}
-				break;
-			default:
-				AssertNever(type);
-		}
+	private setRelationship(id: AccountId, name: string, updated: number, relationship: DatabaseAccountRelationship): void {
+		this.relationships.set(id, {
+			id,
+			name,
+			updated,
+			relationship,
+		});
 	}
 
 	private onConnection(): void {
@@ -314,7 +335,7 @@ export class AccountRelationship {
 				continue;
 			}
 			const rel = this.get(account.id);
-			if (!rel || rel.type !== 'friend') {
+			if (!rel || rel.relationship.type !== 'friend') {
 				continue;
 			}
 			account.associatedConnections.sendMessage('friendStatus', data);
@@ -333,16 +354,5 @@ function Synchronized() {
 			return await GLOBAL_LOCK.acquire(`${a}-${b}`, () => original.call(this, id));
 		};
 		return descriptor;
-	};
-}
-
-function IsNotBlockedBy(data: IAccountRelationship<'blockMutual' | 'blockedBy'>): data is IAccountRelationship<'blockMutual'> {
-	return data.type !== 'blockedBy';
-}
-
-function CastMutualToSimple(data: IAccountRelationship<'blockMutual'>): IAccountRelationship {
-	return {
-		...data,
-		type: data.type === 'blockMutual' ? 'blocked' : data.type,
 	};
 }

@@ -52,7 +52,7 @@ export type IChatRoomExtendedInfoResponse = {
 	data: IChatRoomListExtendedInfo;
 };
 
-export type IAccountRelationship<ExtraType extends string = never> = {
+export type IAccountRelationship = {
 	/** Account id of the other account */
 	id: AccountId;
 	/** Account name of the other account */
@@ -60,7 +60,7 @@ export type IAccountRelationship<ExtraType extends string = never> = {
 	/** Time the relationship was updated */
 	time: number;
 	/** Type of relationship */
-	type: 'friend' | 'pending' | 'incoming' | 'blocked' | ExtraType;
+	type: 'friend' | 'pending' | 'incoming' | 'blocked';
 };
 
 export type IAccountFriendStatus = {

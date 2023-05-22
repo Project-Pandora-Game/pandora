@@ -369,13 +369,13 @@ export class MockDatabase implements PandoraDatabase {
 
 	public getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {
 		return Promise.resolve(this.relationshipDb
-			.filter((rel) => rel.accountIdA === accountId || rel.accountIdB === accountId)
+			.filter((rel) => rel.accounts.includes(accountId))
 			.map((rel) => _.cloneDeep(rel)));
 	}
 
 	public setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: Omit<DatabaseRelationship, 'accountIdA' | 'accountIdB' | 'updated'>): Promise<DatabaseRelationship> {
 		const newData = { ..._.cloneDeep(data), accountIdA, accountIdB, updated: Date.now() };
-		const index = this.relationshipDb.findIndex((rel) => rel.accountIdA === accountIdA && rel.accountIdB === accountIdB);
+		const index = this.relationshipDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		if (index < 0) {
 			this.relationshipDb.push(newData);
 		} else {
@@ -385,7 +385,7 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
-		const index = this.relationshipDb.findIndex((rel) => rel.accountIdA === accountIdA && rel.accountIdB === accountIdB);
+		const index = this.relationshipDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		if (index < 0)
 			return Promise.resolve();
 

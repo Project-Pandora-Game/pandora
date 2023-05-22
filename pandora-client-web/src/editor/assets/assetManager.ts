@@ -1,8 +1,7 @@
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
 import { Immutable } from 'immer';
-import { Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, AssetsDefinitionFile } from 'pandora-common';
+import { TypedEventEmitter, Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, AssetsDefinitionFile } from 'pandora-common';
 import { AssetManagerClient, GetCurrentAssetManager, UpdateAssetManager, useAssetManager } from '../../assets/assetManager';
-import { TypedEventEmitter } from '../../event';
 import { ObservableProperty, ObservableClass } from '../../observable';
 
 export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*([-_][a-z0-9]+)*$/;

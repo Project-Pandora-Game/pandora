@@ -6,8 +6,8 @@ import type {
 	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
+	TypedEventEmitter,
 } from 'pandora-common';
-import type { TypedEventEmitter } from '../event';
 import type { ReadonlyObservable } from '../observable';
 import type { DirectMessageManager } from './directMessageManager';
 

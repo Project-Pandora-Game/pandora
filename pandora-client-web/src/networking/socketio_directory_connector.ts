@@ -15,13 +15,13 @@ import {
 	MessageHandler,
 	ClientDirectorySchema,
 	DirectoryClientSchema,
+	TypedEventEmitter,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
 import { FRIEND_STATUS, RELATIONSHIPS } from '../components/releationships/relationships';
 import { PrehashPassword } from '../crypto/helpers';
-import { TypedEventEmitter } from '../event';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
 import { DirectMessageManager } from './directMessageManager';

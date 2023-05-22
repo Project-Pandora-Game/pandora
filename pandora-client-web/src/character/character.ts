@@ -1,6 +1,5 @@
-import { CharacterAppearance, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose, AppearanceItems, WearableAssetType, AssetFrameworkCharacterState, Assert } from 'pandora-common';
+import { TypedEventEmitter, CharacterAppearance, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose, AppearanceItems, WearableAssetType, AssetFrameworkCharacterState, Assert } from 'pandora-common';
 import { useMemo, useSyncExternalStore } from 'react';
-import { TypedEventEmitter } from '../event';
 import type { PlayerCharacter } from './player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 

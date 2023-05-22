@@ -1,4 +1,4 @@
-import { ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomFullInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalStateBundle, AssetFrameworkGlobalState, AssetFrameworkCharacterState, IChatRoomLoad } from 'pandora-common';
+import { ITypedEventEmitter, TypedEventEmitter, ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomFullInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalStateBundle, AssetFrameworkGlobalState, AssetFrameworkCharacterState, IChatRoomLoad } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -8,7 +8,6 @@ import { ChatParser } from '../chatroom/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
-import { ITypedEventEmitter, TypedEventEmitter } from '../../event';
 import { useShardConnector } from './shardConnectorContextProvider';
 import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';

@@ -126,12 +126,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._relationships = this._db.collection(RELATIONSHIPS_COLLECTION_NAME);
 		await MongoUpdateIndexes(this._relationships, [
 			{
-				name: 'accountIdA',
-				key: { accountIdA: 1 },
-			},
-			{
-				name: 'accountIdB',
-				key: { accountIdB: 1 },
+				name: 'accounts',
+				key: { accounts: 1 },
 			},
 		]);
 
@@ -431,14 +427,13 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: Omit<DatabaseRelationship, 'accountIdA' | 'accountIdB' | 'updated'>): Promise<DatabaseRelationship> {
 		const result = await this._relationships.findOneAndUpdate({
 			$or: [
-				{ accountIdA, accountIdB },
-				{ accountIdA: accountIdB, accountIdB: accountIdA },
-			],useMemouseMemo
+				{ accounts: { $all: [accountIdA, accountIdB] } },
+				{ accounts: { $all: [accountIdB, accountIdA] } },
+			]
 		}, {
 			$set: {
 				...data,
-				accountIdA,
-				accountIdB,
+				accounts: [accountIdA, accountIdB],
 				updated: Date.now(),
 			},
 			$unset: data.source ? undefined : { source: true },
@@ -453,9 +448,9 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
 		await this._relationships.deleteOne({
 			$or: [
-				{ accountIdA, accountIdB },
-				{ accountIdA: accountIdB, accountIdB: accountIdA },
-			],
+				{ accounts: { $all: [accountIdA, accountIdB] } },
+				{ accounts: { $all: [accountIdB, accountIdA] } },
+			]
 		});
 	}
 

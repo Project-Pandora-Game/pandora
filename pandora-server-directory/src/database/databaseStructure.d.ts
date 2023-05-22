@@ -46,8 +46,7 @@ interface DatabaseAccount {
 }
 
 interface DatabaseRelationship {
-	accountIdA: import('pandora-common').AccountId;
-	accountIdB: import('pandora-common').AccountId;
+	accounts: [import('pandora-common').AccountId, import('pandora-common').AccountId];
 	updated: number;
 	type: 'friend' | 'block' | 'request';
 	source?: import('pandora-common').AccountId;

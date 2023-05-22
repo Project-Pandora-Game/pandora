@@ -424,7 +424,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return this._relationships.find({ $or: [{ accountIdA: accountId }, { accountIdB: accountId }] }).toArray();
 	}
 
-	public async setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: Omit<DatabaseRelationship, 'accountIdA' | 'accountIdB' | 'updated'>): Promise<DatabaseRelationship> {
+	public async setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
 		const result = await this._relationships.findOneAndUpdate({
 			$or: [
 				{ accounts: { $all: [accountIdA, accountIdB] } },
@@ -436,7 +436,7 @@ export default class MongoDatabase implements PandoraDatabase {
 				accounts: [accountIdA, accountIdB],
 				updated: Date.now(),
 			},
-			$unset: data.source ? undefined : { source: true },
+			$unset: ('from' in data) ? undefined : { from: true },
 		}, {
 			upsert: true,
 			returnDocument: 'after',

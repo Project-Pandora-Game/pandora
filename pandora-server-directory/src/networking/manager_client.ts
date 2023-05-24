@@ -86,6 +86,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
 			setCryptoKey: this.handleSetCryptoKey.bind(this),
+			getRelationships: this.handleGetRelationships.bind(this),
 
 			// Character management
 			listCharacters: this.handleListCharacters.bind(this),
@@ -186,8 +187,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 			token: { value: token.value, expires: token.expires },
 			account: account.getAccountInfo(),
-			relationships: await account.relationship.getAll(),
-			friends: await account.relationship.getAllStatus(),
 		};
 	}
 
@@ -495,7 +494,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			}
 		}
 		// Notify the client of the result
-		connection.sendConnectionStateUpdate(true);
+		connection.sendConnectionStateUpdate();
 	}
 
 	private handleGitHubBind({ login }: IClientDirectoryArgument['gitHubBind'], connection: ClientConnection): IClientDirectoryResult['gitHubBind'] {
@@ -625,6 +624,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	//#endregion Direct Messages
+
+
+	private async handleGetRelationships(_: IClientDirectoryArgument['getRelationships'], connection: ClientConnection): IClientDirectoryPromiseResult['getRelationships'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		const relationships = await connection.account.relationship.getAll();
+		const friends = await connection.account.relationship.getAllStatus();
+
+		return { friends, relationships };
+	}
 
 	private async handleFriendRequest({ id, action }: IClientDirectoryArgument['friendRequest'], connection: ClientConnection): IClientDirectoryPromiseResult['friendRequest'] {
 		if (!connection.account || id === connection.account.id)

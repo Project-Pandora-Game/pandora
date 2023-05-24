@@ -104,6 +104,11 @@ export class Room extends ServerRoom<IShardClient> {
 				this.history.delete(characterId);
 			}
 		}
+
+		// Save any modified data
+		this.save().catch((err) => {
+			this.logger.error('Periodic save failed:', err);
+		});
 	}
 
 	private _suppressUpdates: boolean = false;

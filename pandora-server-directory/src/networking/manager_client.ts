@@ -616,7 +616,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	//#endregion Direct Messages
 
-
 	private async handleGetRelationships(_: IClientDirectoryArgument['getRelationships'], connection: ClientConnection): IClientDirectoryPromiseResult['getRelationships'] {
 		if (!connection.account)
 			throw new BadMessageError();

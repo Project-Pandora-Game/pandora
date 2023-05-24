@@ -9,7 +9,7 @@ export interface IServerSocket<OutboundT extends SocketInterfaceDefinition> {
 export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT extends IIncomingConnection<OutboundT> = IIncomingConnection<OutboundT>> extends TypedEventEmitter<{
 	join: ClientT;
 	leave: ClientT;
-}>{
+}> {
 	private readonly _servers = new Map<IServerSocket<OutboundT>, Set<ClientT>>();
 	private readonly _clients = new Map<string, IServerSocket<OutboundT>>();
 

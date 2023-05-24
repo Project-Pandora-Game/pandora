@@ -429,7 +429,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			$or: [
 				{ accounts: { $all: [accountIdA, accountIdB] } },
 				{ accounts: { $all: [accountIdB, accountIdA] } },
-			]
+			],
 		}, {
 			$set: {
 				...data,
@@ -450,7 +450,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			$or: [
 				{ accounts: { $all: [accountIdA, accountIdB] } },
 				{ accounts: { $all: [accountIdB, accountIdA] } },
-			]
+			],
 		});
 	}
 

@@ -1,4 +1,4 @@
-import { TypedEvent, TypedEventEmitter } from '../../src/event';
+import { TypedEvent, TypedEventEmitter } from 'pandora-common';
 
 /** Event emitter implementation for testing which allows events to be manually emitted */
 export class TestEventEmitter<T extends TypedEvent> extends TypedEventEmitter<T> {

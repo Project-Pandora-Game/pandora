@@ -374,8 +374,6 @@ export function PromiseOnce<T>(promise: () => Promise<T>): () => Promise<T> {
 		promiseResult = promise();
 		try {
 			result = [await promiseResult];
-		} catch (e) {
-			throw e;
 		} finally {
 			promiseResult = null;
 		}

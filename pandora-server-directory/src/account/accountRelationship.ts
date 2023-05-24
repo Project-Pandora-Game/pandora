@@ -39,10 +39,11 @@ export class AccountRelationship {
 		if (this.account.data.settings.hideOnlineStatus) {
 			return null;
 		}
+		const online = this.account.associatedConnections.hasClients();
 		return {
 			id: this.account.id,
-			online: this.account.associatedConnections.hasClients(),
-			characters: [...this.account.characters.values()]
+			online,
+			characters: !online ? [] : [...this.account.characters.values()]
 				.filter((char) => !!char.assignedConnection)
 				.map((char) => ({
 					id: char.id,

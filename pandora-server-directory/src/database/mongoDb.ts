@@ -124,6 +124,18 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#endregion
 
 		this._relationships = this._db.collection(RELATIONSHIPS_COLLECTION_NAME);
+
+		// DROP THIS
+		await this._relationships.deleteMany({
+			$or: [
+				{ 'accounts.0': { $exists: false } },
+				{ 'accounts.1': { $exists: false } },
+				{ 'accountIdA': { $exists: true } },
+				{ 'accountIdB': { $exists: true } },
+			],
+		});
+		// DROP THIS
+
 		await MongoUpdateIndexes(this._relationships, [
 			{
 				name: 'accounts',

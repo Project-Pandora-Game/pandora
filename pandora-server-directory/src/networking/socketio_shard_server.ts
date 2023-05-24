@@ -44,7 +44,7 @@ export class SocketIOServerShard extends SocketIOServer implements IServerSocket
 		socket.once('disconnect', () => {
 			logger.debug(`Shard disconnected; id: ${socket.id}`);
 		});
-		const info = ShardTokenStore.allowConnect(socket.handshake);
+		const info = ShardTokenStore.getConnectInfo(socket.handshake);
 		if (!info) {
 			logger.warning(`Rejecting shard connection from ${socket.request.socket.remoteAddress ?? '[unknown]'}: Bad secret`);
 			socket.disconnect(true);

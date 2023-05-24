@@ -14,7 +14,7 @@ const logger = GetLogger('ShardTokenStore');
 type IStoredShardTokenInfo = IShardTokenInfo & { token: string; };
 
 export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<IShardTokenInfo> {
-	readonly #connections = new Map<string, ConnectedTokenInfo>();
+	readonly #connections = new Map<string, IConnectedTokenInternal>();
 
 	constructor() {
 		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
@@ -61,7 +61,7 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		return token != null && !this.#connections.has(token.id);
 	}
 
-	public allowConnect(handshake: Readonly<Socket['handshake']>): ConnectedTokenInfo | undefined {
+	public getConnectInfo(handshake: Readonly<Socket['handshake']>): IConnectedTokenInfoHandle | undefined {
 		const secret = handshake.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
 		const token = typeof secret === 'string' ? this.getValidTokenInfo(secret) : undefined;
 		if (!token)
@@ -69,7 +69,15 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		if (this.#connections.has(token.id))
 			return undefined;
 
-		const info = new ConnectedTokenInfo(token, handshake, () => this.#connections.delete(token.id));
+		const info = {
+			type: token.type,
+			id: token.id,
+			handshake,
+			remove: () => {
+				if (this.#connections.get(token.id) === info)
+					this.#connections.delete(token.id);
+			},
+		};
 		this.#connections.set(token.id, info);
 
 		return info;
@@ -96,24 +104,6 @@ export interface IConnectedTokenInfoHandle extends IConnectedTokenInfo {
 	readonly remove: () => void;
 }
 
-class ConnectedTokenInfo implements IConnectedTokenInfoHandle {
-	public readonly type: IShardTokenType;
-	public readonly id: string;
-	public readonly handshake: Readonly<Socket['handshake']>;
-	public readonly remove: () => void;
-
-	constructor(token: IShardTokenInfo, handshake: Readonly<Socket['handshake']>, remove: () => void = () => undefined) {
-		this.type = token.type;
-		this.id = token.id;
-		this.handshake = handshake;
-
-		let once = false;
-		this.remove = () => {
-			if (once)
-				return;
-
-			once = true;
-			remove();
-		};
-	}
+interface IConnectedTokenInternal extends IConnectedTokenInfo {
+	readonly handshake: Readonly<Socket['handshake']>;
 }

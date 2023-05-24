@@ -1,8 +1,7 @@
-import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory, AsyncSynchronized } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
-import AsyncLock from 'async-lock';
 import { GetDatabase } from '../database/databaseProvider';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
@@ -22,7 +21,6 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public readonly roomState: AssetFrameworkGlobalStateContainer;
 
-	private readonly _lock = new AsyncLock();
 	private modified: Set<keyof IChatRoomDataShardUpdate> = new Set();
 
 	public get id(): RoomId {
@@ -331,34 +329,33 @@ export class Room extends ServerRoom<IShardClient> {
 		this.sendMessage('chatRoomUpdate', data);
 	}
 
-	public save(): Promise<void> {
-		return this._lock.acquire('save', async () => {
-			const keys = [...this.modified];
-			this.modified.clear();
+	@AsyncSynchronized()
+	public async save(): Promise<void> {
+		const keys = [...this.modified];
+		this.modified.clear();
 
-			// Nothing to save
-			if (keys.length === 0)
-				return;
+		// Nothing to save
+		if (keys.length === 0)
+			return;
 
-			const data: IChatRoomDataShardUpdate = {};
+		const data: IChatRoomDataShardUpdate = {};
 
-			if (keys.includes('inventory')) {
-				const roomState = this.roomState.currentState.room;
-				AssertNotNullable(roomState);
-				data.inventory = roomState.exportToBundle();
+		if (keys.includes('inventory')) {
+			const roomState = this.roomState.currentState.room;
+			AssertNotNullable(roomState);
+			data.inventory = roomState.exportToBundle();
+		}
+
+		try {
+			if (!await GetDatabase().setChatRoom(this.id, data, this.accessId)) {
+				throw new Error('Database returned failure');
 			}
-
-			try {
-				if (!await GetDatabase().setChatRoom(this.id, data, this.accessId)) {
-					throw new Error('Database returned failure');
-				}
-			} catch (error) {
-				for (const key of keys) {
-					this.modified.add(key);
-				}
-				this.logger.warning(`Failed to save data:`, error);
+		} catch (error) {
+			for (const key of keys) {
+				this.modified.add(key);
 			}
-		});
+			this.logger.warning(`Failed to save data:`, error);
+		}
 	}
 
 	public static async load(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null> {

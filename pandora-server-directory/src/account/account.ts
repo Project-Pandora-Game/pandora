@@ -151,6 +151,7 @@ export class Account {
 				connection.sendMessage('somethingChanged', { changes: ['characterList'] });
 			}
 		}
+		this.relationship.updateStatus();
 	}
 
 	public onAccountInfoChange(): void {

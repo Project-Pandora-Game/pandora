@@ -42,7 +42,6 @@ export class Character {
 	public set assignedConnection(value: ClientConnection | null) {
 		if (this._assignedConnection !== value) {
 			this._assignedConnection = value;
-			this.account.relationship.updateStatus();
 		}
 	}
 

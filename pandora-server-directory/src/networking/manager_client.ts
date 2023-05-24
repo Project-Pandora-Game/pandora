@@ -641,22 +641,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		switch (action) {
-			case 'initiate': {
-				const result = await connection.account.relationship.initiateFriendRequest(id);
-				return { result };
-			}
-			case 'accept': {
-				const success = await connection.account.relationship.acceptFriendRequest(id);
-				return { result: success ? 'ok' : 'requestNotFound' };
-			}
-			case 'decline': {
-				const success = await connection.account.relationship.declineFriendRequest(id);
-				return { result: success ? 'ok' : 'requestNotFound' };
-			}
-			case 'cancel': {
-				const success = await connection.account.relationship.cancelFriendRequest(id);
-				return { result: success ? 'ok' : 'requestNotFound' };
-			}
+			case 'accept':
+			case 'cancel':
+			case 'decline':
+			case 'initiate':
+				return { result: await connection.account.relationship[`${action}FriendRequest`](id) };
 			default:
 				AssertNever(action);
 		}

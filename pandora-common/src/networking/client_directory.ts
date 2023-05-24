@@ -89,8 +89,6 @@ export const ClientDirectorySchema = {
 			result: 'ok';
 			token: { value: string; expires: number; };
 			account: IDirectoryAccountInfo;
-			relationships: IAccountRelationship[];
-			friends: IAccountFriendStatus[];
 		}>(),
 	},
 	register: {
@@ -163,6 +161,14 @@ export const ClientDirectorySchema = {
 		response: null,
 	},
 	//#endregion
+
+	getRelationships: {
+		request: z.object({}),
+		response: ZodCast<{
+			relationships: IAccountRelationship[];
+			friends: IAccountFriendStatus[];
+		}>(),
+	},
 
 	//#region Character management
 	listCharacters: {

@@ -93,29 +93,10 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 		throw new Error('Invalid operation');
 	}
 
-	public sendConnectionStateUpdate(withRelationships: boolean = false): void {
-		const response: IDirectoryClientArgument['connectionState'] = {
+	public sendConnectionStateUpdate(): void {
+		this.sendMessage('connectionState', {
 			account: this.account ? this.account.getAccountInfo() : null,
 			character: this.character ? this.character.getShardConnectionInfo() : null,
-		};
-		if (withRelationships && this.account) {
-			Promise
-				.all([
-					this.account.relationship.getAll(),
-					this.account.relationship.getAllStatus(),
-				])
-				.then(([relationships, friends]) => {
-					response.relationships = {
-						relationships,
-						friends,
-					};
-					this.sendMessage('connectionState', response);
-				})
-				.catch((e) => {
-					this.logger.warning(`Failed to get relationships for account`, e);
-				});
-		} else {
-			this.sendMessage('connectionState', response);
-		}
+		});
 	}
 }

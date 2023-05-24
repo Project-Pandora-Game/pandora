@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
+import { AccountId, IAccountFriendStatus, IAccountRelationship, IClientDirectoryNormalResult, IClientDirectoryPromiseResult, IDirectoryClientArgument } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
@@ -11,8 +11,63 @@ import { useAsyncEvent } from '../../common/useEvent';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 
-export const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
-export const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
+const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
+const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
+
+export const RelationshipContext = new class RelationshipContext {
+	private _queue: (() => void)[] = [];
+	private _useQueue = true;
+
+	public async initStatus(load: () => IClientDirectoryPromiseResult['getRelationships']) {
+		if (!this._useQueue) {
+			return;
+		}
+		const { friends, relationships } = await load();
+		this.handleStatus({ friends, relationships });
+	}
+
+	public handleStatus({ friends, relationships }: IClientDirectoryNormalResult['getRelationships']) {
+		RELATIONSHIPS.value = relationships;
+		FRIEND_STATUS.value = friends;
+		this._dequeue();
+	}
+
+	public handleFriendStatus(data: IDirectoryClientArgument['friendStatus']) {
+		if (this._useQueue) {
+			this._queue.push(() => this.handleFriendStatus(data));
+			return;
+		}
+		const filtered = FRIEND_STATUS.value.filter((status) => status.id !== data.id);
+		if ('online' in data) {
+			filtered.push(data);
+		}
+		FRIEND_STATUS.value = filtered;
+	}
+
+	public handleRelationshipsUpdate(data: IDirectoryClientArgument['relationshipsUpdate']) {
+		if (this._useQueue) {
+			this._queue.push(() => this.handleRelationshipsUpdate(data));
+			return;
+		}
+		const filtered = RELATIONSHIPS.value.filter((relationship) => relationship.id !== data.id);
+		if ('name' in data) {
+			filtered.push(data);
+		}
+		RELATIONSHIPS.value = filtered;
+	}
+
+	public handleLogout() {
+		this._useQueue = true;
+		FRIEND_STATUS.value = [];
+		RELATIONSHIPS.value = [];
+	}
+
+	private _dequeue() {
+		this._useQueue = false;
+		this._queue.forEach((fn) => fn());
+		this._queue = [];
+	}
+};
 
 export function Relationships() {
 	const navigate = useNavigate();

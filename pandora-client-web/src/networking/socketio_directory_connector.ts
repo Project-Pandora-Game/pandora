@@ -20,7 +20,7 @@ import {
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
-import { FRIEND_STATUS, RELATIONSHIPS } from '../components/releationships/relationships';
+import { RelationshipContext } from '../components/releationships/relationships';
 import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
@@ -112,11 +112,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
 				this._connectionStateEventEmitter.onStateChanged(message);
 				this.handleAccountChange(message.account);
-				if (message.relationships) {
-					RELATIONSHIPS.value = message.relationships.relationships;
-					FRIEND_STATUS.value = message.relationships.friends;
-				}
 				await this.directMessageHandler.accountChanged();
+				await RelationshipContext.initStatus(() => this.awaitResponse('getRelationships', {}));
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
 			directMessageSent: async (data) => {
@@ -128,20 +125,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			directMessageAction: (data) => {
 				this.directMessageHandler.handleDirectMessageAction(data);
 			},
-			friendStatus: (data) => {
-				const filtered = FRIEND_STATUS.value.filter((status) => status.id !== data.id);
-				if ('online' in data) {
-					filtered.push(data);
-				}
-				FRIEND_STATUS.value = filtered;
-			},
-			relationshipsUpdate: (data) => {
-				const filtered = RELATIONSHIPS.value.filter((relationship) => relationship.id !== data.id);
-				if ('name' in data) {
-					filtered.push(data);
-				}
-				RELATIONSHIPS.value = filtered;
-			},
+			friendStatus: (data) => RelationshipContext.handleFriendStatus(data),
+			relationshipsUpdate: (data) => RelationshipContext.handleRelationshipsUpdate(data),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -207,14 +192,13 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 
 		if (result.result === 'ok') {
 			this._authToken.value = { ...result.token, username: result.account.username };
-			RELATIONSHIPS.value = result.relationships;
-			FRIEND_STATUS.value = result.friends;
 			await this.directMessageHandler.initCryptoPassword(username, password);
 			this.handleAccountChange(result.account);
 		} else {
 			this.handleAccountChange(null);
 		}
 		await this.directMessageHandler.accountChanged();
+		RelationshipContext.handleStatus(await this.awaitResponse('getRelationships', {}));
 		return result.result;
 	}
 
@@ -222,8 +206,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this.sendMessage('logout', { invalidateToken: this._authToken.value?.value });
 		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
 		this.directMessageHandler.clear();
-		RELATIONSHIPS.value = [];
-		FRIEND_STATUS.value = [];
+		RelationshipContext.handleLogout();
 	}
 
 	/**

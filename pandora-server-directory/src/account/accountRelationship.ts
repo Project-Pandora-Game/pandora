@@ -144,39 +144,39 @@ export class AccountRelationship {
 	}
 
 	@Synchronized()
-	public async acceptFriendRequest(id: AccountId): Promise<boolean> {
+	public async acceptFriendRequest(id: AccountId): Promise<'ok' | 'requestNotFound'> {
 		const existing = this.get(id);
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
-			return false;
+			return 'requestNotFound';
 		}
 		const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'friend' });
 		await this.update(rel, existing.name);
 		await accountManager.getAccountById(id)?.relationship.update(rel, this.account.username);
-		return true;
+		return 'ok';
 	}
 
 	@Synchronized()
-	public async declineFriendRequest(id: AccountId): Promise<boolean> {
+	public async declineFriendRequest(id: AccountId): Promise<'ok' | 'requestNotFound'> {
 		const existing = this.get(id);
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
-			return false;
+			return 'requestNotFound';
 		}
 		await GetDatabase().removeRelationship(this.account.id, id);
 		this.remove(id);
 		accountManager.getAccountById(id)?.relationship.remove(this.account.id);
-		return true;
+		return 'ok';
 	}
 
 	@Synchronized()
-	public async cancelFriendRequest(id: AccountId): Promise<boolean> {
+	public async cancelFriendRequest(id: AccountId): Promise<'ok' | 'requestNotFound'> {
 		const existing = this.get(id);
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== this.account.id) {
-			return false;
+			return 'requestNotFound';
 		}
 		await GetDatabase().removeRelationship(this.account.id, id);
 		this.remove(id);
 		accountManager.getAccountById(id)?.relationship.remove(this.account.id);
-		return true;
+		return 'ok';
 	}
 
 	@Synchronized()

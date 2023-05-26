@@ -251,10 +251,10 @@ export function ChatRoomScene(): ReactElement | null {
 			menuOpen={ menuOpen }
 		>
 			{
-				menuActive && menuActive.character ? <CharacterContextMenu character={ menuActive.character } position={ menuActive.position } onClose={ closeContextMenu } /> : null
+				menuActive?.character ? <CharacterContextMenu character={ menuActive.character } position={ menuActive.position } onClose={ closeContextMenu } /> : null
 			}
 			{
-				menuActive && menuActive.device ? <DeviceContextMenu device={ menuActive.device } position={ menuActive.position } onClose={ closeContextMenu } /> : null
+				menuActive?.device ? <DeviceContextMenu device={ menuActive.device } position={ menuActive.position } onClose={ closeContextMenu } /> : null
 			}
 		</ChatRoomGraphicsScene>
 	);
@@ -538,7 +538,7 @@ function DeviceSlotsMenu({ device }: {
 					{ character?.name } ({ character?.id })
 				</span>
 				<DeviceSlotClear device={ device } slot={ slot } close={ close }>
-					{ (occupancy === player.id)
+					{ (character)
 						? 'Exit the device'
 						: 'Clear occupancy of the slot' }
 				</DeviceSlotClear>

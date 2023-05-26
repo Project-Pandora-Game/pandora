@@ -102,14 +102,16 @@ export class AccountRelationship {
 		if (this.account.data.settings.allowDirectMessagesFrom === 'all') {
 			return true;
 		}
-		if (this.account.data.settings.allowDirectMessagesFrom === 'friends') {
-			return rel?.relationship.type === 'friend';
+		if (rel?.relationship.type === 'friend') {
+			return true;
 		}
-		for (const char of this.account.characters.values()) {
-			if (!char.room) continue;
-			for (const char2 of from.characters.values()) {
-				if (char.room.id === char2.room?.id) {
-					return true;
+		if (this.account.data.settings.allowDirectMessagesFrom === 'room') {
+			for (const char of this.account.characters.values()) {
+				if (!char.room) continue;
+				for (const char2 of from.characters.values()) {
+					if (char.room.id === char2.room?.id) {
+						return true;
+					}
 				}
 			}
 		}

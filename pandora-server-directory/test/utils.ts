@@ -124,7 +124,6 @@ export async function TestMockShard({
 	new ShardConnection(server, connection.connect(), {
 		id: shard.id,
 		type: shard.type,
-		remove: () => { /** noop */ },
 	});
 
 	// Do register

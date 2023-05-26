@@ -3,24 +3,26 @@ import { ConnectionType, IConnectionShard } from './common';
 import { ConnectionManagerShard } from './manager_shard';
 import { Shard } from '../shard/shard';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
-import type { IConnectedTokenInfoHandle, IConnectedTokenInfo } from '../shard/shardTokenStore';
+import type { IConnectedTokenInfo } from '../shard/shardTokenStore';
 
 /** Class housing connection from a shard */
 export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardDirectory, IncomingSocket> implements IConnectionShard {
 	public readonly type: ConnectionType.SHARD = ConnectionType.SHARD;
-	private readonly info: IConnectedTokenInfoHandle;
+	private readonly info: IConnectedTokenInfo;
 
 	public shard: Shard | null = null;
 
-	constructor(server: IServerSocket<IDirectoryShard>, socket: IncomingSocket, info: IConnectedTokenInfoHandle) {
+	public readonly connectionTime: number;
+
+	constructor(server: IServerSocket<IDirectoryShard>, socket: IncomingSocket, info: IConnectedTokenInfo) {
 		super(server, socket, [DirectoryShardSchema, ShardDirectorySchema], GetLogger('Connection-Shard', `[Connection-Shard ${socket.id}]`));
 		this.info = info;
+		this.connectionTime = Date.now();
 		this.logger.verbose(`Connected type: '${info.type}', token: ${info.id}`);
 	}
 
 	protected override onDisconnect(reason: string): void {
 		this.logger.verbose('Disconnected, reason:', reason);
-		this.info.remove();
 		ConnectionManagerShard.onDisconnect(this);
 	}
 

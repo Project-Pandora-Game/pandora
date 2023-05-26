@@ -1,4 +1,4 @@
-import { GetLogger, HTTP_HEADER_SHARD_SECRET, IClientDirectoryArgument, IShardTokenConnectInfo, IShardTokenInfo, IShardTokenType } from 'pandora-common';
+import { GetLogger, HTTP_HEADER_SHARD_SECRET, IClientDirectoryArgument, IShardTokenInfo, IShardTokenType } from 'pandora-common';
 import type { Account } from '../account/account';
 import { SHARD_SHARED_SECRET } from '../config';
 
@@ -14,8 +14,6 @@ const logger = GetLogger('ShardTokenStore');
 type IStoredShardTokenInfo = IShardTokenInfo & { token: string; };
 
 export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<IShardTokenInfo> {
-	readonly #connections = new Map<string, IConnectedTokenInternal>();
-
 	constructor() {
 		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
 	}
@@ -60,47 +58,22 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		return this.hasValidToken(secret);
 	}
 
-	public getConnectInfo(handshake: Readonly<Socket['handshake']>): IConnectedTokenInfoHandle | undefined {
+	public getConnectInfo(handshake: Readonly<Socket['handshake']>): IConnectedTokenInfo | undefined {
 		const secret = handshake.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
 		const token = typeof secret === 'string' ? this.getValidTokenInfo(secret) : undefined;
 		if (!token)
 			return undefined;
 
-		const info: IConnectedTokenInternal = {
+		const info: IConnectedTokenInfo = {
 			type: token.type,
 			id: token.id,
-			handshake,
-			remove: () => {
-				if (this.#connections.get(token.id) === info)
-					this.#connections.delete(token.id);
-			},
 		};
-		this.#connections.set(token.id, info);
 
 		return info;
-	}
-
-	public listShads(): IShardTokenConnectInfo[] {
-		return this.list()
-			.map((token) => {
-				const connection = this.#connections.get(token.id);
-				return {
-					...token,
-					connected: connection?.handshake.issued,
-				};
-			});
 	}
 };
 
 export interface IConnectedTokenInfo {
 	readonly type: IShardTokenType;
 	readonly id: string;
-}
-
-export interface IConnectedTokenInfoHandle extends IConnectedTokenInfo {
-	readonly remove: () => void;
-}
-
-interface IConnectedTokenInternal extends IConnectedTokenInfoHandle {
-	readonly handshake: Readonly<Socket['handshake']>;
 }

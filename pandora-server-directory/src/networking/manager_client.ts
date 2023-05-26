@@ -1,4 +1,4 @@
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, IShardTokenConnectInfo } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } from '../config';
@@ -549,7 +549,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], _connection: ClientConnection & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
-		const info = ShardTokenStore.listShads();
+		const info = ShardTokenStore.list()
+			.map<IShardTokenConnectInfo>((token) => {
+				const connection = ShardManager.getShard(token.id)?.shardConnection;
+				return {
+					...token,
+					connected: connection?.connectionTime,
+				};
+			});
 		return { info };
 	}
 

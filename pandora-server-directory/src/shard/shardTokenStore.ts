@@ -57,8 +57,7 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		if (typeof secret !== 'string')
 			return false;
 
-		const token = this.getValidTokenInfo(secret);
-		return token != null && !this.#connections.has(token.id);
+		return this.hasValidToken(secret);
 	}
 
 	public getConnectInfo(handshake: Readonly<Socket['handshake']>): IConnectedTokenInfoHandle | undefined {
@@ -66,10 +65,8 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 		const token = typeof secret === 'string' ? this.getValidTokenInfo(secret) : undefined;
 		if (!token)
 			return undefined;
-		if (this.#connections.has(token.id))
-			return undefined;
 
-		const info = {
+		const info: IConnectedTokenInternal = {
 			type: token.type,
 			id: token.id,
 			handshake,
@@ -104,6 +101,6 @@ export interface IConnectedTokenInfoHandle extends IConnectedTokenInfo {
 	readonly remove: () => void;
 }
 
-interface IConnectedTokenInternal extends IConnectedTokenInfo {
+interface IConnectedTokenInternal extends IConnectedTokenInfoHandle {
 	readonly handshake: Readonly<Socket['handshake']>;
 }

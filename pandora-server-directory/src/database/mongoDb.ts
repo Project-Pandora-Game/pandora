@@ -421,22 +421,18 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {
-		return this._relationships.find({ $or: [{ accountIdA: accountId }, { accountIdB: accountId }] }).toArray();
+		return this._relationships.find({ accounts: accountId }).toArray();
 	}
 
 	public async setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
 		const result = await this._relationships.findOneAndUpdate({
-			$or: [
-				{ accounts: { $all: [accountIdA, accountIdB] } },
-				{ accounts: { $all: [accountIdB, accountIdA] } },
-			],
+			accounts: { $all: [accountIdA, accountIdB] },
 		}, {
 			$set: {
-				...data,
 				accounts: [accountIdA, accountIdB],
 				updated: Date.now(),
+				relationship: data,
 			},
-			$unset: ('from' in data) ? undefined : { from: true },
 		}, {
 			upsert: true,
 			returnDocument: 'after',
@@ -447,10 +443,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
 		await this._relationships.deleteOne({
-			$or: [
-				{ accounts: { $all: [accountIdA, accountIdB] } },
-				{ accounts: { $all: [accountIdB, accountIdA] } },
-			],
+			$all: [accountIdA, accountIdB],
 		});
 	}
 

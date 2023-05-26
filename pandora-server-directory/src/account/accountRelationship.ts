@@ -1,11 +1,9 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { AccountId, AssertNever, AssertNotNullable, GetLogger, IAccountFriendStatus, IAccountRelationship, Logger, PromiseOnce } from 'pandora-common';
+import { AccountId, AssertNever, AssertNotNullable, GetLogger, IAccountFriendStatus, IAccountRelationship, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
-
-const logger = GetLogger('AccountRelationship');
 
 const GLOBAL_LOCK = new AsyncLock();
 
@@ -24,7 +22,7 @@ export class AccountRelationship {
 
 	constructor(account: Account) {
 		this.account = account;
-		this.logger = logger.prefixMessages(`[${account.id}]`);
+		this.logger = GetLogger('AccountRelationship').prefixMessages(`[${account.id}]`);
 		this.account.associatedConnections.onAny(this.onConnection.bind(this));
 	}
 
@@ -39,12 +37,12 @@ export class AccountRelationship {
 		if (this.account.data.settings.hideOnlineStatus) {
 			return null;
 		}
-		const online = this.account.associatedConnections.hasClients();
+		const online = this.account.isInUse();
 		return {
 			id: this.account.id,
 			online,
 			characters: !online ? [] : [...this.account.characters.values()]
-				.filter((char) => !!char.assignedConnection)
+				.filter((char) => char.isInUse())
 				.map((char) => ({
 					id: char.id,
 					name: char.data.name,
@@ -92,7 +90,7 @@ export class AccountRelationship {
 			.filter((rel) => rel.relationship.type === 'friend')
 			.map((rel) => accountManager.getAccountById(rel.id))
 			.map((acc) => acc?.relationship.getStatus())
-			.filter((status): status is IAccountFriendStatus => !!status);
+			.filter(IsNotNullable);
 	}
 
 	public async canReceiveDM(from: Account): Promise<boolean> {
@@ -104,8 +102,8 @@ export class AccountRelationship {
 		if (this.account.data.settings.allowDirectMessagesFrom === 'all') {
 			return true;
 		}
-		if (rel?.relationship.type === 'friend') {
-			return true;
+		if (this.account.data.settings.allowDirectMessagesFrom === 'friends') {
+			return rel?.relationship.type === 'friend';
 		}
 		for (const char of this.account.characters.values()) {
 			if (!char.room) continue;
@@ -138,9 +136,7 @@ export class AccountRelationship {
 		if (!names[id]) {
 			return 'accountNotFound';
 		}
-		const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'request', from: this.account.id });
-		await this.update(rel, names[id]);
-		await accountManager.getAccountById(id)?.relationship.update(rel, this.account.username);
+		await this.updateRelationship(id, { type: 'request', from: this.account.id }, names[id]);
 		return 'ok';
 	}
 
@@ -150,9 +146,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
 			return 'requestNotFound';
 		}
-		const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'friend' });
-		await this.update(rel, existing.name);
-		await accountManager.getAccountById(id)?.relationship.update(rel, this.account.username);
+		await this.updateRelationship(id, { type: 'friend' }, existing.name);
 		return 'ok';
 	}
 
@@ -162,9 +156,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
 			return 'requestNotFound';
 		}
-		await GetDatabase().removeRelationship(this.account.id, id);
-		this.remove(id);
-		accountManager.getAccountById(id)?.relationship.remove(this.account.id);
+		await this.updateRelationship(id, null);
 		return 'ok';
 	}
 
@@ -174,9 +166,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== this.account.id) {
 			return 'requestNotFound';
 		}
-		await GetDatabase().removeRelationship(this.account.id, id);
-		this.remove(id);
-		accountManager.getAccountById(id)?.relationship.remove(this.account.id);
+		await this.updateRelationship(id, null);
 		return 'ok';
 	}
 
@@ -186,9 +176,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type !== 'friend') {
 			return false;
 		}
-		await GetDatabase().removeRelationship(this.account.id, id);
-		this.remove(id);
-		accountManager.getAccountById(id)?.relationship.remove(this.account.id);
+		await this.updateRelationship(id, null);
 		return true;
 	}
 
@@ -206,11 +194,9 @@ export class AccountRelationship {
 			return false;
 		}
 		const hasSource = existing?.relationship.type !== 'oneSidedBlock';
-		const rel = await GetDatabase().setRelationship(this.account.id, id, hasSource
+		await this.updateRelationship(id, hasSource
 			? { type: 'oneSidedBlock', from: this.account.id }
 			: { type: 'mutualBlock' });
-		await this.update(rel);
-		await accountManager.getAccountById(id)?.relationship.update(rel, this.account.username);
 		return true;
 	}
 
@@ -225,13 +211,9 @@ export class AccountRelationship {
 			return false;
 
 		if (existing.relationship.type === 'oneSidedBlock') {
-			await GetDatabase().removeRelationship(this.account.id, id);
-			this.remove(id);
-			accountManager.getAccountById(id)?.relationship.remove(this.account.id);
+			await this.updateRelationship(id, null);
 		} else {
-			const rel = await GetDatabase().setRelationship(this.account.id, id, { type: 'oneSidedBlock', from: id });
-			await this.update(rel);
-			await accountManager.getAccountById(id)?.relationship.update(rel, this.account.username);
+			await this.updateRelationship(id, { type: 'oneSidedBlock', from: id });
 		}
 		return true;
 	}
@@ -292,6 +274,18 @@ export class AccountRelationship {
 		}
 		this.loaded = true;
 		this.updateStatus();
+	}
+
+	private async updateRelationship(other: AccountId, relationship: DatabaseAccountRelationship | null, otherName?: string) {
+		if (relationship == null) {
+			await GetDatabase().removeRelationship(this.account.id, other);
+			this.remove(other);
+			accountManager.getAccountById(other)?.relationship.remove(this.account.id);
+			return;
+		}
+		const rel = await GetDatabase().setRelationship(this.account.id, other, relationship);
+		await this.update(rel, otherName);
+		await accountManager.getAccountById(other)?.relationship.update(rel, this.account.username);
 	}
 
 	private setRelationship(id: AccountId, name: string, updated: number, relationship: DatabaseAccountRelationship): void {

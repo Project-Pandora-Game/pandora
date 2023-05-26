@@ -145,12 +145,11 @@ export class MockDatabase implements PandoraDatabase {
 
 	public queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
 		const result: Record<AccountId, string> = {};
-		return Promise.resolve(this.accountDbView.reduce((acc, dbAccount) => {
-			if (query.includes(dbAccount.id))
-				acc[dbAccount.id] = dbAccount.username;
-
-			return acc;
-		}, result));
+		for (const acc of this.accountDbView) {
+			if (query.includes(acc.id))
+				result[acc.id] = acc.username;
+		}
+		return Promise.resolve(result);
 	}
 
 	public createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
@@ -385,11 +384,7 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
-		const index = this.relationshipDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
-		if (index < 0)
-			return Promise.resolve();
-
-		this.relationshipDb.splice(index, 1);
+		_.remove(this.relationshipDb, (rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		return Promise.resolve();
 	}
 

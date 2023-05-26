@@ -32,18 +32,8 @@ export class Character {
 	public accessId: string = '';
 	public connectSecret: string;
 
-	private _assignedConnection: ClientConnection | null = null;
-
 	/** Which client is assigned to this character and receives updates from it; only passive listener to what happens to the character */
-	public get assignedConnection(): ClientConnection | null {
-		return this._assignedConnection;
-	}
-
-	public set assignedConnection(value: ClientConnection | null) {
-		if (this._assignedConnection !== value) {
-			this._assignedConnection = value;
-		}
-	}
+	public assignedConnection: ClientConnection | null = null;
 
 	private _room: Room | null = null;
 

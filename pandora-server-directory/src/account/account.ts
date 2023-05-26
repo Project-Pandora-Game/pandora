@@ -13,7 +13,7 @@ import _, { cloneDeep, omit } from 'lodash';
 /** Currently logged in or recently used account */
 export class Account {
 	/** Time when this account was last used */
-	public lastActivity: AccountId;
+	public lastActivity: number;
 	/** The account's saved data */
 	public data: Omit<DatabaseAccount, 'secure' | 'characters'>;
 	/** List of connections logged in as this account */

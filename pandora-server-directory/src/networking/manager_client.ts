@@ -641,10 +641,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		switch (action) {
 			case 'accept':
+				return { result: await connection.account.relationship.acceptFriendRequest(id) };
 			case 'cancel':
+				return { result: await connection.account.relationship.cancelFriendRequest(id) };
 			case 'decline':
+				return { result: await connection.account.relationship.declineFriendRequest(id) };
 			case 'initiate':
-				return { result: await connection.account.relationship[`${action}FriendRequest`](id) };
+				return { result: await connection.account.relationship.initiateFriendRequest(id) };
 			default:
 				AssertNever(action);
 		}

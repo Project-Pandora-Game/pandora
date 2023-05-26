@@ -204,7 +204,7 @@ export class DirectMessageChannel {
 		}
 	}
 
-	public load = PromiseOnce(() => this._load());
+	public readonly load = PromiseOnce(() => this._load());
 
 	public async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<void> {
 		const { content, time, edited } = data;

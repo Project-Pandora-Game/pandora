@@ -21,7 +21,7 @@ export const DirectoryAccountSettingsSchema = z.object({
 	hideOnlineStatus: z.boolean().default(false),
 	/**
 	 * - 'all' - Allow direct messages from anyone
-	 * - 'room' - Allow direct messages from people in the same room
+	 * - 'room' - Allow direct messages from friends and people in the same room
 	 * - 'friends' - Only allow direct messages from friends
 	 */
 	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']).default('all'),

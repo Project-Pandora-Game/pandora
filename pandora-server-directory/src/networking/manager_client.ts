@@ -549,7 +549,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], _connection: ClientConnection & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
-		const info = ShardTokenStore.list();
+		const info = ShardTokenStore.listShads();
 		return { info };
 	}
 

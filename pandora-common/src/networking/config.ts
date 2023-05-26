@@ -8,7 +8,7 @@ export const HTTP_HEADER_SHARD_SECRET: string = 'Pandora-Shard-Secret';
  */
 export const HTTP_HEADER_CLIENT_REQUEST_SHARD: string = 'Pandora-Requested-Shard';
 /** Default acknowledgment timeout in seconds */
-export const DEFAULT_ACK_TIMEOUT: number = 5000;
+export const DEFAULT_ACK_TIMEOUT: number = 15_000;
 
 /** Toggle, if all messages should be logged. Should ALWAYS be `false` in production! */
 export const MESSAGE_HANDLER_DEBUG_ALL: boolean = false;

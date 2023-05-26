@@ -1,5 +1,5 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition, AsyncSynchronized, ManuallyResolvedPromise, CreateManuallyResolvedPromise } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition, AsyncSynchronized, ManuallyResolvedPromise, CreateManuallyResolvedPromise, IShardTokenType } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
@@ -9,9 +9,11 @@ import { ConnectionManagerClient } from '../networking/manager_client';
 import { Sleep } from '../utility';
 import type { Account } from '../account/account';
 import { isEqual, last, uniq } from 'lodash';
+import type { IConnectedTokenInfo } from './shardTokenStore';
 
 export class Shard {
 	public readonly id;
+	public readonly type: IShardTokenType;
 	public shardConnection: IConnectionShard | null = null;
 	private timeout: NodeJS.Timeout | null = null;
 
@@ -28,8 +30,9 @@ export class Shard {
 
 	private logger: Logger;
 
-	constructor(id: string) {
+	constructor({ id, type }: Readonly<IConnectedTokenInfo>) {
 		this.id = id;
+		this.type = type;
 		this.logger = GetLogger('Shard', `[Shard ${this.id}]`);
 	}
 

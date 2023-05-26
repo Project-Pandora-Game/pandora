@@ -40,6 +40,10 @@ export type IShardTokenInfo = IBaseTokenInfo & {
 	readonly type: IShardTokenType;
 };
 
+export type IShardTokenConnectInfo = IShardTokenInfo & {
+	connected?: number;
+};
+
 export type IBetaKeyInfo = IBaseTokenInfo & {
 	readonly maxUses?: number;
 	uses: number;
@@ -311,7 +315,7 @@ export const ClientDirectorySchema = {
 	},
 	manageListShardTokens: {
 		request: z.object({}),
-		response: ZodCast<{ info: IShardTokenInfo[]; }>(),
+		response: ZodCast<{ info: IShardTokenConnectInfo[]; }>(),
 	},
 	manageCreateBetaKey: {
 		request: z.object({

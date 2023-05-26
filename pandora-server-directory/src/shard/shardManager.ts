@@ -1,7 +1,7 @@
-import { nanoid } from 'nanoid';
-import { IDirectoryShardInfo } from 'pandora-common';
+import { Assert, IDirectoryShardInfo, IShardTokenType } from 'pandora-common';
 import { Shard } from './shard';
 import promClient from 'prom-client';
+import { IConnectedTokenInfo } from './shardTokenStore';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const SHARD_TIMEOUT = 10_000;
@@ -30,20 +30,21 @@ export const ShardManager = new class ShardManager {
 		await shard.onDelete(true);
 	}
 
-	public getOrCreateShard(id: string | null): Shard {
-		let shard = id && this.shards.get(id);
+	public getOrCreateShard(info: Readonly<IConnectedTokenInfo>): Shard {
+		let shard = this.shards.get(info.id);
 		if (!shard) {
-			shard = new Shard(id ?? nanoid());
+			shard = new Shard(info);
 			this.shards.set(shard.id, shard);
 			shardsMetric.set(this.shards.size);
 		}
+		Assert(shard.type === info.type, 'Shard type mismatch');
 		return shard;
 	}
 
 	public listShads(): IDirectoryShardInfo[] {
 		const result: IDirectoryShardInfo[] = [];
 		for (const shard of this.shards.values()) {
-			if (!shard.allowConnect())
+			if (!IsVisible(shard, 'stable'))
 				continue;
 			result.push(shard.getInfo());
 		}
@@ -55,7 +56,7 @@ export const ShardManager = new class ShardManager {
 	}
 
 	public getRandomShard(): Shard | null {
-		const shards = [...this.shards.values()].filter((s) => s.allowConnect());
+		const shards = [...this.shards.values()].filter((s) => IsVisible(s, 'stable'));
 		if (shards.length === 0)
 			return null;
 
@@ -73,3 +74,10 @@ export const ShardManager = new class ShardManager {
 		await Promise.all(shards.map((s) => s.onDelete(false)));
 	}
 };
+
+function IsVisible(shard: Shard, ...allowedTypes: IShardTokenType[]): boolean {
+	if (!shard.allowConnect())
+		return false;
+
+	return allowedTypes.includes(shard.type);
+}

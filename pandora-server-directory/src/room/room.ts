@@ -325,7 +325,7 @@ export class Room {
 	public checkVisibleTo(account: Account): boolean {
 		return (
 			this.isAdmin(account) ||
-			(this.config.public && this.hasAdminInside())
+			(this.config.public && this.hasAdminInside() && this._assignedShard?.type === 'stable')
 		);
 	}
 

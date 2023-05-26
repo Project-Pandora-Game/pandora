@@ -256,7 +256,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		}
 
 		const { shardId, ...update } = await this.awaitResponse('shardRegister', {
-			shardId: this.shardId ?? null,
 			publicURL: SERVER_PUBLIC_ADDRESS,
 			features,
 			version: APP_VERSION,

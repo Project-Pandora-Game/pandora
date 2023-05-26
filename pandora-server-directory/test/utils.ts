@@ -101,29 +101,34 @@ export interface TestShardData {
 }
 
 export async function TestMockShard({
-	id = null,
+	id = nanoid(),
 	register = true,
 	features = [],
 	version = '0.0.42-test',
 	messageHandler,
 }: {
-	id?: string | null;
+	id?: string;
 	register?: boolean;
 	features?: ShardFeature[];
 	version?: string;
 	messageHandler: IMessageHandler<IDirectoryShard, MockConnection<IShardDirectory, IDirectoryShard>>;
 }): Promise<TestShardData> {
-	const shard = ShardManager.getOrCreateShard(id);
+	const shard = ShardManager.getOrCreateShard({
+		type: 'stable',
+		id,
+	});
 
 	const server = new MockServerSocket();
 	const connection = new MockConnection<IShardDirectory, IDirectoryShard>(messageHandler);
 	// Side effect: It connects to manager
-	new ShardConnection(server, connection.connect());
+	new ShardConnection(server, connection.connect(), {
+		id: shard.id,
+		type: shard.type,
+	});
 
 	// Do register
 	if (register) {
 		const registerResult = await connection.awaitResponse('shardRegister', {
-			shardId: shard.id,
 			publicURL: `http://${shard.id}.shard.pandora.localhost`,
 			features,
 			version,

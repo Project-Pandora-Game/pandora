@@ -1,9 +1,11 @@
-import { GetLogger, IClientDirectoryArgument, IShardTokenInfo } from 'pandora-common';
+import { GetLogger, HTTP_HEADER_SHARD_SECRET, IClientDirectoryArgument, IShardTokenInfo, IShardTokenType } from 'pandora-common';
 import type { Account } from '../account/account';
 import { SHARD_SHARED_SECRET } from '../config';
 
 import { GetDatabase } from '../database/databaseProvider';
 import { TokenStoreBase } from './tokenStoreBase';
+import type { IncomingMessage } from 'http';
+import type { Socket } from 'socket.io';
 
 const TOKEN_ID_LENGTH = 16;
 const TOKEN_SECRET_LENGTH = 18;
@@ -12,7 +14,6 @@ const logger = GetLogger('ShardTokenStore');
 type IStoredShardTokenInfo = IShardTokenInfo & { token: string; };
 
 export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<IShardTokenInfo> {
-
 	constructor() {
 		super(logger, TOKEN_ID_LENGTH, TOKEN_SECRET_LENGTH);
 	}
@@ -48,4 +49,31 @@ export const ShardTokenStore = new class ShardTokenStore extends TokenStoreBase<
 
 		return await this._create(acc, { type, expires });
 	}
+
+	public allowRequest(req: Readonly<IncomingMessage>): boolean {
+		const secret = req.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
+		if (typeof secret !== 'string')
+			return false;
+
+		return this.hasValidToken(secret);
+	}
+
+	public getConnectInfo(handshake: Readonly<Socket['handshake']>): IConnectedTokenInfo | undefined {
+		const secret = handshake.headers[HTTP_HEADER_SHARD_SECRET.toLowerCase()];
+		const token = typeof secret === 'string' ? this.getValidTokenInfo(secret) : undefined;
+		if (!token)
+			return undefined;
+
+		const info: IConnectedTokenInfo = {
+			type: token.type,
+			id: token.id,
+		};
+
+		return info;
+	}
 };
+
+export interface IConnectedTokenInfo {
+	readonly type: IShardTokenType;
+	readonly id: string;
+}

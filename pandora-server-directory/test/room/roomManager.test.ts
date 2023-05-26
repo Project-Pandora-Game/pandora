@@ -12,7 +12,10 @@ describe('RoomManager', () => {
 
 	beforeAll(async () => {
 		await TestMockDb();
-		shard = ShardManager.getOrCreateShard(null);
+		shard = ShardManager.getOrCreateShard({
+			type: 'stable',
+			id: 'test',
+		});
 		jest.spyOn(shard, 'allowConnect').mockReturnValue(true);
 	});
 

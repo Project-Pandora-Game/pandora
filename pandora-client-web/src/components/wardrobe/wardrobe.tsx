@@ -932,7 +932,7 @@ function InventoryAssetViewList({ asset, container, listMode }: { asset: Asset; 
 		container,
 	}), [targetSelector, newItemId, asset, container]);
 
-	const check = useStaggeredAppearanceActionResult(action, true);
+	const check = useStaggeredAppearanceActionResult(action, { lowPriority: true });
 
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	return (
@@ -1167,7 +1167,7 @@ function CalculateInQueue(fn: () => void, lowPriority = false): () => void {
 	};
 }
 
-function useStaggeredAppearanceActionResult(action: AppearanceAction, lowPriority = false): AppearanceActionResult | null {
+export function useStaggeredAppearanceActionResult(action: AppearanceAction, { lowPriority = false, immediate = false }: { lowPriority?: boolean; immediate?: boolean; } = {}): AppearanceActionResult | null {
 	const { actions, player, target, globalState } = useWardrobeContext();
 	const [result, setResult] = useState<AppearanceActionResult | null>(null);
 
@@ -1185,14 +1185,19 @@ function useStaggeredAppearanceActionResult(action: AppearanceAction, lowPriorit
 
 		const doCalculate = () => {
 			cancelCalculate?.();
-			cancelCalculate = CalculateInQueue(() => {
+			const calculate = () => {
 				if (wantedAction.current === action && wantedContext.current === actions) {
 					const check = DoAppearanceAction(action, actions, globalState.assetManager, { dryRun: true });
 					resultAction.current = action;
 					resultContext.current = actions;
 					setResult(check);
 				}
-			}, lowPriority);
+			};
+			if (immediate) {
+				calculate();
+			} else {
+				cancelCalculate = CalculateInQueue(calculate, lowPriority);
+			}
 		};
 
 		doCalculate();
@@ -1202,7 +1207,7 @@ function useStaggeredAppearanceActionResult(action: AppearanceAction, lowPriorit
 		};
 		// Note, the presence of `globalState` here is more important than just for assetManager
 		// Its purpose is to recalculate requirements when the state changes
-	}, [action, actions, target, lowPriority, player, globalState]);
+	}, [action, actions, target, lowPriority, immediate, player, globalState]);
 
 	const valid = lowPriority ? (resultAction.current === action && resultContext.current === actions) :
 		(resultAction.current?.type === action.type);

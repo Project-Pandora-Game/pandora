@@ -1,21 +1,19 @@
 import { nanoid } from 'nanoid';
-import { ItemRoomDevice, AppearanceAction, DoAppearanceAction } from 'pandora-common';
+import { ItemRoomDevice, AppearanceAction } from 'pandora-common';
 import React, { useMemo, useCallback, useState, ReactElement } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
 import { AppearanceContainer } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../contextMenu';
 import { useChatRoomCharacters, useChatroom } from '../../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../../gameContext/playerContextProvider';
-import { useWardrobeContext, WardrobeContextProvider } from '../../wardrobe/wardrobe';
+import { useStaggeredAppearanceActionResult, useWardrobeContext, WardrobeContextProvider } from '../../wardrobe/wardrobe';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
 	close: () => void;
 }) {
-	const assetManager = useAssetManager();
-	const { actions, execute } = useWardrobeContext();
+	const { execute } = useWardrobeContext();
 	const action = useMemo<AppearanceAction>(() => ({
 		type: 'roomDeviceDeploy',
 		item: {
@@ -25,7 +23,7 @@ function StoreDeviceMenu({ device, close }: {
 		target: { type: 'roomInventory' },
 		deployment: null,
 	}), [device]);
-	const available = useMemo(() => DoAppearanceAction(action, actions, assetManager, { dryRun: true }).result === 'success', [action, actions, assetManager]);
+	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
 	const onClick = useCallback(() => {
 		execute(action);
 		close();
@@ -47,9 +45,8 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 	slot: string;
 	close: () => void;
 }) {
-	const assetManager = useAssetManager();
-	const { actions, execute } = useWardrobeContext();
-	const action = useMemo<AppearanceAction | undefined>(() => slot ? ({
+	const { execute } = useWardrobeContext();
+	const action = useMemo<AppearanceAction>(() => ({
 		type: 'roomDeviceLeave',
 		item: {
 			container: [],
@@ -57,8 +54,8 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 		},
 		target: { type: 'roomInventory' },
 		slot,
-	}) : undefined, [device, slot]);
-	const available = useMemo(() => action && DoAppearanceAction(action, actions, assetManager, { dryRun: true }).result === 'success', [action, actions, assetManager]);
+	}), [device, slot]);
+	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
 	const onClick = useCallback(() => {
 		if (action)
 			execute(action);
@@ -99,8 +96,7 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	character: AppearanceContainer;
 	close: () => void;
 }) {
-	const assetManager = useAssetManager();
-	const { actions, execute } = useWardrobeContext();
+	const { execute } = useWardrobeContext();
 	const action = useMemo<AppearanceAction>(() => ({
 		type: 'roomDeviceEnter',
 		item: {
@@ -115,7 +111,7 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 		},
 		itemId: `i/${nanoid()}` as const,
 	}), [device, slot, character]);
-	const available = useMemo(() => DoAppearanceAction(action, actions, assetManager, { dryRun: true }).result === 'success', [action, actions, assetManager]);
+	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
 	const onClick = useCallback(() => {
 		execute(action);
 		close();

@@ -443,7 +443,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
 		await this._relationships.deleteOne({
-			$all: [accountIdA, accountIdB],
+			accounts: { $all: [accountIdA, accountIdB] },
 		});
 	}
 

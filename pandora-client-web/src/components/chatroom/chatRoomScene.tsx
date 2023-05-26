@@ -174,7 +174,7 @@ export function ChatRoomScene(): ReactElement | null {
 	const shard = useShardConnector();
 	const [menuActive, setMenuActive] = useState<{
 		character?: Character<ICharacterRoomData>;
-		device?: ItemRoomDevice;
+		deviceItemId?: ItemId;
 		position: Readonly<PointLike>;
 	} | null>(null);
 	const player = usePlayer();
@@ -198,7 +198,7 @@ export function ChatRoomScene(): ReactElement | null {
 		} else {
 			setMenuActive({
 				character: target instanceof Character ? target : undefined,
-				device: target instanceof ItemRoomDevice ? target : undefined,
+				deviceItemId: target instanceof ItemRoomDevice ? target.id : undefined,
 				position: {
 					x: event.pageX,
 					y: event.pageY,
@@ -250,7 +250,7 @@ export function ChatRoomScene(): ReactElement | null {
 				menuActive?.character ? <CharacterContextMenu character={ menuActive.character } position={ menuActive.position } onClose={ closeContextMenu } /> : null
 			}
 			{
-				menuActive?.device ? <DeviceContextMenu device={ menuActive.device } position={ menuActive.position } onClose={ closeContextMenu } /> : null
+				menuActive?.deviceItemId ? <DeviceContextMenu deviceItemId={ menuActive.deviceItemId } position={ menuActive.position } onClose={ closeContextMenu } /> : null
 			}
 		</ChatRoomGraphicsScene>
 	);

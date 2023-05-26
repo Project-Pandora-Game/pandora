@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { ItemRoomDevice, AppearanceAction } from 'pandora-common';
+import { ItemRoomDevice, AppearanceAction, ItemId } from 'pandora-common';
 import React, { useMemo, useCallback, useState, ReactElement, useEffect } from 'react';
 import { AppearanceContainer } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
@@ -236,8 +236,8 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 	);
 }
 
-export function DeviceContextMenu({ device, position, onClose }: {
-	device: ItemRoomDevice;
+export function DeviceContextMenu({ deviceItemId, position, onClose }: {
+	deviceItemId: ItemId;
 	position: Readonly<PointLike>;
 	onClose: () => void;
 }): ReactElement | null {
@@ -249,9 +249,9 @@ export function DeviceContextMenu({ device, position, onClose }: {
 
 		return EvalItemPath(actual, {
 			container: [],
-			itemId: device.id,
+			itemId: deviceItemId,
 		});
-	}, [globalState, device.id]);
+	}, [globalState, deviceItemId]);
 
 	useEffect(() => {
 		if (!item?.isType('roomDevice'))

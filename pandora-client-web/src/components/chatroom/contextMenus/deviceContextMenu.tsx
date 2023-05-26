@@ -1,13 +1,14 @@
 import { nanoid } from 'nanoid';
 import { ItemRoomDevice, AppearanceAction } from 'pandora-common';
-import React, { useMemo, useCallback, useState, ReactElement } from 'react';
+import React, { useMemo, useCallback, useState, ReactElement, useEffect } from 'react';
 import { AppearanceContainer } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../contextMenu';
-import { useChatRoomCharacters, useChatroom } from '../../gameContext/chatRoomContextProvider';
+import { useChatRoomCharacters, useChatroom, useChatroomRequired, useRoomState } from '../../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../../gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult, useWardrobeContext, WardrobeContextProvider } from '../../wardrobe/wardrobe';
+import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -190,7 +191,7 @@ function DeviceSlotsMenu({ device }: {
 	);
 }
 
-export function DeviceContextMenu({ device, position, onClose }: {
+function DeviceContextMenuCurrent({ device, position, onClose }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
 	onClose: () => void;
@@ -232,5 +233,35 @@ export function DeviceContextMenu({ device, position, onClose }: {
 				Close
 			</button>
 		</div>
+	);
+}
+
+export function DeviceContextMenu({ device, position, onClose }: {
+	device: ItemRoomDevice;
+	position: Readonly<PointLike>;
+	onClose: () => void;
+}): ReactElement | null {
+	const globalState = useRoomState(useChatroomRequired());
+	const item = useMemo(() => {
+		const actual = globalState.getItems({ type: 'roomInventory' });
+		if (!actual)
+			return null;
+
+		return EvalItemPath(actual, {
+			container: [],
+			itemId: device.id,
+		});
+	}, [globalState, device.id]);
+
+	useEffect(() => {
+		if (!item?.isType('roomDevice'))
+			onClose();
+	}, [item, onClose]);
+
+	if (!item?.isType('roomDevice'))
+		return null;
+
+	return (
+		<DeviceContextMenuCurrent device={ item } position={ position } onClose={ onClose } />
 	);
 }

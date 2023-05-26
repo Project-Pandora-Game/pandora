@@ -40,19 +40,17 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 		if (!serverId) {
 			return;
 		}
-		try {
-			const clients = this._servers.get(serverId);
-			if (!clients) {
-				return;
-			}
+
+		const clients = this._servers.get(serverId);
+		if (clients) {
 			clients.delete(client);
 			if (clients.size === 0) {
 				this._servers.delete(serverId);
 			}
-		} finally {
-			if (this._clients.delete(client.id)) {
-				this.emit('leave', client);
-			}
+		}
+
+		if (this._clients.delete(client.id)) {
+			this.emit('leave', client);
 		}
 	}
 

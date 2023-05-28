@@ -113,7 +113,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 				this._connectionStateEventEmitter.onStateChanged(message);
 				this.handleAccountChange(message.account);
 				await this.directMessageHandler.accountChanged();
-				await RelationshipContext.initStatus(() => this.awaitResponse('getRelationships', {}));
+				if (message.account) {
+					await RelationshipContext.initStatus(() => this.awaitResponse('getRelationships', {}));
+				}
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
 			directMessageSent: async (data) => {

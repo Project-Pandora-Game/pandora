@@ -429,9 +429,11 @@ export default class MongoDatabase implements PandoraDatabase {
 			accounts: { $all: [accountIdA, accountIdB] },
 		}, {
 			$set: {
-				accounts: [accountIdA, accountIdB],
 				updated: Date.now(),
 				relationship: data,
+			},
+			$setOnInsert: {
+				accounts: [accountIdA, accountIdB],
 			},
 		}, {
 			upsert: true,

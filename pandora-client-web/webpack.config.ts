@@ -68,6 +68,17 @@ export default function (env: WebpackEnv): Configuration {
 		resolve: {
 			extensions: ['.ts', '.tsx', '.js'],
 		},
+		performance: {
+			assetFilter: (assetFilename: string) => {
+				// Ignore map files
+				return !/\.map$/.test(assetFilename) &&
+					// Ignore editor assets
+					!/^editor\//.test(assetFilename);
+			},
+			// Increase limit to 2 MiB
+			maxAssetSize: 2 * 1024 * 1024,
+			maxEntrypointSize: 2 * 1024 * 1024,
+		},
 	};
 }
 

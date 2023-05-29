@@ -25,6 +25,11 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 * - 'friends' - Only allow direct messages from friends
 	 */
 	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']).default('all'),
+	/**
+	 * Controls whether to show extra quick actions in wardrobe
+	 * (actions that are doable with multiple clicks even without this button, but the button allows doing them as single click)
+	 */
+	wardrobeExtraActionButtons: z.boolean().catch(true),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
@@ -34,6 +39,7 @@ export const ACCOUNT_SETTINGS_DEFAULT: IDirectoryAccountSettings = {
 	wardrobeBackground: '#aaaaaa',
 	hideOnlineStatus: false,
 	allowDirectMessagesFrom: 'all',
+	wardrobeExtraActionButtons: true,
 };
 
 export const AccountCryptoKeySchema = z.object({

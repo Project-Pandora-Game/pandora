@@ -78,6 +78,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		extraItemActions,
 		actions,
 		execute: (action) => DoAppearanceAction(action, actions, assetManager),
+		showExtraActionButtons: true,
 	}), [character, globalState, assetList, heldItem, extraItemActions, actions, assetManager]);
 
 	return (

@@ -426,7 +426,13 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
 		const result = await this._relationships.findOneAndUpdate({
-			accounts: { $all: [accountIdA, accountIdB] },
+			// TODO simplify this when MongoDB fixes this: https://jira.mongodb.org/browse/SERVER-13843
+			accounts: {
+				$all: [
+					{ $elemMatch: { $eq: accountIdA } },
+					{ $elemMatch: { $eq: accountIdB } },
+				],
+			},
 		}, {
 			$set: {
 				updated: Date.now(),

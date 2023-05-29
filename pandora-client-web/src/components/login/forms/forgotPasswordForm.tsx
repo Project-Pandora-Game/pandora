@@ -20,7 +20,7 @@ export function ForgotPasswordForm(): ReactElement {
 		formState: { errors, submitCount },
 		handleSubmit,
 		register,
-	} = useForm<ForgotPasswordFormData>({ shouldUseNativeValidation: true });
+	} = useForm<ForgotPasswordFormData>({ shouldUseNativeValidation: true, progressive: true });
 
 	const onSubmit = handleSubmit(({ email }) => {
 		void (async () => {

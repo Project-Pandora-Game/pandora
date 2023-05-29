@@ -31,7 +31,7 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 		formState: { errors, submitCount },
 		handleSubmit,
 		register,
-	} = useForm<UseLoginFormData>({ shouldUseNativeValidation: true });
+	} = useForm<UseLoginFormData>({ shouldUseNativeValidation: true, progressive: true });
 	const navigate = useNavigate();
 	const checkNotifications = useNotificationPermissionCheck();
 	const dirty = submitCount > 0;

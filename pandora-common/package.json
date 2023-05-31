@@ -39,7 +39,7 @@
 		"immer": "9.0.21",
 		"lodash": "4.17.21",
 		"nanoid": "3.3.6",
-		"rimraf": "4.4.1",
+		"rimraf": "5.0.1",
 		"tslib": "2.5.2",
 		"typescript": "5.0.4",
 		"zod": "3.21.4"

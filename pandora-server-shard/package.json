@@ -56,7 +56,7 @@
 		"@types/async-lock": "1.4.0",
 		"@types/express": "4.17.17",
 		"@types/jest": "29.5.1",
-		"@types/json-diff": "0.9.1",
+		"@types/json-diff": "1.0.0",
 		"@types/lodash": "4.14.195",
 		"@types/node": "18.16.16",
 		"@types/wtfnode": "0.7.0",

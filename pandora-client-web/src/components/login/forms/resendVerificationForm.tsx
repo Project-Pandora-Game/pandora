@@ -20,7 +20,7 @@ export function ResendVerificationForm(): ReactElement {
 		formState: { errors, submitCount },
 		handleSubmit,
 		register,
-	} = useForm<ResendVerificationFormData>({ shouldUseNativeValidation: true });
+	} = useForm<ResendVerificationFormData>({ shouldUseNativeValidation: true, progressive: true });
 
 	const onSubmit = handleSubmit(({ email }) => {
 		void (async () => {

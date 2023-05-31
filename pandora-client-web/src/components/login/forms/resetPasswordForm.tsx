@@ -25,7 +25,7 @@ export function ResetPasswordForm(): ReactElement {
 		getValues,
 		handleSubmit,
 		register,
-	} = useForm<ResetPasswordFormData>({ shouldUseNativeValidation: true });
+	} = useForm<ResetPasswordFormData>({ shouldUseNativeValidation: true, progressive: true });
 
 	const onSubmit = handleSubmit(({ username, token, password }) => {
 		void (async () => {

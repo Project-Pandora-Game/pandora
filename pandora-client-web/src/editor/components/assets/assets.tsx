@@ -340,7 +340,7 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 		handleSubmit,
 		register,
 		getValues,
-	} = useForm<AssetCreateDialogData>({ shouldUseNativeValidation: true });
+	} = useForm<AssetCreateDialogData>({ shouldUseNativeValidation: true, progressive: true });
 
 	const validateId = useCallback<Validate<string, AssetCreateDialogData>>((id) => {
 		const category = getValues('category');

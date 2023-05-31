@@ -35,7 +35,7 @@ export function RegistrationForm(): ReactElement {
 		handleSubmit,
 		register,
 		trigger,
-	} = useForm<RegistrationFormData>({ shouldUseNativeValidation: true });
+	} = useForm<RegistrationFormData>({ shouldUseNativeValidation: true, progressive: true });
 
 	const betaKeyRequired = !!directoryStatus.betaKeyRequired;
 

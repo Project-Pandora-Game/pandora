@@ -482,8 +482,8 @@ importers:
         specifier: 29.5.1
         version: 29.5.1
       '@types/json-diff':
-        specifier: 0.9.1
-        version: 0.9.1
+        specifier: 1.0.0
+        version: 1.0.0
       '@types/lodash':
         specifier: 4.14.195
         version: 4.14.195
@@ -3479,8 +3479,8 @@ packages:
       parse5: 7.1.2
     dev: true
 
-  /@types/json-diff@0.9.1:
-    resolution: {integrity: sha512-SrwOKMaKa9rmYayzG6N1T2PsqybHJ9dSOzhzZFlI5XORDWwaltgjVz7UIa3OeE5zVkHw65niV2son7PdaZrElQ==}
+  /@types/json-diff@1.0.0:
+    resolution: {integrity: sha512-dCXC1F73Sqriz2d8Wt/sP/DztE+rlfIRPxW9WSYheHp/l3gvkeSvM6l4vhm7t4Dgn8AJAxNKajx/eobbPdP6Wg==}
     dev: true
 
   /@types/json-schema@7.0.11:

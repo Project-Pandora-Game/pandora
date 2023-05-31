@@ -18,7 +18,7 @@ export class BadMessageError extends Error {
 	}
 
 	public log(logger: Logger, messageType: string, message: unknown): void {
-		logger.warning(`Bad message content for '${messageType}' `, message, ...this.extra);
+		logger.warning(`Bad message '${messageType}' `, message, ...this.extra);
 	}
 }
 

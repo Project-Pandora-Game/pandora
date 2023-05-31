@@ -1,13 +1,28 @@
+/*
+In Pandora we use following conventions for sending messages:
+
+Each message is an object and optionally has a callback.
+
+The callback can receive two arguments in specified combination:
+- `null` and result of the request, as object
+- A string describing error that happened and undefined response
+*/
+
 export interface Emitter {
-	emit(event: string, arg: unknown): void;
+	emit(event: string, data: unknown): void;
 }
 
 export interface EmitterWithAck extends Emitter {
 	timeout(seconds: number): {
-		emit(event: string, arg: unknown, callback: (error: unknown, arg: unknown) => void): void;
+		emit(event: string, data: unknown, callback: (socketError: unknown, error: unknown, response?: unknown) => void): void;
 	};
-	emit(event: string, arg: unknown, callback?: (arg: unknown) => void): void;
+	emit(event: string, data: unknown, callback?: (error: unknown, response?: unknown) => void): void;
 }
+
+export type MessageCallback = {
+	(error: string): void;
+	(error: null, response: Record<string, unknown>): void;
+};
 
 export interface IncomingSocket extends EmitterWithAck {
 	readonly id: string;
@@ -25,7 +40,7 @@ export interface IncomingSocket extends EmitterWithAck {
 	 * @param message - The message
 	 * @returns Promise of resolution of the message, for some messages also response data
 	 */
-	onMessage: ((messageType: unknown, message: unknown, callback: ((arg: Record<string, unknown>) => void) | undefined) => void) | null;
+	onMessage: ((messageType: unknown, message: unknown, callback: MessageCallback | undefined) => void) | null;
 }
 
 export class MockConnectionSocket implements IncomingSocket {
@@ -44,17 +59,17 @@ export class MockConnectionSocket implements IncomingSocket {
 	public connected: boolean = true;
 
 	public onDisconnect: ((reason: string) => void) | null = null;
-	public onMessage: ((messageType: unknown, message: unknown, callback: ((arg: Record<string, unknown>) => void) | undefined) => void) | null = null;
+	public onMessage: ((messageType: unknown, message: unknown, callback: MessageCallback | undefined) => void) | null = null;
 
 	public isConnected(): boolean {
 		return this.connected;
 	}
 
 	public timeout(seconds: number): {
-		emit(event: string, arg: unknown, callback: (error: unknown, arg: unknown) => void): void;
+		emit(event: string, arg: unknown, callback: (socketError: unknown, error: unknown, arg?: unknown) => void): void;
 	} {
 		return ({
-			emit: (event: string, arg: unknown, callback: (error: unknown, arg: unknown) => void) => {
+			emit: (event: string, arg: unknown, callback: (socketError: unknown, error: unknown, arg?: unknown) => void) => {
 				let finished = false;
 
 				/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
@@ -64,24 +79,24 @@ export class MockConnectionSocket implements IncomingSocket {
 					if (finished)
 						return;
 					finished = true;
-					callback(new Error('operation has timed out'), undefined);
+					callback(new Error('operation has timed out'), undefined, undefined);
 				}, seconds);
 
-				this.emit(event, arg, (result) => {
+				this.emit(event, arg, (error, result) => {
 					if (finished)
 						return;
 					finished = true;
 					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 					// @ts-ignore: clearTimeout - not sure if Node.js or browser
 					clearTimeout(timeout);
-					callback(null, result);
+					callback(null, error, result);
 				});
 				/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
 			},
 		});
 	}
 
-	public emit(event: string, arg: unknown, callback?: (arg: unknown) => void): void {
+	public emit(event: string, arg: unknown, callback?: (error: unknown, arg?: unknown) => void): void {
 		this.remote.onMessage?.(event, arg, callback);
 	}
 

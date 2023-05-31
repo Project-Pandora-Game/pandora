@@ -4,7 +4,7 @@ import { GetLogger, Logger } from '../logging';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest, SocketInterfaceRespondedMessages, SocketInterfaceResponse } from './helpers';
 import type { IServerSocket, ServerRoom } from './room';
 import { MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config';
-import { EmitterWithAck, IncomingSocket, MockConnectionSocket } from './socket';
+import { EmitterWithAck, IncomingSocket, MessageCallback, MockConnectionSocket } from './socket';
 import { BadMessageError, IMessageHandler } from './message_handler';
 import { AssertNotNullable } from '../utility';
 import { nanoid } from 'nanoid';
@@ -114,10 +114,19 @@ export abstract class ConnectionBase<
 			this.logger.debug(`\u25B2 message '${messageType}':`, message);
 		}
 		return new Promise((resolve, reject) => {
-			this.socket.timeout(timeout).emit(messageType, message, (error: unknown, response: unknown) => {
+			this.socket.timeout(timeout).emit(messageType, message, (socketError: unknown, error: unknown, response?: unknown) => {
+				if (socketError != null) {
+					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
+						this.logger.warning(`\u25BC message '${messageType}' socket error:`, socketError);
+					}
+					return reject(socketError);
+				}
 				if (error != null) {
 					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 						this.logger.warning(`\u25BC message '${messageType}' error:`, error);
+					}
+					if (typeof error !== 'string') {
+						return reject(new Error(`Invalid error type: ${typeof error}`));
 					}
 					return reject(error);
 				}
@@ -160,7 +169,7 @@ export abstract class ConnectionBase<
 		message: SocketInterfaceRequest<IncomingT>[K],
 	): Promise<SocketInterfaceResponse<IncomingT>[K]>;
 
-	protected handleMessage(messageType: unknown, message: unknown, callback: ((arg: Record<string, unknown>) => void) | undefined): void {
+	protected handleMessage(messageType: unknown, message: unknown, callback: MessageCallback | undefined): void {
 		if (typeof messageType !== 'string') {
 			this.logger.warning(`Invalid messageType: ${typeof messageType}`);
 			return;
@@ -179,11 +188,13 @@ export abstract class ConnectionBase<
 			const messageSchema = this.schema.incoming[messageType];
 			if (messageSchema == null) {
 				this.logger.warning(`Invalid message type: '${messageType}'`);
+				callback?.('Unknown request');
 				return;
 			}
 
 			if ((messageSchema.response == null) !== (callback == null)) {
 				this.logger.warning(`Received message '${messageType}' ${callback != null ? 'has' : `doesn't have`} callback, but expected ${messageSchema.response != null ? 'one' : 'none'}`);
+				callback?.('Request does not expect callback');
 				return;
 			}
 
@@ -191,6 +202,7 @@ export abstract class ConnectionBase<
 
 			if (!result.success) {
 				this.logger.warning(`Bad message content for '${messageType}'.\n`, result.error.toString(), '\n', message);
+				callback?.('Bad message content');
 				return;
 			}
 			// Replace message with parsed result, as it might have stripped some data
@@ -201,9 +213,15 @@ export abstract class ConnectionBase<
 			this.logger.debug(`\u25BC message '${messageType}'${callback ? ' with callback' : ''}`, message);
 			if (callback) {
 				const outerCallback = callback;
-				callback = (cbResult: Record<string, unknown>) => {
+				callback = (cbError: null | string, cbResult?: Record<string, unknown>) => {
+					if (cbError != null) {
+						this.logger.debug(`\u25B2 message '${messageType}' response error:`, cbError);
+						return outerCallback(cbError);
+					}
+					AssertNotNullable(cbResult);
+
 					this.logger.debug(`\u25B2 message '${messageType}' result:`, cbResult);
-					outerCallback(cbResult);
+					outerCallback(cbError, cbResult);
 				};
 			}
 		}
@@ -211,7 +229,12 @@ export abstract class ConnectionBase<
 		// If we have schema, validate sent response
 		if (callback && this.schema) {
 			const outerCallback = callback;
-			callback = (cbResult: Record<string, unknown>) => {
+			callback = (cbError: null | string, cbResult?: Record<string, unknown>) => {
+				if (cbError != null) {
+					return outerCallback(cbError);
+				}
+				AssertNotNullable(cbResult);
+
 				const responseSchema = this.schema?.incoming[messageType]?.response;
 				AssertNotNullable(responseSchema);
 
@@ -219,10 +242,10 @@ export abstract class ConnectionBase<
 
 				if (!result.success) {
 					this.logger.error(`Attempt to send bad response for '${messageType}', dropped.\n`, new Error(), '\n', result.error.toString());
-					return;
+					return outerCallback('Bad response');
 				}
 				// Replace message with parsed result, as it might have stripped some data
-				outerCallback(result.data);
+				outerCallback(null, result.data);
 			};
 		}
 
@@ -233,24 +256,30 @@ export abstract class ConnectionBase<
 			.then((result) => {
 				if (IsObject(result)) {
 					if (callback) {
-						callback(result);
+						callback(null, result);
 					} else {
 						this.logger.error(`Message '${messageType}' has result, but missing callback`);
 					}
 				} else if (result !== undefined) {
 					this.logger.error(`Message '${messageType}' has invalid result type: ${typeof result}\n`, result);
+					callback?.('Bad response');
 				} else if (callback) {
 					this.logger.error(`Message '${messageType}' no result, but expected one`);
+					callback?.('Bad response');
 				}
 			})
 			.catch((error) => {
-				if (error === false)
+				if (error === false) {
+					callback?.('Rejected');
 					return;
+				}
 
 				if (error instanceof BadMessageError) {
 					error.log(this.logger, messageType, message);
+					callback?.('Bad message');
 				} else {
 					this.logger.error('Error processing message:', error, `\nMessage type: '${messageType}', message:`, message);
+					callback?.('Error processing message');
 				}
 			});
 	}

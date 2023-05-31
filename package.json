@@ -22,7 +22,7 @@
 		"lint:fix": "pnpm -r --no-bail --parallel run lint:fix",
 		"type-check:test": "pnpm -r --no-bail --parallel run type-check:test",
 		"test": "pnpm -r --no-bail --parallel run test",
-		"build": "pnpm -r run build",
+		"build": "pnpm -r --no-bail run build",
 		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev"
 	},
 	"dependencies": {

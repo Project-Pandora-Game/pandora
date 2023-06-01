@@ -1,5 +1,5 @@
 import { APP_VERSION, DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } from '../config';
-import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema } from 'pandora-common';
+import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema, IDirectoryShardArgument, IDirectoryShardResult } from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
@@ -76,6 +76,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		this._messageHandler = new MessageHandler<IDirectoryShard>({
 			update: (update) => this.updateFromDirectory(update).then(() => ({})),
 			stop: Stop,
+			roomCheckCanEnter: this.handleRoomCheckCanEnter.bind(this),
+			roomCheckCanLeave: this.handleRoomCheckCanLeave.bind(this),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -274,6 +276,35 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 
 		this._state = DirectoryConnectionState.CONNECTED;
 		logger.info('Registered with Directory');
+	}
+
+	private handleRoomCheckCanEnter({ character: characterId, room: roomId }: IDirectoryShardArgument['roomCheckCanEnter']): IDirectoryShardResult['roomCheckCanEnter'] {
+		const character = CharacterManager.getCharacter(characterId);
+		const room = RoomManager.getRoom(roomId);
+
+		// We must know both the character and room and character must not be in a room to check entering another
+		if (character == null || character.room != null || room == null)
+			return { result: 'targetNotFound' };
+
+		return { result: 'ok' };
+	}
+
+	private handleRoomCheckCanLeave({ character: characterId }: IDirectoryShardArgument['roomCheckCanLeave']): IDirectoryShardResult['roomCheckCanLeave'] {
+		const character = CharacterManager.getCharacter(characterId);
+
+		// We must know the character and character must be in a room
+		if (character == null || character.room == null)
+			return { result: 'targetNotFound' };
+
+		const restrictionManager = character.getRestrictionManager();
+		// Safemode skips any checks
+		if (!restrictionManager.isInSafemode()) {
+			// The character must not have leave-restricting effect
+			if (restrictionManager.getEffects().blockRoomLeave)
+				return { result: 'restricted' };
+		}
+
+		return { result: 'ok' };
 	}
 }
 

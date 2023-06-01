@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, IChatRoomMessageAction, IChatRoomMessageChat, RoomId } from 'pandora-common';
+import { AssertNotNullable, CharacterId, GetLogger, IChatRoomMessageAction, IChatRoomMessageChat, RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -14,7 +14,7 @@ import { useAssetManager } from '../../assets/assetManager';
 import { Button } from '../common/button/button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
-import { useCharacterState, useChatRoomInfo, useChatRoomMessages, useChatRoomMessageSender, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
+import { useCharacterRestrictionsManager, useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatRoomMessages, useChatRoomMessageSender, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
 import { usePlayer, usePlayerId, usePlayerState } from '../gameContext/playerContextProvider';
@@ -29,21 +29,19 @@ import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
 import { Column, Row } from '../common/container/container';
 import { useDocumentVisibility } from '../../common/useDocumentVisibility';
-import { useNullableObservable } from '../../observable';
 import { Character, useCharacterData } from '../../character/character';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 import { IChatroomMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { HoverElement } from '../hoverElement/hoverElement';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
 	const playerState = usePlayerState();
-	const room = useChatroomRequired();
 	const roomInfo = useChatRoomInfo();
-	const roomCharacters = useNullableObservable(room?.characters);
-	const navigate = useNavigate();
-	const directoryConnector = useDirectoryConnector();
 
-	if (!roomInfo || !roomCharacters || !player) {
+	if (!roomInfo || !player) {
 		return <Navigate to='/chatroom_select' />;
 	}
 
@@ -56,27 +54,7 @@ export function Chatroom(): ReactElement {
 						<Chat />
 					</Tab>
 					<Tab name='Controls'>
-						<Column className='controls'>
-							<Row>
-								<Button onClick={ () => directoryConnector.sendMessage('chatRoomLeave', {}) }>Leave room</Button>
-								<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
-							</Row>
-							<Row>
-								<Button onClick={ () => {
-									navigate('/wardrobe', { state: { target: 'room' } });
-								} }>
-									Room inventory
-								</Button>
-							</Row>
-							<p>You are in room { roomInfo.name }</p>
-							<div>
-								Characters in this room:<br />
-								<ul>
-									{ roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />) }
-								</ul>
-							</div>
-							{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
-						</Column>
+						<ControlsTabContents />
 					</Tab>
 					<Tab name='Pose'>
 						<WardrobeContextProvider player={ player } target={ player }>
@@ -91,6 +69,74 @@ export function Chatroom(): ReactElement {
 				</TabContainer>
 			</ChatInputContextProvider>
 		</div>
+	);
+}
+
+function ControlsTabContents(): ReactElement | null {
+	const player = usePlayer();
+	const playerState = usePlayerState();
+	const roomInfo = useChatRoomInfo();
+	const roomCharacters = useChatRoomCharacters();
+	const navigate = useNavigate();
+	const directoryConnector = useDirectoryConnector();
+
+	AssertNotNullable(player);
+	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.isInSafemode() || !manager.getEffects().blockRoomLeave));
+
+	const onRoomLeave = useCallback(async () => {
+		try {
+			const result = await directoryConnector.awaitResponse('chatRoomLeave', {});
+			if (result.result !== 'ok') {
+				toast(`Failed to leave room:\n${result.result}`, TOAST_OPTIONS_ERROR);
+			}
+		} catch (err) {
+			GetLogger('LeaveRoom').warning('Error during room leave', err);
+			toast(`Error during room creation:\n${err instanceof Error ? err.message : String(err)}`, TOAST_OPTIONS_ERROR);
+		}
+	}, [directoryConnector]);
+
+	const [leaveButtonRef, setLeaveButtonRef] = useState<HTMLButtonElement | null>(null);
+
+	if (!roomInfo || !roomCharacters) {
+		return null;
+	}
+
+	return (
+		<Column className='controls'>
+			{
+				!canLeave ? (
+					<HoverElement parent={ leaveButtonRef } className='action-warning'>
+						An item is preventing you from leaving the room.
+					</HoverElement>
+				) : null
+			}
+			<Row>
+				<Button
+					onClick={ () => void onRoomLeave() }
+					ref={ setLeaveButtonRef }
+					className='fadeDisabled'
+					disabled={ !canLeave }
+				>
+					Leave room
+				</Button>
+				<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
+			</Row>
+			<Row>
+				<Button onClick={ () => {
+					navigate('/wardrobe', { state: { target: 'room' } });
+				} }>
+					Room inventory
+				</Button>
+			</Row>
+			<p>You are in room { roomInfo.name }</p>
+			<div>
+				Characters in this room:<br />
+				<ul>
+					{ roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />) }
+				</ul>
+			</div>
+			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
+		</Column>
 	);
 }
 

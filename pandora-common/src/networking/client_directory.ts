@@ -207,7 +207,9 @@ export const ClientDirectorySchema = {
 	},
 	chatRoomLeave: {
 		request: z.object({}),
-		response: null,
+		response: z.object({
+			result: z.enum(['ok', 'failed', 'restricted']),
+		}),
 	},
 	chatRoomUpdate: {
 		request: ChatRoomDirectoryUpdateSchema,

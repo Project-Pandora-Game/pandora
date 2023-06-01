@@ -19,6 +19,12 @@ export type EffectsDefinition = MuffleSettings & {
 	blockRoomMovement: boolean;
 
 	/**
+	 * Prevents character from leaving the room, even if admin.
+	 * Note that character can still be kicked/banned out of the room or is removed if the room itself gets destroyed.
+	 */
+	blockRoomLeave: boolean;
+
+	/**
 	 * Blinds the character.
 	 *
 	 * Effective value range:
@@ -42,6 +48,7 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 	// others
 	blockHands: false,
 	blockRoomMovement: false,
+	blockRoomLeave: false,
 	blind: 0,
 };
 

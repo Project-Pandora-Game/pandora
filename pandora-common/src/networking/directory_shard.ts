@@ -1,4 +1,4 @@
-import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
+import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
 import { CharacterIdSchema } from '../character';
 import { ChatRoomDataSchema, RoomId, RoomIdSchema } from '../chatroom/room';
 import { IEmpty } from './empty';
@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { AccountRoleInfoSchema } from '../account';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
+import { Immutable } from 'immer';
 
 export const ShardAccountDefinitionSchema = z.object({
 	id: z.number(),
@@ -49,7 +50,26 @@ export const DirectoryShardSchema = {
 		request: ZodCast<IEmpty>(),
 		response: ZodCast<IEmpty>(),
 	},
-} as const;
+	//#region Room manipulation
+	roomCheckCanEnter: {
+		request: z.object({
+			character: CharacterIdSchema,
+			room: RoomIdSchema,
+		}),
+		response: z.object({
+			result: z.enum(['ok', 'targetNotFound']),
+		}),
+	},
+	roomCheckCanLeave: {
+		request: z.object({
+			character: CharacterIdSchema,
+		}),
+		response: z.object({
+			result: z.enum(['ok', 'targetNotFound', 'restricted']),
+		}),
+	},
+	//#endregion
+} as const satisfies Immutable<SocketInterfaceDefinition>;
 
 export type IDirectoryShard = Satisfies<typeof DirectoryShardSchema, SocketInterfaceDefinitionVerified<typeof DirectoryShardSchema>>;
 export type IDirectoryShardArgument = SocketInterfaceRequest<IDirectoryShard>;

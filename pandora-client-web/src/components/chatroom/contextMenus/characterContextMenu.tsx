@@ -83,7 +83,7 @@ function AdminActionContextMenu(): ReactElement | null {
 	const { isPlayerAdmin, currentAccount, character, menu, setMenu } = useCharacterMenuContext();
 
 	if (!isPlayerAdmin) return null;
-	if (character.data.accountId !== currentAccount?.id) return null;
+	if (character.data.accountId === currentAccount?.id) return null;
 
 	switch (menu) {
 		case 'main':

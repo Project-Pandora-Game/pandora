@@ -29,9 +29,8 @@ const inUseRoomsMetric = new promClient.Gauge({
 	help: 'Current count of rooms in use',
 });
 
-// To use decorators the class needs to be created normally; see https://github.com/microsoft/TypeScript/issues/7342
 /** Class that stores all currently or recently used rooms, removing them when needed */
-class RoomManagerClass {
+export const RoomManager = new class RoomManagerClass {
 	private readonly loadedRooms: Map<RoomId, Room> = new Map();
 
 	/** Init the manager */
@@ -191,6 +190,4 @@ class RoomManagerClass {
 		this.loadedRooms.delete(room.id);
 		loadedRoomsMetric.set(this.loadedRooms.size);
 	}
-}
-
-export const RoomManager = new RoomManagerClass();
+};

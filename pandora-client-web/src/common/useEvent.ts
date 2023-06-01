@@ -26,10 +26,7 @@ export function useEvent<T extends AnyFunction>(callback: T): T {
 	}, []) as T;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PromiseFunction = () => Promise<any>;
-
-export function useAsyncEvent<T extends PromiseFunction>(callback: T, updateComponent: (result: Awaited<ReturnType<T>>) => void, { errorHandler }: { errorHandler?: (error: unknown) => void; } = {}): [() => void, boolean] {
+export function useAsyncEvent<T>(callback: () => Promise<T>, updateComponent: (result: T) => void, { errorHandler }: { errorHandler?: (error: unknown) => void; } = {}): [() => void, boolean] {
 	const [processing, setProcessing] = useState(false);
 	const mounted = useMounted();
 
@@ -40,7 +37,7 @@ export function useAsyncEvent<T extends PromiseFunction>(callback: T, updateComp
 		setProcessing(true);
 
 		callback()
-			.then((result: Awaited<ReturnType<T>>) => {
+			.then((result: T) => {
 				if (mounted.current) {
 					setProcessing(false);
 					updateComponent(result);

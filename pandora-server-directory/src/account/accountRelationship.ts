@@ -325,7 +325,7 @@ export class AccountRelationship {
 			time: updated,
 			type,
 		};
-	};
+	}
 }
 
 function Synchronized() {

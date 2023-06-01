@@ -197,7 +197,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			await this.handleAccountChange(null);
 		}
 		await this.directMessageHandler.accountChanged();
-		RelationshipContext.handleStatus(await this.awaitResponse('getRelationships', {}));
 		return result.result;
 	}
 

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AccountId, IAccountFriendStatus, IAccountRelationship, IClientDirectory, IClientDirectoryNormalResult, IConnectionBase, IDirectoryClientArgument } from 'pandora-common';
+import { AccountId, IAccountFriendStatus, IAccountRelationship, IClientDirectory, IConnectionBase, IDirectoryClientArgument } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
@@ -23,10 +23,6 @@ export const RelationshipContext = new class RelationshipContext {
 			return;
 		}
 		const { friends, relationships } = await connection.awaitResponse('getRelationships', {});
-		this.handleStatus({ friends, relationships });
-	}
-
-	public handleStatus({ friends, relationships }: IClientDirectoryNormalResult['getRelationships']) {
 		RELATIONSHIPS.value = relationships;
 		FRIEND_STATUS.value = friends;
 		this._dequeue();

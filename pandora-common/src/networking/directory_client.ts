@@ -152,11 +152,11 @@ export const DirectoryClientSchema = {
 		response: null,
 	},
 	friendStatus: {
-		request: ZodCast<IAccountFriendStatus | { id: AccountId; }>(),
+		request: ZodCast<IAccountFriendStatus | { id: AccountId; online: 'delete'; }>(),
 		response: null,
 	},
 	relationshipsUpdate: {
-		request: ZodCast<IAccountRelationship | { id: AccountId; }>(),
+		request: ZodCast<IAccountRelationship | { id: AccountId; type: 'none'; }>(),
 		response: null,
 	},
 } as const;

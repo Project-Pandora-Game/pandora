@@ -56,32 +56,10 @@ export class AccountRelationship {
 		const isNotBlockedBy = ({ relationship }: RelationshipCache) => {
 			return relationship.type !== 'oneSidedBlock' || relationship.from === this.account.id;
 		};
-		const cacheToClientData = ({ id, name, updated, relationship }: RelationshipCache): IAccountRelationship => {
-			let type: IAccountRelationship['type'];
-			switch (relationship.type) {
-				case 'friend':
-					type = 'friend';
-					break;
-				case 'oneSidedBlock':
-				case 'mutualBlock':
-					type = 'blocked';
-					break;
-				case 'request':
-					type = relationship.from === this.account.id ? 'pending' : 'incoming';
-					break;
-				default:
-					AssertNever(relationship);
-			}
-			return {
-				id,
-				name,
-				time: updated,
-				type,
-			};
-		};
+
 		return [...this.relationships.values()]
 			.filter(isNotBlockedBy)
-			.map(cacheToClientData);
+			.map(this.cacheToClientData.bind(this));
 	}
 
 	public async getFriendsStatus(): Promise<IAccountFriendStatus[]> {
@@ -240,10 +218,10 @@ export class AccountRelationship {
 			return;
 
 		if (existing?.relationship.type === 'mutualBlock' && newRel.relationship.type === 'oneSidedBlock') {
-			this.account.associatedConnections.sendMessage('relationshipsUpdate', { id });
+			this.account.associatedConnections.sendMessage('relationshipsUpdate', { id, type: 'none' });
 			return;
 		}
-		this.account.associatedConnections.sendMessage('relationshipsUpdate', newRel);
+		this.account.associatedConnections.sendMessage('relationshipsUpdate', this.cacheToClientData(newRel));
 	}
 
 	private remove(id: AccountId): void {
@@ -252,7 +230,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type === 'oneSidedBlock' && existing.relationship.from === id) {
 			return;
 		}
-		this.account.associatedConnections.sendMessage('relationshipsUpdate', { id });
+		this.account.associatedConnections.sendMessage('relationshipsUpdate', { id, type: 'none' });
 	}
 
 	private loaded = false;
@@ -312,7 +290,7 @@ export class AccountRelationship {
 			return;
 		}
 		this.lastStatus = status;
-		const data = status == null ? { id: this.account.id } : status;
+		const data = status == null ? { id: this.account.id, online: 'delete' } as const : status;
 		for (const account of accountManager.onlineAccounts) {
 			if (account.id === this.account.id) {
 				continue;
@@ -324,6 +302,30 @@ export class AccountRelationship {
 			account.associatedConnections.sendMessage('friendStatus', data);
 		}
 	}
+
+	private cacheToClientData({ id, name, updated, relationship }: RelationshipCache): IAccountRelationship {
+		let type: IAccountRelationship['type'];
+		switch (relationship.type) {
+			case 'friend':
+				type = 'friend';
+				break;
+			case 'oneSidedBlock':
+			case 'mutualBlock':
+				type = 'blocked';
+				break;
+			case 'request':
+				type = relationship.from === this.account.id ? 'pending' : 'incoming';
+				break;
+			default:
+				AssertNever(relationship);
+		}
+		return {
+			id,
+			name,
+			time: updated,
+			type,
+		};
+	};
 }
 
 function Synchronized() {

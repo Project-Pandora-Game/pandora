@@ -38,7 +38,7 @@ export const RelationshipContext = new class RelationshipContext {
 			return;
 		}
 		const filtered = FRIEND_STATUS.value.filter((status) => status.id !== data.id);
-		if ('online' in data) {
+		if (data.online !== 'delete') {
 			filtered.push(data);
 		}
 		FRIEND_STATUS.value = filtered;
@@ -50,7 +50,7 @@ export const RelationshipContext = new class RelationshipContext {
 			return;
 		}
 		const filtered = RELATIONSHIPS.value.filter((relationship) => relationship.id !== data.id);
-		if ('name' in data) {
+		if (data.type !== 'none') {
 			filtered.push(data);
 		}
 		RELATIONSHIPS.value = filtered;

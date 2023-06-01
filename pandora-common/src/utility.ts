@@ -215,11 +215,8 @@ const AsyncSynchronizedObjectLocks = new WeakMap<object, AsyncLock>();
  */
 export function AsyncSynchronized(options?: AsyncLockOptions | 'object') {
 	if (options === 'object') {
-		return function <Args extends unknown[], Return>(_target: object, _propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<(...args: Args) => Promise<Return>>) {
-			const original = descriptor.value;
-			AssertNotNullable(original);
-
-			descriptor.value = function (...args) {
+		return function <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) {
+			return function (this: This, ...args: Args) {
 				let lock = AsyncSynchronizedObjectLocks.get(this);
 				if (lock == null) {
 					lock = new AsyncLock({
@@ -228,17 +225,14 @@ export function AsyncSynchronized(options?: AsyncLockOptions | 'object') {
 					AsyncSynchronizedObjectLocks.set(this, lock);
 				}
 
-				return lock.acquire<Return>('', () => original?.apply(this, args));
+				return lock.acquire<Return>('', () => method.apply(this, args));
 			};
 		};
 	}
-	return function <Args extends unknown[], Return>(_target: object, _propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<(...args: Args) => Promise<Return>>) {
-		const original = descriptor.value;
-		AssertNotNullable(original);
-
+	return function <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) {
 		const locks = new WeakMap<object, AsyncLock>();
 
-		descriptor.value = function (...args) {
+		return function (this: This, ...args: Args) {
 			let lock = locks.get(this);
 			if (lock == null) {
 				lock = new AsyncLock({
@@ -248,7 +242,7 @@ export function AsyncSynchronized(options?: AsyncLockOptions | 'object') {
 				locks.set(this, lock);
 			}
 
-			return lock.acquire<Return>('', () => original?.apply(this, args));
+			return lock.acquire<Return>('', () => method.apply(this, args));
 		};
 	};
 }
@@ -338,23 +332,17 @@ export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet)
 /**
  * Decorates a member function so it memoizes the result of the first call, the function must take no arguments
  */
-export function MemoizeNoArg<Return>(_target: object, _key: string, descriptor: TypedPropertyDescriptor<(...args: never[]) => Return>): TypedPropertyDescriptor<(...args: never[]) => Return> {
-	const originalMethod = descriptor.value;
-	AssertNotNullable(originalMethod);
-
+export function MemoizeNoArg<Return, This extends object>(method: (...args: never[]) => Return, _context: ClassMethodDecoratorContext<This>) {
 	const cache = new WeakMap<object, Return>();
-
-	descriptor.value = function (this: object): Return {
+	return function (this: This) {
 		if (cache.has(this)) {
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			return cache.get(this)!;
 		}
-		const result = originalMethod.call(this);
+		const result = method.call(this);
 		cache.set(this, result);
 		return result;
 	};
-
-	return descriptor;
 }
 
 export function ZodTransformReadonly<T>(value: T): Readonly<T> {

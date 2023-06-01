@@ -274,7 +274,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 
 export class ToggleLiState extends ObservableClass<{ open: boolean; }> {
 	@ObservableProperty
-	public open: boolean;
+	public accessor open: boolean;
 
 	constructor(initialState: boolean) {
 		super();

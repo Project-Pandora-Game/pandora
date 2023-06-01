@@ -1,7 +1,7 @@
 import { noop } from 'lodash';
 import { useSyncExternalStore } from 'react';
 import { TypedEvent, TypedEventEmitter } from './event';
-import produce, { Draft } from 'immer';
+import { produce, Draft } from 'immer';
 
 export type Observer<T> = (value: T) => void;
 export type UnsubscribeCallback = () => void;

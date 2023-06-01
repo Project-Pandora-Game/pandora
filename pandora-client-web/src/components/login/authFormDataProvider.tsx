@@ -1,4 +1,4 @@
-import produce from 'immer';
+import { produce } from 'immer';
 import { noop } from 'lodash';
 import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';

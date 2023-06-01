@@ -1,4 +1,4 @@
-import produce from 'immer';
+import { produce } from 'immer';
 import { pick } from 'lodash';
 import { IDirectoryShardInfo, IDirectoryStatus, IsObject } from 'pandora-common';
 import React, { createContext, ReactElement, useCallback, useContext, useMemo, useState } from 'react';

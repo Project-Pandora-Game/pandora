@@ -3,7 +3,7 @@ import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerIma
 import { Observable, ReadonlyObservable, useObservable } from '../observable';
 import { useAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
-import produce, { Immutable, Draft, freeze } from 'immer';
+import { produce, Immutable, Draft, freeze } from 'immer';
 import { useMemo } from 'react';
 import { cloneDeep } from 'lodash';
 

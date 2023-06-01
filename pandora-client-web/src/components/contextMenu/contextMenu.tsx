@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash';
-import React, { ForwardedRef, ReactElement, useState, useEffect, useImperativeHandle, forwardRef, RefObject, useCallback, useRef } from 'react';
+import React, { ForwardedRef, ReactElement, useState, useEffect, useImperativeHandle, forwardRef, RefObject, useCallback, useRef, useMemo } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
@@ -106,27 +106,45 @@ export function useContextMenuPosition({ x, y }: {
 	readonly xLocation?: 'left' | 'center' | 'right';
 	readonly yLocation?: 'up' | 'center' | 'down';
 } = {}): (ref: HTMLElement | null) => void {
-	return useCallback((ref: HTMLElement | null) => {
-		if (ref) {
-			const rect = ref.getBoundingClientRect();
+	const elementRef = useRef<HTMLElement | null>(null);
 
-			let finalY = y;
-			if (yLocation === 'up') {
-				finalY -= rect.height;
-			} else if (yLocation === 'center') {
-				finalY -= Math.round(rect.height / 2);
-			}
-			finalY = clamp(finalY, 0, window.innerHeight - rect.height);
-			ref.style.top = `${finalY}px`;
+	const update = useCallback(() => {
+		const ref = elementRef.current;
+		if (!ref)
+			return;
 
-			let finalX = x;
-			if (xLocation === 'left') {
-				finalX -= rect.width;
-			} else if (xLocation === 'center') {
-				finalX -= Math.round(rect.width / 2);
-			}
-			finalX = clamp(finalX, 0, window.innerWidth - rect.width);
-			ref.style.left = `${finalX}px`;
+		const rect = ref.getBoundingClientRect();
+
+		let finalY = y;
+		if (yLocation === 'up') {
+			finalY -= rect.height;
+		} else if (yLocation === 'center') {
+			finalY -= Math.round(rect.height / 2);
 		}
+		finalY = clamp(finalY, 0, window.innerHeight - rect.height);
+		ref.style.top = `${finalY}px`;
+
+		let finalX = x;
+		if (xLocation === 'left') {
+			finalX -= rect.width;
+		} else if (xLocation === 'center') {
+			finalX -= Math.round(rect.width / 2);
+		}
+		finalX = clamp(finalX, 0, window.innerWidth - rect.width);
+		ref.style.left = `${finalX}px`;
 	}, [x, y, xLocation, yLocation]);
+
+	const observer = useMemo(() => new ResizeObserver(update), [update]);
+
+	return useCallback((newRef: HTMLElement | null) => {
+		if (elementRef.current) {
+			observer.unobserve(elementRef.current);
+			elementRef.current = null;
+		}
+		if (newRef) {
+			elementRef.current = newRef;
+			observer.observe(newRef);
+			update();
+		}
+	}, [update, observer]);
 }

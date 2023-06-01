@@ -630,7 +630,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const relationships = await connection.account.relationship.getAll();
-		const friends = await connection.account.relationship.getAllStatus();
+		const friends = await connection.account.relationship.getFriendsStatus();
 
 		return { friends, relationships };
 	}

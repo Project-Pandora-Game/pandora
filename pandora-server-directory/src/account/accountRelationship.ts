@@ -84,7 +84,7 @@ export class AccountRelationship {
 			.map(cacheToClientData);
 	}
 
-	public async getAllStatus(): Promise<IAccountFriendStatus[]> {
+	public async getFriendsStatus(): Promise<IAccountFriendStatus[]> {
 		await this.load();
 		return [...this.relationships.values()]
 			.filter((rel) => rel.relationship.type === 'friend')

@@ -251,7 +251,7 @@ export function CharacterContextMenu({ character, position, onClose }: {
 		};
 	}, [isPlayerAdmin, currentAccount, character, chatRoomInfo, menu, setMenu, onCloseActual]);
 
-	if (!event || !chatRoomInfo || !context) {
+	if (!chatRoomInfo || !context) {
 		return null;
 	}
 

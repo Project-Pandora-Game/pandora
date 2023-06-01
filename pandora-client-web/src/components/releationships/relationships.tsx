@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AccountId, IAccountFriendStatus, IAccountRelationship, IClientDirectoryNormalResult, IClientDirectoryPromiseResult, IDirectoryClientArgument } from 'pandora-common';
+import { AccountId, IAccountFriendStatus, IAccountRelationship, IClientDirectory, IClientDirectoryNormalResult, IConnectionBase, IDirectoryClientArgument } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
@@ -18,11 +18,11 @@ export const RelationshipContext = new class RelationshipContext {
 	private _queue: (() => void)[] = [];
 	private _useQueue = true;
 
-	public async initStatus(load: () => IClientDirectoryPromiseResult['getRelationships']) {
+	public async initStatus(connection: IConnectionBase<IClientDirectory>) {
 		if (!this._useQueue) {
 			return;
 		}
-		const { friends, relationships } = await load();
+		const { friends, relationships } = await connection.awaitResponse('getRelationships', {});
 		this.handleStatus({ friends, relationships });
 	}
 
@@ -264,7 +264,7 @@ function FriendRow({
 			<td>{ name }</td>
 			<td>{ new Date(time).toLocaleString() }</td>
 			<td>{ status }</td>
-			<td>{ characters?.length !== 0 ? 'yes' : 'no' }</td>
+			<td>{ characters?.map((c) => c.name).join(', ') }</td>
 			<td>
 				<Button className='slim' onClick={ unfriend } disabled={ processing }>
 					Remove

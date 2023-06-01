@@ -111,11 +111,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			},
 			connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
 				this._connectionStateEventEmitter.onStateChanged(message);
-				this.handleAccountChange(message.account);
+				await this.handleAccountChange(message.account);
 				await this.directMessageHandler.accountChanged();
-				if (message.account) {
-					await RelationshipContext.initStatus(() => this.awaitResponse('getRelationships', {}));
-				}
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
 			directMessageSent: async (data) => {
@@ -195,9 +192,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		if (result.result === 'ok') {
 			this._authToken.value = { ...result.token, username: result.account.username };
 			await this.directMessageHandler.initCryptoPassword(username, password);
-			this.handleAccountChange(result.account);
+			await this.handleAccountChange(result.account);
 		} else {
-			this.handleAccountChange(null);
+			await this.handleAccountChange(null);
 		}
 		await this.directMessageHandler.accountChanged();
 		RelationshipContext.handleStatus(await this.awaitResponse('getRelationships', {}));
@@ -278,12 +275,14 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this.socket.io.opts.extraHeaders = extraHeaders;
 	}
 
-	private handleAccountChange(account: IDirectoryAccountInfo | null): void {
+	private async handleAccountChange(account: IDirectoryAccountInfo | null): Promise<void> {
 		// Update current account
 		this._currentAccount.value = account;
 		// Clear saved token if no account
 		if (!account) {
 			this._authToken.value = undefined;
+		} else {
+			await RelationshipContext.initStatus(this);
 		}
 	}
 

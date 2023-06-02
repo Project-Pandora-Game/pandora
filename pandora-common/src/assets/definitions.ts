@@ -333,7 +333,7 @@ export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
 
 export interface BackgroundTagDefinition {
 	name: string;
-	category: 'Time' | 'Ambiance' | 'Location' | 'Item' | 'Space';
+	category: string;
 }
 
 export interface AssetsDefinitionFile {

@@ -368,16 +368,17 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 			messages = ChatParser.parse(message, target);
 		}
 		const id = this._getNextMessageId();
-		this._sent.set(id, {
-			text: message,
-			time: Date.now(),
-			options: { ...options, type, raw },
-		});
+		if (messages.length > 0) {
+			this._sent.set(id, {
+				text: message,
+				time: Date.now(),
+				options: { ...options, type, raw },
+			});
+		}
 		if (editing !== undefined) {
 			this._sent.delete(editing);
-			this._shard.sendMessage('chatRoomMessage', { id, messages, editId: editing });
 		}
-		this._shard.sendMessage('chatRoomMessage', { id, messages });
+		this._shard.sendMessage('chatRoomMessage', { id, messages, editId: editing });
 		this._setRestore();
 	}
 

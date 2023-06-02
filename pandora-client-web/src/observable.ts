@@ -80,26 +80,24 @@ export function ObservableProperty<const EventName extends string>(eventName: Ev
 		target: ClassAccessorDecoratorTarget<ObservableClass<T>, Value>,
 		_context: ClassAccessorDecoratorContext<ObservableClass<T>, Value>,
 	): ClassAccessorDecoratorResult<ObservableClass<T>, Value> {
-	return {
+		return {
 			get(this: ObservableClass<T>): Value {
-			return target.get.call(this);
-		},
+				return target.get.call(this);
+			},
 			set(this: ObservableClass<T>, value: Value): void {
-			if (target.get.call(this) === value) {
-				return;
-			}
-			target.set.call(this, value);
+				if (target.get.call(this) === value) {
+					return;
+				}
+				target.set.call(this, value);
 				this.emit.apply(this, [eventName, value]);
-		},
-	};
+			},
+		};
 	};
 }
 
 export type IObservableClass<T extends TypedEvent> = TypedEventEmitter<T> & {
 	[K in keyof T]: T[K];
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useObservableProperty<O extends IObservableClass<any>, K extends O extends IObservableClass<infer R> ? keyof R : never>(obs: O, key: K): O extends IObservableClass<infer R> ? R[K] : never {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+export function useObservableProperty<T extends TypedEvent, const K extends keyof T>(obs: IObservableClass<T>, key: K): T[K] {
 	return useSyncExternalStore(obs.getSubscriber(key), () => obs[key]);
 }

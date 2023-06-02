@@ -36,7 +36,7 @@
 		"@types/lodash": "4.14.195",
 		"@types/node": "18.16.16",
 		"async-lock": "1.4.0",
-		"immer": "9.0.21",
+		"immer": "10.0.2",
 		"lodash": "4.17.21",
 		"nanoid": "3.3.6",
 		"rimraf": "5.0.1",

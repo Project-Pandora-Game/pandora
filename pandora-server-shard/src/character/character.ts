@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -7,7 +7,6 @@ import { ClientConnection } from '../networking/connection_client';
 import { assetManager } from '../assets/assetManager';
 
 import _, { omit } from 'lodash';
-import AsyncLock from 'async-lock';
 import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes character without any active connection */
@@ -32,7 +31,6 @@ export class Character {
 
 	private modified: Set<keyof ICharacterDataChange | 'appearance'> = new Set();
 
-	private readonly _lock = new AsyncLock();
 	private tickInterval: NodeJS.Timeout | null = null;
 
 	private invalid: null | 'timeout' | 'error' | 'remove' = null;
@@ -387,42 +385,40 @@ export class Character {
 		};
 	}
 
-	public save(): Promise<void> {
-		return this._lock.acquire('save', async () => {
-			const keys: (keyof Omit<ICharacterDataUpdate, 'id'>)[] = [...this.modified];
-			this.modified.clear();
+	@AsyncSynchronized()
+	public async save(): Promise<void> {
+		const keys: (keyof Omit<ICharacterDataUpdate, 'id'>)[] = [...this.modified];
+		this.modified.clear();
 
-			// Nothing to save
-			if (keys.length === 0)
-				return;
+		// Nothing to save
+		if (keys.length === 0)
+			return;
 
-			const data: ICharacterDataUpdate = {
-				id: this.data.id,
-				accessId: this.data.accessId,
-			};
+		const data: ICharacterDataUpdate = {
+			id: this.data.id,
+			accessId: this.data.accessId,
+		};
 
+		for (const key of keys) {
+			if (key === 'appearance') {
+				const characterState = this.getGlobalState().currentState.getCharacterState(this.id);
+				AssertNotNullable(characterState);
+				data.appearance = characterState.exportToBundle();
+			} else {
+				(data as Record<string, unknown>)[key] = this.data[key];
+			}
+		}
+
+		try {
+			if (!await GetDatabase().setCharacter(data)) {
+				throw new Error('Database returned failure');
+			}
+		} catch (error) {
 			for (const key of keys) {
-				if (key === 'appearance') {
-					const characterState = this.getGlobalState().currentState.getCharacterState(this.id);
-					AssertNotNullable(characterState);
-					data.appearance = characterState.exportToBundle();
-				} else {
-					(data as Record<string, unknown>)[key] = this.data[key];
-				}
+				this.modified.add(key);
 			}
-
-			try {
-				if (!await GetDatabase().setCharacter(data)) {
-					throw new Error('Database returned failure');
-				}
-			} catch (error) {
-				for (const key of keys) {
-					this.modified.add(key);
-				}
-				this.logger.warning(`Failed to save data:`, error);
-			}
-		});
-
+			this.logger.warning(`Failed to save data:`, error);
+		}
 	}
 
 	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterData[Key], room: true): void;

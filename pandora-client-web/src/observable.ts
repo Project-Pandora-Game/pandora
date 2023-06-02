@@ -2,6 +2,7 @@ import { noop } from 'lodash';
 import { useSyncExternalStore } from 'react';
 import { TypedEvent, TypedEventEmitter } from 'pandora-common';
 import { produce, Draft } from 'immer';
+import { ClassNamedAccessorDecoratorContext } from 'pandora-common';
 
 export type Observer<T> = (value: T) => void;
 export type UnsubscribeCallback = () => void;
@@ -75,29 +76,28 @@ export function useNullableObservable<T>(obs: ReadonlyObservable<T> | null | und
 export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEmitter<T> {
 }
 
-export function ObservableProperty<const EventName extends string>(eventName: EventName) {
-	return function <T extends (TypedEvent & Record<EventName, unknown>), Value extends T[EventName]>(
-		target: ClassAccessorDecoratorTarget<ObservableClass<T>, Value>,
-		_context: ClassAccessorDecoratorContext<ObservableClass<T>, Value>,
-	): ClassAccessorDecoratorResult<ObservableClass<T>, Value> {
-		return {
-			get(this: ObservableClass<T>): Value {
-				return target.get.call(this);
-			},
-			set(this: ObservableClass<T>, value: Value): void {
-				if (target.get.call(this) === value) {
-					return;
-				}
-				target.set.call(this, value);
-				this.emit.apply(this, [eventName, value]);
-			},
-		};
+export function ObservableProperty<T extends TypedEvent, K extends keyof T & (string | symbol)>(
+	target: ClassAccessorDecoratorTarget<ObservableClass<T>, T[K]>,
+	context: ClassNamedAccessorDecoratorContext<ObservableClass<T> & T, K>,
+): ClassAccessorDecoratorResult<ObservableClass<T>, T[K]> {
+	return {
+		get(this: ObservableClass<T>): T[K] {
+			return target.get.call(this);
+		},
+		set(this: ObservableClass<T>, value: T[K]): void {
+			if (target.get.call(this) === value) {
+				return;
+			}
+			target.set.call(this, value);
+			this.emit.apply(this, [context.name, value]);
+		},
 	};
 }
 
 export type IObservableClass<T extends TypedEvent> = TypedEventEmitter<T> & {
 	[K in keyof T]: T[K];
 };
+
 export function useObservableProperty<T extends TypedEvent, const K extends keyof T>(obs: IObservableClass<T>, key: K): T[K] {
 	return useSyncExternalStore(obs.getSubscriber(key), () => obs[key]);
 }

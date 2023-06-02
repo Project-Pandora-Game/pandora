@@ -142,7 +142,7 @@ function FriendsHeaderButton(): ReactElement {
 			icon={ friendsIcon }
 			title='Friends'
 			type='friends'
-			onClick={ () => navigate('/direct_messages') } />
+			onClick={ () => navigate('/relationships') } />
 	);
 }
 

@@ -97,7 +97,7 @@ function ManageRoleTr({ role, data }: { id: number; role: AccountRole; data: IRo
 			<td>{ new Date(data.grantedAt).toLocaleString() }</td>
 			<td>
 				{ IsConfiguredAccountRole(role) && (
-					<Button className='slim' onClick={ () => void onRevoke() }>Revoke</Button>
+					<Button className='slim' onClick={ onRevoke }>Revoke</Button>
 				) }
 			</td>
 		</tr>
@@ -137,7 +137,7 @@ function ManageRoleGrant(): ReactElement {
 				<input type='date' value={ expires } onChange={ (e) => setExpires(new Date(e.target.value).getTime()) } readOnly={ expires === undefined } />
 			</div>
 			<div className='input-row'>
-				<Button className='slim' onClick={ () => void onGrant() } disabled={ !role || !roles || includes(role) }>Grant</Button>
+				<Button className='slim' onClick={ onGrant } disabled={ !role || !roles || includes(role) }>Grant</Button>
 			</div>
 		</fieldset>
 	);

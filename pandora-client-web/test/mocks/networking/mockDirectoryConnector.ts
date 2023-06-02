@@ -5,11 +5,19 @@ import {
 	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
+	TypedEvent,
+	TypedEventEmitter,
 } from 'pandora-common';
 import { DirectMessageManager } from '../../../src/networking/directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../../src/networking/directoryConnector';
 import { Observable } from '../../../src/observable';
-import { TestEventEmitter } from '../testEventEmitter';
+
+/** Event emitter implementation for testing which allows events to be manually emitted */
+export class TestEventEmitter<T extends TypedEvent> extends TypedEventEmitter<T> {
+	public fireEvent<K extends keyof T>(event: K, value: T[K]): void {
+		this.emit(event, value);
+	}
+}
 
 /** Mock directory connector implementation for testing */
 export class MockDirectoryConnector implements DirectoryConnector {

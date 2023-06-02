@@ -38,7 +38,10 @@ const inUseCharactersMetric = new promClient.Gauge({
 
 /** Class that stores all currently logged in or recently used accounts, removing them when needed */
 export class AccountManager {
-	private onlineAccounts: Set<Account> = new Set();
+	private readonly _onlineAccounts: Set<Account> = new Set();
+	public get onlineAccounts(): ReadonlySet<Account> {
+		return this._onlineAccounts;
+	}
 
 	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms */
 	private tick(): void {
@@ -46,7 +49,7 @@ export class AccountManager {
 		let inUseAccountCount = 0;
 		let inUseCharacterCount = 0;
 		// Go through accounts and prune old ones
-		for (const account of this.onlineAccounts) {
+		for (const account of this._onlineAccounts) {
 			if (account.isInUse()) {
 				inUseAccountCount++;
 				account.characters.forEach((c) => {
@@ -85,7 +88,7 @@ export class AccountManager {
 			this.interval = undefined;
 		}
 		// Go through accounts and remove all of them
-		for (const account of this.onlineAccounts) {
+		for (const account of this._onlineAccounts) {
 			this.unloadAccount(account);
 		}
 		inUseAccountsMetric.set(0);
@@ -94,8 +97,8 @@ export class AccountManager {
 	/** Create account from received data, adding it to loaded accounts */
 	private loadAccount(data: DatabaseAccountWithSecure): Account {
 		const account = new Account(data);
-		this.onlineAccounts.add(account);
-		loadedAccountsMetric.set(this.onlineAccounts.size);
+		this._onlineAccounts.add(account);
+		loadedAccountsMetric.set(this._onlineAccounts.size);
 		logger.debug(`Loaded account ${account.data.username}`);
 		return account;
 	}
@@ -103,15 +106,15 @@ export class AccountManager {
 	/** Remove account from loaded accounts, running necessary cleanup actions */
 	private unloadAccount(account: Account): void {
 		logger.debug(`Unloading account ${account.data.username}`);
-		this.onlineAccounts.delete(account);
-		loadedAccountsMetric.set(this.onlineAccounts.size);
+		this._onlineAccounts.delete(account);
+		loadedAccountsMetric.set(this._onlineAccounts.size);
 	}
 
 	/**
 	 * Find an account between **currently loaded accounts**, returning `null` if not found
 	 */
 	public getAccountById(id: number): Account | null {
-		for (const account of this.onlineAccounts) {
+		for (const account of this._onlineAccounts) {
 			if (account.id === id) {
 				account.touch();
 				return account;
@@ -126,7 +129,7 @@ export class AccountManager {
 	 */
 	public getAccountByUsername(username: string): Account | null {
 		username = username.toLowerCase();
-		for (const account of this.onlineAccounts) {
+		for (const account of this._onlineAccounts) {
 			if (account.data.username.toLowerCase() === username) {
 				account.touch();
 				return account;
@@ -140,7 +143,7 @@ export class AccountManager {
 	 * @returns The account or `null` if not found
 	 */
 	public getAccountByEmailHash(emailHash: string): Account | null {
-		for (const account of this.onlineAccounts) {
+		for (const account of this._onlineAccounts) {
 			if (account.secure.verifyEmailHash(emailHash)) {
 				account.touch();
 				return account;

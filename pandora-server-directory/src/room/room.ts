@@ -32,6 +32,10 @@ export class Room {
 		return this._owners;
 	}
 
+	public get isPublic(): boolean {
+		return this.config.public && this.hasAdminInside() && this._assignedShard?.type === 'stable';
+	}
+
 	private readonly logger: Logger;
 
 	constructor(id: RoomId, config: IChatRoomDirectoryConfig, owners: AccountId[]) {
@@ -323,10 +327,7 @@ export class Room {
 
 	/** Returns if this room is visible to the specific account when searching in room search */
 	public checkVisibleTo(account: Account): boolean {
-		return (
-			this.isAdmin(account) ||
-			(this.config.public && this.hasAdminInside() && this._assignedShard?.type === 'stable')
-		);
+		return this.isAdmin(account) || this.isPublic;
 	}
 
 	public isOwner(account: Account): boolean {

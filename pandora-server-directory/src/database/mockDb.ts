@@ -23,6 +23,7 @@ export class MockDatabase implements PandoraDatabase {
 	private chatroomDb: Map<RoomId, IChatRoomData> = new Map();
 	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
 	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
+	private relationshipDb: DatabaseRelationship[] = [];
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 	private get accountDbView(): DatabaseAccountWithSecure[] {
@@ -140,6 +141,15 @@ export class MockDatabase implements PandoraDatabase {
 
 		acc.roles = _.cloneDeep(data);
 		return Promise.resolve();
+	}
+
+	public queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+		const result: Record<AccountId, string> = {};
+		for (const acc of this.accountDbView) {
+			if (query.includes(acc.id))
+				result[acc.id] = acc.username;
+		}
+		return Promise.resolve(result);
 	}
 
 	public createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
@@ -354,6 +364,28 @@ export class MockDatabase implements PandoraDatabase {
 
 		_.assign(char, _.cloneDeep(data));
 		return Promise.resolve(true);
+	}
+
+	public getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {
+		return Promise.resolve(this.relationshipDb
+			.filter((rel) => rel.accounts.includes(accountId))
+			.map((rel) => _.cloneDeep(rel)));
+	}
+
+	public setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
+		const newData: DatabaseRelationship = { accounts: [accountIdA, accountIdB], updated: Date.now(), relationship: _.cloneDeep(data) };
+		const index = this.relationshipDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
+		if (index < 0) {
+			this.relationshipDb.push(newData);
+		} else {
+			this.relationshipDb[index] = newData;
+		}
+		return Promise.resolve(_.cloneDeep(newData));
+	}
+
+	public removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
+		_.remove(this.relationshipDb, (rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
+		return Promise.resolve();
 	}
 
 	public getConfig<T extends DatabaseConfigType>(type: T): Promise<null | DatabaseConfigData<T>> {

@@ -1,4 +1,4 @@
-import { CharacterId, DirectoryAccountSettingsSchema, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, IsObject, ACCOUNT_SETTINGS_DEFAULT } from 'pandora-common';
+import { CharacterId, DirectoryAccountSettingsSchema, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, IsObject, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } from '../config';
@@ -6,6 +6,7 @@ import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
 import type { ClientConnection } from '../networking/connection_client';
+import { AccountRelationship } from './accountRelationship';
 
 import _, { cloneDeep, omit } from 'lodash';
 
@@ -16,15 +17,16 @@ export class Account {
 	/** The account's saved data */
 	public data: Omit<DatabaseAccount, 'secure' | 'characters'>;
 	/** List of connections logged in as this account */
-	public associatedConnections: Set<ClientConnection> = new Set();
+	public readonly associatedConnections = new ServerRoom<IDirectoryClient, ClientConnection>();
 
 	public readonly characters: Map<CharacterId, Character> = new Map();
 
 	public readonly secure: AccountSecure;
 	public readonly roles: AccountRoles;
 	public readonly directMessages: AccountDirectMessages;
+	public readonly relationship: AccountRelationship;
 
-	public get id(): number {
+	public get id(): AccountId {
 		return this.data.id;
 	}
 
@@ -41,6 +43,7 @@ export class Account {
 		this.secure = new AccountSecure(this, data.secure);
 		this.roles = new AccountRoles(this, data.roles);
 		this.directMessages = new AccountDirectMessages(this, data.directMessages);
+		this.relationship = new AccountRelationship(this);
 
 		// Init characters
 		for (const characterData of data.characters) {
@@ -71,7 +74,7 @@ export class Account {
 	}
 
 	public isInUse(): boolean {
-		return this.associatedConnections.size > 0 || Array.from(this.characters.values()).some((c) => c.isInUse());
+		return this.associatedConnections.hasClients() || Array.from(this.characters.values()).some((c) => c.isInUse());
 	}
 
 	/** Build account part of `connectionState` update message for connection */
@@ -142,17 +145,18 @@ export class Account {
 	}
 
 	public onCharacterListChange(): void {
-		for (const connection of this.associatedConnections.values()) {
+		for (const connection of this.associatedConnections.clients) {
 			// Only send updates to connections that can see the list (don't have character selected)
 			if (!connection.character) {
 				connection.sendMessage('somethingChanged', { changes: ['characterList'] });
 			}
 		}
+		this.relationship.updateStatus();
 	}
 
 	public onAccountInfoChange(): void {
 		// Update connected clients
-		for (const connection of this.associatedConnections.values()) {
+		for (const connection of this.associatedConnections.clients) {
 			connection.sendConnectionStateUpdate();
 		}
 		// Update shards

@@ -1,11 +1,10 @@
-import { AssertNotNullable, EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import { AssertNotNullable, EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, PromiseOnce, TypedEventEmitter } from 'pandora-common';
 import type { SymmetricEncryption } from '../crypto/symmetric';
 import type { DirectoryConnector } from './directoryConnector';
 import { KeyExchange } from '../crypto/keyExchange';
 import { BrowserStorage } from '../browserStorage';
 import { Observable, ReadonlyObservable } from '../observable';
 import { ChatParser } from '../components/chatroom/chatParser';
-import { TypedEventEmitter } from '../event';
 import { HashSHA256Base64 } from '../crypto/helpers';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';
@@ -147,7 +146,6 @@ export class DirectMessageChannel {
 	private readonly _id: number;
 	private readonly _messages = new Observable<readonly DirectMessage[]>([]);
 	private _loaded = false;
-	private _loading?: Promise<void>;
 	private _publicKeyData?: string;
 	private _keyHash?: string;
 	private _account!: IDirectoryDirectMessageAccount;
@@ -205,16 +203,7 @@ export class DirectMessageChannel {
 		}
 	}
 
-	public async load(): Promise<void> {
-		if (this._loaded || this._failed) {
-			return;
-		}
-		if (this._loading) {
-			return this._loading;
-		}
-		this._loading = this._load();
-		return this._loading;
-	}
+	public readonly load = PromiseOnce(() => this._load());
 
 	public async loadSingle(data: IDirectoryDirectMessage & { account?: IDirectoryDirectMessageAccount; }, infos: Observable<readonly IDirectoryDirectMessageInfo[]>): Promise<void> {
 		const { content, time, edited } = data;
@@ -258,7 +247,6 @@ export class DirectMessageChannel {
 		const oldest = this._messages.value[0]?.time;
 		const response = await this.connector.awaitResponse('getDirectMessages', { id: this._id, until: oldest });
 		if (response.result !== 'ok') {
-			this._loading = undefined;
 			this._failed = response.result;
 			return;
 		}
@@ -266,7 +254,6 @@ export class DirectMessageChannel {
 		await this._loadKey(response.account.publicKeyData);
 		this._loaded = true;
 		this._failed = undefined;
-		this._loading = undefined;
 		this._messages.value = [
 			...this.messages.value.filter((old) => !response.messages.some((message) => message.time === old.time)),
 			...await this._decryptMany(response.messages),

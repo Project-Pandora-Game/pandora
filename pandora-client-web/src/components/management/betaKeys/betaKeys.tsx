@@ -100,7 +100,7 @@ function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo; }): ReactElement {
 				{ new Date(betaKey.created.time).toLocaleString() }
 			</td>
 			<td>
-				<Button className='slim' onClick={ () => void onInvalidate() }>Delete</Button>
+				<Button className='slim' onClick={ onInvalidate }>Delete</Button>
 			</td>
 		</tr>
 	);
@@ -171,7 +171,7 @@ function BetaKeyCreate(): ReactElement {
 				<input type='number' value={ maxUses === undefined ? '' : maxUses } onChange={ updateMaxUses } min={ 1 } max={ isAdmin ? undefined : 5 } />
 			</div>
 			<div className='input-row'>
-				<Button className='slim' onClick={ () => void onCreate() }>Create</Button>
+				<Button className='slim' onClick={ onCreate }>Create</Button>
 			</div>
 		</fieldset>
 	);

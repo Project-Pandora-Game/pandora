@@ -63,6 +63,8 @@ export interface PandoraDatabase {
 	 */
 	setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void>;
 
+	queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>>;
+
 	//#region Character
 
 	/**
@@ -192,6 +194,10 @@ export interface PandoraDatabase {
 	setCharacter(data: Partial<ICharacterData> & ICharacterDataAccess): Promise<boolean>;
 
 	//#endregion
+
+	getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]>;
+	setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship>;
+	removeRelationship(accountIdA: AccountId, accountIdB: AccountId): Promise<void>;
 
 	//#region Config
 

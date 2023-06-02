@@ -45,6 +45,19 @@ interface DatabaseAccount {
 	directMessages?: DatabaseDirectMessageInfo[];
 }
 
+type DatabaseAccountRelationship = {
+	type: 'friend' | 'mutualBlock';
+} | {
+	type: 'request' | 'oneSidedBlock';
+	from: import('pandora-common').AccountId;
+};
+
+interface DatabaseRelationship {
+	accounts: [import('pandora-common').AccountId, import('pandora-common').AccountId];
+	updated: number;
+	relationship: DatabaseAccountRelationship;
+}
+
 /** Representation of account stored in database */
 interface DatabaseAccountWithSecure extends DatabaseAccount {
 	/** Secure account data - should never leave this server; all related to account security */

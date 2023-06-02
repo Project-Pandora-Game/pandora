@@ -360,3 +360,30 @@ export function MemoizeNoArg<Return>(_target: object, _key: string, descriptor: 
 export function ZodTransformReadonly<T>(value: T): Readonly<T> {
 	return Object.freeze(value);
 }
+
+/**
+ * Creates a promise that will resolve to the result of the first call to the promise factory
+ *
+ * On reject the promise will be discarded and the next call will create a new promise
+ *
+ * @param promise The promise factory
+ */
+export function PromiseOnce<T>(promise: () => Promise<T>): () => Promise<T> {
+	let result: null | [T] = null;
+	let promiseResult: Promise<T> | null = null;
+	return async () => {
+		if (result) {
+			return result[0];
+		}
+		if (promiseResult != null) {
+			return promiseResult;
+		}
+		promiseResult = promise();
+		try {
+			result = [await promiseResult];
+		} finally {
+			promiseResult = null;
+		}
+		return result[0];
+	};
+}

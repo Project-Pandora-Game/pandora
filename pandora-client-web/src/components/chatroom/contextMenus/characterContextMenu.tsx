@@ -1,5 +1,5 @@
-import { ICharacterRoomData, IChatRoomFullInfo } from 'pandora-common';
-import React, { ReactElement, useCallback, useState, useEffect } from 'react';
+import { AssertNotNullable, ICharacterRoomData, IChatRoomFullInfo, IDirectoryAccountInfo } from 'pandora-common';
+import React, { ReactElement, useCallback, useState, useEffect, createContext, useContext, useMemo, ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Character, useCharacterData } from '../../../character/character';
 import { PointLike } from '../../../graphics/graphicsCharacter';
@@ -8,30 +8,52 @@ import { IsChatroomAdmin, useChatRoomInfo } from '../../gameContext/chatRoomCont
 import { useDirectoryConnector, useCurrentAccount } from '../../gameContext/directoryConnectorContextProvider';
 import { usePlayerId } from '../../gameContext/playerContextProvider';
 import { useChatInput } from '../chatInput';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { HandleResult, useRelationship } from '../../releationships/relationships';
 
-function AdminActionContextMenu({ character, chatRoomInfo, onClose, onBack }: { character: Character<ICharacterRoomData>; chatRoomInfo: IChatRoomFullInfo; onClose: () => void; onBack: () => void; }): ReactElement {
+type MenuType = 'main' | 'admin' | 'relationship';
+
+const characterMenuContext = createContext<{
+	isPlayerAdmin: boolean;
+	currentAccount: IDirectoryAccountInfo;
+	character: Character<ICharacterRoomData>;
+	chatRoomInfo: IChatRoomFullInfo;
+	menu: MenuType;
+	setMenu: (menu: MenuType) => void;
+	close: () => void;
+} | null>(null);
+
+function useCharacterMenuContext() {
+	const context = useContext(characterMenuContext);
+	AssertNotNullable(context);
+	return context;
+}
+
+function AdminActionContextMenuInner(): ReactElement {
+	const { character, chatRoomInfo, setMenu, close } = useCharacterMenuContext();
 	const isCharacterAdmin = IsChatroomAdmin(chatRoomInfo, { id: character.data.accountId });
 	const connector = useDirectoryConnector();
 
 	const kick = useCallback(() => {
 		connector.sendMessage('chatRoomAdminAction', { action: 'kick', targets: [character.data.accountId] });
-		onClose();
-	}, [character, connector, onClose]);
+		close();
+	}, [character, connector, close]);
 
 	const ban = useCallback(() => {
 		connector.sendMessage('chatRoomAdminAction', { action: 'ban', targets: [character.data.accountId] });
-		onClose();
-	}, [character, connector, onClose]);
+		close();
+	}, [character, connector, close]);
 
 	const promote = useCallback(() => {
 		connector.sendMessage('chatRoomAdminAction', { action: 'promote', targets: [character.data.accountId] });
-		onClose();
-	}, [character, connector, onClose]);
+		close();
+	}, [character, connector, close]);
 
 	const demote = useCallback(() => {
 		connector.sendMessage('chatRoomAdminAction', { action: 'demote', targets: [character.data.accountId] });
-		onClose();
-	}, [character, connector, onClose]);
+		close();
+	}, [character, connector, close]);
 
 	return (
 		<>
@@ -50,11 +72,142 @@ function AdminActionContextMenu({ character, chatRoomInfo, onClose, onBack }: { 
 					Promote
 				</button>
 			) }
-			<button onClick={ onBack } >
+			<button onClick={ () => setMenu('main') } >
 				Back
 			</button>
 		</>
 	);
+}
+
+function AdminActionContextMenu(): ReactElement | null {
+	const { isPlayerAdmin, currentAccount, character, menu, setMenu } = useCharacterMenuContext();
+
+	if (!isPlayerAdmin) return null;
+	if (character.data.accountId === currentAccount?.id) return null;
+
+	switch (menu) {
+		case 'main':
+			return (
+				<button onClick={ () => setMenu('admin') }>
+					Admin
+				</button>
+			);
+		case 'admin':
+			return <AdminActionContextMenuInner />;
+		default:
+			return null;
+	}
+}
+
+function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const { character } = useCharacterMenuContext();
+
+	const block = useCallback(() => {
+		if (confirm(`Are you sure you want to ${action} ${character.data.name} from your block list?`))
+			directory.sendMessage('blockList', { action, id: character.data.accountId });
+	}, [action, character, directory]);
+
+	return (
+		<button onClick={ block } >
+			{ text }
+		</button>
+	);
+}
+
+function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | 'decline' | 'cancel'; text: ReactNode; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const { character } = useCharacterMenuContext();
+
+	const request = useCallback(() => {
+		if (confirm(`Are you sure you want to ${action} a friend request with ${character.data.name}?`)) {
+			directory.awaitResponse('friendRequest', { action, id: character.data.accountId })
+				.then(({ result }) => HandleResult(result))
+				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
+		}
+	}, [action, character, directory]);
+
+	return (
+		<button onClick={ request } >
+			{ text }
+		</button>
+	);
+}
+
+function UnfriendRequestMenu(): ReactElement {
+	const directory = useDirectoryConnector();
+	const { character } = useCharacterMenuContext();
+
+	const request = useCallback(() => {
+		if (confirm(`Are you sure you want to unfriend ${character.data.name}?`)) {
+			directory.awaitResponse('unfriend', { id: character.data.accountId })
+				.then(({ result }) => HandleResult(result))
+				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
+		}
+	}, [character, directory]);
+
+	return (
+		<button onClick={ request } >
+			Unfriend
+		</button>
+	);
+}
+
+function RelationshipActionContextMenuInner(): ReactElement | null {
+	const { character } = useCharacterMenuContext();
+	const rel = useRelationship(character.data.accountId);
+
+	switch (rel?.type) {
+		case undefined:
+			return (
+				<>
+					<FriendRequestMenu action='initiate' text='Add Friend' />
+					<BlockMenu action='add' text='Block' />
+				</>
+			);
+		case 'pending':
+			return <FriendRequestMenu action='cancel' text='Cancel Request' />;
+		case 'incoming':
+			return (
+				<>
+					<FriendRequestMenu action='accept' text='Accept Request' />
+					<FriendRequestMenu action='decline' text='Decline Request' />
+					<BlockMenu action='add' text='Block' />
+				</>
+			);
+		case 'friend':
+			return <UnfriendRequestMenu />;
+		case 'blocked':
+			return <BlockMenu action='remove' text='Unblock' />;
+		default:
+			return null;
+	}
+}
+
+function RelationshipActionContextMenu(): ReactElement | null {
+	const { currentAccount, character, menu, setMenu } = useCharacterMenuContext();
+	if (character.data.accountId === currentAccount?.id)
+		return null;
+
+	switch (menu) {
+		case 'main':
+			return (
+				<button onClick={ () => setMenu('relationship') }>
+					Relationship
+				</button>
+			);
+		case 'relationship':
+			return (
+				<>
+					<RelationshipActionContextMenuInner />
+					<button onClick={ () => setMenu('main') } >
+						Back
+					</button>
+				</>
+			);
+		default:
+			return null;
+	}
 }
 
 export function CharacterContextMenu({ character, position, onClose }: {
@@ -66,7 +219,7 @@ export function CharacterContextMenu({ character, position, onClose }: {
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 	const currentAccount = useCurrentAccount();
-	const [menu, setMenu] = useState<'main' | 'admin'>('main');
+	const [menu, setMenu] = useState<MenuType>('main');
 
 	const ref = useContextMenuPosition(position);
 
@@ -85,49 +238,53 @@ export function CharacterContextMenu({ character, position, onClose }: {
 		onClose();
 	}, [onClose]);
 
-	if (!event || !chatRoomInfo) {
+	const context = useMemo(() => {
+		if (!chatRoomInfo || !currentAccount) return null;
+		return {
+			isPlayerAdmin,
+			currentAccount,
+			character,
+			chatRoomInfo,
+			menu,
+			setMenu,
+			close: onCloseActual,
+		};
+	}, [isPlayerAdmin, currentAccount, character, chatRoomInfo, menu, setMenu, onCloseActual]);
+
+	if (!chatRoomInfo || !context) {
 		return null;
 	}
 
 	return (
-		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-			<span>
-				{ characterData.name } ({ characterData.id })
-			</span>
-			{ menu === 'main' && (
-				<>
-					<button onClick={ () => {
-						onCloseActual();
-						navigate('/wardrobe', { state: { character: characterData.id } });
-					} }>
-						Wardrobe
-					</button>
-					{ characterData.id !== playerId && (
+		<characterMenuContext.Provider value={ context }>
+			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
+				<span>
+					{ characterData.name } ({ characterData.id })
+				</span>
+				{ menu === 'main' && (
+					<>
 						<button onClick={ () => {
-							onClose();
-							setTarget(characterData.id);
+							onCloseActual();
+							navigate('/wardrobe', { state: { character: characterData.id } });
 						} }>
-							Whisper
+							Wardrobe
 						</button>
-					) }
-				</>
-			) }
-			{ (isPlayerAdmin && character.data.accountId !== currentAccount?.id) && (
-				<>
-					{ menu === 'main' ? (
-						<button onClick={ () => setMenu('admin') }>
-							Admin
-						</button>
-					) : (
-						<AdminActionContextMenu character={ character } chatRoomInfo={ chatRoomInfo } onClose={ onCloseActual } onBack={ () => setMenu('main') } />
-					) }
-				</>
-			) }
-			<button onClick={ () => {
-				onCloseActual();
-			} } >
-				Close
-			</button>
-		</div>
+						{ characterData.id !== playerId && (
+							<button onClick={ () => {
+								onClose();
+								setTarget(characterData.id);
+							} }>
+								Whisper
+							</button>
+						) }
+					</>
+				) }
+				<AdminActionContextMenu />
+				<RelationshipActionContextMenu />
+				<button onClick={ onCloseActual } >
+					Close
+				</button>
+			</div>
+		</characterMenuContext.Provider>
 	);
 }

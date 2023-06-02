@@ -1,9 +1,10 @@
 import { z } from 'zod';
-import { IAccountRoleInfo, AccountRoleSchema } from '../account';
+import { IAccountRoleInfo, AccountRoleSchema, AccountId } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
 import { Satisfies } from '../utility';
 import { HexColorStringSchema, ZodCast } from '../validation';
+import type { IAccountRelationship, IAccountFriendStatus } from './client_directory';
 import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
 export type IDirectoryStatus = {
@@ -16,6 +17,14 @@ export const DirectoryAccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema),
 	labelColor: HexColorStringSchema.catch('#ffffff'),
 	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
+	/** Hides online status from friends */
+	hideOnlineStatus: z.boolean().default(false),
+	/**
+	 * - 'all' - Allow direct messages from anyone
+	 * - 'room' - Allow direct messages from friends and people in the same room
+	 * - 'friends' - Only allow direct messages from friends
+	 */
+	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']).default('all'),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
@@ -23,6 +32,8 @@ export const ACCOUNT_SETTINGS_DEFAULT: IDirectoryAccountSettings = {
 	visibleRoles: [],
 	labelColor: '#ffffff',
 	wardrobeBackground: '#aaaaaa',
+	hideOnlineStatus: false,
+	allowDirectMessagesFrom: 'all',
 };
 
 export const AccountCryptoKeySchema = z.object({
@@ -121,7 +132,7 @@ export const DirectoryClientSchema = {
 	directMessageSent: {
 		request: ZodCast<IDirectoryDirectMessage & {
 			/** Target accountId */
-			target: number;
+			target: AccountId;
 		}>(),
 		response: null,
 	},
@@ -135,9 +146,17 @@ export const DirectoryClientSchema = {
 	},
 	directMessageAction: {
 		request: ZodCast<{
-			id: number;
+			id: AccountId;
 			action: 'read' | 'close';
 		}>(),
+		response: null,
+	},
+	friendStatus: {
+		request: ZodCast<IAccountFriendStatus | { id: AccountId; online: 'delete'; }>(),
+		response: null,
+	},
+	relationshipsUpdate: {
+		request: ZodCast<IAccountRelationship | { id: AccountId; type: 'none'; }>(),
 		response: null,
 	},
 } as const;

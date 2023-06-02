@@ -1,0 +1,37 @@
+@import '../../styles/constants';
+
+.relationships {
+	height: 100%;
+	width: 100%;
+
+	.tab-container {
+		height: 100%;
+
+		>div {
+			margin: 0.1em 0.2em;
+		}
+	}
+
+	tr {
+		height: 2em;
+	}
+
+	td,
+	th {
+		padding: 0.2em;
+		text-align: center;
+		border: 1px solid $grey-darker;
+	}
+
+	th {
+		background-color: $grey-dark;
+	}
+
+	tr {
+		background-color: $grey-light;
+	}
+
+	tr:nth-child(2n) {
+		background-color: $grey-lighter;
+	}
+}

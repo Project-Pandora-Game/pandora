@@ -15,12 +15,13 @@ import {
 	MessageHandler,
 	ClientDirectorySchema,
 	DirectoryClientSchema,
+	TypedEventEmitter,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
+import { RelationshipContext } from '../components/releationships/relationships';
 import { PrehashPassword } from '../crypto/helpers';
-import { TypedEventEmitter } from '../event';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
 import { DirectMessageManager } from './directMessageManager';
@@ -110,7 +111,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			},
 			connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
 				this._connectionStateEventEmitter.onStateChanged(message);
-				this.handleAccountChange(message.account);
+				await this.handleAccountChange(message.account);
 				await this.directMessageHandler.accountChanged();
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
@@ -123,6 +124,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			directMessageAction: (data) => {
 				this.directMessageHandler.handleDirectMessageAction(data);
 			},
+			friendStatus: (data) => RelationshipContext.handleFriendStatus(data),
+			relationshipsUpdate: (data) => RelationshipContext.handleRelationshipsUpdate(data),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -189,9 +192,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		if (result.result === 'ok') {
 			this._authToken.value = { ...result.token, username: result.account.username };
 			await this.directMessageHandler.initCryptoPassword(username, password);
-			this.handleAccountChange(result.account);
+			await this.handleAccountChange(result.account);
 		} else {
-			this.handleAccountChange(null);
+			await this.handleAccountChange(null);
 		}
 		await this.directMessageHandler.accountChanged();
 		return result.result;
@@ -201,6 +204,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this.sendMessage('logout', { invalidateToken: this._authToken.value?.value });
 		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
 		this.directMessageHandler.clear();
+		RelationshipContext.handleLogout();
 	}
 
 	/**
@@ -270,12 +274,14 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this.socket.io.opts.extraHeaders = extraHeaders;
 	}
 
-	private handleAccountChange(account: IDirectoryAccountInfo | null): void {
+	private async handleAccountChange(account: IDirectoryAccountInfo | null): Promise<void> {
 		// Update current account
 		this._currentAccount.value = account;
 		// Clear saved token if no account
 		if (!account) {
 			this._authToken.value = undefined;
+		} else {
+			await RelationshipContext.initStatus(this);
 		}
 	}
 

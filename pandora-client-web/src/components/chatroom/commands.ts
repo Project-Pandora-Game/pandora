@@ -1,5 +1,5 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId } from 'pandora-common';
 import { CommandSelectorCharacter } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
@@ -98,6 +98,20 @@ function CreateChatroomAdminAction(action: IClientDirectoryArgument['chatRoomAdm
 	};
 }
 
+const ACCOUNT_ID_PARSER: CommandStepProcessor<AccountId, ICommandExecutionContextClient> = {
+	preparse: 'allTrimmed',
+	parse: (input, { directoryConnector }) => {
+		const number = parseInt(input);
+		const result = AccountIdSchema.safeParse(number);
+		if (!result.success)
+			return { success: false, error: 'Invalid account id' };
+		if (directoryConnector.currentAccount.value?.id === result.data)
+			return { success: false, error: 'You cannot use this command on yourself' };
+
+		return { success: true, value: result.data };
+	},
+};
+
 export const COMMANDS: readonly IClientCommand[] = [
 	...CreateMessageTypeParsers('chat', false),
 	...CreateMessageTypeParsers('ooc'),
@@ -107,6 +121,50 @@ export const COMMANDS: readonly IClientCommand[] = [
 	CreateChatroomAdminAction('ban', 'Bans a user from the current chatroom.'),
 	CreateChatroomAdminAction('promote', 'Promotes a user to chatroom admin.'),
 	CreateChatroomAdminAction('demote', 'Demotes a user from chatroom admin.'),
+	{
+		key: ['block'],
+		usage: '<target>',
+		description: 'Blocks a user',
+		longDescription: 'Blocks a user from sending you messages. You can unblock them by using the /unblock command.',
+		handler: CreateClientCommand()
+			.argument('target', ACCOUNT_ID_PARSER)
+			.handler(({ directoryConnector }, { target }) => {
+				directoryConnector.sendMessage('blockList', {
+					id: target,
+					action: 'add',
+				});
+			}),
+	},
+	{
+		key: ['unblock'],
+		usage: '<target>',
+		description: 'Unblocks a user',
+		longDescription: 'Unblocks a user from sending you messages. You can block them by using the /block command.',
+		handler: CreateClientCommand()
+			.argument('target', ACCOUNT_ID_PARSER)
+			.handler(({ directoryConnector }, { target }) => {
+				directoryConnector.sendMessage('blockList', {
+					id: target,
+					action: 'remove',
+				});
+			}),
+	},
+	{
+		key: ['addfriend'],
+		usage: '<target>',
+		description: 'Adds a user to your friends list',
+		longDescription: 'Adds a user to your friends list.',
+		handler: CreateClientCommand()
+			.argument('target', ACCOUNT_ID_PARSER)
+			.handler(({ directoryConnector }, { target }) => {
+				directoryConnector.awaitResponse('friendRequest', {
+					id: target,
+					action: 'initiate',
+				}).catch(() => {
+					// TODO add async commands
+				});
+			}),
+	},
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',

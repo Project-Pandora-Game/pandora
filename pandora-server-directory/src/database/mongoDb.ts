@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
@@ -16,6 +16,7 @@ const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
 const CHATROOMS_COLLECTION_NAME = 'chatrooms';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
+const RELATIONSHIPS_COLLECTION_NAME = 'relationships';
 
 const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
 	locale: 'en',
@@ -35,6 +36,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _chatrooms!: Collection<IChatRoomData>;
 	private _config!: Collection<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>;
 	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
+	private _relationships!: Collection<DatabaseRelationship>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -120,6 +122,14 @@ export default class MongoDatabase implements PandoraDatabase {
 		const [maxCharId] = await this._characters.find().sort({ id: -1 }).limit(1).toArray();
 		this._nextCharacterId = maxCharId ? maxCharId.id + 1 : 1;
 		//#endregion
+
+		this._relationships = this._db.collection(RELATIONSHIPS_COLLECTION_NAME);
+		await MongoUpdateIndexes(this._relationships, [
+			{
+				name: 'accounts',
+				key: { accounts: 1 },
+			},
+		]);
 
 		//#region Chatrooms
 		this._chatrooms = this._db.collection(CHATROOMS_COLLECTION_NAME);
@@ -243,6 +253,19 @@ export default class MongoDatabase implements PandoraDatabase {
 		} else {
 			await this._accounts.updateOne({ id }, { $unset: { roles: '' } });
 		}
+	}
+
+	public async queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+		const result: Record<AccountId, string> = {};
+		const accounts = await this._accounts
+			.find({ id: { $in: query } })
+			.project<Pick<DatabaseAccount, 'id' | 'username'>>({ id: 1, username: 1 })
+			.toArray();
+
+		for (const acc of accounts) {
+			result[acc.id] = acc.username;
+		}
+		return result;
 	}
 
 	public async createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
@@ -395,6 +418,41 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async setCharacter({ id, accessId, ...data }: Partial<ICharacterData> & Pick<ICharacterData, 'id'>): Promise<boolean> {
 		const { acknowledged, matchedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
 		return acknowledged && matchedCount === 1;
+	}
+
+	public async getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {
+		return this._relationships.find({ accounts: accountId }).toArray();
+	}
+
+	public async setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
+		const result = await this._relationships.findOneAndUpdate({
+			// TODO simplify this when MongoDB fixes this: https://jira.mongodb.org/browse/SERVER-13843
+			accounts: {
+				$all: [
+					{ $elemMatch: { $eq: accountIdA } },
+					{ $elemMatch: { $eq: accountIdB } },
+				],
+			},
+		}, {
+			$set: {
+				updated: Date.now(),
+				relationship: data,
+			},
+			$setOnInsert: {
+				accounts: [accountIdA, accountIdB],
+			},
+		}, {
+			upsert: true,
+			returnDocument: 'after',
+		});
+		AssertNotNullable(result.value);
+		return result.value;
+	}
+
+	public async removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
+		await this._relationships.deleteOne({
+			accounts: { $all: [accountIdA, accountIdB] },
+		});
 	}
 
 	public async getConfig<T extends DatabaseConfigType>(type: T): Promise<null | DatabaseConfigData<T>> {

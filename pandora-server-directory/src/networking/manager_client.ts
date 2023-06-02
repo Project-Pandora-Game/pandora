@@ -1,4 +1,4 @@
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, IShardTokenConnectInfo } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } from '../config';
@@ -86,6 +86,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
 			setCryptoKey: this.handleSetCryptoKey.bind(this),
+			getRelationships: this.handleGetRelationships.bind(this),
 
 			// Character management
 			listCharacters: this.handleListCharacters.bind(this),
@@ -110,6 +111,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
 			directMessage: this.handleDirectMessage.bind(this),
 			getDirectMessageInfo: this.handleGetDirectMessageInfo.bind(this),
+			friendRequest: this.handleFriendRequest.bind(this),
+			unfriend: this.handleUnfriend.bind(this),
+			blockList: this.handleBlockList.bind(this),
 
 			// Management/admin endpoints; these require specific roles to be used
 			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
@@ -620,6 +624,58 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	//#endregion Direct Messages
+
+	private async handleGetRelationships(_: IClientDirectoryArgument['getRelationships'], connection: ClientConnection): IClientDirectoryPromiseResult['getRelationships'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		const relationships = await connection.account.relationship.getAll();
+		const friends = await connection.account.relationship.getFriendsStatus();
+
+		return { friends, relationships };
+	}
+
+	private async handleFriendRequest({ id, action }: IClientDirectoryArgument['friendRequest'], connection: ClientConnection): IClientDirectoryPromiseResult['friendRequest'] {
+		if (!connection.account || id === connection.account.id)
+			throw new BadMessageError();
+
+		switch (action) {
+			case 'accept':
+				return { result: await connection.account.relationship.acceptFriendRequest(id) };
+			case 'cancel':
+				return { result: await connection.account.relationship.cancelFriendRequest(id) };
+			case 'decline':
+				return { result: await connection.account.relationship.declineFriendRequest(id) };
+			case 'initiate':
+				return { result: await connection.account.relationship.initiateFriendRequest(id) };
+			default:
+				AssertNever(action);
+		}
+	}
+
+	private async handleUnfriend({ id }: IClientDirectoryArgument['unfriend'], connection: ClientConnection): IClientDirectoryPromiseResult['unfriend'] {
+		if (!connection.account || id === connection.account.id)
+			throw new BadMessageError();
+
+		const success = await connection.account.relationship.removeFriend(id);
+		return { result: success ? 'ok' : 'accountNotFound' };
+	}
+
+	private async handleBlockList({ id, action }: IClientDirectoryArgument['blockList'], connection: ClientConnection): IClientDirectoryPromiseResult['blockList'] {
+		if (!connection.account || id === connection.account.id)
+			throw new BadMessageError();
+
+		switch (action) {
+			case 'add':
+				await connection.account.relationship.block(id);
+				break;
+			case 'remove':
+				await connection.account.relationship.unblock(id);
+				break;
+			default:
+				AssertNever(action);
+		}
+	}
 
 	public onRoomListChange(): void {
 		for (const connection of this.connectedClients) {

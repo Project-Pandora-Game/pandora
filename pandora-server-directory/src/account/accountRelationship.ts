@@ -234,7 +234,7 @@ export class AccountRelationship {
 	}
 
 	private loaded = false;
-	private load = PromiseOnce(() => this._load());
+	protected load = PromiseOnce(() => this._load());
 
 	private async _load(): Promise<void> {
 		if (this.loaded) {
@@ -333,7 +333,6 @@ function Synchronized() {
 		const original = descriptor.value;
 		AssertNotNullable(original);
 		descriptor.value = async function (this: AccountRelationship, id: AccountId) {
-			// @ts-expect-error private
 			await this.load();
 			const [a, b] = [this.account.id, id].sort();
 			return await GLOBAL_LOCK.acquire(`${a}-${b}`, () => original.call(this, id));

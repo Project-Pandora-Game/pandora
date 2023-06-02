@@ -76,10 +76,14 @@ export function useNullableObservable<T>(obs: ReadonlyObservable<T> | null | und
 export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEmitter<T> {
 }
 
+export type IObservableClass<T extends TypedEvent> = ObservableClass<T> & {
+	[K in keyof T]: T[K];
+};
+
 export function ObservableProperty<T extends TypedEvent, K extends keyof T & (string | symbol)>(
 	target: ClassAccessorDecoratorTarget<ObservableClass<T>, T[K]>,
-	context: ClassNamedAccessorDecoratorContext<ObservableClass<T> & T, K>,
-): ClassAccessorDecoratorResult<ObservableClass<T>, T[K]> {
+	context: ClassNamedAccessorDecoratorContext<IObservableClass<T>, K>,
+): ClassAccessorDecoratorResult<IObservableClass<T>, T[K]> {
 	return {
 		get(this: ObservableClass<T>): T[K] {
 			return target.get.call(this);
@@ -93,10 +97,6 @@ export function ObservableProperty<T extends TypedEvent, K extends keyof T & (st
 		},
 	};
 }
-
-export type IObservableClass<T extends TypedEvent> = TypedEventEmitter<T> & {
-	[K in keyof T]: T[K];
-};
 
 export function useObservableProperty<T extends TypedEvent, const K extends keyof T>(obs: IObservableClass<T>, key: K): T[K] {
 	return useSyncExternalStore(obs.getSubscriber(key), () => obs[key]);

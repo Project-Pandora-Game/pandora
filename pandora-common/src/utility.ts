@@ -39,50 +39,10 @@ export type Nullable<T> = T | null | undefined;
  */
 export interface ClassNamedAccessorDecoratorContext<
 	This,
-	Key extends keyof This & (string | symbol),
-> {
-	/** The kind of class element that was decorated. */
-	readonly kind: 'accessor';
-
+	Key extends (keyof This & (string | symbol)),
+> extends ClassAccessorDecoratorContext<This, This[Key]> {
 	/** The name of the decorated class element. */
 	readonly name: Key;
-
-	/** A value indicating whether the class element is a static (`true`) or instance (`false`) element. */
-	readonly static: boolean;
-
-	/** A value indicating whether the class element has a private name. */
-	readonly private: boolean;
-
-	/** An object that can be used to access the current value of the class element at runtime. */
-	readonly access: {
-		/**
-		 * Determines whether an object has a property with the same name as the decorated element.
-		 */
-		has(object: This): boolean;
-
-		/**
-		 * Invokes the getter on the provided object.
-		 *
-		 * @example
-		 * let value = context.access.get(instance);
-		 */
-		get(object: This): This[Key];
-
-		/**
-		 * Invokes the setter on the provided object.
-		 *
-		 * @example
-		 * context.access.set(instance, value);
-		 */
-		set(object: This, value: This[Key]): void;
-	};
-
-	/**
-	 * Adds a callback to be invoked either before static initializers are run (when
-	 * decorating a `static` element), or before instance initializers are run (when
-	 * decorating a non-`static` element).
-	 */
-	addInitializer(initializer: (this: This) => void): void;
 }
 
 declare const window: unknown;

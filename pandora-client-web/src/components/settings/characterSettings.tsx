@@ -34,7 +34,7 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterPrivateData
 				<label>Color</label>
 				<ColorInput initialValue={ color } onChange={ setColor } />
 				<Button
-					className='slim'
+					className='slim fadeDisabled'
 					onClick={ () => shardConnector?.sendMessage('updateSettings', { labelColor: color }) }
 					disabled={ color === playerData.settings.labelColor?.toUpperCase() }>
 					Save
@@ -63,7 +63,7 @@ function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>;
 					)) }
 				</Select>
 				<Button
-					className='slim'
+					className='slim fadeDisabled'
 					onClick={ () => shardConnector?.sendMessage('updateSettings', { pronoun }) }
 					disabled={ !allowChange || pronoun === playerData.settings.pronoun }>
 					Save

@@ -86,7 +86,7 @@ function GitHubIntegration({ account }: { account: IDirectoryAccountInfo; }): Re
 				<span>Account not linked to GitHub, enter your GitHub username to link it.</span>
 				<div className='input-row'>
 					<input type='text' value={ login } onChange={ (e) => setLogin(e.target.value) } />
-					<Button onClick={ onInitLink } disabled={ login.length === 0 || processing }>Link</Button>
+					<Button className='fadeDisabled' onClick={ onInitLink } disabled={ login.length === 0 || processing }>Link</Button>
 				</div>
 			</fieldset>
 		);
@@ -171,7 +171,7 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElem
 				<label>Color</label>
 				<ColorInput initialValue={ color } onChange={ setColor } />
 				<Button
-					className='slim'
+					className='slim fadeDisabled'
 					onClick={ () => directory?.sendMessage('changeSettings', { labelColor: color }) }
 					disabled={ color === account.settings.labelColor?.toUpperCase() }>
 					Save

@@ -1,8 +1,10 @@
 import { GetDatabase } from '../database/databaseProvider';
-import { GetLogger } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, AsyncSynchronized, DirectoryAccountSettingsSchema, GetLogger } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 import promClient from 'prom-client';
 import { DiscordBot } from '../services/discord/discordBot';
+import { cloneDeep, isEqual } from 'lodash';
+import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
@@ -95,7 +97,28 @@ export class AccountManager {
 	}
 
 	/** Create account from received data, adding it to loaded accounts */
-	private loadAccount(data: DatabaseAccountWithSecure): Account {
+	@AsyncSynchronized()
+	private async _loadAccount(data: DatabaseAccountWithSecure): Promise<Account> {
+		// If there already is account matching this id loaded, simply return it
+		const loadedAccount = this.getAccountById(data.id);
+		if (loadedAccount)
+			return loadedAccount;
+
+		// Verify and migrate account data
+
+		// Settings migration
+		{
+			const parsedSettings = DirectoryAccountSettingsSchema.safeParse(data.settings);
+			const newSettings = parsedSettings.success ? parsedSettings.data : cloneDeep(ACCOUNT_SETTINGS_DEFAULT);
+			if (!isEqual(newSettings, data.settings)) {
+				// Save modified data
+				const diff = diffString(data.settings, newSettings, { color: false });
+				logger.warning(`Account ${data.id} has invalid settings, fixing...\n`, diff);
+				await GetDatabase().updateAccountSettings(data.id, newSettings);
+				data.settings = newSettings;
+			}
+		}
+
 		const account = new Account(data);
 		this._onlineAccounts.add(account);
 		loadedAccountsMetric.set(this._onlineAccounts.size);
@@ -158,19 +181,15 @@ export class AccountManager {
 	 */
 	public async loadAccountById(id: number): Promise<Account | null> {
 		// Check if account is loaded and return it if it is
-		let account = this.getAccountById(id);
+		const account = this.getAccountById(id);
 		if (account)
 			return account;
 		// Get it from database
 		const data = await GetDatabase().getAccountById(id);
-		// Check if we didn't load it while we were querying data from DB and use already loaded if we did
-		account = this.getAccountById(id);
-		if (account)
-			return account;
 		// Use the acquired DB data to load character
 		if (!data)
 			return null;
-		return this.loadAccount(data);
+		return await this._loadAccount(data);
 	}
 
 	/**
@@ -179,19 +198,15 @@ export class AccountManager {
 	 */
 	public async loadAccountByUsername(username: string): Promise<Account | null> {
 		// Check if account is loaded and return it if it is
-		let account = this.getAccountByUsername(username);
+		const account = this.getAccountByUsername(username);
 		if (account)
 			return account;
 		// Get it from database
 		const data = await GetDatabase().getAccountByUsername(username);
-		// Check if we didn't load it while we were querying data from DB and use already loaded if we did
-		account = this.getAccountByUsername(username);
-		if (account)
-			return account;
 		// Use the acquired DB data to load character
 		if (!data)
 			return null;
-		return this.loadAccount(data);
+		return await this._loadAccount(data);
 	}
 
 	/**
@@ -200,19 +215,15 @@ export class AccountManager {
 	 */
 	public async loadAccountByEmailHash(emailHash: string): Promise<Account | null> {
 		// Check if account is loaded and return it if it is
-		let account = this.getAccountByEmailHash(emailHash);
+		const account = this.getAccountByEmailHash(emailHash);
 		if (account)
 			return account;
 		// Get it from database
 		const data = await GetDatabase().getAccountByEmailHash(emailHash);
-		// Check if we didn't load it while we were querying data from DB and use already loaded if we did
-		account = this.getAccountByEmailHash(emailHash);
-		if (account)
-			return account;
 		// Use the acquired DB data to load character
 		if (!data)
 			return null;
-		return this.loadAccount(data);
+		return await this._loadAccount(data);
 	}
 
 	public async createAccount(username: string, password: string, email: string): Promise<Account | 'usernameTaken' | 'emailTaken'> {
@@ -221,7 +232,7 @@ export class AccountManager {
 			return data;
 
 		logger.info(`Registered new account ${username}`);
-		const account = this.loadAccount(data);
+		const account = await this._loadAccount(data);
 
 		await account.secure.sendActivation(email);
 

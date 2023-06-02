@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AccountId, IAccountFriendStatus, IAccountRelationship, IClientDirectory, IConnectionBase, IDirectoryClientArgument } from 'pandora-common';
+import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountRelationship, IClientDirectory, IConnectionBase, IDirectoryClientArgument } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
@@ -14,11 +14,13 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
 
-export const RelationshipContext = new class RelationshipContext {
+// To use decorators the class needs to be created normally; see https://github.com/microsoft/TypeScript/issues/7342
+class RelationshipContextClass {
 	private _queue: (() => void)[] = [];
 	private _useQueue = true;
 
-	public async initStatus(connection: IConnectionBase<IClientDirectory>) {
+	@AsyncSynchronized()
+	public async initStatus(connection: IConnectionBase<IClientDirectory>): Promise<void> {
 		if (!this._useQueue) {
 			return;
 		}
@@ -63,7 +65,8 @@ export const RelationshipContext = new class RelationshipContext {
 		this._queue.forEach((fn) => fn());
 		this._queue = [];
 	}
-};
+}
+export const RelationshipContext = new RelationshipContextClass();
 
 export function Relationships() {
 	const navigate = useNavigate();

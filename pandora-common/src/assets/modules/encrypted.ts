@@ -158,9 +158,14 @@ export class ItemModuleEncrypted implements IItemModule<ModuleType>{
 	}
 
 	private _validateSecret(secret: string): boolean {
-		if (this.secretManager == null)
-			return this._decrypted === secret;
+		if (this.secretManager == null) {
+			if (this.data.encrypted == null)
+				return false;
+			if (this.data.encrypted.startsWith(DUMMY_ENCRYPTED_PREFIX))
+				return this._decrypted === secret;
 
+			return true;
+		}
 		return this._decrypted != null && this.secretManager.verify(this._decrypted, secret);
 	}
 

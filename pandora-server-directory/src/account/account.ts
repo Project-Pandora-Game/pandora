@@ -1,4 +1,4 @@
-import { CharacterId, DirectoryAccountSettingsSchema, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, IsObject, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient } from 'pandora-common';
+import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Character } from './character';
 import { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } from '../config';
@@ -48,18 +48,6 @@ export class Account {
 		// Init characters
 		for (const characterData of data.characters) {
 			this.characters.set(characterData.id, new Character(characterData, this));
-		}
-
-		// Settings migration
-		if (!IsObject(this.data.settings)) {
-			this.data.settings = cloneDeep(ACCOUNT_SETTINGS_DEFAULT);
-		} else {
-			const s = this.data.settings as Record<string, unknown>;
-			for (const [key, shape] of Object.entries(DirectoryAccountSettingsSchema.shape)) {
-				if (!shape.safeParse(s[key]).success) {
-					s[key] = cloneDeep((ACCOUNT_SETTINGS_DEFAULT as Record<string, unknown>)[key]);
-				}
-			}
 		}
 	}
 

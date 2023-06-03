@@ -6,6 +6,7 @@ import { AccountSettings } from './accountSettings';
 import { useNavigate } from 'react-router-dom';
 import { CharacterSettings } from './characterSettings';
 import { GraphicsSettings } from '../../graphics/graphicsSettings';
+import { InterfaceSettings } from './interfaceSettings';
 
 export function Settings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -25,6 +26,13 @@ export function Settings(): ReactElement | null {
 						<div className='settings-tab'>
 							<div className='settings-tab-contents'>
 								<CharacterSettings />
+							</div>
+						</div>
+					</Tab>
+					<Tab name='Interface'>
+						<div className='settings-tab'>
+							<div className='settings-tab-contents'>
+								<InterfaceSettings />
 							</div>
 						</div>
 					</Tab>

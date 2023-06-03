@@ -1665,6 +1665,16 @@ type CheckedAssetsPosePresets = {
 	poses: CheckedPosePreset[];
 }[];
 
+function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend: Immutable<PartialAppearancePose>): PartialAppearancePose {
+	return {
+		bones: { ...base.bones, ...extend.bones },
+		arms: { ...base.arms, ...extend.arms },
+		leftArm: { ...base.leftArm, ...extend.leftArm },
+		rightArm: { ...base.rightArm, ...extend.rightArm },
+		view: base.view ?? extend.view,
+	};
+}
+
 function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose, assetManager: AssetManagerClient): {
 	poses: CheckedAssetsPosePresets;
 	limits: AppearanceLimitTree;
@@ -1697,7 +1707,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 		poses: preset.poses.map((pose) => {
 			const available = limits.validate(pose);
 			return {
-				pose,
+				pose: pose.optional ? MergePartialAppearancePoses(pose, pose.optional) : pose,
 				active: available && isActive(pose),
 				available,
 				name: pose.name,

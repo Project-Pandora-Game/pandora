@@ -294,7 +294,10 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 
 export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	category: string;
-	poses: ({ name: string; } & PartialAppearancePose<Bones>)[];
+	poses: (PartialAppearancePose<Bones> & {
+		name: string;
+		optional?: PartialAppearancePose<Bones>;
+	})[];
 }[];
 
 export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {

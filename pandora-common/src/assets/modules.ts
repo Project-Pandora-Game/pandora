@@ -9,6 +9,7 @@ import { AssetDefinitionExtraArgs } from './definitions';
 import { IItemLoadContext } from './item';
 import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
 import { Immutable } from 'immer';
+import { EncryptedModuleDefinition, IModuleConfigEncrypted, IModuleItemDataEncrypted, ItemModuleEncryptedActionSchema } from './modules/encrypted';
 
 //#region Module definitions
 
@@ -25,18 +26,24 @@ export type IAssetModuleTypes<A extends AssetDefinitionExtraArgs = AssetDefiniti
 		config: IModuleConfigLockSlot<A>;
 		data: IModuleItemDataLockSlot;
 	};
+	encrypted: {
+		config: IModuleConfigEncrypted<A>;
+		data: IModuleItemDataEncrypted;
+	};
 };
 
 export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>; } = {
 	typed: new TypedModuleDefinition(),
 	storage: new StorageModuleDefinition(),
 	lockSlot: new LockSlotModuleDefinition(),
+	encrypted: new EncryptedModuleDefinition(),
 };
 
 export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
 	ItemModuleTypedActionSchema,
 	ItemModuleStorageActionSchema,
 	ItemModuleLockSlotActionSchema,
+	ItemModuleEncryptedActionSchema,
 ]);
 export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
@@ -63,6 +70,8 @@ export function GetModuleStaticAttributes(moduleDefinition: Immutable<AssetModul
 			return MODULE_TYPES.storage.getStaticAttributes(moduleDefinition);
 		case 'lockSlot':
 			return MODULE_TYPES.lockSlot.getStaticAttributes(moduleDefinition);
+		case 'encrypted':
+			return MODULE_TYPES.encrypted.getStaticAttributes(moduleDefinition);
 		default:
 			AssertNever(moduleDefinition);
 	}
@@ -113,6 +122,20 @@ export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, dat
 				moduleName,
 				moduleDefinition,
 				MODULE_TYPES.lockSlot.parseData(
+					asset,
+					moduleName,
+					moduleDefinition,
+					data,
+					context.assetManager,
+				),
+				context,
+			);
+		case 'encrypted':
+			return MODULE_TYPES.encrypted.loadModule(
+				asset,
+				moduleName,
+				moduleDefinition,
+				MODULE_TYPES.encrypted.parseData(
 					asset,
 					moduleName,
 					moduleDefinition,

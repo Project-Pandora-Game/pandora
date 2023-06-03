@@ -1,7 +1,6 @@
 import { GetLogger } from 'pandora-common';
 import React, { createRef, ErrorInfo, PureComponent, ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
-import { NODE_ENV } from '../../config/Environment';
 import { Button } from '../common/button/button';
 import { DebugContext, debugContext } from './debugContextProvider';
 import { BuildErrorReport } from './errorReport';

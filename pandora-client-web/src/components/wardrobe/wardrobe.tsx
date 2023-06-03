@@ -86,6 +86,7 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { Immutable } from 'immer';
 import { useUpdatedUserInput } from '../../common/useSyncUserInput';
 import { useItemColorString } from '../../graphics/graphicsLayer';
+import { ItemModuleEncrypted, ItemModuleEncryptedActionType } from 'pandora-common/dist/assets/modules/encrypted';
 
 export function GenerateRandomItemId(): ItemId {
 	return `i/${nanoid()}` as const;
@@ -1491,6 +1492,9 @@ function WardrobeModuleConfig({ m, ...props }: WardrobeModuleProps<IItemModule>)
 	if (m instanceof ItemModuleLockSlot) {
 		return <WardrobeModuleConfigLockSlot { ...props } m={ m } />;
 	}
+	if (m instanceof ItemModuleEncrypted) {
+		return <WardrobeModuleConfigEncrypted { ...props } m={ m } />;
+	}
 	return <>[ ERROR: UNKNOWN MODULE TYPE ]</>;
 }
 
@@ -1611,6 +1615,85 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 				}
 			</Row>
 		</Row>
+	);
+}
+
+function WardrobeModuleConfigEncrypted({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleEncrypted>): ReactElement {
+	const { targetSelector } = useWardrobeContext();
+
+	const [oldSecret, setOldSecret] = useState('');
+	const [newSecret, setNewSecret] = useState('');
+
+	const [action, setAction] = useState<ItemModuleEncryptedActionType>(m.data.encrypted != null ? 'deactivate' : 'activate');
+	const actualAction = useMemo(() => {
+		if (m.data.encrypted == null)
+			return 'activate';
+		if (action === 'activate')
+			return 'deactivate';
+
+		return action;
+	}, [m.data.encrypted, action]);
+
+	const oldInput = useMemo(() => (
+		<Row>
+			<label htmlFor='oldSecret'>Old secret:</label>
+			<input id='oldSecret' type='password' value={ oldSecret } onChange={ (ev) => setOldSecret(ev.target.value) } />
+		</Row>
+	), [oldSecret, setOldSecret]);
+	const newInput = useMemo(() => (
+		<Row>
+			<label htmlFor='newSecret'>New secret:</label>
+			<input id='newSecret' type='password' value={ newSecret } onChange={ (ev) => setNewSecret(ev.target.value) } />
+		</Row>
+	), [newSecret, setNewSecret]);
+	const actionButton = useMemo(() => (
+		<WardrobeActionButton
+			action={ {
+				type: 'moduleAction',
+				target: targetSelector,
+				item,
+				module: moduleName,
+				action: {
+					moduleType: 'encrypted',
+					action: {
+						moduleAction: actualAction,
+						secret: newSecret,
+						oldSecret,
+					}
+				},
+			} }
+			className='allowed'
+		>
+			{ _.capitalize(actualAction) }
+		</WardrobeActionButton>
+	), [targetSelector, item, moduleName, actualAction, newSecret, oldSecret]);
+
+	return (
+		<Column>
+			{
+				actualAction !== 'activate' ? (
+					<Row wrap>
+						<Button onClick={ () => setAction('deactivate') } disabled={ action === 'deactivate' }>Deactivate</Button>
+						<Button onClick={ () => setAction('modify') } disabled={ action === 'modify' }>Modify</Button>
+					</Row>
+				) : null
+			}
+			{
+				actualAction === 'activate' ? newInput : null
+			}
+			{
+				actualAction === 'deactivate' ? oldInput : null
+			}
+			{
+				actualAction === 'modify' ? (
+					<>
+						{ oldInput }
+						{ newInput }
+					</>
+				) : null
+			}
+			{ actionButton }
+		</Column>
 	);
 }
 

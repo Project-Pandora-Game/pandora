@@ -55,6 +55,11 @@ export const ItemModuleEncryptedActionSchema = z.object({
 type ItemModuleEncryptedAction = z.infer<typeof ItemModuleEncryptedActionSchema>;
 export type ItemModuleEncryptedActionType = ItemModuleEncryptedAction['action']['moduleAction'];
 
+const ItemModuleEncryptedSecureDataSchema = z.object({
+	password: z.string(),
+});
+type ItemModuleEncryptedSecureData = z.infer<typeof ItemModuleEncryptedSecureDataSchema>;
+
 export class EncryptedModuleDefinition implements IAssetModuleDefinition<ModuleType> {
 	public parseData(_asset: Asset<AssetType>, _moduleName: string, _config: IModuleConfigEncrypted, data: unknown, assetManager: AssetManager): IModuleItemDataEncrypted {
 		const parsed = ModuleItemDataEncryptedScheme.safeParse(data);
@@ -85,14 +90,14 @@ export class ItemModuleEncrypted implements IItemModule<ModuleType>{
 	public readonly data: Immutable<IModuleItemDataEncrypted>;
 	private readonly assetManager: AssetManager;
 	private readonly secretManager?: SecretManager;
-	private readonly _decrypted?: string;
+	private readonly _decrypted?: ItemModuleEncryptedSecureData;
 
 	constructor(config: IModuleConfigEncrypted, data: IModuleItemDataEncrypted, context: IItemLoadContext) {
 		this.config = config;
 		this.data = data;
 		this.assetManager = context.assetManager;
 		this.secretManager = context.assetManager.secretManager;
-		this._decrypted = this._getDecrypt(data.encrypted);
+		this._decrypted = this._decrypt(data.encrypted);
 	}
 
 	public exportData(): IModuleItemDataEncrypted {
@@ -120,7 +125,7 @@ export class ItemModuleEncrypted implements IItemModule<ModuleType>{
 				message = this.config.activateMessage;
 				data = {
 					...this.data,
-					encrypted: this._generateEncrypted(action.secret),
+					encrypted: this._generateEncrypted({}, action.secret),
 				};
 				break;
 			case 'deactivate':
@@ -135,7 +140,7 @@ export class ItemModuleEncrypted implements IItemModule<ModuleType>{
 				message = this.config.modifyMessage;
 				data = {
 					...this.data,
-					encrypted: this._generateEncrypted(action.secret),
+					encrypted: this._generateEncrypted(this._decrypted ?? {}, action.secret),
 				};
 				break;
 			default:
@@ -162,22 +167,25 @@ export class ItemModuleEncrypted implements IItemModule<ModuleType>{
 			if (this.data.encrypted == null)
 				return false;
 			if (this.data.encrypted.startsWith(DUMMY_ENCRYPTED_PREFIX))
-				return this._decrypted === secret;
+				return this._decrypted?.password === secret;
 
 			return true;
 		}
-		return this._decrypted != null && this.secretManager.verify(this._decrypted, secret);
+		return this._decrypted != null && this.secretManager.verify(this._decrypted.password, secret);
 	}
 
-	private _generateEncrypted(secret: string): string {
+	private _generateEncrypted(secret: Omit<ItemModuleEncryptedSecureData, 'password'>, password: string): string {
+		const str = JSON.stringify({
+			...secret,
+			password: this.secretManager == null ? password : this.secretManager.hash(password),
+		});
 		if (this.secretManager == null)
-			return DUMMY_ENCRYPTED_PREFIX + secret;
+			return DUMMY_ENCRYPTED_PREFIX + str;
 
-		const hash = this.secretManager.hash(secret);
-		return this.secretManager.encrypt(hash);
+		return this.secretManager.encrypt(str);
 	}
 
-	private _getDecrypt(encrypted?: string): string | undefined {
+	private _decrypt(encrypted?: string): ItemModuleEncryptedSecureData | undefined {
 		if (encrypted == null)
 			return undefined;
 
@@ -185,9 +193,25 @@ export class ItemModuleEncrypted implements IItemModule<ModuleType>{
 			if (!encrypted.startsWith(DUMMY_ENCRYPTED_PREFIX))
 				return undefined;
 
-			return encrypted.substring(DUMMY_ENCRYPTED_PREFIX.length);
+			return this._parseDecrypted(encrypted.substring(DUMMY_ENCRYPTED_PREFIX.length));
 		}
 
-		return this.secretManager.decrypt(encrypted);
+		return this._parseDecrypted(this.secretManager.decrypt(encrypted));
+	}
+
+	private _parseDecrypted(decrypted?: string): ItemModuleEncryptedSecureData | undefined {
+		if (decrypted == null)
+			return undefined;
+
+		try {
+			const parsed = JSON.parse(decrypted) as unknown;
+			const result = ItemModuleEncryptedSecureDataSchema.safeParse(parsed);
+			if (!result.success)
+				return undefined;
+
+			return result.data;
+		} catch {
+			return undefined;
+		}
 	}
 }

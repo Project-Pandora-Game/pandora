@@ -7,6 +7,14 @@ import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, A
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { CreateItem, Item, ItemBundle } from './item';
 
+export interface SecretManager {
+	isValid(_secret: string): boolean;
+	decrypt(_secret?: string): string | undefined;
+	encrypt(_secret: string): string;
+	verify(_secret: string, _password: string): boolean;
+	hash(_password: string): string;
+}
+
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
 	protected readonly _bones: ReadonlyMap<string, BoneDefinition>;
@@ -22,6 +30,10 @@ export class AssetManager {
 	public readonly bodyparts: readonly AssetBodyPart[];
 	public readonly randomization: AppearanceRandomizationData;
 	public readonly assetSlots: ReadonlyMap<string, Readonly<AssetSlotDefinition>>;
+
+	public get secretManager(): SecretManager | undefined {
+		return undefined;
+	}
 
 	public getAllAssets(): Asset[] {
 		return [...this._assets.values()];

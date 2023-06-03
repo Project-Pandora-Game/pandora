@@ -1,7 +1,6 @@
 import { GetLogger } from 'pandora-common';
 import React, { createRef, ErrorInfo, PureComponent, ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
-import { NODE_ENV } from '../../config/Environment';
 import { Button } from '../common/button/button';
 import { DebugContext, debugContext } from './debugContextProvider';
 import { BuildErrorReport } from './errorReport';
@@ -51,13 +50,22 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 
 	private readonly _uncaughtErrorListener = (event: ErrorEvent) => this._uncaughtErrorListenerRaw(event);
 	private _uncaughtErrorListenerRaw(event: ErrorEvent): void {
-		logger.fatal('Uncaught error\n', `${event.message} @ ${event.filename}:${event.lineno}:${event.colno}\n`, event.error);
+		const errorDescription = `${event.message} @ ${event.filename}:${event.lineno}:${event.colno}\n`;
+		// Test for ResizeObserver errors that shouldn't actually be errors
+		if (/ResizeObserver.*(loop completed with undelivered notifications|loop limit exceeded)/.test(event.message)) {
+			logger.warning('Got a ResizeObserver loop warning:\n', errorDescription, event.error);
+			return;
+		}
+		// Ignore 'Script error.' as it gives no useful info anyway and 99% of the time is an extension crashing, not us
+		if (event.message === 'Script error.' && event.error == null) {
+			logger.warning('Got a Script error:\n', errorDescription);
+			return;
+		}
+		logger.fatal('Uncaught error\n', errorDescription, event.error);
 		if (event.error instanceof Error) {
 			this.componentDidCatch(event.error);
-		} else if (event.error === null && NODE_ENV !== 'production') {
-			return;
 		} else {
-			this.componentDidCatch(new Error(`Uncaught error: ${ String(event.error) }`));
+			this.componentDidCatch(new Error(`Uncaught error:\n${errorDescription}${ String(event.error) }`));
 		}
 	}
 

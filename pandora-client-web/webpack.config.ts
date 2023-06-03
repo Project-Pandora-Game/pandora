@@ -45,6 +45,12 @@ export default function (env: WebpackEnv): Configuration {
 			},
 			hot: true,
 			open: false,
+			client: {
+				overlay: {
+					// Do not show runtime error overlay - we have our own reporter
+					runtimeErrors: false,
+				},
+			},
 			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),
 		},
 		devtool: env.prod ? 'source-map' : 'eval-source-map',
@@ -123,7 +129,9 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 			chunkFilename: '[name].[contenthash].chunk.css',
 		}));
 	} else {
-		plugins.push(new ReactRefreshWebpackPlugin());
+		plugins.push(new ReactRefreshWebpackPlugin({
+			overlay: false,
+		}));
 	}
 
 	return plugins;

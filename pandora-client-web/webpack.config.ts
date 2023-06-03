@@ -123,7 +123,9 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 			chunkFilename: '[name].[contenthash].chunk.css',
 		}));
 	} else {
-		plugins.push(new ReactRefreshWebpackPlugin());
+		plugins.push(new ReactRefreshWebpackPlugin({
+			overlay: false,
+		}));
 	}
 
 	return plugins;

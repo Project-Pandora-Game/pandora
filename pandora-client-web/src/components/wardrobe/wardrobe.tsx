@@ -39,6 +39,7 @@ import {
 	ItemId,
 	ItemPath,
 	MessageSubstitute,
+	PartialAppearancePose,
 	RoomDeviceDeployment,
 	RoomDeviceSlot,
 	RoomInventory,
@@ -1653,9 +1654,11 @@ function WardrobeBodySizeEditor({ character, characterState }: {
 }
 
 type AssetsPosePreset = AssetsPosePresets[number]['poses'][number];
-type CheckedPosePreset = AssetsPosePreset & {
+type CheckedPosePreset = {
 	active: boolean;
 	available: boolean;
+	pose: PartialAppearancePose;
+	name: string;
 };
 type CheckedAssetsPosePresets = {
 	category: string;
@@ -1694,9 +1697,10 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 		poses: preset.poses.map((pose) => {
 			const available = limits.validate(pose);
 			return {
-				...pose,
+				pose,
 				active: available && isActive(pose),
 				available,
+				name: pose.name,
 			};
 		}),
 	}));
@@ -1704,7 +1708,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 	return { poses, limits };
 }
 
-function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
+function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
 	return (
 		<>
 			{ poses.map((poseCategory, poseCategoryIndex) => (
@@ -1712,8 +1716,8 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 					<h4>{ poseCategory.category }</h4>
 					<div className='pose-row'>
 						{
-							poseCategory.poses.map((pose, poseIndex) => (
-								<PoseButton key={ poseIndex } pose={ pose } setPose={ setPose } />
+							poseCategory.poses.map((preset, presetIndex) => (
+								<PoseButton key={ presetIndex } preset={ preset } setPose={ setPose } />
 							))
 						}
 					</div>
@@ -1723,7 +1727,7 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 	);
 }
 
-export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: CharacterArmsPose; setPose: (pose: Omit<AssetsPosePreset, 'name'>) => void; }): ReactElement {
+export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: CharacterArmsPose; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
 	const assetManager = useAssetManager();
 	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose, assetManager), [appearance, bones, armsPose, assetManager]);
 	return (
@@ -1850,7 +1854,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	const armsPose = useCharacterAppearanceArmsPose(characterState);
 	const view = useCharacterAppearanceView(characterState);
 
-	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm }: Omit<AssetsPosePreset, 'name'>) => {
+	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm }: PartialAppearancePose) => {
 		execute({
 			type: 'pose',
 			target: character.id,
@@ -1906,8 +1910,8 @@ export function WardrobePoseGui({ character, characterState }: {
 	);
 }
 
-function PoseButton({ pose, setPose }: { pose: CheckedPosePreset; setPose: (pose: AssetsPosePreset) => void; }): ReactElement {
-	const { name, available, active } = pose;
+function PoseButton({ preset, setPose }: { preset: CheckedPosePreset; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
+	const { name, available, active, pose } = preset;
 	return (
 		<Button className={ classNames('slim', { ['pose-unavailable']: !available }) } disabled={ active || !available } onClick={ () => setPose(pose) }>
 			{ name }

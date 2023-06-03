@@ -100,3 +100,10 @@ export const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY || '';
 export const HCAPTCHA_SITE_KEY = process.env.HCAPTCHA_SITE_KEY || '';
 
 //#endregion
+
+//#region Shard
+
+/** Secret key for shard to store encrypted data in items */
+export const SHARD_ASSET_SECRET_KEY = process.env.SHARD_ASSET_SECRET_KEY || 'pandora-shard-assets-secret';
+
+//#endregion

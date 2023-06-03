@@ -25,6 +25,7 @@ export const ShardDirectorySchema = {
 		}),
 		response: ZodCast<IDirectoryShardUpdate & {
 			shardId: string;
+			assetSecretKey: string;
 		}>(),
 	},
 	shardRequestStop: {

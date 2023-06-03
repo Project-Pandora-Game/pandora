@@ -10,6 +10,7 @@ import { Sleep } from '../utility';
 import type { Account } from '../account/account';
 import { isEqual, last, uniq } from 'lodash';
 import type { IConnectedTokenInfo } from './shardTokenStore';
+import { SHARD_ASSET_SECRET_KEY } from '../config';
 
 export class Shard {
 	public readonly id;
@@ -89,6 +90,7 @@ export class Shard {
 
 		return {
 			shardId: this.id,
+			assetSecretKey: SHARD_ASSET_SECRET_KEY,
 			characters: this.makeCharacterSetupList(),
 			rooms: this.makeRoomSetupList(),
 			messages: this.makeDirectoryActionMessages(),
@@ -170,6 +172,7 @@ export class Shard {
 
 		return {
 			shardId: this.id,
+			assetSecretKey: SHARD_ASSET_SECRET_KEY,
 			characters: this.makeCharacterSetupList(),
 			rooms: this.makeRoomSetupList(),
 			messages: this.makeDirectoryActionMessages(),

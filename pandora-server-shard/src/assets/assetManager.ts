@@ -6,10 +6,17 @@ import express from 'express';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { CharacterManager } from '../character/characterManager';
 import { RoomManager } from '../room/roomManager';
+import { ShardSecretManager } from './secreatManager';
 
 const logger = GetLogger('AssetManager');
 
-export let assetManager = new AssetManager();
+class ShardAssetManager extends AssetManager {
+	public override get secretManager() {
+		return ShardSecretManager;
+	}
+}
+
+export let assetManager: AssetManager = new ShardAssetManager();
 
 // Checks asset definitions for changes every 2 seconds, if in development mode
 const ASSET_DEFINITIONS_WATCH_INTERVAL = 2_000;
@@ -34,7 +41,7 @@ export function LoadAssetDefinitions(): void {
 		throw new Error('Failed to read asset definitions');
 	}
 
-	assetManager = new AssetManager(currentHash, definitions);
+	assetManager = new ShardAssetManager(currentHash, definitions);
 
 	logger.info(`Loaded asset definitions, version: ${assetManager.definitionsHash}`);
 

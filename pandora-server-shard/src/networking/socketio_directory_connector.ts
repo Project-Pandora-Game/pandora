@@ -6,6 +6,7 @@ import { RoomManager } from '../room/roomManager';
 import { Stop } from '../lifecycle';
 import promClient from 'prom-client';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { ShardSecretManager } from '../assets/secreatManager';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 10_000;
@@ -257,7 +258,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			features.push('development');
 		}
 
-		const { shardId, ...update } = await this.awaitResponse('shardRegister', {
+		const { shardId, assetSecretKey, ...update } = await this.awaitResponse('shardRegister', {
 			publicURL: SERVER_PUBLIC_ADDRESS,
 			features,
 			version: APP_VERSION,
@@ -270,6 +271,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			logger.warning('Ignoring finished registration when in state:', DirectoryConnectionState[this._state]);
 			return;
 		}
+
+		ShardSecretManager.initializeKey(assetSecretKey);
 
 		this.shardId = shardId;
 		await this.updateFromDirectory(update);

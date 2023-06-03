@@ -45,6 +45,12 @@ export default function (env: WebpackEnv): Configuration {
 			},
 			hot: true,
 			open: false,
+			client: {
+				overlay: {
+					// Do not show runtime error overlay - we have our own reporter
+					runtimeErrors: false,
+				},
+			},
 			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),
 		},
 		devtool: env.prod ? 'source-map' : 'eval-source-map',

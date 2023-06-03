@@ -14,8 +14,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
 
-// To use decorators the class needs to be created normally; see https://github.com/microsoft/TypeScript/issues/7342
-class RelationshipContextClass {
+export const RelationshipContext = new class RelationshipContext {
 	private _queue: (() => void)[] = [];
 	private _useQueue = true;
 
@@ -65,8 +64,7 @@ class RelationshipContextClass {
 		this._queue.forEach((fn) => fn());
 		this._queue = [];
 	}
-}
-export const RelationshipContext = new RelationshipContextClass();
+};
 
 export function Relationships() {
 	const navigate = useNavigate();

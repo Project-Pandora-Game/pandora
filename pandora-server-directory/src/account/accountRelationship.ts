@@ -96,7 +96,7 @@ export class AccountRelationship {
 		return false;
 	}
 
-	@Synchronized()
+	@Synchronized
 	public async initiateFriendRequest(id: AccountId): Promise<'ok' | 'accountNotFound' | 'blocked' | 'requestAlreadyExists'> {
 		const existing = this.get(id);
 		if (existing) {
@@ -120,7 +120,7 @@ export class AccountRelationship {
 		return 'ok';
 	}
 
-	@Synchronized()
+	@Synchronized
 	public async acceptFriendRequest(id: AccountId): Promise<'ok' | 'requestNotFound'> {
 		const existing = this.get(id);
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
@@ -130,7 +130,7 @@ export class AccountRelationship {
 		return 'ok';
 	}
 
-	@Synchronized()
+	@Synchronized
 	public async declineFriendRequest(id: AccountId): Promise<'ok' | 'requestNotFound'> {
 		const existing = this.get(id);
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
@@ -140,7 +140,7 @@ export class AccountRelationship {
 		return 'ok';
 	}
 
-	@Synchronized()
+	@Synchronized
 	public async cancelFriendRequest(id: AccountId): Promise<'ok' | 'requestNotFound'> {
 		const existing = this.get(id);
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== this.account.id) {
@@ -150,7 +150,7 @@ export class AccountRelationship {
 		return 'ok';
 	}
 
-	@Synchronized()
+	@Synchronized
 	public async removeFriend(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
 		if (existing?.relationship.type !== 'friend') {
@@ -160,7 +160,7 @@ export class AccountRelationship {
 		return true;
 	}
 
-	@Synchronized()
+	@Synchronized
 	public async block(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
 		if (existing) {
@@ -180,7 +180,7 @@ export class AccountRelationship {
 		return true;
 	}
 
-	@Synchronized()
+	@Synchronized
 	public async unblock(id: AccountId): Promise<boolean> {
 		const existing = this.get(id);
 		if (!existing)
@@ -328,15 +328,13 @@ export class AccountRelationship {
 	}
 }
 
-function Synchronized() {
-	return function <ReturnT>(_target: AccountRelationship, _propertyKey: string, descriptor: TypedPropertyDescriptor<(id: AccountId) => Promise<ReturnT>>) {
-		const original = descriptor.value;
-		AssertNotNullable(original);
-		descriptor.value = async function (this: AccountRelationship, id: AccountId) {
-			await this.load();
-			const [a, b] = [this.account.id, id].sort();
-			return await GLOBAL_LOCK.acquire(`${a}-${b}`, () => original.call(this, id));
-		};
-		return descriptor;
+function Synchronized<ReturnT>(
+	method: (this: AccountRelationship, id: AccountId) => Promise<ReturnT>,
+	_context: ClassMethodDecoratorContext<AccountRelationship>,
+) {
+	return async function (this: AccountRelationship, id: AccountId) {
+		await this.load();
+		const [a, b] = [this.account.id, id].sort();
+		return await GLOBAL_LOCK.acquire(`${a}-${b}`, () => method.call(this, id));
 	};
 }

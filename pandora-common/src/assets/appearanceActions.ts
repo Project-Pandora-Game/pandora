@@ -421,6 +421,18 @@ export function DoAppearanceAction(
 			}
 		// falls through
 		case 'pose': {
+			const target = context.getTarget({ type: 'character', characterId: action.target });
+			if (!target)
+				return { result: 'invalidAction' };
+
+			const r = player.canInteractWithTarget(target);
+			if (!r.allowed) {
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
+			}
+
 			if (!manipulator.produceCharacterState(action.target, (character) => {
 				return character.produceWithPose(action, action.type, false);
 			})) {
@@ -431,6 +443,18 @@ export function DoAppearanceAction(
 		}
 		// Changes view of the character - front or back
 		case 'setView': {
+			const target = context.getTarget({ type: 'character', characterId: action.target });
+			if (!target)
+				return { result: 'invalidAction' };
+
+			const r = player.canInteractWithTarget(target);
+			if (!r.allowed) {
+				return {
+					result: 'restrictionError',
+					restriction: r.restriction,
+				};
+			}
+
 			if (!manipulator.produceCharacterState(action.target, (character) => {
 				return character.produceWithView(action.view);
 			})) {

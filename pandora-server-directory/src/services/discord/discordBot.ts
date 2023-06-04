@@ -20,9 +20,7 @@ type Status<T> = {
 export type DiscordBotStatus = Status<number>;
 
 export const DiscordBot = new class DiscordBot {
-	private readonly _client = new Discord.Client({
-		intents: GATEWAY_INTENTS,
-	});
+	private _client?: Discord.Client;
 	private _statusChannels?: Partial<Status<GuildChannel>>;
 	private _destroyed = false;
 
@@ -31,6 +29,10 @@ export const DiscordBot = new class DiscordBot {
 			logger.warning('Secret is not set, Discord Bot is disabled', DISCORD_BOT_TOKEN);
 			return this;
 		}
+
+		this._client = new Discord.Client({
+			intents: GATEWAY_INTENTS,
+		});
 
 		const result = await this._client.login(DISCORD_BOT_TOKEN);
 		if (result !== DISCORD_BOT_TOKEN) {
@@ -58,13 +60,16 @@ export const DiscordBot = new class DiscordBot {
 			return;
 		}
 		this._destroyed = true;
+		if (!this._client) {
+			return;
+		}
 		this.setOnlineStatus.cancel();
 		this._client.user?.setStatus('dnd');
 		this._client.destroy();
 	}
 
 	public readonly setOnlineStatus = _.throttle((status: Partial<DiscordBotStatus>): void => {
-		if (this._destroyed) {
+		if (this._destroyed || !this._client) {
 			return;
 		}
 		const catcher = (error: Error) => logger.error(error);
@@ -85,7 +90,7 @@ export const DiscordBot = new class DiscordBot {
 	}, STATUS_THROTTLE_TIME);
 
 	private async _getGuildChannel(channelId: string): Promise<GuildChannel | undefined> {
-		if (!channelId) {
+		if (!channelId || !this._client) {
 			return undefined;
 		}
 		const channel = await this._client.channels.fetch(channelId);

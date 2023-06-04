@@ -10,7 +10,7 @@ import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundle, Item
 import { AssetManager } from '../assetManager';
 import type { AppearanceActionContext } from '../appearanceActions';
 import type { ActionMessageTemplateHandler, RoomActionTarget } from '../appearanceTypes';
-import { Assert, AssertNever } from '../../utility';
+import { AssertNever } from '../../utility';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
 	/** Effects applied when this slot isn't occupied by a lock */

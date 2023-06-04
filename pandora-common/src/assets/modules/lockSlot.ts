@@ -47,8 +47,12 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		return new ItemModuleLockSlot(config, data, context);
 	}
 
-	public getStaticAttributes(_config: IModuleConfigLockSlot): ReadonlySet<string> {
-		return new Set<string>();
+	public getStaticAttributes(config: IModuleConfigLockSlot): ReadonlySet<string> {
+		const result = new Set<string>();
+		config.emptyEffects?.attributes?.forEach((a) => result.add(a));
+		config.occupiedEffects?.attributes?.forEach((a) => result.add(a));
+		config.lockedEffects?.attributes?.forEach((a) => result.add(a));
+		return result;
 	}
 }
 

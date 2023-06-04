@@ -2072,7 +2072,7 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 					<img width='21' height='33' src={ closedLock } />
 				</span>
 				<Row alignY='center'>
-					Locked by: { m.lock.asset.definition.name }
+					Locked with: { m.lock.asset.definition.name }
 				</Row>
 			</Row>
 			<WardrobeLockSlotLocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />

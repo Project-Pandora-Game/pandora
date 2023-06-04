@@ -1,4 +1,4 @@
-import { Assert, AssertNever, AssertNotNullable, AsyncSynchronized, CharacterId, CloneDeepMutable, GetLogger, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryCharacterConnectionInfo, Logger } from 'pandora-common';
+import { AccountId, Assert, AssertNever, AssertNotNullable, AsyncSynchronized, CharacterId, CloneDeepMutable, GetLogger, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryCharacterConnectionInfo, Logger } from 'pandora-common';
 import type { Account } from './account';
 import type { Shard } from '../shard/shard';
 import type { Room } from '../room/room';
@@ -74,6 +74,10 @@ export class Character {
 		return this._assignedShard != null;
 	}
 
+	public get shardId(): string | null {
+		return this._assignedShard?.id ?? null;
+	}
+
 	public get inCreation(): boolean {
 		return !!this.data.inCreation;
 	}
@@ -117,6 +121,12 @@ export class Character {
 			return 'inCreation';
 
 		return '';
+	}
+
+	public async sendAccountBlockChanged(blocks: AccountId[]) {
+		if (this._assignedShard) {
+			await this._assignedShard.sendAccountBlockChanged(this.account, blocks);
+		}
 	}
 
 	@AsyncSynchronized('object')

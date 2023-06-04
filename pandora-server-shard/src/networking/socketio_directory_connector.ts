@@ -78,6 +78,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			stop: Stop,
 			roomCheckCanEnter: this.handleRoomCheckCanEnter.bind(this),
 			roomCheckCanLeave: this.handleRoomCheckCanLeave.bind(this),
+			accountBlockChanged: this.handleAccountBlockChanged.bind(this),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -305,6 +306,10 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		}
 
 		return { result: 'ok' };
+	}
+
+	private handleAccountBlockChanged({ account, blocked }: IDirectoryShardArgument['accountBlockChanged']): IDirectoryShardResult['accountBlockChanged'] {
+		return {};
 	}
 }
 

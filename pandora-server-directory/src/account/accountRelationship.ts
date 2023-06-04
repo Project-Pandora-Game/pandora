@@ -177,6 +177,8 @@ export class AccountRelationship {
 		await this.updateRelationship(id, hasSource
 			? { type: 'oneSidedBlock', from: this.account.id }
 			: { type: 'mutualBlock' });
+
+		await this.updateShardBlocks();
 		return true;
 	}
 
@@ -195,6 +197,7 @@ export class AccountRelationship {
 		} else {
 			await this.updateRelationship(id, { type: 'oneSidedBlock', from: id });
 		}
+		await this.updateShardBlocks();
 		return true;
 	}
 
@@ -313,6 +316,19 @@ export class AccountRelationship {
 				continue;
 			}
 			account.associatedConnections.sendMessage('friendStatus', data);
+		}
+	}
+
+	private async updateShardBlocks() {
+		const blocks = this.getBlocked();
+		const sent = new Set<string>();
+		for (const character of this.account.characters.values()) {
+			const id = character.shardId;
+			if (id == null || sent.has(id)) {
+				continue;
+			}
+			sent.add(id);
+			await character.sendAccountBlockChanged(blocks);
 		}
 	}
 

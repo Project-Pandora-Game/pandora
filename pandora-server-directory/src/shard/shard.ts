@@ -349,6 +349,23 @@ export class Shard {
 		return true;
 	}
 
+	@AsyncSynchronized()
+	public async sendAccountBlockChanged(account: Account, blocked: AccountId[]) {
+		if (this.stopping || this.reconnecting)
+			return;
+		if (!this.shardConnection)
+			return;
+
+		try {
+			await this.shardConnection.awaitResponse('accountBlockChanged', {
+				account: account.id,
+				blocked,
+			});
+		} catch (error) {
+			this.logger.warning('Failed to send account block changed:', error);
+		}
+	}
+
 	private makeCharacterSetupList(): IShardCharacterDefinition[] {
 		const result: IShardCharacterDefinition[] = [];
 		for (const [id, character] of this.characters) {

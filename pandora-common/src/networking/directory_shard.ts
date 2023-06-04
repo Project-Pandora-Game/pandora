@@ -4,7 +4,7 @@ import { ChatRoomDataSchema, RoomId, RoomIdSchema } from '../chatroom/room';
 import { IEmpty } from './empty';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 import { z } from 'zod';
-import { AccountId, AccountRoleInfoSchema } from '../account';
+import { AccountId, AccountIdSchema, AccountRoleInfoSchema } from '../account';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
@@ -49,6 +49,13 @@ export const DirectoryShardSchema = {
 	},
 	stop: {
 		request: ZodCast<IEmpty>(),
+		response: ZodCast<IEmpty>(),
+	},
+	accountBlockChanged: {
+		request: z.object({
+			account: AccountIdSchema,
+			blocked: z.array(AccountIdSchema),
+		}),
 		response: ZodCast<IEmpty>(),
 	},
 	//#region Room manipulation

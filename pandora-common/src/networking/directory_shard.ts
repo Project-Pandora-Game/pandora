@@ -4,7 +4,7 @@ import { ChatRoomDataSchema, RoomId, RoomIdSchema } from '../chatroom/room';
 import { IEmpty } from './empty';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 import { z } from 'zod';
-import { AccountRoleInfoSchema } from '../account';
+import { AccountId, AccountRoleInfoSchema } from '../account';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
@@ -38,6 +38,7 @@ export type IDirectoryShardUpdate = {
 	/** List of rooms which exist on this shard */
 	rooms: IShardChatRoomDefinition[];
 	messages: Record<RoomId, IChatRoomMessageDirectoryAction[]>;
+	blocks: [AccountId, AccountId[]][];
 };
 
 /** Directory->Shard messages */

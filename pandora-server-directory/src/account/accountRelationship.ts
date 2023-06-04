@@ -198,6 +198,19 @@ export class AccountRelationship {
 		return true;
 	}
 
+	public getBlocked(): AccountId[] {
+		if (!this.loaded)
+			return [];
+
+		const blocked: AccountId[] = [];
+		for (const { id, relationship } of this.relationships.values()) {
+			if (relationship.type === 'mutualBlock' || (relationship.type === 'oneSidedBlock' && relationship.from === this.account.id)) {
+				blocked.push(id);
+			}
+		}
+		return blocked;
+	}
+
 	private async update(rel: DatabaseRelationship, name?: string): Promise<void> {
 		const id = rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0];
 		const existing = this.get(id);

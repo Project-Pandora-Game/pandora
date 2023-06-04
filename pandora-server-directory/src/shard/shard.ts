@@ -1,5 +1,5 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition, AsyncSynchronized, ManuallyResolvedPromise, CreateManuallyResolvedPromise, IShardTokenType } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition, AsyncSynchronized, ManuallyResolvedPromise, CreateManuallyResolvedPromise, IShardTokenType, AccountId } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
@@ -92,6 +92,7 @@ export class Shard {
 			characters: this.makeCharacterSetupList(),
 			rooms: this.makeRoomSetupList(),
 			messages: this.makeDirectoryActionMessages(),
+			blocks: this.makeAccountBlockDictionary(),
 		};
 	}
 
@@ -173,6 +174,7 @@ export class Shard {
 			characters: this.makeCharacterSetupList(),
 			rooms: this.makeRoomSetupList(),
 			messages: this.makeDirectoryActionMessages(),
+			blocks: this.makeAccountBlockDictionary(),
 		};
 	}
 
@@ -319,6 +321,9 @@ export class Shard {
 		if (updateReasons.includes('messages')) {
 			update.messages = this.makeDirectoryActionMessages();
 		}
+		if (updateReasons.includes('blocks')) {
+			update.blocks = this.makeAccountBlockDictionary();
+		}
 
 		try {
 			await this.shardConnection.awaitResponse('update', update, 10_000);
@@ -373,6 +378,19 @@ export class Shard {
 			if (room.pendingMessages.length > 0) {
 				result[room.id] = room.pendingMessages.slice();
 			}
+		}
+		return result;
+	}
+
+	private makeAccountBlockDictionary(): [AccountId, AccountId[]][] {
+		const result: [AccountId, AccountId[]][] = [];
+		const visited = new Set<AccountId>();
+		for (const character of this.characters.values()) {
+			if (visited.has(character.account.id))
+				continue;
+
+			visited.add(character.account.id);
+			result.push([character.account.id, character.account.relationship.getBlocked()]);
 		}
 		return result;
 	}

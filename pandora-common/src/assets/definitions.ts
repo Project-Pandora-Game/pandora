@@ -270,6 +270,20 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 		/** Message for when this item is unlocked */
 		actionUnlock?: string;
 	};
+	/**
+	 * Text to show when the lock is locked.
+	 * @default 'Locked by CHARACTER at TIME'
+	 *
+	 * To disable this text, set it to '_'
+	 *
+	 * Replacements:
+	 *  - CHARACTER_NAME is replaced with the name of the character
+	 *  - CHARACTER_ID is replaced with the ID of the character
+	 *  - CHARACTER is replaced with `CHARACTER_NAME (CHARACTER_ID)`
+	 *  - TIME is replaced with the time the variant was selected
+	 *  - TIME_PASSED is replaced with the time passed since the variant was selected
+	 */
+	lockedText?: string;
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
 }

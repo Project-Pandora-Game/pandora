@@ -2080,22 +2080,48 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 	);
 }
 
-function WardrobeLockSlotLocked({ item, moduleName }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
+function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const { targetSelector } = useWardrobeContext();
+	const now = useCurrentTime();
+	const lockedText = useMemo(() => {
+		Assert(lock.lockData?.locked != null);
+		const formatText = lock.asset.definition.lockedText ?? 'Locked by CHARACTER at TIME';
+		if (formatText === '_')
+			return null;
+
+		const { name, id, time } = lock.lockData.locked;
+
+		const substitutes = {
+			CHARACTER_NAME: name,
+			CHARACTER_ID: id,
+			CHARACTER: `${name} (${id})`,
+			TIME_PASSED: FormatTimeInterval(now - time),
+			TIME: new Date(time).toLocaleString(),
+		};
+		return (
+			<Row alignY='start'>
+				{ MessageSubstitute(formatText, substitutes) }
+			</Row>
+		);
+	}, [lock, now]);
+
 	return (
-		<WardrobeActionButton
-			action={ {
-				type: 'moduleAction',
-				target: targetSelector,
-				item,
-				module: moduleName,
-				action: {
-					moduleType: 'lockSlot',
-					action: { moduleAction: 'unlock' },
-				},
-			} }>
-			🔓 Unlock
-		</WardrobeActionButton>
+		<>
+			{ lockedText }
+			<WardrobeActionButton
+				action={ {
+					type: 'moduleAction',
+					target: targetSelector,
+					item,
+					module: moduleName,
+					action: {
+						moduleType: 'lockSlot',
+						action: { moduleAction: 'unlock' },
+					},
+				} }>
+				🔓 Unlock
+			</WardrobeActionButton>
+		</>
 	);
 }
 

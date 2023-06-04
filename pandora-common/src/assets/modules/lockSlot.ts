@@ -179,7 +179,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return { allowed: true };
 	}
 
-	public doAction(_context: AppearanceActionContext, { action }: ItemModuleLockSlotAction, messageHandler: ActionMessageTemplateHandler): ItemModuleLockSlot | null {
+	public doAction(context: AppearanceActionContext, { action }: ItemModuleLockSlotAction, messageHandler: ActionMessageTemplateHandler): ItemModuleLockSlot | null {
 		if (this.lock == null)
 			return null;
 
@@ -191,7 +191,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 				if (this.lock.isLocked())
 					return null;
 
-				lock = this.lock.lock();
+				lock = this.lock.lock(context);
 				if (lock == null)
 					return null;
 

@@ -38,7 +38,14 @@ export const RoomDeviceLinkSchema = z.object({
 export type RoomDeviceLink = z.infer<typeof RoomDeviceLinkSchema>;
 
 export const LockBundleSchema = z.object({
-	locked: z.boolean(),
+	locked: z.object({
+		/** Id of the character that locked the item */
+		id: CharacterIdSchema,
+		/** Name of the character that locked the item */
+		name: z.string(),
+		/** Time the item was locked */
+		time: z.number(),
+	}).optional(),
 });
 export type LockBundle = z.infer<typeof LockBundleSchema>;
 
@@ -641,7 +648,7 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public isLocked(): boolean {
-		return this.lockData != null && this.lockData.locked;
+		return this.lockData?.locked != null;
 	}
 
 	public getLockProperties(): AssetLockProperties {
@@ -651,15 +658,23 @@ export class ItemLock extends ItemBase<'lock'> {
 		return this.asset.definition.unlocked ?? {};
 	}
 
-	public lock(): ItemLock | null {
+	public lock(context: AppearanceActionContext): ItemLock | null {
 		if (this.isLocked())
+			return null;
+
+		const by = context.getCharacter(context.player);
+		if (by == null)
 			return null;
 
 		return new ItemLock(this.id, this.asset, {
 			...super.exportToBundle(),
 			lockData: {
 				...this.lockData,
-				locked: true,
+				locked: {
+					id: by.character.id,
+					name: by.character.name,
+					time: Date.now(),
+				},
 			},
 		}, {
 			assetManager: this.assetManager,
@@ -675,7 +690,7 @@ export class ItemLock extends ItemBase<'lock'> {
 			...super.exportToBundle(),
 			lockData: {
 				...this.lockData,
-				locked: false,
+				locked: undefined,
 			},
 		}, {
 			assetManager: this.assetManager,

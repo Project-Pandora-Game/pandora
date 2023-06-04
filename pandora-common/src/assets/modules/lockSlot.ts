@@ -1,7 +1,7 @@
 import { Asset } from '../asset';
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
 import { z } from 'zod';
-import { AssetDefinitionExtraArgs } from '../definitions';
+import { AssetDefinitionExtraArgs, AssetId } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../../character/restrictionsManager';
@@ -53,8 +53,8 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		};
 	}
 
-	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
-		return new ItemModuleLockSlot(config, data, context);
+	public loadModule(asset: Asset, moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
+		return new ItemModuleLockSlot(config, { asset: asset.id, module: moduleName }, data, context);
 	}
 
 	public getStaticAttributes(config: IModuleConfigLockSlot): ReadonlySet<string> {
@@ -66,20 +66,27 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 	}
 }
 
+type ParentInfo = {
+	asset: AssetId;
+	module: string;
+};
+
 export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	public readonly type = 'lockSlot';
 
 	private readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigLockSlot;
 	public readonly lock: ItemLock | null;
+	public readonly parent: Readonly<ParentInfo>;
 
 	public get interactionType(): ItemInteractionType {
 		return ItemInteractionType.MODIFY;
 	}
 
-	constructor(config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext) {
+	constructor(config: IModuleConfigLockSlot, parent: Readonly<ParentInfo>, data: IModuleItemDataLockSlot, context: IItemLoadContext) {
 		this.assetManager = context.assetManager;
 		this.config = config;
+		this.parent = parent;
 		if (data.lock) {
 			// Load asset and skip if unknown
 			const asset = this.assetManager.getAssetById(data.lock.asset);
@@ -130,14 +137,29 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return false;
 	}
 
-	public canDoAction(source: CharacterRestrictionsManager, target: RoomActionTarget, { action }: ItemModuleLockSlotAction, interaction: ItemInteractionType): RestrictionResult {
-		Assert(interaction === this.interactionType, `Invalid interaction type ${interaction} for module ${this.type}`);
-		if (this.lock == null) {
+	public canDoAction(source: CharacterRestrictionsManager, target: RoomActionTarget, fullAction: ItemModuleLockSlotAction | undefined, interaction: ItemInteractionType): RestrictionResult {
+		if (fullAction == null) {
+			if (interaction !== ItemInteractionType.ACCESS_ONLY && this.lock?.isLocked() && !source.isInSafemode()) {
+				return {
+					allowed: false,
+					restriction: {
+						type: 'blockedModule',
+						self: false,
+						...this.parent,
+					},
+				};
+			}
+			return { allowed: true };
+		}
+
+		if (interaction !== this.interactionType || this.lock == null) {
 			return {
 				allowed: false,
 				restriction: { type: 'invalid' },
 			};
 		}
+
+		const action = fullAction.action;
 		const isSelfAction = target.type === 'character' && target.character.id === source.character.id;
 		const properties = this.lock.getLockProperties();
 
@@ -198,7 +220,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 			});
 		}
 
-		return new ItemModuleLockSlot(this.config, {
+		return new ItemModuleLockSlot(this.config, this.parent, {
 			type: 'lockSlot',
 			lock: lock.exportToBundle(),
 		}, {
@@ -217,7 +239,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		if (items.length > 1)
 			return null;
 
-		return new ItemModuleLockSlot(this.config, {
+		return new ItemModuleLockSlot(this.config, this.parent, {
 			type: 'lockSlot',
 			lock: items.length === 1 ? items[0].exportToBundle() : null,
 		}, {

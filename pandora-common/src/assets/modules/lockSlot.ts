@@ -15,7 +15,7 @@ export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = Asse
 	emptyEffects?: AssetProperties<A>;
 	/** Effects applied when this slot is occupied by a lock */
 	occupiedEffects?: AssetProperties<A>;
-	/** Effects applied when the slot is occupied and locked */
+	/** Effects applied when the slot is occupied and locked, default to occupiedEffects */
 	lockedEffects?: AssetProperties<A>;
 }
 
@@ -111,7 +111,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		if (this.lock == null)
 			return this.config.emptyEffects ?? {};
 		if (this.lock.isLocked())
-			return this.config.lockedEffects ?? {};
+			return this.config.lockedEffects ?? this.config.occupiedEffects ?? {};
 
 		return this.config.occupiedEffects ?? {};
 	}

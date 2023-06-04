@@ -2060,7 +2060,7 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 						Lock: { m.lock.asset.definition.name }
 					</Row>
 				</Row>
-				<WardrobeLockSlotLock item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+				<WardrobeLockSlotUnlocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
 			</Column>
 		);
 	}
@@ -2075,13 +2075,47 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 					Locked by: { m.lock.asset.definition.name }
 				</Row>
 			</Row>
-			<WardrobeLockSlotLock item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+			<WardrobeLockSlotLocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
 		</Column>
 	);
 }
 
-function WardrobeLockSlotLock(_props: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
-	return null;
+function WardrobeLockSlotLocked({ item, moduleName }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
+	const { targetSelector } = useWardrobeContext();
+	return (
+		<WardrobeActionButton
+			action={ {
+				type: 'moduleAction',
+				target: targetSelector,
+				item,
+				module: moduleName,
+				action: {
+					moduleType: 'lockSlot',
+					action: { moduleAction: 'unlock' },
+				},
+			} }>
+			🔓 Unlock
+		</WardrobeActionButton>
+	);
+}
+
+function WardrobeLockSlotUnlocked({ item, moduleName }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
+	const { targetSelector } = useWardrobeContext();
+	return (
+		<WardrobeActionButton
+			action={ {
+				type: 'moduleAction',
+				target: targetSelector,
+				item,
+				module: moduleName,
+				action: {
+					moduleType: 'lockSlot',
+					action: { moduleAction: 'lock' },
+				},
+			} }>
+			🔓 Lock
+		</WardrobeActionButton>
+	);
 }
 
 function WardrobeBodySizeEditor({ character, characterState }: {

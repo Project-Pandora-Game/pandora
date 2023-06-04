@@ -643,6 +643,38 @@ export class ItemLock extends ItemBase<'lock'> {
 	public isLocked(): boolean {
 		return this.lockData != null && this.lockData.locked;
 	}
+
+	public lock(): ItemLock | null {
+		if (this.isLocked())
+			return null;
+
+		return new ItemLock(this.id, this.asset, {
+			...super.exportToBundle(),
+			lockData: {
+				...this.lockData,
+				locked: true,
+			},
+		}, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	public unlock(): ItemLock | null {
+		if (!this.isLocked())
+			return null;
+
+		return new ItemLock(this.id, this.asset, {
+			...super.exportToBundle(),
+			lockData: {
+				...this.lockData,
+				locked: false,
+			},
+		}, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
+	}
 }
 
 export type ItemTypeMap =

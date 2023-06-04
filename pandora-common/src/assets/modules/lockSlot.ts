@@ -9,6 +9,8 @@ import { AppearanceItems, AppearanceValidationResult } from '../appearanceValida
 import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundle, ItemBundleSchema, ItemLock } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceActionContext } from '../appearanceActions';
+import type { ActionMessageTemplateHandler } from '../appearanceTypes';
+import { AssertNever } from '../../utility';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
 	/** Effects applied when this slot isn't occupied by a lock */
@@ -30,6 +32,14 @@ const ModuleItemDataLockSlotScheme = z.lazy(() => z.object({
 // Never used
 export const ItemModuleLockSlotActionSchema = z.object({
 	moduleType: z.literal('lockSlot'),
+	action: z.discriminatedUnion('moduleAction', [
+		z.object({
+			moduleAction: z.literal('lock'),
+		}),
+		z.object({
+			moduleAction: z.literal('unlock'),
+		}),
+	]),
 });
 type ItemModuleLockSlotAction = z.infer<typeof ItemModuleLockSlotActionSchema>;
 
@@ -120,8 +130,54 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return false;
 	}
 
-	public doAction(_context: AppearanceActionContext, _action: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
-		return null;
+	public doAction(_context: AppearanceActionContext, { action }: ItemModuleLockSlotAction, messageHandler: ActionMessageTemplateHandler): ItemModuleLockSlot | null {
+		if (this.lock == null)
+			return null;
+
+		let lock: ItemLock | null = null;
+		let message: string | undefined;
+
+		switch (action.moduleAction) {
+			case 'lock':
+				if (this.lock.isLocked())
+					return null;
+
+				lock = this.lock.lock();
+				if (lock == null)
+					return null;
+
+				message = lock.asset.definition.chat?.actionLock;
+				break;
+			case 'unlock':
+				if (!this.lock.isLocked())
+					return null;
+
+				lock = this.lock.unlock();
+				if (lock == null)
+					return null;
+
+				message = lock.asset.definition.chat?.actionUnlock;
+				break;
+			default:
+				AssertNever(action);
+		}
+		if (lock == null)
+			return null;
+
+		if (message != null) {
+			messageHandler({
+				id: 'custom',
+				customText: message,
+			});
+		}
+
+		return new ItemModuleLockSlot(this.config, {
+			type: 'lockSlot',
+			lock: lock.exportToBundle(),
+		}, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
 	}
 
 	public readonly contentsPhysicallyEquipped: boolean = true;

@@ -38,6 +38,7 @@ import {
 	Item,
 	ItemContainerPath,
 	ItemId,
+	ItemLock,
 	ItemPath,
 	MessageSubstitute,
 	PartialAppearancePose,
@@ -1973,41 +1974,114 @@ function WardrobeModuleConfigStorage({ item, moduleName, m, setFocus }: Wardrobe
 }
 
 function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
-	return (
-		<Row padding='medium' wrap>
-			<button
-				className={ classNames('wardrobeActionButton', 'allowed') }
-				onClick={ (ev) => {
-					ev.stopPropagation();
-					setFocus({
-						container: [
-							...item.container,
-							{
-								item: item.itemId,
-								module: moduleName,
-							},
-						],
-						itemId: null,
-					});
-				} }
-			>
-				<img width='21' height='33' src={
-					!m.lock ? emptyLock :
-						m.lock.getProperties().blockAddRemove ? closedLock :
-							openLock
-				} />
-			</button>
-			<Row padding='medium' alignY='center'>
+	const { targetSelector, target } = useWardrobeContext();
+	const isRoomInventory = target.type === 'room' && item.container.length === 0;
+	const onFocus = useCallback((e: React.MouseEvent) => {
+		e.stopPropagation();
+		setFocus({
+			container: [
+				...item.container,
 				{
-					m.lock ?
-						m.lock.getProperties().blockAddRemove ?
-							m.lock.asset.definition.name + ': Locked' :
-							m.lock.asset.definition.name + ': Not locked' :
-						'No lock'
-				}
+					item: item.itemId,
+					module: moduleName,
+				},
+			],
+			itemId: null,
+		});
+	}, [item, moduleName, setFocus]);
+
+	if (m.lock == null) {
+		return (
+			<Column>
+				<Row wrap>
+					<button className={ classNames('wardrobeActionButton', 'allowed') } onClick={ onFocus } >
+						<img width='21' height='33' src={ emptyLock } />
+					</button>
+					<Row alignY='center'>
+						No lock
+					</Row>
+				</Row>
+			</Column>
+		);
+	}
+
+	if (!m.lock.isLocked()) {
+		return (
+			<Column>
+				<Row wrap>
+					<button className={ classNames('wardrobeActionButton', 'allowed') } onClick={ onFocus } >
+						<img width='21' height='33' src={ openLock } />
+					</button>
+					<WardrobeActionButton
+						action={ {
+							type: 'delete',
+							target: targetSelector,
+							item: {
+								container: [
+									...item.container,
+									{
+										item: item.itemId,
+										module: moduleName,
+									},
+								],
+								itemId: m.lock.id,
+							},
+						} }
+					>
+						➖ Remove and delete
+					</WardrobeActionButton>
+					{
+						!isRoomInventory ? (
+							<WardrobeActionButton
+								action={ {
+									type: 'transfer',
+									source: targetSelector,
+									item: {
+										container: [
+											...item.container,
+											{
+												item: item.itemId,
+												module: moduleName,
+											},
+										],
+										itemId: m.lock.id,
+									},
+									target: { type: 'roomInventory' },
+									container: [],
+								} }
+							>
+								<span>
+									<u>▽</u> Store in room
+								</span>
+							</WardrobeActionButton>
+						) : null
+					}
+					<Row alignY='center'>
+						Lock: { m.lock.asset.definition.name }
+					</Row>
+				</Row>
+				<WardrobeLockSlotLock item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+			</Column>
+		);
+	}
+
+	return (
+		<Column>
+			<Row wrap>
+				<span className={ classNames('wardrobeActionButton', 'blocked') }>
+					<img width='21' height='33' src={ closedLock } />
+				</span>
+				<Row alignY='center'>
+					Locked by: { m.lock.asset.definition.name }
+				</Row>
 			</Row>
-		</Row>
+			<WardrobeLockSlotLock item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+		</Column>
 	);
+}
+
+function WardrobeLockSlotLock(_props: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
+	return null;
 }
 
 function WardrobeBodySizeEditor({ character, characterState }: {

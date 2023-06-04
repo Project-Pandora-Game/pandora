@@ -470,17 +470,24 @@ export function useWardrobeItems(): {
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
 		if (target.type === 'room') {
-			return asset.isType('roomDevice') || (
-				asset.isType('personal') &&
-				asset.definition.bodypart == null
-			);
+			return asset.isType('roomDevice') ||
+				asset.isType('lock') ||
+				(
+					asset.isType('personal') &&
+					asset.definition.bodypart == null
+				);
 		}
 		if (target.type === 'character') {
-			return asset.isType('roomDeviceWearablePart') || (
-				asset.isType('personal') &&
-				asset.definition.bodypart == null &&
-				(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
-			);
+			return asset.isType('roomDeviceWearablePart') ||
+				(
+					asset.isType('lock') &&
+					currentFocus.container.length !== 0
+				) ||
+				(
+					asset.isType('personal') &&
+					asset.definition.bodypart == null &&
+					(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
+				);
 		}
 		AssertNever(target);
 	}, [target, currentFocus]);

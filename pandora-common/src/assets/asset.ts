@@ -37,7 +37,6 @@ export class Asset<Type extends AssetType = AssetType> {
 		} else if (definition.type === 'roomDeviceWearablePart') {
 			definition.attributes?.forEach((a) => staticAttributes.add(a));
 		} else if (definition.type === 'lock') {
-			definition.attributes?.forEach((a) => staticAttributes.add(a));
 			staticAttributes.add('Lock');
 		} else {
 			AssertNever(definition);

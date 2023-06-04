@@ -2086,7 +2086,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 	const lockedText = useMemo(() => {
 		Assert(lock.lockData?.locked != null);
 		const formatText = lock.asset.definition.lockedText ?? 'Locked by CHARACTER at TIME';
-		if (formatText === '_')
+		if (formatText.length === 0)
 			return null;
 
 		const { name, id, time } = lock.lockData.locked;

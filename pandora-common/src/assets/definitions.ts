@@ -252,7 +252,7 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 	};
 }
 
-export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'lock', A> {
+export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'lock', A> {
 	/** Properties when the lock is unlocked */
 	unlocked?: AssetLockProperties<A>;
 	/** Properties when the lock is locked */
@@ -272,9 +272,8 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	};
 	/**
 	 * Text to show when the lock is locked.
-	 * @default 'Locked by CHARACTER at TIME'
 	 *
-	 * To disable this text, set it to '_'
+	 * To disable this text, set it to '' (empty string)
 	 *
 	 * Replacements:
 	 *  - CHARACTER_NAME is replaced with the name of the character
@@ -282,6 +281,8 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	 *  - CHARACTER is replaced with `CHARACTER_NAME (CHARACTER_ID)`
 	 *  - TIME is replaced with the time the variant was selected
 	 *  - TIME_PASSED is replaced with the time passed since the variant was selected
+	 *
+	 * @default 'Locked by CHARACTER at TIME'
 	 */
 	lockedText?: string;
 	/** If this item has any graphics to be loaded or is only virtual */

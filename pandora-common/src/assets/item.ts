@@ -12,7 +12,7 @@ import { AssetManager } from './assetManager';
 import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
-import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
+import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
@@ -642,6 +642,13 @@ export class ItemLock extends ItemBase<'lock'> {
 
 	public isLocked(): boolean {
 		return this.lockData != null && this.lockData.locked;
+	}
+
+	public getLockProperties(): AssetLockProperties {
+		if (this.isLocked())
+			return this.asset.definition.locked ?? {};
+
+		return this.asset.definition.unlocked ?? {};
 	}
 
 	public lock(): ItemLock | null {

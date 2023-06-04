@@ -1,4 +1,4 @@
-import { AppearanceActionResult, AssertNever } from 'pandora-common';
+import { AppearanceActionResult, Assert, AssertNever } from 'pandora-common';
 import { DescribeAsset, DescribeAssetSlot } from '../components/chatroom/chatroomMessages';
 import { AssetManagerClient } from './assetManager';
 
@@ -55,6 +55,11 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because ${DescribeAssetSlot(assetManager, e.slot)} is covered by another item.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
+			case 'blockedModuleAction': {
+				Assert(e.moduleType === 'lockSlot');
+				Assert(e.reason === 'blockSelf');
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${e.moduleAction} on yourself.`;
+			}
 			case 'invalid':
 				return '';
 		}

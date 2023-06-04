@@ -4,13 +4,13 @@ import { z } from 'zod';
 import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
-import { ItemInteractionType } from '../../character/restrictionsManager';
+import { CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundle, ItemBundleSchema, ItemLock } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceActionContext } from '../appearanceActions';
-import type { ActionMessageTemplateHandler } from '../appearanceTypes';
-import { AssertNever } from '../../utility';
+import type { ActionMessageTemplateHandler, RoomActionTarget } from '../appearanceTypes';
+import { Assert, AssertNever } from '../../utility';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
 	/** Effects applied when this slot isn't occupied by a lock */
@@ -128,6 +128,33 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 
 	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
 		return false;
+	}
+
+	public canDoAction(source: CharacterRestrictionsManager, target: RoomActionTarget, { action }: ItemModuleLockSlotAction, interaction: ItemInteractionType): RestrictionResult {
+		Assert(interaction === this.interactionType, `Invalid interaction type ${interaction} for module ${this.type}`);
+		if (this.lock == null) {
+			return {
+				allowed: false,
+				restriction: { type: 'invalid' },
+			};
+		}
+		const isSelfAction = target.type === 'character' && target.character.id === source.character.id;
+		const properties = this.lock.getLockProperties();
+
+		if (properties.blockSelf && isSelfAction && !source.isInSafemode()) {
+			return {
+				allowed: false,
+				restriction: {
+					type: 'blockedModuleAction',
+					moduleType: 'lockSlot',
+					moduleAction: action.moduleAction,
+					reason: 'blockSelf',
+					asset: this.lock.asset.id,
+				},
+			};
+		}
+
+		return { allowed: true };
 	}
 
 	public doAction(_context: AppearanceActionContext, { action }: ItemModuleLockSlotAction, messageHandler: ActionMessageTemplateHandler): ItemModuleLockSlot | null {

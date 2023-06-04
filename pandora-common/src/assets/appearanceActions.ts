@@ -398,7 +398,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return { result: 'invalidAction' };
 			// Player doing the action must be able to interact with the item
-			const r = player.canUseItemModule(target, action.item, action.module);
+			const r = player.canUseItemModule(target, action.item, action.module, undefined, action.action);
 			if (!r.allowed) {
 				return {
 					result: 'restrictionError',

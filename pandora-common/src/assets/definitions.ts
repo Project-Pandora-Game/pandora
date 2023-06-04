@@ -4,7 +4,7 @@ import { HexRGBAColorString, ZodTemplateString } from '../validation';
 import type { AppearanceArmPose, CharacterView } from './state/characterState';
 import type { BoneDefinitionCompressed, BoneName, Coordinates } from './graphics';
 import { AssetModuleDefinition } from './modules';
-import { AssetProperties } from './properties';
+import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
 
@@ -253,6 +253,10 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 }
 
 export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'lock', A> {
+	/** Properties when the lock is unlocked */
+	unlocked?: AssetLockProperties<A>;
+	/** Properties when the lock is locked */
+	locked?: AssetLockProperties<A>;
 	/**
 	 * Chat specific settings for this asset
 	 *

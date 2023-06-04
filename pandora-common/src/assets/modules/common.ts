@@ -1,11 +1,11 @@
 import type { Asset } from '../asset';
-import { ConditionOperator } from '../graphics';
-import { ItemInteractionType } from '../../character';
-import { AssetProperties } from '../properties';
+import type { ConditionOperator } from '../graphics';
+import type { CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../../character';
+import type { AssetProperties } from '../properties';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import type { IItemLoadContext, IItemLocationDescriptor } from '../item';
-import type { ActionMessageTemplateHandler } from '../appearanceTypes';
+import type { ActionMessageTemplateHandler, RoomActionTarget } from '../appearanceTypes';
 import type { AppearanceActionContext } from '../appearanceActions';
 
 export interface IModuleConfigCommon<Type extends string> {
@@ -42,6 +42,8 @@ export interface IItemModule<Type extends string = string> {
 	evalCondition(operator: ConditionOperator, value: string): boolean;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	doAction(context: AppearanceActionContext, action: any, messageHandler: ActionMessageTemplateHandler): IItemModule<Type> | null;
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	canDoAction?(source: CharacterRestrictionsManager, target: RoomActionTarget, action: any, interaction: ItemInteractionType): RestrictionResult;
 
 	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */
 	readonly contentsPhysicallyEquipped: boolean;

@@ -1,25 +1,22 @@
 import { Asset } from '../asset';
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
 import { z } from 'zod';
-import { AssetDefinitionExtraArgs, AssetSizeMapping } from '../definitions';
+import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
-import { AppearanceItems, AppearanceValidateRequirements, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItem, IItemLoadContext, IItemLocationDescriptor, Item, ItemBundle, ItemBundleSchema } from '../item';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundle, ItemBundleSchema, ItemLock } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceActionContext } from '../appearanceActions';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
-	/**
-	 * Requirements that locks going into this slot need to meet to be allowed into it.
-	 */
-	lockRequirements: (A['attributes'] | `!${A['attributes']}`)[];
-
 	/** Effects applied when this slot isn't occupied by a lock */
-	unoccupiedEffects?: AssetProperties<A>;
+	emptyEffects?: AssetProperties<A>;
 	/** Effects applied when this slot is occupied by a lock */
 	occupiedEffects?: AssetProperties<A>;
+	/** Effects applied when the slot is occupied and locked */
+	lockedEffects?: AssetProperties<A>;
 }
 
 export interface IModuleItemDataLockSlot extends IModuleItemDataCommon<'lockSlot'> {
@@ -55,32 +52,12 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 	}
 }
 
-function ValidateLock(lock: Item | null, config: IModuleConfigLockSlot): AppearanceValidationResult {
-	if (lock === null)
-		return { success: true };
-
-	if (
-		(AssetSizeMapping[lock.asset.definition.size] ?? 99) > AssetSizeMapping.small ||
-		!AppearanceValidateRequirements(lock.getProperties().attributes, new Set(config.lockRequirements), null).success
-	) {
-		return {
-			success: false,
-			error: {
-				problem: 'contentNotAllowed',
-				asset: lock.asset.id,
-			},
-		};
-	}
-
-	return lock.validate('attached');
-}
-
 export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	public readonly type = 'lockSlot';
 
 	private readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigLockSlot;
-	public readonly lock: Item | null;
+	public readonly lock: ItemLock | null;
 
 	public get interactionType(): ItemInteractionType {
 		return ItemInteractionType.MODIFY;
@@ -103,7 +80,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 					context,
 				);
 
-				if (context.doLoadTimeCleanup && !ValidateLock(item, this.config).success) {
+				if (!item.isType('lock')) {
 					context.logger?.warning(`Skipping invalid lock ${data.lock.asset}`);
 					this.lock = null;
 				} else {
@@ -123,13 +100,16 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	}
 
 	public validate(_location: IItemLocationDescriptor): AppearanceValidationResult {
-		return ValidateLock(this.lock, this.config);
+		return { success: true };
 	}
 
 	public getProperties(): AssetProperties {
-		return this.lock !== null ?
-			(this.config.occupiedEffects ?? {}) :
-			(this.config.unoccupiedEffects ?? {});
+		if (this.lock == null)
+			return this.config.emptyEffects ?? {};
+		if (this.lock.isLocked())
+			return this.config.lockedEffects ?? {};
+
+		return this.config.occupiedEffects ?? {};
 	}
 
 	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
@@ -160,6 +140,6 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	}
 
 	public acceptedContentFilter(asset: Asset): boolean {
-		return this.config.lockRequirements.every((r) => r.startsWith('!') || asset.staticAttributes.has(r));
+		return asset.isType('lock');
 	}
 }

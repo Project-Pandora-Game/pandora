@@ -37,6 +37,11 @@ export const RoomDeviceLinkSchema = z.object({
 });
 export type RoomDeviceLink = z.infer<typeof RoomDeviceLinkSchema>;
 
+export const LockBundleSchema = z.object({
+	locked: z.boolean(),
+});
+export type LockBundle = z.infer<typeof LockBundleSchema>;
+
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
@@ -46,6 +51,8 @@ export const ItemBundleSchema = z.object({
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
 	roomDeviceLink: RoomDeviceLinkSchema.optional(),
+	/** Lock specific data */
+	lockData: LockBundleSchema.optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
@@ -597,12 +604,54 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 	}
 }
 
+export class ItemLock extends ItemBase<'lock'> {
+	public readonly lockData: Immutable<LockBundle> | undefined;
+
+	constructor(id: ItemId, asset: Asset<'lock'>, bundle: ItemBundle, context: IItemLoadContext) {
+		super(id, asset, bundle, context);
+		this.lockData = bundle.lockData;
+	}
+
+	public override exportToBundle(): ItemBundle {
+		return {
+			...super.exportToBundle(),
+			lockData: this.lockData,
+		};
+	}
+
+	public override validate(location: IItemLocationDescriptor): AppearanceValidationResult {
+		if (location === 'worn') {
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: this.asset.id,
+				},
+			};
+		}
+		return { success: true };
+	}
+
+	public override getModuleItems(_moduleName: string): AppearanceItems {
+		return [];
+	}
+
+	public override setModuleItems(_moduleName: string, _items: AppearanceItems): null {
+		return null;
+	}
+
+	public isLocked(): boolean {
+		return this.lockData != null && this.lockData.locked;
+	}
+}
+
 export type ItemTypeMap =
 	Satisfies<
 		{
 			personal: ItemPersonal;
 			roomDevice: ItemRoomDevice;
 			roomDeviceWearablePart: ItemRoomDeviceWearablePart;
+			lock: ItemLock;
 		},
 		{
 			[type in AssetType]: ItemBase<type>;
@@ -626,6 +675,10 @@ export function CreateItem<Type extends AssetType>(id: ItemId, asset: Asset<Type
 		case 'roomDeviceWearablePart':
 			Assert(asset.isType('roomDeviceWearablePart'));
 			result = new ItemRoomDeviceWearablePart(id, asset, bundle, context);
+			break;
+		case 'lock':
+			Assert(asset.isType('lock'));
+			result = new ItemLock(id, asset, bundle, context);
 			break;
 		default:
 			AssertNever(type);

@@ -1,7 +1,7 @@
 import { Immutable } from 'immer';
 import { AssetDefinition, AssetId, AssetType, IsWearableAssetDefinition, WearableAssetType } from './definitions';
 import { GetModuleStaticAttributes } from './modules';
-import { Assert } from '../utility';
+import { Assert, AssertNever } from '../utility';
 
 export class Asset<Type extends AssetType = AssetType> {
 	public readonly id: AssetId;
@@ -36,6 +36,10 @@ export class Asset<Type extends AssetType = AssetType> {
 			definition.staticAttributes?.forEach((a) => staticAttributes.add(a));
 		} else if (definition.type === 'roomDeviceWearablePart') {
 			definition.attributes?.forEach((a) => staticAttributes.add(a));
+		} else if (definition.type === 'lock') {
+			definition.attributes?.forEach((a) => staticAttributes.add(a));
+		} else {
+			AssertNever(definition);
 		}
 	}
 

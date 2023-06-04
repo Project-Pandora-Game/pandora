@@ -70,7 +70,9 @@ export type AssetType =
 	// Room devices are items placed in the room
 	'roomDevice' |
 	// Room device wearable parts are hidden items applied on character when they enter device
-	'roomDeviceWearablePart';
+	'roomDeviceWearablePart' |
+	// Lock items are items that can be used to lock other items
+	'lock';
 
 export const WEARABLE_ASSET_TYPES = ['personal', 'roomDeviceWearablePart'] as const satisfies readonly AssetType[];
 
@@ -250,12 +252,31 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 	};
 }
 
+export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'lock', A> {
+	/**
+	 * Chat specific settings for this asset
+	 *
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 */
+	chat?: {
+		/** How items of this asset are referred to in chat (defaults to asset's name) */
+		chatDescriptor?: string;
+		/** Message for when this item is locked */
+		actionLock?: string;
+		/** Message for when this item is unlocked */
+		actionUnlock?: string;
+	};
+	/** If this item has any graphics to be loaded or is only virtual */
+	hasGraphics: boolean;
+}
+
 export type AssetDefinitionTypeMap<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> =
 	Satisfies<
 		{
 			personal: PersonalAssetDefinition<A>;
 			roomDevice: RoomDeviceAssetDefinition<A>;
 			roomDeviceWearablePart: RoomDeviceWearablePartAssetDefinition<A>;
+			lock: LockAssetDefinition<A>;
 		},
 		{
 			[type in AssetType]: AssetBaseDefinition<type, A>;

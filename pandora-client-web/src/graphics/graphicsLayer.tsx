@@ -256,6 +256,8 @@ export function useItemColorString(items: AppearanceItems, item: Item | null, co
 		return item.resolveColor(colorizationKey);
 	} else if (item.isType('roomDeviceWearablePart')) {
 		return item.resolveColor(colorizationKey, currentRoomDevice);
+	} else if (item.isType('lock')) {
+		return undefined;
 	}
 	AssertNever(item);
 }

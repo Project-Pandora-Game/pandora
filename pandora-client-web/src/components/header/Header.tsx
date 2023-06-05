@@ -19,6 +19,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
 import { useCharacterSafemode } from '../../character/character';
 import { useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
+import { RelationshipContext } from '../releationships/relationships';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -132,10 +133,15 @@ function FriendsHeaderButton(): ReactElement {
 		if (channel.mounted && document.visibilityState === 'visible')
 			return;
 
-			notifyDirectMessage({
+		notifyDirectMessage({
 			// TODO: notification
 		});
 	}), [handler, notifyDirectMessage]);
+
+	const notifyFriendRequest = useNotification(NotificationSource.INCOMING_FRIEND_REQUEST);
+	useEffect(() => RelationshipContext.on('incoming', () => notifyFriendRequest({
+		// TODO: ...
+	})), [notifyFriendRequest]);
 
 	return (
 		<NotificationButton

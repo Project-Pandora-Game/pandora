@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountRelationship, IClientDirectory, IConnectionBase, IDirectoryClientArgument } from 'pandora-common';
+import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountRelationship, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
 import './relationships.scss';
 import { Button } from '../common/button/button';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import { useAsyncEvent } from '../../common/useEvent';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
@@ -15,7 +16,9 @@ import _ from 'lodash';
 const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
 
-export const RelationshipContext = new class RelationshipContext {
+export const RelationshipContext = new class RelationshipContext extends TypedEventEmitter<{
+	incoming: IAccountRelationship & { type: 'incoming'; };
+}> {
 	private _queue: (() => void)[] = [];
 	private _useQueue = true;
 
@@ -50,6 +53,9 @@ export const RelationshipContext = new class RelationshipContext {
 		const filtered = RELATIONSHIPS.value.filter((relationship) => relationship.id !== data.id);
 		if (data.type !== 'none') {
 			filtered.push(data);
+			if (filtered.length > RELATIONSHIPS.value.length && data.type === 'incoming') {
+				this.emit('incoming', { ...data, type: 'incoming' });
+			}
 		}
 		RELATIONSHIPS.value = filtered;
 	}
@@ -87,6 +93,7 @@ export function Relationships() {
 				</Tab>
 				<Tab name={ <RelationshipHeader type='incoming' /> }>
 					<ShowRelationships type='incoming' />
+					<ClearIncoming />
 				</Tab>
 				<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
 			</TabContainer>
@@ -112,6 +119,11 @@ function RelationshipHeader({ type }: { type: IAccountRelationship['type']; }) {
 			{ _.capitalize(type) } ({ count })
 		</span>
 	);
+}
+
+function ClearIncoming() {
+	useNotificationSuppressed(NotificationSource.INCOMING_FRIEND_REQUEST);
+	return null;
 }
 
 function ShowRelationships({ type }: { type: IAccountRelationship['type']; }) {

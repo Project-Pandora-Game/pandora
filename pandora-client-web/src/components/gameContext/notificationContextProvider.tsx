@@ -14,12 +14,14 @@ export enum NotificationSource {
 	CHAT_MESSAGE = 'CHAT_MESSAGE',
 	DIRECT_MESSAGE = 'DIRECT_MESSAGE',
 	VERSION_CHANGED = 'VERSION_CHANGED',
+	INCOMING_FRIEND_REQUEST = 'INCOMING_FRIEND_REQUEST',
 }
 
 export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationHeaderKeys>> = {
 	[NotificationSource.CHAT_MESSAGE]: 'notifications',
 	[NotificationSource.VERSION_CHANGED]: 'notifications',
 	[NotificationSource.DIRECT_MESSAGE]: 'friends',
+	[NotificationSource.INCOMING_FRIEND_REQUEST]: 'friends',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -222,7 +224,7 @@ function NotificationTitleUpdater(): null {
 	return null;
 }
 
-export function useNotification(source: NotificationSource): (data: NotificationData) => void{
+export function useNotification(source: NotificationSource): (data: NotificationData) => void {
 	const context = useContext(notificationContext);
 	return useCallback((data) => context.rise(source, data), [context, source]);
 }
@@ -237,8 +239,8 @@ export function useNotificationSuppressed(source: NotificationSource, suppressNo
 		}
 		return () => {
 			context.suppress.delete(source);
-		}
-	}, [context, visible]);
+		};
+	}, [context, source, visible, suppressNotification]);
 }
 
 export function useNotificationHeader(type: NotificationHeaderKeys): [readonly NotificationFullData[], () => void] {

@@ -198,7 +198,7 @@ function Chat(): ReactElement | null {
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;
 
-	useNotificationSuppressed(NotificationSource.CHAT_MESSAGE, isScrolling)
+	useNotificationSuppressed(NotificationSource.CHAT_MESSAGE, isScrolling);
 
 	const playerId = usePlayerId();
 

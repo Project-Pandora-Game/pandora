@@ -1,6 +1,6 @@
 import { act, renderHook, RenderHookResult } from '@testing-library/react';
 import { ObservableProperty, Observable, useObservable } from '../src/observable';
-import { TypedEventEmitter } from '../src/event';
+import { TypedEventEmitter } from 'pandora-common';
 
 describe('Observable', () => {
 	type T = { mockValue: string; };
@@ -75,7 +75,7 @@ describe('useObservable()', () => {
 describe('@ObservableProperty()', () => {
 	it('should properly emit events', () => {
 		const mock = new class extends TypedEventEmitter<{ test: string; }> {
-			@ObservableProperty('test')
+			@ObservableProperty
 			public accessor test = 'one';
 			public accessor test2 = 2;
 		};

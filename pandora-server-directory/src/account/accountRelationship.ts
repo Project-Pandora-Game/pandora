@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { AccountId, AssertNever, AssertNotNullable, GetLogger, IAccountFriendStatus, IAccountRelationship, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
+import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountRelationship, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';

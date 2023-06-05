@@ -238,6 +238,8 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	public setContents(items: AppearanceItems): ItemModuleLockSlot | null {
 		if (items.length > 1)
 			return null;
+		if (items.length === 1 && !items[0].isType('lock'))
+			return null;
 
 		return new ItemModuleLockSlot(this.config, this.parent, {
 			type: 'lockSlot',

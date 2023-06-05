@@ -10,6 +10,7 @@ import { useDirectoryConnector } from '../gameContext/directoryConnectorContextP
 import { useAsyncEvent } from '../../common/useEvent';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import _ from 'lodash';
 
 const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
@@ -72,7 +73,7 @@ export function Relationships() {
 	return (
 		<div className='relationships'>
 			<TabContainer>
-				<Tab name='Friends'>
+				<Tab name={ <RelationshipHeader type='friend' /> }>
 					<ShowFriends />
 				</Tab>
 				<Tab name='DMs'>
@@ -81,10 +82,10 @@ export function Relationships() {
 				<Tab name='Blocked'>
 					<ShowRelationships type='blocked' />
 				</Tab>
-				<Tab name='Pending'>
+				<Tab name={ <RelationshipHeader type='pending' /> }>
 					<ShowRelationships type='pending' />
 				</Tab>
-				<Tab name='Incoming'>
+				<Tab name={ <RelationshipHeader type='incoming' /> }>
 					<ShowRelationships type='incoming' />
 				</Tab>
 				<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
@@ -101,6 +102,16 @@ function useRelationships(type: IAccountRelationship['type']) {
 export function useRelationship(id: AccountId): IAccountRelationship | undefined {
 	const rel = useObservable(RELATIONSHIPS);
 	return useMemo(() => rel.find((r) => r.id === id), [rel, id]);
+}
+
+function RelationshipHeader({ type }: { type: IAccountRelationship['type']; }) {
+	const count = useRelationships(type).length;
+
+	return (
+		<span>
+			{ _.capitalize(type) } ({ count })
+		</span>
+	);
 }
 
 function ShowRelationships({ type }: { type: IAccountRelationship['type']; }) {

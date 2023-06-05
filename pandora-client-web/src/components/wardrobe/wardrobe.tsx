@@ -1073,6 +1073,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	const { targetSelector, execute } = useWardrobeContext();
 
 	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
+	const { currentFocus, setFocus } = useWardrobeItems();
 
 	const action: AppearanceAction = useMemo(() => ({
 		type: 'create',
@@ -1099,6 +1100,11 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				if (check?.result === 'success') {
 					execute(action);
 					refreshNewItemId();
+					if (asset.isType('lock')) {
+						const prev = SplitContainerPath(currentFocus.container)?.itemPath;
+						if (prev)
+							setFocus(prev);
+					}
 				}
 			} }>
 			{
@@ -2119,7 +2125,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 						action: { moduleAction: 'unlock' },
 					},
 				} }>
-				🔓 Unlock
+				Unlock
 			</WardrobeActionButton>
 		</>
 	);
@@ -2139,7 +2145,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName }: Omit<WardrobeModuleProps
 					action: { moduleAction: 'lock' },
 				},
 			} }>
-			🔓 Lock
+			Lock
 		</WardrobeActionButton>
 	);
 }

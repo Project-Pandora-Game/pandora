@@ -45,7 +45,7 @@ export const connectorFactoryContext = createContext<ConnectorFactoryContext>({
 });
 
 export function ShardConnectorContextProvider({ children }: ChildrenProps): ReactElement {
-	const { notify } = useNotification(NotificationSource.CHAT_MESSAGE);
+	const notify = useNotification(NotificationSource.CHAT_MESSAGE);
 
 	const [shardConnector, setShardConnector] = useState<ShardConnector | null>(null);
 

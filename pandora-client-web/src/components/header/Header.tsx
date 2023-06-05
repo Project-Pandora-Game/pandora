@@ -126,16 +126,16 @@ function NotificationButton({ icon, title, type, onClick }: {
 function FriendsHeaderButton(): ReactElement {
 	const navigate = useNavigate();
 	const handler = useDirectoryConnector().directMessageHandler;
-	const { notify } = useNotification(NotificationSource.DIRECT_MESSAGE);
+	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
 
 	useEffect(() => handler.on('newMessage', (channel: DirectMessageChannel) => {
 		if (channel.mounted && document.visibilityState === 'visible')
 			return;
 
-		notify({
+			notifyDirectMessage({
 			// TODO: notification
 		});
-	}), [handler, notify]);
+	}), [handler, notifyDirectMessage]);
 
 	return (
 		<NotificationButton

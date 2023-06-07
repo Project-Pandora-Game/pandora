@@ -115,9 +115,9 @@ function RelationshipHeader({ type }: { type: IAccountRelationship['type']; }) {
 	const count = useRelationships(type).length;
 
 	return (
-		<span>
+		<>
 			{ _.capitalize(type) } ({ count })
-		</span>
+		</>
 	);
 }
 

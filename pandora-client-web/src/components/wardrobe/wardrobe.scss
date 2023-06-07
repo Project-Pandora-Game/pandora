@@ -89,6 +89,9 @@ $header-height: 2em;
 	gap: 1em;
 }
 
+$drop-overlay-height: 1.8em;
+$drop-overlay-gap: 0.3em;
+
 .inventoryView {
 	@include flex(column);
 	flex: 1;
@@ -141,11 +144,78 @@ $header-height: 2em;
 		}
 	}
 
+	.listContainer {
+		display: flex;
+		flex-flow: column;
+		position: relative;
+		overflow: hidden;
+		flex: 1;
+		padding: 0;
+		margin: 0;
+	}
+
+	.overlay {
+		position: absolute;
+		inset: 0;
+		isolation: isolate;
+
+		z-index: 10;
+		background-color: #00000050;
+
+		.centerButton {
+			width: max(10em, 50%);
+			height: max(8em, 40%);
+
+			@include center-flex;
+		}
+	}
+
+	.Scrollbar {
+		flex: 1;
+		overflow: auto;
+		overflow-x: hidden;
+	}
+
 	.list,
 	.grid {
-		overflow: auto;
+		position: relative;
+		min-height: 100%;
 		padding: 3px;
 		gap: 3px;
+		flex: 1;
+
+		&.withDropButtons {
+			padding: calc($drop-overlay-height * 0.5 + 3px) 3px;
+		}
+
+		.overlayDropContainer {
+			position: relative;
+
+			min-height: $drop-overlay-gap;
+
+			.overlayDrop {
+				position: absolute;
+				left: 3.6em;
+				right: 2em;
+				height: $drop-overlay-height;
+				z-index: 11;
+
+				&.positionUp {
+					top: calc($drop-overlay-height * -0.5 + $drop-overlay-gap * 0.5);
+				}
+
+				&.positionCenter {
+					bottom: calc(-3px - 1.5em - ($drop-overlay-height * 0.75));
+					left: 2.6em;
+					right: 1em;
+					height: $drop-overlay-height * 1.5;
+				}
+
+				isolation: isolate;
+
+				@include center-flex;
+			}
+		}
 	}
 
 	.list {
@@ -167,6 +237,7 @@ $header-height: 2em;
 	border: solid $black 1px;
 	background-color: $grey-lighter;
 	display: flex;
+	position: relative;
 
 	&.selected {
 		color: $white;
@@ -214,6 +285,10 @@ $header-height: 2em;
 		height: 3em;
 		align-items: center;
 		gap: 0.5em;
+
+		&.small {
+			height: 2em;
+		}
 
 		.itemPreview {
 			height: 1.5em;

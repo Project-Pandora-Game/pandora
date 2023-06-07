@@ -4,13 +4,13 @@ import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema, WearableAssetType } from './definitions';
-import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
+import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
-import { sample } from 'lodash';
+import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
@@ -28,6 +28,8 @@ export const AppearanceActionCreateSchema = z.object({
 	target: RoomTargetSelectorSchema,
 	/** Container path on target where to add the item to */
 	container: ItemContainerPathSchema,
+	/** Item to insert the new one in front of in the target container */
+	insertBefore: ItemIdSchema.optional(),
 });
 
 export const AppearanceActionDeleteSchema = z.object({
@@ -49,6 +51,8 @@ export const AppearanceActionTransferSchema = z.object({
 	target: RoomTargetSelectorSchema,
 	/** Container path on target where to add the item to */
 	container: ItemContainerPathSchema,
+	/** Item to insert the current one in front of in the target container */
+	insertBefore: ItemIdSchema.optional(),
 });
 
 export const AppearanceActionPose = z.object({
@@ -250,7 +254,7 @@ export function DoAppearanceAction(
 			const targetManipulator = manipulator.getManipulatorFor(action.target);
 			if (!targetManipulator)
 				return { result: 'invalidAction' };
-			if (!ActionAddItem(targetManipulator, action.container, item))
+			if (!ActionAddItem(targetManipulator, action.container, item, action.insertBefore ?? null))
 				return { result: 'invalidAction' };
 
 			break;
@@ -325,7 +329,7 @@ export function DoAppearanceAction(
 			const targetManipulator = manipulator.getManipulatorFor(action.target);
 
 			// Preform the transfer in manipulators
-			if (!ActionTransferItem(sourceManipulator, action.item, targetManipulator, action.container))
+			if (!ActionTransferItem(sourceManipulator, action.item, targetManipulator, action.container, action.insertBefore ?? null))
 				return { result: 'invalidAction' };
 
 			break;
@@ -580,7 +584,7 @@ export function AppearanceValidationResultToActionResult(result: AppearanceValid
 	};
 }
 
-export function ActionAddItem(rootManipulator: AppearanceRootManipulator, container: ItemContainerPath, item: Item): boolean {
+export function ActionAddItem(rootManipulator: AppearanceRootManipulator, container: ItemContainerPath, item: Item, insertBefore: ItemId | null): boolean {
 	const manipulator = rootManipulator.getContainer(container);
 
 	// Do change
@@ -596,8 +600,25 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 			oldItem.asset.definition.bodypart === item.asset.definition.bodypart,
 		);
 	}
-	if (!manipulator.addItem(item))
+
+	let targetIndex: number | undefined;
+	if (insertBefore != null) {
+		targetIndex = manipulator.getItems().findIndex((anchor) => anchor.id === insertBefore);
+		if (targetIndex < 0)
+			return false;
+	}
+
+	if (!manipulator.addItem(item, targetIndex))
 		return false;
+
+	// if this is a bodypart, we sort bodyparts to be valid, to be more friendly
+	if (manipulator.isCharacter() &&
+		item.isType('personal') &&
+		item.asset.definition.bodypart
+	) {
+		if (!manipulator.fixBodypartOrder())
+			return false;
+	}
 
 	// Change message to chat
 	if (removed.length > 0) {
@@ -647,7 +668,7 @@ export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, ite
 	return true;
 }
 
-export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator, itemPath: ItemPath, targetManipulator: AppearanceRootManipulator, targetContainer: ItemContainerPath): boolean {
+export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator, itemPath: ItemPath, targetManipulator: AppearanceRootManipulator, targetContainer: ItemContainerPath, insertBefore: ItemId | null): boolean {
 	const { container, itemId } = itemPath;
 	const sourceContainerManipulator = sourceManipulator.getContainer(container);
 	const targetContainerManipulator = targetManipulator.getContainer(targetContainer);
@@ -661,14 +682,27 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 	const item = removedItems[0];
 
 	// Check if item allows being transferred
-	if (!item.canBeTransferred())
-		return false;
+	if (!item.canBeTransferred()) {
+		// If not, then check this is actually a transfer (moving not between targets nor containers is fine, as then it is essentially a move)
+		if (!isEqual(sourceManipulator.target, targetManipulator.target) ||
+			!isEqual(itemPath.container, targetContainer)
+		) {
+			return false;
+		}
+	}
 
-	if (!targetContainerManipulator.addItem(item))
+	let targetIndex: number | undefined;
+	if (insertBefore != null) {
+		targetIndex = targetContainerManipulator.getItems().findIndex((anchor) => anchor.id === insertBefore);
+		if (targetIndex < 0)
+			return false;
+	}
+
+	if (!targetContainerManipulator.addItem(item, targetIndex))
 		return false;
 
 	// Change message to chat
-	if (sourceManipulator.isCharacter()) {
+	if (sourceManipulator.isCharacter() && (!targetManipulator.isCharacter() || sourceManipulator.characterId !== targetManipulator.characterId)) {
 		const manipulatorContainer = sourceContainerManipulator.container;
 		sourceContainerManipulator.queueMessage({
 			id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
@@ -677,7 +711,7 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 			},
 		});
 	}
-	if (targetManipulator.isCharacter()) {
+	if (targetManipulator.isCharacter() && (!sourceManipulator.isCharacter() || targetManipulator.characterId !== sourceManipulator.characterId)) {
 		const manipulatorContainer = targetContainerManipulator.container;
 		targetContainerManipulator.queueMessage({
 			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',

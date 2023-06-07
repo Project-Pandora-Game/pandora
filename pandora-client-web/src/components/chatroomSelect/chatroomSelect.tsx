@@ -25,6 +25,8 @@ const TIPS: readonly string[] = [
 	`Your character can turn around for everyone in a chat room in the "Pose" tab or with "/turn".`,
 	`Chat commands start with a "/" and typing just this one character shows a help menu.`,
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
+	`The dragging points to move room devices are invisible, but generally under the item.`,
+	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
 ];
 
 export function ChatroomSelect(): ReactElement {

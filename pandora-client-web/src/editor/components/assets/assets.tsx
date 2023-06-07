@@ -274,7 +274,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 
 export class ToggleLiState extends ObservableClass<{ open: boolean; }> {
 	@ObservableProperty
-	public open: boolean;
+	public accessor open: boolean;
 
 	constructor(initialState: boolean) {
 		super();
@@ -289,7 +289,7 @@ type ToggleLiProps<T extends { open: boolean; }> = React.DetailedHTMLProps<React
 	nameExtra?: ReactElement;
 };
 function ToggleLi<T extends { open: boolean; }>({ state, name, nameExtra, children, className, ...props }: ToggleLiProps<T>): ReactElement {
-	const open = useObservableProperty(state as unknown as IObservableClass<{ open: boolean; }>, 'open');
+	const open = useObservableProperty(state, 'open');
 	const spanClass = !children ? undefined : open ? 'opened' : 'closed';
 
 	const onClick = (event: React.MouseEvent<HTMLElement>) => {

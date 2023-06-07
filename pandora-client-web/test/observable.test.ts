@@ -1,5 +1,6 @@
 import { act, renderHook, RenderHookResult } from '@testing-library/react';
 import { ObservableProperty, Observable, useObservable } from '../src/observable';
+import { TypedEventEmitter } from 'pandora-common';
 
 describe('Observable', () => {
 	type T = { mockValue: string; };
@@ -71,25 +72,24 @@ describe('useObservable()', () => {
 	});
 });
 
-// decorator use case isn\'t tested due to TS & babel not working the same
 describe('@ObservableProperty()', () => {
-	it.todo('decorator use case isn\'t tested due to TS & babel not working the same');
-
-	it('should return decorator factory function', () => {
-		expect(typeof ObservableProperty).toBe('function');
-		const mock = {
-			test: 'one',
-			test2: 2,
-			emit: jest.fn(),
+	it('should properly emit events', () => {
+		const mock = new class extends TypedEventEmitter<{ test: string; }> {
+			@ObservableProperty
+			public accessor test = 'one';
+			public accessor test2 = 2;
 		};
-		const decorator = ObservableProperty;
-		// @ts-expect-error: mock is not an ObservableClass
-		decorator(mock, 'test');
+
+		const eventObserver = jest.fn();
+		mock.onAny(eventObserver);
+
 		mock.test = 'updated';
-		expect(mock.emit).lastCalledWith('test', 'updated');
+		expect(eventObserver).toHaveBeenCalledTimes(1);
+		expect(eventObserver).lastCalledWith({ test: 'updated' });
 		expect(mock.test).toBe('updated');
+
+		eventObserver.mockClear();
 		mock.test2 = 3;
-		expect(mock.emit).toBeCalledTimes(1);
-		expect(mock.emit).not.toBeCalledTimes(2);
+		expect(eventObserver).not.toHaveBeenCalled();
 	});
 });

@@ -2,6 +2,7 @@ import { noop } from 'lodash';
 import { useSyncExternalStore } from 'react';
 import { TypedEvent, TypedEventEmitter } from 'pandora-common';
 import { produce, Draft } from 'immer';
+import { ClassNamedAccessorDecoratorContext } from 'pandora-common';
 
 export type Observer<T> = (value: T) => void;
 export type UnsubscribeCallback = () => void;
@@ -75,38 +76,28 @@ export function useNullableObservable<T>(obs: ReadonlyObservable<T> | null | und
 export abstract class ObservableClass<T extends TypedEvent> extends TypedEventEmitter<T> {
 }
 
-export function ObservableProperty<T extends TypedEvent, K extends keyof T>(target: ObservableClass<T> & T, key: K) {
-	const symbol: unique symbol = Symbol(key as string);
-	type Accessor = { [S in typeof symbol]: T[K] };
-	Object.defineProperty(target, symbol, {
-		value: target[key],
-		writable: true,
-		enumerable: false,
-		configurable: false,
-	});
-	Object.defineProperty(target, key, {
-		get() {
-			const accessor = this as Accessor;
-			return accessor[symbol];
-		},
-		set(newValue: T[K]) {
-			const accessor = this as Accessor;
-			if (accessor[symbol] !== newValue) {
-				accessor[symbol] = newValue;
-				// @ts-expect-error: call protected method
-				target.emit.apply(this, [key, accessor[symbol]]);
-			}
-		},
-		enumerable: true,
-		configurable: true,
-	});
-}
-
-export type IObservableClass<T extends TypedEvent> = TypedEventEmitter<T> & {
+export type IObservableClass<T extends TypedEvent> = ObservableClass<T> & {
 	[K in keyof T]: T[K];
 };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useObservableProperty<O extends IObservableClass<any>, K extends O extends IObservableClass<infer R> ? keyof R : never>(obs: O, key: K): O extends IObservableClass<infer R> ? R[K] : never {
-	// eslint-disable-next-line @typescript-eslint/no-unsafe-return
+
+export function ObservableProperty<T extends TypedEvent, K extends keyof T & (string | symbol)>(
+	target: ClassAccessorDecoratorTarget<ObservableClass<T>, T[K]>,
+	context: ClassNamedAccessorDecoratorContext<IObservableClass<T>, K>,
+): ClassAccessorDecoratorResult<IObservableClass<T>, T[K]> {
+	return {
+		get(this: ObservableClass<T>): T[K] {
+			return target.get.call(this);
+		},
+		set(this: ObservableClass<T>, value: T[K]): void {
+			if (target.get.call(this) === value) {
+				return;
+			}
+			target.set.call(this, value);
+			this.emit.apply(this, [context.name, value]);
+		},
+	};
+}
+
+export function useObservableProperty<T extends TypedEvent, const K extends keyof T>(obs: IObservableClass<T>, key: K): T[K] {
 	return useSyncExternalStore(obs.getSubscriber(key), () => obs[key]);
 }

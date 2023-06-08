@@ -1696,8 +1696,8 @@ export function WardrobeItemConfigMenu({
 				<span>Editing item: { wornItem.asset.definition.name }</span>
 				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
 			</div>
-			<Column overflowX='hidden' overflowY='auto'>
-				<Row wrap>
+			<Column padding='normal' overflowX='hidden' overflowY='auto'>
+				<Row padding='normal' wrap>
 					{
 						singleItemContainer ? null : (
 							<>
@@ -1928,8 +1928,8 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<
 	}), [m.activeVariant, m.config, targetSelector, item, moduleName]);
 
 	return (
-		<Column>
-			<Row wrap>
+		<Column padding='normal'>
+			<Row padding='normal' wrap>
 				{ rows }
 			</Row>
 			{ customText }
@@ -1939,7 +1939,7 @@ function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<
 
 function WardrobeModuleConfigStorage({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
 	return (
-		<Row wrap>
+		<Row padding='normal' wrap>
 			<button
 				className={ classNames('wardrobeActionButton', 'allowed') }
 				onClick={ (ev) => {
@@ -1958,7 +1958,7 @@ function WardrobeModuleConfigStorage({ item, moduleName, m, setFocus }: Wardrobe
 			>
 				Open
 			</button>
-			<Row alignY='center'>
+			<Row padding='normal' alignY='center'>
 				Contains { m.getContents().length } items.
 			</Row>
 		</Row>
@@ -1967,7 +1967,7 @@ function WardrobeModuleConfigStorage({ item, moduleName, m, setFocus }: Wardrobe
 
 function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
 	return (
-		<Row wrap>
+		<Row padding='normal' wrap>
 			<button
 				className={ classNames('wardrobeActionButton', 'allowed') }
 				onClick={ (ev) => {
@@ -1990,7 +1990,7 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 							openLock
 				} />
 			</button>
-			<Row alignY='center'>
+			<Row padding='normal' alignY='center'>
 				{
 					m.lock ?
 						m.lock.getProperties().blockAddRemove ?
@@ -2361,7 +2361,7 @@ export function WardrobeExpressionGui({ characterState }: {
 
 	return (
 		<div className='inventoryView'>
-			<Column overflowX='hidden' overflowY='auto'>
+			<Column padding='normal' overflowX='hidden' overflowY='auto'>
 				{
 					appearance
 						.flatMap((item) => (
@@ -2391,12 +2391,12 @@ export function WardrobeOutfitGui({ character }: {
 
 	return (
 		<div className='inventoryView'>
-			<Column overflowX='hidden' overflowY='auto' className='flex-1'>
+			<Column padding='normal' overflowX='hidden' overflowY='auto' className='flex-1'>
 				<FieldsetToggle legend='Character randomization' open={ false }>
 					<h3>
 						WARNING: These buttons remove and DELETE ALL ITEMS currently worn!
 					</h3>
-					<Row>
+					<Row padding='normal'>
 						{
 							character.id === playerId ? (
 								<>
@@ -2467,7 +2467,7 @@ function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 
 	return (
 		<FieldsetToggle legend='Deployment'>
-			<Column>
+			<Column padding='normal'>
 				{ contents }
 			</Column>
 		</FieldsetToggle>
@@ -2513,7 +2513,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 	}, [deployment, setPositionX, setPositionY, onChangeCallerThrottled]);
 
 	return (
-		<Row alignY='center'>
+		<Row padding='normal' alignY='center'>
 			<label>X:</label>
 			<input type='number'
 				value={ positionX }
@@ -2555,7 +2555,7 @@ function WardrobeRoomDeviceSlots({ roomDevice, item }: {
 
 	return (
 		<FieldsetToggle legend='Slots'>
-			<Column>
+			<Column padding='normal'>
 				{ contents }
 			</Column>
 		</FieldsetToggle>
@@ -2627,7 +2627,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 	}
 
 	return (
-		<Row alignY='center'>
+		<Row padding='normal' alignY='center'>
 			<span>{ slotDefinition.name }:</span>
 			{ contents }
 		</Row>
@@ -2660,7 +2660,7 @@ function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 
 	return (
 		<FieldsetToggle legend='Slots'>
-			<Column>
+			<Column padding='normal'>
 				{ contents }
 			</Column>
 		</FieldsetToggle>

@@ -443,7 +443,7 @@ function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: RoomId;
 				Note that a room without any owner gets instantly deleted, kicking everyone currently inside the room in the process.<br />
 				You cannot affect other owners - only an owner can give up their own ownership of a room.
 			</p>
-			<Row alignX='space-between'>
+			<Row padding='normal' alignX='space-between'>
 				<Button onClick={ closeDialog }>Cancel</Button>
 				<Button onClick={ removeOwnership }>Remove your ownership!</Button>
 			</Row>

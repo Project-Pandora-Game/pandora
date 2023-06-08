@@ -29,7 +29,7 @@ export interface DivContainerProps extends CommonProps {
 
 	// Our spacing setup
 	/** Defaults to `normal` */
-	padding?: ScssSpacing;
+	padding: ScssSpacing;
 	/** Defaults to `normal` */
 	gap?: ScssSpacing;
 }

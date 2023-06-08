@@ -132,7 +132,7 @@ function PoseExportGui({ characterState }: { character: EditorCharacter; charact
 
 	return (
 		<ModalDialog>
-			<Column>
+			<Column padding='normal'>
 				<h2>Pose export</h2>
 				<p>
 					You can use the following TypeScript code and insert into&nbsp;
@@ -142,7 +142,7 @@ function PoseExportGui({ characterState }: { character: EditorCharacter; charact
 					&nbsp;in pandora-assets repository.
 				</p>
 				<textarea value={ typeScriptValue } readOnly rows={ typeScriptValue.split('\n').length } />
-				<Row>
+				<Row padding='normal'>
 					<Button onClick={ () => void navigator.clipboard.writeText(typeScriptValue).catch(() => { /** ignore */ }) }>Copy to clipboard</Button>
 					<Button onClick={ () => setOpen(false) }>Close</Button>
 				</Row>

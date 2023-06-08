@@ -106,7 +106,7 @@ export function EditorWardrobeUI(): ReactElement {
 
 	return (
 		<Scrollbar color='dark' className='editor-wardrobe slim'>
-			<Column>
+			<Column padding='normal'>
 				<div>
 					<label htmlFor='unlocked-toggle'>Character Safemode</label>
 					<input

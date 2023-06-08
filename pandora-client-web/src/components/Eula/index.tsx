@@ -53,7 +53,7 @@ export function Eula({ accept }: EulaProps): ReactElement {
 						</li>
 					</ul>
 				</div>
-				<Row padding='normal' className='eula-buttons' alignX='space-evenly'>
+				<Row padding='medium' className='eula-buttons' alignX='space-evenly'>
 					<Button onClick={ EulaDisagree }>Disagree</Button>
 					<Button onClick={ accept }>Agree ‣‣</Button>
 				</Row>
@@ -223,7 +223,7 @@ function PolicyDialog({ hide }: {
 					<li>Using the email address: <a href='mailto:support@project-pandora.com'>support@project-pandora.com</a></li>
 				</ul>
 			</Scrollbar>
-			<Row padding='normal' className='policyDetails-button' alignX='center'>
+			<Row padding='medium' className='policyDetails-button' alignX='center'>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
 		</ModalDialog>

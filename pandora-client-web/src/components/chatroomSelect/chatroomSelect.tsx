@@ -55,7 +55,7 @@ export function ChatroomSelect(): ReactElement {
 
 	return (
 		<div>
-			<Row padding='normal' wrap alignX='space-between'>
+			<Row padding='medium' wrap alignX='space-between'>
 				<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
 				<span className='infoBox' onClick={ () => setShowTips(true) } >
 					🛈 Tip: { TIPS[index] }
@@ -82,7 +82,7 @@ function TipsListDialog({ hide }: {
 					{ TIPS.map((tip, index) => <li key={ index }>{ tip }</li>) }
 				</ul>
 			</Scrollbar>
-			<Row padding='normal' alignX='center'>
+			<Row padding='medium' alignX='center'>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
 		</ModalDialog>
@@ -242,7 +242,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 						value={ roomPassword }
 						onChange={ (e) => setPassword(e.target.value) }
 					/> }
-				<Row padding='normal' className='buttons' alignX='space-between' alignY='center'>
+				<Row padding='medium' className='buttons' alignX='space-between' alignY='center'>
 					<Button onClick={ hide }>Close</Button>
 					{ userIsOwner && <ChatroomOwnershipRemoval buttonClassName='slim' id={ id } name={ name } /> }
 					<Button className='fadeDisabled'

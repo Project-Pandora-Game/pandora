@@ -44,7 +44,7 @@
 .chatroomDetails {
 	max-width: 95vw;
 	display: grid;
-	gap: spacing('normal');
+	gap: spacing('medium');
 	grid-template-columns: auto 200px;
 
 	.preview {

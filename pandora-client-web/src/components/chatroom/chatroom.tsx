@@ -102,7 +102,7 @@ function ControlsTabContents(): ReactElement | null {
 	}
 
 	return (
-		<Column padding='normal' className='controls'>
+		<Column padding='medium' className='controls'>
 			{
 				!canLeave ? (
 					<HoverElement parent={ leaveButtonRef } className='action-warning'>
@@ -110,7 +110,7 @@ function ControlsTabContents(): ReactElement | null {
 					</HoverElement>
 				) : null
 			}
-			<Row padding='normal'>
+			<Row padding='medium'>
 				<Button
 					onClick={ () => void onRoomLeave() }
 					ref={ setLeaveButtonRef }
@@ -121,7 +121,7 @@ function ControlsTabContents(): ReactElement | null {
 				</Button>
 				<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
 			</Row>
-			<Row padding='normal'>
+			<Row padding='medium'>
 				<Button onClick={ () => {
 					navigate('/wardrobe', { state: { target: 'room' } });
 				} }>
@@ -160,7 +160,7 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 				</span>
 			) }
 			<br />
-			<Row padding='normal'>
+			<Row padding='medium'>
 				<Button className='slim' onClick={ () => {
 					navigate('/wardrobe', { state: { character: data.id } });
 				} }>

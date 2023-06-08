@@ -43,7 +43,7 @@
 .center-flex {
 	@include center-flex;
 	// Give this a default gap so things look better without custom style
-	gap: spacing('normal');
+	gap: spacing('medium');
 }
 
 .hidden {

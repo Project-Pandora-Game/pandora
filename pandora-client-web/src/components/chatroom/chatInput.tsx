@@ -531,7 +531,7 @@ function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount:
 
 	return (
 		<button className='unread-messages-indicator' onClick={ () => scroll(true) }>
-			<Row padding='normal' className='flex-1' alignX='space-between'>
+			<Row padding='medium' className='flex-1' alignX='space-between'>
 				<span>{ indicatorText }</span>
 				<span>Click to scroll to the end</span>
 			</Row>

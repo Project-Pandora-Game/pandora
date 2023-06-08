@@ -383,7 +383,7 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 				<h3>Create a new asset</h3>
 				<FormField>
 					ID:
-					<Row padding='normal' alignY='center' gap='none'>
+					<Row padding='medium' alignY='center' gap='none'>
 						a/
 						<Select
 							{ ...register('category', { deps: 'id' }) }
@@ -417,7 +417,7 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 					</Select>
 					<FormFieldError error={ errors.bodypart } />
 				</FormField>
-				<Row padding='normal' alignX='space-between' className='fill-x'>
+				<Row padding='medium' alignX='space-between' className='fill-x'>
 					<Button onClick={ closeDialog }>Cancel</Button>
 					<Button type='submit'>Create</Button>
 				</Row>

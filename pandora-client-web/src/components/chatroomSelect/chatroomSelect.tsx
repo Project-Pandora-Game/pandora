@@ -210,12 +210,12 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 				<div>
 					Details for room <b>{ name }</b><br />
 				</div>
-				<Row padding='none' className='ownership' alignY='center'>
+				<Row className='ownership' alignY='center'>
 					Owned by: { owners.join(', ') }
 				</Row>
 				{ (background !== '' && !background.startsWith('#')) &&
 					<img className='preview' src={ background } width='200px' height='100px' /> }
-				<Row padding='none' className='features'>
+				<Row className='features'>
 					{ hasPassword && <img className='features-img' src={ closedDoor } title='Protected Room' /> }
 					{
 						CHATROOM_FEATURES

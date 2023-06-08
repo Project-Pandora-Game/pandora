@@ -128,9 +128,9 @@ export function AssetUI() {
 
 function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
 	return (
-		<Column padding='none'>
+		<Column>
 			<Button onClick={ () => void asset.downloadZip() } className='flex-2' >Export archive</Button>
-			<Row padding='none'>
+			<Row>
 				<Button onClick={ () => void asset.exportDefinitionToClipboard() } className='flex-2' >Export definition to clipboard</Button>
 				<label htmlFor='asset-import-button' className='flex-1 hiddenUpload'>
 					<input

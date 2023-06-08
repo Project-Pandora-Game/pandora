@@ -506,7 +506,7 @@ function TypingIndicator(): ReactElement {
 
 	return (
 		<div className='typing-indicator' onClick={ onClick }>
-			<Row padding='none' className='flex-1' wrap>
+			<Row className='flex-1' wrap>
 				{ statuses.map(({ data, status }) => (
 					<span key={ data.id }>
 						<span style={ { color: data.settings.labelColor } }>{ data.name } </span>

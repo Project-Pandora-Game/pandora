@@ -178,7 +178,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			<FieldsetToggle legend='Permissions'>
 				<div className='input-container'>
 					<label>Owners</label>
-					<Row padding='none'>
+					<Row>
 						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
 						{ !creation && roomInfo && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomInfo.id } name={ roomInfo.name } /> : null }
 					</Row>
@@ -595,7 +595,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 							</a>
 						)) }
 				</div>
-				<Row className='footer' alignX='space-between' padding='none'>
+				<Row className='footer' alignX='space-between'>
 					<Button onClick={ hide }>Cancel</Button>
 					<Button
 						onClick={ () => {

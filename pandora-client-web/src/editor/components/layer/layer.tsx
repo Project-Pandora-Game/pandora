@@ -79,7 +79,7 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | nu
 					[category/asset-name] &gt; [layer-name]
 				</ContextHelpButton>
 			</h3>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label htmlFor='layer-name'>
 					Layer name:
 					<ContextHelpButton>
@@ -114,7 +114,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 	}
 
 	return (
-		<Row padding='none' alignY='center'>
+		<Row alignY='center'>
 			<label htmlFor='layer-image-select'>
 				{ asAlpha ? 'Alpha' : 'Layer' } image asset:
 				<ContextHelpButton>
@@ -180,7 +180,7 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 
 	return (
 		<>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label
 					htmlFor='layer-colorization'
 				>
@@ -211,7 +211,7 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 					className='flex-1'
 				/>
 			</Row>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label
 					htmlFor='layer-colorization-name'
 				>
@@ -256,7 +256,7 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 	const tint = useEditorLayerTint(layer);
 
 	return (
-		<Row padding='none' alignY='center'>
+		<Row alignY='center'>
 			<label htmlFor='layer-tint'>
 				Layer tint:
 				<ContextHelpButton>
@@ -299,7 +299,7 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 
 	return (
 		<>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label>
 					Width and Height
 					<ContextHelpButton>
@@ -310,7 +310,7 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 					</ContextHelpButton>
 				</label>
 			</Row>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label htmlFor='width'>
 					Width:
 					<ContextHelpButton>
@@ -327,7 +327,7 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 					className='flex-1'
 				/>
 			</Row>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label htmlFor='height'>
 					Height:
 					<ContextHelpButton>
@@ -363,7 +363,7 @@ function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _ass
 
 	return (
 		<>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label>
 					Layer Offset
 					<ContextHelpButton>
@@ -375,7 +375,7 @@ function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _ass
 					</ContextHelpButton>
 				</label>
 			</Row>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label htmlFor='layer-offset-x'>
 					X-Offset:
 					<ContextHelpButton>
@@ -392,7 +392,7 @@ function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _ass
 					className='flex-1'
 				/>
 			</Row>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label htmlFor='layer-offset-y'>
 					Y-Offset:
 					<ContextHelpButton>
@@ -425,7 +425,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 	}
 
 	return (
-		<Row padding='none' alignY='center'>
+		<Row alignY='center'>
 			<label htmlFor='layer-priority-select'>
 				Layer priority type:
 				<ContextHelpButton>
@@ -474,7 +474,7 @@ function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 		);
 	}
 	return (
-		<Row padding='none' alignY='center'>
+		<Row alignY='center'>
 			<label htmlFor='layer-template-select'>
 				Point template for layer:
 				<ContextHelpButton>
@@ -538,7 +538,7 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer; }): React
 	});
 	// TODO: Consider rephrasing when we have separated arms/hands/legs into more types.
 	return (
-		<Row padding='none' alignY='center'>
+		<Row alignY='center'>
 			<div>
 				Point type filter (comma separated):
 				<ContextHelpButton>
@@ -612,7 +612,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 	});
 
 	return (
-		<Row padding='none' alignY='center'>
+		<Row alignY='center'>
 			<div>
 				{ asAlpha ? 'Alpha' : 'Image' } overrides:
 				<ContextHelpButton>
@@ -697,7 +697,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 
 	return (
 		<>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label htmlFor='layer-scaling-bone-select'>
 					Select an image based on the value of bone:
 					<ContextHelpButton>
@@ -787,7 +787,7 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 
 	return (
 		<>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label htmlFor='layer-scaling-add-point-select'>Add stop point:</label>
 				<Select
 					id='layer-scaling-add-point-select'
@@ -803,7 +803,7 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 			</Row>
 			{ scalingStops?.map((stop) => (
 				<React.Fragment key={ `${stop[0]}-header` }>
-					<Row padding='none' alignY='center'>
+					<Row alignY='center'>
 						<h3 className='flex-1'>{ possibleStops.find((p) => p[1] === stop[0])?.[0] ?? `${stop[0]}` }</h3>
 						<Button className='slim' onClick={ () => asset.removeScalingStop(layer, stop[0]) }>Remove</Button>
 					</Row>

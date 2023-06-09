@@ -2036,32 +2036,28 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 					>
 						➖ Remove and delete
 					</WardrobeActionButton>
-					{
-						!isRoomInventory ? (
-							<WardrobeActionButton
-								action={ {
-									type: 'transfer',
-									source: targetSelector,
-									item: {
-										container: [
-											...item.container,
-											{
-												item: item.itemId,
-												module: moduleName,
-											},
-										],
-										itemId: m.lock.id,
+					<WardrobeActionButton
+						action={ {
+							type: 'transfer',
+							source: targetSelector,
+							item: {
+								container: [
+									...item.container,
+									{
+										item: item.itemId,
+										module: moduleName,
 									},
-									target: { type: 'roomInventory' },
-									container: [],
-								} }
-							>
-								<span>
-									<u>▽</u> Store in room
-								</span>
-							</WardrobeActionButton>
-						) : null
-					}
+								],
+								itemId: m.lock.id,
+							},
+							target: { type: 'roomInventory' },
+							container: [],
+						} }
+					>
+						<span>
+							<u>▽</u> Store in room
+						</span>
+					</WardrobeActionButton>
 					<Row alignY='center'>
 						Lock: { m.lock.asset.definition.name }
 					</Row>

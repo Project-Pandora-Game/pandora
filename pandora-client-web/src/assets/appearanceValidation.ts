@@ -56,9 +56,11 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'blockedModuleAction': {
-				Assert(e.moduleType === 'lockSlot');
-				Assert(e.reason === 'blockSelf');
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${e.moduleAction} on yourself.`;
+				if (e.moduleType === 'lockSlot' && e.reason === 'blockSelf') {
+					return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${e.moduleAction} on yourself.`;
+				} else {
+					AssertNever(e);
+				}
 			}
 			case 'invalid':
 				return '';

@@ -43,7 +43,7 @@ export interface IItemModule<Type extends string = string> {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	doAction(context: AppearanceActionContext, action: any, messageHandler: ActionMessageTemplateHandler): IItemModule<Type> | null;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	canDoAction?(source: CharacterRestrictionsManager, target: RoomActionTarget, action: any | undefined, interaction: ItemInteractionType): RestrictionResult;
+	canDoAction?(source: CharacterRestrictionsManager, target: RoomActionTarget, action: any, interaction: ItemInteractionType): RestrictionResult;
 
 	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */
 	readonly contentsPhysicallyEquipped: boolean;

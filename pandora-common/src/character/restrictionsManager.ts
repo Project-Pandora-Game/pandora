@@ -525,7 +525,7 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
-		const moduleRestrictions = module.canDoAction?.(this, target, action, interaction);
+		const moduleRestrictions = action && module.canDoAction?.(this, target, action, interaction);
 		if (moduleRestrictions?.allowed === false)
 			return moduleRestrictions;
 

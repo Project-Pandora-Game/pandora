@@ -53,8 +53,8 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		};
 	}
 
-	public loadModule(asset: Asset, moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
-		return new ItemModuleLockSlot(config, { asset: asset.id, module: moduleName }, data, context);
+	public loadModule(_asset: Asset, moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
+		return new ItemModuleLockSlot(config, moduleName, data, context);
 	}
 
 	public getStaticAttributes(config: IModuleConfigLockSlot): ReadonlySet<string> {
@@ -77,16 +77,16 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	private readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigLockSlot;
 	public readonly lock: ItemLock | null;
-	public readonly parent: Readonly<ParentInfo>;
+	public readonly moduleName: string;
 
 	public get interactionType(): ItemInteractionType {
 		return ItemInteractionType.MODIFY;
 	}
 
-	constructor(config: IModuleConfigLockSlot, parent: Readonly<ParentInfo>, data: IModuleItemDataLockSlot, context: IItemLoadContext) {
+	constructor(config: IModuleConfigLockSlot, moduleName: string, data: IModuleItemDataLockSlot, context: IItemLoadContext) {
 		this.assetManager = context.assetManager;
 		this.config = config;
-		this.parent = parent;
+		this.moduleName = moduleName;
 		if (data.lock) {
 			// Load asset and skip if unknown
 			const asset = this.assetManager.getAssetById(data.lock.asset);
@@ -127,31 +127,20 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	public getProperties(): AssetProperties {
 		if (this.lock == null)
 			return this.config.emptyEffects ?? {};
-		if (this.lock.isLocked())
-			return this.config.lockedEffects ?? this.config.occupiedEffects ?? {};
+		if (!this.lock.isLocked())
+			return this.config.occupiedEffects ?? {};
 
-		return this.config.occupiedEffects ?? {};
+		return {
+			...this.config.lockedEffects,
+			blockModules: this.config.lockedEffects?.blockModules ? [...this.config.lockedEffects.blockModules, this.moduleName] : [this.moduleName],
+		};
 	}
 
 	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
 		return false;
 	}
 
-	public canDoAction(source: CharacterRestrictionsManager, target: RoomActionTarget, fullAction: ItemModuleLockSlotAction | undefined, interaction: ItemInteractionType): RestrictionResult {
-		if (fullAction == null) {
-			if (interaction !== ItemInteractionType.ACCESS_ONLY && this.lock?.isLocked() && !source.isInSafemode()) {
-				return {
-					allowed: false,
-					restriction: {
-						type: 'blockedModule',
-						self: false,
-						...this.parent,
-					},
-				};
-			}
-			return { allowed: true };
-		}
-
+	public canDoAction(source: CharacterRestrictionsManager, target: RoomActionTarget, { action }: ItemModuleLockSlotAction, interaction: ItemInteractionType): RestrictionResult {
 		if (interaction !== this.interactionType || this.lock == null) {
 			return {
 				allowed: false,
@@ -159,7 +148,6 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 			};
 		}
 
-		const action = fullAction.action;
 		const isSelfAction = target.type === 'character' && target.character.id === source.character.id;
 		const properties = this.lock.getLockProperties();
 
@@ -220,7 +208,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 			});
 		}
 
-		return new ItemModuleLockSlot(this.config, this.parent, {
+		return new ItemModuleLockSlot(this.config, this.moduleName, {
 			type: 'lockSlot',
 			lock: lock.exportToBundle(),
 		}, {
@@ -241,7 +229,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		if (items.length === 1 && !items[0].isType('lock'))
 			return null;
 
-		return new ItemModuleLockSlot(this.config, this.parent, {
+		return new ItemModuleLockSlot(this.config, this.moduleName, {
 			type: 'lockSlot',
 			lock: items.length === 1 ? items[0].exportToBundle() : null,
 		}, {

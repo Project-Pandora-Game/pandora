@@ -458,6 +458,7 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 	}, [items, itemPath]);
 }
 
+/** This hook doesn't generate or use a global state and shouldn't be used recursively */
 export function useWardrobeItems(): {
 	currentFocus: WardrobeFocus;
 	setFocus: React.Dispatch<React.SetStateAction<WardrobeFocus>>;
@@ -1073,7 +1074,6 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	const { targetSelector, execute } = useWardrobeContext();
 
 	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
-	const { currentFocus, setFocus } = useWardrobeItems();
 
 	const action: AppearanceAction = useMemo(() => ({
 		type: 'create',
@@ -1100,11 +1100,6 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				if (check?.result === 'success') {
 					execute(action);
 					refreshNewItemId();
-					if (asset.isType('lock')) {
-						const prev = SplitContainerPath(currentFocus.container)?.itemPath;
-						if (prev)
-							setFocus(prev);
-					}
 				}
 			} }>
 			{
@@ -1152,14 +1147,24 @@ export function InventoryItemView({
 
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
 	useEffect(() => {
+		// Locks have special GUI on higher level, so be friendly and focus on that when there is a lock
+		if (containerModule?.type === 'lockSlot' && displayedItems.length === 1) {
+			const prev = SplitContainerPath(focus.container)?.itemPath;
+			if (prev) {
+				setFocus?.(prev);
+				return;
+			}
+		}
+
 		if (!singleItemContainer)
 			return;
+
 		if (displayedItems.length === 1 && focus.itemId == null) {
 			setFocus?.({ ...focus, itemId: displayedItems[0].id });
 		} else if (displayedItems.length === 0 && focus.itemId != null) {
 			setFocus?.({ ...focus, itemId: null });
 		}
-	}, [focus, setFocus, singleItemContainer, displayedItems]);
+	}, [focus, setFocus, containerModule, singleItemContainer, displayedItems]);
 
 	return (
 		<div className={ classNames('inventoryView', className) }>
@@ -2014,9 +2019,12 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 		return (
 			<Column>
 				<Row wrap>
-					<button className={ classNames('wardrobeActionButton', 'allowed') } onClick={ onFocus } >
-						<img width='21' height='33' src={ openLock } />
-					</button>
+					<img width='21' height='33' src={ openLock } />
+					<Row alignY='center'>
+						Lock: { m.lock.asset.definition.name } (unlocked)
+					</Row>
+				</Row>
+				<Row wrap padding='none'>
 					<WardrobeActionButton
 						action={ {
 							type: 'delete',
@@ -2057,9 +2065,6 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 							<u>▽</u> Store in room
 						</span>
 					</WardrobeActionButton>
-					<Row alignY='center'>
-						Lock: { m.lock.asset.definition.name }
-					</Row>
 				</Row>
 				<WardrobeLockSlotUnlocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
 			</Column>
@@ -2069,9 +2074,7 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 	return (
 		<Column>
 			<Row wrap>
-				<span className={ classNames('wardrobeActionButton', 'blocked') }>
-					<img width='21' height='33' src={ closedLock } />
-				</span>
+				<img width='21' height='33' src={ closedLock } />
 				<Row alignY='center'>
 					Locked with: { m.lock.asset.definition.name }
 				</Row>

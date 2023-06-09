@@ -1,7 +1,7 @@
 import { Asset } from '../asset';
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
 import { z } from 'zod';
-import { AssetDefinitionExtraArgs, AssetId } from '../definitions';
+import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../../character/restrictionsManager';
@@ -65,11 +65,6 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		return result;
 	}
 }
-
-type ParentInfo = {
-	asset: AssetId;
-	module: string;
-};
 
 export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	public readonly type = 'lockSlot';

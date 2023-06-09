@@ -1,4 +1,4 @@
-import { AppearanceActionResult, Assert, AssertNever } from 'pandora-common';
+import { AppearanceActionResult, AssertNever } from 'pandora-common';
 import { DescribeAsset, DescribeAssetSlot } from '../components/chatroom/chatroomMessages';
 import { AssetManagerClient } from './assetManager';
 
@@ -56,11 +56,16 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'blockedModuleAction': {
-				if (e.moduleType === 'lockSlot' && e.reason === 'blockSelf') {
-					return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${e.moduleAction} on yourself.`;
+				if (e.moduleType === 'lockSlot') {
+					if (e.reason === 'blockSelf') {
+						return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${e.moduleAction} on yourself.`;
+					} else {
+						AssertNever(e.reason);
+					}
 				} else {
-					AssertNever(e);
+					AssertNever(e.moduleType);
 				}
+				break;
 			}
 			case 'invalid':
 				return '';

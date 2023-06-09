@@ -1980,8 +1980,7 @@ function WardrobeModuleConfigStorage({ item, moduleName, m, setFocus }: Wardrobe
 }
 
 function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
-	const { targetSelector, target } = useWardrobeContext();
-	const isRoomInventory = target.type === 'room' && item.container.length === 0;
+	const { targetSelector } = useWardrobeContext();
 	const onFocus = useCallback((e: React.MouseEvent) => {
 		e.stopPropagation();
 		setFocus({

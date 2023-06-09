@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { AssetDefinition, AssetModuleDefinition } from 'pandora-common';
+import { AssetDefinition, AssetModuleDefinition, ModuleType } from 'pandora-common';
 import { EffectsDefinition, EFFECTS_DEFAULT } from 'pandora-common/dist/assets/effects';
 import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
@@ -176,7 +176,7 @@ function TypedModuleOptions({ options }: { options: Immutable<IModuleTypedOption
 	);
 }
 
-function ModuleCommon({ module }: { module: IModuleConfigCommon<string>; }): ReactElement {
+function ModuleCommon({ module }: { module: IModuleConfigCommon<ModuleType>; }): ReactElement {
 	const id = useId();
 	return (
 		<>

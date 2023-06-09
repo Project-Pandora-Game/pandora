@@ -1,15 +1,15 @@
-import { Asset } from '../asset';
-import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
+import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
 import { z } from 'zod';
 import { AssetDefinitionExtraArgs, AssetSize, AssetSizeMapping } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItem, IItemLoadContext, IItemLocationDescriptor, Item, ItemBundle, ItemBundleSchema } from '../item';
+import { CreateItem, IItemLoadContext, IItemLocationDescriptor, Item, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { ItemId } from '../appearanceTypes';
-import type { AppearanceActionContext } from '../appearanceActions';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import { Satisfies } from '../../utility';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface IModuleConfigStorage<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'storage'> {
@@ -17,31 +17,29 @@ export interface IModuleConfigStorage<A extends AssetDefinitionExtraArgs = Asset
 	maxAcceptedSize: AssetSize;
 }
 
-export interface IModuleItemDataStorage extends IModuleItemDataCommon<'storage'> {
-	contents: ItemBundle[];
-}
-const ModuleItemDataStorageScheme = z.lazy(() => z.object({
+const ModuleItemDataStorageSchema = z.lazy(() => z.object({
 	type: z.literal('storage'),
 	contents: z.array(ItemBundleSchema),
 }));
+export type IModuleItemDataStorage = Satisfies<z.infer<typeof ModuleItemDataStorageSchema>, IModuleItemDataCommon<'storage'>>;
 
 // Never used
 export const ItemModuleStorageActionSchema = z.object({
 	moduleType: z.literal('storage'),
 });
-type ItemModuleStorageAction = z.infer<typeof ItemModuleStorageActionSchema>;
+export type ItemModuleStorageAction = Satisfies<z.infer<typeof ItemModuleStorageActionSchema>, IModuleActionCommon<'storage'>>;
 
 export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'> {
 
-	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigStorage, data: unknown): IModuleItemDataStorage {
-		const parsed = ModuleItemDataStorageScheme.safeParse(data);
+	public parseData(_config: IModuleConfigStorage, data: unknown): IModuleItemDataStorage {
+		const parsed = ModuleItemDataStorageSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'storage',
 			contents: [],
 		};
 	}
 
-	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage {
+	public loadModule(config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage {
 		return new ItemModuleStorage(config, data, context);
 	}
 
@@ -163,7 +161,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		return false;
 	}
 
-	public doAction(_context: AppearanceActionContext, _action: ItemModuleStorageAction): ItemModuleStorage | null {
+	public doAction(_context: AppearanceModuleActionContext, _action: ItemModuleStorageAction): ItemModuleStorage | null {
 		return null;
 	}
 

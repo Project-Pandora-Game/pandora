@@ -4,15 +4,15 @@ import { z } from 'zod';
 import { Logger } from '../logging';
 import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
 import { HexRGBAColorString, HexRGBAColorStringSchema } from '../validation';
-import type { AppearanceActionContext } from './appearanceActions';
-import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
+import type { AppearanceModuleActionContext } from './appearanceActions';
+import { ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
 import { IItemModule } from './modules/common';
-import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
+import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
@@ -37,6 +37,18 @@ export const RoomDeviceLinkSchema = z.object({
 });
 export type RoomDeviceLink = z.infer<typeof RoomDeviceLinkSchema>;
 
+export const LockBundleSchema = z.object({
+	locked: z.object({
+		/** Id of the character that locked the item */
+		id: CharacterIdSchema,
+		/** Name of the character that locked the item */
+		name: z.string(),
+		/** Time the item was locked */
+		time: z.number(),
+	}).optional(),
+});
+export type LockBundle = z.infer<typeof LockBundleSchema>;
+
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
@@ -46,6 +58,8 @@ export const ItemBundleSchema = z.object({
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
 	roomDeviceLink: RoomDeviceLinkSchema.optional(),
+	/** Lock specific data */
+	lockData: LockBundleSchema.optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
@@ -229,11 +243,11 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		});
 	}
 
-	public moduleAction(context: AppearanceActionContext, moduleName: string, action: ItemModuleAction, messageHandler: ActionMessageTemplateHandler): Item | null {
+	public moduleAction(context: AppearanceModuleActionContext, moduleName: string, action: ItemModuleAction): Item | null {
 		const module = this.modules.get(moduleName);
 		if (!module || module.type !== action.moduleType)
 			return null;
-		const moduleResult = module.doAction(context, action, messageHandler);
+		const moduleResult = module.doAction(context, action);
 		if (!moduleResult)
 			return null;
 		const bundle = this.exportToBundle();
@@ -271,7 +285,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 	}
 
 	@MemoizeNoArg
-	public getPropertiesParts(): Immutable<AssetProperties>[] {
+	public getPropertiesParts(): readonly Immutable<AssetProperties>[] {
 		const propertyParts: Immutable<AssetProperties>[] = (this.isWearable()) ? [this.asset.definition] : [];
 		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
 
@@ -597,12 +611,161 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 	}
 }
 
+export const ItemLockActionSchema = z.discriminatedUnion('action', [
+	z.object({
+		action: z.literal('lock'),
+	}),
+	z.object({
+		action: z.literal('unlock'),
+	}),
+]);
+export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
+
+export class ItemLock extends ItemBase<'lock'> {
+	public readonly lockData: Immutable<LockBundle> | undefined;
+
+	constructor(id: ItemId, asset: Asset<'lock'>, bundle: ItemBundle, context: IItemLoadContext) {
+		super(id, asset, bundle, context);
+		this.lockData = bundle.lockData;
+	}
+
+	public override exportToBundle(): ItemBundle {
+		return {
+			...super.exportToBundle(),
+			lockData: this.lockData,
+		};
+	}
+
+	public override validate(location: IItemLocationDescriptor): AppearanceValidationResult {
+		if (location === 'worn') {
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: this.asset.id,
+				},
+			};
+		}
+		return { success: true };
+	}
+
+	public override getModuleItems(_moduleName: string): AppearanceItems {
+		return [];
+	}
+
+	public override setModuleItems(_moduleName: string, _items: AppearanceItems): null {
+		return null;
+	}
+
+	public isLocked(): boolean {
+		return this.lockData?.locked != null;
+	}
+
+	public getLockProperties(): AssetLockProperties {
+		if (this.isLocked())
+			return this.asset.definition.locked ?? {};
+
+		return this.asset.definition.unlocked ?? {};
+	}
+
+	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): ItemLock | null {
+		const isSelfAction = context.target.type === 'character' && context.target.character.id === context.player.character.id;
+		const properties = this.getLockProperties();
+
+		// Locks can prevent interaction from player (unless in safemode)
+		if (properties.blockSelf && isSelfAction && !context.player.isInSafemode()) {
+			context.reject({
+				type: 'lockIntereactionPrevented',
+				moduleAction: action.action,
+				reason: 'blockSelf',
+				asset: this.asset.id,
+			});
+			return null;
+		}
+
+		switch (action.action) {
+			case 'lock':
+				return this.lock(context);
+			case 'unlock':
+				return this.unlock(context);
+		}
+		AssertNever(action);
+	}
+
+	public lock({ messageHandler, player }: AppearanceModuleActionContext): ItemLock | null {
+		if (this.isLocked())
+			return null;
+
+		if (this.asset.definition.chat?.actionLock) {
+			messageHandler({
+				id: 'custom',
+				customText: this.asset.definition.chat.actionLock,
+			});
+		}
+
+		return new ItemLock(this.id, this.asset, {
+			...super.exportToBundle(),
+			lockData: {
+				...this.lockData,
+				locked: {
+					id: player.character.id,
+					name: player.character.name,
+					time: Date.now(),
+				},
+			},
+		}, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	public unlock({ messageHandler }: AppearanceModuleActionContext): ItemLock | null {
+		if (!this.isLocked())
+			return null;
+
+		if (this.asset.definition.chat?.actionUnlock) {
+			messageHandler({
+				id: 'custom',
+				customText: this.asset.definition.chat.actionUnlock,
+			});
+		}
+
+		return new ItemLock(this.id, this.asset, {
+			...super.exportToBundle(),
+			lockData: {
+				...this.lockData,
+				locked: undefined,
+			},
+		}, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
+	}
+
+	@MemoizeNoArg
+	public override getPropertiesParts(): readonly Immutable<AssetProperties>[] {
+		const parentResult = super.getPropertiesParts();
+
+		if (this.isLocked()) {
+			return [
+				...parentResult,
+				{
+					blockAddRemove: true,
+				},
+			];
+		}
+
+		return parentResult;
+	}
+}
+
 export type ItemTypeMap =
 	Satisfies<
 		{
 			personal: ItemPersonal;
 			roomDevice: ItemRoomDevice;
 			roomDeviceWearablePart: ItemRoomDeviceWearablePart;
+			lock: ItemLock;
 		},
 		{
 			[type in AssetType]: ItemBase<type>;
@@ -626,6 +789,10 @@ export function CreateItem<Type extends AssetType>(id: ItemId, asset: Asset<Type
 		case 'roomDeviceWearablePart':
 			Assert(asset.isType('roomDeviceWearablePart'));
 			result = new ItemRoomDeviceWearablePart(id, asset, bundle, context);
+			break;
+		case 'lock':
+			Assert(asset.isType('lock'));
+			result = new ItemLock(id, asset, bundle, context);
 			break;
 		default:
 			AssertNever(type);

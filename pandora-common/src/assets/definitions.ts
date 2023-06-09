@@ -4,7 +4,7 @@ import { HexRGBAColorString, ZodTemplateString } from '../validation';
 import type { AppearanceArmPose, CharacterView } from './state/characterState';
 import type { BoneDefinitionCompressed, BoneName, Coordinates } from './graphics';
 import { AssetModuleDefinition } from './modules';
-import { AssetProperties } from './properties';
+import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
 
@@ -70,7 +70,9 @@ export type AssetType =
 	// Room devices are items placed in the room
 	'roomDevice' |
 	// Room device wearable parts are hidden items applied on character when they enter device
-	'roomDeviceWearablePart';
+	'roomDeviceWearablePart' |
+	// Lock items are items that can be used to lock other items
+	'lock';
 
 export const WEARABLE_ASSET_TYPES = ['personal', 'roomDeviceWearablePart'] as const satisfies readonly AssetType[];
 
@@ -250,12 +252,50 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 	};
 }
 
+export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'lock', A> {
+	/** Properties when the lock is unlocked */
+	unlocked?: AssetLockProperties<A>;
+	/** Properties when the lock is locked */
+	locked?: AssetLockProperties<A>;
+	/**
+	 * Chat specific settings for this asset
+	 *
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 */
+	chat?: {
+		/** How items of this asset are referred to in chat (defaults to asset's name) */
+		chatDescriptor?: string;
+		/** Message for when this item is locked */
+		actionLock?: string;
+		/** Message for when this item is unlocked */
+		actionUnlock?: string;
+	};
+	/**
+	 * Text to show when the lock is locked.
+	 *
+	 * To disable this text, set it to '' (empty string)
+	 *
+	 * Replacements:
+	 *  - CHARACTER_NAME is replaced with the name of the character
+	 *  - CHARACTER_ID is replaced with the ID of the character
+	 *  - CHARACTER is replaced with `CHARACTER_NAME (CHARACTER_ID)`
+	 *  - TIME is replaced with the time the variant was selected
+	 *  - TIME_PASSED is replaced with the time passed since the variant was selected
+	 *
+	 * @default 'Locked by CHARACTER at TIME'
+	 */
+	lockedText?: string;
+	/** If this item has any graphics to be loaded or is only virtual */
+	hasGraphics: boolean;
+}
+
 export type AssetDefinitionTypeMap<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> =
 	Satisfies<
 		{
 			personal: PersonalAssetDefinition<A>;
 			roomDevice: RoomDeviceAssetDefinition<A>;
 			roomDeviceWearablePart: RoomDeviceWearablePartAssetDefinition<A>;
+			lock: LockAssetDefinition<A>;
 		},
 		{
 			[type in AssetType]: AssetBaseDefinition<type, A>;

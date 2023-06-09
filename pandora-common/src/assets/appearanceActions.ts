@@ -4,9 +4,9 @@ import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema, WearableAssetType } from './definitions';
-import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
+import { ActionHandler, ActionMessageTemplateHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
-import { ItemModuleAction, ItemModuleActionSchema } from './modules';
+import { ItemModuleActionSchema, ModuleActionError } from './modules';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
@@ -186,12 +186,24 @@ export type AppearanceActionResult = {
 	result: 'invalidAction';
 	reason?: 'noDeleteRoomDeviceWearable' | 'noDeleteDeployedRoomDevice';
 } | {
+	result: 'moduleActionError';
+	reason: ModuleActionError;
+} | {
 	result: 'restrictionError';
 	restriction: Restriction;
 } | {
 	result: 'validationError';
 	validationError: AppearanceValidationError;
 };
+
+/** Context for performing module actions */
+export interface AppearanceModuleActionContext {
+	player: CharacterRestrictionsManager;
+	target: RoomActionTarget;
+
+	messageHandler: ActionMessageTemplateHandler;
+	reject: (reason: ModuleActionError) => void;
+}
 
 export interface AppearanceActionHandlerArg<Action extends AppearanceAction = AppearanceAction> {
 	action: Action;
@@ -394,21 +406,12 @@ export function DoAppearanceAction(
 		}
 		// Module-specific action
 		case 'moduleAction': {
-			const target = context.getTarget(action.target);
-			if (!target)
-				return { result: 'invalidAction' };
-			// Player doing the action must be able to interact with the item
-			const r = player.canUseItemModule(target, action.item, action.module);
-			if (!r.allowed) {
-				return {
-					result: 'restrictionError',
-					restriction: r.restriction,
-				};
-			}
-
-			const targetManipulator = manipulator.getManipulatorFor(action.target);
-			if (!ActionModuleAction(context, targetManipulator, action.item, action.module, action.action))
-				return { result: 'invalidAction' };
+			const r = ActionModuleAction({
+				...arg,
+				action,
+			});
+			if (r.result !== 'success')
+				return r;
 
 			break;
 		}
@@ -754,26 +757,62 @@ export function ActionColorItem(rootManipulator: AppearanceRootManipulator, item
 	return true;
 }
 
-export function ActionModuleAction(context: AppearanceActionContext, rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, module: string, action: ItemModuleAction): boolean {
-	const { container, itemId } = itemPath;
-	const manipulator = rootManipulator.getContainer(container);
-
-	// Do change and store chat messages
-	if (!manipulator.modifyItem(itemId, (it) => it.moduleAction(
-		context,
-		module,
-		action,
-		(m) => manipulator.queueMessage({
-			item: {
-				assetId: it.asset.id,
-			},
-			...m,
-		}),
-	))) {
-		return false;
+export function ActionModuleAction({
+	action,
+	manipulator,
+	context,
+	player,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionModuleAction>>): AppearanceActionResult {
+	const target = context.getTarget(action.target);
+	if (!target)
+		return { result: 'invalidAction' };
+	// Player doing the action must be able to interact with the item
+	const r = player.canUseItemModule(target, action.item, action.module);
+	if (!r.allowed) {
+		return {
+			result: 'restrictionError',
+			restriction: r.restriction,
+		};
 	}
 
-	return true;
+	const rootManipulator = manipulator.getManipulatorFor(action.target);
+
+	const { container, itemId } = action.item;
+	const containerManipulator = rootManipulator.getContainer(container);
+
+	let rejectionReason: ModuleActionError | undefined;
+
+	// Do change and store chat messages
+	if (!containerManipulator.modifyItem(itemId, (it) => {
+		const actionContext: AppearanceModuleActionContext = {
+			player,
+			target,
+			messageHandler: (m) => containerManipulator.queueMessage({
+				item: {
+					assetId: it.asset.id,
+				},
+				...m,
+			}),
+			reject: (reason) => {
+				rejectionReason ??= reason;
+			},
+		};
+
+		return it.moduleAction(
+			actionContext,
+			action.module,
+			action.action,
+		);
+	}) || rejectionReason) {
+		return {
+			result: 'moduleActionError',
+			reason: rejectionReason ?? { type: 'invalid' },
+		};
+	}
+
+	return {
+		result: 'success',
+	};
 }
 
 export function ActionAppearanceRandomize({

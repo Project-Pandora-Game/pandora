@@ -1,78 +1,58 @@
 import { Asset } from '../asset';
-import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
+import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
 import { z } from 'zod';
-import { AssetDefinitionExtraArgs, AssetSizeMapping } from '../definitions';
+import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
-import { AppearanceItems, AppearanceValidateRequirements, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItem, IItemLoadContext, IItemLocationDescriptor, Item, ItemBundle, ItemBundleSchema } from '../item';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundleSchema, ItemLock, ItemLockActionSchema } from '../item';
 import { AssetManager } from '../assetManager';
-import type { AppearanceActionContext } from '../appearanceActions';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import { Satisfies } from '../../utility';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
-	/**
-	 * Requirements that locks going into this slot need to meet to be allowed into it.
-	 */
-	lockRequirements: (A['attributes'] | `!${A['attributes']}`)[];
-
 	/** Effects applied when this slot isn't occupied by a lock */
-	unoccupiedEffects?: AssetProperties<A>;
+	emptyEffects?: AssetProperties<A>;
 	/** Effects applied when this slot is occupied by a lock */
 	occupiedEffects?: AssetProperties<A>;
+	/** Effects applied when the slot is occupied and locked, default to occupiedEffects */
+	lockedEffects?: AssetProperties<A>;
 }
 
-export interface IModuleItemDataLockSlot extends IModuleItemDataCommon<'lockSlot'> {
-	lock: ItemBundle | null;
-}
-const ModuleItemDataLockSlotScheme = z.lazy(() => z.object({
+const ModuleItemDataLockSlotSchema = z.lazy(() => z.object({
 	type: z.literal('lockSlot'),
 	lock: ItemBundleSchema.nullable(),
 }));
+export type IModuleItemDataLockSlot = Satisfies<z.infer<typeof ModuleItemDataLockSlotSchema>, IModuleItemDataCommon<'lockSlot'>>;
 
-// Never used
 export const ItemModuleLockSlotActionSchema = z.object({
 	moduleType: z.literal('lockSlot'),
+	lockAction: z.lazy(() => ItemLockActionSchema),
 });
-type ItemModuleLockSlotAction = z.infer<typeof ItemModuleLockSlotActionSchema>;
+export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSlotActionSchema>, IModuleActionCommon<'lockSlot'>>;
 
 export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlot'> {
 
-	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigLockSlot, data: unknown): IModuleItemDataLockSlot {
-		const parsed = ModuleItemDataLockSlotScheme.safeParse(data);
+	public parseData(_config: IModuleConfigLockSlot, data: unknown): IModuleItemDataLockSlot {
+		const parsed = ModuleItemDataLockSlotSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'lockSlot',
 			lock: null,
 		};
 	}
 
-	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
+	public loadModule(config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
 		return new ItemModuleLockSlot(config, data, context);
 	}
 
-	public getStaticAttributes(_config: IModuleConfigLockSlot): ReadonlySet<string> {
-		return new Set<string>();
+	public getStaticAttributes(config: IModuleConfigLockSlot): ReadonlySet<string> {
+		const result = new Set<string>();
+		config.emptyEffects?.attributes?.forEach((a) => result.add(a));
+		config.occupiedEffects?.attributes?.forEach((a) => result.add(a));
+		config.lockedEffects?.attributes?.forEach((a) => result.add(a));
+		return result;
 	}
-}
-
-function ValidateLock(lock: Item | null, config: IModuleConfigLockSlot): AppearanceValidationResult {
-	if (lock === null)
-		return { success: true };
-
-	if (
-		(AssetSizeMapping[lock.asset.definition.size] ?? 99) > AssetSizeMapping.small ||
-		!AppearanceValidateRequirements(lock.getProperties().attributes, new Set(config.lockRequirements), null).success
-	) {
-		return {
-			success: false,
-			error: {
-				problem: 'contentNotAllowed',
-				asset: lock.asset.id,
-			},
-		};
-	}
-
-	return lock.validate('attached');
 }
 
 export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
@@ -80,7 +60,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 
 	private readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigLockSlot;
-	public readonly lock: Item | null;
+	public readonly lock: ItemLock | null;
 
 	public get interactionType(): ItemInteractionType {
 		return ItemInteractionType.MODIFY;
@@ -103,7 +83,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 					context,
 				);
 
-				if (context.doLoadTimeCleanup && !ValidateLock(item, this.config).success) {
+				if (!item.isType('lock')) {
 					context.logger?.warning(`Skipping invalid lock ${data.lock.asset}`);
 					this.lock = null;
 				} else {
@@ -123,21 +103,43 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	}
 
 	public validate(_location: IItemLocationDescriptor): AppearanceValidationResult {
-		return ValidateLock(this.lock, this.config);
+		return { success: true };
 	}
 
 	public getProperties(): AssetProperties {
-		return this.lock !== null ?
-			(this.config.occupiedEffects ?? {}) :
-			(this.config.unoccupiedEffects ?? {});
+		if (this.lock != null) {
+			if (this.lock.isLocked()) {
+				return this.config.lockedEffects ?? this.config.occupiedEffects ?? {};
+			}
+
+			return this.config.occupiedEffects ?? {};
+		}
+
+		return this.config.emptyEffects ?? {};
 	}
 
 	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
 		return false;
 	}
 
-	public doAction(_context: AppearanceActionContext, _action: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
-		return null;
+	public doAction(context: AppearanceModuleActionContext, { lockAction }: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
+		if (this.lock == null)
+			return null;
+
+		if (this.lock == null)
+			return null;
+
+		const result = this.lock.lockAction(context, lockAction);
+		if (result == null)
+			return result;
+
+		return new ItemModuleLockSlot(this.config, {
+			type: 'lockSlot',
+			lock: result.exportToBundle(),
+		}, {
+			assetManager: this.assetManager,
+			doLoadTimeCleanup: false,
+		});
 	}
 
 	public readonly contentsPhysicallyEquipped: boolean = true;
@@ -148,6 +150,8 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 
 	public setContents(items: AppearanceItems): ItemModuleLockSlot | null {
 		if (items.length > 1)
+			return null;
+		if (items.length === 1 && !items[0].isType('lock'))
 			return null;
 
 		return new ItemModuleLockSlot(this.config, {
@@ -160,6 +164,6 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 	}
 
 	public acceptedContentFilter(asset: Asset): boolean {
-		return this.config.lockRequirements.every((r) => r.startsWith('!') || asset.staticAttributes.has(r));
+		return asset.isType('lock');
 	}
 }

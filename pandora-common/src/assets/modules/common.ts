@@ -1,14 +1,14 @@
 import type { Asset } from '../asset';
-import { ConditionOperator } from '../graphics';
-import { ItemInteractionType } from '../../character';
-import { AssetProperties } from '../properties';
+import type { ConditionOperator } from '../graphics';
+import type { ItemInteractionType } from '../../character';
+import type { AssetProperties } from '../properties';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import type { IItemLoadContext, IItemLocationDescriptor } from '../item';
-import type { ActionMessageTemplateHandler } from '../appearanceTypes';
-import type { AppearanceActionContext } from '../appearanceActions';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import type { IAssetModuleTypes, ModuleType } from '../modules';
 
-export interface IModuleConfigCommon<Type extends string> {
+export interface IModuleConfigCommon<Type extends ModuleType> {
 	type: Type;
 	/** The display name of this module */
 	name: string;
@@ -16,32 +16,35 @@ export interface IModuleConfigCommon<Type extends string> {
 	expression?: string;
 }
 
-export interface IModuleItemDataCommon<Type extends string> {
+export interface IModuleItemDataCommon<Type extends ModuleType> {
 	type: Type;
 }
 
-export interface IAssetModuleDefinition<Type extends string> {
-	parseData(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IModuleItemDataCommon<Type>;
-	loadModule(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, context: IItemLoadContext): IItemModule<Type>;
+export interface IModuleActionCommon<Type extends ModuleType> {
+	moduleType: Type;
+}
+
+export interface IAssetModuleDefinition<Type extends ModuleType> {
+	parseData(config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IAssetModuleTypes[Type]['data'];
+	loadModule(config: IModuleConfigCommon<Type>, data: IAssetModuleTypes[Type]['data'], context: IItemLoadContext): IItemModule<Type>;
 	getStaticAttributes(config: IModuleConfigCommon<Type>): ReadonlySet<string>;
 }
 
-export interface IItemModule<Type extends string = string> {
+export interface IItemModule<Type extends ModuleType = ModuleType> {
 	readonly type: Type;
-	readonly config: IModuleConfigCommon<Type>;
+	readonly config: IAssetModuleTypes[Type]['config'];
 
 	/** The module specifies what kind of interaction type interacting with it is */
 	readonly interactionType: ItemInteractionType;
 
-	exportData(): IModuleItemDataCommon<Type>;
+	exportData(): IAssetModuleTypes[Type]['data'];
 
 	validate(location: IItemLocationDescriptor): AppearanceValidationResult;
 
 	getProperties(): AssetProperties;
 
 	evalCondition(operator: ConditionOperator, value: string): boolean;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	doAction(context: AppearanceActionContext, action: any, messageHandler: ActionMessageTemplateHandler): IItemModule<Type> | null;
+	doAction(context: AppearanceModuleActionContext, action: IAssetModuleTypes[Type]['actions']): IItemModule<Type> | null;
 
 	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */
 	readonly contentsPhysicallyEquipped: boolean;

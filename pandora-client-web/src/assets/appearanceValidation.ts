@@ -31,6 +31,28 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 			AssertNever(result.reason);
 		}
 		return '';
+	} else if (result.result === 'moduleActionError') {
+		const e = result.reason;
+		switch (e.type) {
+			case 'lockIntereactionPrevented': {
+				const actionDescription: Record<typeof e.moduleAction, string> = {
+					lock: 'locked',
+					unlock: 'unlocked',
+				};
+
+				switch (e.reason) {
+					case 'blockSelf':
+						return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${actionDescription[e.moduleAction]} on yourself.`;
+				}
+
+				AssertNever(e.reason);
+				break;
+			}
+			case 'invalid':
+				return '';
+			default:
+				AssertNever(e);
+		}
 	} else if (result.result === 'restrictionError') {
 		const e = result.restriction;
 		switch (e.type) {

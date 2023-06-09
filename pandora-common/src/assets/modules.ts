@@ -1,13 +1,13 @@
 import { AssertNever, Satisfies } from '../utility';
-import { IAssetModuleDefinition, IModuleItemDataCommon, IModuleConfigCommon, IItemModule } from './modules/common';
-import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema } from './modules/typed';
-import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema } from './modules/storage';
+import { IAssetModuleDefinition, IModuleItemDataCommon, IModuleConfigCommon, IItemModule, IModuleActionCommon } from './modules/common';
+import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ItemModuleTypedAction } from './modules/typed';
+import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ItemModuleStorageAction } from './modules/storage';
+import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotAction, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
 import { z } from 'zod';
 import { IsObject, ZodMatcher } from '../validation';
 import { Asset } from './asset';
-import { AssetDefinitionExtraArgs } from './definitions';
+import { AssetDefinitionExtraArgs, AssetId } from './definitions';
 import { IItemLoadContext } from './item';
-import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
 import { Immutable } from 'immer';
 
 //#region Module definitions
@@ -16,14 +16,17 @@ export type IAssetModuleTypes<A extends AssetDefinitionExtraArgs = AssetDefiniti
 	typed: {
 		config: IModuleConfigTyped<A>;
 		data: IModuleItemDataTyped;
+		actions: ItemModuleTypedAction;
 	};
 	storage: {
 		config: IModuleConfigStorage<A>;
 		data: IModuleItemDataStorage;
+		actions: ItemModuleStorageAction;
 	};
 	lockSlot: {
 		config: IModuleConfigLockSlot<A>;
 		data: IModuleItemDataLockSlot;
+		actions: ItemModuleLockSlotAction;
 	};
 };
 
@@ -40,6 +43,18 @@ export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
 ]);
 export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
+export type ModuleActionError =
+	| {
+		type: 'lockIntereactionPrevented';
+		moduleAction: 'lock' | 'unlock';
+		reason: 'blockSelf';
+		asset: AssetId;
+	}
+	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
+	| {
+		type: 'invalid';
+	};
+
 //#endregion
 
 export type ModuleType = keyof IAssetModuleTypes;
@@ -50,6 +65,7 @@ type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 	[Type in ModuleType]: {
 		config: IModuleConfigCommon<Type>;
 		data: IModuleItemDataCommon<Type>;
+		actions: IModuleActionCommon<Type>;
 	}
 }>;
 
@@ -81,12 +97,8 @@ export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, dat
 	switch (moduleDefinition.type) {
 		case 'typed':
 			return MODULE_TYPES.typed.loadModule(
-				asset,
-				moduleName,
 				moduleDefinition,
 				MODULE_TYPES.typed.parseData(
-					asset,
-					moduleName,
 					moduleDefinition,
 					data,
 					context.assetManager,
@@ -95,12 +107,8 @@ export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, dat
 			);
 		case 'storage':
 			return MODULE_TYPES.storage.loadModule(
-				asset,
-				moduleName,
 				moduleDefinition,
 				MODULE_TYPES.storage.parseData(
-					asset,
-					moduleName,
 					moduleDefinition,
 					data,
 					context.assetManager,
@@ -109,12 +117,8 @@ export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, dat
 			);
 		case 'lockSlot':
 			return MODULE_TYPES.lockSlot.loadModule(
-				asset,
-				moduleName,
 				moduleDefinition,
 				MODULE_TYPES.lockSlot.parseData(
-					asset,
-					moduleName,
 					moduleDefinition,
 					data,
 					context.assetManager,

@@ -2002,12 +2002,12 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 
 	if (m.lock == null) {
 		return (
-			<Column>
-				<Row wrap>
+			<Column padding='medium'>
+				<Row padding='medium' wrap>
 					<button className={ classNames('wardrobeActionButton', 'allowed') } onClick={ onFocus } >
 						<img width='21' height='33' src={ emptyLock } />
 					</button>
-					<Row alignY='center'>
+					<Row padding='medium' alignY='center'>
 						No lock
 					</Row>
 				</Row>
@@ -2017,14 +2017,14 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 
 	if (!m.lock.isLocked()) {
 		return (
-			<Column>
-				<Row wrap>
+			<Column padding='medium'>
+				<Row padding='medium' wrap>
 					<img width='21' height='33' src={ openLock } />
-					<Row alignY='center'>
+					<Row padding='medium' alignY='center'>
 						Lock: { m.lock.asset.definition.name } (unlocked)
 					</Row>
 				</Row>
-				<Row wrap padding='none'>
+				<Row wrap>
 					<WardrobeActionButton
 						action={ {
 							type: 'delete',
@@ -2072,10 +2072,10 @@ function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: Wardrob
 	}
 
 	return (
-		<Column>
-			<Row wrap>
+		<Column padding='medium'>
+			<Row padding='medium' wrap>
 				<img width='21' height='33' src={ closedLock } />
-				<Row alignY='center'>
+				<Row padding='medium' alignY='center'>
 					Locked with: { m.lock.asset.definition.name }
 				</Row>
 			</Row>
@@ -2103,7 +2103,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 			TIME: new Date(time).toLocaleString(),
 		};
 		return (
-			<Row alignY='start'>
+			<Row padding='medium' alignY='start'>
 				{ MessageSubstitute(formatText, substitutes) }
 			</Row>
 		);

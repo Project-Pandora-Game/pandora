@@ -668,7 +668,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		return this.asset.definition.unlocked ?? {};
 	}
 
-	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): Item | null {
+	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): ItemLock | null {
 		const isSelfAction = context.target.type === 'character' && context.target.character.id === context.player.character.id;
 		const properties = this.getLockProperties();
 

@@ -85,12 +85,8 @@ export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, dat
 	switch (moduleDefinition.type) {
 		case 'typed':
 			return MODULE_TYPES.typed.loadModule(
-				asset,
-				moduleName,
 				moduleDefinition,
 				MODULE_TYPES.typed.parseData(
-					asset,
-					moduleName,
 					moduleDefinition,
 					data,
 					context.assetManager,
@@ -99,12 +95,8 @@ export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, dat
 			);
 		case 'storage':
 			return MODULE_TYPES.storage.loadModule(
-				asset,
-				moduleName,
 				moduleDefinition,
 				MODULE_TYPES.storage.parseData(
-					asset,
-					moduleName,
 					moduleDefinition,
 					data,
 					context.assetManager,
@@ -113,12 +105,8 @@ export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, dat
 			);
 		case 'lockSlot':
 			return MODULE_TYPES.lockSlot.loadModule(
-				asset,
-				moduleName,
 				moduleDefinition,
 				MODULE_TYPES.lockSlot.parseData(
-					asset,
-					moduleName,
 					moduleDefinition,
 					data,
 					context.assetManager,

@@ -1,4 +1,3 @@
-import { Asset } from '../asset';
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
 import { z } from 'zod';
 import { AssetDefinitionExtraArgs, AssetSize, AssetSizeMapping } from '../definitions';
@@ -32,7 +31,7 @@ export type ItemModuleStorageAction = Satisfies<z.infer<typeof ItemModuleStorage
 
 export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'> {
 
-	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigStorage, data: unknown): IModuleItemDataStorage {
+	public parseData(_config: IModuleConfigStorage, data: unknown): IModuleItemDataStorage {
 		const parsed = ModuleItemDataStorageSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'storage',
@@ -40,7 +39,7 @@ export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'
 		};
 	}
 
-	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage {
+	public loadModule(config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage {
 		return new ItemModuleStorage(config, data, context);
 	}
 

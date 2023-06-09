@@ -35,7 +35,7 @@ export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSl
 
 export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlot'> {
 
-	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigLockSlot, data: unknown): IModuleItemDataLockSlot {
+	public parseData(_config: IModuleConfigLockSlot, data: unknown): IModuleItemDataLockSlot {
 		const parsed = ModuleItemDataLockSlotSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'lockSlot',
@@ -43,7 +43,7 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		};
 	}
 
-	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
+	public loadModule(config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
 		return new ItemModuleLockSlot(config, data, context);
 	}
 

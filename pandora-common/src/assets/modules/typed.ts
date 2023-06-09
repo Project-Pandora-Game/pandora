@@ -1,4 +1,3 @@
-import { Asset } from '../asset';
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
 import { z } from 'zod';
 import { AssetDefinitionExtraArgs } from '../definitions';
@@ -81,14 +80,14 @@ export type ItemModuleTypedAction = Satisfies<z.infer<typeof ItemModuleTypedActi
 
 export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 
-	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigTyped, data: unknown): IModuleItemDataTyped {
+	public parseData(_config: IModuleConfigTyped, data: unknown): IModuleItemDataTyped {
 		const parsed = ModuleItemDataTypedSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'typed',
 		};
 	}
 
-	public loadModule(_asset: Asset, _moduleName: string, config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped {
+	public loadModule(config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped {
 		return new ItemModuleTyped(config, data, context);
 	}
 

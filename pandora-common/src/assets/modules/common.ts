@@ -26,8 +26,8 @@ export interface IModuleActionCommon<Type extends ModuleType> {
 }
 
 export interface IAssetModuleDefinition<Type extends ModuleType> {
-	parseData(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IModuleItemDataCommon<Type>;
-	loadModule(asset: Asset, moduleName: string, config: IModuleConfigCommon<Type>, data: unknown, context: IItemLoadContext): IItemModule<Type>;
+	parseData(config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IAssetModuleTypes[Type]['data'];
+	loadModule(config: IModuleConfigCommon<Type>, data: IAssetModuleTypes[Type]['data'], context: IItemLoadContext): IItemModule<Type>;
 	getStaticAttributes(config: IModuleConfigCommon<Type>): ReadonlySet<string>;
 }
 

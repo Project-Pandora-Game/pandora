@@ -285,7 +285,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 	}
 
 	@MemoizeNoArg
-	public getPropertiesParts(): Immutable<AssetProperties>[] {
+	public getPropertiesParts(): readonly Immutable<AssetProperties>[] {
 		const propertyParts: Immutable<AssetProperties>[] = (this.isWearable()) ? [this.asset.definition] : [];
 		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
 
@@ -740,6 +740,22 @@ export class ItemLock extends ItemBase<'lock'> {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
 		});
+	}
+
+	@MemoizeNoArg
+	public override getPropertiesParts(): readonly Immutable<AssetProperties>[] {
+		const parentResult = super.getPropertiesParts();
+
+		if (this.isLocked()) {
+			return [
+				...parentResult,
+				{
+					blockAddRemove: true,
+				},
+			];
+		}
+
+		return parentResult;
 	}
 }
 

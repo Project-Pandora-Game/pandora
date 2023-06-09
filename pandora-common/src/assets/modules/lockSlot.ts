@@ -1,15 +1,16 @@
 import { Asset } from '../asset';
-import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
+import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
 import { z } from 'zod';
 import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundle, ItemBundleSchema, ItemLock, ItemLockActionSchema } from '../item';
+import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundleSchema, ItemLock, ItemLockActionSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceActionContext } from '../appearanceActions';
 import type { ActionMessageTemplateHandler, RoomActionTarget } from '../appearanceTypes';
+import { Satisfies } from '../../utility';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
 	/** Effects applied when this slot isn't occupied by a lock */
@@ -20,24 +21,22 @@ export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = Asse
 	lockedEffects?: AssetProperties<A>;
 }
 
-export interface IModuleItemDataLockSlot extends IModuleItemDataCommon<'lockSlot'> {
-	lock: ItemBundle | null;
-}
-const ModuleItemDataLockSlotScheme = z.lazy(() => z.object({
+const ModuleItemDataLockSlotSchema = z.lazy(() => z.object({
 	type: z.literal('lockSlot'),
 	lock: ItemBundleSchema.nullable(),
 }));
+export type IModuleItemDataLockSlot = Satisfies<z.infer<typeof ModuleItemDataLockSlotSchema>, IModuleItemDataCommon<'lockSlot'>>;
 
 export const ItemModuleLockSlotActionSchema = z.object({
 	moduleType: z.literal('lockSlot'),
 	lockAction: z.lazy(() => ItemLockActionSchema),
 });
-type ItemModuleLockSlotAction = z.infer<typeof ItemModuleLockSlotActionSchema>;
+export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSlotActionSchema>, IModuleActionCommon<'lockSlot'>>;
 
 export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlot'> {
 
 	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigLockSlot, data: unknown): IModuleItemDataLockSlot {
-		const parsed = ModuleItemDataLockSlotScheme.safeParse(data);
+		const parsed = ModuleItemDataLockSlotSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'lockSlot',
 			lock: null,

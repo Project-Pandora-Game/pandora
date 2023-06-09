@@ -1,5 +1,5 @@
 import { Asset } from '../asset';
-import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon } from './common';
+import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
 import { z } from 'zod';
 import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
@@ -10,7 +10,8 @@ import { IItemLoadContext, IItemLocationDescriptor } from '../item';
 import { AssetManager } from '../assetManager';
 import type { ActionMessageTemplateHandler } from '../appearanceTypes';
 import type { AppearanceActionContext } from '../appearanceActions';
-import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
+import { CharacterIdSchema } from '../../character/characterTypes';
+import { Satisfies } from '../../utility';
 
 export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
 	/** ID if this variant, must be unique */
@@ -61,12 +62,7 @@ export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDe
 	variants: [IModuleTypedOption<A>, ...IModuleTypedOption<A>[]];
 }
 
-export interface IModuleItemDataTyped extends IModuleItemDataCommon<'typed'> {
-	variant?: string;
-	selectedAt?: number;
-	selectedBy?: { name: string; id: CharacterId; };
-}
-const ModuleItemDataTypedScheme = z.object({
+const ModuleItemDataTypedSchema = z.object({
 	type: z.literal('typed'),
 	variant: z.string().optional(),
 	selectedAt: z.number().optional(),
@@ -75,17 +71,18 @@ const ModuleItemDataTypedScheme = z.object({
 		id: CharacterIdSchema,
 	}).optional(),
 });
+export type IModuleItemDataTyped = Satisfies<z.infer<typeof ModuleItemDataTypedSchema>, IModuleItemDataCommon<'typed'>>;
 
 export const ItemModuleTypedActionSchema = z.object({
 	moduleType: z.literal('typed'),
 	setVariant: z.string(),
 });
-type ItemModuleTypedAction = z.infer<typeof ItemModuleTypedActionSchema>;
+export type ItemModuleTypedAction = Satisfies<z.infer<typeof ItemModuleTypedActionSchema>, IModuleActionCommon<'typed'>>;
 
 export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 
 	public parseData(_asset: Asset, _moduleName: string, _config: IModuleConfigTyped, data: unknown): IModuleItemDataTyped {
-		const parsed = ModuleItemDataTypedScheme.safeParse(data);
+		const parsed = ModuleItemDataTypedSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'typed',
 		};

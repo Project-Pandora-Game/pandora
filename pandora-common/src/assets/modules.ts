@@ -1,13 +1,13 @@
 import { AssertNever, Satisfies } from '../utility';
-import { IAssetModuleDefinition, IModuleItemDataCommon, IModuleConfigCommon, IItemModule } from './modules/common';
-import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema } from './modules/typed';
-import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema } from './modules/storage';
+import { IAssetModuleDefinition, IModuleItemDataCommon, IModuleConfigCommon, IItemModule, IModuleActionCommon } from './modules/common';
+import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ItemModuleTypedAction } from './modules/typed';
+import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ItemModuleStorageAction } from './modules/storage';
+import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotAction, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
 import { z } from 'zod';
 import { IsObject, ZodMatcher } from '../validation';
 import { Asset } from './asset';
 import { AssetDefinitionExtraArgs } from './definitions';
 import { IItemLoadContext } from './item';
-import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
 import { Immutable } from 'immer';
 
 //#region Module definitions
@@ -16,14 +16,17 @@ export type IAssetModuleTypes<A extends AssetDefinitionExtraArgs = AssetDefiniti
 	typed: {
 		config: IModuleConfigTyped<A>;
 		data: IModuleItemDataTyped;
+		actions: ItemModuleTypedAction;
 	};
 	storage: {
 		config: IModuleConfigStorage<A>;
 		data: IModuleItemDataStorage;
+		actions: ItemModuleStorageAction;
 	};
 	lockSlot: {
 		config: IModuleConfigLockSlot<A>;
 		data: IModuleItemDataLockSlot;
+		actions: ItemModuleLockSlotAction;
 	};
 };
 
@@ -50,6 +53,7 @@ type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 	[Type in ModuleType]: {
 		config: IModuleConfigCommon<Type>;
 		data: IModuleItemDataCommon<Type>;
+		actions: IModuleActionCommon<Type>;
 	}
 }>;
 

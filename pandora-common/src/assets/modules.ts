@@ -6,7 +6,7 @@ import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotActio
 import { z } from 'zod';
 import { IsObject, ZodMatcher } from '../validation';
 import { Asset } from './asset';
-import { AssetDefinitionExtraArgs } from './definitions';
+import { AssetDefinitionExtraArgs, AssetId } from './definitions';
 import { IItemLoadContext } from './item';
 import { Immutable } from 'immer';
 
@@ -42,6 +42,18 @@ export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
 	ItemModuleLockSlotActionSchema,
 ]);
 export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
+
+export type ModuleActionError =
+	| {
+		type: 'lockIntereactionPrevented';
+		moduleAction: 'lock' | 'unlock';
+		reason: 'blockSelf';
+		asset: AssetId;
+	}
+	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
+	| {
+		type: 'invalid';
+	};
 
 //#endregion
 

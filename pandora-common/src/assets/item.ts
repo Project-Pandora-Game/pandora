@@ -669,6 +669,20 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): Item | null {
+		const isSelfAction = context.target.type === 'character' && context.target.character.id === context.player.character.id;
+		const properties = this.getLockProperties();
+
+		// Locks can prevent interaction from player (unless in safemode)
+		if (properties.blockSelf && isSelfAction && !context.player.isInSafemode()) {
+			context.reject({
+				type: 'lockIntereactionPrevented',
+				moduleAction: action.action,
+				reason: 'blockSelf',
+				asset: this.asset.id,
+			});
+			return null;
+		}
+
 		switch (action.action) {
 			case 'lock':
 				return this.lock(context);
@@ -678,12 +692,8 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(action);
 	}
 
-	public lock({ messageHandler, getCharacter, player }: AppearanceModuleActionContext): ItemLock | null {
+	public lock({ messageHandler, player }: AppearanceModuleActionContext): ItemLock | null {
 		if (this.isLocked())
-			return null;
-
-		const by = getCharacter(player);
-		if (by == null)
 			return null;
 
 		if (this.asset.definition.chat?.actionLock) {
@@ -698,8 +708,8 @@ export class ItemLock extends ItemBase<'lock'> {
 			lockData: {
 				...this.lockData,
 				locked: {
-					id: by.character.id,
-					name: by.character.name,
+					id: player.character.id,
+					name: player.character.name,
 					time: Date.now(),
 				},
 			},

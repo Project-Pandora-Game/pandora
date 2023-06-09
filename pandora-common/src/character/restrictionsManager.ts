@@ -7,7 +7,7 @@ import { ActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item, RoomDeviceLink } from '../assets/item';
-import type { Asset, AssetId, ItemContainerPath, ItemId, ItemModuleAction, ItemPath, RoomActionTarget } from '../assets';
+import type { Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
 import { AppearanceGetBlockedSlot, AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Immutable } from 'immer';
 
@@ -96,13 +96,6 @@ export type Restriction =
 	}
 	| {
 		type: 'blockedHands';
-	}
-	| {
-		type: 'blockedModuleAction';
-		moduleType: 'lockSlot';
-		moduleAction: 'lock' | 'unlock';
-		reason: 'blockSelf';
-		asset: AssetId;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
@@ -460,7 +453,7 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public canUseItemModule(target: RoomActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType, action?: ItemModuleAction): RestrictionResult {
+	public canUseItemModule(target: RoomActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
@@ -471,10 +464,10 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
-		return this.canUseItemModuleDirect(target, itemPath.container, item, moduleName, interaction, action);
+		return this.canUseItemModuleDirect(target, itemPath.container, item, moduleName, interaction);
 	}
 
-	public canUseItemModuleDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType, action?: ItemModuleAction): RestrictionResult {
+	public canUseItemModuleDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		// The module must exist
 		const module = item.modules.get(moduleName);
 		if (!module)
@@ -524,10 +517,6 @@ export class CharacterRestrictionsManager {
 					self: true,
 				},
 			};
-
-		const moduleRestrictions = action && module.canDoAction?.(this, target, action, interaction);
-		if (moduleRestrictions?.allowed === false)
-			return moduleRestrictions;
 
 		return { allowed: true };
 	}

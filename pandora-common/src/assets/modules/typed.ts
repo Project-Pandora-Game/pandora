@@ -157,7 +157,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 				false;
 	}
 
-	public doAction({ messageHandler, getCharacter, player }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped | null {
+	public doAction({ messageHandler, player }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped | null {
 		const newVariant = this.config.variants.find((v) => v.id === action.setVariant);
 		if (!newVariant)
 			return null;
@@ -177,15 +177,13 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			});
 		}
 
-		const selectedBy = getCharacter(player);
-
 		return new ItemModuleTyped(this.config, {
 			type: 'typed',
 			variant: newVariant.id,
 			selectedAt: Date.now(),
-			selectedBy: selectedBy == null ? undefined : {
-				id: selectedBy.character.id,
-				name: selectedBy.character.name,
+			selectedBy: {
+				id: player.character.id,
+				name: player.character.name,
 			},
 		}, {
 			assetManager: this.assetManager,

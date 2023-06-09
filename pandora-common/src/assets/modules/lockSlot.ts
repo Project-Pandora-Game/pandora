@@ -4,12 +4,11 @@ import { z } from 'zod';
 import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
-import { CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../../character/restrictionsManager';
+import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundleSchema, ItemLock, ItemLockActionSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
-import type { RoomActionTarget } from '../appearanceTypes';
 import { Satisfies } from '../../utility';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
@@ -121,33 +120,6 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 
 	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
 		return false;
-	}
-
-	public canDoAction(source: CharacterRestrictionsManager, target: RoomActionTarget, { lockAction }: ItemModuleLockSlotAction, interaction: ItemInteractionType): RestrictionResult {
-		if (interaction !== this.interactionType || this.lock == null) {
-			return {
-				allowed: false,
-				restriction: { type: 'invalid' },
-			};
-		}
-
-		const isSelfAction = target.type === 'character' && target.character.id === source.character.id;
-		const properties = this.lock.getLockProperties();
-
-		if (properties.blockSelf && isSelfAction && !source.isInSafemode()) {
-			return {
-				allowed: false,
-				restriction: {
-					type: 'blockedModuleAction',
-					moduleType: 'lockSlot',
-					moduleAction: lockAction.action,
-					reason: 'blockSelf',
-					asset: this.lock.asset.id,
-				},
-			};
-		}
-
-		return { allowed: true };
 	}
 
 	public doAction(context: AppearanceModuleActionContext, { lockAction }: ItemModuleLockSlotAction): ItemModuleLockSlot | null {

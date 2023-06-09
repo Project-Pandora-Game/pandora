@@ -4,8 +4,8 @@ import { z } from 'zod';
 import { Logger } from '../logging';
 import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
 import { HexRGBAColorString, HexRGBAColorStringSchema } from '../validation';
-import type { AppearanceActionContext } from './appearanceActions';
-import { ActionMessageTemplateHandler, ItemId, ItemIdSchema } from './appearanceTypes';
+import type { AppearanceModuleActionContext } from './appearanceActions';
+import { ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
@@ -243,11 +243,11 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		});
 	}
 
-	public moduleAction(context: AppearanceActionContext, moduleName: string, action: ItemModuleAction, messageHandler: ActionMessageTemplateHandler): Item | null {
+	public moduleAction(context: AppearanceModuleActionContext, moduleName: string, action: ItemModuleAction): Item | null {
 		const module = this.modules.get(moduleName);
 		if (!module || module.type !== action.moduleType)
 			return null;
-		const moduleResult = module.doAction(context, action, messageHandler);
+		const moduleResult = module.doAction(context, action);
 		if (!moduleResult)
 			return null;
 		const bundle = this.exportToBundle();
@@ -668,21 +668,21 @@ export class ItemLock extends ItemBase<'lock'> {
 		return this.asset.definition.unlocked ?? {};
 	}
 
-	public lockAction(context: AppearanceActionContext, action: IItemLockAction, messageHandler: ActionMessageTemplateHandler): Item | null {
+	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): Item | null {
 		switch (action.action) {
 			case 'lock':
-				return this.lock(context, messageHandler);
+				return this.lock(context);
 			case 'unlock':
-				return this.unlock(context, messageHandler);
+				return this.unlock(context);
 		}
 		AssertNever(action);
 	}
 
-	public lock(context: AppearanceActionContext, messageHandler: ActionMessageTemplateHandler): ItemLock | null {
+	public lock({ messageHandler, getCharacter, player }: AppearanceModuleActionContext): ItemLock | null {
 		if (this.isLocked())
 			return null;
 
-		const by = context.getCharacter(context.player);
+		const by = getCharacter(player);
 		if (by == null)
 			return null;
 
@@ -709,7 +709,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		});
 	}
 
-	public unlock(_context: AppearanceActionContext, messageHandler: ActionMessageTemplateHandler): ItemLock | null {
+	public unlock({ messageHandler }: AppearanceModuleActionContext): ItemLock | null {
 		if (!this.isLocked())
 			return null;
 

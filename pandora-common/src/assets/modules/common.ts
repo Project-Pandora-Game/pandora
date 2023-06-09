@@ -5,8 +5,8 @@ import type { AssetProperties } from '../properties';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import type { IItemLoadContext, IItemLocationDescriptor } from '../item';
-import type { ActionMessageTemplateHandler, RoomActionTarget } from '../appearanceTypes';
-import type { AppearanceActionContext } from '../appearanceActions';
+import type { RoomActionTarget } from '../appearanceTypes';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { IAssetModuleTypes, ModuleType } from '../modules';
 
 export interface IModuleConfigCommon<Type extends ModuleType> {
@@ -45,7 +45,7 @@ export interface IItemModule<Type extends ModuleType = ModuleType> {
 	getProperties(): AssetProperties;
 
 	evalCondition(operator: ConditionOperator, value: string): boolean;
-	doAction(context: AppearanceActionContext, action: IAssetModuleTypes[Type]['actions'], messageHandler: ActionMessageTemplateHandler): IItemModule<Type> | null;
+	doAction(context: AppearanceModuleActionContext, action: IAssetModuleTypes[Type]['actions']): IItemModule<Type> | null;
 	canDoAction?(source: CharacterRestrictionsManager, target: RoomActionTarget, action: IAssetModuleTypes[Type]['actions'], interaction: ItemInteractionType): RestrictionResult;
 
 	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */

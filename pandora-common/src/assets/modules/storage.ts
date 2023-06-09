@@ -8,7 +8,7 @@ import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidati
 import { CreateItem, IItemLoadContext, IItemLocationDescriptor, Item, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { ItemId } from '../appearanceTypes';
-import type { AppearanceActionContext } from '../appearanceActions';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { Satisfies } from '../../utility';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -161,7 +161,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		return false;
 	}
 
-	public doAction(_context: AppearanceActionContext, _action: ItemModuleStorageAction): ItemModuleStorage | null {
+	public doAction(_context: AppearanceModuleActionContext, _action: ItemModuleStorageAction): ItemModuleStorage | null {
 		return null;
 	}
 

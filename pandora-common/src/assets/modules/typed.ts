@@ -7,8 +7,7 @@ import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { IItemLoadContext, IItemLocationDescriptor } from '../item';
 import { AssetManager } from '../assetManager';
-import type { ActionMessageTemplateHandler } from '../appearanceTypes';
-import type { AppearanceActionContext } from '../appearanceActions';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { CharacterIdSchema } from '../../character/characterTypes';
 import { Satisfies } from '../../utility';
 
@@ -158,7 +157,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 				false;
 	}
 
-	public doAction(context: AppearanceActionContext, action: ItemModuleTypedAction, messageHandler: ActionMessageTemplateHandler): ItemModuleTyped | null {
+	public doAction({ messageHandler, getCharacter, player }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped | null {
 		const newVariant = this.config.variants.find((v) => v.id === action.setVariant);
 		if (!newVariant)
 			return null;
@@ -178,7 +177,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			});
 		}
 
-		const selectedBy = context.getCharacter(context.player);
+		const selectedBy = getCharacter(player);
 
 		return new ItemModuleTyped(this.config, {
 			type: 'typed',

@@ -4,7 +4,7 @@ import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema, WearableAssetType } from './definitions';
-import { ActionHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
+import { ActionHandler, ActionMessageTemplateHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
 import { ItemModuleAction, ItemModuleActionSchema } from './modules';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
@@ -178,6 +178,11 @@ export interface AppearanceActionContext {
 	getCharacter(id: CharacterId): CharacterRestrictionsManager | null;
 	/** Handler for sending messages to chat */
 	actionHandler?: ActionHandler;
+}
+
+/** Context for performing module actions */
+export interface AppearanceModuleActionContext extends AppearanceActionContext {
+	messageHandler: ActionMessageTemplateHandler;
 }
 
 export type AppearanceActionResult = {
@@ -759,17 +764,23 @@ export function ActionModuleAction(context: AppearanceActionContext, rootManipul
 	const manipulator = rootManipulator.getContainer(container);
 
 	// Do change and store chat messages
-	if (!manipulator.modifyItem(itemId, (it) => it.moduleAction(
-		context,
-		module,
-		action,
-		(m) => manipulator.queueMessage({
-			item: {
-				assetId: it.asset.id,
-			},
-			...m,
-		}),
-	))) {
+	if (!manipulator.modifyItem(itemId, (it) => {
+		const actionContext: AppearanceModuleActionContext = {
+			...context,
+			messageHandler: (m) => manipulator.queueMessage({
+				item: {
+					assetId: it.asset.id,
+				},
+				...m,
+			}),
+		};
+
+		return it.moduleAction(
+			actionContext,
+			module,
+			action,
+		);
+	})) {
 		return false;
 	}
 

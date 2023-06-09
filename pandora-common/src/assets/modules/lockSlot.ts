@@ -8,8 +8,8 @@ import { CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } 
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundleSchema, ItemLock, ItemLockActionSchema } from '../item';
 import { AssetManager } from '../assetManager';
-import type { AppearanceActionContext } from '../appearanceActions';
-import type { ActionMessageTemplateHandler, RoomActionTarget } from '../appearanceTypes';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import type { RoomActionTarget } from '../appearanceTypes';
 import { Satisfies } from '../../utility';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
@@ -150,14 +150,14 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return { allowed: true };
 	}
 
-	public doAction(context: AppearanceActionContext, { lockAction }: ItemModuleLockSlotAction, messageHandler: ActionMessageTemplateHandler): ItemModuleLockSlot | null {
+	public doAction(context: AppearanceModuleActionContext, { lockAction }: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
 		if (this.lock == null)
 			return null;
 
 		if (this.lock == null)
 			return null;
 
-		const result = this.lock.lockAction(context, lockAction, messageHandler);
+		const result = this.lock.lockAction(context, lockAction);
 		if (result == null)
 			return result;
 

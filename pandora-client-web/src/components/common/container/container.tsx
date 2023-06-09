@@ -28,11 +28,9 @@ export interface DivContainerProps extends CommonProps {
 	overflowY?: ScssOverflow;
 
 	// Our spacing setup
-	/** Default: normal */
-	spacing?: ScssSpacing;
-	/** Defaults to `spacing` */
-	padding?: ScssSpacing;
-	/** Defaults to `spacing` */
+	/** Defaults to `none` */
+	padding?: Exclude<ScssSpacing, 'none'>;
+	/** Defaults to `medium` */
 	gap?: ScssSpacing;
 }
 
@@ -48,12 +46,9 @@ export function DivContainer({
 	wrapAlign,
 	overflowX,
 	overflowY,
-	spacing = 'normal',
 	padding,
-	gap,
+	gap = 'medium',
 }: DivContainerProps): ReactElement {
-	padding ??= spacing;
-	gap ??= spacing;
 	return (
 		<div
 			id={ id }
@@ -67,7 +62,7 @@ export function DivContainer({
 				wrapAlign ? `wrap-align-${wrapAlign}` : null,
 				overflowX ? `overflow-x-${overflowX}` : null,
 				overflowY ? `overflow-y-${overflowY}` : null,
-				`padding-${padding}`,
+				padding ? `padding-${padding}` : null,
 				`gap-${gap}`,
 				className,
 			) }

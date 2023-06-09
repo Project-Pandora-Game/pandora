@@ -29,7 +29,7 @@ export function ContextHelpButton({ children }: ChildrenProps): ReactElement {
 			</button>
 			{ !open ? null : (
 				<DraggableDialog title='Help'>
-					<Column className='flex-1'>
+					<Column padding='medium' className='flex-1'>
 						{ children }
 					</Column>
 					<Button className='slim' onClick={ close }>Close</Button>

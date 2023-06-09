@@ -506,7 +506,7 @@ function TypingIndicator(): ReactElement {
 
 	return (
 		<div className='typing-indicator' onClick={ onClick }>
-			<Row padding='none' className='flex-1' wrap>
+			<Row className='flex-1' wrap>
 				{ statuses.map(({ data, status }) => (
 					<span key={ data.id }>
 						<span style={ { color: data.settings.labelColor } }>{ data.name } </span>
@@ -531,7 +531,7 @@ function UnreadMessagesIndicator({ newMessageCount, scroll }: { newMessageCount:
 
 	return (
 		<button className='unread-messages-indicator' onClick={ () => scroll(true) }>
-			<Row className='flex-1' alignX='space-between'>
+			<Row padding='medium' className='flex-1' alignX='space-between'>
 				<span>{ indicatorText }</span>
 				<span>Click to scroll to the end</span>
 			</Row>

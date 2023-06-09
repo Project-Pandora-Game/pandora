@@ -83,7 +83,7 @@ export function CharacterSafemodeDialog({ player }: {
 								canLeaveSafemode ? null : <>You need to wait { FormatTimeInterval(safemodeState.allowLeaveAt - currentTime) } before you can leave the safemode.</>
 							}
 						</p>
-						<Row alignX='space-between'>
+						<Row padding='medium' alignX='space-between'>
 							<Button onClick={ hide }>Cancel</Button>
 							<Button
 								disabled={ !canLeaveSafemode }
@@ -105,7 +105,7 @@ export function CharacterSafemodeDialog({ player }: {
 							You are currently not in safemode.<br />
 							<strong>Warning:</strong> After entering safemode, you will not be able to leave it for { FormatTimeInterval(SAFEMODE_EXIT_COOLDOWN) }!
 						</p>
-						<Row alignX='space-between'>
+						<Row padding='medium' alignX='space-between'>
 							<Button onClick={ hide }>Cancel</Button>
 							<Button onClick={ () => {
 								shardConnector?.sendMessage('appearanceAction', {

@@ -67,7 +67,7 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 			{
 				selectedPoint ?
 					<PointConfiguration point={ selectedPoint } /> :
-					<Row padding='none' alignY='center'>No point selected</Row>
+					<Row alignY='center'>No point selected</Row>
 			}
 		</>
 	);
@@ -100,7 +100,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 	}
 	return (
 		<>
-			<Row padding='none' alignY='center'>
+			<Row alignY='center'>
 				<label htmlFor='mirror-points-from-layer'>Mirror all points from selected layer:</label>
 				<br />
 				<Select
@@ -122,7 +122,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 			{
 				typeof points === 'number' &&
 				<>
-					<Row padding='none' alignY='center'>Points are mirrored from layer: { pointSourceLayerName }</Row>
+					<Row alignY='center'>Points are mirrored from layer: { pointSourceLayerName }</Row>
 					<Button onClick={ () => {
 						asset.layerMirrorFrom(layer, null);
 					} }>
@@ -133,7 +133,7 @@ function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; as
 			{
 				typeof points === 'string' &&
 				<>
-					<Row padding='none' alignY='center'>Points are from template: { points }</Row>
+					<Row alignY='center'>Points are from template: { points }</Row>
 					<Button onClick={ () => {
 						asset.layerMirrorFrom(layer, null);
 					} }>

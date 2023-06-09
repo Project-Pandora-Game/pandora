@@ -178,7 +178,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			<FieldsetToggle legend='Permissions'>
 				<div className='input-container'>
 					<label>Owners</label>
-					<Row padding='none'>
+					<Row>
 						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
 						{ !creation && roomInfo && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomInfo.id } name={ roomInfo.name } /> : null }
 					</Row>
@@ -443,7 +443,7 @@ function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: RoomId;
 				Note that a room without any owner gets instantly deleted, kicking everyone currently inside the room in the process.<br />
 				You cannot affect other owners - only an owner can give up their own ownership of a room.
 			</p>
-			<Row alignX='space-between'>
+			<Row padding='medium' alignX='space-between'>
 				<Button onClick={ closeDialog }>Cancel</Button>
 				<Button onClick={ removeOwnership }>Remove your ownership!</Button>
 			</Row>
@@ -595,7 +595,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 							</a>
 						)) }
 				</div>
-				<Row className='footer' alignX='space-between' padding='none'>
+				<Row className='footer' alignX='space-between'>
 					<Button onClick={ hide }>Cancel</Button>
 					<Button
 						onClick={ () => {

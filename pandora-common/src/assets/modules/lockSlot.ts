@@ -6,11 +6,10 @@ import { ConditionOperator } from '../graphics';
 import { AssetProperties } from '../properties';
 import { CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundle, ItemBundleSchema, ItemLock } from '../item';
+import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundle, ItemBundleSchema, ItemLock, ItemLockActionSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceActionContext } from '../appearanceActions';
 import type { ActionMessageTemplateHandler, RoomActionTarget } from '../appearanceTypes';
-import { AssertNever } from '../../utility';
 
 export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
 	/** Effects applied when this slot isn't occupied by a lock */
@@ -29,17 +28,9 @@ const ModuleItemDataLockSlotScheme = z.lazy(() => z.object({
 	lock: ItemBundleSchema.nullable(),
 }));
 
-// Never used
 export const ItemModuleLockSlotActionSchema = z.object({
 	moduleType: z.literal('lockSlot'),
-	action: z.discriminatedUnion('moduleAction', [
-		z.object({
-			moduleAction: z.literal('lock'),
-		}),
-		z.object({
-			moduleAction: z.literal('unlock'),
-		}),
-	]),
+	lockAction: z.lazy(() => ItemLockActionSchema),
 });
 type ItemModuleLockSlotAction = z.infer<typeof ItemModuleLockSlotActionSchema>;
 
@@ -135,7 +126,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return false;
 	}
 
-	public canDoAction(source: CharacterRestrictionsManager, target: RoomActionTarget, { action }: ItemModuleLockSlotAction, interaction: ItemInteractionType): RestrictionResult {
+	public canDoAction(source: CharacterRestrictionsManager, target: RoomActionTarget, { lockAction }: ItemModuleLockSlotAction, interaction: ItemInteractionType): RestrictionResult {
 		if (interaction !== this.interactionType || this.lock == null) {
 			return {
 				allowed: false,
@@ -152,7 +143,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 				restriction: {
 					type: 'blockedModuleAction',
 					moduleType: 'lockSlot',
-					moduleAction: action.moduleAction,
+					moduleAction: lockAction.action,
 					reason: 'blockSelf',
 					asset: this.lock.asset.id,
 				},
@@ -162,50 +153,20 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return { allowed: true };
 	}
 
-	public doAction(context: AppearanceActionContext, { action }: ItemModuleLockSlotAction, messageHandler: ActionMessageTemplateHandler): ItemModuleLockSlot | null {
+	public doAction(context: AppearanceActionContext, { lockAction }: ItemModuleLockSlotAction, messageHandler: ActionMessageTemplateHandler): ItemModuleLockSlot | null {
 		if (this.lock == null)
 			return null;
 
-		let lock: ItemLock | null = null;
-		let message: string | undefined;
-
-		switch (action.moduleAction) {
-			case 'lock':
-				if (this.lock.isLocked())
-					return null;
-
-				lock = this.lock.lock(context);
-				if (lock == null)
-					return null;
-
-				message = lock.asset.definition.chat?.actionLock;
-				break;
-			case 'unlock':
-				if (!this.lock.isLocked())
-					return null;
-
-				lock = this.lock.unlock();
-				if (lock == null)
-					return null;
-
-				message = lock.asset.definition.chat?.actionUnlock;
-				break;
-			default:
-				AssertNever(action);
-		}
-		if (lock == null)
+		if (this.lock == null)
 			return null;
 
-		if (message != null) {
-			messageHandler({
-				id: 'custom',
-				customText: message,
-			});
-		}
+		const result = this.lock.lockAction(context, lockAction, messageHandler);
+		if (result == null)
+			return result;
 
 		return new ItemModuleLockSlot(this.config, this.moduleName, {
 			type: 'lockSlot',
-			lock: lock.exportToBundle(),
+			lock: result.exportToBundle(),
 		}, {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,

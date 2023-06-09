@@ -2117,7 +2117,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 					module: moduleName,
 					action: {
 						moduleType: 'lockSlot',
-						action: { moduleAction: 'unlock' },
+						lockAction: { action: 'unlock' },
 					},
 				} }>
 				Unlock
@@ -2137,7 +2137,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName }: Omit<WardrobeModuleProps
 				module: moduleName,
 				action: {
 					moduleType: 'lockSlot',
-					action: { moduleAction: 'lock' },
+					lockAction: { action: 'lock' },
 				},
 			} }>
 			Lock

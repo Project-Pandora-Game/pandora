@@ -611,6 +611,16 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 	}
 }
 
+export const ItemLockActionSchema = z.discriminatedUnion('action', [
+	z.object({
+		action: z.literal('lock'),
+	}),
+	z.object({
+		action: z.literal('unlock'),
+	}),
+]);
+export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
+
 export class ItemLock extends ItemBase<'lock'> {
 	public readonly lockData: Immutable<LockBundle> | undefined;
 
@@ -658,13 +668,30 @@ export class ItemLock extends ItemBase<'lock'> {
 		return this.asset.definition.unlocked ?? {};
 	}
 
-	public lock(context: AppearanceActionContext): ItemLock | null {
+	public lockAction(context: AppearanceActionContext, action: IItemLockAction, messageHandler: ActionMessageTemplateHandler): Item | null {
+		switch (action.action) {
+			case 'lock':
+				return this.lock(context, messageHandler);
+			case 'unlock':
+				return this.unlock(context, messageHandler);
+		}
+		AssertNever(action);
+	}
+
+	public lock(context: AppearanceActionContext, messageHandler: ActionMessageTemplateHandler): ItemLock | null {
 		if (this.isLocked())
 			return null;
 
 		const by = context.getCharacter(context.player);
 		if (by == null)
 			return null;
+
+		if (this.asset.definition.chat?.actionLock) {
+			messageHandler({
+				id: 'custom',
+				customText: this.asset.definition.chat.actionLock,
+			});
+		}
 
 		return new ItemLock(this.id, this.asset, {
 			...super.exportToBundle(),
@@ -682,9 +709,16 @@ export class ItemLock extends ItemBase<'lock'> {
 		});
 	}
 
-	public unlock(): ItemLock | null {
+	public unlock(_context: AppearanceActionContext, messageHandler: ActionMessageTemplateHandler): ItemLock | null {
 		if (!this.isLocked())
 			return null;
+
+		if (this.asset.definition.chat?.actionUnlock) {
+			messageHandler({
+				id: 'custom',
+				customText: this.asset.definition.chat.actionUnlock,
+			});
+		}
 
 		return new ItemLock(this.id, this.asset, {
 			...super.exportToBundle(),

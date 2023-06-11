@@ -29,7 +29,7 @@ export const LOG_DISCORD_WEBHOOK_URL = process.env.LOG_DISCORD_WEBHOOK_URL ?? ''
 //#region Expiration settings
 
 /** Time (in ms) for how long is a account login token valid */
-export const LOGIN_TOKEN_EXPIRATION = 24 * 60 * 60_000;
+export const LOGIN_TOKEN_EXPIRATION = 7 * 24 * 60 * 60_000;
 /** Time (in ms) for how long is a account activation token valid */
 export const ACTIVATION_TOKEN_EXPIRATION = 7 * 24 * 60 * 60_000;
 /** Time (in ms) for how long is a password reset token valid */

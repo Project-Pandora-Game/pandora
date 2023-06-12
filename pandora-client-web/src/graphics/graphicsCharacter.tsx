@@ -192,6 +192,7 @@ function GraphicsCharacterWithManagerImpl({
 			pointerup={ onPointerUp }
 			pointerupoutside={ onPointerUpOutside }
 			pointermove={ onPointerMove }
+			cursor='pointer'
 		>
 			<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
 				<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>

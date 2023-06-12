@@ -35,6 +35,8 @@ import { IChatroomMessageProcessed, IsActionMessage, RenderActionContent, Render
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { HoverElement } from '../hoverElement/hoverElement';
+import { DeviceOverlayToggle } from './chatRoomDevice';
+import { useObservable } from '../../observable';
 
 export function Chatroom(): ReactElement {
 	const player = usePlayer();
@@ -96,6 +98,7 @@ function ControlsTabContents(): ReactElement | null {
 	}, [directoryConnector]);
 
 	const [leaveButtonRef, setLeaveButtonRef] = useState<HTMLButtonElement | null>(null);
+	const deviceOverlayToggle = useObservable(DeviceOverlayToggle);
 
 	if (!roomInfo || !roomCharacters) {
 		return null;
@@ -135,6 +138,17 @@ function ControlsTabContents(): ReactElement | null {
 					{ roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />) }
 				</ul>
 			</div>
+			<br />
+			<div>
+				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
+				<input
+					id='chatroom-device-overlay'
+					type='checkbox'
+					checked={ deviceOverlayToggle }
+					onChange={ (e) => DeviceOverlayToggle.value = e.target.checked }
+				/>
+			</div>
+			<br />
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
 		</Column>
 	);

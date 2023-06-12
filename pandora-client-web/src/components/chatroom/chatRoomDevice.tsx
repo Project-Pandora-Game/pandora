@@ -1,4 +1,4 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -17,6 +17,8 @@ import { useAppearanceConditionEvaluator } from '../../graphics/appearanceCondit
 import { Character, useCharacterAppearanceView } from '../../character/character';
 import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacters, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
+import { z } from 'zod';
+import { BrowserStorage } from '../../browserStorage';
 
 const DEVICE_WAIT_DRAG_THRESHOLD = 100; // ms
 
@@ -30,12 +32,13 @@ type ChatRoomDeviceProps = {
 	filters: readonly PIXI.Filter[];
 };
 
+export const DeviceOverlayToggle = BrowserStorage.create<boolean>('temp-device-overlay-toggle', true, ZodMatcher(z.boolean().catch(true)));
+
 export const RoomDeviceRenderContext = React.createContext<ItemRoomDevice | null>(null);
 
 export function ChatRoomDevice({
 	item,
 	deployment,
-	debugConfig,
 	background,
 	shard,
 	menuOpen,
@@ -134,11 +137,31 @@ export function ChatRoomDevice({
 		};
 	}, [app, onPointerMove]);
 
-	// Debug graphics
+	// Overlay graphics
+	const showOverlay = useObservable(DeviceOverlayToggle);
 	const hitboxDebugDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
-			.beginFill(0xff0000, 0.25)
-			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
+			.beginFill(0xff0000, 0.30)
+			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
+			.beginFill(0x000000, 0.40)
+			.drawPolygon([
+				hitArea.x + 45, hitArea.y + 30,
+				hitArea.x + 45 - 15, hitArea.y + 30,
+				hitArea.x + 45 - 15, hitArea.y + 30 - 25,
+				hitArea.x + 45 - 50, hitArea.y + 0.5 * hitArea.height,
+				hitArea.x + 45 - 15, hitArea.y - 30 + hitArea.height + 25,
+				hitArea.x + 45 - 15, hitArea.y - 30 + hitArea.height,
+				hitArea.x + 45, hitArea.y - 30 + hitArea.height,
+			])
+			.drawPolygon([
+				hitArea.x + hitArea.width - 45, hitArea.y + 30,
+				hitArea.x + hitArea.width - 45 + 15, hitArea.y + 30,
+				hitArea.x + hitArea.width - 45 + 15, hitArea.y + 30 - 25,
+				hitArea.x + hitArea.width - 45 + 50, hitArea.y + 0.5 * hitArea.height,
+				hitArea.x + hitArea.width - 45 + 15, hitArea.y - 30 + hitArea.height + 25,
+				hitArea.x + hitArea.width - 45 + 15, hitArea.y - 30 + hitArea.height,
+				hitArea.x + hitArea.width - 45, hitArea.y - 30 + hitArea.height,
+			]);
 	}, [hitArea]);
 
 	return (
@@ -158,7 +181,7 @@ export function ChatRoomDevice({
 				zIndex={ -y }
 			>
 				{
-					!debugConfig?.characterDebugOverlay ? null : (
+					!showOverlay ? null : (
 						<Container
 							zIndex={ 99999 }
 						>
@@ -224,6 +247,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 			pointerup={ onPointerUp }
 			pointerupoutside={ onPointerUpOutside }
 			pointermove={ onPointerMove }
+			cursor='pointer'
 		>
 			<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
 				<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>

@@ -264,6 +264,13 @@ $drop-overlay-gap: 0.3em;
 		background-color: #999;
 	}
 
+	>.colorRibbon {
+		position: absolute;
+		display: inline-block;
+		inset: 0;
+		clip-path: polygon(0 0, 0.75em 0, 0 0.75em);
+	}
+
 	.itemPreview {
 		&.missing {
 			border: solid $black 1px;

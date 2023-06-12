@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import _ from 'lodash';
+import _, { first } from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
 import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
@@ -449,6 +449,15 @@ export class ItemPersonal extends ItemBase<'personal'> {
 
 		return this._resolveColorGroup(items, colorizationKey, colorization)?.color ?? colorization.default;
 	}
+
+	public getColorRibbon(items: AppearanceItems): HexRGBAColorString | undefined {
+		return this.resolveColor(
+			items,
+			this.asset.definition.colorRibbonGroup ??
+			first(Object.keys(this.asset.definition.colorization ?? {})) ??
+			'',
+		);
+	}
 }
 
 export class ItemRoomDevice extends ItemBase<'roomDevice'> {
@@ -547,6 +556,14 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 
 		return colorization.default;
 	}
+
+	public getColorRibbon(): HexRGBAColorString | undefined {
+		return this.resolveColor(
+			this.asset.definition.colorRibbonGroup ??
+			first(Object.keys(this.asset.definition.colorization ?? {})) ??
+			'',
+		);
+	}
 }
 
 export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart'> {
@@ -608,6 +625,10 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 
 	public resolveColor(colorizationKey: string, roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
 		return roomDevice?.resolveColor(colorizationKey);
+	}
+
+	public getColorRibbon(roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
+		return roomDevice?.getColorRibbon();
 	}
 }
 

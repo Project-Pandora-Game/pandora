@@ -143,6 +143,9 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	/** Configuration of user-configurable asset colorization */
 	colorization?: Record<string, AssetColorization<A>>;
 
+	/** Which colorization group should be used for item's ribbon in inventory (if not specified defaults to first color group) */
+	colorRibbonGroup?: string;
+
 	/**
 	 * Modules this asset has
 	 */
@@ -205,6 +208,8 @@ export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDev
 export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'roomDevice', A> {
 	/** Configuration of user-configurable asset colorization */
 	colorization?: Record<string, Omit<AssetColorization<A>, 'group'>>;
+	/** Which colorization group should be used for item's ribbon in inventory (if not specified defaults to first color group) */
+	colorRibbonGroup?: string;
 	/** Position of centerpoint relative to top-left corner of assets */
 	pivot: Coordinates;
 	/** Slots that can be entered by characters */

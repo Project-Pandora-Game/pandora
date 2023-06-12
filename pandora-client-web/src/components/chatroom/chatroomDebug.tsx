@@ -52,33 +52,8 @@ export function ChatroomDebugConfigView(): ReactElement {
 	const roomCharacters = useChatRoomCharacters();
 
 	return (
-		<FieldsetToggle legend='[DEV] Debug options' forceOpen={ chatroomDebugConfig.enabled } onChange={ setOpen }>
-			<div>
-				<label htmlFor='chatroom-debug-room-scaling-helper'>Show scaling helper line</label>
-				<input
-					id='chatroom-debug-room-scaling-helper'
-					type='checkbox'
-					checked={ chatroomDebugConfig.roomScalingHelper }
-					onChange={ (e) => {
-						applyChange({
-							roomScalingHelper: e.target.checked,
-						});
-					} }
-				/>
-			</div>
-			<div>
-				<label htmlFor='chatroom-debug-character-overlay'>Show character debug overlay</label>
-				<input
-					id='chatroom-debug-character-overlay'
-					type='checkbox'
-					checked={ chatroomDebugConfig.characterDebugOverlay }
-					onChange={ (e) => {
-						applyChange({
-							characterDebugOverlay: e.target.checked,
-						});
-					} }
-				/>
-			</div>
+		<>
+			<br />
 			<div>
 				<label htmlFor='chatroom-debug-device-overlay'>Show device debug overlay</label>
 				<input
@@ -92,20 +67,49 @@ export function ChatroomDebugConfigView(): ReactElement {
 					} }
 				/>
 			</div>
-			<h3>Chatroom details</h3>
-			{
-				(!roomInfo || !roomCharacters) ? <div>Not in a chatroom</div> : (
-					<>
-						<h4>Characters</h4>
-						<div className='flex-col'>
-							{ roomCharacters.map((c) => (
-								<ChatroomDebugCharacterView key={ c.id } character={ c } />
-							)) }
-						</div>
-					</>
-				)
-			}
-		</FieldsetToggle>
+			<br />
+			<FieldsetToggle legend='[DEV] Debug options' forceOpen={ chatroomDebugConfig.enabled } onChange={ setOpen }>
+				<div>
+					<label htmlFor='chatroom-debug-room-scaling-helper'>Show scaling helper line</label>
+					<input
+						id='chatroom-debug-room-scaling-helper'
+						type='checkbox'
+						checked={ chatroomDebugConfig.roomScalingHelper }
+						onChange={ (e) => {
+							applyChange({
+								roomScalingHelper: e.target.checked,
+							});
+						} }
+					/>
+				</div>
+				<div>
+					<label htmlFor='chatroom-debug-character-overlay'>Show character debug overlay</label>
+					<input
+						id='chatroom-debug-character-overlay'
+						type='checkbox'
+						checked={ chatroomDebugConfig.characterDebugOverlay }
+						onChange={ (e) => {
+							applyChange({
+								characterDebugOverlay: e.target.checked,
+							});
+						} }
+					/>
+				</div>
+				<h3>Chatroom details</h3>
+				{
+					(!roomInfo || !roomCharacters) ? <div>Not in a chatroom</div> : (
+						<>
+							<h4>Characters</h4>
+							<div className='flex-col'>
+								{ roomCharacters.map((c) => (
+									<ChatroomDebugCharacterView key={ c.id } character={ c } />
+								)) }
+							</div>
+						</>
+					)
+				}
+			</FieldsetToggle>
+		</>
 	);
 }
 

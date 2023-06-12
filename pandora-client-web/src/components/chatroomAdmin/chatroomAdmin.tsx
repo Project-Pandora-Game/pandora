@@ -7,7 +7,6 @@ import {
 	IDirectoryShardInfo,
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
-	IChatroomBackgroundData,
 	DEFAULT_BACKGROUND,
 	IsObject,
 	AccountId,
@@ -35,6 +34,7 @@ import pronounChange from '../../icons/male-female.svg';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import './chatroomAdmin.scss';
 import classNames from 'classnames';
+import { ColorInput } from '../common/colorInput/colorInput';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -48,7 +48,7 @@ function DefaultRoomData(): IChatRoomDirectoryConfig {
 		public: false,
 		password: null,
 		features: [],
-		background: cloneDeep(DEFAULT_BACKGROUND) as IChatroomBackgroundData,
+		background: cloneDeep(DEFAULT_BACKGROUND),
 	};
 }
 
@@ -208,17 +208,12 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					typeof currentConfigBackground === 'string' ? null : (
 						<>
 							<div className='input-container'>
-								<label>Background image</label>
+								<label>Background color</label>
 								<div className='row-first'>
-									<input type='text'
-										value={ currentConfigBackground.image }
-										readOnly={ !isPlayerAdmin }
-										onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
-									/>
-									<input type='color'
-										value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
-										readOnly={ !isPlayerAdmin }
-										onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
+									<ColorInput
+										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
+										onChange={ (color) => setRoomModifiedData({ background: { ...currentConfigBackground, image: color } }) }
+										disabled={ !isPlayerAdmin }
 									/>
 								</div>
 							</div>
@@ -322,46 +317,46 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				</div>
 				{
 					currentConfig.features.includes('development') &&
-						<div className='input-container'>
-							<h3>Development settings</h3>
-							<label>Shard for room</label>
-							<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+					<div className='input-container'>
+						<h3>Development settings</h3>
+						<label>Shard for room</label>
+						<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+							(event) => {
+								const value = event.target.value;
+								setRoomModifiedData({
+									development: {
+										...currentConfig.development,
+										shardId: value === '[Auto]' ? undefined : value,
+									},
+								});
+							}
+						}>
+							{
+								!shards ?
+									<option>Loading...</option> :
+									<>
+										<option key='[Auto]' value='[Auto]' >[Auto]</option>
+										{
+											shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
+										}
+									</>
+							}
+						</Select>
+						<div className='input-line'>
+							<label>Auto admin for developers</label>
+							<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={
 								(event) => {
-									const value = event.target.value;
+									const autoAdmin = event.target.checked;
 									setRoomModifiedData({
 										development: {
 											...currentConfig.development,
-											shardId: value === '[Auto]' ? undefined : value,
+											autoAdmin,
 										},
 									});
 								}
-							}>
-								{
-									!shards ?
-										<option>Loading...</option> :
-										<>
-											<option key='[Auto]' value='[Auto]' >[Auto]</option>
-											{
-												shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
-											}
-										</>
-								}
-							</Select>
-							<div className='input-line'>
-								<label>Auto admin for developers</label>
-								<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={
-									(event) => {
-										const autoAdmin = event.target.checked;
-										setRoomModifiedData({
-											development: {
-												...currentConfig.development,
-												autoAdmin,
-											},
-										});
-									}
-								} />
-							</div>
+							} />
 						</div>
+					</div>
 				}
 				<Button onClick={ () => void createRoom(currentConfig) }>Create room</Button>
 			</div>
@@ -499,8 +494,8 @@ function NumberListArea({ values, setValues, readOnly, ...props }: {
 
 function BackgroundSelectDialog({ hide, current, select }: {
 	hide: () => void;
-	current: string | IChatroomBackgroundData;
-	select: (background: string | IChatroomBackgroundData) => void;
+	current: string | IChatRoomDirectoryConfig['background'];
+	select: (background: IChatRoomDirectoryConfig['background']) => void;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [selectedBackground, setSelectedBackground] = useState(current);

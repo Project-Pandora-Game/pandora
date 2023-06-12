@@ -158,7 +158,7 @@ export function ChatRoomDevice({
 				zIndex={ -y }
 			>
 				{
-					!debugConfig?.characterDebugOverlay ? null : (
+					!debugConfig?.deviceDebugOverlay ? null : (
 						<Container
 							zIndex={ 99999 }
 						>

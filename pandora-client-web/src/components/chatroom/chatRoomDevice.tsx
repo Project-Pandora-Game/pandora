@@ -137,8 +137,27 @@ export function ChatRoomDevice({
 	// Debug graphics
 	const hitboxDebugDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
-			.beginFill(0xff0000, 0.25)
-			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
+			.beginFill(0xff0000, 0.30)
+			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
+			.beginFill(0x000000, 0.40)
+			.drawPolygon([
+				hitArea.x + 45, hitArea.y + 30,
+				hitArea.x + 45 - 15, hitArea.y + 30,
+				hitArea.x + 45 - 15, hitArea.y + 30 - 25,
+				hitArea.x + 45 - 50, hitArea.y + 0.5 * hitArea.height,
+				hitArea.x + 45 - 15, hitArea.y - 30 + hitArea.height + 25,
+				hitArea.x + 45 - 15, hitArea.y - 30 + hitArea.height,
+				hitArea.x + 45, hitArea.y - 30 + hitArea.height,
+			])
+			.drawPolygon([
+				hitArea.x + hitArea.width - 45, hitArea.y + 30,
+				hitArea.x + hitArea.width - 45 + 15, hitArea.y + 30,
+				hitArea.x + hitArea.width - 45 + 15, hitArea.y + 30 - 25,
+				hitArea.x + hitArea.width - 45 + 50, hitArea.y + 0.5 * hitArea.height,
+				hitArea.x + hitArea.width - 45 + 15, hitArea.y - 30 + hitArea.height + 25,
+				hitArea.x + hitArea.width - 45 + 15, hitArea.y - 30 + hitArea.height,
+				hitArea.x + hitArea.width - 45, hitArea.y - 30 + hitArea.height,
+			]);
 	}, [hitArea]);
 
 	return (

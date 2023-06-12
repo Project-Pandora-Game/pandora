@@ -6,7 +6,6 @@ import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 
 type NotificationHeader<T extends ReadonlyObservable<readonly unknown[]> = ReadonlyObservable<readonly unknown[]>> = {
 	readonly notifications: T;
-	readonly friends: T;
 };
 export type NotificationHeaderKeys = keyof NotificationHeader;
 
@@ -17,11 +16,11 @@ export enum NotificationSource {
 	INCOMING_FRIEND_REQUEST = 'INCOMING_FRIEND_REQUEST',
 }
 
-export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationHeaderKeys>> = {
+export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationHeaderKeys | null>> = {
 	[NotificationSource.CHAT_MESSAGE]: 'notifications',
 	[NotificationSource.VERSION_CHANGED]: 'notifications',
-	[NotificationSource.DIRECT_MESSAGE]: 'friends',
-	[NotificationSource.INCOMING_FRIEND_REQUEST]: 'friends',
+	[NotificationSource.DIRECT_MESSAGE]: null,
+	[NotificationSource.INCOMING_FRIEND_REQUEST]: null,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -81,7 +80,6 @@ class NotificationHandler extends NotificationHandlerBase {
 	private readonly _notifications = new Observable<readonly NotificationFullData[]>([]);
 	private readonly _header: NotificationHeader<Observable<readonly NotificationFullData[]>> = {
 		notifications: new Observable<readonly NotificationFullData[]>([]),
-		friends: new Observable<readonly NotificationFullData[]>([]),
 	};
 	private readonly _title = new Observable<string>(BASE_TITLE);
 	private readonly _favico = new Observable<string>('');
@@ -137,7 +135,6 @@ class NotificationHandler extends NotificationHandlerBase {
 
 		// Header
 		this._header.notifications.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && NOTIFICATION_KEY[n.source] === 'notifications');
-		this._header.friends.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && NOTIFICATION_KEY[n.source] === 'friends');
 
 		// Title
 		const titleNotifications = notifications.filter((n) => n.alert.has(NotificationAlert.TITLE)).length;

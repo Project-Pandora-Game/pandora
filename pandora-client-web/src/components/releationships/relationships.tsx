@@ -101,7 +101,7 @@ export function Relationships() {
 	);
 }
 
-function useRelationships(type: IAccountRelationship['type']) {
+export function useRelationships(type: IAccountRelationship['type']) {
 	const rel = useObservable(RELATIONSHIPS);
 	return useMemo(() => rel.filter((r) => r.type === type), [rel, type]);
 }

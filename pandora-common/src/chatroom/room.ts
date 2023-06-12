@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ArrayToTruthyMap, ZodTrimedRegex, ZodTemplateString } from '../validation';
+import { ArrayToTruthyMap, ZodTrimedRegex, ZodTemplateString, HexColorStringSchema, HexColorString } from '../validation';
 import { cloneDeep } from 'lodash';
 import { AssetManager } from '../assets';
 import { CharacterId } from '../character';
@@ -51,11 +51,11 @@ export const ChatRoomBackgroundDataSchema = z.object({
 export type IChatroomBackgroundData = z.infer<typeof ChatRoomBackgroundDataSchema>;
 
 export const DEFAULT_ROOM_SIZE = [4000, 2000] as const;
-export const DEFAULT_BACKGROUND: Readonly<IChatroomBackgroundData> = {
+export const DEFAULT_BACKGROUND = {
 	image: '#1099bb',
 	size: cloneDeep(DEFAULT_ROOM_SIZE) as [number, number],
 	scaling: 1,
-};
+} as const satisfies Readonly<IChatroomBackgroundData & { image: HexColorString; }>;
 
 /**
  * Resolves chatroom background data into effective background info
@@ -112,7 +112,7 @@ export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.obje
 	/** The password of the chat room if the room is protected */
 	password: z.string().nullable(),
 	/** The ID of the background or custom data */
-	background: z.union([z.string(), ChatRoomBackgroundDataSchema]),
+	background: z.union([z.string(), ChatRoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]),
 }));
 export type IChatRoomDirectoryConfig = z.infer<typeof ChatRoomDirectoryConfigSchema>;
 

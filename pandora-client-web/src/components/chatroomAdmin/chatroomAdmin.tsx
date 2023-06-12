@@ -7,12 +7,12 @@ import {
 	IDirectoryShardInfo,
 	ChatRoomBaseInfoSchema,
 	ZodMatcher,
-	IChatroomBackgroundData,
 	DEFAULT_BACKGROUND,
 	IsObject,
 	AccountId,
 	AssertNotNullable,
 	RoomId,
+	HexColorString,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -48,7 +48,7 @@ function DefaultRoomData(): IChatRoomDirectoryConfig {
 		public: false,
 		password: null,
 		features: [],
-		background: cloneDeep(DEFAULT_BACKGROUND) as IChatroomBackgroundData,
+		background: cloneDeep(DEFAULT_BACKGROUND),
 	};
 }
 
@@ -208,19 +208,12 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					typeof currentConfigBackground === 'string' ? null : (
 						<>
 							<div className='input-container'>
-								<label>Background image</label>
-								<div className='row-first'>
-									<input type='text'
-										value={ currentConfigBackground.image }
-										readOnly={ !isPlayerAdmin }
-										onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
-									/>
-									<input type='color'
-										value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
-										readOnly={ !isPlayerAdmin }
-										onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value } }) }
-									/>
-								</div>
+								<label>Background color</label>
+								<input type='color'
+									value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
+									readOnly={ !isPlayerAdmin }
+									onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value as HexColorString } }) }
+								/>
 							</div>
 							<div className='input-container'>
 								<label>Room Size: width, height</label>
@@ -499,8 +492,8 @@ function NumberListArea({ values, setValues, readOnly, ...props }: {
 
 function BackgroundSelectDialog({ hide, current, select }: {
 	hide: () => void;
-	current: string | IChatroomBackgroundData;
-	select: (background: string | IChatroomBackgroundData) => void;
+	current: string | IChatRoomDirectoryConfig['background'];
+	select: (background: IChatRoomDirectoryConfig['background']) => void;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [selectedBackground, setSelectedBackground] = useState(current);

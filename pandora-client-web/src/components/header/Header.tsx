@@ -131,7 +131,7 @@ function FriendsHeaderButton(): ReactElement {
 	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
 	const unreadDirectMessageCount = useObservable(handler.info).filter((info) => info.hasUnread).length;
 	const incomingFriendRequestCount = useRelationships('incoming').length;
-	const length = unreadDirectMessageCount + incomingFriendRequestCount;
+	const notificationCount = unreadDirectMessageCount + incomingFriendRequestCount;
 
 	useEffect(() => handler.on('newMessage', (channel: DirectMessageChannel) => {
 		if (channel.mounted && document.visibilityState === 'visible')
@@ -150,9 +150,9 @@ function FriendsHeaderButton(): ReactElement {
 	return (
 		<HeaderButton
 			icon={ friendsIcon }
-			iconAlt={ `${ length } Friends` }
+			iconAlt={ `${ notificationCount } Friends` }
 			title='Friends'
-			badge={ length }
+			badge={ notificationCount }
 			onClick={ () => navigate('/relationships') } />
 	);
 }

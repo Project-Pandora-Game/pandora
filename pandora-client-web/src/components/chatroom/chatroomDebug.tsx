@@ -10,10 +10,10 @@ import { useChatRoomCharacters, useChatRoomInfo } from '../gameContext/chatRoomC
 import { Character, useCharacterData } from '../../character/character';
 
 const ChatroomDebugConfigSchema = z.object({
-	enabled: z.boolean(),
-	roomScalingHelper: z.boolean(),
-	characterDebugOverlay: z.boolean(),
-	deviceDebugOverlay: z.boolean(),
+	enabled: z.boolean().catch(false),
+	roomScalingHelper: z.boolean().catch(false),
+	characterDebugOverlay: z.boolean().catch(false),
+	deviceDebugOverlay: z.boolean().catch(false),
 });
 
 const DEFAULT_DEBUG_CONFIG: z.infer<typeof ChatroomDebugConfigSchema> = {

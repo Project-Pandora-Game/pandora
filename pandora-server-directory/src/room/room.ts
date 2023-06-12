@@ -1,4 +1,4 @@
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomListInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomListExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert, AccountId } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomListInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomListExtendedInfo, IClientDirectoryArgument, AssertNotNullable, Assert, AccountId, AsyncSynchronized } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character } from '../account/character';
 import { Shard } from '../shard/shard';
@@ -511,6 +511,7 @@ export class Room {
 		return this._assignedShard;
 	}
 
+	@AsyncSynchronized()
 	private async setShard(shard: Shard | null): Promise<void> {
 		if (this._assignedShard === shard)
 			return;
@@ -522,10 +523,11 @@ export class Room {
 				await character.setShard(null);
 			}
 
+			const oldShard = this._assignedShard;
 			this._assignedShard.rooms.delete(this.id);
-			await this._assignedShard.update('rooms');
-
 			this._assignedShard = null;
+
+			await oldShard.update('rooms');
 
 			this.logger.debug('Disconnected from shard');
 		}
@@ -534,8 +536,8 @@ export class Room {
 			Assert(shard.allowConnect(), 'Connecting to shard that doesn\'t allow connections');
 
 			this._assignedShard = shard;
-
 			shard.rooms.set(this.id, this);
+
 			await shard.update('rooms');
 
 			// Reconnect all characters that are in this room, too

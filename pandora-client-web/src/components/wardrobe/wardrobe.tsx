@@ -89,7 +89,7 @@ import { Select } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { Immutable } from 'immer';
 import { useUpdatedUserInput } from '../../common/useSyncUserInput';
-import { useItemColorString } from '../../graphics/graphicsLayer';
+import { useItemColorString, useItemColorRibbon } from '../../graphics/graphicsLayer';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 
 export function GenerateRandomItemId(): ItemId {
@@ -934,6 +934,8 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 	const { setHeldItem, targetSelector, showExtraActionButtons } = useWardrobeContext();
 	const inventoryItem = EvalItemPath(room.items, item);
 
+	const ribbonColor = useItemColorRibbon([], inventoryItem ?? null);
+
 	if (!inventoryItem) {
 		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
 	}
@@ -952,6 +954,15 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 				});
 			} }
 		>
+			{
+				ribbonColor ?
+					<span
+						className='colorRibbon'
+						style={ {
+							backgroundColor: ribbonColor,
+						} }
+					/> : null
+			}
 			<InventoryAssetPreview asset={ asset } />
 			<span className='itemName'>{ asset.definition.name }</span>
 			<div className='quickActions'>
@@ -1437,6 +1448,8 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 	const wornItem = useWardrobeTargetItem(target, item);
 	const extraActions = useObservable(extraItemActions);
 
+	const ribbonColor = useItemColorRibbon([], wornItem ?? null);
+
 	if (!wornItem) {
 		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
 	}
@@ -1452,6 +1465,15 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 				itemId: selected ? null : item.itemId,
 			});
 		} }>
+			{
+				ribbonColor ?
+					<span
+						className='colorRibbon'
+						style={ {
+							backgroundColor: ribbonColor,
+						} }
+					/> : null
+			}
 			<InventoryAssetPreview asset={ asset } />
 			<span className='itemName'>{ asset.definition.name }</span>
 			<div className='quickActions'>

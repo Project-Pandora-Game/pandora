@@ -279,6 +279,28 @@ export function useItemColor(items: AppearanceItems, item: Item | null, coloriza
 	return { color, alpha };
 }
 
+export function useItemColorRibbon(items: AppearanceItems, item: Item | null): HexColorString | undefined {
+	const currentRoomDevice = useContext(RoomDeviceRenderContext);
+
+	let color: HexColorString | undefined;
+
+	if (item == null) {
+		color = undefined;
+	} else if (item.isType('personal')) {
+		color = item.getColorRibbon(items);
+	} else if (item.isType('roomDevice')) {
+		color = item.getColorRibbon();
+	} else if (item.isType('roomDeviceWearablePart')) {
+		color = item.getColorRibbon(currentRoomDevice);
+	} else if (item.isType('lock')) {
+		color = undefined;
+	} else {
+		AssertNever(item);
+	}
+
+	return (color?.substring(0, 7) as HexColorString | undefined);
+}
+
 const MASK_X_OVERSCAN = 250;
 export const MASK_SIZE: Readonly<PandoraRectangle> = {
 	x: MASK_X_OVERSCAN,

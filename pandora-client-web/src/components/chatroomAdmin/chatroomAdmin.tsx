@@ -12,7 +12,6 @@ import {
 	AccountId,
 	AssertNotNullable,
 	RoomId,
-	HexColorString,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -35,6 +34,7 @@ import pronounChange from '../../icons/male-female.svg';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import './chatroomAdmin.scss';
 import classNames from 'classnames';
+import { ColorInput } from '../common/colorInput/colorInput';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -209,11 +209,13 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 						<>
 							<div className='input-container'>
 								<label>Background color</label>
-								<input type='color'
-									value={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
-									readOnly={ !isPlayerAdmin }
-									onChange={ (event) => setRoomModifiedData({ background: { ...currentConfigBackground, image: event.target.value as HexColorString } }) }
-								/>
+								<div className='row-first'>
+									<ColorInput
+										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
+										onChange={ (color) => setRoomModifiedData({ background: { ...currentConfigBackground, image: color } }) }
+										disabled={ !isPlayerAdmin }
+									/>
+								</div>
 							</div>
 							<div className='input-container'>
 								<label>Room Size: width, height</label>
@@ -315,46 +317,46 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				</div>
 				{
 					currentConfig.features.includes('development') &&
-						<div className='input-container'>
-							<h3>Development settings</h3>
-							<label>Shard for room</label>
-							<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+					<div className='input-container'>
+						<h3>Development settings</h3>
+						<label>Shard for room</label>
+						<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+							(event) => {
+								const value = event.target.value;
+								setRoomModifiedData({
+									development: {
+										...currentConfig.development,
+										shardId: value === '[Auto]' ? undefined : value,
+									},
+								});
+							}
+						}>
+							{
+								!shards ?
+									<option>Loading...</option> :
+									<>
+										<option key='[Auto]' value='[Auto]' >[Auto]</option>
+										{
+											shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
+										}
+									</>
+							}
+						</Select>
+						<div className='input-line'>
+							<label>Auto admin for developers</label>
+							<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={
 								(event) => {
-									const value = event.target.value;
+									const autoAdmin = event.target.checked;
 									setRoomModifiedData({
 										development: {
 											...currentConfig.development,
-											shardId: value === '[Auto]' ? undefined : value,
+											autoAdmin,
 										},
 									});
 								}
-							}>
-								{
-									!shards ?
-										<option>Loading...</option> :
-										<>
-											<option key='[Auto]' value='[Auto]' >[Auto]</option>
-											{
-												shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
-											}
-										</>
-								}
-							</Select>
-							<div className='input-line'>
-								<label>Auto admin for developers</label>
-								<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={
-									(event) => {
-										const autoAdmin = event.target.checked;
-										setRoomModifiedData({
-											development: {
-												...currentConfig.development,
-												autoAdmin,
-											},
-										});
-									}
-								} />
-							</div>
+							} />
 						</div>
+					</div>
 				}
 				<Button onClick={ () => void createRoom(currentConfig) }>Create room</Button>
 			</div>

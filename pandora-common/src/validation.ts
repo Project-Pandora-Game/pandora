@@ -1,4 +1,5 @@
 import { enableMapSet } from 'immer';
+import { isEqual } from 'lodash';
 import { z, ZodObject, ZodString, ZodType, ZodTypeAny } from 'zod';
 
 enableMapSet();
@@ -16,7 +17,10 @@ export function ZodMatcher<T extends ZodTypeAny>(validator: T, passthrough?: tru
 	if (!passthrough && validator instanceof ZodObject) {
 		validator = validator.strict() as unknown as T;
 	}
-	return (val: unknown): val is z.infer<T> => validator.safeParse(val).success;
+	return (val: unknown): val is z.infer<T> => {
+		const parseResult = validator.safeParse(val);
+		return parseResult.success && isEqual(val, parseResult.data);
+	};
 }
 
 export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck extends ZodTypeAny>(shape: ZodShape, preCheck: ZodPreCheck) {

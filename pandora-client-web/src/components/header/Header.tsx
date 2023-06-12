@@ -19,6 +19,8 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
 import { useCharacterSafemode } from '../../character/character';
 import { useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
+import { RelationshipContext, useRelationships } from '../releationships/relationships';
+import { useObservable } from '../../observable';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -126,22 +128,31 @@ function NotificationButton({ icon, title, type, onClick }: {
 function FriendsHeaderButton(): ReactElement {
 	const navigate = useNavigate();
 	const handler = useDirectoryConnector().directMessageHandler;
-	const { notify } = useNotification(NotificationSource.DIRECT_MESSAGE);
+	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
+	const unreadDirectMessageCount = useObservable(handler.info).filter((info) => info.hasUnread).length;
+	const incomingFriendRequestCount = useRelationships('incoming').length;
+	const notificationCount = unreadDirectMessageCount + incomingFriendRequestCount;
 
 	useEffect(() => handler.on('newMessage', (channel: DirectMessageChannel) => {
 		if (channel.mounted && document.visibilityState === 'visible')
 			return;
 
-		notify({
+		notifyDirectMessage({
 			// TODO: notification
 		});
-	}), [handler, notify]);
+	}), [handler, notifyDirectMessage]);
+
+	const notifyFriendRequest = useNotification(NotificationSource.INCOMING_FRIEND_REQUEST);
+	useEffect(() => RelationshipContext.on('incoming', () => notifyFriendRequest({
+		// TODO: ...
+	})), [notifyFriendRequest]);
 
 	return (
-		<NotificationButton
+		<HeaderButton
 			icon={ friendsIcon }
+			iconAlt={ `${ notificationCount } Friends` }
 			title='Friends'
-			type='friends'
+			badge={ notificationCount }
 			onClick={ () => navigate('/relationships') } />
 	);
 }

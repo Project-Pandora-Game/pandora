@@ -2,10 +2,10 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo } fro
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { VersionCheck } from '../versionCheck/versionCheck';
+import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 
 type NotificationHeader<T extends ReadonlyObservable<readonly unknown[]> = ReadonlyObservable<readonly unknown[]>> = {
 	readonly notifications: T;
-	readonly friends: T;
 };
 export type NotificationHeaderKeys = keyof NotificationHeader;
 
@@ -13,12 +13,14 @@ export enum NotificationSource {
 	CHAT_MESSAGE = 'CHAT_MESSAGE',
 	DIRECT_MESSAGE = 'DIRECT_MESSAGE',
 	VERSION_CHANGED = 'VERSION_CHANGED',
+	INCOMING_FRIEND_REQUEST = 'INCOMING_FRIEND_REQUEST',
 }
 
-export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationHeaderKeys>> = {
+export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationHeaderKeys | null>> = {
 	[NotificationSource.CHAT_MESSAGE]: 'notifications',
 	[NotificationSource.VERSION_CHANGED]: 'notifications',
-	[NotificationSource.DIRECT_MESSAGE]: 'friends',
+	[NotificationSource.DIRECT_MESSAGE]: null,
+	[NotificationSource.INCOMING_FRIEND_REQUEST]: null,
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -53,7 +55,7 @@ class NotificationHandlerBase {
 	public get title(): ReadonlyObservable<string> {
 		throw new Error('Not implemented');
 	}
-	public readonly supress = new Set<NotificationSource>();
+	public readonly suppress = new Set<NotificationSource>();
 	public clearHeader() {
 		throw new Error('Not implemented');
 	}
@@ -78,7 +80,6 @@ class NotificationHandler extends NotificationHandlerBase {
 	private readonly _notifications = new Observable<readonly NotificationFullData[]>([]);
 	private readonly _header: NotificationHeader<Observable<readonly NotificationFullData[]>> = {
 		notifications: new Observable<readonly NotificationFullData[]>([]),
-		friends: new Observable<readonly NotificationFullData[]>([]),
 	};
 	private readonly _title = new Observable<string>(BASE_TITLE);
 	private readonly _favico = new Observable<string>('');
@@ -101,7 +102,7 @@ class NotificationHandler extends NotificationHandlerBase {
 	}
 
 	public override rise(source: NotificationSource, data: NotificationData) {
-		if (this.supress.has(source) && document.visibilityState === 'visible') {
+		if (this.suppress.has(source) && document.visibilityState === 'visible') {
 			return;
 		}
 		const { alert, audio } = this._getSettings(source);
@@ -134,7 +135,6 @@ class NotificationHandler extends NotificationHandlerBase {
 
 		// Header
 		this._header.notifications.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && NOTIFICATION_KEY[n.source] === 'notifications');
-		this._header.friends.value = notifications.filter((n) => n.alert.has(NotificationAlert.HEADER) && NOTIFICATION_KEY[n.source] === 'friends');
 
 		// Title
 		const titleNotifications = notifications.filter((n) => n.alert.has(NotificationAlert.TITLE)).length;
@@ -221,19 +221,23 @@ function NotificationTitleUpdater(): null {
 	return null;
 }
 
-export function useNotification(source: NotificationSource): {
-	notify: (data: NotificationData) => void;
-	clear: () => void;
-	supress: () => void;
-	unsupress: () => void;
-} {
+export function useNotification(source: NotificationSource): (data: NotificationData) => void {
 	const context = useContext(notificationContext);
-	return useMemo(() => ({
-		notify: (data: NotificationData) => context.rise(source, data),
-		clear: () => context.clear(source),
-		supress: () => context.supress.add(source),
-		unsupress: () => context.supress.delete(source),
-	}), [context, source]);
+	return useCallback((data) => context.rise(source, data), [context, source]);
+}
+
+export function useNotificationSuppressed(source: NotificationSource, suppressNotification = true): void {
+	const context = useContext(notificationContext);
+	const visible = useDocumentVisibility();
+	useEffect(() => {
+		if (visible && suppressNotification) {
+			context.suppress.add(source);
+			context.clear(source);
+		}
+		return () => {
+			context.suppress.delete(source);
+		};
+	}, [context, source, visible, suppressNotification]);
 }
 
 export function useNotificationHeader(type: NotificationHeaderKeys): [readonly NotificationFullData[], () => void] {

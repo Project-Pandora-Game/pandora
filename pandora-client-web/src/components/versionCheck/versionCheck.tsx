@@ -15,7 +15,7 @@ export function VersionCheck() {
 function VersionCheckImpl() {
 	const [nextVersion, setNextVersion] = useState('');
 	const notifiedRef = useRef(false);
-	const { notify } = useNotification(NotificationSource.VERSION_CHANGED);
+	const notify = useNotification(NotificationSource.VERSION_CHANGED);
 
 	const mounted = useMounted();
 

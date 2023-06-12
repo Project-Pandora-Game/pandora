@@ -16,7 +16,7 @@ import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
 import { useCharacterRestrictionsManager, useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatRoomMessages, useChatRoomMessageSender, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
+import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import { usePlayer, usePlayerId, usePlayerState } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ChatInputArea, ChatInputContextProvider, useChatInput } from './chatInput';
@@ -28,7 +28,6 @@ import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
 import { Column, Row } from '../common/container/container';
-import { useDocumentVisibility } from '../../common/useDocumentVisibility';
 import { Character, useCharacterData } from '../../character/character';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 import { IChatroomMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
@@ -199,16 +198,7 @@ function Chat(): ReactElement | null {
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;
 
-	const { supress, unsupress, clear } = useNotification(NotificationSource.CHAT_MESSAGE);
-	const visible = useDocumentVisibility();
-
-	useEffect(() => {
-		if (isScrolling && visible) {
-			supress();
-			clear();
-		}
-		return () => unsupress();
-	}, [messages, isScrolling, lastMessageCount, clear, supress, unsupress, visible]);
+	useNotificationSuppressed(NotificationSource.CHAT_MESSAGE, isScrolling);
 
 	const playerId = usePlayerId();
 

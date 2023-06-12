@@ -13,14 +13,14 @@ const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),
 	roomScalingHelper: z.boolean().catch(false),
 	characterDebugOverlay: z.boolean().catch(false),
-	deviceDebugOverlay: z.boolean().catch(false),
+	deviceDebugOverlay: z.boolean().catch(true),
 });
 
 const DEFAULT_DEBUG_CONFIG: z.infer<typeof ChatroomDebugConfigSchema> = {
 	enabled: false,
 	roomScalingHelper: false,
 	characterDebugOverlay: false,
-	deviceDebugOverlay: false,
+	deviceDebugOverlay: true,
 };
 
 export type ChatroomDebugConfig = z.infer<typeof ChatroomDebugConfigSchema> | undefined;

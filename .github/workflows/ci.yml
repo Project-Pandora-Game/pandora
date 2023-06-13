@@ -12,37 +12,53 @@ on:
 jobs:
   build:
     name: Build
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
 
   install-common:
     name: Check installability of pandora-common
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: corepack enable
       - run: pnpm install --no-lockfile
         working-directory: ./.github/workflows/common-install-check
 
   lint:
     name: Lint
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
 
   test:
     name: Test
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run type-check:test
       - run: pnpm run test --ci

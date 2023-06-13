@@ -19,6 +19,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
 
@@ -31,6 +32,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - run: corepack enable
       - run: pnpm install --no-lockfile
         working-directory: ./.github/workflows/common-install-check
 
@@ -43,6 +45,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
 
@@ -55,6 +58,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+      - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run type-check:test
       - run: pnpm run test --ci

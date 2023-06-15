@@ -41,7 +41,7 @@ export const PASSWORD_RESET_TOKEN_EXPIRATION = 24 * 60 * 60_000;
 
 /** Static hash salt */
 export const EMAIL_SALT = 'pandora-directory-server:';
-/** Email sender type, possible values: mock, smtp */
+/** Email sender type, possible values: mock, smtp, ses */
 export const EMAIL_SENDER_TYPE = process.env.EMAIL_SENDER_TYPE ?? 'mock';
 /** SMTP Email configuration, space separated list: service host user */
 export const EMAIL_SMTP_CONFIG = process.env.EMAIL_SMTP_CONFIG ?? '';

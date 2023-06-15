@@ -1,18 +1,20 @@
 import { GetLogger } from 'pandora-common';
 import { EMAIL_SMTP_CONFIG, EMAIL_SMTP_PASSWORD } from '../../config';
-import type { IEmailSender } from '.';
+import { BaseEmailSender } from './baseEmail';
 
-import { Transporter, createTransport } from 'nodemailer';
-import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import type { Transporter } from 'nodemailer';
+import type { SentMessageInfo } from 'nodemailer/lib/smtp-transport';
 
-const logger = GetLogger('SmtpEmail');
-
-export default class SmtpEmail implements IEmailSender {
-	private readonly _transporter: Transporter<SMTPTransport.SentMessageInfo>;
+export class SmtpEmail extends BaseEmailSender<SentMessageInfo> {
 
 	constructor() {
+		super(GetLogger('SmtpEmail'));
+	}
+
+	protected async createTransport(): Promise<Transporter<SentMessageInfo>> {
+		const { createTransport } = await import('nodemailer');
 		const [service, host, user] = EMAIL_SMTP_CONFIG.split(' ');
-		this._transporter = createTransport({
+		return createTransport({
 			service,
 			host,
 			port: 465,
@@ -24,47 +26,10 @@ export default class SmtpEmail implements IEmailSender {
 		});
 	}
 
-	public async init(): Promise<void> {
-		try {
-			await this._transporter.verify();
-			logger.info('Email transporter is ready');
-		} catch (err) {
-			logger.error(err);
-		}
-	}
-
-	public async sendPasswordReset(email: string, username: string, token: string): Promise<void> {
-		await this.send(email, 'Project-Pandora - Password reset', `
-Hello ${username},
-
-You have requested a password reset.
-Please enter the following token to reset your password: ${token}
-
-If you did not request a password reset, please ignore this email.
-		`);
-	}
-
-	public async sendRegistrationConfirmation(email: string, username: string, token: string): Promise<void> {
-		await this.send(email, 'Project-Pandora - Registration confirmation', `
-Hello ${username},
-
-You have successfully registered on Project-Pandora.
-Please enter the following token to confirm your registration: ${token}
-
-If you did not register on Project-Pandora, please ignore this email.
-		`);
-	}
-
-	private async send(email: string, subject: string, text: string): Promise<void> {
-		const result = await this._transporter.sendMail({
-			from: 'game@project-pandora.com',
-			to: email,
-			subject,
-			text: text.trim(),
-		});
+	protected handleSendResult(result: SentMessageInfo): void {
 		if (result.rejected.length > 0)
-			logger.error(`Email rejected: ${result.response}`);
+			this.logger.error(`Email rejected: ${result.response}`);
 		else
-			logger.debug(`Email sent: ${result.response}`);
+			this.logger.debug(`Email sent: ${result.response}`);
 	}
 }

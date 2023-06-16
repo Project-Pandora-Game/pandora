@@ -3,7 +3,6 @@ import { EMPTY, IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import friendsIcon from '../../assets/icons/friends.svg';
-import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
@@ -22,6 +21,7 @@ import { useCharacterSafemode } from '../../character/character';
 import { useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
 import { RelationshipContext, useRelationships } from '../releationships/relationships';
 import { useObservable } from '../../observable';
+import { LeaveButton } from './leaveButton';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -96,7 +96,7 @@ function RightHeader(): ReactElement {
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/settings') } title='Settings' />
 					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }
 					<span>{ currentAccount.username }</span>
-					<HeaderButton icon={ logoutIcon } iconAlt='Logout' onClick={ logout } title='Logout' />
+					<LeaveButton />
 				</>
 			) }
 			{ !loggedIn && <span>[not logged in]</span> }

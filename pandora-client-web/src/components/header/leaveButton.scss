@@ -1,0 +1,14 @@
+.LeaveDialog {
+	fieldset {
+		display: flex;
+		flex-flow: column;
+		margin-bottom: 0.5em;
+		width: 30em;
+
+		button {
+			margin-top: 1em;
+			margin-left: auto;
+			width: 12em;
+		}
+	}
+}

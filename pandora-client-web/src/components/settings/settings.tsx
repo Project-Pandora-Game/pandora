@@ -43,7 +43,7 @@ export function Settings(): ReactElement | null {
 							</div>
 						</div>
 					</Tab>
-					<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate(-1) } />
 				</TabContainer>
 			</div>
 			<footer>Version: { GIT_DESCRIBE }</footer>

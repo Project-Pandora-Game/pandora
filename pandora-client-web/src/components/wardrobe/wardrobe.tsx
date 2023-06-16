@@ -319,7 +319,7 @@ function WardrobeRoom({ room: _room }: {
 							<WardrobeItemManipulation />
 						</div>
 					</Tab>
-					<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate(-1) } />
 				</TabContainer>
 			</div>
 		</div>
@@ -373,7 +373,7 @@ function WardrobeCharacter({ character }: {
 							<WardrobeOutfitGui character={ character } />
 						</div>
 					</Tab>
-					<Tab name='◄ Back' className='slim' onClick={ () => navigate(-1) } />
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate(-1) } />
 				</TabContainer>
 			</div>
 		</div>

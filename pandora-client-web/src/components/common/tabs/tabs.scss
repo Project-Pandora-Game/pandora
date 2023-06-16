@@ -6,7 +6,7 @@ $header-height: 2em;
 	@include flex(column);
 	position: relative;
 
-	&>&__header {
+	>.header {
 		display: flex;
 		width: 100%;
 		margin: 0;
@@ -61,7 +61,24 @@ $header-height: 2em;
 		}
 	}
 
-	&>&__collapsed {
+	&.tab-position-left {
+		flex-flow: row;
+
+		>.header {
+			flex-flow: column;
+			width: unset;
+			height: 100%;
+			padding: 0.5em 0;
+
+			.tab {
+				flex: unset;
+				border-radius: 1.2em 0em 0em 1.2em;
+				margin: -0.1em 0;
+			}
+		}
+	}
+
+	>.tab-container-collapsed {
 		position: absolute;
 		background-color: $white;
 		top: 0;

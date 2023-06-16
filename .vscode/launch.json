@@ -2,11 +2,26 @@
 	"version": "0.2.0",
 	"compounds": [
 		{
-			"name": "Local Pandora Stack",
+			"name": "Local Pandora Stack (Chrome)",
 			"configurations": [
 				"Run Directory Server",
 				"Run Shard Server",
 				"Run Client (Chrome)"
+			],
+			"preLaunchTask": "pandora-common: dev",
+			"stopAll": true,
+			"presentation": {
+				"hidden": false,
+				"group": "",
+				"order": 1
+			}
+		},
+		{
+			"name": "Local Pandora Stack (Firefox)",
+			"configurations": [
+				"Run Directory Server",
+				"Run Shard Server",
+				"Run Client (Firefox)"
 			],
 			"preLaunchTask": "pandora-common: dev",
 			"stopAll": true,
@@ -23,7 +38,7 @@
 			"request": "launch",
 			"type": "chrome",
 			"linux": {
-				"runtimeExecutable": "/usr/bin/chromium",
+				"runtimeExecutable": "/usr/bin/chromium"
 			},
 			"runtimeArgs": [
 				"--incognito"
@@ -39,16 +54,35 @@
 				"<node_internals>/**",
 				"**/node_modules/**",
 				"!**/node_modules/pandora-common/**",
-				"!**/node_modules/.pnpm/pandora-common/**",
+				"!**/node_modules/.pnpm/pandora-common/**"
 			],
+			"preLaunchTask": "pandora-client-web: dev"
+		},
+		{
+			"name": "Run Client (Firefox)",
+			"request": "launch",
+			"type": "firefox",
+			"reAttach": true,
+			"url": "http://localhost:6969",
+			"webRoot": "${workspaceFolder}/pandora-client-web",
 			"preLaunchTask": "pandora-client-web: dev",
+			"pathMappings": [
+				{
+					"url": "webpack://pandora-client-web/src",
+					"path": "${workspaceFolder}/pandora-client-web/src"
+				},
+				{
+					"url": "webpack://pandora-client-web/pandora-common/src",
+					"path": "${workspaceFolder}/pandora-common/src"
+				},
+			]
 		},
 		{
 			"name": "Run Directory Server",
 			"type": "node",
 			"request": "attach",
 			"restart": {
-				"delay": 200,
+				"delay": 200
 			},
 			"autoAttachChildProcesses": false,
 			"attachExistingChildren": false,
@@ -63,13 +97,13 @@
 			"type": "node",
 			"request": "attach",
 			"restart": {
-				"delay": 200,
+				"delay": 200
 			},
 			"continueOnAttach": true,
 			"port": 25861,
 			"sourceMaps": true,
 			"internalConsoleOptions": "neverOpen",
 			"preLaunchTask": "pandora-server-shard: dev"
-		},
+		}
 	]
 }

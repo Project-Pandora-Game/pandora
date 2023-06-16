@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { AssertNotNullable, CharacterId, GetLogger, IChatRoomMessageAction, IChatRoomMessageChat, RoomId } from 'pandora-common';
+import { CharacterId, IChatRoomMessageAction, IChatRoomMessageChat, RoomId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -14,8 +14,7 @@ import { useAssetManager } from '../../assets/assetManager';
 import { Button } from '../common/button/button';
 import { TabContainer, Tab } from '../common/tabs/tabs';
 import { ContextMenu, useContextMenu } from '../contextMenu';
-import { useCharacterRestrictionsManager, useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatRoomMessages, useChatRoomMessageSender, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatRoomMessages, useChatRoomMessageSender, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import { usePlayer, usePlayerId, usePlayerState } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -31,9 +30,6 @@ import { Column, Row } from '../common/container/container';
 import { Character, useCharacterData } from '../../character/character';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 import { IChatroomMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { HoverElement } from '../hoverElement/hoverElement';
 import { DeviceOverlayToggle } from './chatRoomDevice';
 import { useObservable } from '../../observable';
 
@@ -76,29 +72,10 @@ export function Chatroom(): ReactElement {
 }
 
 function ControlsTabContents(): ReactElement | null {
-	const player = usePlayer();
-	const playerState = usePlayerState();
 	const roomInfo = useChatRoomInfo();
 	const roomCharacters = useChatRoomCharacters();
 	const navigate = useNavigate();
-	const directoryConnector = useDirectoryConnector();
 
-	AssertNotNullable(player);
-	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.isInSafemode() || !manager.getEffects().blockRoomLeave));
-
-	const onRoomLeave = useCallback(async () => {
-		try {
-			const result = await directoryConnector.awaitResponse('chatRoomLeave', {});
-			if (result.result !== 'ok') {
-				toast(`Failed to leave room:\n${result.result}`, TOAST_OPTIONS_ERROR);
-			}
-		} catch (err) {
-			GetLogger('LeaveRoom').warning('Error during room leave', err);
-			toast(`Error during room creation:\n${err instanceof Error ? err.message : String(err)}`, TOAST_OPTIONS_ERROR);
-		}
-	}, [directoryConnector]);
-
-	const [leaveButtonRef, setLeaveButtonRef] = useState<HTMLButtonElement | null>(null);
 	const deviceOverlayToggle = useObservable(DeviceOverlayToggle);
 
 	if (!roomInfo || !roomCharacters) {
@@ -107,30 +84,9 @@ function ControlsTabContents(): ReactElement | null {
 
 	return (
 		<Column padding='medium' className='controls'>
-			{
-				!canLeave ? (
-					<HoverElement parent={ leaveButtonRef } className='action-warning'>
-						An item is preventing you from leaving the room.
-					</HoverElement>
-				) : null
-			}
-			<Row padding='medium'>
-				<Button
-					onClick={ () => void onRoomLeave() }
-					ref={ setLeaveButtonRef }
-					className='fadeDisabled'
-					disabled={ !canLeave }
-				>
-					Leave room
-				</Button>
+			<Row padding='small'>
 				<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
-			</Row>
-			<Row padding='medium'>
-				<Button onClick={ () => {
-					navigate('/wardrobe', { state: { target: 'room' } });
-				} }>
-					Room inventory
-				</Button>
+				<Button onClick={ () => navigate('/wardrobe', { state: { target: 'room' } }) } >Room inventory</Button>
 			</Row>
 			<p>You are in room { roomInfo.name }</p>
 			<div>

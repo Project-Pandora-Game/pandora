@@ -6,6 +6,7 @@ import friendsIcon from '../../assets/icons/friends.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
+import wikiIcon from '../../assets/icons/wiki.svg';
 import managementIcon from '../../assets/icons/management.svg';
 import { usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
 import { useLogout } from '../../networking/account_manager';
@@ -89,6 +90,7 @@ function RightHeader(): ReactElement {
 		<div className='rightHeader'>
 			{ loggedIn && (
 				<>
+					<HeaderButton icon={ wikiIcon } iconAlt='Wiki' onClick={ () => navigate('/wiki') } title='Wiki' />
 					<NotificationButton icon={ notificationsIcon } title='Notifications' type='notifications' onClick={ () => toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR) } />
 					<FriendsHeaderButton />
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/settings') } title='Settings' />

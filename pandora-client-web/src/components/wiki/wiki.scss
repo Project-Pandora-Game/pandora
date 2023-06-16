@@ -1,0 +1,22 @@
+@import '../../styles/common';
+
+.wiki {
+	flex: 1;
+	overflow: hidden;
+
+	.tab-content {
+		min-width: min(30em, 90vw);
+	}
+
+	.wiki-content {
+		background-color: $grey-lighter;
+		user-select: text;
+		padding: 0.5em;
+		border: solid black 1px;
+		flex: 1;
+
+		h3, h4 {
+			margin: 0.5em 0 0 0;
+		}
+	}
+}

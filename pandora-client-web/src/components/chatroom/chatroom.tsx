@@ -25,7 +25,7 @@ import './chatroom.scss';
 import { WardrobeContextProvider, WardrobeExpressionGui, WardrobePoseGui } from '../wardrobe/wardrobe';
 import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
-import { Scrollbar } from '../common/scrollbar/scrollbar';
+import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
 import { Column, Row } from '../common/container/container';
 import { Character, useCharacterData } from '../../character/character';
@@ -50,12 +50,14 @@ export function Chatroom(): ReactElement {
 		<div className='chatroom'>
 			<ChatInputContextProvider>
 				<ChatRoomScene />
-				<TabContainer collapsable={ true }>
+				<TabContainer collapsable>
 					<Tab name='Chat'>
 						<Chat />
 					</Tab>
 					<Tab name='Controls'>
-						<ControlsTabContents />
+						<Scrollable color='dark'>
+							<ControlsTabContents />
+						</Scrollable>
 					</Tab>
 					<Tab name='Pose'>
 						<WardrobeContextProvider player={ player } target={ player }>

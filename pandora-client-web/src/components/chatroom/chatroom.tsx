@@ -39,7 +39,7 @@ function InteractionBox({ className }: {
 	const { player, playerState } = usePlayerState();
 
 	return (
-		<TabContainer className={ className }>
+		<TabContainer className={ className } collapsable>
 			<Tab name='Chat'>
 				<Chat />
 			</Tab>

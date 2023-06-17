@@ -128,7 +128,7 @@ function CharacterLeave(): ReactElement {
 						<Button onClick={ onClick }>Change character</Button>
 					</>
 				) : (
-					<span>Not connected</span>
+					<span>No character selected</span>
 				)
 			}
 		</fieldset>

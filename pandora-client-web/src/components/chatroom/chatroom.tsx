@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 import { Navigate } from 'react-router';
 import { useCharacterIsInChatroom } from '../gameContext/chatRoomContextProvider';
-import { Row } from '../common/container/container';
+import { DivContainer } from '../common/container/container';
 import { ChatRoomScene } from './chatRoomScene';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { WardrobeContextProvider, WardrobeExpressionGui, WardrobePoseGui } from '../wardrobe/wardrobe';
@@ -10,19 +10,26 @@ import { Chat } from './chat';
 import { Scrollable } from '../common/scrollbar/scrollbar';
 import { ChatroomControls } from './chatroomControls';
 import './chatroom.scss';
+import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { useIsPortrait } from '../../styles/mediaQueries';
 
 export function Chatroom(): ReactElement | null {
 	const isInChatRoom = useCharacterIsInChatroom();
+	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useCurrentAccountSettings();
+	const isPortrait = useIsPortrait();
 
 	if (!isInChatRoom) {
 		return <Navigate to='/chatroom_select' />;
 	}
 
+	const chatroomGraphicsRatio = isPortrait ? interfaceChatroomGraphicsRatioVertical : interfaceChatroomGraphicsRatioHorizontal;
+	const chatroomChatRatio = 10 - chatroomGraphicsRatio;
+
 	return (
-		<Row className='chatroom'>
-			<ChatRoomScene className={ `chatroom-scene flex-4` } />
-			<InteractionBox className={ `interactionArea flex-1` } />
-		</Row>
+		<DivContainer className='chatroom' direction={ isPortrait ? 'column' : 'row' }>
+			<ChatRoomScene className={ `chatroom-scene flex-${chatroomGraphicsRatio}` } />
+			<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
+		</DivContainer>
 	);
 }
 

@@ -20,7 +20,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Free character placement and movement inside rooms</li>
 				<li>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</li>
 				<li>An already very stable code base (goal: no void memes here)</li>
-				<li>Reliable gag talk & locks - development aims to make it impossible to break mechanics</li>
+				<li>Reliable gag talk & locks - development aims to make it impossible to cheat</li>
 				<li>A direct messaging system that supports offline messages and a persistent message history</li>
 				<li>Ability to use the browser's back/forward buttons to navigate in Pandora</li>
 				<li>No safeword feature, but a safemode that makes it harder to be misused to constantly free characters</li>
@@ -32,13 +32,13 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>Dynamically generated body model with many poses and free arm movement</h4>
 			<p>
-				In the pose tab, you will find the ability to freely move arms and legs under the dev-section "manual pose" at the bottom of the screen.
+				In the pose tab, you will find the ability to freely move arms and legs under the "manual pose" section at the bottom of the screen.
 				Expand this section to view the respective sliders.
 			</p>
 
 			<h4>Front and back character view</h4>
 			<p>
-				Can be toggled in the pose menu and will be seen in the chosen position by everyone in the room.
+				Your character's view can be toggled in the pose menu. The chosen position is seen by everyone in the room.
 			</p>
 
 			<h4>A feature-rich room chat</h4>
@@ -85,9 +85,11 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>Item templates for storing your favorite asset configurations per asset, including things like color, custom name,</li>
-				description/lore about the item, etc.
-				<li>Storing complete outfits in the wardrobe and supporting its import/export</li>
+				<li>
+					Item templates for storing your favorite asset configurations per asset, including things like color, custom name,
+					description/lore about the item, etc.
+				</li>
+				<li>Storing complete outfits in the wardrobe and supporting their import/export</li>
 				<li>Character profile and biography</li>
 				<li>Showing and managing relationships between characters</li>
 				<li>Hearing impairment effect by assets</li>

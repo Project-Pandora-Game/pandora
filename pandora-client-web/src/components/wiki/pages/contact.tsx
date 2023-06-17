@@ -29,8 +29,8 @@ export function WikiContact(): ReactElement {
 
 			<h2>Contributing</h2>
 			<p>
-				The game is open source and you can find all related sources on our <a href='https://github.com/Project-Pandora-Game' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a><br />
-				If you want to contribute something (either a feature or asset), please contact us first on our Discord,
+				The game is open source - you can find all related sources on our <a href='https://github.com/Project-Pandora-Game' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a><br />
+				If you want to contribute something (either a feature or an asset), please contact us first on our Discord,
 				so we can synchronize the efforts to make that happen.
 			</p>
 		</>

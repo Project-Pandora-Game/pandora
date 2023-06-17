@@ -42,3 +42,31 @@ $scrollbar-colors: (
 		}
 	}
 }
+
+.scrollable-vertical {
+	overflow-x: hidden;
+	overflow-y: auto;
+
+	&.scrollable-always {
+		overflow-x: scroll;
+	}
+}
+
+.scrollable-horizontal {
+	overflow-x: auto;
+	overflow-y: hidden;
+
+	&.scrollable-always {
+		overflow-y: scroll;
+	}
+}
+
+.scrollable-both {
+	overflow-x: auto;
+	overflow-y: auto;
+
+	&.scrollable-always {
+		overflow-x: scroll;
+		overflow-y: scroll;
+	}
+}

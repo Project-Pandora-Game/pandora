@@ -20,3 +20,38 @@ function ScrollbarImpl<K extends keyof HTMLElementTagNameMap = 'div'>({ color, c
 }
 
 export const Scrollbar = forwardRef(ScrollbarImpl);
+
+export type ScrollableProps<K extends keyof HTMLElementTagNameMap> = ScrollbarProps<K> & {
+	/**
+	 * Direction the scrollable will allow scrolling in
+	 * @default 'vertical'
+	 */
+	direction?: 'vertical' | 'horizontal' | 'both';
+	/**
+	 * Whether to always show the scrollbar, or only if content overflows
+	 * @default false
+	 */
+	alwaysShowScrollabar?: boolean;
+};
+
+function ScrollableImpl<K extends keyof HTMLElementTagNameMap = 'div'>({
+	className,
+	direction = 'vertical',
+	alwaysShowScrollabar = false,
+	...props
+}: ScrollableProps<K>, ref: ForwardedRef<HTMLElementTagNameMap[K]>): ReactElement {
+	return (
+		<Scrollbar
+			{ ...props }
+			className={ classNames(
+				className,
+				`scrollable-${direction}`,
+				alwaysShowScrollabar ? 'scrollable-always' : null,
+			) }
+			ref={ ref }
+		/>
+	);
+}
+
+export const Scrollable = forwardRef(ScrollableImpl);
+

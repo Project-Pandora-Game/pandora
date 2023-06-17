@@ -17,6 +17,7 @@ import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 import { DirectMessages } from '../components/directMessages/directMessages';
 import { Relationships } from '../components/releationships/relationships';
+import { Wiki } from '../components/wiki/wiki';
 
 export function PandoraRoutes(): ReactElement {
 	return (
@@ -39,6 +40,7 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/chatroom_admin' element={ <RequiresCharacter element={ ChatroomAdmin } /> } />
 			<Route path='/wardrobe' element={ <RequiresCharacter element={ WardrobeScreen } /> } />
 			<Route path='/management/*' element={ <RequiresLogin element={ DeveloperRoutes } /> } />
+			<Route path='/wiki' element={ <Wiki /> } />
 		</Routes>
 	);
 }

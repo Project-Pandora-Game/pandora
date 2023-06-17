@@ -1,15 +1,13 @@
 import classNames from 'classnames';
-import { EMPTY, IsAuthorized } from 'pandora-common';
+import { IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import friendsIcon from '../../assets/icons/friends.svg';
-import logoutIcon from '../../assets/icons/logout.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import managementIcon from '../../assets/icons/management.svg';
 import { usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
-import { useLogout } from '../../networking/account_manager';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import './header.scss';
@@ -22,6 +20,7 @@ import { useCharacterSafemode } from '../../character/character';
 import { useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
 import { RelationshipContext, useRelationships } from '../releationships/relationships';
 import { useObservable } from '../../observable';
+import { LeaveButton } from './leaveButton';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -53,7 +52,6 @@ function LeftHeader(): ReactElement {
 }
 
 function CharacterMenu({ close }: { close: () => void; }): ReactElement {
-	const directoryConnector = useDirectoryConnector();
 	const playerState = usePlayerState();
 
 	const safemode = useCharacterSafemode(playerState);
@@ -62,12 +60,6 @@ function CharacterMenu({ close }: { close: () => void; }): ReactElement {
 	return (
 		<div className='characterMenu' onClick={ () => close() }>
 			<header onClick={ (ev) => ev.stopPropagation() }>Character menu</header>
-			<a onClick={ (ev) => {
-				ev.preventDefault();
-				directoryConnector.sendMessage('disconnectCharacter', EMPTY);
-			} }>
-				Change character
-			</a>
 			<a onClick={ (ev) => {
 				ev.preventDefault();
 				safemodeContext.show();
@@ -80,7 +72,6 @@ function CharacterMenu({ close }: { close: () => void; }): ReactElement {
 
 function RightHeader(): ReactElement {
 	const currentAccount = useCurrentAccount();
-	const logout = useLogout();
 	const navigate = useNavigate();
 	const loggedIn = currentAccount != null;
 
@@ -96,7 +87,7 @@ function RightHeader(): ReactElement {
 					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/settings') } title='Settings' />
 					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }
 					<span>{ currentAccount.username }</span>
-					<HeaderButton icon={ logoutIcon } iconAlt='Logout' onClick={ logout } title='Logout' />
+					<LeaveButton />
 				</>
 			) }
 			{ !loggedIn && <span>[not logged in]</span> }

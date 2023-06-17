@@ -12,9 +12,8 @@ import { PlayerCharacter } from '../../character/player';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { ModalDialog } from '../dialog/dialog';
-import { Column } from '../common/container/container';
+import { Column, Row } from '../common/container/container';
 import './leaveButton.scss';
-import { HoverElement } from '../hoverElement/hoverElement';
 
 const leaveButtonContext = createContext(() => { /** noop */ });
 
@@ -69,7 +68,6 @@ function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: I
 	const directoryConnector = useDirectoryConnector();
 	const playerState = usePlayerState();
 	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.isInSafemode() || !manager.getEffects().blockRoomLeave));
-	const [leaveButtonRef, setLeaveButtonRef] = useState<HTMLButtonElement | null>(null);
 	const closeDialog = useContext(leaveButtonContext);
 
 	const onRoomLeave = useCallback(() => {
@@ -93,12 +91,12 @@ function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: I
 			<span>Id: { room.id }</span>
 			{
 				!canLeave ? (
-					<HoverElement parent={ leaveButtonRef } className='action-warning'>
-						An item is preventing you from leaving the room.
-					</HoverElement>
+					<Row alignX='center' padding='large'>
+						<b>An item is preventing you from leaving the room.</b>
+					</Row>
 				) : null
 			}
-			<Button onClick={ onRoomLeave } className='fadeDisabled' disabled={ !canLeave } ref={ setLeaveButtonRef }>
+			<Button onClick={ onRoomLeave } className='fadeDisabled' disabled={ !canLeave }>
 				Leave room
 			</Button>
 		</>

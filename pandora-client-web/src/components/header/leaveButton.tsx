@@ -47,41 +47,48 @@ function DialogLeave(): ReactElement {
 	);
 }
 
-function ChatRoomLeave(): ReactElement | null {
+function ChatRoomLeave(): ReactElement {
 	const player = usePlayer();
 	const room = useChatRoomInfo();
 
-	if (!player || !room) {
-		return null;
-	}
-
 	return (
-		<CharRoomLeaveInner player={ player } room={ room } />
+		<fieldset>
+			<legend>Chat Room</legend>
+			{
+				(player && room) ? (
+					<CharRoomLeaveInner player={ player } room={ room } />
+				) : (
+					<span>Not in a chat room</span>
+				)
+			}
+		</fieldset>
 	);
 }
 
-function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: IChatRoomFullInfo; }): ReactElement | null {
+function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: IChatRoomFullInfo; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const playerState = usePlayerState();
 	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.isInSafemode() || !manager.getEffects().blockRoomLeave));
 	const [leaveButtonRef, setLeaveButtonRef] = useState<HTMLButtonElement | null>(null);
+	const closeDialog = useContext(leaveButtonContext);
 
 	const onRoomLeave = useCallback(() => {
 		directoryConnector.awaitResponse('chatRoomLeave', EMPTY)
 			.then((result) => {
 				if (result.result !== 'ok') {
 					toast(`Failed to leave room:\n${result.result}`, TOAST_OPTIONS_ERROR);
+				} else {
+					closeDialog();
 				}
 			})
 			.catch((err) => {
-				GetLogger('LeaveRoom').warning('Error during room leave', err);
-				toast(`Error during room creation:\n${err instanceof Error ? err.message : String(err)}`, TOAST_OPTIONS_ERROR);
+				GetLogger('LeaveRoom').warning('Error while leaving room', err);
+				toast(`Error while leaving room:\n${err instanceof Error ? err.message : String(err)}`, TOAST_OPTIONS_ERROR);
 			});
-	}, [directoryConnector]);
+	}, [directoryConnector, closeDialog]);
 
 	return (
-		<fieldset>
-			<legend>Chat Room</legend>
+		<>
 			<span>Name: { room.name }</span>
 			<span>Id: { room.id }</span>
 			{
@@ -94,46 +101,68 @@ function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: I
 			<Button onClick={ onRoomLeave } className='fadeDisabled' disabled={ !canLeave } ref={ setLeaveButtonRef }>
 				Leave room
 			</Button>
-		</fieldset>
+		</>
 	);
 }
 
-function CharacterLeave(): ReactElement | null {
+function CharacterLeave(): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const connectionInfo = useShardConnectionInfo();
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
+	const closeDialog = useContext(leaveButtonContext);
 
 	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 		e.preventDefault();
 		e.stopPropagation();
 		directoryConnector.sendMessage('disconnectCharacter', EMPTY);
-	}, [directoryConnector]);
-
-	if (!connectionInfo) return null;
+		closeDialog();
+	}, [directoryConnector, closeDialog]);
 
 	return (
 		<fieldset>
 			<legend>Character</legend>
-			<span>Name: { characterName ?? `[Character ${connectionInfo.characterId}]` }</span>
-			<span>Id: { connectionInfo.characterId }</span>
-			<Button onClick={ onClick }>Change character</Button>
+			{
+				connectionInfo ? (
+					<>
+						<span>Name: { characterName ?? `[Character ${connectionInfo.characterId}]` }</span>
+						<span>Id: { connectionInfo.characterId }</span>
+						<Button onClick={ onClick }>Change character</Button>
+					</>
+				) : (
+					<span>Not connected</span>
+				)
+			}
 		</fieldset>
 	);
 }
 
-function AccountLeave(): ReactElement | null {
+function AccountLeave(): ReactElement {
 	const currentAccount = useCurrentAccount();
 	const logout = useLogout();
+	const closeDialog = useContext(leaveButtonContext);
 
-	if (!currentAccount) return null;
+	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+		e.preventDefault();
+		e.stopPropagation();
+		logout();
+		closeDialog();
+	}, [logout, closeDialog]);
 
 	return (
 		<fieldset>
 			<legend>Account</legend>
-			<span>Name: { currentAccount.username }</span>
-			<span>Id: { currentAccount.id }</span>
-			<Button onClick={ logout }>Logout</Button>
+			{
+				currentAccount ? (
+					<>
+						<span>Name: { currentAccount.username }</span>
+						<span>Id: { currentAccount.id }</span>
+						<Button onClick={ onClick }>Logout</Button>
+					</>
+				) : (
+					<span>Not logged in</span>
+				)
+			}
 		</fieldset>
 	);
 }

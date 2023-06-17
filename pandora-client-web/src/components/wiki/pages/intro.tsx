@@ -32,8 +32,8 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>Dynamically generated body model with many poses and free arm movement</h4>
 			<p>
-			In the pose tab, you will find the ability to freely move arms and legs under the dev-section "manual pose" at the bottom of the screen.
-			Expand this section to view the respective sliders.
+				In the pose tab, you will find the ability to freely move arms and legs under the dev-section "manual pose" at the bottom of the screen.
+				Expand this section to view the respective sliders.
 			</p>
 
 			<h4>Front and back character view</h4>
@@ -78,7 +78,7 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>No safeword feature, but a safemode that makes it harder to be misused</h4>
 			<p>
-			You can access the safemode feature by clicking on your character name in the top left of the screen and then entering safemode in the menu.
+				You can access the safemode feature by clicking on your character name in the top left of the screen and then entering safemode in the menu.
 			</p>
 
 			<hr />

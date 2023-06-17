@@ -52,7 +52,7 @@ function LeftHeader(): ReactElement {
 }
 
 function CharacterMenu({ close }: { close: () => void; }): ReactElement {
-	const playerState = usePlayerState();
+	const { playerState } = usePlayerState();
 
 	const safemode = useCharacterSafemode(playerState);
 	const safemodeContext = useSafemodeDialogContext();

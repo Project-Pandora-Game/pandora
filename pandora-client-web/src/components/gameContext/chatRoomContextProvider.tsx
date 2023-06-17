@@ -467,6 +467,14 @@ export function useChatRoomInfo(): IChatRoomFullInfo | null {
 	return useNullableObservable(context?.info);
 }
 
+/**
+ * Returns whether character is in a chatroom or not
+ * @returns `true` if character is in a room, `false` otherwise
+ */
+export function useCharacterIsInChatroom(): boolean {
+	return useChatRoomInfo() != null;
+}
+
 export function useChatRoomFeatures(): ChatRoomFeature[] | null {
 	const info = useChatRoomInfo();
 	return useMemo(() => info?.features ?? null, [info]);

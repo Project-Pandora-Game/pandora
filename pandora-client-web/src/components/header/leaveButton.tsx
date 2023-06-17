@@ -1,4 +1,4 @@
-import React, { ForwardedRef, ReactElement, ReactNode, createContext, forwardRef, useCallback, useContext, useState } from 'react';
+import React, { ReactElement, createContext, useCallback, useContext, useState } from 'react';
 import logoutIcon from '../../assets/icons/logout.svg';
 import { HeaderButton } from './HeaderButton';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
@@ -12,7 +12,7 @@ import { PlayerCharacter } from '../../character/player';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { ModalDialog } from '../dialog/dialog';
-import { Column, Row } from '../common/container/container';
+import { Column } from '../common/container/container';
 import './leaveButton.scss';
 import { HoverElement } from '../hoverElement/hoverElement';
 
@@ -46,43 +46,6 @@ function DialogLeave(): ReactElement {
 		</ModalDialog>
 	);
 }
-
-const ConfirmButton = forwardRef(function ConfirmButton({
-	onClick,
-	children,
-	className,
-	disabled,
-}: {
-	onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
-	children: ReactNode;
-	className?: string;
-	disabled?: boolean;
-}, ref: ForwardedRef<HTMLButtonElement>): ReactElement {
-	const [confirmed, setConfirmed] = useState(false);
-	const closeDialog = useContext(leaveButtonContext);
-
-	const onClickInner = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-		if (confirmed) {
-			onClick(e);
-			closeDialog();
-		} else {
-			setConfirmed(true);
-		}
-	}, [onClick, closeDialog, confirmed]);
-
-	const onCancel = useCallback(() => {
-		setConfirmed(false);
-	}, []);
-
-	const text = confirmed ? 'Are you sure?' : children;
-
-	return (
-		<Row>
-			{ confirmed ? <Button onClick={ onCancel }>Cancel</Button> : null }
-			<Button onClick={ onClickInner } className={ className } disabled={ disabled } ref={ ref }>{ text }</Button>
-		</Row>
-	);
-});
 
 function ChatRoomLeave(): ReactElement | null {
 	const player = usePlayer();
@@ -128,9 +91,9 @@ function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: I
 					</HoverElement>
 				) : null
 			}
-			<ConfirmButton onClick={ onRoomLeave } className='fadeDisabled' disabled={ !canLeave } ref={ setLeaveButtonRef }>
+			<Button onClick={ onRoomLeave } className='fadeDisabled' disabled={ !canLeave } ref={ setLeaveButtonRef }>
 				Leave room
-			</ConfirmButton>
+			</Button>
 		</fieldset>
 	);
 }
@@ -154,7 +117,7 @@ function CharacterLeave(): ReactElement | null {
 			<legend>Character</legend>
 			<span>Name: { characterName ?? `[Character ${connectionInfo.characterId}]` }</span>
 			<span>Id: { connectionInfo.characterId }</span>
-			<ConfirmButton onClick={ onClick }>Change character</ConfirmButton>
+			<Button onClick={ onClick }>Change character</Button>
 		</fieldset>
 	);
 }
@@ -170,7 +133,7 @@ function AccountLeave(): ReactElement | null {
 			<legend>Account</legend>
 			<span>Name: { currentAccount.username }</span>
 			<span>Id: { currentAccount.id }</span>
-			<ConfirmButton onClick={ logout }>Logout</ConfirmButton>
+			<Button onClick={ logout }>Logout</Button>
 		</fieldset>
 	);
 }

@@ -61,7 +61,6 @@ import type { PlayerCharacter } from '../../character/player';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import { Button, ButtonProps, IconButton } from '../common/button/button';
-import { USER_DEBUG } from '../../config/Environment';
 import _, { isEqual } from 'lodash';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
@@ -2452,24 +2451,23 @@ export function WardrobePoseGui({ character, characterState }: {
 					/>
 				</div>
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
-				{ USER_DEBUG &&
-					<FieldsetToggle legend='[DEV] Manual pose' persistent='bone-ui-dev-pose' open={ false }>
-						<WardrobeArmPoses armsPose={ armsPose } limits={ limits } setPose={ setPose } />
-						<br />
-						{
-							currentBones
-								.filter((bone) => bone.definition.type === 'pose')
-								.map((bone) => (
-									<BoneRowElement key={ bone.definition.name } bone={ bone } limits={ limits } onChange={ (value) => {
-										setPose({
-											bones: {
-												[bone.definition.name]: value,
-											},
-										});
-									} } />
-								))
-						}
-					</FieldsetToggle> }
+				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
+					<WardrobeArmPoses armsPose={ armsPose } limits={ limits } setPose={ setPose } />
+					<br />
+					{
+						currentBones
+							.filter((bone) => bone.definition.type === 'pose')
+							.map((bone) => (
+								<BoneRowElement key={ bone.definition.name } bone={ bone } limits={ limits } onChange={ (value) => {
+									setPose({
+										bones: {
+											[bone.definition.name]: value,
+										},
+									});
+								} } />
+							))
+					}
+				</FieldsetToggle>
 			</div>
 		</div>
 	);

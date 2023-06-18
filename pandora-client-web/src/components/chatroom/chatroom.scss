@@ -1,5 +1,4 @@
-@import '../../styles/constants';
-@import '../../styles/utils';
+@import '../../styles/common';
 
 .chatroom {
 	overflow: hidden;
@@ -21,16 +20,55 @@
 	}
 }
 
+.controls-container {
+	background-color: $grey-lighter;
+	border: solid $black 2px;
+}
+
 .character-info {
 	margin-bottom: spacing('large');
 
-	.safemode {
-		display: inline-flex;
-		background: $theme-warning;
-		border: solid black 1px;
-		padding: 0.25em;
-		align-items: center;
-		justify-content: center;
+	& fieldset {
+		display: flex;
+		flex-direction: column;
+		border: 1px solid $black;
+		border-radius: 0.5em;
+		margin-bottom: 0.5em;
+
+		>legend {
+			display: flex;
+			flex-flow: row wrap;
+			border: 1px solid $black;
+			border-radius: 0.5em;
+			overflow: hidden;
+			padding: 0;
+
+			background-color: $black;
+			gap: 1px;
+
+			&.player {
+				>span {
+					background-color: $white;
+				}
+			}
+
+			>span {
+				font-size: 1em;
+				padding: 0.2em 0.5em;
+				flex-grow: 1;
+
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+
+				background-color: $grey-lightest;
+
+				&.safemode {
+					background: $theme-warning;
+					padding: 0 0.5em;
+				}
+			}
+		}
 	}
 }
 
@@ -51,13 +89,13 @@
 	}
 
 	.message {
-		color: white;
+		color: $white;
 		padding: 0.1em;
 		white-space: pre-wrap;
 		overflow-wrap: break-word;
 
 		&.serverMessage {
-			border-left: solid 5px white;
+			border-left: solid 5px $white;
 			background-color: #222;
 			margin: 0.4em;
 			padding: 0.2em;
@@ -78,7 +116,7 @@
 
 		&> .info {
 			float: right;
-			color: gray;
+			color: $grey-mid;
 			font-style: italic;
 			font-size: 0.6em;
 			margin-right: 0.2em;
@@ -111,7 +149,7 @@
 	align-items: center;
 
 	background-color: #2A2A2A;
-	color: white;
+	color: $white;
 	padding-left: 0.5em;
 	gap: 0.5em;
 }
@@ -139,7 +177,7 @@
 
 		@include flex(column);
 		background-color: #338;
-		color: white;
+		color: $white;
 		padding: 0.5em;
 		gap: 0.1em;
 

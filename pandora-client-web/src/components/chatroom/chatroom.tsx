@@ -49,7 +49,7 @@ function InteractionBox({ className }: {
 				<Chat />
 			</Tab>
 			<Tab name='Room'>
-				<Scrollable color='dark'>
+				<Scrollable color='dark' className='controls-container flex-1'>
 					<ChatroomControls />
 				</Scrollable>
 			</Tab>

@@ -31,12 +31,12 @@ export function ChatroomControls(): ReactElement | null {
 				<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
 				<Button onClick={ () => navigate('/wardrobe', { state: { target: 'room' } }) } >Room inventory</Button>
 			</Row>
-			<p>You are in room { roomInfo.name }</p>
-			<div>
-				Characters in this room:<br />
-				<ul>
-					{ roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />) }
-				</ul>
+			<br />
+			<span>
+				These characters are in the room <b>{ roomInfo.name }</b>:
+			</span>
+			<div className='character-info'>
+				{ roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />) }
 			</div>
 			<br />
 			<div>
@@ -65,18 +65,23 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 	const inSafemode = state?.safemode != null;
 
 	return (
-		<li className='character-info'>
-			<Column>
-				<Row wrap alignY='center'>
-					<span onClick={ () => setTarget(data.id) }>{ data.name }</span>
-					<span>{ data.id } / { data.accountId }</span>
-				</Row>
+		<fieldset>
+			<legend className={ char.isPlayer() ? 'player' : '' }>
+				<span>
+					<span>
+						<span style={ { color: data.settings.labelColor } }><b>/// </b></span>
+						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
+						<span> / { data.id } / { data.accountId }</span>
+					</span>
+				</span>
 				{ !inSafemode ? null : (
 					<span className='safemode'>
 						<CharacterSafemodeWarningContent />
 					</span>
 				) }
-				<Row>
+			</legend>
+			<Column>
+				<Row wrap>
 					<Button className='slim' onClick={ () => {
 						navigate('/wardrobe', { state: { character: data.id } });
 					} }>
@@ -91,6 +96,6 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 					) }
 				</Row>
 			</Column>
-		</li>
+		</fieldset>
 	);
 }

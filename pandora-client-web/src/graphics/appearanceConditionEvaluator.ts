@@ -1,4 +1,4 @@
-import { AppearanceItemProperties, AppearanceItems, AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
+import { AppearanceItemProperties, AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
 import { EvaluateCondition, RotateVector } from './utility';
@@ -26,15 +26,16 @@ export class AppearanceConditionEvaluator {
 	//#region Point transform
 	private readonly _evalCache = new Map<string, boolean>();
 	public evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean {
-		if ('module' in condition && condition.module != null) {
+		if ('module' in condition) {
+			Assert(condition.module != null);
 			const m = item?.modules.get(condition.module);
 			// If there is no item or no module, the value is always not equal
 			if (!m) {
 				return condition.operator === '!=';
 			}
 			return m.evalCondition(condition.operator, condition.value);
-		}
-		if ('bone' in condition && condition.bone != null) {
+		} else if ('bone' in condition) {
+			Assert(condition.bone != null);
 			const key = `${condition.bone}-${condition.operator}-${condition.value}`;
 			let result = this._evalCache.get(key);
 			if (result === undefined) {
@@ -42,8 +43,8 @@ export class AppearanceConditionEvaluator {
 				this._evalCache.set(key, result = this._evalConditionCore(condition, value));
 			}
 			return result;
-		}
-		if ('armType' in condition && condition.armType != null) {
+		} else if ('armType' in condition) {
+			Assert(condition.armType != null);
 			const key = `${condition.armType}-${condition.side}-${condition.operator}-${condition.value}`;
 			let result = this._evalCache.get(key);
 			if (result === undefined) {
@@ -51,20 +52,16 @@ export class AppearanceConditionEvaluator {
 				this._evalCache.set(key, result = this._evalConditionCore(condition, value));
 			}
 			return result;
-		}
-		if ('attribute' in condition && condition.attribute != null) {
-			for (const attribute of this.attributes) {
-				if (attribute[0] === '!') {
-					if (this.attributes.has(attribute.slice(1))) {
-						return false;
-					}
-				} else if (!this.attributes.has(attribute)) {
-					return false;
-				}
+		} else if ('attribute' in condition) {
+			Assert(condition.attribute != null);
+			if (condition.attribute[0] === '!') {
+				return !this.attributes.has(condition.attribute.slice(1));
+			} else {
+				return this.attributes.has(condition.attribute);
 			}
-			return true;
+		} else {
+			AssertNever(condition);
 		}
-		AssertNever();
 	}
 
 	private _evalConditionCore<T extends string | number>({ operator, value }: AtomicCondition & { value: T; operator: ConditionOperator; }, currentValue: T): boolean {

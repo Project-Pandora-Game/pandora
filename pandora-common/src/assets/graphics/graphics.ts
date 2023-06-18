@@ -52,10 +52,10 @@ export const AtomicConditionModuleSchema = z.object({
 });
 export const AtomicConditionAttributeSchema = z.object({
 	/**
-	 * List of attributes that are required for this condition to be true
-	 *  - attributes can be prefixed with `!` to negate the condition
+	 * Attribute that which required for this condition to be true
+	 *  - attribute can be prefixed with `!` to negate the condition
 	 */
-	attributes: z.array(z.string()).nonempty(),
+	attribute: z.string(),
 });
 export const AtomicConditionArmRotationSchema = z.object({
 	armType: z.literal('rotation'),

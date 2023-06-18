@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { AssertNever, CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition } from 'pandora-common';
+import { Assert, AssertNever, CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition } from 'pandora-common';
 import { PointDefinitionCalculated } from '../assets/assetGraphics';
 
 /** formatting for `<T extends (...)>` is different for ESLint and VS Code */
@@ -15,23 +15,31 @@ export function MirrorCondition(condition: Immutable<Condition> | undefined): Co
 		return undefined;
 
 	return condition.map((cause) => cause.map((c) => {
-		if ('bone' in c && c.bone != null) {
+		if ('bone' in c) {
+			Assert(c.bone != null);
 			return {
 				...c,
 				bone: MirrorBoneLike(c.bone),
 			};
-		} else if ('module' in c && c.module != null) {
+		} else if ('module' in c) {
+			Assert(c.module != null);
 			return {
 				...c,
 				module: MirrorBoneLike(c.module),
 			};
-		} else if ('armType' in c && c.armType != null) {
+		} else if ('armType' in c) {
+			Assert(c.armType != null);
 			return {
 				...c,
 				side: c.side === 'left' ? 'right' : 'left',
 			};
+		} else if ('attribute' in c) {
+			Assert(c.attribute != null);
+			return {
+				...c,
+			};
 		} else {
-			throw new Error(`Unknown condition type: ${JSON.stringify(c)}`);
+			AssertNever(c);
 		}
 	}));
 }

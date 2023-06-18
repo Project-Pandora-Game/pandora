@@ -4,7 +4,7 @@ import React, {
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../common/button/button';
 import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
-import { usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayerId, usePlayer } from '../gameContext/playerContextProvider';
 import { useChatInput } from './chatInput';
 import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
@@ -18,10 +18,11 @@ export function ChatroomControls(): ReactElement | null {
 	const roomInfo = useChatRoomInfo();
 	const roomCharacters = useChatRoomCharacters();
 	const navigate = useNavigate();
+	const player = usePlayer();
 
 	const deviceOverlayToggle = useObservable(DeviceOverlayToggle);
 
-	if (!roomInfo || !roomCharacters) {
+	if (!roomInfo || !roomCharacters || !player) {
 		return null;
 	}
 
@@ -36,7 +37,12 @@ export function ChatroomControls(): ReactElement | null {
 				These characters are in the room <b>{ roomInfo.name }</b>:
 			</span>
 			<div className='character-info'>
-				{ roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />) }
+				<DisplayCharacter char={ player } />
+				{
+					roomCharacters
+						.filter(c => c !== player)
+						.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)
+				}
 			</div>
 			<br />
 			<div>

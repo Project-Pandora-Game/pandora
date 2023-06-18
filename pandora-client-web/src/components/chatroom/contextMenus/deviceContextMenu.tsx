@@ -7,7 +7,8 @@ import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../contextMenu';
 import { useChatRoomCharacters, useChatroom, useChatroomRequired, useRoomState } from '../../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../../gameContext/playerContextProvider';
-import { useStaggeredAppearanceActionResult, useWardrobeContext, WardrobeContextProvider } from '../../wardrobe/wardrobe';
+import { useStaggeredAppearanceActionResult } from '../../wardrobe/wardrobeCheckQueue';
+import { useWardrobeContext, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 
 function StoreDeviceMenu({ device, close }: {

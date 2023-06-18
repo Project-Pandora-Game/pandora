@@ -319,8 +319,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@octokit/auth-oauth-app':
-        specifier: 5.0.5
-        version: 5.0.5
+        specifier: 6.0.0
+        version: 6.0.0
       '@octokit/rest':
         specifier: 19.0.11
         version: 19.0.11
@@ -2523,14 +2523,14 @@ packages:
       fastq: 1.15.0
     dev: true
 
-  /@octokit/auth-oauth-app@5.0.5:
-    resolution: {integrity: sha512-UPX1su6XpseaeLVCi78s9droxpGtBWIgz9XhXAx9VXabksoF0MyI5vaa1zo1njyYt6VaAjFisC2A2Wchcu2WmQ==}
-    engines: {node: '>= 14'}
+  /@octokit/auth-oauth-app@6.0.0:
+    resolution: {integrity: sha512-ihIanzc2dX/FQJwTDeKR2xT2K+5IFV33yjkn4zhJ7HL7FPJjw0ynNcGkEJMzrFEsgIn7Qfjd+MA4jTay0rrbLQ==}
+    engines: {node: '>= 18'}
     dependencies:
       '@octokit/auth-oauth-device': 4.0.4
       '@octokit/auth-oauth-user': 2.1.1
       '@octokit/request': 6.2.3
-      '@octokit/types': 9.0.0
+      '@octokit/types': 9.2.3
       '@types/btoa-lite': 1.0.0
       btoa-lite: 1.0.0
       universal-user-agent: 6.0.0
@@ -2579,7 +2579,7 @@ packages:
       '@octokit/graphql': 5.0.5
       '@octokit/request': 6.2.3
       '@octokit/request-error': 3.0.3
-      '@octokit/types': 9.0.0
+      '@octokit/types': 9.2.3
       before-after-hook: 2.2.3
       universal-user-agent: 6.0.0
     transitivePeerDependencies:
@@ -2622,10 +2622,6 @@ packages:
       btoa-lite: 1.0.0
     transitivePeerDependencies:
       - encoding
-    dev: false
-
-  /@octokit/openapi-types@16.0.0:
-    resolution: {integrity: sha512-JbFWOqTJVLHZSUUoF4FzAZKYtqdxWu9Z5m2QQnOyEa04fOFljvyh7D3GYKbfuaSWisqehImiVIMG4eyJeP5VEA==}
     dev: false
 
   /@octokit/openapi-types@17.2.0:
@@ -2699,12 +2695,6 @@ packages:
 
   /@octokit/tsconfig@1.0.2:
     resolution: {integrity: sha512-I0vDR0rdtP8p2lGMzvsJzbhdOWy405HcGovrspJ8RRibHnyRgggUSNO5AIox5LmqiwmatHKYsvj6VGFHkqS7lA==}
-    dev: false
-
-  /@octokit/types@9.0.0:
-    resolution: {integrity: sha512-LUewfj94xCMH2rbD5YJ+6AQ4AVjFYTgpp6rboWM5T7N3IsIF65SBEOVcYMGAEzO/kKNiNaW4LoWtoThOhH06gw==}
-    dependencies:
-      '@octokit/openapi-types': 16.0.0
     dev: false
 
   /@octokit/types@9.2.3:

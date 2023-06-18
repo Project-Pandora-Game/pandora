@@ -72,7 +72,7 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 			<legend className={ char.isPlayer() ? 'player' : '' }>
 				<span>
 					<span>
-						<span style={ { color: data.settings.labelColor } }><b>/// </b></span>
+						<span style={ { color: data.settings.labelColor } }><b>{ '/// ' }</b></span>
 						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
 						<span> / { data.id } / { data.accountId }</span>
 					</span>

@@ -4,13 +4,13 @@ import React, {
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../common/button/button';
 import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
-import { usePlayerId } from '../gameContext/playerContextProvider';
+import { usePlayerId, usePlayer } from '../gameContext/playerContextProvider';
 import { useChatInput } from './chatInput';
 import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Column, Row } from '../common/container/container';
 import { Character, useCharacterData } from '../../character/character';
-import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
+import { CharacterSafemodeWarningContent, useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
 import { DeviceOverlayToggle } from './chatRoomDevice';
 import { useObservable } from '../../observable';
 
@@ -18,25 +18,31 @@ export function ChatroomControls(): ReactElement | null {
 	const roomInfo = useChatRoomInfo();
 	const roomCharacters = useChatRoomCharacters();
 	const navigate = useNavigate();
+	const player = usePlayer();
 
 	const deviceOverlayToggle = useObservable(DeviceOverlayToggle);
 
-	if (!roomInfo || !roomCharacters) {
+	if (!roomInfo || !roomCharacters || !player) {
 		return null;
 	}
 
 	return (
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
 				<Button onClick={ () => navigate('/wardrobe', { state: { target: 'room' } }) } >Room inventory</Button>
+				<Button onClick={ () => navigate('/chatroom_admin') }>Room administration</Button>
 			</Row>
-			<p>You are in room { roomInfo.name }</p>
-			<div>
-				Characters in this room:<br />
-				<ul>
-					{ roomCharacters.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />) }
-				</ul>
+			<br />
+			<span>
+				These characters are in the room <b>{ roomInfo.name }</b>:
+			</span>
+			<div className='character-info'>
+				<DisplayCharacter char={ player } />
+				{
+					roomCharacters
+						.filter((c) => c !== player)
+						.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)
+				}
 			</div>
 			<br />
 			<div>
@@ -59,38 +65,53 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
 	const chatroom = useChatroomRequired();
+	const safemodeContext = useSafemodeDialogContext();
 
 	const data = useCharacterData(char);
 	const state = useCharacterState(chatroom, char.id);
 	const inSafemode = state?.safemode != null;
 
+	const isPlayer = char.id === playerId;
+
 	return (
-		<li className='character-info'>
-			<Column>
-				<Row wrap alignY='center'>
-					<span onClick={ () => setTarget(data.id) }>{ data.name }</span>
-					<span>{ data.id } / { data.accountId }</span>
-				</Row>
+		<fieldset>
+			<legend className={ char.isPlayer() ? 'player' : '' }>
+				<span>
+					<span>
+						<span style={ { color: data.settings.labelColor } }><b>{ '/// ' }</b></span>
+						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
+						<span> / { data.id } / { data.accountId }</span>
+					</span>
+				</span>
 				{ !inSafemode ? null : (
 					<span className='safemode'>
 						<CharacterSafemodeWarningContent />
 					</span>
 				) }
-				<Row>
+			</legend>
+			<Column>
+				<Row wrap>
 					<Button className='slim' onClick={ () => {
 						navigate('/wardrobe', { state: { character: data.id } });
 					} }>
 						Wardrobe
 					</Button>
-					{ data.id !== playerId && (
+					{ !isPlayer && (
 						<Button className='slim' onClick={ () => {
 							setTarget(data.id);
 						} }>
 							Whisper
 						</Button>
 					) }
+					{ isPlayer && (
+						<Button className='slim' onClick={ () => {
+							safemodeContext.show();
+						} }>
+							{ inSafemode ? 'Exit' : 'Enter' } safemode
+						</Button>
+					) }
 				</Row>
 			</Column>
-		</li>
+		</fieldset>
 	);
 }

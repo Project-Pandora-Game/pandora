@@ -109,15 +109,19 @@ function ChatroomSelectRoomList({ roomList }: {
 							Rooms are a place where you can meet other characters.
 						</p>
 						<p>
-							In Pandora each room has one or more owners. A room that looses all owners is deleted.<br />
-							Each <strong>account</strong> however has a limit on how many rooms it can own.
-							You can own at most { account.roomOwnershipLimit } rooms.<br />
-							You will always see all the rooms you are an owner of in the room search.
+							In Pandora, each room is persistent and has one or more owners.<br />
+							It only gets deleted when it no longer has any owners.<br />
+							A room is visible to everyone (except accounts banned from the room),<br />
+							if it is marked as public and there is at least one admin inside the room.<br />
+							The default setting for newly created rooms is private visibility.<br />
+							You can always see rooms you are either admin or owner of.
 						</p>
 						<p>
-							If you want to make another room past the limit of your rooms,<br />
-							you will have to select any of the rooms you own and give up ownership of that room<br />
-							(possibly deleting the room in the process, if it has no other owner).
+							Each <strong>account</strong> has a maximum number of rooms it can own.<br />
+							You can own at most { account.roomOwnershipLimit } rooms.<br />
+							If you want to create another room beyond your room ownership limit,<br />
+							you must select any of your owned rooms and either repurpose it or give up<br />
+							ownership of that room (resulting in the room being deleted if it has no other owners).
 						</p>
 					</ContextHelpButton>
 				</h3>

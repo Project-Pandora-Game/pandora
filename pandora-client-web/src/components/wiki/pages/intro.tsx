@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/chatRoomContextProvider';
 
 export function WikiIntroduction(): ReactElement {
 	return (
@@ -11,11 +12,12 @@ export function WikiIntroduction(): ReactElement {
 				Pandora's vision is to establish a strict & secure, consensual roleplay platform that focuses on text-heavy interactions.
 			</p>
 
-			To that end the following will list some of the existing core features of Pandora.
+			The following will list some of the existing core features of Pandora.
 			Some of these features are explained in greater detail further below.
 			<ul>
-				<li>Dynamically scaling body model with many poses and free arm movement</li>
+				<li>Dynamically generated body model with many poses and free arm movement</li>
 				<li>Front and back character view</li>
+				<li>Persistent rooms</li>
 				<li>A feature-rich room chat (e.g. message editing, advanced text styling)</li>
 				<li>Free character placement and movement inside rooms</li>
 				<li>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</li>
@@ -32,7 +34,7 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>Dynamically generated body model with many poses and free arm movement</h4>
 			<p>
-				In the pose tab, you will find the ability to freely move arms and legs under the "manual pose" section at the bottom of the screen.
+				In the "Pose"-tab, you will find the ability to freely move arms and legs under the "manual pose" section at the bottom of the screen.
 				Expand this section to view the respective sliders.
 			</p>
 
@@ -41,10 +43,24 @@ export function WikiIntroduction(): ReactElement {
 				Your character's view can be toggled in the pose menu. The chosen position is seen by everyone in the room.
 			</p>
 
+			<h4>Persistent rooms</h4>
+			<p>
+				In Pandora, each room is persistent (settings, inventory, and room devices stay even after everyone has left) and has one or more owners.
+				It only gets deleted when it no longer has any owners.<br />
+				A room is visible to everyone (except accounts banned from the room), if it is marked as public and there is at least one admin inside the room.
+				You can always see rooms you are either admin or owner of.
+			</p>
+			<p>
+				Each <strong>account</strong> has a maximum number of rooms it can own. You can view the rooms owned by your account
+				as well as your ownership limit on the room search screen.
+				If you want to create another room beyond your room ownership limit, you must select any of your owned rooms and either repurpose it or
+				give up ownership of that room (resulting in the room being deleted if it has no other owners).
+			</p>
+
 			<h4>A feature-rich room chat</h4>
 			<ul>
 				<li>Click a name in the chat to start whispering to that person</li>
-				<li>Right-clicking your own message enables you to edit or delete it for 10 mins after posting it</li>
+				<li>Right-clicking your own message enables you to edit or delete it for { MESSAGE_EDIT_TIMEOUT / 1000 / 60 } mins after posting it</li>
 				<li>To get help on chat commands, start the command by typing the "/" character, which will then show the list of available commands</li>
 				<li>You can write Out-Of-Character (OOC) messages by prefixing them with "(("</li>
 				<li>You can enclose text with underscores to style it, such as _<i>italic</i>_ and __<b>bold</b>__</li>
@@ -60,7 +76,7 @@ export function WikiIntroduction(): ReactElement {
 			<p>
 				Room devices must first be deployed from the room inventory to the room in the item menu.
 				Then, you can freely move/position the item in the room by dragging it by the icon below it.
-				The icons below room devices can be toggled to be hidden under the "Controls"-tab.
+				The icons below room devices can be toggled to be hidden under the "Room"-tab.
 			</p>
 
 			<h4>Stable code base</h4>

@@ -68,9 +68,9 @@ export function CharacterSafemodeDialog({ player }: {
 			</h3>
 			<CharacterSafemodeHelpText />
 			<p>
-				Safemode should be seen as a last resort for when OOC interaction about limits fails, or you<br />
+				Safemode should be seen as a last resort for when OOC-talk about limits fails, or you<br />
 				are not fine with what is happening and require a quick out to feel safe again. Please be mindful that<br />
-				there is a person behind every character. Therefore, it is recommended to communicate issues first<br />
+				there is a real person behind every character. Therefore, it is recommended to communicate issues first<br />
 				Out of Character (OOC) by using the '/ooc' command or by prefixing a message with<br />
 				double round brackets '(('.
 			</p>
@@ -102,7 +102,9 @@ export function CharacterSafemodeDialog({ player }: {
 				) : (
 					<>
 						<p>
-							You are currently not in safemode.<br />
+							<i>You are currently not in safemode.</i>
+						</p>
+						<p>
 							<strong>Warning:</strong> After entering safemode, you will not be able to leave it for { FormatTimeInterval(SAFEMODE_EXIT_COOLDOWN) }!
 						</p>
 						<Row padding='medium' alignX='space-between'>
@@ -148,7 +150,7 @@ function CharacterSafemodeHelpText(): ReactElement {
 				For instance, characters in safe mode can generally open/remove any lock on themselves.
 			</p>
 			<p>
-				While a character is in safemode, no one else can modify the character's items. Additionally,<br />
+				<b>While a character is in safemode, no one else can modify the character's items.</b> Additionally,<br />
 				a character in safemode cannot modify items on other characters.
 			</p>
 		</>

@@ -10,7 +10,7 @@ import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Column, Row } from '../common/container/container';
 import { Character, useCharacterData } from '../../character/character';
-import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
+import { CharacterSafemodeWarningContent, useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
 import { DeviceOverlayToggle } from './chatRoomDevice';
 import { useObservable } from '../../observable';
 
@@ -59,10 +59,13 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
 	const chatroom = useChatroomRequired();
+	const safemodeContext = useSafemodeDialogContext();
 
 	const data = useCharacterData(char);
 	const state = useCharacterState(chatroom, char.id);
 	const inSafemode = state?.safemode != null;
+
+	const isPlayer = char.id === playerId;
 
 	return (
 		<fieldset>
@@ -87,11 +90,18 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 					} }>
 						Wardrobe
 					</Button>
-					{ data.id !== playerId && (
+					{ !isPlayer && (
 						<Button className='slim' onClick={ () => {
 							setTarget(data.id);
 						} }>
 							Whisper
+						</Button>
+					) }
+					{ isPlayer && (
+						<Button className='slim' onClick={ () => {
+							safemodeContext.show();
+						} }>
+							{ inSafemode ? 'Exit' : 'Enter' } safemode
 						</Button>
 					) }
 				</Row>

@@ -15,7 +15,7 @@ import { IChatroomMessageProcessed } from '../chatroom/chatroomMessages';
 
 const logger = GetLogger('ChatRoom');
 
-const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 10; // 10 minutes
+export const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 10; // 10 minutes
 
 const MessageParseOptionsSchema = z.object({
 	editing: z.number().optional(),

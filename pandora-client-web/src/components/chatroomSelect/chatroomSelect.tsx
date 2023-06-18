@@ -109,7 +109,7 @@ function ChatroomSelectRoomList({ roomList }: {
 							Rooms are a place where you can meet other characters.
 						</p>
 						<p>
-							In Pandora each room has one or more owners. A room that looses all owners is deleted.<br />
+							In Pandora each room has one or more owners. A room that loses all owners is deleted.<br />
 							Each <strong>account</strong> however has a limit on how many rooms it can own.
 							You can own at most { account.roomOwnershipLimit } rooms.<br />
 							You will always see all the rooms you are an owner of in the room search.

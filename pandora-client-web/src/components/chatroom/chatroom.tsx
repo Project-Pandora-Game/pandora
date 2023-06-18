@@ -12,6 +12,7 @@ import { ChatroomControls } from './chatroomControls';
 import './chatroom.scss';
 import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { useIsPortrait } from '../../styles/mediaQueries';
+import { ChatInputContextProvider } from './chatInput';
 
 export function Chatroom(): ReactElement | null {
 	const isInChatRoom = useCharacterIsInChatroom();
@@ -26,10 +27,12 @@ export function Chatroom(): ReactElement | null {
 	const chatroomChatRatio = 10 - chatroomGraphicsRatio;
 
 	return (
-		<DivContainer className='chatroom' direction={ isPortrait ? 'column' : 'row' }>
-			<ChatRoomScene className={ `chatroom-scene flex-${chatroomGraphicsRatio}` } />
-			<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
-		</DivContainer>
+		<ChatInputContextProvider>
+			<DivContainer className='chatroom' direction={ isPortrait ? 'column' : 'row' }>
+				<ChatRoomScene className={ `chatroom-scene flex-${chatroomGraphicsRatio}` } />
+				<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
+			</DivContainer>
+		</ChatInputContextProvider>
 	);
 }
 

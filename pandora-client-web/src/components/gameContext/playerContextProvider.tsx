@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacterPrivateData } from 'pandora-common';
 import { PlayerCharacter } from '../../character/player';
 import { useNullableObservable } from '../../observable';
@@ -9,14 +9,20 @@ export function usePlayer(): PlayerCharacter | null {
 	return useNullableObservable(useShardConnector()?.player);
 }
 
-export function usePlayerState(): AssetFrameworkCharacterState {
+export function usePlayerState(): {
+	player: PlayerCharacter;
+	playerState: AssetFrameworkCharacterState;
+} {
 	const player = usePlayer();
 	const chatRoom = useChatroomRequired();
 	AssertNotNullable(player);
 	const playerState = useCharacterState(chatRoom, player.id);
 	AssertNotNullable(playerState);
 
-	return playerState;
+	return useMemo(() => ({
+		player,
+		playerState,
+	}), [player, playerState]);
 }
 
 export function usePlayerData(): Readonly<ICharacterPrivateData> | null {

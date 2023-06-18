@@ -167,7 +167,9 @@ export function ChatRoomGraphicsScene({
 	);
 }
 
-export function ChatRoomScene(): ReactElement | null {
+export function ChatRoomScene({ className }: {
+	className?: string;
+}): ReactElement | null {
 	const chatRoom = useChatroomRequired();
 	const info = useChatRoomInfo();
 	const characters = useChatRoomCharacters();
@@ -234,7 +236,7 @@ export function ChatRoomScene(): ReactElement | null {
 
 	return (
 		<ChatRoomGraphicsScene
-			className='chatroom-scene'
+			className={ className }
 			characters={ characters }
 			roomDevices={ roomDevices }
 			shard={ shard }

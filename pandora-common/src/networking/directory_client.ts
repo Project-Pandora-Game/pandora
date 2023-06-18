@@ -30,17 +30,27 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 * (actions that are doable with multiple clicks even without this button, but the button allows doing them as single click)
 	 */
 	wardrobeExtraActionButtons: z.boolean().catch(true),
+	/**
+	 * Controls how many parts (of 10 total) the chatroom graphics takes inside chatroom, while in horizontal mode
+	 */
+	interfaceChatroomGraphicsRatioHorizontal: z.number().int().min(1).max(9).catch(7),
+	/**
+	 * Controls how many parts (of 10 total) the chatroom graphics takes inside chatroom, while in vertical mode
+	 */
+	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9).catch(4),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
-export const ACCOUNT_SETTINGS_DEFAULT: IDirectoryAccountSettings = {
+export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>({
 	visibleRoles: [],
 	labelColor: '#ffffff',
 	wardrobeBackground: '#aaaaaa',
 	hideOnlineStatus: false,
 	allowDirectMessagesFrom: 'all',
 	wardrobeExtraActionButtons: true,
-};
+	interfaceChatroomGraphicsRatioHorizontal: 7,
+	interfaceChatroomGraphicsRatioVertical: 4,
+});
 
 export const AccountCryptoKeySchema = z.object({
 	publicKey: z.string(),

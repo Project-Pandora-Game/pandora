@@ -26,6 +26,7 @@ import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
 import { DirectMessageManager } from './directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
+import { freeze } from 'immer';
 
 type SocketAuthCallback = (data?: IClientDirectoryAuthMessage) => void;
 
@@ -276,7 +277,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 
 	private async handleAccountChange(account: IDirectoryAccountInfo | null): Promise<void> {
 		// Update current account
-		this._currentAccount.value = account;
+		this._currentAccount.value = account ? freeze(account) : null;
 		// Clear saved token if no account
 		if (!account) {
 			this._authToken.value = undefined;

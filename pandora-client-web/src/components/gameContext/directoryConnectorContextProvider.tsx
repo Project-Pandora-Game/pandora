@@ -1,5 +1,5 @@
 import { noop } from 'lodash';
-import { GetLogger, IDirectoryAccountInfo, IDirectoryClientChangeEvents } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, GetLogger, IDirectoryAccountInfo, IDirectoryAccountSettings, IDirectoryClientChangeEvents } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useEffect, useRef } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
@@ -8,6 +8,7 @@ import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
 import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
 import { useObservable } from '../../observable';
+import { Immutable } from 'immer';
 
 let directoryConnectorInstance: DirectoryConnector | undefined;
 let connectionPromise: Promise<DirectoryConnector> | undefined;
@@ -92,6 +93,11 @@ export function useDirectoryChangeListener(
 export function useCurrentAccount(): IDirectoryAccountInfo | null {
 	const directoryConnector = useDirectoryConnector();
 	return useObservable(directoryConnector.currentAccount);
+}
+
+export function useCurrentAccountSettings(): Immutable<IDirectoryAccountSettings> {
+	// It is safe to return it simply like this, as when settings change, the whole account object is updated (it is immutable)
+	return useCurrentAccount()?.settings ?? ACCOUNT_SETTINGS_DEFAULT;
 }
 
 export function useAuthToken(): AuthToken | undefined {

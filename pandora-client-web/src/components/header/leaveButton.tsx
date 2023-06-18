@@ -66,7 +66,7 @@ function ChatRoomLeave(): ReactElement {
 
 function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: IChatRoomFullInfo; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const playerState = usePlayerState();
+	const { playerState } = usePlayerState();
 	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.isInSafemode() || !manager.getEffects().blockRoomLeave));
 	const closeDialog = useContext(leaveButtonContext);
 

@@ -28,7 +28,7 @@
 .character-info {
 	margin-bottom: spacing('large');
 
-	& fieldset {
+	fieldset {
 		display: flex;
 		flex-direction: column;
 		border: 1px solid $black;

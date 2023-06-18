@@ -45,13 +45,16 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>Persistent rooms</h4>
 			<p>
-				In Pandora, a room is always existing and has one or more owners. It is deleted only when it no longer has owners.
-				Each <strong>account</strong> has a limit on how many rooms it can own. You can see your account's owned rooms and limit in the room search screen.
-				A room will only be visible to you in the room search when it is either public and not empty, or you are an owner or admin of it.
+				In Pandora, each room is persistent (settings, inventory, and room devices stay even after everyone has left) and has one or more owners.
+				It only gets deleted when it no longer has any owners.<br />
+				A room is visible to everyone (except accounts banned from the room), if it is marked as public and there is at least one admin inside the room.
+				You can always see rooms you are either admin or owner of.
 			</p>
 			<p>
-				If you want to make another room past the limit of your rooms, you will have to select any of the rooms you own and give up ownership
-				of that room (possibly deleting the room in the process, if it has no other owner) or repurpose it.
+				Each <strong>account</strong> has a maximum number of rooms it can own. You can view the rooms owned by your account
+				as well as your ownership limit on the room search screen.
+				If you want to create another room beyond your room ownership limit, you must select any of your owned rooms and either repurpose it or
+				give up ownership of that room (resulting in the room being deleted if it has no other owners).
 			</p>
 
 			<h4>A feature-rich room chat</h4>

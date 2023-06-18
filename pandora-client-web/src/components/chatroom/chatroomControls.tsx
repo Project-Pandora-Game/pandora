@@ -28,8 +28,8 @@ export function ChatroomControls(): ReactElement | null {
 	return (
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/chatroom_admin') } style={ { marginLeft: '0.5em' } } >Room administration</Button>
 				<Button onClick={ () => navigate('/wardrobe', { state: { target: 'room' } }) } >Room inventory</Button>
+				<Button onClick={ () => navigate('/chatroom_admin') }>Room administration</Button>
 			</Row>
 			<br />
 			<span>

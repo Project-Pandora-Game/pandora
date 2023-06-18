@@ -4,7 +4,9 @@ import { useCharacterIsInChatroom } from '../gameContext/chatRoomContextProvider
 import { DivContainer } from '../common/container/container';
 import { ChatRoomScene } from './chatRoomScene';
 import { Tab, TabContainer } from '../common/tabs/tabs';
-import { WardrobeContextProvider, WardrobeExpressionGui, WardrobePoseGui } from '../wardrobe/wardrobe';
+import { WardrobeContextProvider } from '../wardrobe/wardrobeContext';
+import { WardrobeExpressionGui } from '../wardrobe/views/wardrobeExpressionsView';
+import { WardrobePoseGui } from '../wardrobe/views/wardrobePoseView';
 import { usePlayerState } from '../gameContext/playerContextProvider';
 import { Chat } from './chat';
 import { Scrollable } from '../common/scrollbar/scrollbar';

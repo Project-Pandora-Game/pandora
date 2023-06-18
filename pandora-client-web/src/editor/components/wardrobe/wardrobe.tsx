@@ -4,11 +4,18 @@ import { useAssetManager } from '../../../assets/assetManager';
 import { Column } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { InventoryAssetView, InventoryItemView, useWardrobeContext, useWardrobeItems, WardrobeContext, wardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocusesItem, WardrobeHeldItem, WardrobeItemConfigMenu } from '../../../components/wardrobe/wardrobe';
+import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView';
+import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
+import { useWardrobeContext, wardrobeContext } from '../../../components/wardrobe/wardrobeContext';
+import { useWardrobeItems } from '../../../components/wardrobe/wardrobeItems';
+import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes';
+import { WardrobeFocusesItem } from '../../../components/wardrobe/wardrobeUtils';
+import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
 import { Observable } from '../../../observable';
 import { useEditor, useEditorState } from '../../editorContextProvider';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import '../../../components/wardrobe/wardrobe.scss';
 
 const ROOM_CONTEXT = {
 	features: ChatRoomFeatureSchema.options,

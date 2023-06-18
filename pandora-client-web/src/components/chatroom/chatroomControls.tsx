@@ -40,7 +40,7 @@ export function ChatroomControls(): ReactElement | null {
 				<DisplayCharacter char={ player } />
 				{
 					roomCharacters
-						.filter(c => c !== player)
+						.filter((c) => c !== player)
 						.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)
 				}
 			</div>

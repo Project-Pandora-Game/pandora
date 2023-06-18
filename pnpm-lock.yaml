@@ -319,10 +319,10 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-ses':
-        specifier: ^3.352.0
+        specifier: 3.352.0
         version: 3.352.0
       '@aws-sdk/credential-provider-node':
-        specifier: ^3.352.0
+        specifier: 3.352.0
         version: 3.352.0
       '@octokit/auth-oauth-app':
         specifier: 5.0.5

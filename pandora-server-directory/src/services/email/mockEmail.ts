@@ -4,7 +4,7 @@ import { GenerateEmailHash } from '../../account/accountSecure';
 
 const logger = GetLogger('MockEmailSender');
 
-export default class MockEmailSender implements IEmailSender {
+export class MockEmailSender implements IEmailSender {
 
 	public init(): Promise<void> {
 		logger.info('Email transporter is ready');

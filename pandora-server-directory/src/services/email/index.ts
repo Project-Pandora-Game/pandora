@@ -1,6 +1,7 @@
 import { EMAIL_SENDER_TYPE } from '../../config';
-import MockEmailSender from './mockEmail';
-import SmtpEmail from './smtpEmail';
+import { MockEmailSender } from './mockEmail';
+import { SmtpEmail } from './smtpEmail';
+import { SesEmail } from './sesEmail';
 
 export interface IEmailSender {
 	init(): Promise<void>;
@@ -12,10 +13,17 @@ let emailSender: IEmailSender | undefined;
 
 export default function GetEmailSender(): IEmailSender {
 	if (!emailSender) {
-		if (EMAIL_SENDER_TYPE === 'smtp')
-			emailSender = new SmtpEmail();
-		else
-			emailSender = new MockEmailSender();
+		switch (EMAIL_SENDER_TYPE) {
+			case 'ses':
+				emailSender = new SesEmail();
+				break;
+			case 'smtp':
+				emailSender = new SmtpEmail();
+				break;
+			default:
+				emailSender = new MockEmailSender();
+				break;
+		}
 	}
 	return emailSender;
 }

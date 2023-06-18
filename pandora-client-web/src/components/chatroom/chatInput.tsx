@@ -1,6 +1,6 @@
 import { AssertNotNullable, CharacterId, EMPTY_ARRAY, IChatRoomStatus, IChatType, RoomId, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { clamp, noop } from 'lodash';
+import { clamp } from 'lodash';
 import { Character } from '../../character/character';
 import { IMessageParseOptions, useChatRoomCharacters, useChatRoomInfo, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
@@ -42,22 +42,7 @@ export type IChatInputHandler = {
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
-const chatInputContext = createContext<IChatInputHandler>({
-	focus: noop,
-	setValue: noop,
-	target: null,
-	setTarget: noop,
-	editing: null,
-	setEditing: () => false,
-	autocompleteHint: null,
-	setAutocompleteHint: noop,
-	mode: null,
-	setMode: noop,
-	showSelector: false,
-	setShowSelector: noop,
-	allowCommands: true,
-	ref: null as unknown as RefObject<HTMLTextAreaElement>,
-});
+const chatInputContext = createContext<IChatInputHandler | null>(null);
 
 type ChatInputSave = {
 	input: string;
@@ -483,7 +468,9 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 const TextArea = forwardRef(TextAreaImpl);
 
 export function useChatInput(): IChatInputHandler {
-	return useContext(chatInputContext);
+	const context = useContext(chatInputContext);
+	AssertNotNullable(context);
+	return context;
 }
 
 function TypingIndicator(): ReactElement {

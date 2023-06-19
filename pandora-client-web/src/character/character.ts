@@ -3,15 +3,16 @@ import { useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 
-export type AppearanceContainer = {
+export type AppearanceContainer<T extends ICharacterPublicData = ICharacterPublicData> = {
 	readonly type: 'character';
 	readonly id: CharacterId;
 	readonly name: string;
+	readonly data: Readonly<T>;
 	getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance;
 	getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
 };
 
-export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements AppearanceContainer {
+export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements AppearanceContainer<T> {
 	public readonly type = 'character';
 
 	public get id(): CharacterId {

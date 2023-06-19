@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, LayerPriority, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -101,7 +101,7 @@ export class AppearanceEditor extends CharacterAppearance {
 
 export const EDITOR_CHARACTER_ID: CharacterId = 'c0';
 
-export class EditorCharacter implements AppearanceContainer {
+export class EditorCharacter implements AppearanceContainer<ICharacterRoomData> {
 	public readonly type = 'character';
 	public readonly id = EDITOR_CHARACTER_ID;
 	public readonly name = 'Editor character';
@@ -109,11 +109,17 @@ export class EditorCharacter implements AppearanceContainer {
 	public readonly editor: Editor;
 	protected readonly logger = GetLogger('EditorCharacter');
 
-	private readonly data: ICharacterMinimalData;
+	public readonly data: ICharacterRoomData;
 
 	constructor(editor: Editor) {
 		this.editor = editor;
-		this.data = { id: this.id, accountId: 0, name: 'EditorCharacter' };
+		this.data = {
+			id: this.id,
+			accountId: 0,
+			name: 'EditorCharacter',
+			settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+			position: [0, 0],
+		};
 	}
 
 	public getAppearance(state?: AssetFrameworkCharacterState): AppearanceEditor {

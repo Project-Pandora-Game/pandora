@@ -179,8 +179,8 @@ export function GraphicsBackground({
 
 	return (
 		<Sprite
-			x={ x }
-			y={ y }
+			x={ x ?? 0 }
+			y={ y ?? 0 }
 			width={ backgroundSize?.[0] }
 			height={ backgroundSize?.[1] }
 			zIndex={ zIndex }

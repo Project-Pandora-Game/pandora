@@ -211,6 +211,11 @@ $drop-overlay-gap: 0.3em;
 	.list {
 		display: flex;
 		flex-flow: column;
+
+		&.reverse {
+			flex-flow: column-reverse;
+			justify-content: flex-end;
+		}
 	}
 
 	.grid {

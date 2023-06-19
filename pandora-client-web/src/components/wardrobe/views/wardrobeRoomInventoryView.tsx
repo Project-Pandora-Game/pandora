@@ -81,7 +81,7 @@ export function RoomInventoryViewList({
 				<span>{ title }</span>
 			</div>
 			<Scrollbar color='dark'>
-				<div className='list withDropButtons'>
+				<div className='list reverse withDropButtons'>
 					{
 						heldItem.type !== 'nothing' ? (
 							<div className='overlay' />

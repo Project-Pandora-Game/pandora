@@ -100,7 +100,7 @@ export function InventoryItemView({
 				}
 			</div>
 			<Scrollbar color='dark'>
-				<div className='list withDropButtons'>
+				<div className='list reverse withDropButtons'>
 					{
 						heldItem.type !== 'nothing' ? (
 							<div className='overlay' />
@@ -305,7 +305,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 									item,
 									shift: 1,
 								} } autohide hideReserveSpace>
-									▼
+									▲
 								</WardrobeActionButton>
 								<WardrobeActionButton action={ {
 									type: 'move',
@@ -313,7 +313,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 									item,
 									shift: -1,
 								} } autohide hideReserveSpace>
-									▲
+									▼
 								</WardrobeActionButton>
 							</>
 						) : null

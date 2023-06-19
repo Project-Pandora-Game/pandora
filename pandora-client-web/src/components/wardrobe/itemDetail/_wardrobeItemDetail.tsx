@@ -71,7 +71,7 @@ export function WardrobeItemConfigMenu({
 									item,
 									shift: 1,
 								} }>
-									▼ Wear on top
+									▲ Wear on top
 								</WardrobeActionButton>
 								<WardrobeActionButton action={ {
 									type: 'move',
@@ -79,7 +79,7 @@ export function WardrobeItemConfigMenu({
 									item,
 									shift: -1,
 								} }>
-									▲ Wear under
+									▼ Wear under
 								</WardrobeActionButton>
 							</>
 						)

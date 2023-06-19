@@ -11,10 +11,10 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider'
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { IBounceOptions } from 'pixi-viewport';
 import { CommonProps } from '../../common/reactTypes';
-import { useAssetManager, GetAssetsSourceUrl } from '../../assets/assetManager';
+import { useAssetManager } from '../../assets/assetManager';
 import { ChatroomDebugConfig, useDebugConfig } from './chatroomDebug';
 import { PixiViewportSetupCallback } from '../../graphics/pixiViewport';
-import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
+import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { ChatRoomCharacter } from './chatRoomCharacter';
 import { PointLike } from '../../graphics/graphicsCharacter';
 import { ChatRoomDevice } from './chatRoomDevice';
@@ -63,7 +63,7 @@ export function ChatRoomGraphicsScene({
 }: ChatRoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
 
-	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background, GetAssetsSourceUrl()), [assetManager, info.background]);
+	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
@@ -102,15 +102,13 @@ export function ChatRoomGraphicsScene({
 			});
 	}, [roomBackground]);
 
-	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
+	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		forwardContexts: [shardConnectorContext],
 		worldWidth: roomBackground.size[0],
 		worldHeight: roomBackground.size[1],
-		background: roomBackground.image,
-		backgroundSize: roomBackground.size,
-		backgroundFilters: filters,
-	}), [viewportConfig, roomBackground, filters]);
+		backgroundColor: 0x000000,
+	}), [viewportConfig, roomBackground]);
 
 	return (
 		<GraphicsScene
@@ -163,6 +161,12 @@ export function ChatRoomGraphicsScene({
 					/>
 				)
 			}
+			<GraphicsBackground
+				zIndex={ -1000 }
+				background={ roomBackground.image }
+				backgroundSize={ roomBackground.size }
+				backgroundFilters={ filters }
+			/>
 		</GraphicsScene>
 	);
 }

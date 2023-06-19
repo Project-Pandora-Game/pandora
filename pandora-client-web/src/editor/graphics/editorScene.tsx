@@ -1,7 +1,7 @@
 import { Container, Graphics } from '@pixi/react';
 import classNames from 'classnames';
 import _ from 'lodash';
-import { CharacterSize, GetLogger } from 'pandora-common';
+import { CharacterSize, GetLogger, HexColorStringSchema } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CommonProps } from '../../common/reactTypes';
@@ -19,7 +19,7 @@ function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 	const color = useObservable(editor.backgroundColor);
 
 	const onChange = useEvent((ev: React.ChangeEvent<HTMLInputElement>) => {
-		editor.setBackgroundColor(ev.target.value);
+		editor.setBackgroundColor(HexColorStringSchema.parse(ev.target.value));
 	});
 
 	const onChangeThrottled = useMemo(() => _.throttle(onChange, throttle), [onChange, throttle]);
@@ -37,7 +37,7 @@ export function EditorScene({
 	const contentRef = useRef<PIXI.Container>(null);
 
 	const editor = useEditor();
-	const backgroundColor = useObservable(editor.backgroundColor);
+	const backgroundColor = Number.parseInt(useObservable(editor.backgroundColor).substring(1, 7), 16);
 
 	const character = editor.character;
 
@@ -57,13 +57,13 @@ export function EditorScene({
 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
-	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
+	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
 		forwardContexts: [EditorContext],
 		worldHeight: CharacterSize.HEIGHT,
 		worldWidth: CharacterSize.WIDTH,
-		background: backgroundColor,
+		backgroundColor,
 		createPrivatePixiInstance: true,
 	}), [viewportConfig, backgroundColor]);
 

@@ -7,21 +7,23 @@ import { AppearanceContainer } from '../../character/character';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { Button } from '../common/button/button';
 import { useEvent } from '../../common/useEvent';
-import { DEFAULT_BACKGROUND_COLOR, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
+import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 
 export function WardrobeCharacterPreview({ character, characterState }: {
 	character: AppearanceContainer;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const shardConnector = useShardConnector();
-	const account = useCurrentAccount();
+	const accountSettings = useCurrentAccountSettings();
+
+	const wardrobeBackground: number = Number.parseInt(accountSettings.wardrobeBackground.substring(1, 7), 16);
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
-		background: account ? account.settings.wardrobeBackground : `#${DEFAULT_BACKGROUND_COLOR.toString(16)}`,
-	}), [account]);
+		backgroundColor: wardrobeBackground,
+	}), [wardrobeBackground]);
 
 	const overlay = (
 		<div className='overlay'>
@@ -49,7 +51,7 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 }
 
 function WardrobeBackgroundColorPicker(): ReactElement {
-	const account = useCurrentAccount();
+	const accountSettings = useCurrentAccountSettings();
 	const directory = useDirectoryConnector();
 
 	const onChange = useEvent((newColor: HexColorString) => {
@@ -58,7 +60,7 @@ function WardrobeBackgroundColorPicker(): ReactElement {
 
 	return (
 		<ColorInput
-			initialValue={ account?.settings.wardrobeBackground ?? `#${DEFAULT_BACKGROUND_COLOR.toString(16)}` }
+			initialValue={ accountSettings.wardrobeBackground }
 			onChange={ onChange }
 			throttle={ 100 }
 			hideTextInput={ true }

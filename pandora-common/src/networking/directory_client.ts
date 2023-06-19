@@ -16,7 +16,6 @@ export type IDirectoryStatus = {
 export const DirectoryAccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema),
 	labelColor: HexColorStringSchema.catch('#ffffff'),
-	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
 	/** Hides online status from friends */
 	hideOnlineStatus: z.boolean().default(false),
 	/**
@@ -31,6 +30,15 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 */
 	wardrobeExtraActionButtons: z.boolean().catch(true),
 	/**
+	 * Color to use as wardrobe character preview background, unless room background is used (see `wardrobeUseRoomBackground` setting).
+	 */
+	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
+	/**
+	 * Controls whether wardrobe should use the room's background, if character is in a room.
+	 * If character is not in the room, or if this is `false`, then `wardrobeBackground` setting is used.
+	 */
+	wardrobeUseRoomBackground: z.boolean().catch(true),
+	/**
 	 * Controls how many parts (of 10 total) the chatroom graphics takes inside chatroom, while in horizontal mode
 	 */
 	interfaceChatroomGraphicsRatioHorizontal: z.number().int().min(1).max(9).catch(7),
@@ -44,10 +52,11 @@ export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsS
 export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>({
 	visibleRoles: [],
 	labelColor: '#ffffff',
-	wardrobeBackground: '#aaaaaa',
 	hideOnlineStatus: false,
 	allowDirectMessagesFrom: 'all',
 	wardrobeExtraActionButtons: true,
+	wardrobeBackground: '#aaaaaa',
+	wardrobeUseRoomBackground: true,
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 });

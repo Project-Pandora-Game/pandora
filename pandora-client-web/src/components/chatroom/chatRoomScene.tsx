@@ -178,7 +178,7 @@ export function useCharacterVisionFilters(character: Character, characterState: 
 		if (blindness === 0) {
 			return [];
 		} else {
-			const filter = new PIXI.filters.ColorMatrixFilter();
+			const filter = new PIXI.ColorMatrixFilter();
 			filter.brightness(1 - blindness / 10, false);
 			return [filter];
 		}

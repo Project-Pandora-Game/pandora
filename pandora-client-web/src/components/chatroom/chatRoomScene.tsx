@@ -1,4 +1,4 @@
-import { AssertNotNullable, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import { AssertNotNullable, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -171,6 +171,20 @@ export function ChatRoomGraphicsScene({
 	);
 }
 
+export function useCharacterVisionFilters(character: Character, characterState: AssetFrameworkCharacterState): Filter[] {
+	const blindness = useCharacterRestrictionsManager(characterState, character, (manager) => manager.getBlindness());
+
+	return useMemo((): Filter[] => {
+		if (blindness === 0) {
+			return [];
+		} else {
+			const filter = new PIXI.filters.ColorMatrixFilter();
+			filter.brightness(1 - blindness / 10, false);
+			return [filter];
+		}
+	}, [blindness]);
+}
+
 export function ChatRoomScene({ className }: {
 	className?: string;
 }): ReactElement | null {
@@ -196,8 +210,6 @@ export function ChatRoomScene({ className }: {
 	const playerState = useCharacterState(chatRoom, player.id);
 	AssertNotNullable(playerState);
 
-	const blindness = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getBlindness());
-
 	const menuOpen = useCallback((target: Character<ICharacterRoomData> | ItemRoomDevice | null, event: FederatedPointerEvent | null) => {
 		if (!target || !event) {
 			setMenuActive(null);
@@ -213,15 +225,7 @@ export function ChatRoomScene({ className }: {
 		}
 	}, []);
 
-	const filters = useMemo<Filter[]>(() => {
-		if (blindness === 0) {
-			return [];
-		} else {
-			const filter = new PIXI.filters.ColorMatrixFilter();
-			filter.brightness(1 - blindness / 10, false);
-			return [filter];
-		}
-	}, [blindness]);
+	const filters = useCharacterVisionFilters(player, playerState);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
 		if (menuActive) {

@@ -35,15 +35,15 @@ export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>):
 		return `hand_${condition.armType}_${condition.side}${condition.operator}${condition.value}`;
 	} else if ('attribute' in condition) {
 		Assert(condition.attribute != null);
-		return `attribute ${condition.attribute}`;
+		return `a_${condition.attribute}`;
 	} else {
 		AssertNever(condition);
 	}
 }
 
 function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondition {
-	if (input.startsWith('attribute')) {
-		const attribute = /^attribute\s+(!?[-_a-z0-9]+)\s*$/i.exec(input);
+	if (input.match(/^\s*a_/)) {
+		const attribute = /^\s*a_(!?[-_a-z0-9]+)\s*$/.exec(input);
 		if (!attribute) {
 			throw new Error(`Failed to parse attribute condition '${input}'`);
 		}

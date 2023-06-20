@@ -1,7 +1,6 @@
 import { Container } from '@pixi/react';
 import React, { ReactElement, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
-import { PRIORITY_ORDER_SPRITES } from '../../../graphics/def';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { DraggableBone } from '../draggable';
@@ -19,10 +18,7 @@ export function SetupCharacter(): ReactElement {
 	const selectedLayer = useObservable(editor.targetLayer);
 
 	return (
-		<GraphicsCharacterEditor layer={ SetupLayer } getSortOrder={ (view) => {
-			const reverse = view === 'back';
-			return reverse ? PRIORITY_ORDER_SPRITES.slice().reverse() : PRIORITY_ORDER_SPRITES;
-		} } >
+		<GraphicsCharacterEditor layer={ SetupLayer }>
 			{
 				!selectedLayer ? null :
 				(

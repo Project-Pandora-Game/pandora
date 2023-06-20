@@ -413,7 +413,7 @@ function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _ass
 	);
 }
 
-function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+function LayerPrioritySelect({ layer }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const layerPriority = useLayerDefinition(layer).priority;
 
 	const elements: ReactElement[] = [];
@@ -450,7 +450,7 @@ function LayerPrioritySelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 				className='flex-1'
 				value={ layerPriority }
 				onChange={ (event) => {
-					asset.setLayerPriority(layer, event.target.value as LayerPriority);
+					layer.setPriority(event.target.value as LayerPriority);
 				} }
 			>
 				{ elements }

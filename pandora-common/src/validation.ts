@@ -46,6 +46,15 @@ export function ArrayToTruthyMap<T extends string>(array: readonly T[]): Record<
 	return result;
 }
 
+/**
+ * Checks whether given array includes the element, working as a guard
+ * @param array - The array to check in
+ * @param element - Element to find
+ */
+export function ArrayIncludesGuard<T extends string | number | boolean | null | undefined>(array: readonly T[], element: unknown): element is T {
+	return array.includes(element as T);
+}
+
 /** A dirty thing that shouldn't really be used, but sometimes you are lazy */
 export function ZodCast<T>(): ZodType<T> {
 	return z.any();

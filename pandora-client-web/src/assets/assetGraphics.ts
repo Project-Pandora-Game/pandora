@@ -1,4 +1,4 @@
-import { Assert, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, PointDefinition } from 'pandora-common';
+import { Assert, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, PointDefinition } from 'pandora-common';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
 import { Observable, ReadonlyObservable, useObservable } from '../observable';
 import { useAssetManager } from './assetManager';
@@ -6,6 +6,7 @@ import { GraphicsManagerInstance } from './graphicsManager';
 import { produce, Immutable, Draft, freeze } from 'immer';
 import { useMemo } from 'react';
 import { cloneDeep } from 'lodash';
+import { MirrorPriority } from '../graphics/def';
 
 export interface PointDefinitionCalculated extends PointDefinition {
 	index: number;
@@ -51,6 +52,7 @@ export class AssetGraphicsLayer {
 		}
 
 		const mirrored = produce(definition, (d) => {
+			d.priority = MirrorPriority(d.priority);
 			d.pointType = d.pointType?.map(MirrorBoneLike);
 			d.image = MirrorLayerImageSetting(d.image);
 			d.scaling = d.scaling && {
@@ -89,7 +91,19 @@ export class AssetGraphicsLayer {
 		});
 	}
 
+	public setPriority(priority: LayerPriority): void {
+		if (this.mirror && this.isMirror)
+			return this.mirror.setPriority(MirrorPriority(priority));
+
+		this._modifyDefinition((d) => {
+			d.priority = priority;
+		});
+	}
+
 	public setHeight(height: number): void {
+		if (this.mirror && this.isMirror)
+			return this.mirror.setHeight(height);
+
 		if (height > 0) {
 			this._modifyDefinition((d) => {
 				d.height = height;
@@ -98,6 +112,9 @@ export class AssetGraphicsLayer {
 	}
 
 	public setWidth(width: number): void {
+		if (this.mirror && this.isMirror)
+			return this.mirror.setWidth(width);
+
 		if (width > 0) {
 			this._modifyDefinition((d) => {
 				d.width = width;
@@ -106,12 +123,18 @@ export class AssetGraphicsLayer {
 	}
 
 	public setXOffset(offset: number): void {
+		if (this.mirror && this.isMirror)
+			return this.mirror.setXOffset(offset);
+
 		this._modifyDefinition((d) => {
 			d.x = offset;
 		});
 	}
 
 	public setYOffset(offset: number): void {
+		if (this.mirror && this.isMirror)
+			return this.mirror.setYOffset(offset);
+
 		this._modifyDefinition((d) => {
 			d.y = offset;
 		});

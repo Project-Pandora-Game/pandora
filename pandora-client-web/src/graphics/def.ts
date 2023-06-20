@@ -1,4 +1,4 @@
-import { CharacterArmsPose, Item, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
+import { CharacterArmsPose, Item, LayerPriority, LAYER_PRIORITIES, ArrayIncludesGuard, AssertNever } from 'pandora-common';
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 
 export type LayerStateOverrides = {
@@ -12,7 +12,14 @@ export type LayerState = {
 	state?: LayerStateOverrides;
 };
 
-export const DOUBLE_ORDERED = ['BELOW_ARMS', 'ARMS', 'ABOVE_ARMS'] as const satisfies readonly LayerPriority[];
+export const DOUBLE_ORDERED = [
+	'BELOW_ARM_RIGHT',
+	'BELOW_ARM_LEFT',
+	'ARM_RIGHT',
+	'ARM_LEFT',
+	'ABOVE_ARM_RIGHT',
+	'ABOVE_ARM_LEFT',
+] as const satisfies readonly LayerPriority[];
 type DoubleOrdered = typeof DOUBLE_ORDERED[number];
 
 export type ComputedLayerPriority = Exclude<LayerPriority, DoubleOrdered>
@@ -24,9 +31,13 @@ export const COMPUTED_LAYER_ORDERING = [
 	'BELOW_BACK_HAIR',
 	'BACK_HAIR',
 
-	'BELOW_ARMS_BACK',
-	'ARMS_BACK',
-	'ABOVE_ARMS_BACK',
+	'BELOW_ARM_LEFT_BACK',
+	'ARM_LEFT_BACK',
+	'ABOVE_ARM_LEFT_BACK',
+
+	'BELOW_ARM_RIGHT_BACK',
+	'ARM_RIGHT_BACK',
+	'ABOVE_ARM_RIGHT_BACK',
 
 	'BELOW_BODY',
 	'BODY',
@@ -34,9 +45,13 @@ export const COMPUTED_LAYER_ORDERING = [
 	'BREASTS',
 	'ABOVE_BODY',
 
-	'BELOW_ARMS_FRONT',
-	'ARMS_FRONT',
-	'ABOVE_ARMS_FRONT',
+	'BELOW_ARM_LEFT_FRONT',
+	'ARM_LEFT_FRONT',
+	'ABOVE_ARM_LEFT_FRONT',
+
+	'BELOW_ARM_RIGHT_FRONT',
+	'ARM_RIGHT_FRONT',
+	'ABOVE_ARM_RIGHT_FRONT',
 
 	'FRONT_HAIR',
 	'ABOVE_FRONT_HAIR',
@@ -56,14 +71,20 @@ export const PRIORITY_ORDER_SPRITES = [
 	'BELOW_BREASTS',
 	'BREASTS',
 	'ABOVE_BODY',
+	'BELOW_ARM_LEFT_BACK',
+	'BELOW_ARM_LEFT_FRONT',
+	'ARM_LEFT_BACK',
+	'ARM_LEFT_FRONT',
+	'ABOVE_ARM_LEFT_BACK',
+	'ABOVE_ARM_LEFT_FRONT',
+	'BELOW_ARM_RIGHT_BACK',
+	'BELOW_ARM_RIGHT_FRONT',
+	'ARM_RIGHT_BACK',
+	'ARM_RIGHT_FRONT',
+	'ABOVE_ARM_RIGHT_BACK',
+	'ABOVE_ARM_RIGHT_FRONT',
 	'FRONT_HAIR',
 	'ABOVE_FRONT_HAIR',
-	'BELOW_ARMS_BACK',
-	'BELOW_ARMS_FRONT',
-	'ARMS_BACK',
-	'ARMS_FRONT',
-	'ABOVE_ARMS_BACK',
-	'ABOVE_ARMS_FRONT',
 	'OVERLAY',
 ] as const satisfies readonly ComputedLayerPriority[];
 
@@ -78,18 +99,48 @@ export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<ComputedLayerPriorit
 	'BACK_HAIR',
 	'BELOW_BODY',
 	'BELOW_BREASTS',
-	'BELOW_ARMS_BACK',
-	'BELOW_ARMS_FRONT',
+	'BELOW_ARM_LEFT_BACK',
+	'BELOW_ARM_RIGHT_BACK',
+	'BELOW_ARM_LEFT_FRONT',
+	'BELOW_ARM_RIGHT_FRONT',
 ]);
 
-export function ComputeLayerPriority(priority: LayerPriority, { leftArm, rightArm }: CharacterArmsPose, mirror: boolean): ComputedLayerPriority {
-	if (!DOUBLE_ORDERED.includes(priority as DoubleOrdered)) {
-		return priority as ComputedLayerPriority;
+// Some priority layers should get mirrored when layer get mirrored
+export const PRIORITY_ORDER_MIRROR: Partial<Record<LayerPriority, LayerPriority>> = {
+	BELOW_ARM_LEFT: 'BELOW_ARM_RIGHT',
+	BELOW_ARM_RIGHT: 'BELOW_ARM_LEFT',
+
+	ARM_LEFT: 'ARM_RIGHT',
+	ARM_RIGHT: 'ARM_LEFT',
+
+	ABOVE_ARM_LEFT: 'ABOVE_ARM_RIGHT',
+	ABOVE_ARM_RIGHT: 'ABOVE_ARM_LEFT',
+};
+
+if (!(Object.entries(PRIORITY_ORDER_MIRROR)).every(([original, mirror]) => PRIORITY_ORDER_MIRROR[mirror] === original)) {
+	throw new Error('PRIORITY_ORDER_MIRROR not valid');
+}
+
+export function MirrorPriority(priority: LayerPriority): LayerPriority {
+	const mirrorPriority = PRIORITY_ORDER_MIRROR[priority];
+	return mirrorPriority != null ? mirrorPriority : priority;
+}
+
+export function ComputeLayerPriority(priority: LayerPriority, { leftArm, rightArm }: CharacterArmsPose): ComputedLayerPriority {
+	if (!ArrayIncludesGuard(DOUBLE_ORDERED, priority)) {
+		return priority;
 	}
-	const { position } = mirror ? rightArm : leftArm;
-	if (position === 'front') {
-		return `${priority}_FRONT` as ComputedLayerPriority;
-	} else {
-		return `${priority}_BACK` as ComputedLayerPriority;
+
+	switch (priority) {
+		case 'ABOVE_ARM_LEFT':
+		case 'ARM_LEFT':
+		case 'BELOW_ARM_LEFT':
+			return leftArm.position === 'front' ? `${priority}_FRONT` : `${priority}_BACK`;
+		case 'ABOVE_ARM_RIGHT':
+		case 'ARM_RIGHT':
+		case 'BELOW_ARM_RIGHT':
+			return rightArm.position === 'front' ? `${priority}_FRONT` : `${priority}_BACK`;
 	}
+
+	AssertNever(priority);
 }

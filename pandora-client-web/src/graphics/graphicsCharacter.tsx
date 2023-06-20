@@ -33,18 +33,11 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	onPointerUp?: (event: FederatedPointerEvent) => void;
 	onPointerUpOutside?: (event: FederatedPointerEvent) => void;
 	onPointerMove?: (event: FederatedPointerEvent) => void;
-
-	getSortOrder?: LayerGetSortOrder;
 }
 
 export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
 export type LayerStateOverrideGetter = (layer: AssetGraphicsLayer) => LayerStateOverrides | undefined;
 export type LayerGetSortOrder = (view: CharacterView) => readonly ComputedLayerPriority[];
-
-const GetSortOrderDefault: LayerGetSortOrder = (view) => {
-	const reverse = view === 'back';
-	return reverse ? COMPUTED_LAYER_ORDERING.slice().reverse() : COMPUTED_LAYER_ORDERING;
-};
 
 function useLayerPriorityResolver(states: readonly LayerState[], armsPose: CharacterArmsPose): ReadonlyMap<LayerState, ComputedLayerPriority> {
 	const calculate = useCallback((layers: readonly LayerState[]) => {
@@ -89,7 +82,6 @@ function GraphicsCharacterWithManagerImpl({
 	children,
 	graphicsGetter,
 	layerStateOverrideGetter,
-	getSortOrder = GetSortOrderDefault,
 	...graphicsProps
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;
@@ -175,7 +167,10 @@ function GraphicsCharacterWithManagerImpl({
 
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
 
-	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => getSortOrder(view), [getSortOrder, view]);
+	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => {
+		const reverse = view === 'back';
+		return reverse ? COMPUTED_LAYER_ORDERING.slice().reverse() : COMPUTED_LAYER_ORDERING;
+	}, [view]);
 
 	const actualFilters = useMemo<PIXI.Filter[] | null>(() => filters?.slice() ?? null, [filters]);
 

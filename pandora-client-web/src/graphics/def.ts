@@ -62,36 +62,6 @@ if (new Set(COMPUTED_LAYER_ORDERING).size !== COMPUTED_LAYER_ORDERING.length || 
 	throw new Error('COMPUTED_LAYER_ORDERING not valid');
 }
 
-export const PRIORITY_ORDER_SPRITES = [
-	'BACKGROUND',
-	'BELOW_BACK_HAIR',
-	'BACK_HAIR',
-	'BELOW_BODY',
-	'BODY',
-	'BELOW_BREASTS',
-	'BREASTS',
-	'ABOVE_BODY',
-	'BELOW_ARM_LEFT_BACK',
-	'BELOW_ARM_LEFT_FRONT',
-	'ARM_LEFT_BACK',
-	'ARM_LEFT_FRONT',
-	'ABOVE_ARM_LEFT_BACK',
-	'ABOVE_ARM_LEFT_FRONT',
-	'BELOW_ARM_RIGHT_BACK',
-	'BELOW_ARM_RIGHT_FRONT',
-	'ARM_RIGHT_BACK',
-	'ARM_RIGHT_FRONT',
-	'ABOVE_ARM_RIGHT_BACK',
-	'ABOVE_ARM_RIGHT_FRONT',
-	'FRONT_HAIR',
-	'ABOVE_FRONT_HAIR',
-	'OVERLAY',
-] as const satisfies readonly ComputedLayerPriority[];
-
-if (new Set(PRIORITY_ORDER_SPRITES).size !== PRIORITY_ORDER_SPRITES.length || LAYER_PRIORITIES.length + DOUBLE_ORDERED.length !== PRIORITY_ORDER_SPRITES.length) {
-	throw new Error('PRIORITY_ORDER_SPRITES not valid');
-}
-
 // Some priority layers need their internal order reversed to make sense
 export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<ComputedLayerPriority> = new Set([
 	'BACKGROUND',

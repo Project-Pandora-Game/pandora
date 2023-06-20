@@ -18,8 +18,7 @@ import { useCurrentAccountSettings, useDirectoryConnector } from '../gameContext
 import { useAssetManager } from '../../assets/assetManager';
 import { useCharacterIsInChatroom, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
-import { useCharacterVisionFilters } from '../chatroom/chatRoomScene';
-import { usePlayerState } from '../gameContext/playerContextProvider';
+import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
 
 export function WardrobeCharacterPreview({ character, characterState }: {
 	character: AppearanceContainer<ICharacterRoomData>;
@@ -62,9 +61,11 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 		</div>
 	);
 
+	const filters = usePlayerVisionFilters(character.isPlayer());
+
 	return (
 		<GraphicsScene className='characterPreview' divChildren={ overlay } sceneOptions={ sceneOptions }>
-			<GraphicsCharacter characterState={ characterState } />
+			<GraphicsCharacter characterState={ characterState } filters={ filters } />
 			{
 				roomBackground ? (
 					<WardrobeRoomBackground character={ character } characterState={ characterState } roomBackground={ roomBackground } />
@@ -83,9 +84,8 @@ function WardrobeRoomBackground({
 	character: AppearanceContainer<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { player, playerState } = usePlayerState();
 	const characterPosition = useChatRoomCharacterPosition(character.data.position, characterState, roomBackground);
-	const filters = useCharacterVisionFilters(player, playerState);
+	const filters = usePlayerVisionFilters(false);
 
 	const scale = 1 / characterPosition.scale;
 

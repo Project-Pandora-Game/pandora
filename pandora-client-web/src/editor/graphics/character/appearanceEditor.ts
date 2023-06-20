@@ -122,6 +122,10 @@ export class EditorCharacter implements AppearanceContainer<ICharacterRoomData> 
 		};
 	}
 
+	public isPlayer(): boolean {
+		return true;
+	}
+
 	public getAppearance(state?: AssetFrameworkCharacterState): AppearanceEditor {
 		state ??= this.editor.globalState.currentState.getCharacterState(this.id) ?? undefined;
 		Assert(state != null && state.id === this.id);

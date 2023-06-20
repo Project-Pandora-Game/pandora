@@ -19,6 +19,7 @@ import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacte
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
+import { usePlayerVisionFilters } from './chatRoomScene';
 
 const DEVICE_WAIT_DRAG_THRESHOLD = 100; // ms
 
@@ -29,7 +30,6 @@ type ChatRoomDeviceProps = {
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
 	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
-	filters: readonly PIXI.Filter[];
 };
 
 export const DeviceOverlayToggle = BrowserStorage.create<boolean>('temp-device-overlay-toggle', true, ZodMatcher(z.boolean().catch(true)));
@@ -42,7 +42,6 @@ export function ChatRoomDevice({
 	background,
 	shard,
 	menuOpen,
-	filters,
 }: ChatRoomDeviceProps): ReactElement | null {
 	const asset = item.asset;
 	const app = useApp();
@@ -174,7 +173,6 @@ export function ChatRoomDevice({
 				pivot={ pivot }
 				hitArea={ hitArea }
 				eventMode='static'
-				filters={ filters }
 				onPointerDown={ onPointerDown }
 				onPointerUp={ onPointerUp }
 				onPointerUpOutside={ onPointerUp }
@@ -201,7 +199,6 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	pivot?: PointLike;
 	hitArea?: PIXI.Rectangle;
 	eventMode?: PIXI.EventMode;
-	filters?: readonly PIXI.Filter[];
 	zIndex?: number;
 
 	onPointerDown?: (event: PIXI.FederatedPointerEvent) => void;
@@ -215,7 +212,6 @@ function RoomDeviceGraphicsWithManagerImpl({
 	position: positionOffset,
 	scale: scaleExtra,
 	pivot: pivotExtra,
-	filters,
 	onPointerDown,
 	onPointerUp,
 	onPointerUpOutside,
@@ -232,8 +228,6 @@ function RoomDeviceGraphicsWithManagerImpl({
 
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: 1, y: 1 }), [scaleExtra]);
 
-	const actualFilters = useMemo<PIXI.Filter[] | null>(() => filters?.slice() ?? null, [filters]);
-
 	return (
 		<Container
 			{ ...graphicsProps }
@@ -242,30 +236,27 @@ function RoomDeviceGraphicsWithManagerImpl({
 			position={ position }
 			scale={ scale }
 			sortableChildren
-			filters={ actualFilters }
 			pointerdown={ onPointerDown }
 			pointerup={ onPointerUp }
 			pointerupoutside={ onPointerUpOutside }
 			pointermove={ onPointerMove }
 			cursor='pointer'
 		>
-			<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
-				<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
-					{
-						asset.definition.graphicsLayers.map((layer, i) => {
-							let graphics: ReactElement;
-							if (layer.type === 'sprite') {
-								graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } />;
-							} else if (layer.type === 'slot') {
-								graphics = <RoomDeviceGraphicsLayerSlot item={ item } layer={ layer } />;
-							} else {
-								AssertNever(layer);
-							}
-							return <Container key={ i } zIndex={ i }>{ graphics }</Container>;
-						})
-					}
-					{ children }
-				</SwapCullingDirection>
+			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
+				{
+					asset.definition.graphicsLayers.map((layer, i) => {
+						let graphics: ReactElement;
+						if (layer.type === 'sprite') {
+							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } />;
+						} else if (layer.type === 'slot') {
+							graphics = <RoomDeviceGraphicsLayerSlot item={ item } layer={ layer } />;
+						} else {
+							AssertNever(layer);
+						}
+						return <Container key={ i } zIndex={ i }>{ graphics }</Container>;
+					})
+				}
+				{ children }
 			</SwapCullingDirection>
 		</Container>
 	);
@@ -298,6 +289,9 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
+	const filters = usePlayerVisionFilters(false);
+	const actualFilters = useMemo<PIXI.Filter[] | null>(() => filters?.slice() ?? null, [filters]);
+
 	return (
 		<Sprite
 			x={ layer.offsetX ?? 0 }
@@ -306,6 +300,7 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 			texture={ texture }
 			tint={ color }
 			alpha={ alpha }
+			filters={ actualFilters }
 		/>
 	);
 }
@@ -345,6 +340,8 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 }): ReactElement | null {
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
+	const filters = usePlayerVisionFilters(character.isPlayer());
+
 	const devicePivot = item.asset.definition.pivot;
 	const x = devicePivot.x + layer.characterPosition.offsetX;
 	const y = devicePivot.y + layer.characterPosition.offsetY;
@@ -379,6 +376,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 			position={ { x, y } }
 			scale={ { x: scaleX * scale, y: scale } }
 			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }
+			filters={ filters }
 		>
 		</GraphicsCharacter>
 	);

@@ -8,6 +8,7 @@ export type AppearanceContainer<T extends ICharacterPublicData = ICharacterPubli
 	readonly id: CharacterId;
 	readonly name: string;
 	readonly data: Readonly<T>;
+	isPlayer(): boolean;
 	getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance;
 	getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
 };

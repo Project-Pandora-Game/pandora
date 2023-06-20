@@ -81,6 +81,7 @@ function WardrobeSettings({ account }: { account: IDirectoryAccountInfo; }): Rea
 		<fieldset>
 			<legend>Wardrobe UI</legend>
 			<WardrobeBackgroundColor account={ account } />
+			<WardrobeUseRoomBackground account={ account } />
 			<WardrobeShowExtraButtons account={ account } />
 		</fieldset>
 	);
@@ -104,6 +105,24 @@ function WardrobeBackgroundColor({ account }: { account: IDirectoryAccountInfo; 
 				disabled={ color === account.settings.wardrobeBackground.toUpperCase() }>
 				Save
 			</Button>
+		</div>
+	);
+}
+
+function WardrobeUseRoomBackground({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const [show, setShow] = useState(account.settings.wardrobeUseRoomBackground);
+
+	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newValue = e.target.checked;
+		setShow(newValue);
+		directory.sendMessage('changeSettings', { wardrobeUseRoomBackground: newValue });
+	};
+
+	return (
+		<div className='input-row'>
+			<input type='checkbox' checked={ show } onChange={ onChange } />
+			<label>Use room's background, if character is inside a room</label>
 		</div>
 	);
 }

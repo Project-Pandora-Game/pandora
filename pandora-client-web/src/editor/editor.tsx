@@ -10,7 +10,7 @@ import { LayerStateOverrides } from '../graphics/def';
 import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphics';
 import { Observable } from '../observable';
 import { EDITOR_CHARACTER_ID, EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
-import { TypedEventEmitter, AssetId, GetLogger, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable, Assert, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState } from 'pandora-common';
+import { TypedEventEmitter, AssetId, GetLogger, CharacterSize, ZodMatcher, ParseArrayNotEmpty, AssertNotNullable, Assert, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState, HexColorString } from 'pandora-common';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
 import { DraggablePoint } from './graphics/draggable';
@@ -47,7 +47,7 @@ export class Editor extends TypedEventEmitter<{
 	public readonly targetLayerPoints = new Observable<readonly DraggablePoint[]>([]);
 	public readonly targetPoint = new Observable<DraggablePoint | null>(null);
 
-	public readonly backgroundColor = new Observable<string>('#1099bb');
+	public readonly backgroundColor = new Observable<HexColorString>('#1099bb');
 	public readonly getCenter = new Observable<() => { x: number; y: number; }>(
 		() => ({ x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }),
 	);
@@ -222,7 +222,7 @@ export class Editor extends TypedEventEmitter<{
 		this.targetAsset.value = graphics;
 	}
 
-	public setBackgroundColor(color: string): void {
+	public setBackgroundColor(color: HexColorString): void {
 		this.backgroundColor.value = color;
 		document.documentElement.style.setProperty('--editor-background-color', color);
 	}

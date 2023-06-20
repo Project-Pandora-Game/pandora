@@ -30,6 +30,48 @@ type ChatRoomCharacterPropsWithState = ChatRoomCharacterProps & {
 const BOTTOM_NAME_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
 
+export function useChatRoomCharacterPosition(
+	position: readonly [number, number],
+	characterState: AssetFrameworkCharacterState,
+	background: IChatroomBackgroundData,
+): {
+		x: number;
+		y: number;
+		positionY: number;
+		yOffset: number;
+		baseScale: number;
+		scale: number;
+	} {
+	const evaluator = useAppearanceConditionEvaluator(characterState);
+
+	const [width, height] = background.size;
+	const scaling = background.scaling;
+
+	const x = Math.min(width, position[0]);
+	const positionY = Math.min(height, position[1]);
+
+	let baseScale = 1;
+	if (evaluator.getBoneLikeValue('sitting') > 0) {
+		baseScale *= 0.9;
+	}
+
+	const scale = baseScale * (1 - (positionY * scaling) / height);
+
+	const yOffset = 0
+		+ 1.75 * evaluator.getBoneLikeValue('kneeling')
+		+ 0.75 * evaluator.getBoneLikeValue('sitting')
+		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? -0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+
+	return {
+		x,
+		y: height - positionY,
+		positionY,
+		yOffset,
+		baseScale,
+		scale,
+	};
+}
+
 function ChatRoomCharacterDisplay({
 	character,
 	characterState,
@@ -41,7 +83,6 @@ function ChatRoomCharacterDisplay({
 	filters,
 }: ChatRoomCharacterPropsWithState): ReactElement | null {
 	const app = useApp();
-	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
 		const maxY = CalculateCharacterMaxYForBackground(background);
@@ -56,26 +97,12 @@ function ChatRoomCharacterDisplay({
 
 	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
 
-	const [width, height] = background.size;
-	const scaling = background.scaling;
-	const x = Math.min(width, character.data.position[0]);
-	const y = Math.min(height, character.data.position[1]);
-
-	let baseScale = 1;
-	if (evaluator.getBoneLikeValue('sitting') > 0) {
-		baseScale *= 0.9;
-	}
-
-	const scale = baseScale * (1 - (y * scaling) / height);
+	const height = background.size[1];
+	const { x, y, positionY, yOffset, baseScale, scale } = useChatRoomCharacterPosition(character.data.position, characterState, background);
 
 	const backView = useCharacterAppearanceView(characterState) === 'back';
 
 	const scaleX = backView ? -1 : 1;
-
-	const yOffset = 0
-		+ 1.75 * evaluator.getBoneLikeValue('kneeling')
-		+ 0.75 * evaluator.getBoneLikeValue('sitting')
-		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? -0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
 
 	const labelX = CharacterSize.WIDTH / 2;
 	const labelY = CharacterSize.HEIGHT - BOTTOM_NAME_OFFSET - yOffset;
@@ -96,7 +123,7 @@ function ChatRoomCharacterDisplay({
 		if (!dragging.current || !roomInfo || !characterContainer.current) return;
 		const dragPointerEnd = event.getLocalPosition<Point>(characterContainer.current.parent);
 
-		const newY = (dragPointerEnd.y - height + baseScale * BOTTOM_NAME_OFFSET) / ((scaling / height) * baseScale * BOTTOM_NAME_OFFSET - 1);
+		const newY = (dragPointerEnd.y - height + baseScale * BOTTOM_NAME_OFFSET) / ((background.scaling / height) * baseScale * BOTTOM_NAME_OFFSET - 1);
 
 		setPositionThrottled(dragPointerEnd.x, newY);
 	});
@@ -151,7 +178,7 @@ function ChatRoomCharacterDisplay({
 		<GraphicsCharacter
 			ref={ characterContainer }
 			characterState={ characterState }
-			position={ { x, y: height - y } }
+			position={ { x, y } }
 			scale={ { x: scaleX * scale, y: scale } }
 			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }
 			hitArea={ hitArea }
@@ -160,7 +187,7 @@ function ChatRoomCharacterDisplay({
 			onPointerDown={ onPointerDown }
 			onPointerUp={ onPointerUp }
 			onPointerUpOutside={ onPointerUp }
-			zIndex={ -y }
+			zIndex={ -positionY }
 		>
 			<Text
 				anchor={ { x: 0.5, y: 0.5 } }

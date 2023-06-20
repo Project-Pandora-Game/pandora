@@ -1,9 +1,10 @@
 import {
 	AssertNever,
+	ICharacterRoomData,
 	IsCharacterId,
 	IsObject,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AppearanceContainer, Character } from '../../character/character';
 import { IChatRoomContext, useChatroom, useChatRoomCharacters, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
@@ -30,16 +31,12 @@ export function WardrobeScreen(): ReactElement | null {
 	const characterId = IsObject(locationState) && IsCharacterId(locationState.character) ? locationState.character : null;
 	const targetIsRoomInventory = IsObject(locationState) && locationState.target === 'room';
 
-	const [character, setCharacter] = useState<Character | null>(null);
-
-	useEffect(() => {
+	const character = useMemo((): Character<ICharacterRoomData> | null => {
 		if (characterId == null || characterId === player?.data.id) {
-			setCharacter(player);
-			return;
+			return player;
 		}
-		const get = () => chatRoomCharacters?.find((c) => c.data.id === characterId) ?? null;
-		setCharacter(get());
-	}, [setCharacter, characterId, player, chatRoomCharacters]);
+		return chatRoomCharacters?.find((c) => c.data.id === characterId) ?? null;
+	}, [characterId, player, chatRoomCharacters]);
 
 	const target: WardrobeTarget | null =
 		targetIsRoomInventory ? (
@@ -91,7 +88,7 @@ function WardrobeRoom({ room: _room }: {
 }
 
 function WardrobeCharacter({ character }: {
-	character: AppearanceContainer;
+	character: AppearanceContainer<ICharacterRoomData>;
 }): ReactElement {
 	const navigate = useNavigate();
 	const { globalState } = useWardrobeContext();

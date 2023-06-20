@@ -1,7 +1,8 @@
-import { AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, Item, TransformDefinition } from 'pandora-common';
+import { AppearanceItemProperties, AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
 import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
 import { EvaluateCondition, RotateVector } from './utility';
+import type { Immutable } from 'immer';
 
 export const FAKE_BONES: string[] = ['backView'];
 
@@ -9,8 +10,9 @@ export class AppearanceConditionEvaluator {
 	public readonly pose: ReadonlyMap<BoneName, Readonly<BoneState>>;
 	public readonly view: CharacterView;
 	public readonly arms: CharacterArmsPose;
+	public readonly attributes: ReadonlySet<string>;
 
-	constructor(pose: readonly BoneState[], view: CharacterView, arms: CharacterArmsPose) {
+	constructor(pose: readonly BoneState[], view: CharacterView, arms: CharacterArmsPose, items: AppearanceItems) {
 		const poseResult = new Map<BoneName, Readonly<BoneState>>();
 		for (const bone of pose) {
 			poseResult.set(bone.definition.name, bone);
@@ -18,21 +20,22 @@ export class AppearanceConditionEvaluator {
 		this.pose = poseResult;
 		this.view = view;
 		this.arms = arms;
+		this.attributes = AppearanceItemProperties(items).attributes;
 	}
 
 	//#region Point transform
 	private readonly _evalCache = new Map<string, boolean>();
-	public evalCondition(condition: AtomicCondition, item: Item | null): boolean {
-		if ('module' in condition && condition.module != null) {
+	public evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean {
+		if ('module' in condition) {
+			Assert(condition.module != null);
 			const m = item?.modules.get(condition.module);
 			// If there is no item or no module, the value is always not equal
 			if (!m) {
 				return condition.operator === '!=';
 			}
 			return m.evalCondition(condition.operator, condition.value);
-		}
-
-		if ('bone' in condition && condition.bone != null) {
+		} else if ('bone' in condition) {
+			Assert(condition.bone != null);
 			const key = `${condition.bone}-${condition.operator}-${condition.value}`;
 			let result = this._evalCache.get(key);
 			if (result === undefined) {
@@ -40,8 +43,8 @@ export class AppearanceConditionEvaluator {
 				this._evalCache.set(key, result = this._evalConditionCore(condition, value));
 			}
 			return result;
-		}
-		if ('armType' in condition && condition.armType != null) {
+		} else if ('armType' in condition) {
+			Assert(condition.armType != null);
 			const key = `${condition.armType}-${condition.side}-${condition.operator}-${condition.value}`;
 			let result = this._evalCache.get(key);
 			if (result === undefined) {
@@ -49,12 +52,19 @@ export class AppearanceConditionEvaluator {
 				this._evalCache.set(key, result = this._evalConditionCore(condition, value));
 			}
 			return result;
+		} else if ('attribute' in condition) {
+			Assert(condition.attribute != null);
+			if (condition.attribute[0] === '!') {
+				return !this.attributes.has(condition.attribute.slice(1));
+			} else {
+				return this.attributes.has(condition.attribute);
+			}
+		} else {
+			AssertNever(condition);
 		}
-
-		AssertNever();
 	}
 
-	private _evalConditionCore<T extends string | number>({ operator, value }: AtomicCondition & { value: T; }, currentValue: T): boolean {
+	private _evalConditionCore<T extends string | number>({ operator, value }: AtomicCondition & { value: T; operator: ConditionOperator; }, currentValue: T): boolean {
 		let diff = 0;
 		if (typeof currentValue === 'string' && typeof value === 'string') {
 			diff = currentValue.localeCompare(value);
@@ -138,5 +148,6 @@ export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCh
 	const pose = useCharacterAppearancePose(characterState);
 	const view = useCharacterAppearanceView(characterState);
 	const arms = useCharacterAppearanceArmsPose(characterState);
-	return useMemo(() => new AppearanceConditionEvaluator(pose, view, arms), [pose, view, arms]);
+	const items = characterState.items;
+	return useMemo(() => new AppearanceConditionEvaluator(pose, view, arms, items), [pose, view, arms, items]);
 }

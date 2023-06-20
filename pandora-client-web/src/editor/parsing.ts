@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { ArmFingersSchema, ArmRotationSchema, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher } from 'pandora-common';
+import { ArmFingersSchema, ArmRotationSchema, Assert, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher } from 'pandora-common';
 
 const IsConditionOperator = ZodMatcher(ConditionOperatorSchema);
 
@@ -24,20 +24,34 @@ function ParseFloat(input: string): number {
 }
 
 export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>): string {
-	if ('bone' in condition && condition.bone != null)
+	if ('bone' in condition) {
+		Assert(condition.bone != null);
 		return `${condition.bone}${condition.operator}${condition.value}`;
-
-	if ('module' in condition && condition.module != null)
+	} else if ('module' in condition) {
+		Assert(condition.module != null);
 		return `m_${condition.module}${condition.operator}${condition.value}`;
-
-	if ('armType' in condition && condition.armType != null)
+	} else if ('armType' in condition) {
+		Assert(condition.armType != null);
 		return `hand_${condition.armType}_${condition.side}${condition.operator}${condition.value}`;
-
-	AssertNever();
+	} else if ('attribute' in condition) {
+		Assert(condition.attribute != null);
+		return `a_${condition.attribute}`;
+	} else {
+		AssertNever(condition);
+	}
 }
 
 function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondition {
-	const parsed = /^\s*([-_a-z0-9]+)\s*([=<>!]+)\s*(-?[-_a-z0-9.]+)\s*$/i.exec(input);
+	if (input.startsWith('a_')) {
+		const attribute = /^a_(!?[-_a-z0-9]+)$/i.exec(input);
+		if (!attribute) {
+			throw new Error(`Failed to parse attribute condition '${input}'`);
+		}
+		return {
+			attribute: attribute[1],
+		};
+	}
+	const parsed = /^([-_a-z0-9]+)([=<>!]+)\s*(-?[-_a-z0-9.]+)$/i.exec(input);
 	if (!parsed) {
 		throw new Error(`Failed to parse condition '${input}'`);
 	}

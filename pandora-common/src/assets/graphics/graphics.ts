@@ -50,6 +50,13 @@ export const AtomicConditionModuleSchema = z.object({
 	operator: ConditionOperatorSchema,
 	value: z.string(),
 });
+export const AtomicConditionAttributeSchema = z.object({
+	/**
+	 * Attribute that which required for this condition to be true
+	 *  - attribute can be prefixed with `!` to negate the condition
+	 */
+	attribute: z.string(),
+});
 export const AtomicConditionArmRotationSchema = z.object({
 	armType: z.literal('rotation'),
 	side: z.enum(['left', 'right']),
@@ -66,6 +73,7 @@ export const AtomicConditionArmFingersSchema = z.object({
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,
 	AtomicConditionModuleSchema,
+	AtomicConditionAttributeSchema,
 	AtomicConditionArmRotationSchema,
 	AtomicConditionArmFingersSchema,
 ]);

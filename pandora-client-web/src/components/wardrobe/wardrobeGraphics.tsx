@@ -61,9 +61,11 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 		</div>
 	);
 
+	const filters = usePlayerVisionFilters(character.isPlayer());
+
 	return (
 		<GraphicsScene className='characterPreview' divChildren={ overlay } sceneOptions={ sceneOptions }>
-			<GraphicsCharacter characterState={ characterState } />
+			<GraphicsCharacter characterState={ characterState } filters={ filters } />
 			{
 				roomBackground ? (
 					<WardrobeRoomBackground character={ character } characterState={ characterState } roomBackground={ roomBackground } />

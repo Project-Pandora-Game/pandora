@@ -195,21 +195,11 @@ $drop-overlay-gap: 0.3em;
 
 			.overlayDrop {
 				position: absolute;
+				top: calc($drop-overlay-height * -0.5 + $drop-overlay-gap * 0.5);
 				left: 3.6em;
 				right: 2em;
 				height: $drop-overlay-height;
 				z-index: 11;
-
-				&.positionUp {
-					top: calc($drop-overlay-height * -0.5 + $drop-overlay-gap * 0.5);
-				}
-
-				&.positionCenter {
-					bottom: calc(-3px - 1.5em - ($drop-overlay-height * 0.75));
-					left: 2.6em;
-					right: 1em;
-					height: $drop-overlay-height * 1.5;
-				}
 
 				isolation: isolate;
 
@@ -221,6 +211,11 @@ $drop-overlay-gap: 0.3em;
 	.list {
 		display: flex;
 		flex-flow: column;
+
+		&.reverse {
+			flex-flow: column-reverse;
+			justify-content: flex-end;
+		}
 	}
 
 	.grid {
@@ -339,6 +334,17 @@ $drop-overlay-gap: 0.3em;
 			height: 2.2em;
 			width: 2.2em;
 		}
+	}
+
+	.overlayDrop {
+		@include center-flex;
+		isolation: isolate;
+		position: absolute;
+		top: 0.2em;
+		bottom: 0.2em;
+		left: 2.6em;
+		right: 1em;
+		z-index: 11;
 	}
 }
 

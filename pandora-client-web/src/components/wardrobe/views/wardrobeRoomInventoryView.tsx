@@ -9,10 +9,11 @@ import React, { ReactElement, useCallback, useEffect } from 'react';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
+import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
 import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { InventoryItemViewDropArea } from './wardrobeItemView';
+import { isEqual } from 'lodash';
 
 export function RoomInventoryView({ title, container }: {
 	title: string;
@@ -80,7 +81,7 @@ export function RoomInventoryViewList({
 				<span>{ title }</span>
 			</div>
 			<Scrollbar color='dark'>
-				<div className='list withDropButtons'>
+				<div className='list reverse withDropButtons'>
 					{
 						heldItem.type !== 'nothing' ? (
 							<div className='overlay' />
@@ -133,10 +134,19 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 		type: 'roomInventory',
 	};
 
-	const { setHeldItem, targetSelector, showExtraActionButtons } = useWardrobeContext();
+	const { heldItem, setHeldItem, targetSelector, showExtraActionButtons } = useWardrobeContext();
 	const inventoryItem = EvalItemPath(room.items, item);
 
 	const ribbonColor = useItemColorRibbon([], inventoryItem ?? null);
+
+	const heldItemSelector: WardrobeHeldItem = {
+		type: 'item',
+		target: inventoryTarget,
+		path: item,
+	};
+
+	// Check if this item is held
+	const isHeld = isEqual(heldItem, heldItemSelector);
 
 	if (!inventoryItem) {
 		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
@@ -149,11 +159,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 			tabIndex={ 0 }
 			className={ classNames('inventoryViewItem', 'listMode', 'allowed') }
 			onClick={ () => {
-				setHeldItem({
-					type: 'item',
-					target: inventoryTarget,
-					path: item,
-				});
+				setHeldItem(heldItemSelector);
 			} }
 		>
 			{
@@ -189,6 +195,21 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					</>
 				) : null }
 			</div>
+			{
+				isHeld ? (
+					<div
+						className='overlayDrop inventoryViewItem allowed'
+						tabIndex={ 0 }
+						onClick={ (ev) => {
+							ev.preventDefault();
+							ev.stopPropagation();
+							setHeldItem({ type: 'nothing' });
+						} }
+					>
+						Cancel
+					</div>
+				) : null
+			}
 		</div>
 	);
 }

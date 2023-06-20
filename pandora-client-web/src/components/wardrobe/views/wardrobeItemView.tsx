@@ -19,7 +19,7 @@ import { EvalContainerPath, SplitContainerPath } from 'pandora-common/dist/asset
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { WardrobeFocus } from '../wardrobeTypes';
+import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
 import { GenerateRandomItemId, useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
@@ -100,7 +100,7 @@ export function InventoryItemView({
 				}
 			</div>
 			<Scrollbar color='dark'>
-				<div className='list withDropButtons'>
+				<div className='list reverse withDropButtons'>
 					{
 						heldItem.type !== 'nothing' ? (
 							<div className='overlay' />
@@ -220,27 +220,13 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 
 	const check = useStaggeredAppearanceActionResult(action);
 
-	if (targetIsSource) {
-		return (
-			<div
-				className='overlayDrop positionCenter inventoryViewItem listMode allowed'
-				tabIndex={ 0 }
-				onClick={ () => {
-					setHeldItem({ type: 'nothing' });
-				} }
-			>
-				Cancel
-			</div>
-		);
-	}
-
 	if (action == null || text == null) {
 		return null;
 	}
 
 	return (
 		<div
-			className={ classNames('overlayDrop', 'positionUp', 'inventoryViewItem', 'listMode', check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked') }
+			className={ classNames('overlayDrop', 'inventoryViewItem', check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked') }
 			tabIndex={ 0 }
 			ref={ setRef }
 			onClick={ () => {
@@ -267,11 +253,20 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 	setFocus?: (newFocus: WardrobeFocus) => void;
 	singleItemContainer?: boolean;
 }): ReactElement {
-	const { targetSelector, target, extraItemActions, setHeldItem } = useWardrobeContext();
+	const { targetSelector, target, extraItemActions, heldItem, setHeldItem } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(target, item);
 	const extraActions = useObservable(extraItemActions);
 
 	const ribbonColor = useItemColorRibbon([], wornItem ?? null);
+
+	const heldItemSelector: WardrobeHeldItem = {
+		type: 'item',
+		target: targetSelector,
+		path: item,
+	};
+
+	// Check if this item is held
+	const isHeld = isEqual(heldItem, heldItemSelector);
 
 	if (!wornItem) {
 		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
@@ -310,7 +305,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 									item,
 									shift: 1,
 								} } autohide hideReserveSpace>
-									▼
+									▲
 								</WardrobeActionButton>
 								<WardrobeActionButton action={ {
 									type: 'move',
@@ -318,7 +313,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 									item,
 									shift: -1,
 								} } autohide hideReserveSpace>
-									▲
+									▼
 								</WardrobeActionButton>
 							</>
 						) : null
@@ -331,11 +326,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 							className='wardrobeActionButton allowed'
 							onClick={ (ev) => {
 								ev.stopPropagation();
-								setHeldItem({
-									type: 'item',
-									target: targetSelector,
-									path: item,
-								});
+								setHeldItem(heldItemSelector);
 							} }
 						>
 							<img src={ arrowAllIcon } alt='Quick-action mode' />
@@ -343,6 +334,21 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 					)
 				}
 			</div>
+			{
+				isHeld ? (
+					<div
+						className='overlayDrop inventoryViewItem allowed'
+						tabIndex={ 0 }
+						onClick={ (ev) => {
+							ev.preventDefault();
+							ev.stopPropagation();
+							setHeldItem({ type: 'nothing' });
+						} }
+					>
+						Cancel
+					</div>
+				) : null
+			}
 		</div>
 	);
 }

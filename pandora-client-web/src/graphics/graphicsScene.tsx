@@ -146,6 +146,7 @@ export function GraphicsBackground({
 		backgroundAlpha: number;
 		backgroundImage: string;
 	}>(() => {
+		// Number is color in pixi format
 		if (typeof background === 'number') {
 			return {
 				backgroundTint: background,
@@ -153,6 +154,7 @@ export function GraphicsBackground({
 				backgroundImage: '*',
 			};
 		}
+		// If background is not defined, use default one
 		if (!background) {
 			return {
 				backgroundTint: DEFAULT_BACKGROUND_COLOR,
@@ -160,19 +162,20 @@ export function GraphicsBackground({
 				backgroundImage: '*',
 			};
 		}
+		// Parse color in hex format, with optional alpha
 		if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(background)) {
 			return {
 				backgroundTint: parseInt(background.substring(1, 7), 16),
 				backgroundAlpha: background.length > 7 ? (parseInt(background.substring(7, 9), 16) / 255) : 1,
 				backgroundImage: '*',
 			};
-		} else {
-			return {
-				backgroundTint: 0xffffff,
-				backgroundAlpha: 1,
-				backgroundImage: background,
-			};
 		}
+		// Otherwise try to use background as image path
+		return {
+			backgroundTint: 0xffffff,
+			backgroundAlpha: 1,
+			backgroundImage: background,
+		};
 	}, [background]);
 
 	const backgroundTexture = useTexture(backgroundResult.backgroundImage, true);

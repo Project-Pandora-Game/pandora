@@ -43,7 +43,7 @@ export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>):
 
 function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondition {
 	if (input.startsWith('a_')) {
-		const attribute = /^a_(!?[-_a-z0-9]+)$/.exec(input);
+		const attribute = /^a_(!?[-_a-z0-9]+)$/i.exec(input);
 		if (!attribute) {
 			throw new Error(`Failed to parse attribute condition '${input}'`);
 		}

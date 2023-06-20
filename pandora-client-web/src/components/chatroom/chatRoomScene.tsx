@@ -1,14 +1,14 @@
-import { AssertNotNullable, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterId, EMPTY_ARRAY, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import { AssertNotNullable, CalculateCharacterMaxYForBackground, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { useEvent } from '../../common/useEvent';
-import { Character, useCharacterData } from '../../character/character';
+import { Character } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, ChatRoom, useCharacterState } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { usePlayer } from '../gameContext/playerContextProvider';
+import { usePlayer, usePlayerState } from '../gameContext/playerContextProvider';
 import { IBounceOptions } from 'pixi-viewport';
 import { CommonProps } from '../../common/reactTypes';
 import { useAssetManager } from '../../assets/assetManager';
@@ -40,8 +40,6 @@ interface ChatRoomGraphicsSceneProps extends CommonProps {
 	room: ChatRoom;
 	info: IChatRoomFullInfo;
 	debugConfig: ChatroomDebugConfig;
-	filters: PIXI.Filter[];
-	filtersExclude?: readonly (CharacterId | ItemId)[];
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
 	menuOpen: (target: Character<ICharacterRoomData> | ItemRoomDevice, event: FederatedPointerEvent) => void;
 }
@@ -56,8 +54,6 @@ export function ChatRoomGraphicsScene({
 	room,
 	info,
 	debugConfig,
-	filters,
-	filtersExclude = EMPTY_ARRAY,
 	onPointerDown,
 	menuOpen,
 }: ChatRoomGraphicsSceneProps): ReactElement {
@@ -134,7 +130,6 @@ export function ChatRoomGraphicsScene({
 							background={ roomBackground }
 							shard={ shard }
 							menuOpen={ menuOpen }
-							filters={ filtersExclude.includes(character.id) ? EMPTY_ARRAY : filters }
 						/>
 					))
 				}
@@ -148,7 +143,6 @@ export function ChatRoomGraphicsScene({
 							background={ roomBackground }
 							shard={ shard }
 							menuOpen={ menuOpen }
-							filters={ filtersExclude.includes(device.id) ? EMPTY_ARRAY : filters }
 						/>
 					) : null))
 				}
@@ -165,24 +159,25 @@ export function ChatRoomGraphicsScene({
 				zIndex={ -1000 }
 				background={ roomBackground.image }
 				backgroundSize={ roomBackground.size }
-				backgroundFilters={ filters }
+				backgroundFilters={ usePlayerVisionFilters(false) }
 			/>
 		</GraphicsScene>
 	);
 }
 
-export function useCharacterVisionFilters(character: Character, characterState: AssetFrameworkCharacterState): Filter[] {
-	const blindness = useCharacterRestrictionsManager(characterState, character, (manager) => manager.getBlindness());
+export function usePlayerVisionFilters(targetIsPlayer: boolean): Filter[] {
+	const { player, playerState } = usePlayerState();
+	const blindness = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getBlindness());
 
 	return useMemo((): Filter[] => {
-		if (blindness === 0) {
+		if (blindness === 0)
 			return [];
-		} else {
-			const filter = new PIXI.ColorMatrixFilter();
-			filter.brightness(1 - blindness / 10, false);
-			return [filter];
-		}
-	}, [blindness]);
+		if (targetIsPlayer)
+			return [];
+		const filter = new PIXI.ColorMatrixFilter();
+		filter.brightness(1 - blindness / 10, false);
+		return [filter];
+	}, [blindness, targetIsPlayer]);
 }
 
 export function ChatRoomScene({ className }: {
@@ -206,7 +201,6 @@ export function ChatRoomScene({ className }: {
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
 
-	const playerData = useCharacterData(player);
 	const playerState = useCharacterState(chatRoom, player.id);
 	AssertNotNullable(playerState);
 
@@ -224,8 +218,6 @@ export function ChatRoomScene({ className }: {
 			});
 		}
 	}, []);
-
-	const filters = useCharacterVisionFilters(player, playerState);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
 		if (menuActive) {
@@ -251,8 +243,6 @@ export function ChatRoomScene({ className }: {
 			room={ chatRoom }
 			info={ info }
 			debugConfig={ debugConfig }
-			filters={ filters }
-			filtersExclude={ [playerData.id] }
 			onPointerDown={ onPointerDown }
 			menuOpen={ menuOpen }
 		>

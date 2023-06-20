@@ -1,5 +1,5 @@
 import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo } from 'pandora-common';
-import PIXI, { FederatedPointerEvent, Filter, Point, Rectangle, TextStyle } from 'pixi.js';
+import PIXI, { FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterAppearanceView } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
@@ -11,6 +11,7 @@ import { useAppearanceConditionEvaluator } from '../../graphics/appearanceCondit
 import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE } from '../../graphics/graphicsLayer';
 import { ChatRoom, useCharacterRestrictionsManager, useCharacterState } from '../gameContext/chatRoomContextProvider';
+import { usePlayerVisionFilters } from './chatRoomScene';
 
 type ChatRoomCharacterProps = {
 	character: Character<ICharacterRoomData>;
@@ -20,7 +21,6 @@ type ChatRoomCharacterProps = {
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
 	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
-	filters: readonly Filter[];
 };
 
 type ChatRoomCharacterPropsWithState = ChatRoomCharacterProps & {
@@ -80,9 +80,10 @@ function ChatRoomCharacterDisplay({
 	background,
 	shard,
 	menuOpen,
-	filters,
 }: ChatRoomCharacterPropsWithState): ReactElement | null {
 	const app = useApp();
+
+	const filters = usePlayerVisionFilters(character.isPlayer());
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
 		const maxY = CalculateCharacterMaxYForBackground(background);

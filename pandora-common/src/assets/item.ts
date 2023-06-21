@@ -771,30 +771,37 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(action);
 	}
 
-	public lock({ messageHandler, player }: AppearanceModuleActionContext, { password }: IItemLockAction & { action: 'lock'; }): ItemLock | null {
+	public lock({ messageHandler, player, reject }: AppearanceModuleActionContext, { password }: IItemLockAction & { action: 'lock'; }): ItemLock | null {
 		if (this.isLocked())
 			return null;
+
+		const rejectMissingPassword = () => {
+			reject({
+				type: 'lockIntereactionPrevented',
+				moduleAction: 'lock',
+				reason: 'noStoredPassword',
+				asset: this.asset.id,
+			});
+			return null;
+		};
 
 		let hidden: LockBundle['hidden'] | undefined;
 		if (this.asset.definition.password != null && password == null) {
 			switch (this.lockData?.hidden?.side) {
 				case 'client':
 					if (!this.lockData.hidden.hasPassword) {
-						// TODO: reject no password
-						return null;
+						return rejectMissingPassword();
 					}
 					hidden = { side: 'client', hasPassword: true };
 					break;
 				case 'server':
 					if (this.lockData.hidden.password == null) {
-						// TODO: reject no password
-						return null;
+						return rejectMissingPassword();
 					}
 					hidden = { side: 'server', password };
 					break;
 				default:
-					// TODO: reject no password
-					return null;
+					return rejectMissingPassword();
 			}
 		} else if (password != null) {
 			hidden = { side: 'server', password };

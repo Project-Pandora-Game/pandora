@@ -43,9 +43,11 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				switch (e.reason) {
 					case 'blockSelf':
 						return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${actionDescription[e.moduleAction]} on yourself.`;
+					case 'noStoredPassword':
+						return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
 				}
 
-				AssertNever(e.reason);
+				AssertNever(e);
 				break;
 			}
 			case 'invalid':

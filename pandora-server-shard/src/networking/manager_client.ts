@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult } from 'pandora-common';
 import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
@@ -130,13 +130,23 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		room.updateCharacterPosition(character, id ?? character.id, position);
 	}
 
-	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): void {
+	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): IClientShardNormalResult['appearanceAction'] {
 		if (!client.character)
 			throw new BadMessageError();
 
-		if (DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager).result !== 'success') {
-			// If the action failed, client might be out of sync, force-send full reload
-			client.sendLoadMessage();
+		const result = DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager);
+		switch (result.result) {
+			case 'success':
+				return { result: 'success' };
+			case 'failure':
+				return {
+					result: 'failure',
+					failure: result.failure,
+				};
+			default:
+				// If the action failed, client might be out of sync, force-send full reload
+				client.sendLoadMessage();
+				return { result: 'invalid' };
 		}
 	}
 

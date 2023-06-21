@@ -808,7 +808,7 @@ export function ActionModuleAction({
 			},
 			failure: (reason) => {
 				failureReason ??= reason;
-			}
+			},
 		};
 
 		return it.moduleAction(

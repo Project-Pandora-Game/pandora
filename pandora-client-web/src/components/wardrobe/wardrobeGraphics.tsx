@@ -48,7 +48,7 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 			<Button className='slim iconButton'
 				title='Toggle character view'
 				onClick={ () => {
-					shardConnector?.sendMessage('appearanceAction', {
+					shardConnector?.awaitResponse('appearanceAction', {
 						type: 'setView',
 						target: character.id,
 						view: characterState.view === 'front' ? 'back' : 'front',

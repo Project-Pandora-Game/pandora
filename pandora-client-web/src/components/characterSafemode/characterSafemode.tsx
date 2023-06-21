@@ -89,7 +89,7 @@ export function CharacterSafemodeDialog({ player }: {
 								disabled={ !canLeaveSafemode }
 								className='fadeDisabled'
 								onClick={ () => {
-									shardConnector?.sendMessage('appearanceAction', {
+									shardConnector?.awaitResponse('appearanceAction', {
 										type: 'safemode',
 										action: 'exit',
 									});
@@ -110,7 +110,7 @@ export function CharacterSafemodeDialog({ player }: {
 						<Row padding='medium' alignX='space-between'>
 							<Button onClick={ hide }>Cancel</Button>
 							<Button onClick={ () => {
-								shardConnector?.sendMessage('appearanceAction', {
+								shardConnector?.awaitResponse('appearanceAction', {
 									type: 'safemode',
 									action: 'enter',
 								});

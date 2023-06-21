@@ -1,5 +1,5 @@
 import { CharacterDataCreateSchema, CharacterIdSchema, CharacterPublicSettingsSchema } from '../character';
-import { AppearanceActionSchema } from '../assets';
+import { AppearanceActionFailure, AppearanceActionSchema } from '../assets';
 import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
 import { z } from 'zod';
 import { ZodCast } from '../validation';
@@ -46,7 +46,10 @@ export const ClientShardSchema = {
 	},
 	appearanceAction: {
 		request: AppearanceActionSchema,
-		response: null,
+		response: ZodCast<{ result: 'success' | 'invalid'; } | {
+			result: 'failure';
+			failure: AppearanceActionFailure;
+		}>(),
 	},
 	updateSettings: {
 		request: CharacterPublicSettingsSchema.partial(),

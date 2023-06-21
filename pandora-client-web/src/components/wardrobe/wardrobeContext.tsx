@@ -102,7 +102,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		setHeldItem,
 		extraItemActions,
 		actions,
-		execute: (action) => shardConnector?.sendMessage('appearanceAction', action),
+		execute: (action) => shardConnector?.awaitResponse('appearanceAction', action),
 		showExtraActionButtons: account.settings.wardrobeExtraActionButtons,
 	}), [target, targetSelector, player, globalState, assetList, heldItem, extraItemActions, actions, shardConnector, account.settings]);
 

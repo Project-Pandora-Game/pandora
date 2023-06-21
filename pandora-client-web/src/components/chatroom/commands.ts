@@ -206,7 +206,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 				if (!playerState)
 					return false;
 
-				shardConnector.sendMessage('appearanceAction', {
+				shardConnector.awaitResponse('appearanceAction', {
 					type: 'setView',
 					target: player.data.id,
 					view: playerState.view === 'front' ? 'back' : 'front',

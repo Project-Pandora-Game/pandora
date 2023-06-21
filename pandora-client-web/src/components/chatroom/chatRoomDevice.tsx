@@ -51,7 +51,7 @@ export function ChatRoomDevice({
 
 		newX = _.clamp(Math.round(newX), 0, background.size[0]);
 		newY = _.clamp(Math.round(newY), 0, maxY);
-		shard?.sendMessage('appearanceAction', {
+		shard?.awaitResponse('appearanceAction', {
 			type: 'roomDeviceDeploy',
 			target: {
 				type: 'roomInventory',

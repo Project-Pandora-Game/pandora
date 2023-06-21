@@ -84,7 +84,20 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		setHeldItem,
 		extraItemActions,
 		actions,
-		execute: (action) => DoAppearanceAction(action, actions, assetManager),
+		execute: (action) => {
+			const result = DoAppearanceAction(action, actions, assetManager);
+			switch (result.result) {
+				case 'success':
+					return { result: 'success' };
+				case 'failure':
+					return {
+						result: 'failure',
+						failure: result.failure,
+					};
+				default:
+					return { result: 'invalid' };
+			}
+		},
 		showExtraActionButtons: true,
 	}), [character, globalState, assetList, heldItem, extraItemActions, actions, assetManager]);
 

@@ -5,6 +5,7 @@ import {
 	AssetFrameworkGlobalState,
 	AssetId,
 	ICharacterRoomData,
+	IClientShardResult,
 	ItemContainerPath,
 	ItemId,
 	ItemPath,
@@ -40,7 +41,7 @@ export interface WardrobeContext {
 	setHeldItem: (newHeldItem: WardrobeHeldItem) => void;
 	extraItemActions: Observable<readonly WardrobeContextExtraItemActionComponent[]>;
 	actions: AppearanceActionContext;
-	execute: (action: AppearanceAction) => void;
+	execute: (action: AppearanceAction) => IClientShardResult['appearanceAction'] | undefined;
 
 	// Settings
 	showExtraActionButtons: boolean;

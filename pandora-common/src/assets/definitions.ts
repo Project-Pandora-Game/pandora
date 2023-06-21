@@ -262,6 +262,19 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	unlocked?: AssetLockProperties<A>;
 	/** Properties when the lock is locked */
 	locked?: AssetLockProperties<A>;
+	/** Configuration to enable password on this lock */
+	password?: {
+		/** Length of the password */
+		length: number | [number, number];
+		/**
+		 * Allowed characters in the password
+		 *  - `numeric` - only numbers
+		 *  - `letters` - only letters (case insensitive)
+		 *  - `alphanumeric` - only letters and numbers (case insensitive)
+		 *  - `text` - any text (numbers + case insensitive letters + spaces, dashes, underscores, ...)
+		 */
+		format: 'numeric' | 'letters' | 'alphanumeric' | 'text';
+	};
 	/**
 	 * Chat specific settings for this asset
 	 *

@@ -22,7 +22,7 @@ const logger = GetLogger('Character');
 
 type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id' | 'appearance'>;
 type ICharacterPublicDataChange = Omit<ICharacterPublicData, 'id' | 'appearance'>;
-type ICharacterPrivateDataChange = Omit<ICharacterDataUpdate, keyof ICharacterPublicData>;
+type ICharacterPrivateDataChange = Omit<ICharacterDataUpdate, keyof ICharacterPublicData | 'appearance'>;
 
 export class Character {
 	private readonly data: Omit<ICharacterData, 'appearance'>;
@@ -135,6 +135,10 @@ export class Character {
 		this.connectSecret = connectSecret;
 
 		this.setConnection(null);
+
+		if (data.appearance?.clientOnly) {
+			this.logger.error(`Character ${data.id} has client-only appearance!`);
+		}
 
 		this._context = {
 			inRoom: false,
@@ -455,7 +459,7 @@ export class Character {
 		if (!this._context.inRoom) {
 			this.connection?.sendMessage('chatRoomLoad', {
 				room: null,
-				globalState: this._context.globalState.currentState.exportToBundle(),
+				globalState: this._context.globalState.currentState.exportToClientBundle(),
 			});
 		}
 	}

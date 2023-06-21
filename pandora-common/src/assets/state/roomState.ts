@@ -7,12 +7,15 @@ import { AssetManager } from '../assetManager';
 import { Logger } from '../../logging';
 import { ROOM_INVENTORY_BUNDLE_DEFAULT } from '../roomInventory';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
+import type { IExportOptions } from '../modules/common';
 
 export const RoomInventoryBundleSchema = z.object({
 	items: z.array(ItemBundleSchema),
+	clientOnly: z.boolean().optional(),
 });
 
 export type RoomInventoryBundle = z.infer<typeof RoomInventoryBundleSchema>;
+export type RoomInventoryClientBundle = RoomInventoryBundle & { clientOnly: true; };
 
 /**
  * State of an room. Immutable.
@@ -48,9 +51,17 @@ export class AssetFrameworkRoomState {
 		};
 	}
 
-	public exportToBundle(): RoomInventoryBundle {
+	public exportToBundle(options: IExportOptions = {}): RoomInventoryBundle {
 		return {
-			items: this.items.map((item) => item.exportToBundle()),
+			items: this.items.map((item) => item.exportToBundle(options)),
+		};
+	}
+
+	public exportToClientBundle(options: IExportOptions = {}): RoomInventoryClientBundle {
+		options.clientOnly = true;
+		return {
+			items: this.items.map((item) => item.exportToBundle(options)),
+			clientOnly: true,
 		};
 	}
 
@@ -66,11 +77,11 @@ export class AssetFrameworkRoomState {
 	}
 
 	public static loadFromBundle(assetManager: AssetManager, bundle: RoomInventoryBundle, logger: Logger | undefined): AssetFrameworkRoomState {
-		bundle = RoomInventoryBundleSchema.parse(bundle);
+		const parsed = RoomInventoryBundleSchema.parse(bundle);
 
 		// Load all items
 		const loadedItems: Item[] = [];
-		for (const itemBundle of bundle.items) {
+		for (const itemBundle of parsed.items) {
 			// Load asset and skip if unknown
 			const asset = assetManager.getAssetById(itemBundle.asset);
 			if (asset === undefined) {

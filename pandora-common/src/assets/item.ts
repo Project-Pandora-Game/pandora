@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import _, { first, toPlainObject } from 'lodash';
+import _, { first } from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
 import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
@@ -11,7 +11,7 @@ import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
-import { IItemModule } from './modules/common';
+import { IExportOptions, IItemModule } from './modules/common';
 import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 
@@ -130,12 +130,12 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		this.color = this._loadColor(bundle.color);
 	}
 
-	public exportToBundle(): ItemBundle {
+	public exportToBundle(options: IExportOptions): ItemBundle {
 		let moduleData: ItemBundle['moduleData'];
 		if (this.modules.size > 0) {
 			moduleData = {};
 			for (const [name, module] of this.modules.entries()) {
-				moduleData[name] = module.exportData();
+				moduleData[name] = module.exportData(options);
 			}
 		}
 
@@ -247,7 +247,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeColor(color: ItemColorBundle): Item<Type> {
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		bundle.color = _.cloneDeep(color);
 		return CreateItem(this.id, this.asset, bundle, {
 			assetManager: this.assetManager,
@@ -262,12 +262,12 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		const moduleResult = module.doAction(context, action);
 		if (!moduleResult)
 			return null;
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		return CreateItem(this.id, this.asset, {
 			...bundle,
 			moduleData: {
 				...bundle.moduleData,
-				[moduleName]: moduleResult.exportData(),
+				[moduleName]: moduleResult.exportData({}),
 			},
 		}, {
 			assetManager: this.assetManager,
@@ -283,12 +283,12 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		const moduleResult = this.modules.get(moduleName)?.setContents(items);
 		if (!moduleResult)
 			return null;
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		return CreateItem(this.id, this.asset, {
 			...bundle,
 			moduleData: {
 				...bundle.moduleData,
-				[moduleName]: moduleResult.exportData(),
+				[moduleName]: moduleResult.exportData({}),
 			},
 		}, {
 			assetManager: this.assetManager,
@@ -516,13 +516,13 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 		return { success: true };
 	}
 
-	public override exportToBundle(): ItemBundle & { roomDeviceData: RoomDeviceBundle; } {
+	public override exportToBundle(options: IExportOptions): ItemBundle & { roomDeviceData: RoomDeviceBundle; } {
 		const slotOccupancy: RoomDeviceBundle['slotOccupancy'] = {};
 		for (const [slot, character] of this.slotOccupancy.entries()) {
 			slotOccupancy[slot] = character;
 		}
 		return {
-			...super.exportToBundle(),
+			...super.exportToBundle(options),
 			roomDeviceData: {
 				deployment: this.deployment,
 				slotOccupancy,
@@ -532,7 +532,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeDeployment(newDeployment: RoomDeviceDeployment): ItemRoomDevice {
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		bundle.roomDeviceData.deployment = newDeployment;
 		return CreateItem(this.id, this.asset, bundle, {
 			assetManager: this.assetManager,
@@ -545,7 +545,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 		if (this.asset.definition.slots[slot] == null || this.deployment == null)
 			return null;
 
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		if (character == null) {
 			delete bundle.roomDeviceData.slotOccupancy[slot];
 		} else {
@@ -619,15 +619,15 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 		return false;
 	}
 
-	public override exportToBundle(): ItemBundle {
+	public override exportToBundle(options: IExportOptions): ItemBundle {
 		return {
-			...super.exportToBundle(),
+			...super.exportToBundle(options),
 			roomDeviceLink: this.roomDeviceLink ?? undefined,
 		};
 	}
 
 	public withLink(link: RoomDeviceLink): ItemRoomDeviceWearablePart {
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		bundle.roomDeviceLink = link;
 		return CreateItem(this.id, this.asset, bundle, {
 			assetManager: this.assetManager,
@@ -692,9 +692,9 @@ export class ItemLock extends ItemBase<'lock'> {
 		this.lockData = lockData;
 	}
 
-	public override exportToBundle(): ItemBundle {
+	public override exportToBundle(options: IExportOptions): ItemBundle {
 		return {
-			...super.exportToBundle(),
+			...super.exportToBundle(options),
 			lockData: this.lockData,
 		};
 	}
@@ -796,7 +796,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		}
 
 		return new ItemLock(this.id, this.asset, {
-			...super.exportToBundle(),
+			...super.exportToBundle({}),
 			lockData: {
 				...this.lockData,
 				hidden,
@@ -853,7 +853,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		}
 
 		return new ItemLock(this.id, this.asset, {
-			...super.exportToBundle(),
+			...super.exportToBundle({}),
 			lockData,
 		}, {
 			assetManager: this.assetManager,

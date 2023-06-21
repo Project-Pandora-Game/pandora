@@ -1,4 +1,4 @@
-import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
+import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon, IExportOptions } from './common';
 import { z } from 'zod';
 import { AssetDefinitionExtraArgs, AssetSize, AssetSizeMapping } from '../definitions';
 import { ConditionOperator } from '../graphics';
@@ -142,10 +142,10 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		this.contents = content;
 	}
 
-	public exportData(): IModuleItemDataStorage {
+	public exportData(options: IExportOptions): IModuleItemDataStorage {
 		return {
 			type: 'storage',
-			contents: this.contents.map((item) => item.exportToBundle()),
+			contents: this.contents.map((item) => item.exportToBundle(options)),
 		};
 	}
 
@@ -174,7 +174,7 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 	public setContents(items: AppearanceItems): ItemModuleStorage | null {
 		return new ItemModuleStorage(this.config, {
 			type: 'storage',
-			contents: items.map((item) => item.exportToBundle()),
+			contents: items.map((item) => item.exportToBundle({})),
 		}, {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,

@@ -45,13 +45,13 @@ export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
 export type ModuleActionError =
 	| {
-		type: 'lockIntereactionPrevented';
+		type: 'lockInteractionPrevented';
 		moduleAction: 'lock' | 'unlock';
 		reason: 'blockSelf';
 		asset: AssetId;
 	}
 	| {
-		type: 'lockIntereactionPrevented';
+		type: 'lockInteractionPrevented';
 		moduleAction: 'lock';
 		reason: 'noStoredPassword';
 		asset: AssetId;
@@ -59,6 +59,14 @@ export type ModuleActionError =
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
 		type: 'invalid';
+	};
+
+export type ModuleActionFailure =
+	| {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'unlock';
+		reason: 'wrongPassword';
+		asset: AssetId;
 	};
 
 //#endregion

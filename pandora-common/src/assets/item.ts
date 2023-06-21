@@ -754,7 +754,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		// Locks can prevent interaction from player (unless in safemode)
 		if (properties.blockSelf && isSelfAction && !context.player.isInSafemode()) {
 			context.reject({
-				type: 'lockIntereactionPrevented',
+				type: 'lockInteractionPrevented',
 				moduleAction: action.action,
 				reason: 'blockSelf',
 				asset: this.asset.id,
@@ -777,7 +777,7 @@ export class ItemLock extends ItemBase<'lock'> {
 
 		const rejectMissingPassword = () => {
 			reject({
-				type: 'lockIntereactionPrevented',
+				type: 'lockInteractionPrevented',
 				moduleAction: 'lock',
 				reason: 'noStoredPassword',
 				asset: this.asset.id,
@@ -831,7 +831,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		});
 	}
 
-	public unlock({ messageHandler }: AppearanceModuleActionContext, { password, clearLastPassword }: IItemLockAction & { action: 'unlock'; }): ItemLock | null {
+	public unlock({ messageHandler, failure }: AppearanceModuleActionContext, { password, clearLastPassword }: IItemLockAction & { action: 'unlock'; }): ItemLock | null {
 		if (!this.isLocked() || this.lockData == null)
 			return null;
 
@@ -839,7 +839,12 @@ export class ItemLock extends ItemBase<'lock'> {
 			if (password == null) {
 				return null;
 			} else if (this.lockData.hidden?.side === 'server' && password !== this.lockData.hidden.password) {
-				// TODO: new type of reject for server side failures
+				failure({
+					type: 'lockInteractionPrevented',
+					moduleAction: 'unlock',
+					reason: 'wrongPassword',
+					asset: this.asset.id,
+				});
 				return null;
 			}
 		}

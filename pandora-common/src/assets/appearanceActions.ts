@@ -6,7 +6,7 @@ import { AssetManager } from './assetManager';
 import { AssetIdSchema, WearableAssetType } from './definitions';
 import { ActionHandler, ActionMessageTemplateHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
 import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
-import { ItemModuleActionSchema, ModuleActionError } from './modules';
+import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
@@ -180,8 +180,16 @@ export interface AppearanceActionContext {
 	actionHandler?: ActionHandler;
 }
 
+export type AppearanceActionFailure = {
+	type: 'moduleActionFailure';
+	reason: ModuleActionFailure;
+};
+
 export type AppearanceActionResult = {
 	result: 'success';
+} | {
+	result: 'failure';
+	failure: AppearanceActionFailure;
 } | {
 	result: 'invalidAction';
 	reason?: 'noDeleteRoomDeviceWearable' | 'noDeleteDeployedRoomDevice';
@@ -203,6 +211,7 @@ export interface AppearanceModuleActionContext {
 
 	messageHandler: ActionMessageTemplateHandler;
 	reject: (reason: ModuleActionError) => void;
+	failure: (reason: ModuleActionFailure) => void;
 }
 
 export interface AppearanceActionHandlerArg<Action extends AppearanceAction = AppearanceAction> {
@@ -781,6 +790,7 @@ export function ActionModuleAction({
 	const containerManipulator = rootManipulator.getContainer(container);
 
 	let rejectionReason: ModuleActionError | undefined;
+	let failureReason: ModuleActionFailure | undefined;
 
 	// Do change and store chat messages
 	if (!containerManipulator.modifyItem(itemId, (it) => {
@@ -796,6 +806,9 @@ export function ActionModuleAction({
 			reject: (reason) => {
 				rejectionReason ??= reason;
 			},
+			failure: (reason) => {
+				failureReason ??= reason;
+			}
 		};
 
 		return it.moduleAction(
@@ -803,10 +816,19 @@ export function ActionModuleAction({
 			action.module,
 			action.action,
 		);
-	}) || rejectionReason) {
+	}) || rejectionReason || failureReason) {
+		if (rejectionReason || failureReason == null) {
+			return {
+				result: 'moduleActionError',
+				reason: rejectionReason ?? { type: 'invalid' },
+			};
+		}
 		return {
-			result: 'moduleActionError',
-			reason: rejectionReason ?? { type: 'invalid' },
+			result: 'failure',
+			failure: {
+				type: 'moduleActionFailure',
+				reason: failureReason,
+			},
 		};
 	}
 

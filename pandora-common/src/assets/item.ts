@@ -693,6 +693,18 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public override exportToBundle(options: IExportOptions): ItemBundle {
+		if (options.clientOnly && this.lockData?.hidden?.side === 'server') {
+			return {
+				...super.exportToBundle(options),
+				lockData: {
+					...this.lockData,
+					hidden: {
+						side: 'client',
+						hasPassword: this.lockData.hidden.password ? true : undefined,
+					},
+				},
+			};
+		}
 		return {
 			...super.exportToBundle(options),
 			lockData: this.lockData,

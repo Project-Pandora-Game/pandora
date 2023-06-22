@@ -1,6 +1,7 @@
 import {
 	AppearanceAction,
 	AppearanceActionContext,
+	AppearanceActionFailure,
 	AppearanceActionResult,
 	AssertNever,
 	AssertNotNullable,
@@ -126,6 +127,7 @@ export function useWardrobeContext(): Readonly<WardrobeContext> {
 
 type ExecuteCallbackOptions = {
 	onSuccess?: () => void;
+	onFailure?: (failure: AppearanceActionFailure) => void;
 };
 
 export function useWardrobeExecute(action: Nullable<AppearanceAction>, props: ExecuteCallbackOptions = {}) {
@@ -153,10 +155,15 @@ export function useWardrobeExecuteCallback(props: ExecuteCallbackOptions = {}) {
 	return useAsyncEvent(async (action: AppearanceAction) => await execute(action), ExecuteCallback(props));
 }
 
-function ExecuteCallback({ onSuccess }: ExecuteCallbackOptions) {
+function ExecuteCallback({ onSuccess, onFailure }: ExecuteCallbackOptions) {
 	return (r: Nullable<IClientShardNormalResult['appearanceAction']>) => {
-		if (r?.result === 'success') {
-			onSuccess?.();
+		switch (r?.result) {
+			case 'success':
+				onSuccess?.();
+				break;
+			case 'failure':
+				onFailure?.(r.failure);
+				break;
 		}
 	};
 }

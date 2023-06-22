@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import {
 	AppearanceAction,
+	AppearanceActionFailure,
 	AppearanceActionResult,
 	Asset,
 	IsNotNullable,
@@ -53,6 +54,7 @@ export function WardrobeActionButton({
 	hideReserveSpace = false,
 	showActionBlockedExplanation = true,
 	onExecute,
+	onFailure,
 }: CommonProps & {
 	action: AppearanceAction;
 	/** If the button should hide on certain invalid states */
@@ -61,12 +63,14 @@ export function WardrobeActionButton({
 	hideReserveSpace?: boolean;
 	showActionBlockedExplanation?: boolean;
 	onExecute?: () => void;
+	onFailure?: (failure: AppearanceActionFailure) => void;
 }): ReactElement {
 	const check = useStaggeredAppearanceActionResult(action);
 	const hide = check != null && autohide && AppearanceActionResultShouldHide(check);
 	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
 	const [execute, processing] = useWardrobeExecuteChecked(action, check, {
 		onSuccess: onExecute,
+		onFailure,
 	});
 
 	return (

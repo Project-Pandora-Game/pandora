@@ -8,7 +8,7 @@ import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
 import { ModalDialog } from '../dialog/dialog';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { ContextHelpButton } from '../help/contextHelpButton';
 import { useCharacterState, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 
@@ -50,7 +50,6 @@ export function CharacterSafemodeDialog({ player }: {
 	const roomContext = useChatroomRequired();
 	const state = useCharacterState(roomContext, player.id);
 	const safemodeState = state?.safemode ?? null;
-	const shardConnector = useShardConnector();
 	const currentTime = useCurrentTime();
 
 	const canLeaveSafemode = safemodeState != null && currentTime >= safemodeState.allowLeaveAt;
@@ -60,6 +59,16 @@ export function CharacterSafemodeDialog({ player }: {
 		hide();
 		return true;
 	}, 'Escape');
+
+	const [doSafeModeExit, exiting] = useAppearanceActionEvent({
+		type: 'safemode',
+		action: 'exit',
+	});
+	const [doSafeModeEnter, entering] = useAppearanceActionEvent({
+		type: 'safemode',
+		action: 'enter',
+	});
+	const processing = exiting || entering;
 
 	return (
 		<ModalDialog>
@@ -86,14 +95,9 @@ export function CharacterSafemodeDialog({ player }: {
 						<Row padding='medium' alignX='space-between'>
 							<Button onClick={ hide }>Cancel</Button>
 							<Button
-								disabled={ !canLeaveSafemode }
+								disabled={ !canLeaveSafemode || processing }
 								className='fadeDisabled'
-								onClick={ () => {
-									shardConnector?.awaitResponse('appearanceAction', {
-										type: 'safemode',
-										action: 'exit',
-									});
-								} }
+								onClick={ doSafeModeExit }
 							>
 								Leave safemode
 							</Button>
@@ -109,12 +113,7 @@ export function CharacterSafemodeDialog({ player }: {
 						</p>
 						<Row padding='medium' alignX='space-between'>
 							<Button onClick={ hide }>Cancel</Button>
-							<Button onClick={ () => {
-								shardConnector?.awaitResponse('appearanceAction', {
-									type: 'safemode',
-									action: 'enter',
-								});
-							} }>
+							<Button onClick={ doSafeModeEnter } disabled={ processing }>
 								Enter safemode!
 							</Button>
 						</Row>

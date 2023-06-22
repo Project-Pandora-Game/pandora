@@ -3,6 +3,8 @@ import { useMounted } from './useMounted';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyFunction = (...args: any[]) => any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PromiseFunction = (...args: any[]) => Promise<any>;
 
 /**
  * Creates a stable function that wont change during the lifecycle of the component.
@@ -26,18 +28,18 @@ export function useEvent<T extends AnyFunction>(callback: T): T {
 	}, []) as T;
 }
 
-export function useAsyncEvent<T>(callback: () => Promise<T>, updateComponent: (result: T) => void, { errorHandler }: { errorHandler?: (error: unknown) => void; } = {}): [() => void, boolean] {
+export function useAsyncEvent<T extends PromiseFunction>(callback: (...args: Parameters<T>) => ReturnType<T>, updateComponent: (result: Awaited<ReturnType<T>>) => void, { errorHandler }: { errorHandler?: (error: unknown) => void; } = {}): [(...args: Parameters<T>) => void, boolean] {
 	const [processing, setProcessing] = useState(false);
 	const mounted = useMounted();
 
-	return [useEvent(() => {
+	return [useEvent((...args: Parameters<T>) => {
 		if (processing)
 			return;
 
 		setProcessing(true);
 
-		callback()
-			.then((result: T) => {
+		callback(...args)
+			.then((result: Awaited<ReturnType<T>>) => {
 				if (mounted.current) {
 					setProcessing(false);
 					updateComponent(result);

@@ -210,7 +210,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 					type: 'setView',
 					target: player.data.id,
 					view: playerState.view === 'front' ? 'back' : 'front',
-				});
+				}).catch(() => { /** TODO */ });
 				return true;
 			}),
 	},

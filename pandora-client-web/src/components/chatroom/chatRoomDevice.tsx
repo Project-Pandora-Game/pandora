@@ -10,7 +10,7 @@ import { useTexture } from '../../graphics/useTexture';
 import { ChatroomDebugConfig } from './chatroomDebug';
 import { SwapCullingDirection, useItemColor } from '../../graphics/graphicsLayer';
 import { Immutable } from 'immer';
-import { useEvent } from '../../common/useEvent';
+import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
@@ -46,12 +46,16 @@ export function ChatRoomDevice({
 	const asset = item.asset;
 	const app = useApp();
 
-	const setPositionRaw = useEvent((newX: number, newY: number): void => {
+	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number) => {
+		if (!shard) {
+			return;
+		}
+
 		const maxY = CalculateCharacterMaxYForBackground(background);
 
 		newX = _.clamp(Math.round(newX), 0, background.size[0]);
 		newY = _.clamp(Math.round(newY), 0, maxY);
-		shard?.awaitResponse('appearanceAction', {
+		await shard.awaitResponse('appearanceAction', {
 			type: 'roomDeviceDeploy',
 			target: {
 				type: 'roomInventory',
@@ -66,6 +70,8 @@ export function ChatRoomDevice({
 				y: newY,
 			},
 		});
+	}, () => {
+		/* Do nothing */
 	});
 
 	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);

@@ -27,6 +27,8 @@ export function CharacterCreate(): ReactElement | null {
 			shardConnector?.awaitResponse('appearanceAction', {
 				type: 'randomize',
 				kind: 'full',
+			}).catch(() => {
+				// TODO: this is bad, ww shouldn't have a useEffect that calls a shard action like this
 			});
 		}
 	}, [shouldRandomize, shardConnector]);

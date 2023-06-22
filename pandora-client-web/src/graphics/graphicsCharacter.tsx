@@ -1,5 +1,5 @@
 import { Container } from '@pixi/react';
-import { AssertNotNullable, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
+import { AssertNotNullable, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CloneDeepMutable, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
@@ -68,6 +68,11 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: Chara
 	return useMemo(() => actualCalculate(states), [actualCalculate, states]);
 }
 
+export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
+	x: CharacterSize.WIDTH / 2, // Middle of the character image
+	y: CharacterSize.HEIGHT,
+};
+
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
 	characterState,
@@ -87,9 +92,6 @@ function GraphicsCharacterWithManagerImpl({
 	graphicsGetter: GraphicsGetterFunction;
 	layerStateOverrideGetter?: LayerStateOverrideGetter;
 }, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
-	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CharacterSize.WIDTH / 2, y: 0 }), [pivotExtra]);
-	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
-
 	const items = useCharacterAppearanceItems(characterState);
 
 	const layers = useMemo<LayerState[]>(() => {
@@ -165,7 +167,10 @@ function GraphicsCharacterWithManagerImpl({
 		return result;
 	}, [Layer, characterState, layers, priorities, view]);
 
+
+	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
+	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
 
 	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => {
 		const reverse = view === 'back';

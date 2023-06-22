@@ -1,11 +1,11 @@
 import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo } from 'pandora-common';
-import PIXI, { FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
+import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterAppearanceView } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import _ from 'lodash';
 import { ChatroomDebugConfig } from './chatroomDebug';
-import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
 import { Container, Graphics, Text, useApp } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
@@ -27,48 +27,76 @@ type ChatRoomCharacterPropsWithState = ChatRoomCharacterProps & {
 	characterState: AssetFrameworkCharacterState;
 };
 
-const BOTTOM_NAME_OFFSET = 100;
+const PIVOT_TO_LABEL_OFFSET = -100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 
-export function useChatRoomCharacterPosition(
-	position: readonly [number, number],
-	characterState: AssetFrameworkCharacterState,
-	background: IChatroomBackgroundData,
-): {
-		x: number;
-		y: number;
-		positionY: number;
-		yOffset: number;
-		baseScale: number;
-		scale: number;
-	} {
+export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharacterState): {
+	baseScale: number;
+	yOffset: number;
+	pivot: Readonly<PointLike>;
+} {
 	const evaluator = useAppearanceConditionEvaluator(characterState);
-
-	const [width, height] = background.size;
-	const scaling = background.scaling;
-
-	const x = Math.min(width, position[0]);
-	const positionY = Math.min(height, position[1]);
 
 	let baseScale = 1;
 	if (evaluator.getBoneLikeValue('sitting') > 0) {
 		baseScale *= 0.9;
 	}
 
-	const scale = baseScale * (1 - (positionY * scaling) / height);
+	const legPose = evaluator.getBoneLikeValue('kneeling') != 0 ? 'kneeling' :
+	evaluator.getBoneLikeValue('sitting') != 0 ? 'sitting' :
+	'normal';
+
+	const legEffectMap: Record<typeof legPose, number> = {
+		normal: 600,
+		sitting: 0,
+		kneeling: 300,
+	};
+	const legEffectCharacterOffsetBase = legPose === 'sitting' ? 135 : legEffectMap.normal;
+	const legEffect = legEffectMap[legPose]
+		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? 0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+
+	const effectiveLegAngle = Math.min(Math.abs(evaluator.getBoneLikeValue('leg_l')), Math.abs(evaluator.getBoneLikeValue('leg_r')), 90);
 
 	const yOffset = 0
-		+ 1.75 * evaluator.getBoneLikeValue('kneeling')
-		+ 0.75 * evaluator.getBoneLikeValue('sitting')
-		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? -0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+		+ legEffectCharacterOffsetBase
+		- legEffect * Math.cos(DEG_TO_RAD * effectiveLegAngle);
+
+	const pivot = useMemo((): PointLike => ({ x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y - yOffset }), [yOffset]);
 
 	return {
-		x,
-		y: height - positionY,
-		positionY,
-		yOffset,
 		baseScale,
+		yOffset,
+		pivot,
+	};
+}
+
+export function useChatRoomCharacterPosition(
+	position: readonly [number, number],
+	characterState: AssetFrameworkCharacterState,
+	background: IChatroomBackgroundData,
+): {
+	position: Readonly<PointLike>;
+	rawPositionY: number;
+	yOffset: number;
+	scale: number;
+	pivot: Readonly<PointLike>;
+} {
+	const [width, height] = background.size;
+	const scaling = background.scaling;
+
+	const x = Math.min(width, position[0]);
+	const y = Math.min(height, position[1]);
+
+	const { baseScale, yOffset, pivot } = useChatRoomCharacterOffsets(characterState);
+
+	const scale = baseScale * (1 - (y * scaling) / height);
+
+	return {
+		position: useMemo((): PointLike => ({ x, y: height - y }), [x, y]),
+		rawPositionY: y,
+		yOffset,
 		scale,
+		pivot,
 	};
 }
 
@@ -99,14 +127,14 @@ function ChatRoomCharacterDisplay({
 	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
 
 	const height = background.size[1];
-	const { x, y, positionY, yOffset, baseScale, scale } = useChatRoomCharacterPosition(character.data.position, characterState, background);
+	const { position, rawPositionY, scale, pivot } = useChatRoomCharacterPosition(character.data.position, characterState, background);
 
 	const backView = useCharacterAppearanceView(characterState) === 'back';
 
 	const scaleX = backView ? -1 : 1;
 
-	const labelX = CharacterSize.WIDTH / 2;
-	const labelY = CharacterSize.HEIGHT - BOTTOM_NAME_OFFSET - yOffset;
+	const labelX = pivot.x;
+	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const hitArea = useMemo(() => new Rectangle(labelX - 100, labelY - 50, 200, 100), [labelX, labelY]);
 
@@ -124,7 +152,7 @@ function ChatRoomCharacterDisplay({
 		if (!dragging.current || !roomInfo || !characterContainer.current) return;
 		const dragPointerEnd = event.getLocalPosition<Point>(characterContainer.current.parent);
 
-		const newY = (dragPointerEnd.y - height + baseScale * BOTTOM_NAME_OFFSET) / ((background.scaling / height) * baseScale * BOTTOM_NAME_OFFSET - 1);
+		const newY = height - (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale);
 
 		setPositionThrottled(dragPointerEnd.x, newY);
 	});
@@ -179,16 +207,16 @@ function ChatRoomCharacterDisplay({
 		<GraphicsCharacter
 			ref={ characterContainer }
 			characterState={ characterState }
-			position={ { x, y } }
+			position={ position }
 			scale={ { x: scaleX * scale, y: scale } }
-			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }
+			pivot={ pivot }
 			hitArea={ hitArea }
 			eventMode='static'
 			filters={ filters }
 			onPointerDown={ onPointerDown }
 			onPointerUp={ onPointerUp }
 			onPointerUpOutside={ onPointerUp }
-			zIndex={ -positionY }
+			zIndex={ -rawPositionY }
 		>
 			<Text
 				anchor={ { x: 0.5, y: 0.5 } }
@@ -210,19 +238,18 @@ function ChatRoomCharacterDisplay({
 						zIndex={ 99999 }
 					>
 						<Graphics
-							x={ -MASK_SIZE.x }
-							y={ -MASK_SIZE.y }
 							draw={ (g) => {
 								g.clear()
+									// Mask area
 									.lineStyle({ color: 0xffff00, width: 2 })
-									.drawRect(0, 0, MASK_SIZE.width, MASK_SIZE.height);
-							} }
-						/>
-						<Graphics
-							draw={ (g) => {
-								g.clear()
+									.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+									// Character canvas standard area
 									.lineStyle({ color: 0x00ff00, width: 2 })
-									.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
+									.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+									// Pivot point
+									.beginFill(0xffff00)
+									.lineStyle({ color: 0x000000, width: 1 })
+									.drawCircle(pivot.x, pivot.y, 5);
 							} }
 						/>
 						<Graphics draw={ hotboxDebugDraw } />

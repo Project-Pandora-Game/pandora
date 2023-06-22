@@ -1,10 +1,10 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CloneDeepMutable, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
 import { ChildrenProps } from '../../common/reactTypes';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import { GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
 import { Container, Graphics, Sprite, useApp } from '@pixi/react';
 import { useTexture } from '../../graphics/useTexture';
 import { ChatroomDebugConfig } from './chatroomDebug';
@@ -13,13 +13,13 @@ import { Immutable } from 'immer';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { Character, useCharacterAppearanceView } from '../../character/character';
 import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacters, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
 import { usePlayerVisionFilters } from './chatRoomScene';
+import { useChatRoomCharacterOffsets } from './chatRoomCharacter';
 
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
@@ -344,18 +344,13 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement | null {
-	const evaluator = useAppearanceConditionEvaluator(characterState);
-
 	const filters = usePlayerVisionFilters(character.isPlayer());
 
 	const devicePivot = item.asset.definition.pivot;
 	const x = devicePivot.x + layer.characterPosition.offsetX;
 	const y = devicePivot.y + layer.characterPosition.offsetY;
 
-	let baseScale = 1;
-	if (evaluator.getBoneLikeValue('sitting') > 0) {
-		baseScale *= 0.9;
-	}
+	const { baseScale, pivot } = useChatRoomCharacterOffsets(characterState);
 
 	const scale = baseScale * (layer.characterPosition.relativeScale ?? 1);
 
@@ -363,12 +358,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 
 	const scaleX = backView ? -1 : 1;
 
-	const yOffsetPose = 0
-		+ 1.75 * evaluator.getBoneLikeValue('kneeling')
-		+ 0.75 * evaluator.getBoneLikeValue('sitting')
-		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? -0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
-
-	const yOffset = layer.characterPosition.disablePoseOffset ? 0 : yOffsetPose;
+	const actualPivot = useMemo((): PointLike => layer.characterPosition.disablePoseOffset ? CloneDeepMutable(CHARACTER_PIVOT_POSITION) : pivot, [layer, pivot])
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
@@ -381,7 +371,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 			characterState={ characterState }
 			position={ { x, y } }
 			scale={ { x: scaleX * scale, y: scale } }
-			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }
+			pivot={ actualPivot }
 			filters={ filters }
 		>
 		</GraphicsCharacter>

@@ -12,6 +12,7 @@ import './index.scss';
 import './styles/globalUtils.scss';
 import { PandoraRoutes } from './routing/Routes';
 import { Dialogs } from './components/dialog/dialog';
+import { HoverElementsPortal } from './components/hoverElement/hoverElement';
 
 const logger = GetLogger('init');
 
@@ -31,6 +32,7 @@ function Start(): void {
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
 			<Dialogs />
+			<HoverElementsPortal />
 			<EulaGate>
 				<BrowserRouter>
 					<GameContextProvider>

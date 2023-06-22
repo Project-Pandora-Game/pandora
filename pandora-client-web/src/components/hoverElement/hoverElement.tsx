@@ -3,6 +3,9 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useContextMenuPosition } from '../contextMenu/contextMenu';
 import './hoverElement.scss';
+import { createHtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
+
+const hoverPortal = createHtmlPortalNode();
 
 type HoverElementProps = CommonProps & {
 	parent: HTMLElement | null;
@@ -43,8 +46,14 @@ export function HoverElement({ children, className, parent }: HoverElementProps)
 		return null;
 
 	return (
-		<div className={ classNames('hover-element', className) } ref={ positionRef }>
-			{ children }
-		</div>
+		<InPortal node={ hoverPortal }>
+			<div className={ classNames('hover-element', className) } ref={ positionRef }>
+				{ children }
+			</div>
+		</InPortal>
 	);
+}
+
+export function HoverElementsPortal(): ReactElement {
+	return <OutPortal node={ hoverPortal } />;
 }

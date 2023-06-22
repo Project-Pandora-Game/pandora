@@ -7,6 +7,7 @@ import { DebugContextProvider, useDebugContext } from '../components/error/debug
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
 import { Editor } from './editor';
 import { AssetFrameworkGlobalState } from 'pandora-common';
+import { HoverElementsPortal } from '../components/hoverElement/hoverElement';
 
 export const EditorContext = createContext({
 	editor: null as Editor | null,
@@ -26,6 +27,7 @@ export function EditorContextProvider({ children }: ChildrenProps): ReactElement
 		<DebugContextProvider>
 			<EditorErrorBoundry>
 				<Dialogs />
+				<HoverElementsPortal />
 				<EditorContext.Provider value={ context }>
 					{ children }
 				</EditorContext.Provider>

@@ -12,7 +12,7 @@ import { CommonProps } from '../../common/reactTypes';
 import { AppearanceActionResultShouldHide, RenderAppearanceActionResult } from '../../assets/appearanceValidation';
 import { HoverElement } from '../hoverElement/hoverElement';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
-import { useWardrobeContext } from './wardrobeContext';
+import { useWardrobeExecuteChecked } from './wardrobeContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 
 export function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: HTMLElement | null; }) {
@@ -62,11 +62,12 @@ export function WardrobeActionButton({
 	showActionBlockedExplanation?: boolean;
 	onExecute?: () => void;
 }): ReactElement {
-	const { execute } = useWardrobeContext();
-
 	const check = useStaggeredAppearanceActionResult(action);
 	const hide = check != null && autohide && AppearanceActionResultShouldHide(check);
 	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
+	const [execute, processing] = useWardrobeExecuteChecked(action, check, {
+		onSuccess: onExecute,
+	});
 
 	return (
 		<button
@@ -75,11 +76,9 @@ export function WardrobeActionButton({
 			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
-				if (check?.result === 'success') {
-					execute(action);
-					onExecute?.();
-				}
+				execute();
 			} }
+			disabled={ processing }
 		>
 			{
 				showActionBlockedExplanation && check != null ? (

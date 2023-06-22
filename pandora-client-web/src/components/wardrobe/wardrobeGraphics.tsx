@@ -10,7 +10,7 @@ import React, { ReactElement, useMemo } from 'react';
 import { AppearanceContainer } from '../../character/character';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { Button } from '../common/button/button';
-import { useAsyncEvent, useEvent } from '../../common/useEvent';
+import { useEvent } from '../../common/useEvent';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';

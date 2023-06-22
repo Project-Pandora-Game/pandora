@@ -15,7 +15,7 @@ import _ from 'lodash';
 import { ColorInputRGBA } from '../../common/colorInput/colorInput';
 import { Immutable } from 'immer';
 import { useItemColorString } from '../../../graphics/graphicsLayer';
-import { useWardrobeContext } from '../wardrobeContext';
+import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { useWardrobeTargetItems } from '../wardrobeUtils';
 
 export function WardrobeItemColorization({ wornItem, item }: {
@@ -61,10 +61,11 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 	item: Item;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
-	const { actions, execute } = useWardrobeContext();
+	const { actions } = useWardrobeContext();
 	const current = useItemColorString(allItems, item, colorKey) ?? colorDefinition.default;
 	const bundle = useMemo(() => item.exportColorToBundle(), [item]);
 	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success', [bundle, action, actions, assetManager]);
+	const [execute] = useWardrobeExecuteCallback();
 
 	if (!colorDefinition.name || !bundle)
 		return null;

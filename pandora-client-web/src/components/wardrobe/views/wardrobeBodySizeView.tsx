@@ -5,14 +5,14 @@ import {
 import React, { ReactElement, useCallback, useMemo } from 'react';
 import { AppearanceContainer, useCharacterAppearancePose } from '../../../character/character';
 import _ from 'lodash';
-import { useWardrobeContext } from '../wardrobeContext';
+import { useWardrobeExecuteCallback } from '../wardrobeContext';
 import { BoneRowElement } from './wardrobePoseView';
 
 export function WardrobeBodySizeEditor({ character, characterState }: {
 	character: AppearanceContainer;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { execute } = useWardrobeContext();
+	const [execute] = useWardrobeExecuteCallback();
 	const currentBones = useCharacterAppearancePose(characterState);
 
 	const setBodyDirect = useCallback(({ bones }: { bones: Record<BoneName, number>; }) => {

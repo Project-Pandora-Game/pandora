@@ -1,8 +1,12 @@
 import {
+	AppearanceAction,
 	AppearanceActionContext,
+	AppearanceActionResult,
 	AssertNever,
 	AssertNotNullable,
 	EMPTY_ARRAY,
+	IClientShardNormalResult,
+	Nullable,
 	RoomInventory,
 	RoomTargetSelector,
 } from 'pandora-common';
@@ -16,6 +20,7 @@ import type { PlayerCharacter } from '../../character/player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeHeldItem, WardrobeTarget } from './wardrobeTypes';
+import { useAsyncEvent } from '../../common/useEvent';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
@@ -117,4 +122,41 @@ export function useWardrobeContext(): Readonly<WardrobeContext> {
 	const ctx = useContext(wardrobeContext);
 	AssertNotNullable(ctx);
 	return ctx;
+}
+
+type ExecuteCallbackOptions = {
+	onSuccess?: () => void;
+};
+
+export function useWardrobeExecute(action: Nullable<AppearanceAction>, props: ExecuteCallbackOptions = {}) {
+	const { execute } = useWardrobeContext();
+	return useAsyncEvent(async () => {
+		if (action)
+			return await execute(action);
+
+		return null;
+	}, ExecuteCallback(props));
+}
+
+export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionResult | null, props: ExecuteCallbackOptions = {}) {
+	const { execute } = useWardrobeContext();
+	return useAsyncEvent(async () => {
+		if (action && result?.result === 'success')
+			return await execute(action);
+
+		return null;
+	}, ExecuteCallback(props));
+}
+
+export function useWardrobeExecuteCallback(props: ExecuteCallbackOptions = {}) {
+	const { execute } = useWardrobeContext();
+	return useAsyncEvent(async (action: AppearanceAction) => await execute(action), ExecuteCallback(props));
+}
+
+function ExecuteCallback({ onSuccess }: ExecuteCallbackOptions) {
+	return (r: Nullable<IClientShardNormalResult['appearanceAction']>) => {
+		if (r?.result === 'success') {
+			onSuccess?.();
+		}
+	};
 }

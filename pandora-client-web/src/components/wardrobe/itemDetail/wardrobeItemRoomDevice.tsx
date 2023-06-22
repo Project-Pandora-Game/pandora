@@ -16,7 +16,7 @@ import { Column, Row } from '../../common/container/container';
 import { Select } from '../../common/select/select';
 import { Immutable } from 'immer';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { useWardrobeContext } from '../wardrobeContext';
+import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { WardrobeActionButton } from '../wardrobeComponents';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 
@@ -73,7 +73,8 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 }): ReactElement | null {
 	const throttle = 100;
 
-	const { targetSelector, execute } = useWardrobeContext();
+	const { targetSelector } = useWardrobeContext();
+	const [execute] = useWardrobeExecuteCallback();
 
 	const [positionX, setPositionX] = useUpdatedUserInput(deployment.x, [item]);
 	const [positionY, setPositionY] = useUpdatedUserInput(deployment.y, [item]);

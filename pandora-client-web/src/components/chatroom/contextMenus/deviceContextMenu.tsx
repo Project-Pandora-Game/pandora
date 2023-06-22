@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import { ItemRoomDevice, AppearanceAction, ItemId } from 'pandora-common';
-import React, { useMemo, useCallback, useState, ReactElement, useEffect } from 'react';
+import React, { useMemo, useState, ReactElement, useEffect } from 'react';
 import { AppearanceContainer } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
@@ -8,14 +8,13 @@ import { useContextMenuPosition } from '../../contextMenu';
 import { useChatRoomCharacters, useChatroom, useChatroomRequired, useRoomState } from '../../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../../gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../wardrobe/wardrobeCheckQueue';
-import { useWardrobeContext, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
+import { useWardrobeContext, useWardrobeExecute, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
 	close: () => void;
 }) {
-	const { execute } = useWardrobeContext();
 	const action = useMemo<AppearanceAction>(() => ({
 		type: 'roomDeviceDeploy',
 		item: {
@@ -26,17 +25,14 @@ function StoreDeviceMenu({ device, close }: {
 		deployment: null,
 	}), [device]);
 	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
-	const onClick = useCallback(() => {
-		execute(action);
-		close();
-	}, [action, execute, close]);
+	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
 
 	if (!available) {
 		return null;
 	}
 
 	return (
-		<button onClick={ onClick }>
+		<button onClick={ execute } disabled={ processing }>
 			Store the device
 		</button>
 	);
@@ -47,7 +43,6 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 	slot: string;
 	close: () => void;
 }) {
-	const { execute } = useWardrobeContext();
 	const action = useMemo<AppearanceAction>(() => ({
 		type: 'roomDeviceLeave',
 		item: {
@@ -58,19 +53,14 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 		slot,
 	}), [device, slot]);
 	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
-	const onClick = useCallback(() => {
-		if (action)
-			execute(action);
-
-		close();
-	}, [action, execute, close]);
+	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
 
 	if (!available) {
 		return null;
 	}
 
 	return (
-		<button onClick={ onClick }>
+		<button onClick={ execute } disabled={ processing }>
 			{ children }
 		</button>
 	);
@@ -98,7 +88,6 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	character: AppearanceContainer;
 	close: () => void;
 }) {
-	const { execute } = useWardrobeContext();
 	const action = useMemo<AppearanceAction>(() => ({
 		type: 'roomDeviceEnter',
 		item: {
@@ -114,17 +103,14 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 		itemId: `i/${nanoid()}` as const,
 	}), [device, slot, character]);
 	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
-	const onClick = useCallback(() => {
-		execute(action);
-		close();
-	}, [action, execute, close]);
+	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
 
 	if (!available) {
 		return null;
 	}
 
 	return (
-		<button onClick={ onClick }>
+		<button onClick={ execute } disabled={ processing }>
 			{ character.name } ({ character.id })
 		</button>
 	);

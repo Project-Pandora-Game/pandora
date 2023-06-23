@@ -1,11 +1,12 @@
 import classNames from 'classnames';
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useContextMenuPosition } from '../contextMenu/contextMenu';
+import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
+import { Observable, useObservable } from '../../observable';
 import './hoverElement.scss';
-import { createHtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 
-const hoverPortal = createHtmlPortalNode();
+const PORTALS = new Observable<readonly HtmlPortalNode[]>([]);
 
 type HoverElementProps = CommonProps & {
 	parent: HTMLElement | null;
@@ -14,6 +15,15 @@ type HoverElementProps = CommonProps & {
 export function HoverElement({ children, className, parent }: HoverElementProps): ReactElement | null {
 	const [anchorPoint, setAnchorPoint] = useState({ x: 0, y: 0 });
 	const [show, setShow] = useState(false);
+	const hoverPortal = useMemo(() => createHtmlPortalNode(), []);
+
+	useEffect(() => {
+		PORTALS.produce((old) => old.concat([hoverPortal]));
+
+		return () => {
+			PORTALS.produce((old) => old.filter((p) => p !== hoverPortal));
+		};
+	}, [hoverPortal]);
 
 	useEffect(() => {
 		if (!parent)
@@ -55,5 +65,13 @@ export function HoverElement({ children, className, parent }: HoverElementProps)
 }
 
 export function HoverElementsPortal(): ReactElement {
-	return <OutPortal node={ hoverPortal } />;
+	const portals = useObservable(PORTALS);
+
+	return (
+		<>
+			{ portals.map((node, index) => (
+				<OutPortal key={ index } node={ node } />
+			)) }
+		</>
+	);
 }

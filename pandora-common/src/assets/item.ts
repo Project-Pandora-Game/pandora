@@ -842,11 +842,11 @@ export class ItemLock extends ItemBase<'lock'> {
 		});
 	}
 
-	public unlock({ messageHandler, failure }: AppearanceModuleActionContext, { password, clearLastPassword }: IItemLockAction & { action: 'unlock'; }): ItemLock | null {
+	public unlock({ messageHandler, failure, player }: AppearanceModuleActionContext, { password, clearLastPassword }: IItemLockAction & { action: 'unlock'; }): ItemLock | null {
 		if (!this.isLocked() || this.lockData == null)
 			return null;
 
-		if (this.asset.definition.password != null) {
+		if (this.asset.definition.password != null && !player.isInSafemode()) {
 			if (password == null) {
 				return null;
 			} else if (this.lockData.hidden?.side === 'server' && password !== this.lockData.hidden.password) {

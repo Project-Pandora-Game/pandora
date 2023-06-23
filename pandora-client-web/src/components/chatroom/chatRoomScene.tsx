@@ -139,7 +139,6 @@ export function ChatRoomGraphicsScene({
 							key={ device.id }
 							item={ device }
 							deployment={ device.deployment }
-							debugConfig={ debugConfig }
 							background={ roomBackground }
 							shard={ shard }
 							menuOpen={ menuOpen }

@@ -1,5 +1,5 @@
 import { Container } from '@pixi/react';
-import { AssertNotNullable, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CloneDeepMutable, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
+import { AssertNotNullable, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
@@ -70,8 +70,16 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: Chara
 
 export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
 	x: CharacterSize.WIDTH / 2, // Middle of the character image
-	y: CharacterSize.HEIGHT,
+	y: 1290, // The position where heels seemingly touch the floor
 };
+
+/**
+ * Our original calculations were broken, treating character as if floating in the air.
+ * This can be resolved by simply setting this variable to zero,
+ * however some of backgrounds we have currently were tuned to match the old behaviour.
+ * This variable preserves the offset such that the backgrounds work before the work to migrate them is done.
+ */
+export const CHARACTER_BASE_Y_OFFSET: number = CharacterSize.HEIGHT - CHARACTER_PIVOT_POSITION.y;
 
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
@@ -166,7 +174,6 @@ function GraphicsCharacterWithManagerImpl({
 		}
 		return result;
 	}, [Layer, characterState, layers, priorities, view]);
-
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);

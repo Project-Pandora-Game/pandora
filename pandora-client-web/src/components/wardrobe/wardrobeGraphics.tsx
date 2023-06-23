@@ -1,6 +1,5 @@
 import {
 	AssetFrameworkCharacterState,
-	CharacterSize,
 	HexColorString,
 	ICharacterRoomData,
 	IChatroomBackgroundData,
@@ -90,20 +89,17 @@ function WardrobeRoomBackground({
 	character: AppearanceContainer<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { position, scale } = useChatRoomCharacterPosition(character.data.position, characterState, roomBackground);
+	const { position, scale, errorCorrectedPivot, yOffset } = useChatRoomCharacterPosition(character.data.position, characterState, roomBackground);
 	const filters = usePlayerVisionFilters(false);
 
 	const inverseScale = 1 / scale;
-
-	const posX = position.x;
-	const posY = position.y;
 
 	return (
 		<GraphicsBackground
 			zIndex={ -1000 }
 			background={ roomBackground.image }
-			x={ CHARACTER_PIVOT_POSITION.x - posX * inverseScale }
-			y={ CHARACTER_PIVOT_POSITION.y - posY * inverseScale }
+			x={ errorCorrectedPivot.x - position.x * inverseScale }
+			y={ errorCorrectedPivot.y + yOffset - position.y * inverseScale }
 			backgroundSize={ [roomBackground.size[0] * inverseScale, roomBackground.size[1] * inverseScale] }
 			backgroundFilters={ filters }
 		/>

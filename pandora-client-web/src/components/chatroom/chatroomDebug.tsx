@@ -13,12 +13,14 @@ const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),
 	roomScalingHelper: z.boolean().catch(false),
 	characterDebugOverlay: z.boolean().catch(false),
+	deviceDebugOverlay: z.boolean().catch(false),
 });
 
 const DEFAULT_DEBUG_CONFIG: z.infer<typeof ChatroomDebugConfigSchema> = {
 	enabled: false,
 	roomScalingHelper: false,
 	characterDebugOverlay: false,
+	deviceDebugOverlay: false,
 };
 
 export type ChatroomDebugConfig = z.infer<typeof ChatroomDebugConfigSchema> | undefined;
@@ -73,6 +75,19 @@ export function ChatroomDebugConfigView(): ReactElement {
 					onChange={ (e) => {
 						applyChange({
 							characterDebugOverlay: e.target.checked,
+						});
+					} }
+				/>
+			</div>
+			<div>
+				<label htmlFor='chatroom-debug-device-overlay'>Show chatroom device debug overlay</label>
+				<input
+					id='chatroom-debug-device-overlay'
+					type='checkbox'
+					checked={ chatroomDebugConfig.deviceDebugOverlay }
+					onChange={ (e) => {
+						applyChange({
+							deviceDebugOverlay: e.target.checked,
 						});
 					} }
 				/>

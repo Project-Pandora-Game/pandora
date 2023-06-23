@@ -171,7 +171,6 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 					<PasswordInput
 						password={ lock.asset.definition.password }
 						showInvalidWarning={ showInvalidWarning }
-						label='Password'
 						disabled={ useOldPassword }
 						setAllowExecute={ (allow, value) => {
 							setAllowExecute(allow);
@@ -214,7 +213,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 			{
 				lock.hasPassword ? (
 					<div className='WardrobeInputRow'>
-						<label>Use old password</label>
+						<label>Use old password:</label>
 						<input type='checkbox' checked={ useOldPassword } onChange={ () => setUseOldPassword(!useOldPassword) } />
 					</div>
 				) : null
@@ -228,7 +227,6 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 							if (allow)
 								setPassword(value);
 						} }
-						label='Password'
 					/>
 				) : null
 			}
@@ -256,13 +254,11 @@ function PasswordInput({
 	password,
 	showInvalidWarning,
 	setAllowExecute,
-	label,
 	disabled,
 }: {
 	password: Immutable<NonNullable<LockAssetDefinition['password']>>;
 	showInvalidWarning?: boolean;
 	setAllowExecute?: (...args: [false, null] | [true, string]) => void;
-	label: string;
 	disabled?: boolean;
 
 }) {
@@ -334,7 +330,9 @@ function PasswordInput({
 
 	return (
 		<div className='WardrobeInputRow'>
-			<label htmlFor={ id }>{ label }</label>
+			<label htmlFor={ id }>
+				Password:
+			</label>
 			<input
 				id={ id }
 				type='text'

@@ -453,3 +453,32 @@ $drop-overlay-gap: 0.3em;
 	line-height: 1.5em;
 	text-align: center;
 }
+
+.WardrobeInputRow {
+	height: 1.6em;
+	margin-left: 0.5em;
+
+	label {
+		width: 12em;
+		display: inline-block;
+	}
+
+	span {
+		display: inline-block;
+		margin: 0 1em;
+		color: $theme-error;
+	}
+
+	input[type='checkbox'] {
+		transform: scale(1.6);
+		margin: auto 0.2em;
+	}
+
+	&:first-of-type {
+		margin-top: 1em;
+	}
+
+	&:last-of-type {
+		margin-bottom: 1em;
+	}
+}

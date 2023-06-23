@@ -660,6 +660,17 @@ export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
 export class ItemLock extends ItemBase<'lock'> {
 	public readonly lockData: Immutable<LockBundle> | undefined;
 
+	public get hasPassword(): boolean {
+		switch (this.lockData?.hidden?.side) {
+			case 'client':
+				return this.lockData.hidden.hasPassword ?? false;
+			case 'server':
+				return this.lockData.hidden.password != null;
+			default:
+				return false;
+		}
+	}
+
 	constructor(id: ItemId, asset: Asset<'lock'>, bundle: ItemBundle, context: IItemLoadContext) {
 		super(id, asset, bundle, context);
 		const lockData = bundle.lockData;

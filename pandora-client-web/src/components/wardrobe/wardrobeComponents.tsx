@@ -55,6 +55,7 @@ export function WardrobeActionButton({
 	showActionBlockedExplanation = true,
 	onExecute,
 	onFailure,
+	disabled = false,
 }: CommonProps & {
 	action: AppearanceAction;
 	/** If the button should hide on certain invalid states */
@@ -64,6 +65,7 @@ export function WardrobeActionButton({
 	showActionBlockedExplanation?: boolean;
 	onExecute?: () => void;
 	onFailure?: (failure: AppearanceActionFailure) => void;
+	disabled?: boolean;
 }): ReactElement {
 	const check = useStaggeredAppearanceActionResult(action);
 	const hide = check != null && autohide && AppearanceActionResultShouldHide(check);
@@ -82,7 +84,7 @@ export function WardrobeActionButton({
 				ev.stopPropagation();
 				execute();
 			} }
-			disabled={ processing }
+			disabled={ processing || disabled }
 		>
 			{
 				showActionBlockedExplanation && check != null ? (

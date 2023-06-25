@@ -1,6 +1,6 @@
 import classNames from 'classnames';
-import React, { ReactElement, useEffect, useMemo, useState } from 'react';
-import { CommonProps } from '../../common/reactTypes';
+import React, { PureComponent, ReactElement, useEffect, useState } from 'react';
+import { ChildrenProps, CommonProps } from '../../common/reactTypes';
 import { useContextMenuPosition } from '../contextMenu/contextMenu';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Observable, useObservable } from '../../observable';
@@ -15,15 +15,6 @@ type HoverElementProps = CommonProps & {
 export function HoverElement({ children, className, parent }: HoverElementProps): ReactElement | null {
 	const [anchorPoint, setAnchorPoint] = useState({ x: 0, y: 0 });
 	const [show, setShow] = useState(false);
-	const hoverPortal = useMemo(() => createHtmlPortalNode(), []);
-
-	useEffect(() => {
-		PORTALS.produce((old) => old.concat([hoverPortal]));
-
-		return () => {
-			PORTALS.produce((old) => old.filter((p) => p !== hoverPortal));
-		};
-	}, [hoverPortal]);
 
 	useEffect(() => {
 		if (!parent)
@@ -56,12 +47,39 @@ export function HoverElement({ children, className, parent }: HoverElementProps)
 		return null;
 
 	return (
-		<InPortal node={ hoverPortal }>
+		<HoverElementInner>
 			<div className={ classNames('hover-element', className) } ref={ positionRef }>
 				{ children }
 			</div>
-		</InPortal>
+		</HoverElementInner>
 	);
+}
+
+class HoverElementInner extends PureComponent<ChildrenProps> {
+	private readonly _node: HtmlPortalNode;
+
+	constructor(props: ChildrenProps) {
+		super(props);
+		this._node = createHtmlPortalNode();
+	}
+
+	public override componentDidMount() {
+		PORTALS.produce((old) => old.concat([this._node]));
+	}
+
+	public override componentWillUnmount() {
+		PORTALS.produce((old) => old.filter((p) => p !== this._node));
+	}
+
+	public override render() {
+		const { children } = this.props;
+
+		return (
+			<InPortal node={ this._node }>
+				{ children }
+			</InPortal>
+		);
+	}
 }
 
 export function HoverElementsPortal(): ReactElement {

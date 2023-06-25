@@ -160,24 +160,24 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 			{ lockedText }
 			{
 				lock.asset.definition.password ? (
-					<div className='WardrobeInputRow'>
-						<label>Remove password:</label>
-						<input type='checkbox' checked={ clearLastPassword } onChange={ (e) => setClearLastPassword(e.target.checked) } />
-					</div>
-				) : null
-			}
-			{
-				lock.asset.definition.password ? (
-					<PasswordInput
-						password={ lock.asset.definition.password }
-						showInvalidWarning={ showInvalidWarning }
-						disabled={ useOldPassword }
-						setAllowExecute={ (allow, value) => {
-							setAllowExecute(allow);
-							if (allow)
-								setPassword(value);
-						} }
-					/>
+					<>
+						<br />
+						<div className='WardrobeInputRow'>
+							<label>Remove password:</label>
+							<input type='checkbox' checked={ clearLastPassword } onChange={ (e) => setClearLastPassword(e.target.checked) } />
+						</div>
+						<PasswordInput
+							password={ lock.asset.definition.password }
+							showInvalidWarning={ showInvalidWarning }
+							disabled={ useOldPassword }
+							setAllowExecute={ (allow, value) => {
+								setAllowExecute(allow);
+								if (allow)
+									setPassword(value);
+							} }
+						/>
+						<br />
+					</>
 				) : null
 			}
 			<WardrobeActionButton
@@ -211,23 +211,27 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 	return (
 		<>
 			{
-				lock.hasPassword ? (
-					<div className='WardrobeInputRow'>
-						<label>Use old password:</label>
-						<input type='checkbox' checked={ useOldPassword } onChange={ () => setUseOldPassword(!useOldPassword) } />
-					</div>
-				) : null
-			}
-			{
 				lock.asset.definition.password ? (
-					<PasswordInput
-						password={ lock.asset.definition.password }
-						disabled={ useOldPassword && lock.hasPassword }
-						setAllowExecute={ (allow, value) => {
-							if (allow)
-								setPassword(value);
-						} }
-					/>
+					<>
+						<br />
+						{
+							lock.hasPassword ? (
+								<div className='WardrobeInputRow'>
+									<label>Use old password:</label>
+									<input type='checkbox' checked={ useOldPassword } onChange={ () => setUseOldPassword(!useOldPassword) } />
+								</div>
+							) : null
+						}
+						<PasswordInput
+							password={ lock.asset.definition.password }
+							disabled={ useOldPassword && lock.hasPassword }
+							setAllowExecute={ (allow, value) => {
+								if (allow)
+									setPassword(value);
+							} }
+						/>
+						<br />
+					</>
 				) : null
 			}
 			<WardrobeActionButton
@@ -287,6 +291,9 @@ function PasswordInput({
 	}, [password.format]);
 
 	const error = useMemo(() => {
+		if (disabled)
+			return null;
+
 		if (value.length < min)
 			return `Must be at least ${min} characters`;
 		if (value.length > max)
@@ -295,7 +302,7 @@ function PasswordInput({
 			return 'Invalid password';
 
 		return null;
-	}, [value, min, max, showInvalidWarning]);
+	}, [disabled, value, min, max, showInvalidWarning]);
 
 	useEffect(() => {
 		if (setAllowExecute == null)

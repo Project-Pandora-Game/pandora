@@ -25,18 +25,18 @@ export function EditorContextProvider({ children }: ChildrenProps): ReactElement
 
 	return (
 		<DebugContextProvider>
-			<EditorErrorBoundry>
+			<EditorErrorBoundary>
 				<Dialogs />
 				<HoverElementsPortal />
 				<EditorContext.Provider value={ context }>
 					{ children }
 				</EditorContext.Provider>
-			</EditorErrorBoundry>
+			</EditorErrorBoundary>
 		</DebugContextProvider>
 	);
 }
 
-function EditorErrorBoundry({ children }: ChildrenProps): ReactElement {
+function EditorErrorBoundary({ children }: ChildrenProps): ReactElement {
 	const context = useDebugContext();
 
 	useEffect(() => {

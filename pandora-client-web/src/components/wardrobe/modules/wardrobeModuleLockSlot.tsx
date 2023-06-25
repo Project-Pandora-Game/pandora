@@ -240,7 +240,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 						moduleType: 'lockSlot',
 						lockAction: {
 							action: 'lock',
-							password,
+							password: useOldPassword ? undefined : password,
 						},
 					},
 				} }>

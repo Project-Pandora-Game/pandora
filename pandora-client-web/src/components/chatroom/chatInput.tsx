@@ -709,14 +709,30 @@ function ChatModeSelector(): ReactElement | null {
 
 	return (
 		<Select onChange={ onChange } ref={ ref } defaultValue={ mode ? ((mode.raw ? 'raw_' : '') + mode.type) : '' }>
-			<option value=''>None</option>
-			<option value='raw_chat'>Raw Chat</option>
-			<option value='me' disabled={ hasTarget }>Me</option>
-			<option value='raw_me' disabled={ hasTarget }>Raw Me</option>
-			<option value='emote' disabled={ hasTarget }>Emote</option>
-			<option value='raw_emote' disabled={ hasTarget }>Raw Emote</option>
-			<option value='ooc'>OOC</option>
-			<option value='raw_ooc'>Raw OOC</option>
+			<option value=''>
+				Chat mode: Normal Chat
+			</option>
+			<option value='raw_chat'>
+				Chat mode: Chat (without formatting)
+			</option>
+			<option value='me' disabled={ hasTarget }>
+				Chat mode: Me
+			</option>
+			<option value='raw_me' disabled={ hasTarget }>
+				Chat mode: Me (without formatting)
+			</option>
+			<option value='emote' disabled={ hasTarget }>
+				Chat mode: Emote
+			</option>
+			<option value='raw_emote' disabled={ hasTarget }>
+				Chat mode: Emote (without formatting)
+			</option>
+			<option value='ooc'>
+				Chat mode: OOC
+			</option>
+			<option value='raw_ooc'>
+				Chat mode: OOC (without formatting)
+			</option>
 		</Select>
 	);
 }

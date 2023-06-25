@@ -28,7 +28,7 @@ type ChatRoomCharacterPropsWithState = ChatRoomCharacterProps & {
 };
 
 const BOTTOM_NAME_OFFSET = 100;
-const CHARACTER_WAIT_DRAG_THRESHOLD = 100; // ms
+const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 
 export function useChatRoomCharacterPosition(
 	position: readonly [number, number],

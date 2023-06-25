@@ -21,7 +21,7 @@ import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
 import { usePlayerVisionFilters } from './chatRoomScene';
 
-const DEVICE_WAIT_DRAG_THRESHOLD = 100; // ms
+const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
 type ChatRoomDeviceProps = {
 	item: ItemRoomDevice;

@@ -1,40 +1,39 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
 import { ChildrenProps } from '../../common/reactTypes';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import { GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
+import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
 import { Container, Graphics, Sprite, useApp } from '@pixi/react';
 import { useTexture } from '../../graphics/useTexture';
-import { ChatroomDebugConfig } from './chatroomDebug';
-import { SwapCullingDirection, useItemColor } from '../../graphics/graphicsLayer';
+import { useDebugConfig } from './chatroomDebug';
+import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../../graphics/graphicsLayer';
 import { Immutable } from 'immer';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { Character, useCharacterAppearanceView } from '../../character/character';
 import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacters, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
 import { usePlayerVisionFilters } from './chatRoomScene';
+import { useChatRoomCharacterOffsets } from './chatRoomCharacter';
+import { RoomDeviceRenderContext } from './chatRoomDeviceContext';
 
+const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
 type ChatRoomDeviceProps = {
 	item: ItemRoomDevice;
 	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
-	debugConfig: ChatroomDebugConfig;
 	background: IChatroomBackgroundData;
 	shard: ShardConnector | null;
 	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
 };
 
 export const DeviceOverlayToggle = BrowserStorage.create<boolean>('temp-device-overlay-toggle', true, ZodMatcher(z.boolean().catch(true)));
-
-export const RoomDeviceRenderContext = React.createContext<ItemRoomDevice | null>(null);
 
 export function ChatRoomDevice({
 	item,
@@ -45,6 +44,7 @@ export function ChatRoomDevice({
 }: ChatRoomDeviceProps): ReactElement | null {
 	const asset = item.asset;
 	const app = useApp();
+	const debugConfig = useDebugConfig();
 
 	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number) => {
 		if (!shard) {
@@ -88,7 +88,12 @@ export function ChatRoomDevice({
 		y: asset.definition.pivot.y,
 	}), [asset]);
 
-	const hitArea = useMemo(() => new PIXI.Rectangle(pivot.x - 50, pivot.y - 50, 100, 100), [pivot]);
+	const errorCorrectedPivot = useMemo((): PointLike => ({ x: pivot.x, y: pivot.y + CHARACTER_BASE_Y_OFFSET }), [pivot]);
+
+	const labelX = errorCorrectedPivot.x;
+	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
+
+	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - 50, labelY - 50, 100, 100), [labelX, labelY]);
 
 	const roomDeviceContainer = useRef<PIXI.Container>(null);
 	const dragging = useRef<PIXI.Point | null>(null);
@@ -104,7 +109,7 @@ export function ChatRoomDevice({
 		if (!dragging.current || !roomDeviceContainer.current) return;
 		const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current.parent);
 
-		const newY = height - dragPointerEnd.y;
+		const newY = height - (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale);
 
 		setPositionThrottled(dragPointerEnd.x, newY);
 	});
@@ -144,7 +149,7 @@ export function ChatRoomDevice({
 
 	// Overlay graphics
 	const showOverlay = useObservable(DeviceOverlayToggle);
-	const hitboxDebugDraw = useCallback((g: PIXI.Graphics) => {
+	const deviceMovementHelperDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
 			.beginFill(0xff0000, 0.30)
 			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
@@ -176,7 +181,7 @@ export function ChatRoomDevice({
 				item={ item }
 				position={ { x, y: height - y } }
 				scale={ { x: scale, y: scale } }
-				pivot={ pivot }
+				pivot={ errorCorrectedPivot }
 				hitArea={ hitArea }
 				eventMode='static'
 				onPointerDown={ onPointerDown }
@@ -187,9 +192,38 @@ export function ChatRoomDevice({
 				{
 					!showOverlay ? null : (
 						<Container
+							zIndex={ 99998 }
+						>
+							<Graphics draw={ deviceMovementHelperDraw } />
+						</Container>
+					)
+				}
+				{
+					!debugConfig?.deviceDebugOverlay ? null : (
+						<Container
 							zIndex={ 99999 }
 						>
-							<Graphics draw={ hitboxDebugDraw } />
+							<Graphics
+								draw={ (g) => {
+									g.clear()
+										// Vertical guide line
+										.lineStyle({ color: 0xffff00, width: 2, alpha: 0.5 })
+										.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
+										.lineTo(pivot.x, pivot.y + 100)
+										// Ground line
+										.lineStyle({ color: 0xffff00, width: 2, alpha: 1 })
+										.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
+										.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
+										// Pivot point (wanted)
+										.beginFill(0xffff00)
+										.lineStyle({ color: 0x000000, width: 1 })
+										.drawCircle(pivot.x, pivot.y, 5)
+										// Pivot point (actual)
+										.beginFill(0xccff00)
+										.lineStyle({ color: 0x000000, width: 1 })
+										.drawCircle(errorCorrectedPivot.x, errorCorrectedPivot.y, 5);
+								} }
+							/>
 						</Container>
 					)
 				}
@@ -268,7 +302,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 	);
 }
 
-export const RoomDeviceGraphicsWithManager = React.forwardRef(RoomDeviceGraphicsWithManagerImpl);
+const RoomDeviceGraphicsWithManager = React.forwardRef(RoomDeviceGraphicsWithManagerImpl);
 
 function RoomDeviceGraphicsImpl(props: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement | null {
 	const manager = useObservable(GraphicsManagerInstance);
@@ -279,7 +313,7 @@ function RoomDeviceGraphicsImpl(props: RoomDeviceGraphicsProps, ref: React.Forwa
 	return <RoomDeviceGraphicsWithManager { ...props } ref={ ref } />;
 }
 
-export const RoomDeviceGraphics = React.forwardRef(RoomDeviceGraphicsImpl);
+const RoomDeviceGraphics = React.forwardRef(RoomDeviceGraphicsImpl);
 
 function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 	item: ItemRoomDevice;
@@ -344,18 +378,14 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	character: Character;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement | null {
-	const evaluator = useAppearanceConditionEvaluator(characterState);
-
+	const debugConfig = useDebugConfig();
 	const filters = usePlayerVisionFilters(character.isPlayer());
 
 	const devicePivot = item.asset.definition.pivot;
 	const x = devicePivot.x + layer.characterPosition.offsetX;
 	const y = devicePivot.y + layer.characterPosition.offsetY;
 
-	let baseScale = 1;
-	if (evaluator.getBoneLikeValue('sitting') > 0) {
-		baseScale *= 0.9;
-	}
+	const { baseScale, pivot } = useChatRoomCharacterOffsets(characterState);
 
 	const scale = baseScale * (layer.characterPosition.relativeScale ?? 1);
 
@@ -363,12 +393,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 
 	const scaleX = backView ? -1 : 1;
 
-	const yOffsetPose = 0
-		+ 1.75 * evaluator.getBoneLikeValue('kneeling')
-		+ 0.75 * evaluator.getBoneLikeValue('sitting')
-		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? -0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
-
-	const yOffset = layer.characterPosition.disablePoseOffset ? 0 : yOffsetPose;
+	const actualPivot = useMemo((): PointLike => layer.characterPosition.disablePoseOffset ? CloneDeepMutable(CHARACTER_PIVOT_POSITION) : pivot, [layer, pivot]);
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
@@ -381,9 +406,32 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 			characterState={ characterState }
 			position={ { x, y } }
 			scale={ { x: scaleX * scale, y: scale } }
-			pivot={ { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT - yOffset } }
+			pivot={ actualPivot }
 			filters={ filters }
 		>
+			{
+				!debugConfig?.characterDebugOverlay ? null : (
+					<Container
+						zIndex={ 99999 }
+					>
+						<Graphics
+							draw={ (g) => {
+								g.clear()
+									// Mask area
+									.lineStyle({ color: 0xffff00, width: 2 })
+									.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+									// Character canvas standard area
+									.lineStyle({ color: 0x00ff00, width: 2 })
+									.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+									// Pivot point
+									.beginFill(0xffaa00)
+									.lineStyle({ color: 0x000000, width: 1 })
+									.drawCircle(actualPivot.x, actualPivot.y, 5);
+							} }
+						/>
+					</Container>
+				)
+			}
 		</GraphicsCharacter>
 	);
 }

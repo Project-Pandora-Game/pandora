@@ -1,6 +1,5 @@
 import {
 	AssetFrameworkCharacterState,
-	CharacterSize,
 	HexColorString,
 	ICharacterRoomData,
 	IChatroomBackgroundData,
@@ -12,12 +11,12 @@ import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/
 import { Button } from '../common/button/button';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
 import { useCharacterIsInChatroom, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
-import { useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
+import { useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
 import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
 
 export function WardrobeCharacterPreview({ character, characterState }: {
@@ -61,11 +60,17 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 		</div>
 	);
 
+	const { pivot } = useChatRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(character.isPlayer());
 
 	return (
 		<GraphicsScene className='characterPreview' divChildren={ overlay } sceneOptions={ sceneOptions }>
-			<GraphicsCharacter characterState={ characterState } filters={ filters } />
+			<GraphicsCharacter
+				position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }
+				pivot={ pivot }
+				characterState={ characterState }
+				filters={ filters }
+			/>
 			{
 				roomBackground ? (
 					<WardrobeRoomBackground character={ character } characterState={ characterState } roomBackground={ roomBackground } />
@@ -84,21 +89,18 @@ function WardrobeRoomBackground({
 	character: AppearanceContainer<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const characterPosition = useChatRoomCharacterPosition(character.data.position, characterState, roomBackground);
+	const { position, scale, errorCorrectedPivot, yOffset } = useChatRoomCharacterPosition(character.data.position, characterState, roomBackground);
 	const filters = usePlayerVisionFilters(false);
 
-	const scale = 1 / characterPosition.scale;
-
-	const posX = characterPosition.x;
-	const posY = characterPosition.y - characterPosition.scale * (CharacterSize.HEIGHT - characterPosition.yOffset);
+	const inverseScale = 1 / scale;
 
 	return (
 		<GraphicsBackground
 			zIndex={ -1000 }
 			background={ roomBackground.image }
-			x={ (CharacterSize.WIDTH / 2) - posX * scale }
-			y={ -posY * scale }
-			backgroundSize={ [roomBackground.size[0] * scale, roomBackground.size[1] * scale] }
+			x={ errorCorrectedPivot.x - position.x * inverseScale }
+			y={ errorCorrectedPivot.y + yOffset - position.y * inverseScale }
+			backgroundSize={ [roomBackground.size[0] * inverseScale, roomBackground.size[1] * inverseScale] }
 			backgroundFilters={ filters }
 		/>
 	);

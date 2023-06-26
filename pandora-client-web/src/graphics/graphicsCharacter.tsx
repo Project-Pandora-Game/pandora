@@ -68,6 +68,19 @@ function useLayerPriorityResolver(states: readonly LayerState[], armsPose: Chara
 	return useMemo(() => actualCalculate(states), [actualCalculate, states]);
 }
 
+export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
+	x: CharacterSize.WIDTH / 2, // Middle of the character image
+	y: 1290, // The position where heels seemingly touch the floor
+};
+
+/**
+ * Our original calculations were broken, treating character as if floating in the air.
+ * This can be resolved by simply setting this variable to zero,
+ * however some of backgrounds we have currently were tuned to match the old behaviour.
+ * This variable preserves the offset such that the backgrounds work before the work to migrate them is done.
+ */
+export const CHARACTER_BASE_Y_OFFSET: number = CharacterSize.HEIGHT - CHARACTER_PIVOT_POSITION.y;
+
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
 	characterState,
@@ -87,9 +100,6 @@ function GraphicsCharacterWithManagerImpl({
 	graphicsGetter: GraphicsGetterFunction;
 	layerStateOverrideGetter?: LayerStateOverrideGetter;
 }, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
-	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CharacterSize.WIDTH / 2, y: 0 }), [pivotExtra]);
-	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
-
 	const items = useCharacterAppearanceItems(characterState);
 
 	const layers = useMemo<LayerState[]>(() => {
@@ -165,7 +175,9 @@ function GraphicsCharacterWithManagerImpl({
 		return result;
 	}, [Layer, characterState, layers, priorities, view]);
 
+	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
+	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
 
 	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => {
 		const reverse = view === 'back';

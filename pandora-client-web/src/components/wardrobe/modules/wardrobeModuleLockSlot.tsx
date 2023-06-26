@@ -198,6 +198,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 	const { targetSelector } = useWardrobeContext();
 	const [password, setPassword] = useState<string | undefined>(undefined);
 	const [useOldPassword, setUseOldPassword] = useState(false);
+	const [allowExecute, setAllowExecute] = useState(lock.asset.definition.password == null);
 
 	useEffect(() => {
 		if (!lock.hasPassword)
@@ -221,6 +222,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 							password={ lock.asset.definition.password }
 							disabled={ useOldPassword && lock.hasPassword }
 							setAllowExecute={ (allow, value) => {
+								setAllowExecute(allow);
 								if (allow)
 									setPassword(value);
 							} }
@@ -229,6 +231,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 				) : null
 			}
 			<WardrobeActionButton
+				disabled={ !allowExecute && !useOldPassword }
 				action={ {
 					type: 'moduleAction',
 					target: targetSelector,

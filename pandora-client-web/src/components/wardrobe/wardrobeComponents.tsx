@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import {
 	AppearanceAction,
+	AppearanceActionFailure,
 	AppearanceActionResult,
 	Asset,
 	IsNotNullable,
@@ -12,7 +13,7 @@ import { CommonProps } from '../../common/reactTypes';
 import { AppearanceActionResultShouldHide, RenderAppearanceActionResult } from '../../assets/appearanceValidation';
 import { HoverElement } from '../hoverElement/hoverElement';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
-import { useWardrobeContext } from './wardrobeContext';
+import { useWardrobeExecuteChecked } from './wardrobeContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 
 export function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: HTMLElement | null; }) {
@@ -53,6 +54,8 @@ export function WardrobeActionButton({
 	hideReserveSpace = false,
 	showActionBlockedExplanation = true,
 	onExecute,
+	onFailure,
+	disabled = false,
 }: CommonProps & {
 	action: AppearanceAction;
 	/** If the button should hide on certain invalid states */
@@ -61,12 +64,16 @@ export function WardrobeActionButton({
 	hideReserveSpace?: boolean;
 	showActionBlockedExplanation?: boolean;
 	onExecute?: () => void;
+	onFailure?: (failure: AppearanceActionFailure) => void;
+	disabled?: boolean;
 }): ReactElement {
-	const { execute } = useWardrobeContext();
-
 	const check = useStaggeredAppearanceActionResult(action);
 	const hide = check != null && autohide && AppearanceActionResultShouldHide(check);
 	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
+	const [execute, processing] = useWardrobeExecuteChecked(action, check, {
+		onSuccess: onExecute,
+		onFailure,
+	});
 
 	return (
 		<button
@@ -75,11 +82,9 @@ export function WardrobeActionButton({
 			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
-				if (check?.result === 'success') {
-					execute(action);
-					onExecute?.();
-				}
+				execute();
 			} }
+			disabled={ processing || disabled }
 		>
 			{
 				showActionBlockedExplanation && check != null ? (

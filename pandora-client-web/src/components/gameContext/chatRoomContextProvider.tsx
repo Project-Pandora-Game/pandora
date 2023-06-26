@@ -1,4 +1,4 @@
-import { ITypedEventEmitter, TypedEventEmitter, ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomFullInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalStateBundle, AssetFrameworkGlobalState, AssetFrameworkCharacterState, IChatRoomLoad } from 'pandora-common';
+import { ITypedEventEmitter, TypedEventEmitter, ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomFullInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState, IChatRoomLoad, AssetFrameworkGlobalStateClientBundle } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -225,7 +225,10 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		});
 	}
 
-	private _updateGlobalState(bundle: AssetFrameworkGlobalStateBundle): void {
+	private _updateGlobalState(bundle: AssetFrameworkGlobalStateClientBundle): void {
+		if (!bundle.clientOnly) {
+			this.logger.error('Received global state update that is not client-only');
+		}
 		this.globalState.setState(
 			AssetFrameworkGlobalState
 				.loadFromBundle(GetCurrentAssetManager(), bundle, this.logger.prefixMessages('State bundle load:')),

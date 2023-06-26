@@ -8,7 +8,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { AppearanceContainer } from '../../character/character';
-import { shardConnectorContext, useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { Button } from '../common/button/button';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
@@ -26,7 +26,6 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 }): ReactElement {
 	const roomInfo = useChatRoomInfo();
 	const assetManager = useAssetManager();
-	const shardConnector = useShardConnector();
 	const accountSettings = useCurrentAccountSettings();
 
 	const roomBackground = useMemo((): Readonly<IChatroomBackgroundData> | null => {
@@ -38,6 +37,12 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 
 	const wardrobeBackground: number = Number.parseInt(accountSettings.wardrobeBackground.substring(1, 7), 16);
 
+	const [onClick, processing] = useAppearanceActionEvent({
+		type: 'setView',
+		target: character.id,
+		view: characterState.view === 'front' ? 'back' : 'front',
+	});
+
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		forwardContexts: [shardConnectorContext],
 		backgroundColor: roomBackground ? 0x000000 : wardrobeBackground,
@@ -47,13 +52,8 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 		<div className='overlay'>
 			<Button className='slim iconButton'
 				title='Toggle character view'
-				onClick={ () => {
-					shardConnector?.sendMessage('appearanceAction', {
-						type: 'setView',
-						target: character.id,
-						view: characterState.view === 'front' ? 'back' : 'front',
-					});
-				} }
+				onClick={ onClick }
+				disabled={ processing }
 			>
 				↷
 			</Button>

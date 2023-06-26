@@ -24,7 +24,7 @@ import _ from 'lodash';
 import { useEvent } from '../../../common/useEvent';
 import { Select } from '../../common/select/select';
 import { Immutable } from 'immer';
-import { useWardrobeContext } from '../wardrobeContext';
+import { useWardrobeExecuteCallback } from '../wardrobeContext';
 
 type AssetsPosePreset = AssetsPosePresets[number]['poses'][number];
 type CheckedPosePreset = {
@@ -231,7 +231,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const assetManager = useAssetManager();
-	const { execute } = useWardrobeContext();
+	const [execute, processing] = useWardrobeExecuteCallback();
 
 	const currentBones = useCharacterAppearancePose(characterState);
 	const armsPose = useCharacterAppearanceArmsPose(characterState);
@@ -267,6 +267,7 @@ export function WardrobePoseGui({ character, characterState }: {
 								view: e.target.checked ? 'back' : 'front',
 							});
 						} }
+						disabled={ processing }
 					/>
 				</div>
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />

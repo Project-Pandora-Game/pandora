@@ -30,6 +30,10 @@ export interface IAssetModuleDefinition<Type extends ModuleType> {
 	getStaticAttributes(config: IModuleConfigCommon<Type>): ReadonlySet<string>;
 }
 
+export interface IExportOptions {
+	clientOnly?: true;
+}
+
 export interface IItemModule<Type extends ModuleType = ModuleType> {
 	readonly type: Type;
 	readonly config: IAssetModuleTypes[Type]['config'];
@@ -37,7 +41,7 @@ export interface IItemModule<Type extends ModuleType = ModuleType> {
 	/** The module specifies what kind of interaction type interacting with it is */
 	readonly interactionType: ItemInteractionType;
 
-	exportData(): IAssetModuleTypes[Type]['data'];
+	exportData(options: IExportOptions): IAssetModuleTypes[Type]['data'];
 
 	validate(location: IItemLocationDescriptor): AppearanceValidationResult;
 

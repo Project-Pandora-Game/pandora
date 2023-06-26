@@ -34,7 +34,7 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 	} else if (result.result === 'moduleActionError') {
 		const e = result.reason;
 		switch (e.type) {
-			case 'lockIntereactionPrevented': {
+			case 'lockInteractionPrevented': {
 				const actionDescription: Record<typeof e.moduleAction, string> = {
 					lock: 'locked',
 					unlock: 'unlocked',
@@ -43,9 +43,11 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				switch (e.reason) {
 					case 'blockSelf':
 						return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${actionDescription[e.moduleAction]} on yourself.`;
+					case 'noStoredPassword':
+						return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
 				}
 
-				AssertNever(e.reason);
+				AssertNever(e);
 				break;
 			}
 			case 'invalid':
@@ -125,6 +127,18 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				return `The action results in a generally invalid state.`;
 		}
 		AssertNever(e);
+	} else if (result.result === 'failure') {
+		const f = result.failure;
+		if (f.type === 'moduleActionFailure') {
+			if (f.reason.type === 'lockInteractionPrevented') {
+				if (f.reason.reason === 'wrongPassword') {
+					return `The password is incorrect.`;
+				}
+				AssertNever(f.reason.reason);
+			}
+			AssertNever(f.reason.type);
+		}
+		AssertNever(f.type);
 	}
 	AssertNever(result);
 }

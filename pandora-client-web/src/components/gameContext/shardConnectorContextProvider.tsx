@@ -1,4 +1,4 @@
-import { GetLogger, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import { AppearanceAction, GetLogger, IClientShardNormalResult, IDirectoryCharacterConnectionInfo } from 'pandora-common';
 import React, {
 	createContext,
 	Dispatch,
@@ -19,6 +19,7 @@ import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
 import { NotificationSource, useNotification } from './notificationContextProvider';
+import { useAsyncEvent } from '../../common/useEvent';
 
 export interface ShardConnectorContextData {
 	shardConnector: ShardConnector | null;
@@ -120,6 +121,16 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 
 export function useShardConnector(): ShardConnector | null {
 	return useContext(shardConnectorContext).shardConnector;
+}
+
+export function useAppearanceActionEvent(action: AppearanceAction, handler: (result: IClientShardNormalResult['appearanceAction'] | null) => void = () => { /** ignore */ }) {
+	const shardConnector = useShardConnector();
+	return useAsyncEvent(async () => {
+		if (!shardConnector) {
+			return null;
+		}
+		return await shardConnector.awaitResponse('appearanceAction', action);
+	}, handler);
 }
 
 export function useShardConnectionInfo(): IDirectoryCharacterConnectionInfo | null {

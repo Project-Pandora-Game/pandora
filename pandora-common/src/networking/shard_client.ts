@@ -5,7 +5,7 @@ import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
-import { AssetFrameworkGlobalStateBundle } from '../assets/state/globalState';
+import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
 import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness
@@ -18,7 +18,7 @@ export type ICharacterRoomData = ICharacterPublicData & {
 };
 
 export type IChatRoomLoad = {
-	globalState: AssetFrameworkGlobalStateBundle;
+	globalState: AssetFrameworkGlobalStateClientBundle;
 	room: null | {
 		info: IChatRoomFullInfo;
 		characters: ICharacterRoomData[];
@@ -26,7 +26,7 @@ export type IChatRoomLoad = {
 };
 
 export type IChatRoomUpdate = {
-	globalState?: AssetFrameworkGlobalStateBundle;
+	globalState?: AssetFrameworkGlobalStateClientBundle;
 	info?: Partial<IChatRoomFullInfo>;
 	leave?: CharacterId;
 	join?: ICharacterRoomData;
@@ -38,7 +38,7 @@ export const ShardClientSchema = {
 	load: {
 		request: ZodCast<{
 			character: ICharacterPrivateData;
-			globalState: AssetFrameworkGlobalStateBundle;
+			globalState: AssetFrameworkGlobalStateClientBundle;
 			room: null | {
 				info: IChatRoomFullInfo;
 				characters: ICharacterRoomData[];

@@ -11,7 +11,7 @@ import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
 import { ItemModuleAction, LoadItemModule } from './modules';
-import { IItemModule } from './modules/common';
+import { IExportOptions, IItemModule } from './modules/common';
 import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 
@@ -46,6 +46,18 @@ export const LockBundleSchema = z.object({
 		/** Time the item was locked */
 		time: z.number(),
 	}).optional(),
+	hidden: z.discriminatedUnion('side', [
+		z.object({
+			side: z.literal('server'),
+			/** Password used to lock the item */
+			password: z.string().optional(),
+		}),
+		z.object({
+			side: z.literal('client'),
+			/** Whether the item has a password */
+			hasPassword: z.boolean().optional(),
+		}),
+	]).optional(),
 });
 export type LockBundle = z.infer<typeof LockBundleSchema>;
 
@@ -118,12 +130,12 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		this.color = this._loadColor(bundle.color);
 	}
 
-	public exportToBundle(): ItemBundle {
+	public exportToBundle(options: IExportOptions): ItemBundle {
 		let moduleData: ItemBundle['moduleData'];
 		if (this.modules.size > 0) {
 			moduleData = {};
 			for (const [name, module] of this.modules.entries()) {
-				moduleData[name] = module.exportData();
+				moduleData[name] = module.exportData(options);
 			}
 		}
 
@@ -235,7 +247,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeColor(color: ItemColorBundle): Item<Type> {
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		bundle.color = _.cloneDeep(color);
 		return CreateItem(this.id, this.asset, bundle, {
 			assetManager: this.assetManager,
@@ -250,12 +262,12 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		const moduleResult = module.doAction(context, action);
 		if (!moduleResult)
 			return null;
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		return CreateItem(this.id, this.asset, {
 			...bundle,
 			moduleData: {
 				...bundle.moduleData,
-				[moduleName]: moduleResult.exportData(),
+				[moduleName]: moduleResult.exportData({}),
 			},
 		}, {
 			assetManager: this.assetManager,
@@ -271,12 +283,12 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		const moduleResult = this.modules.get(moduleName)?.setContents(items);
 		if (!moduleResult)
 			return null;
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		return CreateItem(this.id, this.asset, {
 			...bundle,
 			moduleData: {
 				...bundle.moduleData,
-				[moduleName]: moduleResult.exportData(),
+				[moduleName]: moduleResult.exportData({}),
 			},
 		}, {
 			assetManager: this.assetManager,
@@ -504,13 +516,13 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 		return { success: true };
 	}
 
-	public override exportToBundle(): ItemBundle & { roomDeviceData: RoomDeviceBundle; } {
+	public override exportToBundle(options: IExportOptions): ItemBundle & { roomDeviceData: RoomDeviceBundle; } {
 		const slotOccupancy: RoomDeviceBundle['slotOccupancy'] = {};
 		for (const [slot, character] of this.slotOccupancy.entries()) {
 			slotOccupancy[slot] = character;
 		}
 		return {
-			...super.exportToBundle(),
+			...super.exportToBundle(options),
 			roomDeviceData: {
 				deployment: this.deployment,
 				slotOccupancy,
@@ -520,7 +532,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeDeployment(newDeployment: RoomDeviceDeployment): ItemRoomDevice {
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		bundle.roomDeviceData.deployment = newDeployment;
 		return CreateItem(this.id, this.asset, bundle, {
 			assetManager: this.assetManager,
@@ -533,7 +545,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 		if (this.asset.definition.slots[slot] == null || this.deployment == null)
 			return null;
 
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		if (character == null) {
 			delete bundle.roomDeviceData.slotOccupancy[slot];
 		} else {
@@ -607,15 +619,15 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 		return false;
 	}
 
-	public override exportToBundle(): ItemBundle {
+	public override exportToBundle(options: IExportOptions): ItemBundle {
 		return {
-			...super.exportToBundle(),
+			...super.exportToBundle(options),
 			roomDeviceLink: this.roomDeviceLink ?? undefined,
 		};
 	}
 
 	public withLink(link: RoomDeviceLink): ItemRoomDeviceWearablePart {
-		const bundle = this.exportToBundle();
+		const bundle = this.exportToBundle({});
 		bundle.roomDeviceLink = link;
 		return CreateItem(this.id, this.asset, bundle, {
 			assetManager: this.assetManager,
@@ -635,9 +647,12 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 export const ItemLockActionSchema = z.discriminatedUnion('action', [
 	z.object({
 		action: z.literal('lock'),
+		password: z.string().optional(),
 	}),
 	z.object({
 		action: z.literal('unlock'),
+		password: z.string().optional(),
+		clearLastPassword: z.boolean().optional(),
 	}),
 ]);
 export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
@@ -645,14 +660,64 @@ export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
 export class ItemLock extends ItemBase<'lock'> {
 	public readonly lockData: Immutable<LockBundle> | undefined;
 
-	constructor(id: ItemId, asset: Asset<'lock'>, bundle: ItemBundle, context: IItemLoadContext) {
-		super(id, asset, bundle, context);
-		this.lockData = bundle.lockData;
+	public get hasPassword(): boolean {
+		switch (this.lockData?.hidden?.side) {
+			case 'client':
+				return this.lockData.hidden.hasPassword ?? false;
+			case 'server':
+				return this.lockData.hidden.password != null;
+			default:
+				return false;
+		}
 	}
 
-	public override exportToBundle(): ItemBundle {
+	constructor(id: ItemId, asset: Asset<'lock'>, bundle: ItemBundle, context: IItemLoadContext) {
+		super(id, asset, bundle, context);
+		const lockData = bundle.lockData;
+		if (context.doLoadTimeCleanup && lockData?.hidden != null) {
+			switch (lockData.hidden.side) {
+				case 'client':
+					if (asset.definition.password == null && lockData.hidden.hasPassword != null) {
+						context.logger?.warning(`Lock ${id} has hidden password`);
+						delete lockData.hidden.hasPassword;
+					} else if (asset.definition.password != null && lockData.hidden.hasPassword == null) {
+						context.logger?.warning(`Lock ${id} has no hidden password`);
+						delete lockData.locked;
+					}
+					break;
+				case 'server':
+					if (lockData.hidden.password != null && !this._validatePassword(lockData.hidden.password, context.logger)) {
+						delete lockData.hidden.password;
+					}
+					if (asset.definition.password != null && lockData.hidden?.password == null && lockData.locked != null) {
+						context.logger?.warning(`Lock ${id} is locked but has no hidden password`);
+						delete lockData.locked;
+					}
+					break;
+			}
+			// remove hidden if only it has side
+			if (Object.keys(lockData.hidden).length === 1) {
+				delete lockData.hidden;
+			}
+		}
+		this.lockData = lockData;
+	}
+
+	public override exportToBundle(options: IExportOptions): ItemBundle {
+		if (options.clientOnly && this.lockData?.hidden?.side === 'server') {
+			return {
+				...super.exportToBundle(options),
+				lockData: {
+					...this.lockData,
+					hidden: {
+						side: 'client',
+						hasPassword: this.lockData.hidden.password ? true : undefined,
+					},
+				},
+			};
+		}
 		return {
-			...super.exportToBundle(),
+			...super.exportToBundle(options),
 			lockData: this.lockData,
 		};
 	}
@@ -693,10 +758,14 @@ export class ItemLock extends ItemBase<'lock'> {
 		const isSelfAction = context.target.type === 'character' && context.target.character.id === context.player.character.id;
 		const properties = this.getLockProperties();
 
+		if (action.password != null && !this._validatePassword(action.password)) {
+			return null;
+		}
+
 		// Locks can prevent interaction from player (unless in safemode)
 		if (properties.blockSelf && isSelfAction && !context.player.isInSafemode()) {
 			context.reject({
-				type: 'lockIntereactionPrevented',
+				type: 'lockInteractionPrevented',
 				moduleAction: action.action,
 				reason: 'blockSelf',
 				asset: this.asset.id,
@@ -706,16 +775,48 @@ export class ItemLock extends ItemBase<'lock'> {
 
 		switch (action.action) {
 			case 'lock':
-				return this.lock(context);
+				return this.lock(context, action);
 			case 'unlock':
-				return this.unlock(context);
+				return this.unlock(context, action);
 		}
 		AssertNever(action);
 	}
 
-	public lock({ messageHandler, player }: AppearanceModuleActionContext): ItemLock | null {
+	public lock({ messageHandler, player, reject }: AppearanceModuleActionContext, { password }: IItemLockAction & { action: 'lock'; }): ItemLock | null {
 		if (this.isLocked())
 			return null;
+
+		const rejectMissingPassword = () => {
+			reject({
+				type: 'lockInteractionPrevented',
+				moduleAction: 'lock',
+				reason: 'noStoredPassword',
+				asset: this.asset.id,
+			});
+			return null;
+		};
+
+		let hidden: LockBundle['hidden'] | undefined;
+		if (this.asset.definition.password != null && password == null) {
+			switch (this.lockData?.hidden?.side) {
+				case 'client':
+					if (!this.lockData.hidden.hasPassword) {
+						return rejectMissingPassword();
+					}
+					hidden = { side: 'client', hasPassword: true };
+					break;
+				case 'server':
+					if (this.lockData.hidden.password == null) {
+						return rejectMissingPassword();
+					}
+					hidden = { side: 'server', password: this.lockData.hidden.password };
+					break;
+				default:
+					return rejectMissingPassword();
+			}
+		} else if (password != null) {
+			hidden = { side: 'server', password };
+		}
 
 		if (this.asset.definition.chat?.actionLock) {
 			messageHandler({
@@ -725,9 +826,10 @@ export class ItemLock extends ItemBase<'lock'> {
 		}
 
 		return new ItemLock(this.id, this.asset, {
-			...super.exportToBundle(),
+			...super.exportToBundle({}),
 			lockData: {
 				...this.lockData,
+				hidden,
 				locked: {
 					id: player.character.id,
 					name: player.character.name,
@@ -740,9 +842,23 @@ export class ItemLock extends ItemBase<'lock'> {
 		});
 	}
 
-	public unlock({ messageHandler }: AppearanceModuleActionContext): ItemLock | null {
-		if (!this.isLocked())
+	public unlock({ messageHandler, failure, player }: AppearanceModuleActionContext, { password, clearLastPassword }: IItemLockAction & { action: 'unlock'; }): ItemLock | null {
+		if (!this.isLocked() || this.lockData == null)
 			return null;
+
+		if (this.asset.definition.password != null && !player.isInSafemode()) {
+			if (password == null) {
+				return null;
+			} else if (this.lockData.hidden?.side === 'server' && password !== this.lockData.hidden.password) {
+				failure({
+					type: 'lockInteractionPrevented',
+					moduleAction: 'unlock',
+					reason: 'wrongPassword',
+					asset: this.asset.id,
+				});
+				return null;
+			}
+		}
 
 		if (this.asset.definition.chat?.actionUnlock) {
 			messageHandler({
@@ -751,12 +867,29 @@ export class ItemLock extends ItemBase<'lock'> {
 			});
 		}
 
+		const lockData: LockBundle = {
+			...this.lockData,
+			hidden: this.lockData?.hidden ? { ...this.lockData.hidden } : undefined,
+			locked: undefined,
+		};
+		if (clearLastPassword && lockData.hidden) {
+			switch (lockData.hidden.side) {
+				case 'client':
+					delete lockData.hidden.hasPassword;
+					break;
+				case 'server':
+					delete lockData.hidden.password;
+					break;
+			}
+			// remove hidden if only it has side
+			if (Object.keys(lockData.hidden).length === 1) {
+				lockData.hidden = undefined;
+			}
+		}
+
 		return new ItemLock(this.id, this.asset, {
-			...super.exportToBundle(),
-			lockData: {
-				...this.lockData,
-				locked: undefined,
-			},
+			...super.exportToBundle({}),
+			lockData,
 		}, {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
@@ -777,6 +910,49 @@ export class ItemLock extends ItemBase<'lock'> {
 		}
 
 		return parentResult;
+	}
+
+	private _validatePassword(password: string, logger?: Logger): boolean {
+		const def = this.asset.definition.password;
+		const id = this.id;
+		if (def == null) {
+			logger?.warning(`Lock ${id} has a hidden password but the asset does not define a password`);
+			return false;
+		}
+		if (typeof def.length === 'number') {
+			if (password.length !== def.length) {
+				logger?.warning(`Lock ${id} has a hidden password longer than the asset's password length`);
+				return false;
+			}
+		} else if (password.length < def.length[0] || password.length > def.length[1]) {
+			logger?.warning(`Lock ${id} has a hidden password outside of the asset's password length range`);
+			return false;
+		}
+		switch (def.format) {
+			case 'numeric':
+				if (password.match(/[^0-9]/)) {
+					logger?.warning(`Lock ${id} has a hidden password that is not numeric`);
+					return false;
+				}
+				break;
+			case 'letters':
+				if (password.match(/[^a-zA-Z]/)) {
+					logger?.warning(`Lock ${id} has a hidden password that is not letters`);
+					return false;
+				}
+				break;
+			case 'alphanumeric':
+				if (password.match(/[^a-zA-Z0-9]/)) {
+					logger?.warning(`Lock ${id} has a hidden password that is not alphanumeric`);
+					return false;
+				}
+				break;
+			case 'text':
+				break;
+			default:
+				AssertNever(def.format);
+		}
+		return true;
 	}
 }
 

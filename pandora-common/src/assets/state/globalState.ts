@@ -2,19 +2,26 @@ import { CharacterId, CharacterIdSchema } from '../../character';
 import { Logger } from '../../logging';
 import { AssetManager } from '../assetManager';
 import { freeze } from 'immer';
-import { AppearanceBundleSchema, AssetFrameworkCharacterState } from './characterState';
+import { AppearanceClientBundle, AppearanceBundleSchema, AssetFrameworkCharacterState } from './characterState';
 import { z } from 'zod';
 import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { AssetFrameworkGlobalStateManipulator } from '../manipulators/globalStateManipulator';
 import { ActionProcessingContext, RoomTargetSelector } from '../appearanceTypes';
-import { AssetFrameworkRoomState, RoomInventoryBundleSchema } from './roomState';
+import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
+import { IExportOptions } from '../modules/common';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),
 	room: RoomInventoryBundleSchema.nullable(),
+	clientOnly: z.boolean().optional(),
 });
 export type AssetFrameworkGlobalStateBundle = z.infer<typeof AssetFrameworkGlobalStateBundleSchema>;
+export type AssetFrameworkGlobalStateClientBundle = AssetFrameworkGlobalStateBundle & {
+	characters: Record<CharacterId, AppearanceClientBundle>;
+	room: RoomInventoryClientBundle | null;
+	clientOnly: true;
+};
 
 /**
  * Class that stores immutable state for whole current context (so usually room or only the character if not in room).
@@ -77,16 +84,28 @@ export class AssetFrameworkGlobalState {
 		AssertNever(target);
 	}
 
-	public exportToBundle(): AssetFrameworkGlobalStateBundle {
+	public exportToBundle(options: IExportOptions = {}): AssetFrameworkGlobalStateBundle {
 		const result: AssetFrameworkGlobalStateBundle = {
 			characters: {},
-			room: this.room?.exportToBundle() ?? null,
+			room: this.room?.exportToBundle(options) ?? null,
 		};
 
 		for (const [characterId, characterState] of this.characters) {
-			result.characters[characterId] = characterState.exportToBundle();
+			result.characters[characterId] = characterState.exportToBundle(options);
 		}
+		return result;
+	}
 
+	public exportToClientBundle(options: IExportOptions = {}): AssetFrameworkGlobalStateClientBundle {
+		options.clientOnly = true;
+		const result: AssetFrameworkGlobalStateClientBundle = {
+			characters: {},
+			room: this.room?.exportToClientBundle(options) ?? null,
+			clientOnly: true,
+		};
+		for (const [characterId, characterState] of this.characters) {
+			result.characters[characterId] = characterState.exportToClientBundle(options);
+		}
 		return result;
 	}
 

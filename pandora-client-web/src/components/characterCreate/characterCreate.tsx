@@ -24,9 +24,11 @@ export function CharacterCreate(): ReactElement | null {
 	const shouldRandomize = player != null && playerData?.inCreation === true;
 	useEffect(() => {
 		if (shouldRandomize) {
-			shardConnector?.sendMessage('appearanceAction', {
+			shardConnector?.awaitResponse('appearanceAction', {
 				type: 'randomize',
 				kind: 'full',
+			}).catch(() => {
+				// TODO: this is bad, ww shouldn't have a useEffect that calls a shard action like this
 			});
 		}
 	}, [shouldRandomize, shardConnector]);

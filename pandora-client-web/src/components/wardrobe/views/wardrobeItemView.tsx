@@ -20,7 +20,7 @@ import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
-import { useWardrobeContext } from '../wardrobeContext';
+import { useWardrobeContext, useWardrobeExecuteChecked } from '../wardrobeContext';
 import { GenerateRandomItemId, useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { ActionWarning, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
@@ -150,7 +150,7 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 	container: ItemContainerPath;
 	insertBefore?: ItemId;
 }): ReactElement | null {
-	const { execute, heldItem, setHeldItem, globalState } = useWardrobeContext();
+	const { heldItem, setHeldItem, globalState } = useWardrobeContext();
 
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
@@ -219,6 +219,12 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 	}, [heldItem]);
 
 	const check = useStaggeredAppearanceActionResult(action);
+	const [execute] = useWardrobeExecuteChecked(action, check, {
+		onSuccess: () => {
+			setHeldItem({ type: 'nothing' });
+			refreshNewItemId();
+		},
+	});
 
 	if (action == null || text == null) {
 		return null;
@@ -229,13 +235,7 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 			className={ classNames('overlayDrop', 'inventoryViewItem', check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked') }
 			tabIndex={ 0 }
 			ref={ setRef }
-			onClick={ () => {
-				if (check?.result === 'success') {
-					execute(action);
-					setHeldItem({ type: 'nothing' });
-					refreshNewItemId();
-				}
-			} }
+			onClick={ execute }
 		>
 			{
 				check != null ? (

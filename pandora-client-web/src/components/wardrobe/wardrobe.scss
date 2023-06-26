@@ -453,3 +453,27 @@ $drop-overlay-gap: 0.3em;
 	line-height: 1.5em;
 	text-align: center;
 }
+
+.WardrobeLockPassword {
+	margin: 1em 0;
+}
+
+.WardrobeInputRow {
+	margin-left: 0.5em;
+	min-height: 1.6em;
+
+	label {
+		flex: 1 1;
+		margin: auto 0;
+	}
+
+	span {
+		width: 100%;
+		color: $theme-error;
+		text-align: right;
+	}
+
+	input[type='checkbox'] {
+		transform: scale(1.6);
+	}
+}

@@ -12,6 +12,7 @@ import { Logger } from '../../logging';
 import _, { isEqual } from 'lodash';
 import { AssetFrameworkRoomState } from './roomState';
 import { CharacterId } from '../../character';
+import type { IExportOptions } from '../modules/common';
 
 export const CharacterViewSchema = z.enum(['front', 'back']);
 export type CharacterView = z.infer<typeof CharacterViewSchema>;
@@ -39,8 +40,10 @@ export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
 export const AppearanceBundleSchema = AppearancePoseSchema.extend({
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	safemode: SafemodeDataSchema.optional(),
+	clientOnly: z.boolean().optional(),
 });
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
+export type AppearanceClientBundle = AppearanceBundle & { clientOnly: true; };
 
 export type AppearanceCharacterPose = ReadonlyMap<BoneName, BoneState>;
 
@@ -111,14 +114,27 @@ export class AssetFrameworkCharacterState {
 		};
 	}
 
-	public exportToBundle(): AppearanceBundle {
+	public exportToBundle(options: IExportOptions = {}): AppearanceBundle {
 		return {
-			items: this.items.map((item) => item.exportToBundle()),
+			items: this.items.map((item) => item.exportToBundle(options)),
 			bones: this.exportBones(),
 			leftArm: _.cloneDeep(this.arms.leftArm),
 			rightArm: _.cloneDeep(this.arms.rightArm),
 			view: this.view,
 			safemode: this.safemode,
+		};
+	}
+
+	public exportToClientBundle(options: IExportOptions = {}): AppearanceClientBundle {
+		options.clientOnly = true;
+		return {
+			items: this.items.map((item) => item.exportToBundle(options)),
+			bones: this.exportBones(),
+			leftArm: _.cloneDeep(this.arms.leftArm),
+			rightArm: _.cloneDeep(this.arms.rightArm),
+			view: this.view,
+			safemode: this.safemode,
+			clientOnly: true,
 		};
 	}
 

@@ -43,6 +43,10 @@ export class Room extends ServerRoom<IShardClient> {
 		this.logger = GetLogger('Room', `[Room ${data.id}]`);
 		this.logger.verbose('Created');
 
+		if (data.inventory.clientOnly) {
+			this.logger.error('Room inventory is client-only');
+		}
+
 		const initialState = AssetFrameworkGlobalState.createDefault(assetManager)
 			.withRoomState(
 				AssetFrameworkRoomState
@@ -135,7 +139,7 @@ export class Room extends ServerRoom<IShardClient> {
 			return;
 
 		this.sendUpdateToAllInRoom({
-			globalState: newState.exportToBundle(),
+			globalState: newState.exportToClientBundle(),
 		});
 	}
 
@@ -278,7 +282,7 @@ export class Room extends ServerRoom<IShardClient> {
 			this.roomState.setState(roomState);
 
 			// Send update to current characters
-			const globalState = this.roomState.currentState.exportToBundle();
+			const globalState = this.roomState.currentState.exportToClientBundle();
 			this.sendUpdateToAllInRoom({
 				globalState,
 				join: this.getCharacterData(character),
@@ -313,7 +317,7 @@ export class Room extends ServerRoom<IShardClient> {
 			// Update anyone remaining in the room
 			this.roomState.setState(roomState);
 			this.sendUpdateToAllInRoom({
-				globalState: this.roomState.currentState.exportToBundle(),
+				globalState: this.roomState.currentState.exportToClientBundle(),
 				leave: character.id,
 			});
 

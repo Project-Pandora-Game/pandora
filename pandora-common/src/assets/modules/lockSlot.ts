@@ -1,5 +1,5 @@
 import { Asset } from '../asset';
-import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
+import type { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon, IExportOptions } from './common';
 import { z } from 'zod';
 import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
@@ -95,10 +95,10 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		}
 	}
 
-	public exportData(): IModuleItemDataLockSlot {
+	public exportData(options: IExportOptions): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',
-			lock: this.lock ? this.lock.exportToBundle() : null,
+			lock: this.lock ? this.lock.exportToBundle(options) : null,
 		};
 	}
 
@@ -135,7 +135,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 
 		return new ItemModuleLockSlot(this.config, {
 			type: 'lockSlot',
-			lock: result.exportToBundle(),
+			lock: result.exportToBundle({}),
 		}, {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,
@@ -156,7 +156,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 
 		return new ItemModuleLockSlot(this.config, {
 			type: 'lockSlot',
-			lock: items.length === 1 ? items[0].exportToBundle() : null,
+			lock: items.length === 1 ? items[0].exportToBundle({}) : null,
 		}, {
 			assetManager: this.assetManager,
 			doLoadTimeCleanup: false,

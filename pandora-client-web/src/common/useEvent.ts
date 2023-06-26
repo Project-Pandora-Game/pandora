@@ -26,18 +26,22 @@ export function useEvent<T extends AnyFunction>(callback: T): T {
 	}, []) as T;
 }
 
-export function useAsyncEvent<T>(callback: () => Promise<T>, updateComponent: (result: T) => void, { errorHandler }: { errorHandler?: (error: unknown) => void; } = {}): [() => void, boolean] {
+export function useAsyncEvent<R, Args extends unknown[]>(
+	callback: (...args: Args) => Promise<R>,
+	updateComponent: (result: R) => void,
+	{ errorHandler }: { errorHandler?: (error: unknown) => void; } = {},
+): [(...args: Args) => void, boolean] {
 	const [processing, setProcessing] = useState(false);
 	const mounted = useMounted();
 
-	return [useEvent(() => {
+	return [useEvent((...args: Args) => {
 		if (processing)
 			return;
 
 		setProcessing(true);
 
-		callback()
-			.then((result: T) => {
+		callback(...args)
+			.then((result: R) => {
 				if (mounted.current) {
 					setProcessing(false);
 					updateComponent(result);

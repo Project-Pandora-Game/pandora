@@ -1,11 +1,13 @@
 import classNames from 'classnames';
 import {
 	Assert,
+	AssertNever,
 	FormatTimeInterval,
 	ItemLock,
+	LockAssetDefinition,
 	MessageSubstitute,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo } from 'react';
+import React, { ReactElement, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Column, Row } from '../../common/container/container';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import emptyLock from '../../../assets/icons/lock_empty.svg';
@@ -15,6 +17,7 @@ import { useCurrentTime } from '../../../common/useCurrentTime';
 import { WardrobeModuleProps } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeActionButton } from '../wardrobeComponents';
+import type { Immutable } from 'immer';
 
 export function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
 	const { targetSelector } = useWardrobeContext();
@@ -141,10 +144,36 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 		);
 	}, [lock, now]);
 
+	const [password, setPassword] = useState<string | undefined>(undefined);
+	const [allowExecute, setAllowExecute] = useState(lock.asset.definition.password == null);
+	const [showInvalidWarning, setShowInvalidWarning] = useState(false);
+	const [clearLastPassword, setClearLastPassword] = useState(false);
+
 	return (
 		<>
 			{ lockedText }
+			{
+				lock.asset.definition.password ? (
+					<Column className='WardrobeLockPassword'>
+						<Row className='WardrobeInputRow'>
+							<label>Remove password</label>
+							<input type='checkbox' checked={ clearLastPassword } onChange={ (e) => setClearLastPassword(e.target.checked) } />
+						</Row>
+						<PasswordInput
+							password={ lock.asset.definition.password }
+							showInvalidWarning={ showInvalidWarning }
+							setAllowExecute={ (allow, value) => {
+								setAllowExecute(allow);
+								if (allow)
+									setPassword(value);
+							} }
+						/>
+					</Column>
+				) : null
+			}
 			<WardrobeActionButton
+				disabled={ !allowExecute }
+				onFailure={ () => setShowInvalidWarning(true) }
 				action={ {
 					type: 'moduleAction',
 					target: targetSelector,
@@ -152,7 +181,11 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 					module: moduleName,
 					action: {
 						moduleType: 'lockSlot',
-						lockAction: { action: 'unlock' },
+						lockAction: {
+							action: 'unlock',
+							password,
+							clearLastPassword,
+						},
 					},
 				} }>
 				Unlock
@@ -161,21 +194,166 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 	);
 }
 
-function WardrobeLockSlotUnlocked({ item, moduleName }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
+function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const { targetSelector } = useWardrobeContext();
+	const [password, setPassword] = useState<string | undefined>(undefined);
+	const [useOldPassword, setUseOldPassword] = useState(false);
+	const [allowExecute, setAllowExecute] = useState(lock.asset.definition.password == null);
+
+	useEffect(() => {
+		if (!lock.hasPassword)
+			setUseOldPassword(false);
+	}, [lock.hasPassword]);
+
 	return (
-		<WardrobeActionButton
-			action={ {
-				type: 'moduleAction',
-				target: targetSelector,
-				item,
-				module: moduleName,
-				action: {
-					moduleType: 'lockSlot',
-					lockAction: { action: 'lock' },
-				},
-			} }>
-			Lock
-		</WardrobeActionButton>
+		<>
+			{
+				lock.asset.definition.password ? (
+					<Column className='WardrobeLockPassword'>
+						{
+							lock.hasPassword ? (
+								<Row className='WardrobeInputRow'>
+									<label>Use old password</label>
+									<input type='checkbox' checked={ useOldPassword } onChange={ () => setUseOldPassword(!useOldPassword) } />
+								</Row>
+							) : null
+						}
+						<PasswordInput
+							password={ lock.asset.definition.password }
+							disabled={ useOldPassword && lock.hasPassword }
+							setAllowExecute={ (allow, value) => {
+								setAllowExecute(allow);
+								if (allow)
+									setPassword(value);
+							} }
+						/>
+					</Column>
+				) : null
+			}
+			<WardrobeActionButton
+				disabled={ !allowExecute && !useOldPassword }
+				action={ {
+					type: 'moduleAction',
+					target: targetSelector,
+					item,
+					module: moduleName,
+					action: {
+						moduleType: 'lockSlot',
+						lockAction: {
+							action: 'lock',
+							password: useOldPassword ? undefined : password,
+						},
+					},
+				} }>
+				Lock
+			</WardrobeActionButton>
+		</>
+	);
+}
+
+function PasswordInput({
+	password,
+	showInvalidWarning,
+	setAllowExecute,
+	disabled,
+}: {
+	password: Immutable<NonNullable<LockAssetDefinition['password']>>;
+	showInvalidWarning?: boolean;
+	setAllowExecute?: (...args: [false, null] | [true, string]) => void;
+	disabled?: boolean;
+
+}) {
+	const [min, max] = typeof password.length === 'number' ? [password.length, password.length] : password.length;
+	const [value, setValue] = useState('');
+
+	const id = useId();
+
+	const onInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		switch (password.format) {
+			case 'numeric':
+				setValue(e.target.value.replace(/[^0-9]/g, ''));
+				break;
+			case 'letters':
+				setValue(e.target.value.replace(/[^a-zA-Z]/g, ''));
+				break;
+			case 'alphanumeric':
+				setValue(e.target.value.replace(/[^a-zA-Z0-9]/g, ''));
+				break;
+			case 'text':
+				setValue(e.target.value);
+				break;
+			default:
+				AssertNever(password.format);
+		}
+	}, [password.format]);
+
+	const error = useMemo(() => {
+		if (disabled)
+			return null;
+
+		if (value.length < min)
+			return `Must be at least ${min} characters`;
+		if (value.length > max)
+			return `Must be at most ${max} characters`;
+		if (showInvalidWarning)
+			return 'Invalid password';
+
+		return null;
+	}, [disabled, value, min, max, showInvalidWarning]);
+
+	useEffect(() => {
+		if (setAllowExecute == null)
+			return;
+
+		if (value.length < min || value.length > max) {
+			setAllowExecute(false, null);
+			return;
+		}
+		let allow = true;
+		switch (password.format) {
+			case 'numeric':
+				allow = /^[0-9]+$/.test(value);
+				break;
+			case 'letters':
+				allow = /^[a-zA-Z]+$/.test(value);
+				break;
+			case 'alphanumeric':
+				allow = /^[a-zA-Z0-9]+$/.test(value);
+				break;
+			case 'text':
+				break;
+			default:
+				AssertNever(password.format);
+		}
+		if (!allow) {
+			setAllowExecute(false, null);
+		} else {
+			setAllowExecute(true, value);
+		}
+	}, [value, min, max, password.format, setAllowExecute]);
+
+	return (
+		<>
+			<Row className='WardrobeInputRow'>
+				<label htmlFor={ id }>
+					Password
+				</label>
+				<input
+					id={ id }
+					type='text'
+					value={ value }
+					maxLength={ max }
+					onInput={ onInput }
+					disabled={ disabled }
+				/>
+			</Row>
+			{
+				error ? (
+					<Row className='WardrobeInputRow'>
+						<span>{ error }</span>
+					</Row>
+				) : null
+			}
+		</>
 	);
 }

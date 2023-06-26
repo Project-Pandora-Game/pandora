@@ -11,7 +11,7 @@ import { IconButton } from '../../common/button/button';
 import listIcon from '../../../assets/icons/list.svg';
 import gridIcon from '../../../assets/icons/grid.svg';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { useWardrobeContext } from '../wardrobeContext';
+import { useWardrobeContext, useWardrobeExecuteChecked } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { GenerateRandomItemId } from '../wardrobeUtils';
@@ -206,8 +206,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	container: ItemContainerPath;
 	listMode: boolean;
 }): ReactElement {
-	const { targetSelector, execute } = useWardrobeContext();
-
+	const { targetSelector } = useWardrobeContext();
 	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
 
 	const action: AppearanceAction = useMemo(() => ({
@@ -219,6 +218,9 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	}), [targetSelector, newItemId, asset, container]);
 
 	const check = useStaggeredAppearanceActionResult(action, { lowPriority: true });
+	const [execute] = useWardrobeExecuteChecked(action, check, {
+		onSuccess: () => refreshNewItemId(),
+	});
 
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	return (
@@ -231,12 +233,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 			) }
 			tabIndex={ 0 }
 			ref={ setRef }
-			onClick={ () => {
-				if (check?.result === 'success') {
-					execute(action);
-					refreshNewItemId();
-				}
-			} }>
+			onClick={ execute }>
 			{
 				check != null ? (
 					<ActionWarning check={ check } parent={ ref } />
@@ -249,7 +246,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 }
 
 function InventoryAssetDropArea(): ReactElement | null {
-	const { execute, heldItem, setHeldItem } = useWardrobeContext();
+	const { heldItem, setHeldItem } = useWardrobeContext();
 
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 
@@ -280,6 +277,9 @@ function InventoryAssetDropArea(): ReactElement | null {
 	}, [heldItem]);
 
 	const check = useStaggeredAppearanceActionResult(action);
+	const [execute] = useWardrobeExecuteChecked(action, check, {
+		onSuccess: () => setHeldItem({ type: 'nothing' }),
+	});
 
 	if (heldItem.type === 'asset') {
 		return (
@@ -309,12 +309,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 			) }
 			tabIndex={ 0 }
 			ref={ setRef }
-			onClick={ () => {
-				if (check?.result === 'success') {
-					execute(action);
-					setHeldItem({ type: 'nothing' });
-				}
-			} }
+			onClick={ execute }
 		>
 			{
 				check != null ? (
@@ -325,4 +320,3 @@ function InventoryAssetDropArea(): ReactElement | null {
 		</div>
 	);
 }
-

@@ -28,7 +28,8 @@ export function useEvent<T extends AnyFunction>(callback: T): T {
 
 export function useAsyncEvent<R, Args extends unknown[]>(
 	callback: (...args: Args) => Promise<R>,
-	updateComponent: (result: R) => void, { errorHandler }: { errorHandler?: (error: unknown) => void; } = {},
+	updateComponent: (result: R) => void,
+	{ errorHandler }: { errorHandler?: (error: unknown) => void; } = {},
 ): [(...args: Args) => void, boolean] {
 	const [processing, setProcessing] = useState(false);
 	const mounted = useMounted();

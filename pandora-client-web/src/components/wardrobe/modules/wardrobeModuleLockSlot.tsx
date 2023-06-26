@@ -144,40 +144,31 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 		);
 	}, [lock, now]);
 
-	const [useOldPassword, setUseOldPassword] = useState(false);
 	const [password, setPassword] = useState<string | undefined>(undefined);
 	const [allowExecute, setAllowExecute] = useState(lock.asset.definition.password == null);
 	const [showInvalidWarning, setShowInvalidWarning] = useState(false);
 	const [clearLastPassword, setClearLastPassword] = useState(false);
-
-	useEffect(() => {
-		if (!lock.hasPassword)
-			setUseOldPassword(false);
-	}, [lock.hasPassword]);
 
 	return (
 		<>
 			{ lockedText }
 			{
 				lock.asset.definition.password ? (
-					<>
-						<br />
-						<div className='WardrobeInputRow'>
-							<label>Remove password:</label>
+					<Column className='WardrobeLockPassword'>
+						<Row className='WardrobeInputRow'>
+							<label>Remove password</label>
 							<input type='checkbox' checked={ clearLastPassword } onChange={ (e) => setClearLastPassword(e.target.checked) } />
-						</div>
+						</Row>
 						<PasswordInput
 							password={ lock.asset.definition.password }
 							showInvalidWarning={ showInvalidWarning }
-							disabled={ useOldPassword }
 							setAllowExecute={ (allow, value) => {
 								setAllowExecute(allow);
 								if (allow)
 									setPassword(value);
 							} }
 						/>
-						<br />
-					</>
+					</Column>
 				) : null
 			}
 			<WardrobeActionButton
@@ -208,18 +199,22 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 	const [password, setPassword] = useState<string | undefined>(undefined);
 	const [useOldPassword, setUseOldPassword] = useState(false);
 
+	useEffect(() => {
+		if (!lock.hasPassword)
+			setUseOldPassword(false);
+	}, [lock.hasPassword]);
+
 	return (
 		<>
 			{
 				lock.asset.definition.password ? (
-					<>
-						<br />
+					<Column className='WardrobeLockPassword'>
 						{
 							lock.hasPassword ? (
-								<div className='WardrobeInputRow'>
-									<label>Use old password:</label>
+								<Row className='WardrobeInputRow'>
+									<label>Use old password</label>
 									<input type='checkbox' checked={ useOldPassword } onChange={ () => setUseOldPassword(!useOldPassword) } />
-								</div>
+								</Row>
 							) : null
 						}
 						<PasswordInput
@@ -230,8 +225,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 									setPassword(value);
 							} }
 						/>
-						<br />
-					</>
+					</Column>
 				) : null
 			}
 			<WardrobeActionButton
@@ -336,23 +330,27 @@ function PasswordInput({
 	}, [value, min, max, password.format, setAllowExecute]);
 
 	return (
-		<div className='WardrobeInputRow'>
-			<label htmlFor={ id }>
-				Password:
-			</label>
-			<input
-				id={ id }
-				type='text'
-				value={ value }
-				maxLength={ max }
-				onInput={ onInput }
-				disabled={ disabled }
-			/>
-			{ error ? (
-				<span className='FormFieldError'>
-					{ error }
-				</span>
-			) : null }
-		</div>
+		<>
+			<Row className='WardrobeInputRow'>
+				<label htmlFor={ id }>
+					Password
+				</label>
+				<input
+					id={ id }
+					type='text'
+					value={ value }
+					maxLength={ max }
+					onInput={ onInput }
+					disabled={ disabled }
+				/>
+			</Row>
+			{
+				error ? (
+					<Row className='WardrobeInputRow'>
+						<span>{ error }</span>
+					</Row>
+				) : null
+			}
+		</>
 	);
 }

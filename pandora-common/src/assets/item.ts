@@ -809,7 +809,7 @@ export class ItemLock extends ItemBase<'lock'> {
 					if (this.lockData.hidden.password == null) {
 						return rejectMissingPassword();
 					}
-					hidden = { side: 'server', password };
+					hidden = { side: 'server', password: this.lockData.hidden.password };
 					break;
 				default:
 					return rejectMissingPassword();

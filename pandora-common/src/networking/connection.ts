@@ -119,7 +119,7 @@ export abstract class ConnectionBase<
 					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 						this.logger.warning(`\u25BC message '${messageType}' socket error:`, socketError);
 					}
-					return reject(socketError);
+					return reject(socketError instanceof Error ? socketError : new Error(String(socketError)));
 				}
 				if (error != null) {
 					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
@@ -128,7 +128,7 @@ export abstract class ConnectionBase<
 					if (typeof error !== 'string') {
 						return reject(new Error(`Invalid error type: ${typeof error}`));
 					}
-					return reject(error);
+					return reject(new Error(error));
 				}
 				if (!IsObject(response)) {
 					return reject(new Error(`Invalid response type: ${typeof response}`));

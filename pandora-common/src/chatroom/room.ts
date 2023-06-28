@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ArrayToTruthyMap, ZodTrimedRegex, ZodTemplateString, HexColorStringSchema, HexColorString } from '../validation';
 import { cloneDeep } from 'lodash';
-import { AssetManager } from '../assets';
+import { AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT } from '../assets';
 import { CharacterId } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
@@ -159,7 +159,7 @@ export const ChatRoomDataSchema = z.object({
 	/** Account IDs of accounts owning this room */
 	owners: AccountIdSchema.array(),
 	config: ChatRoomDirectoryConfigSchema,
-	inventory: RoomInventoryBundleSchema,
+	inventory: RoomInventoryBundleSchema.default(() => cloneDeep(ROOM_INVENTORY_BUNDLE_DEFAULT)),
 });
 /** Room data stored in database */
 export type IChatRoomData = z.infer<typeof ChatRoomDataSchema>;

@@ -2,7 +2,6 @@ import { noop } from 'lodash';
 import { EMPTY, GetLogger, IChatRoomListInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId, AssertNotNullable } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { useErrorHandler } from '../../common/useErrorHandler';
 import { PersistentToast } from '../../persistentToast';
 import { Button } from '../common/button/button';
 import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
@@ -276,7 +275,6 @@ type ChatRoomEnterResult = IClientDirectoryNormalResult['chatRoomEnter']['result
 
 function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnterResult> {
 	const directoryConnector = useDirectoryConnector();
-	const handleError = useErrorHandler();
 
 	return useCallback(async (id, password) => {
 		try {
@@ -292,10 +290,9 @@ function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnter
 			GetLogger('JoinRoom').warning('Error during room join', err);
 			RoomJoinProgress.show('error',
 				`Error during room join:\n${ err instanceof Error ? err.message : String(err) }`);
-			handleError(err);
-			throw err;
+			return 'failed';
 		}
-	}, [directoryConnector, handleError]);
+	}, [directoryConnector]);
 }
 
 function useRoomList(): IChatRoomListInfo[] | undefined {

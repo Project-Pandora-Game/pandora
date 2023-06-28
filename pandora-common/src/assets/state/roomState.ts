@@ -8,9 +8,10 @@ import { Logger } from '../../logging';
 import { ROOM_INVENTORY_BUNDLE_DEFAULT } from '../roomInventory';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
 import type { IExportOptions } from '../modules/common';
+import { ZodArrayWithInvalidDrop } from '../../validation';
 
 export const RoomInventoryBundleSchema = z.object({
-	items: z.array(ItemBundleSchema),
+	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	clientOnly: z.boolean().optional(),
 });
 

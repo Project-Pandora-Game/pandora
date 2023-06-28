@@ -1,8 +1,9 @@
-import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory, AsyncSynchronized } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory, AsyncSynchronized, ChatRoomDataSchema, CHATROOM_SHARD_UPDATEABLE_PROPERTIES } from 'pandora-common';
 import type { Character } from '../character/character';
-import _, { isEqual, omit } from 'lodash';
+import _, { isEqual, omit, pick } from 'lodash';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
+import { diffString } from 'json-diff';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -367,7 +368,20 @@ export class Room extends ServerRoom<IShardClient> {
 		if (room === false) {
 			return null;
 		}
-		return room;
+		const result = await ChatRoomDataSchema
+			.omit({ config: true, accessId: true, owners: true })
+			.safeParseAsync(room);
+		if (!result.success) {
+			GetLogger('Room').error(`Failed to load room ${id}: `, result.error);
+			return null;
+		}
+		const roomWithoutDbData = omit(room, '_id');
+		if (!_.isEqual(result.data, roomWithoutDbData)) {
+			const diff = diffString(roomWithoutDbData, result.data, { color: false });
+			GetLogger('Room').warning(`Room ${id} has invalid data, fixing...\n`, diff);
+			await GetDatabase().setChatRoom(id, pick(result.data, CHATROOM_SHARD_UPDATEABLE_PROPERTIES), accessId);
+		}
+		return result.data;
 	}
 
 	private lastMessageTime: number = 0;

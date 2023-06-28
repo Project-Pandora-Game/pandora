@@ -446,8 +446,9 @@ export class Room {
 		}
 	}
 
+	@AsyncSynchronized('object')
 	public async disconnect(): Promise<void> {
-		await this.setShard(null);
+		await this._setShard(null);
 		// Clear pending action messages when the room gets disconnected (this is not triggered on simple reassignment)
 		this.pendingMessages.length = 0;
 	}
@@ -477,20 +478,22 @@ export class Room {
 		return await this._connectToShard(shard);
 	}
 
+	@AsyncSynchronized('object')
 	public async shardReconnect(shard: Shard, accessId: string): Promise<void> {
 		if (this.isInUse() || (this.accessId && this.accessId !== accessId))
 			return;
 
 		this.accessId = accessId;
-		await this.setShard(shard);
+		await this._setShard(shard);
 	}
 
+	@AsyncSynchronized('object')
 	private async _connectToShard(shard: Shard): Promise<'failed' | Shard> {
 		this.touch();
 
 		// If we are on a wrong shard, we leave it
 		if (this._assignedShard !== shard) {
-			await this.setShard(null);
+			await this._setShard(null);
 
 			// Generate new access id for new shard
 			const accessId = await this.generateAccessId();
@@ -504,15 +507,14 @@ export class Room {
 		}
 
 		if (this._assignedShard !== shard) {
-			await this.setShard(shard);
+			await this._setShard(shard);
 		}
 
 		AssertNotNullable(this._assignedShard);
 		return this._assignedShard;
 	}
 
-	@AsyncSynchronized()
-	private async setShard(shard: Shard | null): Promise<void> {
+	private async _setShard(shard: Shard | null): Promise<void> {
 		if (this._assignedShard === shard)
 			return;
 		if (this._assignedShard) {

@@ -200,13 +200,13 @@ function PendingRequestActions({ id }: { id: AccountId; }) {
 function IncomingRequestActions({ id }: { id: AccountId; }) {
 	const directory = useDirectoryConnector();
 	const [accept, acceptInProgress] = useAsyncEvent(async () => {
-		if (confirm(`Accept friend request from ${id}?`)) {
+		if (confirm(`Accept the request to add ${id} to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'accept' });
 		}
 		return undefined;
 	}, (r) => HandleResult(r?.result));
 	const [decline, declineInProgress] = useAsyncEvent(async () => {
-		if (confirm(`Decline friend request from ${id}?`)) {
+		if (confirm(`Decline the request to add ${id} to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'decline' });
 		}
 		return undefined;
@@ -272,7 +272,7 @@ function FriendRow({
 	const directory = useDirectoryConnector();
 
 	const [unfriend, processing] = useAsyncEvent(async () => {
-		if (confirm(`Are you sure you want to remove ${name} from your friends list?`)) {
+		if (confirm(`Are you sure you want to remove ${name} from your contacts list?`)) {
 			return await directory.awaitResponse('unfriend', { id });
 		}
 		return undefined;

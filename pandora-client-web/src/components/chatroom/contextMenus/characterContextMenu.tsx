@@ -120,7 +120,7 @@ function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | '
 	const { character } = useCharacterMenuContext();
 
 	const request = useCallback(() => {
-		if (confirm(`Are you sure you want to ${action} a friend request with ${character.data.name}?`)) {
+		if (confirm(`Are you sure you want to ${action} adding the account behind ${character.data.name} to your contacts list?`)) {
 			directory.awaitResponse('friendRequest', { action, id: character.data.accountId })
 				.then(({ result }) => HandleResult(result))
 				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
@@ -139,7 +139,7 @@ function UnfriendRequestMenu(): ReactElement {
 	const { character } = useCharacterMenuContext();
 
 	const request = useCallback(() => {
-		if (confirm(`Are you sure you want to unfriend ${character.data.name}?`)) {
+		if (confirm(`Are you sure you want to remove the account behind ${character.data.name} from your contacts list?`)) {
 			directory.awaitResponse('unfriend', { id: character.data.accountId })
 				.then(({ result }) => HandleResult(result))
 				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));

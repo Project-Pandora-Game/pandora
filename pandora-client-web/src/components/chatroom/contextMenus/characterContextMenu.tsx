@@ -104,7 +104,7 @@ function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode
 	const { character } = useCharacterMenuContext();
 
 	const block = useCallback(() => {
-		if (confirm(`Are you sure you want to ${action} ${character.data.name} from your block list?`))
+		if (confirm(`Are you sure you want to ${action} the account behind ${character.data.name} from your block list?`))
 			directory.sendMessage('blockList', { action, id: character.data.accountId });
 	}, [action, character, directory]);
 
@@ -161,7 +161,7 @@ function RelationshipActionContextMenuInner(): ReactElement | null {
 		case undefined:
 			return (
 				<>
-					<FriendRequestMenu action='initiate' text='Add Friend' />
+					<FriendRequestMenu action='initiate' text='Add to contacts' />
 					<BlockMenu action='add' text='Block' />
 				</>
 			);

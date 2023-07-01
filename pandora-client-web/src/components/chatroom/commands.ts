@@ -150,10 +150,10 @@ export const COMMANDS: readonly IClientCommand[] = [
 			}),
 	},
 	{
-		key: ['addfriend'],
+		key: ['addcontact'],
 		usage: '<target>',
-		description: 'Adds a user to your friends list',
-		longDescription: 'Adds a user to your friends list.',
+		description: 'Adds a user to your contacts list',
+		longDescription: 'Sends the user a request to add the user account to your contacts list.',
 		handler: CreateClientCommand()
 			.argument('target', ACCOUNT_ID_PARSER)
 			.handler(({ directoryConnector }, { target }) => {

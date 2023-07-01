@@ -143,8 +143,8 @@ function FriendsHeaderButton(): ReactElement {
 	return (
 		<HeaderButton
 			icon={ friendsIcon }
-			iconAlt={ `${ notificationCount } Friends` }
-			title='Friends'
+			iconAlt={ `${ notificationCount } Contacts` }
+			title='Contacts'
 			badge={ notificationCount }
 			onClick={ () => navigate('/relationships') } />
 	);

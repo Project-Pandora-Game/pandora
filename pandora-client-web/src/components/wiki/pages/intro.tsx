@@ -92,6 +92,15 @@ export function WikiIntroduction(): ReactElement {
 				resulting in everyone having the same experience.
 			</p>
 
+			<h4>A direct messaging system</h4>
+			<p>
+				To write someone a DM, you have to click the contacts icon at the top and then under the "DMs"-tab,
+				you have to either look for the account name of the user you want to exchange messages with on the left, or
+				you have to search for them via the bottom left input field using their <b>account ID</b>. You can find the account
+				ID either under the "Contacts"-tab or in the "Room"-tab while with a character in the same room. The account ID is
+				the rightmost number behind the character name.
+			</p>
+
 			<h4>No safeword feature, but a safemode that makes it harder to be misused</h4>
 			<p>
 				You can access the safemode feature by clicking on your character name in the top left of the screen and then entering safemode in the menu.

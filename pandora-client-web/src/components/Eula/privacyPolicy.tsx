@@ -46,7 +46,7 @@ export function PrivacyPolicyContent(): ReactElement {
 			</p>
 			<ul>
 				<li>
-					Friendlist: We store the Pandora accounts You have friended and share Your online status in Pandora with them, when You consent to it.
+					Contacts list: We store the Pandora accounts You have added to your Pandora contacts list and share Your online status in Pandora with them, when You consent to it.
 				</li>
 				<li>
 					Direct/Private Messaging: We store the history of the direct messages You exchanged with other Pandora Accounts, but We store this data encrypted and are not able to see the contents of these messages.

@@ -9,6 +9,8 @@ import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult,
 
 export type IDirectoryStatus = {
 	time: number;
+	onlineAccounts: number;
+	onlineCharacters: number;
 	betaKeyRequired?: true;
 	captchaSiteKey?: string;
 };

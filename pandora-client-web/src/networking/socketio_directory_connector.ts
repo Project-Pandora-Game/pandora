@@ -50,6 +50,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>({
 		time: Date.now(),
+		onlineAccounts: 0,
+		onlineCharacters: 0,
 	});
 	private readonly _currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
 

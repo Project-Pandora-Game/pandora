@@ -45,29 +45,39 @@ export class AccountManager {
 		return this._onlineAccounts;
 	}
 
+	public getOnlineCounts(): { onlineAccounts: number; onlineCharacters: number; } {
+		let onlineAccounts = 0;
+		let onlineCharacters = 0;
+		for (const account of this._onlineAccounts) {
+			if (account.isInUse()) {
+				onlineAccounts++;
+				account.characters.forEach((c) => {
+					if (c.isInUse()) {
+						onlineCharacters++;
+					}
+				});
+			}
+		}
+		return { onlineAccounts, onlineCharacters };
+	}
+
 	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms */
 	private tick(): void {
 		const now = Date.now();
-		let inUseAccountCount = 0;
-		let inUseCharacterCount = 0;
 		// Go through accounts and prune old ones
 		for (const account of this._onlineAccounts) {
-			if (account.isInUse()) {
-				inUseAccountCount++;
-				account.characters.forEach((c) => {
-					if (c.isInUse()) {
-						inUseCharacterCount++;
-					}
-				});
-			} else if (account.lastActivity + ACCOUNT_INACTIVITY_THRESHOLD < now) {
+			if (!account.isInUse() && account.lastActivity + ACCOUNT_INACTIVITY_THRESHOLD < now) {
 				this.unloadAccount(account);
 			}
 		}
-		inUseAccountsMetric.set(inUseAccountCount);
-		inUseCharactersMetric.set(inUseCharacterCount);
+
+		// Update metrics
+		const { onlineAccounts, onlineCharacters } = this.getOnlineCounts();
+		inUseAccountsMetric.set(onlineAccounts);
+		inUseCharactersMetric.set(onlineCharacters);
 		DiscordBot.setOnlineStatus({
-			accounts: inUseAccountCount,
-			characters: inUseCharacterCount,
+			accounts: onlineAccounts,
+			characters: onlineCharacters,
 		});
 
 		const db = GetDatabase();

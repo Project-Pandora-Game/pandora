@@ -16,6 +16,7 @@ import closedDoor from '../../icons/closed-door.svg';
 import openDoor from '../../icons/opened-door.svg';
 import { ContextHelpButton } from '../help/contextHelpButton';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
+import { useObservable } from '../../observable';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -31,6 +32,8 @@ const TIPS: readonly string[] = [
 export function ChatroomSelect(): ReactElement {
 	const roomInfo = useChatRoomInfo();
 	const roomList = useRoomList();
+
+	const directoryStatus = useObservable(useDirectoryConnector().directoryStatus);
 
 	const [showTips, setShowTips] = useState(false);
 
@@ -60,7 +63,12 @@ export function ChatroomSelect(): ReactElement {
 					🛈 Tip: { TIPS[index] }
 				</span>
 			</Row>
-			<h2>Room search</h2>
+			<Row wrap alignX='space-between'>
+				<h2>Room search</h2>
+				<Row padding='medium' alignY='center'>
+					Accounts online: { directoryStatus.onlineAccounts } / Characters online: { directoryStatus.onlineCharacters }
+				</Row>
+			</Row>
 			{ !roomList ? <div className='loading'>Loading...</div> : <ChatroomSelectRoomList roomList={ roomList } /> }
 			{ showTips && <TipsListDialog
 				hide={ () => setShowTips(false) }

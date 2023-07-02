@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
+	CreateDefaultDirectoryStatus,
 	IDirectoryAccountInfo,
 	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
@@ -23,7 +24,7 @@ export class TestEventEmitter<T extends TypedEvent> extends TypedEventEmitter<T>
 export class MockDirectoryConnector implements DirectoryConnector {
 	public readonly authToken = new Observable<AuthToken | undefined>(undefined);
 	public readonly currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
-	public readonly directoryStatus = new Observable<IDirectoryStatus>({ time: 0 });
+	public readonly directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
 	public readonly state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 
 	public readonly changeEventEmitter = new TestEventEmitter<Record<IDirectoryClientChangeEvents, true>>();

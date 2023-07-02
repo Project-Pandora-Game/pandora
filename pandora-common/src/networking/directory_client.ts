@@ -14,6 +14,13 @@ export type IDirectoryStatus = {
 	betaKeyRequired?: true;
 	captchaSiteKey?: string;
 };
+export function CreateDefaultDirectoryStatus(): IDirectoryStatus {
+	return {
+		time: Date.now(),
+		onlineAccounts: 0,
+		onlineCharacters: 0,
+	};
+}
 
 export const DirectoryAccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema),

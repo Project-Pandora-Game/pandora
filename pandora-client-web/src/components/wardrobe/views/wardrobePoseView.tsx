@@ -6,7 +6,7 @@ import {
 	AppearanceLimitTree,
 	ArmRotationSchema,
 	AssetFrameworkCharacterState,
-	AssetsPosePresets,
+	AssetsPosePreset,
 	BONE_MAX,
 	BONE_MIN,
 	BoneName,
@@ -26,7 +26,6 @@ import { Select } from '../../common/select/select';
 import { Immutable } from 'immer';
 import { useWardrobeExecuteCallback } from '../wardrobeContext';
 
-type AssetsPosePreset = AssetsPosePresets[number]['poses'][number];
 type CheckedPosePreset = {
 	active: boolean;
 	available: boolean;

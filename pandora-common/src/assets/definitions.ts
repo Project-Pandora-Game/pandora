@@ -219,9 +219,9 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	/** Attributes that are used strictly for filtering, no effect on character */
 	staticAttributes?: (A['attributes'])[];
 	/** Extra pose presets available when inside this device */
-	posePresets?: AssetsPosePreset[];
+	posePresets?: AssetsPosePreset<A['bones']>[];
 	/** Pose thats gets applied to character exiting this device */
-	exitPose?: AssetsPosePreset;
+	exitPose?: AssetsPosePreset<A['bones']>;
 	/**
 	 * Chat specific settings for this asset
 	 *
@@ -251,9 +251,9 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
 	/** Extra pose presets available when wearing this asset, extends device's pose presets */
-	posePresets?: AssetsPosePreset[];
+	posePresets?: AssetsPosePreset<A['bones']>[];
 	/** Pose thats gets applied to character exiting this slot, overrides device's exit pose */
-	exitPose?: AssetsPosePreset;
+	exitPose?: AssetsPosePreset<A['bones']>;
 	/**
 	 * Chat specific settings for this asset
 	 *

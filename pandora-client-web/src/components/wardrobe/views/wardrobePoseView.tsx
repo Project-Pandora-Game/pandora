@@ -57,7 +57,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, roomItems: Appeara
 			continue;
 
 		const deviceId = item.roomDeviceLink.device;
-		const roomItem = roomItems.find((roomItem) => roomItem.id === deviceId);
+		const roomItem = roomItems.find((i) => i.id === deviceId);
 		if (!roomItem?.isType('roomDevice'))
 			continue;
 
@@ -132,8 +132,8 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 
 export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: CharacterArmsPose; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
 	const assetManager = useAssetManager();
-	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' }) ?? [];
-	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), roomItems, bones, armsPose, assetManager), [appearance, bones, armsPose, assetManager]);
+	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
+	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), roomItems ?? [], bones, armsPose, assetManager), [appearance, bones, armsPose, assetManager, roomItems]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 	);
@@ -253,7 +253,7 @@ export function WardrobePoseGui({ character, characterState }: {
 }): ReactElement {
 	const assetManager = useAssetManager();
 	const [execute, processing] = useWardrobeExecuteCallback();
-	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' }) ?? [];
+	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
 
 	const currentBones = useCharacterAppearancePose(characterState);
 	const armsPose = useCharacterAppearanceArmsPose(characterState);
@@ -269,7 +269,7 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(characterState.items, roomItems, currentBones, armsPose, assetManager), [characterState, currentBones, armsPose, assetManager]);
+	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(characterState.items, roomItems ?? [], currentBones, armsPose, assetManager), [characterState, currentBones, armsPose, assetManager, roomItems]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 

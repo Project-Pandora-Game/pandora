@@ -706,8 +706,12 @@ function Auth<T, R>(role: AccountRole, handler: (args: T, connection: ClientConn
 
 /** Create a server status object to be sent to clients */
 function MakeStatus(): IDirectoryStatus {
+	const { onlineAccounts, onlineCharacters } = accountManager.getOnlineCounts();
+
 	const result: IDirectoryStatus = {
 		time: Date.now(),
+		onlineAccounts,
+		onlineCharacters,
 	};
 	if (BETA_KEY_ENABLED) {
 		result.betaKeyRequired = true;

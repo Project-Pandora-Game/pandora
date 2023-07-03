@@ -16,6 +16,7 @@ import {
 	ClientDirectorySchema,
 	DirectoryClientSchema,
 	TypedEventEmitter,
+	CreateDefaultDirectoryStatus,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -48,9 +49,7 @@ class ConnectionStateEventEmitter extends TypedEventEmitter<Pick<IDirectoryClien
 export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory, IDirectoryClient, Socket> implements DirectoryConnector {
 
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
-	private readonly _directoryStatus = new Observable<IDirectoryStatus>({
-		time: Date.now(),
-	});
+	private readonly _directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
 	private readonly _currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
 
 	private readonly _changeEventEmitter = new DirectoryChangeEventEmitter();

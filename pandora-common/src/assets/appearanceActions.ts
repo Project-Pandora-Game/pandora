@@ -1203,7 +1203,7 @@ export function ActionRoomDeviceLeave({
 		}
 
 		const exitPose = asset.definition.exitPose ?? item.asset.definition.exitPose;
-		if (exitPose != null && !manipulator.produceCharacterState(occupyingCharacterId, (character) => character.produceWithPose(exitPose, 'pose', false))) {
+		if (exitPose != null && !manipulator.produceCharacterState(occupyingCharacterId, (character) => character.produceWithPosePreset(exitPose))) {
 			return {
 				result: 'restrictionError',
 				restriction: {

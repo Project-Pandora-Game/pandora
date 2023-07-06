@@ -358,6 +358,19 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	view?: CharacterView;
 };
 
+export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend?: Immutable<PartialAppearancePose>): PartialAppearancePose {
+	if (extend == null)
+		return base;
+
+	return {
+		bones: { ...base.bones, ...extend.bones },
+		arms: { ...base.arms, ...extend.arms },
+		leftArm: { ...base.leftArm, ...extend.leftArm },
+		rightArm: { ...base.rightArm, ...extend.rightArm },
+		view: base.view ?? extend.view,
+	};
+}
+
 export type AssetsPosePreset<Bones extends BoneName = BoneName> = PartialAppearancePose<Bones> & {
 	name: string;
 	optional?: PartialAppearancePose<Bones>;

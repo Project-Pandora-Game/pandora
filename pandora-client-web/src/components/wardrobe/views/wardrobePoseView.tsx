@@ -13,6 +13,7 @@ import {
 	BoneState,
 	CharacterAppearance,
 	CharacterArmsPose,
+	MergePartialAppearancePoses,
 	PartialAppearancePose,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo } from 'react';
@@ -23,7 +24,6 @@ import { Button } from '../../common/button/button';
 import _ from 'lodash';
 import { useEvent } from '../../../common/useEvent';
 import { Select } from '../../common/select/select';
-import { Immutable } from 'immer';
 import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 
 type CheckedPosePreset = {
@@ -36,19 +36,6 @@ type CheckedAssetsPosePresets = {
 	category: string;
 	poses: CheckedPosePreset[];
 }[];
-
-function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend?: Immutable<PartialAppearancePose>): PartialAppearancePose {
-	if (extend == null)
-		return base;
-
-	return {
-		bones: { ...base.bones, ...extend.bones },
-		arms: { ...base.arms, ...extend.arms },
-		leftArm: { ...base.leftArm, ...extend.leftArm },
-		rightArm: { ...base.rightArm, ...extend.rightArm },
-		view: base.view ?? extend.view,
-	};
-}
 
 function GetFilteredAssetsPosePresets(items: AppearanceItems, roomItems: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose, assetManager: AssetManagerClient): {
 	poses: CheckedAssetsPosePresets;

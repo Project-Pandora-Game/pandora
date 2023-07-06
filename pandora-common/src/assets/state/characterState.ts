@@ -1,5 +1,5 @@
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
-import { PartialAppearancePose, WearableAssetType } from '../definitions';
+import { AssetsPosePreset, MergePartialAppearancePoses, PartialAppearancePose, WearableAssetType } from '../definitions';
 import { Assert, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { freeze } from 'immer';
@@ -208,7 +208,7 @@ export class AssetFrameworkCharacterState {
 		);
 	}
 
-	public produceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): AssetFrameworkCharacterState {
+	private unsafeProduceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): [boolean, AssetFrameworkCharacterState] {
 		let resultArms = this.arms;
 		let resultPose = this.pose;
 
@@ -232,10 +232,10 @@ export class AssetFrameworkCharacterState {
 			}
 			resultPose = newPose;
 		} else if (!changed) {
-			return this;
+			return [false, this];
 		}
 
-		return new AssetFrameworkCharacterState(
+		return [true, new AssetFrameworkCharacterState(
 			this.assetManager,
 			this.id,
 			this.items,
@@ -243,8 +243,26 @@ export class AssetFrameworkCharacterState {
 			resultArms,
 			this.view,
 			this.safemode,
-		)
-			.enforcePoseLimits();
+		)];
+	}
+
+	public produceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): AssetFrameworkCharacterState {
+		const [changed, result] = this.unsafeProduceWithPose(pose, type, missingAsZero);
+		if (!changed)
+			return this;
+
+		return result.enforcePoseLimits();
+	}
+
+	public produceWithPosePreset(preset: AssetsPosePreset): AssetFrameworkCharacterState | null {
+		const [changed, result] = this.unsafeProduceWithPose(preset, 'pose', false);
+		if (changed && !result.validatePoseLimits())
+			return null;
+
+		if (preset.optional == null)
+			return result;
+
+		return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose', false);
 	}
 
 	public produceWithArmsPose(pose: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): AssetFrameworkCharacterState {

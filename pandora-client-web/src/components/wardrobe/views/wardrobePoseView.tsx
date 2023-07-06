@@ -37,7 +37,10 @@ type CheckedAssetsPosePresets = {
 	poses: CheckedPosePreset[];
 }[];
 
-function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend: Immutable<PartialAppearancePose>): PartialAppearancePose {
+function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend?: Immutable<PartialAppearancePose>): PartialAppearancePose {
+	if (extend == null)
+		return base;
+
 	return {
 		bones: { ...base.bones, ...extend.bones },
 		arms: { ...base.arms, ...extend.arms },
@@ -76,13 +79,15 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, roomItems: Appeara
 	const limits = AppearanceItemProperties(items).limits;
 	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
 
-	const isActive = (preset: AssetsPosePreset) => {
+	const isActive = (preset: PartialAppearancePose) => {
 		const left = { ...preset.arms, ...preset.leftArm };
 		const right = { ...preset.arms, ...preset.rightArm };
-		if (left.position != null && left.position !== leftArm.position)
-			return false;
-		if (right.position != null && right.position !== rightArm.position)
-			return false;
+		for (const name of ['position', 'rotation', 'fingers'] as const) {
+			if (left[name] != null && left[name] !== leftArm[name])
+				return false;
+			if (right[name] != null && right[name] !== rightArm[name])
+				return false;
+		}
 
 		for (const [boneName, value] of Object.entries(preset.bones ?? {})) {
 			if (value === undefined)
@@ -99,9 +104,10 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, roomItems: Appeara
 		category: preset.category,
 		poses: preset.poses.map((pose) => {
 			const available = limits.validate(pose);
+			const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
 			return {
-				pose: pose.optional ? MergePartialAppearancePoses(pose, pose.optional) : pose,
-				active: available && isActive(pose),
+				pose: mergedPose,
+				active: available && isActive(mergedPose),
 				available,
 				name: pose.name,
 			};

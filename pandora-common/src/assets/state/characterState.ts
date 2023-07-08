@@ -231,7 +231,7 @@ export class AssetFrameworkCharacterState {
 		if (changed) {
 			resultArms = arms;
 		}
-		const { bones } = pose;
+		const { bones, legs } = pose;
 		if (bones) {
 			const newPose = new Map(resultPose);
 			for (const [bone, state] of newPose.entries()) {
@@ -246,11 +246,11 @@ export class AssetFrameworkCharacterState {
 				});
 			}
 			resultPose = newPose;
-		} else if (!changed) {
+		} else if (!changed && (legs == null || this.legs === legs)) {
 			return [false, this];
 		}
 
-		return [true, new AssetFrameworkCharacterState(this, { pose: resultPose, arms: resultArms })];
+		return [true, new AssetFrameworkCharacterState(this, { pose: resultPose, arms: resultArms, legs })];
 	}
 
 	public produceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): AssetFrameworkCharacterState {

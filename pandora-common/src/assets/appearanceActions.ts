@@ -14,7 +14,7 @@ import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterViewSchema } from './state/characterState';
+import { AppearanceArmPoseSchema, AppearanceLegPoseSchema, AppearancePoseSchema, CharacterViewSchema } from './state/characterState';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 
@@ -61,6 +61,7 @@ export const AppearanceActionPose = z.object({
 	bones: AppearancePoseSchema.shape.bones.optional(),
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
+	legs: AppearanceLegPoseSchema.optional(),
 });
 
 export const AppearanceActionBody = z.object({

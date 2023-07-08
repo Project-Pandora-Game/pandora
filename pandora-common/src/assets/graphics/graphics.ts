@@ -10,7 +10,7 @@ export type CoordinatesCompressed = z.infer<typeof CoordinatesCompressedSchema>;
 export const BoneNameSchema = z.string();
 export type BoneName = z.infer<typeof BoneNameSchema>;
 
-export type BoneType = 'pose' | 'body';
+export type BoneType = 'pose' | 'body' | 'fake';
 
 export const SizeSchema = z.object({
 	width: z.number(),

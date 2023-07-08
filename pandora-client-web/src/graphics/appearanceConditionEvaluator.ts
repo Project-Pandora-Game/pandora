@@ -4,8 +4,6 @@ import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacte
 import { EvaluateCondition, RotateVector } from './utility';
 import type { Immutable } from 'immer';
 
-export const FAKE_BONES: string[] = ['backView'];
-
 export class AppearanceConditionEvaluator {
 	public readonly pose: ReadonlyMap<BoneName, Readonly<BoneState>>;
 	public readonly view: CharacterView;
@@ -17,6 +15,7 @@ export class AppearanceConditionEvaluator {
 		for (const bone of pose) {
 			poseResult.set(bone.definition.name, bone);
 		}
+		poseResult.set('backView', { definition: character.assetManager.getBoneByName('backView'), rotation: view === 'back' ? 1 : 0 });
 		this.pose = poseResult;
 		this.view = view;
 		this.arms = arms;
@@ -129,7 +128,7 @@ export class AppearanceConditionEvaluator {
 	}
 	//#endregion
 
-	public getBone(bone: string): BoneState {
+	private getBone(bone: string): Readonly<BoneState> {
 		const state = this.pose.get(bone);
 		if (!state)
 			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
@@ -137,9 +136,6 @@ export class AppearanceConditionEvaluator {
 	}
 
 	public getBoneLikeValue(name: string): number {
-		if (name === 'backView') {
-			return this.view === 'back' ? 1 : 0;
-		}
 		return this.getBone(name).rotation;
 	}
 }

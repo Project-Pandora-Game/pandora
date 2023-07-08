@@ -10,7 +10,6 @@ import { Button } from '../../../components/common/button/button';
 import { Select } from '../../../components/common/select/select';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { FAKE_BONES } from '../../../graphics/appearanceConditionEvaluator';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
@@ -598,7 +597,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
 		try {
-			const result = ParseLayerImageOverrides(e.target.value, assetManager.getAllBones().map((b) => b.name).concat(FAKE_BONES));
+			const result = ParseLayerImageOverrides(e.target.value, assetManager.getAllBones().map((b) => b.name));
 			setError(null);
 			if (asAlpha) {
 				layer.setAlphaOverrides(result, stop);

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AssetId } from '../definitions';
+import { AppearanceLegPoseSchema } from '../state/characterState';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
 export type Coordinates = z.infer<typeof CoordinatesSchema>;
@@ -69,13 +70,16 @@ export const AtomicConditionArmFingersSchema = z.object({
 	operator: ConditionOperatorSchema,
 	value: ArmFingersSchema,
 });
-
+export const AtomicConditionLegsSchema = z.object({
+	legs: AppearanceLegPoseSchema,
+});
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,
 	AtomicConditionModuleSchema,
 	AtomicConditionAttributeSchema,
 	AtomicConditionArmRotationSchema,
 	AtomicConditionArmFingersSchema,
+	AtomicConditionLegsSchema,
 ]);
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
 

@@ -1,4 +1,4 @@
-import { AppearanceItemProperties, Assert, AssertNever, AssetFrameworkCharacterState, AssetManager, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
+import { AppearanceItemProperties, AppearanceLegPose, Assert, AssertNever, AssetFrameworkCharacterState, AssetManager, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
 import { EvaluateCondition, RotateVector } from './utility';
 import type { Immutable } from 'immer';
@@ -7,6 +7,7 @@ export class AppearanceConditionEvaluator {
 	public readonly pose: ReadonlyMap<BoneName, Readonly<BoneState>>;
 	public readonly view: CharacterView;
 	public readonly arms: CharacterArmsPose;
+	public readonly legs: AppearanceLegPose;
 	public readonly attributes: ReadonlySet<string>;
 
 	constructor(character: AssetFrameworkCharacterState) {
@@ -20,6 +21,7 @@ export class AppearanceConditionEvaluator {
 		this.pose = poseResult;
 		this.view = character.view;
 		this.arms = character.arms;
+		this.legs = character.legs;
 		this.attributes = AppearanceItemProperties(character.items).attributes;
 	}
 
@@ -59,6 +61,9 @@ export class AppearanceConditionEvaluator {
 			} else {
 				return this.attributes.has(condition.attribute);
 			}
+		} else if ('legs' in condition) {
+			Assert(condition.legs != null);
+			return this.legs === condition.legs;
 		} else {
 			AssertNever(condition);
 		}

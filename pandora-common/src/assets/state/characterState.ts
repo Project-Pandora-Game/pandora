@@ -1,6 +1,6 @@
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
 import { AssetsPosePreset, MergePartialAppearancePoses, PartialAppearancePose, WearableAssetType } from '../definitions';
-import { Assert, MemoizeNoArg } from '../../utility';
+import { Assert, AssertNotNullable, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { freeze } from 'immer';
 import { z } from 'zod';
@@ -47,6 +47,16 @@ export type AppearanceClientBundle = AppearanceBundle & { clientOnly: true; };
 
 export type AppearanceCharacterPose = ReadonlyMap<BoneName, BoneState>;
 
+type Props = {
+	assetManager: AssetManager;
+	id: CharacterId;
+	items: AppearanceItems<WearableAssetType>;
+	pose: AppearanceCharacterPose;
+	arms: CharacterArmsPose;
+	view: CharacterView;
+	safemode: SafemodeData | undefined;
+};
+
 /**
  * State of an character. Immutable.
  */
@@ -61,22 +71,27 @@ export class AssetFrameworkCharacterState {
 	public readonly view: CharacterView;
 	public readonly safemode: SafemodeData | undefined;
 
-	private constructor(
-		assetManager: AssetManager,
-		id: CharacterId,
-		items: AppearanceItems<WearableAssetType>,
-		pose: AppearanceCharacterPose,
-		arms: CharacterArmsPose,
-		view: CharacterView,
-		safemode: SafemodeData | undefined,
-	) {
-		this.assetManager = assetManager;
-		this.id = id;
-		this.items = items;
-		this.pose = pose;
-		this.arms = arms;
-		this.view = view;
-		this.safemode = safemode;
+	private constructor(props: Props);
+	private constructor(old: AssetFrameworkCharacterState, override: Partial<Props>);
+	private constructor(props: Props | AssetFrameworkCharacterState, override?: Partial<Props>) {
+		if (props instanceof AssetFrameworkCharacterState) {
+			AssertNotNullable(override);
+			this.assetManager = override.assetManager ?? props.assetManager;
+			this.id = override.id ?? props.id;
+			this.items = override.items ?? props.items;
+			this.pose = override.pose ?? props.pose;
+			this.arms = override.arms ?? props.arms;
+			this.view = override.view ?? props.view;
+			this.safemode = 'safemode' in override ? override.safemode : props.safemode;
+		} else {
+			this.assetManager = props.assetManager;
+			this.id = props.id;
+			this.items = props.items;
+			this.pose = props.pose;
+			this.arms = props.arms;
+			this.view = props.view;
+			this.safemode = props.safemode;
+		}
 	}
 
 	public isValid(): boolean {
@@ -182,30 +197,18 @@ export class AssetFrameworkCharacterState {
 			}
 		}
 
-		return new AssetFrameworkCharacterState(
-			this.assetManager,
-			this.id,
-			this.items,
-			newPose,
-			{
+		return new AssetFrameworkCharacterState(this, {
+			pose: newPose,
+			arms: {
 				leftArm,
 				rightArm,
 			},
 			view,
-			this.safemode,
-		);
+		});
 	}
 
 	public produceWithItems(newItems: AppearanceItems<WearableAssetType>): AssetFrameworkCharacterState {
-		return new AssetFrameworkCharacterState(
-			this.assetManager,
-			this.id,
-			newItems,
-			this.pose,
-			this.arms,
-			this.view,
-			this.safemode,
-		);
+		return new AssetFrameworkCharacterState(this, { items: newItems });
 	}
 
 	private unsafeProduceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): [boolean, AssetFrameworkCharacterState] {
@@ -235,15 +238,7 @@ export class AssetFrameworkCharacterState {
 			return [false, this];
 		}
 
-		return [true, new AssetFrameworkCharacterState(
-			this.assetManager,
-			this.id,
-			this.items,
-			resultPose,
-			resultArms,
-			this.view,
-			this.safemode,
-		)];
+		return [true, new AssetFrameworkCharacterState(this, { pose: resultPose, arms: resultArms })];
 	}
 
 	public produceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): AssetFrameworkCharacterState {
@@ -273,15 +268,7 @@ export class AssetFrameworkCharacterState {
 		if (!changed)
 			return this;
 
-		return new AssetFrameworkCharacterState(
-			this.assetManager,
-			this.id,
-			this.items,
-			this.pose,
-			arms,
-			this.view,
-			this.safemode,
-		)
+		return new AssetFrameworkCharacterState(this, { arms })
 			.enforcePoseLimits();
 	}
 
@@ -299,30 +286,14 @@ export class AssetFrameworkCharacterState {
 		if (this.view === newView)
 			return this;
 
-		return new AssetFrameworkCharacterState(
-			this.assetManager,
-			this.id,
-			this.items,
-			this.pose,
-			this.arms,
-			newView,
-			this.safemode,
-		);
+		return new AssetFrameworkCharacterState(this, { view: newView });
 	}
 
 	public produceWithSafemode(value: Readonly<SafemodeData> | null): AssetFrameworkCharacterState {
 		if (isEqual(this.safemode ?? null, value))
 			return this;
 
-		return new AssetFrameworkCharacterState(
-			this.assetManager,
-			this.id,
-			this.items,
-			this.pose,
-			this.arms,
-			this.view,
-			freeze(value ?? undefined, true),
-		);
+		return new AssetFrameworkCharacterState(this, { safemode: freeze(value ?? undefined, true) });
 	}
 
 	public cleanupRoomDeviceWearables(roomInventory: AssetFrameworkRoomState | null): AssetFrameworkCharacterState {
@@ -355,15 +326,7 @@ export class AssetFrameworkCharacterState {
 		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, cleanedUpItems);
 		Assert(ValidateAppearanceItems(this.assetManager, newItems).success);
 
-		return new AssetFrameworkCharacterState(
-			this.assetManager,
-			this.id,
-			newItems,
-			this.pose,
-			this.arms,
-			this.view,
-			this.safemode,
-		)
+		return new AssetFrameworkCharacterState(this, { items: newItems })
 			.enforcePoseLimits();
 	}
 
@@ -408,18 +371,18 @@ export class AssetFrameworkCharacterState {
 		}
 
 		// Create the final state
-		let resultState = freeze(new AssetFrameworkCharacterState(
+		let resultState = freeze(new AssetFrameworkCharacterState({
 			assetManager,
-			characterId,
-			newItems,
+			id: characterId,
+			items: newItems,
 			pose,
-			{
+			arms: {
 				leftArm: _.cloneDeep(bundle.leftArm),
 				rightArm: _.cloneDeep(bundle.rightArm),
 			},
-			bundle.view,
-			bundle.safemode,
-		), true);
+			view: bundle.view,
+			safemode: bundle.safemode,
+		}), true);
 
 		resultState = resultState.enforcePoseLimits();
 

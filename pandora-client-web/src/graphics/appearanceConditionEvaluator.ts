@@ -14,6 +14,8 @@ export class AppearanceConditionEvaluator {
 		for (const bone of character.pose.values()) {
 			poseResult.set(bone.definition.name, bone);
 		}
+		poseResult.set('kneeling', this.createLegsBoneState(character.assetManager, 'kneeling', character.legs));
+		poseResult.set('sitting', this.createLegsBoneState(character.assetManager, 'sitting', character.legs));
 		poseResult.set('backView', { definition: character.assetManager.getBoneByName('backView'), rotation: character.view === 'back' ? 1 : 0 });
 		this.pose = poseResult;
 		this.view = character.view;
@@ -136,6 +138,13 @@ export class AppearanceConditionEvaluator {
 
 	public getBoneLikeValue(name: string): number {
 		return this.getBone(name).rotation;
+	}
+
+	public createLegsBoneState(assetManager: AssetManager, name: Omit<AppearanceLegPose, 'standing'> & string, legs: AppearanceLegPose): BoneState {
+		return {
+			definition: assetManager.getBoneByName(name),
+			rotation: legs === name ? 180 : 0,
+		};
 	}
 }
 

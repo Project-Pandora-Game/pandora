@@ -31,6 +31,7 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 		bones: {},
 		leftArm: GetDefaultAppearanceArmPose(),
 		rightArm: GetDefaultAppearanceArmPose(),
+		legs: 'standing',
 		view: 'front',
 	};
 }

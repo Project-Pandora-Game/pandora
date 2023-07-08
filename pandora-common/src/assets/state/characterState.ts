@@ -29,10 +29,14 @@ export const AppearanceArmPoseSchema = z.object({
 });
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
+export const AppearanceLegPoseSchema = z.enum(['standing', 'sitting', 'kneeling']);
+export type AppearanceLegPose = z.infer<typeof AppearanceLegPoseSchema>;
+
 export const AppearancePoseSchema = z.object({
 	bones: z.record(BoneNameSchema, z.number().optional()).default({}),
 	leftArm: AppearanceArmPoseSchema.default({}),
 	rightArm: AppearanceArmPoseSchema.default({}),
+	legs: AppearanceLegPoseSchema.default('standing'),
 	view: CharacterViewSchema.catch('front'),
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
@@ -53,6 +57,7 @@ type Props = {
 	items: AppearanceItems<WearableAssetType>;
 	pose: AppearanceCharacterPose;
 	arms: CharacterArmsPose;
+	legs: AppearanceLegPose;
 	view: CharacterView;
 	safemode: SafemodeData | undefined;
 };
@@ -68,6 +73,7 @@ export class AssetFrameworkCharacterState {
 	public readonly items: AppearanceItems<WearableAssetType>;
 	public readonly pose: AppearanceCharacterPose;
 	public readonly arms: CharacterArmsPose;
+	public readonly legs: AppearanceLegPose;
 	public readonly view: CharacterView;
 	public readonly safemode: SafemodeData | undefined;
 
@@ -81,6 +87,7 @@ export class AssetFrameworkCharacterState {
 			this.items = override.items ?? props.items;
 			this.pose = override.pose ?? props.pose;
 			this.arms = override.arms ?? props.arms;
+			this.legs = override.legs ?? props.legs;
 			this.view = override.view ?? props.view;
 			this.safemode = 'safemode' in override ? override.safemode : props.safemode;
 		} else {
@@ -89,6 +96,7 @@ export class AssetFrameworkCharacterState {
 			this.items = props.items;
 			this.pose = props.pose;
 			this.arms = props.arms;
+			this.legs = props.legs;
 			this.view = props.view;
 			this.safemode = props.safemode;
 		}
@@ -125,6 +133,7 @@ export class AssetFrameworkCharacterState {
 			bones: Object.fromEntries([...this.pose.entries()].map(([bone, state]) => [bone, state.rotation])),
 			leftArm: this.arms.leftArm,
 			rightArm: this.arms.rightArm,
+			legs: this.legs,
 			view: this.view,
 		};
 	}
@@ -135,6 +144,7 @@ export class AssetFrameworkCharacterState {
 			bones: this.exportBones(),
 			leftArm: _.cloneDeep(this.arms.leftArm),
 			rightArm: _.cloneDeep(this.arms.rightArm),
+			legs: this.legs,
 			view: this.view,
 			safemode: this.safemode,
 		};
@@ -147,6 +157,7 @@ export class AssetFrameworkCharacterState {
 			bones: this.exportBones(),
 			leftArm: _.cloneDeep(this.arms.leftArm),
 			rightArm: _.cloneDeep(this.arms.rightArm),
+			legs: this.legs,
 			view: this.view,
 			safemode: this.safemode,
 			clientOnly: true,
@@ -184,7 +195,7 @@ export class AssetFrameworkCharacterState {
 		if (!changed)
 			return this;
 
-		const { bones, leftArm, rightArm, view } = pose;
+		const { bones, leftArm, rightArm, legs, view } = pose;
 
 		const newPose = new Map(this.pose);
 		for (const [bone, state] of newPose.entries()) {
@@ -203,6 +214,7 @@ export class AssetFrameworkCharacterState {
 				leftArm,
 				rightArm,
 			},
+			legs,
 			view,
 		});
 	}
@@ -383,6 +395,7 @@ export class AssetFrameworkCharacterState {
 				leftArm: _.cloneDeep(bundle.leftArm),
 				rightArm: _.cloneDeep(bundle.rightArm),
 			},
+			legs: bundle.legs,
 			view: bundle.view,
 			safemode: bundle.safemode,
 		}), true);

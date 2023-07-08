@@ -1,6 +1,5 @@
-import { AppearanceItemProperties, AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
+import { AppearanceItemProperties, Assert, AssertNever, AssetFrameworkCharacterState, AssetManager, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
-import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../character/character';
 import { EvaluateCondition, RotateVector } from './utility';
 import type { Immutable } from 'immer';
 
@@ -10,16 +9,16 @@ export class AppearanceConditionEvaluator {
 	public readonly arms: CharacterArmsPose;
 	public readonly attributes: ReadonlySet<string>;
 
-	constructor(pose: readonly BoneState[], view: CharacterView, arms: CharacterArmsPose, items: AppearanceItems) {
+	constructor(character: AssetFrameworkCharacterState) {
 		const poseResult = new Map<BoneName, Readonly<BoneState>>();
-		for (const bone of pose) {
+		for (const bone of character.pose.values()) {
 			poseResult.set(bone.definition.name, bone);
 		}
-		poseResult.set('backView', { definition: character.assetManager.getBoneByName('backView'), rotation: view === 'back' ? 1 : 0 });
+		poseResult.set('backView', { definition: character.assetManager.getBoneByName('backView'), rotation: character.view === 'back' ? 1 : 0 });
 		this.pose = poseResult;
-		this.view = view;
-		this.arms = arms;
-		this.attributes = AppearanceItemProperties(items).attributes;
+		this.view = character.view;
+		this.arms = character.arms;
+		this.attributes = AppearanceItemProperties(character.items).attributes;
 	}
 
 	//#region Point transform
@@ -141,9 +140,5 @@ export class AppearanceConditionEvaluator {
 }
 
 export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState): AppearanceConditionEvaluator {
-	const pose = useCharacterAppearancePose(characterState);
-	const view = useCharacterAppearanceView(characterState);
-	const arms = useCharacterAppearanceArmsPose(characterState);
-	const items = characterState.items;
-	return useMemo(() => new AppearanceConditionEvaluator(pose, view, arms, items), [pose, view, arms, items]);
+	return useMemo(() => new AppearanceConditionEvaluator(characterState), [characterState]);
 }

@@ -4,8 +4,8 @@ import { ZodEnum } from 'zod';
 import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
 import { GetDefaultAppearanceBundle } from './appearance';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema } from './graphics/graphics';
-import { AppearanceArmPose, AppearanceLegPoseSchema, AppearancePose, CharacterViewSchema } from './state/characterState';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, LegsPoseSchema } from './graphics/graphics';
+import { AppearanceArmPose, AppearancePose, CharacterViewSchema } from './state/characterState';
 
 class TreeLimit {
 	private readonly limit: ReadonlyMap<string, [number, number][]>;
@@ -283,7 +283,7 @@ function FromPose({ bones, leftArm, rightArm, arms, legs, view }: PartialAppeara
 	}
 	FromArmPose(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmPose(data, 'rightArm', { ...arms, ...rightArm });
-	EnumToIndex(AppearanceLegPoseSchema, legs, (index) => data.set('legs', index));
+	EnumToIndex(LegsPoseSchema, legs, (index) => data.set('legs', index));
 	EnumToIndex(CharacterViewSchema, view, (index) => data.set('view', index));
 
 	return data;
@@ -313,10 +313,10 @@ function FromLimit({ bones, leftArm, rightArm, arms, legs, view }: Immutable<Ass
 	FromArmLimit(data, 'rightArm', { ...arms, ...rightArm });
 	EnumToIndex(CharacterViewSchema, view, (index) => data.set('view', [[index, index]]));
 	if (typeof legs === 'string') {
-		EnumToIndex(AppearanceLegPoseSchema, legs, (index) => data.set('legs', [[index, index]]));
+		EnumToIndex(LegsPoseSchema, legs, (index) => data.set('legs', [[index, index]]));
 	} else if (legs != null) {
 		data.set('legs', legs
-			.map((leg) => AppearanceLegPoseSchema.options.indexOf(leg))
+			.map((leg) => LegsPoseSchema.options.indexOf(leg))
 			.filter((index) => index !== -1)
 			.map((index) => [index, index]));
 	}
@@ -341,7 +341,7 @@ function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
 	ToArmPose(data, 'leftArm', pose);
 	ToArmPose(data, 'rightArm', pose);
 
-	IndexToEnum(AppearanceLegPoseSchema, data.get('legs'), (value) => pose.legs = value);
+	IndexToEnum(LegsPoseSchema, data.get('legs'), (value) => pose.legs = value);
 	IndexToEnum(CharacterViewSchema, data.get('view'), (value) => pose.view = value);
 
 	for (const [key, value] of data) {

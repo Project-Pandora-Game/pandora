@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import type { AssetId } from '../definitions';
-import { AppearanceLegPoseSchema } from '../state/characterState';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
 export type Coordinates = z.infer<typeof CoordinatesSchema>;
@@ -32,6 +31,9 @@ export type ArmRotation = z.infer<typeof ArmRotationSchema>;
 
 export const ArmFingersSchema = z.enum(['spread', 'fist']);
 export type ArmFingers = z.infer<typeof ArmFingersSchema>;
+
+export const LegsPoseSchema = z.enum(['standing', 'sitting', 'kneeling']);
+export type LegsPose = z.infer<typeof LegsPoseSchema>;
 
 export const RectangleSchema = CoordinatesSchema.merge(SizeSchema);
 export type Rectangle = z.infer<typeof RectangleSchema>;
@@ -71,7 +73,7 @@ export const AtomicConditionArmFingersSchema = z.object({
 	value: ArmFingersSchema,
 });
 export const AtomicConditionLegsSchema = z.object({
-	legs: AppearanceLegPoseSchema,
+	legs: LegsPoseSchema,
 });
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,

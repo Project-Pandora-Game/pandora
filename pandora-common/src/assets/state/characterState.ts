@@ -4,7 +4,7 @@ import { Assert, AssertNotNullable, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { freeze } from 'immer';
 import { z } from 'zod';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType } from '../graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType, LegsPose, LegsPoseSchema } from '../graphics';
 import { Item, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { BONE_MAX, BONE_MIN, CharacterArmsPose, GetDefaultAppearanceBundle } from '../appearance';
@@ -29,14 +29,11 @@ export const AppearanceArmPoseSchema = z.object({
 });
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
-export const AppearanceLegPoseSchema = z.enum(['standing', 'sitting', 'kneeling']);
-export type AppearanceLegPose = z.infer<typeof AppearanceLegPoseSchema>;
-
 export const AppearancePoseSchema = z.object({
 	bones: z.record(BoneNameSchema, z.number().optional()).default({}),
 	leftArm: AppearanceArmPoseSchema.default({}),
 	rightArm: AppearanceArmPoseSchema.default({}),
-	legs: AppearanceLegPoseSchema.default('standing'),
+	legs: LegsPoseSchema.default('standing'),
 	view: CharacterViewSchema.catch('front'),
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
@@ -57,7 +54,7 @@ type Props = {
 	items: AppearanceItems<WearableAssetType>;
 	pose: AppearanceCharacterPose;
 	arms: CharacterArmsPose;
-	legs: AppearanceLegPose;
+	legs: LegsPose;
 	view: CharacterView;
 	safemode: SafemodeData | undefined;
 };
@@ -73,7 +70,7 @@ export class AssetFrameworkCharacterState {
 	public readonly items: AppearanceItems<WearableAssetType>;
 	public readonly pose: AppearanceCharacterPose;
 	public readonly arms: CharacterArmsPose;
-	public readonly legs: AppearanceLegPose;
+	public readonly legs: LegsPose;
 	public readonly view: CharacterView;
 	public readonly safemode: SafemodeData | undefined;
 

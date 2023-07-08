@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexRGBAColorString, ZodTemplateString } from '../validation';
-import type { AppearanceArmPose, AppearanceLegPose, CharacterView } from './state/characterState';
-import type { BoneDefinitionCompressed, BoneName, Coordinates } from './graphics';
+import type { AppearanceArmPose, CharacterView } from './state/characterState';
+import type { BoneDefinitionCompressed, BoneName, Coordinates, LegsPose } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';
@@ -38,7 +38,7 @@ export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = A
 	arms?: Partial<AppearanceArmPose>;
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
-	legs?: AppearanceLegPose | AppearanceLegPose[];
+	legs?: LegsPose | LegsPose[];
 	view?: CharacterView;
 }
 
@@ -356,7 +356,7 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	arms?: Partial<AppearanceArmPose>;
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
-	legs?: AppearanceLegPose;
+	legs?: LegsPose;
 	view?: CharacterView;
 };
 

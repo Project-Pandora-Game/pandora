@@ -1,4 +1,4 @@
-import { AppearanceItemProperties, AppearanceLegPose, Assert, AssertNever, AssetFrameworkCharacterState, AssetManager, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
+import { AppearanceItemProperties, LegsPose, Assert, AssertNever, AssetFrameworkCharacterState, AssetManager, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
 import { useMemo } from 'react';
 import { EvaluateCondition, RotateVector } from './utility';
 import type { Immutable } from 'immer';
@@ -7,7 +7,7 @@ export class AppearanceConditionEvaluator {
 	public readonly pose: ReadonlyMap<BoneName, Readonly<BoneState>>;
 	public readonly view: CharacterView;
 	public readonly arms: CharacterArmsPose;
-	public readonly legs: AppearanceLegPose;
+	public readonly legs: LegsPose;
 	public readonly attributes: ReadonlySet<string>;
 
 	constructor(character: AssetFrameworkCharacterState) {
@@ -145,7 +145,7 @@ export class AppearanceConditionEvaluator {
 		return this.getBone(name).rotation;
 	}
 
-	public createLegsBoneState(assetManager: AssetManager, name: Omit<AppearanceLegPose, 'standing'> & string, legs: AppearanceLegPose): BoneState {
+	public createLegsBoneState(assetManager: AssetManager, name: Omit<LegsPose, 'standing'> & string, legs: LegsPose): BoneState {
 		return {
 			definition: assetManager.getBoneByName(name),
 			rotation: legs === name ? 180 : 0,

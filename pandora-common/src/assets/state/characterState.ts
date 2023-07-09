@@ -255,6 +255,9 @@ export class AssetFrameworkCharacterState {
 	}
 
 	public produceWithPosePreset(preset: AssetsPosePreset): AssetFrameworkCharacterState | null {
+		if (this.safemode != null)
+			return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose', false);
+
 		const [changed, result] = this.unsafeProduceWithPose(preset, 'pose', false);
 		if (changed && !result.validatePoseLimits())
 			return null;

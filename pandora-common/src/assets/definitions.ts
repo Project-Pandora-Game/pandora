@@ -218,6 +218,10 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	graphicsLayers: IRoomDeviceGraphicsLayer[];
 	/** Attributes that are used strictly for filtering, no effect on character */
 	staticAttributes?: (A['attributes'])[];
+	/** Extra pose presets available when inside this device */
+	posePresets?: AssetsPosePreset<A['bones']>[];
+	/** Pose thats gets applied to character exiting this device */
+	exitPose?: AssetsPosePreset<A['bones']>;
 	/**
 	 * Chat specific settings for this asset
 	 *
@@ -246,6 +250,10 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'roomDeviceWearablePart', A> {
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
+	/** Extra pose presets available when wearing this asset, extends device's pose presets */
+	posePresets?: AssetsPosePreset<A['bones']>[];
+	/** Pose thats gets applied to character exiting this slot, overrides device's exit pose */
+	exitPose?: AssetsPosePreset<A['bones']>;
 	/**
 	 * Chat specific settings for this asset
 	 *
@@ -350,12 +358,27 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	view?: CharacterView;
 };
 
+export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend?: Immutable<PartialAppearancePose>): PartialAppearancePose {
+	if (extend == null)
+		return base;
+
+	return {
+		bones: { ...base.bones, ...extend.bones },
+		arms: { ...base.arms, ...extend.arms },
+		leftArm: { ...base.leftArm, ...extend.leftArm },
+		rightArm: { ...base.rightArm, ...extend.rightArm },
+		view: base.view ?? extend.view,
+	};
+}
+
+export type AssetsPosePreset<Bones extends BoneName = BoneName> = PartialAppearancePose<Bones> & {
+	name: string;
+	optional?: PartialAppearancePose<Bones>;
+};
+
 export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	category: string;
-	poses: (PartialAppearancePose<Bones> & {
-		name: string;
-		optional?: PartialAppearancePose<Bones>;
-	})[];
+	poses: AssetsPosePreset<Bones>[];
 }[];
 
 export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {

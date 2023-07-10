@@ -79,6 +79,8 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because ${DescribeAssetSlot(assetManager, e.slot)} is covered by another item.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
+			case 'exitPose':
+				return `You cannot assume the pose required to exit the ${DescribeAsset(assetManager, e.asset)}.`;
 			case 'invalid':
 				return '';
 		}

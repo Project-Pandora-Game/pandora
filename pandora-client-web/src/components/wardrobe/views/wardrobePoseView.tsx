@@ -6,13 +6,14 @@ import {
 	AppearanceLimitTree,
 	ArmRotationSchema,
 	AssetFrameworkCharacterState,
-	AssetsPosePresets,
+	AssetsPosePreset,
 	BONE_MAX,
 	BONE_MIN,
 	BoneName,
 	BoneState,
 	CharacterAppearance,
 	CharacterArmsPose,
+	MergePartialAppearancePoses,
 	PartialAppearancePose,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo } from 'react';
@@ -23,10 +24,8 @@ import { Button } from '../../common/button/button';
 import _ from 'lodash';
 import { useEvent } from '../../../common/useEvent';
 import { Select } from '../../common/select/select';
-import { Immutable } from 'immer';
-import { useWardrobeExecuteCallback } from '../wardrobeContext';
+import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 
-type AssetsPosePreset = AssetsPosePresets[number]['poses'][number];
 type CheckedPosePreset = {
 	active: boolean;
 	available: boolean;
@@ -38,31 +37,44 @@ type CheckedAssetsPosePresets = {
 	poses: CheckedPosePreset[];
 }[];
 
-function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend: Immutable<PartialAppearancePose>): PartialAppearancePose {
-	return {
-		bones: { ...base.bones, ...extend.bones },
-		arms: { ...base.arms, ...extend.arms },
-		leftArm: { ...base.leftArm, ...extend.leftArm },
-		rightArm: { ...base.rightArm, ...extend.rightArm },
-		view: base.view ?? extend.view,
-	};
-}
-
-function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose, assetManager: AssetManagerClient): {
+function GetFilteredAssetsPosePresets(items: AppearanceItems, roomItems: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose, assetManager: AssetManagerClient): {
 	poses: CheckedAssetsPosePresets;
 	limits: AppearanceLimitTree;
 } {
 	const presets = assetManager.getPosePresets();
+	for (const item of items) {
+		if (!item.isType('roomDeviceWearablePart') || item.roomDeviceLink == null)
+			continue;
+
+		const deviceId = item.roomDeviceLink.device;
+		const roomItem = roomItems.find((i) => i.id === deviceId);
+		if (!roomItem?.isType('roomDevice'))
+			continue;
+
+		if (!item.asset.definition.posePresets && !roomItem.asset.definition.posePresets)
+			continue;
+
+		presets.unshift({
+			category: `Device: ${roomItem.asset.definition.name}`,
+			poses: [
+				...roomItem.asset.definition.posePresets ?? [],
+				...item.asset.definition.posePresets ?? [],
+			],
+		});
+	}
+
 	const limits = AppearanceItemProperties(items).limits;
 	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
 
-	const isActive = (preset: AssetsPosePreset) => {
+	const isActive = (preset: PartialAppearancePose) => {
 		const left = { ...preset.arms, ...preset.leftArm };
 		const right = { ...preset.arms, ...preset.rightArm };
-		if (left.position != null && left.position !== leftArm.position)
-			return false;
-		if (right.position != null && right.position !== rightArm.position)
-			return false;
+		for (const name of ['position', 'rotation', 'fingers'] as const) {
+			if (left[name] != null && left[name] !== leftArm[name])
+				return false;
+			if (right[name] != null && right[name] !== rightArm[name])
+				return false;
+		}
 
 		for (const [boneName, value] of Object.entries(preset.bones ?? {})) {
 			if (value === undefined)
@@ -79,9 +91,10 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, bonesStates: reado
 		category: preset.category,
 		poses: preset.poses.map((pose) => {
 			const available = limits.validate(pose);
+			const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
 			return {
-				pose: pose.optional ? MergePartialAppearancePoses(pose, pose.optional) : pose,
-				active: available && isActive(pose),
+				pose: mergedPose,
+				active: available && isActive(mergedPose),
 				available,
 				name: pose.name,
 			};
@@ -112,7 +125,8 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 
 export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: CharacterArmsPose; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
 	const assetManager = useAssetManager();
-	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), bones, armsPose, assetManager), [appearance, bones, armsPose, assetManager]);
+	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
+	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), roomItems ?? [], bones, armsPose, assetManager), [appearance, bones, armsPose, assetManager, roomItems]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 	);
@@ -232,6 +246,7 @@ export function WardrobePoseGui({ character, characterState }: {
 }): ReactElement {
 	const assetManager = useAssetManager();
 	const [execute, processing] = useWardrobeExecuteCallback();
+	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
 
 	const currentBones = useCharacterAppearancePose(characterState);
 	const armsPose = useCharacterAppearanceArmsPose(characterState);
@@ -247,7 +262,7 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(characterState.items, currentBones, armsPose, assetManager), [characterState, currentBones, armsPose, assetManager]);
+	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(characterState.items, roomItems ?? [], currentBones, armsPose, assetManager), [characterState, currentBones, armsPose, assetManager, roomItems]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 

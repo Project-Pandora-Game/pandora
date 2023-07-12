@@ -369,6 +369,7 @@ export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePos
 		arms: { ...base.arms, ...extend.arms },
 		leftArm: { ...base.leftArm, ...extend.leftArm },
 		rightArm: { ...base.rightArm, ...extend.rightArm },
+		legs: base.legs ?? extend.legs,
 		view: base.view ?? extend.view,
 	};
 }

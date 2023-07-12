@@ -362,9 +362,6 @@ export class AssetFrameworkCharacterState {
 
 		const pose = new Map<BoneName, BoneState>();
 		for (const bone of assetManager.getAllBones()) {
-			if (bone.type === 'fake')
-				continue;
-
 			const value = bundle.bones[bone.name];
 			pose.set(bone.name, {
 				definition: bone,

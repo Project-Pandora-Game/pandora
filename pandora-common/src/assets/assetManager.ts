@@ -7,8 +7,6 @@ import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, A
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { CreateItem, Item, ItemBundle } from './item';
 
-export const FAKE_BONES: readonly string[] = ['backView', 'kneeling', 'sitting'];
-
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
 	protected readonly _bones: ReadonlyMap<string, BoneDefinition>;
@@ -133,9 +131,6 @@ export class AssetManager {
 			bones.set(bone.mirror, this.createBone(bone.mirror, {
 				...bone,
 			}, parent?.mirror ?? parent, newBone));
-		}
-		for (const bone of FAKE_BONES) {
-			bones.set(bone, this.createBone(bone, { type: 'fake' }));
 		}
 
 		this._bones = bones;

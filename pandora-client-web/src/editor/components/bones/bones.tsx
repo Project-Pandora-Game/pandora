@@ -1,13 +1,13 @@
-import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose } from 'pandora-common';
-import React, { ReactElement, useMemo, useState } from 'react';
-import { useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
+import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose, PartialAppearancePose } from 'pandora-common';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { useCharacterAppearanceArmsPose, useCharacterAppearancePose } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { BoneRowElement, WardrobeArmPoses, WardrobePoseCategories } from '../../../components/wardrobe/views/wardrobePoseView';
+import { BoneRowElement, WardrobeArmPoses, WardrobeLegsPose, WardrobePoseCategories } from '../../../components/wardrobe/views/wardrobePoseView';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
@@ -19,9 +19,11 @@ export function BoneUI(): ReactElement {
 	const character = editor.character;
 
 	const bones = useCharacterAppearancePose(characterState);
-	const armsPose = useCharacterAppearanceArmsPose(characterState);
-	const view = useCharacterAppearanceView(characterState);
 	const showBones = useObservable(editor.showBones);
+
+	const setPose = useCallback((pose: PartialAppearancePose) => {
+		character.getAppearance().produceState((state) => state.produceWithPose(pose, 'pose', false));
+	}, [character]);
 
 	return (
 		<Scrollbar color='lighter' className='bone-ui slim'>
@@ -36,24 +38,21 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<WardrobeArmPoses armsPose={ armsPose } setPose={ (pose) => {
-				character.getAppearance().produceState((state) => state.produceWithArmsPose(pose));
-			} } />
+			<WardrobeArmPoses armsPose={ characterState.arms } setPose={ setPose } />
+			<WardrobeLegsPose legs={ characterState.legs } setPose={ setPose } />
 			<div>
 				<label htmlFor='back-view-toggle'>Show back view</label>
 				<input
 					id='back-view-toggle'
 					type='checkbox'
-					checked={ view === 'back' }
+					checked={ characterState.view === 'back' }
 					onChange={ (e) => {
 						character.getAppearance().setView(e.target.checked ? 'back' : 'front');
 					} }
 				/>
 			</div>
 			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } className='slim-padding' open={ false }>
-				<WardrobePoseCategories appearance={ character.getAppearance() } bones={ bones } armsPose={ armsPose } setPose={ (pose) => {
-					character.getAppearance().produceState((state) => state.produceWithPose(pose, 'pose', false));
-				} } />
+				<WardrobePoseCategories appearance={ character.getAppearance() } bones={ bones } armsPose={ characterState.arms } setPose={ setPose } />
 			</FieldsetToggle>
 			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>
 				<WardrobeExpressionGui character={ character } characterState={ characterState } />

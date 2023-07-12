@@ -13,6 +13,8 @@ import {
 	BoneState,
 	CharacterAppearance,
 	CharacterArmsPose,
+	LegsPose,
+	LegsPoseSchema,
 	MergePartialAppearancePoses,
 	PartialAppearancePose,
 } from 'pandora-common';
@@ -240,6 +242,36 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 	);
 }
 
+export function WardrobeLegsPose({ setPose, legs, limits }: {
+	limits?: AppearanceLimitTree;
+	legs: LegsPose;
+	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+}) {
+	return (
+		<div>
+			<label htmlFor='pose-legs'>Legs pose</label>
+			<Select value={ legs } id='pose-legs' onChange={ (e) => {
+				setPose({
+					legs: LegsPoseSchema.parse(e.target.value),
+				});
+			} }>
+				{
+					LegsPoseSchema.options
+						.map((r) => (
+							<option
+								key={ r }
+								value={ r }
+								disabled={ limits != null && !limits.validate({ legs: r }) }
+							>
+								{ _.capitalize(r) }
+							</option>
+						))
+				}
+			</Select>
+		</div>
+	);
+}
+
 export function WardrobePoseGui({ character, characterState }: {
 	character: AppearanceContainer;
 	characterState: AssetFrameworkCharacterState;
@@ -288,6 +320,7 @@ export function WardrobePoseGui({ character, characterState }: {
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
 					<WardrobeArmPoses armsPose={ armsPose } limits={ limits } setPose={ setPose } />
+					<WardrobeLegsPose legs={ characterState.legs } limits={ limits } setPose={ setPose } />
 					<br />
 					{
 						currentBones

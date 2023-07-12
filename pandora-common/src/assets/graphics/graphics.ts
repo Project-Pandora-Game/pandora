@@ -23,6 +23,9 @@ export const CharacterSize = {
 	HEIGHT: 1500,
 } as const;
 
+export const CharacterViewSchema = z.enum(['front', 'back']);
+export type CharacterView = z.infer<typeof CharacterViewSchema>;
+
 export const ArmPoseSchema = z.enum(['front', 'back']);
 export type ArmPose = z.infer<typeof ArmPoseSchema>;
 
@@ -100,6 +103,9 @@ function Negatable<T extends string[]>(arr: T): [...T, ...NegateArray<T>] {
 export const AtomicConditionLegsSchema = z.object({
 	legs: z.enum(Negatable(LegsPoseSchema.options)),
 });
+export const AtomicConditionViewSchema = z.object({
+	view: CharacterViewSchema,
+});
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,
 	AtomicConditionModuleSchema,
@@ -107,6 +113,7 @@ export const AtomicConditionSchema = z.union([
 	AtomicConditionArmRotationSchema,
 	AtomicConditionArmFingersSchema,
 	AtomicConditionLegsSchema,
+	AtomicConditionViewSchema,
 ]);
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
 

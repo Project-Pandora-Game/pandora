@@ -14,10 +14,10 @@ import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterViewSchema } from './state/characterState';
+import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterState';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
-import { LegsPoseSchema } from './graphics/graphics';
+import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),

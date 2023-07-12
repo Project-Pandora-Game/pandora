@@ -4,7 +4,7 @@ import { Assert, AssertNotNullable, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { freeze } from 'immer';
 import { z } from 'zod';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType, LegsPose, LegsPoseSchema } from '../graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType, CharacterView, CharacterViewSchema, LegsPose, LegsPoseSchema } from '../graphics';
 import { Item, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { BONE_MAX, BONE_MIN, CharacterArmsPose, GetDefaultAppearanceBundle } from '../appearance';
@@ -13,9 +13,6 @@ import _, { isEqual } from 'lodash';
 import { AssetFrameworkRoomState } from './roomState';
 import { CharacterId } from '../../character';
 import type { IExportOptions } from '../modules/common';
-
-export const CharacterViewSchema = z.enum(['front', 'back']);
-export type CharacterView = z.infer<typeof CharacterViewSchema>;
 
 export const SafemodeDataSchema = z.object({
 	allowLeaveAt: z.number(),

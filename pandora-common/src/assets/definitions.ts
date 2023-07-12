@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexRGBAColorString, ZodTemplateString } from '../validation';
-import type { AppearanceArmPose, CharacterView } from './state/characterState';
-import type { BoneDefinitionCompressed, BoneName, Coordinates, LegsPose } from './graphics';
+import type { AppearanceArmPose } from './state/characterState';
+import type { BoneDefinitionCompressed, BoneName, CharacterView, Coordinates, LegsPose } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';

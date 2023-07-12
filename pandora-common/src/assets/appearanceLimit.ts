@@ -4,8 +4,8 @@ import { ZodEnum } from 'zod';
 import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
 import { GetDefaultAppearanceBundle } from './appearance';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, LegsPoseSchema } from './graphics/graphics';
-import { AppearanceArmPose, AppearancePose, CharacterViewSchema } from './state/characterState';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
+import type { AppearanceArmPose, AppearancePose } from './state/characterState';
 
 class TreeLimit {
 	private readonly limit: ReadonlyMap<string, [number, number][]>;

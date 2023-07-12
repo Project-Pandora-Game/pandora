@@ -67,6 +67,9 @@ export class AppearanceConditionEvaluator {
 				return this.legs !== condition.legs.slice(1);
 			}
 			return this.legs === condition.legs;
+		} else if ('view' in condition) {
+			Assert(condition.view != null);
+			return this.view === condition.view;
 		} else {
 			AssertNever(condition);
 		}

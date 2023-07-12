@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { LegsPoseSchema, ArmFingersSchema, ArmRotationSchema, Assert, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher } from 'pandora-common';
+import { ArmFingersSchema, ArmRotationSchema, Assert, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher, AtomicConditionLegsSchema } from 'pandora-common';
 
 const IsConditionOperator = ZodMatcher(ConditionOperatorSchema);
 
@@ -55,11 +55,11 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 		};
 	}
 	if (input.startsWith('legs_')) {
-		const legs = /^legs_([-_a-z0-9]+)$/i.exec(input);
+		const legs = /^legs_(!?[-_a-z0-9]+)$/i.exec(input);
 		if (!legs) {
 			throw new Error(`Failed to parse legs condition '${input}'`);
 		}
-		if (!ZodMatcher(LegsPoseSchema)(legs[1])) {
+		if (!ZodMatcher(AtomicConditionLegsSchema.shape.legs)(legs[1])) {
 			throw new Error(`Invalid legs pose '${legs[1]}'`);
 		}
 		return {

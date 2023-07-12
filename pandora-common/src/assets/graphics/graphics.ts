@@ -48,7 +48,6 @@ let boneSchema: StringLikeSchema = z.string();
 let moduleSchema: StringLikeSchema = z.string();
 let attributeSchema: StringLikeSchema = z.string();
 
-
 export function SetBoneSchemaForAtomicCondition(schema: typeof boneSchema) {
 	boneSchema = schema;
 }
@@ -91,8 +90,15 @@ export const AtomicConditionArmFingersSchema = z.object({
 	operator: ConditionOperatorSchema,
 	value: ArmFingersSchema,
 });
+
+type Negate<T extends string> = `!${T}`;
+type NegateArray<T extends string[]> = T extends [infer F extends string, ...infer R extends string[]] ? [Negate<F>, ...NegateArray<R>] : [];
+function Negatable<T extends string[]>(arr: T): [...T, ...NegateArray<T>] {
+	return [...arr, ...arr.map((x) => `!${x}`) as NegateArray<T>];
+}
+
 export const AtomicConditionLegsSchema = z.object({
-	legs: LegsPoseSchema,
+	legs: z.enum(Negatable(LegsPoseSchema.options)),
 });
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,

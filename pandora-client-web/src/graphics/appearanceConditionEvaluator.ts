@@ -63,6 +63,9 @@ export class AppearanceConditionEvaluator {
 			}
 		} else if ('legs' in condition) {
 			Assert(condition.legs != null);
+			if (condition.legs.startsWith('!')) {
+				return this.legs !== condition.legs.slice(1);
+			}
 			return this.legs === condition.legs;
 		} else {
 			AssertNever(condition);

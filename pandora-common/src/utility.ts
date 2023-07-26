@@ -349,7 +349,6 @@ export function MemoizeNoArg<Return, This extends object>(method: (...args: neve
 	const cache = new WeakMap<object, Return>();
 	return function (this: This) {
 		if (cache.has(this)) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			return cache.get(this)!;
 		}
 		const result = method.call(this);

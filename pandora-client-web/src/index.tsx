@@ -80,6 +80,7 @@ function SetupLogging(): void {
 				break;
 			default: {
 				const parsed = parseInt(logLevel);
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
 				if (parsed >= LogLevel.FATAL && parsed <= LogLevel.DEBUG)
 					level = parsed;
 				break;

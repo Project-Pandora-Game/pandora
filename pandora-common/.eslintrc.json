@@ -31,7 +31,6 @@
 				"@typescript-eslint/consistent-type-definitions": "off",
 				"@typescript-eslint/no-duplicate-type-constituents": "off",
 				"@typescript-eslint/no-redundant-type-constituents": "off",
-				"@typescript-eslint/no-unsafe-enum-comparison": "off",
 				"@typescript-eslint/non-nullable-type-assertion-style": "off",
 				"@typescript-eslint/prefer-nullish-coalescing": "off",
 				"@typescript-eslint/prefer-optional-chain": "off",

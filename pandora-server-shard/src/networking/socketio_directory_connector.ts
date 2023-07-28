@@ -241,6 +241,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 
 		if (messages) {
 			for (const [roomId, messageList] of Object.entries(messages)) {
+				if (messageList == null)
+					continue;
 				const room = RoomManager.getRoom(roomId as RoomId);
 				if (!room) {
 					logger.warning('Ignoring messages to non-existing room', roomId);

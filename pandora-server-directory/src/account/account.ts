@@ -1,6 +1,6 @@
 import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
-import { Character } from './character';
+import { CharacterInfo } from './character';
 import { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } from '../config';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
@@ -19,7 +19,7 @@ export class Account {
 	/** List of connections logged in as this account */
 	public readonly associatedConnections = new ServerRoom<IDirectoryClient, ClientConnection>();
 
-	public readonly characters: Map<CharacterId, Character> = new Map();
+	public readonly characters: Map<CharacterId, CharacterInfo> = new Map();
 
 	public readonly secure: AccountSecure;
 	public readonly roles: AccountRoles;
@@ -47,7 +47,7 @@ export class Account {
 
 		// Init characters
 		for (const characterData of data.characters) {
-			this.characters.set(characterData.id, new Character(characterData, this));
+			this.characters.set(characterData.id, new CharacterInfo(characterData, this));
 		}
 	}
 
@@ -106,12 +106,12 @@ export class Account {
 		}));
 	}
 
-	public async createCharacter(): Promise<Character | null> {
+	public async createCharacter(): Promise<CharacterInfo | null> {
 		if (this.characters.size > CHARACTER_LIMIT_NORMAL || Array.from(this.characters.values()).some((i) => i.inCreation))
 			return null;
 
 		const info = await GetDatabase().createCharacter(this.data.id);
-		const character = new Character(info, this);
+		const character = new CharacterInfo(info, this);
 		this.characters.set(info.id, character);
 
 		this.onCharacterListChange();

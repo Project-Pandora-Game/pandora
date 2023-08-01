@@ -1,10 +1,11 @@
-import { AccountId, Assert, AsyncSynchronized, GetLogger, IChatRoomDirectoryConfig, IChatRoomDirectoryData, RoomId } from 'pandora-common';
+import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, IChatRoomDirectoryConfig, IChatRoomDirectoryData, RoomId } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from '../room/room';
 import promClient from 'prom-client';
 import { GetDatabase } from '../database/databaseProvider';
 import { accountManager } from '../account/accountManager';
 import { Account } from '../account/account';
+import { CharacterInfo } from '../account/character';
 
 /** Time (in ms) after which manager prunes rooms without any activity (search or characters inside) */
 export const ROOM_INACTIVITY_THRESHOLD = 60_000;
@@ -82,7 +83,7 @@ export const RoomManager = new class RoomManagerClass {
 		// Look for owned rooms or rooms this account is admin of
 		for (const roomData of await GetDatabase().getChatRoomsWithOwnerOrAdmin(account.id)) {
 			// Load the room (using already loaded to avoid race conditions)
-			const room = this.loadedRooms.get(roomData.id) ?? this._loadRoom(roomData);
+			const room = this.loadedRooms.get(roomData.id) ?? await this._loadRoom(roomData);
 			// If we are still owner or admin, add it to the list
 			if (room.checkVisibleTo(account)) {
 				result.add(room);
@@ -111,19 +112,17 @@ export const RoomManager = new class RoomManagerClass {
 	 */
 	public async loadRoom(id: RoomId): Promise<Room | null> {
 		// Check if account is loaded and return it if it is
-		let room = this.getLoadedRoom(id);
-		if (room)
-			return room;
+		{
+			const room = this.getLoadedRoom(id);
+			if (room)
+				return room;
+		}
 		// Get it from database
 		const data = await GetDatabase().getChatRoomById(id, null);
-		// Check if we didn't load it while we were querying data from DB and use already loaded if we did
-		room = this.getLoadedRoom(id);
-		if (room)
-			return room;
-		// Use the acquired DB data to load room
 		if (!data)
 			return null;
-		return this._loadRoom(data);
+		// Load the room (possible race conditions are handled in _loadRoom)
+		return await this._loadRoom(data);
 	}
 
 	@AsyncSynchronized()
@@ -173,11 +172,53 @@ export const RoomManager = new class RoomManagerClass {
 	}
 
 	/** Create room from received data, adding it to loaded rooms */
-	private _loadRoom({ id, config, owners }: IChatRoomDirectoryData): Room {
-		const room = new Room(id, config, owners);
+
+	@AsyncSynchronized()
+	private async _loadRoom({ id, config, owners, accessId }: IChatRoomDirectoryData): Promise<Room> {
+		{
+			const existingRoom = this.loadedRooms.get(id);
+			if (existingRoom != null)
+				return existingRoom;
+		}
+
+		// Load the room itself
+		const room = new Room(id, config, owners, accessId);
+
+		// Load characters relevant to the room
+		const characterList = await GetDatabase().getCharactersInRoom(id);
+
+		const characters = await Promise.all(
+			characterList
+				.map(({ accountId, characterId }): Promise<CharacterInfo | null> => {
+					return (async () => {
+						const account = await accountManager.loadAccountById(accountId);
+						AssertNotNullable(account);
+						const character = account.characters.get(characterId);
+						AssertNotNullable(character);
+
+						account.touch();
+
+						return character;
+					})()
+						.catch((err) => {
+							logger.error(`Failed to load a character while loading room ${id}`, err);
+							return null;
+						});
+				}),
+		);
+
+		// Make the room available
 		Assert(!this.loadedRooms.has(room.id));
 		this.loadedRooms.set(room.id, room);
 		loadedRoomsMetric.set(this.loadedRooms.size);
+
+		// Assign all the characters
+		for (const character of characters) {
+			if (character != null) {
+				character.load(room);
+			}
+		}
+
 		logger.debug(`Loaded room ${room.id}`);
 		return room;
 	}

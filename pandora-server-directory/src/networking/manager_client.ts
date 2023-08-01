@@ -289,7 +289,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!char)
 			return { result: 'maxCharactersReached' };
 
-		const result = await char.connect(connection);
+		const loadedCharacter = await char.requestLoad();
+
+		const result = await loadedCharacter.connect(connection);
 
 		return { result };
 	}
@@ -328,7 +330,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const char = connection.account.characters.get(id);
 		AssertNotNullable(char);
 
-		const result = await char.connect(connection);
+		const loadedCharacter = await char.requestLoad();
+
+		const result = await loadedCharacter.connect(connection);
 
 		return { result };
 	}
@@ -392,7 +396,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: room };
 		}
 
-		const result = await character.joinRoom(room, true, null);
+		const result = await character.joinRoom(room, null);
 		Assert(result !== 'noAccess');
 		Assert(result !== 'errFull');
 		Assert(result !== 'invalidPassword');
@@ -412,7 +416,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const result = await character.joinRoom(room, true, password ?? null);
+		const result = await character.joinRoom(room, password ?? null);
 
 		return { result };
 	}
@@ -429,7 +433,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'noAccess' };
 		}
 
-		const result = await connection.character.room.update(roomConfig, connection.character);
+		const result = await connection.character.room.update(roomConfig, connection.character.baseInfo);
 
 		return { result };
 	}
@@ -446,7 +450,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return;
 		}
 
-		await connection.character.room.adminAction(connection.character, action, targets);
+		await connection.character.room.adminAction(connection.character.baseInfo, action, targets);
 	}
 
 	private async handleChatRoomLeave(_: IClientDirectoryArgument['chatRoomLeave'], connection: ClientConnection): IClientDirectoryPromiseResult['chatRoomLeave'] {
@@ -487,7 +491,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			logger.verbose(`${connection.id} logged in as ${account.data.username} using token`);
 			connection.setAccount(account);
 			if (auth.character) {
-				const char = account.characters.get(auth.character.id);
+				const char = account.characters.get(auth.character.id)?.loadedCharacter;
 				if (char && char.connectSecret === auth.character.secret) {
 					connection.setCharacter(char);
 				}

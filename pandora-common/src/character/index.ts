@@ -9,6 +9,7 @@ import { HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
 import { ZodTransformReadonly } from '../utility';
+import { RoomId } from '../chatroom';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),
@@ -67,7 +68,9 @@ export type ICharacterSelfInfo = {
 	name: string;
 	preview: string;
 	state: string;
+	currentRoom?: RoomId | null;
 	inCreation?: true;
 };
 
-export type ICharacterSelfInfoUpdate = Pick<ICharacterSelfInfo, 'id'> & Partial<Pick<ICharacterSelfInfo, 'preview'>>;
+export type ICharacterSelfInfoUpdateProperties = 'preview' | 'currentRoom';
+export type ICharacterSelfInfoUpdate = Pick<ICharacterSelfInfo, 'id'> & Partial<Pick<ICharacterSelfInfo, ICharacterSelfInfoUpdateProperties>>;

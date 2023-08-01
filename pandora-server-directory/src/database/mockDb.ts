@@ -1,6 +1,6 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { AccountId, CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
+import { AccountId, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
 
 import _ from 'lodash';
@@ -225,13 +225,36 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(char.accessId);
 	}
 
+	public getCharactersInRoom(roomId: RoomId): Promise<{
+		accountId: AccountId;
+		characterId: CharacterId;
+	}[]> {
+		const chars: {
+			accountId: AccountId;
+			characterId: CharacterId;
+		}[] = [];
+
+		for (const account of this.accountDbView) {
+			for (const character of account.characters) {
+				if (character.currentRoom === roomId) {
+					chars.push({
+						accountId: account.id,
+						characterId: character.id,
+					});
+				}
+			}
+		}
+
+		return Promise.resolve(chars);
+	}
+
 	//#region ChatRoom
 
 	public getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]> {
 		return Promise.resolve(
 			Array.from(this.chatroomDb.values())
 				.filter((room) => room.owners.includes(account))
-				.map((room) => _.pick(room, ['id', 'config', 'owners'])),
+				.map((room) => _.pick(room, CHATROOM_DIRECTORY_PROPERTIES)),
 		);
 	}
 
@@ -239,7 +262,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(
 			Array.from(this.chatroomDb.values())
 				.filter((room) => room.owners.includes(account) || room.config.admin.includes(account))
-				.map((room) => _.pick(room, ['id', 'config', 'owners'])),
+				.map((room) => _.pick(room, CHATROOM_DIRECTORY_PROPERTIES)),
 		);
 	}
 

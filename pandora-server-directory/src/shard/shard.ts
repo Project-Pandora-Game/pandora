@@ -131,7 +131,17 @@ export class Shard {
 			data.rooms.map((roomData) => RoomManager
 				.loadRoom(roomData.id)
 				.then((room) => {
-					return room?.shardReconnect(this, roomData.accessId);
+					if (!room)
+						return;
+
+					const characterAccessIds = new Map<CharacterId, string>();
+					for (const character of data.characters) {
+						if (character.room === room.id) {
+							characterAccessIds.set(character.id, character.accessId);
+						}
+					}
+
+					return room.shardReconnect(this, roomData.accessId, characterAccessIds);
 				}),
 			),
 		);
@@ -253,11 +263,7 @@ export class Shard {
 		await Promise.all(
 			[...this.characters.values()]
 				.map(async (character) => {
-					await character.setShard(null);
-					if (attemptReassign) {
-						await character.autoconnect();
-						character.assignedConnection?.sendConnectionStateUpdate();
-					}
+					await character.shardChange(attemptReassign);
 				}),
 		);
 		this.logger.info('Deleted');
@@ -349,7 +355,7 @@ export class Shard {
 		for (const [id, character] of this.characters) {
 			result.push({
 				id,
-				account: character.account.getShardAccountDefinition(),
+				account: character.baseInfo.account.getShardAccountDefinition(),
 				accessId: character.accessId,
 				connectSecret: character.connectSecret,
 				room: character.room ? character.room.id : null,

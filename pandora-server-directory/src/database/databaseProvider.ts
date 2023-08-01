@@ -101,6 +101,15 @@ export interface PandoraDatabase {
 	 */
 	setCharacterAccess(id: CharacterId): Promise<string | null>;
 
+	/**
+	 * Lists all characters that are in a given room
+	 * @param roomId - The id of a room to query for
+	 */
+	getCharactersInRoom(roomId: RoomId): Promise<{
+		accountId: AccountId;
+		characterId: CharacterId;
+	}[]>;
+
 	//#endregion
 
 	//#region ChatRoom

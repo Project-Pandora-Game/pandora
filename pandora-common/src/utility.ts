@@ -57,6 +57,12 @@ export const IS_NODE = !IS_BROWSER;
 /** Immutable, always empty array */
 export const EMPTY_ARRAY: readonly never[] = Object.freeze([]);
 
+/** A `true` usable to prevent narrowing */
+export const NOT_NARROWING_TRUE: boolean = true;
+
+/** A `false` usable to prevent narrowing */
+export const NOT_NARROWING_FALSE: boolean = false;
+
 export function Assert(condition: unknown, msg?: string): asserts condition {
 	if (!condition) {
 		throw new Error(msg ? `Assetion failed: ${msg}` : 'Assertion failed');

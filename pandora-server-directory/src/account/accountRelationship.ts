@@ -42,10 +42,12 @@ export class AccountRelationship {
 			id: this.account.id,
 			online,
 			characters: !online ? [] : [...this.account.characters.values()]
-				.filter((char) => char.isInUse())
+				.map((char) => char.loadedCharacter)
+				.filter(IsNotNullable)
+				.filter((char) => char.assignedClient != null)
 				.map((char) => ({
-					id: char.id,
-					name: char.data.name,
+					id: char.baseInfo.id,
+					name: char.baseInfo.data.name,
 					inRoom: char.room?.isPublic ? char.room.id : undefined,
 				})),
 		};
@@ -85,9 +87,11 @@ export class AccountRelationship {
 		}
 		if (this.account.data.settings.allowDirectMessagesFrom === 'room') {
 			for (const char of this.account.characters.values()) {
-				if (!char.room) continue;
+				const room = char?.loadedCharacter?.room;
+				if (!room) continue;
 				for (const char2 of from.characters.values()) {
-					if (char.room.id === char2.room?.id) {
+					const room2 = char2?.loadedCharacter?.room;
+					if (room.id === room2?.id) {
 						return true;
 					}
 				}

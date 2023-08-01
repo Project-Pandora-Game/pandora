@@ -172,7 +172,7 @@ export const CHATROOM_SHARD_UPDATEABLE_PROPERTIES = ['inventory'] as const satis
 export const ChatRoomDataShardUpdateSchema = ChatRoomDataSchema.pick(ArrayToTruthyMap(CHATROOM_SHARD_UPDATEABLE_PROPERTIES)).partial();
 export type IChatRoomDataShardUpdate = z.infer<typeof ChatRoomDataShardUpdateSchema>;
 
-export const CHATROOM_DIRECTORY_PROPERTIES = ['id', 'config', 'owners'] as const satisfies readonly (keyof IChatRoomData)[];
+export const CHATROOM_DIRECTORY_PROPERTIES = ['id', 'config', 'owners', 'accessId'] as const satisfies readonly (keyof IChatRoomData)[];
 /** Room data from database, only those relevant to Directory */
 export const ChatRoomDirectoryDataSchema = ChatRoomDataSchema.pick(ArrayToTruthyMap(CHATROOM_DIRECTORY_PROPERTIES));
 /** Room data from database, only those relevant to Directory */

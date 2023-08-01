@@ -96,7 +96,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (!character)
 			throw new BadMessageError();
 
-		const char = await character.finishCharacterCreation();
+		const char = await character.baseInfo.finishCharacterCreation();
 		if (!char)
 			throw new BadMessageError();
 

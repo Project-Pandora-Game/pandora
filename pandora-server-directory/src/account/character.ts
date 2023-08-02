@@ -13,7 +13,6 @@ function GenerateConnectSecret(): string {
 }
 
 // TODO: On change
-// account.relationship.updateStatus();
 // account.onCharacterListChange();
 
 export class CharacterInfo {
@@ -40,6 +39,10 @@ export class CharacterInfo {
 
 	public isInUse(): boolean {
 		return this._loadedCharacter != null && this._loadedCharacter.isInUse();
+	}
+
+	public isOnline(): boolean {
+		return this._loadedCharacter != null && this._loadedCharacter.isOnline();
 	}
 
 	public get inCreation(): boolean {
@@ -259,7 +262,7 @@ export class Character {
 	}
 
 	public isInUse(): boolean {
-		return this.assignment != null;
+		return this.assignment != null || this.isOnline();
 	}
 
 	public async generateAccessId(): Promise<boolean> {
@@ -290,6 +293,7 @@ export class Character {
 
 		// Assign new connection
 		this._connectSecret = GenerateConnectSecret();
+		this.baseInfo.account.relationship.updateStatus();
 
 		// If we are already on shard, update the secret on the shard
 		await this.currentShard?.update('characters');
@@ -332,6 +336,7 @@ export class Character {
 
 		// Mark the character as offline
 		this._connectSecret = null;
+		this.baseInfo.account.relationship.updateStatus();
 
 		Assert(!this._disposed || this.assignment == null);
 
@@ -390,6 +395,7 @@ export class Character {
 
 			// Do the rest
 			this._connectSecret = connectionSecret;
+			this.baseInfo.account.relationship.updateStatus();
 
 			return;
 		}
@@ -397,8 +403,9 @@ export class Character {
 		Assert(this.assignment == null);
 
 		// Restore access id and connection secret
-		this._connectSecret = connectionSecret;
 		this.accessId = accessId;
+		this._connectSecret = connectionSecret;
+		this.baseInfo.account.relationship.updateStatus();
 
 		// We are ready to connect to shard, but check again if we can to avoid race conditions
 		if (!shard.allowConnect()) {

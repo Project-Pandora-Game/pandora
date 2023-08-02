@@ -23,7 +23,7 @@ export class AccountRelationship {
 	constructor(account: Account) {
 		this.account = account;
 		this.logger = GetLogger('AccountRelationship').prefixMessages(`[${account.id}]`);
-		this.account.associatedConnections.onAny(this.onConnection.bind(this));
+		this.account.associatedConnections.onAny(() => this.updateStatus());
 	}
 
 	private get(id: AccountId): RelationshipCache | undefined {
@@ -37,18 +37,16 @@ export class AccountRelationship {
 		if (this.account.data.settings.hideOnlineStatus) {
 			return null;
 		}
-		const online = this.account.isInUse();
+		const online = this.account.isOnline();
 		return {
 			id: this.account.id,
 			online,
 			characters: !online ? [] : [...this.account.characters.values()]
-				.map((char) => char.loadedCharacter)
-				.filter(IsNotNullable)
-				.filter((char) => char.assignedClient != null)
+				.filter((char) => char.isOnline())
 				.map((char) => ({
-					id: char.baseInfo.id,
-					name: char.baseInfo.data.name,
-					inRoom: char.room?.isPublic ? char.room.id : undefined,
+					id: char.id,
+					name: char.data.name,
+					inRoom: char.loadedCharacter?.room?.isPublic ? char.loadedCharacter.room.id : undefined,
 				})),
 		};
 	}
@@ -279,13 +277,6 @@ export class AccountRelationship {
 			updated,
 			relationship,
 		});
-	}
-
-	private onConnection(): void {
-		if (!this.loaded) {
-			return;
-		}
-		this.updateStatus();
 	}
 
 	public updateStatus(): void {

@@ -65,6 +65,10 @@ export class Account {
 		return this.associatedConnections.hasClients() || Array.from(this.characters.values()).some((c) => c.isInUse());
 	}
 
+	public isOnline(): boolean {
+		return this.associatedConnections.hasClients() || Array.from(this.characters.values()).some((c) => c.isOnline());
+	}
+
 	/** Build account part of `connectionState` update message for connection */
 	public getAccountInfo(): IDirectoryAccountInfo {
 		return {

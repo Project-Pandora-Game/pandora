@@ -264,7 +264,7 @@ export class Room extends ServerRoom<IShardClient> {
 		return new RoomInventory(state);
 	}
 
-	public characterEnter(character: Character, appearance: AppearanceBundle): void {
+	public characterAdd(character: Character, appearance: AppearanceBundle): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
 		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
@@ -296,12 +296,12 @@ export class Room extends ServerRoom<IShardClient> {
 			});
 		});
 
-		this.logger.debug(`Character ${character.id} entered`);
+		this.logger.debug(`Character ${character.id} added`);
 		// Make sure action info is in cache
 		this._getCharacterActionInfo(character.id);
 	}
 
-	public characterLeave(character: Character): void {
+	public characterRemove(character: Character): void {
 		this.runWithSuppressedUpdates(() => {
 			// Remove character
 			let roomState = this.roomState.currentState;
@@ -327,7 +327,7 @@ export class Room extends ServerRoom<IShardClient> {
 			this.status.delete(character.id);
 			this._cleanActionCache(character.id);
 		});
-		this.logger.debug(`Character ${character.id} left`);
+		this.logger.debug(`Character ${character.id} removed`);
 	}
 
 	public sendUpdateToAllInRoom(data: IChatRoomUpdate): void {

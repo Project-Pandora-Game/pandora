@@ -18,7 +18,8 @@ export const ShardCharacterDefinitionSchema = z.object({
 	id: CharacterIdSchema,
 	account: ShardAccountDefinitionSchema,
 	accessId: z.string(),
-	connectSecret: z.string(),
+	/** Secret for client to connect; `null` means this character is only loaded in room, but not connected to ("offline") */
+	connectSecret: z.string().nullable(),
 	room: RoomIdSchema.nullable(),
 });
 export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionSchema>;

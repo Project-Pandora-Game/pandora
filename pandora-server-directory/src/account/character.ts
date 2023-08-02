@@ -130,32 +130,46 @@ export class CharacterInfo {
 		this._loadedCharacter = new Character(this, room);
 	}
 
-	public unload(): void {
-		// TODO
-		Assert(false);
+	public trackedRoomUnload(room: Room): void {
+		const oldCharacter = this._loadedCharacter;
+		// Can only be perfromed when loaded and tracking specified room
+		Assert(oldCharacter != null);
+		Assert(oldCharacter.assignment?.type === 'room-joined' || oldCharacter.assignment?.type === 'room-tracking');
+		Assert(oldCharacter.assignment.room === room);
+		// The room shouldn't unload when any character is requesting it to be loaded or is loaded on a shard
+		Assert(oldCharacter.connectSecret == null);
+		Assert(oldCharacter.assignedClient == null);
+		Assert(oldCharacter.currentShard == null);
+
+		// Cleanup links to the room to allow it to properly unload
+		room.trackingCharacters.delete(oldCharacter);
+		oldCharacter.assignment = null;
+
+		// Finish unload
+		this._loadedCharacter = null;
 	}
 
 	@AsyncSynchronized('object')
 	public shardReconnect({ shard, accessId, connectionSecret, room }: {
 		shard: Shard;
 		accessId: string;
-		connectionSecret: string;
-		room?: Room;
+		connectionSecret: string | null;
+		room: Room | null;
 	}): Promise<void> {
 		// If we are in a room, the character should have already been loaded by the room
 		if (room != null) {
 			Assert(this._loadedCharacter != null);
-			this._loadedCharacter.connectSecret = connectionSecret;
-			return Promise.resolve();
+		} else {
+			// Someone else might have loaded the character meanwhile
+			if (this._loadedCharacter != null && NOT_NARROWING_TRUE)
+				return Promise.resolve();
+
+			// Load the character
+			this.load(null);
+			Assert(this._loadedCharacter != null);
 		}
 
-		if (this._loadedCharacter != null && NOT_NARROWING_TRUE)
-			return Promise.resolve();
-
-		this.load(null);
-		Assert(this._loadedCharacter != null);
-
-		this._loadedCharacter.shardReconnect({ shard, accessId, connectionSecret });
+		this._loadedCharacter.shardReconnect({ shard, accessId, connectionSecret, room });
 		return Promise.resolve();
 	}
 }
@@ -185,7 +199,11 @@ export class Character {
 	/** Which client is assigned to this character and receives updates from it; only passive listener to what happens to the character */
 	public assignedClient: ClientConnection | null = null;
 
-	public connectSecret: string;
+	/** Secret for client to connect; `null` means this character is only loaded in room, but not connected to ("offline") */
+	private _connectSecret: string | null = null;
+	public get connectSecret(): string | null {
+		return this._connectSecret;
+	}
 
 	//#endregion
 
@@ -219,10 +237,13 @@ export class Character {
 
 	//#endregion
 
+	private get _disposed(): boolean {
+		return this.baseInfo.loadedCharacter !== this;
+	}
+
 	constructor(baseInfo: CharacterInfo, initialRoom: Room | null) {
 		this.logger = GetLogger('Character', `[Character ${baseInfo.id}]`);
 		this.baseInfo = baseInfo;
-		this.connectSecret = GenerateConnectSecret();
 		if (initialRoom != null) {
 			// This is for initializing character that is already in a room. It should only be used by the room itself when it loads
 			Assert(initialRoom.assignedShard == null);
@@ -254,6 +275,9 @@ export class Character {
 
 	@AsyncSynchronized('object')
 	public async connect(connection: ClientConnection): Promise<'ok' | 'noShardFound' | 'failed'> {
+		if (this._disposed)
+			return 'failed';
+
 		this.baseInfo.account.touch();
 
 		// Remove old connection
@@ -265,7 +289,7 @@ export class Character {
 		Assert(this.assignedClient == null);
 
 		// Assign new connection
-		this.connectSecret = GenerateConnectSecret();
+		this._connectSecret = GenerateConnectSecret();
 
 		// If we are already on shard, update the secret on the shard
 		await this.currentShard?.update('characters');
@@ -299,11 +323,17 @@ export class Character {
 
 		// Detach the client
 		if (this.assignedClient) {
+			Assert(!this._disposed);
 			const c = this.assignedClient;
 			c.setCharacter(null);
 			c.sendConnectionStateUpdate();
 		}
 		Assert(this.assignedClient == null);
+
+		// Mark the character as offline
+		this._connectSecret = null;
+
+		Assert(!this._disposed || this.assignment == null);
 
 		// Perform action specific to the current assignment
 		if (this.assignment == null) {
@@ -316,7 +346,9 @@ export class Character {
 			// (only purpose for tracking a room is if we want to make a request to join, which can't happen without a client)
 			await this._unassign();
 		} else if (this.assignment.type === 'room-joined') {
-			// If we are in a room, delegate the action to the room
+			// If we are in a room, notify the shard that this character went offline
+			await this.currentShard?.update('characters');
+			// Try to perform room cleanup, if applicable
 			await this.assignment.room.cleanupIfEmpty();
 		} else {
 			AssertNever(this.assignment);
@@ -324,7 +356,7 @@ export class Character {
 	}
 
 	public getShardConnectionInfo(): IDirectoryCharacterConnectionInfo | null {
-		if (!this.currentShard)
+		if (!this.currentShard || !this.connectSecret)
 			return null;
 		return {
 			...this.currentShard.getInfo(),
@@ -333,24 +365,39 @@ export class Character {
 		};
 	}
 
-	public isRequestingLoad(): boolean {
-		// TODO: Check pending operations to avoid race conditions
-		return this.assignedClient != null;
+	public isOnline(): boolean {
+		Assert(!this._disposed || this.connectSecret == null);
+
+		return this.connectSecret != null;
 	}
 
 	//#endregion
 
 	//#region Shard and room assignment handling
 
-	public shardReconnect({ shard, accessId, connectionSecret }: {
+	public shardReconnect({ shard, accessId, connectionSecret, room }: {
 		shard: Shard;
 		accessId: string;
-		connectionSecret: string;
+		connectionSecret: string | null;
+		room: Room | null;
 	}): void {
+		Assert(!this._disposed);
+
+		if (room != null) {
+			// If reconnecting to a room, room should have already done most of the setup
+			Assert(this.accessId === accessId);
+			Assert(this.room === room);
+
+			// Do the rest
+			this._connectSecret = connectionSecret;
+
+			return;
+		}
+
 		Assert(this.assignment == null);
 
 		// Restore access id and connection secret
-		this.connectSecret = connectionSecret;
+		this._connectSecret = connectionSecret;
 		this.accessId = accessId;
 
 		// We are ready to connect to shard, but check again if we can to avoid race conditions
@@ -375,8 +422,10 @@ export class Character {
 		if (this.assignment?.type !== 'shard')
 			return;
 
+		Assert(!this._disposed);
+
 		await this._unassign();
-		if (attemptReassign) {
+		if (attemptReassign && this.isOnline()) {
 			await this._assignToShard('auto');
 		}
 	}
@@ -470,6 +519,9 @@ export class Character {
 				shard.characters.delete(this.baseInfo.id);
 				await shard.update('characters');
 			}
+
+			// Check if room can be cleaned up
+			await room.cleanupIfEmpty();
 		} else if (this.assignment.type === 'shard') {
 			const shard = this.assignment.shard;
 
@@ -486,8 +538,35 @@ export class Character {
 		Assert(this.assignment == null);
 	}
 
+	/**
+	 * Handles the case where character has error while loading or loaded on shard and needs to be forcefully removed
+	 * This allows rest of the room (if in a room) to function properly
+	 */
+	@AsyncSynchronized('object')
+	public async forceDisconnectShard(): Promise<void> {
+		if (this._disposed)
+			return;
+
+		// Force remove from a room, if necessary
+		// Must be in a room (otherwise success)
+		const oldAssignment = this.assignment;
+		if (oldAssignment?.type === 'room-joined') {
+			const oldRoom = oldAssignment.room;
+
+			// Actually remove the character from the room
+			await oldRoom.removeCharacter(this, 'error', this.baseInfo);
+		}
+
+		// Disconnect
+		await this._unassign();
+	}
+
 	@AsyncSynchronized('object')
 	public async joinRoom(room: Room, password: string | null): Promise<'failed' | 'ok' | 'errFull' | 'noAccess' | 'invalidPassword'> {
+		// Only loaded characters can request room join
+		if (!this.isOnline())
+			return 'failed';
+
 		// Must not be in a different room (TODO: Shift the automatic leaving logic here)
 		if (this.room != null)
 			return 'failed';
@@ -548,6 +627,10 @@ export class Character {
 
 	@AsyncSynchronized('object')
 	public async leaveRoom(): Promise<'ok' | 'failed' | 'restricted'> {
+		// Only loaded characters can request room leave
+		if (!this.isOnline())
+			return 'failed';
+
 		// Must be in a room (otherwise success)
 		const oldAssignment = this.assignment;
 		if (oldAssignment?.type !== 'room-joined')
@@ -589,6 +672,9 @@ export class Character {
 			type: 'shard',
 			shard,
 		};
+
+		// Check if room can be cleaned up
+		await oldRoom.cleanupIfEmpty();
 
 		return 'ok';
 	}

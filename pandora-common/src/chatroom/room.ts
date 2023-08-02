@@ -178,4 +178,4 @@ export const ChatRoomDirectoryDataSchema = ChatRoomDataSchema.pick(ArrayToTruthy
 /** Room data from database, only those relevant to Directory */
 export type IChatRoomDirectoryData = z.infer<typeof ChatRoomDirectoryDataSchema>;
 
-export type IChatRoomLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'kick' | 'ban';
+export type IChatRoomLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'error' | 'kick' | 'ban';

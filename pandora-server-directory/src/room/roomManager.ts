@@ -227,6 +227,13 @@ export const RoomManager = new class RoomManagerClass {
 	private _unloadRoom(room: Room): void {
 		logger.debug(`Unloading room ${room.id}`);
 		Assert(!room.isInUse());
+
+		// Unload all characters tracking the room
+		for (const character of room.trackingCharacters) {
+			character.baseInfo.trackedRoomUnload(room);
+		}
+		Assert(room.trackingCharacters.size === 0);
+
 		Assert(this.loadedRooms.get(room.id) === room);
 		this.loadedRooms.delete(room.id);
 		loadedRoomsMetric.set(this.loadedRooms.size);

@@ -59,7 +59,17 @@ export class Room {
 	}
 
 	public isInUse(): boolean {
-		return this._assignedShard != null;
+		// Check if the room is currently loaded
+		if (this._assignedShard != null)
+			return true;
+
+		// Check if there is any character that wants this room loaded
+		for (const character of this.trackingCharacters) {
+			if (character.isOnline())
+				return true;
+		}
+
+		return false;
 	}
 
 	/** List of characters tracking this room's shard assignment */
@@ -427,6 +437,8 @@ export class Room {
 			action = 'characterKicked';
 		} else if (reason === 'ban') {
 			action = 'characterBanned';
+		} else if (reason === 'error') {
+			action = 'characterDisconnected';
 		} else if (reason === 'destroy') {
 			// Do not report room being destroyed, everyone is removed anyway
 		} else {
@@ -603,10 +615,19 @@ export class Room {
 		return true;
 	}
 
+	@AsyncSynchronized('object')
 	public async cleanupIfEmpty(): Promise<void> {
-		if (this.trackingCharacters.size === 0) {
-			await this.disconnect();
+		// Check if there is any character that wants this room loaded
+		for (const character of this.trackingCharacters) {
+			if (character.isOnline())
+				return;
 		}
+
+		// Disconnect the room from a shard
+		const result = await this._setShard(null);
+		Assert(result);
+		// Clear pending action messages when the room gets disconnected
+		this.pendingMessages.length = 0;
 	}
 
 	public readonly pendingMessages: IChatRoomMessageDirectoryAction[] = [];

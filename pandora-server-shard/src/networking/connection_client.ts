@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema, AssertNotNullable } from 'pandora-common';
+import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema, AssertNotNullable, Assert } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
@@ -39,6 +39,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 			return;
 		this._aborted = true;
 		this.character?.setConnection(null);
+		Assert(this.character == null);
 		this.socket.disconnect();
 	}
 

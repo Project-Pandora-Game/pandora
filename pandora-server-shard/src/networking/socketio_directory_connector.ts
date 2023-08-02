@@ -207,7 +207,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 							if (!result) {
 								logger.error(`Failed to load room ${room.id} for access ${room.accessId}`);
 								// Report back that room load failed
-								this.sendMessage('roomUnload', { id: room.id, reason: 'error' });
+								this.sendMessage('roomError', { id: room.id });
 							}
 						})
 						.catch((err) => {
@@ -227,13 +227,13 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 							if (!result) {
 								logger.error(`Failed to load character ${character.id} for access ${character.accessId}`);
 								// Report back that character load failed
-								this.sendMessage('characterDisconnect', { id: character.id, reason: 'error' });
+								this.sendMessage('characterError', { id: character.id });
 							}
 						})
 						.catch((err) => {
 							logger.error(`Failed to load character ${character.id} for access ${character.accessId}:\n`, err);
 							// Report back that character load failed
-							this.sendMessage('characterDisconnect', { id: character.id, reason: 'error' });
+							this.sendMessage('characterError', { id: character.id });
 						}),
 				),
 			);

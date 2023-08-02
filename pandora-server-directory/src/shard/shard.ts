@@ -164,7 +164,7 @@ export class Shard {
 				shard: this,
 				accessId: characterData.accessId,
 				connectionSecret: characterData.connectSecret,
-				room,
+				room: room ?? null,
 			});
 
 			this.logger.debug('Added character during registration', character.id);

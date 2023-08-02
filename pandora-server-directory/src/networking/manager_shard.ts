@@ -27,8 +27,9 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		this.messageHandler = new MessageHandler<IShardDirectory, IConnectionShard>({
 			shardRegister: this.handleShardRegister.bind(this),
 			shardRequestStop: this.handleShardRequestStop.bind(this),
-			characterDisconnect: this.handleCharacterDisconnect.bind(this),
-			roomUnload: this.handleRoomUnload.bind(this),
+			characterClientDisconnect: this.handleCharacterClientDisconnect.bind(this),
+			characterError: this.handleCharacterError.bind(this),
+			roomError: this.handleRoomError.bind(this),
 			createCharacter: this.createCharacter.bind(this),
 
 			// Database
@@ -65,7 +66,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		return shard.stop();
 	}
 
-	private async handleCharacterDisconnect({ id /* TODO , reason */ }: IShardDirectoryArgument['characterDisconnect'], connection: IConnectionShard): Promise<void> {
+	private async handleCharacterClientDisconnect({ id /* TODO , reason */ }: IShardDirectoryArgument['characterClientDisconnect'], connection: IConnectionShard): Promise<void> {
 		const shard = connection.shard;
 		if (!shard)
 			throw new BadMessageError();
@@ -76,7 +77,18 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		await character.disconnect();
 	}
 
-	private async handleRoomUnload({ id /* TODO , reason */ }: IShardDirectoryArgument['roomUnload'], connection: IConnectionShard): Promise<void> {
+	private async handleCharacterError({ id }: IShardDirectoryArgument['characterError'], connection: IConnectionShard): Promise<void> {
+		const shard = connection.shard;
+		if (!shard)
+			throw new BadMessageError();
+		const character = shard.getConnectedCharacter(id);
+		if (!character)
+			throw new BadMessageError();
+
+		await character.forceDisconnectShard();
+	}
+
+	private async handleRoomError({ id }: IShardDirectoryArgument['roomError'], connection: IConnectionShard): Promise<void> {
 		const shard = connection.shard;
 		if (!shard)
 			throw new BadMessageError();

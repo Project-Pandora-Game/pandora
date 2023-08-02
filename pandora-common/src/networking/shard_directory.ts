@@ -31,17 +31,22 @@ export const ShardDirectorySchema = {
 		request: z.object({}),
 		response: null,
 	},
-	characterDisconnect: {
+	characterClientDisconnect: {
 		request: z.object({
 			id: CharacterIdSchema,
-			reason: z.enum(['timeout', 'error']),
+			reason: z.enum(['timeout']),
 		}),
 		response: null,
 	},
-	roomUnload: {
+	characterError: {
+		request: z.object({
+			id: CharacterIdSchema,
+		}),
+		response: null,
+	},
+	roomError: {
 		request: z.object({
 			id: RoomIdSchema,
-			reason: z.enum(['error']),
 		}),
 		response: null,
 	},

@@ -27,14 +27,16 @@ type ICharacterPrivateDataChange = Omit<ICharacterDataUpdate, keyof ICharacterPu
 export class Character {
 	private readonly data: Omit<ICharacterData, 'appearance'>;
 	public accountData: IShardAccountDefinition;
-	public connectSecret: string;
+	public connectSecret: string | null;
 
 	private modified: Set<keyof ICharacterDataChange | 'appearance'> = new Set();
 
 	private tickInterval: NodeJS.Timeout | null = null;
 
 	private invalid: null | 'timeout' | 'error' | 'remove' = null;
-	private timeout: NodeJS.Timeout | null = null;
+
+	/** Timeout (interval) for when directory should be notified that client is disconnected */
+	private _clientTimeout: NodeJS.Timeout | null = null;
 
 	private _connection: ClientConnection | null = null;
 	public get connection(): ClientConnection | null {
@@ -128,13 +130,14 @@ export class Character {
 		this.modified.add('position');
 	}
 
-	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string, room: RoomId | null) {
+	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string | null, room: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
 		this.accountData = account;
 		this.connectSecret = connectSecret;
 
 		this.setConnection(null);
+		Assert(this._clientTimeout == null || connectSecret != null);
 
 		if (data.appearance?.clientOnly) {
 			this.logger.error(`Character ${data.id} has client-only appearance!`);
@@ -173,6 +176,7 @@ export class Character {
 	}
 
 	public update(data: IShardCharacterDefinition) {
+		Assert(this.isValid);
 		if (data.id !== this.data.id) {
 			throw new Error('Character update changes id');
 		}
@@ -189,6 +193,10 @@ export class Character {
 			this.connectSecret = data.connectSecret;
 			if (this.connection) {
 				this.connection.abortConnection();
+			}
+			if (data.connectSecret == null && this._clientTimeout != null) {
+				clearInterval(this._clientTimeout);
+				this._clientTimeout = null;
 			}
 		}
 		this.linkRoom(data.room);
@@ -207,13 +215,13 @@ export class Character {
 			}
 		}
 		if (this.room !== room) {
-			this.room?.characterLeave(this);
+			this.room?.characterRemove(this);
 
 			if (room) {
 				Assert(!this._context.inRoom);
 				const characterAppearance = this._context.globalState.currentState.characters.get(this.id)?.exportToBundle();
 				AssertNotNullable(characterAppearance);
-				room.characterEnter(
+				room.characterAdd(
 					this,
 					characterAppearance,
 				);
@@ -229,9 +237,9 @@ export class Character {
 		if (this.invalid) {
 			AssertNever();
 		}
-		if (this.timeout !== null) {
-			clearTimeout(this.timeout);
-			this.timeout = null;
+		if (this._clientTimeout !== null) {
+			clearInterval(this._clientTimeout);
+			this._clientTimeout = null;
 		}
 		const oldConnection = this._connection;
 		this._connection = null;
@@ -247,17 +255,16 @@ export class Character {
 				connection.joinRoom(this.room);
 			}
 			this._connection = connection;
-		} else if (this.isValid) {
-			this.timeout = setTimeout(this.handleTimeout.bind(this), CHARACTER_TIMEOUT);
+		} else if (this.isValid && this.connectSecret != null) {
+			this._clientTimeout = setInterval(this._handleTimeout.bind(this), CHARACTER_TIMEOUT);
 		}
 	}
 
-	private handleTimeout(): void {
-		if (this.invalid) {
-			AssertNever();
-		}
-		this.logger.verbose('Timed out');
-		this.invalidate('timeout');
+	private _handleTimeout(): void {
+		if (!this.isValid || this.connectSecret == null)
+			return;
+		this.logger.verbose('Client timed out');
+		DirectoryConnector.sendMessage('characterClientDisconnect', { id: this.id, reason: 'timeout' });
 	}
 
 	public async finishCreation(name: string): Promise<boolean> {
@@ -281,11 +288,11 @@ export class Character {
 	}
 
 	public onRemove(): void {
-		this.room?.characterLeave(this);
+		this.room?.characterRemove(this);
 		this.invalidate('remove');
 	}
 
-	private invalidate(reason: 'timeout' | 'error' | 'remove'): void {
+	private invalidate(reason: 'error' | 'remove'): void {
 		if (this.invalid !== null)
 			return;
 		this.invalid = reason;
@@ -302,12 +309,12 @@ export class Character {
 			oldConnection.character = null;
 			oldConnection.abortConnection();
 		}
-		if (this.timeout !== null) {
-			clearTimeout(this.timeout);
-			this.timeout = null;
+		if (this._clientTimeout !== null) {
+			clearInterval(this._clientTimeout);
+			this._clientTimeout = null;
 		}
-		if (reason !== 'remove') {
-			DirectoryConnector.sendMessage('characterDisconnect', { id: this.id, reason });
+		if (reason === 'error') {
+			DirectoryConnector.sendMessage('characterError', { id: this.id });
 		}
 	}
 

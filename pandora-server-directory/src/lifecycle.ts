@@ -29,10 +29,12 @@ async function StopGracefully(): Promise<void> {
 	ConnectionManagerClient.onDestroy();
 	// Unload all shards
 	await ShardManager.onDestroy();
-	// Unload all accounts
-	accountManager.onDestroy();
+	// Unload all characters
+	await accountManager.onDestroyCharacters();
 	// Unload all rooms
 	RoomManager.onDestroy();
+	// Unload all accounts
+	accountManager.onDestroyAccounts();
 	// Disconnect database
 	await CloseDatabase();
 }

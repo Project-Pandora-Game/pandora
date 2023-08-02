@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient } from 'pandora-common';
+import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { CharacterInfo } from './character';
 import { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } from '../config';
@@ -95,6 +95,19 @@ export class Account {
 
 		await GetDatabase().updateAccountSettings(this.data.id, this.data.settings);
 		this.onAccountInfoChange();
+	}
+
+	public async onManagerDestroy(): Promise<void> {
+		// Disconnect all characters
+		for (const character of this.characters.values()) {
+			await character.loadedCharacter?.disconnect();
+		}
+
+		// Disconnect clients
+		for (const client of this.associatedConnections.clients.slice()) {
+			client.setAccount(null);
+		}
+		Assert(!this.associatedConnections.hasClients());
 	}
 
 	//#region Character

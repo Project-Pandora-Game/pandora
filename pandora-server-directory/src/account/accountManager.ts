@@ -1,5 +1,5 @@
 import { GetDatabase } from '../database/databaseProvider';
-import { ACCOUNT_SETTINGS_DEFAULT, AsyncSynchronized, DirectoryAccountSettingsSchema, GetLogger } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, Assert, AsyncSynchronized, DirectoryAccountSettingsSchema, GetLogger } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 import promClient from 'prom-client';
 import { DiscordBot } from '../services/discord/discordBot';
@@ -94,7 +94,14 @@ export class AccountManager {
 		}
 	}
 
-	public onDestroy(): void {
+	public async onDestroyCharacters(): Promise<void> {
+		// Go through accounts and run disconnection
+		for (const account of this._onlineAccounts) {
+			await account.onManagerDestroy();
+		}
+	}
+
+	public onDestroyAccounts(): void {
 		if (this.interval !== undefined) {
 			clearInterval(this.interval);
 			this.interval = undefined;
@@ -138,6 +145,7 @@ export class AccountManager {
 
 	/** Remove account from loaded accounts, running necessary cleanup actions */
 	private unloadAccount(account: Account): void {
+		Assert(!account.isInUse());
 		logger.debug(`Unloading account ${account.data.username}`);
 		this._onlineAccounts.delete(account);
 		loadedAccountsMetric.set(this._onlineAccounts.size);

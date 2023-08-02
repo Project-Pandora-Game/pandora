@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -134,7 +134,7 @@ export class Character {
 		this.modified.add('position');
 	}
 
-	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string | null, room: RoomId | null) {
+	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string | null, roomId: RoomId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
 		this.accountData = account;
@@ -152,7 +152,19 @@ export class Character {
 			globalState: this._createIsolatedState(data.appearance),
 		};
 
-		this.linkRoom(room);
+		// Load into room directly (to avoid cleanup of appearance outside of the room)
+		if (roomId != null) {
+			const room = RoomManager.getRoom(roomId);
+			if (room != null) {
+				room.characterAdd(
+					this,
+					data.appearance ?? GetDefaultAppearanceBundle(),
+				);
+				Assert(this._context.inRoom);
+			} else {
+				this.logger.error(`Failed to link character to room ${roomId}; not found`);
+			}
+		}
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
@@ -239,6 +251,7 @@ export class Character {
 					this,
 					characterAppearance,
 				);
+				Assert(this._context.inRoom);
 			}
 		}
 	}

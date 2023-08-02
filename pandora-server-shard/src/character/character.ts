@@ -101,6 +101,10 @@ export class Character {
 		return this.invalid === null;
 	}
 
+	public get isOnline(): boolean {
+		return this.connectSecret != null;
+	}
+
 	public get settings(): Readonly<ICharacterPublicSettings> {
 		return this.data.settings;
 	}
@@ -190,6 +194,7 @@ export class Character {
 		}
 		if (data.connectSecret !== this.connectSecret) {
 			this.logger.debug('Connection secret changed');
+			const oldOnline = this.isOnline;
 			this.connectSecret = data.connectSecret;
 			if (this.connection) {
 				this.connection.abortConnection();
@@ -197,6 +202,15 @@ export class Character {
 			if (data.connectSecret == null && this._clientTimeout != null) {
 				clearInterval(this._clientTimeout);
 				this._clientTimeout = null;
+			}
+			if (this.isOnline !== oldOnline) {
+				this.room?.sendUpdateToAllInRoom({
+					characters: {
+						[this.id]: {
+							isOnline: this.isOnline,
+						},
+					},
+				});
 			}
 		}
 		this.linkRoom(data.room);

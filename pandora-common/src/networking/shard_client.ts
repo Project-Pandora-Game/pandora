@@ -15,6 +15,7 @@ import type { } from '../character/pronouns';
 
 export type ICharacterRoomData = ICharacterPublicData & {
 	position: readonly [number, number];
+	isOnline: boolean;
 };
 
 export type IChatRoomLoad = {

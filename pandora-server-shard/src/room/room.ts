@@ -247,6 +247,7 @@ export class Room extends ServerRoom<IShardClient> {
 			accountId: c.accountId,
 			settings: c.settings,
 			position: c.position,
+			isOnline: c.isOnline,
 		};
 	}
 

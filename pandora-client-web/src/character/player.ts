@@ -14,6 +14,7 @@ export class PlayerCharacter extends Character<ICharacterPrivateData & ICharacte
 		super({
 			...data,
 			position: [CharacterSize.WIDTH / 2, 0],
+			isOnline: true,
 		}, GetLogger('Character', `[Player ${data.id}]`));
 	}
 

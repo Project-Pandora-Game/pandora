@@ -119,6 +119,7 @@ export class EditorCharacter implements AppearanceContainer<ICharacterRoomData> 
 			name: 'EditorCharacter',
 			settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 			position: [0, 0],
+			isOnline: true,
 		};
 	}
 

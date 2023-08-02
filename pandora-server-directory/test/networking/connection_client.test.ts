@@ -133,52 +133,56 @@ describe('ClientConnection', () => {
 
 		it('Sets and removes character and associated connection', async () => {
 			const account = await TestMockAccount();
-			const character = await TestMockCharacter(account);
+			const characterInfo = await TestMockCharacter(account);
+			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account);
 
 			// Set
 			client.setCharacter(character);
 			expect(client.character).toBe(character);
-			expect(character.assignedConnection).toBe(client);
+			expect(character.assignedClient).toBe(client);
 
 			// Remove
 			client.setCharacter(null);
 			expect(client.character).toBe(null);
-			expect(character.assignedConnection).toBe(null);
+			expect(character.assignedClient).toBe(null);
 
 			// Cleanup
-			await account.deleteCharacter(character.id);
+			await account.deleteCharacter(characterInfo.id);
 		});
 
 		it('Swaps characters', async () => {
 			const account = await TestMockAccount();
-			const character1 = await TestMockCharacter(account);
-			const character2 = await TestMockCharacter(account);
+			const characterInfo1 = await TestMockCharacter(account);
+			const character1 = await characterInfo1.requestLoad();
+			const characterInfo2 = await TestMockCharacter(account);
+			const character2 = await characterInfo2.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account);
 
 			// Set first
 			client.setCharacter(character1);
 			expect(client.character).toBe(character1);
-			expect(character1.assignedConnection).toBe(client);
-			expect(character2.assignedConnection).toBe(null);
+			expect(character1.assignedClient).toBe(client);
+			expect(character2.assignedClient).toBe(null);
 
 			// Swap to second
 			client.setCharacter(character2);
 			expect(client.character).toBe(character2);
-			expect(character1.assignedConnection).toBe(null);
-			expect(character2.assignedConnection).toBe(client);
+			expect(character1.assignedClient).toBe(null);
+			expect(character2.assignedClient).toBe(client);
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(character1.id);
-			await account.deleteCharacter(character2.id);
+			await account.deleteCharacter(characterInfo1.id);
+			await account.deleteCharacter(characterInfo2.id);
 		});
 
 		it('Fails when character is in use', async () => {
 			const account = await TestMockAccount();
-			const character = await TestMockCharacter(account);
+			const characterInfo = await TestMockCharacter(account);
+			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
 			const connection2 = new MockConnection<IClientDirectory, IDirectoryClient>({ onMessage: connectionOnMessage });
 			const client2 = new ClientConnection(server, connection2.connect(), {});
@@ -190,7 +194,7 @@ describe('ClientConnection', () => {
 			client.setCharacter(character);
 			expect(client.character).toBe(character);
 			expect(client2.character).toBe(null);
-			expect(character.assignedConnection).toBe(client);
+			expect(character.assignedClient).toBe(client);
 			expect(connectionOnMessage).not.toHaveBeenCalled();
 
 			// Fails to set the second connection
@@ -199,29 +203,30 @@ describe('ClientConnection', () => {
 			}).toThrow();
 			expect(client.character).toBe(character);
 			expect(client2.character).toBe(null);
-			expect(character.assignedConnection).toBe(client);
+			expect(character.assignedClient).toBe(client);
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(character.id);
+			await account.deleteCharacter(characterInfo.id);
 		});
 
 		it('Removes character after disconnect', async () => {
 			const account = await TestMockAccount();
-			const character = await TestMockCharacter(account);
+			const characterInfo = await TestMockCharacter(account);
+			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account);
 
 			// Set
 			client.setCharacter(character);
 			expect(client.character).toBe(character);
-			expect(character.assignedConnection).toBe(client);
+			expect(character.assignedClient).toBe(client);
 
 			// Disconnect
 			connection.disconnect();
 
 			expect(client.character).toBe(null);
-			expect(character.assignedConnection).toBe(null);
+			expect(character.assignedClient).toBe(null);
 		});
 	});
 
@@ -257,7 +262,8 @@ describe('ClientConnection', () => {
 
 		it('Sends state message with character', async () => {
 			const account = await TestMockAccount();
-			const character = await TestMockCharacter(account);
+			const characterInfo = await TestMockCharacter(account);
+			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account);
 			connectionOnMessage.mockClear();
@@ -273,7 +279,7 @@ describe('ClientConnection', () => {
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(character.id);
+			await account.deleteCharacter(characterInfo.id);
 		});
 	});
 });

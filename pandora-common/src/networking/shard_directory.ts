@@ -1,7 +1,7 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
 import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataSchema, CharacterDataUpdateSchema, CharacterIdSchema } from '../character';
 import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
-import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, RoomIdSchema, ShardFeatureSchema } from '../chatroom';
+import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 
@@ -11,6 +11,7 @@ export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
+import type { } from '../chatroom/chat';
 
 export const ShardDirectorySchema = {
 	shardRegister: {

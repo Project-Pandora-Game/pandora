@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import { Account, CreateAccountData } from '../src/account/account';
 import { accountManager } from '../src/account/accountManager';
-import { Character } from '../src/account/character';
+import { CharacterInfo } from '../src/account/character';
 import { InitDatabase } from '../src/database/databaseProvider';
 import { MockDatabase, PrehashPassword } from '../src/database/mockDb';
 import { Shard } from '../src/shard/shard';
@@ -56,7 +56,7 @@ export async function TestMockCharacter(account: Account, finalize: {
 	name: string;
 } | false = {
 	name: nanoid(),
-}): Promise<Character> {
+}): Promise<CharacterInfo> {
 	const db = await TestMockDb();
 
 	if (!account.isActivated()) {

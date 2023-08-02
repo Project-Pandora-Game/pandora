@@ -1,10 +1,10 @@
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useCallback, useState } from 'react';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo } from 'pandora-common';
+import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryAccountSettings } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { useColorInput } from '../../common/useColorInput';
-import { Select } from '../common/select/select';
+import { Select, SelectProps } from '../common/select/select';
 import { useUpdatedUserInput } from '../../common/useSyncUserInput';
 import { range } from 'lodash';
 
@@ -27,6 +27,7 @@ function ChatroomSettings({ account }: { account: IDirectoryAccountInfo; }): Rea
 		<fieldset>
 			<legend>Chatroom UI</legend>
 			<ChatroomGraphicsRatio account={ account } />
+			<ChatroomOfflineCharacters account={ account } />
 		</fieldset>
 	);
 }
@@ -73,6 +74,37 @@ function ChatroomGraphicsRatio({ account }: { account: IDirectoryAccountInfo; })
 				</Select>
 			</div>
 		</>
+	);
+}
+
+function ChatroomOfflineCharacters({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const [selection, setSelection] = useState(account.settings.interfaceChatroomOfflineCharacterFilter);
+
+	const onChange = useCallback<NonNullable<SelectProps['onChange']>>(({ target }) => {
+		const newValue = DirectoryAccountSettingsSchema.shape.interfaceChatroomOfflineCharacterFilter.parse(target.value);
+
+		setSelection(newValue);
+		directory.sendMessage('changeSettings', { interfaceChatroomOfflineCharacterFilter: newValue });
+	}, [directory]);
+
+	const SELECTION_DESCRIPTIONS: Record<IDirectoryAccountSettings['interfaceChatroomOfflineCharacterFilter'], string> = {
+		none: 'No effect (displayed the same as online characters)',
+		icon: 'Show icon under the character name',
+		darken: 'Darken',
+		ghost: 'Ghost (darken + semi-transparent)',
+	};
+
+	return (
+		<div className='input-section'>
+			<label>Offline characters display effect</label>
+			<Select value={ selection } onChange={ onChange }>
+				{
+					(Object.keys(SELECTION_DESCRIPTIONS) as IDirectoryAccountSettings['interfaceChatroomOfflineCharacterFilter'][])
+						.map((v) => <option key={ v } value={ v }>{ SELECTION_DESCRIPTIONS[v] }</option>)
+				}
+			</Select>
+		</div>
 	);
 }
 

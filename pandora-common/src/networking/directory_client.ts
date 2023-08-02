@@ -55,6 +55,14 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 * Controls how many parts (of 10 total) the chatroom graphics takes inside chatroom, while in vertical mode
 	 */
 	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9).catch(4),
+	/**
+	 * Controls how offline characters are displayed in chatroom:
+	 * - None: No difference between online and offline characters
+	 * - Icon: Show disconnected icon under the name (not shown on other options)
+	 * - Darken: The characters are darkened (similar to blindness)
+	 * - Ghost: Darken + semi-transparent
+	 */
+	interfaceChatroomOfflineCharacterFilter: z.enum(['none', 'icon', 'darken', 'ghost']).default('ghost'),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
@@ -68,6 +76,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	wardrobeUseRoomBackground: true,
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
+	interfaceChatroomOfflineCharacterFilter: 'ghost',
 });
 
 export const AccountCryptoKeySchema = z.object({

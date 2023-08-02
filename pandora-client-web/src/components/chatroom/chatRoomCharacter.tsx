@@ -1,17 +1,20 @@
 import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Character, useCharacterAppearanceView } from '../../character/character';
+import { Character, useCharacterAppearanceView, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import _ from 'lodash';
 import { ChatroomDebugConfig } from './chatroomDebug';
 import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
-import { Container, Graphics, Text, useApp } from '@pixi/react';
+import { Container, Graphics, Sprite, Text, useApp } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE } from '../../graphics/graphicsLayer';
 import { ChatRoom, useCharacterRestrictionsManager, useCharacterState } from '../gameContext/chatRoomContextProvider';
-import { usePlayerVisionFilters } from './chatRoomScene';
+import { useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
+import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { useTexture } from '../../graphics/useTexture';
+import disconnectedIcon from '../../assets/icons/disconnected.svg';
 
 type ChatRoomCharacterProps = {
 	character: Character<ICharacterRoomData>;
@@ -124,7 +127,19 @@ function ChatRoomCharacterDisplay({
 }: ChatRoomCharacterPropsWithState): ReactElement | null {
 	const app = useApp();
 
-	const filters = usePlayerVisionFilters(character.isPlayer());
+	const {
+		id,
+		name,
+		position: dataPosition,
+		settings,
+		isOnline,
+	} = useCharacterData(character);
+
+	const { interfaceChatroomOfflineCharacterFilter } = useCurrentAccountSettings();
+
+	const playerFilters = usePlayerVisionFilters(character.isPlayer());
+	const characterFilters = useCharacterDisplayFilters(character);
+	const filters = [...playerFilters, ...characterFilters];
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
 		const maxY = CalculateCharacterMaxYForBackground(background);
@@ -132,7 +147,7 @@ function ChatRoomCharacterDisplay({
 		newX = _.clamp(Math.round(newX), 0, background.size[0]);
 		newY = _.clamp(Math.round(newY), 0, maxY);
 		shard?.sendMessage('chatRoomCharacterMove', {
-			id: character.data.id,
+			id,
 			position: [newX, newY],
 		});
 	});
@@ -140,7 +155,7 @@ function ChatRoomCharacterDisplay({
 	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
 
 	const height = background.size[1];
-	const { position, rawPositionY, scale, pivot, errorCorrectedPivot } = useChatRoomCharacterPosition(character.data.position, characterState, background);
+	const { position, rawPositionY, scale, pivot, errorCorrectedPivot } = useChatRoomCharacterPosition(dataPosition, characterState, background);
 
 	const backView = useCharacterAppearanceView(characterState) === 'back';
 
@@ -148,6 +163,10 @@ function ChatRoomCharacterDisplay({
 
 	const labelX = errorCorrectedPivot.x;
 	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
+
+	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
+	const disconnectedIconTexture = useTexture(disconnectedIcon);
+	const disconnectedIconY = labelY + 50;
 
 	const hitArea = useMemo(() => new Rectangle(labelX - 100, labelY - 50, 200, 100), [labelX, labelY]);
 
@@ -238,13 +257,24 @@ function ChatRoomCharacterDisplay({
 				style={ new TextStyle({
 					fontFamily: 'Arial',
 					fontSize: 32,
-					fill: character.data.settings.labelColor,
+					fill: settings.labelColor,
 					align: 'center',
 					dropShadow: true,
 					dropShadowBlur: 4,
 				}) }
-				text={ character.data.name }
+				text={ name }
 			/>
+			{
+				!showDisconnectedIcon ? null : (
+					<Sprite
+						anchor={ { x: 0.5, y: 0.5 } }
+						texture={ disconnectedIconTexture }
+						position={ { x: labelX, y: disconnectedIconY } }
+						width={ 64 }
+						height={ 64 }
+					/>
+				)
+			}
 			{
 				!debugConfig?.characterDebugOverlay ? null : (
 					<Container

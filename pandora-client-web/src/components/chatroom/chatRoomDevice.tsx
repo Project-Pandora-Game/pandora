@@ -1,4 +1,4 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, EMPTY_ARRAY, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -18,7 +18,7 @@ import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacte
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
-import { usePlayerVisionFilters } from './chatRoomScene';
+import { useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
 import { useChatRoomCharacterOffsets } from './chatRoomCharacter';
 import { RoomDeviceRenderContext } from './chatRoomDeviceContext';
 
@@ -375,11 +375,13 @@ function RoomDeviceGraphicsLayerSlot({ item, layer }: {
 function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characterState }: {
 	item: ItemRoomDevice;
 	layer: IRoomDeviceGraphicsLayerSlot;
-	character: Character;
+	character: Character<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement | null {
 	const debugConfig = useDebugConfig();
-	const filters = usePlayerVisionFilters(character.isPlayer());
+	const playerFilters = usePlayerVisionFilters(character.isPlayer());
+	const characterFilters = useCharacterDisplayFilters(character);
+	const filters = [...playerFilters, ...characterFilters];
 
 	const devicePivot = item.asset.definition.pivot;
 	const x = devicePivot.x + layer.characterPosition.offsetX;

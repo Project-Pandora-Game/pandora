@@ -13,7 +13,7 @@ import { useEvent } from '../../common/useEvent';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
-import { useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { directoryConnectorContext, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
 import { useCharacterIsInChatroom, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
@@ -43,7 +43,7 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 	});
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
-		forwardContexts: [shardConnectorContext],
+		forwardContexts: [directoryConnectorContext, shardConnectorContext],
 		backgroundColor: roomBackground ? 0x000000 : wardrobeBackground,
 	}), [roomBackground, wardrobeBackground]);
 

@@ -7,14 +7,18 @@ import { useObservable } from '../observable';
  * Resolves an image string to a texture. Supported image formats:
  * - `''` (empty string): `Texture.EMPTY`
  * - `'*'`: `Texture.WHITE`
- * - `data:image/png;base64,...`: The image created from the data blob
+ * - `data:image/*;base64,...`: The image created from the data blob
  * - `https://...`: Image available on URL
  * @param image - The image to resolve to texture
  * @param preferBlank - True: prefer blank (`Texture.EMPTY`) when texture is not ready; False: Reuse last ready texture when new texture is not ready
  * @param customGetTexture - Optional getter for resolving http-based textures (is not used for special ones)
  * @returns The requested texture, or `Texture.EMPTY` when the texture is not yet ready
  */
-export function useTexture(image: string | '' | '*', preferBlank: boolean = false, customGetTexture?: (path: string) => Promise<Texture>): Texture {
+export function useTexture(
+	image: string | '' | '*',
+	preferBlank: boolean = false,
+	customGetTexture?: (path: string) => Promise<Texture>,
+): Texture {
 	const manager = useObservable(GraphicsManagerInstance);
 
 	const wanted = useRef('');
@@ -44,7 +48,7 @@ export function useTexture(image: string | '' | '*', preferBlank: boolean = fals
 			return;
 		}
 
-		if (/^data:image\/png;base64,[0-9a-zA-Z+/=]+$/i.test(image)) {
+		if (/^data:image\/[^;]+;base64,[0-9a-zA-Z+/=]+$/i.test(image)) {
 			const img = new Image();
 			img.src = image;
 			setTexture({

@@ -1,10 +1,10 @@
-import { AssertNotNullable, CalculateCharacterMaxYForBackground, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CalculateCharacterMaxYForBackground, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { useEvent } from '../../common/useEvent';
-import { Character } from '../../character/character';
+import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, ChatRoom, useCharacterState } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -23,6 +23,7 @@ import { useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
 import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
+import { directoryConnectorContext, useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -100,7 +101,7 @@ export function ChatRoomGraphicsScene({
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
-		forwardContexts: [shardConnectorContext],
+		forwardContexts: [directoryConnectorContext, shardConnectorContext],
 		worldWidth: roomBackground.size[0],
 		worldHeight: roomBackground.size[1],
 		backgroundColor: 0x000000,
@@ -177,6 +178,36 @@ export function usePlayerVisionFilters(targetIsPlayer: boolean): Filter[] {
 		filter.brightness(1 - blindness / 10, false);
 		return [filter];
 	}, [blindness, targetIsPlayer]);
+}
+
+export function useCharacterDisplayFilters(character: Character<ICharacterRoomData>): Filter[] {
+	const {
+		isOnline,
+	} = useCharacterData(character);
+
+	const { interfaceChatroomOfflineCharacterFilter } = useCurrentAccountSettings();
+
+	const onlineFilters = useMemo(() => [], []);
+
+	const offlineFilters = useMemo(() => {
+		if (interfaceChatroomOfflineCharacterFilter === 'none') {
+			return [];
+		} else if (interfaceChatroomOfflineCharacterFilter === 'icon') {
+			return [];
+		} else if (interfaceChatroomOfflineCharacterFilter === 'darken') {
+			const colorFilter = new PIXI.ColorMatrixFilter();
+			colorFilter.brightness(0.4, true);
+			return [colorFilter];
+		} else if (interfaceChatroomOfflineCharacterFilter === 'ghost') {
+			const colorFilter = new PIXI.ColorMatrixFilter();
+			colorFilter.brightness(0.4, true);
+			const alphaFilter = new PIXI.AlphaFilter(0.8);
+			return [colorFilter, alphaFilter];
+		}
+		AssertNever(interfaceChatroomOfflineCharacterFilter);
+	}, [interfaceChatroomOfflineCharacterFilter]);
+
+	return isOnline ? onlineFilters : offlineFilters;
 }
 
 export function ChatRoomScene({ className }: {

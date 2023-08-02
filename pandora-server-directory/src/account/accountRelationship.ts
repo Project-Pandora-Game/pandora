@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountRelationship, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
+import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountRelationship, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
@@ -220,10 +220,24 @@ export class AccountRelationship {
 			return;
 
 		if (existing?.relationship.type === 'mutualBlock' && newRel.relationship.type === 'oneSidedBlock') {
-			this.account.associatedConnections.sendMessage('relationshipsUpdate', { id, type: 'none' });
+			this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+				relationship: { id, type: 'none' },
+				friendStatus: { id, online: 'delete' },
+			});
 			return;
 		}
-		this.account.associatedConnections.sendMessage('relationshipsUpdate', this.cacheToClientData(newRel));
+		let friendStatus: IDirectoryClientArgument['relationshipsUpdate']['friendStatus'] = { id, online: 'delete' };
+		if (newRel.relationship.type === 'friend') {
+			const friendAccount = accountManager.getAccountById(id);
+			const actualStatus = friendAccount?.relationship.getStatus();
+			if (actualStatus != null) {
+				friendStatus = actualStatus;
+			}
+		}
+		this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+			relationship: this.cacheToClientData(newRel),
+			friendStatus,
+		});
 	}
 
 	private remove(id: AccountId): void {
@@ -232,7 +246,10 @@ export class AccountRelationship {
 		if (existing?.relationship.type === 'oneSidedBlock' && existing.relationship.from === id) {
 			return;
 		}
-		this.account.associatedConnections.sendMessage('relationshipsUpdate', { id, type: 'none' });
+		this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+			relationship: { id, type: 'none' },
+			friendStatus: { id, online: 'delete' },
+		});
 	}
 
 	private loaded = false;

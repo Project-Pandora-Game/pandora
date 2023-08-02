@@ -190,7 +190,10 @@ export const DirectoryClientSchema = {
 		response: null,
 	},
 	relationshipsUpdate: {
-		request: ZodCast<IAccountRelationship | { id: AccountId; type: 'none'; }>(),
+		request: ZodCast<{
+			relationship: IAccountRelationship | { id: AccountId; type: 'none'; };
+			friendStatus: IAccountFriendStatus | { id: AccountId; online: 'delete'; };
+		}>(),
 		response: null,
 	},
 } as const;

@@ -45,19 +45,30 @@ export const RelationshipContext = new class RelationshipContext extends TypedEv
 		FRIEND_STATUS.value = filtered;
 	}
 
-	public handleRelationshipsUpdate(data: IDirectoryClientArgument['relationshipsUpdate']) {
+	public handleRelationshipsUpdate({ relationship, friendStatus }: IDirectoryClientArgument['relationshipsUpdate']) {
 		if (this._useQueue) {
-			this._queue.push(() => this.handleRelationshipsUpdate(data));
+			this._queue.push(() => this.handleRelationshipsUpdate({ relationship, friendStatus }));
 			return;
 		}
-		const filtered = RELATIONSHIPS.value.filter((relationship) => relationship.id !== data.id);
-		if (data.type !== 'none') {
-			filtered.push(data);
-			if (filtered.length > RELATIONSHIPS.value.length && data.type === 'incoming') {
-				this.emit('incoming', { ...data, type: 'incoming' });
+		// Update relationship side
+		{
+			const filtered = RELATIONSHIPS.value.filter((currentRelationship) => currentRelationship.id !== relationship.id);
+			if (relationship.type !== 'none') {
+				filtered.push(relationship);
+				if (filtered.length > RELATIONSHIPS.value.length && relationship.type === 'incoming') {
+					this.emit('incoming', { ...relationship, type: 'incoming' });
+				}
 			}
+			RELATIONSHIPS.value = filtered;
 		}
-		RELATIONSHIPS.value = filtered;
+		// Update friend side
+		{
+			const filtered = FRIEND_STATUS.value.filter((status) => status.id !== friendStatus.id);
+			if (friendStatus.online !== 'delete') {
+				filtered.push(friendStatus);
+			}
+			FRIEND_STATUS.value = filtered;
+		}
 	}
 
 	public handleLogout() {

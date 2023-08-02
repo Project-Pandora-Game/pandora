@@ -213,6 +213,7 @@ export class Shard {
 		this.logger.info('Timed out');
 		this.stopping = true;
 		ConnectionManagerClient.onShardListChange();
+		Assert(this.shardConnection == null);
 		ShardManager.deleteShard(this.id)
 			.catch((err) => {
 				this.logger.fatal('Failed to delete timed-out shard', err);
@@ -224,9 +225,19 @@ export class Shard {
 		this.stopping = true;
 		ConnectionManagerClient.onShardListChange();
 		if (this.shardConnection) {
-			await this.shardConnection.awaitResponse('stop', {});
+			this.logger.debug('Requesting clean stop from shard');
+			await this.shardConnection.awaitResponse('stop', {})
+				.then(() => {
+					this.logger.debug('Shard reported successful stop');
+				}, (err) => {
+					this.logger.warning('Shard stop error', err);
+				});
+			this.setConnection(null);
 		}
-		await ShardManager.deleteShard(this.id);
+		ShardManager.deleteShard(this.id)
+			.catch((err) => {
+				this.logger.fatal('Failed to delete stopping shard', err);
+			});
 	}
 
 	public async onDelete(attemptReassign: boolean): Promise<void> {

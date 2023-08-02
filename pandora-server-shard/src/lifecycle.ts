@@ -30,7 +30,7 @@ async function StopGracefully(): Promise<IEmpty> {
 	// The result of promise from graceful stop is used by Directory, disconnect afterwards
 	setTimeout(() => {
 		DirectoryConnector?.disconnect();
-	}, 200);
+	}, 500);
 	return {};
 }
 

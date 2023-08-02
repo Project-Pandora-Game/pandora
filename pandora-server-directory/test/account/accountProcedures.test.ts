@@ -15,15 +15,17 @@ beforeAll(async () => {
 	const account = await accountManager.createAccount(TEST_USERNAME, 'test', TEST_EMAIL);
 	expect(account).toBeInstanceOf(Account);
 	testAccountId = (account as Account).id;
-	accountManager.onDestroy();
+	await accountManager.onDestroyCharacters();
+	accountManager.onDestroyAccounts();
 });
 
 beforeEach(() => {
 	jest.useFakeTimers();
 	accountManager.init();
 });
-afterEach(() => {
-	accountManager.onDestroy();
+afterEach(async () => {
+	await accountManager.onDestroyCharacters();
+	accountManager.onDestroyAccounts();
 	jest.useRealTimers();
 });
 

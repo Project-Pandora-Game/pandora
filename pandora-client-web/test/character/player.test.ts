@@ -37,7 +37,7 @@ describe('PlayerCharacter', () => {
 	}
 });
 
-function MockPlayerData(overrides?: Partial<ICharacterData & ICharacterRoomData>): ICharacterData {
+function MockPlayerData(overrides?: Partial<ICharacterData & ICharacterRoomData>): ICharacterData & ICharacterRoomData {
 	return {
 		id: 'c123',
 		accountId: 0,
@@ -46,6 +46,7 @@ function MockPlayerData(overrides?: Partial<ICharacterData & ICharacterRoomData>
 		accessId: 'mockID',
 		settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 		position: [CharacterSize.WIDTH / 2, 0],
+		isOnline: true,
 		...overrides,
 	};
 }

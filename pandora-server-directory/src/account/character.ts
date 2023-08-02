@@ -12,9 +12,6 @@ function GenerateConnectSecret(): string {
 	return nanoid(8);
 }
 
-// TODO: On change
-// account.onCharacterListChange();
-
 export class CharacterInfo {
 	public readonly id: CharacterId;
 	public readonly account: Account;
@@ -54,7 +51,7 @@ export class CharacterInfo {
 	}
 
 	public getInfoState(): string {
-		if (this._loadedCharacter?.assignedClient != null)
+		if (this.isOnline())
 			return 'connected';
 
 		if (this.inCreation)
@@ -292,8 +289,12 @@ export class Character {
 		Assert(this.assignedClient == null);
 
 		// Assign new connection
+		const isChange = this._connectSecret == null;
 		this._connectSecret = GenerateConnectSecret();
-		this.baseInfo.account.relationship.updateStatus();
+		if (isChange) {
+			this.baseInfo.account.onCharacterListChange();
+			this.baseInfo.account.relationship.updateStatus();
+		}
 
 		// If we are already on shard, update the secret on the shard
 		await this.currentShard?.update('characters');
@@ -335,12 +336,14 @@ export class Character {
 		Assert(this.assignedClient == null);
 
 		// Mark the character as offline
-		this._connectSecret = null;
-		this.baseInfo.account.relationship.updateStatus();
-
-		Assert(!this._disposed || this.assignment == null);
+		if (this._connectSecret != null) {
+			this._connectSecret = null;
+			this.baseInfo.account.onCharacterListChange();
+			this.baseInfo.account.relationship.updateStatus();
+		}
 
 		// Perform action specific to the current assignment
+		Assert(!this._disposed || this.assignment == null);
 		if (this.assignment == null) {
 			// If we have no assignment, then there is nothing to do
 		} else if (this.assignment.type === 'shard') {
@@ -395,6 +398,7 @@ export class Character {
 
 			// Do the rest
 			this._connectSecret = connectionSecret;
+			this.baseInfo.account.onCharacterListChange();
 			this.baseInfo.account.relationship.updateStatus();
 
 			return;
@@ -405,6 +409,7 @@ export class Character {
 		// Restore access id and connection secret
 		this.accessId = accessId;
 		this._connectSecret = connectionSecret;
+		this.baseInfo.account.onCharacterListChange();
 		this.baseInfo.account.relationship.updateStatus();
 
 		// We are ready to connect to shard, but check again if we can to avoid race conditions

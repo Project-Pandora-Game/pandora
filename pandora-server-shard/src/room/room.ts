@@ -302,7 +302,12 @@ export class Room extends ServerRoom<IShardClient> {
 		this._getCharacterActionInfo(character.id);
 	}
 
-	public characterRemove(character: Character): void {
+	/**
+	 * Removes a character from the room
+	 * @param character - The character being removed
+	 * @param updateCharacterOutsideRoom - If the character should be updated to be valid outside of a room (should be false only if character is removed as part of being unloaded)
+	 */
+	public characterRemove(character: Character, updateCharacterOutsideRoom: boolean): void {
 		this.runWithSuppressedUpdates(() => {
 			// Remove character
 			let roomState = this.roomState.currentState;
@@ -314,7 +319,9 @@ export class Room extends ServerRoom<IShardClient> {
 
 			// Update the target character
 			character.setRoom(null, characterAppearance);
-			character.onAppearanceChanged();
+			if (updateCharacterOutsideRoom) {
+				character.onAppearanceChanged();
+			}
 
 			// Update anyone remaining in the room
 			this.roomState.setState(roomState);

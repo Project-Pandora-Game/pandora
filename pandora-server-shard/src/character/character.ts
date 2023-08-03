@@ -46,6 +46,12 @@ export class Character {
 	private _context: {
 		inRoom: false;
 		globalState: AssetFrameworkGlobalStateContainer;
+		/**
+		 * Bundle to use when appearance wasn't modified.
+		 * It is used to preserve room devices
+		 * during character load or unload.
+		 */
+		saveOverride?: AppearanceBundle;
 	} | {
 		inRoom: true;
 		room: Room;
@@ -73,6 +79,7 @@ export class Character {
 			this._context = {
 				inRoom: false,
 				globalState: this._createIsolatedState(appearance),
+				saveOverride: appearance,
 			};
 		}
 	}
@@ -245,7 +252,7 @@ export class Character {
 			}
 		}
 		if (this.room !== room) {
-			this.room?.characterRemove(this);
+			this.room?.characterRemove(this, true);
 
 			if (room) {
 				Assert(!this._context.inRoom);
@@ -319,7 +326,7 @@ export class Character {
 	}
 
 	public onRemove(): void {
-		this.room?.characterRemove(this);
+		this.room?.characterRemove(this, false);
 		this.invalidate('remove');
 	}
 
@@ -443,9 +450,13 @@ export class Character {
 
 		for (const key of keys) {
 			if (key === 'appearance') {
-				const characterState = this.getGlobalState().currentState.getCharacterState(this.id);
-				AssertNotNullable(characterState);
-				data.appearance = characterState.exportToBundle();
+				if (!this._context.inRoom && this._context.saveOverride != null) {
+					data.appearance = this._context.saveOverride;
+				} else {
+					const characterState = this.getGlobalState().currentState.getCharacterState(this.id);
+					AssertNotNullable(characterState);
+					data.appearance = characterState.exportToBundle();
+				}
 			} else {
 				(data as Record<string, unknown>)[key] = this.data[key];
 			}
@@ -487,6 +498,11 @@ export class Character {
 
 	public onAppearanceChanged(): void {
 		this.modified.add('appearance');
+
+		if (!this._context.inRoom && this._context.saveOverride != null) {
+			this.logger.debug('Cleared appearance save override');
+			delete this._context.saveOverride;
+		}
 
 		this.sendUpdateDebounced();
 	}

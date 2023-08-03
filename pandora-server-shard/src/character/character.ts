@@ -216,6 +216,10 @@ export class Character {
 				this._clientTimeout = null;
 			}
 			if (this.isOnline !== oldOnline) {
+				// Clear waiting messages when going offline
+				if (!this.isOnline) {
+					this.messageQueue.length = 0;
+				}
 				this.room?.sendUpdateToAllInRoom({
 					characters: {
 						[this.id]: {
@@ -521,10 +525,13 @@ export class Character {
 
 	//#region Chat messages
 
-	private messageQueue: IChatRoomMessage[] = [];
+	private readonly messageQueue: IChatRoomMessage[] = [];
 
 	public queueMessages(messages: IChatRoomMessage[]): void {
 		if (messages.length === 0)
+			return;
+		// Do not store messages for offline characters
+		if (!this.isOnline)
 			return;
 		this.messageQueue.push(...messages);
 		this.connection?.sendMessage('chatRoomMessage', {
@@ -535,7 +542,7 @@ export class Character {
 	public onMessageAck(time: number): void {
 		const nextIndex = this.messageQueue.findIndex((m) => m.time > time);
 		if (nextIndex < 0) {
-			this.messageQueue = [];
+			this.messageQueue.length = 0;
 		} else {
 			this.messageQueue.splice(0, nextIndex);
 		}

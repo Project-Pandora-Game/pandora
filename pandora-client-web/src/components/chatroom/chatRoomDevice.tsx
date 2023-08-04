@@ -381,7 +381,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	const debugConfig = useDebugConfig();
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
 	const characterFilters = useCharacterDisplayFilters(character);
-	const filters = [...playerFilters, ...characterFilters];
+	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
 
 	const devicePivot = item.asset.definition.pivot;
 	const x = devicePivot.x + layer.characterPosition.offsetX;

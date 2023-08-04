@@ -77,15 +77,15 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 		if (this._character === character)
 			return;
 		if (this._character) {
-			Assert(this._character.assignedConnection === this);
-			this._character.assignedConnection = null;
+			Assert(this._character.assignedClient === this);
+			this._character.assignedClient = null;
 			this._character = null;
 		}
 		if (character) {
-			Assert(this._account === character.account);
-			Assert(character.assignedConnection == null);
+			Assert(this._account === character.baseInfo.account);
+			Assert(character.assignedClient == null);
 			this._character = character;
-			character.assignedConnection = this;
+			character.assignedClient = this;
 		}
 	}
 

@@ -131,7 +131,17 @@ export class Shard {
 			data.rooms.map((roomData) => RoomManager
 				.loadRoom(roomData.id)
 				.then((room) => {
-					return room?.shardReconnect(this, roomData.accessId);
+					if (!room)
+						return;
+
+					const characterAccessIds = new Map<CharacterId, string>();
+					for (const character of data.characters) {
+						if (character.room === room.id) {
+							characterAccessIds.set(character.id, character.accessId);
+						}
+					}
+
+					return room.shardReconnect(this, roomData.accessId, characterAccessIds);
 				}),
 			),
 		);
@@ -154,7 +164,7 @@ export class Shard {
 				shard: this,
 				accessId: characterData.accessId,
 				connectionSecret: characterData.connectSecret,
-				room,
+				room: room ?? null,
 			});
 
 			this.logger.debug('Added character during registration', character.id);
@@ -203,6 +213,7 @@ export class Shard {
 		this.logger.info('Timed out');
 		this.stopping = true;
 		ConnectionManagerClient.onShardListChange();
+		Assert(this.shardConnection == null);
 		ShardManager.deleteShard(this.id)
 			.catch((err) => {
 				this.logger.fatal('Failed to delete timed-out shard', err);
@@ -214,9 +225,19 @@ export class Shard {
 		this.stopping = true;
 		ConnectionManagerClient.onShardListChange();
 		if (this.shardConnection) {
-			await this.shardConnection.awaitResponse('stop', {});
+			this.logger.debug('Requesting clean stop from shard');
+			await this.shardConnection.awaitResponse('stop', {})
+				.then(() => {
+					this.logger.debug('Shard reported successful stop');
+				}, (err) => {
+					this.logger.warning('Shard stop error', err);
+				});
+			this.setConnection(null);
 		}
-		await ShardManager.deleteShard(this.id);
+		ShardManager.deleteShard(this.id)
+			.catch((err) => {
+				this.logger.fatal('Failed to delete stopping shard', err);
+			});
 	}
 
 	public async onDelete(attemptReassign: boolean): Promise<void> {
@@ -253,11 +274,7 @@ export class Shard {
 		await Promise.all(
 			[...this.characters.values()]
 				.map(async (character) => {
-					await character.setShard(null);
-					if (attemptReassign) {
-						await character.autoconnect();
-						character.assignedConnection?.sendConnectionStateUpdate();
-					}
+					await character.shardChange(attemptReassign);
 				}),
 		);
 		this.logger.info('Deleted');
@@ -349,7 +366,7 @@ export class Shard {
 		for (const [id, character] of this.characters) {
 			result.push({
 				id,
-				account: character.account.getShardAccountDefinition(),
+				account: character.baseInfo.account.getShardAccountDefinition(),
 				accessId: character.accessId,
 				connectSecret: character.connectSecret,
 				room: character.room ? character.room.id : null,

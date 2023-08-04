@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountRelationship, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
+import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountRelationship, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
@@ -23,7 +23,7 @@ export class AccountRelationship {
 	constructor(account: Account) {
 		this.account = account;
 		this.logger = GetLogger('AccountRelationship').prefixMessages(`[${account.id}]`);
-		this.account.associatedConnections.onAny(this.onConnection.bind(this));
+		this.account.associatedConnections.onAny(() => this.updateStatus());
 	}
 
 	private get(id: AccountId): RelationshipCache | undefined {
@@ -37,16 +37,16 @@ export class AccountRelationship {
 		if (this.account.data.settings.hideOnlineStatus) {
 			return null;
 		}
-		const online = this.account.isInUse();
+		const online = this.account.isOnline();
 		return {
 			id: this.account.id,
 			online,
 			characters: !online ? [] : [...this.account.characters.values()]
-				.filter((char) => char.isInUse())
+				.filter((char) => char.isOnline())
 				.map((char) => ({
 					id: char.id,
 					name: char.data.name,
-					inRoom: char.room?.isPublic ? char.room.id : undefined,
+					inRoom: char.loadedCharacter?.room?.isPublic ? char.loadedCharacter.room.id : undefined,
 				})),
 		};
 	}
@@ -85,9 +85,11 @@ export class AccountRelationship {
 		}
 		if (this.account.data.settings.allowDirectMessagesFrom === 'room') {
 			for (const char of this.account.characters.values()) {
-				if (!char.room) continue;
+				const room = char.loadedCharacter?.room;
+				if (!room) continue;
 				for (const char2 of from.characters.values()) {
-					if (char.room.id === char2.room?.id) {
+					const room2 = char2?.loadedCharacter?.room;
+					if (room.id === room2?.id) {
 						return true;
 					}
 				}
@@ -218,10 +220,24 @@ export class AccountRelationship {
 			return;
 
 		if (existing?.relationship.type === 'mutualBlock' && newRel.relationship.type === 'oneSidedBlock') {
-			this.account.associatedConnections.sendMessage('relationshipsUpdate', { id, type: 'none' });
+			this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+				relationship: { id, type: 'none' },
+				friendStatus: { id, online: 'delete' },
+			});
 			return;
 		}
-		this.account.associatedConnections.sendMessage('relationshipsUpdate', this.cacheToClientData(newRel));
+		let friendStatus: IDirectoryClientArgument['relationshipsUpdate']['friendStatus'] = { id, online: 'delete' };
+		if (newRel.relationship.type === 'friend') {
+			const friendAccount = accountManager.getAccountById(id);
+			const actualStatus = friendAccount?.relationship.getStatus();
+			if (actualStatus != null) {
+				friendStatus = actualStatus;
+			}
+		}
+		this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+			relationship: this.cacheToClientData(newRel),
+			friendStatus,
+		});
 	}
 
 	private remove(id: AccountId): void {
@@ -230,7 +246,10 @@ export class AccountRelationship {
 		if (existing?.relationship.type === 'oneSidedBlock' && existing.relationship.from === id) {
 			return;
 		}
-		this.account.associatedConnections.sendMessage('relationshipsUpdate', { id, type: 'none' });
+		this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+			relationship: { id, type: 'none' },
+			friendStatus: { id, online: 'delete' },
+		});
 	}
 
 	private loaded = false;
@@ -275,13 +294,6 @@ export class AccountRelationship {
 			updated,
 			relationship,
 		});
-	}
-
-	private onConnection(): void {
-		if (!this.loaded) {
-			return;
-		}
-		this.updateStatus();
 	}
 
 	public updateStatus(): void {

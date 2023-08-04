@@ -13,6 +13,7 @@ import { Character, useCharacterData } from '../../character/character';
 import { CharacterSafemodeWarningContent, useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
 import { DeviceOverlayToggle } from './chatRoomDevice';
 import { useObservable } from '../../observable';
+import { ICharacterRoomData } from 'pandora-common';
 
 export function ChatroomControls(): ReactElement | null {
 	const roomInfo = useChatRoomInfo();
@@ -60,7 +61,7 @@ export function ChatroomControls(): ReactElement | null {
 	);
 }
 
-function DisplayCharacter({ char }: { char: Character; }): ReactElement {
+function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): ReactElement {
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
@@ -70,6 +71,7 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 	const data = useCharacterData(char);
 	const state = useCharacterState(chatroom, char.id);
 	const inSafemode = state?.safemode != null;
+	const isOnline = data.isOnline;
 
 	const isPlayer = char.id === playerId;
 
@@ -83,6 +85,11 @@ function DisplayCharacter({ char }: { char: Character; }): ReactElement {
 						<span> / { data.id } / { data.accountId }</span>
 					</span>
 				</span>
+				{ isOnline ? null : (
+					<span className='offline'>
+						Offline
+					</span>
+				) }
 				{ !inSafemode ? null : (
 					<span className='safemode'>
 						<CharacterSafemodeWarningContent />

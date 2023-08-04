@@ -67,6 +67,12 @@
 					background: $theme-warning;
 					padding: 0 0.5em;
 				}
+
+				&.offline {
+					background-color: $grey-light;
+					padding: 0 0.5em;
+					font-style: italic;
+				}
 			}
 		}
 	}

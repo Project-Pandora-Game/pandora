@@ -1,9 +1,8 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
-import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataUpdateSchema, CharacterIdSchema, ICharacterData } from '../character';
-import { IDirectoryShardUpdate, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
-import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom';
+import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataSchema, CharacterDataUpdateSchema, CharacterIdSchema } from '../character';
+import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
+import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
 import { z } from 'zod';
-import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 
 export const ChatRoomDataAccessSchema = ChatRoomDataSchema.pick({ id: true, accessId: true });
@@ -12,6 +11,7 @@ export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
+import type { } from '../chatroom/chat';
 
 export const ShardDirectorySchema = {
 	shardRegister: {
@@ -23,46 +23,53 @@ export const ShardDirectorySchema = {
 			disconnectCharacters: z.array(CharacterIdSchema),
 			rooms: z.array(ShardChatRoomDefinitionSchema.pick({ id: true, accessId: true })),
 		}),
-		response: ZodCast<IDirectoryShardUpdate & {
-			shardId: string;
-		}>(),
+		response: DirectoryShardUpdateSchema.extend({
+			shardId: z.string(),
+		}),
 	},
 	shardRequestStop: {
 		request: z.object({}),
 		response: null,
 	},
-	characterDisconnect: {
+	characterClientDisconnect: {
 		request: z.object({
 			id: CharacterIdSchema,
-			reason: z.enum(['timeout', 'error']),
+			reason: z.enum(['timeout']),
 		}),
 		response: null,
 	},
-	roomUnload: {
+	characterError: {
+		request: z.object({
+			id: CharacterIdSchema,
+		}),
+		response: null,
+	},
+	roomError: {
 		request: z.object({
 			id: RoomIdSchema,
-			reason: z.enum(['error']),
 		}),
 		response: null,
 	},
 
 	createCharacter: {
 		request: CharacterDataIdSchema,
-		response: ZodCast<ICharacterData>(),
+		response: CharacterDataSchema,
 	},
 
 	//#region Database
 	getCharacter: {
 		request: CharacterDataAccessSchema,
-		response: ZodCast<ICharacterData>(),
+		response: CharacterDataSchema,
 	},
 	setCharacter: {
 		request: CharacterDataUpdateSchema,
-		response: ZodCast<{ result: 'success' | 'invalidAccessId'; }>(),
+		response: z.object({
+			result: z.enum(['success', 'invalidAccessId']),
+		}),
 	},
 	getChatRoom: {
 		request: ChatRoomDataAccessSchema,
-		response: ZodCast<IChatRoomData>(),
+		response: ChatRoomDataSchema,
 	},
 	setChatRoom: {
 		request: z.object({
@@ -70,7 +77,9 @@ export const ShardDirectorySchema = {
 			accessId: z.string(),
 			data: ChatRoomDataShardUpdateSchema,
 		}),
-		response: ZodCast<{ result: 'success' | 'invalidAccessId'; }>(),
+		response: z.object({
+			result: z.enum(['success', 'invalidAccessId']),
+		}),
 	},
 	//#endregion
 } as const;

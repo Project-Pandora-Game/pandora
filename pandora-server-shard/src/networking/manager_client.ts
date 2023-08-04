@@ -57,8 +57,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return;
 		connection.sendLoadMessage();
 		connection.character.sendAllPendingMessages();
-
-		logger.debug(`Client ${connection.id} connected to character ${connection.character.id}`);
 	}
 
 	/** Handle disconnecting client */

@@ -247,6 +247,7 @@ export class Room extends ServerRoom<IShardClient> {
 			accountId: c.accountId,
 			settings: c.settings,
 			position: c.position,
+			isOnline: c.isOnline,
 		};
 	}
 
@@ -264,7 +265,7 @@ export class Room extends ServerRoom<IShardClient> {
 		return new RoomInventory(state);
 	}
 
-	public characterEnter(character: Character, appearance: AppearanceBundle): void {
+	public characterAdd(character: Character, appearance: AppearanceBundle): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
 		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
@@ -296,12 +297,17 @@ export class Room extends ServerRoom<IShardClient> {
 			});
 		});
 
-		this.logger.debug(`Character ${character.id} entered`);
+		this.logger.debug(`Character ${character.id} added`);
 		// Make sure action info is in cache
 		this._getCharacterActionInfo(character.id);
 	}
 
-	public characterLeave(character: Character): void {
+	/**
+	 * Removes a character from the room
+	 * @param character - The character being removed
+	 * @param updateCharacterOutsideRoom - If the character should be updated to be valid outside of a room (should be false only if character is removed as part of being unloaded)
+	 */
+	public characterRemove(character: Character, updateCharacterOutsideRoom: boolean): void {
 		this.runWithSuppressedUpdates(() => {
 			// Remove character
 			let roomState = this.roomState.currentState;
@@ -313,7 +319,9 @@ export class Room extends ServerRoom<IShardClient> {
 
 			// Update the target character
 			character.setRoom(null, characterAppearance);
-			character.onAppearanceChanged();
+			if (updateCharacterOutsideRoom) {
+				character.onAppearanceChanged();
+			}
 
 			// Update anyone remaining in the room
 			this.roomState.setState(roomState);
@@ -327,7 +335,7 @@ export class Room extends ServerRoom<IShardClient> {
 			this.status.delete(character.id);
 			this._cleanActionCache(character.id);
 		});
-		this.logger.debug(`Character ${character.id} left`);
+		this.logger.debug(`Character ${character.id} removed`);
 	}
 
 	public sendUpdateToAllInRoom(data: IChatRoomUpdate): void {

@@ -1,7 +1,6 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
 import { CharacterIdSchema } from '../character';
-import { ChatRoomDataSchema, RoomId, RoomIdSchema } from '../chatroom/room';
-import { IEmpty } from './empty';
+import { ChatRoomDataSchema, RoomIdSchema } from '../chatroom/room';
 import type { IChatRoomMessageDirectoryAction } from '../chatroom';
 import { z } from 'zod';
 import { AccountRoleInfoSchema } from '../account';
@@ -19,7 +18,8 @@ export const ShardCharacterDefinitionSchema = z.object({
 	id: CharacterIdSchema,
 	account: ShardAccountDefinitionSchema,
 	accessId: z.string(),
-	connectSecret: z.string(),
+	/** Secret for client to connect; `null` means this character is only loaded in room, but not connected to ("offline") */
+	connectSecret: z.string().nullable(),
 	room: RoomIdSchema.nullable(),
 });
 export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionSchema>;
@@ -32,23 +32,24 @@ export const ShardChatRoomDefinitionSchema = ChatRoomDataSchema.pick({
 });
 export type IShardChatRoomDefinition = z.infer<typeof ShardChatRoomDefinitionSchema>;
 
-export type IDirectoryShardUpdate = {
+export const DirectoryShardUpdateSchema = z.object({
 	/** List of characters connected to this shard (both outside and in room) */
-	characters: IShardCharacterDefinition[];
+	characters: ShardCharacterDefinitionSchema.array(),
 	/** List of rooms which exist on this shard */
-	rooms: IShardChatRoomDefinition[];
-	messages: Record<RoomId, IChatRoomMessageDirectoryAction[]>;
-};
+	rooms: ShardChatRoomDefinitionSchema.array(),
+	messages: z.record(RoomIdSchema, ZodCast<IChatRoomMessageDirectoryAction>().array()),
+});
+export type IDirectoryShardUpdate = z.infer<typeof DirectoryShardUpdateSchema>;
 
 /** Directory->Shard messages */
 export const DirectoryShardSchema = {
 	update: {
-		request: ZodCast<Partial<IDirectoryShardUpdate>>(),
-		response: ZodCast<IEmpty>(),
+		request: DirectoryShardUpdateSchema.partial(),
+		response: z.object({}),
 	},
 	stop: {
-		request: ZodCast<IEmpty>(),
-		response: ZodCast<IEmpty>(),
+		request: z.object({}),
+		response: z.object({}),
 	},
 	//#region Room manipulation
 	roomCheckCanEnter: {

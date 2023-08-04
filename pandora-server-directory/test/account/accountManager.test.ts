@@ -34,16 +34,19 @@ describe('AccountManager', () => {
 		// Make sure at least one account is loaded already before testing
 		await expect(accountManager.loadAccountByUsername('backgroundAccount')).resolves.toBeInstanceOf(Account);
 	});
-	afterEach(() => {
-		accountManager.onDestroy();
+	afterEach(async () => {
+		await accountManager.onDestroyCharacters();
+		accountManager.onDestroyAccounts();
 		jest.useRealTimers();
 	});
 
-	it('Doesn\'t crash on double init and double destroy', () => {
+	it('Doesn\'t crash on double init and double destroy', async () => {
 		accountManager.init();
 		accountManager.init();
-		accountManager.onDestroy();
-		accountManager.onDestroy();
+		await accountManager.onDestroyCharacters();
+		accountManager.onDestroyAccounts();
+		await accountManager.onDestroyCharacters();
+		accountManager.onDestroyAccounts();
 	});
 
 	describe('createAccount()', () => {

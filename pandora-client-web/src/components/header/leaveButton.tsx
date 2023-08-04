@@ -7,7 +7,7 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { EMPTY, GetLogger, IChatRoomFullInfo } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { useLogout } from '../../networking/account_manager';
-import { useCharacterRestrictionsManager, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
+import { useCharacterIsInChatroom, useCharacterRestrictionsManager, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { PlayerCharacter } from '../../character/player';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
@@ -33,11 +33,23 @@ export function LeaveButton() {
 
 function DialogLeave(): ReactElement {
 	const closeDialog = useContext(leaveButtonContext);
+	const inRoom = useCharacterIsInChatroom();
 
 	return (
 		<ModalDialog>
-			<Column className='LeaveDialog'>
+			<Column className='LeaveDialog' alignX='center'>
 				<ChatRoomLeave />
+				{
+					inRoom ? (
+						<span>
+							<strong>
+								Warning:
+								Changing character or logging out<br />
+								will leave the character inside the current room
+							</strong>
+						</span>
+					) : null
+				}
 				<CharacterLeave />
 				<AccountLeave />
 				<Button onClick={ closeDialog }>Cancel</Button>

@@ -57,6 +57,12 @@ export const IS_NODE = !IS_BROWSER;
 /** Immutable, always empty array */
 export const EMPTY_ARRAY: readonly never[] = Object.freeze([]);
 
+/** A `true` usable to prevent narrowing */
+export const NOT_NARROWING_TRUE: boolean = true;
+
+/** A `false` usable to prevent narrowing */
+export const NOT_NARROWING_FALSE: boolean = false;
+
 export function Assert(condition: unknown, msg?: string): asserts condition {
 	if (!condition) {
 		throw new Error(msg ? `Assetion failed: ${msg}` : 'Assertion failed');
@@ -105,6 +111,15 @@ export function ParseArrayNotEmpty<T>(value: T[]): [T, ...T[]] {
 export type ArrayCompressType<T, K extends readonly (keyof T)[], Transform extends Partial<Record<keyof T, any>> = { /* empty */ }> = {
 	[N in keyof K]: K[N] extends keyof Transform ? Transform[K[N]] : K[N] extends keyof T ? T[K[N]] : never;
 };
+
+export function ArrayToRecordKeys<const T extends string, const V>(keys: readonly T[], value: V): Record<T, V> {
+	// @ts-expect-error: Created to match in loop
+	const result: Record<T, V> = {};
+
+	keys.forEach((v) => result[v] = value);
+
+	return result;
+}
 
 export function NaturalListJoin(list: string[]): string {
 	let res = list.pop() ?? '';

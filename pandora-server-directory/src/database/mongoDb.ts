@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
@@ -312,6 +312,40 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result.value?.accessId ?? null;
 	}
 
+	public async getCharactersInRoom(roomId: RoomId): Promise<{
+		accountId: AccountId;
+		characterId: CharacterId;
+	}[]> {
+		const chars: {
+			accountId: AccountId;
+			characterId: CharacterId;
+		}[] = [];
+
+		const accounts = await this._accounts
+			.find({
+				characters: {
+					$elemMatch: {
+						currentRoom: roomId,
+					},
+				},
+			})
+			.project<Pick<DatabaseAccountWithSecure, 'id' | 'characters'>>({ id: 1, characters: 1 })
+			.toArray();
+
+		for (const account of accounts) {
+			for (const character of account.characters) {
+				if (character.currentRoom === roomId) {
+					chars.push({
+						accountId: account.id,
+						characterId: character.id,
+					});
+				}
+			}
+		}
+
+		return chars;
+	}
+
 	//#region ChatRoom
 
 	public async getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null> {
@@ -325,7 +359,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return await this._chatrooms.find({
 			owners: { $elemMatch: { $in: [account] } },
 		})
-			.project<Pick<IChatRoomDirectoryData, 'id' | 'config' | 'owners'>>({ id: 1, config: 1, owners: 1 })
+			.project<Pick<IChatRoomDirectoryData, (typeof CHATROOM_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(CHATROOM_DIRECTORY_PROPERTIES, 1))
 			.toArray();
 	}
 
@@ -340,7 +374,7 @@ export default class MongoDatabase implements PandoraDatabase {
 				},
 			],
 		})
-			.project<Pick<IChatRoomDirectoryData, 'id' | 'config' | 'owners'>>({ id: 1, config: 1, owners: 1 })
+			.project<Pick<IChatRoomDirectoryData, (typeof CHATROOM_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(CHATROOM_DIRECTORY_PROPERTIES, 1))
 			.toArray();
 	}
 

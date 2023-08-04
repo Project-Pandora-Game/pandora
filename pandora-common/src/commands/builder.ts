@@ -77,7 +77,6 @@ export class CommandBuilder<
 			handler = options;
 			options = {};
 		}
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!);
 		return this.parent.build(executor);
 	}

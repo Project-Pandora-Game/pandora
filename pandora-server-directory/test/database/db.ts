@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import _ from 'lodash';
 import { Assert, AssertNotNullable, logConfig, LogLevel } from 'pandora-common';
 import { CreateAccountData } from '../../src/account/account';

@@ -4,9 +4,7 @@
 		"config:recommended",
 		":disableDependencyDashboard",
 		":prHourlyLimitNone",
-		":rebaseStalePrs",
-		"group:recommended",
-		"group:allNonMajor"
+		":rebaseStalePrs"
 	],
 	"autoApprove": true,
 	"rangeStrategy": "pin",
@@ -30,6 +28,16 @@
 				"@types/node"
 			],
 			"allowedVersions": "^18.x"
+		},
+		{
+			"groupName": "all patched dependencies",
+			"groupSlug": "all-patch",
+			"matchPackagePatterns": [
+				"*"
+			],
+			"matchUpdateTypes": [
+				"patch"
+			]
 		}
 	]
 }

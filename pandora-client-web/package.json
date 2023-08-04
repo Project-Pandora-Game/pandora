@@ -54,7 +54,7 @@
 		"@types/delaunator": "5.0.0",
 		"@types/jest": "29.5.1",
 		"@types/lodash": "4.14.195",
-		"@types/node": "18.16.16",
+		"@types/node": "18.17.2",
 		"@types/offscreencanvas": "2019.7.0",
 		"@types/postcss-flexbugs-fixes": "5.0.0",
 		"@types/react": "18.2.7",

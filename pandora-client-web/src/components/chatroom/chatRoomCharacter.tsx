@@ -139,7 +139,7 @@ function ChatRoomCharacterDisplay({
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
 	const characterFilters = useCharacterDisplayFilters(character);
-	const filters = [...playerFilters, ...characterFilters];
+	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
 		const maxY = CalculateCharacterMaxYForBackground(background);

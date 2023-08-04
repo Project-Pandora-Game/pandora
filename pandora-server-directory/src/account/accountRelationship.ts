@@ -85,7 +85,7 @@ export class AccountRelationship {
 		}
 		if (this.account.data.settings.allowDirectMessagesFrom === 'room') {
 			for (const char of this.account.characters.values()) {
-				const room = char?.loadedCharacter?.room;
+				const room = char.loadedCharacter?.room;
 				if (!room) continue;
 				for (const char2 of from.characters.values()) {
 					const room2 = char2?.loadedCharacter?.room;

@@ -112,6 +112,15 @@ export type ArrayCompressType<T, K extends readonly (keyof T)[], Transform exten
 	[N in keyof K]: K[N] extends keyof Transform ? Transform[K[N]] : K[N] extends keyof T ? T[K[N]] : never;
 };
 
+export function ArrayToRecordKeys<const T extends string, const V>(keys: readonly T[], value: V): Record<T, V> {
+	// @ts-expect-error: Created to match in loop
+	const result: Record<T, V> = {};
+
+	keys.forEach((v) => result[v] = value);
+
+	return result;
+}
+
 export function NaturalListJoin(list: string[]): string {
 	let res = list.pop() ?? '';
 	if (list.length > 0) {

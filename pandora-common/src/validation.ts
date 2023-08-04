@@ -37,15 +37,6 @@ export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck
 	});
 }
 
-export function ArrayToTruthyMap<T extends string>(array: readonly T[]): Record<T, true> {
-	// @ts-expect-error: Created to match in loop
-	const result: Record<T, true> = {};
-
-	array.forEach((v) => result[v] = true);
-
-	return result;
-}
-
 /**
  * Checks whether given array includes the element, working as a guard
  * @param array - The array to check in

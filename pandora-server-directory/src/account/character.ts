@@ -180,6 +180,8 @@ export type CharacterAssignment = {
 	shard: Shard;
 } | {
 	// Character is assigned to the same shard the room is, but is not in the room
+	// This state is used when joining a room - the character first needs to be loaded on the same shard as the room
+	// before joining it, so item-specific room checks can be done without worrying about different versions loaded by different shards
 	type: 'room-tracking';
 	room: Room;
 } | {

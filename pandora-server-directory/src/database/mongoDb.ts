@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { DATABASE_URL, DATABASE_NAME } from '../config';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
@@ -359,7 +359,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return await this._chatrooms.find({
 			owners: { $elemMatch: { $in: [account] } },
 		})
-			.project<Pick<IChatRoomDirectoryData, 'id' | 'config' | 'owners' | 'accessId'>>({ id: 1, config: 1, owners: 1, accessId: 1 })
+			.project<Pick<IChatRoomDirectoryData, (typeof CHATROOM_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(CHATROOM_DIRECTORY_PROPERTIES, 1))
 			.toArray();
 	}
 
@@ -374,7 +374,7 @@ export default class MongoDatabase implements PandoraDatabase {
 				},
 			],
 		})
-			.project<Pick<IChatRoomDirectoryData, 'id' | 'config' | 'owners' | 'accessId'>>({ id: 1, config: 1, owners: 1, accessId: 1 })
+			.project<Pick<IChatRoomDirectoryData, (typeof CHATROOM_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(CHATROOM_DIRECTORY_PROPERTIES, 1))
 			.toArray();
 	}
 

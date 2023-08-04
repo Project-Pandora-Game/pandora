@@ -1,10 +1,11 @@
 import { z } from 'zod';
-import { ArrayToTruthyMap, ZodTrimedRegex, ZodTemplateString, HexColorStringSchema, HexColorString } from '../validation';
+import { ZodTrimedRegex, ZodTemplateString, HexColorStringSchema, HexColorString } from '../validation';
 import { cloneDeep } from 'lodash';
 import { AssetManager, ROOM_INVENTORY_BUNDLE_DEFAULT } from '../assets';
 import { CharacterId } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
+import { ArrayToRecordKeys } from '../utility';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
@@ -165,16 +166,16 @@ export const ChatRoomDataSchema = z.object({
 export type IChatRoomData = z.infer<typeof ChatRoomDataSchema>;
 
 export const CHATROOM_DIRECTORY_UPDATEABLE_PROPERTIES = ['config', 'owners'] as const satisfies readonly (keyof IChatRoomData)[];
-export const ChatRoomDataDirectoryUpdateSchema = ChatRoomDataSchema.pick(ArrayToTruthyMap(CHATROOM_DIRECTORY_UPDATEABLE_PROPERTIES)).partial();
+export const ChatRoomDataDirectoryUpdateSchema = ChatRoomDataSchema.pick(ArrayToRecordKeys(CHATROOM_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 export type IChatRoomDataDirectoryUpdate = z.infer<typeof ChatRoomDataDirectoryUpdateSchema>;
 
 export const CHATROOM_SHARD_UPDATEABLE_PROPERTIES = ['inventory'] as const satisfies readonly Exclude<keyof IChatRoomData, ((typeof CHATROOM_DIRECTORY_PROPERTIES)[number])>[];
-export const ChatRoomDataShardUpdateSchema = ChatRoomDataSchema.pick(ArrayToTruthyMap(CHATROOM_SHARD_UPDATEABLE_PROPERTIES)).partial();
+export const ChatRoomDataShardUpdateSchema = ChatRoomDataSchema.pick(ArrayToRecordKeys(CHATROOM_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 export type IChatRoomDataShardUpdate = z.infer<typeof ChatRoomDataShardUpdateSchema>;
 
 export const CHATROOM_DIRECTORY_PROPERTIES = ['id', 'config', 'owners', 'accessId'] as const satisfies readonly (keyof IChatRoomData)[];
 /** Room data from database, only those relevant to Directory */
-export const ChatRoomDirectoryDataSchema = ChatRoomDataSchema.pick(ArrayToTruthyMap(CHATROOM_DIRECTORY_PROPERTIES));
+export const ChatRoomDirectoryDataSchema = ChatRoomDataSchema.pick(ArrayToRecordKeys(CHATROOM_DIRECTORY_PROPERTIES, true));
 /** Room data from database, only those relevant to Directory */
 export type IChatRoomDirectoryData = z.infer<typeof ChatRoomDirectoryDataSchema>;
 

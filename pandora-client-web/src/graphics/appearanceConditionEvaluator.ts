@@ -102,6 +102,9 @@ export class AppearanceConditionEvaluator {
 		let [resX, resY] = [x, y];
 		for (const transform of transforms) {
 			const { type, condition } = transform;
+			if (valueOverrides != null && (type === 'const-shift' || type === 'const-rotate')) {
+				continue;
+			}
 			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c, item))) {
 				continue;
 			}

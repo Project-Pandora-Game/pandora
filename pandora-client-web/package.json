@@ -47,7 +47,7 @@
 	"devDependencies": {
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.10",
 		"@project-pandora-game/sass-loader": "13.2.0",
-		"@testing-library/jest-dom": "5.16.5",
+		"@testing-library/jest-dom": "5.17.0",
 		"@testing-library/react": "14.0.0",
 		"@testing-library/user-event": "14.4.3",
 		"@types/browser-resolve": "2.0.1",

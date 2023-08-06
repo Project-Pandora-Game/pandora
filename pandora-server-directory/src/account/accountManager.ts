@@ -33,9 +33,19 @@ const inUseAccountsMetric = new promClient.Gauge({
 	help: 'Current count of accounts in use',
 });
 
+const onlineAccountsMetric = new promClient.Gauge({
+	name: 'pandora_directory_accounts_online',
+	help: 'Current count of accounts considered online',
+});
+
 const inUseCharactersMetric = new promClient.Gauge({
 	name: 'pandora_directory_characters_in_use',
 	help: 'Current count of characters in use',
+});
+
+const onlineCharactersMetric = new promClient.Gauge({
+	name: 'pandora_directory_characters_online',
+	help: 'Current count of characters considered online',
 });
 
 /** Class that stores all currently logged in or recently used accounts, removing them when needed */
@@ -45,20 +55,33 @@ export class AccountManager {
 		return this._onlineAccounts;
 	}
 
-	public getOnlineCounts(): { onlineAccounts: number; onlineCharacters: number; } {
+	public getOnlineCounts(): {
+		inUseAccounts: number;
+		onlineAccounts: number;
+		inUseCharacters: number;
+		onlineCharacters: number;
+	} {
+		let inUseAccounts = 0;
 		let onlineAccounts = 0;
+		let inUseCharacters = 0;
 		let onlineCharacters = 0;
 		for (const account of this._onlineAccounts) {
 			if (account.isInUse()) {
-				onlineAccounts++;
-				account.characters.forEach((c) => {
-					if (c.isInUse()) {
-						onlineCharacters++;
-					}
-				});
+				inUseAccounts++;
 			}
+			if (account.isOnline()) {
+				onlineAccounts++;
+			}
+			account.characters.forEach((c) => {
+				if (c.isInUse()) {
+					inUseCharacters++;
+				}
+				if (c.isOnline()) {
+					onlineCharacters++;
+				}
+			});
 		}
-		return { onlineAccounts, onlineCharacters };
+		return { inUseAccounts, onlineAccounts, inUseCharacters, onlineCharacters };
 	}
 
 	/** A tick of the manager, happens every `ACCOUNTMANAGER_TICK_INTERVAL` ms */
@@ -72,9 +95,11 @@ export class AccountManager {
 		}
 
 		// Update metrics
-		const { onlineAccounts, onlineCharacters } = this.getOnlineCounts();
-		inUseAccountsMetric.set(onlineAccounts);
-		inUseCharactersMetric.set(onlineCharacters);
+		const { inUseAccounts, onlineAccounts, inUseCharacters, onlineCharacters } = this.getOnlineCounts();
+		inUseAccountsMetric.set(inUseAccounts);
+		onlineAccountsMetric.set(onlineAccounts);
+		inUseCharactersMetric.set(inUseCharacters);
+		onlineCharactersMetric.set(onlineCharacters);
 		DiscordBot.setOnlineStatus({
 			accounts: onlineAccounts,
 			characters: onlineCharacters,
@@ -99,6 +124,8 @@ export class AccountManager {
 		for (const account of this._onlineAccounts) {
 			await account.onManagerDestroy();
 		}
+		inUseCharactersMetric.set(0);
+		onlineCharactersMetric.set(0);
 	}
 
 	public onDestroyAccounts(): void {
@@ -111,6 +138,7 @@ export class AccountManager {
 			this.unloadAccount(account);
 		}
 		inUseAccountsMetric.set(0);
+		onlineAccountsMetric.set(0);
 	}
 
 	/** Create account from received data, adding it to loaded accounts */

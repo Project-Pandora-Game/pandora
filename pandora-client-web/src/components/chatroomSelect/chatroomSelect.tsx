@@ -27,6 +27,7 @@ const TIPS: readonly string[] = [
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`The dragging points to move room devices are invisible, but generally under the item.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
+	`Every single change in the wardrobe happens instantly and is visible to everyone in the room immediately.`,
 ];
 
 export function ChatroomSelect(): ReactElement {

@@ -7,6 +7,7 @@ import { GetDatabase, ICharacterSelfInfoDb } from '../database/databaseProvider'
 import { nanoid } from 'nanoid';
 import { ShardManager } from '../shard/shardManager';
 import { RoomManager } from '../room/roomManager';
+import { ConnectionManagerClient } from '../networking/manager_client';
 
 function GenerateConnectSecret(): string {
 	return nanoid(8);
@@ -296,6 +297,9 @@ export class Character {
 		if (isChange) {
 			this.baseInfo.account.onCharacterListChange();
 			this.baseInfo.account.relationship.updateStatus();
+			if (this.room != null) {
+				ConnectionManagerClient.onRoomListChange();
+			}
 		}
 
 		// If we are already on shard, update the secret on the shard
@@ -342,6 +346,9 @@ export class Character {
 			this._connectSecret = null;
 			this.baseInfo.account.onCharacterListChange();
 			this.baseInfo.account.relationship.updateStatus();
+			if (this.room != null) {
+				ConnectionManagerClient.onRoomListChange();
+			}
 		}
 
 		// Perform action specific to the current assignment

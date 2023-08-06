@@ -95,7 +95,8 @@ export class Room {
 			...this.getBaseInfo(),
 			id: this.id,
 			hasPassword: this.config.password !== null,
-			users: this.characterCount,
+			onlineCharacters: Array.from(this.characters).reduce((current, character) => current + (character.isOnline() ? 1 : 0), 0),
+			totalCharacters: this.characterCount,
 			isOwner: this.isOwner(queryingAccount),
 		});
 	}
@@ -110,6 +111,7 @@ export class Room {
 				id: c.baseInfo.id,
 				accountId: c.baseInfo.account.id,
 				name: c.baseInfo.data.name,
+				isOnline: c.isOnline(),
 			})),
 		});
 	}

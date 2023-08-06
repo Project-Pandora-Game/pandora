@@ -126,8 +126,10 @@ export type IChatRoomListInfo = IChatRoomBaseInfo & {
 	id: RoomId;
 	/** Indicated if a password is available */
 	hasPassword: boolean;
-	/** The amount of users in the chat room */
-	users: number;
+	/** The amount of online characters in the chat room */
+	onlineCharacters: number;
+	/** The amount of characters in the chat room */
+	totalCharacters: number;
 	/** Whether the account that requested the info is owner of this room */
 	isOwner: boolean;
 };
@@ -142,6 +144,7 @@ export type IChatRoomListExtendedInfo = IChatRoomListInfo & Pick<IChatRoomDirect
 		id: CharacterId;
 		accountId: number;
 		name: string;
+		isOnline: boolean;
 	}[];
 };
 

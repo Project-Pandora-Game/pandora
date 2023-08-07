@@ -30,6 +30,6 @@
 		"js-yaml": "4.1.0"
 	},
 	"devDependencies": {
-		"jest": "29.5.0"
+		"jest": "29.6.2"
 	}
 }

@@ -1,6 +1,6 @@
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
 import { AssetsPosePreset, MergePartialAppearancePoses, PartialAppearancePose, WearableAssetType } from '../definitions';
-import { Assert, AssertNotNullable, MemoizeNoArg } from '../../utility';
+import { Assert, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { freeze } from 'immer';
 import { z } from 'zod';

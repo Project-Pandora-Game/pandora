@@ -1,5 +1,6 @@
-import { ZodEffects, ZodString, z } from 'zod';
+import { z } from 'zod';
 import type { AssetId } from '../definitions';
+import { ZodOverridable } from '../../validation';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
 export type Coordinates = z.infer<typeof CoordinatesSchema>;
@@ -7,7 +8,7 @@ export type Coordinates = z.infer<typeof CoordinatesSchema>;
 export const CoordinatesCompressedSchema = z.tuple([CoordinatesSchema.shape.x, CoordinatesSchema.shape.y]);
 export type CoordinatesCompressed = z.infer<typeof CoordinatesCompressedSchema>;
 
-export const BoneNameSchema = z.string();
+export const BoneNameSchema = ZodOverridable(z.string());
 export type BoneName = z.infer<typeof BoneNameSchema>;
 
 export type BoneType = 'pose' | 'body';
@@ -45,32 +46,17 @@ export const CONDITION_OPERATORS = ['=', '<', '<=', '>', '>=', '!='] as const;
 export const ConditionOperatorSchema = z.enum(CONDITION_OPERATORS);
 export type ConditionOperator = z.infer<typeof ConditionOperatorSchema>;
 
-type StringLikeSchema = ZodString | ZodEffects<ZodString, string, string>;
-
-let boneSchema: StringLikeSchema = z.string();
-let moduleSchema: StringLikeSchema = z.string();
-let attributeSchema: StringLikeSchema = z.string();
-
-export function SetBoneSchemaForAtomicCondition(schema: typeof boneSchema) {
-	boneSchema = schema;
-}
-
-export function SetModuleSchemaForAtomicCondition(schema: typeof moduleSchema) {
-	moduleSchema = schema;
-}
-
-export function SetAttributeSchemaForAtomicCondition(schema: typeof attributeSchema) {
-	attributeSchema = schema;
-}
+export const ModuleNameSchema = ZodOverridable(z.string());
+export const AttributeNameSchema = ZodOverridable(z.string());
 
 export const AtomicConditionBoneSchema = z.object({
-	bone: z.lazy(() => boneSchema),
+	bone: BoneNameSchema,
 	operator: ConditionOperatorSchema,
 	value: z.number(),
 });
 export type AtomicConditionBone = z.infer<typeof AtomicConditionBoneSchema>;
 export const AtomicConditionModuleSchema = z.object({
-	module: z.lazy(() => moduleSchema),
+	module: ModuleNameSchema,
 	operator: ConditionOperatorSchema,
 	value: z.string(),
 });
@@ -79,7 +65,7 @@ export const AtomicConditionAttributeSchema = z.object({
 	 * Attribute that which required for this condition to be true
 	 *  - attribute can be prefixed with `!` to negate the condition
 	 */
-	attribute: z.lazy(() => attributeSchema),
+	attribute: AttributeNameSchema,
 });
 export const AtomicConditionArmRotationSchema = z.object({
 	armType: z.literal('rotation'),
@@ -120,14 +106,8 @@ export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
 export const ConditionSchema = z.array(z.array(AtomicConditionSchema));
 export type Condition = z.infer<typeof ConditionSchema>;
 
-let transformDefinitionBoneSchema: StringLikeSchema = z.string();
-
-export function SetTransformDefinitionBoneSchema(schema: typeof transformDefinitionBoneSchema) {
-	transformDefinitionBoneSchema = schema;
-}
-
 const TransformDefinitionBaseSchema = z.object({
-	bone: z.lazy(() => transformDefinitionBoneSchema),
+	bone: BoneNameSchema,
 	condition: ConditionSchema.optional(),
 });
 

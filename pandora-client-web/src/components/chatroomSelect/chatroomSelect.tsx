@@ -27,7 +27,7 @@ const TIPS: readonly string[] = [
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`The dragging points to move room devices are invisible, but generally under the item.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
-	`Every single change in the wardrobe happens instantly and is visible to everyone in the room immediately.`,
+	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
 ];
 
 export function ChatroomSelect(): ReactElement {
@@ -171,19 +171,9 @@ function RoomEntry({ roomInfo }: {
 						alt={ hasPassword ? 'Protected room' : 'Open room' } />
 				</div>
 				<div className='entry'>
-					{ name }
-					{ ' ' }
-					(
-					{ ' ' }
-					{ onlineCharacters }
-					{ ' ' }
+					{ `${name} ( ${onlineCharacters} ` }
 					<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
-					{ ' ' }
-					/
-					{ ' ' }
-					{ maxUsers }
-					{ ' ' }
-					)
+					{ ` / ${maxUsers} )` }
 				</div>
 				<div className='entry'>{ (description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}` }</div>
 			</a>

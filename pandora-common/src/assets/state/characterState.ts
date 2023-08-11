@@ -45,21 +45,21 @@ export type AppearanceClientBundle = AppearanceBundle & { clientOnly: true; };
 
 export type AppearanceCharacterPose = ReadonlyMap<BoneName, BoneState>;
 
-type Props = {
-	assetManager: AssetManager;
-	id: CharacterId;
-	items: AppearanceItems<WearableAssetType>;
-	pose: AppearanceCharacterPose;
-	arms: CharacterArmsPose;
-	legs: LegsPose;
-	view: CharacterView;
-	safemode: SafemodeData | undefined;
+type AssetFrameworkCharacterStateProps = {
+	readonly assetManager: AssetManager;
+	readonly id: CharacterId;
+	readonly items: AppearanceItems<WearableAssetType>;
+	readonly pose: AppearanceCharacterPose;
+	readonly arms: CharacterArmsPose;
+	readonly legs: LegsPose;
+	readonly view: CharacterView;
+	readonly safemode: SafemodeData | undefined;
 };
 
 /**
  * State of an character. Immutable.
  */
-export class AssetFrameworkCharacterState {
+export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStateProps {
 	public readonly type = 'character';
 	public readonly assetManager: AssetManager;
 
@@ -71,29 +71,18 @@ export class AssetFrameworkCharacterState {
 	public readonly view: CharacterView;
 	public readonly safemode: SafemodeData | undefined;
 
-	private constructor(props: Props);
-	private constructor(old: AssetFrameworkCharacterState, override: Partial<Props>);
-	private constructor(props: Props | AssetFrameworkCharacterState, override?: Partial<Props>) {
-		if (props instanceof AssetFrameworkCharacterState) {
-			AssertNotNullable(override);
-			this.assetManager = override.assetManager ?? props.assetManager;
-			this.id = override.id ?? props.id;
-			this.items = override.items ?? props.items;
-			this.pose = override.pose ?? props.pose;
-			this.arms = override.arms ?? props.arms;
-			this.legs = override.legs ?? props.legs;
-			this.view = override.view ?? props.view;
-			this.safemode = 'safemode' in override ? override.safemode : props.safemode;
-		} else {
-			this.assetManager = props.assetManager;
-			this.id = props.id;
-			this.items = props.items;
-			this.pose = props.pose;
-			this.arms = props.arms;
-			this.legs = props.legs;
-			this.view = props.view;
-			this.safemode = props.safemode;
-		}
+	private constructor(props: AssetFrameworkCharacterStateProps);
+	private constructor(old: AssetFrameworkCharacterState, override: Partial<AssetFrameworkCharacterStateProps>);
+	private constructor(props: AssetFrameworkCharacterStateProps, override: Partial<AssetFrameworkCharacterStateProps> = {}) {
+		this.assetManager = override.assetManager ?? props.assetManager;
+		this.id = override.id ?? props.id;
+		this.items = override.items ?? props.items;
+		this.pose = override.pose ?? props.pose;
+		this.arms = override.arms ?? props.arms;
+		this.legs = override.legs ?? props.legs;
+		this.view = override.view ?? props.view;
+		// allow override safemode with undefined (override: { safemode: undefined })
+		this.safemode = 'safemode' in override ? override.safemode : props.safemode;
 	}
 
 	public isValid(): boolean {

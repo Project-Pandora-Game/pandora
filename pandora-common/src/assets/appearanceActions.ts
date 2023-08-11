@@ -19,6 +19,9 @@ import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
 
+// Fix for pnpm resolution weirdness
+import type { } from "../validation";
+
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
 	/** ID to give the new item */

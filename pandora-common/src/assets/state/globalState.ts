@@ -11,6 +11,9 @@ import { ActionProcessingContext, RoomTargetSelector } from '../appearanceTypes'
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
 import { IExportOptions } from '../modules/common';
 
+// Fix for pnpm resolution weirdness
+import type { } from "../../validation";
+
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),
 	room: RoomInventoryBundleSchema.nullable(),

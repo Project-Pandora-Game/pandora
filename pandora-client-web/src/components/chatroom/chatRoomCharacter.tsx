@@ -57,7 +57,7 @@ export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharac
 	};
 	const legEffectCharacterOffsetBase = evaluator.legs === 'sitting' ? 135 : legEffectMap.standing;
 	const legEffect = legEffectMap[evaluator.legs]
-		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? 0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+		+ (evaluator.legs !== 'kneeling' ? 0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
 
 	const effectiveLegAngle = Math.min(Math.abs(evaluator.getBoneLikeValue('leg_l')), Math.abs(evaluator.getBoneLikeValue('leg_r')), 90);
 

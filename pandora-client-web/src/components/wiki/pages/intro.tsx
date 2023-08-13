@@ -48,7 +48,9 @@ export function WikiIntroduction(): ReactElement {
 				In Pandora, each room is persistent (settings, inventory, and room devices stay even after everyone has left) and has one or more owners.
 				It only gets deleted when it no longer has any owners.<br />
 				A room is visible to everyone (except accounts banned from the room), if it is marked as public and there is at least one admin inside the room.
-				You can always see rooms you are either admin or owner of.
+				You can always see rooms you are either admin or owner of.<br />
+				When a character goes offline inside a room, they will stay in the room and are shown as not connected.
+				By default, this is shown by the character having a ghost-like effect; this effect can be changed in the settings.
 			</p>
 			<p>
 				Each <strong>account</strong> has a maximum number of rooms it can own. You can view the rooms owned by your account

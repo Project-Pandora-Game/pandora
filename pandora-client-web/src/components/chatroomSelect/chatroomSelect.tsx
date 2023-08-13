@@ -27,6 +27,7 @@ const TIPS: readonly string[] = [
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`The dragging points to move room devices are invisible, but generally under the item.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
+	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
 ];
 
 export function ChatroomSelect(): ReactElement {
@@ -158,7 +159,7 @@ function RoomEntry({ roomInfo }: {
 
 	const [show, setShow] = useState(false);
 
-	const { name, users, maxUsers, description, hasPassword } = roomInfo;
+	const { name, onlineCharacters, totalCharacters, maxUsers, description, hasPassword } = roomInfo;
 
 	return (
 		<>
@@ -169,7 +170,11 @@ function RoomEntry({ roomInfo }: {
 						title={ hasPassword ? 'Protected room' : 'Open room' }
 						alt={ hasPassword ? 'Protected room' : 'Open room' } />
 				</div>
-				<div className='entry'>{ `${name} (${users}/${maxUsers})` }</div>
+				<div className='entry'>
+					{ `${name} ( ${onlineCharacters} ` }
+					<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
+					{ ` / ${maxUsers} )` }
+				</div>
 				<div className='entry'>{ (description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}` }</div>
 			</a>
 			{ show && <RoomDetailsDialog
@@ -241,7 +246,15 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 				{ characters.length > 0 &&
 					<div className='title'>Current users in this room:
 						<div className='users-list'>
-							{ characters.map((char) => <div key={ char.id }>{ char.name } ({ char.id })</div>) }
+							{
+								characters.map((char) => (
+									<div key={ char.id } className={ char.isOnline ? '' : 'offline' }>
+										{ char.isOnline ? '' : '( ' }
+										{ char.name } ({ char.id })
+										{ char.isOnline ? '' : ' )' }
+									</div>
+								))
+							}
 						</div>
 					</div> }
 				{ (!userIsAdmin && hasPassword) &&

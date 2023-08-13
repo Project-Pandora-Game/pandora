@@ -39,11 +39,11 @@ export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck
 
 export const SCHEME_OVERRIDE = Symbol('SCHEME_OVERRIDE');
 
-export interface ZodOverridableType<Output = undefined, Def extends ZodTypeDef = ZodTypeDef, Input = Output> extends ZodEffects<ZodType<Output, Def, Input>, Output, Input> {
+export interface ZodOverridableType<Output, Def extends ZodTypeDef = ZodTypeDef, Input = Output> extends ZodEffects<ZodType<Output, Def, Input>, Output, Input> {
 	[SCHEME_OVERRIDE]: ((attachedValidation: ((arg: Output, ctx: RefinementCtx) => void)) => void);
 }
 
-export function ZodOverridable<Output = undefined, Def extends ZodTypeDef = ZodTypeDef, Input = Output>(schema: ZodType<Output, Def, Input>): ZodOverridableType<Output, Def, Input> {
+export function ZodOverridable<Output, Def extends ZodTypeDef = ZodTypeDef, Input = Output>(schema: ZodType<Output, Def, Input>): ZodOverridableType<Output, Def, Input> {
 	let attachedValidation: ((arg: Output, ctx: RefinementCtx) => void) | undefined;
 	const refined = schema.superRefine((arg, ctx) => attachedValidation?.(arg, ctx)) as ZodOverridableType<Output, Def, Input>;
 	refined[SCHEME_OVERRIDE] = (fn) => attachedValidation = fn;

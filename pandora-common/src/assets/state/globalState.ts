@@ -12,7 +12,7 @@ import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClient
 import { IExportOptions } from '../modules/common';
 
 // Fix for pnpm resolution weirdness
-import type { } from "../../validation";
+import type { } from '../../validation';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),

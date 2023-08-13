@@ -12,6 +12,7 @@ export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 import type { } from '../chatroom/chat';
+import type { } from '../validation';
 
 export const ShardDirectorySchema = {
 	shardRegister: {

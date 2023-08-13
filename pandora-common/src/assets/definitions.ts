@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexRGBAColorString, ZodTemplateString } from '../validation';
-import type { AppearanceArmPose, CharacterView } from './state/characterState';
-import type { BoneDefinitionCompressed, BoneName, Coordinates } from './graphics';
+import type { AppearanceArmPose } from './state/characterState';
+import type { BoneDefinitionCompressed, BoneName, CharacterView, Coordinates, LegsPose } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';
@@ -38,6 +38,7 @@ export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = A
 	arms?: Partial<AppearanceArmPose>;
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
+	legs?: LegsPose | LegsPose[];
 	view?: CharacterView;
 }
 
@@ -355,6 +356,7 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	arms?: Partial<AppearanceArmPose>;
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
+	legs?: LegsPose;
 	view?: CharacterView;
 };
 
@@ -367,6 +369,7 @@ export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePos
 		arms: { ...base.arms, ...extend.arms },
 		leftArm: { ...base.leftArm, ...extend.leftArm },
 		rightArm: { ...base.rightArm, ...extend.rightArm },
+		legs: base.legs ?? extend.legs,
 		view: base.view ?? extend.view,
 	};
 }

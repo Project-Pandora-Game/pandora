@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { ArmFingersSchema, ArmRotationSchema, Assert, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher } from 'pandora-common';
+import { ArmFingersSchema, ArmRotationSchema, Assert, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher, AtomicConditionLegsSchema, CharacterViewSchema } from 'pandora-common';
 
 const IsConditionOperator = ZodMatcher(ConditionOperatorSchema);
 
@@ -36,6 +36,12 @@ export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>):
 	} else if ('attribute' in condition) {
 		Assert(condition.attribute != null);
 		return `a_${condition.attribute}`;
+	} else if ('legs' in condition) {
+		Assert(condition.legs != null);
+		return `legs_${condition.legs}`;
+	} else if ('view' in condition) {
+		Assert(condition.view != null);
+		return `view_${condition.view}`;
 	} else {
 		AssertNever(condition);
 	}
@@ -49,6 +55,30 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 		}
 		return {
 			attribute: attribute[1],
+		};
+	}
+	if (input.startsWith('legs_')) {
+		const legs = /^legs_(!?[-_a-z0-9]+)$/i.exec(input);
+		if (!legs) {
+			throw new Error(`Failed to parse legs condition '${input}'`);
+		}
+		if (!ZodMatcher(AtomicConditionLegsSchema.shape.legs)(legs[1])) {
+			throw new Error(`Invalid legs pose '${legs[1]}'`);
+		}
+		return {
+			legs: legs[1],
+		};
+	}
+	if (input.startsWith('view_')) {
+		const view = /^view_([-_a-z0-9]+)$/i.exec(input);
+		if (!view) {
+			throw new Error(`Failed to parse view condition '${input}'`);
+		}
+		if (!ZodMatcher(CharacterViewSchema)(view[1])) {
+			throw new Error(`Invalid view '${view[1]}'`);
+		}
+		return {
+			view: view[1],
 		};
 	}
 	const parsed = /^([-_a-z0-9]+)([=<>!]+)\s*(-?[-_a-z0-9.]+)$/i.exec(input);

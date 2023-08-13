@@ -38,6 +38,16 @@ export function MirrorCondition(condition: Immutable<Condition> | undefined): Co
 			return {
 				...c,
 			};
+		} else if ('legs' in c) {
+			Assert(c.legs != null);
+			return {
+				...c,
+			};
+		} else if ('view' in c) {
+			Assert(c.view != null);
+			return {
+				...c,
+			};
 		} else {
 			AssertNever(c);
 		}

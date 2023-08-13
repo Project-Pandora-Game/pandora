@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AssetId } from '../definitions';
+import { ZodOverridable } from '../../validation';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
 export type Coordinates = z.infer<typeof CoordinatesSchema>;
@@ -7,7 +8,7 @@ export type Coordinates = z.infer<typeof CoordinatesSchema>;
 export const CoordinatesCompressedSchema = z.tuple([CoordinatesSchema.shape.x, CoordinatesSchema.shape.y]);
 export type CoordinatesCompressed = z.infer<typeof CoordinatesCompressedSchema>;
 
-export const BoneNameSchema = z.string();
+export const BoneNameSchema = ZodOverridable(z.string());
 export type BoneName = z.infer<typeof BoneNameSchema>;
 
 export type BoneType = 'pose' | 'body';
@@ -23,6 +24,9 @@ export const CharacterSize = {
 	HEIGHT: 1500,
 } as const;
 
+export const CharacterViewSchema = z.enum(['front', 'back']);
+export type CharacterView = z.infer<typeof CharacterViewSchema>;
+
 export const ArmPoseSchema = z.enum(['front', 'back']);
 export type ArmPose = z.infer<typeof ArmPoseSchema>;
 
@@ -32,6 +36,9 @@ export type ArmRotation = z.infer<typeof ArmRotationSchema>;
 export const ArmFingersSchema = z.enum(['spread', 'fist']);
 export type ArmFingers = z.infer<typeof ArmFingersSchema>;
 
+export const LegsPoseSchema = z.enum(['standing', 'sitting', 'kneeling']);
+export type LegsPose = z.infer<typeof LegsPoseSchema>;
+
 export const RectangleSchema = CoordinatesSchema.merge(SizeSchema);
 export type Rectangle = z.infer<typeof RectangleSchema>;
 
@@ -39,14 +46,17 @@ export const CONDITION_OPERATORS = ['=', '<', '<=', '>', '>=', '!='] as const;
 export const ConditionOperatorSchema = z.enum(CONDITION_OPERATORS);
 export type ConditionOperator = z.infer<typeof ConditionOperatorSchema>;
 
+export const ModuleNameSchema = ZodOverridable(z.string());
+export const AttributeNameSchema = ZodOverridable(z.string());
+
 export const AtomicConditionBoneSchema = z.object({
-	bone: z.string(),
+	bone: BoneNameSchema,
 	operator: ConditionOperatorSchema,
 	value: z.number(),
 });
 export type AtomicConditionBone = z.infer<typeof AtomicConditionBoneSchema>;
 export const AtomicConditionModuleSchema = z.object({
-	module: z.string(),
+	module: ModuleNameSchema,
 	operator: ConditionOperatorSchema,
 	value: z.string(),
 });
@@ -55,7 +65,7 @@ export const AtomicConditionAttributeSchema = z.object({
 	 * Attribute that which required for this condition to be true
 	 *  - attribute can be prefixed with `!` to negate the condition
 	 */
-	attribute: z.string(),
+	attribute: AttributeNameSchema,
 });
 export const AtomicConditionArmRotationSchema = z.object({
 	armType: z.literal('rotation'),
@@ -70,12 +80,26 @@ export const AtomicConditionArmFingersSchema = z.object({
 	value: ArmFingersSchema,
 });
 
+type Negate<T extends string> = `!${T}`;
+type NegateArray<T extends string[]> = T extends [infer F extends string, ...infer R extends string[]] ? [Negate<F>, ...NegateArray<R>] : [];
+function Negatable<T extends string[]>(arr: T): [...T, ...NegateArray<T>] {
+	return [...arr, ...arr.map((x) => `!${x}`) as NegateArray<T>];
+}
+
+export const AtomicConditionLegsSchema = z.object({
+	legs: z.enum(Negatable(LegsPoseSchema.options)),
+});
+export const AtomicConditionViewSchema = z.object({
+	view: CharacterViewSchema,
+});
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,
 	AtomicConditionModuleSchema,
 	AtomicConditionAttributeSchema,
 	AtomicConditionArmRotationSchema,
 	AtomicConditionArmFingersSchema,
+	AtomicConditionLegsSchema,
+	AtomicConditionViewSchema,
 ]);
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
 
@@ -83,7 +107,7 @@ export const ConditionSchema = z.array(z.array(AtomicConditionSchema));
 export type Condition = z.infer<typeof ConditionSchema>;
 
 const TransformDefinitionBaseSchema = z.object({
-	bone: z.string(),
+	bone: BoneNameSchema,
 	condition: ConditionSchema.optional(),
 });
 

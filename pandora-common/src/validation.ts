@@ -1,6 +1,6 @@
 import { enableMapSet } from 'immer';
 import { isEqual } from 'lodash';
-import { z, ZodObject, ZodString, ZodType, ZodTypeAny } from 'zod';
+import { z, ZodObject, ZodString, ZodType, ZodTypeAny, ZodTypeDef, RefinementCtx, ZodEffects } from 'zod';
 
 enableMapSet();
 
@@ -35,6 +35,19 @@ export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck
 		}
 		return res;
 	});
+}
+
+export const SCHEME_OVERRIDE = Symbol('SCHEME_OVERRIDE');
+
+export interface ZodOverridableType<Output, Def extends ZodTypeDef = ZodTypeDef, Input = Output> extends ZodEffects<ZodType<Output, Def, Input>, Output, Input> {
+	[SCHEME_OVERRIDE]: ((attachedValidation: ((arg: Output, ctx: RefinementCtx) => void)) => void);
+}
+
+export function ZodOverridable<Output, Def extends ZodTypeDef = ZodTypeDef, Input = Output>(schema: ZodType<Output, Def, Input>): ZodOverridableType<Output, Def, Input> {
+	let attachedValidation: ((arg: Output, ctx: RefinementCtx) => void) | undefined;
+	const refined = schema.superRefine((arg, ctx) => attachedValidation?.(arg, ctx)) as ZodOverridableType<Output, Def, Input>;
+	refined[SCHEME_OVERRIDE] = (fn) => attachedValidation = fn;
+	return refined;
 }
 
 /**

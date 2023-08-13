@@ -1,4 +1,4 @@
-import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo } from 'pandora-common';
+import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo, LegsPose } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterAppearanceView, useCharacterData } from '../../character/character';
@@ -46,22 +46,18 @@ export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharac
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	let baseScale = 1;
-	if (evaluator.getBoneLikeValue('sitting') > 0) {
+	if (evaluator.legs === 'sitting') {
 		baseScale *= 0.9;
 	}
 
-	const legPose = evaluator.getBoneLikeValue('kneeling') !== 0 ? 'kneeling' :
-	evaluator.getBoneLikeValue('sitting') !== 0 ? 'sitting' :
-	'normal';
-
-	const legEffectMap: Record<typeof legPose, number> = {
-		normal: 600,
+	const legEffectMap: Record<LegsPose, number> = {
+		standing: 600,
 		sitting: 0,
 		kneeling: 300,
 	};
-	const legEffectCharacterOffsetBase = legPose === 'sitting' ? 135 : legEffectMap.normal;
-	const legEffect = legEffectMap[legPose]
-		+ (evaluator.getBoneLikeValue('kneeling') === 0 ? 0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+	const legEffectCharacterOffsetBase = evaluator.legs === 'sitting' ? 135 : legEffectMap.standing;
+	const legEffect = legEffectMap[evaluator.legs]
+		+ (evaluator.legs !== 'kneeling' ? 0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
 
 	const effectiveLegAngle = Math.min(Math.abs(evaluator.getBoneLikeValue('leg_l')), Math.abs(evaluator.getBoneLikeValue('leg_r')), 90);
 

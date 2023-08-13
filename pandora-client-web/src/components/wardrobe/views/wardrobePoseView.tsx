@@ -9,15 +9,14 @@ import {
 	AssetsPosePreset,
 	BONE_MAX,
 	BONE_MIN,
-	BoneName,
 	BoneState,
-	CharacterAppearance,
 	CharacterArmsPose,
+	LegsPose,
+	LegsPoseSchema,
 	MergePartialAppearancePoses,
 	PartialAppearancePose,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo } from 'react';
-import { AssetManagerClient, useAssetManager } from '../../../assets/assetManager';
 import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Button } from '../../common/button/button';
@@ -37,12 +36,14 @@ type CheckedAssetsPosePresets = {
 	poses: CheckedPosePreset[];
 }[];
 
-function GetFilteredAssetsPosePresets(items: AppearanceItems, roomItems: AppearanceItems, bonesStates: readonly BoneState[], { leftArm, rightArm }: CharacterArmsPose, assetManager: AssetManagerClient): {
+function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems): {
 	poses: CheckedAssetsPosePresets;
 	limits: AppearanceLimitTree;
 } {
+	const { leftArm, rightArm } = characterState.arms;
+	const assetManager = characterState.assetManager;
 	const presets = assetManager.getPosePresets();
-	for (const item of items) {
+	for (const item of characterState.items) {
 		if (!item.isType('roomDeviceWearablePart') || item.roomDeviceLink == null)
 			continue;
 
@@ -63,10 +64,12 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, roomItems: Appeara
 		});
 	}
 
-	const limits = AppearanceItemProperties(items).limits;
-	const bones = new Map<BoneName, number>(bonesStates.map((bone) => [bone.definition.name, bone.rotation]));
+	const limits = AppearanceItemProperties(characterState.items).limits;
 
 	const isActive = (preset: PartialAppearancePose) => {
+		if (preset.legs != null && preset.legs !== characterState.legs)
+			return false;
+
 		const left = { ...preset.arms, ...preset.leftArm };
 		const right = { ...preset.arms, ...preset.rightArm };
 		for (const name of ['position', 'rotation', 'fingers'] as const) {
@@ -80,7 +83,7 @@ function GetFilteredAssetsPosePresets(items: AppearanceItems, roomItems: Appeara
 			if (value === undefined)
 				continue;
 
-			if (bones.get(boneName) !== value)
+			if (characterState.pose.get(boneName)?.rotation !== value)
 				return false;
 		}
 
@@ -123,10 +126,9 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 	);
 }
 
-export function WardrobePoseCategories({ appearance, bones, armsPose, setPose }: { appearance: CharacterAppearance; bones: readonly BoneState[]; armsPose: CharacterArmsPose; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
-	const assetManager = useAssetManager();
+export function WardrobePoseCategories({ characterState, setPose }: { characterState: AssetFrameworkCharacterState; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
 	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
-	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(appearance.getAllItems(), roomItems ?? [], bones, armsPose, assetManager), [appearance, bones, armsPose, assetManager, roomItems]);
+	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 	);
@@ -240,11 +242,40 @@ export function WardrobeArmPoses({ setPose, armsPose, limits }: {
 	);
 }
 
+export function WardrobeLegsPose({ setPose, legs, limits }: {
+	limits?: AppearanceLimitTree;
+	legs: LegsPose;
+	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+}) {
+	return (
+		<div>
+			<label htmlFor='pose-legs'>Legs pose</label>
+			<Select value={ legs } id='pose-legs' onChange={ (e) => {
+				setPose({
+					legs: LegsPoseSchema.parse(e.target.value),
+				});
+			} }>
+				{
+					LegsPoseSchema.options
+						.map((r) => (
+							<option
+								key={ r }
+								value={ r }
+								disabled={ limits != null && !limits.validate({ legs: r }) }
+							>
+								{ _.capitalize(r) }
+							</option>
+						))
+				}
+			</Select>
+		</div>
+	);
+}
+
 export function WardrobePoseGui({ character, characterState }: {
 	character: AppearanceContainer;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const assetManager = useAssetManager();
 	const [execute, processing] = useWardrobeExecuteCallback();
 	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
 
@@ -252,17 +283,18 @@ export function WardrobePoseGui({ character, characterState }: {
 	const armsPose = useCharacterAppearanceArmsPose(characterState);
 	const view = useCharacterAppearanceView(characterState);
 
-	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm }: PartialAppearancePose) => {
+	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm, legs }: PartialAppearancePose) => {
 		execute({
 			type: 'pose',
 			target: character.id,
 			bones,
 			leftArm: { ...arms, ...leftArm },
 			rightArm: { ...arms, ...rightArm },
+			legs,
 		});
 	});
 
-	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(characterState.items, roomItems ?? [], currentBones, armsPose, assetManager), [characterState, currentBones, armsPose, assetManager, roomItems]);
+	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
@@ -288,6 +320,7 @@ export function WardrobePoseGui({ character, characterState }: {
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
 					<WardrobeArmPoses armsPose={ armsPose } limits={ limits } setPose={ setPose } />
+					<WardrobeLegsPose legs={ characterState.legs } limits={ limits } setPose={ setPose } />
 					<br />
 					{
 						currentBones

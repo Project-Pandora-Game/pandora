@@ -14,9 +14,13 @@ import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AppearanceArmPoseSchema, AppearancePoseSchema, CharacterViewSchema } from './state/characterState';
+import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterState';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
+import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
+
+// Fix for pnpm resolution weirdness
+import type { } from '../validation';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
@@ -61,6 +65,7 @@ export const AppearanceActionPose = z.object({
 	bones: AppearancePoseSchema.shape.bones.optional(),
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
+	legs: LegsPoseSchema.optional(),
 });
 
 export const AppearanceActionBody = z.object({

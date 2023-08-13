@@ -7,9 +7,9 @@ import type { ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
 import { AppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { AssetId, WearableAssetType } from './definitions';
-import { BoneState } from './graphics';
+import type { BoneState, CharacterView } from './graphics';
 import { Item } from './item';
-import { AppearanceArmPose, AppearanceBundle, AppearancePose, AssetFrameworkCharacterState, CharacterView, SafemodeData } from './state/characterState';
+import { AppearanceArmPose, AppearanceBundle, AppearancePose, AssetFrameworkCharacterState, SafemodeData } from './state/characterState';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
@@ -31,6 +31,7 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 		bones: {},
 		leftArm: GetDefaultAppearanceArmPose(),
 		rightArm: GetDefaultAppearanceArmPose(),
+		legs: 'standing',
 		view: 'front',
 	};
 }

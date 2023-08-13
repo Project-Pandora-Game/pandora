@@ -52,7 +52,7 @@ export function BoneUI(): ReactElement {
 				/>
 			</div>
 			<FieldsetToggle legend='Pose presets' persistent={ 'bone-ui-poses' } className='slim-padding' open={ false }>
-				<WardrobePoseCategories appearance={ character.getAppearance() } bones={ bones } armsPose={ characterState.arms } setPose={ setPose } />
+				<WardrobePoseCategories characterState={ characterState } setPose={ setPose } />
 			</FieldsetToggle>
 			<FieldsetToggle legend='Expressions' persistent={ 'expressions' } className='no-padding' open={ false }>
 				<WardrobeExpressionGui character={ character } characterState={ characterState } />

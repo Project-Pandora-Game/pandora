@@ -53,6 +53,7 @@ class PuppeteerEnvironment extends NodeEnvironment {
 				break;
 			case 'incognito':
 				global.context = await browser.createIncognitoBrowserContext();
+				await global.context.newPage();
 				break;
 			default:
 				throw new Error(

@@ -39,7 +39,9 @@ export function GetPuppeteerConfig(): PuppeteerConfig {
 			...DEFAULT_PUPPETEER_CONFIG,
 			launch: {
 				headless: 'new',
+				waitForInitialPage: false,
 				args: [
+					'--no-startup-window',
 					'--no-sandbox',
 					'--disable-setuid-sandbox',
 					'--disable-background-timer-throttling',
@@ -53,6 +55,10 @@ export function GetPuppeteerConfig(): PuppeteerConfig {
 		...DEFAULT_PUPPETEER_CONFIG,
 		launch: {
 			headless: false,
+			waitForInitialPage: false,
+			args: [
+				'--no-startup-window',
+			],
 		},
 	};
 }

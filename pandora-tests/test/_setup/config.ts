@@ -12,7 +12,6 @@ declare global {
 
 export type PuppeteerConfig = {
 	browserContext: 'default' | 'incognito';
-	exitOnPageError: true;
 	runBeforeUnloadOnClose?: boolean;
 	launch: PuppeteerLaunchOptions;
 };

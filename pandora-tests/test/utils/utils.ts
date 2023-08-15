@@ -18,3 +18,8 @@ export function AssertNotNullable<T>(value: T | null | undefined): asserts value
 		throw new Error('Value is null or undefined');
 	}
 }
+
+/** Sleep for certain amount of milliseconds */
+export function Sleep(ms: number): Promise<void> {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}

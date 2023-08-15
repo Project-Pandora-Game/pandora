@@ -21,14 +21,16 @@ function Run(command: string, args: string[] = [], options: SpawnSyncOptions = {
 }
 
 export default async (_jestConfig: JestConfig) => {
-	console.log('\nRunning global setup');
+	console.log('\n--- Running global setup ---\n');
 
 	const ctx: TestContext = globalThis.__testContext = globalThis.__testContext ?? {};
 	const cleanup: (() => Promise<void> | void)[] = ctx.cleanup = [];
 	const puppeteerConfig = GetPuppeteerConfig();
 
+	const shouldBuild = process.env.SKIP_TEST_BUILD !== 'true' || !fs.existsSync(TEST_TEMP);
+
 	// Clean and setup temporary directory
-	{
+	if (shouldBuild) {
 		if (fs.existsSync(TEST_TEMP)) {
 			rimraf.sync(TEST_TEMP);
 		}
@@ -36,11 +38,11 @@ export default async (_jestConfig: JestConfig) => {
 	}
 
 	// Build everything necessary
-	{
-		console.log('Building common and servers...');
+	if (shouldBuild) {
+		console.log('\nBuilding common and servers...');
 		Run('pnpm', ['run', '-r', '--no-bail', '--filter', '!pandora-client-web', 'build']);
 
-		console.log('Building client...');
+		console.log('\nBuilding client...');
 		fs.mkdirSync(TEST_CLIENT_DIST_DIR);
 		Run('pnpm', ['run', '-r', '--no-bail', '--filter', 'pandora-client-web', 'build'], {
 			env: {
@@ -56,7 +58,7 @@ export default async (_jestConfig: JestConfig) => {
 
 	// Start HTTP server
 	{
-		console.log('Starting HTTP server...');
+		console.log('\nStarting HTTP server...');
 		const app = express();
 
 		app.use(
@@ -76,7 +78,7 @@ export default async (_jestConfig: JestConfig) => {
 
 	// Start puppeteer
 	{
-		console.log('Starting browser...');
+		console.log('\nStarting browser...');
 		const browser = await puppeteer.launch(puppeteerConfig.launch);
 		process.env.PUPPETEER_WS_ENDPOINT = browser.wsEndpoint();
 		cleanup.push(async () => {
@@ -84,5 +86,5 @@ export default async (_jestConfig: JestConfig) => {
 		});
 	}
 
-	console.log('\nGlobal setup done\n');
+	console.log('\n--- Global setup done ---\n');
 };

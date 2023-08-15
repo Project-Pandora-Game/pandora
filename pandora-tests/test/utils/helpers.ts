@@ -1,21 +1,33 @@
-import type { Page } from 'puppeteer';
-import { type JestPuppeteerGlobal, TEST_PROJECT_PANDORA_DIR, TEST_CLIENT_DIST_DIR } from './_setup/config';
+import type { ConsoleMessage, Page } from 'puppeteer';
+import { type JestPuppeteerGlobal, TEST_PROJECT_PANDORA_DIR, TEST_CLIENT_DIST_DIR } from '../_setup/config';
 import { AssertNotNullable } from './utils';
 
 export function TestBrowserGlobals(): JestPuppeteerGlobal {
 	return globalThis as unknown as JestPuppeteerGlobal;
 }
 
+const handleLog = (message: ConsoleMessage) => {
+	if (message.type() === 'error') {
+		// eslint-disable-next-line no-console
+		console.error(
+			'Page emitted error log:\n',
+			message.text(),
+			'\n',
+			message.stackTrace().map((entry) => `${entry.url}:${entry.lineNumber}:${entry.columnNumber}`).join('\n'),
+		);
+		throw new Error('Page emitted error log');
+	}
+};
+
 const handlePageError = (error: Error) => {
-	process.emit('uncaughtException', error);
+	throw error;
 };
 
 async function DoClosePage(page: Page): Promise<void> {
 	const { writeCoverate, puppeteerConfig, httpAddress } = TestBrowserGlobals();
 
-	if (puppeteerConfig.exitOnPageError) {
-		page.off('pageerror', handlePageError);
-	}
+	page.off('pageerror', handlePageError);
+	page.off('console', handleLog);
 
 	const jsCoverage = await page.coverage.stopJSCoverage();
 
@@ -75,12 +87,11 @@ export interface TestPageOptions {
 }
 
 export async function TestOpenPage(options: TestPageOptions = {}): Promise<Page> {
-	const { context, puppeteerConfig } = TestBrowserGlobals();
+	const { context } = TestBrowserGlobals();
 
 	const page = await context.newPage();
-	if (puppeteerConfig.exitOnPageError) {
-		page.on('pageerror', handlePageError);
-	}
+	page.on('pageerror', handlePageError);
+	page.on('console', handleLog);
 
 	if (options.keepOpen) {
 		openPagesAll.push(page);
@@ -96,12 +107,12 @@ export async function TestOpenPage(options: TestPageOptions = {}): Promise<Page>
 	return page;
 }
 
-export async function TestOpenPandora(options: TestPageOptions = {}): Promise<Page> {
+export async function TestOpenPandora(path: `/${string}` = '/', options: TestPageOptions = {}): Promise<Page> {
 	const { httpAddress } = TestBrowserGlobals();
 
 	const page = await TestOpenPage(options);
 
-	await page.goto(httpAddress, {
+	await page.goto(httpAddress + path.substring(1), {
 		waitUntil: 'networkidle2',
 	});
 

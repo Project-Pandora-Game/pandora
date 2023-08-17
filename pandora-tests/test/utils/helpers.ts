@@ -1,6 +1,7 @@
 import type { ConsoleMessage, Page } from 'puppeteer';
 import { type JestPuppeteerGlobal, TEST_PROJECT_PANDORA_DIR, TEST_CLIENT_DIST_DIR } from '../_setup/config';
 import { AssertNotNullable } from './utils';
+import { PageTester } from './pageTester';
 
 export function TestBrowserGlobals(): JestPuppeteerGlobal {
 	return globalThis as unknown as JestPuppeteerGlobal;
@@ -87,7 +88,7 @@ export interface TestPageOptions {
 	defaultTimeout?: number;
 }
 
-export async function TestOpenPage(options: TestPageOptions = {}): Promise<Page> {
+export async function TestOpenPage(options: TestPageOptions = {}): Promise<PageTester> {
 	const { context } = TestBrowserGlobals();
 
 	const page = await context.newPage();
@@ -107,15 +108,15 @@ export async function TestOpenPage(options: TestPageOptions = {}): Promise<Page>
 
 	page.setDefaultTimeout(options.defaultTimeout ?? 10_000);
 
-	return page;
+	return new PageTester(page);
 }
 
-export async function TestOpenPandora(path: `/${string}` = '/', options: TestPageOptions = {}): Promise<Page> {
+export async function TestOpenPandora(path: `/${string}` = '/', options: TestPageOptions = {}): Promise<PageTester> {
 	const { httpAddress } = TestBrowserGlobals();
 
 	const page = await TestOpenPage(options);
 
-	await page.goto(httpAddress + path.substring(1), {
+	await page.rawPage.goto(httpAddress + path.substring(1), {
 		waitUntil: 'networkidle2',
 	});
 

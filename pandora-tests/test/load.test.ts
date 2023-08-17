@@ -4,12 +4,12 @@ describe('Load', () => {
 	it('Should load Pandora', async () => {
 		const page = await TestOpenPandora();
 
-		await expect(page.title()).resolves.toBe('Pandora');
+		await expect(page.rawPage.title()).resolves.toBe('Pandora');
 	});
 
 	it('Should load Editor', async () => {
 		const page = await TestOpenPandora('/editor');
 
-		await expect(page.title()).resolves.toBe('Pandora Editor');
+		await expect(page.rawPage.title()).resolves.toBe('Pandora Editor');
 	});
 });

@@ -6,6 +6,7 @@ module.exports = {
 	clearMocks: true,
 	errorOnDeprecated: true,
 	testTimeout: 60_000,
+	maxWorkers: 1,
 	globalSetup: '<rootDir>/test/_setup/global_setup.ts',
 	globalTeardown: '<rootDir>/test/_setup/global_teardown.ts',
 	testEnvironment: '<rootDir>/test/_setup/environment.ts',

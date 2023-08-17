@@ -28,15 +28,10 @@ export type StrictGlobal = {
 
 export type JestPuppeteerGlobal = Required<StrictGlobal>;
 
-const DEFAULT_PUPPETEER_CONFIG = {
-	browserContext: 'incognito',
-	exitOnPageError: true,
-} as const;
-
 export function GetPuppeteerConfig(): PuppeteerConfig {
 	if (process.env.CI) {
 		return {
-			...DEFAULT_PUPPETEER_CONFIG,
+			browserContext: 'incognito',
 			launch: {
 				headless: 'new',
 				waitForInitialPage: false,
@@ -52,7 +47,7 @@ export function GetPuppeteerConfig(): PuppeteerConfig {
 		};
 	}
 	return {
-		...DEFAULT_PUPPETEER_CONFIG,
+		browserContext: 'incognito',
 		launch: {
 			headless: false,
 			waitForInitialPage: false,
@@ -63,8 +58,10 @@ export function GetPuppeteerConfig(): PuppeteerConfig {
 	};
 }
 
-// Ports
-export const TEST_HTTP_SERVER_PORT = 6969;
+// Ports and addresses
+export const TEST_HTTP_SERVER_PORT = 10269;
+export const TEST_CLIENT_DIRECTORY_ADDRESS = 'http://127.0.0.1:25560';
+export const TEST_CLIENT_EDITOR_ASSETS_ADDRESS = 'http://127.0.0.1:26969/assets';
 
 // Paths
 export const TEST_PROJECT_PANDORA_DIR = path.resolve(process.cwd(), '..');

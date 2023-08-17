@@ -6,7 +6,7 @@ import { spawnSync, SpawnSyncOptions } from 'child_process';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 
-import { TestContext, GetPuppeteerConfig, TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT, TEST_TEMP } from './config';
+import { TestContext, GetPuppeteerConfig, TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT, TEST_TEMP, TEST_CLIENT_DIRECTORY_ADDRESS, TEST_CLIENT_EDITOR_ASSETS_ADDRESS } from './config';
 
 function Run(command: string, args: string[] = [], options: SpawnSyncOptions = {}): void {
 	const { status, error } = spawnSync(command, args, {
@@ -48,9 +48,9 @@ export default async (_jestConfig: JestConfig) => {
 			env: {
 				...process.env,
 				DIST_DIR_OVERRIDE: TEST_CLIENT_DIST_DIR,
-				DIRECTORY_ADDRESS: 'http://127.0.0.1:25560',
-				EDITOR_ASSETS_ADDRESS: 'http://127.0.0.1:26969/assets',
-				WEBPACK_DEV_SERVER_PORT: '6969',
+				DIRECTORY_ADDRESS: TEST_CLIENT_DIRECTORY_ADDRESS,
+				EDITOR_ASSETS_ADDRESS: TEST_CLIENT_EDITOR_ASSETS_ADDRESS,
+				WEBPACK_DEV_SERVER_PORT: TEST_HTTP_SERVER_PORT.toString(10),
 				USER_DEBUG: 'false',
 			},
 		});

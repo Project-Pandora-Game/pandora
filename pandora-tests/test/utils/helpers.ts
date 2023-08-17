@@ -84,6 +84,7 @@ afterAll(async () => {
 
 export interface TestPageOptions {
 	keepOpen?: boolean;
+	defaultTimeout?: number;
 }
 
 export async function TestOpenPage(options: TestPageOptions = {}): Promise<Page> {
@@ -103,6 +104,8 @@ export async function TestOpenPage(options: TestPageOptions = {}): Promise<Page>
 		resetOnNavigation: false,
 		includeRawScriptCoverage: true,
 	});
+
+	page.setDefaultTimeout(options.defaultTimeout ?? 10_000);
 
 	return page;
 }

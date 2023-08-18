@@ -2,7 +2,7 @@ import { CharacterId, IChatModifier, IClientMessage, IChatSegment } from 'pandor
 
 export type ParserConfig<Types extends string, Default extends string> = Record<Exclude<Types, Default>, [string, string]>;
 
-type LineTypes = 'chat' | 'me' | 'emote' | 'ooc' | 'raw';
+type LineTypes = 'chat' | 'me' | 'emote' | 'ooc' | 'raw' | 'link';
 
 const ESCAPE = '\\'; // length must be 1
 
@@ -28,6 +28,8 @@ export class LineParser {
 		['*', '*\n', /\*$/, 'me', false],
 		['((', '))\n', /\)?\)$/g, 'ooc', true],
 		['```', '```\n', /`{3}$/, 'raw', true],
+		['https://', '\n', /\s/g, 'link', true],
+		['http://', '\n', /\s/g, 'link', true],
 	];
 
 	public parse(text: string, allowNonTargeted: boolean): [LineTypes, string][] {
@@ -90,9 +92,18 @@ export class SegmentParser {
 		['_', 'italic'],
 	];
 
-	public parse(text: string): IChatSegment[] {
+	public parse(text: string, allowLinks: boolean = false): IChatSegment[] {
 		text = text.trim();
 		const result: IChatSegment[] = [];
+		if (allowLinks) {
+			const match = text.match(/^\s*(https?:\/\/[^\s]+)/);
+			if (match) {
+				result.push(['normal', match[0]]);
+				text = text.substring(match[0].length);
+				if (!text.trim())
+					return result;
+			}
+		}
 		while (text) {
 			const [modifier, inner, next] = this._parseOne(text);
 			if (modifier)
@@ -100,7 +111,6 @@ export class SegmentParser {
 
 			text = next ?? '';
 		}
-
 		return result;
 	}
 
@@ -159,14 +169,14 @@ export const ChatParser = new class ChatParser {
 				case 'me':
 					result.push({
 						type,
-						parts: this._segmentParser.parse(line),
+						parts: this._segmentParser.parse(line, false),
 					});
 					break;
 				case 'chat':
 				case 'ooc':
 					result.push({
 						type,
-						parts: this._segmentParser.parse(line),
+						parts: this._segmentParser.parse(line, type === 'ooc'),
 						to,
 					});
 					break;
@@ -177,12 +187,19 @@ export const ChatParser = new class ChatParser {
 						to,
 					});
 					break;
+				case 'link':
+					result.push({
+						type: 'ooc',
+						parts: [['normal', line]],
+						to,
+					});
+					break;
 			}
 		}
 		return result;
 	}
 
-	public parseStyle(text: string): IChatSegment[] {
-		return this._segmentParser.parse(text);
+	public parseStyle(text: string, allowLinks: boolean = false): IChatSegment[] {
+		return this._segmentParser.parse(text, allowLinks);
 	}
 };

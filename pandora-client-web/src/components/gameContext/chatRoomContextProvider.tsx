@@ -364,7 +364,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		}
 		let messages: IClientMessage[] = [];
 		if (type !== undefined) {
-			messages = [{ type, parts: raw ? [['normal', message]] : ChatParser.parseStyle(message), to: target }];
+			messages = [{ type, parts: raw ? [['normal', message]] : ChatParser.parseStyle(message, type === 'ooc'), to: target }];
 		} else if (raw) {
 			throw new Error('Raw is not implemented for multi-part messages');
 		} else {

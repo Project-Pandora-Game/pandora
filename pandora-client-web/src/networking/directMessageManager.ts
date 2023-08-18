@@ -273,7 +273,7 @@ export class DirectMessageChannel {
 		}
 		return {
 			time,
-			message: ChatParser.parseStyle(await this.#encryption.decrypt(content)),
+			message: ChatParser.parseStyle(await this.#encryption.decrypt(content), true),
 			sent: source !== this._id,
 			edited,
 		};
@@ -295,7 +295,7 @@ export class DirectMessageChannel {
 				...begin,
 				{
 					time,
-					message: ChatParser.parseStyle(message),
+					message: ChatParser.parseStyle(message, true),
 					sent,
 					edited,
 				},
@@ -305,7 +305,7 @@ export class DirectMessageChannel {
 		}
 		this._messages.value = [...this.messages.value, {
 			time,
-			message: ChatParser.parseStyle(message),
+			message: ChatParser.parseStyle(message, true),
 			sent,
 			edited,
 		}];

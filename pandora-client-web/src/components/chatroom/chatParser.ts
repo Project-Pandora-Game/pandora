@@ -35,7 +35,7 @@ export class LineParser {
 		while (text) {
 			const [type, inner, next] = this._parseOne(text, allowNonTargeted);
 			if (type)
-				result.push([type, inner ?? '']);
+				result.push([type, inner?.trim() ?? '']);
 
 			text = next ?? '';
 		}
@@ -91,7 +91,7 @@ export class SegmentParser {
 	];
 
 	public parse(text: string): IChatSegment[] {
-
+		text = text.trim();
 		const result: IChatSegment[] = [];
 		while (text) {
 			const [modifier, inner, next] = this._parseOne(text);

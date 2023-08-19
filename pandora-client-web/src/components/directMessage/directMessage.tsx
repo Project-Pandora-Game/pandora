@@ -72,7 +72,7 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 			</span>
 			{ ': ' }
 			<span className='direct-message-entry__content'>
-				{...message.message.map((c, i) => RenderChatPart(c, i))}
+				{...message.message.map((c, i) => RenderChatPart(c, i, true))}
 			</span>
 		</div>
 	);

@@ -56,10 +56,11 @@ export class LineParser {
 
 			if (text.startsWith(start)) {
 				const [index, inner] = IndexOf(text, lineEnd);
+				const idx = type === 'link' ? 0 : start.length;
 				if (index === -1)
-					return [type, inner.substring(start.length).replace(replace, '')];
+					return [type, inner.substring(idx).replace(replace, '')];
 
-				return [type, inner.substring(start.length, index).replace(replace, ''), inner.substring(index + lineEnd.length)];
+				return [type, inner.substring(idx, index).replace(replace, ''), inner.substring(index + lineEnd.length)];
 			}
 
 			if (text.startsWith(ESCAPE + start)) {

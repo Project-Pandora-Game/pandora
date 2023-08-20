@@ -130,7 +130,7 @@ export function RenderChatPart([type, contents]: IChatSegment, index: number, al
 			<a key={ index } href={ contents } target='_blank' referrerPolicy='no-referrer' rel='noopener noreferrer'>
 				{ contents }
 			</a>
-		)
+		);
 	}
 	switch (type) {
 		case 'normal':

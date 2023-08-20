@@ -28,9 +28,9 @@ describe('LineParser', () => {
 
 		it('should parse ooc', () => {
 			expect(mockLineParser.parse('(( OOC talk ))', true))
-				.toStrictEqual([['ooc', ' OOC talk ']]);
+				.toStrictEqual([['ooc', 'OOC talk']]);
 			expect(mockLineParser.parse('(( OOC talk ))', false))
-				.toStrictEqual([['ooc', ' OOC talk ']]);
+				.toStrictEqual([['ooc', 'OOC talk']]);
 		});
 
 		it('should handle escape - \\', () => {

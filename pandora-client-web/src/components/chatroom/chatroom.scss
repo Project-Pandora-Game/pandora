@@ -127,6 +127,15 @@
 			font-size: 0.6em;
 			margin-right: 0.2em;
 		}
+
+		a {
+			color: $white;
+			text-decoration: underline;
+
+			&:hover {
+				color: $grey-mid;
+			}
+		}
 	}
 
 	textarea {

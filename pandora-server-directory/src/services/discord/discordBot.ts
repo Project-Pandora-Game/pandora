@@ -55,7 +55,7 @@ export const DiscordBot = new class DiscordBot {
 		return this;
 	}
 
-	public onDestroy(): void {
+	public async onDestroy(): Promise<void> {
 		if (this._destroyed) {
 			return;
 		}
@@ -65,7 +65,7 @@ export const DiscordBot = new class DiscordBot {
 		}
 		this.setOnlineStatus.cancel();
 		this._client.user?.setStatus('dnd');
-		this._client.destroy();
+		await this._client.destroy();
 	}
 
 	public readonly setOnlineStatus = _.throttle((status: Partial<DiscordBotStatus>): void => {

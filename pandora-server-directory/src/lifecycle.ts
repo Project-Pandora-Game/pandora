@@ -24,7 +24,7 @@ async function StopGracefully(): Promise<void> {
 	// Stop HTTP server
 	StopHttpServer();
 	// Stop discord bot
-	DiscordBot.onDestroy();
+	await DiscordBot.onDestroy();
 	// Stop sending status updates
 	ConnectionManagerClient.onDestroy();
 	// Unload all shards

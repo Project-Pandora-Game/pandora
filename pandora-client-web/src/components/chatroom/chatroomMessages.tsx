@@ -124,7 +124,14 @@ export function DescribeAssetSlot(assetManager: AssetManagerClient, slot: string
 	return slotDefinition?.description ?? `[UNKNOWN SLOT '${slot}']`;
 }
 
-export function RenderChatPart([type, contents]: IChatSegment, index: number): ReactElement {
+export function RenderChatPart([type, contents]: IChatSegment, index: number, allowLinkInNormal: boolean): ReactElement {
+	if (type === 'normal' && allowLinkInNormal && contents.match(/^https?:\/\//)) {
+		return (
+			<a key={ index } href={ contents } target='_blank' referrerPolicy='no-referrer' rel='noopener noreferrer'>
+				{ contents }
+			</a>
+		);
+	}
 	switch (type) {
 		case 'normal':
 			return <span key={ index }>{ contents }</span>;

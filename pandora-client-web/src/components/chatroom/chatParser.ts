@@ -2,7 +2,7 @@ import { CharacterId, IChatModifier, IClientMessage, IChatSegment } from 'pandor
 
 export type ParserConfig<Types extends string, Default extends string> = Record<Exclude<Types, Default>, [string, string]>;
 
-type LineTypes = 'chat' | 'me' | 'emote' | 'ooc' | 'raw';
+type LineTypes = 'chat' | 'me' | 'emote' | 'ooc' | 'raw' | 'link';
 
 const ESCAPE = '\\'; // length must be 1
 
@@ -28,6 +28,8 @@ export class LineParser {
 		['*', '*\n', /\*$/, 'me', false],
 		['((', '))\n', /\)?\)$/g, 'ooc', true],
 		['```', '```\n', /`{3}$/, 'raw', true],
+		['https://', '\n', /\s/g, 'link', true],
+		['http://', '\n', /\s/g, 'link', true],
 	];
 
 	public parse(text: string, allowNonTargeted: boolean): [LineTypes, string][] {
@@ -35,7 +37,7 @@ export class LineParser {
 		while (text) {
 			const [type, inner, next] = this._parseOne(text, allowNonTargeted);
 			if (type)
-				result.push([type, inner ?? '']);
+				result.push([type, inner?.trim() ?? '']);
 
 			text = next ?? '';
 		}
@@ -54,10 +56,11 @@ export class LineParser {
 
 			if (text.startsWith(start)) {
 				const [index, inner] = IndexOf(text, lineEnd);
+				const idx = type === 'link' ? 0 : start.length;
 				if (index === -1)
-					return [type, inner.substring(start.length).replace(replace, '')];
+					return [type, inner.substring(idx).replace(replace, '')];
 
-				return [type, inner.substring(start.length, index).replace(replace, ''), inner.substring(index + lineEnd.length)];
+				return [type, inner.substring(idx, index).replace(replace, ''), inner.substring(index + lineEnd.length)];
 			}
 
 			if (text.startsWith(ESCAPE + start)) {
@@ -90,9 +93,18 @@ export class SegmentParser {
 		['_', 'italic'],
 	];
 
-	public parse(text: string): IChatSegment[] {
-
+	public parse(text: string, allowLinks: boolean = false): IChatSegment[] {
+		text = text.trim();
 		const result: IChatSegment[] = [];
+		if (allowLinks) {
+			const match = text.match(/^\s*(https?:\/\/[^\s]+)/);
+			if (match) {
+				result.push(['normal', match[0]]);
+				text = text.substring(match[0].length);
+				if (!text.trim())
+					return result;
+			}
+		}
 		while (text) {
 			const [modifier, inner, next] = this._parseOne(text);
 			if (modifier)
@@ -100,7 +112,6 @@ export class SegmentParser {
 
 			text = next ?? '';
 		}
-
 		return result;
 	}
 
@@ -159,14 +170,14 @@ export const ChatParser = new class ChatParser {
 				case 'me':
 					result.push({
 						type,
-						parts: this._segmentParser.parse(line),
+						parts: this._segmentParser.parse(line, false),
 					});
 					break;
 				case 'chat':
 				case 'ooc':
 					result.push({
 						type,
-						parts: this._segmentParser.parse(line),
+						parts: this._segmentParser.parse(line, type === 'ooc'),
 						to,
 					});
 					break;
@@ -177,12 +188,19 @@ export const ChatParser = new class ChatParser {
 						to,
 					});
 					break;
+				case 'link':
+					result.push({
+						type: 'ooc',
+						parts: [['normal', line]],
+						to,
+					});
+					break;
 			}
 		}
 		return result;
 	}
 
-	public parseStyle(text: string): IChatSegment[] {
-		return this._segmentParser.parse(text);
+	public parseStyle(text: string, allowLinks: boolean = false): IChatSegment[] {
+		return this._segmentParser.parse(text, allowLinks);
 	}
 };

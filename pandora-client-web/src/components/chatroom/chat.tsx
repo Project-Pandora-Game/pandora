@@ -89,7 +89,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageCh
 				<DisplayInfo message={ message } />
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
-				{...message.parts.map((c, i) => RenderChatPart(c, i))}
+				{...message.parts.map((c, i) => RenderChatPart(c, i, message.type === 'ooc'))}
 				{ after }
 			</div>
 			{ self ? (
@@ -249,13 +249,13 @@ function ActionMessage({ message }: { message: IChatroomMessageProcessed<IChatRo
 		<div className={ classNames('message', message.type, extraContent !== null ? 'foldable' : null) } style={ style } onClick={ () => setFolded(!folded) }>
 			<DisplayInfo message={ message } />
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
-			{ content.map((c, i) => RenderChatPart(c, i)) }
+			{ content.map((c, i) => RenderChatPart(c, i, false)) }
 			{ extraContent != null && folded ? ' ( ... )' : null }
 			{
 				!folded && extraContent != null && (
 					<>
 						<br />
-						{ extraContent.map((c, i) => RenderChatPart(c, i)) }
+						{ extraContent.map((c, i) => RenderChatPart(c, i, false)) }
 					</>
 				)
 			}

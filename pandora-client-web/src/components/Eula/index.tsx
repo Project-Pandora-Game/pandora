@@ -41,7 +41,7 @@ export function Eula({ accept }: EulaProps): ReactElement {
 							I will not permit any minors to have access to any of the materials from this site.
 						</li>
 						<li>
-							I have read { GAME_NAME }'s <a onClick={ () => setShow(true) } >privacy policy</a> and accept it. (Last updated on: { EULA_LAST_UPDATED })
+							I have read { GAME_NAME }'s <a onClick={ () => setShow(true) } role='button'>privacy policy</a> and accept it. (Last updated on: { EULA_LAST_UPDATED })
 						</li>
 						<li>
 							I have carefully read the above and agree to all of them.

@@ -1,35 +1,42 @@
+import { test, expect } from '@playwright/test';
 import { TestOpenPandora } from './utils/helpers';
 
-describe('EULA', () => {
-	test('Shows privacy policy', async () => {
-		const page = await TestOpenPandora();
+test.describe('Load', () => {
+	test('Should load Pandora', async ({ page }) => {
+		await page.goto('/');
 
-		// Find link
-		const link = await page.findLink('privacy policy');
-
-		// Click it
-		await link.click();
-
-		// We should see the policy
-		await page.findElement('h1::-p-text(Privacy Policy)');
-
-		// There should be a close button
-		const closeButton = await page.findButton('Close');
-
-		// Close button should hide the policy
-		await closeButton.click();
-		await page.waitForMissingElement('h1::-p-text(Privacy Policy)');
+		await expect(page).toHaveTitle('Pandora');
 	});
 
-	test('Disagree navigates away', async () => {
-		const page = await TestOpenPandora();
+	test('Should load Editor', async ({ page }) => {
+		await page.goto('/editor');
 
-		// Find button
-		const button = await page.findButton('Disagree');
+		await expect(page).toHaveTitle('Pandora Editor');
+	});
+});
+
+test.describe('EULA', () => {
+	test('Shows privacy policy', async ({ page }) => {
+		await TestOpenPandora(page);
+
+		// Click privacy policy link
+		await page.getByRole('button', { name: 'privacy policy' }).click();
+
+		// We should see the policy
+		await expect(page.getByRole('heading', { name: 'Privacy Policy', exact: true })).toBeVisible();
+
+		// There should be a close button to close it
+		await page.getByRole('button', { name: 'Close' }).click();
+
+		await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toBeHidden();
+	});
+
+	test('Disagree navigates away', async ({ page }) => {
+		await TestOpenPandora(page);
 
 		// Disagree button should navigate away from pandora
-		await page.expectNavigation(() => button.click());
+		await page.getByRole('button', { name: 'Disagree' }).click();
 
-		expect(page.rawPage.url()).toBe('about:blank');
+		await page.waitForURL('about:blank');
 	});
 });

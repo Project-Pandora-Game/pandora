@@ -6,10 +6,10 @@
 			"DOM"
 		],
 		"types": [
-			"@types/node",
+			"@types/node"
 		]
 	},
 	"include": [
-		"./**/*.ts"
+		"./playwright.config.ts"
 	]
 }

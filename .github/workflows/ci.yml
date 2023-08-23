@@ -78,6 +78,6 @@ jobs:
       - name: Install Playwright dependencies and browsers
         run: pnpm run -C pandora-tests playwright-setup-ci
       - name: Typecheck E2E tests
-        run: pnpm run -C pandora-tests type-check:test-e2e
+        run: pnpm run -C pandora-tests type-check
       - name: Run E2E tests
         run: pnpm run -C pandora-tests test-e2e

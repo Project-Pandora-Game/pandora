@@ -366,7 +366,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	return (
 		<div className='roomAdminScreen configuration'>
 			<Link to='/chatroom'>◄ Back</Link>
-			<p>Current room ID: <span className='selectable'>{ roomInfo.id }</span></p>
+			<p>Current room ID: <span className='selectable-all'>{ roomInfo.id }</span></p>
 			{ configurableElements }
 			<div className='input-container'>
 				<label>Features (cannot be changed after creation)</label>

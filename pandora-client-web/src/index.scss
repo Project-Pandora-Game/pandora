@@ -20,10 +20,6 @@ html, body {
 	user-select: none;
 }
 
-.selectable {
-	user-select: all;
-}
-
 div.main {
 	@include flex(column);
 	background-color: $grey-light;

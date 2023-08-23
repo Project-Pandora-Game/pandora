@@ -103,3 +103,15 @@
 }
 
 //#endregion
+
+//#region Misc
+
+.selectable {
+	user-select: text;
+}
+
+.selectable-all {
+	user-select: all;
+}
+
+//#endregion

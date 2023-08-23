@@ -10,7 +10,7 @@ import { usePlayerId } from '../../gameContext/playerContextProvider';
 import { useChatInput } from '../chatInput';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { HandleResult, useRelationship } from '../../releationships/relationships';
+import { RelationshipChangeHandleResult, useRelationship } from '../../releationships/relationshipsContext';
 
 type MenuType = 'main' | 'admin' | 'relationship';
 
@@ -122,7 +122,7 @@ function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | '
 	const request = useCallback(() => {
 		if (confirm(`Are you sure you want to ${action} adding the account behind ${character.data.name} to your contacts list?`)) {
 			directory.awaitResponse('friendRequest', { action, id: character.data.accountId })
-				.then(({ result }) => HandleResult(result))
+				.then(({ result }) => RelationshipChangeHandleResult(result))
 				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
 		}
 	}, [action, character, directory]);
@@ -141,7 +141,7 @@ function UnfriendRequestMenu(): ReactElement {
 	const request = useCallback(() => {
 		if (confirm(`Are you sure you want to remove the account behind ${character.data.name} from your contacts list?`)) {
 			directory.awaitResponse('unfriend', { id: character.data.accountId })
-				.then(({ result }) => HandleResult(result))
+				.then(({ result }) => RelationshipChangeHandleResult(result))
 				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
 		}
 	}, [character, directory]);

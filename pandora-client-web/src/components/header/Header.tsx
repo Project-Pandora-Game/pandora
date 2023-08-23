@@ -18,7 +18,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
 import { useCharacterSafemode } from '../../character/character';
 import { useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
-import { RelationshipContext, useRelationships } from '../releationships/relationships';
+import { RelationshipContext, useRelationships } from '../releationships/relationshipsContext';
 import { useObservable } from '../../observable';
 import { LeaveButton } from './leaveButton';
 

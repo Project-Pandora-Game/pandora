@@ -18,7 +18,7 @@
 
 	td,
 	th {
-		padding: 0.2em;
+		padding: 0.2em 0.5em;
 		text-align: center;
 		border: 1px solid $grey-darker;
 	}
@@ -33,5 +33,29 @@
 
 	tr:nth-child(2n) {
 		background-color: $grey-lighter;
+	}
+
+	.friend {
+		.status .indicator {
+			font-size: x-large;
+		}
+
+		&.online {
+			.status .indicator {
+				color: #080;
+			}
+		}
+
+		&.offline {
+			.status {
+				font-style: italic;
+
+				.indicator {
+					color: #444;
+					font-style: normal;
+				}
+			}
+
+		}
 	}
 }

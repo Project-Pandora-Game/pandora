@@ -21,7 +21,7 @@ import {
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
-import { RelationshipContext } from '../components/releationships/relationships';
+import { RelationshipContext } from '../components/releationships/relationshipsContext';
 import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';

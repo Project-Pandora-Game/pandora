@@ -4,7 +4,6 @@ import { Observable, useObservable } from '../../observable';
 import './relationships.scss';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import _ from 'lodash';
 
 const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);

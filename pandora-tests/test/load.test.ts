@@ -1,14 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { TestOpenPandora } from './utils/helpers';
 
 test.describe('Load', () => {
 	test('Should load Pandora', async ({ page }) => {
-		await page.goto('/');
+		await TestOpenPandora(page);
 
 		await expect(page).toHaveTitle('Pandora');
 	});
 
 	test('Should load Editor', async ({ page }) => {
-		await page.goto('/editor');
+		await TestOpenPandora(page, '/editor');
 
 		await expect(page).toHaveTitle('Pandora Editor');
 	});

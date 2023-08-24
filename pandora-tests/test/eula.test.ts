@@ -1,20 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { TestOpenPandora } from './utils/helpers';
 
-test.describe('Load', () => {
-	test('Should load Pandora', async ({ page }) => {
-		await page.goto('/');
-
-		await expect(page).toHaveTitle('Pandora');
-	});
-
-	test('Should load Editor', async ({ page }) => {
-		await page.goto('/editor');
-
-		await expect(page).toHaveTitle('Pandora Editor');
-	});
-});
-
 test.describe('EULA', () => {
 	test('Shows privacy policy', async ({ page }) => {
 		await TestOpenPandora(page);

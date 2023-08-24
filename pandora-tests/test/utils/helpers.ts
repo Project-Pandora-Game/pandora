@@ -2,10 +2,16 @@ import { ConsoleMessage, Page } from '@playwright/test';
 
 const handleLog = (message: ConsoleMessage) => {
 	if (message.type() === 'error') {
+		// Ignore socket.io errors (some tests test non-working server connection)
+		if (/\/socket\.io\//.test(message.location().url))
+			return;
+
 		// eslint-disable-next-line no-console
 		console.error(
 			'Page emitted error log:\n',
 			message.text(),
+			'\n',
+			message.location(),
 		);
 		throw new Error('Page emitted error log');
 	}

@@ -20,10 +20,10 @@
 		"@typescript-eslint/eslint-plugin": "6.3.0",
 		"@typescript-eslint/parser": "6.3.0",
 		"eslint": "8.47.0",
-		"http-server": "^14.1.1",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",
 		"pandora-server-shard": "workspace:*",
-		"rimraf": "5.0.1"
+		"rimraf": "5.0.1",
+		"superstatic": "^9.0.3"
 	}
 }

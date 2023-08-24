@@ -1,0 +1,12 @@
+{
+	"rewrites": [
+		{
+			"source": "/editor/**",
+			"destination": "/editor/index.html"
+		},
+		{
+			"source": "/**",
+			"destination": "/index.html"
+		}
+	]
+}

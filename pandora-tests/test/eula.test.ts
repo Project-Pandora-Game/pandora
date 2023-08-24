@@ -25,4 +25,36 @@ test.describe('EULA', () => {
 
 		await page.waitForURL('about:blank');
 	});
+
+	test('EULA guards non-index pages', async ({ page }) => {
+		await TestOpenPandora(page, '/login');
+
+		// Disagree button should navigate away from pandora
+		await expect(page.getByRole('button', { name: 'Disagree' })).toBeVisible();
+		await expect(page.getByRole('button', { name: /^Agree/ })).toBeVisible();
+	});
+
+	test('Agree opens login', async ({ page }) => {
+		await TestOpenPandora(page);
+
+		// Agree button opens login
+		await page.getByRole('button', { name: /^Agree/ }).click();
+
+		await page.waitForURL('/login');
+		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
+	});
+
+	test('Agreement is remembered', async ({ page }) => {
+		await TestOpenPandora(page);
+
+		await page.getByRole('button', { name: /^Agree/ }).click();
+		await page.waitForURL('/login');
+		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
+
+		await page.reload();
+
+		// No agreement needed
+		await page.waitForURL('/login');
+		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
+	});
 });

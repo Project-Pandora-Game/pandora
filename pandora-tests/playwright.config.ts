@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import { TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT } from './test/_setup/config';
+import path from 'path';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -20,7 +21,7 @@ export default defineConfig({
 	/* Reporter to use. See https://playwright.dev/docs/test-reporters */
 	reporter: [
 		['list'],
-		['html'],
+		['html', { open: 'never' }],
 	],
 
 	/* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
@@ -32,9 +33,9 @@ export default defineConfig({
 	},
 
 	webServer: {
-		command: `http-server -s -c-1 -p ${TEST_HTTP_SERVER_PORT} -a 127.0.0.1 '${TEST_CLIENT_DIST_DIR}'`,
+		command: `pnpm exec superstatic serve -p ${TEST_HTTP_SERVER_PORT} --host 127.0.0.1 '${path.relative(process.cwd(), TEST_CLIENT_DIST_DIR)}'`,
 		port: TEST_HTTP_SERVER_PORT,
-		reuseExistingServer: !process.env.CI,
+		reuseExistingServer: false,
 	},
 
 	projects: [

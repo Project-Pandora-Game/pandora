@@ -15,7 +15,7 @@
 		"playwright-setup-ci": "playwright install --with-deps chromium"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.37.1",
+		"@playwright/test": "1.37.1",
 		"@types/node": "18.17.5",
 		"@typescript-eslint/eslint-plugin": "6.3.0",
 		"@typescript-eslint/parser": "6.3.0",
@@ -24,6 +24,8 @@
 		"pandora-server-directory": "workspace:*",
 		"pandora-server-shard": "workspace:*",
 		"rimraf": "5.0.1",
-		"superstatic": "^9.0.3"
+		"superstatic": "9.0.3",
+		"tslib": "2.6.1",
+		"typescript": "5.1.6"
 	}
 }

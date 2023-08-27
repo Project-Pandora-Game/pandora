@@ -22,8 +22,20 @@ export async function TestSetupPage(page: Page): Promise<void> {
 	page.on('console', handleLog);
 }
 
-export async function TestOpenPandora(page: Page, path: `/${string}` = '/'): Promise<void> {
+interface TestOpenPandoraOptions {
+	/** @default '/' */
+	path?: `/${string}`;
+	/** @default true */
+	agreeEula?: boolean;
+}
+
+export async function TestOpenPandora(page: Page, options: TestOpenPandoraOptions = {}): Promise<void> {
 	await TestSetupPage(page);
 
-	await page.goto(path);
+	await page.goto(options.path ?? '/');
+
+	if (options.agreeEula !== false) {
+		await page.getByRole('button', { name: /^Agree/ }).click();
+		await page.waitForURL('/login');
+	}
 }

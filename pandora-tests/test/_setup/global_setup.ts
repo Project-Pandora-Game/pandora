@@ -4,7 +4,7 @@ import { spawnSync, SpawnSyncOptions } from 'child_process';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 
-import { TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT, TEST_TEMP, TEST_CLIENT_DIRECTORY_ADDRESS, TEST_CLIENT_EDITOR_ASSETS_ADDRESS } from './config';
+import { TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT, TEST_TEMP, TEST_CLIENT_DIRECTORY_ADDRESS, TEST_CLIENT_EDITOR_ASSETS_ADDRESS, TEST_SERVER_DIRECTORY_TEST_DIR } from './config';
 
 function Run(command: string, args: string[] = [], options: SpawnSyncOptions = {}): void {
 	const { status, error } = spawnSync(command, args, {
@@ -29,6 +29,7 @@ setup('Setup', () => {
 			rimraf.sync(TEST_TEMP);
 		}
 		fs.mkdirSync(TEST_TEMP);
+		fs.mkdirSync(TEST_SERVER_DIRECTORY_TEST_DIR);
 	}
 
 	// Build everything necessary

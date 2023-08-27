@@ -3,7 +3,7 @@ import { TestOpenPandora } from './utils/helpers';
 
 test.describe('EULA', () => {
 	test('Shows privacy policy', async ({ page }) => {
-		await TestOpenPandora(page);
+		await TestOpenPandora(page, { agreeEula: false });
 
 		// Click privacy policy link
 		await page.getByRole('button', { name: 'privacy policy' }).click();
@@ -18,7 +18,7 @@ test.describe('EULA', () => {
 	});
 
 	test('Disagree navigates away', async ({ page }) => {
-		await TestOpenPandora(page);
+		await TestOpenPandora(page, { agreeEula: false });
 
 		// Disagree button should navigate away from pandora
 		await page.getByRole('button', { name: 'Disagree' }).click();
@@ -27,7 +27,10 @@ test.describe('EULA', () => {
 	});
 
 	test('EULA guards non-index pages', async ({ page }) => {
-		await TestOpenPandora(page, '/login');
+		await TestOpenPandora(page, {
+			path: '/login',
+			agreeEula: false,
+		});
 
 		// Disagree button should navigate away from pandora
 		await expect(page.getByRole('button', { name: 'Disagree' })).toBeVisible();
@@ -35,7 +38,7 @@ test.describe('EULA', () => {
 	});
 
 	test('Agree opens login', async ({ page }) => {
-		await TestOpenPandora(page);
+		await TestOpenPandora(page, { agreeEula: false });
 
 		// Agree button opens login
 		await page.getByRole('button', { name: /^Agree/ }).click();
@@ -45,13 +48,21 @@ test.describe('EULA', () => {
 	});
 
 	test('Agreement is remembered', async ({ page }) => {
-		await TestOpenPandora(page);
+		await TestOpenPandora(page, { agreeEula: false });
 
 		await page.getByRole('button', { name: /^Agree/ }).click();
 		await page.waitForURL('/login');
 		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 
 		await page.reload();
+
+		// No agreement needed
+		await page.waitForURL('/login');
+		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
+	});
+
+	test('Test auto-agreement works', async ({ page }) => {
+		await TestOpenPandora(page, { agreeEula: true });
 
 		// No agreement needed
 		await page.waitForURL('/login');

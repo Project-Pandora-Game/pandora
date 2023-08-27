@@ -1,23 +1,11 @@
-export function Assert(condition: unknown, msg?: string): asserts condition {
-	if (!condition) {
-		throw new Error(msg ? `Assetion failed: ${msg}` : 'Assertion failed');
-	}
-}
+// Only utility functions should be used from pandora-common for testing
+// Avoid using more complex code - tests should be as simple and straightforward as possible
 
-/**
- * Assert all arguments are `never`
- *
- * Useful for checking all possible outcomes are handled
- */
-export function AssertNever(...args: never[]): never {
-	throw new Error(`Never assertion failed with arguments: ${args.join(', ')}`);
-}
-
-export function AssertNotNullable<T>(value: T | null | undefined): asserts value is NonNullable<T> {
-	if (value === null || value === undefined) {
-		throw new Error('Value is null or undefined');
-	}
-}
+export {
+	Assert,
+	AssertNever,
+	AssertNotNullable,
+} from 'pandora-common/dist/utility';
 
 /** Sleep for certain amount of milliseconds */
 export function Sleep(ms: number): Promise<void> {

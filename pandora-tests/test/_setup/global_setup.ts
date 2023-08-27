@@ -34,8 +34,8 @@ setup('Setup', () => {
 
 	// Build everything necessary
 	if (shouldBuild) {
-		console.log('\nBuilding common and servers...');
-		Run('pnpm', ['run', '-r', '--no-bail', '--filter', '!pandora-client-web', 'build']);
+		console.log('\nBuilding servers...');
+		Run('pnpm', ['run', '-r', '--no-bail', '--filter', 'pandora-server-*', 'build']);
 
 		console.log('\nBuilding client...');
 		fs.mkdirSync(TEST_CLIENT_DIST_DIR);

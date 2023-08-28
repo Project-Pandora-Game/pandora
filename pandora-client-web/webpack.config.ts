@@ -16,15 +16,20 @@ import { execSync } from 'child_process';
 const GIT_COMMIT_HASH = execSync('git rev-parse --short HEAD').toString().trim();
 const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString().trim();
 
+// Load .env file
+config();
+
+// Load options from environment
 const {
 	DIRECTORY_ADDRESS = 'http://127.0.0.1:25560',
 	EDITOR_ASSETS_ADDRESS = 'http://127.0.0.1:26969/assets',
 	WEBPACK_DEV_SERVER_PORT = '6969',
 	USER_DEBUG = 'false',
-} = config().parsed ?? {};
+	DIST_DIR_OVERRIDE,
+} = process.env;
 
 const SRC_DIR = join(__dirname, 'src');
-const DIST_DIR = join(__dirname, 'dist');
+const DIST_DIR = DIST_DIR_OVERRIDE ?? join(__dirname, 'dist');
 const GAME_NAME = 'Pandora';
 
 type WebpackMinimizer = WebpackPluginInstance | '...';

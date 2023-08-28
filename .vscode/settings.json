@@ -34,6 +34,7 @@
 		"pandora-client-web",
 		"pandora-common",
 		"pandora-server-directory",
-		"pandora-server-shard"
+		"pandora-server-shard",
+		"pandora-tests"
 	]
 }

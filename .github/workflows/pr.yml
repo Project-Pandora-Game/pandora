@@ -1,5 +1,5 @@
 
-name: Lint PR
+name: PR
 
 on:
   # Triggers the workflow on any pull request (but runs in context of target branch, having a bit higher rights)
@@ -32,3 +32,22 @@ jobs:
             REFACTOR
             DEV
             CHORE
+
+  automation:
+    name: Automation tasks
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Auto-approve (Lead Developer)
+        if: contains(fromJSON('["ace-1331", "ClaudiaMia", "elliesec", "Jomshir98", "Sekkmer"]'), github.actor)
+        uses: hmarr/auto-approve-action@v3
+        with:
+          review-message: "PR is from a Lead Developer."
+
+      - name: Auto-approve (Renovate)
+        if: github.actor == 'renovate[bot]'
+        uses: hmarr/auto-approve-action@v3
+        with:
+          review-message: "Automated dependency updates only need a single review."

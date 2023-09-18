@@ -238,13 +238,13 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async setAccountSecureGitHub(id: number, data: DatabaseAccountSecure['github']): Promise<boolean> {
 		const result = await this._accounts.findOneAndUpdate({ id }, { $set: { 'secure.github': data } }, { returnDocument: 'after' });
-		if (!result.value)
+		if (!result)
 			return false;
 
 		if (data === undefined)
-			return result.value.secure.github === undefined;
+			return result.secure.github === undefined;
 
-		return data.date === result.value.secure.github?.date;
+		return data.date === result.secure.github?.date;
 	}
 
 	public async setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void> {
@@ -284,12 +284,12 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async finalizeCharacter(accountId: number, characterId: CharacterId): Promise<ICharacterData | null> {
 		const result = await this._characters.findOneAndUpdate({ id: PlainId(characterId), inCreation: true }, { $set: { created: Date.now() }, $unset: { inCreation: '' } }, { returnDocument: 'after' });
-		if (!result.value || result.value.inCreation !== undefined)
+		if (!result || result.inCreation !== undefined)
 			return null;
 
-		await this._accounts.updateOne({ 'id': accountId, 'characters.id': characterId }, { $set: { 'characters.$.name': result.value.name }, $unset: { 'characters.$.inCreation': '' } });
+		await this._accounts.updateOne({ 'id': accountId, 'characters.id': characterId }, { $set: { 'characters.$.name': result.name }, $unset: { 'characters.$.inCreation': '' } });
 
-		return Id(result.value);
+		return Id(result);
 	}
 
 	public async updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
@@ -299,7 +299,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			update[`characters.$.${k}`] = v;
 		}
 		const result = await this._accounts.findOneAndUpdate({ 'id': accountId, 'characters.id': id }, { $set: update as MatchKeysAndValues<DatabaseAccountWithSecure> }, { returnDocument: 'after' });
-		return result.value?.characters.find((c) => c.id === id) ?? null;
+		return result?.characters.find((c) => c.id === id) ?? null;
 	}
 
 	public async deleteCharacter(accountId: number, characterId: CharacterId): Promise<void> {
@@ -309,7 +309,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async setCharacterAccess(id: CharacterId): Promise<string | null> {
 		const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
-		return result.value?.accessId ?? null;
+		return result?.accessId ?? null;
 	}
 
 	public async getCharactersInRoom(roomId: RoomId): Promise<{
@@ -391,10 +391,10 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async updateChatRoom(id: RoomId, data: IChatRoomDataDirectoryUpdate & IChatRoomDataShardUpdate, accessId: string | null): Promise<boolean> {
 		if (accessId !== null) {
 			const result = await this._chatrooms.findOneAndUpdate({ id, accessId }, { $set: data });
-			return result.value === null ? false : true;
+			return result === null ? false : true;
 		} else {
 			const result = await this._chatrooms.findOneAndUpdate({ id }, { $set: data });
-			Assert(result.value != null);
+			Assert(result != null);
 			return true;
 		}
 	}
@@ -405,7 +405,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async setChatRoomAccess(id: RoomId): Promise<string | null> {
 		const result = await this._chatrooms.findOneAndUpdate({ id }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
-		return result.value?.accessId ?? null;
+		return result?.accessId ?? null;
 	}
 
 	//#endregion
@@ -439,7 +439,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (accessId === false) {
 			accessId = nanoid(8);
 			const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId } }, { returnDocument: 'after' });
-			return result.value ? Id(result.value) : null;
+			return result ? Id(result) : null;
 		}
 
 		const character = await this._characters.findOne({ id: PlainId(id), accessId });
@@ -479,8 +479,8 @@ export default class MongoDatabase implements PandoraDatabase {
 			upsert: true,
 			returnDocument: 'after',
 		});
-		AssertNotNullable(result.value);
-		return result.value;
+		AssertNotNullable(result);
+		return result;
 	}
 
 	public async removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {

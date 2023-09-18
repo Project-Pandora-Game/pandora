@@ -1,5 +1,5 @@
-
 name: PR
+concurrency: automation
 
 on:
   # Triggers the workflow on any pull request (but runs in context of target branch, having a bit higher rights)

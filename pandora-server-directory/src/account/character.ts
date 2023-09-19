@@ -277,7 +277,7 @@ export class Character {
 	//#region Client connection handling
 
 	@AsyncSynchronized('object')
-	public async connect(connection: ClientConnection, newConnection: boolean = true): Promise<'ok' | 'noShardFound' | 'failed'> {
+	public async connect(connection: ClientConnection, reconnectSecret?: string): Promise<'ok' | 'noShardFound' | 'failed'> {
 		if (this._disposed)
 			return 'failed';
 
@@ -293,6 +293,7 @@ export class Character {
 
 		// Assign new connection
 		const isChange = this._connectSecret == null;
+		const newConnection = reconnectSecret == null || this._connectSecret !== reconnectSecret;
 		if (newConnection) {
 			this._connectSecret = GenerateConnectSecret();
 		}

@@ -493,7 +493,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			if (auth.character) {
 				const char = account.characters.get(auth.character.id)?.loadedCharacter;
 				if (char && char.connectSecret === auth.character.secret) {
-					connection.setCharacter(char);
+					await char.connect(connection, false);
 				}
 			}
 		}

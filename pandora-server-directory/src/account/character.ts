@@ -277,7 +277,7 @@ export class Character {
 	//#region Client connection handling
 
 	@AsyncSynchronized('object')
-	public async connect(connection: ClientConnection): Promise<'ok' | 'noShardFound' | 'failed'> {
+	public async connect(connection: ClientConnection, newConnection: boolean = true): Promise<'ok' | 'noShardFound' | 'failed'> {
 		if (this._disposed)
 			return 'failed';
 
@@ -293,7 +293,9 @@ export class Character {
 
 		// Assign new connection
 		const isChange = this._connectSecret == null;
-		this._connectSecret = GenerateConnectSecret();
+		if (newConnection) {
+			this._connectSecret = GenerateConnectSecret();
+		}
 		if (isChange) {
 			this.baseInfo.account.onCharacterListChange();
 			this.baseInfo.account.relationship.updateStatus();
@@ -303,7 +305,9 @@ export class Character {
 		}
 
 		// If we are already on shard, update the secret on the shard
-		await this.currentShard?.update('characters');
+		if (newConnection) {
+			await this.currentShard?.update('characters');
+		}
 
 		connection.setCharacter(this);
 		connection.sendConnectionStateUpdate();

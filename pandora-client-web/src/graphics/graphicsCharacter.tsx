@@ -24,6 +24,7 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
+	angle?: number;
 	hitArea?: Rectangle;
 	eventMode?: PIXI.EventMode;
 	filters?: readonly Filter[];

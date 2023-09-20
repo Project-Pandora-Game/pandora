@@ -1,12 +1,12 @@
 import React, { ReactElement } from 'react';
-import { AppearanceContainer } from '../../../character/character';
+import { ICharacter } from '../../../character/character';
 import { usePlayerId } from '../../gameContext/playerContextProvider';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column, Row } from '../../common/container/container';
 import { WardrobeActionButton } from '../wardrobeComponents';
 
 export function WardrobeOutfitGui({ character }: {
-	character: AppearanceContainer;
+	character: ICharacter;
 }): ReactElement {
 	const playerId = usePlayerId();
 

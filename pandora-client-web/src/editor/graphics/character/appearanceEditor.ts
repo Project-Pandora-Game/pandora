@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -8,7 +8,7 @@ import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Editor } from '../../editor';
 import { cloneDeep } from 'lodash';
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
-import { AppearanceContainer } from '../../../character/character';
+import { ICharacter, CharacterEvents } from '../../../character/character';
 import { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import { useEditorState } from '../../editorContextProvider';
@@ -101,7 +101,7 @@ export class AppearanceEditor extends CharacterAppearance {
 
 export const EDITOR_CHARACTER_ID: CharacterId = 'c0';
 
-export class EditorCharacter implements AppearanceContainer<ICharacterRoomData> {
+export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacterRoomData>> implements ICharacter<ICharacterRoomData> {
 	public readonly type = 'character';
 	public readonly id = EDITOR_CHARACTER_ID;
 	public readonly name = 'Editor character';
@@ -112,13 +112,14 @@ export class EditorCharacter implements AppearanceContainer<ICharacterRoomData> 
 	public readonly data: ICharacterRoomData;
 
 	constructor(editor: Editor) {
+		super();
 		this.editor = editor;
 		this.data = {
 			id: this.id,
 			accountId: 0,
 			name: 'EditorCharacter',
 			settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-			position: [0, 0],
+			position: [0, 0, 0],
 			isOnline: true,
 		};
 	}

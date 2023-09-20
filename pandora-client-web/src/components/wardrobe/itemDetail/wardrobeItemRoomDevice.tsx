@@ -8,7 +8,7 @@ import {
 	RoomDeviceSlot,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
-import { AppearanceContainer } from '../../../character/character';
+import { ICharacter } from '../../../character/character';
 import { useChatRoomCharacters } from '../../gameContext/chatRoomContextProvider';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import _ from 'lodash';
@@ -164,7 +164,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 }): ReactElement | null {
 	const { targetSelector, player } = useWardrobeContext();
 
-	const characters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? [player];
+	const characters: readonly ICharacter[] = useChatRoomCharacters() ?? [player];
 
 	let contents: ReactNode;
 

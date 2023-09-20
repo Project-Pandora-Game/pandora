@@ -17,13 +17,17 @@ import {
 	PartialAppearancePose,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo } from 'react';
-import { AppearanceContainer, useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView } from '../../../character/character';
+import { IChatroomCharacter, useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterData } from '../../../character/character';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Button } from '../../common/button/button';
 import _ from 'lodash';
 import { useEvent } from '../../../common/useEvent';
 import { Select } from '../../common/select/select';
 import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
+import { useCharacterIsInChatroom } from '../../gameContext/chatRoomContextProvider';
+import { Row } from '../../common/container/container';
+import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
+import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -273,7 +277,7 @@ export function WardrobeLegsPose({ setPose, legs, limits }: {
 }
 
 export function WardrobePoseGui({ character, characterState }: {
-	character: AppearanceContainer;
+	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute, processing] = useWardrobeExecuteCallback();
@@ -318,6 +322,7 @@ export function WardrobePoseGui({ character, characterState }: {
 					/>
 				</div>
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
+				<ChatroomManualYOffsetControl character={ character } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
 					<WardrobeArmPoses armsPose={ armsPose } limits={ limits } setPose={ setPose } />
 					<WardrobeLegsPose legs={ characterState.legs } limits={ limits } setPose={ setPose } />
@@ -379,5 +384,53 @@ export function BoneRowElement({ bone, onChange, limits }: { bone: BoneState; on
 				</Button>
 			</div>
 		</FieldsetToggle>
+	);
+}
+
+function ChatroomManualYOffsetControl({ character }: {
+	character: IChatroomCharacter;
+}): ReactElement {
+
+	const {
+		id,
+		position,
+	} = useCharacterData(character);
+
+	const [yOffset, setYOffsetLocal] = useUpdatedUserInput(position[2], [character]);
+
+	const shard = useShardConnector();
+	const inRoom = useCharacterIsInChatroom();
+
+	const setYOffset = useCallback((newYOffset: number) => {
+		setYOffsetLocal(newYOffset);
+		shard?.sendMessage('chatRoomCharacterMove', {
+			id,
+			position: [position[0], position[1], newYOffset],
+		});
+	}, [setYOffsetLocal, shard, id, position]);
+
+	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
+		const value = Math.round(parseFloat(event.target.value));
+		if (Number.isInteger(value) && value !== yOffset) {
+			setYOffset(value);
+		}
+	});
+
+	if (shard == null || !inRoom) {
+		return (
+			<Row alignY='center' padding='small'>
+				Y Offset is only available while inside a room.
+			</Row>
+		);
+	}
+
+	return (
+		<Row padding='small'>
+			<Row alignY='center'>Character Y Offset:</Row>
+			<input type='number' step='1' value={ yOffset } onChange={ onInput } />
+			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ yOffset === 0 }>
+				↺
+			</Button>
+		</Row>
 	);
 }

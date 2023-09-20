@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -118,16 +118,16 @@ export class Character {
 
 	private logger: Logger;
 
-	public set position(value: readonly [number, number]) {
+	public set position(value: CharacterRoomPosition) {
 		this.data.position = value;
 		this.modified.add('position');
 	}
 
-	public get position(): readonly [number, number] {
+	public get position(): CharacterRoomPosition {
 		return this.data.position;
 	}
 
-	public initRoomPosition(roomId: RoomId, value: readonly [number, number], [maxX, maxY]: readonly [number, number]) {
+	public initRoomPosition(roomId: RoomId, value: CharacterRoomPosition, [maxX, maxY]: readonly [number, number]) {
 		if (this.data.roomId === roomId) {
 			if (this.data.position[0] > maxX || this.data.position[1] > maxY) {
 				this.data.position = value;

@@ -1,9 +1,30 @@
-import { TypedEventEmitter, CharacterAppearance, BoneState, CharacterView, GetLogger, ICharacterPublicData, Item, Logger, CharacterRestrictionsManager, ActionRoomContext, ItemPath, SafemodeData, CharacterId, CharacterArmsPose, AppearanceItems, WearableAssetType, AssetFrameworkCharacterState, Assert } from 'pandora-common';
+import {
+	TypedEventEmitter,
+	CharacterAppearance,
+	BoneState,
+	CharacterView,
+	GetLogger,
+	ICharacterPublicData,
+	Item,
+	Logger,
+	CharacterRestrictionsManager,
+	ActionRoomContext,
+	ItemPath,
+	SafemodeData,
+	CharacterId,
+	CharacterArmsPose,
+	AppearanceItems,
+	WearableAssetType,
+	AssetFrameworkCharacterState,
+	Assert,
+	ITypedEventEmitter,
+	ICharacterRoomData,
+} from 'pandora-common';
 import { useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 
-export type AppearanceContainer<T extends ICharacterPublicData = ICharacterPublicData> = {
+export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicData> extends ITypedEventEmitter<CharacterEvents<T>> {
 	readonly type: 'character';
 	readonly id: CharacterId;
 	readonly name: string;
@@ -11,9 +32,11 @@ export type AppearanceContainer<T extends ICharacterPublicData = ICharacterPubli
 	isPlayer(): boolean;
 	getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance;
 	getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
-};
+}
 
-export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements AppearanceContainer<T> {
+export type IChatroomCharacter = ICharacter<ICharacterRoomData>;
+
+export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements ICharacter<T> {
 	public readonly type = 'character';
 
 	public get id(): CharacterId {
@@ -58,11 +81,11 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 	}
 }
 
-type CharacterEvents<T extends ICharacterPublicData> = {
+export type CharacterEvents<T extends ICharacterPublicData> = {
 	'update': Partial<T>;
 };
 
-export function useCharacterData<T extends ICharacterPublicData>(character: Character<T>): Readonly<T> {
+export function useCharacterData<T extends ICharacterPublicData>(character: ICharacter<T>): Readonly<T> {
 	return useSyncExternalStore(character.getSubscriber('update'), () => character.data);
 }
 

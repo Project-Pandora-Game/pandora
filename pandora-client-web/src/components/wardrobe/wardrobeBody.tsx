@@ -8,7 +8,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
-import { AppearanceContainer } from '../../character/character';
+import { ICharacter } from '../../character/character';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { WardrobeFocus } from './wardrobeTypes';
 import { useWardrobeContext } from './wardrobeContext';
@@ -20,7 +20,7 @@ import { WardrobeBodySizeEditor } from './views/wardrobeBodySizeView';
 
 export function WardrobeBodyManipulation({ className, character, characterState }: {
 	className?: string;
-	character: AppearanceContainer;
+	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const { assetList } = useWardrobeContext();

@@ -40,7 +40,7 @@ export const ClientShardSchema = {
 	chatRoomCharacterMove: {
 		request: z.object({
 			id: CharacterIdSchema.optional(),
-			position: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
+			position: z.tuple([z.number().int().min(0), z.number().int().min(0), z.number().int()]),
 		}),
 		response: null,
 	},

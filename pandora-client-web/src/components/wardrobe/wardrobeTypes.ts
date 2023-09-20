@@ -4,7 +4,6 @@ import {
 	Asset,
 	AssetFrameworkGlobalState,
 	AssetId,
-	ICharacterRoomData,
 	IClientShardResult,
 	ItemContainerPath,
 	ItemId,
@@ -12,13 +11,13 @@ import {
 	RoomTargetSelector,
 } from 'pandora-common';
 import { ReactElement } from 'react';
-import { AppearanceContainer } from '../../character/character';
+import { ICharacter, IChatroomCharacter } from '../../character/character';
 import { Observable } from '../../observable';
 import { IChatRoomContext } from '../gameContext/chatRoomContextProvider';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 
 export type WardrobeContextExtraItemActionComponent = (props: { item: ItemPath; }) => ReactElement | null;
-export type WardrobeTarget = AppearanceContainer<ICharacterRoomData> | IChatRoomContext;
+export type WardrobeTarget = IChatroomCharacter | IChatRoomContext;
 
 export type WardrobeHeldItem = {
 	type: 'nothing';
@@ -34,7 +33,7 @@ export type WardrobeHeldItem = {
 export interface WardrobeContext {
 	target: WardrobeTarget;
 	targetSelector: RoomTargetSelector;
-	player: AppearanceContainer;
+	player: ICharacter;
 	globalState: AssetFrameworkGlobalState;
 	assetList: readonly Asset[];
 	heldItem: WardrobeHeldItem;

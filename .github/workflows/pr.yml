@@ -1,5 +1,4 @@
 name: PR
-concurrency: automation
 
 on:
   # Triggers the workflow on any pull request (but runs in context of target branch, having a bit higher rights)
@@ -36,6 +35,7 @@ jobs:
   automation:
     name: Automation tasks
     runs-on: ubuntu-latest
+    concurrency: automation
     permissions:
       pull-requests: write
 

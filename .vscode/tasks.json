@@ -92,7 +92,7 @@
 		{
 			"label": "pandora-client-web: dev",
 			"type": "npm",
-			"script": "dev",
+			"script": "dev:progress",
 			"path": "pandora-client-web",
 			"dependsOn": [
 				"pandora-common: dev"

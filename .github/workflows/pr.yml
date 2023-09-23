@@ -1,5 +1,4 @@
 name: PR
-concurrency: automation
 
 on:
   # Triggers the workflow on any pull request (but runs in context of target branch, having a bit higher rights)
@@ -36,18 +35,19 @@ jobs:
   automation:
     name: Automation tasks
     runs-on: ubuntu-latest
+    concurrency: automation
     permissions:
       pull-requests: write
 
     steps:
       - name: Auto-approve (Lead Developer)
-        if: contains(fromJSON('["ace-1331", "ClaudiaMia", "elliesec", "Jomshir98", "Sekkmer"]'), github.actor)
+        if: contains(fromJSON('["ace-1331", "ClaudiaMia", "elliesec", "Jomshir98", "Sekkmer"]'), github.event.pull_request.user.login)
         uses: hmarr/auto-approve-action@v3
         with:
           review-message: "PR is from a Lead Developer."
 
       - name: Auto-approve (Renovate)
-        if: github.actor == 'renovate[bot]'
+        if: github.event.pull_request.user.login == 'renovate[bot]'
         uses: hmarr/auto-approve-action@v3
         with:
-          review-message: "Automated dependency updates only need a single review."
+          review-message: "Automated dependency update."

@@ -1,4 +1,4 @@
-import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory, AsyncSynchronized, ChatRoomDataSchema, CHATROOM_SHARD_UPDATEABLE_PROPERTIES } from 'pandora-common';
+import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory, AsyncSynchronized, ChatRoomDataSchema, CHATROOM_SHARD_UPDATEABLE_PROPERTIES, CharacterRoomPosition } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { isEqual, omit, pick } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -75,7 +75,7 @@ export class Room extends ServerRoom<IShardClient> {
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		for (const character of this.characters) {
 			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
-				character.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
+				character.position = GenerateInitialRoomPosition();
 
 				update.characters ??= {};
 				update.characters[character.id] = {
@@ -163,7 +163,7 @@ export class Room extends ServerRoom<IShardClient> {
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		for (const character of this.characters) {
 			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
-				character.position = [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0];
+				character.position = GenerateInitialRoomPosition();
 
 				update.characters ??= {};
 				update.characters[character.id] = {
@@ -209,7 +209,7 @@ export class Room extends ServerRoom<IShardClient> {
 		return false;
 	}
 
-	public updateCharacterPosition(source: Character, id: CharacterId, [x, y]: [number, number]): void {
+	public updateCharacterPosition(source: Character, id: CharacterId, [x, y, yOffset]: CharacterRoomPosition): void {
 		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 
@@ -230,7 +230,7 @@ export class Room extends ServerRoom<IShardClient> {
 		if (character.id !== source.id && !this.isAdmin(source)) {
 			return;
 		}
-		character.position = [x, y];
+		character.position = [x, y, yOffset];
 		this.sendUpdateToAllInRoom({
 			characters: {
 				[character.id]: {
@@ -269,7 +269,11 @@ export class Room extends ServerRoom<IShardClient> {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
 		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
-		character.initRoomPosition(this.id, [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0], [roomBackground.size[0], maxY]);
+		character.initRoomPosition(
+			this.id,
+			GenerateInitialRoomPosition(),
+			[roomBackground.size[0], maxY],
+		);
 
 		this.runWithSuppressedUpdates(() => {
 			let roomState = this.roomState.currentState;
@@ -605,4 +609,8 @@ export class Room extends ServerRoom<IShardClient> {
 
 function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc'; parts: IChatSegment[]; to: CharacterId; } {
 	return (message.type === 'chat' || message.type === 'ooc') && message.to !== undefined;
+}
+
+function GenerateInitialRoomPosition(): CharacterRoomPosition {
+	return [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0, 0];
 }

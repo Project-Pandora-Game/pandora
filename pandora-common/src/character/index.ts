@@ -8,7 +8,6 @@ import { AppearanceBundleSchema } from '../assets/state/characterState';
 import { HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
-import { ZodTransformReadonly } from '../utility';
 import { RoomId } from '../chatroom';
 
 export const CharacterPublicSettingsSchema = z.object({
@@ -42,14 +41,17 @@ export const CharacterPrivateDataSchema = CharacterPublicDataSchema.extend({
 /** Data about character, that is visible only to the character itself */
 export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;
 
+export const CharacterRoomPositionSchema = z.tuple([z.number(), z.number(), z.number()])
+	.catch([-1, -1, 0])
+	.readonly();
+export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
+
 /** Data about character, as seen by server */
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
 	roomId: z.string().optional(),
-	position: z.tuple([z.number(), z.number()])
-		.default([-1, -1])
-		.transform(ZodTransformReadonly),
+	position: CharacterRoomPositionSchema,
 });
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;

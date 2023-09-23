@@ -3,13 +3,13 @@ import {
 	BoneName,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo } from 'react';
-import { AppearanceContainer, useCharacterAppearancePose } from '../../../character/character';
+import { ICharacter, useCharacterAppearancePose } from '../../../character/character';
 import _ from 'lodash';
 import { useWardrobeExecuteCallback } from '../wardrobeContext';
 import { BoneRowElement } from './wardrobePoseView';
 
 export function WardrobeBodySizeEditor({ character, characterState }: {
-	character: AppearanceContainer;
+	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback();

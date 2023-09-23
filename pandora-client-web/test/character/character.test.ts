@@ -16,7 +16,7 @@ const mockData: ICharacterData = {
 	created: 0,
 	accessId: 'mockID',
 	settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-	position: [0, 0],
+	position: [0, 0, 0],
 };
 describe('Character', () => {
 	let mock: Character;

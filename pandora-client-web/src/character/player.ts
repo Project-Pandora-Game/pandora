@@ -13,7 +13,7 @@ export class PlayerCharacter extends Character<ICharacterPrivateData & ICharacte
 	constructor(data: ICharacterPrivateData) {
 		super({
 			...data,
-			position: [CharacterSize.WIDTH / 2, 0],
+			position: [CharacterSize.WIDTH / 2, 0, 0],
 			isOnline: true,
 		}, GetLogger('Character', `[Player ${data.id}]`));
 	}

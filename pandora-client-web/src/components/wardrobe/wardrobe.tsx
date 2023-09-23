@@ -6,7 +6,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AppearanceContainer, Character } from '../../character/character';
+import { Character, IChatroomCharacter } from '../../character/character';
 import { IChatRoomContext, useChatroom, useChatRoomCharacters, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -88,7 +88,7 @@ function WardrobeRoom({ room: _room }: {
 }
 
 function WardrobeCharacter({ character }: {
-	character: AppearanceContainer<ICharacterRoomData>;
+	character: IChatroomCharacter;
 }): ReactElement {
 	const navigate = useNavigate();
 	const { globalState } = useWardrobeContext();

@@ -1,4 +1,4 @@
-import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo, LegsPose } from 'pandora-common';
+import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterRoomPosition, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo, LegsPose } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterAppearanceView, useCharacterData } from '../../character/character';
@@ -34,9 +34,18 @@ const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 
 export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharacterState): {
+	/** Scale generated from pose */
 	baseScale: number;
+	/**
+	 * Y offset based on pose and items.
+	 * Affects pivot.
+	 * Doesn't include manual offset.
+	 */
 	yOffset: number;
+	/** Position of character's pivot (usually between feet; between knees when kneeling) */
 	pivot: Readonly<PointLike>;
+	/** Angle (in degrees) of whole-character rotation */
+	rotationAngle: number;
 	/**
 	 * This pivot is adjusted for the error in the room positioning
 	 * @see CHARACTER_BASE_Y_OFFSET
@@ -72,42 +81,64 @@ export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharac
 		baseScale,
 		yOffset,
 		pivot,
+		rotationAngle: evaluator.getBoneLikeValue('character_rotation'),
 		errorCorrectedPivot,
 	};
 }
 
-export function useChatRoomCharacterPosition(
-	position: readonly [number, number],
-	characterState: AssetFrameworkCharacterState,
-	background: IChatroomBackgroundData,
-): {
-		position: Readonly<PointLike>;
-		rawPositionY: number;
-		yOffset: number;
-		scale: number;
-		pivot: Readonly<PointLike>;
-		/**
+export function useChatRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, background: IChatroomBackgroundData): {
+	/** Position on the room canvas */
+	position: Readonly<PointLike>;
+	/** Z index to use for the character within the room's container */
+	zIndex: number;
+	/**
+	 * Y offset based on pose and items.
+	 * Affects pivot.
+	 * Doesn't include manual offset.
+	 */
+	yOffset: number;
+	/**
+	 * Y offset based on manual correction.
+	 * Doesn't affect pivot.
+	 */
+	yOffsetExtra: number;
+	/** Final scale of the character (both pose and room scaling applied) */
+	scale: number;
+	/** Position of character's pivot (usually between feet; between knees when kneeling) */
+	pivot: Readonly<PointLike>;
+	/** Angle (in degrees) of whole-character rotation */
+	rotationAngle: number;
+	/**
 	 * This pivot is adjusted for the error in the room positioning
 	 * @see CHARACTER_BASE_Y_OFFSET
 	 */
-		errorCorrectedPivot: Readonly<PointLike>;
-	} {
+	errorCorrectedPivot: Readonly<PointLike>;
+} {
 	const [width, height] = background.size;
 	const scaling = background.scaling;
 
 	const x = Math.min(width, position[0]);
 	const y = Math.min(height, position[1]);
+	const yOffsetExtra = Math.round(position[2]);
 
-	const { baseScale, yOffset, pivot, errorCorrectedPivot } = useChatRoomCharacterOffsets(characterState);
+	const {
+		baseScale,
+		yOffset,
+		pivot,
+		rotationAngle,
+		errorCorrectedPivot,
+	} = useChatRoomCharacterOffsets(characterState);
 
 	const scale = baseScale * (1 - (y * scaling) / height);
 
 	return {
 		position: useMemo((): PointLike => ({ x, y: height - y }), [x, y, height]),
-		rawPositionY: y,
+		zIndex: -y,
 		yOffset,
+		yOffsetExtra,
 		scale,
 		pivot,
+		rotationAngle,
 		errorCorrectedPivot,
 	};
 }
@@ -137,6 +168,17 @@ function ChatRoomCharacterDisplay({
 	const characterFilters = useCharacterDisplayFilters(character);
 	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
 
+	const height = background.size[1];
+	const {
+		position,
+		zIndex,
+		yOffsetExtra,
+		scale,
+		pivot,
+		rotationAngle,
+		errorCorrectedPivot,
+	} = useChatRoomCharacterPosition(dataPosition, characterState, background);
+
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
 		const maxY = CalculateCharacterMaxYForBackground(background);
 
@@ -144,14 +186,11 @@ function ChatRoomCharacterDisplay({
 		newY = _.clamp(Math.round(newY), 0, maxY);
 		shard?.sendMessage('chatRoomCharacterMove', {
 			id,
-			position: [newX, newY],
+			position: [newX, newY, yOffsetExtra],
 		});
 	});
 
 	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
-
-	const height = background.size[1];
-	const { position, rawPositionY, scale, pivot, errorCorrectedPivot } = useChatRoomCharacterPosition(dataPosition, characterState, background);
 
 	const backView = useCharacterAppearanceView(characterState) === 'back';
 
@@ -232,20 +271,53 @@ function ChatRoomCharacterDisplay({
 		return null;
 
 	return (
-		<GraphicsCharacter
+		<Container
 			ref={ characterContainer }
-			characterState={ characterState }
 			position={ position }
 			scale={ { x: scaleX * scale, y: scale } }
 			pivot={ errorCorrectedPivot }
-			hitArea={ hitArea }
-			eventMode='static'
+			zIndex={ zIndex }
 			filters={ filters }
-			onPointerDown={ onPointerDown }
-			onPointerUp={ onPointerUp }
-			onPointerUpOutside={ onPointerUp }
-			zIndex={ -rawPositionY }
+			sortableChildren
+			eventMode='static'
+			cursor='pointer'
+			hitArea={ hitArea }
+			pointerdown={ onPointerDown }
+			pointerup={ onPointerUp }
+			pointerupoutside={ onPointerUp }
+			pointermove={ onPointerMove }
 		>
+			<GraphicsCharacter
+				characterState={ characterState }
+				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+				pivot={ pivot }
+				angle={ rotationAngle }
+			>
+				{
+					!debugConfig?.characterDebugOverlay ? null : (
+						<Container
+							zIndex={ 99999 }
+						>
+							<Graphics
+								draw={ (g) => {
+									g.clear()
+										// Pivot point (with extra Y offset)
+										.beginFill(0xffaa00)
+										.lineStyle({ color: 0x000000, width: 1 })
+										.drawCircle(pivot.x, pivot.y, 5)
+										.endFill()
+										// Mask area
+										.lineStyle({ color: 0xffff00, width: 2 })
+										.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+										// Character canvas standard area
+										.lineStyle({ color: 0x00ff00, width: 2 })
+										.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
+								} }
+							/>
+						</Container>
+					)
+				}
+			</GraphicsCharacter>
 			<Text
 				anchor={ { x: 0.5, y: 0.5 } }
 				position={ { x: labelX, y: labelY } }
@@ -261,15 +333,15 @@ function ChatRoomCharacterDisplay({
 				text={ name }
 			/>
 			{
-				!showDisconnectedIcon ? null : (
-					<Sprite
-						anchor={ { x: 0.5, y: 0.5 } }
-						texture={ disconnectedIconTexture }
-						position={ { x: labelX, y: disconnectedIconY } }
-						width={ 64 }
-						height={ 64 }
-					/>
-				)
+					!showDisconnectedIcon ? null : (
+						<Sprite
+							anchor={ { x: 0.5, y: 0.5 } }
+							texture={ disconnectedIconTexture }
+							position={ { x: labelX, y: disconnectedIconY } }
+							width={ 64 }
+							height={ 64 }
+						/>
+					)
 			}
 			{
 				!debugConfig?.characterDebugOverlay ? null : (
@@ -279,12 +351,6 @@ function ChatRoomCharacterDisplay({
 						<Graphics
 							draw={ (g) => {
 								g.clear()
-									// Mask area
-									.lineStyle({ color: 0xffff00, width: 2 })
-									.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-									// Character canvas standard area
-									.lineStyle({ color: 0x00ff00, width: 2 })
-									.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
 									// Pivot point (wanted)
 									.beginFill(0xffff00)
 									.lineStyle({ color: 0x000000, width: 1 })
@@ -299,7 +365,7 @@ function ChatRoomCharacterDisplay({
 					</Container>
 				)
 			}
-		</GraphicsCharacter>
+		</Container>
 	);
 }
 

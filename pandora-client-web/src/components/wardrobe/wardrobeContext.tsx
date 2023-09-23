@@ -13,7 +13,7 @@ import {
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
-import { AppearanceContainer } from '../../character/character';
+import { ICharacter } from '../../character/character';
 import { Observable } from '../../observable';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useActionRoomContext, useChatRoomCharacters, useChatroomRequired, useRoomState } from '../gameContext/chatRoomContextProvider';
@@ -32,7 +32,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const globalStateContainer = room.globalState;
 	const roomContext = useActionRoomContext();
 	const shardConnector = useShardConnector();
-	const chatroomCharacters: readonly AppearanceContainer[] = useChatRoomCharacters() ?? EMPTY_ARRAY;
+	const chatroomCharacters: readonly ICharacter[] = useChatRoomCharacters() ?? EMPTY_ARRAY;
 
 	AssertNotNullable(account);
 

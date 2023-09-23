@@ -1,5 +1,5 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
-import type { CharacterId, ICharacterPrivateData, ICharacterPublicData } from '../character';
+import type { CharacterId, CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character';
 import type { IChatRoomFullInfo } from '../chatroom';
 import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
@@ -14,7 +14,7 @@ import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 
 export type ICharacterRoomData = ICharacterPublicData & {
-	position: readonly [number, number];
+	position: CharacterRoomPosition;
 	isOnline: boolean;
 };
 

@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import { ItemRoomDevice, AppearanceAction, ItemId } from 'pandora-common';
 import React, { useMemo, useState, ReactElement, useEffect } from 'react';
-import { AppearanceContainer } from '../../../character/character';
+import { ICharacter } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../contextMenu';
@@ -85,7 +85,7 @@ function LeaveDeviceMenu({ device, close }: {
 function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	device: ItemRoomDevice;
 	slot: string;
-	character: AppearanceContainer;
+	character: ICharacter;
 	close: () => void;
 }) {
 	const action = useMemo<AppearanceAction>(() => ({
@@ -124,7 +124,7 @@ function DeviceSlotsMenu({ device }: {
 	const occupancy = useMemo(() => slot && device.slotOccupancy.get(slot), [device, slot]);
 	const { player } = useWardrobeContext();
 	const chatRoomCharacters = useChatRoomCharacters();
-	const characters = useMemo<readonly AppearanceContainer[]>(() => chatRoomCharacters || [player], [chatRoomCharacters, player]);
+	const characters = useMemo<readonly ICharacter[]>(() => chatRoomCharacters || [player], [chatRoomCharacters, player]);
 	const character = useMemo(() => characters.find(({ id }) => id === occupancy), [characters, occupancy]);
 
 	if (!slot) {

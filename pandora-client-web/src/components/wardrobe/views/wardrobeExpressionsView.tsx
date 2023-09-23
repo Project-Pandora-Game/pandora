@@ -3,13 +3,13 @@ import {
 	AssetFrameworkCharacterState,
 } from 'pandora-common';
 import React, { ReactElement, useCallback } from 'react';
-import { AppearanceContainer, useCharacterAppearanceItems } from '../../../character/character';
+import { ICharacter, useCharacterAppearanceItems } from '../../../character/character';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column } from '../../common/container/container';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
 
 export function WardrobeExpressionGui({ characterState }: {
-	character: AppearanceContainer;
+	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const appearance = useCharacterAppearanceItems(characterState);

@@ -1,12 +1,11 @@
 import {
 	AssetFrameworkCharacterState,
 	HexColorString,
-	ICharacterRoomData,
 	IChatroomBackgroundData,
 	ResolveBackground,
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
-import { AppearanceContainer } from '../../character/character';
+import { IChatroomCharacter } from '../../character/character';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { Button } from '../common/button/button';
 import { useEvent } from '../../common/useEvent';
@@ -20,7 +19,7 @@ import { useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../ch
 import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
 
 export function WardrobeCharacterPreview({ character, characterState }: {
-	character: AppearanceContainer<ICharacterRoomData>;
+	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const roomInfo = useChatRoomInfo();
@@ -86,7 +85,7 @@ function WardrobeRoomBackground({
 	characterState,
 }: {
 	roomBackground: Readonly<IChatroomBackgroundData>;
-	character: AppearanceContainer<ICharacterRoomData>;
+	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const { position, scale, errorCorrectedPivot, yOffset } = useChatRoomCharacterPosition(character.data.position, characterState, roomBackground);

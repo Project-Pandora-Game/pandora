@@ -1,13 +1,13 @@
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
-import { AssetsPosePreset, MergePartialAppearancePoses, PartialAppearancePose, WearableAssetType } from '../definitions';
+import { AssetsPosePreset, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose, WearableAssetType } from '../definitions';
 import { Assert, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
-import { Immutable, freeze, produce } from 'immer';
+import { Immutable, freeze } from 'immer';
 import { z } from 'zod';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType, CharacterView, CharacterViewSchema, LegsPoseSchema } from '../graphics';
 import { Item, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
-import { BONE_MAX, BONE_MIN, CharacterArmsPose, GetDefaultAppearanceBundle, GetDefaultAppearancePose } from '../appearance';
+import { BONE_MAX, BONE_MIN, GetDefaultAppearanceBundle, GetDefaultAppearancePose } from '../appearance';
 import { Logger } from '../../logging';
 import _, { isEqual } from 'lodash';
 import { AssetFrameworkRoomState } from './roomState';
@@ -148,40 +148,15 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	}
 
 	public produceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean = false): AssetFrameworkCharacterState {
-		const resultPose = produce(this.requestedPose, (draft) => {
-			// Update view
-			if (pose.view != null) {
-				draft.view = pose.view;
-			}
-
-			// Update arms
+		const resultPose = ProduceAppearancePose(
+			this.requestedPose,
 			{
-				const [changed, arms] = this._newArmsPose(pose);
-				if (changed) {
-					draft.leftArm = arms.leftArm;
-					draft.rightArm = arms.rightArm;
-				}
-			}
-
-			// Update legs
-			if (pose.legs != null) {
-				draft.legs = pose.legs;
-			}
-
-			// Update bones
-			if (pose.bones != null) {
-				for (const bone of this.assetManager.getAllBones()) {
-					const newValue = pose.bones[bone.name];
-
-					if (type !== true && bone.type !== type)
-						continue;
-					if (!missingAsZero && newValue == null)
-						continue;
-
-					draft.bones[bone.name] = (newValue != null && Number.isInteger(newValue)) ? _.clamp(newValue, BONE_MIN, BONE_MAX) : 0;
-				}
-			}
-		});
+				assetManager: this.assetManager,
+				boneTypeFilter: type === true ? undefined : type,
+				missingBonesAsZero: missingAsZero,
+			},
+			pose,
+		);
 
 		// Return current if no change
 		if (resultPose === this.requestedPose)
@@ -197,16 +172,6 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			return result;
 
 		return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose');
-	}
-
-	private _newArmsPose({ arms, leftArm: left, rightArm: right }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): [boolean, CharacterArmsPose] {
-		const leftArm = { ...this.requestedPose.leftArm, ...arms, ...left };
-		const rightArm = { ...this.requestedPose.rightArm, ...arms, ...right };
-		const changed =
-			!_.isEqual(this.requestedPose.leftArm, leftArm) ||
-			!_.isEqual(this.requestedPose.rightArm, rightArm);
-
-		return [changed, freeze({ leftArm, rightArm }, true)];
 	}
 
 	public produceWithView(newView: CharacterView): AssetFrameworkCharacterState {

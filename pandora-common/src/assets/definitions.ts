@@ -1,12 +1,15 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexRGBAColorString, ZodTemplateString } from '../validation';
-import type { AppearanceArmPose } from './state/characterState';
-import type { BoneDefinitionCompressed, BoneName, CharacterView, Coordinates, LegsPose } from './graphics';
+import type { AppearanceArmPose, AppearancePose } from './state/characterState';
+import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Coordinates, LegsPose } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';
-import { Immutable } from 'immer';
+import { Immutable, freeze, produce } from 'immer';
+import { AssetManager } from './assetManager';
+import _ from 'lodash';
+import { BONE_MAX, BONE_MIN } from './appearance';
 
 export const AssetIdSchema = ZodTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
@@ -372,6 +375,63 @@ export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePos
 		legs: base.legs ?? extend.legs,
 		view: base.view ?? extend.view,
 	};
+}
+
+export function ProduceAppearancePose(
+	basePose: Immutable<AppearancePose>,
+	{
+		assetManager,
+		boneTypeFilter,
+		missingBonesAsZero = false,
+	}: {
+		assetManager: AssetManager;
+		boneTypeFilter?: BoneType;
+		/** @default false */
+		missingBonesAsZero?: boolean;
+	},
+	...changes: [(PartialAppearancePose | AssetsPosePreset), ...(PartialAppearancePose | AssetsPosePreset)[]]
+): Immutable<AppearancePose> {
+	const pose = changes.reduce(MergePartialAppearancePoses);
+
+	return produce(basePose, (draft) => {
+		// Update view
+		if (pose.view != null) {
+			draft.view = pose.view;
+		}
+
+		// Update arms
+		{
+			const leftArm = { ...basePose.leftArm, ...pose.arms, ...pose.leftArm };
+			const rightArm = { ...basePose.rightArm, ...pose.arms, ...pose.rightArm };
+			const armsChanged =
+				!_.isEqual(basePose.leftArm, leftArm) ||
+				!_.isEqual(basePose.rightArm, rightArm);
+
+			if (armsChanged) {
+				draft.leftArm = freeze(leftArm, true);
+				draft.rightArm = freeze(rightArm, true);
+			}
+		}
+
+		// Update legs
+		if (pose.legs != null) {
+			draft.legs = pose.legs;
+		}
+
+		// Update bones
+		if (pose.bones != null) {
+			for (const bone of assetManager.getAllBones()) {
+				const newValue = pose.bones[bone.name];
+
+				if (boneTypeFilter !== undefined && bone.type !== boneTypeFilter)
+					continue;
+				if (!missingBonesAsZero && newValue == null)
+					continue;
+
+				draft.bones[bone.name] = (newValue != null && Number.isInteger(newValue)) ? _.clamp(newValue, BONE_MIN, BONE_MAX) : 0;
+			}
+		}
+	});
 }
 
 export type AssetsPosePreset<Bones extends BoneName = BoneName> = PartialAppearancePose<Bones> & {

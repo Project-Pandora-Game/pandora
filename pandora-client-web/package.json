@@ -8,6 +8,7 @@
 		"clean": "rimraf dist",
 		"build": "pnpm run --silent clean && cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --env prod --fail-on-warnings",
 		"dev": "pnpm run --silent clean && cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack serve",
+		"dev:progress": "pnpm run --silent dev --progress",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "pnpm run '/type-check:.*/'",

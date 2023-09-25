@@ -92,7 +92,7 @@
 		{
 			"label": "pandora-client-web: dev",
 			"type": "npm",
-			"script": "dev",
+			"script": "dev:progress",
 			"path": "pandora-client-web",
 			"dependsOn": [
 				"pandora-common: dev"
@@ -129,8 +129,8 @@
 				],
 				"background": {
 					"activeOnStart": true,
-					"beginsPattern": "^assets by ",
-					"endsPattern": "webpack [\\d.]+ compiled .+ in \\d+ ms"
+					"beginsPattern": "Compiler starting\\.\\.\\.",
+					"endsPattern": "(webpack [\\d.]+ compiled .+ in \\d+ ms)|(Compiler is watching files for update\\.\\.\\.)"
 				}
 			}
 		},

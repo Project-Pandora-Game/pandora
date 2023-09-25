@@ -90,6 +90,9 @@ export default function (env: WebpackEnv): Configuration {
 			maxAssetSize: 2 * 1024 * 1024,
 			maxEntrypointSize: 2 * 1024 * 1024,
 		},
+		infrastructureLogging: {
+			level: 'log',
+		},
 	};
 }
 

@@ -79,6 +79,7 @@ function ChatRoomLeave(): ReactElement {
 function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: IChatRoomFullInfo; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const { playerState } = usePlayerState();
+	const roomDeviceLink = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getRoomDeviceLink());
 	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.isInSafemode() || !manager.getEffects().blockRoomLeave));
 	const closeDialog = useContext(leaveButtonContext);
 
@@ -102,13 +103,20 @@ function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: I
 			<span>Name: { room.name }</span>
 			<span>Id: { room.id }</span>
 			{
-				!canLeave ? (
+				roomDeviceLink ? (
+					<Row alignX='center' padding='large'>
+						<b>You must exit the room device before leaving the room.</b>
+					</Row>
+				) : null
+			}
+			{
+				(!canLeave && roomDeviceLink == null) ? (
 					<Row alignX='center' padding='large'>
 						<b>An item is preventing you from leaving the room.</b>
 					</Row>
 				) : null
 			}
-			<Button onClick={ onRoomLeave } className='fadeDisabled' disabled={ !canLeave }>
+			<Button onClick={ onRoomLeave } className='fadeDisabled' disabled={ !canLeave || roomDeviceLink != null }>
 				Leave room
 			</Button>
 		</>

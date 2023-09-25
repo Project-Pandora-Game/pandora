@@ -652,7 +652,7 @@ export class Character {
 	}
 
 	@AsyncSynchronized('object')
-	public async leaveRoom(): Promise<'ok' | 'failed' | 'restricted'> {
+	public async leaveRoom(): Promise<'ok' | 'failed' | 'restricted' | 'inRoomDevice'> {
 		// Only loaded characters can request room leave
 		if (!this.isOnline())
 			return 'failed';
@@ -680,12 +680,16 @@ export class Character {
 			return 'failed';
 		}
 
-		if (restrictionResult.result === 'ok') {
-			// NOOP (fallthough)
-		} else if (restrictionResult.result === 'restricted') {
-			return 'restricted';
-		} else {
-			AssertNever(restrictionResult.result);
+		switch (restrictionResult.result) {
+			case 'ok':
+				// NOOP (fallthough)
+				break;
+			case 'restricted':
+				return 'restricted';
+			case 'inRoomDevice':
+				return 'inRoomDevice';
+			default:
+				AssertNever(restrictionResult.result);
 		}
 
 		// Actually remove the character from the room

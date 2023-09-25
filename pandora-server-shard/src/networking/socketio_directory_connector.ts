@@ -299,6 +299,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			return { result: 'targetNotFound' };
 
 		const restrictionManager = character.getRestrictionManager();
+		if (restrictionManager.getRoomDeviceLink() != null)
+			return { result: 'inRoomDevice' };
+
 		// Safemode skips any checks
 		if (!restrictionManager.isInSafemode()) {
 			// The character must not have leave-restricting effect

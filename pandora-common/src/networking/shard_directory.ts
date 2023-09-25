@@ -1,7 +1,7 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
-import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataSchema, CharacterDataUpdateSchema, CharacterIdSchema } from '../character';
+import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataSchema, CharacterDataUpdateSchema, CharacterIdSchema, ICharacterData } from '../character';
 import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
-import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
+import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 
@@ -12,7 +12,7 @@ export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 import type { } from '../chatroom/chat';
-import type { } from '../validation';
+import { ZodCast } from '../validation';
 
 export const ShardDirectorySchema = {
 	shardRegister: {
@@ -60,7 +60,10 @@ export const ShardDirectorySchema = {
 	//#region Database
 	getCharacter: {
 		request: CharacterDataAccessSchema,
-		response: CharacterDataSchema,
+		response: z.object({
+			// Response is intentionally not checked, as DB might contain outdated data and migration happens on the shard
+			result: ZodCast<ICharacterData>().nullable(),
+		}),
 	},
 	setCharacter: {
 		request: CharacterDataUpdateSchema,
@@ -70,7 +73,10 @@ export const ShardDirectorySchema = {
 	},
 	getChatRoom: {
 		request: ChatRoomDataAccessSchema,
-		response: ChatRoomDataSchema,
+		response: z.object({
+			// Response is intentionally not checked, as DB might contain outdated data and migration happens on the shard
+			result: ZodCast<IChatRoomData>().nullable(),
+		}),
 	},
 	setChatRoom: {
 		request: z.object({

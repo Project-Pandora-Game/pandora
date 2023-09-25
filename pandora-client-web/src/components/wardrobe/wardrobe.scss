@@ -407,19 +407,25 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	.pose-row {
-		display: flex;
-		flex-flow: row wrap;
-		gap: 0.5em;
 		margin: 0 1em;
 
-		.Button:disabled {
-			background-color: $grey-lighter;
-			color: $grey-darkest;
+		.pose {
+			border: solid 2px transparent;
+			border-radius: 0.5em;
+			transition: all 150ms linear;
+			padding: 2px;
 
 			&.pose-unavailable {
-				background-color: $grey-darker;
-				color: $grey-mid;
-				opacity: 40%;
+				opacity: 60%;
+			}
+
+			&.pose-requested {
+				border-color: #000;
+			}
+
+			&.pose-active:not(.pose-requested) {
+				border-color: #000;
+				border-style: dashed;
 			}
 		}
 	}

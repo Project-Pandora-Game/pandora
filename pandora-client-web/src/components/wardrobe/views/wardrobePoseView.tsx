@@ -15,6 +15,7 @@ import {
 	LegsPoseSchema,
 	MergePartialAppearancePoses,
 	PartialAppearancePose,
+	ProduceAppearancePose,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo } from 'react';
 import { IChatroomCharacter, useCharacterData } from '../../../character/character';
@@ -31,6 +32,7 @@ import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 
 type CheckedPosePreset = {
 	active: boolean;
+	requested: boolean;
 	available: boolean;
 	pose: PartialAppearancePose;
 	name: string;
@@ -69,42 +71,35 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 
 	const limits = AppearanceItemProperties(characterState.items).limits;
 
-	const isActive = (preset: PartialAppearancePose) => {
-		if (preset.view != null && preset.view !== characterState.requestedPose.view)
-			return false;
-
-		if (preset.legs != null && preset.legs !== characterState.requestedPose.legs)
-			return false;
-
-		const left = { ...preset.arms, ...preset.leftArm };
-		const right = { ...preset.arms, ...preset.rightArm };
-		for (const name of ['position', 'rotation', 'fingers'] as const) {
-			if (left[name] != null && left[name] !== characterState.requestedPose.leftArm[name])
-				return false;
-			if (right[name] != null && right[name] !== characterState.requestedPose.rightArm[name])
-				return false;
-		}
-
-		for (const [boneName, value] of Object.entries(preset.bones ?? {})) {
-			if (value === undefined)
-				continue;
-
-			if (characterState.requestedPose.bones[boneName] !== value)
-				return false;
-		}
-
-		return true;
-	};
-
 	const poses = presets.map<CheckedAssetsPosePresets[number]>((preset) => ({
 		category: preset.category,
-		poses: preset.poses.map((pose) => {
-			const available = limits.validate(pose);
+		poses: preset.poses.map((pose): CheckedPosePreset => {
 			const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
 			return {
 				pose: mergedPose,
-				active: available && isActive(mergedPose),
-				available,
+				requested: _.isEqual(
+					characterState.requestedPose,
+					ProduceAppearancePose(
+						characterState.requestedPose,
+						{
+							assetManager,
+							boneTypeFilter: 'pose',
+						},
+						mergedPose,
+					),
+				),
+				active: _.isEqual(
+					characterState.actualPose,
+					ProduceAppearancePose(
+						characterState.actualPose,
+						{
+							assetManager,
+							boneTypeFilter: 'pose',
+						},
+						mergedPose,
+					),
+				),
+				available: limits.validate(pose),
 				name: pose.name,
 			};
 		}),
@@ -119,13 +114,17 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 			{ poses.map((poseCategory, poseCategoryIndex) => (
 				<React.Fragment key={ poseCategoryIndex }>
 					<h4>{ poseCategory.category }</h4>
-					<div className='pose-row'>
+					<Row
+						className='pose-row'
+						gap='tiny'
+						wrap
+					>
 						{
 							poseCategory.poses.map((preset, presetIndex) => (
 								<PoseButton key={ presetIndex } preset={ preset } setPose={ setPose } />
 							))
 						}
-					</div>
+					</Row>
 				</React.Fragment>
 			)) }
 		</>
@@ -347,11 +346,25 @@ export function WardrobePoseGui({ character, characterState }: {
 }
 
 function PoseButton({ preset, setPose }: { preset: CheckedPosePreset; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
-	const { name, available, active, pose } = preset;
+	const { name, available, requested, active, pose } = preset;
 	return (
-		<Button className={ classNames('slim', { ['pose-unavailable']: !available }) } disabled={ active || !available } onClick={ () => setPose(pose) }>
-			{ name }
-		</Button>
+		<Row
+			className={ classNames(
+				'pose',
+				{
+					['pose-unavailable']: !available,
+					['pose-requested']: requested,
+					['pose-active']: active,
+				},
+			) }
+		>
+			<Button
+				slim
+				onClick={ () => setPose(pose) }
+			>
+				{ name }
+			</Button>
+		</Row>
 	);
 }
 

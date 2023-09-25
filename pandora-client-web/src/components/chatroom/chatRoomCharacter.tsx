@@ -9,7 +9,7 @@ import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter, P
 import { Container, Graphics, Sprite, Text, useApp } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
-import { MASK_SIZE } from '../../graphics/graphicsLayer';
+import { MASK_SIZE, SwapCullingDirection } from '../../graphics/graphicsLayer';
 import { ChatRoom, useCharacterRestrictionsManager, useCharacterState } from '../gameContext/chatRoomContextProvider';
 import { useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
 import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
@@ -287,13 +287,63 @@ function ChatRoomCharacterDisplay({
 			pointerupoutside={ onPointerUp }
 			pointermove={ onPointerMove }
 		>
-			<GraphicsCharacter
-				characterState={ characterState }
-				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
-				scale={ { x: scaleX, y: 1 } }
-				pivot={ pivot }
-				angle={ rotationAngle }
-			>
+			<SwapCullingDirection uniqueKey='filter' swap={ filters.length > 0 }>
+				<GraphicsCharacter
+					characterState={ characterState }
+					position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+					scale={ { x: scaleX, y: 1 } }
+					pivot={ pivot }
+					angle={ rotationAngle }
+				>
+					{
+						!debugConfig?.characterDebugOverlay ? null : (
+							<Container
+								zIndex={ 99999 }
+							>
+								<Graphics
+									draw={ (g) => {
+										g.clear()
+											// Pivot point (with extra Y offset)
+											.beginFill(0xffaa00)
+											.lineStyle({ color: 0x000000, width: 1 })
+											.drawCircle(pivot.x, pivot.y, 5)
+											.endFill()
+											// Mask area
+											.lineStyle({ color: 0xffff00, width: 2 })
+											.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+											// Character canvas standard area
+											.lineStyle({ color: 0x00ff00, width: 2 })
+											.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
+									} }
+								/>
+							</Container>
+						)
+					}
+				</GraphicsCharacter>
+				<Text
+					anchor={ { x: 0.5, y: 0.5 } }
+					position={ { x: labelX, y: labelY } }
+					style={ new TextStyle({
+						fontFamily: 'Arial',
+						fontSize: 32,
+						fill: settings.labelColor,
+						align: 'center',
+						dropShadow: true,
+						dropShadowBlur: 4,
+					}) }
+					text={ name }
+				/>
+				{
+						!showDisconnectedIcon ? null : (
+							<Sprite
+								anchor={ { x: 0.5, y: 0.5 } }
+								texture={ disconnectedIconTexture }
+								position={ { x: labelX, y: disconnectedIconY } }
+								width={ 64 }
+								height={ 64 }
+							/>
+						)
+				}
 				{
 					!debugConfig?.characterDebugOverlay ? null : (
 						<Container
@@ -302,69 +352,21 @@ function ChatRoomCharacterDisplay({
 							<Graphics
 								draw={ (g) => {
 									g.clear()
-										// Pivot point (with extra Y offset)
-										.beginFill(0xffaa00)
+										// Pivot point (wanted)
+										.beginFill(0xffff00)
 										.lineStyle({ color: 0x000000, width: 1 })
 										.drawCircle(pivot.x, pivot.y, 5)
-										.endFill()
-										// Mask area
-										.lineStyle({ color: 0xffff00, width: 2 })
-										.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-										// Character canvas standard area
-										.lineStyle({ color: 0x00ff00, width: 2 })
-										.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
+										// Pivot point (actual)
+										.beginFill(0xccff00)
+										.lineStyle({ color: 0x000000, width: 1 })
+										.drawCircle(errorCorrectedPivot.x, errorCorrectedPivot.y, 5);
 								} }
 							/>
+							<Graphics draw={ hotboxDebugDraw } />
 						</Container>
 					)
 				}
-			</GraphicsCharacter>
-			<Text
-				anchor={ { x: 0.5, y: 0.5 } }
-				position={ { x: labelX, y: labelY } }
-				style={ new TextStyle({
-					fontFamily: 'Arial',
-					fontSize: 32,
-					fill: settings.labelColor,
-					align: 'center',
-					dropShadow: true,
-					dropShadowBlur: 4,
-				}) }
-				text={ name }
-			/>
-			{
-					!showDisconnectedIcon ? null : (
-						<Sprite
-							anchor={ { x: 0.5, y: 0.5 } }
-							texture={ disconnectedIconTexture }
-							position={ { x: labelX, y: disconnectedIconY } }
-							width={ 64 }
-							height={ 64 }
-						/>
-					)
-			}
-			{
-				!debugConfig?.characterDebugOverlay ? null : (
-					<Container
-						zIndex={ 99999 }
-					>
-						<Graphics
-							draw={ (g) => {
-								g.clear()
-									// Pivot point (wanted)
-									.beginFill(0xffff00)
-									.lineStyle({ color: 0x000000, width: 1 })
-									.drawCircle(pivot.x, pivot.y, 5)
-									// Pivot point (actual)
-									.beginFill(0xccff00)
-									.lineStyle({ color: 0x000000, width: 1 })
-									.drawCircle(errorCorrectedPivot.x, errorCorrectedPivot.y, 5);
-							} }
-						/>
-						<Graphics draw={ hotboxDebugDraw } />
-					</Container>
-				)
-			}
+			</SwapCullingDirection>
 		</Container>
 	);
 }

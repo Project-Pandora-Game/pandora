@@ -274,7 +274,7 @@ function ChatRoomCharacterDisplay({
 		<Container
 			ref={ characterContainer }
 			position={ position }
-			scale={ { x: scaleX * scale, y: scale } }
+			scale={ { x: scale, y: scale } }
 			pivot={ errorCorrectedPivot }
 			zIndex={ zIndex }
 			filters={ filters }
@@ -290,6 +290,7 @@ function ChatRoomCharacterDisplay({
 			<GraphicsCharacter
 				characterState={ characterState }
 				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+				scale={ { x: scaleX, y: 1 } }
 				pivot={ pivot }
 				angle={ rotationAngle }
 			>
@@ -321,7 +322,6 @@ function ChatRoomCharacterDisplay({
 			<Text
 				anchor={ { x: 0.5, y: 0.5 } }
 				position={ { x: labelX, y: labelY } }
-				scale={ { x: 1 / scaleX, y: 1 } }
 				style={ new TextStyle({
 					fontFamily: 'Arial',
 					fontSize: 32,

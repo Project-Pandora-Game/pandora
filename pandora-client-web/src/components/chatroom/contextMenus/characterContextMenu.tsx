@@ -210,10 +210,11 @@ function RelationshipActionContextMenu(): ReactElement | null {
 	}
 }
 
-export function CharacterContextMenu({ character, position, onClose }: {
+export function CharacterContextMenu({ character, position, onClose, closeText = 'Close' }: {
 	character: Character<ICharacterRoomData>;
 	position: Readonly<PointLike>;
 	onClose: () => void;
+	closeText?: string;
 }): ReactElement | null {
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
@@ -282,7 +283,7 @@ export function CharacterContextMenu({ character, position, onClose }: {
 				<AdminActionContextMenu />
 				<RelationshipActionContextMenu />
 				<button onClick={ onCloseActual } >
-					Close
+					{ closeText }
 				</button>
 			</div>
 		</characterMenuContext.Provider>

@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
-import { ItemRoomDevice, AppearanceAction, ItemId } from 'pandora-common';
-import React, { useMemo, useState, ReactElement, useEffect } from 'react';
-import { ICharacter } from '../../../character/character';
+import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData } from 'pandora-common';
+import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
+import { Character, ICharacter } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../contextMenu';
@@ -10,6 +10,7 @@ import { usePlayer } from '../../gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../wardrobe/wardrobeCheckQueue';
 import { useWardrobeContext, useWardrobeExecute, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import { CharacterContextMenu } from './characterContextMenu';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -116,8 +117,9 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	);
 }
 
-function DeviceSlotsMenu({ device }: {
+function DeviceSlotsMenu({ device, position, close }: {
 	device: ItemRoomDevice;
+	position: Readonly<PointLike>;
 	close: () => void;
 }) {
 	const [slot, setSlot] = useState<string | null>(null);
@@ -126,6 +128,25 @@ function DeviceSlotsMenu({ device }: {
 	const chatRoomCharacters = useChatRoomCharacters();
 	const characters = useMemo<readonly ICharacter[]>(() => chatRoomCharacters || [player], [chatRoomCharacters, player]);
 	const character = useMemo(() => characters.find(({ id }) => id === occupancy), [characters, occupancy]);
+	const [selectedCharacter, setSelectedCharacter] = useState<Character<ICharacterRoomData> | null>(null);
+	const onSelectCharacter = useCallback(() => {
+		if (!chatRoomCharacters || !character) {
+			setSelectedCharacter(null);
+			return;
+		}
+		setSelectedCharacter(chatRoomCharacters.find((c) => c.data.id === character.data.id) ?? null);
+	}, [chatRoomCharacters, character]);
+
+	if (selectedCharacter) {
+		return (
+			<CharacterContextMenu
+				character={ selectedCharacter }
+				position={ position }
+				onClose={ () => setSelectedCharacter(null) }
+				closeText='Back to slots'
+			/>
+		);
+	}
 
 	if (!slot) {
 		return (
@@ -145,9 +166,9 @@ function DeviceSlotsMenu({ device }: {
 				<span>
 					{ device.asset.definition.slots[slot].name }
 				</span>
-				<span>
+				<button onClick={ onSelectCharacter }>
 					{ character?.name } ({ character?.id })
-				</span>
+				</button>
 				<DeviceSlotClear device={ device } slot={ slot } close={ close }>
 					{ (character)
 						? 'Exit the device'
@@ -209,7 +230,7 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 				) }
 				{ menu === 'slots' && (
 					<>
-						<DeviceSlotsMenu device={ device } close={ onClose } />
+						<DeviceSlotsMenu device={ device } position={ position } close={ onClose } />
 						<button onClick={ () => setMenu('main') }>
 							Back
 						</button>

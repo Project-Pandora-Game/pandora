@@ -3,7 +3,7 @@ import {
 	BoneName,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo } from 'react';
-import { ICharacter, useCharacterAppearancePose } from '../../../character/character';
+import { ICharacter } from '../../../character/character';
 import _ from 'lodash';
 import { useWardrobeExecuteCallback } from '../wardrobeContext';
 import { BoneRowElement } from './wardrobePoseView';
@@ -13,7 +13,8 @@ export function WardrobeBodySizeEditor({ character, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback();
-	const currentBones = useCharacterAppearancePose(characterState);
+	const assetManager = characterState.assetManager;
+	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
 	const setBodyDirect = useCallback(({ bones }: { bones: Record<BoneName, number>; }) => {
 		execute({
@@ -29,13 +30,13 @@ export function WardrobeBodySizeEditor({ character, characterState }: {
 		<div className='inventoryView'>
 			<div className='bone-ui'>
 				{
-					currentBones
-						.filter((bone) => bone.definition.type === 'body')
+					allBones
+						.filter((bone) => bone.type === 'body')
 						.map((bone) => (
-							<BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => {
+							<BoneRowElement key={ bone.name } definition={ bone } rotation={ characterState.requestedPose.bones[bone.name] || 0 } onChange={ (value) => {
 								setBody({
 									bones: {
-										[bone.definition.name]: value,
+										[bone.name]: value,
 									},
 								});
 							} } />

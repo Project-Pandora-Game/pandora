@@ -2,12 +2,12 @@ import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, 
 import { AssetsPosePreset, MergePartialAppearancePoses, PartialAppearancePose, WearableAssetType } from '../definitions';
 import { Assert, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
-import { freeze } from 'immer';
+import { Immutable, freeze, produce } from 'immer';
 import { z } from 'zod';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType, CharacterView, CharacterViewSchema, LegsPose, LegsPoseSchema } from '../graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType, CharacterView, CharacterViewSchema, LegsPoseSchema } from '../graphics';
 import { Item, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
-import { BONE_MAX, BONE_MIN, CharacterArmsPose, GetDefaultAppearanceBundle } from '../appearance';
+import { BONE_MAX, BONE_MIN, CharacterArmsPose, GetDefaultAppearanceBundle, GetDefaultAppearancePose } from '../appearance';
 import { Logger } from '../../logging';
 import _, { isEqual } from 'lodash';
 import { AssetFrameworkRoomState } from './roomState';
@@ -35,7 +35,8 @@ export const AppearancePoseSchema = z.object({
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
 
-export const AppearanceBundleSchema = AppearancePoseSchema.extend({
+export const AppearanceBundleSchema = z.object({
+	requestedPose: AppearancePoseSchema.catch(() => GetDefaultAppearancePose()),
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	safemode: SafemodeDataSchema.optional(),
 	clientOnly: z.boolean().optional(),
@@ -49,10 +50,7 @@ type AssetFrameworkCharacterStateProps = {
 	readonly assetManager: AssetManager;
 	readonly id: CharacterId;
 	readonly items: AppearanceItems<WearableAssetType>;
-	readonly pose: AppearanceCharacterPose;
-	readonly arms: CharacterArmsPose;
-	readonly legs: LegsPose;
-	readonly view: CharacterView;
+	readonly requestedPose: AppearancePose;
 	readonly safemode: SafemodeData | undefined;
 };
 
@@ -65,11 +63,12 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 	public readonly id: CharacterId;
 	public readonly items: AppearanceItems<WearableAssetType>;
-	public readonly pose: AppearanceCharacterPose;
-	public readonly arms: CharacterArmsPose;
-	public readonly legs: LegsPose;
-	public readonly view: CharacterView;
+	public readonly requestedPose: Immutable<AppearancePose>;
 	public readonly safemode: SafemodeData | undefined;
+
+	public get actualPose(): Immutable<AppearancePose> {
+		return this._generateActualPose();
+	}
 
 	private constructor(props: AssetFrameworkCharacterStateProps);
 	private constructor(old: AssetFrameworkCharacterState, override: Partial<AssetFrameworkCharacterStateProps>);
@@ -77,10 +76,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		this.assetManager = override.assetManager ?? props.assetManager;
 		this.id = override.id ?? props.id;
 		this.items = override.items ?? props.items;
-		this.pose = override.pose ?? props.pose;
-		this.arms = override.arms ?? props.arms;
-		this.legs = override.legs ?? props.legs;
-		this.view = override.view ?? props.view;
+		this.requestedPose = override.requestedPose ?? props.requestedPose;
 		// allow override safemode with undefined (override: { safemode: undefined })
 		this.safemode = 'safemode' in override ? override.safemode : props.safemode;
 	}
@@ -97,38 +93,15 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				return r;
 		}
 
-		if (!this.validatePoseLimits()) {
-			return {
-				success: false,
-				error: {
-					problem: 'invalidPose',
-				},
-			};
-		}
-
 		return {
 			success: true,
-		};
-	}
-
-	public exportVolatileFullPose(): AppearancePose {
-		return {
-			bones: Object.fromEntries([...this.pose.entries()].map(([bone, state]) => [bone, state.rotation])),
-			leftArm: this.arms.leftArm,
-			rightArm: this.arms.rightArm,
-			legs: this.legs,
-			view: this.view,
 		};
 	}
 
 	public exportToBundle(options: IExportOptions = {}): AppearanceBundle {
 		return {
 			items: this.items.map((item) => item.exportToBundle(options)),
-			bones: this.exportBones(),
-			leftArm: _.cloneDeep(this.arms.leftArm),
-			rightArm: _.cloneDeep(this.arms.rightArm),
-			legs: this.legs,
-			view: this.view,
+			requestedPose: _.cloneDeep(this.requestedPose),
 			safemode: this.safemode,
 		};
 	}
@@ -137,151 +110,109 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		options.clientOnly = true;
 		return {
 			items: this.items.map((item) => item.exportToBundle(options)),
-			bones: this.exportBones(),
-			leftArm: _.cloneDeep(this.arms.leftArm),
-			rightArm: _.cloneDeep(this.arms.rightArm),
-			legs: this.legs,
-			view: this.view,
+			requestedPose: _.cloneDeep(this.requestedPose),
 			safemode: this.safemode,
 			clientOnly: true,
 		};
 	}
 
-	public exportBones(type?: BoneType): Record<BoneName, number> {
-		const pose: Record<BoneName, number> = {};
-		for (const state of this.pose.values()) {
-			if (state.rotation === 0) {
-				continue;
-			}
-			if (type && state.definition.type !== type) {
-				continue;
-			}
-			pose[state.definition.name] = state.rotation;
-		}
-		return pose;
-	}
-
-	public validatePoseLimits(): boolean {
+	@MemoizeNoArg
+	private _generateActualPose(): Immutable<AppearancePose> {
 		const limits = AppearanceItemProperties(this.items).limits;
 		if (!limits || limits.hasNoLimits())
-			return true;
+			return this.requestedPose;
 
-		return limits.validate(this.exportVolatileFullPose());
-	}
-
-	public enforcePoseLimits(): AssetFrameworkCharacterState {
-		const limits = AppearanceItemProperties(this.items).limits;
-		if (!limits || limits.hasNoLimits())
-			return this;
-
-		const { changed, pose } = limits.force(this.exportVolatileFullPose());
+		const { changed, pose } = limits.force(this.requestedPose);
 		if (!changed)
-			return this;
+			return this.requestedPose;
 
-		const { bones, leftArm, rightArm, legs, view } = pose;
+		return freeze(pose, true);
+	}
 
-		const newPose = new Map(this.pose);
-		for (const [bone, state] of newPose.entries()) {
-			const rotation = bones[bone];
-			if (rotation != null && rotation !== state.rotation) {
-				newPose.set(bone, {
-					definition: state.definition,
-					rotation,
-				});
-			}
-		}
+	public getRequestedPoseBoneValue(bone: string): number {
+		// Asserts existence of bone
+		void this.assetManager.getBoneByName(bone);
 
-		return new AssetFrameworkCharacterState(this, {
-			pose: newPose,
-			arms: {
-				leftArm,
-				rightArm,
-			},
-			legs,
-			view,
-		});
+		return this.requestedPose.bones[bone] || 0;
+	}
+
+	public getActualPoseBoneValue(bone: string): number {
+		// Asserts existence of bone
+		void this.assetManager.getBoneByName(bone);
+
+		return this.actualPose.bones[bone] || 0;
 	}
 
 	public produceWithItems(newItems: AppearanceItems<WearableAssetType>): AssetFrameworkCharacterState {
 		return new AssetFrameworkCharacterState(this, { items: newItems });
 	}
 
-	private unsafeProduceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): [boolean, AssetFrameworkCharacterState] {
-		let resultArms = this.arms;
-		let resultPose = this.pose;
-
-		const [changed, arms] = this._newArmsPose(pose);
-		if (changed) {
-			resultArms = arms;
-		}
-		const { bones, legs } = pose;
-		if (bones) {
-			const newPose = new Map(resultPose);
-			for (const [bone, state] of newPose.entries()) {
-				if (type !== true && state.definition.type !== type)
-					continue;
-				if (!missingAsZero && bones[state.definition.name] == null)
-					continue;
-
-				newPose.set(bone, {
-					definition: state.definition,
-					rotation: _.clamp(bones[state.definition.name] || 0, BONE_MIN, BONE_MAX),
-				});
+	public produceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean = false): AssetFrameworkCharacterState {
+		const resultPose = produce(this.requestedPose, (draft) => {
+			// Update view
+			if (pose.view != null) {
+				draft.view = pose.view;
 			}
-			resultPose = newPose;
-		} else if (!changed && (legs == null || this.legs === legs)) {
-			return [false, this];
-		}
 
-		return [true, new AssetFrameworkCharacterState(this, { pose: resultPose, arms: resultArms, legs })];
-	}
+			// Update arms
+			{
+				const [changed, arms] = this._newArmsPose(pose);
+				if (changed) {
+					draft.leftArm = arms.leftArm;
+					draft.rightArm = arms.rightArm;
+				}
+			}
 
-	public produceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean): AssetFrameworkCharacterState {
-		const [changed, result] = this.unsafeProduceWithPose(pose, type, missingAsZero);
-		if (!changed)
+			// Update legs
+			if (pose.legs != null) {
+				draft.legs = pose.legs;
+			}
+
+			// Update bones
+			if (pose.bones != null) {
+				for (const bone of this.assetManager.getAllBones()) {
+					const newValue = pose.bones[bone.name];
+
+					if (type !== true && bone.type !== type)
+						continue;
+					if (!missingAsZero && newValue == null)
+						continue;
+
+					draft.bones[bone.name] = (newValue != null && Number.isInteger(newValue)) ? _.clamp(newValue, BONE_MIN, BONE_MAX) : 0;
+				}
+			}
+		});
+
+		// Return current if no change
+		if (resultPose === this.requestedPose)
 			return this;
 
-		return result.enforcePoseLimits();
+		return new AssetFrameworkCharacterState(this, { requestedPose: resultPose });
 	}
 
-	public produceWithPosePreset(preset: AssetsPosePreset): AssetFrameworkCharacterState | null {
-		if (this.safemode != null)
-			return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose', false);
-
-		const [changed, result] = this.unsafeProduceWithPose(preset, 'pose', false);
-		if (changed && !result.validatePoseLimits())
-			return null;
+	public produceWithPosePreset(preset: AssetsPosePreset): AssetFrameworkCharacterState {
+		const result = this.produceWithPose(preset, 'pose');
 
 		if (preset.optional == null)
 			return result;
 
-		return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose', false);
-	}
-
-	public produceWithArmsPose(pose: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): AssetFrameworkCharacterState {
-		const [changed, arms] = this._newArmsPose(pose);
-		if (!changed)
-			return this;
-
-		return new AssetFrameworkCharacterState(this, { arms })
-			.enforcePoseLimits();
+		return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose');
 	}
 
 	private _newArmsPose({ arms, leftArm: left, rightArm: right }: Pick<PartialAppearancePose, 'arms' | 'leftArm' | 'rightArm'>): [boolean, CharacterArmsPose] {
-		const leftArm = { ...this.arms.leftArm, ...arms, ...left };
-		const rightArm = { ...this.arms.rightArm, ...arms, ...right };
+		const leftArm = { ...this.requestedPose.leftArm, ...arms, ...left };
+		const rightArm = { ...this.requestedPose.rightArm, ...arms, ...right };
 		const changed =
-			!_.isEqual(this.arms.leftArm, leftArm) ||
-			!_.isEqual(this.arms.rightArm, rightArm);
+			!_.isEqual(this.requestedPose.leftArm, leftArm) ||
+			!_.isEqual(this.requestedPose.rightArm, rightArm);
 
-		return [changed, { leftArm, rightArm }];
+		return [changed, freeze({ leftArm, rightArm }, true)];
 	}
 
 	public produceWithView(newView: CharacterView): AssetFrameworkCharacterState {
-		if (this.view === newView)
-			return this;
-
-		return new AssetFrameworkCharacterState(this, { view: newView });
+		return this.produceWithPose({
+			view: newView,
+		}, true);
 	}
 
 	public produceWithSafemode(value: Readonly<SafemodeData> | null): AssetFrameworkCharacterState {
@@ -321,8 +252,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, cleanedUpItems);
 		Assert(ValidateAppearanceItems(this.assetManager, newItems).success);
 
-		return new AssetFrameworkCharacterState(this, { items: newItems })
-			.enforcePoseLimits();
+		return new AssetFrameworkCharacterState(this, { items: newItems });
 	}
 
 	public static createDefault(assetManager: AssetManager, characterId: CharacterId): AssetFrameworkCharacterState {
@@ -349,38 +279,30 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		// Validate and add all items
 		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, logger);
 
-		const pose = new Map<BoneName, BoneState>();
+		// Load pose
+		const requestedPose = _.cloneDeep(bundle.requestedPose);
+		// Load the bones manually, as they might change and are not validated by Zod; instead depend on assetManager
+		requestedPose.bones = {};
 		for (const bone of assetManager.getAllBones()) {
-			const value = bundle.bones[bone.name];
-			pose.set(bone.name, {
-				definition: bone,
-				rotation: (value != null && Number.isInteger(value)) ? _.clamp(value, BONE_MIN, BONE_MAX) : 0,
-			});
+			const value = bundle.requestedPose.bones[bone.name];
+			requestedPose.bones[bone.name] = (value != null && Number.isInteger(value)) ? _.clamp(value, BONE_MIN, BONE_MAX) : 0;
 		}
 		if (logger) {
-			for (const k of Object.keys(bundle.bones)) {
-				if (!pose.has(k)) {
+			for (const k of Object.keys(bundle.requestedPose.bones)) {
+				if (requestedPose.bones[k] == null) {
 					logger.warning(`Skipping unknown pose bone ${k}`);
 				}
 			}
 		}
 
 		// Create the final state
-		let resultState = freeze(new AssetFrameworkCharacterState({
+		const resultState = freeze(new AssetFrameworkCharacterState({
 			assetManager,
 			id: characterId,
 			items: newItems,
-			pose,
-			arms: {
-				leftArm: _.cloneDeep(bundle.leftArm),
-				rightArm: _.cloneDeep(bundle.rightArm),
-			},
-			legs: bundle.legs,
-			view: bundle.view,
+			requestedPose,
 			safemode: bundle.safemode,
 		}), true);
-
-		resultState = resultState.enforcePoseLimits();
 
 		Assert(resultState.isValid(), 'State is invalid after load');
 

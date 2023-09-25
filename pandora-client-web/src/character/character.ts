@@ -1,8 +1,6 @@
 import {
 	TypedEventEmitter,
 	CharacterAppearance,
-	BoneState,
-	CharacterView,
 	GetLogger,
 	ICharacterPublicData,
 	Item,
@@ -12,7 +10,6 @@ import {
 	ItemPath,
 	SafemodeData,
 	CharacterId,
-	CharacterArmsPose,
 	AppearanceItems,
 	WearableAssetType,
 	AssetFrameworkCharacterState,
@@ -101,18 +98,6 @@ export function useCharacterAppearanceItem(characterState: AssetFrameworkCharact
 	const items = useCharacterAppearanceItems(characterState);
 
 	return useMemo(() => (items && path) ? EvalItemPath(items, path) : undefined, [items, path]);
-}
-
-export function useCharacterAppearancePose(characterState: AssetFrameworkCharacterState): readonly BoneState[] {
-	return useMemo(() => Array.from(characterState.pose.values()), [characterState.pose]);
-}
-
-export function useCharacterAppearanceArmsPose(characterState: AssetFrameworkCharacterState): CharacterArmsPose {
-	return characterState.arms;
-}
-
-export function useCharacterAppearanceView(characterState: AssetFrameworkCharacterState): CharacterView {
-	return characterState.view;
 }
 
 export function useCharacterSafemode(characterState: AssetFrameworkCharacterState): Readonly<SafemodeData> | null {

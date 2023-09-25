@@ -1,7 +1,7 @@
 import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterRoomPosition, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo, LegsPose } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Character, useCharacterAppearanceView, useCharacterData } from '../../character/character';
+import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import _ from 'lodash';
 import { ChatroomDebugConfig } from './chatroomDebug';
@@ -55,7 +55,7 @@ export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharac
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	let baseScale = 1;
-	if (evaluator.legs === 'sitting') {
+	if (evaluator.pose.legs === 'sitting') {
 		baseScale *= 0.9;
 	}
 
@@ -64,9 +64,9 @@ export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharac
 		sitting: 0,
 		kneeling: 300,
 	};
-	const legEffectCharacterOffsetBase = evaluator.legs === 'sitting' ? 135 : legEffectMap.standing;
-	const legEffect = legEffectMap[evaluator.legs]
-		+ (evaluator.legs !== 'kneeling' ? 0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+	const legEffectCharacterOffsetBase = evaluator.pose.legs === 'sitting' ? 135 : legEffectMap.standing;
+	const legEffect = legEffectMap[evaluator.pose.legs]
+		+ (evaluator.pose.legs !== 'kneeling' ? 0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
 
 	const effectiveLegAngle = Math.min(Math.abs(evaluator.getBoneLikeValue('leg_l')), Math.abs(evaluator.getBoneLikeValue('leg_r')), 90);
 
@@ -192,7 +192,7 @@ function ChatRoomCharacterDisplay({
 
 	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
 
-	const backView = useCharacterAppearanceView(characterState) === 'back';
+	const backView = characterState.actualPose.view === 'back';
 
 	const scaleX = backView ? -1 : 1;
 

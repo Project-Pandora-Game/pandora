@@ -25,14 +25,20 @@ function GetDefaultAppearanceArmPose(): AppearanceArmPose {
 	};
 }
 
-export function GetDefaultAppearanceBundle(): AppearanceBundle {
+export function GetDefaultAppearancePose(): AppearancePose {
 	return {
-		items: [],
 		bones: {},
 		leftArm: GetDefaultAppearanceArmPose(),
 		rightArm: GetDefaultAppearanceArmPose(),
 		legs: 'standing',
 		view: 'front',
+	};
+}
+
+export function GetDefaultAppearanceBundle(): AppearanceBundle {
+	return {
+		items: [],
+		requestedPose: GetDefaultAppearancePose(),
 	};
 }
 
@@ -91,18 +97,24 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 	}
 
 	public getPose(bone: string): BoneState {
-		const state = this.characterState.pose.get(bone);
-		if (!state)
+		const definition = this.assetManager.getBoneByName(bone);
+		if (definition == null)
 			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
-		return { ...state };
+		return {
+			definition,
+			rotation: this.characterState.actualPose.bones[definition.name] || 0,
+		};
 	}
 
 	public getArmsPose(): CharacterArmsPose {
-		return this.characterState.arms;
+		return {
+			leftArm: this.characterState.actualPose.leftArm,
+			rightArm: this.characterState.actualPose.rightArm,
+		};
 	}
 
 	public getView(): CharacterView {
-		return this.characterState.view;
+		return this.characterState.actualPose.view;
 	}
 
 	public getSafemode(): Readonly<SafemodeData> | null {

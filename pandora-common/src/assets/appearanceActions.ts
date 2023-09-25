@@ -455,7 +455,7 @@ export function DoAppearanceAction(
 			}
 
 			if (!manipulator.produceCharacterState(action.target, (character) => {
-				return character.produceWithPose(action, action.type, false);
+				return character.produceWithPose(action, action.type);
 			})) {
 				return { result: 'invalidAction' };
 			}

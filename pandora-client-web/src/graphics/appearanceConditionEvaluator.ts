@@ -1,24 +1,16 @@
-import { AppearanceItemProperties, LegsPose, Assert, AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, CharacterArmsPose, CharacterView, ConditionOperator, Item, TransformDefinition } from 'pandora-common';
+import { AppearanceItemProperties, Assert, AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, ConditionOperator, Item, TransformDefinition, AppearancePose, AssetManager } from 'pandora-common';
 import { useMemo } from 'react';
 import { EvaluateCondition, RotateVector } from './utility';
 import type { Immutable } from 'immer';
 
 export class AppearanceConditionEvaluator {
-	public readonly pose: ReadonlyMap<BoneName, Readonly<BoneState>>;
-	public readonly view: CharacterView;
-	public readonly arms: CharacterArmsPose;
-	public readonly legs: LegsPose;
+	public readonly assetManager: AssetManager;
+	public readonly pose: Immutable<AppearancePose>;
 	public readonly attributes: ReadonlySet<string>;
 
 	constructor(character: AssetFrameworkCharacterState) {
-		const poseResult = new Map<BoneName, Readonly<BoneState>>();
-		for (const bone of character.pose.values()) {
-			poseResult.set(bone.definition.name, bone);
-		}
-		this.pose = poseResult;
-		this.view = character.view;
-		this.arms = character.arms;
-		this.legs = character.legs;
+		this.assetManager = character.assetManager;
+		this.pose = character.actualPose;
 		this.attributes = AppearanceItemProperties(character.items).attributes;
 	}
 
@@ -47,7 +39,7 @@ export class AppearanceConditionEvaluator {
 			const key = `${condition.armType}-${condition.side}-${condition.operator}-${condition.value}`;
 			let result = this._evalCache.get(key);
 			if (result === undefined) {
-				const value = this.arms[`${condition.side}Arm`][condition.armType];
+				const value = this.pose[`${condition.side}Arm`][condition.armType];
 				this._evalCache.set(key, result = this._evalConditionCore(condition, value));
 			}
 			return result;
@@ -61,12 +53,12 @@ export class AppearanceConditionEvaluator {
 		} else if ('legs' in condition) {
 			Assert(condition.legs != null);
 			if (condition.legs.startsWith('!')) {
-				return this.legs !== condition.legs.slice(1);
+				return this.pose.legs !== condition.legs.slice(1);
 			}
-			return this.legs === condition.legs;
+			return this.pose.legs === condition.legs;
 		} else if ('view' in condition) {
 			Assert(condition.view != null);
-			return this.view === condition.view;
+			return this.pose.view === condition.view;
 		} else {
 			AssertNever(condition);
 		}
@@ -140,11 +132,14 @@ export class AppearanceConditionEvaluator {
 	}
 	//#endregion
 
-	private getBone(bone: string): Readonly<BoneState> {
-		const state = this.pose.get(bone);
-		if (!state)
+	private getBone(bone: string): BoneState {
+		const definition = this.assetManager.getBoneByName(bone);
+		if (definition == null)
 			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
-		return state;
+		return {
+			definition,
+			rotation: this.pose.bones[definition.name] || 0,
+		};
 	}
 
 	public getBoneLikeValue(name: string): number {

@@ -54,7 +54,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		// This asserts existence of bone
 		this.getPose(bone);
 
-		return this.produceState((state) => state.produceWithPose({ bones: { [bone]: value } }, true, false));
+		return this.produceState((state) => state.produceWithPose({ bones: { [bone]: value } }, true));
 	}
 
 	public addItem(asset: Asset, context: ActionProcessingContext = {}): boolean {

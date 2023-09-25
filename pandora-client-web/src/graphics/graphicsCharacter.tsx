@@ -5,7 +5,7 @@ import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
-import { useCharacterAppearanceArmsPose, useCharacterAppearanceItems, useCharacterAppearanceView } from '../character/character';
+import { useCharacterAppearanceItems } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
 import { useObservable } from '../observable';
 import { ComputedLayerPriority, COMPUTED_LAYER_ORDERING, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
@@ -145,10 +145,9 @@ function GraphicsCharacterWithManagerImpl({
 		return result;
 	}, [items, graphicsGetter, layerStateOverrideGetter]);
 
-	const armsPose = useCharacterAppearanceArmsPose(characterState);
-	const view = useCharacterAppearanceView(characterState);
+	const { view } = characterState.actualPose;
 
-	const priorities = useLayerPriorityResolver(layers, armsPose);
+	const priorities = useLayerPriorityResolver(layers, characterState.actualPose);
 
 	const priorityLayers = useMemo<ReadonlyMap<ComputedLayerPriority, ReactElement>>(() => {
 		const result = new Map<ComputedLayerPriority, ReactElement>();

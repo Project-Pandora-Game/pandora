@@ -65,9 +65,7 @@ export class AssetFrameworkGlobalStateManipulator {
 
 			return this.produceCharacterState(
 				target.characterId,
-				(character) => character
-					.produceWithItems(wearableItems)
-					.enforcePoseLimits(),
+				(character) => character.produceWithItems(wearableItems),
 			);
 		} else if (target.type === 'roomInventory') {
 			return this.produceRoomState(

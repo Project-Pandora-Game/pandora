@@ -9,7 +9,7 @@ import {
 	AssetsPosePreset,
 	BONE_MAX,
 	BONE_MIN,
-	BoneState,
+	BoneDefinition,
 	CharacterArmsPose,
 	LegsPose,
 	LegsPoseSchema,
@@ -17,7 +17,7 @@ import {
 	PartialAppearancePose,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo } from 'react';
-import { IChatroomCharacter, useCharacterAppearanceArmsPose, useCharacterAppearancePose, useCharacterAppearanceView, useCharacterData } from '../../../character/character';
+import { IChatroomCharacter, useCharacterData } from '../../../character/character';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Button } from '../../common/button/button';
 import _ from 'lodash';
@@ -44,7 +44,6 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 	poses: CheckedAssetsPosePresets;
 	limits: AppearanceLimitTree;
 } {
-	const { leftArm, rightArm } = characterState.arms;
 	const assetManager = characterState.assetManager;
 	const presets = assetManager.getPosePresets();
 	for (const item of characterState.items) {
@@ -71,15 +70,18 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 	const limits = AppearanceItemProperties(characterState.items).limits;
 
 	const isActive = (preset: PartialAppearancePose) => {
-		if (preset.legs != null && preset.legs !== characterState.legs)
+		if (preset.view != null && preset.view !== characterState.requestedPose.view)
+			return false;
+
+		if (preset.legs != null && preset.legs !== characterState.requestedPose.legs)
 			return false;
 
 		const left = { ...preset.arms, ...preset.leftArm };
 		const right = { ...preset.arms, ...preset.rightArm };
 		for (const name of ['position', 'rotation', 'fingers'] as const) {
-			if (left[name] != null && left[name] !== leftArm[name])
+			if (left[name] != null && left[name] !== characterState.requestedPose.leftArm[name])
 				return false;
-			if (right[name] != null && right[name] !== rightArm[name])
+			if (right[name] != null && right[name] !== characterState.requestedPose.rightArm[name])
 				return false;
 		}
 
@@ -87,7 +89,7 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 			if (value === undefined)
 				continue;
 
-			if (characterState.pose.get(boneName)?.rotation !== value)
+			if (characterState.requestedPose.bones[boneName] !== value)
 				return false;
 		}
 
@@ -282,10 +284,8 @@ export function WardrobePoseGui({ character, characterState }: {
 }): ReactElement {
 	const [execute, processing] = useWardrobeExecuteCallback();
 	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
-
-	const currentBones = useCharacterAppearancePose(characterState);
-	const armsPose = useCharacterAppearanceArmsPose(characterState);
-	const view = useCharacterAppearanceView(characterState);
+	const assetManager = characterState.assetManager;
+	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
 	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm, legs }: PartialAppearancePose) => {
 		execute({
@@ -310,7 +310,7 @@ export function WardrobePoseGui({ character, characterState }: {
 					<input
 						id='back-view-toggle'
 						type='checkbox'
-						checked={ view === 'back' }
+						checked={ characterState.requestedPose.view === 'back' }
 						onChange={ (e) => {
 							execute({
 								type: 'setView',
@@ -324,17 +324,17 @@ export function WardrobePoseGui({ character, characterState }: {
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				<ChatroomManualYOffsetControl character={ character } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
-					<WardrobeArmPoses armsPose={ armsPose } limits={ limits } setPose={ setPose } />
-					<WardrobeLegsPose legs={ characterState.legs } limits={ limits } setPose={ setPose } />
+					<WardrobeArmPoses armsPose={ characterState.requestedPose } limits={ limits } setPose={ setPose } />
+					<WardrobeLegsPose legs={ characterState.requestedPose.legs } limits={ limits } setPose={ setPose } />
 					<br />
 					{
-						currentBones
-							.filter((bone) => bone.definition.type === 'pose')
+						allBones
+							.filter((bone) => bone.type === 'pose')
 							.map((bone) => (
-								<BoneRowElement key={ bone.definition.name } bone={ bone } limits={ limits } onChange={ (value) => {
+								<BoneRowElement key={ bone.name } definition={ bone } rotation={ characterState.getRequestedPoseBoneValue(bone.name) } limits={ limits } onChange={ (value) => {
 									setPose({
 										bones: {
-											[bone.definition.name]: value,
+											[bone.name]: value,
 										},
 									});
 								} } />
@@ -363,23 +363,27 @@ export function GetVisibleBoneName(name: string): string {
 		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
 }
 
-export function BoneRowElement({ bone, onChange, limits }: { bone: BoneState; onChange: (value: number) => void; limits?: AppearanceLimitTree; }): ReactElement {
-	const name = useMemo(() => GetVisibleBoneName(bone.definition.name), [bone]);
-	const canReset = useMemo(() => limits == null || limits.validate({ bones: { bone: 0 } }), [limits]);
+export function BoneRowElement({ definition, rotation, onChange, limits }: {
+	definition: BoneDefinition;
+	rotation: number;
+	onChange: (value: number) => void;
+	limits?: AppearanceLimitTree;
+}): ReactElement {
+	const name = useMemo(() => GetVisibleBoneName(definition.name), [definition]);
 
 	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(value) && value !== bone.rotation && (limits == null || limits.validate({ bones: { bone: value } }))) {
+		if (Number.isInteger(value) && value !== rotation && (limits == null || limits.validate({ bones: { bone: value } }))) {
 			onChange(value);
 		}
 	});
 
 	return (
-		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + bone.definition.name }>
+		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + definition.name }>
 			<div className='bone-rotation'>
-				<input type='range' min={ BONE_MIN } max={ BONE_MAX } step='1' value={ bone.rotation } onChange={ onInput } />
-				<input type='number' min={ BONE_MIN } max={ BONE_MAX } step='1' value={ bone.rotation } onChange={ onInput } />
-				<Button className='slim' onClick={ () => onChange(0) } disabled={ bone.rotation === 0 || !canReset }>
+				<input type='range' min={ BONE_MIN } max={ BONE_MAX } step='1' value={ rotation } onChange={ onInput } />
+				<input type='number' min={ BONE_MIN } max={ BONE_MAX } step='1' value={ rotation } onChange={ onInput } />
+				<Button className='slim' onClick={ () => onChange(0) } disabled={ rotation === 0 }>
 					↺
 				</Button>
 			</div>

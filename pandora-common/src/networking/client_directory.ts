@@ -240,7 +240,7 @@ export const ClientDirectorySchema = {
 	chatRoomLeave: {
 		request: z.object({}),
 		response: z.object({
-			result: z.enum(['ok', 'failed', 'restricted']),
+			result: z.enum(['ok', 'failed', 'restricted', 'inRoomDevice']),
 		}),
 	},
 	chatRoomUpdate: {

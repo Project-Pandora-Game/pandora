@@ -66,7 +66,7 @@ export const DirectoryShardSchema = {
 			character: CharacterIdSchema,
 		}),
 		response: z.object({
-			result: z.enum(['ok', 'targetNotFound', 'restricted']),
+			result: z.enum(['ok', 'targetNotFound', 'restricted', 'inRoomDevice']),
 		}),
 	},
 	//#endregion

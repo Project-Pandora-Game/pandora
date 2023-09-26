@@ -282,7 +282,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const [execute, processing] = useWardrobeExecuteCallback();
+	const [execute] = useWardrobeExecuteCallback();
 	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
@@ -306,22 +306,6 @@ export function WardrobePoseGui({ character, characterState }: {
 	return (
 		<div className='inventoryView'>
 			<div className='bone-ui'>
-				<div>
-					<label htmlFor='back-view-toggle'>Show back view</label>
-					<input
-						id='back-view-toggle'
-						type='checkbox'
-						checked={ characterState.requestedPose.view === 'back' }
-						onChange={ (e) => {
-							execute({
-								type: 'setView',
-								target: character.id,
-								view: e.target.checked ? 'back' : 'front',
-							});
-						} }
-						disabled={ processing }
-					/>
-				</div>
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				<ChatroomManualYOffsetControl character={ character } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>

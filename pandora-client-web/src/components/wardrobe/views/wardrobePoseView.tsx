@@ -39,44 +39,12 @@ type CheckedPosePreset = {
 	pose: PartialAppearancePose;
 	name: string;
 };
-type CheckedAssetsPosePresets = {
-	category: string;
-	poses: CheckedPosePreset[];
-}[];
 
-function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems): {
-	poses: CheckedAssetsPosePresets;
-	limits: AppearanceLimitTree;
-} {
+function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkCharacterState): CheckedPosePreset {
 	const assetManager = characterState.assetManager;
-	const presets = assetManager.getPosePresets();
-	for (const item of characterState.items) {
-		if (!item.isType('roomDeviceWearablePart') || item.roomDeviceLink == null)
-			continue;
-
-		const deviceId = item.roomDeviceLink.device;
-		const roomItem = roomItems.find((i) => i.id === deviceId);
-		if (!roomItem?.isType('roomDevice'))
-			continue;
-
-		if (!item.asset.definition.posePresets && !roomItem.asset.definition.posePresets)
-			continue;
-
-		presets.unshift({
-			category: `Device: ${roomItem.asset.definition.name}`,
-			poses: [
-				...roomItem.asset.definition.posePresets ?? [],
-				...item.asset.definition.posePresets ?? [],
-			],
-		});
-	}
-
+	const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
+	// TODO: Optimize this
 	const limits = AppearanceItemProperties(characterState.items).limits;
-
-	const poses = presets.map<CheckedAssetsPosePresets[number]>((preset) => ({
-		category: preset.category,
-		poses: preset.poses.map((pose): CheckedPosePreset => {
-			const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
 			return {
 				pose: mergedPose,
 				requested: _.isEqual(
@@ -104,13 +72,45 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 				available: limits.validate(pose),
 				name: pose.name,
 			};
-		}),
-	}));
-
-	return { poses, limits };
 }
 
-function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAssetsPosePresets; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
+function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems): {
+	poses: AssetsPosePresets;
+	limits: AppearanceLimitTree;
+} {
+	const assetManager = characterState.assetManager;
+	const presets: AssetsPosePresets = assetManager.getPosePresets();
+	for (const item of characterState.items) {
+		if (!item.isType('roomDeviceWearablePart') || item.roomDeviceLink == null)
+			continue;
+
+		const deviceId = item.roomDeviceLink.device;
+		const roomItem = roomItems.find((i) => i.id === deviceId);
+		if (!roomItem?.isType('roomDevice'))
+			continue;
+
+		if (!item.asset.definition.posePresets && !roomItem.asset.definition.posePresets)
+			continue;
+
+		presets.unshift({
+			category: `Device: ${roomItem.asset.definition.name}`,
+			poses: [
+				...roomItem.asset.definition.posePresets ?? [],
+				...item.asset.definition.posePresets ?? [],
+			],
+		});
+	}
+
+	const limits = AppearanceItemProperties(characterState.items).limits;
+
+	return { poses: presets, limits };
+}
+
+function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
+	poses: AssetsPosePresets;
+	characterState: AssetFrameworkCharacterState;
+	setPose: (pose: PartialAppearancePose) => void;
+}): ReactElement {
 	return (
 		<>
 			{ poses.map((poseCategory, poseCategoryIndex) => (
@@ -123,7 +123,7 @@ function WardrobePoseCategoriesInternal({ poses, setPose }: { poses: CheckedAsse
 					>
 						{
 							poseCategory.poses.map((preset, presetIndex) => (
-								<PoseButton key={ presetIndex } preset={ preset } setPose={ setPose } />
+								<PoseButton key={ presetIndex } preset={ preset } characterState={ characterState } setPose={ setPose } />
 							))
 						}
 					</Row>
@@ -137,7 +137,7 @@ export function WardrobePoseCategories({ characterState, setPose }: { characterS
 	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
 	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
 	return (
-		<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
+		<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 	);
 }
 
@@ -331,7 +331,7 @@ export function WardrobePoseGui({ character, characterState }: {
 						Stay in it
 					</Button>
 				</Row>
-				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
+				<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 				<ChatroomManualYOffsetControl character={ character } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
 					<WardrobeArmPoses armsPose={ characterState.requestedPose } limits={ limits } setPose={ setPose } />
@@ -356,8 +356,12 @@ export function WardrobePoseGui({ character, characterState }: {
 	);
 }
 
-function PoseButton({ preset, setPose }: { preset: CheckedPosePreset; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
-	const { name, available, requested, active, pose } = preset;
+function PoseButton({ preset, setPose, characterState }: {
+	preset: AssetsPosePreset;
+	characterState: AssetFrameworkCharacterState;
+	setPose: (pose: PartialAppearancePose) => void;
+}): ReactElement {
+	const { name, available, requested, active, pose } = CheckPosePreset(preset, characterState);
 	return (
 		<SelectionIndicator
 			selected={ requested }
@@ -372,6 +376,7 @@ function PoseButton({ preset, setPose }: { preset: CheckedPosePreset; setPose: (
 			<Button
 				slim
 				onClick={ () => setPose(pose) }
+				className='flex-1'
 			>
 				{ name }
 			</Button>

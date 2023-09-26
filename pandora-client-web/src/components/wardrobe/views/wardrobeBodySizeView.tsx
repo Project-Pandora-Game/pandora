@@ -33,7 +33,7 @@ export function WardrobeBodySizeEditor({ character, characterState }: {
 					allBones
 						.filter((bone) => bone.type === 'body')
 						.map((bone) => (
-							<BoneRowElement key={ bone.name } definition={ bone } rotation={ characterState.requestedPose.bones[bone.name] || 0 } onChange={ (value) => {
+							<BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => {
 								setBody({
 									bones: {
 										[bone.name]: value,

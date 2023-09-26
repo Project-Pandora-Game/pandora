@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import {
 	AppearanceItemProperties,
 	AppearanceItems,
-	AppearanceLimitTree,
 	ArmRotationSchema,
 	AssetFrameworkCharacterState,
 	AssetsPosePreset,
@@ -16,7 +15,7 @@ import {
 	PartialAppearancePose,
 	ProduceAppearancePose,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import { IChatroomCharacter, useCharacterData } from '../../../character/character';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Button } from '../../common/button/button';
@@ -28,6 +27,8 @@ import { Column, Row } from '../../common/container/container';
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
+import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
+import { useDebouncedValue } from '../../../common/useDebounceValue';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -71,10 +72,7 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 	};
 }
 
-function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems): {
-	poses: AssetsPosePresets;
-	limits: AppearanceLimitTree;
-} {
+function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems): AssetsPosePresets {
 	const assetManager = characterState.assetManager;
 	const presets: AssetsPosePresets = assetManager.getPosePresets();
 	for (const item of characterState.items) {
@@ -98,9 +96,7 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 		});
 	}
 
-	const limits = AppearanceItemProperties(characterState.items).limits;
-
-	return { poses: presets, limits };
+	return presets;
 }
 
 function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
@@ -132,7 +128,7 @@ function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
 
 export function WardrobePoseCategories({ characterState, setPose }: { characterState: AssetFrameworkCharacterState; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
 	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
-	const { poses } = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 	);
@@ -334,7 +330,7 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const { poses, limits } = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
@@ -376,7 +372,7 @@ export function WardrobePoseGui({ character, characterState }: {
 							allBones
 								.filter((bone) => bone.type === 'pose')
 								.map((bone) => (
-									<BoneRowElement key={ bone.name } definition={ bone } rotation={ characterState.getRequestedPoseBoneValue(bone.name) } limits={ limits } onChange={ (value) => {
+									<BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => {
 										setPose({
 											bones: {
 												[bone.name]: value,
@@ -428,27 +424,54 @@ export function GetVisibleBoneName(name: string): string {
 		.replace(/_\w/g, (c) => ' ' + c.charAt(1).toUpperCase());
 }
 
-export function BoneRowElement({ definition, rotation, onChange, limits }: {
+export function BoneRowElement({ definition, onChange, characterState }: {
 	definition: BoneDefinition;
-	rotation: number;
+	characterState: AssetFrameworkCharacterState;
 	onChange: (value: number) => void;
-	limits?: AppearanceLimitTree;
 }): ReactElement {
-	const name = useMemo(() => GetVisibleBoneName(definition.name), [definition]);
+	const id = 'bone-input-' + useId();
+
+	const visibleName = useMemo(() => GetVisibleBoneName(definition.name), [definition]);
+	const requestedRotation = characterState.getRequestedPoseBoneValue(definition.name);
+	const actualRotation = characterState.getActualPoseBoneValue(definition.name);
+	const markerPosition = useDebouncedValue(actualRotation, 1000);
+
+	const [value, setValue] = useRemotelyUpdatedUserInput(requestedRotation, [characterState.id, definition], {
+		updateCallback: onChange,
+	});
 
 	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
-		const value = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(value) && value !== rotation && (limits == null || limits.validate({ bones: { bone: value } }))) {
-			onChange(value);
+		const newValue = Math.round(parseFloat(event.target.value));
+		if (Number.isInteger(newValue)) {
+			setValue(newValue);
 		}
 	});
 
 	return (
-		<FieldsetToggle legend={ name } persistent={ 'bone-ui-' + definition.name }>
+		<FieldsetToggle legend={ visibleName } persistent={ 'bone-ui-' + definition.name }>
 			<div className='bone-rotation'>
-				<input type='range' min={ BONE_MIN } max={ BONE_MAX } step='1' value={ rotation } onChange={ onInput } />
-				<input type='number' min={ BONE_MIN } max={ BONE_MAX } step='1' value={ rotation } onChange={ onInput } />
-				<Button className='slim' onClick={ () => onChange(0) } disabled={ rotation === 0 }>
+				<input
+					id={ id }
+					type='range'
+					min={ BONE_MIN }
+					max={ BONE_MAX }
+					step='1'
+					value={ value }
+					onChange={ onInput }
+					list={ id + '-markers' }
+				/>
+				<datalist id={ id + '-markers' }>
+					<option value={ markerPosition }></option>
+				</datalist>
+				<input
+					type='number'
+					min={ BONE_MIN }
+					max={ BONE_MAX }
+					step='1'
+					value={ value }
+					onChange={ onInput }
+				/>
+				<Button className='slim' onClick={ () => setValue(0) } disabled={ value === 0 }>
 					↺
 				</Button>
 			</div>

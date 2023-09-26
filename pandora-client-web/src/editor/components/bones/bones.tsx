@@ -96,14 +96,14 @@ export function BoneUI(): ReactElement {
 			{
 				allBones
 					.filter((bone) => bone.type === 'pose')
-					.map((bone) => <BoneRowElement key={ bone.name } definition={ bone } rotation={ characterState.getRequestedPoseBoneValue(bone.name) } onChange={ (value) => character.getAppearance().setPose(bone.name, value) } />)
+					.map((bone) => <BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => character.getAppearance().setPose(bone.name, value) } />)
 			}
 			<hr />
 			<h4>Body bones</h4>
 			{
 				allBones
 					.filter((bone) => bone.type === 'body')
-					.map((bone) => <BoneRowElement key={ bone.name } definition={ bone } rotation={ characterState.getRequestedPoseBoneValue(bone.name) } onChange={ (value) => character.getAppearance().setPose(bone.name, value) } />)
+					.map((bone) => <BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => character.getAppearance().setPose(bone.name, value) } />)
 			}
 		</Scrollbar>
 	);

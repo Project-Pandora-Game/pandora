@@ -4,8 +4,10 @@
 		"config:recommended",
 		":disableDependencyDashboard",
 		":prHourlyLimitNone",
-		":rebaseStalePrs"
+		":rebaseStalePrs",
+		":automergeMinor"
 	],
+	"automergeType": "branch",
 	"autoApprove": true,
 	"rangeStrategy": "pin",
 	"onboardingPrTitle": "[DEV] Configure Renovate",

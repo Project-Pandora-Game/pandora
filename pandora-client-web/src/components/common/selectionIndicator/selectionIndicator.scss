@@ -1,0 +1,25 @@
+.selectionIndicator {
+	position: relative;
+	margin: 2px;
+	border-radius: 0.5em;
+	outline: solid 2px transparent;
+	transition: outline-color 150ms linear;
+
+	&.selected {
+		outline-color: black;
+	}
+
+	&::before {
+		content: " ";
+		position: absolute;
+		inset: 0px;
+		outline: dashed 2px transparent;
+		border-radius: 0.5em;
+		transition: outline-color 150ms linear;
+		pointer-events: none;
+	}
+
+	&.active:not(.selected)::before {
+		outline-color: black;
+	}
+}

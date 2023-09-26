@@ -1207,17 +1207,6 @@ export function ActionRoomDeviceLeave({
 				},
 			});
 		}
-
-		const exitPose = asset.definition.exitPose ?? item.asset.definition.exitPose;
-		if (exitPose != null && !manipulator.produceCharacterState(occupyingCharacterId, (character) => character.produceWithPosePreset(exitPose))) {
-			return {
-				result: 'restrictionError',
-				restriction: {
-					type: 'exitPose',
-					asset: item.asset.id,
-				},
-			};
-		}
 	}
 
 	// Only after freeing character remove the reservation from the device - to do things in opposite order of putting character into it

@@ -11,6 +11,7 @@ import {
 	BONE_MIN,
 	BoneDefinition,
 	CharacterArmsPose,
+	CloneDeepMutable,
 	LegsPose,
 	LegsPoseSchema,
 	MergePartialAppearancePoses,
@@ -303,9 +304,33 @@ export function WardrobePoseGui({ character, characterState }: {
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 
+	const actualPoseDiffers = !_.isEqual(characterState.requestedPose, characterState.actualPose);
+
 	return (
 		<div className='inventoryView'>
 			<div className='bone-ui'>
+				<Row
+					className={ actualPoseDiffers ? '' : 'invisible' }
+					alignX='center'
+					alignY='stretch'
+				>
+					<SelectionIndicator
+						active
+						justify='center'
+						align='center'
+						className='requestedPoseIndicatorText'
+					>
+						Items are forcing this character into a different pose.
+					</SelectionIndicator>
+					<Button
+						slim
+						onClick={ () => {
+							setPose(CloneDeepMutable(characterState.actualPose));
+						} }
+					>
+						Stay in it
+					</Button>
+				</Row>
 				<WardrobePoseCategoriesInternal poses={ poses } setPose={ setPose } />
 				<ChatroomManualYOffsetControl character={ character } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>

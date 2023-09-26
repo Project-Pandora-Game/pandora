@@ -410,22 +410,8 @@ $drop-overlay-gap: 0.3em;
 		margin: 0 1em;
 
 		.pose {
-			border: solid 2px transparent;
-			border-radius: 0.5em;
-			transition: all 150ms linear;
-			padding: 2px;
-
 			&.pose-unavailable {
 				opacity: 60%;
-			}
-
-			&.pose-requested {
-				border-color: #000;
-			}
-
-			&.pose-active:not(.pose-requested) {
-				border-color: #000;
-				border-style: dashed;
 			}
 		}
 	}

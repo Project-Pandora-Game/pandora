@@ -29,6 +29,7 @@ import { useCharacterIsInChatroom } from '../../gameContext/chatRoomContextProvi
 import { Row } from '../../common/container/container';
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
+import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -348,13 +349,13 @@ export function WardrobePoseGui({ character, characterState }: {
 function PoseButton({ preset, setPose }: { preset: CheckedPosePreset; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
 	const { name, available, requested, active, pose } = preset;
 	return (
-		<Row
+		<SelectionIndicator
+			selected={ requested }
+			active={ active }
 			className={ classNames(
 				'pose',
 				{
 					['pose-unavailable']: !available,
-					['pose-requested']: requested,
-					['pose-active']: active,
 				},
 			) }
 		>
@@ -364,7 +365,7 @@ function PoseButton({ preset, setPose }: { preset: CheckedPosePreset; setPose: (
 			>
 				{ name }
 			</Button>
-		</Row>
+		</SelectionIndicator>
 	);
 }
 

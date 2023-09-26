@@ -35,6 +35,7 @@ import { FieldsetToggle } from '../common/fieldsetToggle';
 import './chatroomAdmin.scss';
 import classNames from 'classnames';
 import { ColorInput } from '../common/colorInput/colorInput';
+import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -579,14 +580,20 @@ function BackgroundSelectDialog({ hide, current, select }: {
 									setSelectedBackground(b.id);
 								} }
 							>
-								<div
-									className={ classNames('details', b.id === selectedBackground && 'selected', b.id === current && 'current') }
+								<SelectionIndicator
+									direction='column'
+									align='center'
+									justify='center'
+									padding='small'
+									selected={ b.id === selectedBackground }
+									active={ b.id === current }
+									className='details'
 								>
 									<div className='preview'>
 										<img src={ GetAssetsSourceUrl() + b.preview } />
 									</div>
 									<div className='name'>{ b.name }</div>
-								</div>
+								</SelectionIndicator>
 							</a>
 						)) }
 				</div>

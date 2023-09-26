@@ -38,8 +38,8 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<WardrobeArmPoses armsPose={ characterState.requestedPose } setPose={ setPose } />
-			<WardrobeLegsPose legs={ characterState.requestedPose.legs } setPose={ setPose } />
+			<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
+			<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
 			<div>
 				<label htmlFor='back-view-toggle'>Show back view</label>
 				<input

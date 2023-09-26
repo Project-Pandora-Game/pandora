@@ -1,33 +1,30 @@
 import classNames from 'classnames';
 import {
-	AppearanceArmPose,
 	AppearanceItemProperties,
 	AppearanceItems,
 	AppearanceLimitTree,
 	ArmRotationSchema,
 	AssetFrameworkCharacterState,
 	AssetsPosePreset,
+	AssetsPosePresets,
 	BONE_MAX,
 	BONE_MIN,
 	BoneDefinition,
-	CharacterArmsPose,
 	CloneDeepMutable,
-	LegsPose,
 	LegsPoseSchema,
 	MergePartialAppearancePoses,
 	PartialAppearancePose,
 	ProduceAppearancePose,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useId, useMemo } from 'react';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { IChatroomCharacter, useCharacterData } from '../../../character/character';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Button } from '../../common/button/button';
 import _ from 'lodash';
 import { useEvent } from '../../../common/useEvent';
-import { Select } from '../../common/select/select';
 import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { useCharacterIsInChatroom } from '../../gameContext/chatRoomContextProvider';
-import { Row } from '../../common/container/container';
+import { Column, Row } from '../../common/container/container';
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
@@ -45,33 +42,33 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 	const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
 	// TODO: Optimize this
 	const limits = AppearanceItemProperties(characterState.items).limits;
-			return {
-				pose: mergedPose,
-				requested: _.isEqual(
-					characterState.requestedPose,
-					ProduceAppearancePose(
-						characterState.requestedPose,
-						{
-							assetManager,
-							boneTypeFilter: 'pose',
-						},
-						mergedPose,
-					),
-				),
-				active: _.isEqual(
-					characterState.actualPose,
-					ProduceAppearancePose(
-						characterState.actualPose,
-						{
-							assetManager,
-							boneTypeFilter: 'pose',
-						},
-						mergedPose,
-					),
-				),
-				available: limits.validate(pose),
-				name: pose.name,
-			};
+	return {
+		pose: mergedPose,
+		requested: _.isEqual(
+			characterState.requestedPose,
+			ProduceAppearancePose(
+				characterState.requestedPose,
+				{
+					assetManager,
+					boneTypeFilter: 'pose',
+				},
+				mergedPose,
+			),
+		),
+		active: _.isEqual(
+			characterState.actualPose,
+			ProduceAppearancePose(
+				characterState.actualPose,
+				{
+					assetManager,
+					boneTypeFilter: 'pose',
+				},
+				mergedPose,
+			),
+		),
+		available: limits.validate(pose),
+		name: pose.name,
+	};
 }
 
 function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems): {
@@ -141,141 +138,178 @@ export function WardrobePoseCategories({ characterState, setPose }: { characterS
 	);
 }
 
-function WardrobeArmPoseSection<K extends 'position' | 'fingers'>({
-	armsPose,
-	limits,
-	setPose,
-	label,
-	arm,
-	type,
-	checked,
-	unchecked,
-}: {
-	armsPose: CharacterArmsPose;
-	label: string;
-	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
-	limits?: AppearanceLimitTree;
-	arm: 'leftArm' | 'rightArm' | 'arms';
-	type: K;
-	checked: AppearanceArmPose[K];
-	unchecked: AppearanceArmPose[K];
-}): ReactElement {
-	const id = useId();
-
-	const currentlyChecked = arm !== 'arms'
-		? armsPose[arm][type] === checked
-		: armsPose.leftArm[type] === checked && armsPose.rightArm[type] === checked;
-
-	return (
-		<div>
-			<label htmlFor={ `pose-selection-${id}` }>{ label }</label>
-			<input
-				id={ `pose-selection-${id}` }
-				type='checkbox'
-				checked={ currentlyChecked }
-				disabled={ limits != null && !limits.validate({ [arm]: { [type]: currentlyChecked ? unchecked : checked } }) }
-				onChange={ (e) => {
-					setPose({
-						[arm]: { [type]: e.target.checked ? checked : unchecked },
-					});
-				} }
-			/>
-		</div>
-	);
-}
-
-export function WardrobeArmPoses({ setPose, armsPose, limits }: {
-	armsPose: CharacterArmsPose;
-	limits?: AppearanceLimitTree;
+export function WardrobeArmPoses({ setPose, characterState }: {
+	characterState: AssetFrameworkCharacterState;
 	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
 }): ReactElement {
-	const ArmToggle = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm' | 'arms'; title: string; }): ReactElement => (
-		<WardrobeArmPoseSection
-			armsPose={ armsPose }
-			limits={ limits }
-			setPose={ setPose }
-			label={ title }
-			arm={ arm }
-			type='position'
-			checked='front'
-			unchecked='back'
-		/>
-	), [armsPose, limits, setPose]);
-	const FingersToggle = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm' | 'arms'; title: string; }): ReactElement => (
-		<WardrobeArmPoseSection
-			armsPose={ armsPose }
-			limits={ limits }
-			setPose={ setPose }
-			label={ title }
-			arm={ arm }
-			type='fingers'
-			checked={ 'fist' }
-			unchecked={ 'spread' }
-		/>
-	), [armsPose, limits, setPose]);
-	const HandRotation = useCallback(({ arm, title }: { arm: 'leftArm' | 'rightArm'; title: string; }): ReactElement => {
-		return (
-			<div>
-				<label htmlFor={ `pose-hand-rotation-${arm}` }>{ title }</label>
-				<Select value={ armsPose[arm].rotation } onChange={ (e) => {
-					setPose({
+	const [controlIndividually, setControlIndividually] = useState<boolean>(false);
+
+	const ArmPosition = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
+		<td>
+			<Row gap='tiny' wrap>
+				<PoseButton
+					preset={ {
+						name: 'Front',
 						[arm]: {
-							rotation: ArmRotationSchema.parse(e.target.value),
+							position: 'front',
 						},
-					});
-				} }>
-					{
-						ArmRotationSchema.options
-							.filter((r) => armsPose[arm].rotation === r || limits == null || limits.validate({ [arm]: { rotation: r } }))
-							.map((r) => (
-								<option key={ r } value={ r }>{ _.capitalize(r) }</option>
-							))
-					}
-				</Select>
-			</div>
-		);
-	}, [armsPose, limits, setPose]);
+					} }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+				<PoseButton
+					preset={ {
+						name: 'Back',
+						[arm]: {
+							position: 'back',
+						},
+					} }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+			</Row>
+		</td>
+	), [characterState, setPose]);
+	const ArmFingers = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
+		<td>
+			<Row gap='tiny' wrap>
+				<PoseButton
+					preset={ {
+						name: 'Spread',
+						[arm]: {
+							fingers: 'spread',
+						},
+					} }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+				<PoseButton
+					preset={ {
+						name: 'Fist',
+						[arm]: {
+							fingers: 'fist',
+						},
+					} }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+			</Row>
+		</td>
+	), [characterState, setPose]);
+	const ArmRotation = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
+		<td>
+			<Row gap='tiny' wrap>
+				{
+					ArmRotationSchema.options.map((r) => (
+						<PoseButton
+							key={ r }
+							preset={ {
+								name: _.capitalize(r),
+								[arm]: {
+									rotation: r,
+								},
+							} }
+							characterState={ characterState }
+							setPose={ setPose }
+						/>
+					))
+				}
+			</Row>
+		</td>
+	), [characterState, setPose]);
 	return (
 		<>
-			<ArmToggle arm='arms' title='Arms are in front of the body' />
-			<ArmToggle arm='leftArm' title='Left arm is in front of the body' />
-			<ArmToggle arm='rightArm' title='Right arm is in front of the body' />
-			<FingersToggle arm='arms' title='Hands are closed into fists' />
-			<FingersToggle arm='leftArm' title='Left hand is closed into a fist' />
-			<FingersToggle arm='rightArm' title='Right hand is closed into a fist' />
-			<HandRotation arm='leftArm' title='Left hand rotation' />
-			<HandRotation arm='rightArm' title='Right hand rotation' />
+			<strong>Arms</strong>
+			<Row>
+				<input
+					id='pose-arms-individual'
+					type='checkbox'
+					checked={ controlIndividually }
+					onChange={ (e) => {
+						setControlIndividually(e.target.checked);
+					} }
+				/>
+				<label htmlFor='pose-arms-individual'>Control arms individually</label>
+			</Row>
+			{
+				!controlIndividually ? (
+					<table className='armPositioningTable'>
+						<tr>
+							<td></td>
+							<td>Both arms</td>
+						</tr>
+						<tr>
+							<td>Position</td>
+							<ArmPosition arm='arms' />
+						</tr>
+						<tr>
+							<td>Fingers</td>
+							<ArmFingers arm='arms' />
+						</tr>
+						<tr>
+							<td>Rotation</td>
+							<ArmRotation arm='arms' />
+						</tr>
+					</table>
+				) : (
+					<table className='armPositioningTable'>
+						<tr>
+							<td></td>
+							<td>Left arm</td>
+							<td>Right arm</td>
+						</tr>
+						<tr>
+							<td>Position</td>
+							<ArmPosition arm='leftArm' />
+							<ArmPosition arm='rightArm' />
+						</tr>
+						<tr>
+							<td>Fingers</td>
+							<ArmFingers arm='leftArm' />
+							<ArmFingers arm='rightArm' />
+						</tr>
+						<tr>
+							<td>Rotation</td>
+							<ArmRotation arm='leftArm' />
+							<ArmRotation arm='rightArm' />
+						</tr>
+					</table>
+				)
+			}
 		</>
 	);
 }
 
-export function WardrobeLegsPose({ setPose, legs, limits }: {
-	limits?: AppearanceLimitTree;
-	legs: LegsPose;
+export function WardrobeLegsPose({ setPose, characterState }: {
+	characterState: AssetFrameworkCharacterState;
 	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
 }) {
 	return (
-		<div>
-			<label htmlFor='pose-legs'>Legs pose</label>
-			<Select value={ legs } id='pose-legs' onChange={ (e) => {
-				setPose({
-					legs: LegsPoseSchema.parse(e.target.value),
-				});
-			} }>
-				{
-					LegsPoseSchema.options
-						.map((r) => (
-							<option
-								key={ r }
-								value={ r }
-								disabled={ limits != null && !limits.validate({ legs: r }) }
-							>
-								{ _.capitalize(r) }
-							</option>
-						))
-				}
-			</Select>
-		</div>
+		<>
+			<strong>Legs</strong>
+			<table className='armPositioningTable'>
+				<tr>
+					<td>State</td>
+					<td>
+						<Row gap='tiny' wrap>
+							{
+								LegsPoseSchema.options.map((r) => (
+									<PoseButton
+										key={ r }
+										preset={ {
+											name: _.capitalize(r),
+											legs: r,
+										} }
+										characterState={ characterState }
+										setPose={ setPose }
+									/>
+								))
+							}
+						</Row>
+					</td>
+				</tr>
+			</table>
+		</>
 	);
 }
 
@@ -334,22 +368,24 @@ export function WardrobePoseGui({ character, characterState }: {
 				<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 				<ChatroomManualYOffsetControl character={ character } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
-					<WardrobeArmPoses armsPose={ characterState.requestedPose } limits={ limits } setPose={ setPose } />
-					<WardrobeLegsPose legs={ characterState.requestedPose.legs } limits={ limits } setPose={ setPose } />
-					<br />
-					{
-						allBones
-							.filter((bone) => bone.type === 'pose')
-							.map((bone) => (
-								<BoneRowElement key={ bone.name } definition={ bone } rotation={ characterState.getRequestedPoseBoneValue(bone.name) } limits={ limits } onChange={ (value) => {
-									setPose({
-										bones: {
-											[bone.name]: value,
-										},
-									});
-								} } />
-							))
-					}
+					<Column>
+						<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
+						<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
+						<br />
+						{
+							allBones
+								.filter((bone) => bone.type === 'pose')
+								.map((bone) => (
+									<BoneRowElement key={ bone.name } definition={ bone } rotation={ characterState.getRequestedPoseBoneValue(bone.name) } limits={ limits } onChange={ (value) => {
+										setPose({
+											bones: {
+												[bone.name]: value,
+											},
+										});
+									} } />
+								))
+						}
+					</Column>
 				</FieldsetToggle>
 			</div>
 		</div>

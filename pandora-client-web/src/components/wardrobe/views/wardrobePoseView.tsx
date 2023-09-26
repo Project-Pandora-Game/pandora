@@ -287,7 +287,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
-	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm, legs }: PartialAppearancePose) => {
+	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm, legs, view }: PartialAppearancePose) => {
 		execute({
 			type: 'pose',
 			target: character.id,
@@ -295,6 +295,7 @@ export function WardrobePoseGui({ character, characterState }: {
 			leftArm: { ...arms, ...leftArm },
 			rightArm: { ...arms, ...rightArm },
 			legs,
+			view,
 		});
 	});
 

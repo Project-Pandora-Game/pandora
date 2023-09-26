@@ -66,6 +66,7 @@ export const AppearanceActionPose = z.object({
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
 	legs: LegsPoseSchema.optional(),
+	view: CharacterViewSchema.optional(),
 });
 
 export const AppearanceActionBody = z.object({

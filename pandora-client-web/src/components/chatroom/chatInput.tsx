@@ -2,7 +2,7 @@ import { AssertNotNullable, CharacterId, EMPTY_ARRAY, IChatRoomStatus, IChatType
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from 'lodash';
 import { Character } from '../../character/character';
-import { IMessageParseOptions, useChatRoomCharacters, useChatRoomInfo, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { IMessageParseOptions, useChatroom, useChatRoomCharacters, useChatRoomInfo, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
 import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext } from './commandsProcessor';
 import { toast } from 'react-toastify';
@@ -66,8 +66,8 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplyData | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
 	const [showSelector, setShowSelector] = useState(false);
+	const chatroom = useChatroom();
 	const characters = useChatRoomCharacters();
-	const sender = useChatRoomMessageSender();
 	const playerId = usePlayerId();
 	const roomId = useChatRoomInfo()?.id;
 
@@ -86,7 +86,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			ref.current?.focus();
 			return true;
 		}
-		const editingMessage = sender.getMessageEdit(edit?.target);
+		const editingMessage = chatroom?.getMessageEdit(edit?.target);
 		if (!editingMessage) return false;
 		const { text, options } = editingMessage;
 		if (!text) {

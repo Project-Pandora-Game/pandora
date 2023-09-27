@@ -6,6 +6,7 @@ import { DirectoryConnectorContextProvider } from './directoryConnectorContextPr
 import { NotificationContextProvider } from './notificationContextProvider';
 import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
 import { CharacterSafemodeDialogContext } from '../characterSafemode/characterSafemode';
+import { ChatInputContextProvider } from '../chatroom/chatInput';
 
 export function GameContextProvider({ children }: ChildrenProps): ReactElement {
 	return (
@@ -14,9 +15,11 @@ export function GameContextProvider({ children }: ChildrenProps): ReactElement {
 				<NotificationContextProvider>
 					<DirectoryConnectorContextProvider>
 						<ShardConnectorContextProvider>
-							<MiscProviders>
-								{ children }
-							</MiscProviders>
+							<ChatInputContextProvider>
+								<MiscProviders>
+									{ children }
+								</MiscProviders>
+							</ChatInputContextProvider>
 						</ShardConnectorContextProvider>
 					</DirectoryConnectorContextProvider>
 				</NotificationContextProvider>

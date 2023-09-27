@@ -4,9 +4,7 @@ import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/chatRoomContextProvider'
 export function WikiIntroduction(): ReactElement {
 	return (
 		<>
-			<p>
-				<h3>Introduction to Pandora with some quick hints to get you started</h3>
-			</p>
+			<h3>Introduction to Pandora with some quick hints to get you started</h3>
 
 			<p>
 				Pandora's vision is to establish a strict & secure, consensual roleplay platform that focuses on text-heavy interactions.

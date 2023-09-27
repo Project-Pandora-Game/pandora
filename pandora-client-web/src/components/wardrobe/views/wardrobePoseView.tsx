@@ -230,45 +230,53 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 			{
 				!controlIndividually ? (
 					<table className='armPositioningTable'>
-						<tr>
-							<td></td>
-							<td>Both arms</td>
-						</tr>
-						<tr>
-							<td>Position</td>
-							<ArmPosition arm='arms' />
-						</tr>
-						<tr>
-							<td>Fingers</td>
-							<ArmFingers arm='arms' />
-						</tr>
-						<tr>
-							<td>Rotation</td>
-							<ArmRotation arm='arms' />
-						</tr>
+						<thead>
+							<tr>
+								<td></td>
+								<td>Both arms</td>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Position</td>
+								<ArmPosition arm='arms' />
+							</tr>
+							<tr>
+								<td>Fingers</td>
+								<ArmFingers arm='arms' />
+							</tr>
+							<tr>
+								<td>Rotation</td>
+								<ArmRotation arm='arms' />
+							</tr>
+						</tbody>
 					</table>
 				) : (
 					<table className='armPositioningTable'>
-						<tr>
-							<td></td>
-							<td>Left arm</td>
-							<td>Right arm</td>
-						</tr>
-						<tr>
-							<td>Position</td>
-							<ArmPosition arm='leftArm' />
-							<ArmPosition arm='rightArm' />
-						</tr>
-						<tr>
-							<td>Fingers</td>
-							<ArmFingers arm='leftArm' />
-							<ArmFingers arm='rightArm' />
-						</tr>
-						<tr>
-							<td>Rotation</td>
-							<ArmRotation arm='leftArm' />
-							<ArmRotation arm='rightArm' />
-						</tr>
+						<thead>
+							<tr>
+								<td></td>
+								<td>Left arm</td>
+								<td>Right arm</td>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Position</td>
+								<ArmPosition arm='leftArm' />
+								<ArmPosition arm='rightArm' />
+							</tr>
+							<tr>
+								<td>Fingers</td>
+								<ArmFingers arm='leftArm' />
+								<ArmFingers arm='rightArm' />
+							</tr>
+							<tr>
+								<td>Rotation</td>
+								<ArmRotation arm='leftArm' />
+								<ArmRotation arm='rightArm' />
+							</tr>
+						</tbody>
 					</table>
 				)
 			}
@@ -284,26 +292,28 @@ export function WardrobeLegsPose({ setPose, characterState }: {
 		<>
 			<strong>Legs</strong>
 			<table className='armPositioningTable'>
-				<tr>
-					<td>State</td>
-					<td>
-						<Row gap='tiny' wrap>
-							{
-								LegsPoseSchema.options.map((r) => (
-									<PoseButton
-										key={ r }
-										preset={ {
-											name: _.capitalize(r),
-											legs: r,
-										} }
-										characterState={ characterState }
-										setPose={ setPose }
-									/>
-								))
-							}
-						</Row>
-					</td>
-				</tr>
+				<tbody>
+					<tr>
+						<td>State</td>
+						<td>
+							<Row gap='tiny' wrap>
+								{
+									LegsPoseSchema.options.map((r) => (
+										<PoseButton
+											key={ r }
+											preset={ {
+												name: _.capitalize(r),
+												legs: r,
+											} }
+											characterState={ characterState }
+											setPose={ setPose }
+										/>
+									))
+								}
+							</Row>
+						</td>
+					</tr>
+				</tbody>
 			</table>
 		</>
 	);

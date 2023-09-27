@@ -13,7 +13,7 @@ import { Immutable } from 'immer';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
-import { Character, useCharacterAppearanceView } from '../../character/character';
+import { Character } from '../../character/character';
 import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacters, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
@@ -391,7 +391,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 
 	const scale = baseScale * (layer.characterPosition.relativeScale ?? 1);
 
-	const backView = useCharacterAppearanceView(characterState) === 'back';
+	const backView = characterState.actualPose.view === 'back';
 
 	const scaleX = backView ? -1 : 1;
 

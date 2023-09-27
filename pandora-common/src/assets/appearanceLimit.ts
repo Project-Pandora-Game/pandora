@@ -2,7 +2,7 @@ import { Immutable } from 'immer';
 import _ from 'lodash';
 import { ZodEnum } from 'zod';
 import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
-import { GetDefaultAppearanceBundle } from './appearance';
+import { GetDefaultAppearancePose } from './appearance';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits, PartialAppearancePose } from './definitions';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
 import type { AppearanceArmPose, AppearancePose } from './state/characterState';
@@ -237,11 +237,11 @@ export class AppearanceLimitTree {
 		return this.root != null && this.root.hasNoLimits();
 	}
 
-	public validate(pose: PartialAppearancePose): boolean {
+	public validate(pose: Immutable<PartialAppearancePose>): boolean {
 		return this.root != null && this.root.validate(FromPose(pose));
 	}
 
-	public force(pose: AppearancePose): { pose: AppearancePose; changed: boolean; } {
+	public force(pose: Immutable<AppearancePose>): { pose: AppearancePose; changed: boolean; } {
 		if (this.root == null)
 			return { pose, changed: false };
 
@@ -270,7 +270,7 @@ function CreateTreeNode(limits: Immutable<AssetDefinitionPoseLimits>): TreeNode 
 	return new TreeNode(FromLimit(limits), nodeChildren);
 }
 
-function FromPose({ bones, leftArm, rightArm, arms, legs, view }: PartialAppearancePose): Map<string, number> {
+function FromPose({ bones, leftArm, rightArm, arms, legs, view }: Immutable<PartialAppearancePose>): Map<string, number> {
 	const data = new Map<string, number>();
 
 	if (bones) {
@@ -336,7 +336,7 @@ function ToArmPose(data: ReadonlyMap<string, number>, prefix: 'leftArm' | 'right
 }
 
 function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
-	const pose = GetDefaultAppearanceBundle();
+	const pose = GetDefaultAppearancePose();
 
 	ToArmPose(data, 'leftArm', pose);
 	ToArmPose(data, 'rightArm', pose);

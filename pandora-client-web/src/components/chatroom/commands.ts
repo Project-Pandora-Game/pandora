@@ -209,7 +209,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 				shardConnector.awaitResponse('appearanceAction', {
 					type: 'setView',
 					target: player.data.id,
-					view: playerState.view === 'front' ? 'back' : 'front',
+					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
 				}).catch(() => { /** TODO */ });
 				return true;
 			}),

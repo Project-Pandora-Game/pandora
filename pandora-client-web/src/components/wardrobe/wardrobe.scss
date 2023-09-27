@@ -406,21 +406,27 @@ $drop-overlay-gap: 0.3em;
 		margin: 0 0 0 0.5em;
 	}
 
+	.requestedPoseIndicatorText {
+		padding: 0 0.5em;
+	}
+
 	.pose-row {
-		display: flex;
-		flex-flow: row wrap;
-		gap: 0.5em;
 		margin: 0 1em;
 
-		.Button:disabled {
-			background-color: $grey-lighter;
-			color: $grey-darkest;
-
+		.pose {
 			&.pose-unavailable {
-				background-color: $grey-darker;
-				color: $grey-mid;
-				opacity: 40%;
+				opacity: 60%;
 			}
+		}
+	}
+
+	.armPositioningTable {
+		margin: 0.5em;
+		&, td {
+			border: solid 1px black;
+			border-collapse: collapse;
+			padding: 0.25em;
+			text-align: center;
 		}
 	}
 

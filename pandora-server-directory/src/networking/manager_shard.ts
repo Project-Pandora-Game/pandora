@@ -1,4 +1,4 @@
-import { IShardDirectory, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, BadMessageError, IMessageHandler, AssertNotNullable } from 'pandora-common';
+import { IShardDirectory, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, BadMessageError, IMessageHandler } from 'pandora-common';
 import type { IConnectionShard } from './common';
 import { GetDatabase } from '../database/databaseProvider';
 import { ShardManager } from '../shard/shardManager';
@@ -119,7 +119,9 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (!connection.shard?.getConnectedCharacter(id))
 			throw new BadMessageError();
 
-		return GetDatabase().getCharacter(id, accessId) as IShardDirectoryPromiseResult['getCharacter'];
+		return {
+			result: await GetDatabase().getCharacter(id, accessId),
+		};
 	}
 
 	private async handleSetCharacter(args: IShardDirectoryArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
@@ -136,9 +138,9 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		if (!connection.shard?.getConnectedRoom(id))
 			throw new BadMessageError();
 
-		const result = await GetDatabase().getChatRoomById(id, accessId);
-		AssertNotNullable(result);
-		return result;
+		return {
+			result: await GetDatabase().getChatRoomById(id, accessId),
+		};
 	}
 
 	private async handleSetChatRoom({ id, data, accessId }: IShardDirectoryArgument['setChatRoom'], connection: IConnectionShard): IShardDirectoryPromiseResult['setChatRoom'] {

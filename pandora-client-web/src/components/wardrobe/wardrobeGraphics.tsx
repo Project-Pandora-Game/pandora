@@ -38,7 +38,7 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 	const [onClick, processing] = useAppearanceActionEvent({
 		type: 'setView',
 		target: character.id,
-		view: characterState.view === 'front' ? 'back' : 'front',
+		view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
 	});
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({

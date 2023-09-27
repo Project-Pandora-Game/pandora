@@ -97,10 +97,6 @@ export type Restriction =
 	| {
 		type: 'blockedHands';
 	}
-	| {
-		type: 'exitPose';
-		asset: AssetId;
-	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
 		type: 'invalid';

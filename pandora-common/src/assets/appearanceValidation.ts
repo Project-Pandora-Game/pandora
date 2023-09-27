@@ -25,10 +25,6 @@ export type AppearanceValidationError =
 		problem: 'poseConflict';
 	}
 	| {
-		// There is a possible valid pose, but the current pose is not valid
-		problem: 'invalidPose';
-	}
-	| {
 		problem: 'tooManyItems';
 		asset: AssetId | null;
 		limit: number;

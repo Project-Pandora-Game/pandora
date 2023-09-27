@@ -66,6 +66,7 @@ export const AppearanceActionPose = z.object({
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
 	legs: LegsPoseSchema.optional(),
+	view: CharacterViewSchema.optional(),
 });
 
 export const AppearanceActionBody = z.object({
@@ -455,7 +456,7 @@ export function DoAppearanceAction(
 			}
 
 			if (!manipulator.produceCharacterState(action.target, (character) => {
-				return character.produceWithPose(action, action.type, false);
+				return character.produceWithPose(action, action.type);
 			})) {
 				return { result: 'invalidAction' };
 			}
@@ -1205,17 +1206,6 @@ export function ActionRoomDeviceLeave({
 					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
 				},
 			});
-		}
-
-		const exitPose = asset.definition.exitPose ?? item.asset.definition.exitPose;
-		if (exitPose != null && !manipulator.produceCharacterState(occupyingCharacterId, (character) => character.produceWithPosePreset(exitPose))) {
-			return {
-				result: 'restrictionError',
-				restriction: {
-					type: 'exitPose',
-					asset: item.asset.id,
-				},
-			};
 		}
 	}
 

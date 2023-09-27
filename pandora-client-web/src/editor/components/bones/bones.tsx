@@ -1,6 +1,5 @@
 import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose, PartialAppearancePose } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
-import { useCharacterAppearanceArmsPose, useCharacterAppearancePose } from '../../../character/character';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
@@ -18,11 +17,12 @@ export function BoneUI(): ReactElement {
 	const characterState = useEditorCharacterState();
 	const character = editor.character;
 
-	const bones = useCharacterAppearancePose(characterState);
+	const assetManager = characterState.assetManager;
+	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const showBones = useObservable(editor.showBones);
 
 	const setPose = useCallback((pose: PartialAppearancePose) => {
-		character.getAppearance().produceState((state) => state.produceWithPose(pose, 'pose', false));
+		character.getAppearance().produceState((state) => state.produceWithPose(pose, 'pose'));
 	}, [character]);
 
 	return (
@@ -38,14 +38,14 @@ export function BoneUI(): ReactElement {
 					} }
 				/>
 			</div>
-			<WardrobeArmPoses armsPose={ characterState.arms } setPose={ setPose } />
-			<WardrobeLegsPose legs={ characterState.legs } setPose={ setPose } />
+			<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
+			<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
 			<div>
 				<label htmlFor='back-view-toggle'>Show back view</label>
 				<input
 					id='back-view-toggle'
 					type='checkbox'
-					checked={ characterState.view === 'back' }
+					checked={ characterState.requestedPose.view === 'back' }
 					onChange={ (e) => {
 						character.getAppearance().setView(e.target.checked ? 'back' : 'front');
 					} }
@@ -94,37 +94,46 @@ export function BoneUI(): ReactElement {
 				</ContextHelpButton>
 			</h4>
 			{
-				bones
-					.filter((bone) => bone.definition.type === 'pose')
-					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.getAppearance().setPose(bone.definition.name, value) } />)
+				allBones
+					.filter((bone) => bone.type === 'pose')
+					.map((bone) => <BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => character.getAppearance().setPose(bone.name, value) } />)
 			}
 			<hr />
 			<h4>Body bones</h4>
 			{
-				bones
-					.filter((bone) => bone.definition.type === 'body')
-					.map((bone) => <BoneRowElement key={ bone.definition.name } bone={ bone } onChange={ (value) => character.getAppearance().setPose(bone.definition.name, value) } />)
+				allBones
+					.filter((bone) => bone.type === 'body')
+					.map((bone) => <BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => character.getAppearance().setPose(bone.name, value) } />)
 			}
 		</Scrollbar>
 	);
 }
 
 function PoseExportGui({ characterState }: { character: EditorCharacter; characterState: AssetFrameworkCharacterState; }) {
+	const assetManager = characterState.assetManager;
 	const [open, setOpen] = useState(false);
 
-	const pose = useCharacterAppearancePose(characterState);
-	const arms = useCharacterAppearanceArmsPose(characterState);
+	const bonesText = useMemo(() => {
+		let result = '';
+		for (const bone of assetManager.getAllBones()) {
+			if (bone.type !== 'pose')
+				continue;
+			const value = characterState.requestedPose.bones[bone.name];
+			if (value == null || value === 0)
+				continue;
+			result += `\n\t\t${bone.name}: ${value},`;
+		}
+		return result;
+	}, [assetManager, characterState.requestedPose]);
 
 	const typeScriptValue = useMemo(() => {
 		return `{
 	name: '[Pose Preset Name]',
-	bones: {${pose.reduce((acc, value) => (value.rotation === 0 || value.definition.type !== 'pose')
-			? acc
-			: acc + `\n\t\t${value.definition.name}: ${value.rotation},`, '')}
+	bones: {${bonesText}
 	},
-	${CharacterArmsPoseToString(arms)}
+	${CharacterArmsPoseToString(characterState.requestedPose)}
 },`;
-	}, [pose, arms]);
+	}, [bonesText, characterState]);
 
 	if (!open) {
 		return <Button onClick={ () => setOpen(true) }>Show pose export</Button>;

@@ -21,7 +21,8 @@ export default class DirectoryDatabase implements ShardDatabase {
 		if (DirectoryConnector.state !== DirectoryConnectionState.CONNECTED)
 			return false;
 
-		return await DirectoryConnector.awaitResponse('getCharacter', { id, accessId });
+		const { result } = await DirectoryConnector.awaitResponse('getCharacter', { id, accessId });
+		return result;
 	}
 
 	public async setCharacter(data: ICharacterDataUpdate): Promise<boolean> {
@@ -37,8 +38,13 @@ export default class DirectoryDatabase implements ShardDatabase {
 		if (DirectoryConnector.state !== DirectoryConnectionState.CONNECTED)
 			return false;
 
+		const { result } = await DirectoryConnector.awaitResponse('getChatRoom', { id, accessId });
+
+		if (result == null)
+			return null;
+
 		return _.omit(
-			await DirectoryConnector.awaitResponse('getChatRoom', { id, accessId }),
+			result,
 			['config', 'accessId', 'owners'],
 		);
 	}

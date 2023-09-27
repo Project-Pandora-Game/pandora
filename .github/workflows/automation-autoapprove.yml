@@ -6,6 +6,7 @@ on:
     types:
       - opened
 
+jobs:
   automation:
     name: Automation tasks
     runs-on: ubuntu-latest

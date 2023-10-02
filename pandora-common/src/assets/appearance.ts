@@ -1,4 +1,5 @@
-import type { CharacterId, ICharacterMinimalData } from '../character';
+import type { CharacterId } from '../character/characterTypes';
+import type { ICharacterMinimalData } from '../character/characterData';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { ActionRoomContext } from '../chatroom';
 import { Assert } from '../utility';

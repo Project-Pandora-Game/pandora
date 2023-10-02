@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import type { ICharacterMinimalData } from '.';
+import type { ICharacterMinimalData } from './characterData';
 import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
 import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';

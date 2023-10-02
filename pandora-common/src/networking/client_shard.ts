@@ -1,4 +1,5 @@
-import { CharacterDataCreateSchema, CharacterIdSchema, CharacterPublicSettingsSchema } from '../character';
+import { CharacterIdSchema } from '../character/characterTypes';
+import { CharacterDataCreateSchema, CharacterPublicSettingsSchema } from '../character/characterData';
 import { AppearanceActionFailure, AppearanceActionSchema } from '../assets';
 import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
 import { z } from 'zod';

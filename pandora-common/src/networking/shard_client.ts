@@ -1,5 +1,6 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
-import type { CharacterId, CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character';
+import type { CharacterId } from '../character/characterTypes';
+import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
 import type { IChatRoomFullInfo } from '../chatroom';
 import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';

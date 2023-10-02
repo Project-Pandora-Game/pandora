@@ -3,7 +3,8 @@ import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ZodTemplateString } from '../validation';
 import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction, IChatRoomMessageActionTargetCharacter, IChatRoomMessageActionTargetRoomInventory } from '../chatroom';
 import type { Item } from './item';
-import type { CharacterRestrictionsManager, ICharacterMinimalData } from '../character';
+import type { CharacterRestrictionsManager } from '../character/restrictionsManager';
+import type { ICharacterMinimalData } from '../character/characterData';
 
 export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;

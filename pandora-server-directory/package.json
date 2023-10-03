@@ -57,7 +57,7 @@
 		"prom-client": "14.2.0",
 		"socket.io": "4.6.1",
 		"wtfnode": "0.9.1",
-		"zod": "3.22.2"
+		"zod": "3.22.3"
 	},
 	"devDependencies": {
 		"@types/async-lock": "1.4.0",

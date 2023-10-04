@@ -21,15 +21,8 @@ export function CreateEnvParser<TEnvSchema extends Record<string, ZodTypeAny> = 
 		switch (GetZodDefType(schema)) {
 			case 'boolean':
 				transformed[key] = z.preprocess((arg, ctx) => {
-					if (arg == null) {
-						return arg;
-					}
 					if (typeof arg !== 'string') {
-						ctx.addIssue({
-							code: ZodIssueCode.custom,
-							message: 'must be a "true" or "false"',
-						});
-						return z.NEVER;
+						return arg;
 					}
 					switch (arg.trim().toLowerCase()) {
 						case 'true':
@@ -46,16 +39,9 @@ export function CreateEnvParser<TEnvSchema extends Record<string, ZodTypeAny> = 
 				}, schema);
 				break;
 			case 'number':
-				transformed[key] = z.preprocess((arg, ctx) => {
-					if (arg == null) {
-						return arg;
-					}
+				transformed[key] = z.preprocess((arg) => {
 					if (typeof arg !== 'string') {
-						ctx.addIssue({
-							code: ZodIssueCode.custom,
-							message: 'must be a number',
-						});
-						return z.NEVER;
+						return arg;
 					}
 					return parseInt(arg);
 				}, schema);
@@ -67,7 +53,7 @@ export function CreateEnvParser<TEnvSchema extends Record<string, ZodTypeAny> = 
 	}
 	return (obj?: Record<string, unknown>): EnvOutput<TEnvSchema> => {
 		if (obj === undefined) {
-			if (!('process' in globalThis) || !IsObject(process?.env)) {
+			if (!IsObject(process?.env)) {
 				logger.fatal('process.env is not an object');
 				throw new Error('failed to create env');
 			}

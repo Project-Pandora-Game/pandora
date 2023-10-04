@@ -481,6 +481,9 @@ importers:
       wtfnode:
         specifier: 0.9.1
         version: 0.9.1
+      zod:
+        specifier: 3.22.3
+        version: 3.22.3
     devDependencies:
       '@types/async-lock':
         specifier: 1.4.0

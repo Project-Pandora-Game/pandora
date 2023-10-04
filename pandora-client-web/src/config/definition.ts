@@ -14,9 +14,9 @@ export const WEBPACK_CONFIG = {
 
 export const CLIENT_CONFIG = {
 	...WEBPACK_BASE_CONFIG,
-	GAME_NAME: z.string(),
-	GAME_VERSION: z.string(),
-	NODE_ENV: z.enum(['production', 'development']),
-	GIT_COMMIT_HASH: z.string(),
-	GIT_DESCRIBE: z.string(),
+	GAME_NAME: z.string().optional(),
+	GAME_VERSION: z.string().optional(),
+	NODE_ENV: z.enum(['production', 'development', 'test']),
+	GIT_COMMIT_HASH: z.string().optional(),
+	GIT_DESCRIBE: z.string().optional(),
 } as const;

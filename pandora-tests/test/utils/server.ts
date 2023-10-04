@@ -43,7 +43,28 @@ export interface TestStartDirectoryOptions {
 let DirectoryServer: {
 	process: ChildProcessWithoutNullStreams;
 	keepActive: boolean;
+	stdout: string;
+	stderr: string;
 } | null = null;
+
+const HandlePrematureExit = (code: number | null, signal: NodeJS.Signals | null) => {
+	Assert(DirectoryServer != null);
+	// eslint-disable-next-line no-console
+	console.error(
+		'\n========== Directory server crashed ==========',
+		'\nCode:',
+		code,
+		'\nSignal:',
+		signal,
+		'\n===== stdout =====\n',
+		DirectoryServer.stdout,
+		'\n\n===== stderr =====\n',
+		DirectoryServer.stderr,
+		'\n========== End of crash ==========\n',
+	);
+	DirectoryServer = null;
+	throw new Error('Directory exited prematurely');
+};
 
 export function TestStopDirectory(): Promise<void> {
 	AssertNotNullable(DirectoryServer);
@@ -55,6 +76,7 @@ export function TestStopDirectory(): Promise<void> {
 			DirectoryServer = null;
 			resolve();
 		});
+		server.process.off('exit', HandlePrematureExit);
 		server.process.kill('SIGINT');
 	});
 }
@@ -81,12 +103,25 @@ export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> =
 			...DIRECTORY_ENV_DEFAULTS,
 			...options.configOverrides,
 		}),
+		stdio: 'pipe',
 	});
 
 	DirectoryServer = {
 		process: directoryProcess,
 		keepActive: options.keepActive === true,
+		stderr: '',
+		stdout: '',
 	};
+
+	directoryProcess.stdout.on('data', function (data: string | Buffer) {
+		Assert(DirectoryServer?.process === directoryProcess);
+		DirectoryServer.stdout += data.toString();
+	});
+	directoryProcess.stderr.on('data', function (data: string | Buffer) {
+		Assert(DirectoryServer?.process === directoryProcess);
+		DirectoryServer.stderr += data.toString();
+	});
+	directoryProcess.on('exit', HandlePrematureExit);
 
 	return Promise.resolve();
 }

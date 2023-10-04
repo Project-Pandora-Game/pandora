@@ -6,6 +6,12 @@ export const WEBPACK_BASE_CONFIG = {
 	USER_DEBUG: z.boolean().default(false),
 } as const;
 
+export const WEBPACK_CONFIG = {
+	...WEBPACK_BASE_CONFIG,
+	WEBPACK_DEV_SERVER_PORT: z.number().default(6969),
+	DIST_DIR_OVERRIDE: z.string().optional(),
+} as const;
+
 export const CLIENT_CONFIG = {
 	...WEBPACK_BASE_CONFIG,
 	GAME_NAME: z.string(),

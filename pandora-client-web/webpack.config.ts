@@ -15,7 +15,7 @@ import { execSync } from 'child_process';
 import { z } from 'zod';
 
 import { CreateEnvParser, type EnvInputJson } from 'pandora-common';
-import { WEBPACK_BASE_CONFIG, type CLIENT_CONFIG } from './src/config/definition';
+import { WEBPACK_CONFIG, type CLIENT_CONFIG } from './src/config/definition';
 
 const GIT_COMMIT_HASH = execSync('git rev-parse --short HEAD').toString().trim();
 const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString().trim();
@@ -31,11 +31,7 @@ const {
 	WEBPACK_DEV_SERVER_PORT,
 	USER_DEBUG = 'false',
 	DIST_DIR_OVERRIDE,
-} = CreateEnvParser({
-	...WEBPACK_BASE_CONFIG,
-	WEBPACK_DEV_SERVER_PORT: z.number().default(6969),
-	DIST_DIR_OVERRIDE: z.string().optional(),
-})();
+} = CreateEnvParser(WEBPACK_CONFIG)();
 
 const SRC_DIR = join(__dirname, 'src');
 const DIST_DIR = DIST_DIR_OVERRIDE ?? join(__dirname, 'dist');

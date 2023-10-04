@@ -15,8 +15,8 @@ export function CreateEnvParser<TEnvSchema extends Record<string, ZodTypeAny> = 
 	const transformed: Record<string, ZodTypeAny> = {};
 	for (const [key, schema] of Object.entries(envSchema)) {
 		if (!EnvironmentKeySchema.safeParse(key).success) {
-			logger.fatal();
-			throw new Error('failed to create env');
+			logger.fatal(`invalid environment key: ${key}`);
+			throw new Error(`failed to create env: invalid environment key: ${key}`);
 		}
 		switch (GetZodDefType(schema)) {
 			case 'boolean':
@@ -55,14 +55,14 @@ export function CreateEnvParser<TEnvSchema extends Record<string, ZodTypeAny> = 
 		if (obj === undefined) {
 			if (!IsObject(process?.env)) {
 				logger.fatal('process.env is not an object');
-				throw new Error('failed to create env');
+				throw new Error('failed to create env: process.env is not an object');
 			}
 			obj = process.env;
 		}
 		const parsed = z.object(transformed).safeParse(obj);
 		if (!parsed.success) {
 			logger.fatal(parsed.error.toString());
-			throw new Error('failed to create env');
+			throw new Error('failed to create env:\n' + parsed.error.toString());
 		}
 		return parsed.data as unknown as EnvOutput<TEnvSchema>;
 	};

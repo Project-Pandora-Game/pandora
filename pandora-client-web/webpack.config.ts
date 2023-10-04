@@ -12,7 +12,6 @@ import { Compilation, Compiler, Configuration, DefinePlugin, RuleSetRule, RuleSe
 import 'webpack-dev-server';
 import packageJson from './package.json';
 import { execSync } from 'child_process';
-import { z } from 'zod';
 
 import { CreateEnvParser, type EnvInputJson } from 'pandora-common';
 import { WEBPACK_CONFIG, type CLIENT_CONFIG } from './src/config/definition';

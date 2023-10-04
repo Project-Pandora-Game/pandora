@@ -80,7 +80,11 @@ export const EnvParser = CreateEnvParser({
 	BETA_KEY_GLOBAL: z.string().default(''),
 	BETA_KEY_ENABLED: z.boolean().default(false),
 	/** Comma separated list of accounts automatically granted 'admin' role. Does not affect database, only effective data */
-	AUTO_ADMIN_ACCOUNTS: z.preprocess((ctx) => typeof ctx !== 'string' ? ctx : ctx.split(',').map(parseInt), z.array(z.number())).default([]),
+	AUTO_ADMIN_ACCOUNTS: z.preprocess((ctx) => typeof ctx !== 'string' ? ctx : ctx
+		.split(',')
+		.map((x) => x.trim())
+		.filter(Boolean)
+		.map(parseInt), z.array(z.number())).default([]),
 
 	//#endregion
 

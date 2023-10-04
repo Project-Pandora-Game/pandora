@@ -1,11 +1,10 @@
-import { Assert, AssertNotNullable } from './utils';
+import { Assert, AssertNotNullable, EnvStringify } from './utils';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
 import { TEST_DIRECTORY_PORT, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_TEMP } from '../_setup/config';
 import { test } from '@playwright/test';
 import path from 'path';
 
 import type { ENV } from 'pandora-server-directory/src/config';
-import { EnvStringify } from 'pandora-common/dist/environment';
 
 export type DirectoryEnvSetup = Partial<typeof ENV>;
 
@@ -37,7 +36,7 @@ const DIRECTORY_ENV_DEFAULTS: DirectoryEnvSetup = {
 export interface TestStartDirectoryOptions {
 	/** Whether to keep the server active across tests */
 	keepActive: boolean;
-	configOverrides: DirectoryEnvSetup;
+	configOverrides: Partial<DirectoryEnvSetup>;
 }
 
 let DirectoryServer: {

@@ -8,7 +8,7 @@ export const EnvParser = CreateEnvParser({
 	//#region Networking
 
 	/** Port on which will HTTP server listen */
-	SERVER_PORT: z.number().default(25560),
+	SERVER_PORT: z.number().int().default(25560),
 	/** Path to HTTPS certificate file */
 	SERVER_HTTPS_CERT: z.string().default(''),
 	/** Path to HTTPS key file */

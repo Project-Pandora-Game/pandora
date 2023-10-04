@@ -1,5 +1,6 @@
 import { GetLogger, IAccountCryptoKey } from 'pandora-common';
-import { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } from '../config';
+import { ENV } from '../config';
+const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } = ENV;
 import { GetDatabase } from '../database/databaseProvider';
 import GetEmailSender from '../services/email';
 import type { Account } from './account';

@@ -1,7 +1,8 @@
 import Discord, { BitFieldResolvable, GatewayIntentsString, GuildChannel } from 'discord.js';
 import _ from 'lodash';
 import { GetLogger } from 'pandora-common';
-import { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID } from '../../config';
+import { ENV } from '../../config';
+const { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID } = ENV;
 
 const STATUS_THROTTLE_TIME = 10 * 60 * 1000; // 10 minutes
 

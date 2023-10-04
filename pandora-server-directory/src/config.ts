@@ -1,102 +1,108 @@
-export const APP_NAME = process.env.APP_NAME ?? 'Pandora Directory Server';
+import { CreateEnvParser } from 'pandora-common';
+import { z } from 'zod';
 
-//#region Networking
+export const EnvParser = CreateEnvParser({
 
-/** Port on which will HTTP server listen */
-export const SERVER_PORT = process.env.SERVER_PORT ?? '25560';
-/** Path to HTTPS certificate file */
-export const SERVER_HTTPS_CERT = process.env.SERVER_HTTPS_CERT ?? '';
-/** Path to HTTPS key file */
-export const SERVER_HTTPS_KEY = process.env.SERVER_HTTPS_KEY ?? '';
-/** Secret key used to authenticate Shards connecting to Directory */
-export const SHARD_SHARED_SECRET = process.env.SHARD_SHARED_SECRET ?? '';
-/** How many hops are we after a trusted reverse proxy */
-export const TRUSTED_REVERSE_PROXY_HOPS = Number.parseInt(process.env.TRUSTED_REVERSE_PROXY_HOPS ?? '0') || 0;
+	APP_NAME: z.string().default('Pandora Directory Server'),
 
-//#endregion
+	//#region Networking
 
-//#region Logging
+	/** Port on which will HTTP server listen */
+	SERVER_PORT: z.number().default(25560),
+	/** Path to HTTPS certificate file */
+	SERVER_HTTPS_CERT: z.string().default(''),
+	/** Path to HTTPS key file */
+	SERVER_HTTPS_KEY: z.string().default(''),
+	/** Secret key used to authenticate Shards connecting to Directory */
+	SHARD_SHARED_SECRET: z.string().default(''),
+	/** How many hops are we after a trusted reverse proxy */
+	TRUSTED_REVERSE_PROXY_HOPS: z.number().default(0),
 
-/** The directory to store logs into */
-export const LOG_DIR = process.env.LOG_DIR ?? './logs';
-/** If the logging should use "production" preset, reducing verbosity and rotating logs */
-export const LOG_PRODUCTION = (process.env.LOG_PRODUCTION ?? '').toLocaleLowerCase() === 'true';
-/** A webhook URL to log important events */
-export const LOG_DISCORD_WEBHOOK_URL = process.env.LOG_DISCORD_WEBHOOK_URL ?? '';
+	//#endregion
 
-//#endregion
+	//#region Logging
+	/** The directory to store logs into */
+	LOG_DIR: z.string().default('./logs'),
+	/** If the logging should use "production" preset, reducing verbosity and rotating logs */
+	LOG_PRODUCTION: z.boolean().default(false),
+	/** A webhook URL to log important events */
+	LOG_DISCORD_WEBHOOK_URL: z.string().default(''),
 
-//#region Expiration settings
+	//#endregion
 
-/** Time (in ms) for how long is a account login token valid */
-export const LOGIN_TOKEN_EXPIRATION = 7 * 24 * 60 * 60_000;
-/** Time (in ms) for how long is a account activation token valid */
-export const ACTIVATION_TOKEN_EXPIRATION = 7 * 24 * 60 * 60_000;
-/** Time (in ms) for how long is a password reset token valid */
-export const PASSWORD_RESET_TOKEN_EXPIRATION = 24 * 60 * 60_000;
+	//#region Expiration settings
 
-//#endregion
+	/** Time (in ms) for how long is an account login token valid */
+	LOGIN_TOKEN_EXPIRATION: z.number().default(7 * 24 * 60 * 60_000),
+	/** Time (in ms) for how long is an account activation token valid */
+	ACTIVATION_TOKEN_EXPIRATION: z.number().default(7 * 24 * 60 * 60_000),
+	/** Time (in ms) for how long is a password reset token valid */
+	PASSWORD_RESET_TOKEN_EXPIRATION: z.number().default(24 * 60 * 60_000),
 
-//#region Email settings
+	//#endregion
 
-/** Static hash salt */
-export const EMAIL_SALT = 'pandora-directory-server:';
-/** Email sender type, possible values: mock, smtp, ses */
-export const EMAIL_SENDER_TYPE = process.env.EMAIL_SENDER_TYPE ?? 'mock';
-/** SMTP Email configuration, space separated list: service host user */
-export const EMAIL_SMTP_CONFIG = process.env.EMAIL_SMTP_CONFIG ?? '';
-/** SMTP Email user password */
-export const EMAIL_SMTP_PASSWORD = process.env.EMAIL_SMTP_PASSWORD ?? '';
+	//#region Email settings
 
-//#endregion
+	/** Static hash salt */
+	EMAIL_SALT: z.string().default('pandora-directory-server:'),
+	/** Email sender type, possible values: mock, smtp, ses */
+	EMAIL_SENDER_TYPE: z.enum(['mock', 'smtp', 'ses']).default('mock'),
+	/** SMTP Email configuration, space-separated list: service host user */
+	EMAIL_SMTP_CONFIG: z.string().default(''),
+	/** SMTP Email user password */
+	EMAIL_SMTP_PASSWORD: z.string().default(''),
 
-//#region Database
+	//#endregion
 
-/** Database type, possible values: mock, mongodb, mongodb-in-memory, mongodb-local */
-export const DATABASE_TYPE = process.env.DATABASE_TYPE ?? 'mongodb-local';
-/** MongoDB connection string */
-export const DATABASE_URL = process.env.DATABASE_URL ?? 'mongodb://localhost:27017';
-/** Name of the db to connect to */
-export const DATABASE_NAME = process.env.DATABASE_NAME ?? 'pandora-test';
+	//#region Database
 
-//#endregion
+	/** Database type, possible values: mock, mongodb, mongodb-in-memory, mongodb-local */
+	DATABASE_TYPE: z.enum(['mock', 'mongodb', 'mongodb-in-memory', 'mongodb-local']).default('mock'),
+	/** MongoDB connection string */
+	DATABASE_URL: z.string().default('mongodb://localhost:27017'),
+	/** Name of the db to connect to */
+	DATABASE_NAME: z.string().default('pandora-test'),
 
-//#region Limits
+	//#endregion
 
-/** Character limit for normal account */
-export const CHARACTER_LIMIT_NORMAL = 5;
+	//#region Limits
 
-/** Room ownership limit for normal account */
-export const ROOM_LIMIT_NORMAL = 5;
+	/** Character limit for normal account */
+	CHARACTER_LIMIT_NORMAL: z.number().default(5),
+	/** Room ownership limit for normal account */
+	ROOM_LIMIT_NORMAL: z.number().default(5),
 
-//#endregion
+	//#endregion
 
-//#region Development
+	//#region Development
 
-/** Key needed to register, if set */
-export const BETA_KEY_GLOBAL = process.env.BETA_KEY_GLOBAL ?? '';
-export const BETA_KEY_ENABLED = process.env.BETA_KEY_ENABLED === 'true';
-/** Comma separated list of accounts automatically granted 'admin' role. Does not affect database, only effective data */
-export const AUTO_ADMIN_ACCOUNTS = (process.env.AUTO_ADMIN_ACCOUNTS ?? '').split(',').map((v) => Number.parseInt(v, 10)).filter((v) => !isNaN(v));
+	/** Key needed to register, if set */
+	BETA_KEY_GLOBAL: z.string().default(''),
+	BETA_KEY_ENABLED: z.boolean().default(false),
+	/** Comma separated list of accounts automatically granted 'admin' role. Does not affect database, only effective data */
+	AUTO_ADMIN_ACCOUNTS: z.preprocess((ctx) => typeof ctx !== 'string' ? ctx : ctx.split(',').map(parseInt), z.array(z.number())).default([]),
 
-//#endregion
+	//#endregion
 
-//#region Discord
+	//#region Discord
 
-/** Discord bot token */
-export const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || '';
-/** Discord bot account status channel ID */
-export const DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID = process.env.DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID || '';
-/** Discord bot character status channel ID */
-export const DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID = process.env.DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID || '';
+	/** Discord bot token */
+	DISCORD_BOT_TOKEN: z.string().default(''),
+	/** Discord bot account status channel ID */
+	DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID: z.string().default(''),
+	/** Discord bot character status channel ID */
+	DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID: z.string().default(''),
 
-//#endregion
+	//#endregion
 
-//#region Captcha
+	//#region Captcha
 
-/** hCaptcha secret key */
-export const HCAPTCHA_SECRET_KEY = process.env.HCAPTCHA_SECRET_KEY || '';
-/** hCaptcha site key */
-export const HCAPTCHA_SITE_KEY = process.env.HCAPTCHA_SITE_KEY || '';
+	/** hCaptcha secret key */
+	HCAPTCHA_SECRET_KEY: z.string().default(''),
+	/** hCaptcha site key */
+	HCAPTCHA_SITE_KEY: z.string().default(''),
 
-//#endregion
+	//#endregion
+});
+
+export const ENV = EnvParser();

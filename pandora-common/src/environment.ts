@@ -100,3 +100,32 @@ export type EnvOutput<TEnvSchema extends Record<string, ZodTypeAny>> = {
 export type EnvInputJson<TEnvSchema extends Record<string, ZodTypeAny>> = {
 	readonly [K in keyof TEnvSchema]: string | number | boolean;
 };
+
+export function EnvStringify(envOvj: Record<string, unknown>): Record<string, string | undefined> {
+	const transformed: Record<string, string | undefined> = {};
+	for (const [key, value] of Object.entries(envOvj)) {
+		transformed[key] = Stringify(value);
+	}
+	return transformed;
+}
+
+function Stringify(value: unknown, allowArray = true): string | undefined {
+	if (value == null) {
+		return undefined;
+	}
+	switch (typeof value) {
+		case 'string':
+			return value;
+		case 'number':
+			return value.toString();
+		case 'boolean':
+			return value ? 'true' : 'false';
+		case 'object':
+			if (allowArray && Array.isArray(value)) {
+				return value.map((v: unknown) => Stringify(v, false)).join(',');
+			}
+			return undefined;
+		default:
+			return undefined;
+	}
+}

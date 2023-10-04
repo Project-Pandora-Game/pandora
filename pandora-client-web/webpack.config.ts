@@ -13,6 +13,9 @@ import 'webpack-dev-server';
 import packageJson from './package.json';
 import { execSync } from 'child_process';
 
+import { CreateEnvParser, type EnvInputJson } from 'pandora-common';
+import { WEBPACK_CONFIG, type CLIENT_CONFIG } from './src/config/definition';
+
 const GIT_COMMIT_HASH = execSync('git rev-parse --short HEAD').toString().trim();
 const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString().trim();
 
@@ -20,13 +23,14 @@ const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString()
 config();
 
 // Load options from environment
+
 const {
-	DIRECTORY_ADDRESS = 'http://127.0.0.1:25560',
-	EDITOR_ASSETS_ADDRESS = 'http://127.0.0.1:26969/assets',
-	WEBPACK_DEV_SERVER_PORT = '6969',
-	USER_DEBUG = 'false',
+	DIRECTORY_ADDRESS,
+	EDITOR_ASSETS_ADDRESS,
+	WEBPACK_DEV_SERVER_PORT,
+	USER_DEBUG,
 	DIST_DIR_OVERRIDE,
-} = process.env;
+} = CreateEnvParser(WEBPACK_CONFIG)();
 
 const SRC_DIR = join(__dirname, 'src');
 const DIST_DIR = DIST_DIR_OVERRIDE ?? join(__dirname, 'dist');
@@ -56,7 +60,7 @@ export default function (env: WebpackEnv): Configuration {
 					runtimeErrors: false,
 				},
 			},
-			port: parseInt(WEBPACK_DEV_SERVER_PORT, 10),
+			port: WEBPACK_DEV_SERVER_PORT,
 		},
 		devtool: env.prod ? 'source-map' : 'eval-source-map',
 		entry: {
@@ -102,14 +106,14 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 		new DefinePlugin({
 			'process.env': JSON.stringify({
 				NODE_ENV: env.prod ? 'production' : 'development',
-				VERSION: packageJson.version,
+				GAME_VERSION: packageJson.version,
 				GAME_NAME,
 				DIRECTORY_ADDRESS,
 				EDITOR_ASSETS_ADDRESS,
 				USER_DEBUG,
 				GIT_COMMIT_HASH,
 				GIT_DESCRIBE,
-			}),
+			} satisfies EnvInputJson<typeof CLIENT_CONFIG>),
 		}),
 		new HtmlWebpackPlugin({
 			template: join(SRC_DIR, 'index.ejs'),

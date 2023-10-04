@@ -1,4 +1,5 @@
-import { EMAIL_SENDER_TYPE } from '../../config';
+import { ENV } from '../../config';
+const { EMAIL_SENDER_TYPE } = ENV;
 import { MockEmailSender } from './mockEmail';
 import { SmtpEmail } from './smtpEmail';
 import { SesEmail } from './sesEmail';

@@ -1,6 +1,7 @@
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
-import { DATABASE_TYPE } from '../config';
+import { ENV } from '../config';
+const { DATABASE_TYPE } = ENV;
 import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 

@@ -6,6 +6,9 @@ import * as rimraf from 'rimraf';
 
 import { TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT, TEST_TEMP, TEST_CLIENT_DIRECTORY_ADDRESS, TEST_CLIENT_EDITOR_ASSETS_ADDRESS, TEST_SERVER_DIRECTORY_TEST_DIR } from './config';
 
+import type { WEBPACK_CONFIG } from '../../../pandora-client-web/src/config/definition';
+import type { EnvInputJson } from 'pandora-common';
+
 function Run(command: string, args: string[] = [], options: SpawnSyncOptions = {}): void {
 	const { status, error } = spawnSync(command, args, {
 		stdio: 'inherit',
@@ -47,7 +50,7 @@ setup('Setup', () => {
 				EDITOR_ASSETS_ADDRESS: TEST_CLIENT_EDITOR_ASSETS_ADDRESS,
 				WEBPACK_DEV_SERVER_PORT: TEST_HTTP_SERVER_PORT.toString(10),
 				USER_DEBUG: 'false',
-			},
+			} satisfies EnvInputJson<typeof WEBPACK_CONFIG>,
 		});
 	}
 

@@ -1,7 +1,8 @@
 import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { CharacterInfo } from './character';
-import { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } from '../config';
+import { ENV } from '../config';
+const { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } = ENV;
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';

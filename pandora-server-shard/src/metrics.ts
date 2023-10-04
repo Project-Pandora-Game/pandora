@@ -1,7 +1,8 @@
 import promClient from 'prom-client';
 import { performance } from 'perf_hooks';
 import express, { Request, Response } from 'express';
-import { SERVER_PUBLIC_ADDRESS } from './config';
+import { ENV } from './config';
+const { SERVER_PUBLIC_ADDRESS } = ENV;
 
 /** Host the metrics as express endpoint */
 export function MetricsServe(): express.RequestHandler {

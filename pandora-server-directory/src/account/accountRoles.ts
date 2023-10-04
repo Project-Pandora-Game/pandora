@@ -1,7 +1,8 @@
 import { AccountRole, ACCOUNT_ROLES_CONFIG, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IsAuthorized, Logger } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import type { Account } from './account';
-import { AUTO_ADMIN_ACCOUNTS } from '../config';
+import { ENV } from '../config';
+const { AUTO_ADMIN_ACCOUNTS } = ENV;
 
 import _ from 'lodash';
 

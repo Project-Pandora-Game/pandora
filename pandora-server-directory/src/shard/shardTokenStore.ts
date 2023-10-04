@@ -1,6 +1,7 @@
 import { GetLogger, HTTP_HEADER_SHARD_SECRET, IClientDirectoryArgument, IShardTokenInfo, IShardTokenType } from 'pandora-common';
 import type { Account } from '../account/account';
-import { SHARD_SHARED_SECRET } from '../config';
+import { ENV } from '../config';
+const { SHARD_SHARED_SECRET } = ENV;
 
 import { GetDatabase } from '../database/databaseProvider';
 import { TokenStoreBase } from './tokenStoreBase';

@@ -1,7 +1,8 @@
 import { customAlphabet } from 'nanoid';
 import { GetLogger, type IBetaKeyInfo, type IClientDirectoryArgument } from 'pandora-common';
 import { type Account } from '../account/account';
-import { BETA_KEY_GLOBAL } from '../config';
+import { ENV } from '../config';
+const { BETA_KEY_GLOBAL } = ENV;
 import { GetDatabase } from '../database/databaseProvider';
 import { TokenStoreBase } from './tokenStoreBase';
 

@@ -1,7 +1,8 @@
 import { AssetManager, AssetsDefinitionFile, GetLogger, IsObject } from 'pandora-common';
 import { join } from 'path';
 import { readFileSync, statSync } from 'fs';
-import { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } from '../config';
+import { ENV } from '../config';
+const { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } = ENV;
 import express from 'express';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { CharacterManager } from '../character/characterManager';

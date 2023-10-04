@@ -5,7 +5,8 @@ import { CharacterManager } from '../character/characterManager';
 import { ConnectionManagerClient } from './manager_client';
 import type { IncomingHttpHeaders } from 'http';
 import { assetManager } from '../assets/assetManager';
-import { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } from '../config';
+import { ENV } from '../config';
+const { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } = ENV;
 
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IShardClient, IClientShard, IncomingSocket> {

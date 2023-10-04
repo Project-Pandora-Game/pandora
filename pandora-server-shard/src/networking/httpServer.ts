@@ -1,5 +1,6 @@
 import { GetLogger } from 'pandora-common';
-import { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } from '../config';
+import { ENV } from '../config';
+const { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
 import { Server as HttpServer } from 'http';
 import { Server as HttpsServer } from 'https';
 import * as fs from 'fs';
@@ -17,11 +18,6 @@ const activeConnections = new Set<Socket>();
 
 /** Setup HTTP server and everything related to it */
 export function StartHttpServer(): Promise<void> {
-	const port = Number.parseInt(SERVER_PORT);
-	if (!Number.isInteger(port)) {
-		throw new Error('Invalid SERVER_PORT');
-	}
-
 	// Setup Express application
 	const expressApp = express()
 		.disable('x-powered-by');
@@ -87,7 +83,7 @@ export function StartHttpServer(): Promise<void> {
 	return new Promise((resolve, reject) => {
 		// Catch error during port open
 		server.once('error', reject);
-		server.listen(port, () => {
+		server.listen(SERVER_PORT, () => {
 			// Port open didn't error
 			server.off('error', reject);
 			// Setup error logging
@@ -95,7 +91,7 @@ export function StartHttpServer(): Promise<void> {
 				logger.error('HTTP server Error:', error);
 			});
 			// Finalize start
-			logger.info(`HTTP server started on port ${port}`);
+			logger.info(`HTTP server started on port ${SERVER_PORT}`);
 			resolve();
 		});
 	});

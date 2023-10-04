@@ -1,5 +1,6 @@
 import type { CharacterId, ICharacterData, ICharacterDataUpdate, IChatRoomData, IChatRoomDataShardUpdate, RoomId } from 'pandora-common';
-import { DATABASE_TYPE } from '../config';
+import { ENV } from '../config';
+const { DATABASE_TYPE } = ENV;
 import DirectoryDatabase from './directoryDb';
 import MongoDatabase from './mongoDb';
 

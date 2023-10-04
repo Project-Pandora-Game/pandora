@@ -1,6 +1,7 @@
 import { CharacterId, ICharacterData, ICharacterDataUpdate, GetLogger, RoomId, IChatRoomData, IChatRoomDataShardUpdate } from 'pandora-common';
 import type { ShardDatabase } from './databaseProvider';
-import { DATABASE_URL, DATABASE_NAME } from '../config';
+import { ENV } from '../config';
+const { DATABASE_URL, DATABASE_NAME } = ENV;
 
 import { MongoClient } from 'mongodb';
 import type { Db, Collection } from 'mongodb';

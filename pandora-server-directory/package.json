@@ -70,7 +70,7 @@
 		"@types/wtfnode": "0.7.1",
 		"@typescript-eslint/eslint-plugin": "6.7.4",
 		"@typescript-eslint/parser": "6.7.4",
-		"discord-api-types": "0.37.59",
+		"discord-api-types": "0.37.60",
 		"eslint": "8.50.0",
 		"jest": "29.7.0",
 		"nodemon": "3.0.1",

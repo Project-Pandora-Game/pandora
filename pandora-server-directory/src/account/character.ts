@@ -327,6 +327,9 @@ export class Character {
 			if (typeof roomConnectResult === 'string')
 				return roomConnectResult;
 
+			if (this.assignment.type === 'room-joined')
+				this.assignment.room.characterReconnected(this);
+
 			return 'ok';
 		}
 
@@ -370,8 +373,8 @@ export class Character {
 		} else if (this.assignment.type === 'room-joined') {
 			// If we are in a room, notify the shard that this character went offline
 			await this.currentShard?.update('characters');
-			// Try to perform room cleanup, if applicable
-			await this.assignment.room.cleanupIfEmpty();
+			// Notify the room that this character went offline
+			await this.assignment.room.characterDisconnected(this);
 		} else {
 			AssertNever(this.assignment);
 		}

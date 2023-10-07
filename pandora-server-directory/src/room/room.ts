@@ -461,6 +461,34 @@ export class Room {
 		ConnectionManagerClient.onRoomListChange();
 	}
 
+	public characterReconnected(character: Character): void {
+		if (!this.characters.has(character))
+			return;
+
+		this.sendMessage({
+			type: 'serverMessage',
+			id: 'characterReconnected',
+			data: {
+				character: character.baseInfo.id,
+			},
+		});
+	}
+
+	public async characterDisconnected(character: Character): Promise<void> {
+		if (await this.cleanupIfEmpty())
+			return;
+		if (!this.characters.has(character))
+			return;
+
+		this.sendMessage({
+			type: 'serverMessage',
+			id: 'characterDisconnected',
+			data: {
+				character: character.baseInfo.id,
+			},
+		});
+	}
+
 	private async removeBannedCharacters(source: CharacterInfo | null): Promise<void> {
 		for (const character of this.characters.values()) {
 			if (this.isBanned(character.baseInfo.account)) {
@@ -618,11 +646,11 @@ export class Room {
 	}
 
 	@AsyncSynchronized('object')
-	public async cleanupIfEmpty(): Promise<void> {
+	public async cleanupIfEmpty(): Promise<boolean> {
 		// Check if there is any character that wants this room loaded
 		for (const character of this.trackingCharacters) {
 			if (character.isOnline())
-				return;
+				return false;
 		}
 
 		// Disconnect the room from a shard
@@ -630,6 +658,7 @@ export class Room {
 		Assert(result);
 		// Clear pending action messages when the room gets disconnected
 		this.pendingMessages.length = 0;
+		return true;
 	}
 
 	public readonly pendingMessages: IChatRoomMessageDirectoryAction[] = [];

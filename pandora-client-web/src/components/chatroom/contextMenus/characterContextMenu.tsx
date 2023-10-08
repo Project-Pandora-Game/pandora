@@ -13,6 +13,7 @@ import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { RelationshipChangeHandleResult, useRelationship } from '../../releationships/relationshipsContext';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { useGoToDM } from '../../releationships/relationships';
 
 type MenuType = 'main' | 'admin' | 'relationship';
 
@@ -163,6 +164,19 @@ function UnfriendRequestMenu(): ReactElement {
 	);
 }
 
+function NavigateToDMMenu(): ReactElement | null {
+	const { currentAccount, character } = useCharacterMenuContext();
+	const onClick = useGoToDM(character.data.accountId);
+	if (character.data.accountId === currentAccount?.id)
+		return null;
+
+	return (
+		<button onClick={ onClick } >
+			Go to Direct Messages
+		</button>
+	);
+}
+
 function RelationshipActionContextMenuInner(): ReactElement | null {
 	const { character } = useCharacterMenuContext();
 	const rel = useRelationship(character.data.accountId);
@@ -288,6 +302,7 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 								Whisper
 							</button>
 						) }
+						<NavigateToDMMenu />
 					</>
 				) }
 				<AdminActionContextMenu />

@@ -199,6 +199,15 @@ function ShowFriends() {
 	);
 }
 
+export function useGoToDM(id: AccountId) {
+	const directory = useDirectoryConnector();
+	const navigate = useNavigate();
+	return React.useCallback(() => {
+		directory.directMessageHandler.setSelected(id);
+		navigate('/relationships/DMs');
+	}, [directory.directMessageHandler, id, navigate]);
+}
+
 function FriendRow({
 	id,
 	name,
@@ -222,11 +231,7 @@ function FriendRow({
 		return undefined;
 	}, RelationshipChangeHandleResult);
 
-	const navigate = useNavigate();
-	const message = React.useCallback(() => {
-		directory.directMessageHandler.setSelected(id);
-		navigate('/relationships/DMs');
-	}, [directory.directMessageHandler, id, navigate]);
+	const message = useGoToDM(id);
 
 	return (
 		<tr className={ online ? 'friend online' : 'friend offline' }>

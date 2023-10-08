@@ -8,6 +8,7 @@ import { Button } from '../../common/button/button';
 import { Select } from '../../common/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './shards.scss';
+import { useConfirmDialog } from '../../dialog/dialog';
 
 const ShardListContext = createContext({
 	reload: () => { /** noop */ },
@@ -64,9 +65,10 @@ export function Shards(): ReactElement {
 function ShardRow({ shard }: { shard: IShardTokenConnectInfo; }): ReactElement {
 	const connector = useDirectoryConnector();
 	const { reload } = useContext(ShardListContext);
+	const confirm = useConfirmDialog();
 
 	const [onInvalidate] = useAsyncEvent(async () => {
-		if (!confirm('Are you sure you want to delete this token?'))
+		if (!await confirm('Are you sure you want to delete this token?'))
 			return { result: 'cancelled' };
 
 		return await connector.awaitResponse('manageInvalidateShardToken', { id: shard.id });

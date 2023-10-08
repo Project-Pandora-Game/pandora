@@ -223,6 +223,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 				{ EDITOR_ALPHA_ICONS[alphaIndex] }
 			</Button>
 			<Button className='slim hideDisabled' aria-label='delete' disabled={ layer.isMirror } onClick={ () => {
+				// eslint-disable-next-line no-alert
 				if (!confirm(`Delete layer '${name}'?`))
 					return;
 				asset.deleteLayer(layer);
@@ -260,6 +261,7 @@ function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraph
 
 	const onDelete = useEvent((event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
+		// eslint-disable-next-line no-alert
 		if (!confirm(`Delete image '${image}'?`))
 			return;
 

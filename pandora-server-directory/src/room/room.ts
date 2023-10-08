@@ -461,6 +461,34 @@ export class Room {
 		ConnectionManagerClient.onRoomListChange();
 	}
 
+	/**
+	 * Triggered when client reconnects to a character that is already in a room
+	 * @param character The character that reconnected
+	 */
+	public characterReconnected(character: Character): void {
+		Assert(this.characters.has(character));
+
+		this.sendMessage({
+			type: 'serverMessage',
+			id: 'characterReconnected',
+			data: {
+				character: character.baseInfo.id,
+			},
+		});
+	}
+
+	public characterDisconnected(character: Character): void {
+		Assert(this.characters.has(character));
+
+		this.sendMessage({
+			type: 'serverMessage',
+			id: 'characterDisconnected',
+			data: {
+				character: character.baseInfo.id,
+			},
+		});
+	}
+
 	private async removeBannedCharacters(source: CharacterInfo | null): Promise<void> {
 		for (const character of this.characters.values()) {
 			if (this.isBanned(character.baseInfo.account)) {

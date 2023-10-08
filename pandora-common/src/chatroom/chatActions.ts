@@ -6,6 +6,7 @@ const CHAT_ACTIONS_DEF = {
 	characterEntered: 'SOURCE_CHARACTER entered.',
 	characterLeft: 'SOURCE_CHARACTER left.',
 	characterDisconnected: 'SOURCE_CHARACTER disconnected.',
+	characterReconnected: 'SOURCE_CHARACTER reconnected.',
 	characterKicked: 'TARGET_CHARACTER has been kicked by SOURCE_CHARACTER.',
 	characterBanned: 'TARGET_CHARACTER has been banned by SOURCE_CHARACTER.',
 

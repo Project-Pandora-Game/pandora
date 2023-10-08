@@ -119,6 +119,10 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		}
 	}
 
+	public getChat(id: number): DirectMessageChannel | undefined {
+		return this._chats.get(id);
+	}
+
 	private _getChat(id: number): DirectMessageChannel {
 		let chat = this._chats.get(id);
 		if (chat === undefined) {

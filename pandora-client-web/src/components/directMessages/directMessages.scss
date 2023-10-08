@@ -40,6 +40,11 @@
 			&.selected {
 				background-color: $grey-mid;
 			}
+
+			&.temp {
+				background-color: $grey-mid;
+				font-style: italic;
+			}
 		}
 
 		.input-line {

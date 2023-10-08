@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { AccountId, IDirectoryDirectMessageInfo } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
@@ -32,12 +32,33 @@ export function DirectMessages(): React.ReactElement {
 			<div className='direct-messages__list'>
 				<input type='text' value={ filter } onChange={ (e) => setFilter(e.target.value) } placeholder='Filter' />
 				<Scrollbar color='dark' tag='ul'>
+					{ selected == null ? null : (
+						<Suspense>
+							<DirectMessageTempInfo selected={ selected } filtered={ filtered } />
+						</Suspense>
+					) }
 					{ filtered.map((i) => <DirectMessageInfo key={ i.id } info={ i } selected={ i.id === selected } />) }
 				</Scrollbar>
 				<OpenConversation />
 			</div>
 			{ selected !== null && <DirectMessage accountId={ selected } key={ selected } /> }
 		</div>
+	);
+}
+
+function DirectMessageTempInfo({ selected, filtered }: { selected: AccountId; filtered: readonly IDirectoryDirectMessageInfo[]; }) {
+	const directoryConnector = useDirectoryConnector();
+
+	if (filtered.some((i) => i.id === selected)) {
+		return null;
+	}
+
+	const chat = directoryConnector.directMessageHandler.loadChat(selected);
+
+	return (
+		<li className='temp'>
+			{ chat.account.name } ({ selected })
+		</li>
 	);
 }
 

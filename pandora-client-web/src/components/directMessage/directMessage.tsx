@@ -72,7 +72,7 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 			</span>
 			{ ': ' }
 			<span className='direct-message-entry__content'>
-				{...message.message.map((c, i) => RenderChatPart(c, i, true))}
+				{ ...message.message.map((c, i) => RenderChatPart(c, i, true)) }
 			</span>
 		</div>
 	);
@@ -95,6 +95,9 @@ function DirectChannelInput(): ReactElement {
 	});
 
 	return (
-		<textarea onKeyDown={ onKeyDown } />
+		<textarea
+			onKeyDown={ onKeyDown }
+			placeholder={ `Send message to ${channel.account.name} (${channel.account.id})` }
+		/>
 	);
 }

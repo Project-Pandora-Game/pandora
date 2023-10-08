@@ -9,6 +9,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { uniq } from 'lodash';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { useColorInput } from '../../common/useColorInput';
+import { useConfirmDialog } from '../dialog/dialog';
 
 export function AccountSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -60,12 +61,18 @@ function GitHubIntegration({ account }: { account: IDirectoryAccountInfo; }): Re
 			});
 	});
 
+	const confirm = useConfirmDialog();
 	const onUnlink = useEvent(() => {
 		if (processing)
 			return;
 
-		if (confirm('Are you sure you want to unlink GitHub account?'))
-			connection.sendMessage('gitHubUnbind', EMPTY);
+		confirm('Are you sure you want to unlink GitHub account?')
+			.then((result) => {
+				if (result) {
+					connection.sendMessage('gitHubUnbind', EMPTY);
+				}
+			})
+			.catch(() => { /** ignore */ });
 	});
 
 	if (githubUrl && !account.github) {

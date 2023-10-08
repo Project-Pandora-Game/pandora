@@ -12,6 +12,8 @@ import { DivContainer } from '../common/container/container';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HtmlPortalNodeAny = HtmlPortalNode<any>;
 
+const DEFAULT_CONFIRM_DIALOG_SYMBOL = Symbol('DEFAULT_CONFIRM_DIALOG_SYMBOL');
+
 const PORTALS = new Observable<readonly ({
 	priority: number;
 	node: HtmlPortalNodeAny;
@@ -25,6 +27,7 @@ export function Dialogs(): ReactElement {
 			{ portals.map(({ node }, index) => (
 				<OutPortal key={ index } node={ node } />
 			)) }
+			<ConfirmDialog symbol={ DEFAULT_CONFIRM_DIALOG_SYMBOL } />
 		</>
 	);
 }
@@ -272,7 +275,7 @@ export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDial
 	);
 }
 
-export function useConfirmDialog(symbol: symbol): (title: string) => Promise<boolean> {
+export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string) => Promise<boolean> {
 	const unset = useRef(false);
 	const entry = GetConfirmDialogEntry(symbol);
 	useEffect(() => () => {

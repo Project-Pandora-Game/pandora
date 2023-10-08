@@ -192,6 +192,19 @@ export const COMMANDS: readonly IClientCommand[] = [
 		// },
 	},
 	{
+		key: ['dm'],
+		description: 'Switches to direct message screen',
+		longDescription: 'Switches to direct message screen with the selected <target> character.' + LONGDESC_THIRD_PERSON,
+		usage: '<target>',
+		handler: CreateClientCommand()
+			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
+			.handler(({ directoryConnector, navigate }, { target }) => {
+				directoryConnector.directMessageHandler.setSelected(target.data.accountId);
+				navigate('/relationships/DMs');
+				return true;
+			}),
+	},
+	{
 		key: ['turn', 't'],
 		description: 'Turns yourself around',
 		longDescription: '',

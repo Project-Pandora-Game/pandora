@@ -19,6 +19,7 @@ import { useDirectoryConnector } from '../gameContext/directoryConnectorContextP
 import { Select } from '../common/select/select';
 import settingsIcon from '../../assets/icons/setting.svg';
 import { z } from 'zod';
+import { useNavigate } from 'react-router';
 
 type Editing = {
 	target: number;
@@ -209,6 +210,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
+	const navigate = useNavigate();
 	AssertNotNullable(shardConnector);
 
 	/**
@@ -227,7 +229,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		chatRoom,
 		messageSender: sender,
 		inputHandlerContext: chatInput,
-	}), [chatInput, chatRoom, directoryConnector, sender, shardConnector]);
+		navigate,
+	}), [chatInput, chatRoom, directoryConnector, navigate, sender, shardConnector]);
 
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
@@ -596,6 +599,7 @@ function AutoCompleteHint(): ReactElement | null {
 
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
+	const navigate = useNavigate();
 	AssertNotNullable(shardConnector);
 	if (!autocompleteHint?.result || !allowCommands)
 		return null;
@@ -645,6 +649,7 @@ function AutoCompleteHint(): ReactElement | null {
 												chatRoom,
 												messageSender: sender,
 												inputHandlerContext: chatInput,
+												navigate,
 											});
 
 											setAutocompleteHint({

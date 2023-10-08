@@ -327,8 +327,8 @@ export class Character {
 			if (typeof roomConnectResult === 'string')
 				return roomConnectResult;
 
-			if (this.assignment.type === 'room-joined')
-				this.assignment.room.characterReconnected(this, isChange);
+			if (isChange && this.assignment.type === 'room-joined')
+				this.assignment.room.characterReconnected(this);
 
 			return 'ok';
 		}
@@ -350,7 +350,8 @@ export class Character {
 		Assert(this.assignedClient == null);
 
 		// Mark the character as offline
-		if (this._connectSecret != null) {
+		const isChange = this._connectSecret != null;
+		if (isChange) {
 			this._connectSecret = null;
 			this.baseInfo.account.onCharacterListChange();
 			this.baseInfo.account.relationship.updateStatus();
@@ -374,7 +375,11 @@ export class Character {
 			// If we are in a room, notify the shard that this character went offline
 			await this.currentShard?.update('characters');
 			// Notify the room that this character went offline
-			await this.assignment.room.characterDisconnected(this);
+			if (isChange) {
+				this.assignment.room.characterDisconnected(this);
+			}
+			// Try to perform room cleanup, if applicable
+			await this.assignment.room.cleanupIfEmpty();
 		} else {
 			AssertNever(this.assignment);
 		}

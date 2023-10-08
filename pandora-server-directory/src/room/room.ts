@@ -16,7 +16,6 @@ export class Room {
 	public readonly id: RoomId;
 	private readonly config: IChatRoomDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
-	private readonly disconnectedCharacters: Set<CharacterId> = new Set();
 
 	private _assignedShard: Shard | null = null;
 	public get assignedShard(): Shard | null {
@@ -408,9 +407,6 @@ export class Room {
 			},
 		});
 
-		if (!character.isOnline())
-			this.disconnectedCharacters.add(character.baseInfo.id);
-
 		ConnectionManagerClient.onRoomListChange();
 		await Promise.all([
 			this._assignedShard?.update('characters'),
@@ -423,7 +419,6 @@ export class Room {
 		Assert(character.assignment?.type === 'room-joined' && character.assignment.room === this);
 		Assert(this.trackingCharacters.has(character));
 		Assert(this.characters.has(character));
-		this.disconnectedCharacters.delete(character.baseInfo.id);
 
 		await character.baseInfo.updateSelfData({ currentRoom: null });
 
@@ -466,10 +461,12 @@ export class Room {
 		ConnectionManagerClient.onRoomListChange();
 	}
 
-	public characterReconnected(character: Character, isChange: boolean): void {
-		const disconnected = this.disconnectedCharacters.delete(character.baseInfo.id);
-		if (!disconnected || !isChange || !this.characters.has(character))
-			return;
+	/**
+	 * Triggered when client reconnects to a character that is already in a room
+	 * @param character The character that reconnected
+	 */
+	public characterReconnected(character: Character): void {
+		Assert(this.characters.has(character));
 
 		this.sendMessage({
 			type: 'serverMessage',
@@ -480,13 +477,8 @@ export class Room {
 		});
 	}
 
-	public async characterDisconnected(character: Character): Promise<void> {
-		if (await this.cleanupIfEmpty())
-			return;
-		if (!this.characters.has(character) || this.disconnectedCharacters.has(character.baseInfo.id))
-			return;
-
-		this.disconnectedCharacters.add(character.baseInfo.id);
+	public characterDisconnected(character: Character): void {
+		Assert(this.characters.has(character));
 
 		this.sendMessage({
 			type: 'serverMessage',
@@ -654,11 +646,11 @@ export class Room {
 	}
 
 	@AsyncSynchronized('object')
-	public async cleanupIfEmpty(): Promise<boolean> {
+	public async cleanupIfEmpty(): Promise<void> {
 		// Check if there is any character that wants this room loaded
 		for (const character of this.trackingCharacters) {
 			if (character.isOnline())
-				return false;
+				return;
 		}
 
 		// Disconnect the room from a shard
@@ -666,7 +658,6 @@ export class Room {
 		Assert(result);
 		// Clear pending action messages when the room gets disconnected
 		this.pendingMessages.length = 0;
-		return true;
 	}
 
 	public readonly pendingMessages: IChatRoomMessageDirectoryAction[] = [];

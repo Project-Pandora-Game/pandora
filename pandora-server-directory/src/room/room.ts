@@ -16,6 +16,7 @@ export class Room {
 	public readonly id: RoomId;
 	private readonly config: IChatRoomDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
+	private readonly disconnectedCharacters: Set<CharacterId> = new Set();
 
 	private _assignedShard: Shard | null = null;
 	public get assignedShard(): Shard | null {
@@ -407,6 +408,9 @@ export class Room {
 			},
 		});
 
+		if (!character.isOnline())
+			this.disconnectedCharacters.add(character.baseInfo.id);
+
 		ConnectionManagerClient.onRoomListChange();
 		await Promise.all([
 			this._assignedShard?.update('characters'),
@@ -419,6 +423,7 @@ export class Room {
 		Assert(character.assignment?.type === 'room-joined' && character.assignment.room === this);
 		Assert(this.trackingCharacters.has(character));
 		Assert(this.characters.has(character));
+		this.disconnectedCharacters.delete(character.baseInfo.id);
 
 		await character.baseInfo.updateSelfData({ currentRoom: null });
 
@@ -461,8 +466,9 @@ export class Room {
 		ConnectionManagerClient.onRoomListChange();
 	}
 
-	public characterReconnected(character: Character): void {
-		if (!this.characters.has(character))
+	public characterReconnected(character: Character, isChange: boolean): void {
+		const disconnected = this.disconnectedCharacters.delete(character.baseInfo.id);
+		if (!disconnected || !isChange || !this.characters.has(character))
 			return;
 
 		this.sendMessage({
@@ -477,8 +483,10 @@ export class Room {
 	public async characterDisconnected(character: Character): Promise<void> {
 		if (await this.cleanupIfEmpty())
 			return;
-		if (!this.characters.has(character))
+		if (!this.characters.has(character) || this.disconnectedCharacters.has(character.baseInfo.id))
 			return;
+
+		this.disconnectedCharacters.add(character.baseInfo.id);
 
 		this.sendMessage({
 			type: 'serverMessage',

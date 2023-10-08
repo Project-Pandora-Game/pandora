@@ -328,7 +328,7 @@ export class Character {
 				return roomConnectResult;
 
 			if (this.assignment.type === 'room-joined')
-				this.assignment.room.characterReconnected(this);
+				this.assignment.room.characterReconnected(this, isChange);
 
 			return 'ok';
 		}

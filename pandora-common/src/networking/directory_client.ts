@@ -129,7 +129,7 @@ export type IDirectoryDirectMessage = {
 /** Account info for direct message conversation */
 export type IDirectoryDirectMessageAccount = {
 	/** Id of the account */
-	id: number;
+	id: AccountId;
 	/** Name of the account */
 	name: string;
 	/** Label color of the account */
@@ -141,7 +141,7 @@ export type IDirectoryDirectMessageAccount = {
 /** Direct message conversation info */
 export type IDirectoryDirectMessageInfo = {
 	/** Id of the other account */
-	id: number;
+	id: AccountId;
 	/** Name of the other account */
 	account: string;
 	/** Flag to indicate that there are unread messages */

@@ -2,14 +2,14 @@ import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
 import { Tab, TabContainer } from '../common/tabs/tabs';
-import { DirectMessages } from '../directMessages/directMessages';
+import { DirectMessages, SELECTED_DIRECT_MESSAGE } from '../directMessages/directMessages';
 import './relationships.scss';
 import { Button } from '../common/button/button';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import { useAsyncEvent } from '../../common/useEvent';
 import _ from 'lodash';
-import { Row } from '../common/container/container';
+import { DivContainer, Row } from '../common/container/container';
 import { RelationshipChangeHandleResult, useFriendStatus, useRelationships } from './relationshipsContext';
 import { useConfirmDialog } from '../dialog/dialog';
 
@@ -18,7 +18,7 @@ export function Relationships() {
 
 	return (
 		<div className='relationships'>
-			<TabContainer>
+			<TabContainer urlMatch='/relationships/:tab'>
 				<Tab name={ <RelationshipHeader type='friend' /> }>
 					<ShowFriends />
 				</Tab>
@@ -222,6 +222,12 @@ function FriendRow({
 		return undefined;
 	}, RelationshipChangeHandleResult);
 
+	const navigate = useNavigate();
+	const message = React.useCallback(() => {
+		SELECTED_DIRECT_MESSAGE.value = id;
+		navigate('/relationships/DMs');
+	}, [id, navigate]);
+
 	return (
 		<tr className={ online ? 'friend online' : 'friend offline' }>
 			<td className='selectable'>{ id }</td>
@@ -237,9 +243,14 @@ function FriendRow({
 			<td>{ characters?.map((c) => c.name).join(', ') }</td>
 			<td>{ new Date(time).toLocaleDateString() }</td>
 			<td>
-				<Button className='slim' onClick={ unfriend } disabled={ processing }>
-					Remove
-				</Button>
+				<DivContainer direction='row' gap='small'>
+					<Button className='slim' onClick={ message } disabled={ processing }>
+						Message
+					</Button>
+					<Button className='slim' onClick={ unfriend } disabled={ processing }>
+						Remove
+					</Button>
+				</DivContainer>
 			</td>
 		</tr>
 	);

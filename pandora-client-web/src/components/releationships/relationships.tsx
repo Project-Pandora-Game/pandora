@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
 import { Tab, TabContainer } from '../common/tabs/tabs';
-import { DirectMessages, SELECTED_DIRECT_MESSAGE } from '../directMessages/directMessages';
+import { DirectMessages } from '../directMessages/directMessages';
 import './relationships.scss';
 import { Button } from '../common/button/button';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
@@ -224,9 +224,9 @@ function FriendRow({
 
 	const navigate = useNavigate();
 	const message = React.useCallback(() => {
-		SELECTED_DIRECT_MESSAGE.value = id;
+		directory.directMessageHandler.setSelected(id);
 		navigate('/relationships/DMs');
-	}, [id, navigate]);
+	}, [directory.directMessageHandler, id, navigate]);
 
 	return (
 		<tr className={ online ? 'friend online' : 'friend offline' }>

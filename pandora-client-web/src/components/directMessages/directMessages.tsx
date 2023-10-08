@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { AccountId, IDirectoryDirectMessageInfo } from 'pandora-common';
-import { Observable, useObservable } from '../../observable';
+import { useObservable } from '../../observable';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { DirectMessage } from '../directMessage/directMessage';
 import './directMessages.scss';
@@ -8,13 +8,11 @@ import { useEvent } from '../../common/useEvent';
 import { Button } from '../common/button/button';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 
-export const SELECTED_DIRECT_MESSAGE = new Observable<AccountId | null>(null);
-
 export function DirectMessages(): React.ReactElement {
 	const directory = useDirectoryConnector();
 	const [filter, setFilter] = React.useState('');
 	const info = useObservable(directory.directMessageHandler.info);
-	const selected = useObservable(SELECTED_DIRECT_MESSAGE);
+	const selected = useObservable(directory.directMessageHandler.selected);
 
 	const flt = React.useDeferredValue(filter.toLowerCase().trim());
 	const filtered = React.useMemo(() => {
@@ -41,7 +39,7 @@ export function DirectMessages(): React.ReactElement {
 				</Scrollbar>
 				<OpenConversation />
 			</div>
-			{ selected !== null && <DirectMessage accountId={ selected } key={ selected } /> }
+			{ selected != null && <DirectMessage accountId={ selected } key={ selected } /> }
 		</div>
 	);
 }
@@ -63,8 +61,9 @@ function DirectMessageTempInfo({ selected, filtered }: { selected: AccountId; fi
 }
 
 function DirectMessageInfo({ info, selected }: { info: Readonly<IDirectoryDirectMessageInfo>; selected: boolean; }): React.ReactElement {
+	const directory = useDirectoryConnector();
 	const { id, account, hasUnread } = info;
-	const show = React.useCallback(() => SELECTED_DIRECT_MESSAGE.value = id, [id]);
+	const show = React.useCallback(() => directory.directMessageHandler.setSelected(id), [directory.directMessageHandler, id]);
 
 	return (
 		<li onClick={ show } className={ selected ? 'selected' : '' }>
@@ -75,12 +74,13 @@ function DirectMessageInfo({ info, selected }: { info: Readonly<IDirectoryDirect
 }
 
 function OpenConversation(): React.ReactElement {
+	const directory = useDirectoryConnector();
 	const accountId = useCurrentAccount()?.id;
 	const [id, setId] = React.useState('');
 	const onClick = useEvent(() => {
 		const parsed = parseInt(id, 10);
 		if (Number.isInteger(parsed) && parsed > 0 && parsed !== accountId) {
-			SELECTED_DIRECT_MESSAGE.value = parsed;
+			directory.directMessageHandler.setSelected(parsed);
 		}
 	});
 

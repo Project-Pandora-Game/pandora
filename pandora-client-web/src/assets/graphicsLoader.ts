@@ -1,7 +1,10 @@
 import { Assert, GetLogger, Logger } from 'pandora-common';
-import { BaseTexture, IImageResourceOptions, Resource, Texture, autoDetectResource } from 'pixi.js';
+import { BaseTexture, IImageResourceOptions, Resource, Texture, autoDetectResource, settings as PIXISettings } from 'pixi.js';
 import { PersistentToast } from '../persistentToast';
 import { IGraphicsLoader } from './graphicsManager';
+
+// Prevent PIXI from doing PIXI things
+PIXISettings.STRICT_TEXTURE_CACHE = true;
 
 /**
  * Interval after which texture load is retried, if the texture is still being requested.

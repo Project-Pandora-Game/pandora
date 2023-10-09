@@ -114,6 +114,7 @@
 		"react/no-unstable-nested-components": "error",
 		"react/jsx-no-script-url": "error",
 		// Warnings
+		"no-alert": "warn",
 		"react/default-props-match-prop-types": "warn",
 		"react/no-typos": "warn",
 		"react/prefer-stateless-function": "warn",

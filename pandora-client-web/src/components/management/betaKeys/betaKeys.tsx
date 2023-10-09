@@ -8,6 +8,7 @@ import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentT
 import { Button } from '../../common/button/button';
 import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import '../shards/shards.scss';
+import { useConfirmDialog } from '../../dialog/dialog';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
@@ -65,9 +66,10 @@ export function BetaKeys(): ReactElement {
 function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo; }): ReactElement {
 	const connector = useDirectoryConnector();
 	const { reload } = useContext(BetaKeyListContext);
+	const confirm = useConfirmDialog();
 
 	const [onInvalidate] = useAsyncEvent(async () => {
-		if (!confirm('Are you sure you want to delete this token?'))
+		if (!await confirm('Are you sure you want to delete this token?'))
 			return { result: 'cancelled' };
 
 		return await connector.awaitResponse('manageInvalidateBetaKey', { id: betaKey.id });

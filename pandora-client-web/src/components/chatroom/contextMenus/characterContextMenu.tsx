@@ -11,6 +11,9 @@ import { useChatInput } from '../chatInput';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { RelationshipChangeHandleResult, useRelationship } from '../../releationships/relationshipsContext';
+import { useConfirmDialog } from '../../dialog/dialog';
+import { useAsyncEvent } from '../../../common/useEvent';
+import { useGoToDM } from '../../releationships/relationships';
 
 type MenuType = 'main' | 'admin' | 'relationship';
 
@@ -102,11 +105,17 @@ function AdminActionContextMenu(): ReactElement | null {
 function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const { character } = useCharacterMenuContext();
+	const confirm = useConfirmDialog();
 
 	const block = useCallback(() => {
-		if (confirm(`Are you sure you want to ${action} the account behind ${character.data.name} from your block list?`))
-			directory.sendMessage('blockList', { action, id: character.data.accountId });
-	}, [action, character, directory]);
+		confirm(`Are you sure you want to ${action} the account behind ${character.data.name} from your block list?`)
+			.then((result) => {
+				if (result) {
+					directory.sendMessage('blockList', { action, id: character.data.accountId });
+				}
+			})
+			.catch(() => { /** ignore */ });
+	}, [action, character.data.accountId, character.data.name, confirm, directory]);
 
 	return (
 		<button onClick={ block } >
@@ -115,17 +124,19 @@ function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode
 	);
 }
 
+const errorHandler = (err: unknown) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR);
+
 function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | 'decline' | 'cancel'; text: ReactNode; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const { character } = useCharacterMenuContext();
+	const confirm = useConfirmDialog();
 
-	const request = useCallback(() => {
-		if (confirm(`Are you sure you want to ${action} adding the account behind ${character.data.name} to your contacts list?`)) {
-			directory.awaitResponse('friendRequest', { action, id: character.data.accountId })
-				.then(({ result }) => RelationshipChangeHandleResult(result))
-				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
+	const [request] = useAsyncEvent(async () => {
+		if (await confirm(`Are you sure you want to ${action} adding the account behind ${character.data.name} to your contacts list?`)) {
+			return directory.awaitResponse('friendRequest', { action, id: character.data.accountId });
 		}
-	}, [action, character, directory]);
+		return undefined;
+	}, RelationshipChangeHandleResult, { errorHandler });
 
 	return (
 		<button onClick={ request } >
@@ -137,18 +148,31 @@ function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | '
 function UnfriendRequestMenu(): ReactElement {
 	const directory = useDirectoryConnector();
 	const { character } = useCharacterMenuContext();
+	const confirm = useConfirmDialog();
 
-	const request = useCallback(() => {
-		if (confirm(`Are you sure you want to remove the account behind ${character.data.name} from your contacts list?`)) {
-			directory.awaitResponse('unfriend', { id: character.data.accountId })
-				.then(({ result }) => RelationshipChangeHandleResult(result))
-				.catch((err) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR));
+	const [request] = useAsyncEvent(async () => {
+		if (await confirm(`Are you sure you want to remove the account behind ${character.data.name} from your contacts list?`)) {
+			return directory.awaitResponse('unfriend', { id: character.data.accountId });
 		}
-	}, [character, directory]);
+		return undefined;
+	}, RelationshipChangeHandleResult, { errorHandler });
 
 	return (
 		<button onClick={ request } >
 			Unfriend
+		</button>
+	);
+}
+
+function NavigateToDMMenu(): ReactElement | null {
+	const { currentAccount, character } = useCharacterMenuContext();
+	const onClick = useGoToDM(character.data.accountId);
+	if (character.data.accountId === currentAccount?.id)
+		return null;
+
+	return (
+		<button onClick={ onClick } >
+			Go to Direct Messages
 		</button>
 	);
 }
@@ -278,6 +302,7 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 								Whisper
 							</button>
 						) }
+						<NavigateToDMMenu />
 					</>
 				) }
 				<AdminActionContextMenu />

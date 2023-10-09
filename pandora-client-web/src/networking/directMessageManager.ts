@@ -1,4 +1,4 @@
-import { AssertNotNullable, EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, PromiseOnce, TypedEventEmitter } from 'pandora-common';
+import { AccountId, AssertNotNullable, EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, PromiseOnce, TypedEventEmitter } from 'pandora-common';
 import type { SymmetricEncryption } from '../crypto/symmetric';
 import type { DirectoryConnector } from './directoryConnector';
 import { KeyExchange } from '../crypto/keyExchange';
@@ -9,16 +9,25 @@ import { HashSHA256Base64 } from '../crypto/helpers';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 
-export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: number; }> {
+export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: AccountId; }> {
 	public readonly connector: DirectoryConnector;
 	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined);
-	private readonly _chats: Map<number, DirectMessageChannel> = new Map();
+	private readonly _chats: Map<AccountId, DirectMessageChannel> = new Map();
 	private readonly _info = new Observable<readonly IDirectoryDirectMessageInfo[]>([]);
+	private readonly _selected = new Observable<AccountId | undefined>(undefined);
 	private _lastCryptoKey?: Readonly<IAccountCryptoKey>;
 	#crypto?: KeyExchange;
 
 	public get info(): ReadonlyObservable<readonly IDirectoryDirectMessageInfo[]> {
 		return this._info;
+	}
+
+	public get selected(): ReadonlyObservable<AccountId | undefined> {
+		return this._selected;
+	}
+
+	public setSelected(id: AccountId) {
+		this._selected.value = id;
 	}
 
 	constructor(connector: DirectoryConnector) {
@@ -29,6 +38,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	public clear() {
 		this._lastCryptoKey = undefined;
 		this.#crypto = undefined;
+		this._selected.value = undefined;
 		this._cryptoPassword.value = undefined;
 		this._chats.clear();
 	}
@@ -76,7 +86,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	/**
 	 * designed for use in &lt;Suspense&gt; element
 	 */
-	public loadChat(id: number): DirectMessageChannel {
+	public loadChat(id: AccountId): DirectMessageChannel {
 		const chat = this._getChat(id);
 		if (chat.loaded || chat.failed) {
 			return chat;
@@ -113,13 +123,20 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 				if (index >= 0) {
 					this._info.value = [...this._info.value.slice(0, index), ...this._info.value.slice(index + 1)];
 				}
+				if (this._selected.value === id) {
+					this._selected.value = undefined;
+				}
 				this._chats.delete(id);
 				break;
 			}
 		}
 	}
 
-	private _getChat(id: number): DirectMessageChannel {
+	public getChat(id: AccountId): DirectMessageChannel | undefined {
+		return this._chats.get(id);
+	}
+
+	private _getChat(id: AccountId): DirectMessageChannel {
 		let chat = this._chats.get(id);
 		if (chat === undefined) {
 			chat = new DirectMessageChannel(this, id);

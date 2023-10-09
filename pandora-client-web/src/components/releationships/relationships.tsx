@@ -9,15 +9,16 @@ import { useDirectoryConnector } from '../gameContext/directoryConnectorContextP
 import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import { useAsyncEvent } from '../../common/useEvent';
 import _ from 'lodash';
-import { Row } from '../common/container/container';
+import { DivContainer, Row } from '../common/container/container';
 import { RelationshipChangeHandleResult, useFriendStatus, useRelationships } from './relationshipsContext';
+import { useConfirmDialog } from '../dialog/dialog';
 
 export function Relationships() {
 	const navigate = useNavigate();
 
 	return (
 		<div className='relationships'>
-			<TabContainer>
+			<TabContainer urlMatch='/relationships/:tab'>
 				<Tab name={ <RelationshipHeader type='friend' /> }>
 					<ShowFriends />
 				</Tab>
@@ -88,12 +89,16 @@ function RelationshipsRow({
 	type: IAccountRelationship['type'];
 }) {
 	const directory = useDirectoryConnector();
+	const confirm = useConfirmDialog();
 	const actions = useMemo(() => {
 		switch (type) {
 			case 'blocked':
 				return (
 					<Button className='slim' onClick={
-						() => confirm(`Unblock ${name}?`) && directory.sendMessage('blockList', { id, action: 'remove' })
+						() => void confirm(`Unblock ${name}?`).then((result) => {
+							if (result)
+								directory.sendMessage('blockList', { id, action: 'remove' });
+						}).catch(() => { /** ignore */ })
 					}>
 						Unblock
 					</Button>
@@ -105,7 +110,7 @@ function RelationshipsRow({
 			default:
 				return null;
 		}
-	}, [type, name, id, directory]);
+	}, [type, name, id, directory, confirm]);
 	return (
 		<tr>
 			<td>{ id }</td>
@@ -120,7 +125,7 @@ function PendingRequestActions({ id }: { id: AccountId; }) {
 	const directory = useDirectoryConnector();
 	const [cancel, cancelInProgress] = useAsyncEvent(async () => {
 		return await directory.awaitResponse('friendRequest', { id, action: 'cancel' });
-	}, (r) => RelationshipChangeHandleResult(r?.result));
+	}, RelationshipChangeHandleResult);
 	return (
 		<Button className='slim' onClick={ cancel } disabled={ cancelInProgress }>Cancel</Button>
 	);
@@ -128,18 +133,19 @@ function PendingRequestActions({ id }: { id: AccountId; }) {
 
 function IncomingRequestActions({ id }: { id: AccountId; }) {
 	const directory = useDirectoryConnector();
+	const confirm = useConfirmDialog();
 	const [accept, acceptInProgress] = useAsyncEvent(async () => {
-		if (confirm(`Accept the request to add ${id} to your contacts?`)) {
+		if (await confirm(`Accept the request to add ${id} to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'accept' });
 		}
 		return undefined;
-	}, (r) => RelationshipChangeHandleResult(r?.result));
+	}, RelationshipChangeHandleResult);
 	const [decline, declineInProgress] = useAsyncEvent(async () => {
-		if (confirm(`Decline the request to add ${id} to your contacts?`)) {
+		if (await confirm(`Decline the request to add ${id} to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'decline' });
 		}
 		return undefined;
-	}, (r) => RelationshipChangeHandleResult(r?.result));
+	}, RelationshipChangeHandleResult);
 	return (
 		<>
 			<Button className='slim' onClick={ accept } disabled={ acceptInProgress }>Accept</Button>
@@ -193,6 +199,15 @@ function ShowFriends() {
 	);
 }
 
+export function useGoToDM(id: AccountId) {
+	const directory = useDirectoryConnector();
+	const navigate = useNavigate();
+	return React.useCallback(() => {
+		directory.directMessageHandler.setSelected(id);
+		navigate('/relationships/DMs');
+	}, [directory.directMessageHandler, id, navigate]);
+}
+
 function FriendRow({
 	id,
 	name,
@@ -207,13 +222,16 @@ function FriendRow({
 	characters?: IAccountFriendStatus['characters'];
 }) {
 	const directory = useDirectoryConnector();
+	const confirm = useConfirmDialog();
 
 	const [unfriend, processing] = useAsyncEvent(async () => {
-		if (confirm(`Are you sure you want to remove ${name} from your contacts list?`)) {
+		if (await confirm(`Are you sure you want to remove ${name} from your contacts list?`)) {
 			return await directory.awaitResponse('unfriend', { id });
 		}
 		return undefined;
-	}, (r) => RelationshipChangeHandleResult(r?.result));
+	}, RelationshipChangeHandleResult);
+
+	const message = useGoToDM(id);
 
 	return (
 		<tr className={ online ? 'friend online' : 'friend offline' }>
@@ -230,9 +248,14 @@ function FriendRow({
 			<td>{ characters?.map((c) => c.name).join(', ') }</td>
 			<td>{ new Date(time).toLocaleDateString() }</td>
 			<td>
-				<Button className='slim' onClick={ unfriend } disabled={ processing }>
-					Remove
-				</Button>
+				<DivContainer direction='row' gap='small'>
+					<Button className='slim' onClick={ message } disabled={ processing }>
+						Message
+					</Button>
+					<Button className='slim' onClick={ unfriend } disabled={ processing }>
+						Remove
+					</Button>
+				</DivContainer>
 			</td>
 		</tr>
 	);

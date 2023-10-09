@@ -90,9 +90,15 @@ export const RelationshipContext = new class RelationshipContext extends TypedEv
 	}
 };
 
-export function RelationshipChangeHandleResult(result: 'ok' | 'accountNotFound' | 'requestNotFound' | 'blocked' | 'requestAlreadyExists' | undefined) {
+type RelationshipChangeHandleResult = 'ok' | 'accountNotFound' | 'requestNotFound' | 'blocked' | 'requestAlreadyExists';
+export function RelationshipChangeHandleResult(result?: null | RelationshipChangeHandleResult | { result: RelationshipChangeHandleResult; }) {
+	if (result == null) {
+		return;
+	}
+	if (typeof result === 'object' && 'result' in result) {
+		result = result.result;
+	}
 	switch (result) {
-		case undefined:
 		case 'ok':
 			return;
 		case 'accountNotFound':

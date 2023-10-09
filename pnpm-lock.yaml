@@ -367,8 +367,8 @@ importers:
         specifier: workspace:*
         version: link:../pandora-common
       prom-client:
-        specifier: 14.2.0
-        version: 14.2.0
+        specifier: 15.0.0
+        version: 15.0.0
       socket.io:
         specifier: 4.6.1
         version: 4.6.1
@@ -470,8 +470,8 @@ importers:
         specifier: workspace:*
         version: link:../pandora-common
       prom-client:
-        specifier: 14.2.0
-        version: 14.2.0
+        specifier: 15.0.0
+        version: 15.0.0
       socket.io:
         specifier: 4.6.1
         version: 4.6.1
@@ -2434,6 +2434,11 @@ packages:
     resolution: {integrity: sha512-EzD434aHTFifGudYAygnFlS1Tl6KhbTynEWELQXIbTY8Msvb5nEqTZIm7sbPEt4mQYLZwu3zPKVdeIrw0g7ovg==}
     dependencies:
       '@octokit/openapi-types': 19.0.0
+    dev: false
+
+  /@opentelemetry/api@1.6.0:
+    resolution: {integrity: sha512-OWlrQAnWn9577PhVgqjUvMr1pg57Bc4jv0iL4w0PRuOSRvq67rvHW9Ie/dZVMvCzhSCB+UxhcY/PmCmFj33Q+g==}
+    engines: {node: '>=8.0.0'}
     dev: false
 
   /@phc/format@1.0.0:
@@ -9867,10 +9872,11 @@ packages:
     resolution: {integrity: sha512-3ouUOpQhtgrbOa17J7+uxOTpITYWaGP7/AhoR3+A+/1e9skrzelGi/dXzEYyvbxubEF6Wn2ypscTKiKJFFn1ag==}
     dev: true
 
-  /prom-client@14.2.0:
-    resolution: {integrity: sha512-sF308EhTenb/pDRPakm+WgiN+VdM/T1RaHj1x+MvAuT8UiQP8JmOEbxVqtkbfR4LrvOg5n7ic01kRBDGXjYikA==}
-    engines: {node: '>=10'}
+  /prom-client@15.0.0:
+    resolution: {integrity: sha512-UocpgIrKyA2TKLVZDSfm8rGkL13C19YrQBAiG3xo3aDFWcHedxRxI3z+cIcucoxpSO0h5lff5iv/SXoxyeopeA==}
+    engines: {node: ^16 || ^18 || >=20}
     dependencies:
+      '@opentelemetry/api': 1.6.0
       tdigest: 0.1.2
     dev: false
 

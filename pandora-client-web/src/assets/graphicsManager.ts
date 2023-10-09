@@ -1,12 +1,19 @@
 import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate } from 'pandora-common';
-import { Texture } from 'pixi.js';
+import { Resource, Texture } from 'pixi.js';
 import { useState, useEffect } from 'react';
 import { Observable, useObservable } from '../observable';
 import { AssetGraphics } from './assetGraphics';
 
 export interface IGraphicsLoader {
 	getCachedTexture(path: string): Texture | null;
-	getTexture(path: string): Promise<Texture>;
+	/**
+	 * Requests a texture to be loaded and marks the texture as in-use
+	 * @param path - The requested texture
+	 * @param listener - Listener for when the texture is successfully loaded
+	 * @returns A callback to release the texture
+	 */
+	useTexture(path: string, listener: (texture: Texture) => void): () => void;
+	loadResource(path: string): Promise<Resource>;
 	loadTextFile(path: string): Promise<string>;
 	loadFileArrayBuffer(path: string, type?: string): Promise<ArrayBuffer>;
 	/**

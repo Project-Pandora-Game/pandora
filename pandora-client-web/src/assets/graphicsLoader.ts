@@ -1,11 +1,105 @@
-import { GetLogger, Logger } from 'pandora-common';
-import { Texture } from 'pixi.js';
+import { Assert, GetLogger, Logger } from 'pandora-common';
+import { BaseTexture, IImageResourceOptions, Resource, Texture, autoDetectResource } from 'pixi.js';
 import { PersistentToast } from '../persistentToast';
 import { IGraphicsLoader } from './graphicsManager';
 
+/**
+ * Interval after which texture load is retried, if the texture is still being requested.
+ * Last interval is repeated indefinitely until the load either succeeds or the texture is no longer needed.
+ */
+const RETRY_INTERVALS = [100, 500, 500, 1000, 1000, 5000];
+
+export const ERROR_TEXTURE = Texture.EMPTY;
+
+type TextureUpdateListener = (texture: Texture<Resource>) => void;
+
+class TextureData {
+	public readonly path: string;
+	public readonly loader: IGraphicsLoader;
+	private readonly logger: Logger;
+
+	private readonly _listeners = new Set<TextureUpdateListener>;
+
+	private _loadedResource: Resource | null = null;
+	private _loadedTexture: Texture | null = null;
+	public get loadedTexture(): Texture | null {
+		return this._loadedTexture;
+	}
+
+	private _pendingLoad: boolean = false;
+	private _failedCounter: number = 0;
+
+	constructor(path: string, loader: IGraphicsLoader, logger: Logger) {
+		this.path = path;
+		this.loader = loader;
+		this.logger = logger;
+	}
+
+	public registerListener(listener: TextureUpdateListener): () => void {
+		this._listeners.add(listener);
+		this.load();
+		return () => {
+			this._listeners.delete(listener);
+		};
+	}
+
+	public load(): void {
+		if (this._loadedResource != null || this._pendingLoad)
+			return;
+		this._pendingLoad = true;
+
+		this.loader.loadResource(this.path)
+			.then((resource) => {
+				Assert(this._pendingLoad);
+				Assert(this._loadedResource == null);
+				Assert(this._loadedTexture == null);
+
+				if (this._failedCounter > 0) {
+					this.logger.info(`Image '${this.path}' loaded successfully after ${this._failedCounter + 1} tries`);
+				}
+
+				// Finish load
+				this._loadedResource = resource;
+				const texture = new Texture(new BaseTexture(resource, {
+					resolution: 1,
+				}));
+				this._loadedTexture = texture;
+				this._failedCounter = 0;
+				this._pendingLoad = false;
+
+				// Notify all listeners about load finishing
+				this._listeners.forEach((listener) => listener(texture));
+			})
+			.catch((err) => {
+				Assert(this._pendingLoad);
+				Assert(this._loadedResource == null);
+				Assert(this._loadedTexture == null);
+
+				this._failedCounter++;
+				const shouldRetry = this._listeners.size > 0;
+
+				if (shouldRetry) {
+					const retryTimer = RETRY_INTERVALS[Math.min(this._failedCounter, RETRY_INTERVALS.length) - 1];
+					this.logger.warning(`Failed to load image '${this.path}', will retry after ${retryTimer}ms\n`, err);
+
+					setTimeout(() => {
+						this._pendingLoad = false;
+						this.load();
+					}, retryTimer);
+				} else {
+					this.logger.error(`Failed to load image '${this.path}', will not retry\n`, err);
+					this._pendingLoad = false;
+				}
+
+				// Send an error texture to all listeners
+				this._listeners.forEach((listener) => listener(ERROR_TEXTURE));
+			});
+	}
+}
+
 export abstract class GraphicsLoaderBase implements IGraphicsLoader {
-	private readonly cache = new Map<string, Texture>();
-	private readonly pending = new Map<string, Promise<Texture>>();
+	private readonly store = new Map<string, TextureData>();
+
 	private readonly textureLoadingProgress = new PersistentToast();
 	protected readonly logger: Logger;
 
@@ -17,37 +111,24 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 		if (!path)
 			return Texture.EMPTY;
 
-		return this.cache.get(path) ?? null;
+		return this.store.get(path)?.loadedTexture ?? null;
 	}
 
-	public async getTexture(path: string): Promise<Texture> {
-		if (!path)
-			return Texture.EMPTY;
+	public useTexture(path: string, listener: TextureUpdateListener): () => void {
+		return this._initTexture(path).registerListener(listener);
+	}
 
-		let texture = this.cache.get(path);
-		if (texture !== undefined)
-			return texture;
+	private _initTexture(path: string): TextureData {
+		let data: TextureData | undefined = this.store.get(path);
+		if (data != null)
+			return data;
 
-		let promise = this.pending.get(path);
-		if (promise !== undefined)
-			return promise;
+		data = new TextureData(path, this, this.logger);
+		this.store.set(path, data);
 
-		promise = this.monitorProgress(this.loadTexture(path));
-		this.pending.set(path, promise);
+		data.load();
 
-		const errorWithStack = new Error('Error loading image');
-
-		try {
-			texture = await promise;
-		} catch (err) {
-			this.logger.error('Failed to load image', path, '\n', err);
-			throw errorWithStack;
-		} finally {
-			this.pending.delete(path);
-		}
-
-		this.cache.set(path, texture);
-		return texture;
+		return data;
 	}
 
 	private readonly _pendingPromises = new Set<Promise<unknown>>();
@@ -72,7 +153,7 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 		}
 	}
 
-	protected abstract loadTexture(path: string): Promise<Texture>;
+	public abstract loadResource(path: string): Promise<Resource>;
 
 	public abstract loadTextFile(path: string): Promise<string>;
 
@@ -89,19 +170,22 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 		this.prefix = prefix;
 	}
 
-	protected override loadTexture(path: string): Promise<Texture> {
-		return Texture.fromURL(this.prefix + path);
+	public override loadResource(path: string): Promise<Resource> {
+		return autoDetectResource<Resource, IImageResourceOptions>(this.prefix + path, {
+			autoLoad: false,
+			crossorigin: 'anonymous',
+		}).load();
 	}
 
-	public loadTextFile(path: string): Promise<string> {
+	public override loadTextFile(path: string): Promise<string> {
 		return this.monitorProgress(fetch(this.prefix + path).then((r) => r.text()));
 	}
 
-	public loadFileArrayBuffer(path: string): Promise<ArrayBuffer> {
+	public override loadFileArrayBuffer(path: string): Promise<ArrayBuffer> {
 		return this.monitorProgress(fetch(this.prefix + path).then((r) => r.arrayBuffer()));
 	}
 
-	public pathToUrl(path: string): Promise<string> {
+	public override pathToUrl(path: string): Promise<string> {
 		return Promise.resolve(this.prefix + path);
 	}
 }

@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import type { Condition, AtomicCondition, AssetId } from 'pandora-common';
-import { Texture } from 'pixi.js';
+import { ImageResource, Resource } from 'pixi.js';
 
 export function GetAngle(x: number, y: number): number {
 	const angle = Math.atan2(y, x);
@@ -32,16 +32,18 @@ export function StripAssetHash(name: string): string {
 	return name.replace(/_[a-z0-9_-]{43}(?=\.[a-z]+$)/i, '');
 }
 
-export function LoadArrayBufferTexture(buffer: ArrayBuffer): Promise<Texture> {
+export function LoadArrayBufferImageResource(buffer: ArrayBuffer): Promise<Resource> {
 	const blob = new Blob([buffer], { type: 'image/png' });
 	return new Promise((resolve, reject) => {
 		const image = new Image();
 		image.onload = () => {
-			const texture = Texture.from(image);
 			URL.revokeObjectURL(image.src);
-			resolve(texture);
+			resolve(new ImageResource(image));
 		};
-		image.onerror = reject;
+		image.onerror = () => {
+			URL.revokeObjectURL(image.src);
+			reject();
+		};
 		image.src = URL.createObjectURL(blob);
 	});
 }

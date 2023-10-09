@@ -1,9 +1,9 @@
 import { AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
-import { Texture } from 'pixi.js';
+import { Resource } from 'pixi.js';
 import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager';
 import { GraphicsLoaderBase, URLGraphicsLoader } from '../assets/graphicsLoader';
 import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
-import { LoadArrayBufferTexture } from '../graphics/utility';
+import { LoadArrayBufferImageResource } from '../graphics/utility';
 import { EDITOR_ASSETS_ADDRESS } from '../config/Environment';
 
 export async function LoadAssetsFromFileSystem(): Promise<[AssetManagerEditor, GraphicsManager]> {
@@ -58,8 +58,8 @@ class FileSystemGraphicsLoader extends GraphicsLoaderBase {
 		this._handle = handle;
 	}
 
-	protected override async loadTexture(path: string): Promise<Texture> {
-		return LoadArrayBufferTexture(await ReadFile(this._handle, path, false));
+	public override async loadResource(path: string): Promise<Resource> {
+		return LoadArrayBufferImageResource(await ReadFile(this._handle, path, false));
 	}
 
 	public loadTextFile(path: string): Promise<string> {

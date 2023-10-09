@@ -1,9 +1,9 @@
 import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter } from 'pandora-common';
-import { Texture } from 'pixi.js';
+import { BaseTexture, Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
 import { GraphicsManagerInstance, IGraphicsLoader } from '../../../assets/graphicsManager';
-import { LoadArrayBufferTexture, StripAssetHash } from '../../../graphics/utility';
+import { LoadArrayBufferImageResource, StripAssetHash } from '../../../graphics/utility';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Editor } from '../../editor';
 import { cloneDeep } from 'lodash';
@@ -380,7 +380,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 	}
 
 	public async addTextureFromArrayBuffer(name: string, buffer: ArrayBuffer): Promise<void> {
-		const texture = await LoadArrayBufferTexture(buffer);
+		const texture = new Texture(new BaseTexture(await LoadArrayBufferImageResource(buffer)));
 		this.fileContents.set(name, buffer);
 		this.textures.set(name, texture);
 		if (!this._loadedTextures.includes(name)) {

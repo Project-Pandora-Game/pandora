@@ -57,27 +57,19 @@ export function useTexture(
 			return;
 		}
 
-		(async () => {
-			const t = await loader.getTexture(image);
+		const unregister = loader.useTexture(image, (t) => {
 			if (wanted.current === image) {
 				setTexture({
 					image,
 					texture: t,
 				});
 			}
-		})()
-			.catch((_err) => {
-				if (wanted.current === image) {
-					setTexture({
-						image,
-						texture: Texture.EMPTY,
-					});
-				}
-			});
+		});
 
 		return () => {
 			// Clear the wanted image so set doesn't happen after unmount
 			wanted.current = '';
+			unregister();
 		};
 	}, [manager, image, customGetTexture]);
 

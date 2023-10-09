@@ -17,7 +17,7 @@ export function EditorLayer({
 	const asset = layer.asset;
 
 	// TODO: Make editor asset's images observable
-	const editorGetTexture = useMemo<((image: string) => Promise<Texture>) | undefined>(() => {
+	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
 		if (getTexture)
 			return getTexture;
 		if (asset instanceof EditorAssetGraphics)

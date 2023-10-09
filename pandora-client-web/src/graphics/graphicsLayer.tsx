@@ -105,7 +105,7 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	item: Item | null;
 	verticesPoseOverride?: Record<BoneName, number>;
 	state?: LayerStateOverrides;
-	getTexture?: (path: string) => Promise<Texture>;
+	getTexture?: (path: string) => Texture;
 }
 
 export const ContextCullClockwise = createContext<{
@@ -314,7 +314,7 @@ interface MaskContainerProps extends ChildrenProps {
 		indices: IArrayBuffer;
 	};
 	zIndex?: number;
-	getTexture?: (path: string) => Promise<Texture>;
+	getTexture?: (path: string) => Texture;
 }
 
 function MaskContainer({

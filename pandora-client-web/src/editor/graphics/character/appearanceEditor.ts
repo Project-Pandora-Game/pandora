@@ -374,9 +374,9 @@ export class EditorAssetGraphics extends AssetGraphics {
 		return this._loadedTextures;
 	}
 
-	public getTexture(image: string): Promise<Texture> {
+	public getTexture(image: string): Texture {
 		const texture = this.textures.get(image);
-		return texture ? Promise.resolve(texture) : Promise.reject();
+		return texture ?? Texture.EMPTY;
 	}
 
 	public async addTextureFromArrayBuffer(name: string, buffer: ArrayBuffer): Promise<void> {

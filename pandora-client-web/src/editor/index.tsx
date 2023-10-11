@@ -15,6 +15,7 @@ import { GraphicsManager } from '../assets/graphicsManager';
 import { EulaGate } from '../components/Eula';
 import { EditorWardrobeContextProvider } from './components/wardrobe/wardrobe';
 import { AssetManagerEditor } from './assets/assetManager';
+import { ConfigurePixiSettings } from '../graphics/pixiSettings';
 
 const logger = GetLogger('init');
 
@@ -27,6 +28,7 @@ Start().catch((error) => {
  */
 async function Start(): Promise<void> {
 	SetupLogging();
+	ConfigurePixiSettings();
 	logger.info('Starting...');
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>

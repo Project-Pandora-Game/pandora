@@ -755,7 +755,8 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): ItemLock | null {
-		const isSelfAction = context.target.type === 'character' && context.target.character.id === context.player.character.id;
+		const playerRestrictionManager = context.processingContext.getPlayerRestrictionManager();
+		const isSelfAction = context.target.type === 'character' && context.target.character.id === context.processingContext.player.id;
 		const properties = this.getLockProperties();
 
 		if (action.password != null && !this._validatePassword(action.password)) {
@@ -763,7 +764,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		}
 
 		// Locks can prevent interaction from player (unless in safemode)
-		if (properties.blockSelf && isSelfAction && !context.player.isInSafemode()) {
+		if (properties.blockSelf && isSelfAction && !playerRestrictionManager.isInSafemode()) {
 			context.reject({
 				type: 'lockInteractionPrevented',
 				moduleAction: action.action,
@@ -782,7 +783,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(action);
 	}
 
-	public lock({ messageHandler, player, reject }: AppearanceModuleActionContext, { password }: IItemLockAction & { action: 'lock'; }): ItemLock | null {
+	public lock({ messageHandler, processingContext, reject }: AppearanceModuleActionContext, { password }: IItemLockAction & { action: 'lock'; }): ItemLock | null {
 		if (this.isLocked())
 			return null;
 
@@ -831,8 +832,8 @@ export class ItemLock extends ItemBase<'lock'> {
 				...this.lockData,
 				hidden,
 				locked: {
-					id: player.character.id,
-					name: player.character.name,
+					id: processingContext.player.id,
+					name: processingContext.player.name,
 					time: Date.now(),
 				},
 			},
@@ -842,11 +843,12 @@ export class ItemLock extends ItemBase<'lock'> {
 		});
 	}
 
-	public unlock({ messageHandler, failure, player }: AppearanceModuleActionContext, { password, clearLastPassword }: IItemLockAction & { action: 'unlock'; }): ItemLock | null {
+	public unlock({ messageHandler, failure, processingContext }: AppearanceModuleActionContext, { password, clearLastPassword }: IItemLockAction & { action: 'unlock'; }): ItemLock | null {
+		const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
 		if (!this.isLocked() || this.lockData == null)
 			return null;
 
-		if (this.asset.definition.password != null && !player.isInSafemode()) {
+		if (this.asset.definition.password != null && !playerRestrictionManager.isInSafemode()) {
 			if (password == null) {
 				return null;
 			} else if (this.lockData.hidden?.side === 'server' && password !== this.lockData.hidden.password) {
@@ -856,7 +858,6 @@ export class ItemLock extends ItemBase<'lock'> {
 					reason: 'wrongPassword',
 					asset: this.asset.id,
 				});
-				return null;
 			}
 		}
 

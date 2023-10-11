@@ -129,23 +129,33 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): IClientShardNormalResult['appearanceAction'] {
-		if (!client.character)
+		const character = client.character;
+		if (!character)
 			throw new BadMessageError();
 
-		const result = DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager);
-		switch (result.result) {
-			case 'success':
-				return { result: 'success' };
-			case 'failure':
-				return {
-					result: 'failure',
-					failure: result.failure,
-				};
-			default:
-				// If the action failed, client might be out of sync, force-send full reload
-				client.sendLoadMessage();
-				return { result: 'invalid' };
+		const result = DoAppearanceAction(action, character.getAppearanceActionContext(), assetManager);
+
+		// Check if result is valid
+		if (!result.valid || result.problems.length > 0) {
+			// If the action failed, client might be out of sync, force-send full reload
+			client.sendLoadMessage();
+			return {
+				result: 'failure',
+				problems: result.problems.slice(),
+			};
 		}
+
+		// Apply the action
+		character.getGlobalState().setState(result.resultState);
+
+		// Send chat messages as needed
+		for (const message of result.pendingMessages) {
+			character.room?.handleActionMessage(message);
+		}
+
+		return {
+			result: 'success',
+		};
 	}
 
 	private handleUpdateSettings(settings: IClientShardArgument['updateSettings'], client: ClientConnection): void {

@@ -232,14 +232,14 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 
 	return (
 		<div
-			className={ classNames('overlayDrop', 'inventoryViewItem', check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked') }
+			className={ classNames('overlayDrop', 'inventoryViewItem', check === null ? 'pending' : check.problems.length === 0 ? 'allowed' : 'blocked') }
 			tabIndex={ 0 }
 			ref={ setRef }
 			onClick={ execute }
 		>
 			{
 				check != null ? (
-					<ActionWarning check={ check } parent={ ref } />
+					<ActionWarning problems={ check.problems } parent={ ref } />
 				) : null
 			}
 			{ text }

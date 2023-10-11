@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter, GameLogicCharacter, GameLogicCharacterClient } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ItemId, ActionRoomContext, CharacterRestrictionsManager, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter, GameLogicCharacter, GameLogicCharacterClient, DoAppearanceAction, AppearanceAction, AppearanceActionContext } from 'pandora-common';
 import { BaseTexture, Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -12,8 +12,11 @@ import { ICharacter, CharacterEvents } from '../../../character/character';
 import { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import { useEditorState } from '../../editorContextProvider';
-import { AppearanceCharacterManipulator } from 'pandora-common/dist/assets/appearanceHelpers';
-import { AssetFrameworkGlobalStateManipulator } from 'pandora-common/dist/assets/manipulators/globalStateManipulator';
+import { EDITOR_ROOM_CONTEXT } from '../../components/wardrobe/wardrobe';
+
+export interface EditorActionContext {
+	dryRun?: boolean;
+}
 
 export class AppearanceEditor extends CharacterAppearance {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
@@ -23,28 +26,34 @@ export class AppearanceEditor extends CharacterAppearance {
 		this.globalState = globalState;
 	}
 
-	protected _manipulateGlobalState(action: (manipulator: AssetFrameworkGlobalStateManipulator) => boolean, context: ActionProcessingContext): boolean {
-		const manipulator = this.globalState.getManipulator();
-		if (!action(manipulator)) {
+	protected _makeActionContext(): AppearanceActionContext {
+		return {
+			player: this.character,
+			globalState: this.globalState,
+			roomContext: EDITOR_ROOM_CONTEXT,
+			getCharacter: (id) => {
+				if (id === this.id) {
+					return this.character;
+				}
+				return null;
+			},
+		};
+	}
+
+	public editorDoAction(
+		action: AppearanceAction,
+		{ dryRun = false }: EditorActionContext = {},
+	): boolean {
+		const result = DoAppearanceAction(action, this._makeActionContext(), this.assetManager);
+
+		if (!result.valid || result.problems.length > 0) {
 			return false;
 		}
 
-		return this.globalState.commitChanges(manipulator, context).success;
-	}
-
-	protected _manipulateState(action: (manipulator: AppearanceCharacterManipulator) => boolean, context: ActionProcessingContext): boolean {
-		return this._manipulateGlobalState((manipulator) => {
-			return action(manipulator.getManipulatorFor({
-				type: 'character',
-				characterId: this.id,
-			}) as AppearanceCharacterManipulator);
-		}, context);
-	}
-
-	public produceState(producer: (currentState: AssetFrameworkCharacterState) => AssetFrameworkCharacterState | null, context: ActionProcessingContext = {}): boolean {
-		return this._manipulateGlobalState((manipulator) => {
-			return manipulator.produceCharacterState(this.id, producer);
-		}, context);
+		if (!dryRun) {
+			this.globalState.setState(result.resultState);
+		}
+		return true;
 	}
 
 	public setPose(bone: string, value: number): boolean {
@@ -54,48 +63,61 @@ export class AppearanceEditor extends CharacterAppearance {
 		// This asserts existence of bone
 		this.getPose(bone);
 
-		return this.produceState((state) => state.produceWithPose({ bones: { [bone]: value } }, true));
+		return this.editorDoAction({
+			type: this.assetManager.getBoneByName(bone).type,
+			target: this.id,
+			bones: { [bone]: value },
+		});
 	}
 
-	public addItem(asset: Asset, context: ActionProcessingContext = {}): boolean {
-		return this._manipulateState((manipulator) => {
-			const item = this.assetManager.createItem(`i/editor/${nanoid()}`, asset, null);
-			return ActionAddItem(
-				manipulator,
-				[],
-				item,
-				null,
-			);
+	public addItem(asset: Asset, context: EditorActionContext = {}): boolean {
+		return this.editorDoAction({
+			type: 'create',
+			target: {
+				type: 'character',
+				characterId: this.id,
+			},
+			asset: asset.id,
+			container: [],
+			itemId: `i/editor/${nanoid()}`,
 		}, context);
 	}
 
-	public removeItem(id: ItemId, context: ActionProcessingContext = {}): boolean {
-		return this._manipulateState((manipulator) => {
-			return ActionRemoveItem(
-				manipulator,
-				{
-					container: [],
-					itemId: id,
-				},
-			);
+	public removeItem(id: ItemId, context: EditorActionContext = {}): boolean {
+		return this.editorDoAction({
+			type: 'delete',
+			target: {
+				type: 'character',
+				characterId: this.id,
+			},
+			item: {
+				container: [],
+				itemId: id,
+			},
 		}, context);
 	}
 
-	public moveItem(id: ItemId, shift: number, context: ActionProcessingContext = {}): boolean {
-		return this._manipulateState((manipulator) => {
-			return ActionMoveItem(
-				manipulator,
-				{
-					container: [],
-					itemId: id,
-				},
-				shift,
-			);
+	public moveItem(id: ItemId, shift: number, context: EditorActionContext = {}): boolean {
+		return this.editorDoAction({
+			type: 'move',
+			target: {
+				type: 'character',
+				characterId: this.id,
+			},
+			item: {
+				container: [],
+				itemId: id,
+			},
+			shift,
 		}, context);
 	}
 
-	public setView(view: CharacterView, context: ActionProcessingContext = {}): boolean {
-		return this.produceState((state) => state.produceWithView(view), context);
+	public setView(view: CharacterView, context: EditorActionContext = {}): boolean {
+		return this.editorDoAction({
+			type: 'setView',
+			target: this.id,
+			view,
+		}, context);
 	}
 }
 

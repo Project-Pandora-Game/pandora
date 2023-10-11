@@ -6,8 +6,7 @@ import { AppearanceClientBundle, AppearanceBundleSchema, AssetFrameworkCharacter
 import { z } from 'zod';
 import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { AssetFrameworkGlobalStateManipulator } from '../manipulators/globalStateManipulator';
-import { ActionProcessingContext, RoomTargetSelector } from '../appearanceTypes';
+import { RoomTargetSelector } from '../appearanceTypes';
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
 import { IExportOptions } from '../modules/common';
 
@@ -274,43 +273,11 @@ export class AssetFrameworkGlobalStateContainer {
 		this._onChange(newState, oldState);
 	}
 
-	public getManipulator(): AssetFrameworkGlobalStateManipulator {
-		return new AssetFrameworkGlobalStateManipulator(this._currentState);
-	}
-
 	public setState(newState: AssetFrameworkGlobalState): void {
 		Assert(newState.isValid(), 'Attempt to set invalid state');
 		const oldState = this._currentState;
 		this._currentState = newState;
 		this._onChange(newState, oldState);
-	}
-
-	public commitChanges(manipulator: AssetFrameworkGlobalStateManipulator, context: ActionProcessingContext): AppearanceValidationResult {
-		const oldState = this._currentState;
-		const newState = manipulator.currentState;
-
-		// Validate
-		const r = newState.validate();
-		if (!r.success)
-			return r;
-
-		if (context.dryRun)
-			return { success: true };
-
-		this._currentState = newState;
-		this._onChange(newState, oldState);
-
-		for (const message of manipulator.getAndClearPendingMessages()) {
-			context.actionHandler?.({
-				...message,
-				character: context.sourceCharacter ? {
-					type: 'character',
-					id: context.sourceCharacter,
-				} : undefined,
-			});
-		}
-
-		return { success: true };
 	}
 
 	private _onChange(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState) {

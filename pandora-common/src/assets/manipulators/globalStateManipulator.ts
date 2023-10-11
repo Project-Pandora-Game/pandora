@@ -1,7 +1,7 @@
 import { CharacterId } from '../../character';
 import { AssertNever } from '../../utility';
 import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers';
-import { ActionHandlerMessageWithTarget, RoomTargetSelector } from '../appearanceTypes';
+import { RoomTargetSelector } from '../appearanceTypes';
 import { AppearanceItems } from '../appearanceValidation';
 import { AssetManager } from '../assetManager';
 import { FilterItemWearable } from '../item';
@@ -12,8 +12,6 @@ import { AssetFrameworkRoomState } from '../state/roomState';
 export class AssetFrameworkGlobalStateManipulator {
 	public readonly assetManager: AssetManager;
 	public currentState: AssetFrameworkGlobalState;
-
-	private _messages: ActionHandlerMessageWithTarget[] = [];
 
 	constructor(originState: AssetFrameworkGlobalState) {
 		this.assetManager = originState.assetManager;
@@ -73,15 +71,5 @@ export class AssetFrameworkGlobalStateManipulator {
 			);
 		}
 		AssertNever(target);
-	}
-
-	public queueMessage(message: ActionHandlerMessageWithTarget): void {
-		this._messages.push(message);
-	}
-
-	public getAndClearPendingMessages(): ActionHandlerMessageWithTarget[] {
-		const messages = this._messages;
-		this._messages = [];
-		return messages;
 	}
 }

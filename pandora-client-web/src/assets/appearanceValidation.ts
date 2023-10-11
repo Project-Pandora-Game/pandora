@@ -1,9 +1,9 @@
-import { AppearanceActionResult, AssertNever } from 'pandora-common';
+import { AppearanceActionProblem, AssertNever } from 'pandora-common';
 import { DescribeAsset, DescribeAssetSlot } from '../components/chatroom/chatroomMessages';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
-export function AppearanceActionResultShouldHide(result: AppearanceActionResult): boolean {
+export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {
 	if (result.result === 'invalidAction')
 		return true;
 
@@ -17,10 +17,8 @@ export function AppearanceActionResultShouldHide(result: AppearanceActionResult)
 	return false;
 }
 
-export function RenderAppearanceActionResult(assetManager: AssetManagerClient, result: AppearanceActionResult): string {
-	if (result.result === 'success') {
-		return 'No problem.';
-	} else if (result.result === 'invalidAction') {
+export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem): string {
+	if (result.result === 'invalidAction') {
 		if (result.reason != null) {
 			switch (result.reason) {
 				case 'noDeleteRoomDeviceWearable':

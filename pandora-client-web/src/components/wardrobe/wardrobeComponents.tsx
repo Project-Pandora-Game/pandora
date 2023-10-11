@@ -1,8 +1,7 @@
 import classNames from 'classnames';
 import {
 	AppearanceAction,
-	AppearanceActionFailure,
-	AppearanceActionResult,
+	AppearanceActionProblem,
 	Asset,
 	IsNotNullable,
 } from 'pandora-common';
@@ -10,34 +9,42 @@ import React, { ReactElement, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { CommonProps } from '../../common/reactTypes';
-import { AppearanceActionResultShouldHide, RenderAppearanceActionResult } from '../../assets/appearanceValidation';
+import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
 import { HoverElement } from '../hoverElement/hoverElement';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { useWardrobeExecuteChecked } from './wardrobeContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
+import _ from 'lodash';
 
-export function ActionWarning({ check, parent }: { check: AppearanceActionResult; parent: HTMLElement | null; }) {
+export function ActionWarning({ problems, parent }: { problems: readonly AppearanceActionProblem[]; parent: HTMLElement | null; }) {
 	const assetManager = useAssetManager();
-	const reason = useMemo(() => (check.result === 'success'
-		? ''
-		: RenderAppearanceActionResult(assetManager, check)
-	), [assetManager, check]);
+	const reasons = useMemo(() => (
+		_.uniq(
+			problems
+				.map((problem) => RenderAppearanceActionProblem(assetManager, problem))
+				.filter(Boolean),
+		)
+	), [assetManager, problems]);
 
-	if (check.result === 'success') {
+	if (problems.length === 0) {
 		return null;
 	}
 
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
 			{
-				!reason ? (
+				reasons.length === 0 ? (
 					<>
 						This action isn't possible.
 					</>
 				) : (
 					<>
-						This action isn't possible, because:<br />
-						{ reason }
+						This action isn't possible, because:
+						<ul>
+							{
+								reasons.map((reason, i) => (<li key={ i }>{ reason }</li>))
+							}
+						</ul>
 					</>
 				)
 			}
@@ -64,11 +71,11 @@ export function WardrobeActionButton({
 	hideReserveSpace?: boolean;
 	showActionBlockedExplanation?: boolean;
 	onExecute?: () => void;
-	onFailure?: (failure: AppearanceActionFailure) => void;
+	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 	disabled?: boolean;
 }): ReactElement {
 	const check = useStaggeredAppearanceActionResult(action);
-	const hide = check != null && autohide && AppearanceActionResultShouldHide(check);
+	const hide = check != null && autohide && check.problems.some(AppearanceActionProblemShouldHide);
 	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
 	const [execute, processing] = useWardrobeExecuteChecked(action, check, {
 		onSuccess: onExecute,
@@ -79,7 +86,7 @@ export function WardrobeActionButton({
 		<button
 			id={ id }
 			ref={ setRef }
-			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
+			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : check.problems.length === 0 ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
 				execute();
@@ -88,7 +95,7 @@ export function WardrobeActionButton({
 		>
 			{
 				showActionBlockedExplanation && check != null ? (
-					<ActionWarning check={ check } parent={ ref } />
+					<ActionWarning problems={ check.problems } parent={ ref } />
 				) : null
 			}
 			{ children }

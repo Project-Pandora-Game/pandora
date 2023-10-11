@@ -1,4 +1,4 @@
-import { ActionRoomContext, AppearanceActionContext, AssertNever, ChatRoomFeatureSchema, DoAppearanceAction, EMPTY_ARRAY, RoomInventory } from 'pandora-common';
+import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema, DoAppearanceAction, EMPTY_ARRAY } from 'pandora-common';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Column } from '../../../components/common/container/container';
@@ -17,7 +17,7 @@ import { useEditorCharacterState } from '../../graphics/character/appearanceEdit
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import '../../../components/wardrobe/wardrobe.scss';
 
-const ROOM_CONTEXT = {
+export const EDITOR_ROOM_CONTEXT = {
 	features: ChatRoomFeatureSchema.options,
 } as const satisfies ActionRoomContext;
 
@@ -32,32 +32,14 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
-		player: character.id,
+		player: character.gameLogicCharacter,
 		globalState: editor.globalState,
+		roomContext: EDITOR_ROOM_CONTEXT,
 		getCharacter: (id) => {
 			if (id === character.id) {
-				return character.getRestrictionManager(undefined, ROOM_CONTEXT);
+				return character.gameLogicCharacter;
 			}
 			return null;
-		},
-		getTarget: (target) => {
-			if (target.type === 'character') {
-				if (target.characterId === character.id) {
-					return character.getAppearance();
-				}
-
-				return null;
-			}
-
-			if (target.type === 'roomInventory') {
-				const roomState = editor.globalState.currentState.room;
-				if (!roomState)
-					return null;
-
-				return new RoomInventory(roomState);
-			}
-
-			AssertNever(target);
 		},
 	}), [character, editor]);
 
@@ -86,20 +68,24 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		actions,
 		execute: (action) => {
 			const result = DoAppearanceAction(action, actions, assetManager);
-			switch (result.result) {
-				case 'success':
-					return { result: 'success' };
-				case 'failure':
-					return {
-						result: 'failure',
-						failure: result.failure,
-					};
-				default:
-					return { result: 'invalid' };
+
+			// Check if result is valid
+			if (!result.valid || result.problems.length > 0) {
+				return {
+					result: 'failure',
+					problems: result.problems.slice(),
+				};
 			}
+
+			// Apply the action
+			editor.globalState.setState(result.resultState);
+
+			return {
+				result: 'success',
+			};
 		},
 		showExtraActionButtons: true,
-	}), [character, globalState, assetList, heldItem, extraItemActions, actions, assetManager]);
+	}), [character, globalState, assetList, heldItem, extraItemActions, actions, assetManager, editor]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -134,7 +120,11 @@ export function EditorWardrobeUI(): ReactElement {
 						type='checkbox'
 						checked={ safemode }
 						onChange={ (e) => {
-							character.getAppearance().produceState((state) => state.produceWithSafemode(e.target.checked ? { allowLeaveAt: 0 } : null));
+							character.getAppearance()
+								.editorDoAction({
+									type: 'safemode',
+									action: e.target.checked ? 'enter' : 'exit',
+								});
 						} }
 					/>
 				</div>

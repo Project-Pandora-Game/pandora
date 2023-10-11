@@ -79,12 +79,13 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 	const [positionX, setPositionX] = useUpdatedUserInput(deployment.x, [item]);
 	const [positionY, setPositionY] = useUpdatedUserInput(deployment.y, [item]);
 
-	const disabled = useStaggeredAppearanceActionResult({
+	const checkResult = useStaggeredAppearanceActionResult({
 		type: 'roomDeviceDeploy',
 		target: targetSelector,
 		item,
 		deployment,
-	})?.result !== 'success';
+	});
+	const disabled = checkResult == null || checkResult.problems.length > 0;
 
 	const onChangeCaller = useCallback((newPosition: Immutable<RoomDeviceDeployment>) => {
 		execute({

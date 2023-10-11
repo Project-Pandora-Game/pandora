@@ -61,12 +61,6 @@ export interface ActionHandlerMessage extends ActionHandlerMessageWithTarget {
 }
 export type ActionHandler = (message: ActionHandlerMessage) => void;
 
-export interface ActionProcessingContext {
-	sourceCharacter?: CharacterId;
-	actionHandler?: ActionHandler;
-	dryRun?: boolean;
-}
-
 interface RoomActionTargetBase {
 	getItem(path: ItemPath): Item | undefined;
 }

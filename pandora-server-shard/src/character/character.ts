@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -400,40 +400,22 @@ export class Character {
 		return this._context.inRoom ? this._context.room.roomState : this._context.globalState;
 	}
 
-	public getAppearance(): CharacterAppearance {
+	public getRestrictionManager(): CharacterRestrictionsManager {
 		const state = this.getGlobalState().currentState.characters.get(this.id);
 		AssertNotNullable(state);
 
-		return new CharacterAppearance(state, this.gameLogicCharacter);
-	}
-
-	public getRestrictionManager(): CharacterRestrictionsManager {
-		return this.getAppearance().getRestrictionManager(this.room?.getActionRoomContext() ?? null);
+		return this.gameLogicCharacter.getRestrictionManager(state, this.room?.getActionRoomContext() ?? null);
 	}
 
 	public getAppearanceActionContext(): AppearanceActionContext {
 		const globalState = this.getGlobalState();
 		return {
-			player: this.id,
+			player: this.gameLogicCharacter,
 			globalState,
+			roomContext: this.room?.getActionRoomContext() ?? null,
 			getCharacter: (id) => {
 				const char = this.id === id ? this : this.room?.getCharacterById(id);
-				return char?.getRestrictionManager() ?? null;
-			},
-			getTarget: (target) => {
-				if (target.type === 'character') {
-					const char = this.id === target.characterId ? this : this.room?.getCharacterById(target.characterId);
-					return char?.getAppearance() ?? null;
-				}
-
-				if (target.type === 'roomInventory') {
-					return this.room?.getRoomInventory() ?? null;
-				}
-
-				AssertNever(target);
-			},
-			actionHandler: (message) => {
-				this.room?.handleActionMessage(message);
+				return char?.gameLogicCharacter ?? null;
 			},
 		};
 	}

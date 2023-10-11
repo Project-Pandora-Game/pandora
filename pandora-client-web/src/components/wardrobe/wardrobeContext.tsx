@@ -1,14 +1,13 @@
 import {
 	AppearanceAction,
 	AppearanceActionContext,
-	AppearanceActionFailure,
-	AppearanceActionResult,
+	AppearanceActionProblem,
+	AppearanceActionProcessingResult,
 	AssertNever,
 	AssertNotNullable,
 	EMPTY_ARRAY,
 	IClientShardNormalResult,
 	Nullable,
-	RoomInventory,
 	RoomTargetSelector,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
@@ -40,35 +39,16 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
-		player: player.data.id,
+		player: player.gameLogicCharacter,
 		globalState: globalStateContainer,
+		roomContext,
 		getCharacter: (id) => {
 			const state = globalStateContainer.currentState.getCharacterState(id);
 			const character = chatroomCharacters.find((c) => c.id === id);
 			if (!state || !character)
 				return null;
 
-			return character.getRestrictionManager(state, roomContext);
-		},
-		getTarget: (actionTarget) => {
-			if (actionTarget.type === 'character') {
-				const state = globalStateContainer.currentState.getCharacterState(actionTarget.characterId);
-				const character = chatroomCharacters.find((c) => c.id === actionTarget.characterId);
-				if (!state || !character)
-					return null;
-
-				return character.getAppearance(state);
-			}
-
-			if (actionTarget.type === 'roomInventory') {
-				const roomState = globalStateContainer.currentState.room;
-				if (!roomState)
-					return null;
-
-				return new RoomInventory(roomState);
-			}
-
-			AssertNever(actionTarget);
+			return character.gameLogicCharacter;
 		},
 	}), [player, globalStateContainer, roomContext, chatroomCharacters]);
 
@@ -127,7 +107,7 @@ export function useWardrobeContext(): Readonly<WardrobeContext> {
 
 type ExecuteCallbackOptions = {
 	onSuccess?: () => void;
-	onFailure?: (failure: AppearanceActionFailure) => void;
+	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 };
 
 export function useWardrobeExecute(action: Nullable<AppearanceAction>, props: ExecuteCallbackOptions = {}) {
@@ -140,10 +120,10 @@ export function useWardrobeExecute(action: Nullable<AppearanceAction>, props: Ex
 	}, ExecuteCallback(props));
 }
 
-export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionResult | null, props: ExecuteCallbackOptions = {}) {
+export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}) {
 	const { execute } = useWardrobeContext();
 	return useAsyncEvent(async () => {
-		if (action && result?.result === 'success')
+		if (action && result != null && result.problems.length === 0)
 			return await execute(action);
 
 		return null;
@@ -162,7 +142,7 @@ function ExecuteCallback({ onSuccess, onFailure }: ExecuteCallbackOptions) {
 				onSuccess?.();
 				break;
 			case 'failure':
-				onFailure?.(r.failure);
+				onFailure?.(r.problems);
 				break;
 		}
 	};

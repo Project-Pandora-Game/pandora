@@ -1,4 +1,6 @@
 export * from './appearance';
+export * from './appearanceActionProblems';
+export * from './appearanceActionProcessingContext';
 export * from './appearanceActions';
 export * from './appearanceLimit';
 export * from './appearanceTypes';

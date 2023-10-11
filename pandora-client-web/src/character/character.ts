@@ -17,6 +17,7 @@ import {
 	ITypedEventEmitter,
 	ICharacterRoomData,
 	GameLogicCharacterClient,
+	GameLogicCharacter,
 } from 'pandora-common';
 import { useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player';
@@ -27,6 +28,7 @@ export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicDat
 	readonly id: CharacterId;
 	readonly name: string;
 	readonly data: Readonly<T>;
+	readonly gameLogicCharacter: GameLogicCharacter;
 	isPlayer(): boolean;
 	getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance;
 	getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager;

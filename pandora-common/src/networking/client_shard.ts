@@ -1,6 +1,7 @@
 import { CharacterIdSchema } from '../character/characterTypes';
 import { CharacterDataCreateSchema, CharacterPublicSettingsSchema } from '../character/characterData';
-import { AppearanceActionFailure, AppearanceActionSchema } from '../assets';
+import { AppearanceActionSchema } from '../assets/appearanceActions';
+import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
 import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
 import { z } from 'zod';
 import { ZodCast } from '../validation';
@@ -47,10 +48,15 @@ export const ClientShardSchema = {
 	},
 	appearanceAction: {
 		request: AppearanceActionSchema,
-		response: ZodCast<{ result: 'success' | 'invalid'; } | {
-			result: 'failure';
-			failure: AppearanceActionFailure;
-		}>(),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('success'),
+			}),
+			z.object({
+				result: z.literal('failure'),
+				problems: ZodCast<AppearanceActionProblem>().array(),
+			}),
+		]),
 	},
 	updateSettings: {
 		request: CharacterPublicSettingsSchema.partial(),

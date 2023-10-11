@@ -229,14 +229,14 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				'inventoryViewItem',
 				listMode ? 'listMode' : 'gridMode',
 				'small',
-				check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked',
+				check === null ? 'pending' : check.problems.length === 0 ? 'allowed' : 'blocked',
 			) }
 			tabIndex={ 0 }
 			ref={ setRef }
 			onClick={ execute }>
 			{
 				check != null ? (
-					<ActionWarning check={ check } parent={ ref } />
+					<ActionWarning problems={ check.problems } parent={ ref } />
 				) : null
 			}
 			<InventoryAssetPreview asset={ asset } />
@@ -305,7 +305,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 				'overlayDrop',
 				'centerButton',
 				'inventoryViewItem',
-				check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked',
+				check === null ? 'pending' : check.problems.length === 0 ? 'allowed' : 'blocked',
 			) }
 			tabIndex={ 0 }
 			ref={ setRef }
@@ -313,7 +313,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 		>
 			{
 				check != null ? (
-					<ActionWarning check={ check } parent={ ref } />
+					<ActionWarning problems={ check.problems } parent={ ref } />
 				) : null
 			}
 			{ text }

@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import type { ICharacterMinimalData } from './characterData';
 import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
 import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
@@ -10,6 +9,7 @@ import type { Item, RoomDeviceLink } from '../assets/item';
 import type { Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
 import { AppearanceGetBlockedSlot, AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Immutable } from 'immer';
+import { GameLogicCharacter } from '../gameLogic/character/character';
 
 export enum ItemInteractionType {
 	/**
@@ -74,9 +74,7 @@ export type Restriction =
 	| {
 		type: 'permission';
 		missingPermission:
-		| 'modifyBodyOthers'
-		| 'modifyBodyRoom'
-		| 'safemodeInteractOther';
+		| 'modifyBodyOthers';
 	}
 	| {
 		type: 'blockedAddRemove';
@@ -96,6 +94,12 @@ export type Restriction =
 	}
 	| {
 		type: 'blockedHands';
+	}
+	| {
+		type: 'safemodeInteractOther';
+	}
+	| {
+		type: 'modifyBodyRoom';
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
@@ -119,7 +123,7 @@ export class CharacterRestrictionsManager {
 	private _properties: Immutable<AssetPropertiesResult> = CreateAssetPropertiesResult();
 	private _roomDeviceLink: Immutable<RoomDeviceLink> | null = null;
 
-	public get character(): Readonly<ICharacterMinimalData> {
+	public get character(): GameLogicCharacter {
 		return this.appearance.character;
 	}
 
@@ -227,8 +231,7 @@ export class CharacterRestrictionsManager {
 				return {
 					allowed: false,
 					restriction: {
-						type: 'permission',
-						missingPermission: 'safemodeInteractOther',
+						type: 'safemodeInteractOther',
 					},
 				};
 		}
@@ -361,8 +364,7 @@ export class CharacterRestrictionsManager {
 				return {
 					allowed: false,
 					restriction: {
-						type: 'permission',
-						missingPermission: 'modifyBodyRoom',
+						type: 'modifyBodyRoom',
 					},
 				};
 			}

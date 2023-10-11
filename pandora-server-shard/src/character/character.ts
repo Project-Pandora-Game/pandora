@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -116,6 +116,8 @@ export class Character {
 		return this.data.settings;
 	}
 
+	public readonly gameLogicCharacter: GameLogicCharacterServer;
+
 	private logger: Logger;
 
 	public set position(value: CharacterRoomPosition) {
@@ -146,6 +148,8 @@ export class Character {
 		this.data = data;
 		this.accountData = account;
 		this.connectSecret = connectSecret;
+
+		this.gameLogicCharacter = new GameLogicCharacterServer(data, this.logger.prefixMessages('[GameLogic]'));
 
 		this.setConnection(null);
 		Assert(this._clientTimeout == null || connectSecret != null);
@@ -400,7 +404,7 @@ export class Character {
 		const state = this.getGlobalState().currentState.characters.get(this.id);
 		AssertNotNullable(state);
 
-		return new CharacterAppearance(state, () => this.data);
+		return new CharacterAppearance(state, this.gameLogicCharacter);
 	}
 
 	public getRestrictionManager(): CharacterRestrictionsManager {

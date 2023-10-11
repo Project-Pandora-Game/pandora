@@ -62,10 +62,6 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				switch (e.missingPermission) {
 					case 'modifyBodyOthers':
 						return `You cannot modify body of other characters.`;
-					case 'modifyBodyRoom':
-						return `You cannot modify body in this room.`;
-					case 'safemodeInteractOther':
-						return `You cannot touch others while either you or they are in safemode.`;
 				}
 				break;
 			case 'blockedAddRemove':
@@ -79,6 +75,10 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because ${DescribeAssetSlot(assetManager, e.slot)} is covered by another item.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
+			case 'safemodeInteractOther':
+				return `You cannot touch others while either you or they are in safemode.`;
+			case 'modifyBodyRoom':
+				return `You cannot modify body in this room.`;
 			case 'invalid':
 				return '';
 		}

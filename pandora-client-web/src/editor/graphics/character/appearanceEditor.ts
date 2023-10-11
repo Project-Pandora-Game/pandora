@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, ICharacterMinimalData, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ActionAddItem, ItemId, ActionProcessingContext, ActionRemoveItem, ActionMoveItem, ActionRoomContext, CharacterRestrictionsManager, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter, GameLogicCharacter, GameLogicCharacterClient } from 'pandora-common';
 import { BaseTexture, Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -18,8 +18,8 @@ import { AssetFrameworkGlobalStateManipulator } from 'pandora-common/dist/assets
 export class AppearanceEditor extends CharacterAppearance {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
-	constructor(characterState: AssetFrameworkCharacterState, getCharacter: () => Readonly<ICharacterMinimalData>, globalState: AssetFrameworkGlobalStateContainer) {
-		super(characterState, getCharacter);
+	constructor(characterState: AssetFrameworkCharacterState, character: GameLogicCharacter, globalState: AssetFrameworkGlobalStateContainer) {
+		super(characterState, character);
 		this.globalState = globalState;
 	}
 
@@ -110,6 +110,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 	protected readonly logger = GetLogger('EditorCharacter');
 
 	public readonly data: ICharacterRoomData;
+	public readonly gameLogicCharacter: GameLogicCharacterClient;
 
 	constructor(editor: Editor) {
 		super();
@@ -122,6 +123,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 			position: [0, 0, 0],
 			isOnline: true,
 		};
+		this.gameLogicCharacter = new GameLogicCharacterClient(this.data, this.logger.prefixMessages('[GameLogic]'));
 	}
 
 	public isPlayer(): boolean {
@@ -131,7 +133,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 	public getAppearance(state?: AssetFrameworkCharacterState): AppearanceEditor {
 		state ??= this.editor.globalState.currentState.getCharacterState(this.id) ?? undefined;
 		Assert(state != null && state.id === this.id);
-		return new AppearanceEditor(state, () => this.data, this.editor.globalState);
+		return new AppearanceEditor(state, this.gameLogicCharacter, this.editor.globalState);
 	}
 
 	public getRestrictionManager(state: AssetFrameworkCharacterState | undefined, roomContext: ActionRoomContext | null): CharacterRestrictionsManager {

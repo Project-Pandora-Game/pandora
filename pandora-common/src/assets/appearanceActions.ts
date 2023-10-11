@@ -879,8 +879,7 @@ export function ActionAppearanceRandomize({
 		return {
 			result: 'restrictionError',
 			restriction: {
-				type: 'permission',
-				missingPermission: 'modifyBodyRoom',
+				type: 'modifyBodyRoom',
 			},
 		};
 	}

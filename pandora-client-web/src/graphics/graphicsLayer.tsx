@@ -7,9 +7,7 @@ import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks } from '../assets/assetGraphics';
-import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { ChildrenProps } from '../common/reactTypes';
-import { useObservable } from '../observable';
 import { AppearanceConditionEvaluator, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
@@ -107,7 +105,7 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	item: Item | null;
 	verticesPoseOverride?: Record<BoneName, number>;
 	state?: LayerStateOverrides;
-	getTexture?: (path: string) => Promise<Texture>;
+	getTexture?: (path: string) => Texture;
 }
 
 export const ContextCullClockwise = createContext<{
@@ -316,7 +314,7 @@ interface MaskContainerProps extends ChildrenProps {
 		indices: IArrayBuffer;
 	};
 	zIndex?: number;
-	getTexture?: (path: string) => Promise<Texture>;
+	getTexture?: (path: string) => Texture;
 }
 
 function MaskContainer({
@@ -429,12 +427,13 @@ function MaskContainerCustom({
 	getTexture,
 }: MaskContainerProps): ReactElement {
 	const app = useApp();
-	const manager = useObservable(GraphicsManagerInstance);
 
 	const maskLayer = useRef<GraphicsMaskLayer | null>(null);
 	const maskContainer = useRef<PIXI.Container | null>(null);
-	const maskImageFinal = useRef<string | null>(null);
 	const maskGeometryFinal = useRef<PIXI.Geometry | undefined | null>(null);
+
+	const maskImageTexture = useTexture(maskImage, true, getTexture);
+	const maskImageTextureSaved = useRef<PIXI.Texture | null>(null);
 
 	const update = useCallback(() => {
 		if (!maskContainer.current)
@@ -447,9 +446,12 @@ function MaskContainerCustom({
 	}, []);
 
 	useLayoutEffect(() => {
-		maskImageFinal.current = maskImage;
-		maskLayer.current?.updateContent(maskImage);
-	}, [maskImage]);
+		maskImageTextureSaved.current = maskImageTexture;
+		maskLayer.current?.updateContent(maskImageTexture);
+		return () => {
+			maskImageTextureSaved.current = null;
+		};
+	}, [maskImageTexture]);
 
 	useLayoutEffect(() => {
 		const g = maskGeometryFinal.current = maskMesh ? new PIXI.MeshGeometry(maskMesh.vertices, maskMesh.uvs, maskMesh.indices) : undefined;
@@ -463,17 +465,17 @@ function MaskContainerCustom({
 	const [maskSprite, setMaskSprite] = useState<PIXI.Sprite | null>(null);
 
 	useLayoutEffect(() => {
-		const getTextureFinal = getTexture ?? manager?.loader.getTexture.bind(manager.loader);
-		if (!getTextureFinal || !maskSprite)
+		if (!maskSprite)
 			return;
+		Assert(maskLayer.current == null);
 
-		const engine = new GraphicsMaskLayer(app.renderer, maskSprite, getTextureFinal, MASK_SIZE);
+		const engine = new GraphicsMaskLayer(app, maskSprite, MASK_SIZE);
 		maskLayer.current = engine;
 		if (maskGeometryFinal.current !== null) {
 			engine.updateGeometry(maskGeometryFinal.current);
 		}
-		if (maskImageFinal.current !== null) {
-			engine.updateContent(maskImageFinal.current);
+		if (maskImageTextureSaved.current != null) {
+			engine.updateContent(maskImageTextureSaved.current);
 		}
 		update();
 		return () => {
@@ -481,7 +483,7 @@ function MaskContainerCustom({
 			update();
 			engine.destroy();
 		};
-	}, [app.renderer, getTexture, manager, maskSprite, update]);
+	}, [app, maskSprite, update]);
 
 	const setMaskContainer = useCallback((container: PIXI.Container | null) => {
 		maskContainer.current = container;

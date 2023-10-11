@@ -318,7 +318,7 @@ const RoomDeviceGraphics = React.forwardRef(RoomDeviceGraphicsImpl);
 function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 	item: ItemRoomDevice;
 	layer: IRoomDeviceGraphicsLayerSprite;
-	getTexture?: (path: string) => Promise<PIXI.Texture>;
+	getTexture?: (path: string) => PIXI.Texture;
 }): ReactElement | null {
 
 	const image = useMemo<string>(() => {

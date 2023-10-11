@@ -1,41 +1,39 @@
-import { CharacterSize, Rectangle } from 'pandora-common';
-import { RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Graphics, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix, IRenderer } from 'pixi.js';
+import { Rectangle } from 'pandora-common';
+import { RenderTexture, Sprite, Geometry, Mesh, MeshMaterial, Texture, Filter, type IMaskTarget, type FilterSystem, type CLEAR_MODES, type ISpriteMaskTarget, Matrix, TextureMatrix, Application } from 'pixi.js';
 
 const FILTER_CONDITION = 'masky.a > 0.5 && masky.r < 0.5';
-const POLYGON_COLOR = 0xFF0000;
-const POLYGON_ALPHA = 1.0;
 
 export class GraphicsMaskLayer {
-	private readonly _renderer: IRenderer;
-	private readonly _getTexture: (image: string) => Promise<Texture>;
+	private readonly _pixiApp: Application;
 	private readonly _renderTexture: RenderTexture;
 	private _textureParent?: Sprite | MeshMaterial;
 	private _texture: Texture = Texture.EMPTY;
 	private _result?: Mesh | Sprite;
 	private _geometry?: Geometry;
-	private _lastContent?: string | [number, number][][];
 
 	public readonly maskSize: Readonly<Rectangle>;
 
 	public readonly sprite: Sprite;
 	public readonly filter: Filter;
 
-	constructor(renderer: IRenderer, maskSprite: Sprite, getTexture: (image: string) => Promise<Texture>, maskSize: Readonly<Rectangle>) {
+	constructor(pixiApp: Application, maskSprite: Sprite, maskSize: Readonly<Rectangle>) {
 		this.maskSize = maskSize;
-		this._renderer = renderer;
-		this._getTexture = getTexture;
+		this._pixiApp = pixiApp;
 		this._renderTexture = RenderTexture.create({ width: maskSize.width, height: maskSize.height });
 		this.sprite = maskSprite;
 		this.sprite.texture = this._renderTexture;
 		this.filter = new AlphaMaskFilter(this.sprite);
 	}
 
-	public render() {
-		if (this._texture === Texture.EMPTY || !this._textureParent || !this._result) {
-			return;
-		}
-		this._textureParent.texture = this._texture;
-		this._renderer.render(this._result, { renderTexture: this._renderTexture });
+	private _render() {
+		requestAnimationFrame(() => {
+			if (!this._textureParent || !this._result) {
+				return;
+			}
+			this._textureParent.texture = this._texture;
+			this._pixiApp.renderer.render(this._result, { renderTexture: this._renderTexture });
+			this._pixiApp.ticker.update();
+		});
 	}
 
 	public destroy() {
@@ -44,65 +42,32 @@ export class GraphicsMaskLayer {
 		this._renderTexture.destroy(true);
 		this._result?.destroy();
 		this._result = undefined;
-		if (this._texture instanceof RenderTexture) {
-			this._texture.destroy();
-		}
 		this._texture = Texture.EMPTY;
 	}
 
-	public updateContent(content: string | [number, number][][]): void {
-		if (this._lastContent === content) return;
-		this._lastContent = content;
-		if (typeof content === 'string') {
-			this._getTexture(content).then((texture) => {
-				if (this._texture === texture) return;
-				if (this._lastContent !== content) return;
-				if (this._texture instanceof RenderTexture) {
-					this._texture.destroy(true);
-				}
-				this._texture = texture;
-				this.render();
-			}).catch(() => {
-				this._texture = Texture.EMPTY;
-				this.render();
-			});
-		} else {
-			const g = new Graphics();
-			g.width = CharacterSize.WIDTH;
-			g.height = CharacterSize.HEIGHT;
-			for (const polygonPoints of content) {
-				g.beginFill(POLYGON_COLOR, POLYGON_ALPHA);
-				g.drawPolygon(polygonPoints.flat());
-				g.endFill();
-			}
-			let renderTexture: RenderTexture | undefined;
-			let clear = false;
-			if (this._texture instanceof RenderTexture) {
-				renderTexture = this._texture;
-			} else {
-				this._texture.destroy();
-				this._texture = renderTexture = RenderTexture.create({ width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT });
-				clear = true;
-			}
-			this._renderer.render(g, { renderTexture, clear });
-			this.render();
-		}
+	public updateContent(texture: Texture): void {
+		if (this._texture === texture) return;
+		this._texture = texture;
+		this._render();
 	}
 
 	public updateGeometry(geometry?: Geometry) {
 		if (this._geometry === geometry) {
-			this.render();
+			this._render();
 			return;
 		}
 		this._geometry = geometry;
-		this._result?.destroy();
+		this._result?.destroy({
+			texture: false,
+		});
 		if (this._geometry) {
-			this._result = new Mesh(this._geometry, this._textureParent = new MeshMaterial(this._texture));
+			this._textureParent = new MeshMaterial(this._texture);
+			this._result = new Mesh(this._geometry, this._textureParent);
 		} else {
 			this._result = this._textureParent = new Sprite(this._texture);
 		}
 		this._result.position.set(this.maskSize.x, this.maskSize.y);
-		this.render();
+		this._render();
 	}
 }
 

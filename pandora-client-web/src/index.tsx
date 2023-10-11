@@ -13,6 +13,7 @@ import './styles/globalUtils.scss';
 import { PandoraRoutes } from './routing/Routes';
 import { Dialogs } from './components/dialog/dialog';
 import { HoverElementsPortal } from './components/hoverElement/hoverElement';
+import { ConfigurePixiSettings } from './graphics/pixiSettings';
 
 const logger = GetLogger('init');
 
@@ -27,6 +28,7 @@ try {
  */
 function Start(): void {
 	SetupLogging();
+	ConfigurePixiSettings();
 	logger.info('Starting...');
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(

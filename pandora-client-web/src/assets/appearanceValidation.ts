@@ -56,12 +56,9 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 	} else if (result.result === 'restrictionError') {
 		const e = result.restriction;
 		switch (e.type) {
-			case 'permission':
-				switch (e.missingPermission) {
-					case 'modifyBodyOthers':
-						return `You cannot modify body of other characters.`;
-				}
-				break;
+			case 'missingPermission':
+				// TODO: Nicer permission description
+				return `You are missing permission ${e.permissionGroup}:${e.permissionId}`;
 			case 'blockedAddRemove':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
 			case 'blockedModule': {

@@ -4,6 +4,7 @@ import { HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
 import { RoomId } from '../chatroom';
+import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),
@@ -45,6 +46,7 @@ export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: num
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
+	interactionConfig: InteractionSystemDataSchema.optional(),
 	roomId: z.string().optional(),
 	position: CharacterRoomPositionSchema,
 });

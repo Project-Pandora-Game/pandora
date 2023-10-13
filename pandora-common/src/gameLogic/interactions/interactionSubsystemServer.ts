@@ -1,0 +1,43 @@
+import { Logger } from '../../logging';
+import { AssertNotNullable } from '../../utility';
+import { ArrayIncludesGuard } from '../../validation';
+import { GameLogicCharacter } from '../character';
+import { GameLogicPermissionServer } from '../permissions';
+import { INTERACTION_IDS, InteractionId } from './_interactionConfig';
+import { GameLogicInteractionServer } from './interaction';
+import { InteractionData, InteractionSystemData } from './interactionData';
+import { InteractionSubsystem } from './interactionSubsystem';
+
+export class InteractionSubsystemServer extends InteractionSubsystem {
+	private readonly interactions: ReadonlyMap<InteractionId, GameLogicInteractionServer>;
+
+	constructor(character: GameLogicCharacter, data: InteractionSystemData, logger: Logger) {
+		super();
+		// Load data
+		const interactions = new Map<InteractionId, GameLogicInteractionServer>();
+		for (const id of INTERACTION_IDS) {
+			let interactionData: InteractionData | undefined = data.config[id];
+			if (interactionData == null) {
+				logger.warning(`Adding missing interaction data for '${id}'`);
+				interactionData = {
+					permissionConfig: null,
+				};
+			}
+			interactions.set(id, new GameLogicInteractionServer(character, id, interactionData));
+		}
+		this.interactions = interactions;
+		// Report ignored configs
+		for (const dataId of Object.keys(data.config)) {
+			if (!ArrayIncludesGuard(INTERACTION_IDS, dataId)) {
+				logger.warning(`Ignoring unknown interaction config '${dataId}'`);
+			}
+		}
+	}
+
+	public override getInteractionPermission(permissionId: InteractionId): GameLogicPermissionServer {
+		const interaction = this.interactions.get(permissionId);
+		AssertNotNullable(interaction);
+
+		return interaction.permission;
+	}
+}

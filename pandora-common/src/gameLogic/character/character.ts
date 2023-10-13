@@ -1,9 +1,11 @@
 import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
 import { AccountId } from '../../account';
 import { TypedEventEmitter } from '../../event';
+import { InteractionSubsystem } from '../interactions/interactionSubsystem';
 import { AssetFrameworkCharacterState, CharacterAppearance } from '../../assets';
-import { Assert } from '../../utility';
+import { Assert, AssertNever } from '../../utility';
 import { ActionRoomContext } from '../../chatroom';
+import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
 
 export type GameLogicCharacterEvents = {
 	dataChanged: void;
@@ -13,6 +15,8 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 	public readonly id: CharacterId;
 	public readonly accountId: AccountId;
 	public readonly name: string;
+
+	public readonly abstract interactions: InteractionSubsystem;
 
 	constructor(minimalData: ICharacterMinimalData) {
 		super();
@@ -28,5 +32,19 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 
 	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
 		return this.getAppearance(state).getRestrictionManager(roomContext);
+	}
+
+	protected _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider {
+		switch (permissionGroup) {
+			case 'interaction':
+				return this.interactions;
+			default:
+				AssertNever(permissionGroup);
+		}
+	}
+
+	public getPermission(permissionGroup: PermissionGroup, permissionId: string): GameLogicPermission | null {
+		return this._getPermissionProvider(permissionGroup)
+			.getPermission(permissionId);
 	}
 }

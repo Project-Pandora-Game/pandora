@@ -1,5 +1,5 @@
 import { CharacterId, CharacterRestrictionsManager } from '../character';
-import { GameLogicCharacter } from '../gameLogic';
+import { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import { AppearanceActionContext } from './appearanceActions';
@@ -85,6 +85,36 @@ export class AppearanceActionProcessingContext {
 
 	public addProblem(problem: AppearanceActionProblem): void {
 		this._actionProblems.push(problem);
+	}
+
+	public addInteraction(target: GameLogicCharacter, interaction: InteractionId): void {
+		// Player doing action on themselves is not an interaction
+		if (target.id === this.player.id)
+			return;
+
+		// Check the permission for the interaction
+		this.addRequiredPermission(
+			target.interactions.getInteractionPermission(interaction),
+		);
+	}
+
+	public addRequiredPermission(permission: GameLogicPermission): void {
+		// Player has all the permissions towards themselves
+		if (permission.character.id === this.player.id)
+			return;
+
+		// Check the permission
+		if (!permission.checkPermission(this.player)) {
+			this.addProblem({
+				result: 'restrictionError',
+				restriction: {
+					type: 'missingPermission',
+					target: permission.character.id,
+					permissionGroup: permission.group,
+					permissionId: permission.id,
+				},
+			});
+		}
 	}
 
 	public invalid(invalidReason?: InvalidActionReason): AppearanceActionProcessingResultInvalid {

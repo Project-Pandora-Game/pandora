@@ -226,7 +226,7 @@ export function DoAppearanceAction(
 				return processingContext.invalid();
 			const item = assetManager.createItem(action.itemId, asset, null);
 			// Player adding the item must be able to use it
-			const r = playerRestrictionManager.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			const r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -248,7 +248,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 			// Player removing the item must be able to use it
-			const r = playerRestrictionManager.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -285,7 +285,7 @@ export function DoAppearanceAction(
 				return processingContext.invalid();
 
 			// Player removing the item must be able to use it on source
-			let r = playerRestrictionManager.canUseItemDirect(source, action.item.container, item, ItemInteractionType.ADD_REMOVE);
+			let r = playerRestrictionManager.canUseItemDirect(processingContext, source, action.item.container, item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -294,7 +294,7 @@ export function DoAppearanceAction(
 			}
 
 			// Player adding the item must be able to use it on target
-			r = playerRestrictionManager.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -317,7 +317,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 			// Player moving the item must be able to interact with the item
-			let r = playerRestrictionManager.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			let r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -334,7 +334,7 @@ export function DoAppearanceAction(
 				const newPos = currentPos + action.shift;
 
 				if (newPos >= 0 && newPos < items.length) {
-					r = playerRestrictionManager.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
+					r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
 					if (!r.allowed) {
 						processingContext.addProblem({
 							result: 'restrictionError',
@@ -355,7 +355,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 			// Player coloring the item must be able to interact with the item
-			const r = playerRestrictionManager.canUseItem(target, action.item, ItemInteractionType.STYLING);
+			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.STYLING);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -377,23 +377,20 @@ export function DoAppearanceAction(
 			});
 		}
 		// Resize body or change pose
-		case 'body':
-			if (context.player.id !== action.target) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: {
-						type: 'permission',
-						missingPermission: 'modifyBodyOthers',
-					},
-				});
-			}
-		// falls through
+		case 'body': {
+			const target = processingContext.getTarget({ type: 'character', characterId: action.target });
+			if (!target || target.type !== 'character')
+				return processingContext.invalid();
+			processingContext.addInteraction(target.character, 'modifyBody');
+
+			// falls through
+		}
 		case 'pose': {
 			const target = processingContext.getTarget({ type: 'character', characterId: action.target });
 			if (!target)
 				return processingContext.invalid();
 
-			const r = playerRestrictionManager.canInteractWithTarget(target);
+			const r = playerRestrictionManager.canInteractWithTarget(processingContext, target);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -415,7 +412,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 
-			const r = playerRestrictionManager.canInteractWithTarget(target);
+			const r = playerRestrictionManager.canInteractWithTarget(processingContext, target);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -483,7 +480,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 			// Player deploying the device must be able to interact with it
-			const r = playerRestrictionManager.canUseItem(target, action.item, ItemInteractionType.MODIFY);
+			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.MODIFY);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -703,7 +700,7 @@ export function ActionModuleAction({
 	if (!target)
 		return processingContext.invalid();
 	// Player doing the action must be able to interact with the item
-	const r = playerRestrictionManager.canUseItemModule(target, action.item, action.module);
+	const r = playerRestrictionManager.canUseItemModule(processingContext, target, action.item, action.module);
 	if (!r.allowed) {
 		processingContext.addProblem({
 			result: 'restrictionError',
@@ -782,7 +779,7 @@ export function ActionAppearanceRandomize({
 			// Ignore bodyparts if we are not changing those
 			if (kind === 'items' && i.isType('personal') && i.asset.definition.bodypart != null)
 				return { allowed: true };
-			return character.canUseItemDirect(character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
+			return character.canUseItemDirect(processingContext, character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
 		})
 		.find((res) => !res.allowed);
 	if (restriction != null && !restriction.allowed) {
@@ -969,7 +966,7 @@ export function ActionRoomDeviceEnter({
 		return processingContext.invalid();
 
 	// Player must be able to interact with the device
-	let r = playerRestrictionManager.canUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	let r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.item.container, item, ItemInteractionType.MODIFY);
 	if (!r.allowed) {
 		processingContext.addProblem({
 			result: 'restrictionError',
@@ -989,7 +986,7 @@ export function ActionRoomDeviceEnter({
 			slot: action.slot,
 		});
 	// Player adding the item must be able to use it
-	r = playerRestrictionManager.canUseItemDirect(targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
+	r = playerRestrictionManager.canUseItemDirect(processingContext, targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
 	if (!r.allowed) {
 		processingContext.addProblem({
 			result: 'restrictionError',
@@ -1060,7 +1057,7 @@ export function ActionRoomDeviceLeave({
 		return processingContext.invalid();
 
 	// Player must be able to interact with the device
-	let r = playerRestrictionManager.canUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	let r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.item.container, item, ItemInteractionType.MODIFY);
 	if (!r.allowed) {
 		processingContext.addProblem({
 			result: 'restrictionError',
@@ -1092,7 +1089,7 @@ export function ActionRoomDeviceLeave({
 		if (wearablePart != null) {
 
 			// Player must be able to remove the item
-			r = playerRestrictionManager.canUseItem(targetCharacter, {
+			r = playerRestrictionManager.canUseItem(processingContext, targetCharacter, {
 				container: [],
 				itemId: wearablePart.id,
 			}, ItemInteractionType.ADD_REMOVE);

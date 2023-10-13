@@ -6,10 +6,12 @@ import { ActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item, RoomDeviceLink } from '../assets/item';
-import type { Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
+import type { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
 import { AppearanceGetBlockedSlot, AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
+import { PermissionGroup } from '../gameLogic';
+import { CharacterId } from './characterTypes';
 
 export enum ItemInteractionType {
 	/**
@@ -72,9 +74,10 @@ export enum ItemInteractionType {
 
 export type Restriction =
 	| {
-		type: 'permission';
-		missingPermission:
-		| 'modifyBodyOthers';
+		type: 'missingPermission';
+		target: CharacterId;
+		permissionGroup: PermissionGroup;
+		permissionId: string;
 	}
 	| {
 		type: 'blockedAddRemove';
@@ -212,7 +215,7 @@ export class CharacterRestrictionsManager {
 		return this.appearance.getSafemode() != null;
 	}
 
-	public canInteractWithTarget(target: RoomActionTarget): RestrictionResult {
+	public canInteractWithTarget(context: AppearanceActionProcessingContext, target: RoomActionTarget): RestrictionResult {
 		// Room inventory can always be interacted with
 		if (target.type === 'roomInventory')
 			return { allowed: true };
@@ -224,7 +227,8 @@ export class CharacterRestrictionsManager {
 
 			const targetCharacter = target.getRestrictionManager(this.room);
 
-			// TODO: For other permissions
+			// Mark as interaction
+			context.addInteraction(target.character, 'interact');
 
 			// Safemode checks
 			if (this.isInSafemode() || targetCharacter.isInSafemode())
@@ -239,9 +243,9 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public canUseAsset(target: RoomActionTarget, _asset: Asset): RestrictionResult {
+	public canUseAsset(context: AppearanceActionProcessingContext, target: RoomActionTarget, _asset: Asset): RestrictionResult {
 		// Must be able to interact with character
-		const r = this.canInteractWithTarget(target);
+		const r = this.canInteractWithTarget(context, target);
 		if (!r.allowed)
 			return r;
 
@@ -252,14 +256,14 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public hasPermissionForItemContents(target: RoomActionTarget, item: Item): RestrictionResult {
+	public hasPermissionForItemContents(context: AppearanceActionProcessingContext, target: RoomActionTarget, item: Item): RestrictionResult {
 		// Iterate over whole content
 		for (const module of item.modules.keys()) {
 			for (const innerItem of item.getModuleItems(module)) {
-				let r = this.canUseItemDirect(target, [], innerItem, ItemInteractionType.ACCESS_ONLY);
+				let r = this.canUseItemDirect(context, target, [], innerItem, ItemInteractionType.ACCESS_ONLY);
 				if (!r.allowed)
 					return r;
-				r = this.hasPermissionForItemContents(target, innerItem);
+				r = this.hasPermissionForItemContents(context, target, innerItem);
 				if (!r.allowed)
 					return r;
 			}
@@ -274,7 +278,7 @@ export class CharacterRestrictionsManager {
 	 * @param interaction - What kind of interaction to check against
 	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
 	 */
-	public canUseItem(target: RoomActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
+	public canUseItem(context: AppearanceActionProcessingContext, target: RoomActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
 		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
@@ -285,7 +289,7 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
-		return this.canUseItemDirect(target, itemPath.container, item, interaction, insertBeforeRootItem);
+		return this.canUseItemDirect(context, target, itemPath.container, item, interaction, insertBeforeRootItem);
 	}
 
 	/**
@@ -296,7 +300,7 @@ export class CharacterRestrictionsManager {
 	 * @param interaction - What kind of interaction to check against
 	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
 	 */
-	public canUseItemDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
+	public canUseItemDirect(context: AppearanceActionProcessingContext, target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
 		// Must validate insertBeforeRootItem, if present
 		if (insertBeforeRootItem && target.getItem({ container: [], itemId: insertBeforeRootItem }) == null)
 			return {
@@ -307,7 +311,7 @@ export class CharacterRestrictionsManager {
 			};
 
 		// Must be able to use item's asset
-		let r = this.canUseAsset(target, item.asset);
+		let r = this.canUseAsset(context, target, item.asset);
 		if (!r.allowed)
 			return r;
 
@@ -331,6 +335,7 @@ export class CharacterRestrictionsManager {
 			isPhysicallyEquipped = containingModule.contentsPhysicallyEquipped;
 
 			r = this.canUseItemModule(
+				context,
 				target,
 				upperPath.itemPath,
 				upperPath.module,
@@ -369,15 +374,8 @@ export class CharacterRestrictionsManager {
 				};
 			}
 
-			// Bodyparts can only be changed on self
-			if (target.character.id !== this.character.id)
-				return {
-					allowed: false,
-					restriction: {
-						type: 'permission',
-						missingPermission: 'modifyBodyOthers',
-					},
-				};
+			// Bodyparts have special interaction type
+			context.addInteraction(target.character, 'modifyBody');
 
 			return { allowed: true };
 		}
@@ -393,7 +391,7 @@ export class CharacterRestrictionsManager {
 
 		// To add or remove the item, we need to have access to all contained items
 		if (interaction === ItemInteractionType.ADD_REMOVE) {
-			r = this.hasPermissionForItemContents(target, item);
+			r = this.hasPermissionForItemContents(context, target, item);
 			if (!r.allowed)
 				return r;
 		}
@@ -455,7 +453,7 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public canUseItemModule(target: RoomActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
+	public canUseItemModule(context: AppearanceActionProcessingContext, target: RoomActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
@@ -466,10 +464,10 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
-		return this.canUseItemModuleDirect(target, itemPath.container, item, moduleName, interaction);
+		return this.canUseItemModuleDirect(context, target, itemPath.container, item, moduleName, interaction);
 	}
 
-	public canUseItemModuleDirect(target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
+	public canUseItemModuleDirect(context: AppearanceActionProcessingContext, target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		// The module must exist
 		const module = item.modules.get(moduleName);
 		if (!module)
@@ -486,7 +484,7 @@ export class CharacterRestrictionsManager {
 		interaction ??= module.interactionType;
 
 		// Must be able to interact with this item in that way
-		const r = this.canUseItemDirect(target, container, item, interaction);
+		const r = this.canUseItemDirect(context, target, container, item, interaction);
 		if (!r.allowed)
 			return r;
 

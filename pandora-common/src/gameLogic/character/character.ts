@@ -3,7 +3,7 @@ import { AccountId } from '../../account';
 import { TypedEventEmitter } from '../../event';
 import { InteractionSubsystem } from '../interactions/interactionSubsystem';
 import { AssetFrameworkCharacterState, CharacterAppearance } from '../../assets';
-import { Assert, AssertNever } from '../../utility';
+import { Assert } from '../../utility';
 import { ActionRoomContext } from '../../chatroom';
 import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
 
@@ -34,17 +34,6 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 		return this.getAppearance(state).getRestrictionManager(roomContext);
 	}
 
-	protected _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider {
-		switch (permissionGroup) {
-			case 'interaction':
-				return this.interactions;
-			default:
-				AssertNever(permissionGroup);
-		}
-	}
-
-	public getPermission(permissionGroup: PermissionGroup, permissionId: string): GameLogicPermission | null {
-		return this._getPermissionProvider(permissionGroup)
-			.getPermission(permissionId);
-	}
+	protected abstract _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider;
+	public abstract getPermission(permissionGroup: PermissionGroup, permissionId: string): GameLogicPermission | null;
 }

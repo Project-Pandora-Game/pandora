@@ -8,19 +8,26 @@ export type GameLogicPermissionEvents = {
 };
 
 export abstract class GameLogicPermission extends TypedEventEmitter<GameLogicPermissionEvents> {
-	public readonly group: PermissionGroup;
-	public readonly id: string;
-	public readonly displayName: string;
-	public readonly defaultConfig: Immutable<PermissionConfigDefault>;
+	public readonly setup: Immutable<PermissionSetup>;
+
+	public get group(): PermissionGroup {
+		return this.setup.group;
+	}
+	public get id(): string {
+		return this.setup.id;
+	}
+	public get displayName(): string {
+		return this.setup.displayName;
+	}
+	public get defaultConfig(): Immutable<PermissionConfigDefault> {
+		return this.setup.defaultConfig;
+	}
 
 	public readonly character: GameLogicCharacter;
 
 	constructor(character: GameLogicCharacter, setup: Immutable<PermissionSetup>) {
 		super();
-		this.group = setup.group;
-		this.id = setup.id;
-		this.displayName = setup.displayName;
-		this.defaultConfig = setup.defaultConfig;
+		this.setup = Object.freeze(setup);
 		this.character = character;
 	}
 
@@ -33,6 +40,6 @@ export function MakePermissionConfigFromDefault(defaultConfig: PermissionConfigD
 	};
 }
 
-export interface IPermissionProvider {
-	getPermission(permissionId: string): GameLogicPermission | null;
+export interface IPermissionProvider<PermissionClass extends GameLogicPermission = GameLogicPermission> {
+	getPermission(permissionId: string): PermissionClass | null;
 }

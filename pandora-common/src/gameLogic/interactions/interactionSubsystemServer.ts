@@ -2,13 +2,13 @@ import { Logger } from '../../logging';
 import { AssertNotNullable } from '../../utility';
 import { ArrayIncludesGuard } from '../../validation';
 import { GameLogicCharacter } from '../character';
-import { GameLogicPermissionServer } from '../permissions';
+import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
 import { INTERACTION_IDS, InteractionId } from './_interactionConfig';
 import { GameLogicInteractionServer } from './interaction';
 import { InteractionData, InteractionSystemData } from './interactionData';
 import { InteractionSubsystem } from './interactionSubsystem';
 
-export class InteractionSubsystemServer extends InteractionSubsystem {
+export class InteractionSubsystemServer extends InteractionSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
 	private readonly interactions: ReadonlyMap<InteractionId, GameLogicInteractionServer>;
 
 	constructor(character: GameLogicCharacter, data: InteractionSystemData, logger: Logger) {
@@ -58,5 +58,13 @@ export class InteractionSubsystemServer extends InteractionSubsystem {
 		AssertNotNullable(interaction);
 
 		return interaction.permission;
+	}
+
+	public override getPermission(permissionId: string): GameLogicPermissionServer | null {
+		if (!ArrayIncludesGuard(INTERACTION_IDS, permissionId)) {
+			return null;
+		}
+
+		return this.getInteractionPermission(permissionId);
 	}
 }

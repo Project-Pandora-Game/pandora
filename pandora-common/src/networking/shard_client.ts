@@ -35,6 +35,8 @@ export type IChatRoomUpdate = {
 	characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
 };
 
+export type IShardClientChangeEvents = 'permissions';
+
 /** Shard->Client messages */
 export const ShardClientSchema = {
 	load: {
@@ -73,6 +75,12 @@ export const ShardClientSchema = {
 		request: ZodCast<{
 			id: CharacterId;
 			status: IChatRoomStatus;
+		}>(),
+		response: null,
+	},
+	somethingChanged: {
+		request: ZodCast<{
+			changes: IShardClientChangeEvents[];
 		}>(),
 		response: null,
 	},

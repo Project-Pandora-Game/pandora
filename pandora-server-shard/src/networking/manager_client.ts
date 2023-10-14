@@ -45,6 +45,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 			gamblingAction: this.handleGamblingAction.bind(this),
+			permissionGet: this.handlePermissionGet.bind(this),
+			permissionSet: this.handlePermissionSet.bind(this),
 		});
 	}
 
@@ -227,6 +229,41 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			default:
 				AssertNever(game);
 		}
+	}
+
+	private handlePermissionGet({ permissionGroup, permissionId }: IClientShardArgument['permissionGet'], client: ClientConnection): IClientShardNormalResult['permissionGet'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		const permission = client.character.gameLogicCharacter.getPermission(permissionGroup, permissionId);
+		if (permission == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		return {
+			result: 'ok',
+			permissionSetup: permission.setup,
+			permissionConfig: permission.getConfig(),
+		};
+	}
+
+	private handlePermissionSet({ permissionGroup, permissionId, config }: IClientShardArgument['permissionSet'], client: ClientConnection): IClientShardNormalResult['permissionSet'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		const permission = client.character.gameLogicCharacter.getPermission(permissionGroup, permissionId);
+		if (permission == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		permission.setConfig(config);
+		return {
+			result: 'ok',
+		};
 	}
 
 	public onAssetDefinitionsChanged(): void {

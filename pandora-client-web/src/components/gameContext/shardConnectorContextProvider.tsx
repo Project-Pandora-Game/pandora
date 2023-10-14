@@ -1,4 +1,4 @@
-import { AppearanceAction, GetLogger, IClientShardNormalResult, IDirectoryCharacterConnectionInfo } from 'pandora-common';
+import { AppearanceAction, GetLogger, IClientShardNormalResult, IDirectoryCharacterConnectionInfo, IShardClientChangeEvents } from 'pandora-common';
 import React, {
 	createContext,
 	Dispatch,
@@ -8,6 +8,7 @@ import React, {
 	useContext,
 	useEffect,
 	useMemo,
+	useRef,
 	useState,
 } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
@@ -20,6 +21,7 @@ import { useDebugContext } from '../error/debugContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
 import { NotificationSource, useNotification } from './notificationContextProvider';
 import { useAsyncEvent } from '../../common/useEvent';
+import { noop } from 'lodash';
 
 export interface ShardConnectorContextData {
 	shardConnector: ShardConnector | null;
@@ -121,6 +123,28 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 
 export function useShardConnector(): ShardConnector | null {
 	return useContext(shardConnectorContext).shardConnector;
+}
+
+export function useShardChangeListener(
+	event: IShardClientChangeEvents,
+	callback: () => void,
+	runImmediate = true,
+): void {
+	const shardConnector = useShardConnector();
+	const callbackRef = useRef<() => void>(noop);
+
+	useEffect(() => {
+		callbackRef.current = callback;
+	}, [callback, callbackRef]);
+
+	useEffect(() => {
+		if (runImmediate) {
+			callbackRef.current();
+		}
+		if (shardConnector == null)
+			return undefined;
+		return shardConnector.changeEventEmitter.on(event, () => callbackRef.current());
+	}, [shardConnector, event, callbackRef, runImmediate]);
 }
 
 export function useAppearanceActionEvent(action: AppearanceAction, handler: (result: IClientShardNormalResult['appearanceAction'] | null) => void = () => { /** ignore */ }) {

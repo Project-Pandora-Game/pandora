@@ -6,7 +6,9 @@ import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
 import { z } from 'zod';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
-import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import { Immutable } from 'immer';
+import { PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema } from '../gameLogic';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/appearance';
@@ -76,7 +78,38 @@ export const ClientShardSchema = {
 		]),
 		response: null,
 	},
-} as const;
+	permissionGet: {
+		request: z.object({
+			permissionGroup: PermissionGroupSchema,
+			permissionId: z.string(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				permissionSetup: PermissionSetupSchema.readonly(),
+				permissionConfig: PermissionConfigSchema.nullable(),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+	permissionSet: {
+		request: z.object({
+			permissionGroup: PermissionGroupSchema,
+			permissionId: z.string(),
+			config: PermissionConfigSchema.nullable(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
+} as const satisfies Immutable<SocketInterfaceDefinition>;
 
 export type IClientShard = Satisfies<typeof ClientShardSchema, SocketInterfaceDefinitionVerified<typeof ClientShardSchema>>;
 export type IClientShardArgument = SocketInterfaceRequest<IClientShard>;

@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -181,6 +181,7 @@ export class Character {
 		this.gameLogicCharacter.on('dataChanged', (type) => {
 			if (type === 'interactions') {
 				this.setValue('interactionConfig', this.gameLogicCharacter.interactions.getData(), false);
+				this._emitSomethingChanged('permissions');
 			} else {
 				AssertNever(type);
 			}
@@ -488,6 +489,18 @@ export class Character {
 			});
 		} else {
 			this.connection?.sendMessage('updateCharacter', { [key]: value });
+		}
+	}
+
+	private _emitSomethingChanged(...changes: IShardClientChangeEvents[]): void {
+		if (this.room != null) {
+			this.room.sendMessage('somethingChanged', {
+				changes,
+			});
+		} else {
+			this.connection?.sendMessage('somethingChanged', {
+				changes,
+			});
 		}
 	}
 

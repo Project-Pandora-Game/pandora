@@ -1,8 +1,18 @@
+import { TypedEventEmitter } from '../../event';
 import { ArrayIncludesGuard } from '../../validation';
 import { GameLogicPermission, IPermissionProvider } from '../permissions';
 import { INTERACTION_IDS, InteractionId } from './_interactionConfig';
 
-export abstract class InteractionSubsystem implements IPermissionProvider {
+export type InteractionSubsystemEvents = {
+	dataChanged: void;
+};
+
+export abstract class InteractionSubsystem extends TypedEventEmitter<InteractionSubsystemEvents> implements IPermissionProvider {
+
+	constructor() {
+		super();
+	}
+
 	public abstract getInteractionPermission(interaction: InteractionId): GameLogicPermission;
 
 	public getPermission(permissionId: string): GameLogicPermission | null {

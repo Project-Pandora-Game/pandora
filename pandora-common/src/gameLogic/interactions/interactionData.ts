@@ -1,16 +1,16 @@
 import { z } from 'zod';
 import { PermissionConfigSchema } from '../permissions';
 
-export const InteractionGenericIdScheme = z.string();
-export type InteractionGenericId = z.infer<typeof InteractionGenericIdScheme>;
+export const InteractionGenericIdSchema = z.string();
+export type InteractionGenericId = z.infer<typeof InteractionGenericIdSchema>;
 
-export const InteractionDataScheme = z.object({
-	permissionConfig: PermissionConfigSchema.nullable(),
+export const InteractionDataSchema = z.object({
+	permissionConfig: PermissionConfigSchema.nullable().catch(null),
 });
-export type InteractionData = z.infer<typeof InteractionDataScheme>;
+export type InteractionData = z.infer<typeof InteractionDataSchema>;
 
 export const InteractionSystemDataSchema = z.object({
-	config: z.record(InteractionGenericIdScheme, InteractionDataScheme),
+	config: z.record(InteractionGenericIdSchema, InteractionDataSchema),
 });
 export type InteractionSystemData = z.infer<typeof InteractionSystemDataSchema>;
 

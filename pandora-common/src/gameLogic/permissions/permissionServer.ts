@@ -40,6 +40,6 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 
 	public setConfig(newConfig: PermissionConfig | null): void {
 		this._config = cloneDeep(newConfig);
-		this.emit('configChanged', true);
+		this.emit('configChanged', undefined);
 	}
 }

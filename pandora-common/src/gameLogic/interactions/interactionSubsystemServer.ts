@@ -32,6 +32,25 @@ export class InteractionSubsystemServer extends InteractionSubsystem {
 				logger.warning(`Ignoring unknown interaction config '${dataId}'`);
 			}
 		}
+
+		// Link up events
+		for (const interaction of this.interactions.values()) {
+			interaction.on('configChanged', () => {
+				this.emit('dataChanged', undefined);
+			});
+		}
+	}
+
+	public getData(): InteractionSystemData {
+		const data: InteractionSystemData = {
+			config: {},
+		};
+
+		for (const [id, interaction] of this.interactions.entries()) {
+			data.config[id] = interaction.getConfig();
+		}
+
+		return data;
 	}
 
 	public override getInteractionPermission(permissionId: InteractionId): GameLogicPermissionServer {

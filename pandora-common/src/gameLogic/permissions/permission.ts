@@ -4,7 +4,7 @@ import { GameLogicCharacter } from '../character/character';
 import { PermissionConfig, PermissionConfigDefault, PermissionGroup, PermissionSetup } from './permissionData';
 
 export type GameLogicPermissionEvents = {
-	configChanged: true;
+	configChanged: void;
 };
 
 export abstract class GameLogicPermission extends TypedEventEmitter<GameLogicPermissionEvents> {

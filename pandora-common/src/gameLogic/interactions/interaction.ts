@@ -6,7 +6,7 @@ import { INTERACTION_CONFIG, InteractionId } from './_interactionConfig';
 import { InteractionData } from './interactionData';
 
 export type GameLogicInteractionEvents = {
-	configChanged: true;
+	configChanged: void;
 };
 
 export abstract class GameLogicInteraction extends TypedEventEmitter<GameLogicInteractionEvents> {
@@ -46,5 +46,15 @@ export class GameLogicInteractionServer extends GameLogicInteraction {
 			displayName: `Interaction: ${config.visibleName}`,
 			defaultConfig: config.defaultPermissions,
 		}, data.permissionConfig);
+
+		this.permission.on('configChanged', () => {
+			this.emit('configChanged', undefined);
+		});
+	}
+
+	public getConfig(): InteractionData {
+		return {
+			permissionConfig: this.permission.getConfig(),
+		};
 	}
 }

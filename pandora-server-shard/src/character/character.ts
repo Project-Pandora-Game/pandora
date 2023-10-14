@@ -177,6 +177,15 @@ export class Character {
 			}
 		}
 
+		// Link events from game logic parts
+		this.gameLogicCharacter.on('dataChanged', (type) => {
+			if (type === 'interactions') {
+				this.setValue('interactionConfig', this.gameLogicCharacter.interactions.getData(), false);
+			} else {
+				AssertNever(type);
+			}
+		});
+
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
 

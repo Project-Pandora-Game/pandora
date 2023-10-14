@@ -8,7 +8,7 @@ import { ActionRoomContext } from '../../chatroom';
 import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
 
 export type GameLogicCharacterEvents = {
-	dataChanged: void;
+	dataChanged: 'interactions';
 };
 
 export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicCharacterEvents> {

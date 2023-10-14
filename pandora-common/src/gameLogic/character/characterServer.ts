@@ -14,5 +14,9 @@ export class GameLogicCharacterServer extends GameLogicCharacter {
 			data.interactionConfig ?? MakeDefaultInteractionSystemData(),
 			logger.prefixMessages('[InteractionSubsystem]'),
 		);
+
+		this.interactions.on('dataChanged', () => {
+			this.emit('dataChanged', 'interactions');
+		});
 	}
 }

@@ -78,6 +78,7 @@ export type Restriction =
 		target: CharacterId;
 		permissionGroup: PermissionGroup;
 		permissionId: string;
+		permissionDescription: string;
 	}
 	| {
 		type: 'blockedAddRemove';

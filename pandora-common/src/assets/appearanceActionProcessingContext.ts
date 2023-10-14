@@ -1,3 +1,4 @@
+import { isEqual } from 'lodash';
 import { CharacterId, CharacterRestrictionsManager } from '../character';
 import { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
@@ -84,6 +85,10 @@ export class AppearanceActionProcessingContext {
 	}
 
 	public addProblem(problem: AppearanceActionProblem): void {
+		// Avoid adding duplicate problems
+		if (this._actionProblems.some((existingProblem) => isEqual(existingProblem, problem)))
+			return;
+
 		this._actionProblems.push(problem);
 	}
 
@@ -112,6 +117,7 @@ export class AppearanceActionProcessingContext {
 					target: permission.character.id,
 					permissionGroup: permission.group,
 					permissionId: permission.id,
+					permissionDescription: permission.displayName,
 				},
 			});
 		}

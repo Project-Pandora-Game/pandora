@@ -57,8 +57,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 		const e = result.restriction;
 		switch (e.type) {
 			case 'missingPermission':
-				// TODO: Nicer permission description
-				return `You are missing permission ${e.permissionGroup}:${e.permissionId}`;
+				return `You are missing permission to:\n${e.permissionDescription}`;
 			case 'blockedAddRemove':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
 			case 'blockedModule': {

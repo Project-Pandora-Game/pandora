@@ -27,7 +27,7 @@ export class GameLogicInteractionClient extends GameLogicInteraction {
 		this.permission = new GameLogicPermissionClient(character, {
 			group: 'interaction',
 			id,
-			displayName: `Interaction: ${config.visibleName}`,
+			displayName: `${config.visibleName}`,
 			defaultConfig: config.defaultPermissions,
 		});
 	}
@@ -43,7 +43,7 @@ export class GameLogicInteractionServer extends GameLogicInteraction {
 		this.permission = new GameLogicPermissionServer(character, {
 			group: 'interaction',
 			id,
-			displayName: `Interaction: ${config.visibleName}`,
+			displayName: `${config.visibleName}`,
 			defaultConfig: config.defaultPermissions,
 		}, data.permissionConfig);
 

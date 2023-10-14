@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { CharacterSettings } from './characterSettings';
 import { GraphicsSettings } from '../../graphics/graphicsSettings';
 import { InterfaceSettings } from './interfaceSettings';
+import { PermissionsSettings } from './permissionsSettings';
 
 export function Settings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -15,10 +16,10 @@ export function Settings(): ReactElement | null {
 		<>
 			<div className='settings'>
 				<TabContainer className='flex-1'>
-					<Tab name='Account'>
+					<Tab name='Permissions'>
 						<div className='settings-tab'>
 							<div className='settings-tab-contents'>
-								<AccountSettings />
+								<PermissionsSettings />
 							</div>
 						</div>
 					</Tab>
@@ -26,6 +27,13 @@ export function Settings(): ReactElement | null {
 						<div className='settings-tab'>
 							<div className='settings-tab-contents'>
 								<CharacterSettings />
+							</div>
+						</div>
+					</Tab>
+					<Tab name='Account'>
+						<div className='settings-tab'>
+							<div className='settings-tab-contents'>
+								<AccountSettings />
 							</div>
 						</div>
 					</Tab>

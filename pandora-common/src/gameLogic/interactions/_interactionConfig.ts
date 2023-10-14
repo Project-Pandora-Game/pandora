@@ -7,13 +7,13 @@ import { ParseArrayNotEmpty } from '../../utility';
 
 export const INTERACTION_CONFIG = {
 	interact: {
-		visibleName: 'Any interaction',
+		visibleName: 'Interact with this character',
 		defaultPermissions: {
 			allowOthers: true,
 		},
 	},
 	modifyBody: {
-		visibleName: 'Modify Character\'s body',
+		visibleName: `Modify this character's body`,
 		defaultPermissions: {
 			allowOthers: false,
 		},

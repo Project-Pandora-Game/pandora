@@ -457,6 +457,7 @@ function MaskContainerCustom({
 		const g = maskGeometryFinal.current = maskMesh ? new PIXI.MeshGeometry(maskMesh.vertices, maskMesh.uvs, maskMesh.indices) : undefined;
 		maskLayer.current?.updateGeometry(g);
 		return () => {
+			maskLayer.current?.updateGeometry(undefined);
 			maskGeometryFinal.current?.destroy();
 			maskGeometryFinal.current = null;
 		};

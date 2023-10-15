@@ -27,7 +27,7 @@ export function WardrobeExpressionGui({ characterState }: {
 							Array.from(item.modules.entries())
 								.filter((m) => m[1].config.expression)
 								.map(([moduleName, m]) => (
-									<FieldsetToggle legend={ m.config.expression } key={ moduleName }>
+									<FieldsetToggle legend={ m.config.expression } key={ `${item.id}:${moduleName}` }>
 										<WardrobeModuleConfig
 											item={ { container: [], itemId: item.id } }
 											moduleName={ moduleName }

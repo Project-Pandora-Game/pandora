@@ -4,8 +4,14 @@ import { WikiContent } from '../wiki';
 import maid from '../../../assets/maid.png';
 import { useHelpUserName } from '../../help/helpUtils';
 import { ExternalLink } from '../../common/link/externalLink';
+import { Button } from '../../common/button/button';
+import { usePlayer } from '../../gameContext/playerContextProvider';
+import { useNavigate } from 'react-router';
 
 export function WikiGreeting(): ReactElement {
+	const characterSelected = usePlayer() != null;
+	const navigate = useNavigate();
+
 	return (
 		<Row className='fill-y'>
 			<Row alignX='center' className='maid-container'>
@@ -32,7 +38,7 @@ export function WikiGreeting(): ReactElement {
 					<br />
 					Second important mechanism is for when communication fails or others don't respect your safeword - for such a case there is a safemode feature,
 					which you can find in the top left by clicking the name of your character.
-					Do note, however, that we consider safemode as an last-resort option for emergencies and there are small drawbacks to using it,
+					Do note, however, that we consider safemode as a last-resort option for emergencies and there are small drawbacks to using it,
 					most notably while other characters cannot interact with your character while in safemode, you also cannot interact with them.
 					It also comes with a cooldown period that simulates stopping the play after a safeword usage to recover and be safe.
 					This is explained further in the safemode menu.<br />
@@ -46,8 +52,16 @@ export function WikiGreeting(): ReactElement {
 					<br />
 					You can find more guidance by pressing the (?) button on the top bar.<br />
 					<br />
-					The club is still being renovated so you can expect many new things over time or even help us. Please enjoy!~ ”
+					The club is still being renovated so you can expect many new things over time or even help us. Please have a joyful stay~ ”
 				</p>
+
+				{
+					characterSelected ? null : (
+						<Row alignX='center'>
+							<Button onClick={ () => navigate('/') }>Get started</Button>
+						</Row>
+					)
+				}
 			</WikiContent>
 		</Row>
 	);

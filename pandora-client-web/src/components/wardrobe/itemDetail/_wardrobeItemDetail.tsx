@@ -141,6 +141,7 @@ export function WardrobeItemConfigMenu({
 							</FieldsetToggle>
 						))
 				}
+				<span>Asset developer: TODO</span>
 			</Column>
 		</div>
 	);

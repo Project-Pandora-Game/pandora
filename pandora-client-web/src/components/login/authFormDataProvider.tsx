@@ -8,8 +8,6 @@ export interface AuthFormDataState {
 	username?: string;
 	password?: string;
 	justRegistered?: boolean;
-	redirectPath?: string;
-	redirectState?: unknown;
 }
 
 export interface AuthFormData {

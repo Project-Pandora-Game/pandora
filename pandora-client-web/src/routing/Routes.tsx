@@ -1,4 +1,4 @@
-import { IsAuthorized } from 'pandora-common';
+import { IsAuthorized, IsObject } from 'pandora-common';
 import React, { ComponentType, ReactElement, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
@@ -90,15 +90,31 @@ function useLoggedInCheck(preserveLocation = true): void {
 
 function AuthPageFallback({ component }: { component: ComponentType<Record<string, never>>; }): ReactElement {
 	const isLoggedIn = useCurrentAccount() != null;
-	const navigate = useNavigate();
+	const state: unknown = useLocation().state;
 
-	useEffect(() => {
-		if (isLoggedIn) {
-			navigate('/');
-		}
-	}, [isLoggedIn, navigate]);
+	if (isLoggedIn) {
+		const { path: redirectPath, state: redirectState } = GetDefaultNavigation(state);
+		return <Navigate to={ redirectPath } state={ redirectState } />;
+	}
 
 	return <AuthPage component={ component } />;
+}
+
+function GetDefaultNavigation(state?: unknown): {
+	path: string;
+	state: unknown;
+} {
+	if (IsObject(state) && typeof state.redirectPath === 'string') {
+		return {
+			path: state.redirectPath,
+			state: state.redirectState,
+		};
+	}
+
+	return {
+		path: '/',
+		state: undefined,
+	};
 }
 
 const Management = lazy(() => import('../components/management'));

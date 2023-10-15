@@ -26,14 +26,11 @@ export class GraphicsMaskLayer {
 	}
 
 	private _render() {
-		requestAnimationFrame(() => {
-			if (!this._textureParent || !this._result) {
-				return;
-			}
-			this._textureParent.texture = this._texture;
-			this._pixiApp.renderer.render(this._result, { renderTexture: this._renderTexture });
-			this._pixiApp.ticker.update();
-		});
+		if (!this._textureParent || !this._result) {
+			return;
+		}
+		this._textureParent.texture = this._texture;
+		this._pixiApp.renderer.render(this._result, { renderTexture: this._renderTexture });
 	}
 
 	public destroy() {

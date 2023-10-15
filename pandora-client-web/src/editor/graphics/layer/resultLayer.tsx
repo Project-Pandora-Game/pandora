@@ -1,4 +1,3 @@
-import { Texture } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import { EditorLayer, EDITOR_LAYER_Z_INDEX_EXTRA } from './editorLayer';
 import dotTexture from '../../../assets/editor/dotTexture.png';
@@ -8,6 +7,7 @@ import { useEditor } from '../../editorContextProvider';
 import { useObservable } from '../../../observable';
 import { Container, Graphics, Sprite } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
+import { useTexture } from '../../../graphics/useTexture';
 
 export function ResultLayer({
 	layer,
@@ -34,7 +34,7 @@ export function ResultLayer({
 		}
 	}, [triangles, vertices]);
 
-	const pointTexture = Texture.from(dotTexture);
+	const pointTexture = useTexture(dotTexture);
 	const displayPoints = useMemo<readonly [number, number][]>(() => {
 		const res: [number, number][] = [];
 		for (let i = 0; i < vertices.length; i += 2) {

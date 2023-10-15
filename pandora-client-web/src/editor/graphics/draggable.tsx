@@ -14,6 +14,7 @@ import { Observable, ReadonlyObservable, useObservable } from '../../observable'
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { Draft, Immutable } from 'immer';
 import { EditorCharacter } from './character/appearanceEditor';
+import { useTexture } from '../../graphics/useTexture';
 
 type DraggableProps = {
 	x: number;
@@ -90,6 +91,7 @@ export function DraggablePointDisplay({
 	const editor = useEditor();
 	const selectedPoint = useObservable(editor.targetPoint);
 	const { pos, isMirror } = useDraggablePointDefinition(draggablePoint);
+	const pointTexture = useTexture(dotTexture);
 	const isSelected = draggablePoint === selectedPoint;
 
 	return (
@@ -110,7 +112,7 @@ export function DraggablePointDisplay({
 				editor.targetPoint.value = draggablePoint;
 				return false;
 			} }
-			createTexture={ () => Texture.from(dotTexture) }
+			createTexture={ () => pointTexture }
 			setPos={ (x, y) => draggablePoint.setPos(x, y) }
 		/>
 	);
@@ -244,6 +246,7 @@ export function DraggableBone({
 	type: 'setup' | 'result';
 }): ReactElement {
 	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const pointTexture = useTexture(dotTexture);
 
 	const setPos = useEvent((x: number, y: number): void => {
 		if (type === 'result') {
@@ -292,7 +295,7 @@ export function DraggableBone({
 			x={ posX }
 			y={ posY }
 			tint={ 0xff00ff }
-			createTexture={ () => Texture.from(dotTexture) }
+			createTexture={ () => pointTexture }
 			setPos={ setPos }
 		/>
 	);

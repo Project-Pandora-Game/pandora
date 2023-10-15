@@ -200,7 +200,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
 			.handler(({ directoryConnector, navigate }, { target }) => {
 				directoryConnector.directMessageHandler.setSelected(target.data.accountId);
-				navigate('/relationships/DMs');
+				navigate('/relationships/dm');
 				return true;
 			}),
 	},

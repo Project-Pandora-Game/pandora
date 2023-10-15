@@ -136,7 +136,7 @@ export function UrlTabContainer({
 
 	const tabs = useMemo<(TabConfig | undefined)[]>(() => children.map((c): TabConfig | undefined => (c == null ? undefined : {
 		name: c.props.name,
-		active: c.props.urlChunk ? matchPath({ path: resolvePath(c.props.urlChunk, routerPath).pathname, end: true }, pathname) != null : false,
+		active: c.props.urlChunk ? matchPath({ path: resolvePath(c.props.urlChunk, routerPath).pathname + '/*' }, pathname) != null : false,
 		onClick: c.props.onClick ?? (() => c.props.urlChunk ? navigate(c.props.urlChunk) : undefined),
 		tabClassName: c.props.tabClassName,
 	})), [children, navigate, routerPath, pathname]);
@@ -146,7 +146,7 @@ export function UrlTabContainer({
 			<Routes>
 				{
 					children.map((tab, index) => (tab && (
-						<Route key={ index } element={ tab } path={ tab.props.urlChunk } />
+						<Route key={ index } element={ tab } path={ tab.props.urlChunk + '/*' } />
 					)))
 				}
 				{

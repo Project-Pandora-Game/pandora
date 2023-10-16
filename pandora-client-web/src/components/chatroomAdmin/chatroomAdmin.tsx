@@ -1,4 +1,4 @@
-import { clamp, cloneDeep, noop } from 'lodash';
+import { clamp, cloneDeep, noop, uniq } from 'lodash';
 import {
 	ChatRoomFeature,
 	EMPTY,
@@ -12,6 +12,7 @@ import {
 	AccountId,
 	AssertNotNullable,
 	RoomId,
+	BackgroundTagDefinition,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -33,9 +34,9 @@ import devMode from '../../icons/developer.svg';
 import pronounChange from '../../icons/male-female.svg';
 import { FieldsetToggle } from '../common/fieldsetToggle';
 import './chatroomAdmin.scss';
-import classNames from 'classnames';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
+import { Scrollbar } from '../common/scrollbar/scrollbar';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 
@@ -507,21 +508,18 @@ function BackgroundSelectDialog({ hide, current, select }: {
 
 	const availableBackgrounds = useMemo(() => assetManager.getBackgrounds(), [assetManager]);
 	const [nameFilter, setNameFilter] = useState('');
-	const [tagFilter, setTagFilter] = useState('');
+	const [tags, setTags] = useState<readonly string[]>([...assetManager.backgroundTags.keys()]);
+	const knownTagCategories = useMemo(() => uniq([...assetManager.backgroundTags.values()].map((tag) => tag.category)), [assetManager.backgroundTags]);
 
-	const knownTags = useMemo(() => assetManager.backgroundTags, [assetManager]);
+	const tagFilteredBackgrounds = useMemo(() => (availableBackgrounds
+		.filter((b) => b.tags.some((t) => tags.includes(t)))
+	), [availableBackgrounds, tags]);
 
 	const filteredBackgrounds = useMemo(() => {
-		const tags = tagFilter.split(/\s+/);
 		const filterParts = nameFilter.toLowerCase().trim().split(/\s+/);
-		return availableBackgrounds.filter((background) => {
-			// Filter background by making sure they have all requested tags
-			const matchesAllTags = tags.length === 0 || tags.some((tag) => background.tags.includes(tag));
-			const matchesName = filterParts.every((f) => background.name.toLowerCase().includes(f));
-			return matchesName && matchesAllTags;
-		});
-	}, [availableBackgrounds, nameFilter, tagFilter]);
-
+		return tagFilteredBackgrounds
+			.filter((b) => filterParts.every((f) => b.name.toLowerCase().includes(f)));
+	}, [tagFilteredBackgrounds, nameFilter]);
 	const nameFilterInput = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -550,41 +548,29 @@ function BackgroundSelectDialog({ hide, current, select }: {
 		<ModalDialog>
 			<div className='backgroundSelect'>
 				<div className='header'>
-					<div>Select a background for the room</div>
-					<input ref={ nameFilterInput }
-						className='input-filter'
-						placeholder='Background name…'
-						value={ nameFilter }
-						onChange={ (e) => setNameFilter(e.target.value) }
-					/>
-					<div className='dropdown'>
-						<button className='dropdown-button'>Tag filter…</button>
-						<div className='dropdown-content'>
-							{ Array.from(knownTags)
-								.map(([id, tag]) => (
-									<a key={ id }
-										onClick={ () => {
-											setTagFilter(id);
-										} }
-									>
-										{ `${tag.category}: ${tag.name}` }
-									</a>
-								)) }
-						</div>
+					<div className='header-filter'>
+						<span>Select a background for the room</span>
+						<input ref={ nameFilterInput }
+							className='input-filter'
+							placeholder='Background name…'
+							value={ nameFilter }
+							onChange={ (e) => setNameFilter(e.target.value) }
+						/>
+					</div>
+					<div className='header-tags'>
+						{
+							knownTagCategories.map((category) => (
+								<TagCategoryButton
+									key={ category }
+									category={ category }
+									tags={ tags }
+									setTags={ setTags }
+								/>
+							))
+						}
 					</div>
 				</div>
-				<div className='backgrounds'>
-					<a
-						onClick={ () => {
-							setSelectedBackground(DEFAULT_BACKGROUND);
-						} }
-					>
-						<div
-							className={ classNames('details', IsObject(selectedBackground) && 'selected', IsObject(current) && 'current') }
-						>
-							<div className='name'>[ Custom background ]</div>
-						</div>
-					</a>
+				<Scrollbar className='backgrounds' color='lighter'>
 					{ filteredBackgrounds
 						.map((b) => (
 							<a key={ b.id }
@@ -608,9 +594,18 @@ function BackgroundSelectDialog({ hide, current, select }: {
 								</SelectionIndicator>
 							</a>
 						)) }
-				</div>
+				</Scrollbar>
 				<Row className='footer' alignX='space-between'>
 					<Button onClick={ hide }>Cancel</Button>
+					<Button
+						disabled={ IsObject(current) }
+						className='hideDisabled'
+						onClick={ () => {
+							select(DEFAULT_BACKGROUND);
+							hide();
+						} }>
+						Custom background
+					</Button>
 					<Button
 						onClick={ () => {
 							select(selectedBackground);
@@ -622,6 +617,86 @@ function BackgroundSelectDialog({ hide, current, select }: {
 				</Row>
 			</div>
 		</ModalDialog>
+	);
+}
+
+type BackgroundTag = Readonly<BackgroundTagDefinition & { id: string; }>;
+
+function TagCategoryButton({ category, tags, setTags }: {
+	category: string;
+	tags: readonly string[];
+	setTags: (tags: readonly string[]) => void;
+}): ReactElement {
+	const assetManager = useAssetManager();
+	const [selected, empty] = useMemo(() => {
+		const state = [true, true];
+		for (const [id, tag] of assetManager.backgroundTags.entries()) {
+			if (tag.category === category) {
+				if (tags.includes(id)) {
+					state[1] = false;
+				} else {
+					state[0] = false;
+				}
+			}
+		}
+		return state;
+	}, [category, tags, assetManager]);
+	const tagsUnderCategory = useMemo<readonly BackgroundTag[]>(() => ([...assetManager.backgroundTags.entries()]
+		.map(([id, tag]) => ({ id, ...tag }))
+		.filter((tag) => tag.category === category)
+	), [assetManager, category]);
+	const onClick = useCallback(() => {
+		if (selected) {
+			setTags(tags.filter((t) => tagsUnderCategory.every((tag) => tag.id !== t)));
+		} else {
+			setTags(uniq([...tags, ...tagsUnderCategory.map((tag) => tag.id)]));
+		}
+	}, [selected, tags, setTags, tagsUnderCategory]);
+	const onDoubleClick = useCallback((ev: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+		ev.preventDefault();
+		ev.stopPropagation();
+		setTags(uniq([...tagsUnderCategory.map((tag) => tag.category)]));
+	}, [setTags, tagsUnderCategory]);
+	return (
+		<div className='dropdown'>
+			<Button onClick={ onClick } onDoubleClick={ onDoubleClick } className='slim dropdown-button'>
+				{ category }
+				<span>{ selected ? '✓' : empty ? ' ' : '○' }</span>
+			</Button>
+			<div className='dropdown-content'>
+				{ tagsUnderCategory.map((tag) => (
+					<TagButton key={ tag.id } tagsUnderCategory={ tagsUnderCategory } tag={ tag.id } name={ tag.name } tags={ tags } setTags={ setTags } />
+				)) }
+			</div>
+		</div>
+	);
+}
+
+function TagButton({ tagsUnderCategory, tag, name, tags, setTags }: {
+	tagsUnderCategory: readonly BackgroundTag[];
+	tag: string;
+	name: string;
+	tags: readonly string[];
+	setTags: (tags: readonly string[]) => void;
+}): ReactElement {
+	const selected = tags.includes(tag);
+	const onClick = useCallback(() => {
+		if (selected) {
+			setTags(tags.filter((t) => t !== tag));
+		} else {
+			setTags([...tags, tag]);
+		}
+	}, [selected, setTags, tags, tag]);
+	const onDoubleClick = useCallback((ev: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+		ev.preventDefault();
+		ev.stopPropagation();
+		setTags(tags.filter((t) => tagsUnderCategory.every(({ id }) => id !== t)).concat([tag]));
+	}, [tagsUnderCategory, tags, setTags, tag]);
+	return (
+		<a onClick={ onClick } onDoubleClick={ onDoubleClick }>
+			<span>{ selected ? '✓' : ' ' }</span>
+			{ name }
+		</a>
 	);
 }
 

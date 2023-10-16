@@ -28,7 +28,7 @@ import { IsChatroomAdmin, useChatRoomInfo } from '../gameContext/chatRoomContext
 import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { Select } from '../common/select/select';
 import { ModalDialog } from '../dialog/dialog';
-import { Row } from '../common/container/container';
+import { Column, Row } from '../common/container/container';
 import bodyChange from '../../icons/body-change.svg';
 import devMode from '../../icons/developer.svg';
 import pronounChange from '../../icons/male-female.svg';
@@ -195,19 +195,23 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Background'>
-				<Button
-					onClick={ () => setShowBackgrounds(true) }
-					disabled={ !isPlayerAdmin }
-				>
-					Select a background
-				</Button>
 				{ showBackgrounds && <BackgroundSelectDialog
 					hide={ () => setShowBackgrounds(false) }
 					current={ currentConfigBackground }
 					select={ (background) => setRoomModifiedData({ background }) }
 				/> }
 				{
-					typeof currentConfigBackground === 'string' ? null : (
+					typeof currentConfigBackground === 'string' ? (
+						<Column>
+							<BackgroundInfo background={ currentConfigBackground } />
+							<Button
+								onClick={ () => setShowBackgrounds(true) }
+								disabled={ !isPlayerAdmin }
+							>
+								Select a background
+							</Button>
+						</Column>
+					) : (
 						<>
 							<div className='input-container'>
 								<label>Background color</label>
@@ -279,6 +283,13 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 									/>
 								</div>
 							</div>
+							<br />
+							<Button
+								onClick={ () => setShowBackgrounds(true) }
+								disabled={ !isPlayerAdmin }
+							>
+								Select a background
+							</Button>
 						</>
 					)
 				}
@@ -491,6 +502,21 @@ function NumberListArea({ values, setValues, readOnly, ...props }: {
 
 	return (
 		<textarea value={ text } onChange={ onChange } readOnly={ readOnly } { ...props } />
+	);
+}
+
+function BackgroundInfo({ background }: { background: string; }): ReactElement {
+	const assetManager = useAssetManager();
+	const backgroundInfo = useMemo(() => assetManager.getBackgrounds().find((b) => b.id === background), [assetManager, background]);
+	AssertNotNullable(backgroundInfo);
+
+	return (
+		<Column className='backgroundInfo'>
+			<span className='name'>{ backgroundInfo.name }</span>
+			<div className='preview'>
+				<img src={ GetAssetsSourceUrl() + backgroundInfo.image } />
+			</div>
+		</Column>
 	);
 }
 

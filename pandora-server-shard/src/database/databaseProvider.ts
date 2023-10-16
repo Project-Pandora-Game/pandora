@@ -1,10 +1,10 @@
-import type { CharacterId, ICharacterData, ICharacterDataUpdate, IChatRoomData, IChatRoomDataShardUpdate, RoomId } from 'pandora-common';
+import type { CharacterId, ICharacterData, ICharacterDataUpdate, IChatRoomData, IChatRoomDataShardUpdate, RoomId, Service } from 'pandora-common';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
 import DirectoryDatabase from './directoryDb';
 import MongoDatabase from './mongoDb';
 
-export interface ShardDatabase {
+export interface ShardDatabase extends Service {
 	/**
 	 * Get a character's data
 	 * @param id - Id of character
@@ -45,7 +45,7 @@ export async function InitDatabase(): Promise<void> {
 
 export async function CloseDatabase(): Promise<void> {
 	if (database instanceof MongoDatabase) {
-		await database.close();
+		await database.onDestroy();
 	}
 }
 

@@ -1,4 +1,4 @@
-import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, IChatRoomDirectoryConfig, IChatRoomDirectoryData, RoomId } from 'pandora-common';
+import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, IChatRoomDirectoryConfig, IChatRoomDirectoryData, RoomId, Service } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Room } from '../room/room';
 import promClient from 'prom-client';
@@ -31,14 +31,15 @@ const inUseRoomsMetric = new promClient.Gauge({
 });
 
 /** Class that stores all currently or recently used rooms, removing them when needed */
-export const RoomManager = new class RoomManagerClass {
+export const RoomManager = new class RoomManagerClass implements Service {
 	private readonly loadedRooms: Map<RoomId, Room> = new Map();
 
 	/** Init the manager */
-	public init(): void {
+	public init(): this {
 		if (this.interval === undefined) {
 			this.interval = setInterval(this.tick.bind(this), TICK_INTERVAL).unref();
 		}
+		return this;
 	}
 
 	public onDestroy(): void {

@@ -2,12 +2,12 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId } from 'pandora-common';
+import { type CharacterId, type IChatRoomData, type ICharacterData, type ICharacterDataAccess, type ICharacterSelfInfo, type ICharacterSelfInfoUpdate, type IDirectoryAccountSettings, type IDirectoryDirectMessage, type IDirectoryDirectMessageInfo, type IChatRoomDataDirectoryUpdate, type IChatRoomDataShardUpdate, type RoomId, type IChatRoomDirectoryData, type AccountId, type Service } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
-export interface PandoraDatabase {
+export interface PandoraDatabase extends Service {
 	/** The id in numeric form that will be assigned to next created account */
 	readonly nextAccountId: number;
 
@@ -251,7 +251,7 @@ export async function InitDatabase(setDb?: typeof database): Promise<void> {
 
 export async function CloseDatabase(): Promise<void> {
 	if (database instanceof MongoDatabase) {
-		await database.close();
+		await database.onDestroy();
 	}
 }
 

@@ -1,6 +1,6 @@
 import Discord, { BitFieldResolvable, GatewayIntentsString, GuildChannel } from 'discord.js';
 import _ from 'lodash';
-import { GetLogger } from 'pandora-common';
+import { GetLogger, Service } from 'pandora-common';
 import { ENV } from '../../config';
 const { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID } = ENV;
 
@@ -20,7 +20,7 @@ type Status<T> = {
 
 export type DiscordBotStatus = Status<number>;
 
-export const DiscordBot = new class DiscordBot {
+export const DiscordBot = new class DiscordBot implements Service {
 	private _client?: Discord.Client;
 	private _statusChannels?: Partial<Status<GuildChannel>>;
 	private _destroyed = false;

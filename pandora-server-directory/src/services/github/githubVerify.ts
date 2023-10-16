@@ -1,4 +1,4 @@
-import { GetLogger, ZodMatcher } from 'pandora-common';
+import { GetLogger, Service, ZodMatcher } from 'pandora-common';
 import { accountManager } from '../../account/accountManager';
 
 import { Octokit } from '@octokit/rest';
@@ -33,7 +33,7 @@ const invalidTeams = new Set<string>();
 let octokitOrg!: Octokit;
 let octokitApp!: Octokit;
 
-export const GitHubVerifier = new class GitHubVerifier {
+export const GitHubVerifier = new class GitHubVerifier implements Service {
 	private _active = false;
 
 	public get active(): boolean {

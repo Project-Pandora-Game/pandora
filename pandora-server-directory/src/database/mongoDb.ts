@@ -180,7 +180,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return this;
 	}
 
-	public async close(): Promise<void> {
+	public async onDestroy(): Promise<void> {
 		await this._client.close();
 		if (this._inMemoryServer) {
 			await this._inMemoryServer.stop();

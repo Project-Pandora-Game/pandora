@@ -42,7 +42,7 @@ export default class MongoDatabase implements ShardDatabase {
 		return this;
 	}
 
-	public async close(): Promise<void> {
+	public async onDestroy(): Promise<void> {
 		await this._client.close();
 	}
 

@@ -15,7 +15,7 @@ describe('MongoDatabase', () => {
 		return db;
 	}, async () => {
 		if (db) {
-			await db.close();
+			await db.onDestroy();
 		}
 	});
 });
@@ -36,7 +36,7 @@ describe('MongoDatabase extra tests', () => {
 
 	it('Can connect to normal MongoDB', async () => {
 		const testDb = await new MongoDatabase(server.getUri()).init();
-		await testDb.close();
+		await testDb.onDestroy();
 	});
 
 	it('fails on double init', async () => {
@@ -44,7 +44,7 @@ describe('MongoDatabase extra tests', () => {
 
 		await expect(testDb.init()).rejects.toThrowError('Database already initialized');
 
-		await testDb.close();
+		await testDb.onDestroy();
 	});
 
 	it('Correctly finds id after reconnect', async () => {
@@ -53,7 +53,7 @@ describe('MongoDatabase extra tests', () => {
 		const acc = await testDb.createAccount(await CreateAccountData('testuser1', PrehashPassword('password1'), 'test1@project-pandora.com')) as DatabaseAccountWithSecure;
 		const char = await testDb.createCharacter(acc.id);
 
-		await testDb.close();
+		await testDb.onDestroy();
 
 		const testDb2 = await new MongoDatabase(server.getUri()).init();
 
@@ -63,6 +63,6 @@ describe('MongoDatabase extra tests', () => {
 		expect(acc2.id).not.toBe(acc.id);
 		expect(char2.id).not.toBe(char.id);
 
-		await testDb2.close();
+		await testDb2.onDestroy();
 	});
 });

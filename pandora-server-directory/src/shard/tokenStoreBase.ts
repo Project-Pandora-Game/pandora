@@ -1,5 +1,5 @@
 import { cloneDeep, debounce, omit } from 'lodash';
-import { type IBaseTokenInfo, type Logger } from 'pandora-common';
+import { Service, type IBaseTokenInfo, type Logger } from 'pandora-common';
 import { type Account } from '../account/account';
 import { nanoid } from 'nanoid';
 
@@ -9,7 +9,7 @@ const CLEANUPS = new Set<() => void>();
 
 const SAVE_DEBOUNCE = 1000; // 1 second
 
-export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
+export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Service {
 	/** @internal */
 	readonly #tokens = new Map<string, Full<Token>>();
 	protected readonly logger: Logger;
@@ -23,7 +23,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		this.secretLength = secretLength;
 	}
 
-	public async init(): Promise<void> {
+	public async init(): Promise<this> {
 		for (const token of await this.load()) {
 			this.#tokens.set(token.id, token);
 		}
@@ -31,6 +31,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> {
 		await this.onInit();
 		CLEANUPS.add(() => this._cleanup());
 		this.logger.info(`Loaded ${this.#tokens.size} tokens`);
+		return this;
 	}
 
 	protected abstract onInit(): void | Promise<void>;

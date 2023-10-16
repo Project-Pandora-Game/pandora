@@ -13,7 +13,7 @@ let mockDb: MockDatabase | undefined;
 
 export async function TestMockDb(): Promise<MockDatabase> {
 	if (!mockDb) {
-		mockDb = await new MockDatabase().init(false);
+		mockDb = await new MockDatabase({ addTestAccounts: false }).init();
 		await InitDatabase(mockDb);
 	}
 	return mockDb;

@@ -24,11 +24,18 @@ const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
 	strength: 2,
 });
 
+type MongoDbInit = Readonly<{
+	url?: string;
+	inMemory?: true;
+	/** Requires `inMemory`, saves data into persistent directory */
+	dbPath?: string;
+}>;
+
 export const MONGODB_SERVER_VERSION: string = '6.0.5';
 
 export default class MongoDatabase implements PandoraDatabase {
 	private readonly _lock: AsyncLock;
-	private readonly _url: string;
+	private readonly _init: MongoDbInit;
 	private _client!: MongoClient;
 	private _inMemoryServer!: MongoMemoryServer;
 	private _db!: Db;
@@ -41,19 +48,13 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
-	constructor(url: string = DATABASE_URL) {
+	constructor(init: MongoDbInit = {}) {
 		this._lock = new AsyncLock();
-		this._url = url;
+		this._init = init;
 	}
 
-	public async init({
-		inMemory,
-		dbPath,
-	}: {
-		inMemory?: true;
-		/** Requires `inMemory`, saves data into persistent directory */
-		dbPath?: string;
-	} = {}): Promise<this> {
+	public async init(): Promise<this> {
+		const { url, inMemory, dbPath } = this._init;
 		if (this._db) {
 			throw new Error('Database already initialized');
 		}
@@ -64,7 +65,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			uri = this._inMemoryServer.getUri();
 			logger.verbose('Started local MongoDB instance on', uri);
 		} else {
-			uri = this._url;
+			uri = url ?? DATABASE_URL;
 		}
 		this._client = new MongoClient(uri, {
 			ignoreUndefined: true,

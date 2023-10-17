@@ -330,14 +330,15 @@ describe('AccountSecure', () => {
 
 		describe('generateNewLoginToken()', () => {
 			it('Generates new tokens', async () => {
+				const timeBefore = Date.now();
 				token1 = await account.generateNewLoginToken();
 				token2 = await account.generateNewLoginToken();
 				// Reason is login
 				expect(token1.reason).toBe(AccountTokenReason.LOGIN);
 				expect(token2.reason).toBe(AccountTokenReason.LOGIN);
 				// Tokens expire in future
-				expect(token1.expires).toBeGreaterThan(Date.now());
-				expect(token2.expires).toBeGreaterThan(Date.now());
+				expect(token1.expires).toBeGreaterThan(timeBefore);
+				expect(token2.expires).toBeGreaterThan(timeBefore);
 				// Tokens are different
 				expect(token1.value).not.toBe(token2.value);
 				// Saves data

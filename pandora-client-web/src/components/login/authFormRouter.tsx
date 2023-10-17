@@ -1,8 +1,6 @@
-import { IsObject } from 'pandora-common';
-import React, { ComponentType, ReactElement, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { ComponentType, ReactElement } from 'react';
 import { FormErrorMessage } from '../common/form/form';
-import { AuthFormDataProvider, useAuthFormData } from './authFormDataProvider';
+import { AuthFormDataProvider } from './authFormDataProvider';
 import './authFormRouter.scss';
 
 export interface AuthFormRouterProps {
@@ -20,22 +18,6 @@ export function AuthFormRouter({ component }: AuthFormRouterProps): ReactElement
 }
 
 function AuthFormContent({ component: Component }: AuthFormRouterProps): ReactElement | null {
-	const location = useLocation();
-	const locationState = location.state as unknown;
-	const redirectPath = IsObject(locationState) && typeof locationState.redirectPath === 'string' ?
-		locationState.redirectPath :
-		'';
-	const redirectState = IsObject(locationState) && locationState.redirectState != null ?
-		locationState.redirectState :
-		undefined;
-	const { setState: setAuthData } = useAuthFormData();
-
-	useEffect(() => {
-		if (redirectPath) {
-			setAuthData({ redirectPath, redirectState });
-		}
-	}, [redirectPath, redirectState, setAuthData]);
-
 	if (!globalThis.crypto.subtle) {
 		return (
 			<FormErrorMessage>

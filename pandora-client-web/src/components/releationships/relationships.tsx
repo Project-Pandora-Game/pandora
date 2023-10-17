@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
-import { Tab, TabContainer } from '../common/tabs/tabs';
+import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
 import './relationships.scss';
 import { Button } from '../common/button/button';
@@ -18,25 +18,25 @@ export function Relationships() {
 
 	return (
 		<div className='relationships'>
-			<TabContainer urlMatch='/relationships/:tab'>
-				<Tab name={ <RelationshipHeader type='friend' /> }>
+			<UrlTabContainer>
+				<UrlTab name={ <RelationshipHeader type='friend' /> } urlChunk='friends'>
 					<ShowFriends />
-				</Tab>
-				<Tab name='DMs'>
+				</UrlTab>
+				<UrlTab name='DMs' urlChunk='dm'>
 					<DirectMessages />
-				</Tab>
-				<Tab name='Blocked'>
+				</UrlTab>
+				<UrlTab name='Blocked' urlChunk='blocked'>
 					<ShowRelationships type='blocked' />
-				</Tab>
-				<Tab name={ <RelationshipHeader type='pending' /> }>
+				</UrlTab>
+				<UrlTab name={ <RelationshipHeader type='pending' /> } urlChunk='pending'>
 					<ShowRelationships type='pending' />
-				</Tab>
-				<Tab name={ <RelationshipHeader type='incoming' /> }>
+				</UrlTab>
+				<UrlTab name={ <RelationshipHeader type='incoming' /> } urlChunk='incoming'>
 					<ShowRelationships type='incoming' />
 					<ClearIncoming />
-				</Tab>
-				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate(-1) } />
-			</TabContainer>
+				</UrlTab>
+				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
+			</UrlTabContainer>
 		</div>
 	);
 }
@@ -204,7 +204,7 @@ export function useGoToDM(id: AccountId) {
 	const navigate = useNavigate();
 	return React.useCallback(() => {
 		directory.directMessageHandler.setSelected(id);
-		navigate('/relationships/DMs');
+		navigate('/relationships/dm');
 	}, [directory.directMessageHandler, id, navigate]);
 }
 

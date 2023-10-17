@@ -1,38 +1,42 @@
 import React, { ReactElement } from 'react';
-import { Tab, TabContainer } from '../common/tabs/tabs';
+import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { ChildrenProps } from '../../common/reactTypes';
 import { Scrollable } from '../common/scrollbar/scrollbar';
 import { PrivacyPolicyContent } from '../Eula/privacyPolicy';
 import { useNavigate } from 'react-router';
 import './wiki.scss';
 import { WikiIntroduction } from './pages/intro';
+import { WikiGreeting } from './pages/greeting';
 import { WikiContact } from './pages/contact';
 
 export function Wiki(): ReactElement {
 	const navigate = useNavigate();
 
 	return (
-		<TabContainer className='wiki' tabsPosition='left'>
-			<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/pandora_lobby') } />
-			<Tab name='Introduction' default>
+		<UrlTabContainer className='wiki' tabsPosition='left'>
+			<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
+			<UrlTab name='Introduction' default urlChunk='introduction'>
 				<WikiContent>
 					<WikiIntroduction />
 				</WikiContent>
-			</Tab>
-			<Tab name='Contact'>
+			</UrlTab>
+			<UrlTab name='Greeting' urlChunk='greeting'>
+				<WikiGreeting />
+			</UrlTab>
+			<UrlTab name='Contact' urlChunk='contact'>
 				<WikiContent>
 					<WikiContact />
 				</WikiContent>
-			</Tab>
-			<Tab name='Privacy Policy'>
+			</UrlTab>
+			<UrlTab name='Privacy Policy' urlChunk='privacy_policy'>
 				<WikiContent>
 					<PrivacyPolicyContent />
 				</WikiContent>
-			</Tab>
-		</TabContainer>
+			</UrlTab>
+		</UrlTabContainer>
 	);
 }
 
-function WikiContent({ children }: ChildrenProps): ReactElement {
+export function WikiContent({ children }: ChildrenProps): ReactElement {
 	return <Scrollable color='dark' className='wiki-content'>{ children }</Scrollable>;
 }

@@ -1,7 +1,7 @@
 import { noop } from 'lodash';
 import { EMPTY, GetLogger, ICharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 import { USER_DEBUG } from '../../config/Environment';
 import { useConnectToCharacter, useCreateNewCharacter } from '../../networking/account_manager';
@@ -33,6 +33,8 @@ export function CharacterSelect(): ReactElement {
 	const createNewCharacter = useCreateNewCharacter();
 	const connectToCharacter = useConnectToCharacter();
 
+	const navigate = useNavigate();
+
 	const createNewCharacterAndRefreshList = useCallback(async () => {
 		await createNewCharacter();
 		await fetchCharacterList();
@@ -52,8 +54,7 @@ export function CharacterSelect(): ReactElement {
 				await connectToCharacter(LastSelectedCharacter.value);
 			} else if (characters.length === 0) {
 				autoSelectDone = true;
-				setState('No characters found. Creating a new one...');
-				await createNewCharacterAndRefreshList();
+				navigate('/wiki/greeting');
 			} else if (characters.length === 1 && characters[0].inCreation) {
 				autoSelectDone = true;
 				setState('Character creation in progress...');
@@ -61,7 +62,7 @@ export function CharacterSelect(): ReactElement {
 			}
 		})();
 
-	}, [data, connectToCharacter, createNewCharacterAndRefreshList]);
+	}, [data, connectToCharacter, navigate]);
 
 	if (playerData) {
 		if (playerData.inCreation) {

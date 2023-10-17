@@ -62,7 +62,6 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 
 			if (result === 'ok') {
 				setErrorMessage('');
-				navigate(authData.redirectPath ?? '/', { state: authData.redirectState });
 				return;
 			} else if (result === 'unknownCredentials') {
 				// Invalid user data

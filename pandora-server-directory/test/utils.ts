@@ -56,8 +56,8 @@ export async function TestMockAccount({
 export async function TestMockCharacter(account: Account, finalize: {
 	name: string;
 } | false = {
-		name: nanoid(),
-	}): Promise<CharacterInfo> {
+	name: nanoid(),
+}): Promise<CharacterInfo> {
 	const db = await TestMockDb();
 
 	if (!account.isActivated()) {

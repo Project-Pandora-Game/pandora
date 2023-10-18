@@ -23,7 +23,7 @@ describe('MockDatabase', () => {
 		return db;
 	}, () => Promise.resolve());
 
-	it('Inits with mock accounts', async () => {
+	it('Inits with mock accounts', () => {
 		new MockDatabase();
 	});
 });

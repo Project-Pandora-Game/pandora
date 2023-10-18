@@ -1,4 +1,4 @@
 export type Service = {
-	init?(): Promise<Service> | Service;
+	init?(): Promise<void> | void;
 	onDestroy?(): Promise<void> | void;
 };

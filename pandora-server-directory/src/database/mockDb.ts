@@ -18,7 +18,6 @@ export function PrehashPassword(password: string): string {
 const logger = GetLogger('db');
 
 export class MockDatabase implements PandoraDatabase {
-	private readonly addTestAccounts: boolean;
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
 	private chatroomDb: Map<RoomId, IChatRoomData> = new Map();
@@ -31,15 +30,11 @@ export class MockDatabase implements PandoraDatabase {
 		return Array.from(this.accountDb.values());
 	}
 
-	constructor({ addTestAccounts = true }: { addTestAccounts?: boolean; } = {}) {
+	constructor() {
 		logger.info('Initialized mock database');
-		this.addTestAccounts = addTestAccounts;
 	}
 
-	public async init(): Promise<this> {
-		if (!this.addTestAccounts)
-			return this;
-
+	public async addTestAccounts() {
 		await this.createAccount(await CreateAccountData(
 			'test',
 			PrehashPassword('test'),
@@ -52,7 +47,6 @@ export class MockDatabase implements PandoraDatabase {
 			'testinactive@project-pandora.com',
 			false,
 		));
-		return this;
 	}
 
 	public get nextAccountId(): number {

@@ -32,15 +32,16 @@ export interface ShardDatabase extends Service {
 }
 
 /** Current database connection */
-let database: ShardDatabase | undefined;
+let database: MongoDatabase | DirectoryDatabase | undefined;
 
 /** Init database connection based on configuration */
 export async function InitDatabase(): Promise<void> {
 	if (DATABASE_TYPE === 'mongodb') {
-		database = await new MongoDatabase().init();
+		database = new MongoDatabase();
 	} else {
-		database = await new DirectoryDatabase().init();
+		database = new DirectoryDatabase();
 	}
+	await database.init();
 }
 
 export async function CloseDatabase(): Promise<void> {

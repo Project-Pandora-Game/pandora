@@ -21,7 +21,7 @@ let destroying: string | undefined;
 let stopping: Promise<void> | undefined;
 const STOP_TIMEOUT = 10_000;
 
-function DestroyService(service: Service & object): Promise<void> | void {
+function DestroyService(service: Service): Promise<void> | void {
 	destroying = service.constructor.name;
 	return service.onDestroy?.();
 }

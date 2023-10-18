@@ -17,9 +17,13 @@ describe('PrehashPassword()', () => {
 });
 
 describe('MockDatabase', () => {
-	RunDbTests(() => new MockDatabase({ addTestAccounts: false }).init(), () => Promise.resolve());
+	RunDbTests(async () => {
+		const db = new MockDatabase();
+		await db.addTestAccounts();
+		return db;
+	}, () => Promise.resolve());
 
 	it('Inits with mock accounts', async () => {
-		await new MockDatabase().init();
+		new MockDatabase();
 	});
 });

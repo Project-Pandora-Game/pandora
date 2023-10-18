@@ -53,7 +53,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._init = init;
 	}
 
-	public async init(): Promise<this> {
+	public async init(): Promise<void> {
 		const { url, inMemory, dbPath } = this._init;
 		if (this._db) {
 			throw new Error('Database already initialized');
@@ -177,8 +177,6 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (!inMemory || dbPath) {
 			await this._doMigrations();
 		}
-
-		return this;
 	}
 
 	public async onDestroy(): Promise<void> {

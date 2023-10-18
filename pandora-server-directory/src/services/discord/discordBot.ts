@@ -25,10 +25,10 @@ export const DiscordBot = new class DiscordBot implements Service {
 	private _statusChannels?: Partial<Status<GuildChannel>>;
 	private _destroyed = false;
 
-	public async init(): Promise<this> {
+	public async init(): Promise<void> {
 		if (!DISCORD_BOT_TOKEN) {
 			logger.warning('Secret is not set, Discord Bot is disabled', DISCORD_BOT_TOKEN);
-			return this;
+			return;
 		}
 
 		this._client = new Discord.Client({
@@ -38,7 +38,7 @@ export const DiscordBot = new class DiscordBot implements Service {
 		const result = await this._client.login(DISCORD_BOT_TOKEN);
 		if (result !== DISCORD_BOT_TOKEN) {
 			logger.error('Discord login failed');
-			return this;
+			return;
 		}
 
 		/** Call with no status to trigger throttle */
@@ -52,8 +52,6 @@ export const DiscordBot = new class DiscordBot implements Service {
 		this._client.user?.setStatus('online');
 
 		logger.info('Discord Bot is ready');
-
-		return this;
 	}
 
 	public async onDestroy(): Promise<void> {

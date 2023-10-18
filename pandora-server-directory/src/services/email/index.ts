@@ -6,7 +6,6 @@ import { SesEmail } from './sesEmail';
 import { Service } from 'pandora-common';
 
 export interface IEmailSender extends Service {
-	init(): Promise<IEmailSender>;
 	sendPasswordReset(email: string, username: string, token: string): Promise<void>;
 	sendRegistrationConfirmation(email: string, username: string, token: string): Promise<void>;
 }

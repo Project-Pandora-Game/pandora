@@ -16,7 +16,7 @@ export abstract class BaseEmailSender<T> implements IEmailSender {
 	protected abstract handleSendResult(result: Awaited<T>): void;
 	protected abstract createTransport(): Promise<Transporter<T>>;
 
-	public async init(): Promise<this> {
+	public async init(): Promise<void> {
 		try {
 			this._transporter = await this.createTransport();
 			await this._transporter.verify();
@@ -25,7 +25,6 @@ export abstract class BaseEmailSender<T> implements IEmailSender {
 			this._transporter = undefined;
 			this.logger.error(err);
 		}
-		return this;
 	}
 
 	public async sendPasswordReset(email: string, username: string, token: string): Promise<void> {

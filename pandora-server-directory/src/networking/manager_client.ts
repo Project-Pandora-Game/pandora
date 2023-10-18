@@ -50,11 +50,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	/** Init the manager */
-	public init(): this {
+	public init(): void {
 		if (this.statusUpdateInterval === undefined) {
 			this.statusUpdateInterval = setInterval(this.broadcastStatusUpdate.bind(this), STATUS_UPDATE_INTERVAL).unref();
 		}
-		return this;
 	}
 
 	public onDestroy(): void {

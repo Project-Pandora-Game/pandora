@@ -2,7 +2,7 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import { type CharacterId, type IChatRoomData, type ICharacterData, type ICharacterDataAccess, type ICharacterSelfInfo, type ICharacterSelfInfoUpdate, type IDirectoryAccountSettings, type IDirectoryDirectMessage, type IDirectoryDirectMessageInfo, type IChatRoomDataDirectoryUpdate, type IChatRoomDataShardUpdate, type RoomId, type IChatRoomDirectoryData, type AccountId, type Service } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
@@ -235,18 +235,20 @@ export async function InitDatabase(setDb?: typeof database): Promise<void> {
 	}
 	switch (DATABASE_TYPE) {
 		case 'mongodb':
-			database = await new MongoDatabase().init();
+			database = new MongoDatabase();
 			break;
 		case 'mongodb-in-memory':
-			database = await new MongoDatabase({ inMemory: true }).init();
+			database = new MongoDatabase({ inMemory: true });
 			break;
 		case 'mongodb-local':
-			database = await new MongoDatabase({ inMemory: true, dbPath: './localDb' }).init();
+			database = new MongoDatabase({ inMemory: true, dbPath: './localDb' });
 			break;
 		case 'mock':
 		default:
-			database = await new MockDatabase().init();
+			database = new MockDatabase();
 	}
+	if ('init' in database)
+		await database.init();
 }
 
 export async function CloseDatabase(): Promise<void> {

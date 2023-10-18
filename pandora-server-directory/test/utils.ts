@@ -13,7 +13,8 @@ let mockDb: MockDatabase | undefined;
 
 export async function TestMockDb(): Promise<MockDatabase> {
 	if (!mockDb) {
-		mockDb = await new MockDatabase({ addTestAccounts: false }).init();
+		mockDb = new MockDatabase();
+		await mockDb.addTestAccounts();
 		await InitDatabase(mockDb);
 	}
 	return mockDb;
@@ -55,8 +56,8 @@ export async function TestMockAccount({
 export async function TestMockCharacter(account: Account, finalize: {
 	name: string;
 } | false = {
-	name: nanoid(),
-}): Promise<CharacterInfo> {
+		name: nanoid(),
+	}): Promise<CharacterInfo> {
 	const db = await TestMockDb();
 
 	if (!account.isActivated()) {

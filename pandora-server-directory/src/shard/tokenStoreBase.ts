@@ -23,7 +23,7 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Se
 		this.secretLength = secretLength;
 	}
 
-	public async init(): Promise<this> {
+	public async init(): Promise<void> {
 		for (const token of await this.load()) {
 			this.#tokens.set(token.id, token);
 		}
@@ -31,7 +31,6 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Se
 		await this.onInit();
 		CLEANUPS.add(() => this._cleanup());
 		this.logger.info(`Loaded ${this.#tokens.size} tokens`);
-		return this;
 	}
 
 	protected abstract onInit(): void | Promise<void>;

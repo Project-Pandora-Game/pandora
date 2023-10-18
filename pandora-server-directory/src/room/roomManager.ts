@@ -35,11 +35,10 @@ export const RoomManager = new class RoomManagerClass implements Service {
 	private readonly loadedRooms: Map<RoomId, Room> = new Map();
 
 	/** Init the manager */
-	public init(): this {
+	public init(): void {
 		if (this.interval === undefined) {
 			this.interval = setInterval(this.tick.bind(this), TICK_INTERVAL).unref();
 		}
-		return this;
 	}
 
 	public onDestroy(): void {

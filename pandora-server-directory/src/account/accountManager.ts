@@ -113,11 +113,10 @@ export class AccountManager implements Service {
 	private interval: NodeJS.Timeout | undefined;
 
 	/** Init the manager */
-	public init(): this {
+	public init(): void {
 		if (this.interval === undefined) {
 			this.interval = setInterval(this.tick.bind(this), ACCOUNTMANAGER_TICK_INTERVAL).unref();
 		}
-		return this;
 	}
 
 	public async onDestroyCharacters(): Promise<void> {

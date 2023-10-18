@@ -24,7 +24,7 @@ import { ShardConnector, ShardConnectionState } from './shardConnector';
 
 const logger = GetLogger('ShardConn');
 
-class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClientChangeEvents, true>> {
+export class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClientChangeEvents, true>> {
 	public onSomethingChanged(changes: IShardClientChangeEvents[]): void {
 		changes.forEach((change) => this.emit(change, true));
 	}

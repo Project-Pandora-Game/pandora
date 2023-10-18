@@ -3,6 +3,7 @@ import { PlayerCharacter } from '../../../src/character/player';
 import { ChatRoom } from '../../../src/components/gameContext/chatRoomContextProvider';
 import { ShardConnectionState, ShardConnector } from '../../../src/networking/shardConnector';
 import { Observable } from '../../../src/observable';
+import { ShardChangeEventEmitter } from '../../../src/networking/socketio_shard_connector';
 
 /** Mock shard connector implementation for testing */
 export class MockShardConnector implements ShardConnector {
@@ -10,6 +11,7 @@ export class MockShardConnector implements ShardConnector {
 	public readonly state = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
 	public readonly player: Observable<PlayerCharacter | null>;
 	public readonly room: ChatRoom;
+	public readonly changeEventEmitter = new ShardChangeEventEmitter();
 
 	constructor(info: IDirectoryCharacterConnectionInfo = MockConnectionInfo(), player: Observable<PlayerCharacter | null> = new Observable<PlayerCharacter | null>(null)) {
 		this.connectionInfo = new Observable<Readonly<IDirectoryCharacterConnectionInfo>>(info);

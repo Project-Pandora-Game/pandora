@@ -4,6 +4,7 @@ import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
 import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
+import { ServiceInit } from 'pandora-common';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -247,8 +248,7 @@ export async function InitDatabase(setDb?: typeof database): Promise<void> {
 		default:
 			database = new MockDatabase();
 	}
-	if ('init' in database)
-		await database.init();
+	await ServiceInit(database as PandoraDatabase);
 }
 
 export async function CloseDatabase(): Promise<void> {

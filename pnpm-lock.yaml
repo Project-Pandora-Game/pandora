@@ -91,7 +91,7 @@ importers:
     devDependencies:
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.11
-        version: 0.5.11(@types/webpack@5.28.3)(react-refresh@0.14.0)(type-fest@4.5.0)(webpack-dev-server@4.15.1)(webpack@5.89.0)
+        version: 0.5.11(@types/webpack@5.28.4)(react-refresh@0.14.0)(type-fest@4.5.0)(webpack-dev-server@4.15.1)(webpack@5.89.0)
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
         version: 13.2.0(sass@1.69.4)(webpack@5.89.0)
@@ -129,8 +129,8 @@ importers:
         specifier: 18.2.29
         version: 18.2.29
       '@types/react-dom':
-        specifier: 18.2.13
-        version: 18.2.13
+        specifier: 18.2.14
+        version: 18.2.14
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
@@ -138,8 +138,8 @@ importers:
         specifier: 5.14.9
         version: 5.14.9
       '@types/webpack':
-        specifier: 5.28.3
-        version: 5.28.3(webpack-cli@5.1.4)
+        specifier: 5.28.4
+        version: 5.28.4(webpack-cli@5.1.4)
       '@typescript-eslint/eslint-plugin':
         specifier: 6.8.0
         version: 6.8.0(@typescript-eslint/parser@6.8.0)(eslint@8.51.0)(typescript@5.2.2)
@@ -398,11 +398,11 @@ importers:
         specifier: 18.18.6
         version: 18.18.6
       '@types/nodemailer':
-        specifier: 6.4.12
-        version: 6.4.12
+        specifier: 6.4.13
+        version: 6.4.13
       '@types/wtfnode':
-        specifier: 0.7.1
-        version: 0.7.1
+        specifier: 0.7.2
+        version: 0.7.2
       '@typescript-eslint/eslint-plugin':
         specifier: 6.8.0
         version: 6.8.0(@typescript-eslint/parser@6.8.0)(eslint@8.51.0)(typescript@5.2.2)
@@ -504,8 +504,8 @@ importers:
         specifier: 18.18.6
         version: 18.18.6
       '@types/wtfnode':
-        specifier: 0.7.1
-        version: 0.7.1
+        specifier: 0.7.2
+        version: 0.7.2
       '@typescript-eslint/eslint-plugin':
         specifier: 6.8.0
         version: 6.8.0(@typescript-eslint/parser@6.8.0)(eslint@8.51.0)(typescript@5.2.2)
@@ -2826,7 +2826,7 @@ packages:
       playwright: 1.39.0
     dev: true
 
-  /@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.3)(react-refresh@0.14.0)(type-fest@4.5.0)(webpack-dev-server@4.15.1)(webpack@5.89.0):
+  /@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.4)(react-refresh@0.14.0)(type-fest@4.5.0)(webpack-dev-server@4.15.1)(webpack@5.89.0):
     resolution: {integrity: sha512-7j/6vdTym0+qZ6u4XbSAxrWBGYSdCfTzySkj7WAFgDLmSyWlOrWvpyzxlFh5jtw9dn0oL/jtW+06XfFiisN3JQ==}
     engines: {node: '>= 10.13'}
     peerDependencies:
@@ -2852,7 +2852,7 @@ packages:
       webpack-plugin-serve:
         optional: true
     dependencies:
-      '@types/webpack': 5.28.3(webpack-cli@5.1.4)
+      '@types/webpack': 5.28.4(webpack-cli@5.1.4)
       ansi-html-community: 0.0.8
       common-path-prefix: 3.0.0
       core-js-pure: 3.32.1
@@ -3395,7 +3395,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.22.11
       '@testing-library/dom': 9.3.1
-      '@types/react-dom': 18.2.13
+      '@types/react-dom': 18.2.14
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: true
@@ -3662,8 +3662,8 @@ packages:
   /@types/node@18.18.6:
     resolution: {integrity: sha512-wf3Vz+jCmOQ2HV1YUJuCWdL64adYxumkrxtc+H1VUQlnQI04+5HtH+qZCOE21lBE7gIrt+CwX2Wv8Acrw5Ak6w==}
 
-  /@types/nodemailer@6.4.12:
-    resolution: {integrity: sha512-FMXpf8/U9tpcjGwwOh2nSPKiPmxmIDEwHjYyUMMKYlHn7WSeJeDtT61pnpcjk1QDK9+5ktnyuxXVsTvvTx1zoA==}
+  /@types/nodemailer@6.4.13:
+    resolution: {integrity: sha512-889Vq/77eEpidCwh52sVWpbnqQmIwL8yVBekNbrztVEaWKOCRH3Eq6hjIJh1jwsGDEAJEH0RR+YhpH9mfELLKA==}
     dependencies:
       '@types/node': 18.18.6
     dev: true
@@ -3689,8 +3689,8 @@ packages:
     resolution: {integrity: sha512-EEhsLsD6UsDM1yFhAvy0Cjr6VwmpMWqFBCb9w07wVugF7w9nfajxLuVmngTIpgS6svCnm6Vaw+MZhoDCKnOfsw==}
     dev: true
 
-  /@types/react-dom@18.2.13:
-    resolution: {integrity: sha512-eJIUv7rPP+EC45uNYp/ThhSpE16k22VJUknt5OLoH9tbXoi8bMhwLf5xRuWMywamNbWzhrSmU7IBJfPup1+3fw==}
+  /@types/react-dom@18.2.14:
+    resolution: {integrity: sha512-V835xgdSVmyQmI1KLV2BEIUgqEuinxp9O4G6g3FqO/SqLac049E53aysv0oEFD2kHfejeKU+ZqL2bcFWj9gLAQ==}
     dependencies:
       '@types/react': 18.2.29
     dev: true
@@ -3779,8 +3779,8 @@ packages:
     resolution: {integrity: sha512-xTE1E+YF4aWPJJeUzaZI5DRntlkY3+BCVJi0axFptnjGmAoWxkyREIh/XMrfxVLejwQxMCfDXdICo0VLxThrog==}
     dev: false
 
-  /@types/webpack@5.28.3(webpack-cli@5.1.4):
-    resolution: {integrity: sha512-Hd0GBzpP0mO2ZKChw2V7flK45m01/2g9FalpMum2X66uouzG3P1vkxvOtLVzAWLna4N9h0s2sVjND9Slnlef8A==}
+  /@types/webpack@5.28.4(webpack-cli@5.1.4):
+    resolution: {integrity: sha512-sVIGIQdg0bNruxwQvpiNXaIXndScf+qTfYULLo2DI8urXgxC7f8Rw8aNHjjckdI3QaV3cRHqoHdCuBMMyUtGiw==}
     dependencies:
       '@types/node': 18.18.6
       tapable: 2.2.1
@@ -3804,8 +3804,8 @@ packages:
     dependencies:
       '@types/node': 18.18.6
 
-  /@types/wtfnode@0.7.1:
-    resolution: {integrity: sha512-0uo9YyPSCbYsHNfoQrEhpLbT/PuGBzaJhItss2Eb2uH+/XEsBabupPVAARmAdEY73wKIQFOZ2L2z9TZ2HbKOxQ==}
+  /@types/wtfnode@0.7.2:
+    resolution: {integrity: sha512-pJXFIeY+nSK+vgijyNcIt4stSxpOujYhom9kVFnSn9p21xiKn8pGf4uXzXc/RnwKTXE9i9QdGIb01XyJeDvsSg==}
     dev: true
 
   /@types/yargs-parser@21.0.0:

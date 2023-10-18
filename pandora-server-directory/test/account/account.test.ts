@@ -23,9 +23,12 @@ describe('Account', () => {
 
 	describe('touch()', () => {
 		it('should update last activity timestamp', () => {
+			const timeBefore = Date.now();
 			accountActive.touch();
-			const now = Date.now();
-			expect(accountActive.lastActivity).toBe(now);
+			const timeAfter = Date.now();
+
+			expect(accountActive.lastActivity).toBeGreaterThanOrEqual(timeBefore);
+			expect(accountActive.lastActivity).toBeLessThanOrEqual(timeAfter);
 		});
 	});
 

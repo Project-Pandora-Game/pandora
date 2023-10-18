@@ -59,7 +59,7 @@ describe('MongoDatabase extra tests', () => {
 		await testDb.onDestroy();
 
 		const testDb2 = new MongoDatabase({ url: server.getUri() });
-		await testDb.init();
+		await testDb2.init();
 
 		const acc2 = await testDb2.createAccount(await CreateAccountData('testuser2', PrehashPassword('password2'), 'test2@project-pandora.com')) as DatabaseAccountWithSecure;
 		const char2 = await testDb2.createCharacter(acc.id);

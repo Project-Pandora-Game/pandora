@@ -30,6 +30,11 @@ export class AppearanceActionProcessingContext {
 		return this._actionProblems;
 	}
 
+	private readonly _requiredPermissions = new Set<GameLogicPermission>();
+	public get requiredPermissions(): ReadonlySet<GameLogicPermission> {
+		return this._requiredPermissions;
+	}
+
 	constructor(context: AppearanceActionContext) {
 		this._context = context;
 		this.originalState = context.globalState.currentState;
@@ -108,17 +113,13 @@ export class AppearanceActionProcessingContext {
 		if (permission.character.id === this.player.id)
 			return;
 
+		this._requiredPermissions.add(permission);
+
 		// Check the permission
 		if (!permission.checkPermission(this.player)) {
 			this.addProblem({
 				result: 'restrictionError',
-				restriction: {
-					type: 'missingPermission',
-					target: permission.character.id,
-					permissionGroup: permission.group,
-					permissionId: permission.id,
-					permissionDescription: permission.displayName,
-				},
+				restriction: permission.getRestrictionDescriptor(),
 			});
 		}
 	}
@@ -137,8 +138,11 @@ abstract class AppearanceActionProcessingResultBase {
 
 	public abstract readonly problems: readonly AppearanceActionProblem[];
 
+	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
+
 	constructor(processingContext: AppearanceActionProcessingContext) {
 		this.originalState = processingContext.originalState;
+		this.requiredPermissions = processingContext.requiredPermissions;
 	}
 }
 

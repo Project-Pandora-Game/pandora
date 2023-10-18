@@ -2,6 +2,7 @@ import { Immutable } from 'immer';
 import { TypedEventEmitter } from '../../event';
 import { GameLogicCharacter } from '../character/character';
 import { PermissionConfig, PermissionConfigDefault, PermissionGroup, PermissionSetup } from './permissionData';
+import { PermissionRestriction } from '../../character';
 
 export type GameLogicPermissionEvents = {
 	configChanged: void;
@@ -29,6 +30,16 @@ export abstract class GameLogicPermission extends TypedEventEmitter<GameLogicPer
 		super();
 		this.setup = Object.freeze(setup);
 		this.character = character;
+	}
+
+	public getRestrictionDescriptor(): PermissionRestriction {
+		return {
+			type: 'missingPermission',
+			target: this.character.id,
+			permissionGroup: this.group,
+			permissionId: this.id,
+			permissionDescription: this.displayName,
+		};
 	}
 
 	public abstract checkPermission(actingCharacter: GameLogicCharacter): boolean;

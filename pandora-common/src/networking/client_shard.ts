@@ -109,6 +109,24 @@ export const ClientShardSchema = {
 			}),
 		]),
 	},
+	permissionCheck: {
+		request: z.object({
+			target: CharacterIdSchema,
+			permissionGroup: PermissionGroupSchema,
+			permissionId: z.string(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('noAccess'),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+		]),
+	},
 } as const satisfies Immutable<SocketInterfaceDefinition>;
 
 export type IClientShard = Satisfies<typeof ClientShardSchema, SocketInterfaceDefinitionVerified<typeof ClientShardSchema>>;

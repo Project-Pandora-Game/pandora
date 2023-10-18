@@ -15,6 +15,7 @@ import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { useWardrobeExecuteChecked } from './wardrobeContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
+import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
 
 export function ActionWarning({ problems, parent }: { problems: readonly AppearanceActionProblem[]; parent: HTMLElement | null; }) {
 	const assetManager = useAssetManager();
@@ -85,12 +86,19 @@ export function WardrobeActionButton({
 		onFailure,
 	});
 
+	const permissionProblems = usePermissionCheck(check?.requiredPermissions);
+
+	const finalProblems = useMemo<readonly AppearanceActionProblem[]>(() => check != null ? [
+		...check.problems,
+		...permissionProblems,
+	] : [], [check, permissionProblems]);
+
 	return (
 		<Element
 			id={ id }
 			ref={ setRef }
 			tabIndex={ 0 }
-			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : check.problems.length === 0 ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
+			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
 				execute();
@@ -99,7 +107,7 @@ export function WardrobeActionButton({
 		>
 			{
 				showActionBlockedExplanation && check != null ? (
-					<ActionWarning problems={ check.problems } parent={ ref } />
+					<ActionWarning problems={ finalProblems } parent={ ref } />
 				) : null
 			}
 			{ children }

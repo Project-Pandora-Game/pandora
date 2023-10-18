@@ -72,14 +72,16 @@ export enum ItemInteractionType {
 	ADD_REMOVE = 'ADD_REMOVE',
 }
 
+export type PermissionRestriction = {
+	type: 'missingPermission';
+	target: CharacterId;
+	permissionGroup: PermissionGroup;
+	permissionId: string;
+	permissionDescription: string;
+};
+
 export type Restriction =
-	| {
-		type: 'missingPermission';
-		target: CharacterId;
-		permissionGroup: PermissionGroup;
-		permissionId: string;
-		permissionDescription: string;
-	}
+	| PermissionRestriction
 	| {
 		type: 'blockedAddRemove';
 		asset: AssetId;

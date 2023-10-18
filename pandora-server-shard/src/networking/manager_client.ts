@@ -5,6 +5,7 @@ import { assetManager } from '../assets/assetManager';
 import promClient from 'prom-client';
 import { DoAppearanceAction } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { Character } from '../character/character';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -45,6 +46,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 			gamblingAction: this.handleGamblingAction.bind(this),
+			permissionCheck: this.handlePermissionCheck.bind(this),
 			permissionGet: this.handlePermissionGet.bind(this),
 			permissionSet: this.handlePermissionSet.bind(this),
 		});
@@ -229,6 +231,38 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			default:
 				AssertNever(game);
 		}
+	}
+
+	private handlePermissionCheck({ target, permissionGroup, permissionId }: IClientShardArgument['permissionCheck'], client: ClientConnection): IClientShardNormalResult['permissionCheck'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		let targetCharacter: Character | null;
+
+		if (client.character.id === target) {
+			targetCharacter = client.character;
+		} else {
+			targetCharacter = client.character.room?.getCharacterById(target) ?? null;
+		}
+
+		if (targetCharacter == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		const permission = targetCharacter.gameLogicCharacter.getPermission(permissionGroup, permissionId);
+		if (permission == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		const checkResult = permission.checkPermission(client.character.gameLogicCharacter);
+
+		return {
+			result: checkResult ? 'ok' : 'noAccess',
+		};
 	}
 
 	private handlePermissionGet({ permissionGroup, permissionId }: IClientShardArgument['permissionGet'], client: ClientConnection): IClientShardNormalResult['permissionGet'] {

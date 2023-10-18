@@ -53,6 +53,7 @@ export function ActionWarning({ problems, parent }: { problems: readonly Appeara
 }
 
 export function WardrobeActionButton({
+	Element = 'button',
 	id,
 	className,
 	children,
@@ -64,6 +65,8 @@ export function WardrobeActionButton({
 	onFailure,
 	disabled = false,
 }: CommonProps & {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	Element?: 'button' | 'div';
 	action: AppearanceAction;
 	/** If the button should hide on certain invalid states */
 	autohide?: boolean;
@@ -76,16 +79,17 @@ export function WardrobeActionButton({
 }): ReactElement {
 	const check = useStaggeredAppearanceActionResult(action);
 	const hide = check != null && autohide && check.problems.some(AppearanceActionProblemShouldHide);
-	const [ref, setRef] = useState<HTMLButtonElement | null>(null);
+	const [ref, setRef] = useState<HTMLElement | null>(null);
 	const [execute, processing] = useWardrobeExecuteChecked(action, check, {
 		onSuccess: onExecute,
 		onFailure,
 	});
 
 	return (
-		<button
+		<Element
 			id={ id }
 			ref={ setRef }
+			tabIndex={ 0 }
 			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : check.problems.length === 0 ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
@@ -99,7 +103,7 @@ export function WardrobeActionButton({
 				) : null
 			}
 			{ children }
-		</button>
+		</Element>
 	);
 }
 

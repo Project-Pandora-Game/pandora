@@ -350,9 +350,12 @@ $drop-overlay-gap: 0.3em;
 
 .wardrobeActionButton {
 	@include center-flex;
-	min-height: 2.5em;
-	min-width: 2.5em;
 	border: 1px solid black;
+
+	&:not(.slim) {
+		min-height: 2.5em;
+		min-width: 2.5em;
+	}
 
 	background-color: $grey-lighter;
 

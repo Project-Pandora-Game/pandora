@@ -18,7 +18,7 @@ export class InteractionSubsystemServer extends InteractionSubsystem implements 
 		for (const id of INTERACTION_IDS) {
 			let interactionData: InteractionData | undefined = data.config[id];
 			if (interactionData == null) {
-				logger.warning(`Adding missing interaction data for '${id}'`);
+				logger.verbose(`Adding missing interaction data for '${id}'`);
 				interactionData = {
 					permissionConfig: null,
 				};

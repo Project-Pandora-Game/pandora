@@ -49,7 +49,7 @@
 		"express": "4.18.2",
 		"json-diff": "1.0.6",
 		"lodash": "4.17.21",
-		"mongodb": "6.1.0",
+		"mongodb": "6.2.0",
 		"mongodb-memory-server-core": "9.0.1",
 		"nanoid": "3.3.6",
 		"nodemailer": "6.9.6",

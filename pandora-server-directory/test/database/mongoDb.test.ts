@@ -10,12 +10,12 @@ let db: MongoDatabase | null = null;
 
 describe('MongoDatabase', () => {
 	RunDbTests(async () => {
-		db = null;
-		db = await new MongoDatabase().init({ inMemory: true });
+		db = new MongoDatabase({ inMemory: true });
+		await db.init();
 		return db;
 	}, async () => {
 		if (db) {
-			await db.close();
+			await db.onDestroy();
 		}
 	});
 });
@@ -35,27 +35,31 @@ describe('MongoDatabase extra tests', () => {
 	});
 
 	it('Can connect to normal MongoDB', async () => {
-		const testDb = await new MongoDatabase(server.getUri()).init();
-		await testDb.close();
+		const testDb = new MongoDatabase({ url: server.getUri() });
+		await testDb.init();
+		await testDb.onDestroy();
 	});
 
 	it('fails on double init', async () => {
-		const testDb = await new MongoDatabase(server.getUri()).init();
+		const testDb = new MongoDatabase({ url: server.getUri() });
+		await testDb.init();
 
 		await expect(testDb.init()).rejects.toThrowError('Database already initialized');
 
-		await testDb.close();
+		await testDb.onDestroy();
 	});
 
 	it('Correctly finds id after reconnect', async () => {
-		const testDb = await new MongoDatabase(server.getUri()).init();
+		const testDb = new MongoDatabase({ url: server.getUri() });
+		await testDb.init();
 
 		const acc = await testDb.createAccount(await CreateAccountData('testuser1', PrehashPassword('password1'), 'test1@project-pandora.com')) as DatabaseAccountWithSecure;
 		const char = await testDb.createCharacter(acc.id);
 
-		await testDb.close();
+		await testDb.onDestroy();
 
-		const testDb2 = await new MongoDatabase(server.getUri()).init();
+		const testDb2 = new MongoDatabase({ url: server.getUri() });
+		await testDb2.init();
 
 		const acc2 = await testDb2.createAccount(await CreateAccountData('testuser2', PrehashPassword('password2'), 'test2@project-pandora.com')) as DatabaseAccountWithSecure;
 		const char2 = await testDb2.createCharacter(acc.id);
@@ -63,6 +67,6 @@ describe('MongoDatabase extra tests', () => {
 		expect(acc2.id).not.toBe(acc.id);
 		expect(char2.id).not.toBe(char.id);
 
-		await testDb2.close();
+		await testDb2.onDestroy();
 	});
 });

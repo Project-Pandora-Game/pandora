@@ -1,5 +1,5 @@
 import { GetDatabase } from '../database/databaseProvider';
-import { ACCOUNT_SETTINGS_DEFAULT, Assert, AsyncSynchronized, DirectoryAccountSettingsSchema, GetLogger } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, Assert, AsyncSynchronized, DirectoryAccountSettingsSchema, GetLogger, Service } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 import promClient from 'prom-client';
 import { DiscordBot } from '../services/discord/discordBot';
@@ -49,7 +49,7 @@ const onlineCharactersMetric = new promClient.Gauge({
 });
 
 /** Class that stores all currently logged in or recently used accounts, removing them when needed */
-export class AccountManager {
+export class AccountManager implements Service {
 	private readonly _onlineAccounts: Set<Account> = new Set();
 	public get onlineAccounts(): ReadonlySet<Account> {
 		return this._onlineAccounts;

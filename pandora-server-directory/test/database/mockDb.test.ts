@@ -17,9 +17,9 @@ describe('PrehashPassword()', () => {
 });
 
 describe('MockDatabase', () => {
-	RunDbTests(() => new MockDatabase().init(false), () => Promise.resolve());
+	RunDbTests(() => Promise.resolve(new MockDatabase()), () => Promise.resolve());
 
-	it('Inits with mock accounts', async () => {
-		await new MockDatabase().init();
+	it('Inits with mock accounts', () => {
+		new MockDatabase();
 	});
 });

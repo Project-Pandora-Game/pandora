@@ -8,5 +8,6 @@ export * from './event';
 export * from './logging';
 export * from './networking';
 export * from './security';
+export * from './services';
 export * from './utility';
 export * from './validation';

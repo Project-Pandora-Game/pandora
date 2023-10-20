@@ -2,12 +2,13 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
+import { ServiceInit } from 'pandora-common';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
-export interface PandoraDatabase {
+export interface PandoraDatabase extends Service {
 	/** The id in numeric form that will be assigned to next created account */
 	readonly nextAccountId: number;
 
@@ -225,7 +226,7 @@ export interface PandoraDatabase {
 }
 
 /** Current database connection */
-let database: MongoDatabase | MockDatabase | undefined;
+let database: PandoraDatabase | undefined;
 
 /** Init database connection based on configuration */
 export async function InitDatabase(setDb?: typeof database): Promise<void> {
@@ -235,23 +236,24 @@ export async function InitDatabase(setDb?: typeof database): Promise<void> {
 	}
 	switch (DATABASE_TYPE) {
 		case 'mongodb':
-			database = await new MongoDatabase().init();
+			database = new MongoDatabase();
 			break;
 		case 'mongodb-in-memory':
-			database = await new MongoDatabase().init({ inMemory: true });
+			database = new MongoDatabase({ inMemory: true });
 			break;
 		case 'mongodb-local':
-			database = await new MongoDatabase().init({ inMemory: true, dbPath: './localDb' });
+			database = new MongoDatabase({ inMemory: true, dbPath: './localDb' });
 			break;
 		case 'mock':
 		default:
-			database = await new MockDatabase().init();
+			database = new MockDatabase();
 	}
+	await ServiceInit(database);
 }
 
 export async function CloseDatabase(): Promise<void> {
 	if (database instanceof MongoDatabase) {
-		await database.close();
+		await database.onDestroy();
 	}
 }
 

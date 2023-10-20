@@ -1,4 +1,4 @@
-import { GetLogger, logConfig } from 'pandora-common';
+import { GetLogger, Service, logConfig } from 'pandora-common';
 import { accountManager } from './account/accountManager';
 import { CloseDatabase } from './database/databaseProvider';
 import { StopHttpServer } from './networking/httpServer';
@@ -17,25 +17,35 @@ const logger = GetLogger('Lifecycle');
 	wtfnode.setLogger('error', (...message) => wtfNodeLogger.error(...message));
 }
 
+let destroying: string | undefined;
 let stopping: Promise<void> | undefined;
 const STOP_TIMEOUT = 10_000;
 
+function DestroyService(service: Service): Promise<void> | void {
+	destroying = service.constructor.name;
+	return service.onDestroy?.();
+}
+
 async function StopGracefully(): Promise<void> {
 	// Stop HTTP server
+	destroying = 'HTTP Server';
 	StopHttpServer();
 	// Stop discord bot
-	await DiscordBot.onDestroy();
+	await DestroyService(DiscordBot);
 	// Stop sending status updates
-	ConnectionManagerClient.onDestroy();
+	await DestroyService(ConnectionManagerClient);
 	// Unload all shards
-	await ShardManager.onDestroy();
+	await DestroyService(ShardManager);
 	// Unload all characters
+	destroying = 'AccountManager Characters';
 	await accountManager.onDestroyCharacters();
 	// Unload all rooms
-	RoomManager.onDestroy();
+	await DestroyService(RoomManager);
 	// Unload all accounts
+	destroying = 'AccountManager Accounts';
 	accountManager.onDestroyAccounts();
 	// Disconnect database
+	destroying = 'AccountManager Database';
 	await CloseDatabase();
 }
 
@@ -44,7 +54,7 @@ export function Stop(): Promise<void> {
 		return stopping;
 	logger.alert('Stopping...');
 	setTimeout(() => {
-		logger.fatal('Stop timed out!');
+		logger.fatal(`Stop timed out! Destroying ${destroying ?? 'unknown service'}!`);
 		// Dump what is running
 		wtfnode.dump();
 		// Force exit the process
@@ -53,7 +63,7 @@ export function Stop(): Promise<void> {
 	// Graceful stop syncs everything with directory and database
 	stopping = StopGracefully()
 		.catch((err) => {
-			logger.fatal('Stop errored:\n', err);
+			logger.fatal(`Stop errored at ${destroying}:\n`, err);
 			// Force exit the process
 			process.exit();
 		});

@@ -23,10 +23,10 @@ export default class MongoDatabase implements ShardDatabase {
 		});
 	}
 
-	public async init(): Promise<this> {
+	public async init(): Promise<void> {
 		if (this._db) {
 			logger.error('Database already initialized');
-			return this;
+			return;
 		}
 
 		// if connection fails, error is thrown, application will exit
@@ -38,11 +38,9 @@ export default class MongoDatabase implements ShardDatabase {
 		this._chatrooms = this._db.collection(CHATROOMS_COLLECTION_NAME);
 
 		logger.info('Initialized MongoDB database');
-
-		return this;
 	}
 
-	public async close(): Promise<void> {
+	public async onDestroy(): Promise<void> {
 		await this._client.close();
 	}
 

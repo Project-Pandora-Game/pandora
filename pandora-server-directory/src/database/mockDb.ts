@@ -34,10 +34,7 @@ export class MockDatabase implements PandoraDatabase {
 		logger.info('Initialized mock database');
 	}
 
-	public async init(addTestAccounts?: false): Promise<this> {
-		if (addTestAccounts === false)
-			return this;
-
+	public async addTestAccounts() {
 		await this.createAccount(await CreateAccountData(
 			'test',
 			PrehashPassword('test'),
@@ -50,7 +47,6 @@ export class MockDatabase implements PandoraDatabase {
 			'testinactive@project-pandora.com',
 			false,
 		));
-		return this;
 	}
 
 	public get nextAccountId(): number {

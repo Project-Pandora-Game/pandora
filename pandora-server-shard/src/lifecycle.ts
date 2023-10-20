@@ -15,19 +15,25 @@ const logger = GetLogger('Lifecycle');
 	wtfnode.setLogger('error', (...message) => wtfNodeLogger.error(...message));
 }
 
+let destroying = 'unknown service';
 let stopping: Promise<IEmpty> | undefined;
 const STOP_TIMEOUT = 10_000;
 
 async function StopGracefully(): Promise<IEmpty> {
 	// Disconnect all characters
+	destroying = 'CharacterManager';
 	await CharacterManager.removeAllCharacters();
 	// Cleanup all rooms
+	destroying = 'RoomManager';
 	await RoomManager.removeAllRooms();
 	// Stop HTTP server
+	destroying = 'HTTP Server';
 	StopHttpServer();
 	// Disconnect database
+	destroying = 'Database';
 	await CloseDatabase();
 	// The result of promise from graceful stop is used by Directory, disconnect afterwards
+	destroying = 'DirectoryConnector';
 	setTimeout(() => {
 		DirectoryConnector?.disconnect();
 	}, 500);
@@ -39,7 +45,7 @@ export function Stop(): Promise<IEmpty> {
 		return stopping;
 	logger.alert('Stopping...');
 	setTimeout(() => {
-		logger.fatal('Stop timed out!');
+		logger.fatal(`Stop timed out! Destroying ${destroying}!`);
 		// Dump what is running
 		wtfnode.dump();
 		// Force exit the process
@@ -48,7 +54,7 @@ export function Stop(): Promise<IEmpty> {
 	// Graceful stop syncs everything with directory and database
 	stopping = StopGracefully()
 		.catch((err) => {
-			logger.fatal('Stop errored:\n', err);
+			logger.fatal(`Stop errored at ${destroying}:\n`, err);
 			// Force exit the process
 			process.exit();
 		});

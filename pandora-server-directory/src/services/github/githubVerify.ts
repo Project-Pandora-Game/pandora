@@ -1,4 +1,4 @@
-import { GetLogger, ZodMatcher } from 'pandora-common';
+import { GetLogger, Service, ZodMatcher } from 'pandora-common';
 import { accountManager } from '../../account/accountManager';
 
 import { Octokit } from '@octokit/rest';
@@ -33,20 +33,20 @@ const invalidTeams = new Set<string>();
 let octokitOrg!: Octokit;
 let octokitApp!: Octokit;
 
-export const GitHubVerifier = new class GitHubVerifier {
+export const GitHubVerifier = new class GitHubVerifier implements Service {
 	private _active = false;
 
 	public get active(): boolean {
 		return this._active;
 	}
 
-	public async init(): Promise<this> {
+	public async init(): Promise<void> {
 		if (this.active) {
-			return this;
+			return;
 		}
 		if (!GITHUB_PERSONAL_ACCESS_TOKEN || !GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET) {
 			logger.warning('Secret is not set, GitHub OAuth is disabled');
-			return this;
+			return;
 		}
 		// TODO remove this once the org is public
 		octokitOrg = new Octokit({
@@ -54,7 +54,7 @@ export const GitHubVerifier = new class GitHubVerifier {
 		});
 		if (!await GitHubCheckSecret(octokitOrg, true)) {
 			logger.warning('Personal access token is invalid, GitHub OAuth is disabled');
-			return this;
+			return;
 		}
 		octokitApp = new Octokit({
 			authStrategy: createOAuthAppAuth,
@@ -65,13 +65,12 @@ export const GitHubVerifier = new class GitHubVerifier {
 		});
 		if (!await GitHubCheckSecret(octokitApp)) {
 			logger.warning('Client secret is invalid, GitHub OAuth is disabled');
-			return this;
+			return;
 		}
 
 		this._active = true;
 
 		logger.info('GitHub Verifier API is attached');
-		return this;
 	}
 
 	private async getTeamMemberships(login: string): Promise<GitHubTeam[]> {

@@ -6,15 +6,11 @@ import _ from 'lodash';
 const logger = GetLogger('db');
 
 export default class DirectoryDatabase implements ShardDatabase {
-	public async init(): Promise<this> {
-		if (!DirectoryConnector) {
+	public init(): void {
+		if (!DirectoryConnector)
 			logger.error('Directory connection not initialized');
-			return Promise.resolve(this);
-		}
-
-		logger.info('Initialized Directory database');
-
-		return Promise.resolve(this);
+		else
+			logger.info('Initialized Directory database');
 	}
 
 	public async getCharacter(id: CharacterId, accessId: string): Promise<ICharacterData | null | false> {

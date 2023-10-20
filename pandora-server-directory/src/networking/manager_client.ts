@@ -1,4 +1,4 @@
-import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo } from 'pandora-common';
+import { GetLogger, ChatRoomDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { ENV } from '../config';
@@ -35,7 +35,7 @@ const IsIChatRoomDirectoryConfig = ZodMatcher(ChatRoomDirectoryConfigSchema);
 const IsClientDirectoryAuthMessage = ZodMatcher(ClientDirectoryAuthMessageSchema);
 
 /** Class that stores all currently connected clients */
-export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, ClientConnection> {
+export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, ClientConnection>, Service {
 	private connectedClients: Set<ClientConnection> = new Set();
 
 	private readonly messageHandler: MessageHandler<IClientDirectory, ClientConnection>;

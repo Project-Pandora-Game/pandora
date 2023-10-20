@@ -9,7 +9,7 @@ describe('GetDatabase()', () => {
 
 describe('InitDatabase()', () => {
 	it('sets given database', async () => {
-		const instance = await new MockDatabase().init();
+		const instance = new MockDatabase();
 		await InitDatabase(instance);
 		expect(() => GetDatabase()).not.toThrowError();
 		expect(GetDatabase()).toBe(instance);

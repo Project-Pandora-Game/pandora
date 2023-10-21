@@ -120,33 +120,31 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 	return useAsyncEvent(
 		async (action: AppearanceAction) => await execute(action),
 		(result) => {
-			{
-				switch (result?.result) {
-					case 'success':
-						onSuccess?.();
-						break;
-					case 'failure':
-						GetLogger('wardrobeExecute').info('Failure executing action:', result.problems);
-						toast(
-							<Column>
-								<span>Problems performing action:</span>
-								<ul>
-									{
-										result.problems.map((problem, i) => (
-											<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem) }</li>
-										))
-									}
-								</ul>
-							</Column>,
-							TOAST_OPTIONS_ERROR,
-						);
-						onFailure?.(result.problems);
-						break;
-					case undefined:
-						break;
-					default:
-						AssertNever(result);
-				}
+			switch (result?.result) {
+				case 'success':
+					onSuccess?.();
+					break;
+				case 'failure':
+					GetLogger('wardrobeExecute').info('Failure executing action:', result.problems);
+					toast(
+						<Column>
+							<span>Problems performing action:</span>
+							<ul>
+								{
+									result.problems.map((problem, i) => (
+										<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem) }</li>
+									))
+								}
+							</ul>
+						</Column>,
+						TOAST_OPTIONS_ERROR,
+					);
+					onFailure?.(result.problems);
+					break;
+				case undefined:
+					break;
+				default:
+					AssertNever(result);
 			}
 		},
 		{

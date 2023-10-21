@@ -55,8 +55,8 @@
 }
 
 .backgroundSelect {
-	max-width: 95vw;
-	max-height: 60vh;
+	width: min(50em, 90vw);
+	max-height: calc(100vh - 10em);
 	display: flex;
 	flex-flow: column;
 	gap: 0.5em;

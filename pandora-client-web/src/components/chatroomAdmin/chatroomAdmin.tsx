@@ -14,7 +14,7 @@ import {
 	RoomId,
 	BackgroundTagDefinition,
 	AssetManager,
-	IChatroomBackgroundInfo
+	IChatroomBackgroundInfo,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -567,7 +567,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 	}, []);
 
 	return (
-		<ModalDialog>
+		<ModalDialog position='top'>
 			<div className='backgroundSelect'>
 				<div className='header'>
 					<div className='header-filter'>

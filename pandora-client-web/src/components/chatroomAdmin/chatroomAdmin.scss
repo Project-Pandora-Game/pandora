@@ -55,7 +55,6 @@
 }
 
 .backgroundSelect {
-
 	max-width: 95vw;
 	max-height: 60vh;
 	display: flex;
@@ -80,7 +79,7 @@
 		}
 
 		.header-tags {
-			@include flex(row);
+			@include flex(row, wrap);
 			gap: 0.5em;
 			width: 100%;
 
@@ -131,10 +130,17 @@
 			@include flex(column);
 			display: none;
 			position: absolute;
+			max-height: 50vh;
+            overflow-y: auto;
 			background-color: $grey-lighter;
 			box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
 			padding: 0.8em 1em;
 			z-index: 1;
+
+			a > span {
+				display: inline-block;
+				width: 1rem;
+			}
 		}
 
 		.dropdown:hover .dropdown-content {

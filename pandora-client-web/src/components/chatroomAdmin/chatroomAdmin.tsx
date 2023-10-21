@@ -13,6 +13,8 @@ import {
 	AssertNotNullable,
 	RoomId,
 	BackgroundTagDefinition,
+	AssetManager,
+	IChatroomBackgroundInfo
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -532,20 +534,14 @@ function BackgroundSelectDialog({ hide, current, select }: {
 		setSelectedBackground(current);
 	}, [current]);
 
-	const availableBackgrounds = useMemo(() => assetManager.getBackgrounds(), [assetManager]);
 	const [nameFilter, setNameFilter] = useState('');
-	const [tags, setTags] = useState<readonly string[]>([...assetManager.backgroundTags.keys()]);
-	const knownTagCategories = useMemo(() => uniq([...assetManager.backgroundTags.values()].map((tag) => tag.category)), [assetManager.backgroundTags]);
-
-	const tagFilteredBackgrounds = useMemo(() => (availableBackgrounds
-		.filter((b) => b.tags.some((t) => tags.includes(t)))
-	), [availableBackgrounds, tags]);
+	const [selection, setSelection] = useState(() => BackgroundSelectionStateClass.create(assetManager));
 
 	const filteredBackgrounds = useMemo(() => {
 		const filterParts = nameFilter.toLowerCase().trim().split(/\s+/);
-		return tagFilteredBackgrounds
+		return selection.backgrounds
 			.filter((b) => filterParts.every((f) => b.name.toLowerCase().includes(f)));
-	}, [tagFilteredBackgrounds, nameFilter]);
+	}, [selection, nameFilter]);
 	const nameFilterInput = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -585,12 +581,12 @@ function BackgroundSelectDialog({ hide, current, select }: {
 					</div>
 					<div className='header-tags'>
 						{
-							knownTagCategories.map((category) => (
+							selection.knownCategories.map((category) => (
 								<TagCategoryButton
 									key={ category }
 									category={ category }
-									tags={ tags }
-									setTags={ setTags }
+									selection={ selection }
+									setSelection={ setSelection }
 								/>
 							))
 						}
@@ -648,76 +644,49 @@ function BackgroundSelectDialog({ hide, current, select }: {
 
 type BackgroundTag = Readonly<BackgroundTagDefinition & { id: string; }>;
 
-function TagCategoryButton({ category, tags, setTags }: {
+function TagCategoryButton({ category, selection, setSelection }: {
 	category: string;
-	tags: readonly string[];
-	setTags: (tags: readonly string[]) => void;
+	selection: BackgroundSelectionStateClass;
+	setSelection: (selection: BackgroundSelectionStateClass) => void;
 }): ReactElement {
-	const assetManager = useAssetManager();
-	const [selected, empty] = useMemo(() => {
-		const state = [true, true];
-		for (const [id, tag] of assetManager.backgroundTags.entries()) {
-			if (tag.category === category) {
-				if (tags.includes(id)) {
-					state[1] = false;
-				} else {
-					state[0] = false;
-				}
-			}
-		}
-		return state;
-	}, [category, tags, assetManager]);
-	const tagsUnderCategory = useMemo<readonly BackgroundTag[]>(() => ([...assetManager.backgroundTags.entries()]
-		.map(([id, tag]) => ({ id, ...tag }))
-		.filter((tag) => tag.category === category)
-	), [assetManager, category]);
-	const onClick = useCallback(() => {
-		if (selected) {
-			setTags(tags.filter((t) => tagsUnderCategory.every((tag) => tag.id !== t)));
-		} else {
-			setTags(uniq([...tags, ...tagsUnderCategory.map((tag) => tag.id)]));
-		}
-	}, [selected, tags, setTags, tagsUnderCategory]);
-	const onDoubleClick = useCallback((ev: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+	const selected = selection.isSelectedCategory(category);
+	const onClick = useCallback((ev: React.MouseEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
-		setTags(uniq([...tagsUnderCategory.map((tag) => tag.category)]));
-	}, [setTags, tagsUnderCategory]);
+		setSelection(selection.toggleCategory(category));
+	}, [category, selection, setSelection]);
 	return (
 		<div className='dropdown'>
-			<Button onClick={ onClick } onDoubleClick={ onDoubleClick } className='slim dropdown-button'>
+			<Button className='slim dropdown-button' onClick={ onClick }>
 				{ category }
-				<span>{ selected ? '✓' : empty ? ' ' : '○' }</span>
+				<span>{ selected ? '✓' : ' ' }</span>
 			</Button>
 			<div className='dropdown-content'>
-				{ tagsUnderCategory.map((tag) => (
-					<TagButton key={ tag.id } tagsUnderCategory={ tagsUnderCategory } tag={ tag.id } name={ tag.name } tags={ tags } setTags={ setTags } />
+				{ selection.getTagsByCategory(category).map((tag) => (
+					<TagButton key={ tag.id } id={ tag.id } name={ tag.name } selection={ selection } setSelection={ setSelection } />
 				)) }
 			</div>
 		</div>
 	);
 }
 
-function TagButton({ tagsUnderCategory, tag, name, tags, setTags }: {
-	tagsUnderCategory: readonly BackgroundTag[];
-	tag: string;
+function TagButton({ id, name, selection, setSelection }: {
+	id: string;
 	name: string;
-	tags: readonly string[];
-	setTags: (tags: readonly string[]) => void;
+	selection: BackgroundSelectionStateClass;
+	setSelection: (selection: BackgroundSelectionStateClass) => void;
 }): ReactElement {
-	const selected = tags.includes(tag);
-	const onClick = useCallback(() => {
-		if (selected) {
-			setTags(tags.filter((t) => t !== tag));
-		} else {
-			setTags([...tags, tag]);
-		}
-	}, [selected, setTags, tags, tag]);
-	const onDoubleClick = useCallback((ev: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+	const selected = selection.isSelectedTag(id);
+	const onClick = useCallback((ev: React.MouseEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
-		setTags(tags.filter((t) => tagsUnderCategory.every(({ id }) => id !== t)).concat([tag]));
-	}, [tagsUnderCategory, tags, setTags, tag]);
+		setSelection(selection.toggleTag(id));
+	}, [id, selection, setSelection]);
+	const onDoubleClick = useCallback((ev: React.MouseEvent) => {
+		ev.preventDefault();
+		ev.stopPropagation();
+		setSelection(selection.fullToggleTag(id));
+	}, [id, selection, setSelection]);
 	return (
 		<a onClick={ onClick } onDoubleClick={ onDoubleClick }>
 			<span>{ selected ? '✓' : ' ' }</span>
@@ -780,3 +749,153 @@ function useShards(): IDirectoryShardInfo[] | undefined {
 
 	return shards;
 }
+
+interface BackgroundSelectionState {
+	readonly availableBackgrounds: readonly Readonly<IChatroomBackgroundInfo>[];
+	readonly availableTags: ReadonlyMap<string, readonly BackgroundTag[]>;
+	readonly backgroundTags: ReadonlyMap<string, Readonly<BackgroundTagDefinition>>;
+	readonly tagToCategory: ReadonlyMap<string, string>;
+	readonly categories: readonly string[];
+	readonly selectedCategories: Set<string>;
+	readonly selectedTags: ReadonlyMap<string, Set<string>>;
+}
+
+class BackgroundSelectionStateClass {
+	private readonly state: BackgroundSelectionState;
+	public readonly backgrounds: readonly Readonly<IChatroomBackgroundInfo>[];
+	public readonly categories: ReadonlySet<string>;
+
+	public get knownCategories(): readonly string[] {
+		return this.state.categories;
+	}
+
+	private constructor(state: BackgroundSelectionState) {
+		this.state = state;
+		this.backgrounds = state.availableBackgrounds.filter((b) => BackgroundSelectionStateClass.isSelected(state, b));
+		this.categories = this.state.selectedCategories;
+	}
+
+	public static create(assetManager: AssetManager): BackgroundSelectionStateClass {
+		const availableBackgrounds = assetManager.getBackgrounds();
+		const backgroundTags = assetManager.backgroundTags;
+		const categories = uniq([...backgroundTags.values()].map((tag) => tag.category));
+		const tagToCategory = new Map<string, string>();
+		for (const [id, tag] of backgroundTags.entries()) {
+			tagToCategory.set(id, tag.category);
+		}
+		const availableTags = new Map<string, readonly BackgroundTag[]>();
+		const selectedTags = new Map<string, Set<string>>();
+		for (const category of categories) {
+			selectedTags.set(category, new Set<string>());
+			const tags: BackgroundTag[] = [];
+			for (const [id, tag] of backgroundTags.entries()) {
+				if (tag.category === category) {
+					tags.push({ ...tag, id });
+				}
+			}
+			availableTags.set(category, tags);
+		}
+		return new BackgroundSelectionStateClass({
+			availableBackgrounds,
+			availableTags,
+			backgroundTags,
+			tagToCategory,
+			categories,
+			selectedCategories: new Set<string>(),
+			selectedTags,
+		});
+	}
+
+	public isSelectedCategory(category: string): boolean {
+		return this.state.selectedCategories.has(category);
+	}
+
+	public isSelectedTag(tag: string): boolean {
+		const category = this.state.tagToCategory.get(tag);
+		if (!category) {
+			return false;
+		}
+		const tags = this.state.selectedTags.get(category);
+		return tags != null && tags.has(tag);
+	}
+
+	public toggleTag(tag: string): BackgroundSelectionStateClass {
+		const category = this.state.tagToCategory.get(tag);
+		if (!category) {
+			return this;
+		}
+		const selected = this.state.selectedTags.get(category);
+		if (!selected) {
+			return this;
+		}
+		if (!selected.delete(tag)) {
+			selected.add(tag);
+			this.state.selectedCategories.add(category);
+
+		} else if (selected.size === 0) {
+			this.state.selectedCategories.delete(category);
+		}
+		return new BackgroundSelectionStateClass(this.state);
+	}
+
+	public fullToggleTag(tag: string): BackgroundSelectionStateClass {
+		const category = this.state.tagToCategory.get(tag);
+		if (!category) {
+			return this;
+		}
+		const selected = this.state.selectedTags.get(category);
+		if (!selected) {
+			return this;
+		}
+		this.state.selectedCategories.add(category);
+		if (!selected.has(tag)) {
+			selected.clear();
+			selected.add(tag);
+		} else {
+			const tags = this.state.availableTags.get(category)!;
+			selected.clear();
+			for (const t of tags) {
+				if (t.id !== tag) {
+					selected.add(t.id);
+				}
+			}
+		}
+		return new BackgroundSelectionStateClass(this.state);
+	}
+
+	public toggleCategory(category: string): BackgroundSelectionStateClass {
+		const selected = this.state.selectedTags.get(category);
+		if (!selected) {
+			return this;
+		}
+		if (!this.state.selectedCategories.delete(category)) {
+			this.state.selectedCategories.add(category);
+			const tags = this.state.availableTags.get(category)!;
+			for (const t of tags) {
+				selected.add(t.id);
+			}
+		} else {
+			selected.clear();
+		}
+		return new BackgroundSelectionStateClass(this.state);
+	}
+
+	public getTagsByCategory(category: string): readonly BackgroundTag[] {
+		return this.state.availableTags.get(category) ?? EMPTY_ARRAY;
+	}
+
+	private static isSelected(state: BackgroundSelectionState, info: Readonly<IChatroomBackgroundInfo>): boolean {
+		if (state.selectedCategories.size === 0) {
+			return true;
+		}
+		for (const category of state.selectedCategories) {
+			const tags = state.selectedTags.get(category);
+			if (!tags || !info.tags.some((tag) => tags.has(tag))) {
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+const EMPTY_ARRAY: readonly [] = Object.freeze([]);

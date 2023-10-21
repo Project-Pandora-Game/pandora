@@ -8,6 +8,7 @@ import { Observable, useObservable } from '../../observable';
 import './dialog.scss';
 import { useEvent } from '../../common/useEvent';
 import { DivContainer } from '../common/container/container';
+import classNames from 'classnames';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HtmlPortalNodeAny = HtmlPortalNode<any>;
@@ -47,6 +48,7 @@ export class ModalDialog extends PureComponent<ChildrenProps & {
 	 * @default 0
 	 */
 	priority?: number;
+	position?: 'center' | 'top';
 }> {
 	private readonly _node: HtmlPortalNodeAny;
 	private readonly _context: DialogCloseContext;
@@ -88,10 +90,10 @@ export class ModalDialog extends PureComponent<ChildrenProps & {
 	}
 
 	public override render() {
-		const { children } = this.props;
+		const { children, position = 'center' } = this.props;
 		return (
 			<InPortal node={ this._node }>
-				<div className='dialog'>
+				<div className={ classNames('dialog', position) }>
 					<div className='dialog-content'>
 						<dialogCloseContext.Provider value={ this._context }>
 							{ children }

@@ -4,7 +4,7 @@
 .roomAdminScreen {
 	width: min(100%, 50em);
 
-	& > * {
+	&>* {
 		margin-top: 0.5em;
 	}
 
@@ -55,19 +55,43 @@
 }
 
 .backgroundSelect {
-
-	max-width: 95vw;
-	max-height: 60vh;
+	width: min(50em, 90vw);
+	max-height: calc(100vh - 10em);
 	display: flex;
 	flex-flow: column;
 	gap: 0.5em;
 
 	.header {
-		display: grid;
-		grid-template-columns: auto 1fr 1fr;
-		grid-template-rows: auto;
-		column-gap: 0.6em;
+		@include flex(column);
+		gap: 0.5em;
 		max-width: 95vw;
+
+		.header-filter {
+			display: grid;
+			grid-template-columns: auto 1fr;
+			grid-template-rows: auto;
+			column-gap: 0.6em;
+			width: 100%;
+
+			span {
+				margin: auto 0;
+			}
+		}
+
+		.header-tags {
+			@include flex(row, wrap);
+			gap: 0.5em;
+			width: 100%;
+
+			button {
+				width: 100%;
+
+				span {
+					float: right;
+				}
+			}
+		}
+
 		align-items: center;
 
 		.input-filter {
@@ -88,6 +112,8 @@
 		.dropdown {
 			position: relative;
 			display: inline-block;
+			flex: 1;
+			min-width: max-content;
 		}
 
 		.dropdown-button {
@@ -101,16 +127,24 @@
 		}
 
 		.dropdown-content {
+			@include flex(column);
 			display: none;
 			position: absolute;
+			max-height: 50vh;
+			overflow-y: auto;
 			background-color: $grey-lighter;
 			box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
 			padding: 0.8em 1em;
 			z-index: 1;
+
+			a > span {
+				display: inline-block;
+				width: 1rem;
+			}
 		}
 
 		.dropdown:hover .dropdown-content {
-			display: block;
+			display: flex;
 		}
 	}
 
@@ -153,5 +187,12 @@
 
 	.footer {
 		max-width: 100%;
+	}
+}
+
+.backgroundInfo {
+	img {
+		max-width: 46em;
+		max-height: 46em;
 	}
 }

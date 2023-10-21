@@ -19,7 +19,7 @@
 		"@types/node": "18.18.6",
 		"@typescript-eslint/eslint-plugin": "6.8.0",
 		"@typescript-eslint/parser": "6.8.0",
-		"eslint": "8.51.0",
+		"eslint": "8.52.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",
 		"pandora-server-shard": "workspace:*",

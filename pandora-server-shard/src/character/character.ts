@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterAppearance, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -116,6 +116,8 @@ export class Character {
 		return this.data.settings;
 	}
 
+	public readonly gameLogicCharacter: GameLogicCharacterServer;
+
 	private logger: Logger;
 
 	public set position(value: CharacterRoomPosition) {
@@ -147,6 +149,8 @@ export class Character {
 		this.accountData = account;
 		this.connectSecret = connectSecret;
 
+		this.gameLogicCharacter = new GameLogicCharacterServer(data, this.logger.prefixMessages('[GameLogic]'));
+
 		this.setConnection(null);
 		Assert(this._clientTimeout == null || connectSecret != null);
 
@@ -172,6 +176,16 @@ export class Character {
 				this.logger.error(`Failed to link character to room ${roomId}; not found`);
 			}
 		}
+
+		// Link events from game logic parts
+		this.gameLogicCharacter.on('dataChanged', (type) => {
+			if (type === 'interactions') {
+				this.setValue('interactionConfig', this.gameLogicCharacter.interactions.getData(), false);
+				this._emitSomethingChanged('permissions');
+			} else {
+				AssertNever(type);
+			}
+		});
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
@@ -396,40 +410,22 @@ export class Character {
 		return this._context.inRoom ? this._context.room.roomState : this._context.globalState;
 	}
 
-	public getAppearance(): CharacterAppearance {
+	public getRestrictionManager(): CharacterRestrictionsManager {
 		const state = this.getGlobalState().currentState.characters.get(this.id);
 		AssertNotNullable(state);
 
-		return new CharacterAppearance(state, () => this.data);
-	}
-
-	public getRestrictionManager(): CharacterRestrictionsManager {
-		return this.getAppearance().getRestrictionManager(this.room?.getActionRoomContext() ?? null);
+		return this.gameLogicCharacter.getRestrictionManager(state, this.room?.getActionRoomContext() ?? null);
 	}
 
 	public getAppearanceActionContext(): AppearanceActionContext {
 		const globalState = this.getGlobalState();
 		return {
-			player: this.id,
+			player: this.gameLogicCharacter,
 			globalState,
+			roomContext: this.room?.getActionRoomContext() ?? null,
 			getCharacter: (id) => {
 				const char = this.id === id ? this : this.room?.getCharacterById(id);
-				return char?.getRestrictionManager() ?? null;
-			},
-			getTarget: (target) => {
-				if (target.type === 'character') {
-					const char = this.id === target.characterId ? this : this.room?.getCharacterById(target.characterId);
-					return char?.getAppearance() ?? null;
-				}
-
-				if (target.type === 'roomInventory') {
-					return this.room?.getRoomInventory() ?? null;
-				}
-
-				AssertNever(target);
-			},
-			actionHandler: (message) => {
-				this.room?.handleActionMessage(message);
+				return char?.gameLogicCharacter ?? null;
 			},
 		};
 	}
@@ -493,6 +489,18 @@ export class Character {
 			});
 		} else {
 			this.connection?.sendMessage('updateCharacter', { [key]: value });
+		}
+	}
+
+	private _emitSomethingChanged(...changes: IShardClientChangeEvents[]): void {
+		if (this.room != null) {
+			this.room.sendMessage('somethingChanged', {
+				changes,
+			});
+		} else {
+			this.connection?.sendMessage('somethingChanged', {
+				changes,
+			});
 		}
 	}
 

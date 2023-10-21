@@ -1,9 +1,9 @@
-import { AppearanceActionResult, AssertNever } from 'pandora-common';
+import { AppearanceActionProblem, AssertNever } from 'pandora-common';
 import { DescribeAsset, DescribeAssetSlot } from '../components/chatroom/chatroomMessages';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
-export function AppearanceActionResultShouldHide(result: AppearanceActionResult): boolean {
+export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {
 	if (result.result === 'invalidAction')
 		return true;
 
@@ -17,10 +17,8 @@ export function AppearanceActionResultShouldHide(result: AppearanceActionResult)
 	return false;
 }
 
-export function RenderAppearanceActionResult(assetManager: AssetManagerClient, result: AppearanceActionResult): string {
-	if (result.result === 'success') {
-		return 'No problem.';
-	} else if (result.result === 'invalidAction') {
+export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem): string {
+	if (result.result === 'invalidAction') {
 		if (result.reason != null) {
 			switch (result.reason) {
 				case 'noDeleteRoomDeviceWearable':
@@ -58,16 +56,8 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 	} else if (result.result === 'restrictionError') {
 		const e = result.restriction;
 		switch (e.type) {
-			case 'permission':
-				switch (e.missingPermission) {
-					case 'modifyBodyOthers':
-						return `You cannot modify body of other characters.`;
-					case 'modifyBodyRoom':
-						return `You cannot modify body in this room.`;
-					case 'safemodeInteractOther':
-						return `You cannot touch others while either you or they are in safemode.`;
-				}
-				break;
+			case 'missingPermission':
+				return `You are missing permission to:\n${e.permissionDescription}`;
 			case 'blockedAddRemove':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
 			case 'blockedModule': {
@@ -79,6 +69,10 @@ export function RenderAppearanceActionResult(assetManager: AssetManagerClient, r
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because ${DescribeAssetSlot(assetManager, e.slot)} is covered by another item.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
+			case 'safemodeInteractOther':
+				return `You cannot touch others while either you or they are in safemode.`;
+			case 'modifyBodyRoom':
+				return `You cannot modify body in this room.`;
 			case 'invalid':
 				return '';
 		}

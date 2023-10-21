@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import {
 	AppearanceAction,
+	AppearanceActionProblem,
 	AssertNever,
 	Asset,
 	ItemContainerPath,
@@ -16,6 +17,7 @@ import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { GenerateRandomItemId } from '../wardrobeUtils';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { usePermissionCheck } from '../../gameContext/permissionCheckProvider';
 
 export function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions, spawnStyle }: {
 	className?: string;
@@ -222,6 +224,13 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 		onSuccess: () => refreshNewItemId(),
 	});
 
+	const permissionProblems = usePermissionCheck(check?.requiredPermissions);
+
+	const finalProblems = useMemo<readonly AppearanceActionProblem[]>(() => check != null ? [
+		...check.problems,
+		...permissionProblems,
+	] : [], [check, permissionProblems]);
+
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	return (
 		<div
@@ -229,14 +238,14 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				'inventoryViewItem',
 				listMode ? 'listMode' : 'gridMode',
 				'small',
-				check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked',
+				check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked',
 			) }
 			tabIndex={ 0 }
 			ref={ setRef }
 			onClick={ execute }>
 			{
 				check != null ? (
-					<ActionWarning check={ check } parent={ ref } />
+					<ActionWarning problems={ finalProblems } parent={ ref } />
 				) : null
 			}
 			<InventoryAssetPreview asset={ asset } />
@@ -247,8 +256,6 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 
 function InventoryAssetDropArea(): ReactElement | null {
 	const { heldItem, setHeldItem } = useWardrobeContext();
-
-	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 
 	const action = useMemo<AppearanceAction | null>(() => {
 		if (heldItem.type === 'nothing' || heldItem.type === 'asset')
@@ -276,22 +283,16 @@ function InventoryAssetDropArea(): ReactElement | null {
 		AssertNever(heldItem);
 	}, [heldItem]);
 
-	const check = useStaggeredAppearanceActionResult(action);
-	const [execute] = useWardrobeExecuteChecked(action, check, {
-		onSuccess: () => setHeldItem({ type: 'nothing' }),
-	});
-
 	if (heldItem.type === 'asset') {
 		return (
-			<div
-				className='overlayDrop centerButton inventoryViewItem allowed'
-				tabIndex={ 0 }
+			<button
+				className='wardrobeActionButton overlayDrop centerButton allowed'
 				onClick={ () => {
 					setHeldItem({ type: 'nothing' });
 				} }
 			>
 				Cancel
-			</div>
+			</button>
 		);
 	}
 
@@ -300,23 +301,14 @@ function InventoryAssetDropArea(): ReactElement | null {
 	}
 
 	return (
-		<div
-			className={ classNames(
-				'overlayDrop',
-				'centerButton',
-				'inventoryViewItem',
-				check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked',
-			) }
-			tabIndex={ 0 }
-			ref={ setRef }
-			onClick={ execute }
+		<WardrobeActionButton
+			className='overlayDrop centerButton'
+			action={ action }
+			onExecute={ () => {
+				setHeldItem({ type: 'nothing' });
+			} }
 		>
-			{
-				check != null ? (
-					<ActionWarning check={ check } parent={ ref } />
-				) : null
-			}
 			{ text }
-		</div>
+		</WardrobeActionButton>
 	);
 }

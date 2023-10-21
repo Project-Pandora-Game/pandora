@@ -16,6 +16,8 @@ import {
 	Assert,
 	ITypedEventEmitter,
 	ICharacterRoomData,
+	GameLogicCharacterClient,
+	GameLogicCharacter,
 } from 'pandora-common';
 import { useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player';
@@ -26,6 +28,7 @@ export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicDat
 	readonly id: CharacterId;
 	readonly name: string;
 	readonly data: Readonly<T>;
+	readonly gameLogicCharacter: GameLogicCharacter;
 	isPlayer(): boolean;
 	getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance;
 	getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
@@ -51,10 +54,15 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		return this._data;
 	}
 
+	public readonly gameLogicCharacter: GameLogicCharacterClient;
+
 	constructor(data: T, logger?: Logger) {
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
+
+		this.gameLogicCharacter = new GameLogicCharacterClient(data, this.logger.prefixMessages('[GameLogic]'));
+
 		this.logger.verbose('Loaded');
 	}
 
@@ -70,7 +78,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 
 	public getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance {
 		Assert(state.id === this.id);
-		return new CharacterAppearance(state, () => this.data);
+		return new CharacterAppearance(state, this.gameLogicCharacter);
 	}
 
 	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager {

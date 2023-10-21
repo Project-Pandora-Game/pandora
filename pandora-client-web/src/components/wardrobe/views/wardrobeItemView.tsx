@@ -10,7 +10,7 @@ import {
 	ItemPath,
 	RoomTargetSelector,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useReducer } from 'react';
 import { useObservable } from '../../../observable';
 import { isEqual } from 'lodash';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
@@ -20,10 +20,9 @@ import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
-import { useWardrobeContext, useWardrobeExecuteChecked } from '../wardrobeContext';
+import { useWardrobeContext } from '../wardrobeContext';
 import { GenerateRandomItemId, useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { ActionWarning, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 
 export function InventoryItemView({
 	className,
@@ -152,7 +151,6 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 }): ReactElement | null {
 	const { heldItem, setHeldItem, globalState } = useWardrobeContext();
 
-	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
 
 	// Check if we are not trying to do NOOP
@@ -218,32 +216,22 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 		AssertNever(heldItem);
 	}, [heldItem]);
 
-	const check = useStaggeredAppearanceActionResult(action);
-	const [execute] = useWardrobeExecuteChecked(action, check, {
-		onSuccess: () => {
-			setHeldItem({ type: 'nothing' });
-			refreshNewItemId();
-		},
-	});
-
 	if (action == null || text == null) {
 		return null;
 	}
 
 	return (
-		<div
-			className={ classNames('overlayDrop', 'inventoryViewItem', check === null ? 'pending' : check.result === 'success' ? 'allowed' : 'blocked') }
-			tabIndex={ 0 }
-			ref={ setRef }
-			onClick={ execute }
+		<WardrobeActionButton
+			Element='div'
+			className='slim overlayDrop'
+			action={ action }
+			onExecute={ () => {
+				setHeldItem({ type: 'nothing' });
+				refreshNewItemId();
+			} }
 		>
-			{
-				check != null ? (
-					<ActionWarning check={ check } parent={ ref } />
-				) : null
-			}
 			{ text }
-		</div>
+		</WardrobeActionButton>
 	);
 }
 

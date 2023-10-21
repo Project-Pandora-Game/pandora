@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ItemContainerPath, ItemId, ItemPath, RoomTargetSelector } from './appearanceTypes';
+import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ItemContainerPath, ItemId, ItemPath, RoomTargetSelector } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { Item } from './item';
 import type { IItemModule } from './modules/common';
@@ -117,7 +117,7 @@ export abstract class AppearanceManipulator {
 		return this._applyItemsWithChange(items);
 	}
 
-	public abstract queueMessage(message: ActionHandlerMessageTemplate): void;
+	public abstract makeMessage(message: ActionHandlerMessageTemplate): ActionHandlerMessageWithTarget;
 
 	protected _applyItemsWithChange(items: AppearanceItems): boolean {
 		return this._applyItems(items.map((item) => item.containerChanged(items, this.isCharacter())));
@@ -159,9 +159,9 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 		return this._base.modifyItem(this._item, (it) => it.setModuleItems(this._module, items));
 	}
 
-	public queueMessage(message: ActionHandlerMessageTemplate): void {
+	public makeMessage(message: ActionHandlerMessageTemplate): ActionHandlerMessageWithTarget {
 		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName }));
-		this._base.queueMessage(message);
+		return this._base.makeMessage(message);
 	}
 }
 
@@ -201,7 +201,7 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 		return this._base.setItems(this._target, items);
 	}
 
-	public queueMessage(message: ActionHandlerMessageTemplate): void {
+	public override makeMessage(message: ActionHandlerMessageTemplate): ActionHandlerMessageWithTarget {
 		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName }));
 
 		let target: ActionHandlerMessageTarget;
@@ -218,10 +218,10 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 			AssertNever(this._target);
 		}
 
-		this._base.queueMessage({
+		return {
 			...message,
 			target,
-		});
+		};
 	}
 }
 

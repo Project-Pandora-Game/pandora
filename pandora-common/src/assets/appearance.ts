@@ -1,4 +1,4 @@
-import type { CharacterId, ICharacterMinimalData } from '../character';
+import type { CharacterId } from '../character/characterTypes';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { ActionRoomContext } from '../chatroom';
 import { Assert } from '../utility';
@@ -10,6 +10,7 @@ import { AssetId, WearableAssetType } from './definitions';
 import type { BoneState, CharacterView } from './graphics';
 import { Item } from './item';
 import { AppearanceArmPose, AppearanceBundle, AppearancePose, AssetFrameworkCharacterState, SafemodeData } from './state/characterState';
+import { GameLogicCharacter } from '../gameLogic/character/character';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
@@ -54,7 +55,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 
 	public readonly type = 'character';
 	public readonly id: CharacterId;
-	private readonly getCharacter: () => Readonly<ICharacterMinimalData>;
+	public readonly character: GameLogicCharacter;
 
 	protected get assetManager(): AssetManager {
 		return this.characterState.assetManager;
@@ -64,16 +65,11 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this.characterState.items;
 	}
 
-	public get character(): Readonly<ICharacterMinimalData> {
-		const character = this.getCharacter();
-		Assert(character.id === this.id);
-		return character;
-	}
-
-	constructor(characterState: AssetFrameworkCharacterState, getCharacter: () => Readonly<ICharacterMinimalData>) {
+	constructor(characterState: AssetFrameworkCharacterState, character: GameLogicCharacter) {
 		this.characterState = characterState;
 		this.id = characterState.id;
-		this.getCharacter = getCharacter;
+		Assert(character.id === this.id);
+		this.character = character;
 	}
 
 	public getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager {

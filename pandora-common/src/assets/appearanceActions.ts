@@ -4,20 +4,22 @@ import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { AssetIdSchema, WearableAssetType } from './definitions';
-import { ActionHandler, ActionMessageTemplateHandler, ActionProcessingContext, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelector, RoomTargetSelectorSchema } from './appearanceTypes';
-import { CharacterRestrictionsManager, ItemInteractionType, Restriction } from '../character/restrictionsManager';
+import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelectorSchema } from './appearanceTypes';
+import { ItemInteractionType } from '../character/restrictionsManager';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
-import { AppearanceItems, CharacterAppearanceLoadAndValidate, AppearanceValidationError, AppearanceValidationResult, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
+import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterState';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
-import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
+import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
+import { GameLogicCharacter } from '../gameLogic';
+import { ActionRoomContext } from '../chatroom';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -178,41 +180,15 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
 export interface AppearanceActionContext {
-	player: CharacterId;
+	player: GameLogicCharacter;
 	globalState: AssetFrameworkGlobalStateContainer;
-	getTarget(target: RoomTargetSelector): RoomActionTarget | null;
-	getCharacter(id: CharacterId): CharacterRestrictionsManager | null;
-	/** Handler for sending messages to chat */
-	actionHandler?: ActionHandler;
+	roomContext: ActionRoomContext | null;
+	getCharacter(id: CharacterId): GameLogicCharacter | null;
 }
-
-export type AppearanceActionFailure = {
-	type: 'moduleActionFailure';
-	reason: ModuleActionFailure;
-};
-
-export type AppearanceActionResult = {
-	result: 'success';
-} | {
-	result: 'failure';
-	failure: AppearanceActionFailure;
-} | {
-	result: 'invalidAction';
-	reason?: 'noDeleteRoomDeviceWearable' | 'noDeleteDeployedRoomDevice';
-} | {
-	result: 'moduleActionError';
-	reason: ModuleActionError;
-} | {
-	result: 'restrictionError';
-	restriction: Restriction;
-} | {
-	result: 'validationError';
-	validationError: AppearanceValidationError;
-};
 
 /** Context for performing module actions */
 export interface AppearanceModuleActionContext {
-	player: CharacterRestrictionsManager;
+	processingContext: AppearanceActionProcessingContext;
 	target: RoomActionTarget;
 
 	messageHandler: ActionMessageTemplateHandler;
@@ -222,40 +198,20 @@ export interface AppearanceModuleActionContext {
 
 export interface AppearanceActionHandlerArg<Action extends AppearanceAction = AppearanceAction> {
 	action: Action;
-	manipulator: AssetFrameworkGlobalStateManipulator;
-	context: AppearanceActionContext;
 	assetManager: AssetManager;
-	player: CharacterRestrictionsManager;
-	processingContext: ActionProcessingContext;
+	processingContext: AppearanceActionProcessingContext;
 }
 
 export function DoAppearanceAction(
 	action: AppearanceAction,
 	context: AppearanceActionContext,
 	assetManager: AssetManager,
-	{
-		dryRun = false,
-	}: {
-		dryRun?: boolean;
-	} = {},
-): AppearanceActionResult {
-	const player = context.getCharacter(context.player);
-	if (!player)
-		return { result: 'invalidAction' };
-
-	const processingContext: ActionProcessingContext = {
-		sourceCharacter: context.player,
-		actionHandler: context.actionHandler,
-		dryRun,
-	};
-
-	const manipulator = context.globalState.getManipulator();
+): AppearanceActionProcessingResult {
+	const processingContext = new AppearanceActionProcessingContext(context);
+	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
 
 	const arg: Omit<AppearanceActionHandlerArg, 'action'> = {
-		context,
-		manipulator,
 		assetManager,
-		player,
 		processingContext,
 	};
 
@@ -263,119 +219,113 @@ export function DoAppearanceAction(
 		// Create and equip an item
 		case 'create': {
 			const asset = assetManager.getAssetById(action.asset);
-			const target = context.getTarget(action.target);
+			const target = processingContext.getTarget(action.target);
 			if (!asset || !target)
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 			if (!asset.canBeSpawned())
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 			const item = assetManager.createItem(action.itemId, asset, null);
 			// Player adding the item must be able to use it
-			const r = player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			const r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
-			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 			if (!targetManipulator)
-				return { result: 'invalidAction' };
-			if (!ActionAddItem(targetManipulator, action.container, item, action.insertBefore ?? null))
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
+			if (!ActionAddItem(processingContext, targetManipulator, action.container, item, action.insertBefore ?? null))
+				return processingContext.invalid();
 
-			break;
+			return processingContext.finalize();
 		}
 		// Unequip and delete an item
 		case 'delete': {
-			const target = context.getTarget(action.target);
+			const target = processingContext.getTarget(action.target);
 			if (!target)
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 			// Player removing the item must be able to use it
-			const r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
 			// Room device wearable parts cannot be deleted, you have to leave the device instead
 			const item = target.getItem(action.item);
 			if (item?.isType('roomDeviceWearablePart')) {
-				return {
-					result: 'invalidAction',
-					reason: 'noDeleteRoomDeviceWearable',
-				};
+				return processingContext.invalid('noDeleteRoomDeviceWearable');
 			}
 			// Deployed room devices cannot be deleted, you must store them first
 			if (item?.isType('roomDevice') && item.deployment != null) {
-				return {
-					result: 'invalidAction',
-					reason: 'noDeleteDeployedRoomDevice',
-				};
+				return processingContext.invalid('noDeleteDeployedRoomDevice');
 			}
 
-			const targetManipulator = manipulator.getManipulatorFor(action.target);
-			if (!ActionRemoveItem(targetManipulator, action.item))
-				return { result: 'invalidAction' };
+			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
+			if (!ActionRemoveItem(processingContext, targetManipulator, action.item))
+				return processingContext.invalid();
 
-			break;
+			return processingContext.finalize();
 		}
 		// Unequip item and equip on another target
 		case 'transfer': {
-			const source = context.getTarget(action.source);
-			const target = context.getTarget(action.target);
+			const source = processingContext.getTarget(action.source);
+			const target = processingContext.getTarget(action.target);
 			if (!source || !target)
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 
 			// The item must exist
 			const item = source.getItem(action.item);
 			if (!item)
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 
 			// Player removing the item must be able to use it on source
-			let r = player.canUseItemDirect(source, action.item.container, item, ItemInteractionType.ADD_REMOVE);
+			let r = playerRestrictionManager.canUseItemDirect(processingContext, source, action.item.container, item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
 			// Player adding the item must be able to use it on target
-			r = player.canUseItemDirect(target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
-			const sourceManipulator = manipulator.getManipulatorFor(action.source);
-			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			const sourceManipulator = processingContext.manipulator.getManipulatorFor(action.source);
+			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
 			// Preform the transfer in manipulators
-			if (!ActionTransferItem(sourceManipulator, action.item, targetManipulator, action.container, action.insertBefore ?? null))
-				return { result: 'invalidAction' };
+			if (!ActionTransferItem(processingContext, sourceManipulator, action.item, targetManipulator, action.container, action.insertBefore ?? null))
+				return processingContext.invalid();
 
-			break;
+			return processingContext.finalize();
 		}
 		// Moves an item within inventory, reordering the worn order
 		case 'move': {
-			const target = context.getTarget(action.target);
+			const target = processingContext.getTarget(action.target);
 			if (!target)
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 			// Player moving the item must be able to interact with the item
-			let r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
+			let r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
-			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
 			// Player moving the item must be able to interact with the item on target position (if it is being moved in root)
 			if (action.item.container.length === 0) {
@@ -384,225 +334,184 @@ export function DoAppearanceAction(
 				const newPos = currentPos + action.shift;
 
 				if (newPos >= 0 && newPos < items.length) {
-					r = player.canUseItem(target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
+					r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
 					if (!r.allowed) {
-						return {
+						processingContext.addProblem({
 							result: 'restrictionError',
 							restriction: r.restriction,
-						};
+						});
 					}
 				}
 			}
 
 			if (!ActionMoveItem(targetManipulator, action.item, action.shift))
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 
-			break;
+			return processingContext.finalize();
 		}
 		// Changes the color of an item
 		case 'color': {
-			const target = context.getTarget(action.target);
+			const target = processingContext.getTarget(action.target);
 			if (!target)
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 			// Player coloring the item must be able to interact with the item
-			const r = player.canUseItem(target, action.item, ItemInteractionType.STYLING);
+			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.STYLING);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
-			const targetManipulator = manipulator.getManipulatorFor(action.target);
+			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 			if (!ActionColorItem(targetManipulator, action.item, action.color))
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 
-			break;
+			return processingContext.finalize();
 		}
 		// Module-specific action
 		case 'moduleAction': {
-			const r = ActionModuleAction({
+			return ActionModuleAction({
 				...arg,
 				action,
 			});
-			if (r.result !== 'success')
-				return r;
-
-			break;
 		}
 		// Resize body or change pose
-		case 'body':
-			if (context.player !== action.target) {
-				return {
-					result: 'restrictionError',
-					restriction: {
-						type: 'permission',
-						missingPermission: 'modifyBodyOthers',
-					},
-				};
-			}
-		// falls through
-		case 'pose': {
-			const target = context.getTarget({ type: 'character', characterId: action.target });
-			if (!target)
-				return { result: 'invalidAction' };
+		case 'body': {
+			const target = processingContext.getTarget({ type: 'character', characterId: action.target });
+			if (!target || target.type !== 'character')
+				return processingContext.invalid();
+			processingContext.addInteraction(target.character, 'modifyBody');
 
-			const r = player.canInteractWithTarget(target);
+			// falls through
+		}
+		case 'pose': {
+			const target = processingContext.getTarget({ type: 'character', characterId: action.target });
+			if (!target)
+				return processingContext.invalid();
+
+			const r = playerRestrictionManager.canInteractWithTarget(processingContext, target);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
-			if (!manipulator.produceCharacterState(action.target, (character) => {
+			if (!processingContext.manipulator.produceCharacterState(action.target, (character) => {
 				return character.produceWithPose(action, action.type);
 			})) {
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 			}
 
-			break;
+			return processingContext.finalize();
 		}
 		// Changes view of the character - front or back
 		case 'setView': {
-			const target = context.getTarget({ type: 'character', characterId: action.target });
+			const target = processingContext.getTarget({ type: 'character', characterId: action.target });
 			if (!target)
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 
-			const r = player.canInteractWithTarget(target);
+			const r = playerRestrictionManager.canInteractWithTarget(processingContext, target);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
-			if (!manipulator.produceCharacterState(action.target, (character) => {
+			if (!processingContext.manipulator.produceCharacterState(action.target, (character) => {
 				return character.produceWithView(action.view);
 			})) {
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 			}
 
-			break;
+			return processingContext.finalize();
 		}
 		case 'safemode': {
-			const current = player.appearance.getSafemode();
+			const current = playerRestrictionManager.appearance.getSafemode();
 			if (action.action === 'enter') {
 				// If we are already in it we cannot enter it again
 				if (current)
-					return { result: 'invalidAction' };
+					return processingContext.invalid();
 
-				if (!manipulator.produceCharacterState(player.appearance.id, (character) => {
+				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
 					return character.produceWithSafemode({
-						allowLeaveAt: Date.now() + (player.room?.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
+						allowLeaveAt: Date.now() + (playerRestrictionManager.room?.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
 					});
 				})) {
-					return { result: 'invalidAction' };
+					return processingContext.invalid();
 				}
 
-				processingContext.actionHandler?.({
+				processingContext.queueMessage({
 					id: 'safemodeEnter',
-					character: {
-						type: 'character',
-						id: player.appearance.id,
-					},
 				});
 			} else if (action.action === 'exit') {
 				// If we are already not in it we cannot exit it
 				if (!current)
-					return { result: 'invalidAction' };
+					return processingContext.invalid();
 
 				// Check the timer to leave it passed
 				if (Date.now() < current.allowLeaveAt)
-					return { result: 'invalidAction' };
+					return processingContext.invalid();
 
-				if (!manipulator.produceCharacterState(player.appearance.id, (character) => {
+				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
 					return character.produceWithSafemode(null);
 				})) {
-					return { result: 'invalidAction' };
+					return processingContext.invalid();
 				}
 
-				processingContext.actionHandler?.({
+				processingContext.queueMessage({
 					id: 'safemodeLeave',
-					character: {
-						type: 'character',
-						id: player.appearance.id,
-					},
 				});
 			} else {
 				AssertNever(action.action);
 			}
-			break;
+			return processingContext.finalize();
 		}
 		case 'randomize': {
-			const r = ActionAppearanceRandomize({
+			return ActionAppearanceRandomize({
 				...arg,
 				action,
 			});
-
-			if (r.result !== 'success')
-				return r;
-
-			break;
 		}
 		case 'roomDeviceDeploy': {
-			const target = context.getTarget(action.target);
+			const target = processingContext.getTarget(action.target);
 			if (!target)
-				return { result: 'invalidAction' };
+				return processingContext.invalid();
 			// Player deploying the device must be able to interact with it
-			const r = player.canUseItem(target, action.item, ItemInteractionType.MODIFY);
+			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.MODIFY);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
-			const targetManipulator = manipulator.getManipulatorFor(action.target);
-			if (!ActionRoomDeviceDeploy(targetManipulator, action.item, action.deployment))
-				return { result: 'invalidAction' };
+			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
+			if (!ActionRoomDeviceDeploy(processingContext, targetManipulator, action.item, action.deployment))
+				return processingContext.invalid();
 
-			break;
+			return processingContext.finalize();
 		}
 		case 'roomDeviceEnter': {
-			const r = ActionRoomDeviceEnter({
+			return ActionRoomDeviceEnter({
 				...arg,
 				action,
 			});
-			if (r.result !== 'success')
-				return r;
-
-			break;
 		}
 		case 'roomDeviceLeave': {
-			const r = ActionRoomDeviceLeave({
+			return ActionRoomDeviceLeave({
 				...arg,
 				action,
 			});
-			if (r.result !== 'success')
-				return r;
-
-			break;
 		}
 		default:
 			AssertNever(action);
 	}
-
-	return AppearanceValidationResultToActionResult(
-		context.globalState.commitChanges(manipulator, processingContext),
-	);
 }
 
-export function AppearanceValidationResultToActionResult(result: AppearanceValidationResult): AppearanceActionResult {
-	return result.success ? {
-		result: 'success',
-	} : {
-		result: 'validationError',
-		validationError: result.error,
-	};
-}
-
-export function ActionAddItem(rootManipulator: AppearanceRootManipulator, container: ItemContainerPath, item: Item, insertBefore: ItemId | null): boolean {
+export function ActionAddItem(processingContext: AppearanceActionProcessingContext, rootManipulator: AppearanceRootManipulator, container: ItemContainerPath, item: Item, insertBefore: ItemId | null): boolean {
 	const manipulator = rootManipulator.getContainer(container);
 
 	// Do change
@@ -641,29 +550,33 @@ export function ActionAddItem(rootManipulator: AppearanceRootManipulator, contai
 	// Change message to chat
 	if (removed.length > 0) {
 		Assert(rootManipulator.isCharacter());
-		manipulator.queueMessage({
-			id: 'itemReplace',
-			item: {
-				assetId: item.asset.id,
-			},
-			itemPrevious: {
-				assetId: removed[0].asset.id,
-			},
-		});
+		processingContext.queueMessage(
+			manipulator.makeMessage({
+				id: 'itemReplace',
+				item: {
+					assetId: item.asset.id,
+				},
+				itemPrevious: {
+					assetId: removed[0].asset.id,
+				},
+			}),
+		);
 	} else {
 		const manipulatorContainer = manipulator.container;
-		manipulator.queueMessage({
-			id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
-			item: {
-				assetId: item.asset.id,
-			},
-		});
+		processingContext.queueMessage(
+			manipulator.makeMessage({
+				id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
+				item: {
+					assetId: item.asset.id,
+				},
+			}),
+		);
 	}
 
 	return true;
 }
 
-export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath): boolean {
+export function ActionRemoveItem(processingContext: AppearanceActionProcessingContext, rootManipulator: AppearanceRootManipulator, itemPath: ItemPath): boolean {
 	const { container, itemId } = itemPath;
 	const manipulator = rootManipulator.getContainer(container);
 
@@ -676,17 +589,19 @@ export function ActionRemoveItem(rootManipulator: AppearanceRootManipulator, ite
 
 	// Change message to chat
 	const manipulatorContainer = manipulator.container;
-	manipulator.queueMessage({
-		id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
-		item: {
-			assetId: removedItems[0].asset.id,
-		},
-	});
+	processingContext.queueMessage(
+		manipulator.makeMessage({
+			id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
+			item: {
+				assetId: removedItems[0].asset.id,
+			},
+		}),
+	);
 
 	return true;
 }
 
-export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator, itemPath: ItemPath, targetManipulator: AppearanceRootManipulator, targetContainer: ItemContainerPath, insertBefore: ItemId | null): boolean {
+export function ActionTransferItem(processingContext: AppearanceActionProcessingContext, sourceManipulator: AppearanceRootManipulator, itemPath: ItemPath, targetManipulator: AppearanceRootManipulator, targetContainer: ItemContainerPath, insertBefore: ItemId | null): boolean {
 	const { container, itemId } = itemPath;
 	const sourceContainerManipulator = sourceManipulator.getContainer(container);
 	const targetContainerManipulator = targetManipulator.getContainer(targetContainer);
@@ -722,21 +637,25 @@ export function ActionTransferItem(sourceManipulator: AppearanceRootManipulator,
 	// Change message to chat
 	if (sourceManipulator.isCharacter() && (!targetManipulator.isCharacter() || sourceManipulator.characterId !== targetManipulator.characterId)) {
 		const manipulatorContainer = sourceContainerManipulator.container;
-		sourceContainerManipulator.queueMessage({
-			id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
-			item: {
-				assetId: item.asset.id,
-			},
-		});
+		processingContext.queueMessage(
+			sourceContainerManipulator.makeMessage({
+				id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
+				item: {
+					assetId: item.asset.id,
+				},
+			}),
+		);
 	}
 	if (targetManipulator.isCharacter() && (!sourceManipulator.isCharacter() || targetManipulator.characterId !== sourceManipulator.characterId)) {
 		const manipulatorContainer = targetContainerManipulator.container;
-		targetContainerManipulator.queueMessage({
-			id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
-			item: {
-				assetId: removedItems[0].asset.id,
-			},
-		});
+		processingContext.queueMessage(
+			targetContainerManipulator.makeMessage({
+				id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
+				item: {
+					assetId: removedItems[0].asset.id,
+				},
+			}),
+		);
 	}
 
 	return true;
@@ -774,46 +693,54 @@ export function ActionColorItem(rootManipulator: AppearanceRootManipulator, item
 
 export function ActionModuleAction({
 	action,
-	manipulator,
-	context,
-	player,
-}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionModuleAction>>): AppearanceActionResult {
-	const target = context.getTarget(action.target);
+	processingContext,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionModuleAction>>): AppearanceActionProcessingResult {
+	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
+	const target = processingContext.getTarget(action.target);
 	if (!target)
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 	// Player doing the action must be able to interact with the item
-	const r = player.canUseItemModule(target, action.item, action.module);
+	const r = playerRestrictionManager.canUseItemModule(processingContext, target, action.item, action.module);
 	if (!r.allowed) {
-		return {
+		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: r.restriction,
-		};
+		});
 	}
 
-	const rootManipulator = manipulator.getManipulatorFor(action.target);
+	const rootManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
 	const { container, itemId } = action.item;
 	const containerManipulator = rootManipulator.getContainer(container);
 
 	let rejectionReason: ModuleActionError | undefined;
-	let failureReason: ModuleActionFailure | undefined;
 
 	// Do change and store chat messages
 	if (!containerManipulator.modifyItem(itemId, (it) => {
 		const actionContext: AppearanceModuleActionContext = {
-			player,
+			processingContext,
 			target,
-			messageHandler: (m) => containerManipulator.queueMessage({
-				item: {
-					assetId: it.asset.id,
-				},
-				...m,
-			}),
+			messageHandler: (m) => {
+				processingContext.queueMessage(
+					containerManipulator.makeMessage({
+						item: {
+							assetId: it.asset.id,
+						},
+						...m,
+					}),
+				);
+			},
 			reject: (reason) => {
 				rejectionReason ??= reason;
 			},
 			failure: (reason) => {
-				failureReason ??= reason;
+				processingContext.addProblem({
+					result: 'failure',
+					failure: {
+						type: 'moduleActionFailure',
+						reason,
+					},
+				});
 			},
 		};
 
@@ -822,37 +749,25 @@ export function ActionModuleAction({
 			action.module,
 			action.action,
 		);
-	}) || rejectionReason || failureReason) {
-		if (rejectionReason || failureReason == null) {
-			return {
-				result: 'moduleActionError',
-				reason: rejectionReason ?? { type: 'invalid' },
-			};
-		}
-		return {
-			result: 'failure',
-			failure: {
-				type: 'moduleActionFailure',
-				reason: failureReason,
-			},
-		};
+	}) || rejectionReason) {
+		processingContext.addProblem({
+			result: 'moduleActionError',
+			reason: rejectionReason ?? { type: 'invalid' },
+		});
+		return processingContext.invalid();
 	}
 
-	return {
-		result: 'success',
-	};
+	return processingContext.finalize();
 }
 
 export function ActionAppearanceRandomize({
 	action,
-	manipulator,
 	processingContext,
 	assetManager,
-	player,
-}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRandomize>>): AppearanceActionResult {
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRandomize>>): AppearanceActionProcessingResult {
 	const kind = action.kind;
-	const character = player;
-	const characterManipulator = manipulator.getManipulatorFor({
+	const character = processingContext.getPlayerRestrictionManager();
+	const characterManipulator = processingContext.manipulator.getManipulatorFor({
 		type: 'character',
 		characterId: character.appearance.id,
 	});
@@ -864,40 +779,35 @@ export function ActionAppearanceRandomize({
 			// Ignore bodyparts if we are not changing those
 			if (kind === 'items' && i.isType('personal') && i.asset.definition.bodypart != null)
 				return { allowed: true };
-			return character.canUseItemDirect(character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
+			return character.canUseItemDirect(processingContext, character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
 		})
 		.find((res) => !res.allowed);
 	if (restriction != null && !restriction.allowed) {
-		return {
+		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: restriction.restriction,
-		};
+		});
 	}
 
 	// Room must allow body changes if running full randomization
 	if (kind === 'full' && character.room && !character.room.features.includes('allowBodyChanges')) {
-		return {
+		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: {
-				type: 'permission',
-				missingPermission: 'modifyBodyRoom',
+				type: 'modifyBodyRoom',
 			},
-		};
+		});
 	}
 
 	// Must have free hands to randomize
 	if (!character.canUseHands() && !character.isInSafemode()) {
-		return {
+		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: {
 				type: 'blockedHands',
 			},
-		};
+		});
 	}
-
-	// Dry run can end here as everything lower is simply random
-	if (processingContext.dryRun)
-		return { result: 'success' };
 
 	// Filter appearance to get either body or nothing
 	let newAppearance: Item<WearableAssetType>[] = kind === 'items' ? oldItems.filter((i) => !i.isType('personal') || i.asset.definition.bodypart != null) : [];
@@ -950,10 +860,11 @@ export function ActionAppearanceRandomize({
 	// Make sure the appearance is valid (required for items step)
 	let r = ValidateAppearanceItems(assetManager, newAppearance);
 	if (!r.success) {
-		return {
+		processingContext.addProblem({
 			result: 'validationError',
 			validationError: r.error,
-		};
+		});
+		return processingContext.invalid();
 	}
 
 	// Go through wanted attributes one-by one, always try to find matching items and try to add them in random order
@@ -996,12 +907,10 @@ export function ActionAppearanceRandomize({
 	// Try to assign the new appearance
 	characterManipulator.resetItemsTo(newAppearance);
 
-	return {
-		result: 'success',
-	};
+	return processingContext.finalize();
 }
 
-export function ActionRoomDeviceDeploy(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, deployment: RoomDeviceDeployment): boolean {
+export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProcessingContext, rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, deployment: RoomDeviceDeployment): boolean {
 	const { container, itemId } = itemPath;
 	const manipulator = rootManipulator.getContainer(container);
 
@@ -1018,12 +927,14 @@ export function ActionRoomDeviceDeploy(rootManipulator: AppearanceRootManipulato
 
 	// Change message to chat
 	if (previousDeviceState != null && (deployment == null) !== (previousDeviceState.deployment == null)) {
-		manipulator.queueMessage({
-			id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',
-			item: {
-				assetId: previousDeviceState.asset.id,
-			},
-		});
+		processingContext.queueMessage(
+			manipulator.makeMessage({
+				id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',
+				item: {
+					assetId: previousDeviceState.asset.id,
+				},
+			}),
+		);
 	}
 
 	return true;
@@ -1031,43 +942,42 @@ export function ActionRoomDeviceDeploy(rootManipulator: AppearanceRootManipulato
 
 export function ActionRoomDeviceEnter({
 	action,
-	manipulator,
-	context,
+	processingContext,
 	assetManager,
-	player,
-}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceEnter>>): AppearanceActionResult {
-	const target = context.getTarget(action.target);
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceEnter>>): AppearanceActionProcessingResult {
+	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
+	const target = processingContext.getTarget(action.target);
 	if (!target)
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// The device must exist and be a device
 	const item = target.getItem(action.item);
 	if (!item || !item.isType('roomDevice'))
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// The slot must exist
 	const slot = item.asset.definition.slots[action.slot];
 	if (!slot)
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// We must know asset bound to the slot
 	const asset = assetManager.getAssetById(slot.wearableAsset);
 	if (!asset || !asset.isType('roomDeviceWearablePart'))
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// Player must be able to interact with the device
-	let r = player.canUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	let r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.item.container, item, ItemInteractionType.MODIFY);
 	if (!r.allowed) {
-		return {
+		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: r.restriction,
-		};
+		});
 	}
 
 	// We must have target character
-	const targetCharacter = context.getTarget(action.character);
+	const targetCharacter = processingContext.getTarget(action.character);
 	if (!targetCharacter)
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	const wearableItem = assetManager
 		.createItem(action.itemId, asset, null)
@@ -1076,22 +986,22 @@ export function ActionRoomDeviceEnter({
 			slot: action.slot,
 		});
 	// Player adding the item must be able to use it
-	r = player.canUseItemDirect(targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
+	r = playerRestrictionManager.canUseItemDirect(processingContext, targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
 	if (!r.allowed) {
-		return {
+		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: r.restriction,
-		};
+		});
 	}
 
 	// Actual action
 
 	if (target === targetCharacter)
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
-	const roomManipulator = manipulator.getManipulatorFor(action.target);
+	const roomManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 	const containerManipulator = roomManipulator.getContainer(action.item.container);
-	const characterManipulator = manipulator.getManipulatorFor(action.character);
+	const characterManipulator = processingContext.manipulator.getManipulatorFor(action.character);
 
 	// Do change
 	if (!containerManipulator.modifyItem(action.item.itemId, (it) => {
@@ -1099,68 +1009,67 @@ export function ActionRoomDeviceEnter({
 			return null;
 		return it.changeSlotOccupancy(action.slot, action.character.characterId);
 	}))
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	if (!characterManipulator.addItem(wearableItem))
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// Change message to chat
-	characterManipulator.queueMessage({
-		id: 'roomDeviceSlotEnter',
-		item: {
-			assetId: item.asset.id,
-		},
-		dictionary: {
-			ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
-		},
-	});
+	processingContext.queueMessage(
+		characterManipulator.makeMessage({
+			id: 'roomDeviceSlotEnter',
+			item: {
+				assetId: item.asset.id,
+			},
+			dictionary: {
+				ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+			},
+		}),
+	);
 
-	return {
-		result: 'success',
-	};
+	return processingContext.finalize();
 }
 
 export function ActionRoomDeviceLeave({
 	action,
-	manipulator,
-	context,
+	processingContext,
 	assetManager,
-	player,
-}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceLeave>>): AppearanceActionResult {
-	const target = context.getTarget(action.target);
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceLeave>>): AppearanceActionProcessingResult {
+	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
+	const target = processingContext.getTarget(action.target);
 	if (!target)
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// The device must exist and be a device
 	const item = target.getItem(action.item);
 	if (!item || !item.isType('roomDevice'))
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// The slot must exist and be occupied
 	const slot = item.asset.definition.slots[action.slot];
 	const occupyingCharacterId = item.slotOccupancy.get(action.slot);
 	if (!slot || !occupyingCharacterId)
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// We must know asset bound to the slot
 	const asset = assetManager.getAssetById(slot.wearableAsset);
 	if (!asset || !asset.isType('roomDeviceWearablePart'))
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 
 	// Player must be able to interact with the device
-	let r = player.canUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	let r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.item.container, item, ItemInteractionType.MODIFY);
 	if (!r.allowed) {
-		return {
+		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: r.restriction,
-		};
+		});
 	}
 
-	const roomManipulator = manipulator.getManipulatorFor(action.target);
+	const roomManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
 	// We try to find the character and remove the device cleanly.
 	// If character is not found, we ignore it (assuming cleanup-style instead of freeing character)
-	const targetCharacter = context.getTarget({
+	const targetCharacter = processingContext.getTarget({
 		type: 'character',
 		characterId: occupyingCharacterId,
 	});
@@ -1168,7 +1077,7 @@ export function ActionRoomDeviceLeave({
 	let isCleanup = true;
 
 	if (targetCharacter) {
-		const characterManipulator = manipulator.getManipulatorFor({
+		const characterManipulator = processingContext.manipulator.getManipulatorFor({
 			type: 'character',
 			characterId: occupyingCharacterId,
 		});
@@ -1180,15 +1089,15 @@ export function ActionRoomDeviceLeave({
 		if (wearablePart != null) {
 
 			// Player must be able to remove the item
-			r = player.canUseItem(targetCharacter, {
+			r = playerRestrictionManager.canUseItem(processingContext, targetCharacter, {
 				container: [],
 				itemId: wearablePart.id,
 			}, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {
-				return {
+				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: r.restriction,
-				};
+				});
 			}
 
 			// Actually remove the item
@@ -1197,15 +1106,17 @@ export function ActionRoomDeviceLeave({
 			isCleanup = false;
 
 			// Change message to chat
-			characterManipulator.queueMessage({
-				id: 'roomDeviceSlotLeave',
-				item: {
-					assetId: item.asset.id,
-				},
-				dictionary: {
-					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
-				},
-			});
+			processingContext.queueMessage(
+				characterManipulator.makeMessage({
+					id: 'roomDeviceSlotLeave',
+					item: {
+						assetId: item.asset.id,
+					},
+					dictionary: {
+						ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+					},
+				}),
+			);
 		}
 	}
 
@@ -1215,23 +1126,23 @@ export function ActionRoomDeviceLeave({
 			return null;
 		return it.changeSlotOccupancy(action.slot, null);
 	})) {
-		return { result: 'invalidAction' };
+		return processingContext.invalid();
 	}
 
 	// If we didn't remove item from character, then this is just a cleanup, so send cleanup message
 	if (isCleanup) {
-		roomManipulator.queueMessage({
-			id: 'roomDeviceSlotClear',
-			item: {
-				assetId: item.asset.id,
-			},
-			dictionary: {
-				ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
-			},
-		});
+		processingContext.queueMessage(
+			roomManipulator.makeMessage({
+				id: 'roomDeviceSlotClear',
+				item: {
+					assetId: item.asset.id,
+				},
+				dictionary: {
+					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
+				},
+			}),
+		);
 	}
 
-	return {
-		result: 'success',
-	};
+	return processingContext.finalize();
 }

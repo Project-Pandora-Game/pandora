@@ -5,6 +5,7 @@ import { assetManager } from '../assets/assetManager';
 import promClient from 'prom-client';
 import { DoAppearanceAction } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { Character } from '../character/character';
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -45,6 +46,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 			gamblingAction: this.handleGamblingAction.bind(this),
+			permissionCheck: this.handlePermissionCheck.bind(this),
+			permissionGet: this.handlePermissionGet.bind(this),
+			permissionSet: this.handlePermissionSet.bind(this),
 		});
 	}
 
@@ -129,23 +133,33 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): IClientShardNormalResult['appearanceAction'] {
-		if (!client.character)
+		const character = client.character;
+		if (!character)
 			throw new BadMessageError();
 
-		const result = DoAppearanceAction(action, client.character.getAppearanceActionContext(), assetManager);
-		switch (result.result) {
-			case 'success':
-				return { result: 'success' };
-			case 'failure':
-				return {
-					result: 'failure',
-					failure: result.failure,
-				};
-			default:
-				// If the action failed, client might be out of sync, force-send full reload
-				client.sendLoadMessage();
-				return { result: 'invalid' };
+		const result = DoAppearanceAction(action, character.getAppearanceActionContext(), assetManager);
+
+		// Check if result is valid
+		if (!result.valid || result.problems.length > 0) {
+			// If the action failed, client might be out of sync, force-send full reload
+			client.sendLoadMessage();
+			return {
+				result: 'failure',
+				problems: result.problems.slice(),
+			};
 		}
+
+		// Apply the action
+		character.getGlobalState().setState(result.resultState);
+
+		// Send chat messages as needed
+		for (const message of result.pendingMessages) {
+			character.room?.handleActionMessage(message);
+		}
+
+		return {
+			result: 'success',
+		};
 	}
 
 	private handleUpdateSettings(settings: IClientShardArgument['updateSettings'], client: ClientConnection): void {
@@ -217,6 +231,73 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			default:
 				AssertNever(game);
 		}
+	}
+
+	private handlePermissionCheck({ target, permissionGroup, permissionId }: IClientShardArgument['permissionCheck'], client: ClientConnection): IClientShardNormalResult['permissionCheck'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		let targetCharacter: Character | null;
+
+		if (client.character.id === target) {
+			targetCharacter = client.character;
+		} else {
+			targetCharacter = client.character.room?.getCharacterById(target) ?? null;
+		}
+
+		if (targetCharacter == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		const permission = targetCharacter.gameLogicCharacter.getPermission(permissionGroup, permissionId);
+		if (permission == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		const checkResult = permission.checkPermission(client.character.gameLogicCharacter);
+
+		return {
+			result: checkResult ? 'ok' : 'noAccess',
+		};
+	}
+
+	private handlePermissionGet({ permissionGroup, permissionId }: IClientShardArgument['permissionGet'], client: ClientConnection): IClientShardNormalResult['permissionGet'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		const permission = client.character.gameLogicCharacter.getPermission(permissionGroup, permissionId);
+		if (permission == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		return {
+			result: 'ok',
+			permissionSetup: permission.setup,
+			permissionConfig: permission.getConfig(),
+		};
+	}
+
+	private handlePermissionSet({ permissionGroup, permissionId, config }: IClientShardArgument['permissionSet'], client: ClientConnection): IClientShardNormalResult['permissionSet'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		const permission = client.character.gameLogicCharacter.getPermission(permissionGroup, permissionId);
+		if (permission == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		permission.setConfig(config);
+		return {
+			result: 'ok',
+		};
 	}
 
 	public onAssetDefinitionsChanged(): void {

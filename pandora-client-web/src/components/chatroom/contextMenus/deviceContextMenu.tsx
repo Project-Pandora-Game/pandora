@@ -25,7 +25,8 @@ function StoreDeviceMenu({ device, close }: {
 		target: { type: 'roomInventory' },
 		deployment: null,
 	}), [device]);
-	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
+	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
+	const available = checkResult != null && checkResult.problems.length === 0;
 	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
 
 	if (!available) {
@@ -53,7 +54,8 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 		target: { type: 'roomInventory' },
 		slot,
 	}), [device, slot]);
-	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
+	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
+	const available = checkResult != null && checkResult.problems.length === 0;
 	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
 
 	if (!available) {
@@ -103,7 +105,8 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 		},
 		itemId: `i/${nanoid()}` as const,
 	}), [device, slot, character]);
-	const available = useStaggeredAppearanceActionResult(action, { immediate: true })?.result === 'success';
+	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
+	const available = checkResult != null && checkResult.problems.length === 0;
 	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
 
 	if (!available) {

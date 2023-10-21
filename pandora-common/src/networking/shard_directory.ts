@@ -1,5 +1,6 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
-import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataSchema, CharacterDataUpdateSchema, CharacterIdSchema, ICharacterData } from '../character';
+import { CharacterIdSchema } from '../character/characterTypes';
+import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataSchema, CharacterDataUpdateSchema, ICharacterData } from '../character/characterData';
 import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
 import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
 import { z } from 'zod';

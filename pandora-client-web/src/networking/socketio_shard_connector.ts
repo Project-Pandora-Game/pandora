@@ -9,6 +9,8 @@ import {
 	MessageHandler,
 	ClientShardSchema,
 	ShardClientSchema,
+	TypedEventEmitter,
+	IShardClientChangeEvents,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -21,6 +23,12 @@ import { PersistentToast } from '../persistentToast';
 import { ShardConnector, ShardConnectionState } from './shardConnector';
 
 const logger = GetLogger('ShardConn');
+
+export class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClientChangeEvents, true>> {
+	public onSomethingChanged(changes: IShardClientChangeEvents[]): void {
+		changes.forEach((change) => this.emit(change, true));
+	}
+}
 
 /** Used for auto-reconnect to character after window refresh */
 export const LastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined);
@@ -45,6 +53,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
 	private readonly _room: ChatRoom;
 	private readonly _player: Observable<PlayerCharacter | null>;
+	private readonly _changeEventEmitter = new ShardChangeEventEmitter();
 	private readonly _messageHandler: MessageHandler<IShardClient>;
 
 	private loadResolver: ((arg: this) => void) | null = null;
@@ -66,6 +75,11 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 
 	public get connectionInfo(): ReadonlyObservable<Readonly<IDirectoryCharacterConnectionInfo>> {
 		return this._connectionInfo;
+	}
+
+	/** Event emitter for shard change events */
+	public get changeEventEmitter(): TypedEventEmitter<Record<IShardClientChangeEvents, true>> {
+		return this._changeEventEmitter;
 	}
 
 	constructor(info: IDirectoryCharacterConnectionInfo) {
@@ -98,6 +112,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 			chatRoomStatus: (status: IShardClientArgument['chatRoomStatus']) => {
 				this._room.onStatus(status);
 			},
+			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}

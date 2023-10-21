@@ -1,7 +1,7 @@
 import {
 	AppearanceAction,
 	AppearanceActionContext,
-	AppearanceActionResult,
+	AppearanceActionProcessingResult,
 	DoAppearanceAction,
 } from 'pandora-common';
 import { useEffect, useRef, useState } from 'react';
@@ -41,9 +41,9 @@ function CalculateInQueue(fn: () => void, lowPriority = false): () => void {
 	};
 }
 
-export function useStaggeredAppearanceActionResult(action: AppearanceAction | null, { lowPriority = false, immediate = false }: { lowPriority?: boolean; immediate?: boolean; } = {}): AppearanceActionResult | null {
+export function useStaggeredAppearanceActionResult(action: AppearanceAction | null, { lowPriority = false, immediate = false }: { lowPriority?: boolean; immediate?: boolean; } = {}): AppearanceActionProcessingResult | null {
 	const { actions, player, target, globalState } = useWardrobeContext();
-	const [result, setResult] = useState<AppearanceActionResult | null>(null);
+	const [result, setResult] = useState<AppearanceActionProcessingResult | null>(null);
 
 	const resultAction = useRef<AppearanceAction | null>(null);
 	const resultContext = useRef<AppearanceActionContext | null>(null);
@@ -64,10 +64,10 @@ export function useStaggeredAppearanceActionResult(action: AppearanceAction | nu
 					resultContext.current = null;
 					setResult(null);
 				} else {
-					const check = DoAppearanceAction(action, actions, globalState.assetManager, { dryRun: true });
+					const checkResult = DoAppearanceAction(action, actions, globalState.assetManager);
 					resultAction.current = action;
 					resultContext.current = actions;
-					setResult(check);
+					setResult(checkResult);
 				}
 			}
 		};

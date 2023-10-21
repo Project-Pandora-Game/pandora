@@ -64,7 +64,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 	const { actions } = useWardrobeContext();
 	const current = useItemColorString(allItems, item, colorKey) ?? colorDefinition.default;
 	const bundle = useMemo(() => item.exportColorToBundle(), [item]);
-	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager, { dryRun: true }).result !== 'success', [bundle, action, actions, assetManager]);
+	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager).problems.length > 0, [bundle, action, actions, assetManager]);
 	const [execute] = useWardrobeExecuteCallback();
 
 	if (!colorDefinition.name || !bundle)

@@ -1,6 +1,7 @@
 import type { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
-import { CharacterId, CharacterIdSchema, ICharacterSelfInfo } from '../character';
+import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
+import { ICharacterSelfInfo } from '../character/characterData';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomId, RoomIdSchema } from '../chatroom/room';
 import { AccountId, AccountIdSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
 import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';

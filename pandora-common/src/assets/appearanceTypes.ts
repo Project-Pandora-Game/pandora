@@ -3,7 +3,8 @@ import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ZodTemplateString } from '../validation';
 import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction, IChatRoomMessageActionTargetCharacter, IChatRoomMessageActionTargetRoomInventory } from '../chatroom';
 import type { Item } from './item';
-import type { CharacterRestrictionsManager, ICharacterMinimalData } from '../character';
+import type { CharacterRestrictionsManager } from '../character/restrictionsManager';
+import { GameLogicCharacter } from '../gameLogic';
 
 export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;
@@ -60,19 +61,13 @@ export interface ActionHandlerMessage extends ActionHandlerMessageWithTarget {
 }
 export type ActionHandler = (message: ActionHandlerMessage) => void;
 
-export interface ActionProcessingContext {
-	sourceCharacter?: CharacterId;
-	actionHandler?: ActionHandler;
-	dryRun?: boolean;
-}
-
 interface RoomActionTargetBase {
 	getItem(path: ItemPath): Item | undefined;
 }
 
 export interface RoomActionTargetCharacter extends RoomActionTargetBase {
 	readonly type: 'character';
-	readonly character: Readonly<ICharacterMinimalData>;
+	readonly character: GameLogicCharacter;
 	getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager;
 }
 

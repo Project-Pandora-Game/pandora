@@ -1,5 +1,6 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
-import type { CharacterId, CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character';
+import type { CharacterId } from '../character/characterTypes';
+import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
 import type { IChatRoomFullInfo } from '../chatroom';
 import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
@@ -33,6 +34,8 @@ export type IChatRoomUpdate = {
 	join?: ICharacterRoomData;
 	characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
 };
+
+export type IShardClientChangeEvents = 'permissions';
 
 /** Shard->Client messages */
 export const ShardClientSchema = {
@@ -72,6 +75,12 @@ export const ShardClientSchema = {
 		request: ZodCast<{
 			id: CharacterId;
 			status: IChatRoomStatus;
+		}>(),
+		response: null,
+	},
+	somethingChanged: {
+		request: ZodCast<{
+			changes: IShardClientChangeEvents[];
 		}>(),
 		response: null,
 	},

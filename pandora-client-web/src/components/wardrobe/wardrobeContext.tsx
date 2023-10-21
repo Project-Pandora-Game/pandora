@@ -1,17 +1,16 @@
 import {
 	AppearanceAction,
 	AppearanceActionContext,
-	AppearanceActionFailure,
-	AppearanceActionResult,
+	AppearanceActionProblem,
+	AppearanceActionProcessingResult,
 	AssertNever,
 	AssertNotNullable,
 	EMPTY_ARRAY,
-	IClientShardNormalResult,
+	GetLogger,
 	Nullable,
-	RoomInventory,
 	RoomTargetSelector,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { ICharacter } from '../../character/character';
 import { Observable } from '../../observable';
@@ -22,6 +21,10 @@ import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeHeldItem, WardrobeTarget } from './wardrobeTypes';
 import { useAsyncEvent } from '../../common/useEvent';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
+import { Column } from '../common/container/container';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
@@ -40,35 +43,16 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
-		player: player.data.id,
+		player: player.gameLogicCharacter,
 		globalState: globalStateContainer,
+		roomContext,
 		getCharacter: (id) => {
 			const state = globalStateContainer.currentState.getCharacterState(id);
 			const character = chatroomCharacters.find((c) => c.id === id);
 			if (!state || !character)
 				return null;
 
-			return character.getRestrictionManager(state, roomContext);
-		},
-		getTarget: (actionTarget) => {
-			if (actionTarget.type === 'character') {
-				const state = globalStateContainer.currentState.getCharacterState(actionTarget.characterId);
-				const character = chatroomCharacters.find((c) => c.id === actionTarget.characterId);
-				if (!state || !character)
-					return null;
-
-				return character.getAppearance(state);
-			}
-
-			if (actionTarget.type === 'roomInventory') {
-				const roomState = globalStateContainer.currentState.room;
-				if (!roomState)
-					return null;
-
-				return new RoomInventory(roomState);
-			}
-
-			AssertNever(actionTarget);
+			return character.gameLogicCharacter;
 		},
 	}), [player, globalStateContainer, roomContext, chatroomCharacters]);
 
@@ -127,43 +111,73 @@ export function useWardrobeContext(): Readonly<WardrobeContext> {
 
 type ExecuteCallbackOptions = {
 	onSuccess?: () => void;
-	onFailure?: (failure: AppearanceActionFailure) => void;
+	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 };
 
+export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCallbackOptions = {}) {
+	const assetManager = useAssetManager();
+	const { execute } = useWardrobeContext();
+	return useAsyncEvent(
+		async (action: AppearanceAction) => await execute(action),
+		(result) => {
+			switch (result?.result) {
+				case 'success':
+					onSuccess?.();
+					break;
+				case 'failure':
+					GetLogger('wardrobeExecute').info('Failure executing action:', result.problems);
+					toast(
+						<Column>
+							<span>Problems performing action:</span>
+							<ul>
+								{
+									result.problems.map((problem, i) => (
+										<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem) }</li>
+									))
+								}
+							</ul>
+						</Column>,
+						TOAST_OPTIONS_ERROR,
+					);
+					onFailure?.(result.problems);
+					break;
+				case undefined:
+					break;
+				default:
+					AssertNever(result);
+			}
+		},
+		{
+			errorHandler: (err) => {
+				GetLogger('wardrobeExecute').error('Error executing action:', err);
+				toast(`Error performing action`, TOAST_OPTIONS_ERROR);
+			},
+		},
+	);
+}
+
 export function useWardrobeExecute(action: Nullable<AppearanceAction>, props: ExecuteCallbackOptions = {}) {
-	const { execute } = useWardrobeContext();
-	return useAsyncEvent(async () => {
-		if (action)
-			return await execute(action);
+	const [execute, processing] = useWardrobeExecuteCallback(props);
 
-		return null;
-	}, ExecuteCallback(props));
+	return [
+		useCallback(() => {
+			if (action) {
+				execute(action);
+			}
+		}, [execute, action]),
+		processing,
+	] as const;
 }
 
-export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionResult | null, props: ExecuteCallbackOptions = {}) {
-	const { execute } = useWardrobeContext();
-	return useAsyncEvent(async () => {
-		if (action && result?.result === 'success')
-			return await execute(action);
+export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}) {
+	const [execute, processing] = useWardrobeExecuteCallback(props);
 
-		return null;
-	}, ExecuteCallback(props));
-}
-
-export function useWardrobeExecuteCallback(props: ExecuteCallbackOptions = {}) {
-	const { execute } = useWardrobeContext();
-	return useAsyncEvent(async (action: AppearanceAction) => await execute(action), ExecuteCallback(props));
-}
-
-function ExecuteCallback({ onSuccess, onFailure }: ExecuteCallbackOptions) {
-	return (r: Nullable<IClientShardNormalResult['appearanceAction']>) => {
-		switch (r?.result) {
-			case 'success':
-				onSuccess?.();
-				break;
-			case 'failure':
-				onFailure?.(r.failure);
-				break;
-		}
-	};
+	return [
+		useCallback(() => {
+			if (action && result != null && result.problems.length === 0) {
+				execute(action);
+			}
+		}, [execute, action, result]),
+		processing,
+	] as const;
 }

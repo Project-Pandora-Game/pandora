@@ -20,6 +20,7 @@ import './assets.scss';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
+import { PreviewCutter } from '../previewCutter/previewCutter';
 
 export function AssetsUI(): ReactElement {
 	const editor = useEditor();
@@ -97,6 +98,7 @@ export function AssetsUI(): ReactElement {
 				</ContextHelpButton>
 			</h3>
 			<AssetCreatePrompt />
+			<PreviewCutter />
 			<ul>
 				{ view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } />) }
 			</ul>

@@ -8,6 +8,7 @@ import { useObservable } from '../../../observable';
 import { Container, Graphics, Sprite } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { useTexture } from '../../../graphics/useTexture';
+import { PreviewCutterRectangle } from '../../components/previewCutter/previewCutter';
 
 export function ResultLayer({
 	layer,
@@ -76,6 +77,7 @@ export function ResultLayer({
 					</Container>
 				)
 			}
+			<PreviewCutterRectangle />
 		</>
 	);
 }

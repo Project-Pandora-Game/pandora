@@ -13,6 +13,7 @@ import { useObservable } from '../../observable';
 import { EditorContext, useEditor } from '../editorContextProvider';
 import { ResultCharacter, SetupCharacter } from './character';
 import { ImageExporter } from './export/imageExporter';
+import { DownloadAsFile } from '../../common/downloadHelper';
 
 function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
@@ -93,17 +94,8 @@ export function EditorScene({
 			height: CharacterSize.HEIGHT,
 			width: CharacterSize.WIDTH,
 		}, 'png')
-			.then((result) => {
-				const link = document.createElement('a');
-				link.href = result;
-				link.download = `export.png`;
-				link.style.display = 'none';
-				document.body.appendChild(link);
-				link.click();
-				link.remove();
-			}, (error) => {
-				GetLogger('Editor').error('Error exporting image:', error);
-			});
+			.then((result) => DownloadAsFile(result, 'export.png'))
+			.catch((error) => GetLogger('Editor').error('Error exporting image:', error));
 	}, []);
 
 	const overlay = (

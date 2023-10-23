@@ -639,7 +639,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 							select(DEFAULT_BACKGROUND);
 							hide();
 						} }>
-						Custom background
+						Solid-color background
 					</Button>
 					<Button
 						onClick={ () => {

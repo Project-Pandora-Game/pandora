@@ -91,7 +91,7 @@ importers:
     devDependencies:
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.11
-        version: 0.5.11(@types/webpack@5.28.4)(react-refresh@0.14.0)(type-fest@4.5.0)(webpack-dev-server@4.15.1)(webpack@5.89.0)
+        version: 0.5.11(@types/webpack@5.28.4)(react-refresh@0.14.0)(type-fest@4.6.0)(webpack-dev-server@4.15.1)(webpack@5.89.0)
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
         version: 13.2.0(sass@1.69.4)(webpack@5.89.0)
@@ -237,8 +237,8 @@ importers:
         specifier: 2.6.2
         version: 2.6.2
       type-fest:
-        specifier: 4.5.0
-        version: 4.5.0
+        specifier: 4.6.0
+        version: 4.6.0
       typescript:
         specifier: 5.2.2
         version: 5.2.2
@@ -2827,7 +2827,7 @@ packages:
       playwright: 1.39.0
     dev: true
 
-  /@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.4)(react-refresh@0.14.0)(type-fest@4.5.0)(webpack-dev-server@4.15.1)(webpack@5.89.0):
+  /@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.4)(react-refresh@0.14.0)(type-fest@4.6.0)(webpack-dev-server@4.15.1)(webpack@5.89.0):
     resolution: {integrity: sha512-7j/6vdTym0+qZ6u4XbSAxrWBGYSdCfTzySkj7WAFgDLmSyWlOrWvpyzxlFh5jtw9dn0oL/jtW+06XfFiisN3JQ==}
     engines: {node: '>= 10.13'}
     peerDependencies:
@@ -2864,7 +2864,7 @@ packages:
       react-refresh: 0.14.0
       schema-utils: 3.3.0
       source-map: 0.7.4
-      type-fest: 4.5.0
+      type-fest: 4.6.0
       webpack: 5.89.0(webpack-cli@5.1.4)
       webpack-dev-server: 4.15.1(webpack-cli@5.1.4)(webpack@5.89.0)
     dev: true
@@ -11268,8 +11268,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /type-fest@4.5.0:
-    resolution: {integrity: sha512-diLQivFzddJl4ylL3jxSkEc39Tpw7o1QeEHIPxVwryDK2lpB7Nqhzhuo6v5/Ls08Z0yPSAhsyAWlv1/H0ciNmw==}
+  /type-fest@4.6.0:
+    resolution: {integrity: sha512-rLjWJzQFOq4xw7MgJrCZ6T1jIOvvYElXT12r+y0CC6u67hegDHaxcPqb2fZHOGlqxugGQPNB1EnTezjBetkwkw==}
     engines: {node: '>=16'}
     dev: true
 

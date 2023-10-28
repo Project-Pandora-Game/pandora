@@ -242,7 +242,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 					}
 				</Row>
 				<div className='description-title'>Description:</div>
-				<textarea className='widebox' value={ description } rows={ 10 } readOnly />
+				<textarea className='widebox' value={ description } rows={ 16 } readOnly />
 				{ characters.length > 0 &&
 					<div className='title'>Current users in this room:
 						<div className='users-list'>

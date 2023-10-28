@@ -2,9 +2,4 @@
 
 .AuthPage {
 	@include center-flex;
-
-	.auth-page-content {
-		@include center-flex(row, wrap);
-		gap: 5rem;
-	}
 }

@@ -3,24 +3,44 @@
 
 .LoginTeaser {
 	@include flex(column);
+	width: min(95vw, 45em);
+	min-height: min(90vh, 25em);
 	background-color: $grey-light;
 	border-radius: 0.2em;
 	padding: 2em 2.5em 1em;
-	box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;;
+	align-self: stretch;
+	box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
 
-	.teaser-text {
-		@include center-flex;
+	.teaser-content-box {
 		flex: 1;
-		width: 100%;
-		background-color: $grey-mid;
-		border-top-left-radius: 0.3em;
-		border-top-right-radius: 0.3em;
-		padding: 0.8em;
-	}
+		flex-basis: 0;
+		overflow: hidden;
 
-	.teaser-image {
-		max-width: 100%;
-		box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+		.teaser-content {
+			overflow: hidden;
+			background-color: $grey-mid;
+			border-top-left-radius: 0.3em;
+			border-top-right-radius: 0.3em;
+			box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+
+			.teaser-text {
+				@include center-flex;
+				padding: 0.8em;
+			}
+
+			.teaser-image {
+				flex: 1;
+				overflow: hidden;
+				max-height: 100%;
+				max-width: 100%;
+
+				img {
+					max-width: 100%;
+					max-height: 100%;
+					object-fit: contain;
+				}
+			}
+		}
 	}
 
 	.teaser-navigation {

@@ -593,6 +593,26 @@ export class Character {
 
 		// Disconnect
 		await this._unassign();
+
+		// Detach the client
+		if (this.assignedClient) {
+			Assert(!this._disposed);
+			const c = this.assignedClient;
+			c.setCharacter(null);
+			c.sendConnectionStateUpdate();
+		}
+		Assert(this.assignedClient == null);
+
+		// Mark the character as offline
+		const isChange = this._connectSecret != null;
+		if (isChange) {
+			this._connectSecret = null;
+			this.baseInfo.account.onCharacterListChange();
+			this.baseInfo.account.relationship.updateStatus();
+			if (this.room != null) {
+				ConnectionManagerClient.onRoomListChange();
+			}
+		}
 	}
 
 	@AsyncSynchronized('object')

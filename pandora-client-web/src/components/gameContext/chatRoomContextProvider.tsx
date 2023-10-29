@@ -342,9 +342,6 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 	private readonly _sent = new Map<number, ISavedMessage>();
 	public sendMessage(message: string, options: IMessageParseOptions = {}): void {
 		const { editing, type, raw, target } = options;
-		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
-			throw new Error('Shard is not connected');
-		}
 		if (editing !== undefined) {
 			const edit = this._sent.get(editing);
 			if (!edit || edit.time + MESSAGE_EDIT_TIMEOUT < Date.now()) {

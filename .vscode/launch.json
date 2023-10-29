@@ -75,7 +75,8 @@
 					"url": "webpack://pandora-client-web/pandora-common/src",
 					"path": "${workspaceFolder}/pandora-common/src"
 				},
-			]
+			],
+			"suggestPathMappingWizard": false
 		},
 		{
 			"name": "Run Directory Server",

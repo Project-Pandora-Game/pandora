@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 /** The maximum length of an account name */
 export const LIMIT_ACCOUNT_NAME_LENGTH = 32;
 

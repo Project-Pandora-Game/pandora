@@ -1,4 +1,4 @@
-import { ITypedEventEmitter, TypedEventEmitter, ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomFullInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState, IChatRoomLoad, AssetFrameworkGlobalStateClientBundle } from 'pandora-common';
+import { ITypedEventEmitter, TypedEventEmitter, ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomFullInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState, IChatRoomLoad, AssetFrameworkGlobalStateClientBundle, LIMIT_CHAT_MESSAGE_LENGTH } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -361,6 +361,9 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 			if (type === 'me' || type === 'emote') {
 				throw new Error('Emote and me messages cannot be sent to a specific target');
 			}
+		}
+		if (message.length > LIMIT_CHAT_MESSAGE_LENGTH) {
+			throw new Error(`Message must not be longer than ${LIMIT_CHAT_MESSAGE_LENGTH} characters (currently: ${message.length})`);
 		}
 		let messages: IClientMessage[] = [];
 		if (type !== undefined) {

@@ -1,4 +1,4 @@
-import { AssertNotNullable, CharacterId, EMPTY_ARRAY, IChatRoomStatus, IChatType, LIMIT_CHAT_MESSAGE_LENGTH, RoomId, ZodTransformReadonly } from 'pandora-common';
+import { AssertNotNullable, CharacterId, EMPTY_ARRAY, IChatRoomStatus, IChatType, RoomId, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from 'lodash';
 import { Character } from '../../character/character';
@@ -298,9 +298,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
-				if (input.length > LIMIT_CHAT_MESSAGE_LENGTH) {
-					toast(`Message must not be longer than ${LIMIT_CHAT_MESSAGE_LENGTH} characters (currently: ${input.length})`, TOAST_OPTIONS_ERROR);
-				} else if (handleSend(input)) {
+				if (handleSend(input)) {
 					textarea.value = '';
 					inputHistoryIndex.current = -1;
 					setEditing(null);

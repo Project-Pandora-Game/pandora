@@ -9,7 +9,7 @@ import { AccountDirectMessages } from './accountDirectMessages';
 import type { ClientConnection } from '../networking/connection_client';
 import { AccountRelationship } from './accountRelationship';
 
-import _, { cloneDeep, omit } from 'lodash';
+import _, { cloneDeep, omit, uniq } from 'lodash';
 
 /** Currently logged in or recently used account */
 export class Account {
@@ -93,7 +93,7 @@ export class Account {
 
 	public async changeSettings(settings: Partial<IDirectoryAccountSettings>): Promise<void> {
 		if (settings.visibleRoles) {
-			settings.visibleRoles = settings.visibleRoles.filter((role) => this.roles.isAuthorized(role));
+			settings.visibleRoles = uniq(settings.visibleRoles.filter((role) => this.roles.isAuthorized(role)));
 		}
 
 		this.data.settings = { ...this.data.settings, ...settings };

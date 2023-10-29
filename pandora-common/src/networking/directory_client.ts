@@ -23,7 +23,7 @@ export function CreateDefaultDirectoryStatus(): IDirectoryStatus {
 }
 
 export const DirectoryAccountSettingsSchema = z.object({
-	visibleRoles: z.array(AccountRoleSchema),
+	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
 	labelColor: HexColorStringSchema.catch('#ffffff'),
 	/** Hides online status from friends */
 	hideOnlineStatus: z.boolean().default(false),

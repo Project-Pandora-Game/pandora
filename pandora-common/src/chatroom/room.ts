@@ -97,7 +97,7 @@ export function CalculateCharacterMaxYForBackground(roomBackground: IChatroomBac
 
 export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.object({
 	/** The requested features */
-	features: z.array(ChatRoomFeatureSchema),
+	features: z.array(ChatRoomFeatureSchema).max(ChatRoomFeatureSchema.options.length),
 	/**
 	 * Development options, may get ignored if requested features don't include 'development'
 	 */

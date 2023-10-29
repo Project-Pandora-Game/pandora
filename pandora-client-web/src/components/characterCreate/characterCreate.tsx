@@ -1,4 +1,4 @@
-import { IsCharacterName } from 'pandora-common';
+import { IsValidCharacterName, LIMIT_CHARACTER_NAME_LENGTH } from 'pandora-common';
 import React, { ReactElement, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCreateCharacter } from '../../character/player';
@@ -45,7 +45,7 @@ export function CharacterCreate(): ReactElement | null {
 		event.preventDefault();
 
 		// Character name
-		if (!IsCharacterName(characterName)) {
+		if (!IsValidCharacterName(characterName)) {
 			setErrorMessage('Invalid character name format');
 			return;
 		}
@@ -74,7 +74,7 @@ export function CharacterCreate(): ReactElement | null {
 				<Form onSubmit={ handleSubmit }>
 					<FormField className='input-container'>
 						<label htmlFor='characterName'>Name</label>
-						<input autoComplete='off' type='text' id='characterName' name='characterName' value={ characterName }
+						<input autoComplete='off' type='text' id='characterName' name='characterName' value={ characterName } maxLength={ LIMIT_CHARACTER_NAME_LENGTH }
 							onChange={ (event) => setCharacterName(event.target.value) } required />
 					</FormField>
 					{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }

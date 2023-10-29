@@ -1,10 +1,10 @@
 import { CharacterIdSchema } from '../character/characterTypes';
-import { CharacterDataCreateSchema, CharacterPublicSettingsSchema } from '../character/characterData';
+import { CharacterPublicSettingsSchema } from '../character/characterData';
 import { AppearanceActionSchema } from '../assets/appearanceActions';
 import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
 import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
 import { z } from 'zod';
-import { ZodCast } from '../validation';
+import { CharacterInputNameSchema, ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { Immutable } from 'immer';
@@ -17,7 +17,9 @@ import type { } from '../character/pronouns';
 /** Client->Shard messages */
 export const ClientShardSchema = {
 	finishCharacterCreation: {
-		request: CharacterDataCreateSchema,
+		request: z.object({
+			name: CharacterInputNameSchema,
+		}),
 		response: ZodCast<{ result: 'ok' | 'failed'; }>(),
 	},
 	chatRoomMessage: {

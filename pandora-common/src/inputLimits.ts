@@ -10,6 +10,8 @@
 /** The maximum length of an account name */
 export const LIMIT_ACCOUNT_NAME_LENGTH = 32;
 
+/** The minimum length of a character name */
+export const LIMIT_CHARACTER_NAME_MIN_LENGTH = 3;
 /** The maximum length of a character name */
 export const LIMIT_CHARACTER_NAME_LENGTH = 32;
 

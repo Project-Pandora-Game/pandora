@@ -54,8 +54,6 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;
 
-export const CharacterDataCreateSchema = CharacterDataSchema.pick({ name: true });
-export type ICharacterDataCreate = z.infer<typeof CharacterDataCreateSchema>;
 export const CharacterDataAccessSchema = CharacterDataSchema.pick({ id: true, accessId: true });
 export type ICharacterDataAccess = z.infer<typeof CharacterDataAccessSchema>;
 export const CharacterDataUpdateSchema = CharacterDataSchema.omit({ inCreation: true, accountId: true, created: true }).partial().merge(CharacterDataAccessSchema);

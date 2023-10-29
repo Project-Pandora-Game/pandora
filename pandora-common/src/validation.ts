@@ -1,7 +1,7 @@
 import { enableMapSet } from 'immer';
 import { isEqual } from 'lodash';
 import { z, ZodObject, ZodString, ZodType, ZodTypeAny, ZodTypeDef, RefinementCtx, ZodEffects } from 'zod';
-import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits';
+import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_CHARACTER_NAME_MIN_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits';
 
 enableMapSet();
 
@@ -89,16 +89,14 @@ export const IsUndefined = (value: unknown): value is undefined => value === und
  *
  * TODO - finalize this to what we want
  */
-export const UserNameSchema = z.string().min(3).max(LIMIT_ACCOUNT_NAME_LENGTH).regex(/^[a-zA-Z0-9_-]+$/);
+export const UserNameSchema = z.string().min(3).max(LIMIT_ACCOUNT_NAME_LENGTH).regex(/^[a-zA-Z0-9_-]*$/);
 export const IsUsername = ZodMatcher(UserNameSchema);
 
-/**
- * Tests if the parameter is a valid character name
- *
- * TODO - finalize this to what we want
- */
-export const CharacterNameSchema = z.string().min(3).max(LIMIT_CHARACTER_NAME_LENGTH).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex);
-export const IsCharacterName = ZodMatcher(CharacterNameSchema);
+/** Name of a character */
+export const CharacterNameSchema = z.string().max(LIMIT_CHARACTER_NAME_LENGTH).regex(/^[a-zA-Z0-9_\- ]*$/).regex(ZodTrimedRegex);
+/** Name of a character as entered by user; further limits allowed values */
+export const CharacterInputNameSchema = CharacterNameSchema.min(LIMIT_CHARACTER_NAME_MIN_LENGTH);
+export const IsValidCharacterName = ZodMatcher(CharacterInputNameSchema);
 
 /**
  * Tests if the parameter is a valid email address

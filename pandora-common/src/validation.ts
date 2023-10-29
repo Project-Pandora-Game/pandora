@@ -109,10 +109,11 @@ export const IsValidCharacterName = ZodMatcher(CharacterInputNameSchema);
 export const EmailAddressSchema = z.string().min(5).max(LIMIT_MAIL_LENGTH).regex(/^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/i);
 export const IsEmail = ZodMatcher(EmailAddressSchema);
 
+export const SIMPLE_TOKEN_LENGTH = 6;
 /**
- * Tests if string is a 'simple' token format - 6 digits
+ * A simple digit-based token
  */
-export const SimpleTokenSchema = z.string().length(6).regex(/^[0-9]+$/);
+export const SimpleTokenSchema = z.string().length(SIMPLE_TOKEN_LENGTH).regex(/^[0-9]+$/);
 export const IsSimpleToken = ZodMatcher(SimpleTokenSchema);
 
 export const PasswordSha512Schema = z.string().regex(/^[a-zA-Z0-9+/]{86}==$/);

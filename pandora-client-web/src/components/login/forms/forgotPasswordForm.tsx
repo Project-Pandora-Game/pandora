@@ -1,4 +1,4 @@
-import { AssertNever, IsEmail } from 'pandora-common';
+import { AssertNever, IsEmail, LIMIT_MAIL_LENGTH } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -55,6 +55,7 @@ export function ForgotPasswordForm(): ReactElement {
 					{ ...register('email', {
 						required: 'Email is required',
 						validate: (email) => IsEmail(email) || 'Invalid email format',
+						maxLength: LIMIT_MAIL_LENGTH,
 					}) }
 				/>
 				<FormFieldError error={ errors.email } />

@@ -1,4 +1,4 @@
-import { AssertNever, IsSimpleToken, IsUsername } from 'pandora-common';
+import { AssertNever, IsSimpleToken, IsUsername, LIMIT_ACCOUNT_NAME_LENGTH, SIMPLE_TOKEN_LENGTH } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
@@ -6,8 +6,6 @@ import { useDirectoryPasswordResetConfirm } from '../../../networking/account_ma
 import { Button } from '../../common/button/button';
 import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
-
-const RESET_CODE_LENGTH = 6;
 
 export interface ResetPasswordFormData {
 	username: string;
@@ -61,6 +59,7 @@ export function ResetPasswordForm(): ReactElement {
 					{ ...register('username', {
 						required: 'Username is required',
 						validate: (username) => IsUsername(username) || 'Invalid username format',
+						maxLength: LIMIT_ACCOUNT_NAME_LENGTH,
 					}) }
 				/>
 				<FormFieldError error={ errors.username } />
@@ -74,12 +73,12 @@ export function ResetPasswordForm(): ReactElement {
 					{ ...register('token', {
 						required: 'Reset code is required',
 						minLength: {
-							message: `Reset code must be exactly ${ RESET_CODE_LENGTH } characters`,
-							value: RESET_CODE_LENGTH,
+							message: `Reset code must be exactly ${ SIMPLE_TOKEN_LENGTH } characters`,
+							value: SIMPLE_TOKEN_LENGTH,
 						},
 						maxLength: {
-							message: `Reset code must be exactly ${ RESET_CODE_LENGTH } characters`,
-							value: RESET_CODE_LENGTH,
+							message: `Reset code must be exactly ${ SIMPLE_TOKEN_LENGTH } characters`,
+							value: SIMPLE_TOKEN_LENGTH,
 						},
 						validate: (token) => IsSimpleToken(token) || 'Invalid reset code format',
 					}) }

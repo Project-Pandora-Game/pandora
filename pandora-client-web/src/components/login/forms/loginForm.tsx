@@ -1,4 +1,4 @@
-import { IsUsername } from 'pandora-common';
+import { IsUsername, LIMIT_ACCOUNT_NAME_LENGTH } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { Button } from '../../common/button/button';
 import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
@@ -44,6 +44,7 @@ export function LoginForm(): ReactElement {
 					{ ...register('username', {
 						required: 'Username is required',
 						validate: (username) => IsUsername(username) || 'Invalid username format',
+						maxLength: LIMIT_ACCOUNT_NAME_LENGTH,
 					}) }
 				/>
 				<FormFieldError error={ errors.username } />

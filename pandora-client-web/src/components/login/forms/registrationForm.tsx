@@ -1,4 +1,4 @@
-import { AssertNever, IsEmail, IsUsername } from 'pandora-common';
+import { AssertNever, IsEmail, IsUsername, LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_MAIL_LENGTH } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
@@ -98,7 +98,11 @@ export function RegistrationForm(): ReactElement {
 					type='text'
 					id='registration-username'
 					autoComplete='username'
-					{ ...register('username', { required: 'Username is required', validate: validateUsername }) }
+					{ ...register('username', {
+						required: 'Username is required',
+						validate: validateUsername,
+						maxLength: LIMIT_ACCOUNT_NAME_LENGTH,
+					}) }
 				/>
 				<FormFieldError error={ errors.username } />
 			</FormField>
@@ -108,7 +112,11 @@ export function RegistrationForm(): ReactElement {
 					type='email'
 					id='registration-email'
 					autoComplete='email'
-					{ ...register('email', { required: 'Email is required', validate: validateEmail }) }
+					{ ...register('email', {
+						required: 'Email is required',
+						validate: validateEmail,
+						maxLength: LIMIT_MAIL_LENGTH,
+					}) }
 				/>
 				<FormFieldError error={ errors.email } />
 			</FormField>

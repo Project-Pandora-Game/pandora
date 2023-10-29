@@ -79,6 +79,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 });
 
+// TODO: This needs reasonable size limits
 export const AccountCryptoKeySchema = z.object({
 	publicKey: z.string(),
 	salt: z.string(),

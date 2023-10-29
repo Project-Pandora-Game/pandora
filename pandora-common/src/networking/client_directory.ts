@@ -190,7 +190,7 @@ export const ClientDirectorySchema = {
 	updateCharacter: {
 		request: z.object({
 			id: CharacterIdSchema,
-			preview: z.string().optional(),
+			preview: z.string().optional(), // TODO: Not yet implemented
 		}),
 		response: ZodCast<ICharacterSelfInfo>(),
 	},

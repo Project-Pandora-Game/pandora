@@ -1,3 +1,12 @@
+/* TODO list of things to potentially limit *
+- AccountCryptoKeySchema limits (or more thorough validation)
+- Room admin list
+- Room banned list
+- Room owner list
+- Room password
+- Chatroom chat limits are per-segment
+*/
+
 /** The maximum length of an account name */
 export const LIMIT_ACCOUNT_NAME_LENGTH = 32;
 

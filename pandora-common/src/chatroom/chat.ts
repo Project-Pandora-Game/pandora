@@ -3,11 +3,12 @@ import type { AssetId } from '../assets';
 import { CharacterId, CharacterIdSchema } from '../character';
 import type { PronounKey } from '../character/pronouns';
 import { ChatActionId } from './chatActions';
+import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
 export type IChatModifier = z.infer<typeof ChatModifierSchema>;
 
-export const ChatSegmentSchema = z.tuple([ChatModifierSchema, z.string()]);
+export const ChatSegmentSchema = z.tuple([ChatModifierSchema, z.string().max(LIMIT_CHAT_MESSAGE_LENGTH)]);
 export type IChatSegment = z.infer<typeof ChatSegmentSchema>;
 
 export const ChatTypeSchema = z.enum(['chat', 'me', 'emote', 'ooc']);

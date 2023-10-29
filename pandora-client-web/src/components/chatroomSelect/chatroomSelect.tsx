@@ -175,7 +175,7 @@ function RoomEntry({ roomInfo }: {
 					<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
 					{ ` / ${maxUsers} )` }
 				</div>
-				<div className='entry'>{ (description.length > 50) ? `${description.substring(0, 49).concat('\u2026')}` : `${description}` }</div>
+				<div className='description-preview'>{ `${description}` }</div>
 			</a>
 			{ show && <RoomDetailsDialog
 				baseRoomInfo={ roomInfo }

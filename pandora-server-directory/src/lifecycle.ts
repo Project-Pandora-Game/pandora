@@ -45,8 +45,9 @@ async function StopGracefully(): Promise<void> {
 	destroying = 'AccountManager Accounts';
 	accountManager.onDestroyAccounts();
 	// Disconnect database
-	destroying = 'AccountManager Database';
+	destroying = 'Database';
 	await CloseDatabase();
+	destroying = '[done]';
 }
 
 export function Stop(): Promise<void> {

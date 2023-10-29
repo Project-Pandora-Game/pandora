@@ -62,12 +62,19 @@ export const DiscordBot = new class DiscordBot implements Service {
 		if (!this._client) {
 			return;
 		}
-		this.setOnlineStatus.cancel();
+		this._setOnlineStatusInternal.cancel();
 		this._client.user?.setStatus('dnd');
 		await this._client.destroy();
 	}
 
-	public readonly setOnlineStatus = _.throttle((status: Partial<DiscordBotStatus>): void => {
+	public setOnlineStatus(status: Partial<DiscordBotStatus>): void {
+		if (this._destroyed || !this._client) {
+			return;
+		}
+		this._setOnlineStatusInternal(status);
+	}
+
+	private readonly _setOnlineStatusInternal = _.throttle((status: Partial<DiscordBotStatus>): void => {
 		if (this._destroyed || !this._client) {
 			return;
 		}

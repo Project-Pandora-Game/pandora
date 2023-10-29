@@ -10,7 +10,7 @@ export function ZodTemplateString<T extends string>(validator: ZodString, regex:
 }
 
 /** ZodString .trim method doesn't do actual validation, we need to use regex */
-export const ZodTrimedRegex = /^[^\s].*[^\s]$/;
+export const ZodTrimedRegex = /^(([^\s].*[^\s])|[^\s]*)$/s;
 
 export const ZodBase64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 

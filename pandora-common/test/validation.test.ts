@@ -1,4 +1,4 @@
-import { IsObject } from '../src/validation';
+import { IsObject, ZodTrimedRegex } from '../src/validation';
 
 describe('Validation', () => {
 
@@ -49,5 +49,40 @@ describe('Validation', () => {
 			expect(IsObject(obj)).toBeFalsy();
 		});
 
+	});
+
+	describe('ZodTrimedRegex', () => {
+		it.each([
+			'',
+			'a',
+			'0123',
+			'a a',
+			'1 2 3 4 5 6 7 8 9',
+			'1 2 3\t4 5\n6 7 8 9',
+		])('Passes for %p', (value) => {
+			expect(ZodTrimedRegex.test(value)).toBe(true);
+		});
+
+		it.each([
+			' ',
+			'a ',
+			'a\t',
+			'a\n',
+			' b',
+			'\tb',
+			'\nb',
+			' c ',
+			' 0123',
+			'0123 ',
+			' 0123 ',
+			' a a',
+			'a a ',
+			' a a ',
+			' 1 2 3 4 5 6 7 8 9',
+			'1 2 3 4 5 6 7 8 9 ',
+			'  1 2 3 4 5 6 7 8 9  ',
+		])('Fails for %p', (value) => {
+			expect(ZodTrimedRegex.test(value)).toBe(false);
+		});
 	});
 });

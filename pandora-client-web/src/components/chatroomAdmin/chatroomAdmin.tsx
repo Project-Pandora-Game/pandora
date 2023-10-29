@@ -156,9 +156,14 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const configurableElements = (
 		<>
 			<div className='input-container'>
-				<label>Room name ({ roomModifiedData.name?.length ? roomModifiedData.name?.length : currentConfig.name.length }/{ LIMIT_ROOM_NAME_LENGTH } characters)</label>
-				<input autoComplete='none' type='text' value={ currentConfig.name } readOnly={ !isPlayerAdmin }
-					onChange={ (event) => setRoomModifiedData({ name: event.target.value }) } />
+				<label>Room name ({ currentConfig.name.length }/{ LIMIT_ROOM_NAME_LENGTH } characters)</label>
+				<input
+					autoComplete='none'
+					type='text'
+					value={ currentConfig.name }
+					onChange={ (event) => setRoomModifiedData({ name: event.target.value }) }
+					readOnly={ !isPlayerAdmin }
+				/>
 				{ !IsChatroomName(currentConfig.name) && <div className='error'>Invalid room name</div> }
 			</div>
 			<div className='input-container'>
@@ -168,9 +173,13 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			</div>
 			<FieldsetToggle legend='Presentation and access'>
 				<div className='input-container'>
-					<label>Room description ({ roomModifiedData.description?.length ? roomModifiedData.description?.length : currentConfig.description.length }/{ LIMIT_ROOM_DESCRIPTION_LENGTH } characters)</label>
-					<textarea value={ currentConfig.description } readOnly={ !isPlayerAdmin }
-						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) } />
+					<label>Room description ({ currentConfig.description.length }/{ LIMIT_ROOM_DESCRIPTION_LENGTH } characters)</label>
+					<textarea
+						value={ currentConfig.description }
+						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) }
+						readOnly={ !isPlayerAdmin }
+						rows={ 16 }
+					/>
 					{ !IsChatroomDescription(currentConfig.description) && <div className='error'>Invalid description</div> }
 				</div>
 				<div className='input-container'>

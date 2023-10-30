@@ -49,7 +49,7 @@ describe('Login Form', () => {
 			await user.type(screen.getByLabelText('Password'), 'password');
 			await user.click(screen.getByRole('button'));
 
-			await ExpectFieldToBeInvalid('Username', 'Invalid username format');
+			await ExpectFieldToBeInvalid('Username');
 		});
 
 		it('should not permit an empty password to be submitted', async () => {

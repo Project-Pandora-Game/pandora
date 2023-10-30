@@ -1,10 +1,10 @@
-import { AssertNever, IsSimpleToken, IsUsername, LIMIT_ACCOUNT_NAME_LENGTH, SIMPLE_TOKEN_LENGTH } from 'pandora-common';
+import { AssertNever, IsSimpleToken, SIMPLE_TOKEN_LENGTH, UserNameSchema } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
-import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
 
 export interface ResetPasswordFormData {
@@ -58,8 +58,7 @@ export function ResetPasswordForm(): ReactElement {
 					autoComplete='username'
 					{ ...register('username', {
 						required: 'Username is required',
-						validate: (username) => IsUsername(username) || 'Invalid username format',
-						maxLength: LIMIT_ACCOUNT_NAME_LENGTH,
+						validate: FormCreateStringValidator(UserNameSchema, 'username'),
 					}) }
 				/>
 				<FormFieldError error={ errors.username } />

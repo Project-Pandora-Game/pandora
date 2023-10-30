@@ -1,11 +1,11 @@
-import { IsCharacterName } from 'pandora-common';
+import { CharacterInputNameSchema, IsValidCharacterName } from 'pandora-common';
 import React, { ReactElement, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCreateCharacter } from '../../character/player';
 import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
 import { Button } from '../common/button/button';
 import './characterCreate.scss';
-import { Form, FormErrorMessage, FormField } from '../common/form/form';
+import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 
 export function CharacterCreate(): ReactElement | null {
@@ -45,7 +45,7 @@ export function CharacterCreate(): ReactElement | null {
 		event.preventDefault();
 
 		// Character name
-		if (!IsCharacterName(characterName)) {
+		if (!IsValidCharacterName(characterName)) {
 			setErrorMessage('Invalid character name format');
 			return;
 		}
@@ -67,6 +67,8 @@ export function CharacterCreate(): ReactElement | null {
 		})();
 	};
 
+	const characterNameError = characterName ? FormCreateStringValidator(CharacterInputNameSchema, 'character name')(characterName) : undefined;
+
 	return (
 		<div className='CharacterCreate'>
 			<div id='registration-form'>
@@ -74,8 +76,16 @@ export function CharacterCreate(): ReactElement | null {
 				<Form onSubmit={ handleSubmit }>
 					<FormField className='input-container'>
 						<label htmlFor='characterName'>Name</label>
-						<input autoComplete='off' type='text' id='characterName' name='characterName' value={ characterName }
-							onChange={ (event) => setCharacterName(event.target.value) } required />
+						<input
+							type='text'
+							autoComplete='off'
+							id='characterName'
+							name='characterName'
+							value={ characterName }
+							onChange={ (event) => setCharacterName(event.target.value) }
+							required
+						/>
+						<FormError error={ characterNameError } />
 					</FormField>
 					{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
 					<Button type='submit'>Submit</Button>

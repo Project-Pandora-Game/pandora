@@ -15,6 +15,8 @@ import {
 	BackgroundTagDefinition,
 	AssetManager,
 	IChatroomBackgroundInfo,
+	LIMIT_ROOM_DESCRIPTION_LENGTH,
+	LIMIT_ROOM_NAME_LENGTH,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -41,6 +43,7 @@ import { SelectionIndicator } from '../common/selectionIndicator/selectionIndica
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
+const IsChatroomDescription = ZodMatcher(ChatRoomBaseInfoSchema.shape.description);
 
 function DefaultRoomData(): IChatRoomDirectoryConfig {
 	return {
@@ -153,9 +156,14 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const configurableElements = (
 		<>
 			<div className='input-container'>
-				<label>Room name</label>
-				<input autoComplete='none' type='text' value={ currentConfig.name } readOnly={ !isPlayerAdmin }
-					onChange={ (event) => setRoomModifiedData({ name: event.target.value }) } />
+				<label>Room name ({ currentConfig.name.length }/{ LIMIT_ROOM_NAME_LENGTH } characters)</label>
+				<input
+					autoComplete='none'
+					type='text'
+					value={ currentConfig.name }
+					onChange={ (event) => setRoomModifiedData({ name: event.target.value }) }
+					readOnly={ !isPlayerAdmin }
+				/>
 				{ !IsChatroomName(currentConfig.name) && <div className='error'>Invalid room name</div> }
 			</div>
 			<div className='input-container'>
@@ -165,9 +173,14 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			</div>
 			<FieldsetToggle legend='Presentation and access'>
 				<div className='input-container'>
-					<label>Room description</label>
-					<textarea value={ currentConfig.description } readOnly={ !isPlayerAdmin }
-						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) } />
+					<label>Room description ({ currentConfig.description.length }/{ LIMIT_ROOM_DESCRIPTION_LENGTH } characters)</label>
+					<textarea
+						value={ currentConfig.description }
+						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) }
+						readOnly={ !isPlayerAdmin }
+						rows={ 16 }
+					/>
+					{ !IsChatroomDescription(currentConfig.description) && <div className='error'>Invalid description</div> }
 				</div>
 				<div className='input-container'>
 					<label>Public</label>

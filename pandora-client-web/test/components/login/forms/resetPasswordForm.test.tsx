@@ -92,7 +92,7 @@ describe('Reset Password Form', () => {
 
 		await fillInAndSubmitForm(invalidUsername, defaultResetCode, defaultPassword, defaultPassword);
 
-		await ExpectFieldToBeInvalid('Username', 'Invalid username format');
+		await ExpectFieldToBeInvalid('Username');
 	});
 
 	it.each(INVALID_LENGTH_TOKENS)(

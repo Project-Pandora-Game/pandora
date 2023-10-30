@@ -15,7 +15,7 @@ export function WikiIntroduction(): ReactElement {
 			<ul>
 				<li>Dynamically generated body model with many poses and free arm movement</li>
 				<li>Front and back character view</li>
-				<li>Persistent rooms</li>
+				<li>Persistent rooms with long descriptions</li>
 				<li>A feature-rich room chat (e.g. message editing, advanced text styling)</li>
 				<li>Free character placement and movement inside rooms</li>
 				<li>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</li>
@@ -24,6 +24,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>A direct messaging system that supports offline messages and a persistent message history</li>
 				<li>Ability to use the browser's back/forward buttons to navigate in Pandora</li>
 				<li>No safeword feature, but a safemode that makes it harder to be misused to constantly free characters</li>
+				<li>A permission feature that allows the user to set who is allowed to do what</li>
 			</ul>
 
 			<p>
@@ -48,7 +49,8 @@ export function WikiIntroduction(): ReactElement {
 				A room is visible to everyone (except accounts banned from the room), if it is marked as public and there is at least one admin inside the room.
 				You can always see rooms you are either admin or owner of.<br />
 				When a character goes offline inside a room, they will stay in the room and are shown as not connected.
-				By default, this is shown by the character having a ghost-like effect; this effect can be changed in the settings.
+				By default, this is shown by the character having a ghost-like effect; this effect can be changed in the settings.<br />
+				Rooms can have a long description that can be read from the outside in the room preview popup.
 			</p>
 			<p>
 				Each <strong>account</strong> has a maximum number of rooms it can own. You can view the rooms owned by your account
@@ -104,6 +106,11 @@ export function WikiIntroduction(): ReactElement {
 			<h4>No safeword feature, but a safemode that makes it harder to be misused</h4>
 			<p>
 				You can access the safemode feature by clicking on your character name in the top left of the screen and then entering safemode in the menu.
+			</p>
+
+			<h4>A permission feature that allows the user to set who is allowed to do what</h4>
+			<p>
+				You can find it in the Pandora settings. Currently, you can set if other character are allowed to interact with you and if you allow your body to be changed, too. This will be much more configurable in the future.
 			</p>
 
 			<hr />

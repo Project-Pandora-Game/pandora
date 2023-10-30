@@ -1,6 +1,7 @@
 import { enableMapSet } from 'immer';
 import { isEqual } from 'lodash';
 import { z, ZodObject, ZodString, ZodType, ZodTypeAny, ZodTypeDef, RefinementCtx, ZodEffects } from 'zod';
+import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_CHARACTER_NAME_MIN_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits';
 
 enableMapSet();
 
@@ -9,7 +10,7 @@ export function ZodTemplateString<T extends string>(validator: ZodString, regex:
 }
 
 /** ZodString .trim method doesn't do actual validation, we need to use regex */
-export const ZodTrimedRegex = /^[^\s].*[^\s]$/;
+export const ZodTrimedRegex = /^(([^\s].*[^\s])|[^\s]*)$/s;
 
 export const ZodBase64Regex = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
 
@@ -88,16 +89,14 @@ export const IsUndefined = (value: unknown): value is undefined => value === und
  *
  * TODO - finalize this to what we want
  */
-export const UserNameSchema = z.string().min(3).max(32).regex(/^[a-zA-Z0-9_-]+$/);
+export const UserNameSchema = z.string().min(3).max(LIMIT_ACCOUNT_NAME_LENGTH).regex(/^[a-zA-Z0-9_-]*$/);
 export const IsUsername = ZodMatcher(UserNameSchema);
 
-/**
- * Tests if the parameter is a valid character name
- *
- * TODO - finalize this to what we want
- */
-export const CharacterNameSchema = z.string().min(3).max(32).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex);
-export const IsCharacterName = ZodMatcher(CharacterNameSchema);
+/** Name of a character */
+export const CharacterNameSchema = z.string().max(LIMIT_CHARACTER_NAME_LENGTH).regex(/^[a-zA-Z0-9_\- ]*$/).regex(ZodTrimedRegex);
+/** Name of a character as entered by user; further limits allowed values */
+export const CharacterInputNameSchema = CharacterNameSchema.min(LIMIT_CHARACTER_NAME_MIN_LENGTH);
+export const IsValidCharacterName = ZodMatcher(CharacterInputNameSchema);
 
 /**
  * Tests if the parameter is a valid email address
@@ -107,13 +106,14 @@ export const IsCharacterName = ZodMatcher(CharacterNameSchema);
  * @see https://stackoverflow.com/questions/201323/how-can-i-validate-an-email-address-using-a-regular-expression/201378#201378
  */
 // eslint-disable-next-line no-control-regex
-export const EmailAddressSchema = z.string().min(5).max(256).regex(/^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/i);
+export const EmailAddressSchema = z.string().min(5).max(LIMIT_MAIL_LENGTH).regex(/^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])$/i);
 export const IsEmail = ZodMatcher(EmailAddressSchema);
 
+export const SIMPLE_TOKEN_LENGTH = 6;
 /**
- * Tests if string is a 'simple' token format - 6 digits
+ * A simple digit-based token
  */
-export const SimpleTokenSchema = z.string().length(6).regex(/^[0-9]+$/);
+export const SimpleTokenSchema = z.string().length(SIMPLE_TOKEN_LENGTH).regex(/^[0-9]+$/);
 export const IsSimpleToken = ZodMatcher(SimpleTokenSchema);
 
 export const PasswordSha512Schema = z.string().regex(/^[a-zA-Z0-9+/]{86}==$/);

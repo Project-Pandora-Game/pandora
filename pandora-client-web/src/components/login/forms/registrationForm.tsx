@@ -1,11 +1,11 @@
-import { AssertNever, IsEmail, IsUsername } from 'pandora-common';
+import { AssertNever, EmailAddressSchema, UserNameSchema } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { useDirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
-import { Form, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormCreateStringValidator, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { useAuthFormData } from '../authFormDataProvider';
 
@@ -42,18 +42,26 @@ export function RegistrationForm(): ReactElement {
 	const validateUsername = useCallback<Validate<string, RegistrationFormData>>((username) => {
 		if (username === usernameTaken) {
 			return 'Username already taken';
-		} else if (!IsUsername(username)) {
-			return 'Invalid username format';
 		}
+
+		const formatValidator = FormCreateStringValidator(UserNameSchema, 'username');
+		const validationResult = formatValidator(username);
+		if (validationResult != null)
+			return validationResult;
+
 		return true;
 	}, [usernameTaken]);
 
 	const validateEmail = useCallback<Validate<string, RegistrationFormData>>((email) => {
 		if (email === emailTaken) {
 			return 'Email already in use';
-		} else if (!IsEmail(email)) {
-			return 'Invalid email format';
 		}
+
+		const formatValidator = FormCreateStringValidator(EmailAddressSchema, 'email');
+		const validationResult = formatValidator(email);
+		if (validationResult != null)
+			return validationResult;
+
 		return true;
 	}, [emailTaken]);
 
@@ -98,7 +106,10 @@ export function RegistrationForm(): ReactElement {
 					type='text'
 					id='registration-username'
 					autoComplete='username'
-					{ ...register('username', { required: 'Username is required', validate: validateUsername }) }
+					{ ...register('username', {
+						required: 'Username is required',
+						validate: validateUsername,
+					}) }
 				/>
 				<FormFieldError error={ errors.username } />
 			</FormField>
@@ -108,7 +119,10 @@ export function RegistrationForm(): ReactElement {
 					type='email'
 					id='registration-email'
 					autoComplete='email'
-					{ ...register('email', { required: 'Email is required', validate: validateEmail }) }
+					{ ...register('email', {
+						required: 'Email is required',
+						validate: validateEmail,
+					}) }
 				/>
 				<FormFieldError error={ errors.email } />
 			</FormField>

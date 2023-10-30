@@ -1,11 +1,11 @@
-import { GetLogger, ICharacterDataCreate, ICharacterRoomData, CharacterSize, ICharacterPrivateData } from 'pandora-common';
+import { GetLogger, ICharacterRoomData, CharacterSize, ICharacterPrivateData, IClientShardArgument } from 'pandora-common';
 import { useCallback } from 'react';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { Character } from './character';
 
 export type CharacterCreationCallback = (
 	character: PlayerCharacter,
-	creationData: ICharacterDataCreate,
+	creationData: IClientShardArgument['finishCharacterCreation'],
 ) => Promise<'ok' | 'failed'>;
 
 export class PlayerCharacter extends Character<ICharacterPrivateData & ICharacterRoomData> {
@@ -30,7 +30,7 @@ export class PlayerCharacter extends Character<ICharacterPrivateData & ICharacte
 
 export function useCreateCharacter(): CharacterCreationCallback {
 	const shardConnector = useShardConnector();
-	return useCallback(async (character: PlayerCharacter, creationData: ICharacterDataCreate) => {
+	return useCallback(async (character: PlayerCharacter, creationData: IClientShardArgument['finishCharacterCreation']) => {
 		if (!shardConnector || !character.data) {
 			return 'failed';
 		}

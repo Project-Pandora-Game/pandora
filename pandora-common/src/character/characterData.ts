@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { AppearanceBundleSchema } from '../assets/state/characterState';
-import { HexColorStringSchema } from '../validation';
+import { CharacterNameSchema, HexColorStringSchema } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
 import { RoomId } from '../chatroom';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
+import { AccountIdSchema } from '../account';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),
@@ -20,8 +21,8 @@ export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSetting
 /** Data about character, that is visible to everyone in same room */
 export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
-	accountId: z.number(),
-	name: z.string(),
+	accountId: AccountIdSchema,
+	name: CharacterNameSchema,
 	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 });
 /** Data about character, that is visible to everyone in same room */
@@ -53,8 +54,6 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;
 
-export const CharacterDataCreateSchema = CharacterDataSchema.pick({ name: true });
-export type ICharacterDataCreate = z.infer<typeof CharacterDataCreateSchema>;
 export const CharacterDataAccessSchema = CharacterDataSchema.pick({ id: true, accessId: true });
 export type ICharacterDataAccess = z.infer<typeof CharacterDataAccessSchema>;
 export const CharacterDataUpdateSchema = CharacterDataSchema.omit({ inCreation: true, accountId: true, created: true }).partial().merge(CharacterDataAccessSchema);

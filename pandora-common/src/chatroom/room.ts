@@ -6,6 +6,7 @@ import { CharacterId } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { ArrayToRecordKeys } from '../utility';
+import { LIMIT_ROOM_DESCRIPTION_LENGTH, LIMIT_ROOM_NAME_LENGTH } from '../inputLimits';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
@@ -29,9 +30,9 @@ export type ActionRoomContext = {
 
 export const ChatRoomBaseInfoSchema = z.object({
 	/** The name of the chat room */
-	name: z.string().min(3).max(32).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex),
+	name: z.string().min(3).max(LIMIT_ROOM_NAME_LENGTH).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex),
 	/** The description of the chat room */
-	description: z.string(),
+	description: z.string().max(LIMIT_ROOM_DESCRIPTION_LENGTH),
 	/** Rooms are private by default and can be published to be seen in room search. */
 	public: z.boolean(),
 	/** The maximum amount of users in the chat room */
@@ -96,7 +97,7 @@ export function CalculateCharacterMaxYForBackground(roomBackground: IChatroomBac
 
 export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.object({
 	/** The requested features */
-	features: z.array(ChatRoomFeatureSchema),
+	features: z.array(ChatRoomFeatureSchema).max(ChatRoomFeatureSchema.options.length),
 	/**
 	 * Development options, may get ignored if requested features don't include 'development'
 	 */

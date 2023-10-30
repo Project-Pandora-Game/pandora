@@ -92,7 +92,7 @@ describe('Registration Form', () => {
 
 		await fillInAndSubmitForm(invalidUsername, defaultEmail, defaultPassword, defaultPassword);
 
-		await ExpectFieldToBeInvalid('Username', 'Invalid username format');
+		await ExpectFieldToBeInvalid('Username');
 	});
 
 	it.each(INVALID_EMAILS)('should not permit the invalid email %p to be submitted', async (invalidEmail) => {

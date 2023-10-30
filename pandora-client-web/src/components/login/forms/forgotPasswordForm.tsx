@@ -1,10 +1,10 @@
-import { AssertNever, IsEmail } from 'pandora-common';
+import { AssertNever, EmailAddressSchema } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useDirectoryPasswordReset } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
-import { Form, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormCreateStringValidator, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
 
 export interface ForgotPasswordFormData {
 	email: string;
@@ -54,7 +54,7 @@ export function ForgotPasswordForm(): ReactElement {
 					autoComplete='email'
 					{ ...register('email', {
 						required: 'Email is required',
-						validate: (email) => IsEmail(email) || 'Invalid email format',
+						validate: FormCreateStringValidator(EmailAddressSchema, 'email'),
 					}) }
 				/>
 				<FormFieldError error={ errors.email } />

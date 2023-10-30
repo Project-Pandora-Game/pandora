@@ -6,6 +6,7 @@ export * from './commands';
 export * from './environment';
 export * from './event';
 export * from './gameLogic';
+export * from './inputLimits';
 export * from './logging';
 export * from './networking';
 export * from './security';

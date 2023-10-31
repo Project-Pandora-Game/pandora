@@ -21,6 +21,8 @@ import { BrowserStorage } from '../../browserStorage';
 import { useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
 import { useChatRoomCharacterOffsets } from './chatRoomCharacter';
 import { RoomDeviceRenderContext } from './chatRoomDeviceContext';
+import { EvaluateCondition } from '../../graphics/utility';
+import { useStandaloneConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 
 const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -317,13 +319,15 @@ const RoomDeviceGraphics = React.forwardRef(RoomDeviceGraphicsImpl);
 
 function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 	item: ItemRoomDevice;
-	layer: IRoomDeviceGraphicsLayerSprite;
+	layer: Immutable<IRoomDeviceGraphicsLayerSprite>;
 	getTexture?: (path: string) => PIXI.Texture;
 }): ReactElement | null {
 
+	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
+
 	const image = useMemo<string>(() => {
-		return layer.image;
-	}, [layer]);
+		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? layer.image;
+	}, [evaluator, item, layer]);
 
 	const texture = useTexture(image, undefined, getTexture);
 

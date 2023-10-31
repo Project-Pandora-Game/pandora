@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexRGBAColorString, ZodTemplateString } from '../validation';
 import type { AppearanceArmPose, AppearancePose } from './state/characterState';
-import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Coordinates, LegsPose } from './graphics';
+import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Coordinates, LayerImageOverride, LegsPose } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';
@@ -170,6 +170,7 @@ export type RoomDeviceSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionE
 export type IRoomDeviceGraphicsLayerSprite = {
 	type: 'sprite';
 	image: string;
+	imageOverrides?: LayerImageOverride[];
 	/** Name of colorization key used to color this sprite layer */
 	colorizationKey?: string;
 	/**

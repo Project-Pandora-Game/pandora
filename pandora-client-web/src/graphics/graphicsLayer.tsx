@@ -8,7 +8,7 @@ import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks } from '../assets/assetGraphics';
 import { ChildrenProps } from '../common/reactTypes';
-import { AppearanceConditionEvaluator, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
+import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
@@ -68,7 +68,7 @@ export function MirrorPoint([x, y]: CoordinatesCompressed, mirror: LayerMirror, 
 }
 
 export function useLayerVertices(
-	evaluator: AppearanceConditionEvaluator,
+	evaluator: ConditionEvaluatorBase,
 	points: readonly PointDefinitionCalculated[],
 	layer: AssetGraphicsLayer,
 	item: Item | null,

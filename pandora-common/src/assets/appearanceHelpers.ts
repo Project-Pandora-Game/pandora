@@ -131,12 +131,12 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 
 	public get container(): IItemModule | null {
 		const item = this._base.getItems().find((i) => i.id === this._item);
-		return item?.modules.get(this._module) ?? null;
+		return item?.getModules().get(this._module) ?? null;
 	}
 	public get containerPath(): IContainerPathActual | null {
 		const basePath = this._base.containerPath;
 		const item = this._base.getItems().find((i) => i.id === this._item);
-		const module = item?.modules.get(this._module);
+		const module = item?.getModules().get(this._module);
 		return (!basePath || !item || !module) ? null : [
 			...basePath,
 			{ item, moduleName: this._module, module },

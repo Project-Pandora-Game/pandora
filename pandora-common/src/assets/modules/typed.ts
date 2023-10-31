@@ -1,8 +1,6 @@
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
 import { z } from 'zod';
-import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
-import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { IItemLoadContext, IItemLocationDescriptor } from '../item';
@@ -11,12 +9,15 @@ import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { CharacterIdSchema } from '../../character/characterTypes';
 import { Satisfies } from '../../utility';
 
-export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A> {
+export interface IModuleTypedOption<TProperties> {
 	/** ID if this variant, must be unique */
 	id: string;
 
 	/** The display name of this variant */
 	name: string;
+
+	/** The properties this option applies */
+	properties?: TProperties;
 
 	/** If this variant should be autoselected as default; otherwise first one is used */
 	default?: true;
@@ -49,7 +50,7 @@ export interface IModuleTypedOption<A extends AssetDefinitionExtraArgs = AssetDe
 	customText?: string[];
 }
 
-export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'typed'> {
+export interface IModuleConfigTyped<TProperties> extends IModuleConfigCommon<'typed'> {
 	/**
 	 * The kind of interaction this module provides, affects prerequisites for changing it.
 	 * @default ItemInteractionType.MODIFY
@@ -57,7 +58,7 @@ export interface IModuleConfigTyped<A extends AssetDefinitionExtraArgs = AssetDe
 	interactionType?: ItemInteractionType;
 
 	/** List of variants this typed module has */
-	variants: [IModuleTypedOption<A>, ...IModuleTypedOption<A>[]];
+	variants: [IModuleTypedOption<TProperties>, ...IModuleTypedOption<TProperties>[]];
 }
 
 const ModuleItemDataTypedSchema = z.object({
@@ -79,32 +80,35 @@ export type ItemModuleTypedAction = Satisfies<z.infer<typeof ItemModuleTypedActi
 
 export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 
-	public parseData(_config: IModuleConfigTyped, data: unknown): IModuleItemDataTyped {
+	public parseData(_config: IModuleConfigTyped<unknown>, data: unknown): IModuleItemDataTyped {
 		const parsed = ModuleItemDataTypedSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'typed',
 		};
 	}
 
-	public loadModule(config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped {
+	public loadModule<TProperties>(config: IModuleConfigTyped<TProperties>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties> {
 		return new ItemModuleTyped(config, data, context);
 	}
 
-	public getStaticAttributes(config: IModuleConfigTyped): ReadonlySet<string> {
+	public getStaticAttributes<TProperties>(config: IModuleConfigTyped<TProperties>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
 		const result = new Set<string>();
 		for (const option of config.variants) {
-			option.attributes?.forEach((a) => result.add(a));
+			if (option.properties != null) {
+				staticAttributesExtractor(option.properties)
+					.forEach((a) => result.add(a));
+			}
 		}
 		return result;
 	}
 }
 
-export class ItemModuleTyped implements IItemModule<'typed'> {
+export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProperties, 'typed'> {
 	public readonly type = 'typed';
 
 	private readonly assetManager: AssetManager;
-	public readonly config: IModuleConfigTyped;
-	public readonly activeVariant: Readonly<IModuleTypedOption>;
+	public readonly config: IModuleConfigTyped<TProperties>;
+	public readonly activeVariant: Readonly<IModuleTypedOption<TProperties>>;
 	public readonly data: Readonly<IModuleItemDataTyped>;
 
 	public get interactionType(): ItemInteractionType {
@@ -113,11 +117,11 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 			(this.config.expression != null ? ItemInteractionType.EXPRESSION_CHANGE : ItemInteractionType.MODIFY);
 	}
 
-	constructor(config: IModuleConfigTyped, data: IModuleItemDataTyped, context: IItemLoadContext) {
+	constructor(config: IModuleConfigTyped<TProperties>, data: IModuleItemDataTyped, context: IItemLoadContext) {
 		this.assetManager = context.assetManager;
 		this.config = config;
 		// Get currently selected module
-		const activeVariant: IModuleTypedOption | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
+		const activeVariant: IModuleTypedOption<TProperties> | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
 		// Warn if we were trying to find variant
 		if (!activeVariant && data.variant != null) {
 			context.logger?.warning(`Unknown typed module variant '${data.variant}'`);
@@ -147,8 +151,11 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 		return { success: true };
 	}
 
-	public getProperties(): AssetProperties {
-		return this.activeVariant;
+	public getProperties(): readonly TProperties[] {
+		if (this.activeVariant.properties != null)
+			return [this.activeVariant.properties];
+
+		return [];
 	}
 
 	public evalCondition(operator: ConditionOperator, value: string): boolean {
@@ -157,7 +164,7 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 				false;
 	}
 
-	public doAction({ messageHandler, processingContext }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped | null {
+	public doAction({ messageHandler, processingContext }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped<TProperties> | null {
 		const newVariant = this.config.variants.find((v) => v.id === action.setVariant);
 		if (!newVariant)
 			return null;
@@ -198,11 +205,11 @@ export class ItemModuleTyped implements IItemModule<'typed'> {
 		return [];
 	}
 
-	public setContents(_items: AppearanceItems): ItemModuleTyped | null {
+	public setContents(_items: AppearanceItems): ItemModuleTyped<TProperties> | null {
 		return null;
 	}
 
-	private _getDefaultVariant(): Readonly<IModuleTypedOption> {
+	private _getDefaultVariant(): Readonly<IModuleTypedOption<TProperties>> {
 		return this.config.variants.find((v) => v.default) ?? this.config.variants[0];
 	}
 }

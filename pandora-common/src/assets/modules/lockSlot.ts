@@ -1,9 +1,7 @@
 import { Asset } from '../asset';
 import type { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon, IExportOptions } from './common';
 import { z } from 'zod';
-import { AssetDefinitionExtraArgs } from '../definitions';
 import { ConditionOperator } from '../graphics';
-import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundleSchema, ItemLock, ItemLockActionSchema } from '../item';
@@ -11,13 +9,13 @@ import { AssetManager } from '../assetManager';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { Satisfies } from '../../utility';
 
-export interface IModuleConfigLockSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'lockSlot'> {
-	/** Effects applied when this slot isn't occupied by a lock */
-	emptyEffects?: AssetProperties<A>;
-	/** Effects applied when this slot is occupied by a lock */
-	occupiedEffects?: AssetProperties<A>;
-	/** Effects applied when the slot is occupied and locked, default to occupiedEffects */
-	lockedEffects?: AssetProperties<A>;
+export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<'lockSlot'> {
+	/** Properties applied when this slot isn't occupied by a lock */
+	emptyProperties?: TProperties;
+	/** Properties applied when this slot is occupied by a lock */
+	occupiedProperties?: TProperties;
+	/** Properties applied when the slot is occupied and locked, default to occupiedEffects */
+	lockedProperties?: TProperties;
 }
 
 const ModuleItemDataLockSlotSchema = z.lazy(() => z.object({
@@ -34,7 +32,7 @@ export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSl
 
 export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlot'> {
 
-	public parseData(_config: IModuleConfigLockSlot, data: unknown): IModuleItemDataLockSlot {
+	public parseData(_config: IModuleConfigLockSlot<unknown>, data: unknown): IModuleItemDataLockSlot {
 		const parsed = ModuleItemDataLockSlotSchema.safeParse(data);
 		return parsed.success ? parsed.data : {
 			type: 'lockSlot',
@@ -42,31 +40,37 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		};
 	}
 
-	public loadModule(config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot {
+	public loadModule<TProperties>(config: IModuleConfigLockSlot<TProperties>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
 		return new ItemModuleLockSlot(config, data, context);
 	}
 
-	public getStaticAttributes(config: IModuleConfigLockSlot): ReadonlySet<string> {
+	public getStaticAttributes<TProperties>(config: IModuleConfigLockSlot<TProperties>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
 		const result = new Set<string>();
-		config.emptyEffects?.attributes?.forEach((a) => result.add(a));
-		config.occupiedEffects?.attributes?.forEach((a) => result.add(a));
-		config.lockedEffects?.attributes?.forEach((a) => result.add(a));
+		if (config.emptyProperties != null) {
+			staticAttributesExtractor(config.emptyProperties).forEach((a) => result.add(a));
+		}
+		if (config.occupiedProperties != null) {
+			staticAttributesExtractor(config.occupiedProperties).forEach((a) => result.add(a));
+		}
+		if (config.lockedProperties != null) {
+			staticAttributesExtractor(config.lockedProperties).forEach((a) => result.add(a));
+		}
 		return result;
 	}
 }
 
-export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
+export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TProperties, 'lockSlot'> {
 	public readonly type = 'lockSlot';
 
 	private readonly assetManager: AssetManager;
-	public readonly config: IModuleConfigLockSlot;
+	public readonly config: IModuleConfigLockSlot<TProperties>;
 	public readonly lock: ItemLock | null;
 
 	public get interactionType(): ItemInteractionType {
 		return ItemInteractionType.MODIFY;
 	}
 
-	constructor(config: IModuleConfigLockSlot, data: IModuleItemDataLockSlot, context: IItemLoadContext) {
+	constructor(config: IModuleConfigLockSlot<TProperties>, data: IModuleItemDataLockSlot, context: IItemLoadContext) {
 		this.assetManager = context.assetManager;
 		this.config = config;
 		if (data.lock) {
@@ -106,23 +110,29 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return { success: true };
 	}
 
-	public getProperties(): AssetProperties {
+	public getProperties(): readonly TProperties[] {
 		if (this.lock != null) {
-			if (this.lock.isLocked()) {
-				return this.config.lockedEffects ?? this.config.occupiedEffects ?? {};
+			if (this.config.lockedProperties != null && this.lock.isLocked()) {
+				return [this.config.lockedProperties];
 			}
 
-			return this.config.occupiedEffects ?? {};
+			if (this.config.occupiedProperties != null)
+				return [this.config.occupiedProperties];
+
+			return [];
 		}
 
-		return this.config.emptyEffects ?? {};
+		if (this.config.emptyProperties != null)
+			return [this.config.emptyProperties];
+
+		return [];
 	}
 
 	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
 		return false;
 	}
 
-	public doAction(context: AppearanceModuleActionContext, { lockAction }: ItemModuleLockSlotAction): ItemModuleLockSlot | null {
+	public doAction(context: AppearanceModuleActionContext, { lockAction }: ItemModuleLockSlotAction): ItemModuleLockSlot<TProperties> | null {
 		if (this.lock == null)
 			return null;
 
@@ -148,7 +158,7 @@ export class ItemModuleLockSlot implements IItemModule<'lockSlot'> {
 		return this.lock ? [this.lock] : [];
 	}
 
-	public setContents(items: AppearanceItems): ItemModuleLockSlot | null {
+	public setContents(items: AppearanceItems): ItemModuleLockSlot<TProperties> | null {
 		if (items.length > 1)
 			return null;
 		if (items.length === 1 && !items[0].isType('lock'))

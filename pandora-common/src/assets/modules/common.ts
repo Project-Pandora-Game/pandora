@@ -1,7 +1,6 @@
 import type { Asset } from '../asset';
 import type { ConditionOperator } from '../graphics';
 import type { ItemInteractionType } from '../../character';
-import type { AssetProperties } from '../properties';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import type { IItemLoadContext, IItemLocationDescriptor } from '../item';
@@ -25,30 +24,30 @@ export interface IModuleActionCommon<Type extends ModuleType> {
 }
 
 export interface IAssetModuleDefinition<Type extends ModuleType> {
-	parseData(config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IAssetModuleTypes[Type]['data'];
-	loadModule(config: IModuleConfigCommon<Type>, data: IAssetModuleTypes[Type]['data'], context: IItemLoadContext): IItemModule<Type>;
-	getStaticAttributes(config: IModuleConfigCommon<Type>): ReadonlySet<string>;
+	parseData(config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IAssetModuleTypes<unknown>[Type]['data'];
+	loadModule<TProperties>(config: IModuleConfigCommon<Type>, data: IAssetModuleTypes<unknown>[Type]['data'], context: IItemLoadContext): IItemModule<TProperties, Type>;
+	getStaticAttributes<TProperties>(config: IModuleConfigCommon<Type>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string>;
 }
 
 export interface IExportOptions {
 	clientOnly?: true;
 }
 
-export interface IItemModule<Type extends ModuleType = ModuleType> {
+export interface IItemModule<out TProperties = unknown, Type extends ModuleType = ModuleType> {
 	readonly type: Type;
-	readonly config: IAssetModuleTypes[Type]['config'];
+	readonly config: IAssetModuleTypes<TProperties>[Type]['config'];
 
 	/** The module specifies what kind of interaction type interacting with it is */
 	readonly interactionType: ItemInteractionType;
 
-	exportData(options: IExportOptions): IAssetModuleTypes[Type]['data'];
+	exportData(options: IExportOptions): IAssetModuleTypes<TProperties>[Type]['data'];
 
 	validate(location: IItemLocationDescriptor): AppearanceValidationResult;
 
-	getProperties(): AssetProperties;
+	getProperties(): readonly TProperties[];
 
 	evalCondition(operator: ConditionOperator, value: string): boolean;
-	doAction(context: AppearanceModuleActionContext, action: IAssetModuleTypes[Type]['actions']): IItemModule<Type> | null;
+	doAction(context: AppearanceModuleActionContext, action: IAssetModuleTypes<TProperties>[Type]['actions']): IItemModule<TProperties, Type> | null;
 
 	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */
 	readonly contentsPhysicallyEquipped: boolean;
@@ -57,7 +56,7 @@ export interface IItemModule<Type extends ModuleType = ModuleType> {
 	getContents(): AppearanceItems;
 
 	/** Sets content of this module */
-	setContents(items: AppearanceItems): IItemModule<Type> | null;
+	setContents(items: AppearanceItems): IItemModule<TProperties, Type> | null;
 
 	acceptedContentFilter?(asset: Asset): boolean;
 }

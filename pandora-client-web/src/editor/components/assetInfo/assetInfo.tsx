@@ -116,7 +116,7 @@ function Modules({ modules }: { modules: Immutable<AssetDefinition<'personal'>>[
 	);
 }
 
-function Module({ name, module }: { name: string; module: Immutable<AssetModuleDefinition>; }): ReactElement {
+function Module({ name, module }: { name: string; module: Immutable<AssetModuleDefinition<unknown>>; }): ReactElement {
 	const moduleInfo = useMemo(() => {
 		switch (module.type) {
 			case 'typed':
@@ -137,7 +137,7 @@ function Module({ name, module }: { name: string; module: Immutable<AssetModuleD
 	);
 }
 
-function UnknownModule({ module }: { module: Immutable<AssetModuleDefinition>; }): ReactElement {
+function UnknownModule({ module }: { module: Immutable<IModuleConfigCommon<ModuleType>>; }): ReactElement {
 	return (
 		<div>
 			Unknown module type: { String(module.type) }
@@ -145,7 +145,7 @@ function UnknownModule({ module }: { module: Immutable<AssetModuleDefinition>; }
 	);
 }
 
-function TypedModule({ module }: { module: Immutable<IModuleConfigTyped>; }): ReactElement {
+function TypedModule({ module }: { module: Immutable<IModuleConfigTyped<unknown>>; }): ReactElement {
 	return (
 		<FieldsetToggle legend='Variants' className='slim-padding-inner'>
 			{ module.variants.map((variant, index) => (
@@ -155,7 +155,7 @@ function TypedModule({ module }: { module: Immutable<IModuleConfigTyped>; }): Re
 	);
 }
 
-function TypedModuleOptions({ options }: { options: Immutable<IModuleTypedOption>; }): ReactElement {
+function TypedModuleOptions({ options }: { options: Immutable<IModuleTypedOption<unknown>>; }): ReactElement {
 	const id = useId();
 	return (
 		<div>
@@ -171,7 +171,6 @@ function TypedModuleOptions({ options }: { options: Immutable<IModuleTypedOption
 				<label htmlFor={ `module-type-${id}-default` }>Default: </label>
 				<input id={ `module-type-${id}-default` } type='checkbox' checked={ options.default } disabled />
 			</div>
-			<Effects effects={ options.effects } id={ `module-type-${id}-` } />
 		</div>
 	);
 }

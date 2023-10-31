@@ -19,7 +19,7 @@ export class AppearanceConditionEvaluator {
 	public evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean {
 		if ('module' in condition) {
 			Assert(condition.module != null);
-			const m = item?.modules.get(condition.module);
+			const m = item?.getModules().get(condition.module);
 			// If there is no item or no module, the value is always not equal
 			if (!m) {
 				return condition.operator === '!=';

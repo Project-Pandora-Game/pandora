@@ -153,7 +153,7 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	/**
 	 * Modules this asset has
 	 */
-	modules?: Record<string, AssetModuleDefinition<A>>;
+	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>>>;
 
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;

@@ -97,7 +97,6 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 	public readonly id: ItemId;
 	public readonly asset: Asset<Type>;
 	public readonly color: Immutable<ItemColorBundle>;
-	public readonly modules: ReadonlyMap<string, IItemModule>;
 
 	public get type(): Type {
 		return this.asset.type;
@@ -118,23 +117,15 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		if (this.asset.id !== bundle.asset) {
 			throw new Error(`Attempt to import different asset bundle into item (${this.asset.id} vs ${bundle.asset})`);
 		}
-		// Load modules
-		const modules = new Map<string, IItemModule>();
-		if (asset.isType('personal')) {
-			for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
-				modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
-			}
-		}
-		this.modules = modules;
 		// Load color from bundle
 		this.color = this._loadColor(bundle.color);
 	}
 
 	public exportToBundle(options: IExportOptions): ItemBundle {
 		let moduleData: ItemBundle['moduleData'];
-		if (this.modules.size > 0) {
+		if (this.getModules().size > 0) {
 			moduleData = {};
-			for (const [name, module] of this.modules.entries()) {
+			for (const [name, module] of this.getModules().entries()) {
 				moduleData[name] = module.exportData(options);
 			}
 		}
@@ -227,7 +218,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 				},
 			};
 
-		for (const module of this.modules.values()) {
+		for (const module of this.getModules().values()) {
 			const r = module.validate(location);
 			if (!r.success)
 				return r;
@@ -256,7 +247,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 	}
 
 	public moduleAction(context: AppearanceModuleActionContext, moduleName: string, action: ItemModuleAction): Item | null {
-		const module = this.modules.get(moduleName);
+		const module = this.getModules().get(moduleName);
 		if (!module || module.type !== action.moduleType)
 			return null;
 		const moduleResult = module.doAction(context, action);
@@ -275,12 +266,17 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		});
 	}
 
+	@MemoizeNoArg
+	public getModules(): ReadonlyMap<string, IItemModule> {
+		return new Map();
+	}
+
 	public getModuleItems(moduleName: string): AppearanceItems {
-		return this.modules.get(moduleName)?.getContents() ?? [];
+		return this.getModules().get(moduleName)?.getContents() ?? [];
 	}
 
 	public setModuleItems(moduleName: string, items: AppearanceItems): Item | null {
-		const moduleResult = this.modules.get(moduleName)?.setContents(items);
+		const moduleResult = this.getModules().get(moduleName)?.setContents(items);
 		if (!moduleResult)
 			return null;
 		const bundle = this.exportToBundle({});
@@ -299,7 +295,6 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 	@MemoizeNoArg
 	public getPropertiesParts(): readonly Immutable<AssetProperties>[] {
 		const propertyParts: Immutable<AssetProperties>[] = (this.isWearable()) ? [this.asset.definition] : [];
-		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
 
 		return propertyParts;
 	}
@@ -450,6 +445,18 @@ export function FilterItemWearable(item: Item): item is Item<WearableAssetType> 
 export type IItemLocationDescriptor = 'worn' | 'attached' | 'stored' | 'roomInventory';
 
 export class ItemPersonal extends ItemBase<'personal'> {
+	private readonly _modules: ReadonlyMap<string, IItemModule<AssetProperties>>;
+
+	constructor(id: ItemId, asset: Asset<'personal'>, bundle: ItemBundle, context: IItemLoadContext) {
+		super(id, asset, bundle, context);
+		// Load modules
+		const modules = new Map<string, IItemModule<AssetProperties>>();
+		for (const [moduleName, moduleConfig] of Object.entries(asset.definition.modules ?? {})) {
+			modules.set(moduleName, LoadItemModule<AssetProperties>(moduleConfig, bundle.moduleData?.[moduleName], context));
+		}
+		this._modules = modules;
+	}
+
 	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {
 		const colorization = this.asset.definition.colorization?.[colorizationKey];
 		if (!colorization)
@@ -469,6 +476,18 @@ export class ItemPersonal extends ItemBase<'personal'> {
 			first(Object.keys(this.asset.definition.colorization ?? {})) ??
 			'',
 		);
+	}
+
+	public override getModules(): ReadonlyMap<string, IItemModule<AssetProperties>> {
+		return this._modules;
+	}
+
+	@MemoizeNoArg
+	public override getPropertiesParts(): readonly Immutable<AssetProperties>[] {
+		return [
+			...super.getPropertiesParts(),
+			...Array.from(this._modules.values()).flatMap((m) => m.getProperties()),
+		];
 	}
 }
 

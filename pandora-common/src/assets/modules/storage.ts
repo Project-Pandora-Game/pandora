@@ -1,8 +1,7 @@
 import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon, IExportOptions } from './common';
 import { z } from 'zod';
-import { AssetDefinitionExtraArgs, AssetSize, AssetSizeMapping } from '../definitions';
+import { AssetSize, AssetSizeMapping } from '../definitions';
 import { ConditionOperator } from '../graphics';
-import { AssetProperties } from '../properties';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
 import { CreateItem, IItemLoadContext, IItemLocationDescriptor, Item, ItemBundleSchema } from '../item';
@@ -12,7 +11,7 @@ import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { Satisfies } from '../../utility';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface IModuleConfigStorage<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends IModuleConfigCommon<'storage'> {
+export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
 	maxCount: number;
 	maxAcceptedSize: AssetSize;
 }
@@ -39,8 +38,8 @@ export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'
 		};
 	}
 
-	public loadModule(config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage {
-		return new ItemModuleStorage(config, data, context);
+	public loadModule<TProperties>(config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties> {
+		return new ItemModuleStorage<TProperties>(config, data, context);
 	}
 
 	public getStaticAttributes(_config: IModuleConfigStorage): ReadonlySet<string> {
@@ -89,7 +88,7 @@ function ValidateStorage(contents: AppearanceItems, config: IModuleConfigStorage
 		.reduce(AppearanceValidationCombineResults, { success: true });
 }
 
-export class ItemModuleStorage implements IItemModule<'storage'> {
+export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TProperties, 'storage'> {
 	public readonly type = 'storage';
 
 	private readonly assetManager: AssetManager;
@@ -153,15 +152,15 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		return ValidateStorage(this.contents, this.config);
 	}
 
-	public getProperties(): AssetProperties {
-		return {};
+	public getProperties(): readonly TProperties[] {
+		return [];
 	}
 
 	public evalCondition(_operator: ConditionOperator, _value: string): boolean {
 		return false;
 	}
 
-	public doAction(_context: AppearanceModuleActionContext, _action: ItemModuleStorageAction): ItemModuleStorage | null {
+	public doAction(_context: AppearanceModuleActionContext, _action: ItemModuleStorageAction): ItemModuleStorage<TProperties> | null {
 		return null;
 	}
 
@@ -171,8 +170,8 @@ export class ItemModuleStorage implements IItemModule<'storage'> {
 		return this.contents;
 	}
 
-	public setContents(items: AppearanceItems): ItemModuleStorage | null {
-		return new ItemModuleStorage(this.config, {
+	public setContents(items: AppearanceItems): ItemModuleStorage<TProperties> | null {
+		return new ItemModuleStorage<TProperties>(this.config, {
 			type: 'storage',
 			contents: items.map((item) => item.exportToBundle({})),
 		}, {

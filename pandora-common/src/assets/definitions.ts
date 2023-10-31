@@ -10,6 +10,7 @@ import { Immutable, freeze, produce } from 'immer';
 import { AssetManager } from './assetManager';
 import _ from 'lodash';
 import { BONE_MAX, BONE_MIN } from './appearance';
+import { RoomDeviceProperties } from './roomDeviceProperties';
 
 export const AssetIdSchema = ZodTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
@@ -218,6 +219,8 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	pivot: Coordinates;
 	/** Slots that can be entered by characters */
 	slots: Record<string, RoomDeviceSlot<A>>;
+	/** Modules this device has */
+	modules?: Record<string, AssetModuleDefinition<RoomDeviceProperties<A>>>;
 	/** The graphical display of the device */
 	graphicsLayers: IRoomDeviceGraphicsLayer[];
 	/** Attributes that are used strictly for filtering, no effect on character */

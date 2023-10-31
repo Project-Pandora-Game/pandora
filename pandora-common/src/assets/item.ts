@@ -14,6 +14,7 @@ import { ItemModuleAction, LoadItemModule } from './modules';
 import { IExportOptions, IItemModule } from './modules/common';
 import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
+import { CreateRoomDevicePropertiesResult, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from './roomDeviceProperties';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
@@ -494,10 +495,19 @@ export class ItemPersonal extends ItemBase<'personal'> {
 export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 	public readonly deployment: Immutable<RoomDeviceDeployment>;
 	public readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
+	private readonly _modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties>>;
 
 	constructor(id: ItemId, asset: Asset<'roomDevice'>, bundle: ItemBundle, context: IItemLoadContext) {
 		super(id, asset, bundle, context);
 
+		// Load modules
+		const modules = new Map<string, IItemModule<RoomDeviceProperties>>();
+		for (const [moduleName, moduleConfig] of Object.entries(asset.definition.modules ?? {})) {
+			modules.set(moduleName, LoadItemModule<RoomDeviceProperties>(moduleConfig, bundle.moduleData?.[moduleName], context));
+		}
+		this._modules = modules;
+
+		// Load device-specific data
 		const roomDeviceData: RoomDeviceBundle = bundle.roomDeviceData ?? {
 			deployment: null,
 			slotOccupancy: {},
@@ -594,6 +604,25 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 			first(Object.keys(this.asset.definition.colorization ?? {})) ??
 			'',
 		);
+	}
+
+	public override getModules(): ReadonlyMap<string, IItemModule<RoomDeviceProperties>> {
+		return this._modules;
+	}
+
+	@MemoizeNoArg
+	public getRoomDevicePropertiesParts(): readonly Immutable<RoomDeviceProperties>[] {
+		const propertyParts: Immutable<AssetProperties>[] = [
+			...Array.from(this._modules.values()).flatMap((m) => m.getProperties()),
+		];
+
+		return propertyParts;
+	}
+
+	@MemoizeNoArg
+	public getRoomDeviceProperties(): RoomDevicePropertiesResult {
+		return this.getRoomDevicePropertiesParts()
+			.reduce(MergeRoomDeviceProperties, CreateRoomDevicePropertiesResult());
 	}
 }
 

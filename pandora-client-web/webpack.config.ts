@@ -61,9 +61,12 @@ export default function (env: WebpackEnv): Configuration {
 					runtimeErrors: false,
 				},
 			},
+			devMiddleware: {
+				writeToDisk: true,
+			},
 			port: WEBPACK_DEV_SERVER_PORT,
 		},
-		devtool: env.prod ? 'source-map' : 'eval-source-map',
+		devtool: env.prod ? 'source-map' : 'inline-source-map',
 		entry: {
 			'index': join(SRC_DIR, 'index.tsx'),
 			'editor/index': join(SRC_DIR, 'editor', 'index.tsx'),

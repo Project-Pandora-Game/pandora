@@ -64,7 +64,7 @@
 			"type": "firefox",
 			"reAttach": true,
 			"url": "http://localhost:6969",
-			"webRoot": "${workspaceFolder}/pandora-client-web",
+			"webRoot": "${workspaceFolder}/pandora-client-web/dist",
 			"preLaunchTask": "pandora-client-web: dev",
 			"pathMappings": [
 				{

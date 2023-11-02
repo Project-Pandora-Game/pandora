@@ -8,6 +8,7 @@ import './wiki.scss';
 import { WikiIntroduction } from './pages/intro';
 import { WikiGreeting } from './pages/greeting';
 import { WikiContact } from './pages/contact';
+import { WikiHistory } from './pages/history';
 
 export function Wiki(): ReactElement {
 	const navigate = useNavigate();
@@ -18,6 +19,11 @@ export function Wiki(): ReactElement {
 			<UrlTab name='Introduction' default urlChunk='introduction'>
 				<WikiContent>
 					<WikiIntroduction />
+				</WikiContent>
+			</UrlTab>
+			<UrlTab name='Pandora History' urlChunk='history'>
+				<WikiContent>
+					<WikiHistory />
 				</WikiContent>
 			</UrlTab>
 			<UrlTab name='Greeting' urlChunk='greeting'>

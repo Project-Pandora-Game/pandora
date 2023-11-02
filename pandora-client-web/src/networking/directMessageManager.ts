@@ -172,6 +172,10 @@ export class DirectMessageChannel {
 
 	public readonly connector: DirectoryConnector;
 
+	public get id(): number {
+		return this._id;
+	}
+
 	public get loaded(): boolean {
 		return this._loaded;
 	}

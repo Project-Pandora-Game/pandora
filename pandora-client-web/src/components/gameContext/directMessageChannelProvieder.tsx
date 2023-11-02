@@ -46,15 +46,19 @@ function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { 
 	if (channel?.failed) {
 		switch (channel.failed) {
 			case 'notFound':
-				message = 'Account not found';
+				message = 'Not found';
 				break;
 			case 'denied':
-				message = 'Access denied';
+				message = 'Denied';
 				break;
 		}
 	}
 	return (
-		<span>{ message }</span>
+		<span className='error'>
+			Account: { channel?.id ?? 'unknown' }
+			<br />
+			{ message }
+		</span>
 	);
 }
 

@@ -1,9 +1,9 @@
-import { IDirectoryAccountInfo } from 'pandora-common';
+import { IDirectoryAccountInfo, IDirectoryDirectMessageAccount } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAutoScroll } from '../../common/useAutoScroll';
 import { useEvent } from '../../common/useEvent';
-import { DirectMessage, DirectMessageChannel } from '../../networking/directMessageManager';
+import { DirectMessage } from '../../networking/directMessageManager';
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { RenderChatPart } from '../chatroom/chatroomMessages';
@@ -25,24 +25,25 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 
 function DirectMessageList(): ReactElement | null {
 	const channel = useDirectMessageChannel();
+	const channelAccount = channel.account;
 	const messages = useObservable(channel.messages);
 	const account = useCurrentAccount();
 	const [ref] = useAutoScroll<HTMLDivElement>([messages]);
 
-	if (!account) {
+	if (!account || !channelAccount) {
 		return null;
 	}
 
 	return (
 		<Scrollbar ref={ ref } color='dark' className='direct-message-list'>
 			{ messages.map((message) => (
-				<DirectMessageElement key={ message.time } message={ message } channel={ channel } account={ account } />
+				<DirectMessageElement key={ message.time } message={ message } channel={ channelAccount } account={ account } />
 			)) }
 		</Scrollbar>
 	);
 }
 
-function DirectMessageElement({ message, channel, account }: { message: DirectMessage; channel: DirectMessageChannel; account: IDirectoryAccountInfo; }): ReactElement {
+function DirectMessageElement({ message, channel, account }: { message: DirectMessage; channel: Readonly<IDirectoryDirectMessageAccount>; account: IDirectoryAccountInfo; }): ReactElement {
 	const { color, name } = useMemo(() => {
 		if (message.sent) {
 			return {
@@ -51,8 +52,8 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 			};
 		} else {
 			return {
-				color: channel.account.labelColor,
-				name: channel.account.name,
+				color: channel.labelColor,
+				name: channel.name,
 			};
 		}
 	}, [message, account, channel]);
@@ -78,7 +79,7 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 	);
 }
 
-function DirectChannelInput(): ReactElement {
+function DirectChannelInput(): ReactElement | null {
 	const channel = useDirectMessageChannel();
 
 	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -93,6 +94,10 @@ function DirectChannelInput(): ReactElement {
 			}
 		}
 	});
+
+	if (!channel.account) {
+		return null;
+	}
 
 	return (
 		<textarea

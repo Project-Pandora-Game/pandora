@@ -53,6 +53,10 @@ function DirectMessageTempInfo({ selected, filtered }: { selected: AccountId; fi
 
 	const chat = directoryConnector.directMessageHandler.loadChat(selected);
 
+	if (!chat.account) {
+		return null;
+	}
+
 	return (
 		<li className='temp'>
 			{ chat.account.name } ({ selected })

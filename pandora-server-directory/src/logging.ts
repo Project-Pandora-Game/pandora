@@ -1,7 +1,6 @@
 import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
 import fs from 'fs';
 import { GetLogger, logConfig, LogLevel } from 'pandora-common';
-import axios from 'axios';
 
 /** Custom function for stringifying data when logging into file */
 export function AnyToString(data: unknown): string {
@@ -83,7 +82,13 @@ export function AddDiscordLogOutput(name: string, webhookUrl: string, logLevel: 
 					description: `\`\`\`\n${message.map((v) => AnyToString(v)).join(' ')}\n\`\`\``,
 				}],
 			};
-			axios.post(webhookUrl, request).catch((err) => {
+			fetch(webhookUrl, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(request),
+			}).catch((err) => {
 				suspend = true;
 				logger.error('Failed to send discord webhook error', err);
 				suspend = false;

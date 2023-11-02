@@ -12,7 +12,7 @@ export function WikiHistory(): ReactElement {
 				In early 2021, most BC developers at that time concluded that they do not want to support BC any more, as they see various issues with it that
 				cannot realistically be solved.<br />
 				It was an often voiced desire from parts of the community to have an alternative to BC and therefore talks about making a new platform started.
-				In August 2021, "Project Pandora" officially started with the creation of the Pandora Discord. The first half year was focusing on looking for
+				In August 2021, "Project Pandora" officially started with the creation of the Pandora Discord. The first half year was focused on looking for
 				suitable technologies, asset basis, and architecture planning.<br />
 				Progress was slow but steady, as making such a platform is really a lot of work and requires careful planning and thinking.
 				Moreover, it is merely a hobby for everyone, spending free time here and there besides the actual day-time job, friends & family, etc.
@@ -22,13 +22,14 @@ export function WikiHistory(): ReactElement {
 
 			<p>
 				Not at all! Pandora has a different vision, wanting to be a secure, consensual roleplaying platform that focuses on text-heavy interactions.
-				BC was a bit like that in its first year before more and more game-like features were added that changed public rooms and the community quite
-				a bit over time. Also the fact that console-usage/scripts/mods/extensions in BC are so all-powerful has certain drawbacks and is exploited often.
+				BC was a bit like that in its first year before more and more game-like features were added that changed the focus of public rooms and the
+				interests of parts of the community slowly. Also the fact that console-usage/scripts/mods/extensions in BC are so all-powerful has certain
+				drawbacks and is exploited quite often.<br />
 				In a way, Pandora will offer an improved "classic" experience, focusing on roleplaying and clear house rules. It will not be tolerated that
-				some users can cheat or gain intransparent feature advantages that others do not have available without having to risk running external scripts.
+				some users can cheat or gain intransparent feature advantages that others do not have, unless they risk running external scripts.
 			</p>
 
-			<h4>What issues did some of the devs see with BC?</h4>
+			<h4>What issues with BC were seen?</h4>
 
 			<p>
 				<ul>
@@ -39,16 +40,16 @@ export function WikiHistory(): ReactElement {
 					</li>
 					<li>Not Open-Source: While the source code of BC is public, it is not licensed under any open-source license. That means that every part of BC
 						is proprietary and owned by its authors and that would mean that one cannot legally use the BC code anywhere else or copy it and further
-						develop it without the explicit permission by every person who ever contributed to BC which is almost impossible. The longevity of BC is
-						therefore questionable and contributing to BC can be seen as a risk to invest time into a black hole.
+						develop it without the explicit permission by every person who ever contributed to BC which makes that almost impossible. The longevity of BC is
+						therefore doubtful and contributing to BC can be seen as a risk to invest time into a black hole.
 					</li>
-					<li>BC Project Management: The desire for a different project management approach and development process was strong.</li>
-					<li>BC server architecture: It is singular and cannot scale beyond a certain number of users, where lag and disconnects get slowly worse.
+					<li>BC project management: The desire for a different project management approach and development process was strong.</li>
+					<li>BC server architecture: It is singular and cannot scale beyond a certain number of users, where lag and disconnects slowly get worse.
 						Starting from scratch with a modern and scalable approach seemed like the best option to give users a stable experience.
 					</li>
 					<li>
-						Lack of server validation: In many cases the server in BC does not validate what the client does, which makes it easy to alter things
-						like locks, restraints, or messages. The overall lack of security was a concern voiced by many.
+						Lack of server validation: In many cases the server in BC does not validate what the client does, which makes it possible for everyone
+						to alter things like locks, restraints, or messages. The overall lack of security was a concern voiced by many.
 					</li>
 					<li>Asset creation: Asset creation in BC needs many variants of the same image and it is an extreme effort to add new poses.</li>
 					<li>Legality of assets: In BC there is no process for vetoing assets. Most of them are not providing where they originate
@@ -58,7 +59,7 @@ export function WikiHistory(): ReactElement {
 			</p>
 
 			<h4>The people behind Pandora (Last updated: 1-11-2023)</h4>
-
+			<br />
 			<p>
 				<strong>Lead Developers</strong>
 				<ul>

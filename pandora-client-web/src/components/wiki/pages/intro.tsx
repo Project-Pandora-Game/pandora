@@ -101,7 +101,7 @@ export function WikiIntroduction(): ReactElement {
 				you have to either look for the account name of the user you want to exchange messages with on the left, or
 				you have to search for them via the bottom left input field using their <b>account ID</b>. You can find the account
 				ID either under the "Contacts"-tab or in the "Room"-tab while with a character in the same room. The account ID is
-				the rightmost number behind the character name.
+				the rightmost number behind the character name. Direct messages are end-to-end encrypted.
 			</p>
 
 			<h4>No safeword feature, but a safemode that makes it harder to be misused</h4>
@@ -128,6 +128,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Hearing impairment effect by assets</li>
 				<li>Advanced permission feature</li>
 				<li>Character rules</li>
+				<li>Connecting rooms with each other into a small housing area with a customized layout and ways to move from room to room</li>
 				<li>Creating character contracts to temporarily or permanently agree on sets of rules and permissions between specific characters</li>
 				<li>Improvements to the new player experience & safety</li>
 				... and many more, which can be found by looking at Pandora's issue list on <a href='https://github.com/Project-Pandora-Game/pandora/issues' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a>

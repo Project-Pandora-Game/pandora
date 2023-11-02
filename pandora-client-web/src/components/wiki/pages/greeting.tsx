@@ -33,7 +33,7 @@ export function WikiGreeting(): ReactElement {
 					During your stay you will often encounter various restraints.
 					Restraints in Pandora are very secure and can really get you stuck with no one else being able to help so please be mindful of that.<br />
 					While communication with others is the most important tool, Pandora also offers several mechanisms to keep you safe.<br />
-					First of those is ability to enforce your own limits through <i>permissions</i> - allowing you to prevent others from doing some things to your character.
+					First of those is the ability to enforce your own limits through <i>permissions</i> - allowing you to prevent others from doing some things to your character.
 					Right now other visitors can interact with you as they wish, which you can change in the settings via the "cog" icon on the top right.<br />
 					<br />
 					Second important mechanism is for when communication fails or others don't respect your safeword - for such a case there is a safemode feature,

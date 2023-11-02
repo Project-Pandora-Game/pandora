@@ -28,12 +28,12 @@ export function WikiHistory(): ReactElement {
 				some users can cheat or gain intransparent feature advantages that others do not have available without having to risk running external scripts.
 			</p>
 
-			<h4>What issues did the devs see with BC?</h4>
+			<h4>What issues did some of the devs see with BC?</h4>
 
 			<p>
 				<ul>
-					<li>Technical quality of BC: The source code of BC was not of good quality and while it improved quite a bit over the years (to a large degree
-						thanks to the people who founded Pandora), it is essentially still something held together by many band aids and compromises.
+					<li>Technical quality of BC: The source code of BC was not of good quality and while it improved quite a bit over the years (to a large part
+						thanks to the same people who founded Pandora), it is essentially still something held together by many band aids and compromises.
 						Contributing to it is not exactly pleasant and beginner friendly. Starting from scratch seemed like a more sensible decision than
 						trying to improve it further.
 					</li>
@@ -48,11 +48,11 @@ export function WikiHistory(): ReactElement {
 					</li>
 					<li>
 						Lack of server validation: In many cases the server in BC does not validate what the client does, which makes it easy to alter things
-						like locks or restraints or messages. The overall lack of security was a concern voiced by many.
+						like locks, restraints, or messages. The overall lack of security was a concern voiced by many.
 					</li>
-					<li>Asset creation: Asset creation in BC is quite some effort, especially the coding part, and not very beginner friendly.</li>
-					<li>Legality of some assets: The BC character models and some other assets are copied from a commercial game and other sources, where
-						permission for usage in BC is not demonstrated.
+					<li>Asset creation: Asset creation in BC needs many variants of the same image and it is an extreme effort to add new poses.</li>
+					<li>Legality of assets: In BC there is no process for vetoing assets. Most of them are not providing where they originate
+						from or how the sources used for the assets were licensed. Proper licensing is the correct and safe way.
 					</li>
 				</ul>
 			</p>
@@ -60,16 +60,11 @@ export function WikiHistory(): ReactElement {
 			<h4>The people behind Pandora (Last updated: 1-11-2023)</h4>
 
 			<p>
-				<strong>Admins</strong>
-				<ul>
-					<li>Ace</li>
-					<li>Ellie</li>
-					<li>Jomshir (Clare)</li>
-					<li>Sekkmer</li>
-				</ul>
 				<strong>Lead Developers</strong>
 				<ul>
+					<li>Ace</li>
 					<li>Claudia</li>
+					<li>Ellie</li>
 					<li>Jomshir (Clare)</li>
 					<li>Sekkmer</li>
 				</ul>

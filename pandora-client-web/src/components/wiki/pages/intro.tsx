@@ -4,7 +4,7 @@ import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/chatRoomContextProvider'
 export function WikiIntroduction(): ReactElement {
 	return (
 		<>
-			<h3>Introduction to Pandora with some quick hints to get you started</h3>
+			<h2>Introduction to Pandora with some quick hints to get you started</h2>
 
 			<p>
 				Pandora's vision is to establish a strict & secure, consensual roleplay platform that focuses on text-heavy interactions.
@@ -84,6 +84,7 @@ export function WikiIntroduction(): ReactElement {
 			<h4>Stable code base</h4>
 			<p>
 				Pandora aims for a stable experience without random disconnects. But even if a short disconnect happens, the character will not be shown as disconnected for some time, and you will still receive all the missed chat messages on reconnect, not losing anything.
+				Additionally, Pandora's server architecture is scalable to support future growth of its user base without compromising stability.
 			</p>
 
 			<h4>Reliable gag talk & locks</h4>

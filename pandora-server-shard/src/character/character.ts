@@ -187,6 +187,10 @@ export class Character {
 			}
 		});
 
+		if (this.gameLogicCharacter.interactions.changedOnInit) {
+			this.setValue('interactionConfig', this.gameLogicCharacter.interactions.getData(), false);
+		}
+
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
 	}
 

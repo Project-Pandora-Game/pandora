@@ -49,11 +49,11 @@ export function WikiHistory(): ReactElement {
 						Starting from scratch with a modern and scalable approach seemed like the best option to give users a stable experience.
 					</li>
 					<li>
-						Lack of server validation / security: In many cases the server in BC does not validate what the client does, which makes it possible for everyone
-						to alter things like locks, restraints, or messages. The overall lack of security was a concern voiced by many.
+						Lack of server validation: In many cases the server in BC does not validate what the client does, which makes it possible for everyone
+						to alter things like locks, restraints, or messages. The overall lack of security was a concern often voiced.
 					</li>
 					<li>Asset creation: Asset creation in BC needs many variants of the same image and it is an extreme effort to add new poses.</li>
-					<li>Legality of assets / images: In BC there is no process for vetoing assets. Most of them are not providing where they originate
+					<li>Legality of assets/images: In BC there is no process for vetoing assets. Most of them are not providing where they originate
 						from or how the sources used for the assets were licensed. Proper licensing is the correct and safe way.
 					</li>
 				</ul>

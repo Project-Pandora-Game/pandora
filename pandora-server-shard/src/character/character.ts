@@ -206,8 +206,13 @@ export class Character {
 				.withCharacter(
 					this.id,
 					AssetFrameworkCharacterState
-						.loadFromBundle(assetManager, this.id, appearance, this.logger.prefixMessages('Appearance load:'))
-						.cleanupRoomDeviceWearables(null),
+						.loadFromBundle(
+							assetManager,
+							this.id,
+							appearance,
+							null,
+							this.logger.prefixMessages('Appearance load:'),
+						),
 				),
 		);
 	}

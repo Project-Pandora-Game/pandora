@@ -3,7 +3,7 @@ import type { ConditionOperator } from '../graphics';
 import type { ItemInteractionType } from '../../character';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
-import type { IItemLoadContext, IItemLocationDescriptor } from '../item';
+import type { IItemLoadContext, IItemValidationContext } from '../item';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { IAssetModuleTypes, ModuleType } from '../modules';
 
@@ -42,7 +42,7 @@ export interface IItemModule<out TProperties = unknown, Type extends ModuleType 
 
 	exportData(options: IExportOptions): IAssetModuleTypes<TProperties>[Type]['data'];
 
-	validate(location: IItemLocationDescriptor): AppearanceValidationResult;
+	validate(context: IItemValidationContext): AppearanceValidationResult;
 
 	getProperties(): readonly TProperties[];
 

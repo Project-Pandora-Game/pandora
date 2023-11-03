@@ -62,7 +62,7 @@ export class AssetFrameworkGlobalState {
 		}
 
 		for (const character of this.characters.values()) {
-			const r = character.validate();
+			const r = character.validate(this.room);
 			if (!r.success)
 				return r;
 		}
@@ -146,7 +146,7 @@ export class AssetFrameworkGlobalState {
 		for (const [id, character] of newCharacters) {
 			newCharacters.set(
 				id,
-				character.cleanupRoomDeviceWearables(newState),
+				character.updateRoomStateLink(newState),
 			);
 		}
 
@@ -213,16 +213,16 @@ export class AssetFrameworkGlobalState {
 	public static loadFromBundle(assetManager: AssetManager, bundle: AssetFrameworkGlobalStateBundle, logger: Logger | undefined): AssetFrameworkGlobalState {
 		const characters = new Map<CharacterId, AssetFrameworkCharacterState>();
 
+		const room = bundle.room == null ? null : AssetFrameworkRoomState.loadFromBundle(assetManager, bundle.room, logger);
+
 		for (const [key, characterData] of Object.entries(bundle.characters)) {
 			AssertNotNullable(characterData);
 			const characterId = CharacterIdSchema.parse(key);
 			characters.set(
 				characterId,
-				AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, characterData, logger),
+				AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, characterData, room, logger),
 			);
 		}
-
-		const room = bundle.room == null ? null : AssetFrameworkRoomState.loadFromBundle(assetManager, bundle.room, logger);
 
 		const resultState = new AssetFrameworkGlobalState(
 			assetManager,

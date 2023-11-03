@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItem, IItemLoadContext, IItemLocationDescriptor, ItemBundleSchema, ItemLock, ItemLockActionSchema } from '../item';
+import { IItemLoadContext, IItemValidationContext, ItemBundleSchema, ItemLock, ItemLockActionSchema, LoadItemFromBundle } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { Satisfies } from '../../utility';
@@ -41,7 +41,7 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 	}
 
 	public loadModule<TProperties>(config: IModuleConfigLockSlot<TProperties>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
-		return new ItemModuleLockSlot(config, data, context);
+		return ItemModuleLockSlot.loadFromData(config, data, context);
 	}
 
 	public getStaticAttributes<TProperties>(config: IModuleConfigLockSlot<TProperties>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
@@ -59,10 +59,16 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 	}
 }
 
-export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TProperties, 'lockSlot'> {
+interface ItemModuleLockSlotProps<TProperties = unknown> {
+	readonly assetManager: AssetManager;
+	readonly config: IModuleConfigLockSlot<TProperties>;
+	readonly lock: ItemLock | null;
+}
+
+export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TProperties, 'lockSlot'>, ItemModuleLockSlotProps<TProperties> {
 	public readonly type = 'lockSlot';
 
-	private readonly assetManager: AssetManager;
+	public readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigLockSlot<TProperties>;
 	public readonly lock: ItemLock | null;
 
@@ -70,18 +76,27 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		return ItemInteractionType.MODIFY;
 	}
 
-	constructor(config: IModuleConfigLockSlot<TProperties>, data: IModuleItemDataLockSlot, context: IItemLoadContext) {
-		this.assetManager = context.assetManager;
-		this.config = config;
+	protected constructor(props: ItemModuleLockSlotProps<TProperties>, overrideProps?: Partial<ItemModuleLockSlotProps<TProperties>>) {
+		this.assetManager = overrideProps?.assetManager ?? props.assetManager;
+		this.config = overrideProps?.config ?? props.config;
+		this.lock = overrideProps?.lock !== undefined ? overrideProps.lock : props.lock;
+	}
+
+	protected withProps(overrideProps: Partial<ItemModuleLockSlotProps<TProperties>>): ItemModuleLockSlot<TProperties> {
+		return new ItemModuleLockSlot(this, overrideProps);
+	}
+
+	public static loadFromData<TProperties>(config: IModuleConfigLockSlot<TProperties>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
+		let lock: ItemModuleLockSlotProps<TProperties>['lock'];
+
 		if (data.lock) {
 			// Load asset and skip if unknown
-			const asset = this.assetManager.getAssetById(data.lock.asset);
+			const asset = context.assetManager.getAssetById(data.lock.asset);
 			if (asset === undefined) {
 				context.logger?.warning(`Skipping unknown lock asset ${data.lock.asset}`);
-				this.lock = null;
+				lock = null;
 			} else {
-				const item = CreateItem(
-					data.lock.id,
+				const item = LoadItemFromBundle(
 					asset,
 					data.lock,
 					context,
@@ -89,14 +104,20 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 
 				if (!item.isType('lock')) {
 					context.logger?.warning(`Skipping invalid lock ${data.lock.asset}`);
-					this.lock = null;
+					lock = null;
 				} else {
-					this.lock = item;
+					lock = item;
 				}
 			}
 		} else {
-			this.lock = null;
+			lock = null;
 		}
+
+		return new ItemModuleLockSlot({
+			assetManager: context.assetManager,
+			config,
+			lock,
+		});
 	}
 
 	public exportData(options: IExportOptions): IModuleItemDataLockSlot {
@@ -106,7 +127,16 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		};
 	}
 
-	public validate(_location: IItemLocationDescriptor): AppearanceValidationResult {
+	public validate(context: IItemValidationContext): AppearanceValidationResult {
+		if (this.lock != null) {
+			const r = this.lock.validate({
+				...context,
+				location: 'attached',
+			});
+			if (!r.success)
+				return r;
+		}
+
 		return { success: true };
 	}
 
@@ -143,12 +173,8 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		if (result == null)
 			return result;
 
-		return new ItemModuleLockSlot(this.config, {
-			type: 'lockSlot',
-			lock: result.exportToBundle({}),
-		}, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
+		return this.withProps({
+			lock: result,
 		});
 	}
 
@@ -161,15 +187,13 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 	public setContents(items: AppearanceItems): ItemModuleLockSlot<TProperties> | null {
 		if (items.length > 1)
 			return null;
-		if (items.length === 1 && !items[0].isType('lock'))
+
+		const lock = items.length === 1 ? items[0] : null;
+		if (lock != null && !lock.isType('lock'))
 			return null;
 
-		return new ItemModuleLockSlot(this.config, {
-			type: 'lockSlot',
-			lock: items.length === 1 ? items[0].exportToBundle({}) : null,
-		}, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
+		return this.withProps({
+			lock,
 		});
 	}
 

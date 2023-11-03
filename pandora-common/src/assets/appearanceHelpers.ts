@@ -7,6 +7,7 @@ import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceVa
 import { Assert, AssertNever } from '../utility';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { CharacterId } from '../character';
+import { AssetFrameworkGlobalState } from './state/globalState';
 
 export function SplitContainerPath(path: ItemContainerPath): {
 	itemPath: ItemPath;
@@ -58,6 +59,8 @@ export abstract class AppearanceManipulator {
 	public abstract readonly containerPath: IContainerPathActual | null;
 
 	public readonly assetManager: AssetManager;
+
+	public abstract get currentState(): AssetFrameworkGlobalState;
 
 	constructor(assetManager: AssetManager) {
 		this.assetManager = assetManager;
@@ -143,6 +146,10 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 		];
 	}
 
+	public override get currentState(): AssetFrameworkGlobalState {
+		return this._base.currentState;
+	}
+
 	constructor(base: AppearanceManipulator, item: ItemId, module: string) {
 		super(base.assetManager);
 		this._base = base;
@@ -175,6 +182,10 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 
 	public readonly container: null = null;
 	public readonly containerPath: IContainerPathActual = [];
+
+	public override get currentState(): AssetFrameworkGlobalState {
+		return this._base.currentState;
+	}
 
 	constructor(base: AssetFrameworkGlobalStateManipulator, target: RoomTargetSelector) {
 		super(base.assetManager);

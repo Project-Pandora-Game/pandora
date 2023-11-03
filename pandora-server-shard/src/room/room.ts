@@ -281,8 +281,13 @@ export class Room extends ServerRoom<IShardClient> {
 			// Add the character to the room
 			this.characters.add(character);
 			const characterState = AssetFrameworkCharacterState
-				.loadFromBundle(assetManager, character.id, appearance, this.logger.prefixMessages(`Character ${character.id} join:`))
-				.cleanupRoomDeviceWearables(roomState.room);
+				.loadFromBundle(
+					assetManager,
+					character.id,
+					appearance,
+					roomState.room,
+					this.logger.prefixMessages(`Character ${character.id} join:`),
+				);
 			roomState = roomState.withCharacter(character.id, characterState);
 
 			this.roomState.setState(roomState);

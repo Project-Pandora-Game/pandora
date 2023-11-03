@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemLoadContext, IItemLocationDescriptor } from '../item';
+import { IItemLoadContext, IItemValidationContext } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { CharacterIdSchema } from '../../character/characterTypes';
@@ -88,7 +88,7 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 	}
 
 	public loadModule<TProperties>(config: IModuleConfigTyped<TProperties>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties> {
-		return new ItemModuleTyped(config, data, context);
+		return ItemModuleTyped.loadFromData(config, data, context);
 	}
 
 	public getStaticAttributes<TProperties>(config: IModuleConfigTyped<TProperties>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
@@ -103,13 +103,20 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 	}
 }
 
-export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProperties, 'typed'> {
+interface ItemModuleTypedProps<TProperties = unknown> {
+	readonly assetManager: AssetManager;
+	readonly config: IModuleConfigTyped<TProperties>;
+	readonly activeVariant: Readonly<IModuleTypedOption<TProperties>>;
+	readonly data: Readonly<Pick<IModuleItemDataTyped, 'selectedAt' | 'selectedBy'>>;
+}
+
+export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProperties, 'typed'>, ItemModuleTypedProps<TProperties> {
 	public readonly type = 'typed';
 
-	private readonly assetManager: AssetManager;
+	public readonly assetManager: AssetManager;
 	public readonly config: IModuleConfigTyped<TProperties>;
 	public readonly activeVariant: Readonly<IModuleTypedOption<TProperties>>;
-	public readonly data: Readonly<IModuleItemDataTyped>;
+	public readonly data: Readonly<Pick<IModuleItemDataTyped, 'selectedAt' | 'selectedBy'>>;
 
 	public get interactionType(): ItemInteractionType {
 		// Interaction can be overridden by config, but defaults to modify (unless this is an expression, then to expression)
@@ -117,24 +124,35 @@ export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProp
 			(this.config.expression != null ? ItemInteractionType.EXPRESSION_CHANGE : ItemInteractionType.MODIFY);
 	}
 
-	constructor(config: IModuleConfigTyped<TProperties>, data: IModuleItemDataTyped, context: IItemLoadContext) {
-		this.assetManager = context.assetManager;
-		this.config = config;
+	protected constructor(props: ItemModuleTypedProps<TProperties>, overrideProps?: Partial<ItemModuleTypedProps<TProperties>>) {
+		this.assetManager = overrideProps?.assetManager ?? props.assetManager;
+		this.config = overrideProps?.config ?? props.config;
+		this.activeVariant = overrideProps?.activeVariant ?? props.activeVariant;
+		this.data = overrideProps?.data ?? props.data;
+	}
+
+	protected withProps(overrideProps: Partial<ItemModuleTypedProps<TProperties>>): ItemModuleTyped<TProperties> {
+		return new ItemModuleTyped(this, overrideProps);
+	}
+
+	public static loadFromData<TProperties>(config: IModuleConfigTyped<TProperties>, data: IModuleItemDataTyped, context: IItemLoadContext) {
 		// Get currently selected module
 		const activeVariant: IModuleTypedOption<TProperties> | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
 		// Warn if we were trying to find variant
 		if (!activeVariant && data.variant != null) {
 			context.logger?.warning(`Unknown typed module variant '${data.variant}'`);
 		}
-		// Use the default variant if not found
-		this.activeVariant = activeVariant ?? this._getDefaultVariant();
 
-		this.data = {
-			...data,
-			variant: this.activeVariant.id,
-			selectedAt: activeVariant?.storeTime ? data.selectedAt : undefined,
-			selectedBy: activeVariant?.storeCharacter ? data.selectedBy : undefined,
-		};
+		return new ItemModuleTyped({
+			assetManager: context.assetManager,
+			config,
+			// Use the default variant if not found
+			activeVariant: activeVariant ?? ItemModuleTyped._getDefaultVariant(config),
+			data: {
+				selectedAt: activeVariant?.storeTime ? data.selectedAt : undefined,
+				selectedBy: activeVariant?.storeCharacter ? data.selectedBy : undefined,
+			},
+		});
 	}
 
 	public exportData(): IModuleItemDataTyped {
@@ -147,7 +165,7 @@ export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProp
 		};
 	}
 
-	public validate(_location: IItemLocationDescriptor): AppearanceValidationResult {
+	public validate(_context: IItemValidationContext): AppearanceValidationResult {
 		return { success: true };
 	}
 
@@ -184,17 +202,15 @@ export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProp
 			});
 		}
 
-		return new ItemModuleTyped(this.config, {
-			type: 'typed',
-			variant: newVariant.id,
-			selectedAt: Date.now(),
-			selectedBy: {
-				id: processingContext.player.id,
-				name: processingContext.player.name,
+		return this.withProps({
+			activeVariant: newVariant,
+			data: {
+				selectedAt: Date.now(),
+				selectedBy: {
+					id: processingContext.player.id,
+					name: processingContext.player.name,
+				},
 			},
-		}, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
 		});
 	}
 
@@ -209,7 +225,7 @@ export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProp
 		return null;
 	}
 
-	private _getDefaultVariant(): Readonly<IModuleTypedOption<TProperties>> {
-		return this.config.variants.find((v) => v.default) ?? this.config.variants[0];
+	private static _getDefaultVariant<TProperties>(config: IModuleConfigTyped<TProperties>): Readonly<IModuleTypedOption<TProperties>> {
+		return config.variants.find((v) => v.default) ?? config.variants[0];
 	}
 }

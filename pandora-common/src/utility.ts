@@ -360,7 +360,7 @@ export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet)
 /**
  * Decorates a member function so it memoizes the result of the first call, the function must take no arguments
  */
-export function MemoizeNoArg<Return, This extends object>(method: (...args: never[]) => Return, _context: ClassMethodDecoratorContext<This>) {
+export function MemoizeNoArg<Return, This extends object>(method: () => Return, _context: ClassMethodDecoratorContext<This>) {
 	const cache = new WeakMap<object, Return>();
 	return function (this: This) {
 		if (cache.has(this)) {

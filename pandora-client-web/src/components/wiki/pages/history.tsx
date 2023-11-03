@@ -12,10 +12,11 @@ export function WikiHistory(): ReactElement {
 				In early 2021, most BC developers at that time concluded that they do not want to support BC any more, as they see various issues with it that
 				cannot realistically be solved.<br />
 				It was an often voiced desire from parts of the community to have an alternative to BC and therefore talks about making a new platform started.
-				In August 2021, "Project Pandora" officially started with the creation of the Pandora Discord. The first half year was focused on looking for
-				suitable technologies, asset basis, and architecture planning.<br />
+				In August 2021, "Project Pandora" officially started with the creation of the Pandora Discord.<br />
+				<br />
+				The first half year was focused on looking for suitable technologies, asset basis, and architecture planning.
 				Progress was slow but steady, as making such a platform is really a lot of work and requires careful planning and thinking.
-				Moreover, it is merely a hobby for everyone, spending free time here and there besides the actual day-time job, friends & family, etc.
+				Moreover, it is merely a hobby for everyone, spending free time here and there besides the actual day-time work, friends & family, etc.
 			</p>
 
 			<h4>Does Pandora want to replace BC?</h4>
@@ -48,11 +49,11 @@ export function WikiHistory(): ReactElement {
 						Starting from scratch with a modern and scalable approach seemed like the best option to give users a stable experience.
 					</li>
 					<li>
-						Lack of server validation: In many cases the server in BC does not validate what the client does, which makes it possible for everyone
+						Lack of server validation / security: In many cases the server in BC does not validate what the client does, which makes it possible for everyone
 						to alter things like locks, restraints, or messages. The overall lack of security was a concern voiced by many.
 					</li>
 					<li>Asset creation: Asset creation in BC needs many variants of the same image and it is an extreme effort to add new poses.</li>
-					<li>Legality of assets: In BC there is no process for vetoing assets. Most of them are not providing where they originate
+					<li>Legality of assets / images: In BC there is no process for vetoing assets. Most of them are not providing where they originate
 						from or how the sources used for the assets were licensed. Proper licensing is the correct and safe way.
 					</li>
 				</ul>

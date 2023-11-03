@@ -102,7 +102,8 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	public override evalCondition(condition: Immutable<AtomicCondition>, item: Item | null): boolean {
 		if ('module' in condition) {
 			Assert(condition.module != null);
-			const m = item?.getModules().get(condition.module);
+			const m = (item?.isType('roomDeviceWearablePart') ? item?.roomDevice?.getModules() : item?.getModules())
+				?.get(condition.module);
 			// If there is no item or no module, the value is always not equal
 			if (!m) {
 				return condition.operator === '!=';

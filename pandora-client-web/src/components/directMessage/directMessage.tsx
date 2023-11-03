@@ -81,6 +81,7 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 
 function DirectChannelInput(): ReactElement | null {
 	const channel = useDirectMessageChannel();
+	const ref = React.useRef<HTMLTextAreaElement>(null);
 
 	const onKeyDown = useEvent((ev: React.KeyboardEvent<HTMLTextAreaElement>) => {
 		const textarea = ev.currentTarget;
@@ -95,12 +96,17 @@ function DirectChannelInput(): ReactElement | null {
 		}
 	});
 
+	React.useEffect(() => {
+		ref.current?.focus();
+	}, [channel.account]);
+
 	if (!channel.account) {
 		return null;
 	}
 
 	return (
 		<textarea
+			ref={ ref }
 			onKeyDown={ onKeyDown }
 			placeholder={ `Send message to ${channel.account.name} (${channel.account.id})` }
 		/>

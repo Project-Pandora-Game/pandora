@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 /**
  * Registers a keydown handler to the document
- * @param callback - Callback for the handler (can return `true` to stop event propagation)
+ * @param callback - Callback for the handler, should be memoized (can return `true` to stop event propagation)
  * @param key - Optionally a key to filter for; `undefined` means filters are not processed
  */
 export function useKeyDownEvent(

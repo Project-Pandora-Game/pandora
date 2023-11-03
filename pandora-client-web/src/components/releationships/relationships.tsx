@@ -12,9 +12,14 @@ import _ from 'lodash';
 import { DivContainer, Row } from '../common/container/container';
 import { RelationshipChangeHandleResult, useFriendStatus, useRelationships } from './relationshipsContext';
 import { useConfirmDialog } from '../dialog/dialog';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 
 export function Relationships() {
 	const navigate = useNavigate();
+
+	useKeyDownEvent(React.useCallback(() => {
+		navigate('/');
+	}, [navigate]), 'Escape');
 
 	return (
 		<div className='relationships'>

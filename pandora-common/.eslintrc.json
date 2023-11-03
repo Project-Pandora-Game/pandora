@@ -99,6 +99,10 @@
 						"leadingUnderscore": "require"
 					},
 					{
+						"selector": "import",
+						"format": null
+					},
+					{
 						"selector": "objectLiteralProperty",
 						"format": null
 					},

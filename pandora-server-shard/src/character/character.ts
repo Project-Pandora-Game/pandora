@@ -6,7 +6,7 @@ import { GetDatabase } from '../database/databaseProvider';
 import { ClientConnection } from '../networking/connection_client';
 import { assetManager } from '../assets/assetManager';
 
-import _, { omit } from 'lodash';
+import _, { isEqual, omit } from 'lodash';
 import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes character without any active connection */
@@ -149,6 +149,7 @@ export class Character {
 		this.accountData = account;
 		this.connectSecret = connectSecret;
 
+		const originalInteractionConfig = data.interactionConfig;
 		this.gameLogicCharacter = new GameLogicCharacterServer(data, this.logger.prefixMessages('[GameLogic]'));
 
 		this.setConnection(null);
@@ -187,8 +188,9 @@ export class Character {
 			}
 		});
 
-		if (this.gameLogicCharacter.interactions.changedOnInit) {
-			this.setValue('interactionConfig', this.gameLogicCharacter.interactions.getData(), false);
+		const currentInteractionConfig = this.gameLogicCharacter.interactions.getData();
+		if (!isEqual(originalInteractionConfig, currentInteractionConfig)) {
+			this.setValue('interactionConfig', currentInteractionConfig, false);
 		}
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);

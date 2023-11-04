@@ -91,6 +91,7 @@ function OpenConversation(): React.ReactElement {
 	}, [directory.directMessageHandler, accountId]);
 	const onKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === 'Enter') {
+			e.preventDefault();
 			onClick();
 		}
 	}, [onClick]);

@@ -10,7 +10,6 @@ import { InteractionSubsystem } from './interactionSubsystem';
 
 export class InteractionSubsystemServer extends InteractionSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
 	private readonly interactions: ReadonlyMap<InteractionId, GameLogicInteractionServer>;
-	private _changedOnInit: boolean = false;
 
 	constructor(character: GameLogicCharacter, data: InteractionSystemData, logger: Logger) {
 		super();
@@ -25,7 +24,6 @@ export class InteractionSubsystemServer extends InteractionSubsystem implements 
 				};
 			}
 			interactions.set(id, new GameLogicInteractionServer(character, id, interactionData));
-			this._changedOnInit = true;
 		}
 		this.interactions = interactions;
 		// Report ignored configs
@@ -41,10 +39,6 @@ export class InteractionSubsystemServer extends InteractionSubsystem implements 
 				this.emit('dataChanged', undefined);
 			});
 		}
-	}
-
-	public get changedOnInit(): boolean {
-		return this._changedOnInit;
 	}
 
 	public getData(): InteractionSystemData {

@@ -19,6 +19,7 @@ export function Relationships() {
 
 	useKeyDownEvent(React.useCallback(() => {
 		navigate('/');
+		return true;
 	}, [navigate]), 'Escape');
 
 	return (

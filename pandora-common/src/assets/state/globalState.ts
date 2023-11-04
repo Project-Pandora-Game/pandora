@@ -146,7 +146,7 @@ export class AssetFrameworkGlobalState {
 		for (const [id, character] of newCharacters) {
 			newCharacters.set(
 				id,
-				character.updateRoomStateLink(newState),
+				character.updateRoomStateLink(newState, false),
 			);
 		}
 

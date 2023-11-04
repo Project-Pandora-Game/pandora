@@ -1015,7 +1015,7 @@ export function ActionRoomDeviceEnter({
 
 	if (!processingContext.manipulator.produceCharacterState(
 		action.character.characterId,
-		(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.room),
+		(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.room, false),
 	))
 		return processingContext.invalid();
 

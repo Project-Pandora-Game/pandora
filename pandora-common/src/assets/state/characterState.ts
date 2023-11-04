@@ -186,8 +186,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return new AssetFrameworkCharacterState(this, { safemode: freeze(value ?? undefined, true) });
 	}
 
-	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState | null): AssetFrameworkCharacterState {
-		const updatedItems = this.items.map((item) => {
+	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState | null, revalidate: boolean): AssetFrameworkCharacterState {
+		let updatedItems: AppearanceItems<WearableAssetType> = this.items.map((item) => {
 			if (item.isType('roomDeviceWearablePart')) {
 				const link = item.roomDeviceLink;
 				if (!roomInventory || !link)
@@ -218,12 +218,14 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			return this;
 		}
 
-		// Re-validate items as forceful removal might have broken dependencies
-		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, updatedItems, roomInventory);
-		Assert(ValidateAppearanceItems(this.assetManager, newItems, roomInventory).success);
+		if (revalidate) {
+			// Re-validate items as forceful removal might have broken dependencies
+			updatedItems = CharacterAppearanceLoadAndValidate(this.assetManager, updatedItems, roomInventory);
+			Assert(ValidateAppearanceItems(this.assetManager, updatedItems, roomInventory).success);
+		}
 
 		return new AssetFrameworkCharacterState(this, {
-			items: newItems,
+			items: updatedItems,
 		});
 	}
 
@@ -285,7 +287,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				items: newItems,
 				requestedPose,
 				safemode: bundle.safemode,
-			}).updateRoomStateLink(roomState),
+			}).updateRoomStateLink(roomState, true),
 			true,
 		);
 

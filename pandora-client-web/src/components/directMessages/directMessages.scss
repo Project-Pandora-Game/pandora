@@ -57,5 +57,12 @@
 
 	>.direct-message {
 		flex: 1;
+
+		.error {
+			color: red;
+			font-weight: bold;
+			text-align: center;
+			margin: auto;
+		}
 	}
 }

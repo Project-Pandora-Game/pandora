@@ -4,7 +4,6 @@ import { useObservable } from '../../observable';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { DirectMessage } from '../directMessage/directMessage';
 import './directMessages.scss';
-import { useEvent } from '../../common/useEvent';
 import { Button } from '../common/button/button';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 
@@ -53,6 +52,10 @@ function DirectMessageTempInfo({ selected, filtered }: { selected: AccountId; fi
 
 	const chat = directoryConnector.directMessageHandler.loadChat(selected);
 
+	if (!chat.account) {
+		return null;
+	}
+
 	return (
 		<li className='temp'>
 			{ chat.account.name } ({ selected })
@@ -76,17 +79,26 @@ function DirectMessageInfo({ info, selected }: { info: Readonly<IDirectoryDirect
 function OpenConversation(): React.ReactElement {
 	const directory = useDirectoryConnector();
 	const accountId = useCurrentAccount()?.id;
-	const [id, setId] = React.useState('');
-	const onClick = useEvent(() => {
-		const parsed = parseInt(id, 10);
+	const ref = React.useRef<HTMLInputElement>(null);
+	const onClick = React.useCallback(() => {
+		if (!ref.current)
+			return;
+
+		const parsed = parseInt(ref.current.value, 10);
 		if (Number.isInteger(parsed) && parsed > 0 && parsed !== accountId) {
 			directory.directMessageHandler.setSelected(parsed);
 		}
-	});
+	}, [directory.directMessageHandler, accountId]);
+	const onKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+		if (e.key === 'Enter') {
+			e.preventDefault();
+			onClick();
+		}
+	}, [onClick]);
 
 	return (
 		<div className='input-line'>
-			<input type='text' inputMode='numeric' pattern='\d*' value={ id } onChange={ (e) => setId(e.target.value) } />
+			<input type='text' inputMode='numeric' pattern='\d*' ref={ ref } onKeyDown={ onKeyDown } />
 			<Button className='slim' onClick={ onClick }>Open</Button>
 		</div>
 	);

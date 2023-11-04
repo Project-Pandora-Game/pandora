@@ -55,10 +55,10 @@ export function CharacterSafemodeDialog({ player }: {
 	const canLeaveSafemode = safemodeState != null && currentTime >= safemodeState.allowLeaveAt;
 
 	const hide = useCallback(() => safemodeContext.hide(), [safemodeContext]);
-	useKeyDownEvent(() => {
+	useKeyDownEvent(useCallback(() => {
 		hide();
 		return true;
-	}, 'Escape');
+	}, [hide]), 'Escape');
 
 	const [doSafeModeExit, exiting] = useAppearanceActionEvent({
 		type: 'safemode',

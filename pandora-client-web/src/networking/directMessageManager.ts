@@ -165,12 +165,16 @@ export class DirectMessageChannel {
 	private _loaded = false;
 	private _publicKeyData?: string;
 	private _keyHash?: string;
-	private _account!: IDirectoryDirectMessageAccount;
+	private _account?: IDirectoryDirectMessageAccount;
 	private _mounts = 0;
 	private _failed?: 'notFound' | 'denied';
 	#encryption!: SymmetricEncryption;
 
 	public readonly connector: DirectoryConnector;
+
+	public get id(): number {
+		return this._id;
+	}
 
 	public get loaded(): boolean {
 		return this._loaded;
@@ -180,7 +184,7 @@ export class DirectMessageChannel {
 		return this._messages;
 	}
 
-	public get account(): Readonly<IDirectoryDirectMessageAccount> {
+	public get account(): Readonly<IDirectoryDirectMessageAccount> | undefined {
 		return this._account;
 	}
 
@@ -234,6 +238,7 @@ export class DirectMessageChannel {
 			sent: data.account === undefined,
 			edited,
 		});
+		AssertNotNullable(this._account);
 		const id = this._account.id;
 		let info = infos.value.find((i) => i.id === id);
 		if (!info) {

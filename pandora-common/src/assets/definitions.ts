@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexRGBAColorString, ZodTemplateString } from '../validation';
 import type { AppearanceArmPose, AppearancePose } from './state/characterState';
-import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Coordinates, LayerImageOverride, LegsPose } from './graphics';
+import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';
@@ -185,28 +185,36 @@ export type IRoomDeviceGraphicsLayerSprite = {
 	offsetY?: number;
 };
 
+export type IRoomDeviceGraphicsCharacterPosition = {
+	offsetX: number;
+	offsetY: number;
+	/**
+	 * Is the factor by which the character is made bigger or smaller inside the room device slot,
+	 * compared to this room device scaled inside the room
+	 * @default 1
+	 */
+	relativeScale?: number;
+	/**
+	 * Prevents pose from changing character's offset while inside this room device slot
+	 * (for slots that allow different poses, but require precision)
+	 * @default false
+	 */
+	disablePoseOffset?: boolean;
+};
+
+export type IRoomDeviceGraphicsCharacterPositionOverride = {
+	position: IRoomDeviceGraphicsCharacterPosition;
+	condition: Condition;
+};
+
 export type IRoomDeviceGraphicsLayerSlot = {
 	type: 'slot';
 	/**
 	 * Is the name of the character slot that is drawn on this layer.
 	 */
 	slot: string;
-	characterPosition: {
-		offsetX: number;
-		offsetY: number;
-		/**
-		 * Is the factor by which the character is made bigger or smaller inside the room device slot,
-		 * compared to this room device scaled inside the room
-		 * @default 1
-		 */
-		relativeScale?: number;
-		/**
-		 * Prevents pose from changing character's offset while inside this room device slot
-		 * (for slots that allow different poses, but require precision)
-		 * @default false
-		 */
-		disablePoseOffset?: boolean;
-	};
+	characterPosition: IRoomDeviceGraphicsCharacterPosition;
+	characterPositionOverrides?: IRoomDeviceGraphicsCharacterPositionOverride[];
 };
 
 export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDeviceGraphicsLayerSlot;

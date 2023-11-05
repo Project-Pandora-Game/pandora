@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -44,21 +44,18 @@ export class Character {
 	}
 
 	private _context: {
-		inRoom: false;
+		state: 'isolated';
 		globalState: AssetFrameworkGlobalStateContainer;
-		/**
-		 * Bundle to use when appearance wasn't modified.
-		 * It is used to preserve room devices
-		 * during character load or unload.
-		 */
-		saveOverride?: AppearanceBundle;
 	} | {
-		inRoom: true;
+		state: 'room';
 		room: Room;
+	} | {
+		state: 'unloaded';
+		appearanceBundle: AppearanceBundle;
 	};
 
 	public get room(): Room | null {
-		return this._context.inRoom ? this._context.room : null;
+		return this._context.state === 'room' ? this._context.room : null;
 	}
 
 	public setRoom(room: Room | null, appearance: AppearanceBundle): void {
@@ -72,14 +69,13 @@ export class Character {
 		}
 		if (room) {
 			this._context = {
-				inRoom: true,
+				state: 'room',
 				room,
 			};
 		} else {
 			this._context = {
-				inRoom: false,
-				globalState: this._createIsolatedState(appearance),
-				saveOverride: appearance,
+				state: 'unloaded',
+				appearanceBundle: appearance,
 			};
 		}
 	}
@@ -160,22 +156,13 @@ export class Character {
 		}
 
 		this._context = {
-			inRoom: false,
-			globalState: this._createIsolatedState(data.appearance),
+			state: 'unloaded',
+			appearanceBundle: data.appearance ?? GetDefaultAppearanceBundle(),
 		};
 
 		// Load into room directly (to avoid cleanup of appearance outside of the room)
 		if (roomId != null) {
-			const room = RoomManager.getRoom(roomId);
-			if (room != null) {
-				room.characterAdd(
-					this,
-					data.appearance ?? GetDefaultAppearanceBundle(),
-				);
-				Assert(this._context.inRoom);
-			} else {
-				this.logger.error(`Failed to link character to room ${roomId}; not found`);
-			}
+			this.linkRoom(roomId);
 		}
 
 		// Link events from game logic parts
@@ -218,7 +205,7 @@ export class Character {
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
-		if (!this._context.inRoom) {
+		if (this._context.state === 'isolated') {
 			this._context.globalState.reloadAssetManager(manager);
 		}
 	}
@@ -278,16 +265,14 @@ export class Character {
 		}
 		if (this.room !== room) {
 			this.room?.characterRemove(this, true);
+			Assert(NOT_NARROWING_FALSE || this._context.state !== 'room');
 
 			if (room) {
-				Assert(!this._context.inRoom);
-				const characterAppearance = this._context.globalState.currentState.characters.get(this.id)?.exportToBundle();
-				AssertNotNullable(characterAppearance);
 				room.characterAdd(
 					this,
-					characterAppearance,
+					this.getCharacterAppearanceBundle(),
 				);
-				Assert(this._context.inRoom);
+				Assert(NOT_NARROWING_FALSE || this._context.state === 'room');
 			}
 		}
 	}
@@ -351,7 +336,6 @@ export class Character {
 	}
 
 	public onRemove(): void {
-		this.room?.characterRemove(this, false);
 		this.invalidate('remove');
 	}
 
@@ -376,6 +360,10 @@ export class Character {
 			clearInterval(this._clientTimeout);
 			this._clientTimeout = null;
 		}
+
+		// Leave room after disconnecting client (so change propagates to other people in the room)
+		this.room?.characterRemove(this, false);
+
 		if (reason === 'error') {
 			DirectoryConnector.sendMessage('characterError', { id: this.id });
 		}
@@ -418,7 +406,28 @@ export class Character {
 	}
 
 	public getGlobalState(): AssetFrameworkGlobalStateContainer {
-		return this._context.inRoom ? this._context.room.roomState : this._context.globalState;
+		// Perform lazy-load if needed
+		if (this._context.state === 'unloaded') {
+			Assert(this.invalid == null, 'Character state should not load while invalid');
+			this._context = {
+				state: 'isolated',
+				globalState: this._createIsolatedState(this._context.appearanceBundle),
+			};
+		}
+		return this._context.state === 'room' ? this._context.room.roomState : this._context.globalState;
+	}
+
+	public getCharacterState(): AssetFrameworkCharacterState {
+		const state = this.getGlobalState().currentState.characters.get(this.id);
+		AssertNotNullable(state);
+		return state;
+	}
+
+	public getCharacterAppearanceBundle(): AppearanceBundle {
+		if (this._context.state === 'unloaded') {
+			return this._context.appearanceBundle;
+		}
+		return this.getCharacterState().exportToBundle();
 	}
 
 	public getRestrictionManager(): CharacterRestrictionsManager {
@@ -457,13 +466,7 @@ export class Character {
 
 		for (const key of keys) {
 			if (key === 'appearance') {
-				if (!this._context.inRoom && this._context.saveOverride != null) {
-					data.appearance = this._context.saveOverride;
-				} else {
-					const characterState = this.getGlobalState().currentState.getCharacterState(this.id);
-					AssertNotNullable(characterState);
-					data.appearance = characterState.exportToBundle();
-				}
+				data.appearance = this.getCharacterAppearanceBundle();
 			} else {
 				(data as Record<string, unknown>)[key] = this.data[key];
 			}
@@ -517,23 +520,20 @@ export class Character {
 
 	public onAppearanceChanged(): void {
 		this.modified.add('appearance');
-
-		if (!this._context.inRoom && this._context.saveOverride != null) {
-			this.logger.debug('Cleared appearance save override');
-			delete this._context.saveOverride;
-		}
-
 		this.sendUpdateDebounced();
 	}
 
 	private readonly sendUpdateDebounced = _.debounce(this.sendUpdate.bind(this), UPDATE_DEBOUNCE, { maxWait: 5 * UPDATE_DEBOUNCE });
 	private sendUpdate(): void {
-		// Only send update if not in room, as otherwise the room handles it
-		if (!this._context.inRoom) {
-			this.connection?.sendMessage('chatRoomLoad', {
-				room: null,
-				globalState: this._context.globalState.currentState.exportToClientBundle(),
-			});
+		if (this.connection != null) {
+			// Only send update if not in room, as otherwise the room handles it
+			if (this.room == null) {
+				const bundle = this.getGlobalState().currentState.exportToClientBundle();
+				this.connection.sendMessage('chatRoomLoad', {
+					room: null,
+					globalState: bundle,
+				});
+			}
 		}
 	}
 

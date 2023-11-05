@@ -153,7 +153,7 @@ export function UrlTabContainer({
 					defaultTabPath ? (
 						<Route
 							path='*'
-							element={ <Navigate to={ defaultTabPath } /> }
+							element={ <Navigate to={ defaultTabPath } replace /> }
 						/>
 					) : null
 				}

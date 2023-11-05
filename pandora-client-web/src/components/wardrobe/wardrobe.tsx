@@ -80,7 +80,7 @@ function WardrobeRoom({ room: _room }: {
 							<WardrobeItemManipulation />
 						</div>
 					</Tab>
-					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate(-1) } />
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/pandora_lobby') } />
 				</TabContainer>
 			</div>
 		</div>
@@ -134,7 +134,7 @@ function WardrobeCharacter({ character }: {
 							<WardrobeOutfitGui character={ character } />
 						</div>
 					</Tab>
-					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate(-1) } />
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/pandora_lobby') } />
 				</TabContainer>
 			</div>
 		</div>

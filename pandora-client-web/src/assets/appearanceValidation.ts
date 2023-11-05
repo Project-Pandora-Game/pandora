@@ -99,7 +99,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				const attribute = assetManager.getAttributeDefinition(attributeName);
 				const description = attribute ? `"${attribute.description}"` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
 				if (e.asset) {
-					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description}.`;
+					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description} (${negative ? 'must not' : 'must'} be worn under the ${DescribeAsset(assetManager, e.asset)}).`;
 				} else {
 					return `The item ${negative ? 'must not' : 'must'} be ${description}.`;
 				}

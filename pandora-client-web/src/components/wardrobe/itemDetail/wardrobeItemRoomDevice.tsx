@@ -51,6 +51,7 @@ export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 				deployment: {
 					x: 0,
 					y: 0,
+					yOffset: 0,
 				},
 			} }>
 				Deploy the device
@@ -78,6 +79,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 
 	const [positionX, setPositionX] = useUpdatedUserInput(deployment.x, [item]);
 	const [positionY, setPositionY] = useUpdatedUserInput(deployment.y, [item]);
+	const [positionYOffset, setPositionYOffset] = useUpdatedUserInput(deployment.yOffset, [item]);
 
 	const checkResult = useStaggeredAppearanceActionResult({
 		type: 'roomDeviceDeploy',
@@ -104,8 +106,9 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 		};
 		setPositionX(newPosition.x);
 		setPositionY(newPosition.y);
+		setPositionYOffset(newPosition.yOffset);
 		onChangeCallerThrottled(newPosition);
-	}, [deployment, setPositionX, setPositionY, onChangeCallerThrottled]);
+	}, [deployment, setPositionX, setPositionY, setPositionYOffset, onChangeCallerThrottled]);
 
 	return (
 		<Row padding='medium' alignY='center'>
@@ -122,6 +125,14 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 				value={ positionY }
 				onChange={ (ev) => {
 					changeCallback({ y: ev.target.valueAsNumber });
+				} }
+				disabled={ disabled }
+			/>
+			<label>Y offset:</label>
+			<input type='number'
+				value={ positionYOffset }
+				onChange={ (ev) => {
+					changeCallback({ yOffset: ev.target.valueAsNumber });
 				} }
 				disabled={ disabled }
 			/>

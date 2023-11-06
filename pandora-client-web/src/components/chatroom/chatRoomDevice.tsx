@@ -82,6 +82,7 @@ export function ChatRoomDevice({
 	const scaling = background.scaling;
 	const x = Math.min(width, deployment.x);
 	const y = Math.min(height, deployment.y);
+	const yOffsetExtra = Math.round(deployment.yOffset);
 
 	const scale = 1 - (y * scaling) / height;
 
@@ -181,7 +182,7 @@ export function ChatRoomDevice({
 			<RoomDeviceGraphics
 				ref={ roomDeviceContainer }
 				item={ item }
-				position={ { x, y: height - y } }
+				position={ { x, y: height - y - yOffsetExtra } }
 				scale={ { x: scale, y: scale } }
 				pivot={ errorCorrectedPivot }
 				hitArea={ hitArea }

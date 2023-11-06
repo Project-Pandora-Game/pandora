@@ -23,6 +23,7 @@ export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 export const RoomDeviceDeploymentSchema = z.object({
 	x: z.number(),
 	y: z.number(),
+	yOffset: z.number().int().catch(0),
 }).nullable();
 export type RoomDeviceDeployment = z.infer<typeof RoomDeviceDeploymentSchema>;
 

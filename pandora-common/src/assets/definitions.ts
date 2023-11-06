@@ -174,15 +174,14 @@ export type IRoomDeviceGraphicsLayerSprite = {
 	/** Name of colorization key used to color this sprite layer */
 	colorizationKey?: string;
 	/**
-	 * Horizontal offset of this sprite relative to cage's origin point
-	 * @default 0
+	 * Offset of this sprite relative to cage's origin point
+	 * @default { x: 0, y: 0 }
 	 */
-	offsetX?: number;
-	/**
-	 * Vertical offset of this sprite relative to cage's origin point
-	 * @default 0
-	 */
-	offsetY?: number;
+	offset?: Coordinates;
+	offsetOverrides?: {
+		offset: Coordinates;
+		condition: Condition;
+	}[];
 };
 
 export type IRoomDeviceGraphicsCharacterPosition = {

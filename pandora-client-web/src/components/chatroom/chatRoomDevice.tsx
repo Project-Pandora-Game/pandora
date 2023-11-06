@@ -1,4 +1,4 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -330,6 +330,10 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? layer.image;
 	}, [evaluator, item, layer]);
 
+	const offset = useMemo<Coordinates | undefined>(() => {
+		return layer.offsetOverrides?.find((o) => EvaluateCondition(o.condition, (c) => evaluator.evalCondition(c, item)))?.offset ?? layer.offset;
+	}, [evaluator, item, layer]);
+
 	const texture = useTexture(image, undefined, getTexture);
 
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
@@ -339,8 +343,8 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 
 	return (
 		<Sprite
-			x={ layer.offsetX ?? 0 }
-			y={ layer.offsetY ?? 0 }
+			x={ offset?.x ?? 0 }
+			y={ offset?.y ?? 0 }
 			scale={ 1 }
 			texture={ texture }
 			tint={ color }

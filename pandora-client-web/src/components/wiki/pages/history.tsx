@@ -9,10 +9,14 @@ export function WikiHistory(): ReactElement {
 
 			<p>
 				Pandora was founded by many developers and contributors of a free and open-to-contribute project called "Bondage Club" (BC).
-				In early 2021, most BC developers at that time concluded that they do not want to support BC any more, as they see various issues with it that
+				In early 2021, most BC developers at that time concluded that they do not want to support BC anymore, as they see various issues with it that
 				cannot realistically be solved.<br />
 				It was an often voiced desire from parts of the community to have an alternative to BC and therefore talks about making a new platform started.
-				In August 2021, "Project Pandora" officially started with the creation of the Pandora Discord.<br />
+				In August 2021, "Project Pandora" officially started with the creation of the
+				<a href='https://discord.gg/EnaPvuQf8d' target='_blank' rel='external nofollow noopener noreferrer'>
+					Pandora Discord
+				</a>
+				.<br />
 				<br />
 				The first half year was focused on looking for suitable technologies, asset basis, and architecture planning.
 				Progress was slow but steady, as making such a platform is really a lot of work and requires careful planning and thinking.
@@ -26,8 +30,8 @@ export function WikiHistory(): ReactElement {
 				BC was a bit like that in its first year before more and more game-like features were added that changed the focus of public rooms and the
 				interests of parts of the community slowly. Also the fact that console-usage/scripts/mods/extensions in BC are so all-powerful has certain
 				drawbacks and is exploited quite often.<br />
-				In a way, Pandora will offer an improved "classic" experience, focusing on roleplaying and clear house rules. It will not be tolerated that
-				some users can cheat or gain intransparent feature advantages that others do not have, unless they risk running external scripts.
+				In a way, Pandora will offer an improved "classic" experience, focusing on roleplaying and clear house rules. We will actively remove
+				ways with which users can cheat or gain intransparent feature advantages that others do not have, unless they risk running external scripts.
 			</p>
 
 			<h4>What issues with BC were seen?</h4>
@@ -41,7 +45,7 @@ export function WikiHistory(): ReactElement {
 					</li>
 					<li>Not Open-Source: While the source code of BC is public, it is not licensed under any open-source license. That means that every part of BC
 						is proprietary and owned by its authors and that would mean that one cannot legally use the BC code anywhere else or copy it and further
-						develop it without the explicit permission by every person who ever contributed to BC which makes that almost impossible. The longevity of BC is
+						develop it without the explicit permission of every person who ever contributed to BC which makes that almost impossible. The longevity of BC is
 						therefore doubtful and contributing to BC can be seen as a risk to invest time into a black hole.
 					</li>
 					<li>BC project management: The desire for a different project management approach and development process was strong.</li>
@@ -53,7 +57,7 @@ export function WikiHistory(): ReactElement {
 						to alter things like locks, restraints, or messages. The overall lack of security was a concern often voiced.
 					</li>
 					<li>Asset creation: Asset creation in BC needs many variants of the same image and it is an extreme effort to add new poses.</li>
-					<li>Legality of assets/images: In BC there is no process for vetoing assets. Most of them are not providing where they originate
+					<li>Legality of assets/images: In BC there is no process for vetoing assets. Most of them do not provide where they originate
 						from or how the sources used for the assets were licensed. Proper licensing is the correct and safe way.
 					</li>
 				</ul>

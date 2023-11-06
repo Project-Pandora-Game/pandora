@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import _, { first } from 'lodash';
+import { first } from 'lodash';
 import { z } from 'zod';
 import { Logger } from '../logging';
 import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
@@ -14,6 +14,8 @@ import { ItemModuleAction, LoadItemModule } from './modules';
 import { IExportOptions, IItemModule } from './modules/common';
 import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
+import { CreateRoomDevicePropertiesResult, GetPropertiesForSlot, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from './roomDeviceProperties';
+import { AssetFrameworkRoomState } from './state/roomState';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
@@ -21,6 +23,7 @@ export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 export const RoomDeviceDeploymentSchema = z.object({
 	x: z.number(),
 	y: z.number(),
+	yOffset: z.number().int().catch(0),
 }).nullable();
 export type RoomDeviceDeployment = z.infer<typeof RoomDeviceDeploymentSchema>;
 
@@ -81,23 +84,34 @@ export type IItemLoadContext = {
 	logger?: Logger;
 };
 
+export type IItemValidationContext = {
+	location: IItemLocationDescriptor;
+	roomState: AssetFrameworkRoomState | null;
+};
+
 export type ColorGroupResult = {
 	item: Item;
 	colorization: Immutable<AssetColorization>;
 	color: HexRGBAColorString;
 };
 
+interface ItemBaseProps<Type extends AssetType = AssetType> {
+	readonly assetManager: AssetManager;
+	readonly id: ItemId;
+	readonly asset: Asset<Type>;
+	readonly color: Immutable<ItemColorBundle>;
+}
+
 /**
  * Class representing an equipped item
  *
  * **THIS CLASS IS IMMUTABLE**
  */
-abstract class ItemBase<Type extends AssetType = AssetType> {
+abstract class ItemBase<Type extends AssetType = AssetType> implements ItemBaseProps<Type> {
 	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
 	public readonly asset: Asset<Type>;
 	public readonly color: Immutable<ItemColorBundle>;
-	public readonly modules: ReadonlyMap<string, IItemModule>;
 
 	public get type(): Type {
 		return this.asset.type;
@@ -111,30 +125,30 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		return this.asset.isWearable();
 	}
 
-	constructor(id: ItemId, asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext) {
-		this.assetManager = context.assetManager;
-		this.id = id;
-		this.asset = asset;
-		if (this.asset.id !== bundle.asset) {
-			throw new Error(`Attempt to import different asset bundle into item (${this.asset.id} vs ${bundle.asset})`);
-		}
-		// Load modules
-		const modules = new Map<string, IItemModule>();
-		if (asset.isType('personal')) {
-			for (const moduleName of Object.keys(asset.definition.modules ?? {})) {
-				modules.set(moduleName, LoadItemModule(asset, moduleName, bundle.moduleData?.[moduleName], context));
-			}
-		}
-		this.modules = modules;
-		// Load color from bundle
-		this.color = this._loadColor(bundle.color);
+	protected constructor(props: ItemBaseProps<Type>, overrideProps?: Partial<ItemBaseProps<Type>>) {
+		this.assetManager = overrideProps?.assetManager ?? props.assetManager;
+		this.id = overrideProps?.id ?? props.id;
+		this.asset = overrideProps?.asset ?? props.asset;
+		this.color = overrideProps?.color ?? props.color;
 	}
+
+	protected static _parseBundle<Type extends AssetType = AssetType>(asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext): ItemBaseProps<Type> {
+		Assert(asset.id === bundle.asset);
+		return {
+			assetManager: context.assetManager,
+			id: bundle.id,
+			asset,
+			color: ItemBase._loadColorBundle(asset, bundle.color),
+		};
+	}
+
+	protected abstract withProps(overrideProps: Partial<ItemBaseProps<Type>>): Item<Type>;
 
 	public exportToBundle(options: IExportOptions): ItemBundle {
 		let moduleData: ItemBundle['moduleData'];
-		if (this.modules.size > 0) {
+		if (this.getModules().size > 0) {
 			moduleData = {};
-			for (const [name, module] of this.modules.entries()) {
+			for (const [name, module] of this.getModules().entries()) {
 				moduleData[name] = module.exportData(options);
 			}
 		}
@@ -206,9 +220,9 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		return hasGroup ? result : null;
 	}
 
-	public validate(location: IItemLocationDescriptor): AppearanceValidationResult {
+	public validate(context: IItemValidationContext): AppearanceValidationResult {
 		// Check the asset can actually be worn
-		if (location === 'worn' && (!this.isWearable() || (this.isType('personal') && this.asset.definition.wearable === false)))
+		if (context.location === 'worn' && (!this.isWearable() || (this.isType('personal') && this.asset.definition.wearable === false)))
 			return {
 				success: false,
 				error: {
@@ -218,7 +232,7 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 			};
 
 		// Check bodyparts are worn
-		if (this.isType('personal') && this.asset.definition.bodypart != null && location !== 'worn')
+		if (this.isType('personal') && this.asset.definition.bodypart != null && context.location !== 'worn')
 			return {
 				success: false,
 				error: {
@@ -227,8 +241,8 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 				},
 			};
 
-		for (const module of this.modules.values()) {
-			const r = module.validate(location);
+		for (const module of this.getModules().values()) {
+			const r = module.validate(context);
 			if (!r.success)
 				return r;
 		}
@@ -247,59 +261,31 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeColor(color: ItemColorBundle): Item<Type> {
-		const bundle = this.exportToBundle({});
-		bundle.color = _.cloneDeep(color);
-		return CreateItem(this.id, this.asset, bundle, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
+		return this.withProps({
+			color: ItemBase._loadColorBundle(this.asset, color),
 		});
 	}
 
-	public moduleAction(context: AppearanceModuleActionContext, moduleName: string, action: ItemModuleAction): Item | null {
-		const module = this.modules.get(moduleName);
-		if (!module || module.type !== action.moduleType)
-			return null;
-		const moduleResult = module.doAction(context, action);
-		if (!moduleResult)
-			return null;
-		const bundle = this.exportToBundle({});
-		return CreateItem(this.id, this.asset, {
-			...bundle,
-			moduleData: {
-				...bundle.moduleData,
-				[moduleName]: moduleResult.exportData({}),
-			},
-		}, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
-		});
+	@MemoizeNoArg
+	public getModules(): ReadonlyMap<string, IItemModule> {
+		return new Map();
 	}
 
 	public getModuleItems(moduleName: string): AppearanceItems {
-		return this.modules.get(moduleName)?.getContents() ?? [];
+		return this.getModules().get(moduleName)?.getContents() ?? [];
 	}
 
-	public setModuleItems(moduleName: string, items: AppearanceItems): Item | null {
-		const moduleResult = this.modules.get(moduleName)?.setContents(items);
-		if (!moduleResult)
-			return null;
-		const bundle = this.exportToBundle({});
-		return CreateItem(this.id, this.asset, {
-			...bundle,
-			moduleData: {
-				...bundle.moduleData,
-				[moduleName]: moduleResult.exportData({}),
-			},
-		}, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
-		});
+	public moduleAction(_context: AppearanceModuleActionContext, _moduleName: string, _action: ItemModuleAction): Item<Type> | null {
+		return null;
+	}
+
+	public setModuleItems(_moduleName: string, _items: AppearanceItems): Item<Type> | null {
+		return null;
 	}
 
 	@MemoizeNoArg
 	public getPropertiesParts(): readonly Immutable<AssetProperties>[] {
 		const propertyParts: Immutable<AssetProperties>[] = (this.isWearable()) ? [this.asset.definition] : [];
-		propertyParts.push(...Array.from(this.modules.values()).map((m) => m.getProperties()));
 
 		return propertyParts;
 	}
@@ -406,8 +392,8 @@ abstract class ItemBase<Type extends AssetType = AssetType> {
 		return inherited ? ['inherited', ...inherited] : null;
 	}
 
-	private _loadColor(color: ItemColorBundle | HexRGBAColorString[] = {}): ItemColorBundle {
-		const colorization = (this.isType('personal') || this.isType('roomDevice')) ? (this.asset.definition.colorization ?? {}) : {};
+	private static _loadColorBundle(asset: Asset, color: ItemColorBundle | HexRGBAColorString[] = {}): ItemColorBundle {
+		const colorization = (asset.isType('personal') || asset.isType('roomDevice')) ? (asset.definition.colorization ?? {}) : {};
 		if (Array.isArray(color)) {
 			const keys = Object.keys(colorization);
 			const fixup: Writeable<ItemColorBundle> = {};
@@ -449,7 +435,35 @@ export function FilterItemWearable(item: Item): item is Item<WearableAssetType> 
 
 export type IItemLocationDescriptor = 'worn' | 'attached' | 'stored' | 'roomInventory';
 
-export class ItemPersonal extends ItemBase<'personal'> {
+interface ItemPersonalProps extends ItemBaseProps<'personal'> {
+	readonly modules: ReadonlyMap<string, IItemModule<AssetProperties>>;
+}
+
+export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalProps {
+	public readonly modules: ReadonlyMap<string, IItemModule<AssetProperties>>;
+
+	protected constructor(props: ItemPersonalProps, overrideProps?: Partial<ItemPersonalProps>) {
+		super(props, overrideProps);
+		this.modules = overrideProps?.modules ?? props.modules;
+	}
+
+	protected override withProps(overrideProps: Partial<ItemPersonalProps>): ItemPersonal {
+		return new ItemPersonal(this, overrideProps);
+	}
+
+	public static loadFromBundle(asset: Asset<'personal'>, bundle: ItemBundle, context: IItemLoadContext): ItemPersonal {
+		// Load modules
+		const modules = new Map<string, IItemModule<AssetProperties>>();
+		for (const [moduleName, moduleConfig] of Object.entries(asset.definition.modules ?? {})) {
+			modules.set(moduleName, LoadItemModule<AssetProperties>(moduleConfig, bundle.moduleData?.[moduleName], context));
+		}
+
+		return new ItemPersonal({
+			...(ItemBase._parseBundle(asset, bundle, context)),
+			modules,
+		});
+	}
+
 	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {
 		const colorization = this.asset.definition.colorization?.[colorizationKey];
 		if (!colorization)
@@ -470,41 +484,113 @@ export class ItemPersonal extends ItemBase<'personal'> {
 			'',
 		);
 	}
+
+	public override getModules(): ReadonlyMap<string, IItemModule<AssetProperties>> {
+		return this.modules;
+	}
+
+	public override moduleAction(context: AppearanceModuleActionContext, moduleName: string, action: ItemModuleAction): ItemPersonal | null {
+		const module = this.modules.get(moduleName);
+		if (!module || module.type !== action.moduleType)
+			return null;
+		const moduleResult = module.doAction(context, action);
+		if (!moduleResult)
+			return null;
+
+		const newModules = new Map(this.modules);
+		newModules.set(moduleName, moduleResult);
+
+		return this.withProps({
+			modules: newModules,
+		});
+	}
+
+	public override setModuleItems(moduleName: string, items: AppearanceItems): ItemPersonal | null {
+		const moduleResult = this.modules.get(moduleName)?.setContents(items);
+		if (!moduleResult)
+			return null;
+
+		const newModules = new Map(this.modules);
+		newModules.set(moduleName, moduleResult);
+
+		return this.withProps({
+			modules: newModules,
+		});
+	}
+
+	@MemoizeNoArg
+	public override getPropertiesParts(): readonly Immutable<AssetProperties>[] {
+		return [
+			...super.getPropertiesParts(),
+			...Array.from(this.modules.values()).flatMap((m) => m.getProperties()),
+		];
+	}
 }
 
-export class ItemRoomDevice extends ItemBase<'roomDevice'> {
+interface ItemRoomDeviceProps extends ItemBaseProps<'roomDevice'> {
+	readonly deployment: Immutable<RoomDeviceDeployment>;
+	readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
+	readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties>>;
+}
+
+export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDeviceProps {
 	public readonly deployment: Immutable<RoomDeviceDeployment>;
 	public readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
+	public readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties>>;
 
-	constructor(id: ItemId, asset: Asset<'roomDevice'>, bundle: ItemBundle, context: IItemLoadContext) {
-		super(id, asset, bundle, context);
+	protected constructor(props: ItemRoomDeviceProps, overrideProps: Partial<ItemRoomDeviceProps> = {}) {
+		super(props, overrideProps);
+		this.deployment = overrideProps.deployment !== undefined ? overrideProps.deployment : props.deployment;
+		this.slotOccupancy = overrideProps?.slotOccupancy ?? props.slotOccupancy;
+		this.modules = overrideProps?.modules ?? props.modules;
+	}
 
+	protected override withProps(overrideProps: Partial<ItemRoomDeviceProps>): ItemRoomDevice {
+		return new ItemRoomDevice(this, overrideProps);
+	}
+
+	public static loadFromBundle(asset: Asset<'roomDevice'>, bundle: ItemBundle, context: IItemLoadContext): ItemRoomDevice {
+		// Load modules
+		const modules = new Map<string, IItemModule<RoomDeviceProperties>>();
+		for (const [moduleName, moduleConfig] of Object.entries(asset.definition.modules ?? {})) {
+			modules.set(moduleName, LoadItemModule<RoomDeviceProperties>(moduleConfig, bundle.moduleData?.[moduleName], context));
+		}
+
+		// Load device-specific data
 		const roomDeviceData: RoomDeviceBundle = bundle.roomDeviceData ?? {
 			deployment: null,
 			slotOccupancy: {},
 		};
 
-		this.deployment = roomDeviceData.deployment;
+		const deployment = roomDeviceData.deployment;
 
 		const slotOccupancy = new Map<string, CharacterId>();
 		// Skip occupied slots if we are not deployed
-		if (this.deployment != null) {
+		if (deployment != null) {
 			for (const slot of Object.keys(asset.definition.slots)) {
 				if (roomDeviceData.slotOccupancy[slot] != null) {
 					slotOccupancy.set(slot, roomDeviceData.slotOccupancy[slot]);
 				}
 			}
 		}
-		this.slotOccupancy = slotOccupancy;
+
+		return new ItemRoomDevice({
+			...(ItemBase._parseBundle(asset, bundle, context)),
+			modules,
+			deployment,
+			slotOccupancy,
+		});
 	}
 
-	public override validate(location: IItemLocationDescriptor): AppearanceValidationResult {
-		const parentResult = super.validate(location);
-		if (!parentResult.success)
-			return parentResult;
+	public override validate(context: IItemValidationContext): AppearanceValidationResult {
+		{
+			const r = super.validate(context);
+			if (!r.success)
+				return r;
+		}
 
 		// Deployed room devices must be in a room
-		if (this.deployment != null && location !== 'roomInventory')
+		if (this.deployment != null && context.location !== 'roomInventory')
 			return {
 				success: false,
 				error: {
@@ -532,11 +618,8 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeDeployment(newDeployment: RoomDeviceDeployment): ItemRoomDevice {
-		const bundle = this.exportToBundle({});
-		bundle.roomDeviceData.deployment = newDeployment;
-		return CreateItem(this.id, this.asset, bundle, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
+		return this.withProps({
+			deployment: newDeployment,
 		});
 	}
 
@@ -545,15 +628,15 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 		if (this.asset.definition.slots[slot] == null || this.deployment == null)
 			return null;
 
-		const bundle = this.exportToBundle({});
+		const slotOccupancy = new Map(this.slotOccupancy);
 		if (character == null) {
-			delete bundle.roomDeviceData.slotOccupancy[slot];
+			slotOccupancy.delete(slot);
 		} else {
-			bundle.roomDeviceData.slotOccupancy[slot] = character;
+			slotOccupancy.set(slot, character);
 		}
-		return CreateItem(this.id, this.asset, bundle, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
+
+		return this.withProps({
+			slotOccupancy,
 		});
 	}
 
@@ -576,24 +659,92 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> {
 			'',
 		);
 	}
-}
 
-export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart'> {
-	public readonly roomDeviceLink: Immutable<RoomDeviceLink> | null;
-
-	constructor(id: ItemId, asset: Asset<'roomDeviceWearablePart'>, bundle: ItemBundle, context: IItemLoadContext) {
-		super(id, asset, bundle, context);
-
-		this.roomDeviceLink = bundle.roomDeviceLink ?? null;
+	public override getModules(): ReadonlyMap<string, IItemModule<RoomDeviceProperties>> {
+		return this.modules;
 	}
 
-	public override validate(location: IItemLocationDescriptor): AppearanceValidationResult {
-		const parentResult = super.validate(location);
-		if (!parentResult.success)
-			return parentResult;
+	public override moduleAction(context: AppearanceModuleActionContext, moduleName: string, action: ItemModuleAction): ItemRoomDevice | null {
+		const module = this.modules.get(moduleName);
+		if (!module || module.type !== action.moduleType)
+			return null;
+		const moduleResult = module.doAction(context, action);
+		if (!moduleResult)
+			return null;
+
+		const newModules = new Map(this.modules);
+		newModules.set(moduleName, moduleResult);
+
+		return this.withProps({
+			modules: newModules,
+		});
+	}
+
+	public override setModuleItems(moduleName: string, items: AppearanceItems): ItemRoomDevice | null {
+		const moduleResult = this.modules.get(moduleName)?.setContents(items);
+		if (!moduleResult)
+			return null;
+
+		const newModules = new Map(this.modules);
+		newModules.set(moduleName, moduleResult);
+
+		return this.withProps({
+			modules: newModules,
+		});
+	}
+
+	@MemoizeNoArg
+	public getRoomDevicePropertiesParts(): readonly Immutable<RoomDeviceProperties>[] {
+		const propertyParts: Immutable<AssetProperties>[] = [
+			...Array.from(this.modules.values()).flatMap((m) => m.getProperties()),
+		];
+
+		return propertyParts;
+	}
+
+	@MemoizeNoArg
+	public getRoomDeviceProperties(): RoomDevicePropertiesResult {
+		return this.getRoomDevicePropertiesParts()
+			.reduce(MergeRoomDeviceProperties, CreateRoomDevicePropertiesResult());
+	}
+}
+
+interface ItemRoomDeviceWearablePartProps extends ItemBaseProps<'roomDeviceWearablePart'> {
+	readonly roomDeviceLink: Immutable<RoomDeviceLink> | null;
+	readonly roomDevice: ItemRoomDevice | null;
+}
+export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart'> implements ItemRoomDeviceWearablePartProps {
+	public readonly roomDeviceLink: Immutable<RoomDeviceLink> | null;
+	public readonly roomDevice: ItemRoomDevice | null;
+
+	protected constructor(props: ItemRoomDeviceWearablePartProps, overrideProps?: Partial<ItemRoomDeviceWearablePartProps>) {
+		super(props, overrideProps);
+
+		this.roomDeviceLink = overrideProps?.roomDeviceLink !== undefined ? overrideProps.roomDeviceLink : props.roomDeviceLink;
+		this.roomDevice = overrideProps?.roomDevice !== undefined ? overrideProps.roomDevice : props.roomDevice;
+	}
+
+	protected override withProps(overrideProps: Partial<ItemRoomDeviceWearablePartProps>): ItemRoomDeviceWearablePart {
+		return new ItemRoomDeviceWearablePart(this, overrideProps);
+	}
+
+	public static loadFromBundle(asset: Asset<'roomDeviceWearablePart'>, bundle: ItemBundle, context: IItemLoadContext): ItemRoomDeviceWearablePart {
+		return new ItemRoomDeviceWearablePart({
+			...(ItemBase._parseBundle(asset, bundle, context)),
+			roomDeviceLink: bundle.roomDeviceLink ?? null,
+			roomDevice: null,
+		});
+	}
+
+	public override validate(context: IItemValidationContext): AppearanceValidationResult {
+		{
+			const r = super.validate(context);
+			if (!r.success)
+				return r;
+		}
 
 		// Room device wearable parts must be worn
-		if (location !== 'worn')
+		if (context.location !== 'worn')
 			return {
 				success: false,
 				error: {
@@ -611,6 +762,16 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 				},
 			};
 
+		const device = context.roomState?.items.find((item) => item.isType('roomDevice') && item.id === this.roomDeviceLink?.device);
+		if (device == null || device !== this.roomDevice) {
+			return {
+				success: false,
+				error: {
+					problem: 'invalid',
+				},
+			};
+		}
+
 		return { success: true };
 	}
 
@@ -626,12 +787,20 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 		};
 	}
 
-	public withLink(link: RoomDeviceLink): ItemRoomDeviceWearablePart {
-		const bundle = this.exportToBundle({});
-		bundle.roomDeviceLink = link;
-		return CreateItem(this.id, this.asset, bundle, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
+	public withLink(device: ItemRoomDevice, slot: string): ItemRoomDeviceWearablePart {
+		return this.withProps({
+			roomDeviceLink: {
+				device: device.id,
+				slot,
+			},
+			roomDevice: device,
+		});
+	}
+
+	public updateRoomStateLink(roomDevice: ItemRoomDevice): ItemRoomDeviceWearablePart {
+		Assert(this.roomDeviceLink?.device === roomDevice.id);
+		return this.withProps({
+			roomDevice,
 		});
 	}
 
@@ -641,6 +810,16 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 
 	public getColorRibbon(roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
 		return roomDevice?.getColorRibbon();
+	}
+
+	@MemoizeNoArg
+	public override getPropertiesParts(): readonly Immutable<AssetProperties>[] {
+		const deviceProperties: RoomDevicePropertiesResult | undefined = this.roomDevice?.getRoomDeviceProperties();
+
+		return [
+			...super.getPropertiesParts(),
+			...(deviceProperties != null ? GetPropertiesForSlot(deviceProperties, this.roomDeviceLink!.slot) : []),
+		];
 	}
 }
 
@@ -657,6 +836,9 @@ export const ItemLockActionSchema = z.discriminatedUnion('action', [
 ]);
 export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
 
+interface ItemLockProps extends ItemBaseProps<'lock'> {
+	readonly lockData: Immutable<LockBundle> | undefined;
+}
 export class ItemLock extends ItemBase<'lock'> {
 	public readonly lockData: Immutable<LockBundle> | undefined;
 
@@ -671,26 +853,34 @@ export class ItemLock extends ItemBase<'lock'> {
 		}
 	}
 
-	constructor(id: ItemId, asset: Asset<'lock'>, bundle: ItemBundle, context: IItemLoadContext) {
-		super(id, asset, bundle, context);
-		const lockData = bundle.lockData;
+	protected constructor(props: ItemLockProps, overrideProps: Partial<ItemLockProps> = {}) {
+		super(props, overrideProps);
+		this.lockData = 'lockData' in overrideProps ? overrideProps.lockData : props.lockData;
+	}
+
+	protected override withProps(overrideProps: Partial<ItemLockProps>): ItemLock {
+		return new ItemLock(this, overrideProps);
+	}
+
+	public static loadFromBundle(asset: Asset<'lock'>, bundle: ItemBundle, context: IItemLoadContext): ItemLock {
+		const lockData: LockBundle | undefined = bundle.lockData;
 		if (context.doLoadTimeCleanup && lockData?.hidden != null) {
 			switch (lockData.hidden.side) {
 				case 'client':
 					if (asset.definition.password == null && lockData.hidden.hasPassword != null) {
-						context.logger?.warning(`Lock ${id} has hidden password`);
+						context.logger?.warning(`Lock ${bundle.id} has hidden password`);
 						delete lockData.hidden.hasPassword;
 					} else if (asset.definition.password != null && lockData.hidden.hasPassword == null) {
-						context.logger?.warning(`Lock ${id} has no hidden password`);
+						context.logger?.warning(`Lock ${bundle.id} has no hidden password`);
 						delete lockData.locked;
 					}
 					break;
 				case 'server':
-					if (lockData.hidden.password != null && !this._validatePassword(lockData.hidden.password, context.logger)) {
+					if (lockData.hidden.password != null && !ItemLock._validatePassword(asset, lockData.hidden.password, context.logger?.prefixMessages(`Lock ${bundle.id}`))) {
 						delete lockData.hidden.password;
 					}
 					if (asset.definition.password != null && lockData.hidden?.password == null && lockData.locked != null) {
-						context.logger?.warning(`Lock ${id} is locked but has no hidden password`);
+						context.logger?.warning(`Lock ${bundle.id} is locked but has no hidden password`);
 						delete lockData.locked;
 					}
 					break;
@@ -700,7 +890,11 @@ export class ItemLock extends ItemBase<'lock'> {
 				delete lockData.hidden;
 			}
 		}
-		this.lockData = lockData;
+
+		return new ItemLock({
+			...(ItemBase._parseBundle(asset, bundle, context)),
+			lockData,
+		});
 	}
 
 	public override exportToBundle(options: IExportOptions): ItemBundle {
@@ -722,8 +916,14 @@ export class ItemLock extends ItemBase<'lock'> {
 		};
 	}
 
-	public override validate(location: IItemLocationDescriptor): AppearanceValidationResult {
-		if (location === 'worn') {
+	public override validate(context: IItemValidationContext): AppearanceValidationResult {
+		{
+			const r = super.validate(context);
+			if (!r.success)
+				return r;
+		}
+
+		if (context.location === 'worn') {
 			return {
 				success: false,
 				error: {
@@ -732,6 +932,7 @@ export class ItemLock extends ItemBase<'lock'> {
 				},
 			};
 		}
+
 		return { success: true };
 	}
 
@@ -759,7 +960,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		const isSelfAction = context.target.type === 'character' && context.target.character.id === context.processingContext.player.id;
 		const properties = this.getLockProperties();
 
-		if (action.password != null && !this._validatePassword(action.password)) {
+		if (action.password != null && !ItemLock._validatePassword(this.asset, action.password)) {
 			return null;
 		}
 
@@ -826,8 +1027,7 @@ export class ItemLock extends ItemBase<'lock'> {
 			});
 		}
 
-		return new ItemLock(this.id, this.asset, {
-			...super.exportToBundle({}),
+		return this.withProps({
 			lockData: {
 				...this.lockData,
 				hidden,
@@ -837,9 +1037,6 @@ export class ItemLock extends ItemBase<'lock'> {
 					time: Date.now(),
 				},
 			},
-		}, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
 		});
 	}
 
@@ -888,12 +1085,8 @@ export class ItemLock extends ItemBase<'lock'> {
 			}
 		}
 
-		return new ItemLock(this.id, this.asset, {
-			...super.exportToBundle({}),
+		return this.withProps({
 			lockData,
-		}, {
-			assetManager: this.assetManager,
-			doLoadTimeCleanup: false,
 		});
 	}
 
@@ -913,38 +1106,37 @@ export class ItemLock extends ItemBase<'lock'> {
 		return parentResult;
 	}
 
-	private _validatePassword(password: string, logger?: Logger): boolean {
-		const def = this.asset.definition.password;
-		const id = this.id;
+	private static _validatePassword(asset: Asset<'lock'>, password: string, logger?: Logger): boolean {
+		const def = asset.definition.password;
 		if (def == null) {
-			logger?.warning(`Lock ${id} has a hidden password but the asset does not define a password`);
+			logger?.warning(`has a hidden password but the asset does not define a password`);
 			return false;
 		}
 		if (typeof def.length === 'number') {
 			if (password.length !== def.length) {
-				logger?.warning(`Lock ${id} has a hidden password longer than the asset's password length`);
+				logger?.warning(`has a hidden password longer than the asset's password length`);
 				return false;
 			}
 		} else if (password.length < def.length[0] || password.length > def.length[1]) {
-			logger?.warning(`Lock ${id} has a hidden password outside of the asset's password length range`);
+			logger?.warning(`has a hidden password outside of the asset's password length range`);
 			return false;
 		}
 		switch (def.format) {
 			case 'numeric':
 				if (password.match(/[^0-9]/)) {
-					logger?.warning(`Lock ${id} has a hidden password that is not numeric`);
+					logger?.warning(`has a hidden password that is not numeric`);
 					return false;
 				}
 				break;
 			case 'letters':
 				if (password.match(/[^a-zA-Z]/)) {
-					logger?.warning(`Lock ${id} has a hidden password that is not letters`);
+					logger?.warning(`has a hidden password that is not letters`);
 					return false;
 				}
 				break;
 			case 'alphanumeric':
 				if (password.match(/[^a-zA-Z0-9]/)) {
-					logger?.warning(`Lock ${id} has a hidden password that is not alphanumeric`);
+					logger?.warning(`has a hidden password that is not alphanumeric`);
 					return false;
 				}
 				break;
@@ -972,29 +1164,25 @@ export type ItemTypeMap =
 
 export type Item<Type extends AssetType = AssetType> = ItemTypeMap[Type];
 
-export function CreateItem<Type extends AssetType>(id: ItemId, asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext): Item<Type> {
+export function LoadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, context: IItemLoadContext): Item<T> {
 	const type = asset.type;
-	let result: Item;
 	switch (type) {
 		case 'personal':
 			Assert(asset.isType('personal'));
-			result = new ItemPersonal(id, asset, bundle, context);
-			break;
+			// @ts-expect-error: Type specialized manually
+			return ItemPersonal.loadFromBundle(asset, bundle, context);
 		case 'roomDevice':
 			Assert(asset.isType('roomDevice'));
-			result = new ItemRoomDevice(id, asset, bundle, context);
-			break;
+			// @ts-expect-error: Type specialized manually
+			return ItemRoomDevice.loadFromBundle(asset, bundle, context);
 		case 'roomDeviceWearablePart':
 			Assert(asset.isType('roomDeviceWearablePart'));
-			result = new ItemRoomDeviceWearablePart(id, asset, bundle, context);
-			break;
+			// @ts-expect-error: Type specialized manually
+			return ItemRoomDeviceWearablePart.loadFromBundle(asset, bundle, context);
 		case 'lock':
 			Assert(asset.isType('lock'));
-			result = new ItemLock(id, asset, bundle, context);
-			break;
-		default:
-			AssertNever(type);
+			// @ts-expect-error: Type specialized manually
+			return ItemLock.loadFromBundle(asset, bundle, context);
 	}
-	// @ts-expect-error: The type is narrowed manually
-	return result;
+	AssertNever(type);
 }

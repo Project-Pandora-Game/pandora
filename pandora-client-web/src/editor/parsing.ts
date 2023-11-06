@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { ArmFingersSchema, ArmRotationSchema, Assert, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher, AtomicConditionLegsSchema, CharacterViewSchema } from 'pandora-common';
+import { ArmFingersSchema, ArmRotationSchema, Assert, AssertNever, AtomicCondition, Condition, ConditionOperatorSchema, LayerImageOverride, TransformDefinition, ZodMatcher, AtomicConditionLegsSchema, CharacterViewSchema, SplitStringFirstOccurrence } from 'pandora-common';
 
 const IsConditionOperator = ZodMatcher(ConditionOperatorSchema);
 
@@ -8,11 +8,6 @@ export function SplitAndClean(input: string, separator: string): string[] {
 		.split(separator)
 		.map((l) => l.trim())
 		.filter(Boolean);
-}
-
-function SplitFirst(input: string, separator: string): [string, string] {
-	const index = input.indexOf(separator);
-	return index < 0 ? [input, ''] : [input.substring(0, index), input.substring(index + 1)];
 }
 
 function ParseFloat(input: string): number {
@@ -244,7 +239,7 @@ export function SerializeLayerImageOverride(imageOverride: Immutable<LayerImageO
 }
 
 export function ParseLayerImageOverride(input: string, validBones: string[]): LayerImageOverride {
-	const [condition, image] = SplitFirst(input.trim(), ' ').map((i) => i.trim());
+	const [condition, image] = SplitStringFirstOccurrence(input.trim(), ' ').map((i) => i.trim());
 	return {
 		image,
 		condition: ParseCondition(condition, validBones),

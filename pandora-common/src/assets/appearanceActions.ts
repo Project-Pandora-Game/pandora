@@ -819,6 +819,8 @@ export function ActionAppearanceRandomize({
 		properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
 	});
 
+	const room = processingContext.manipulator.currentState.room;
+
 	// Build body if running full randomization
 	if (kind === 'full') {
 		const usedSingularBodyparts = new Set<string>();
@@ -854,11 +856,11 @@ export function ActionAppearanceRandomize({
 		}
 
 		// Re-load the appearance we have to make sure body is valid
-		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance).slice();
+		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance, room).slice();
 	}
 
 	// Make sure the appearance is valid (required for items step)
-	let r = ValidateAppearanceItems(assetManager, newAppearance);
+	let r = ValidateAppearanceItems(assetManager, newAppearance, room);
 	if (!r.success) {
 		processingContext.addProblem({
 			result: 'validationError',
@@ -894,7 +896,7 @@ export function ActionAppearanceRandomize({
 			const item = assetManager.createItem(`i/${nanoid()}`, asset, null);
 			const newItems: Item<WearableAssetType>[] = [...newAppearance, item];
 
-			r = ValidateAppearanceItemsPrefix(assetManager, newItems);
+			r = ValidateAppearanceItemsPrefix(assetManager, newItems, room);
 			if (r.success) {
 				newAppearance = newItems;
 				usedAssets.add(asset);
@@ -981,10 +983,7 @@ export function ActionRoomDeviceEnter({
 
 	const wearableItem = assetManager
 		.createItem(action.itemId, asset, null)
-		.withLink({
-			device: item.id,
-			slot: action.slot,
-		});
+		.withLink(item, action.slot);
 	// Player adding the item must be able to use it
 	r = playerRestrictionManager.canUseItemDirect(processingContext, targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
 	if (!r.allowed) {
@@ -1012,6 +1011,12 @@ export function ActionRoomDeviceEnter({
 		return processingContext.invalid();
 
 	if (!characterManipulator.addItem(wearableItem))
+		return processingContext.invalid();
+
+	if (!processingContext.manipulator.produceCharacterState(
+		action.character.characterId,
+		(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.room, false),
+	))
 		return processingContext.invalid();
 
 	// Change message to chat

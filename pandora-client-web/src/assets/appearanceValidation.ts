@@ -62,7 +62,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
 			case 'blockedModule': {
 				const asset = assetManager.getAssetById(e.asset);
-				const visibleModuleName: string = (asset?.isType('personal') && asset.definition.modules?.[e.module]?.name) || `[UNKNOWN MODULE '${e.module}']`;
+				const visibleModuleName: string =
+					(asset?.isType('personal') && asset.definition.modules?.[e.module]?.name) ||
+					(asset?.isType('roomDevice') && asset.definition.modules?.[e.module]?.name) ||
+					`[UNKNOWN MODULE '${e.module}']`;
 				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
 			}
 			case 'blockedSlot':
@@ -96,7 +99,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				const attribute = assetManager.getAttributeDefinition(attributeName);
 				const description = attribute ? `"${attribute.description}"` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
 				if (e.asset) {
-					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description}.`;
+					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description} (${negative ? 'must not' : 'must'} be worn under the ${DescribeAsset(assetManager, e.asset)}).`;
 				} else {
 					return `The item ${negative ? 'must not' : 'must'} be ${description}.`;
 				}

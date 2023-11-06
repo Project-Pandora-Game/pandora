@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
 import { HexRGBAColorString, ZodTemplateString } from '../validation';
 import type { AppearanceArmPose, AppearancePose } from './state/characterState';
-import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Coordinates, LegsPose } from './graphics';
+import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
 import { AssetModuleDefinition } from './modules';
 import { AssetLockProperties, AssetProperties } from './properties';
 import { Satisfies } from '../utility';
@@ -10,6 +10,7 @@ import { Immutable, freeze, produce } from 'immer';
 import { AssetManager } from './assetManager';
 import _ from 'lodash';
 import { BONE_MAX, BONE_MIN } from './appearance';
+import { RoomDeviceProperties } from './roomDeviceProperties';
 
 export const AssetIdSchema = ZodTemplateString<`a/${string}`>(z.string(), /^a\//);
 export type AssetId = z.infer<typeof AssetIdSchema>;
@@ -153,7 +154,7 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	/**
 	 * Modules this asset has
 	 */
-	modules?: Record<string, AssetModuleDefinition<A>>;
+	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>>>;
 
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
@@ -169,18 +170,40 @@ export type RoomDeviceSlot<A extends AssetDefinitionExtraArgs = AssetDefinitionE
 export type IRoomDeviceGraphicsLayerSprite = {
 	type: 'sprite';
 	image: string;
+	imageOverrides?: LayerImageOverride[];
 	/** Name of colorization key used to color this sprite layer */
 	colorizationKey?: string;
 	/**
-	 * Horizontal offset of this sprite relative to cage's origin point
-	 * @default 0
+	 * Offset of this sprite relative to cage's origin point
+	 * @default { x: 0, y: 0 }
 	 */
-	offsetX?: number;
+	offset?: Coordinates;
+	offsetOverrides?: {
+		offset: Coordinates;
+		condition: Condition;
+	}[];
+};
+
+export type IRoomDeviceGraphicsCharacterPosition = {
+	offsetX: number;
+	offsetY: number;
 	/**
-	 * Vertical offset of this sprite relative to cage's origin point
-	 * @default 0
+	 * Is the factor by which the character is made bigger or smaller inside the room device slot,
+	 * compared to this room device scaled inside the room
+	 * @default 1
 	 */
-	offsetY?: number;
+	relativeScale?: number;
+	/**
+	 * Prevents pose from changing character's offset while inside this room device slot
+	 * (for slots that allow different poses, but require precision)
+	 * @default false
+	 */
+	disablePoseOffset?: boolean;
+};
+
+export type IRoomDeviceGraphicsCharacterPositionOverride = {
+	position: IRoomDeviceGraphicsCharacterPosition;
+	condition: Condition;
 };
 
 export type IRoomDeviceGraphicsLayerSlot = {
@@ -189,22 +212,8 @@ export type IRoomDeviceGraphicsLayerSlot = {
 	 * Is the name of the character slot that is drawn on this layer.
 	 */
 	slot: string;
-	characterPosition: {
-		offsetX: number;
-		offsetY: number;
-		/**
-		 * Is the factor by which the character is made bigger or smaller inside the room device slot,
-		 * compared to this room device scaled inside the room
-		 * @default 1
-		 */
-		relativeScale?: number;
-		/**
-		 * Prevents pose from changing character's offset while inside this room device slot
-		 * (for slots that allow different poses, but require precision)
-		 * @default false
-		 */
-		disablePoseOffset?: boolean;
-	};
+	characterPosition: IRoomDeviceGraphicsCharacterPosition;
+	characterPositionOverrides?: IRoomDeviceGraphicsCharacterPositionOverride[];
 };
 
 export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDeviceGraphicsLayerSlot;
@@ -218,6 +227,8 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	pivot: Coordinates;
 	/** Slots that can be entered by characters */
 	slots: Record<string, RoomDeviceSlot<A>>;
+	/** Modules this device has */
+	modules?: Record<string, AssetModuleDefinition<RoomDeviceProperties<A>>>;
 	/** The graphical display of the device */
 	graphicsLayers: IRoomDeviceGraphicsLayer[];
 	/** Attributes that are used strictly for filtering, no effect on character */

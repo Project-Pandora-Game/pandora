@@ -46,7 +46,7 @@ export function InventoryItemView({
 		const steps: string[] = [];
 		for (const step of focus.container) {
 			const item = items.find((it) => it.id === step.item);
-			const module = item?.modules.get(step.module);
+			const module = item?.getModules().get(step.module);
 			if (!item || !module)
 				return [[], undefined, []];
 			steps.push(`${item.asset.definition.name} (${module.config.name})`);

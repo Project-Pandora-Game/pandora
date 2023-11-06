@@ -5,26 +5,25 @@ import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, 
 import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotAction, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
 import { z } from 'zod';
 import { IsObject, ZodMatcher } from '../validation';
-import { Asset } from './asset';
-import { AssetDefinitionExtraArgs, AssetId } from './definitions';
+import { AssetId } from './definitions';
 import { IItemLoadContext } from './item';
 import { Immutable } from 'immer';
 
 //#region Module definitions
 
-export type IAssetModuleTypes<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = {
+export type IAssetModuleTypes<TProperties> = {
 	typed: {
-		config: IModuleConfigTyped<A>;
+		config: IModuleConfigTyped<TProperties>;
 		data: IModuleItemDataTyped;
 		actions: ItemModuleTypedAction;
 	};
 	storage: {
-		config: IModuleConfigStorage<A>;
+		config: IModuleConfigStorage;
 		data: IModuleItemDataStorage;
 		actions: ItemModuleStorageAction;
 	};
 	lockSlot: {
-		config: IModuleConfigLockSlot<A>;
+		config: IModuleConfigLockSlot<TProperties>;
 		data: IModuleItemDataLockSlot;
 		actions: ItemModuleLockSlotAction;
 	};
@@ -71,11 +70,11 @@ export type ModuleActionFailure =
 
 //#endregion
 
-export type ModuleType = keyof IAssetModuleTypes;
+export type ModuleType = keyof IAssetModuleTypes<unknown>;
 export const ModuleTypeSchema = z.enum(Object.keys(MODULE_TYPES) as [ModuleType, ...ModuleType[]]);
 export const IsModuleType = ZodMatcher(ModuleTypeSchema);
 
-type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
+type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes<unknown>, {
 	[Type in ModuleType]: {
 		config: IModuleConfigCommon<Type>;
 		data: IModuleItemDataCommon<Type>;
@@ -83,27 +82,22 @@ type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes, {
 	}
 }>;
 
-export type AssetModuleDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = IAssetModuleTypes<A>[ModuleType]['config'];
+export type AssetModuleDefinition<TProperties> = IAssetModuleTypes<TProperties>[ModuleType]['config'];
 
-export function GetModuleStaticAttributes(moduleDefinition: Immutable<AssetModuleDefinition>): ReadonlySet<string> {
+export function GetModuleStaticAttributes<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
 	switch (moduleDefinition.type) {
 		case 'typed':
-			return MODULE_TYPES.typed.getStaticAttributes(moduleDefinition);
+			return MODULE_TYPES.typed.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
 		case 'storage':
-			return MODULE_TYPES.storage.getStaticAttributes(moduleDefinition);
+			return MODULE_TYPES.storage.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
 		case 'lockSlot':
-			return MODULE_TYPES.lockSlot.getStaticAttributes(moduleDefinition);
+			return MODULE_TYPES.lockSlot.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
 		default:
 			AssertNever(moduleDefinition);
 	}
 }
 
-export function LoadItemModule(asset: Asset<'personal'>, moduleName: string, data: unknown, context: IItemLoadContext): IItemModule {
-	const moduleDefinition = asset.definition.modules?.[moduleName];
-	if (!moduleDefinition) {
-		throw new Error('LoadItemModule called with invalid module for asset');
-	}
-
+export function LoadItemModule<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, data: unknown, context: IItemLoadContext): IItemModule<TProperties> {
 	if (!IsObject(data) || data?.type !== moduleDefinition.type) {
 		data = undefined;
 	}

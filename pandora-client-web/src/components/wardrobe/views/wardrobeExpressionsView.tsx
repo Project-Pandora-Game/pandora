@@ -24,7 +24,7 @@ export function WardrobeExpressionGui({ characterState }: {
 				{
 					appearance
 						.flatMap((item) => (
-							Array.from(item.modules.entries())
+							Array.from(item.getModules().entries())
 								.filter((m) => m[1].config.expression)
 								.map(([moduleName, m]) => (
 									<FieldsetToggle legend={ m.config.expression } key={ `${item.id}:${moduleName}` }>

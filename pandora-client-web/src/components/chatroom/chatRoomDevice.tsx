@@ -1,4 +1,4 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -21,6 +21,8 @@ import { BrowserStorage } from '../../browserStorage';
 import { useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
 import { useChatRoomCharacterOffsets } from './chatRoomCharacter';
 import { RoomDeviceRenderContext } from './chatRoomDeviceContext';
+import { EvaluateCondition } from '../../graphics/utility';
+import { useStandaloneConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 
 const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -80,6 +82,7 @@ export function ChatRoomDevice({
 	const scaling = background.scaling;
 	const x = Math.min(width, deployment.x);
 	const y = Math.min(height, deployment.y);
+	const yOffsetExtra = Math.round(deployment.yOffset);
 
 	const scale = 1 - (y * scaling) / height;
 
@@ -179,7 +182,7 @@ export function ChatRoomDevice({
 			<RoomDeviceGraphics
 				ref={ roomDeviceContainer }
 				item={ item }
-				position={ { x, y: height - y } }
+				position={ { x, y: height - y - yOffsetExtra } }
 				scale={ { x: scale, y: scale } }
 				pivot={ errorCorrectedPivot }
 				hitArea={ hitArea }
@@ -317,13 +320,19 @@ const RoomDeviceGraphics = React.forwardRef(RoomDeviceGraphicsImpl);
 
 function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 	item: ItemRoomDevice;
-	layer: IRoomDeviceGraphicsLayerSprite;
+	layer: Immutable<IRoomDeviceGraphicsLayerSprite>;
 	getTexture?: (path: string) => PIXI.Texture;
 }): ReactElement | null {
 
+	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
+
 	const image = useMemo<string>(() => {
-		return layer.image;
-	}, [layer]);
+		return layer.imageOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? layer.image;
+	}, [evaluator, item, layer]);
+
+	const offset = useMemo<Coordinates | undefined>(() => {
+		return layer.offsetOverrides?.find((o) => EvaluateCondition(o.condition, (c) => evaluator.evalCondition(c, item)))?.offset ?? layer.offset;
+	}, [evaluator, item, layer]);
 
 	const texture = useTexture(image, undefined, getTexture);
 
@@ -334,8 +343,8 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 
 	return (
 		<Sprite
-			x={ layer.offsetX ?? 0 }
-			y={ layer.offsetY ?? 0 }
+			x={ offset?.x ?? 0 }
+			y={ offset?.y ?? 0 }
 			scale={ 1 }
 			texture={ texture }
 			tint={ color }
@@ -347,7 +356,7 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 
 function RoomDeviceGraphicsLayerSlot({ item, layer }: {
 	item: ItemRoomDevice;
-	layer: IRoomDeviceGraphicsLayerSlot;
+	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
 }): ReactElement | null {
 	const characterId = item.slotOccupancy.get(layer.slot);
 	const chatRoom = useChatroomRequired();
@@ -374,7 +383,7 @@ function RoomDeviceGraphicsLayerSlot({ item, layer }: {
 
 function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characterState }: {
 	item: ItemRoomDevice;
-	layer: IRoomDeviceGraphicsLayerSlot;
+	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
 	character: Character<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement | null {
@@ -384,18 +393,27 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
 
 	const devicePivot = item.asset.definition.pivot;
-	const x = devicePivot.x + layer.characterPosition.offsetX;
-	const y = devicePivot.y + layer.characterPosition.offsetY;
+
+	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
+
+	const effectiveCharacterPosition = useMemo<IRoomDeviceGraphicsCharacterPosition>(() => {
+		return layer.characterPositionOverrides
+			?.find((override) => EvaluateCondition(override.condition, (c) => evaluator.evalCondition(c, item)))?.position
+			?? layer.characterPosition;
+	}, [evaluator, item, layer]);
+
+	const x = devicePivot.x + effectiveCharacterPosition.offsetX;
+	const y = devicePivot.y + effectiveCharacterPosition.offsetY;
 
 	const { baseScale, pivot } = useChatRoomCharacterOffsets(characterState);
 
-	const scale = baseScale * (layer.characterPosition.relativeScale ?? 1);
+	const scale = baseScale * (effectiveCharacterPosition.relativeScale ?? 1);
 
 	const backView = characterState.actualPose.view === 'back';
 
 	const scaleX = backView ? -1 : 1;
 
-	const actualPivot = useMemo((): PointLike => layer.characterPosition.disablePoseOffset ? CloneDeepMutable(CHARACTER_PIVOT_POSITION) : pivot, [layer, pivot]);
+	const actualPivot = useMemo((): PointLike => effectiveCharacterPosition.disablePoseOffset ? CloneDeepMutable(CHARACTER_PIVOT_POSITION) : pivot, [effectiveCharacterPosition, pivot]);
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)

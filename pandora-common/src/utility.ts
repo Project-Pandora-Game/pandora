@@ -141,6 +141,11 @@ export function ShuffleArray<T extends unknown[]>(array: T): T {
 	return array;
 }
 
+export function SplitStringFirstOccurrence(input: string, separator: string): [string, string] {
+	const index = input.indexOf(separator);
+	return index < 0 ? [input, ''] : [input.substring(0, index), input.substring(index + 1)];
+}
+
 /**
  * Returns longest preffix all input strings have in common (case sensitive)
  */
@@ -360,7 +365,7 @@ export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet)
 /**
  * Decorates a member function so it memoizes the result of the first call, the function must take no arguments
  */
-export function MemoizeNoArg<Return, This extends object>(method: (...args: never[]) => Return, _context: ClassMethodDecoratorContext<This>) {
+export function MemoizeNoArg<Return, This extends object>(method: () => Return, _context: ClassMethodDecoratorContext<This>) {
 	const cache = new WeakMap<object, Return>();
 	return function (this: This) {
 		if (cache.has(this)) {

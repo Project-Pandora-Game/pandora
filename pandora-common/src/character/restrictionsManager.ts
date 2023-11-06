@@ -261,7 +261,7 @@ export class CharacterRestrictionsManager {
 
 	public hasPermissionForItemContents(context: AppearanceActionProcessingContext, target: RoomActionTarget, item: Item): RestrictionResult {
 		// Iterate over whole content
-		for (const module of item.modules.keys()) {
+		for (const module of item.getModules().keys()) {
 			for (const innerItem of item.getModuleItems(module)) {
 				let r = this.canUseItemDirect(context, target, [], innerItem, ItemInteractionType.ACCESS_ONLY);
 				if (!r.allowed)
@@ -326,7 +326,8 @@ export class CharacterRestrictionsManager {
 		// Must be able to access all upper items
 		const upperPath = SplitContainerPath(container);
 		if (upperPath) {
-			const containingModule = target.getItem(upperPath.itemPath)?.modules.get(upperPath.module);
+			const upperItem = target.getItem(upperPath.itemPath);
+			const containingModule = upperItem?.getModules().get(upperPath.module);
 			if (!containingModule)
 				return {
 					allowed: false,
@@ -472,7 +473,7 @@ export class CharacterRestrictionsManager {
 
 	public canUseItemModuleDirect(context: AppearanceActionProcessingContext, target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		// The module must exist
-		const module = item.modules.get(moduleName);
+		const module = item.getModules().get(moduleName);
 		if (!module)
 			return {
 				allowed: false,
@@ -495,7 +496,7 @@ export class CharacterRestrictionsManager {
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
 			return { allowed: true };
 
-		const properties = item.getProperties();
+		const properties = item.isType('roomDevice') ? item.getRoomDeviceProperties() : item.getProperties();
 
 		// If item blocks this module, fail
 		if (properties.blockModules.has(moduleName) && !this.isInSafemode())

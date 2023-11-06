@@ -1,6 +1,6 @@
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
 import { AssetsPosePreset, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose, WearableAssetType } from '../definitions';
-import { Assert, MemoizeNoArg } from '../../utility';
+import { Assert, IsNotNullable, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { Immutable, freeze } from 'immer';
 import { z } from 'zod';
@@ -81,14 +81,13 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		this.safemode = 'safemode' in override ? override.safemode : props.safemode;
 	}
 
-	public isValid(): boolean {
-		return this.validate().success;
+	public isValid(roomState: AssetFrameworkRoomState | null): boolean {
+		return this.validate(roomState).success;
 	}
 
-	@MemoizeNoArg
-	public validate(): AppearanceValidationResult {
+	public validate(roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
 		{
-			const r = ValidateAppearanceItems(this.assetManager, this.items);
+			const r = ValidateAppearanceItems(this.assetManager, this.items, roomState);
 			if (!r.success)
 				return r;
 		}
@@ -187,44 +186,54 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return new AssetFrameworkCharacterState(this, { safemode: freeze(value ?? undefined, true) });
 	}
 
-	public cleanupRoomDeviceWearables(roomInventory: AssetFrameworkRoomState | null): AssetFrameworkCharacterState {
-		const cleanedUpItems = this.items.filter((item) => {
+	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState | null, revalidate: boolean): AssetFrameworkCharacterState {
+		let updatedItems: AppearanceItems<WearableAssetType> = this.items.map((item) => {
 			if (item.isType('roomDeviceWearablePart')) {
 				const link = item.roomDeviceLink;
 				if (!roomInventory || !link)
-					return false;
+					return null;
 
 				// Target device must exist
 				const device = roomInventory.items.find((roomItem) => roomItem.id === link.device);
 				if (!device || !device.isType('roomDevice'))
-					return false;
+					return null;
 
 				// The device must have a matching slot
 				if (device.asset.definition.slots[item.roomDeviceLink.slot]?.wearableAsset !== item.asset.id)
-					return false;
+					return null;
 
 				// The device must be deployed with this character in target slot
 				if (!device.deployment || device.slotOccupancy.get(item.roomDeviceLink.slot) !== this.id)
-					return false;
+					return null;
+
+				return item.updateRoomStateLink(device);
 			}
-			return true;
-		});
+			return item;
+		}).filter(IsNotNullable);
 
-		if (cleanedUpItems.length === this.items.length)
+		if (
+			updatedItems.length === this.items.length &&
+			updatedItems.every((item, i) => this.items[i] === item)
+		) {
 			return this;
+		}
 
-		// Re-validate items as forceful removal might have broken dependencies
-		const newItems = CharacterAppearanceLoadAndValidate(this.assetManager, cleanedUpItems);
-		Assert(ValidateAppearanceItems(this.assetManager, newItems).success);
+		if (revalidate) {
+			// Re-validate items as forceful removal might have broken dependencies
+			updatedItems = CharacterAppearanceLoadAndValidate(this.assetManager, updatedItems, roomInventory);
+			Assert(ValidateAppearanceItems(this.assetManager, updatedItems, roomInventory).success);
+		}
 
-		return new AssetFrameworkCharacterState(this, { items: newItems });
+		return new AssetFrameworkCharacterState(this, {
+			items: updatedItems,
+		});
 	}
 
 	public static createDefault(assetManager: AssetManager, characterId: CharacterId): AssetFrameworkCharacterState {
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, undefined);
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, null, undefined);
 	}
 
-	public static loadFromBundle(assetManager: AssetManager, characterId: CharacterId, bundle: AppearanceBundle | undefined, logger: Logger | undefined): AssetFrameworkCharacterState {
+	public static loadFromBundle(assetManager: AssetManager, characterId: CharacterId, bundle: AppearanceBundle | undefined, roomState: AssetFrameworkRoomState | null, logger: Logger | undefined): AssetFrameworkCharacterState {
 		bundle = AppearanceBundleSchema.parse(bundle ?? GetDefaultAppearanceBundle());
 
 		// Load all items
@@ -237,12 +246,22 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				continue;
 			}
 
-			const item = assetManager.createItem(itemBundle.id, asset, itemBundle, logger);
+			let item = assetManager.createItem(itemBundle.id, asset, itemBundle, logger);
+
+			// Properly link room device wearable parts
+			if (item.isType('roomDeviceWearablePart')) {
+				const link = item.roomDeviceLink;
+				const device = roomState?.items.find((roomItem) => roomItem.id === link?.device);
+				if (device?.isType('roomDevice')) {
+					item = item.updateRoomStateLink(device);
+				}
+			}
+
 			loadedItems.push(item);
 		}
 
 		// Validate and add all items
-		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, logger);
+		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, roomState, logger);
 
 		// Load pose
 		const requestedPose = _.cloneDeep(bundle.requestedPose);
@@ -261,15 +280,18 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		}
 
 		// Create the final state
-		const resultState = freeze(new AssetFrameworkCharacterState({
-			assetManager,
-			id: characterId,
-			items: newItems,
-			requestedPose,
-			safemode: bundle.safemode,
-		}), true);
+		const resultState = freeze(
+			new AssetFrameworkCharacterState({
+				assetManager,
+				id: characterId,
+				items: newItems,
+				requestedPose,
+				safemode: bundle.safemode,
+			}).updateRoomStateLink(roomState, true),
+			true,
+		);
 
-		Assert(resultState.isValid(), 'State is invalid after load');
+		Assert(resultState.isValid(roomState), 'State is invalid after load');
 
 		return resultState;
 	}

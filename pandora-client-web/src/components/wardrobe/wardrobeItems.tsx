@@ -57,7 +57,7 @@ export function useWardrobeItems(): {
 	const containerPath = useMemo(() => SplitContainerPath(currentFocus.container), [currentFocus.container]);
 	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
 	const containerContentsFilter = useMemo<(asset: Asset) => boolean>(() => {
-		const module = containerPath ? containerItem?.modules.get(containerPath.module) : undefined;
+		const module = containerPath ? containerItem?.getModules().get(containerPath.module) : undefined;
 		return module?.acceptedContentFilter?.bind(module) ?? (() => true);
 	}, [containerPath, containerItem]);
 
@@ -93,7 +93,7 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 		let container: IItemModule | undefined;
 		for (const step of currentFocus.container) {
 			const item = items.find((it) => it.id === step.item);
-			const module = item?.modules.get(step.module);
+			const module = item?.getModules().get(step.module);
 			if (!item || !module)
 				return false;
 			container = module;

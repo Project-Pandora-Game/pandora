@@ -7,6 +7,7 @@ import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceVa
 import { Assert, AssertNever } from '../utility';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { CharacterId } from '../character';
+import { AssetFrameworkGlobalState } from './state/globalState';
 
 export function SplitContainerPath(path: ItemContainerPath): {
 	itemPath: ItemPath;
@@ -58,6 +59,8 @@ export abstract class AppearanceManipulator {
 	public abstract readonly containerPath: IContainerPathActual | null;
 
 	public readonly assetManager: AssetManager;
+
+	public abstract get currentState(): AssetFrameworkGlobalState;
 
 	constructor(assetManager: AssetManager) {
 		this.assetManager = assetManager;
@@ -131,16 +134,20 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 
 	public get container(): IItemModule | null {
 		const item = this._base.getItems().find((i) => i.id === this._item);
-		return item?.modules.get(this._module) ?? null;
+		return item?.getModules().get(this._module) ?? null;
 	}
 	public get containerPath(): IContainerPathActual | null {
 		const basePath = this._base.containerPath;
 		const item = this._base.getItems().find((i) => i.id === this._item);
-		const module = item?.modules.get(this._module);
+		const module = item?.getModules().get(this._module);
 		return (!basePath || !item || !module) ? null : [
 			...basePath,
 			{ item, moduleName: this._module, module },
 		];
+	}
+
+	public override get currentState(): AssetFrameworkGlobalState {
+		return this._base.currentState;
 	}
 
 	constructor(base: AppearanceManipulator, item: ItemId, module: string) {
@@ -175,6 +182,10 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 
 	public readonly container: null = null;
 	public readonly containerPath: IContainerPathActual = [];
+
+	public override get currentState(): AssetFrameworkGlobalState {
+		return this._base.currentState;
+	}
 
 	constructor(base: AssetFrameworkGlobalStateManipulator, target: RoomTargetSelector) {
 		super(base.assetManager);

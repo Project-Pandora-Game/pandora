@@ -26,7 +26,7 @@ export function WardrobeItemConfigMenu({
 
 	const containerPath = SplitContainerPath(item.container);
 	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
-	const containerModule = containerPath != null ? containerItem?.modules.get(containerPath.module) : undefined;
+	const containerModule = containerPath != null ? containerItem?.getModules().get(containerPath.module) : undefined;
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
 	const isRoomInventory = target.type === 'room' && item.container.length === 0;
 
@@ -134,7 +134,7 @@ export function WardrobeItemConfigMenu({
 					) : null
 				}
 				{
-					Array.from(wornItem.modules.entries())
+					Array.from(wornItem.getModules().entries())
 						.map(([moduleName, m]) => (
 							<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
 								<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } setFocus={ setFocus } />

@@ -6,6 +6,7 @@ import type { AssetManager } from './assetManager';
 import type { AssetId, AssetType, WearableAssetType } from './definitions';
 import type { Item } from './item';
 import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
+import { AssetFrameworkRoomState } from './state/roomState';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems<Type extends AssetType = AssetType> = readonly Item<Type>[];
@@ -135,7 +136,7 @@ export function AppearanceGetBlockedSlot(slots: AssetSlotResult, blocked: Readon
 }
 
 /** Validates items prefix, ignoring required items */
-export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>): AppearanceValidationResult {
+export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
 	// Bodypart validation
 
 	// Check bodypart order
@@ -176,7 +177,10 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 		ids.add(item.id);
 
 		// Run internal item validation
-		const r = item.validate('worn');
+		const r = item.validate({
+			location: 'worn',
+			roomState,
+		});
 		if (!r.success)
 			return r;
 
@@ -244,10 +248,10 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 }
 
 /** Validates the appearance items, including all prefixes and required items */
-export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>): AppearanceValidationResult {
+export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
-		const r = ValidateAppearanceItemsPrefix(assetManager, items.slice(0, i));
+		const r = ValidateAppearanceItemsPrefix(assetManager, items.slice(0, i), roomState);
 		if (!r.success)
 			return r;
 	}
@@ -267,7 +271,7 @@ export function ValidateAppearanceItems(assetManager: AssetManager, items: Appea
 	return { success: true };
 }
 
-export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems<WearableAssetType> {
+export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, roomState: AssetFrameworkRoomState | null, logger?: Logger): AppearanceItems<WearableAssetType> {
 	// First sort input so bodyparts are ordered correctly work
 	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
 
@@ -300,7 +304,7 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 
 				for (const asset of possibleAssets) {
 					const tryFix = [...resultItems, assetManager.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, null, logger)];
-					if (ValidateAppearanceItemsPrefix(assetManager, tryFix).success) {
+					if (ValidateAppearanceItemsPrefix(assetManager, tryFix, roomState).success) {
 						resultItems = tryFix;
 						break;
 					}
@@ -329,7 +333,7 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 		}
 
 		const tryItem: AppearanceItems<WearableAssetType> = [...resultItems, itemToAdd];
-		if (!ValidateAppearanceItemsPrefix(assetManager, tryItem).success) {
+		if (!ValidateAppearanceItemsPrefix(assetManager, tryItem, roomState).success) {
 			logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
 		} else {
 			resultItems = tryItem;

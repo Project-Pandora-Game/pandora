@@ -13,5 +13,6 @@ export * from './modules';
 export * from './state/_index';
 export * from './properties';
 export * from './graphics';
+export * from './roomDeviceProperties';
 export * from './roomInventory';
 export * from './roomValidation';

@@ -141,6 +141,11 @@ export function ShuffleArray<T extends unknown[]>(array: T): T {
 	return array;
 }
 
+export function SplitStringFirstOccurrence(input: string, separator: string): [string, string] {
+	const index = input.indexOf(separator);
+	return index < 0 ? [input, ''] : [input.substring(0, index), input.substring(index + 1)];
+}
+
 /**
  * Returns longest preffix all input strings have in common (case sensitive)
  */

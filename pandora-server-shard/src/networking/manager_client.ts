@@ -27,7 +27,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
-	private readonly rockPaperScissorsStatus: WeakMap<Character, { time: number; choice: string; }>;
+	private readonly rockPaperScissorsStatus: WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>;
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -238,22 +238,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					const scissors: string[] = [];
 
 					for (const c of client.character.room.getAllCharacters()) {
-						if (this.rockPaperScissorsStatus.has(c)) {
-							const status = this.rockPaperScissorsStatus.get(c);
+						const status = this.rockPaperScissorsStatus.get(c);
+						this.rockPaperScissorsStatus.delete(c);
 
-							if (status && Date.now() < status?.time + 10 * 60 * 1000) {
-								if (status.choice === 'rock') {
-									rock.push(c.name + ` (${ c.id })`);
-								} else if (status.choice === 'paper') {
-									paper.push(c.name + ` (${ c.id })`);
-								} else if (status.choice === 'scissors') {
-									scissors.push(c.name + ` (${ c.id })`);
-								} else {
-									throw new BadMessageError();
-								}
-								this.rockPaperScissorsStatus.delete(c);
+						if (status != null && Date.now() < status.time + 10 * 60 * 1000) {
+							if (status.choice === 'rock') {
+								rock.push(c.name + ` (${ c.id })`);
+							} else if (status.choice === 'paper') {
+								paper.push(c.name + ` (${ c.id })`);
+							} else if (status.choice === 'scissors') {
+								scissors.push(c.name + ` (${ c.id })`);
 							} else {
-								this.rockPaperScissorsStatus.delete(c);
+								AssertNever(status.choice);
 							}
 						}
 					}

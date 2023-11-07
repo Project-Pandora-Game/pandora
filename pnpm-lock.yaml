@@ -105,11 +105,11 @@ importers:
         specifier: 14.5.1
         version: 14.5.1(@testing-library/dom@9.3.3)
       '@types/browser-resolve':
-        specifier: 2.0.3
-        version: 2.0.3
+        specifier: 2.0.4
+        version: 2.0.4
       '@types/delaunator':
-        specifier: 5.0.1
-        version: 5.0.1
+        specifier: 5.0.2
+        version: 5.0.2
       '@types/jest':
         specifier: 29.5.7
         version: 29.5.7
@@ -258,8 +258,8 @@ importers:
   pandora-common:
     dependencies:
       '@types/async-lock':
-        specifier: 1.4.1
-        version: 1.4.1
+        specifier: 1.4.2
+        version: 1.4.2
       '@types/lodash':
         specifier: 4.14.200
         version: 4.14.200
@@ -377,11 +377,11 @@ importers:
         version: 3.22.4
     devDependencies:
       '@types/async-lock':
-        specifier: 1.4.1
-        version: 1.4.1
+        specifier: 1.4.2
+        version: 1.4.2
       '@types/express':
-        specifier: 4.17.20
-        version: 4.17.20
+        specifier: 4.17.21
+        version: 4.17.21
       '@types/jest':
         specifier: 29.5.7
         version: 29.5.7
@@ -480,11 +480,11 @@ importers:
         version: 3.22.4
     devDependencies:
       '@types/async-lock':
-        specifier: 1.4.1
-        version: 1.4.1
+        specifier: 1.4.2
+        version: 1.4.2
       '@types/express':
-        specifier: 4.17.20
-        version: 4.17.20
+        specifier: 4.17.21
+        version: 4.17.21
       '@types/jest':
         specifier: 29.5.7
         version: 29.5.7
@@ -3462,8 +3462,8 @@ packages:
     resolution: {integrity: sha512-0Z6Tr7wjKJIk4OUEjVUQMtyunLDy339vcMaj38Kpj6jM2OE1p3S4kXExKZ7a3uXQAPCoy3sbrP1wibDKaf39oA==}
     dev: true
 
-  /@types/async-lock@1.4.1:
-    resolution: {integrity: sha512-tpYc9kp2I8eI6qcDWtD2023jIlJYz6030qR1S5WhRbTK/JJcYdJ8fb2dRKPRgqioxcPZfTPmzl/PemHIPCrA9g==}
+  /@types/async-lock@1.4.2:
+    resolution: {integrity: sha512-HlZ6Dcr205BmNhwkdXqrg2vkFMN2PluI7Lgr8In3B3wE5PiQHhjRqtW/lGdVU9gw+sM0JcIDx2AN+cW8oSWIcw==}
 
   /@types/babel__core@7.20.3:
     resolution: {integrity: sha512-54fjTSeSHwfan8AyHWrKbfBWiEUrNTZsUwPTDSNaaP1QDQIZbeNUg3a59E9D+375MzUw/x1vx2/0F5LBz+AeYA==}
@@ -3507,8 +3507,8 @@ packages:
       '@types/node': 18.18.8
     dev: true
 
-  /@types/browser-resolve@2.0.3:
-    resolution: {integrity: sha512-zXi3FYTwKkZQqDzCSFZCDB8o0ofKWhkUf+OQXQGVbxiCiBcybTAaRduxoyxSmvPu3S2BibhyGebWK+bhmthFlw==}
+  /@types/browser-resolve@2.0.4:
+    resolution: {integrity: sha512-6qR8ne4oBrfDcM1ZM+CY+OY29zQ22+7bgrLDDCeyt7QNqyIh+tJkmnN18dg7PrxnEVy3YG7Gs61NQJvOc5tTpA==}
     dependencies:
       '@types/resolve': 1.20.4
     dev: true
@@ -3544,8 +3544,8 @@ packages:
     resolution: {integrity: sha512-PdJeLlCJj/ShOA+c0dXdZ/e1P0Cdjhip+dRBtPaigOqwKd0DiFx3NeO6T2E7AQ5JszSR3dub3YkQjc2hcQyxSw==}
     dev: false
 
-  /@types/delaunator@5.0.1:
-    resolution: {integrity: sha512-THSjp5iG4XgNC99v91ntQhelyNyJ1cJlooDc36PjqnSxtbAkTH0rirgY/q65DiT4fBuZkPJv23jn/Fk3YDx7bQ==}
+  /@types/delaunator@5.0.2:
+    resolution: {integrity: sha512-lqBrFSZT+7NYMtz454avpNJaAJYz4TAxsR99HOYqZLXYTduPYjpcmm8BonGGHXsE3L67yk5qO6qxKcrHpxXPMA==}
     dev: true
 
   /@types/earcut@2.1.3:
@@ -3581,6 +3581,15 @@ packages:
 
   /@types/express@4.17.20:
     resolution: {integrity: sha512-rOaqlkgEvOW495xErXMsmyX3WKBInbhG5eqojXYi3cGUaLoRDlXa5d52fkfWZT963AZ3v2eZ4MbKE6WpDAGVsw==}
+    dependencies:
+      '@types/body-parser': 1.19.4
+      '@types/express-serve-static-core': 4.17.39
+      '@types/qs': 6.9.9
+      '@types/serve-static': 1.15.4
+    dev: true
+
+  /@types/express@4.17.21:
+    resolution: {integrity: sha512-ejlPM315qwLpaQlQDTjPdsUFSc6ZsP4AN6AlWnogPjQ7CVi7PYF3YVz+CY3jE2pwYf7E/7HlDAN0rV2GxTG0HQ==}
     dependencies:
       '@types/body-parser': 1.19.4
       '@types/express-serve-static-core': 4.17.39
@@ -3766,7 +3775,7 @@ packages:
   /@types/serve-index@1.9.3:
     resolution: {integrity: sha512-4KG+yMEuvDPRrYq5fyVm/I2uqAJSAwZK9VSa+Zf+zUq9/oxSSvy3kkIqyL+jjStv6UCVi8/Aho0NHtB1Fwosrg==}
     dependencies:
-      '@types/express': 4.17.20
+      '@types/express': 4.17.21
     dev: true
 
   /@types/serve-static@1.15.4:

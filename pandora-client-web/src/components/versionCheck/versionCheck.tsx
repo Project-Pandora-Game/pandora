@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useMounted } from '../../common/useMounted';
 import { GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment';
 import { Button } from '../common/button/button';
-import { ModalDialog, DialogCloseButton } from '../dialog/dialog';
+import { ModalDialog } from '../dialog/dialog';
 import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
 
 // In debug mode 30 seconds, otherwise 5 minutes per new version check
@@ -14,6 +14,7 @@ export function VersionCheck() {
 
 function VersionCheckImpl() {
 	const [nextVersion, setNextVersion] = useState('');
+	const [ignoredVersion, setIgnoredVersion] = useState('');
 	const notifiedRef = useRef(false);
 	const notify = useNotification(NotificationSource.VERSION_CHANGED);
 
@@ -40,7 +41,7 @@ function VersionCheckImpl() {
 		return () => clearInterval(cleanup);
 	}, [mounted, notify]);
 
-	if (!nextVersion) {
+	if (!nextVersion || nextVersion === ignoredVersion) {
 		return null;
 	}
 
@@ -60,7 +61,9 @@ function VersionCheckImpl() {
 			</p>
 			<div>
 				<Button onClick={ () => window.location.reload() }>Reload</Button>
-				<DialogCloseButton>Cancel</DialogCloseButton>
+				<Button onClick={ () => setIgnoredVersion(nextVersion) }>
+					Cancel
+				</Button>
 			</div>
 		</ModalDialog>
 	);

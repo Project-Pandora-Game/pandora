@@ -77,6 +77,10 @@ export const ClientShardSchema = {
 				dice: z.number().int().min(1).max(10),
 				hidden: z.boolean().default(false).optional(),
 			}),
+			z.object({
+				type: z.literal('rps'),
+				choice: z.string(),
+			}),
 		]),
 		response: null,
 	},

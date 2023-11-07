@@ -27,6 +27,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
+	private readonly rockPaperScissorsStatus: WeakMap<Character, { time: number; choice: string; }>;
+
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
 		message: SocketInterfaceRequest<IClientShard>[K],
@@ -50,6 +52,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			permissionGet: this.handlePermissionGet.bind(this),
 			permissionSet: this.handlePermissionSet.bind(this),
 		});
+		this.rockPaperScissorsStatus = new WeakMap();
 	}
 
 	/** Handle new incoming connection */
@@ -224,6 +227,51 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								`${game.dice} ${game.sides}-sided dice`,
 							'DICE_RESULT': result,
 						},
+					});
+				}
+				break;
+			}
+			case 'rps': {
+				if (game.choice === 'show') {
+					const rock: string[] = [];
+					const paper: string[] = [];
+					const scissors: string[] = [];
+
+					for (const c of client.character.room.getAllCharacters()) {
+						if (this.rockPaperScissorsStatus.has(c)) {
+							const status = this.rockPaperScissorsStatus.get(c);
+
+							if (status && Date.now() < status?.time + 10 * 60 * 1000) {
+								if (status.choice === 'rock') {
+									rock.push(c.name + ` (${ c.id })`);
+								} else if (status.choice === 'paper') {
+									paper.push(c.name + ` (${ c.id })`);
+								} else if (status.choice === 'scissors') {
+									scissors.push(c.name + ` (${ c.id })`);
+								} else {
+									throw new BadMessageError();
+								}
+								this.rockPaperScissorsStatus.delete(c);
+							} else {
+								this.rockPaperScissorsStatus.delete(c);
+							}
+						}
+					}
+					room.handleActionMessage({
+						id: 'gamblingRockPaperScissorsResult',
+						character,
+						dictionary: {
+							'ROCK_CHARACTERS': rock.length > 0 ? rock.join(', ') : 'No one',
+							'PAPER_CHARACTERS': paper.length > 0 ? paper.join(', ') : 'No one',
+							'SCISSORS_CHARACTERS': scissors.length > 0 ? scissors.join(', ') : 'No one',
+						},
+					});
+				} else if (['rock', 'paper', 'scissors'].includes(game.choice)) {
+					this.rockPaperScissorsStatus.set(client.character, { time: Date.now(), choice: game.choice });
+					room.handleActionMessage({
+						id: 'gamblingRockPaperScissorsSet',
+						character,
+						dictionary: {},
 					});
 				}
 				break;

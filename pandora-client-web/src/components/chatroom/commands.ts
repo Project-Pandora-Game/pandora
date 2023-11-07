@@ -168,7 +168,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',
-		longDescription: 'Sends a message to the selected <target> character which only they will see.' + LONGDESC_THIRD_PERSON,
+		longDescription: `Sends a message to the selected <target> character which only they will see. (alternative command: '/w')` + LONGDESC_THIRD_PERSON,
 		usage: '<target> [message]',
 		handler: CreateClientCommand()
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'otherCharacter' }))
@@ -206,8 +206,8 @@ export const COMMANDS: readonly IClientCommand[] = [
 	},
 	{
 		key: ['turn', 't'],
-		description: 'Turns yourself around',
-		longDescription: '',
+		description: `Turns yourself around`,
+		longDescription: `(alternative command: '/t')`,
 		usage: '',
 		handler: CreateClientCommand()
 			.handler(({ shardConnector, chatRoom }) => {
@@ -236,6 +236,32 @@ export const COMMANDS: readonly IClientCommand[] = [
 			.handler(({ shardConnector }) => {
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'coinFlip',
+				});
+				return true;
+			}),
+	},
+	{
+		key: ['rockpaperscissors', 'rps'],
+		description: 'Play rock paper scissors with people in the same room.',
+		longDescription: `Allows each player to secretly choose rock, paper, or scissors.
+			If anyone uses 'show', all players with a recent pick will reveal their choice. (alternative command: '/rps')`,
+		usage: 'rock | paper | scissors | show',
+		handler: CreateClientCommand()
+			.argument('options', {
+				preparse: 'allTrimmed',
+				parse: (input) => {
+					const choice = input;
+					if (!['rock', 'paper', 'scissors', 'show'].includes(choice)) {
+						return { success: false, error: `Invalid Option: '${input}'` };
+					}
+					return { success: true, value: { choice } };
+				},
+				//TODO: add autocomplete for 'rock', 'paper', 'scissors', 'show'
+			})
+			.handler(({ shardConnector }, { options }) => {
+				shardConnector.sendMessage('gamblingAction', {
+					type: 'rps',
+					...options,
 				});
 				return true;
 			}),

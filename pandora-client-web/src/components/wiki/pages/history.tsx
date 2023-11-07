@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { ExternalLink } from '../../common/link/externalLink';
 
 export function WikiHistory(): ReactElement {
 	return (
@@ -12,10 +13,10 @@ export function WikiHistory(): ReactElement {
 				In early 2021, most BC developers at that time concluded that they do not want to support BC anymore, as they see various issues with it that
 				cannot realistically be solved.<br />
 				It was an often voiced desire from parts of the community to have an alternative to BC and therefore talks about making a new platform started.
-				In August 2021, "Project Pandora" officially started with the creation of the
-				<a href='https://discord.gg/EnaPvuQf8d' target='_blank' rel='external nofollow noopener noreferrer'>
+				In August 2021, "Project Pandora" officially started with the creation of the{ ' ' }
+				<ExternalLink href='https://discord.gg/EnaPvuQf8d'>
 					Pandora Discord
-				</a>
+				</ExternalLink>
 				.<br />
 				<br />
 				The first half year was focused on looking for suitable technologies, asset basis, and architecture planning.

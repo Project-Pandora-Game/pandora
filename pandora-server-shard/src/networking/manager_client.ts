@@ -27,7 +27,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
-	private readonly rockPaperScissorsStatus: WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>;
+	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -52,7 +52,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			permissionGet: this.handlePermissionGet.bind(this),
 			permissionSet: this.handlePermissionSet.bind(this),
 		});
-		this.rockPaperScissorsStatus = new WeakMap();
 	}
 
 	/** Handle new incoming connection */

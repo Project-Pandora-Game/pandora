@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin } from 'pandora-common';
 import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
@@ -261,17 +261,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 						id: 'gamblingRockPaperScissorsResult',
 						character,
 						dictionary: {
-							'ROCK_CHARACTERS': rock.length > 0 ? rock.join(', ') : 'No one',
-							'PAPER_CHARACTERS': paper.length > 0 ? paper.join(', ') : 'No one',
-							'SCISSORS_CHARACTERS': scissors.length > 0 ? scissors.join(', ') : 'No one',
+							'ROCK_CHARACTERS': rock.length > 0 ? NaturalListJoin(rock) : 'no one',
+							'PAPER_CHARACTERS': paper.length > 0 ? NaturalListJoin(paper) : 'no one',
+							'SCISSORS_CHARACTERS': scissors.length > 0 ? NaturalListJoin(scissors) : 'no one',
 						},
 					});
-				} else if (['rock', 'paper', 'scissors'].includes(game.choice)) {
+				} else {
 					this.rockPaperScissorsStatus.set(client.character, { time: Date.now(), choice: game.choice });
 					room.handleActionMessage({
 						id: 'gamblingRockPaperScissorsSet',
 						character,
-						dictionary: {},
 					});
 				}
 				break;

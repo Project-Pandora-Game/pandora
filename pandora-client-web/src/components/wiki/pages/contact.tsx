@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { ExternalLink } from '../../common/link/externalLink';
 
 export function WikiContact(): ReactElement {
 	return (
@@ -9,9 +10,9 @@ export function WikiContact(): ReactElement {
 			</p>
 			<p>
 				Using our Discord server:<br />
-				<a href='https://discord.gg/EnaPvuQf8d' target='_blank' rel='external nofollow noopener noreferrer'>
+				<ExternalLink href='https://discord.gg/EnaPvuQf8d'>
 					<img src='https://discord.com/api/guilds/872284471611760720/widget.png?style=banner2' alt='Discord invite' />
-				</a>
+				</ExternalLink>
 			</p>
 
 			<p>
@@ -29,7 +30,7 @@ export function WikiContact(): ReactElement {
 
 			<h2>Contributing</h2>
 			<p>
-				The game is open source - you can find all related sources on our <a href='https://github.com/Project-Pandora-Game' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a><br />
+				The game is open source - you can find all related sources on our <ExternalLink href='https://github.com/Project-Pandora-Game'>GitHub</ExternalLink><br />
 				If you want to contribute something (either a feature or an asset), please contact us first on our Discord,
 				so we can synchronize the efforts to make that happen.
 			</p>

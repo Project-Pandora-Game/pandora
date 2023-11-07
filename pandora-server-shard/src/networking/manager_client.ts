@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin } from 'pandora-common';
 import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
@@ -26,6 +26,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private readonly _connectedClients: Set<ClientConnection> = new Set();
 
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
+
+	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -224,6 +226,46 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								`${game.dice} ${game.sides}-sided dice`,
 							'DICE_RESULT': result,
 						},
+					});
+				}
+				break;
+			}
+			case 'rps': {
+				if (game.choice === 'show') {
+					const rock: string[] = [];
+					const paper: string[] = [];
+					const scissors: string[] = [];
+
+					for (const c of client.character.room.getAllCharacters()) {
+						const status = this.rockPaperScissorsStatus.get(c);
+						this.rockPaperScissorsStatus.delete(c);
+
+						if (status != null && Date.now() < status.time + 10 * 60 * 1000) {
+							if (status.choice === 'rock') {
+								rock.push(c.name + ` (${ c.id })`);
+							} else if (status.choice === 'paper') {
+								paper.push(c.name + ` (${ c.id })`);
+							} else if (status.choice === 'scissors') {
+								scissors.push(c.name + ` (${ c.id })`);
+							} else {
+								AssertNever(status.choice);
+							}
+						}
+					}
+					room.handleActionMessage({
+						id: 'gamblingRockPaperScissorsResult',
+						character,
+						dictionary: {
+							'ROCK_CHARACTERS': rock.length > 0 ? NaturalListJoin(rock) : 'no one',
+							'PAPER_CHARACTERS': paper.length > 0 ? NaturalListJoin(paper) : 'no one',
+							'SCISSORS_CHARACTERS': scissors.length > 0 ? NaturalListJoin(scissors) : 'no one',
+						},
+					});
+				} else {
+					this.rockPaperScissorsStatus.set(client.character, { time: Date.now(), choice: game.choice });
+					room.handleActionMessage({
+						id: 'gamblingRockPaperScissorsSet',
+						character,
 					});
 				}
 				break;

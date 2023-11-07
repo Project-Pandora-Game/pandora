@@ -1,6 +1,6 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
 import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId } from 'pandora-common';
-import { CommandSelectorCharacter } from './commandsHelpers';
+import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
 import { capitalize } from 'lodash';
@@ -168,7 +168,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 	{
 		key: ['whisper', 'w'],
 		description: 'Sends a private message to a user',
-		longDescription: 'Sends a message to the selected <target> character which only they will see.' + LONGDESC_THIRD_PERSON,
+		longDescription: `Sends a message to the selected <target> character which only they will see. (alternative command: '/w')` + LONGDESC_THIRD_PERSON,
 		usage: '<target> [message]',
 		handler: CreateClientCommand()
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'otherCharacter' }))
@@ -206,8 +206,8 @@ export const COMMANDS: readonly IClientCommand[] = [
 	},
 	{
 		key: ['turn', 't'],
-		description: 'Turns yourself around',
-		longDescription: '',
+		description: `Turns yourself around`,
+		longDescription: `(alternative command: '/t')`,
 		usage: '',
 		handler: CreateClientCommand()
 			.handler(({ shardConnector, chatRoom }) => {
@@ -236,6 +236,22 @@ export const COMMANDS: readonly IClientCommand[] = [
 			.handler(({ shardConnector }) => {
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'coinFlip',
+				});
+				return true;
+			}),
+	},
+	{
+		key: ['rockpaperscissors', 'rps'],
+		description: 'Play rock paper scissors with people in the same room.',
+		longDescription: `Allows each player to secretly choose rock, paper, or scissors.
+			If anyone uses 'show', all players with a recent pick will reveal their choice. (alternative command: '/rps')`,
+		usage: 'rock | paper | scissors | show',
+		handler: CreateClientCommand()
+			.argument('option', CommandSelectorEnum(['rock', 'paper', 'scissors', 'show']))
+			.handler(({ shardConnector }, { option }) => {
+				shardConnector.sendMessage('gamblingAction', {
+					type: 'rps',
+					choice: option,
 				});
 				return true;
 			}),

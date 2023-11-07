@@ -48,10 +48,12 @@ const CHAT_ACTIONS_DEF = {
 	roomDeviceSlotClear: `SOURCE_CHARACTER freed up ITEM_ASSET_NAME for new usage.`,
 
 	// Gambling related
-	gamblingCoin: `SOURCE_CHARACTER flips a coin and the result is TOSS_RESULT.`,
-	gamblingDice: `SOURCE_CHARACTER rolls DICE_COUNT and the result is DICE_RESULT.`,
-	gamblingDiceHidden: `SOURCE_CHARACTER rolls DICE_COUNT secretly.`,
-	gamblingDiceHiddenResult: `You roll DICE_COUNT and the result is DICE_RESULT.`,
+	gamblingCoin: `SOURCE_CHARACTER flipped a coin and the result is TOSS_RESULT.`,
+	gamblingDice: `SOURCE_CHARACTER rolled DICE_COUNT and the result is DICE_RESULT.`,
+	gamblingDiceHidden: `SOURCE_CHARACTER rolled DICE_COUNT secretly.`,
+	gamblingDiceHiddenResult: `You rolled DICE_COUNT and the result is DICE_RESULT.`,
+	gamblingRockPaperScissorsSet: `SOURCE_CHARACTER is ready to show rock, paper, or scissors when the 'show' command is given.`,
+	gamblingRockPaperScissorsResult: `Rock was shown by ROCK_CHARACTERS. Paper was shown by PAPER_CHARACTERS. Scissors were shown by SCISSORS_CHARACTERS.`,
 
 	//#endregion
 };

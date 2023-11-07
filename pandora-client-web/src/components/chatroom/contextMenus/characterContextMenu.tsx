@@ -108,7 +108,7 @@ function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode
 	const confirm = useConfirmDialog();
 
 	const block = useCallback(() => {
-		confirm(`Are you sure you want to ${action} the account behind ${character.data.name} from your block list?`)
+		confirm(`Are you sure you want to ${action} the account behind ${character.data.name} ${ action === 'add' ? 'to' : 'from' } your block list?`)
 			.then((result) => {
 				if (result) {
 					directory.sendMessage('blockList', { action, id: character.data.accountId });

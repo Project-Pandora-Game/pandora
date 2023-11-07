@@ -1,6 +1,6 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
 import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId } from 'pandora-common';
-import { CommandSelectorCharacter } from './commandsHelpers';
+import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
 import { capitalize } from 'lodash';
@@ -247,21 +247,11 @@ export const COMMANDS: readonly IClientCommand[] = [
 			If anyone uses 'show', all players with a recent pick will reveal their choice. (alternative command: '/rps')`,
 		usage: 'rock | paper | scissors | show',
 		handler: CreateClientCommand()
-			.argument('options', {
-				preparse: 'allTrimmed',
-				parse: (input) => {
-					const choice = input;
-					if (!['rock', 'paper', 'scissors', 'show'].includes(choice)) {
-						return { success: false, error: `Invalid Option: '${input}'` };
-					}
-					return { success: true, value: { choice } };
-				},
-				//TODO: add autocomplete for 'rock', 'paper', 'scissors', 'show'
-			})
-			.handler(({ shardConnector }, { options }) => {
+			.argument('option', CommandSelectorEnum(['rock', 'paper', 'scissors', 'show']))
+			.handler(({ shardConnector }, { option }) => {
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'rps',
-					...options,
+					choice: option,
 				});
 				return true;
 			}),

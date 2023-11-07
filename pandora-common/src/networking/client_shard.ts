@@ -78,8 +78,8 @@ export const ClientShardSchema = {
 				hidden: z.boolean().default(false).optional(),
 			}),
 			z.object({
-				type: z.literal('rps'),
-				choice: z.string(),
+				type: z.literal('rps'), // Rock Paper Scissors
+				choice: z.enum(['rock', 'paper', 'scissors', 'show']),
 			}),
 		]),
 		response: null,

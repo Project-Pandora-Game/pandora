@@ -24,7 +24,7 @@ import { LeaveButton } from './leaveButton';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
 import { Column, Row } from '../common/container/container';
 import { DialogInPortal } from '../dialog/dialog';
-import { Button } from '../common/button/button';
+import { IconCross, IconHamburger } from '../common/button/domIcons';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -211,11 +211,17 @@ function OverlayHeader({ onClose: close, visible }: {
 	return (
 		<DialogInPortal priority={ 5 }>
 			<Column className={ classNames('OverlayHeader', visible ? null : 'hide') }>
-				<Button onClick={ close }>Close menu</Button>
+				<Row>
+					<button className='HeaderButton' onClick={ close }>
+						<IconCross />
+					</button>
+				</Row>
 
-				<LeftHeader />
-				<hr />
-				<RightHeader onAnyClick={ close } />
+				<Column className='content'>
+					<LeftHeader />
+					<hr />
+					<RightHeader onAnyClick={ close } />
+				</Column>
 			</Column>
 		</DialogInPortal>
 	);
@@ -226,11 +232,11 @@ function CollapsableHeader(): ReactElement {
 	const [showMenu, setShowMenu] = useState(false);
 
 	return (
-		<Row alignX='space-between' className='flex-1'>
-			<button className='HeaderButton withText' onClick={ () => {
+		<Row alignX='space-between' alignY='center' className='flex-1'>
+			<button className='HeaderButton' onClick={ () => {
 				setShowMenu(true);
 			} }>
-				Menu
+				<IconHamburger />
 			</button>
 			<span>{ currentAccount != null ? currentAccount.username : '[not logged in]' }</span>
 			<OverlayHeader visible={ showMenu } onClose={ () => setShowMenu(false) } />

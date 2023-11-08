@@ -46,13 +46,11 @@
 }
 
 .OverlayHeader {
-	position: absolute;
 	position: fixed;
 	inset: 0;
 	z-index: 1000;
 	margin: 0;
-	padding: 2em;
-	overflow: auto;
+	overflow: hidden;
 	pointer-events: auto;
 	background-color: $grey-mid;
 	transition: all 150ms linear;
@@ -61,30 +59,36 @@
 		transform: translateX(-100%);
 	}
 
-	> hr {
-		width: 100%;
-	}
+	>.content {
+		flex: 1;
+		padding: 2em;
+		overflow: auto;
 
-	> div {
-		@include flex(column, wrap);
-		align-items: stretch;
-		min-height: $header-button-height;
-		flex: unset;
+		> hr {
+			width: 100%;
+		}
 
-		> button, > span {
-			@include flex(row);
-			align-items: center;
-			min-width: 6em;
+		> div {
+			@include flex(column, wrap);
+			align-items: stretch;
 			min-height: $header-button-height;
-			padding: 0 1em;
-		}
+			flex: unset;
 
-		> span {
-			justify-content: center;
-		}
+			> button, > span {
+				@include flex(row);
+				align-items: center;
+				min-width: 6em;
+				min-height: $header-button-height;
+				padding: 0 1em;
+			}
 
-		.label {
-			padding: 0 0.2em;
+			> span {
+				justify-content: center;
+			}
+
+			.label {
+				padding: 0 0.2em;
+			}
 		}
 	}
 }

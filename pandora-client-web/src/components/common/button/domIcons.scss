@@ -1,0 +1,70 @@
+$lineColor: #212121;
+
+.icon-hamburger {
+	position: relative;
+	width: 2em;
+	height: 2em;
+
+	.icon {
+		position: absolute;
+		top: 45%;
+		height: 0.1875em;
+		width: 100%;
+		background-color: $lineColor;
+
+		&:before{
+			position: absolute;
+			top: -300%;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: $lineColor;
+			content: "";
+		}
+
+		&:after{
+			position: absolute;
+			top: 300%;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: $lineColor;
+			content: "";
+		}
+	}
+}
+
+.icon-cross {
+	position: relative;
+	width: 2em;
+	height: 2em;
+
+	.icon {
+		position: absolute;
+		top: 45%;
+		height: 0.1875em;
+		width: 100%;
+
+		&:before{
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: $lineColor;
+			content: "";
+			transform: rotate(45deg);
+		}
+
+		&:after{
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background-color: $lineColor;
+			content: "";
+			transform: rotate(-45deg);
+		}
+	}
+}

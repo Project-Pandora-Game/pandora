@@ -81,8 +81,10 @@ export function EulaGate({ children }: ChildrenProps): ReactElement {
 
 	if (!eula || eula < EULA_VERSION) {
 		return (
-			<div className='main'>
-				<Eula accept={ () => setEula(EULA_VERSION) } />
+			<div className='main-container'>
+				<div className='main'>
+					<Eula accept={ () => setEula(EULA_VERSION) } />
+				</div>
 			</div>
 		);
 	}

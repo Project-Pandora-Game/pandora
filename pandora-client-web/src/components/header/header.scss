@@ -43,20 +43,24 @@
 			padding: 0.2em;
 		}
 	}
+
+	.collapsableHeaderButton {
+		background-color: #777;
+	}
 }
 
 .OverlayHeader {
-	position: fixed;
+	position: absolute;
 	inset: 0;
 	z-index: 1000;
 	margin: 0;
 	overflow: hidden;
 	pointer-events: auto;
-	background-color: $grey-mid;
-	transition: all 150ms linear;
+	background-color: #777;
+	transition: all 200ms linear;
 
 	&.hide {
-		transform: translateX(-100%);
+		transform: translateY(-100vh);
 	}
 
 	>.content {

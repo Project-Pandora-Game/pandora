@@ -1,17 +1,11 @@
 import React, { ReactElement } from 'react';
 import './domIcons.scss';
 
-export function IconHamburger(): ReactElement {
+export function IconHamburger({ state }: {
+	state: 'hamburger' | 'cross';
+}): ReactElement {
 	return (
-		<div className='icon-hamburger'>
-			<div className='icon' />
-		</div>
-	);
-}
-
-export function IconCross(): ReactElement {
-	return (
-		<div className='icon-cross'>
+		<div className={ `icon-hamburger state-${state}` }>
 			<div className='icon' />
 		</div>
 	);

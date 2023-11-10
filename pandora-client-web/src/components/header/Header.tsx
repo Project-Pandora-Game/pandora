@@ -24,7 +24,7 @@ import { LeaveButton } from './leaveButton';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
 import { Column, Row } from '../common/container/container';
 import { DialogInPortal } from '../dialog/dialog';
-import { IconCross, IconHamburger } from '../common/button/domIcons';
+import { IconHamburger } from '../common/button/domIcons';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -209,14 +209,8 @@ function OverlayHeader({ onClose: close, visible }: {
 	visible: boolean;
 }): ReactElement {
 	return (
-		<DialogInPortal priority={ 5 }>
+		<DialogInPortal priority={ 5 } location='mainOverlay'>
 			<Column className={ classNames('OverlayHeader', visible ? null : 'hide') }>
-				<Row>
-					<button className='HeaderButton' onClick={ close }>
-						<IconCross />
-					</button>
-				</Row>
-
 				<Column className='content'>
 					<LeftHeader />
 					<hr />
@@ -228,17 +222,27 @@ function OverlayHeader({ onClose: close, visible }: {
 }
 
 function CollapsableHeader(): ReactElement {
-	const currentAccount = useCurrentAccount();
 	const [showMenu, setShowMenu] = useState(false);
+
+	const currentAccount = useCurrentAccount();
+	const connectionInfo = useShardConnectionInfo();
+	const characterData = usePlayerData();
+	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
 
 	return (
 		<Row alignX='space-between' alignY='center' className='flex-1'>
-			<button className='HeaderButton' onClick={ () => {
-				setShowMenu(true);
+			<span>
+				{
+					currentAccount == null ? '[not logged in]' :
+					connectionInfo == null ? '[no character selected]' :
+					(characterName ?? `[Character ${connectionInfo.characterId}]`)
+				}
+			</span>
+			<button className='collapsableHeaderButton' onClick={ () => {
+				setShowMenu(!showMenu);
 			} }>
-				<IconHamburger />
+				<IconHamburger state={ showMenu ? 'cross' : 'hamburger' } />
 			</button>
-			<span>{ currentAccount != null ? currentAccount.username : '[not logged in]' }</span>
 			<OverlayHeader visible={ showMenu } onClose={ () => setShowMenu(false) } />
 		</Row>
 	);

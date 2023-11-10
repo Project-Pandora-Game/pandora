@@ -15,35 +15,54 @@ type HtmlPortalNodeAny = HtmlPortalNode<any>;
 
 const DEFAULT_CONFIRM_DIALOG_SYMBOL = Symbol('DEFAULT_CONFIRM_DIALOG_SYMBOL');
 
+export type DialogLocation = 'global' | 'mainOverlay';
+
 const PORTALS = new Observable<readonly ({
 	priority: number;
+	location: DialogLocation;
 	node: HtmlPortalNodeAny;
 })[]>([]);
 
-export function Dialogs(): ReactElement {
+export function Dialogs({ location }: {
+	location: DialogLocation;
+}): ReactElement {
 	const portals = useObservable(PORTALS);
 
 	return (
 		<>
-			{ portals.map(({ node }, index) => (
-				<OutPortal key={ index } node={ node } />
-			)) }
-			<ConfirmDialog symbol={ DEFAULT_CONFIRM_DIALOG_SYMBOL } />
+			{
+				portals
+					.filter((portal) => portal.location === location)
+					.map(({ node }, index) => (
+						<OutPortal key={ index } node={ node } />
+					))
+			}
+			{
+				location === 'global' ? (
+					<ConfirmDialog symbol={ DEFAULT_CONFIRM_DIALOG_SYMBOL } />
+				) : null
+			}
 		</>
 	);
 }
 
-export function DialogInPortal({ children, priority }: {
+export function DialogInPortal({ children, priority, location = 'global' }: {
 	children?: ReactNode;
 	priority?: number;
+	location?: DialogLocation;
 }): ReactElement {
-	const portal = useMemo(() => createHtmlPortalNode(), []);
+	const portal = useMemo(() => createHtmlPortalNode({
+		attributes: {
+			class: 'dialog-portal',
+		},
+	}), []);
 
 	useLayoutEffect(() => {
 		PORTALS.produce((existingPortals) => {
 			return sortBy([
 				{
 					priority: priority ?? 0,
+					location,
 					node: portal,
 				},
 				...existingPortals,
@@ -53,7 +72,7 @@ export function DialogInPortal({ children, priority }: {
 		return () => {
 			PORTALS.value = PORTALS.value.filter(({ node }) => node !== portal);
 		};
-	}, [portal, priority]);
+	}, [portal, priority, location]);
 
 	return (
 		<InPortal node={ portal }>

@@ -1,4 +1,4 @@
-@import '../../styles/utils';
+@import '../../styles/common';
 
 .character-select {
 	width: 100%;
@@ -6,6 +6,8 @@
 	flex-wrap: wrap;
 	justify-content: center;
 	gap: 3.5em;
+	padding: spacing('x-large');
+	margin: 0;
 }
 
 .card {

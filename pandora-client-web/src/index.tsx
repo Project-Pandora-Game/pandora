@@ -39,9 +39,14 @@ function Start(): void {
 				<BrowserRouter>
 					<GameContextProvider>
 						<Header />
-						<ToastContainer theme='dark' />
 						<div className='main-container'>
 							<Dialogs location='mainOverlay' />
+							<ToastContainer
+								theme='dark'
+								style={ {
+									position: 'absolute',
+								} }
+							/>
 							<div className='main'>
 								<PandoraRoutes />
 							</div>

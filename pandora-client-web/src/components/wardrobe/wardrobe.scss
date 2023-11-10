@@ -8,6 +8,7 @@ $header-height: 2em;
 	flex-flow: column;
 	gap: 0.5em;
 	height: 100%;
+	min-width: fit-content;
 
 	.safemode {
 		@include center-flex;

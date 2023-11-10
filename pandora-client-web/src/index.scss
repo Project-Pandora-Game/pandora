@@ -26,31 +26,32 @@ div.main-container {
 	flex: 1;
 	overflow: hidden;
 
-	> .main {
-		@include flex(column);
-		width: 100%;
-		height: 100%;
-		overflow: auto;
+	> .Toastify {
+		position: relative;
+	}
+}
 
-		& > * {
-			flex: 1;
-			padding: 1em;
-			min-width: fit-content;
-		}
+// Do NOT put this into .main-container; it needs to have a low specificity to be overridable by subscreens
+.main {
+	@include flex(column);
+	width: 100%;
+	height: 100%;
+	overflow: auto;
 
-		& > footer {
-			flex: none;
-			align-self: stretch;
-			height: 1.5em;
-			padding: 0.2em;
-			font-style: italic;
-			background-color: $grey-mid;
-			user-select: text;
-		}
+	& > * {
+		flex: 1;
+		padding: 1em;
+		min-width: fit-content;
 	}
 
-	.Toastify {
-		position: relative;
+	& > footer {
+		flex: none;
+		align-self: stretch;
+		height: 1.5em;
+		padding: 0.2em;
+		font-style: italic;
+		background-color: $grey-mid;
+		user-select: text;
 	}
 }
 

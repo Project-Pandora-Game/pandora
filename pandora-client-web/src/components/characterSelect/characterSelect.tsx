@@ -73,38 +73,36 @@ export function CharacterSelect(): ReactElement {
 	}
 
 	return (
-		<div className='centerbox'>
-			<ul className='character-select'>
-				{ !data ? <div className='loading'>{ state }</div> : (
-					<>{ data.characters.map((character) => (
-						<CharacterListItem
-							key={ character.id }
-							{ ...character }
-							onClick={ () => {
-								connectToCharacter(character.id).catch((err) => {
-									GetLogger('connectToCharacter').error('Error connecting to character:', err);
-									toast(`Error connecting to character`, TOAST_OPTIONS_ERROR);
-								});
-							} }
-						/>
-					)) }
-					</>
-				) }
-				{ data && data.characters.length < data.limit && !data.characters.some(
-					(i) => i.inCreation) && (
+		<ul className='character-select'>
+			{ !data ? <div className='loading'>{ state }</div> : (
+				<>{ data.characters.map((character) => (
 					<CharacterListItem
-						key='create'
-						name={ 'Create new character' }
+						key={ character.id }
+						{ ...character }
 						onClick={ () => {
-							createNewCharacterAndRefreshList().catch((err) => {
-								GetLogger('createNewCharacter').error('Error creating new character:', err);
-								toast(`Error creating new character`, TOAST_OPTIONS_ERROR);
+							connectToCharacter(character.id).catch((err) => {
+								GetLogger('connectToCharacter').error('Error connecting to character:', err);
+								toast(`Error connecting to character`, TOAST_OPTIONS_ERROR);
 							});
 						} }
 					/>
-				) }
-			</ul>
-		</div>
+				)) }
+				</>
+			) }
+			{ data && data.characters.length < data.limit && !data.characters.some(
+				(i) => i.inCreation) && (
+				<CharacterListItem
+					key='create'
+					name={ 'Create new character' }
+					onClick={ () => {
+						createNewCharacterAndRefreshList().catch((err) => {
+							GetLogger('createNewCharacter').error('Error creating new character:', err);
+							toast(`Error creating new character`, TOAST_OPTIONS_ERROR);
+						});
+					} }
+				/>
+			) }
+		</ul>
 	);
 }
 

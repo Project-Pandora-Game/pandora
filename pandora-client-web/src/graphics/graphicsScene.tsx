@@ -60,6 +60,7 @@ function GraphicsSceneCore({
 			minScale: Math.min(params.height / params.worldHeight, params.width / params.worldWidth) * 0.2,
 			maxScale: 2,
 		});
+		viewport.pinch();
 		viewport.fit();
 		viewport.moveCenter(params.worldWidth / 2, params.worldHeight / 2);
 		viewportConfig?.(viewport, params);

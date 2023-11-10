@@ -33,15 +33,23 @@ function Start(): void {
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
-			<Dialogs />
+			<Dialogs location='global' />
 			<HoverElementsPortal />
 			<EulaGate>
 				<BrowserRouter>
 					<GameContextProvider>
 						<Header />
-						<ToastContainer theme='dark' />
-						<div className='main'>
-							<PandoraRoutes />
+						<div className='main-container'>
+							<Dialogs location='mainOverlay' />
+							<ToastContainer
+								theme='dark'
+								style={ {
+									position: 'absolute',
+								} }
+							/>
+							<div className='main'>
+								<PandoraRoutes />
+							</div>
 						</div>
 					</GameContextProvider>
 				</BrowserRouter>

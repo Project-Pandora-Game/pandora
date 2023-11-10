@@ -17,6 +17,9 @@
 			align-items: stretch;
 		}
 
+		.label {
+			display: none;
+		}
 	}
 
 	span {
@@ -38,6 +41,58 @@
 			@include center-flex;
 			background: #777;
 			padding: 0.2em;
+		}
+	}
+
+	.collapsableHeaderButton {
+		background-color: #777;
+	}
+}
+
+.OverlayHeader {
+	position: absolute;
+	inset: 0;
+	z-index: 1000;
+	margin: 0;
+	overflow: hidden;
+	pointer-events: auto;
+	background-color: #777;
+	transition: all 200ms linear;
+
+	&.hide {
+		transform: translateY(-100vh);
+	}
+
+	>.content {
+		flex: 1;
+		padding: 2em;
+		overflow: auto;
+
+		> hr {
+			width: 100%;
+		}
+
+		> div {
+			@include flex(column, wrap);
+			align-items: stretch;
+			min-height: $header-button-height;
+			flex: unset;
+
+			> button, > span {
+				@include flex(row);
+				align-items: center;
+				min-width: 6em;
+				min-height: $header-button-height;
+				padding: 0 1em;
+			}
+
+			> span {
+				justify-content: center;
+			}
+
+			.label {
+				padding: 0 0.2em;
+			}
 		}
 	}
 }

@@ -17,13 +17,23 @@ import './leaveButton.scss';
 
 const leaveButtonContext = createContext(() => { /** noop */ });
 
-export function LeaveButton() {
+export function LeaveButton({ onClickExtra }: {
+	onClickExtra?: () => void;
+}) {
 	const [show, setShow] = useState(false);
 	const closeDialog = useCallback(() => setShow(false), []);
 
 	return (
 		<leaveButtonContext.Provider value={ closeDialog }>
-			<HeaderButton icon={ logoutIcon } iconAlt='Leave' onClick={ () => setShow(true) } title='Leave' />
+			<HeaderButton
+				icon={ logoutIcon }
+				iconAlt='Leave'
+				title='Leave'
+				onClick={ () => {
+					setShow(true);
+					onClickExtra?.();
+				} }
+			/>
 			{
 				show ? <DialogLeave /> : null
 			}

@@ -3,7 +3,7 @@
 		display: flex;
 		flex-flow: column;
 		margin-bottom: 0.5em;
-		width: 30em;
+		width: min(30em, 80vw);
 		user-select: text;
 
 		button {

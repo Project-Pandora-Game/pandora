@@ -3,6 +3,7 @@
 .wiki {
 	flex: 1;
 	overflow: hidden;
+	min-width: fit-content;
 
 	.tab-content {
 		min-width: min(30em, 90vw);

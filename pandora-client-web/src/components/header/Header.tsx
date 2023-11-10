@@ -21,6 +21,10 @@ import { useSafemodeDialogContext } from '../characterSafemode/characterSafemode
 import { RelationshipContext, useRelationships } from '../releationships/relationshipsContext';
 import { useObservable } from '../../observable';
 import { LeaveButton } from './leaveButton';
+import { useIsNarrowScreen } from '../../styles/mediaQueries';
+import { Column, Row } from '../common/container/container';
+import { DialogInPortal } from '../dialog/dialog';
+import { IconHamburger } from '../common/button/domIcons';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -42,10 +46,16 @@ function LeftHeader(): ReactElement {
 					ev.currentTarget.focus();
 					setShowCharacterMenu(!showCharacterMenu);
 				} }>
+					<span className='label'>Current character:</span>
 					{ characterName ?? `[Character ${connectionInfo.characterId}]` }
 				</button>
 			) }
-			{ !connectionInfo && <span>[no character selected]</span> }
+			{ !connectionInfo && (
+				<span>
+					<span className='label'>Current character:</span>
+					[no character selected]
+				</span>
+			) }
 			{ connectionInfo && showCharacterMenu && <CharacterMenu close={ () => setShowCharacterMenu(false) } /> }
 		</div>
 	);
@@ -70,7 +80,9 @@ function CharacterMenu({ close }: { close: () => void; }): ReactElement {
 	);
 }
 
-function RightHeader(): ReactElement {
+function RightHeader({ onAnyClick }: {
+	onAnyClick?: () => void;
+}): ReactElement {
 	const currentAccount = useCurrentAccount();
 	const navigate = useNavigate();
 	const loggedIn = currentAccount != null;
@@ -81,13 +93,49 @@ function RightHeader(): ReactElement {
 		<div className='rightHeader'>
 			{ loggedIn && (
 				<>
-					<HeaderButton icon={ wikiIcon } iconAlt='Wiki' onClick={ () => navigate('/wiki') } title='Wiki' />
-					<NotificationButton icon={ notificationsIcon } title='Notifications' type='notifications' onClick={ () => toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR) } />
-					<FriendsHeaderButton />
-					<HeaderButton icon={ settingsIcon } iconAlt='Settings' onClick={ () => navigate('/settings') } title='Settings' />
-					{ isDeveloper && <HeaderButton icon={ managementIcon } iconAlt='Settings' onClick={ () => navigate('/management') } title='Management' /> }
-					<span>{ currentAccount.username }</span>
-					<LeaveButton />
+					<HeaderButton
+						icon={ wikiIcon }
+						iconAlt='Wiki'
+						title='Wiki'
+						onClick={ () => {
+							navigate('/wiki');
+							onAnyClick?.();
+						} }
+					/>
+					<NotificationButton
+						icon={ notificationsIcon }
+						title='Notifications'
+						type='notifications'
+						onClick={ () => {
+							toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR);
+						} }
+					/>
+					<FriendsHeaderButton onClickExtra={ onAnyClick } />
+					<HeaderButton
+						icon={ settingsIcon }
+						iconAlt='Settings'
+						title='Settings'
+						onClick={ () => {
+							navigate('/settings');
+							onAnyClick?.();
+						} }
+					/>
+					{ isDeveloper && (
+						<HeaderButton
+							icon={ managementIcon }
+							iconAlt='Management'
+							title='Management'
+							onClick={ () => {
+								navigate('/management');
+								onAnyClick?.();
+							} }
+						/>
+					) }
+					<span>
+						<span className='label'>Current account:</span>
+						{ currentAccount.username }
+					</span>
+					<LeaveButton onClickExtra={ onAnyClick } />
 				</>
 			) }
 			{ !loggedIn && <span>[not logged in]</span> }
@@ -118,7 +166,9 @@ function NotificationButton({ icon, title, type, onClick }: {
 	);
 }
 
-function FriendsHeaderButton(): ReactElement {
+function FriendsHeaderButton({ onClickExtra }: {
+	onClickExtra?: () => void;
+}): ReactElement {
 	const navigate = useNavigate();
 	const handler = useDirectoryConnector().directMessageHandler;
 	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
@@ -146,15 +196,73 @@ function FriendsHeaderButton(): ReactElement {
 			iconAlt={ `${ notificationCount } Contacts` }
 			title='Contacts'
 			badge={ notificationCount }
-			onClick={ () => navigate('/relationships') } />
+			onClick={ () => {
+				navigate('/relationships');
+				onClickExtra?.();
+			} }
+		/>
+	);
+}
+
+function OverlayHeader({ onClose: close, visible }: {
+	onClose: () => void;
+	visible: boolean;
+}): ReactElement {
+	return (
+		<DialogInPortal priority={ 5 } location='mainOverlay'>
+			<Column className={ classNames('OverlayHeader', visible ? null : 'hide') }>
+				<Column className='content'>
+					<LeftHeader />
+					<hr />
+					<RightHeader onAnyClick={ close } />
+				</Column>
+			</Column>
+		</DialogInPortal>
+	);
+}
+
+function CollapsableHeader(): ReactElement {
+	const [showMenu, setShowMenu] = useState(false);
+
+	const currentAccount = useCurrentAccount();
+	const connectionInfo = useShardConnectionInfo();
+	const characterData = usePlayerData();
+	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
+
+	return (
+		<Row alignX='space-between' alignY='center' className='flex-1'>
+			<span>
+				{
+					currentAccount == null ? '[not logged in]' :
+					connectionInfo == null ? '[no character selected]' :
+					(characterName ?? `[Character ${connectionInfo.characterId}]`)
+				}
+			</span>
+			<button className='collapsableHeaderButton' onClick={ () => {
+				setShowMenu(!showMenu);
+			} }>
+				<IconHamburger state={ showMenu ? 'cross' : 'hamburger' } />
+			</button>
+			<OverlayHeader visible={ showMenu } onClose={ () => setShowMenu(false) } />
+		</Row>
 	);
 }
 
 export function Header(): ReactElement {
+	const isNarrow = useIsNarrowScreen();
+
 	return (
 		<header className='Header'>
-			<LeftHeader />
-			<RightHeader />
+			{
+				isNarrow ? (
+					<CollapsableHeader />
+				) : (
+					<>
+						<LeftHeader />
+						<RightHeader />
+					</>
+				)
+			}
 		</header>
 	);
 }

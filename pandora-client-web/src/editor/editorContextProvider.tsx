@@ -26,7 +26,8 @@ export function EditorContextProvider({ children }: ChildrenProps): ReactElement
 	return (
 		<DebugContextProvider>
 			<EditorErrorBoundary>
-				<Dialogs />
+				<Dialogs location='global' />
+				<Dialogs location='mainOverlay' />
 				<HoverElementsPortal />
 				<EditorContext.Provider value={ context }>
 					{ children }

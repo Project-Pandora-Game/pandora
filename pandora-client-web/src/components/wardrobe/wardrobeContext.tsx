@@ -25,6 +25,8 @@ import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
 import { Column } from '../common/container/container';
+import { useConfirmDialog } from '../dialog/dialog';
+import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
@@ -171,13 +173,41 @@ export function useWardrobeExecute(action: Nullable<AppearanceAction>, props: Ex
 
 export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}) {
 	const [execute, processing] = useWardrobeExecuteCallback(props);
+	const {
+		player,
+		actions: { roomContext },
+	} = useWardrobeContext();
+
+	const confirm = useConfirmDialog();
 
 	return [
 		useCallback(() => {
-			if (action && result != null && result.problems.length === 0) {
+			if (action == null || result == null || !result.valid || result.problems.length > 0)
+				return;
+
+			// Detect need for confirmation
+			const warnings = WardrobeCheckResultForConfirmationWarnings(player, roomContext, result);
+
+			if (warnings.length > 0) {
+				confirm(
+					`You might not be able to undo this action without help. Continue?`,
+					(
+						<ul>
+							{
+								warnings.map((warning, i) => <li key={ i }>{ warning }</li>)
+							}
+						</ul>
+					),
+				).then((confirmResult) => {
+					if (confirmResult) {
+						execute(action);
+					}
+				}).catch(() => {/* NOOP */});
+			} else {
 				execute(action);
 			}
-		}, [execute, action, result]),
+
+		}, [execute, confirm, player, roomContext, action, result]),
 		processing,
 	] as const;
 }

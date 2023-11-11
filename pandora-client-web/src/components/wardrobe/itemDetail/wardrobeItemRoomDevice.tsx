@@ -114,7 +114,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 		<Row padding='medium' alignY='center'>
 			<label>X:</label>
 			<input type='number'
-				id='positioning-input'
+				className='positioning-input'
 				value={ positionX }
 				onChange={ (ev) => {
 					changeCallback({ x: ev.target.valueAsNumber });
@@ -123,7 +123,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 			/>
 			<label>Y:</label>
 			<input type='number'
-				id='positioning-input'
+				className='positioning-input'
 				value={ positionY }
 				onChange={ (ev) => {
 					changeCallback({ y: ev.target.valueAsNumber });
@@ -132,7 +132,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 			/>
 			<label>Y offset:</label>
 			<input type='number'
-				id='positioning-input'
+				className='positioning-input'
 				value={ positionYOffset }
 				onChange={ (ev) => {
 					changeCallback({ yOffset: ev.target.valueAsNumber });

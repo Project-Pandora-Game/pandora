@@ -529,7 +529,7 @@ function ChatroomManualYOffsetControl({ character }: {
 	return (
 		<Row padding='small'>
 			<Row alignY='center'>Character Y Offset:</Row>
-			<input type='number' id='positioning-input' step='1' value={ yOffset } onChange={ onInput } />
+			<input type='number' className='positioning-input' step='1' value={ yOffset } onChange={ onInput } />
 			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ yOffset === 0 }>
 				↺
 			</Button>

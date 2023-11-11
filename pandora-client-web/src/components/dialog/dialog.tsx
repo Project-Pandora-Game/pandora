@@ -7,7 +7,7 @@ import { Button } from '../common/button/button';
 import { Observable, useObservable } from '../../observable';
 import './dialog.scss';
 import { useEvent } from '../../common/useEvent';
-import { DivContainer } from '../common/container/container';
+import { Column, Row } from '../common/container/container';
 import classNames from 'classnames';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -144,6 +144,7 @@ export function DraggableDialog({ children, title, rawContent, close }: {
 
 type ConfirmDialogEntry = Readonly<{
 	title: string;
+	content: ReactNode;
 	handler: (result: boolean) => void;
 }>;
 
@@ -160,6 +161,7 @@ function GetConfirmDialogEntry(symbol: symbol) {
 function useConfirmDialogController(symbol: symbol): {
 	open: boolean;
 	title: string;
+	content: ReactNode;
 	onConfirm: () => void;
 	onCancel: () => void;
 } {
@@ -178,9 +180,11 @@ function useConfirmDialogController(symbol: symbol): {
 	});
 	const open = observed != null;
 	const title = observed != null ? observed.title : '';
+	const content = observed?.content;
 	return {
 		open,
 		title,
+		content,
 		onConfirm,
 		onCancel,
 	};
@@ -193,27 +197,30 @@ type ConfirmDialogProps = {
 };
 
 export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDialogProps) {
-	const { open, title, onConfirm, onCancel } = useConfirmDialogController(symbol);
+	const { open, title, content, onConfirm, onCancel } = useConfirmDialogController(symbol);
 
 	if (!open)
 		return null;
 
 	return (
 		<ModalDialog>
-			<h1>{ title }</h1>
-			<DivContainer gap='small' justify='end'>
-				<Button onClick={ onCancel }>
-					{ no }
-				</Button>
-				<Button onClick={ onConfirm }>
-					{ yes }
-				</Button>
-			</DivContainer>
+			<Column>
+				<strong>{ title }</strong>
+				{ content }
+				<Row gap='small' alignX='space-between'>
+					<Button onClick={ onCancel }>
+						{ no }
+					</Button>
+					<Button onClick={ onConfirm }>
+						{ yes }
+					</Button>
+				</Row>
+			</Column>
 		</ModalDialog>
 	);
 }
 
-export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string) => Promise<boolean> {
+export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode) => Promise<boolean> {
 	const unset = useRef(false);
 	const entry = GetConfirmDialogEntry(symbol);
 	useEffect(() => () => {
@@ -221,10 +228,11 @@ export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL)
 			entry.value = null;
 		}
 	}, [entry]);
-	return useCallback((title: string) => new Promise<boolean>((resolve) => {
+	return useCallback((title: string, content?: ReactNode) => new Promise<boolean>((resolve) => {
 		unset.current = true;
 		entry.value = {
 			title,
+			content,
 			handler: (result) => {
 				unset.current = false;
 				entry.value = null;

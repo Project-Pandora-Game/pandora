@@ -8,6 +8,7 @@ import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
 import { Editor } from './editor';
 import { AssetFrameworkGlobalState } from 'pandora-common';
 import { HoverElementsPortal } from '../components/hoverElement/hoverElement';
+import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider';
 
 export const EditorContext = createContext({
 	editor: null as Editor | null,
@@ -30,10 +31,21 @@ export function EditorContextProvider({ children }: ChildrenProps): ReactElement
 				<Dialogs location='mainOverlay' />
 				<HoverElementsPortal />
 				<EditorContext.Provider value={ context }>
-					{ children }
+					<PermissionCheckServiceProvider>
+						{ children }
+					</PermissionCheckServiceProvider>
 				</EditorContext.Provider>
 			</EditorErrorBoundary>
 		</DebugContextProvider>
+	);
+}
+
+function PermissionCheckServiceProvider({ children }: ChildrenProps) {
+	const service = useMemo(() => new PermissionCheckServiceBase(), []);
+	return (
+		<permissionCheckContext.Provider value={ service }>
+			{ children }
+		</permissionCheckContext.Provider>
 	);
 }
 

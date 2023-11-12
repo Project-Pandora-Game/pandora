@@ -4,10 +4,20 @@ import { AppearanceActionProblem, AssertNever, AssertNotNullable, GameLogicPermi
 import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
 
-class PermissionCheckService extends TypedEventEmitter<{
+export class PermissionCheckServiceBase extends TypedEventEmitter<{
 	permissionResultReset: void;
 	permissionResultUpdated: GameLogicPermission;
 }> {
+	public checkPermissions(_permissions: ReadonlySet<GameLogicPermission>): readonly PermissionRestriction[] {
+		return [];
+	}
+
+	public onPermissionsChanged() {
+		// no-op
+	}
+}
+
+class PermissionCheckService extends PermissionCheckServiceBase {
 	private _logger: Logger;
 	private _shardConnector: ShardConnector;
 
@@ -21,7 +31,7 @@ class PermissionCheckService extends TypedEventEmitter<{
 		this._shardConnector = shardConnector;
 	}
 
-	public checkPermissions(permissions: ReadonlySet<GameLogicPermission>): readonly PermissionRestriction[] {
+	public override checkPermissions(permissions: ReadonlySet<GameLogicPermission>): readonly PermissionRestriction[] {
 		const generation = this._permissionsGeneration;
 
 		const restrictions: PermissionRestriction[] = [];
@@ -76,7 +86,7 @@ class PermissionCheckService extends TypedEventEmitter<{
 		return restrictions;
 	}
 
-	public onPermissionsChanged() {
+	public override onPermissionsChanged() {
 		this._permissionsGeneration++;
 		this._pendingChecks.clear();
 		this._cachedResults.clear();
@@ -84,7 +94,7 @@ class PermissionCheckService extends TypedEventEmitter<{
 	}
 }
 
-export const permissionCheckContext = createContext<PermissionCheckService | null | undefined>(undefined);
+export const permissionCheckContext = createContext<PermissionCheckServiceBase | null | undefined>(undefined);
 
 export function PermissionCheckServiceProvider({ children }: ChildrenProps): ReactElement {
 	const shardConnector = useShardConnector();
@@ -101,7 +111,7 @@ export function PermissionCheckServiceProvider({ children }: ChildrenProps): Rea
 	);
 }
 
-function usePermissionCheckService(): PermissionCheckService {
+function usePermissionCheckService(): PermissionCheckServiceBase {
 	const service = useContext(permissionCheckContext);
 	AssertNotNullable(service);
 	return service;

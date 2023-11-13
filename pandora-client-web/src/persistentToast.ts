@@ -10,6 +10,14 @@ export const TOAST_OPTIONS_SUCCESS: ToastOptions = {
 	closeButton: true,
 	draggable: true,
 };
+export const TOAST_OPTIONS_WARNING: ToastOptions = {
+	type: 'warning',
+	isLoading: false,
+	autoClose: 10_000,
+	closeOnClick: true,
+	closeButton: true,
+	draggable: true,
+};
 export const TOAST_OPTIONS_ERROR: ToastOptions = {
 	type: 'error',
 	isLoading: false,

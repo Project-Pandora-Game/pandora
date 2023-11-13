@@ -17,7 +17,7 @@ import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
 import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
 
-export function ActionWarning({ problems, parent }: { problems: readonly AppearanceActionProblem[]; parent: HTMLElement | null; }) {
+export function ActionWarningContent({ problems }: { problems: readonly AppearanceActionProblem[]; }): ReactElement {
 	const assetManager = useAssetManager();
 	const reasons = useMemo(() => (
 		_.uniq(
@@ -27,28 +27,34 @@ export function ActionWarning({ problems, parent }: { problems: readonly Appeara
 		)
 	), [assetManager, problems]);
 
+	if (reasons.length === 0) {
+		return (
+			<>
+				This action isn't possible.
+			</>
+		);
+	}
+
+	return (
+		<>
+			This action isn't possible, because:
+			<ul>
+				{
+					reasons.map((reason, i) => (<li key={ i }>{ reason }</li>))
+				}
+			</ul>
+		</>
+	);
+}
+
+export function ActionWarning({ problems, parent }: { problems: readonly AppearanceActionProblem[]; parent: HTMLElement | null; }) {
 	if (problems.length === 0) {
 		return null;
 	}
 
 	return (
 		<HoverElement parent={ parent } className='action-warning'>
-			{
-				reasons.length === 0 ? (
-					<>
-						This action isn't possible.
-					</>
-				) : (
-					<>
-						This action isn't possible, because:
-						<ul>
-							{
-								reasons.map((reason, i) => (<li key={ i }>{ reason }</li>))
-							}
-						</ul>
-					</>
-				)
-			}
+			<ActionWarningContent problems={ problems } />
 		</HoverElement>
 	);
 }

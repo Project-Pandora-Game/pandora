@@ -22,11 +22,12 @@ import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvi
 import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeHeldItem, WardrobeTarget } from './wardrobeTypes';
 import { useAsyncEvent } from '../../common/useEvent';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
 import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
 import { Column } from '../common/container/container';
 import { useConfirmDialog } from '../dialog/dialog';
 import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils';
+import { ActionWarningContent } from './wardrobeComponents';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
@@ -154,6 +155,7 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 				GetLogger('wardrobeExecute').error('Error executing action:', err);
 				toast(`Error performing action`, TOAST_OPTIONS_ERROR);
 			},
+			updateAfterUnmount: true,
 		},
 	);
 }
@@ -182,8 +184,13 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 
 	return [
 		useCallback(() => {
-			if (action == null || result == null || !result.valid || result.problems.length > 0)
+			if (action == null || result == null)
 				return;
+
+			if (!result.valid || result.problems.length > 0) {
+				toast(<ActionWarningContent problems={ result.problems } />, TOAST_OPTIONS_WARNING);
+				return;
+			}
 
 			// Detect need for confirmation
 			const warnings = WardrobeCheckResultForConfirmationWarnings(player, roomContext, result);

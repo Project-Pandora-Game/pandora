@@ -21,7 +21,7 @@
 		"start": "pnpm dev"
 	},
 	"dependencies": {
-		"@hcaptcha/react-hcaptcha": "1.8.1",
+		"@hcaptcha/react-hcaptcha": "1.9.0",
 		"@pixi/react": "7.1.1",
 		"bowser": "2.11.0",
 		"classnames": "2.3.2",
@@ -45,6 +45,7 @@
 		"zod": "3.22.4"
 	},
 	"devDependencies": {
+		"@babel/preset-env": "^7.23.3",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.11",
 		"@project-pandora-game/sass-loader": "13.2.0",
 		"@testing-library/jest-dom": "6.1.4",
@@ -64,6 +65,7 @@
 		"@types/webpack": "5.28.5",
 		"@typescript-eslint/eslint-plugin": "6.11.0",
 		"@typescript-eslint/parser": "6.11.0",
+		"babel-jest": "^29.7.0",
 		"browser-resolve": "2.0.0",
 		"clean-webpack-plugin": "4.0.0",
 		"cross-env": "7.0.3",

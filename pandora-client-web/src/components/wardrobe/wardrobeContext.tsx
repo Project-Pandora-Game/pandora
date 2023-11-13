@@ -160,19 +160,6 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 	);
 }
 
-export function useWardrobeExecute(action: Nullable<AppearanceAction>, props: ExecuteCallbackOptions = {}) {
-	const [execute, processing] = useWardrobeExecuteCallback(props);
-
-	return [
-		useCallback(() => {
-			if (action) {
-				execute(action);
-			}
-		}, [execute, action]),
-		processing,
-	] as const;
-}
-
 export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}) {
 	const [execute, processing] = useWardrobeExecuteCallback(props);
 	const {

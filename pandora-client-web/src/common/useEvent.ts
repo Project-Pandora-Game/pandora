@@ -25,7 +25,14 @@ export function useEvent<R, Args extends unknown[]>(callback: (...args: Args) =>
 export function useAsyncEvent<R, Args extends unknown[]>(
 	callback: (...args: Args) => Promise<R>,
 	updateComponent: (result: R) => void,
-	{ errorHandler }: { errorHandler?: (error: unknown) => void; } = {},
+	{
+		errorHandler,
+		updateAfterUnmount = false,
+	}: {
+		errorHandler?: (error: unknown) => void;
+		/** If update should trigger even after the component was unmounted */
+		updateAfterUnmount?: boolean;
+	} = {},
 ): [(...args: Args) => void, boolean] {
 	const [processing, setProcessing] = useState(false);
 	const mounted = useMounted();
@@ -38,13 +45,13 @@ export function useAsyncEvent<R, Args extends unknown[]>(
 
 		callback(...args)
 			.then((result: R) => {
-				if (mounted.current) {
+				if (updateAfterUnmount || mounted.current) {
 					setProcessing(false);
 					updateComponent(result);
 				}
 			})
 			.catch((e) => {
-				if (mounted.current) {
+				if (updateAfterUnmount || mounted.current) {
 					setProcessing(false);
 					errorHandler?.(e);
 				}

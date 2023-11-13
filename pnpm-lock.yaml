@@ -90,7 +90,7 @@ importers:
         version: 3.22.4
     devDependencies:
       '@babel/preset-env':
-        specifier: ^7.23.3
+        specifier: 7.23.3
         version: 7.23.3(@babel/core@7.23.2)
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.11
@@ -150,7 +150,7 @@ importers:
         specifier: 6.11.0
         version: 6.11.0(eslint@8.53.0)(typescript@5.2.2)
       babel-jest:
-        specifier: ^29.7.0
+        specifier: 29.7.0
         version: 29.7.0(@babel/core@7.23.2)
       browser-resolve:
         specifier: 2.0.0
@@ -1076,7 +1076,7 @@ packages:
       '@babel/code-frame': 7.22.13
       '@babel/generator': 7.23.0
       '@babel/helper-compilation-targets': 7.22.15
-      '@babel/helper-module-transforms': 7.23.0(@babel/core@7.23.2)
+      '@babel/helper-module-transforms': 7.23.3(@babel/core@7.23.2)
       '@babel/helpers': 7.23.2
       '@babel/parser': 7.23.0
       '@babel/template': 7.22.15
@@ -1203,20 +1203,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@babel/types': 7.23.0
-    dev: true
-
-  /@babel/helper-module-transforms@7.23.0(@babel/core@7.23.2):
-    resolution: {integrity: sha512-WhDWw1tdrlT0gMgUJSlX0IQvoO1eN279zrAUbVB+KpV2c3Tylz8+GnKOLllCS6Z/iZQEyVYxhZVUdPTqs2YYPw==}
-    engines: {node: '>=6.9.0'}
-    peerDependencies:
-      '@babel/core': ^7.0.0
-    dependencies:
-      '@babel/core': 7.23.2
-      '@babel/helper-environment-visitor': 7.22.20
-      '@babel/helper-module-imports': 7.22.15
-      '@babel/helper-simple-access': 7.22.5
-      '@babel/helper-split-export-declaration': 7.22.6
-      '@babel/helper-validator-identifier': 7.22.20
     dev: true
 
   /@babel/helper-module-transforms@7.23.3(@babel/core@7.23.2):

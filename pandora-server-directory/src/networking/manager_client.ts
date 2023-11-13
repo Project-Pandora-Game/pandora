@@ -750,7 +750,7 @@ async function TestCaptcha(token?: string): Promise<boolean> {
 				response: token,
 			}),
 		});
-		const data = await response.json() as unknown;
+		const data: unknown = await response.json();
 		const result = await VerifyResponseSchema.safeParseAsync(data);
 		if (!result.success)
 			return false;

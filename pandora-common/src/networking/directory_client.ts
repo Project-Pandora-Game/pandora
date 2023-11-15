@@ -39,6 +39,11 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 */
 	wardrobeExtraActionButtons: z.boolean().catch(true),
 	/**
+	 * Controls whether to show character preview when hovering over an action button.
+	 * (when action is possible the character preview shows the result state while hovering)
+	 */
+	wardrobeHoverPreview: z.boolean().catch(true),
+	/**
 	 * Color to use as wardrobe character preview background, unless room background is used (see `wardrobeUseRoomBackground` setting).
 	 */
 	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
@@ -74,6 +79,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	wardrobeExtraActionButtons: true,
 	wardrobeBackground: '#aaaaaa',
 	wardrobeUseRoomBackground: true,
+	wardrobeHoverPreview: true,
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',

@@ -5,6 +5,7 @@ import {
 	AppearanceActionProcessingResult,
 	AssertNever,
 	AssertNotNullable,
+	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
 	GetLogger,
 	Nullable,
@@ -43,6 +44,8 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	AssertNotNullable(account);
 
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
+	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
+
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
@@ -96,8 +99,10 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		extraItemActions,
 		actions,
 		execute: (action) => shardConnector?.awaitResponse('appearanceAction', action),
+		actionPreviewState,
 		showExtraActionButtons: account.settings.wardrobeExtraActionButtons,
-	}), [target, targetSelector, player, globalState, assetList, heldItem, extraItemActions, actions, shardConnector, account.settings]);
+		showHoverPreview: account.settings.wardrobeHoverPreview,
+	}), [target, targetSelector, player, globalState, assetList, heldItem, extraItemActions, actions, shardConnector, actionPreviewState, account.settings]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

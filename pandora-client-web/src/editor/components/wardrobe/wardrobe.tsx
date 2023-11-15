@@ -1,4 +1,4 @@
-import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema, DoAppearanceAction, EMPTY_ARRAY } from 'pandora-common';
+import { ActionRoomContext, AppearanceActionContext, AssetFrameworkGlobalState, ChatRoomFeatureSchema, DoAppearanceAction, EMPTY_ARRAY } from 'pandora-common';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Column, Row } from '../../../components/common/container/container';
@@ -30,6 +30,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const assetList = assetManager.assetList;
 
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
+	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
@@ -67,6 +68,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		setHeldItem,
 		extraItemActions,
 		actions,
+		actionPreviewState,
 		execute: (action) => {
 			const result = DoAppearanceAction(action, actions, assetManager);
 
@@ -86,7 +88,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 			};
 		},
 		showExtraActionButtons: true,
-	}), [character, globalState, assetList, heldItem, extraItemActions, actions, assetManager, editor]);
+		showHoverPreview: true,
+	}), [character, globalState, assetList, heldItem, extraItemActions, actions, actionPreviewState, assetManager, editor]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

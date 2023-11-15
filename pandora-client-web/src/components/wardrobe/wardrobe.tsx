@@ -20,6 +20,7 @@ import { WardrobeOutfitGui } from './views/wardrobeOutfitsView';
 import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
 import { WardrobeItemManipulation } from './wardrobeItems';
 import './wardrobe.scss';
+import { useObservable } from '../../observable';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -91,8 +92,9 @@ function WardrobeCharacter({ character }: {
 	character: IChatroomCharacter;
 }): ReactElement {
 	const navigate = useNavigate();
-	const { globalState } = useWardrobeContext();
+	const { globalState, actionPreviewState } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);
+	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
 
 	if (characterState == null)
 		return <Link to='/pandora_lobby'>◄ Back</Link>;
@@ -109,7 +111,7 @@ function WardrobeCharacter({ character }: {
 				)
 			}
 			<div className='wardrobeMain'>
-				<WardrobeCharacterPreview character={ character } characterState={ characterState } />
+				<WardrobeCharacterPreview character={ character } characterState={ characterPreviewState ?? characterState } isPreview={ characterPreviewState != null } />
 				<TabContainer className='flex-1'>
 					<Tab name='Items'>
 						<div className='wardrobe-pane'>

@@ -126,4 +126,12 @@
 	white-space: pre-line;
 }
 
+.pointer-events-disable {
+	pointer-events: none;
+}
+
+.pointer-events-enable {
+	pointer-events: auto;
+}
+
 //#endregion

@@ -115,6 +115,7 @@ function WardrobeSettings({ account }: { account: IDirectoryAccountInfo; }): Rea
 			<WardrobeBackgroundColor account={ account } />
 			<WardrobeUseRoomBackground account={ account } />
 			<WardrobeShowExtraButtons account={ account } />
+			<WardrobeHoverPreview account={ account } />
 		</fieldset>
 	);
 }
@@ -173,6 +174,24 @@ function WardrobeShowExtraButtons({ account }: { account: IDirectoryAccountInfo;
 		<div className='input-row'>
 			<input type='checkbox' checked={ show } onChange={ onChange } />
 			<label>Show quick action buttons</label>
+		</div>
+	);
+}
+
+function WardrobeHoverPreview({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const [show, setShow] = useState(account.settings.wardrobeHoverPreview);
+
+	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const newValue = e.target.checked;
+		setShow(newValue);
+		directory.sendMessage('changeSettings', { wardrobeHoverPreview: newValue });
+	};
+
+	return (
+		<div className='input-row'>
+			<input type='checkbox' checked={ show } onChange={ onChange } />
+			<label>Show preview when hovering over action button</label>
 		</div>
 	);
 }

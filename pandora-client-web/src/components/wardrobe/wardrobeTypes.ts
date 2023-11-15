@@ -42,8 +42,12 @@ export interface WardrobeContext {
 	actions: AppearanceActionContext;
 	execute: (action: AppearanceAction) => IClientShardResult['appearanceAction'] | undefined;
 
+	/** Override for previewing the actions */
+	actionPreviewState: Observable<AssetFrameworkGlobalState | null>;
+
 	// Settings
 	showExtraActionButtons: boolean;
+	showHoverPreview: boolean;
 }
 
 export interface WardrobeFocus {

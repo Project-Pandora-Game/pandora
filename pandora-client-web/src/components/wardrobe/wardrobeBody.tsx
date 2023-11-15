@@ -3,6 +3,7 @@ import {
 	Assert,
 	Asset,
 	AssetFrameworkCharacterState,
+	EMPTY_ARRAY,
 	Item,
 	ItemId,
 } from 'pandora-common';
@@ -61,7 +62,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 						title='Add a new bodypart'
 						assets={ assetList.filter(filter) }
 						attributesFilterOptions={ bodyFilterAttributes }
-						container={ [] }
+						container={ EMPTY_ARRAY }
 						spawnStyle='spawn'
 					/>
 				</Tab>

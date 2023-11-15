@@ -1,16 +1,17 @@
 import { nanoid } from 'nanoid';
 import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData } from 'pandora-common';
 import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
-import { Character, ICharacter } from '../../../character/character';
+import { Character, ICharacter, useCharacterData } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../contextMenu';
 import { useChatRoomCharacters, useChatroom, useChatroomRequired, useRoomState } from '../../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../../gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../wardrobe/wardrobeCheckQueue';
-import { useWardrobeContext, useWardrobeExecute, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
+import { useWardrobeContext, useWardrobeExecuteChecked, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { CharacterContextMenu } from './characterContextMenu';
+import { useConfirmDialog } from '../../dialog/dialog';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -27,14 +28,20 @@ function StoreDeviceMenu({ device, close }: {
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
-	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
+	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
+	const confirm = useConfirmDialog();
 
-	if (!available) {
-		return null;
-	}
+	const onClick = useCallback(() => {
+		confirm('Are you sure you want to store the device?')
+			.then((result) => {
+				if (result) {
+					execute();
+				}
+			}).catch(() => { /* NOOP */});
+	}, [confirm, execute]);
 
 	return (
-		<button onClick={ execute } disabled={ processing }>
+		<button onClick={ onClick } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
 			Store the device
 		</button>
 	);
@@ -56,14 +63,10 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 	}), [device, slot]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
-	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
-
-	if (!available) {
-		return null;
-	}
+	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	return (
-		<button onClick={ execute } disabled={ processing }>
+		<button onClick={ execute } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
 			{ children }
 		</button>
 	);
@@ -91,6 +94,8 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	character: ICharacter;
 	close: () => void;
 }) {
+	const characterData = useCharacterData(character);
+
 	const action = useMemo<AppearanceAction>(() => ({
 		type: 'roomDeviceEnter',
 		item: {
@@ -107,14 +112,17 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	}), [device, slot, character]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
-	const [execute, processing] = useWardrobeExecute(action, { onSuccess: close });
-
-	if (!available) {
-		return null;
-	}
+	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	return (
-		<button onClick={ execute } disabled={ processing }>
+		<button
+			onClick={ execute }
+			disabled={ processing }
+			className={ available ? '' : 'text-strikethrough' }
+			style={ {
+				backgroundColor: `${characterData.settings.labelColor}44`,
+			} }
+		>
 			{ character.name } ({ character.id })
 		</button>
 	);

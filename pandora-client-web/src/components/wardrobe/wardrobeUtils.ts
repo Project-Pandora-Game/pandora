@@ -1,7 +1,10 @@
 import { nanoid } from 'nanoid';
 import {
+	ActionRoomContext,
+	AppearanceActionProcessingResultValid,
 	AppearanceItems,
 	AssertNever,
+	AssertNotNullable,
 	EMPTY_ARRAY,
 	Item,
 	ItemId,
@@ -10,6 +13,7 @@ import {
 import { useMemo } from 'react';
 import { WardrobeFocus, WardrobeTarget } from './wardrobeTypes';
 import { useWardrobeContext } from './wardrobeContext';
+import { ICharacter } from '../../character/character';
 
 export function GenerateRandomItemId(): ItemId {
 	return `i/${nanoid()}` as const;
@@ -59,4 +63,26 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 		}
 		return current.find((it) => it.id === itemId);
 	}, [items, itemPath]);
+}
+
+export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, roomContext: ActionRoomContext | null, result: AppearanceActionProcessingResultValid): string[] {
+	const originalCharacterState = result.originalState.characters.get(player.id);
+	AssertNotNullable(originalCharacterState);
+	const resultCharacterState = result.resultState.characters.get(player.id);
+	AssertNotNullable(resultCharacterState);
+
+	const originalRestrictionManager = player.getRestrictionManager(originalCharacterState, roomContext);
+	const resultRestrictionManager = player.getRestrictionManager(resultCharacterState, roomContext);
+
+	// Do not warn about anything in safemode
+	if (resultRestrictionManager.isInSafemode())
+		return [];
+
+	const warnings: string[] = [];
+
+	if (originalRestrictionManager.canUseHands() && !resultRestrictionManager.canUseHands()) {
+		warnings.push(`This action will prevent you from using your hands`);
+	}
+
+	return warnings;
 }

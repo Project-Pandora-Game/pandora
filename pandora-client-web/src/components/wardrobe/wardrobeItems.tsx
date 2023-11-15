@@ -17,6 +17,7 @@ import { InventoryAssetView } from './views/wardrobeAssetView';
 import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
 import { InventoryItemView } from './views/wardrobeItemView';
 import { RoomInventoryView } from './views/wardrobeRoomInventoryView';
+import { WardrobeTemplateEditMenu } from './templateDetail/_wardrobeTemplateDetail';
 
 /** This hook doesn't generate or use a global state and shouldn't be used recursively */
 export function useWardrobeItems(): {
@@ -70,7 +71,7 @@ export function useWardrobeItems(): {
 }
 
 export function WardrobeItemManipulation({ className }: { className?: string; }): ReactElement {
-	const { globalState, target, assetList } = useWardrobeContext();
+	const { globalState, target, assetList, heldItem, setHeldItem } = useWardrobeContext();
 	const { currentFocus, setFocus, preFilter, containerContentsFilter } = useWardrobeItems();
 
 	const assetManager = useAssetManager();
@@ -102,6 +103,10 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 		return container != null && container instanceof ItemModuleLockSlot;
 	}, [appearance, currentFocus]);
 
+	const focus = WardrobeFocusesItem(currentFocus) ? 'item' :
+		heldItem.type === 'template' ? 'template' :
+		'nothing';
+
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
 			<InventoryItemView
@@ -110,7 +115,7 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 				focus={ currentFocus }
 				setFocus={ setFocus }
 			/>
-			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
+			<TabContainer className={ classNames('flex-1', focus !== 'nothing' ? 'hidden' : null) }>
 				{
 					globalState.room != null && !isRoomInventory ? (
 						<Tab name='Room inventory'>
@@ -145,10 +150,21 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 				</Tab>
 			</TabContainer>
 			{
-				WardrobeFocusesItem(currentFocus) &&
-				<div className='flex-col flex-1'>
-					<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } setFocus={ setFocus } />
-				</div>
+				focus === 'item' && WardrobeFocusesItem(currentFocus) ? (
+					<div className='flex-col flex-1'>
+						<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } setFocus={ setFocus } />
+					</div>
+				) :
+				focus === 'template' && heldItem.type === 'template' ? (
+					<div className='flex-col flex-1'>
+						<WardrobeTemplateEditMenu
+							template={ heldItem.template }
+							cancel={ () => setHeldItem({ type: 'nothing' }) }
+							updateTemplate={ (newTemplate) => setHeldItem({ type: 'template', template: newTemplate }) }
+						/>
+					</div>
+				) :
+				null
 			}
 		</div>
 	);

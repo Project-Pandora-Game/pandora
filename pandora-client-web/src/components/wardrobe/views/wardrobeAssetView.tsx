@@ -193,8 +193,10 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 			tabIndex={ 0 }
 			onClick={ () => {
 				setHeldItem({
-					type: 'asset',
-					asset: asset.id,
+					type: 'template',
+					template: {
+						asset: asset.id,
+					},
 				});
 			} }>
 			<InventoryAssetPreview asset={ asset } />
@@ -208,8 +210,10 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	container: ItemContainerPath;
 	listMode: boolean;
 }): ReactElement {
-	const { targetSelector } = useWardrobeContext();
+	const { targetSelector, actionPreviewState, showHoverPreview } = useWardrobeContext();
 	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
+	const [ref, setRef] = useState<HTMLDivElement | null>(null);
+	const [isHovering, setIsHovering] = useState(false);
 
 	const action = useMemo((): AppearanceAction => ({
 		type: 'create',
@@ -233,7 +237,21 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 		...permissionProblems,
 	] : [], [check, permissionProblems]);
 
-	const [ref, setRef] = useState<HTMLDivElement | null>(null);
+	useEffect(() => {
+		if (!isHovering || !showHoverPreview || check == null || !check.valid || finalProblems.length > 0)
+			return;
+
+		const previewState = check.resultState;
+
+		actionPreviewState.value = previewState;
+
+		return () => {
+			if (actionPreviewState.value === previewState) {
+				actionPreviewState.value = null;
+			}
+		};
+	}, [isHovering, showHoverPreview, actionPreviewState, check, finalProblems]);
+
 	return (
 		<div
 			className={ classNames(
@@ -244,7 +262,14 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 			) }
 			tabIndex={ 0 }
 			ref={ setRef }
-			onClick={ execute }>
+			onClick={ execute }
+			onMouseEnter={ () => {
+				setIsHovering(true);
+			} }
+			onMouseLeave={ () => {
+				setIsHovering(false);
+			} }
+		>
 			{
 				check != null ? (
 					<ActionWarning problems={ finalProblems } parent={ ref } />
@@ -260,7 +285,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 	const { heldItem, setHeldItem } = useWardrobeContext();
 
 	const action = useMemo<AppearanceAction | null>(() => {
-		if (heldItem.type === 'nothing' || heldItem.type === 'asset')
+		if (heldItem.type === 'nothing' || heldItem.type === 'template')
 			return null;
 
 		if (heldItem.type === 'item') {
@@ -275,7 +300,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 	}, [heldItem]);
 
 	const text = useMemo<string | null>(() => {
-		if (heldItem.type === 'nothing' || heldItem.type === 'asset')
+		if (heldItem.type === 'nothing' || heldItem.type === 'template')
 			return null;
 
 		if (heldItem.type === 'item') {
@@ -285,7 +310,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 		AssertNever(heldItem);
 	}, [heldItem]);
 
-	if (heldItem.type === 'asset') {
+	if (heldItem.type === 'template') {
 		return (
 			<button
 				className='wardrobeActionButton overlayDrop centerButton allowed'

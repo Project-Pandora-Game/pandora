@@ -187,14 +187,12 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 			};
 		}
 
-		if (heldItem.type === 'asset') {
+		if (heldItem.type === 'template') {
 			return {
 				type: 'create',
 				target,
 				itemId: newItemId,
-				itemTemplate: {
-					asset: heldItem.asset,
-				},
+				itemTemplate: heldItem.template,
 				container,
 				insertBefore,
 			};
@@ -211,7 +209,7 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 			return 'Move item here';
 		}
 
-		if (heldItem.type === 'asset') {
+		if (heldItem.type === 'template') {
 			return 'Create item here';
 		}
 

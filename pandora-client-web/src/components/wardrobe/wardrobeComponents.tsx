@@ -122,7 +122,12 @@ export function WardrobeActionButton({
 			id={ id }
 			ref={ setRef }
 			tabIndex={ 0 }
-			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
+			className={ classNames(
+				'wardrobeActionButton',
+				className,
+				check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked',
+				hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null,
+			) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
 				execute();

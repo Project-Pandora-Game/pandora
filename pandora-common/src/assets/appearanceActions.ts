@@ -7,7 +7,7 @@ import { WearableAssetType } from './definitions';
 import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelectorSchema } from './appearanceTypes';
 import { ItemInteractionType } from '../character/restrictionsManager';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
-import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplate, ItemTemplateSchema, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
+import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { isEqual, sample } from 'lodash';

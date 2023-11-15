@@ -77,7 +77,9 @@ export class AppearanceEditor extends CharacterAppearance {
 				type: 'character',
 				characterId: this.id,
 			},
-			asset: asset.id,
+			itemTemplate: {
+				asset: asset.id,
+			},
 			container: [],
 			itemId: `i/editor/${nanoid()}`,
 		}, context);

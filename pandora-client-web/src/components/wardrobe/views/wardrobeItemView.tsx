@@ -159,7 +159,7 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 		isEqual(container, heldItem.path.container);
 	const targetIsSource = identicalContainer && insertBefore === heldItem.path.itemId;
 
-	const action = useMemo<AppearanceAction | null>(() => {
+	const action = useMemo((): AppearanceAction | null => {
 		if (heldItem.type === 'nothing' || targetIsSource)
 			return null;
 
@@ -192,7 +192,9 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 				type: 'create',
 				target,
 				itemId: newItemId,
-				asset: heldItem.asset,
+				itemTemplate: {
+					asset: heldItem.asset,
+				},
 				container,
 				insertBefore,
 			};

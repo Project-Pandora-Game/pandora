@@ -64,6 +64,10 @@ export const LockBundleSchema = z.object({
 });
 export type LockBundle = z.infer<typeof LockBundleSchema>;
 
+/**
+ * Serializable data bundle containing information about an item.
+ * Used for storing appearance or room data in database and for transferring it to the clients.
+ */
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
@@ -77,6 +81,17 @@ export const ItemBundleSchema = z.object({
 	lockData: LockBundleSchema.optional(),
 });
 export type ItemBundle = z.infer<typeof ItemBundleSchema>;
+
+/**
+ * Data describing an item configuration as a template.
+ * Used for creating a new item from the template with matching configuration.
+ */
+export const ItemTemplateSchema = z.object({
+	asset: AssetIdSchema,
+	templateName: z.string().optional(),
+	color: ItemColorBundleSchema.optional(),
+});
+export type ItemTemplate = z.infer<typeof ItemTemplateSchema>;
 
 export type IItemLoadContext = {
 	assetManager: AssetManager;

@@ -5,7 +5,7 @@ import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
 import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, AssetType, BackgroundTagDefinition, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
-import { LoadItemFromBundle, Item, ItemBundle } from './item';
+import { LoadItemFromBundle, Item, ItemBundle, ItemTemplate } from './item';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
@@ -189,12 +189,33 @@ export class AssetManager {
 		return res;
 	}
 
-	public createItem<T extends AssetType>(id: ItemId, asset: Asset<T>, bundle: ItemBundle | null, logger?: Logger): Item<T> {
+	public createItem<T extends AssetType>(id: ItemId, asset: Asset<T>, template?: ItemTemplate, logger?: Logger): Item<T> {
 		Assert(this._assets.get(asset.id) === asset);
-		return LoadItemFromBundle<T>(asset, bundle ?? {
+
+		// Create template if none was supplied
+		template ??= {
+			asset: asset.id,
+		};
+		Assert(template.asset === asset.id);
+
+		// Build a bundle from the template
+		const bundle: ItemBundle = {
 			id,
 			asset: asset.id,
-		}, {
+			color: template.color,
+		};
+
+		return LoadItemFromBundle<T>(asset, bundle, {
+			assetManager: this,
+			doLoadTimeCleanup: false,
+			logger,
+		});
+	}
+
+	public loadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, logger?: Logger): Item {
+		Assert(this._assets.get(asset.id) === asset);
+		Assert(asset.id === bundle.asset);
+		return LoadItemFromBundle(asset, bundle, {
 			assetManager: this,
 			doLoadTimeCleanup: bundle !== null,
 			logger,

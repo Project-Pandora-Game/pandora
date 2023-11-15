@@ -90,7 +90,7 @@ export class AssetFrameworkRoomState {
 				continue;
 			}
 
-			const item = assetManager.createItem(itemBundle.id, asset, itemBundle, logger);
+			const item = assetManager.loadItemFromBundle(asset, itemBundle, logger);
 			loadedItems.push(item);
 		}
 

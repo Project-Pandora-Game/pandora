@@ -211,11 +211,13 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	const { targetSelector } = useWardrobeContext();
 	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
 
-	const action: AppearanceAction = useMemo(() => ({
+	const action = useMemo((): AppearanceAction => ({
 		type: 'create',
 		target: targetSelector,
 		itemId: newItemId,
-		asset: asset.id,
+		itemTemplate: {
+			asset: asset.id,
+		},
 		container,
 	}), [targetSelector, newItemId, asset, container]);
 

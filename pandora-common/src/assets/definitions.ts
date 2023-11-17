@@ -188,6 +188,13 @@ export type IRoomDeviceGraphicsCharacterPosition = {
 	offsetX: number;
 	offsetY: number;
 	/**
+	 * Pivot point used for character rotation and similar transforms.
+	 * @see {CHARACTER_PIVOT_POSITION}
+	 * @default
+	 * { x: 500, y: 1290 }
+	 */
+	pivot?: Coordinates;
+	/**
 	 * Is the factor by which the character is made bigger or smaller inside the room device slot,
 	 * compared to this room device scaled inside the room
 	 * @default 1

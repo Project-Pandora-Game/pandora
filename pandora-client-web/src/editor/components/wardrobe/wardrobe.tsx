@@ -1,7 +1,7 @@
 import { ActionRoomContext, AppearanceActionContext, ChatRoomFeatureSchema, DoAppearanceAction, EMPTY_ARRAY } from 'pandora-common';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
-import { Column } from '../../../components/common/container/container';
+import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView';
@@ -16,6 +16,7 @@ import { useEditor, useEditorState } from '../../editorContextProvider';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import '../../../components/wardrobe/wardrobe.scss';
+import { WardrobeActionButton } from '../../../components/wardrobe/wardrobeComponents';
 
 export const EDITOR_ROOM_CONTEXT = {
 	features: ChatRoomFeatureSchema.options,
@@ -154,6 +155,22 @@ export function EditorWardrobeUI(): ReactElement {
 						container={ currentFocus.container }
 						spawnStyle='spawn'
 					/>
+				</FieldsetToggle>
+				<FieldsetToggle legend='Randomization' className='no-padding' open={ false } persistent='wardrobe-randomization'>
+					<Row padding='medium'>
+						<WardrobeActionButton action={ {
+							type: 'randomize',
+							kind: 'items',
+						} }>
+							Randomize clothes
+						</WardrobeActionButton>
+						<WardrobeActionButton action={ {
+							type: 'randomize',
+							kind: 'full',
+						} }>
+							Randomize everything
+						</WardrobeActionButton>
+					</Row>
 				</FieldsetToggle>
 			</Column>
 		</Scrollbar>

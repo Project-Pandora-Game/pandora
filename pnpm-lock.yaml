@@ -94,7 +94,7 @@ importers:
         version: 7.23.3(@babel/core@7.23.2)
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.11
-        version: 0.5.11(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@4.7.1)(webpack-dev-server@4.15.1)(webpack@5.89.0)
+        version: 0.5.11(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@4.8.1)(webpack-dev-server@4.15.1)(webpack@5.89.0)
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
         version: 13.2.0(sass@1.69.5)(webpack@5.89.0)
@@ -243,8 +243,8 @@ importers:
         specifier: 2.6.2
         version: 2.6.2
       type-fest:
-        specifier: 4.7.1
-        version: 4.7.1
+        specifier: 4.8.1
+        version: 4.8.1
       typescript:
         specifier: 5.2.2
         version: 5.2.2
@@ -3754,7 +3754,7 @@ packages:
       playwright: 1.40.0
     dev: true
 
-  /@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@4.7.1)(webpack-dev-server@4.15.1)(webpack@5.89.0):
+  /@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.5)(react-refresh@0.14.0)(type-fest@4.8.1)(webpack-dev-server@4.15.1)(webpack@5.89.0):
     resolution: {integrity: sha512-7j/6vdTym0+qZ6u4XbSAxrWBGYSdCfTzySkj7WAFgDLmSyWlOrWvpyzxlFh5jtw9dn0oL/jtW+06XfFiisN3JQ==}
     engines: {node: '>= 10.13'}
     peerDependencies:
@@ -3791,7 +3791,7 @@ packages:
       react-refresh: 0.14.0
       schema-utils: 3.3.0
       source-map: 0.7.4
-      type-fest: 4.7.1
+      type-fest: 4.8.1
       webpack: 5.89.0(webpack-cli@5.1.4)
       webpack-dev-server: 4.15.1(webpack-cli@5.1.4)(webpack@5.89.0)
     dev: true
@@ -12401,8 +12401,8 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /type-fest@4.7.1:
-    resolution: {integrity: sha512-iWr8RUmzAJRfhZugX9O7nZE6pCxDU8CZ3QxsLuTnGcBLJpCaP2ll3s4eMTBoFnU/CeXY/5rfQSuAEsTGJO4y8A==}
+  /type-fest@4.8.1:
+    resolution: {integrity: sha512-ShaaYnjf+0etG8W/FumARKMjjIToy/haCaTjN2dvcewOSoNqCQzdgG7m2JVOlM5qndGTHjkvsrWZs+k/2Z7E0Q==}
     engines: {node: '>=16'}
     dev: true
 

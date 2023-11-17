@@ -417,11 +417,14 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 
 	const scaleX = backView ? -1 : 1;
 
-	const actualPivot = useMemo((): PointLike => effectiveCharacterPosition.disablePoseOffset ? CloneDeepMutable(CHARACTER_PIVOT_POSITION) : pivot, [effectiveCharacterPosition, pivot]);
-	const rotationPivot = useMemo((): PointLike => effectiveCharacterPosition.pivot ?? CloneDeepMutable(CHARACTER_PIVOT_POSITION), [effectiveCharacterPosition]);
-
-	// TODO: Considering supporting extra offset while in a device that allows pose offset
-	const yOffsetExtra = 0;
+	const actualPivot = useMemo((): PointLike => {
+		const result: PointLike = CloneDeepMutable(effectiveCharacterPosition.disablePoseOffset ? CHARACTER_PIVOT_POSITION : pivot);
+		if (effectiveCharacterPosition.pivotOffset != null) {
+			result.x += effectiveCharacterPosition.pivotOffset.x;
+			result.y += effectiveCharacterPosition.pivotOffset.y;
+		}
+		return result;
+	}, [effectiveCharacterPosition, pivot]);
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
@@ -430,45 +433,37 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 		return null;
 
 	return (
-		<Container
+		<GraphicsCharacter
+			characterState={ characterState }
 			position={ { x, y } }
 			pivot={ actualPivot }
-			scale={ { x: scale, y: scale } }
+			scale={ { x: scale * scaleX, y: scale } }
+			angle={ rotationAngle }
 			filters={ filters }
 		>
-			<SwapCullingDirection uniqueKey='filter' swap={ filters.length > 0 }>
-				<GraphicsCharacter
-					characterState={ characterState }
-					position={ { x: rotationPivot.x, y: rotationPivot.y - yOffsetExtra } }
-					pivot={ rotationPivot }
-					scale={ { x: scaleX, y: 1 } }
-					angle={ rotationAngle }
-				>
-					{
-						!debugConfig?.characterDebugOverlay ? null : (
-							<Container
-								zIndex={ 99999 }
-							>
-								<Graphics
-									draw={ (g) => {
-										g.clear()
-											// Mask area
-											.lineStyle({ color: 0xffff00, width: 2 })
-											.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-											// Character canvas standard area
-											.lineStyle({ color: 0x00ff00, width: 2 })
-											.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
-											// Pivot point
-											.beginFill(0xffaa00)
-											.lineStyle({ color: 0x000000, width: 1 })
-											.drawCircle(actualPivot.x, actualPivot.y, 5);
-									} }
-								/>
-							</Container>
-						)
-					}
-				</GraphicsCharacter>
-			</SwapCullingDirection>
-		</Container>
+			{
+				!debugConfig?.characterDebugOverlay ? null : (
+					<Container
+						zIndex={ 99999 }
+					>
+						<Graphics
+							draw={ (g) => {
+								g.clear()
+									// Mask area
+									.lineStyle({ color: 0xffff00, width: 2 })
+									.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+									// Character canvas standard area
+									.lineStyle({ color: 0x00ff00, width: 2 })
+									.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+									// Pivot point
+									.beginFill(0xffaa00)
+									.lineStyle({ color: 0x000000, width: 1 })
+									.drawCircle(actualPivot.x, actualPivot.y, 5);
+							} }
+						/>
+					</Container>
+				)
+			}
+		</GraphicsCharacter>
 	);
 }

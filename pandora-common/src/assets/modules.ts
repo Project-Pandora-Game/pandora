@@ -111,17 +111,7 @@ export function GetModuleStaticAttributes<TProperties>(moduleDefinition: Immutab
 	}
 }
 
-export function LoadItemModule<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, rawData: unknown, context: IItemLoadContext): IItemModule<TProperties> {
-	let data: ItemModuleData | undefined;
-	if (rawData != null) {
-		const parsedData = ItemModuleDataSchema.safeParse(rawData);
-		if (parsedData.success) {
-			data = parsedData.data;
-		} else {
-			context.logger?.warning(`Invalid module data, ignoring`);
-		}
-	}
-
+export function LoadItemModule<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, data: ItemModuleData | undefined, context: IItemLoadContext): IItemModule<TProperties> {
 	if (data !== undefined && data.type !== moduleDefinition.type) {
 		data = undefined;
 	}

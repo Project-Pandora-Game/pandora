@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { first } from 'lodash';
-import { z } from 'zod';
+import { ZodTypeDef, z } from 'zod';
 import { Logger } from '../logging';
 import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
 import { HexRGBAColorString, HexRGBAColorStringSchema } from '../validation';
@@ -9,8 +9,8 @@ import { ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
-import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
-import { ItemModuleAction, LoadItemModule } from './modules';
+import { AssetColorization, AssetId, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
+import { ItemModuleAction, ItemModuleData, ItemModuleDataSchema, LoadItemModule } from './modules';
 import { IExportOptions, IItemModule } from './modules/common';
 import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
@@ -68,11 +68,29 @@ export type LockBundle = z.infer<typeof LockBundleSchema>;
  * Serializable data bundle containing information about an item.
  * Used for storing appearance or room data in database and for transferring it to the clients.
  */
-export const ItemBundleSchema = z.object({
+export type ItemBundle = {
+	id: ItemId;
+	asset: AssetId;
+	color?: ItemColorBundle | HexRGBAColorString[];
+	moduleData?: Record<string, ItemModuleData>;
+	/** Room device specific data */
+	roomDeviceData?: RoomDeviceBundle;
+	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
+	roomDeviceLink?: RoomDeviceLink;
+	/** Lock specific data */
+	lockData?: LockBundle;
+};
+
+/**
+ * Serializable data bundle containing information about an item.
+ * Used for storing appearance or room data in database and for transferring it to the clients.
+ * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
+ */
+export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
-	moduleData: z.record(z.unknown()).optional(),
+	moduleData: z.record(ItemModuleDataSchema).optional(),
 	/** Room device specific data */
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
@@ -80,7 +98,6 @@ export const ItemBundleSchema = z.object({
 	/** Lock specific data */
 	lockData: LockBundleSchema.optional(),
 });
-export type ItemBundle = z.infer<typeof ItemBundleSchema>;
 
 /**
  * Data describing an item configuration as a template.

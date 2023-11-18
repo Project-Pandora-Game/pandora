@@ -61,7 +61,7 @@ export interface IModuleConfigTyped<TProperties> extends IModuleConfigCommon<'ty
 	variants: [IModuleTypedOption<TProperties>, ...IModuleTypedOption<TProperties>[]];
 }
 
-const ModuleItemDataTypedSchema = z.object({
+export const ModuleItemDataTypedSchema = z.object({
 	type: z.literal('typed'),
 	variant: z.string().optional(),
 	selectedAt: z.number().optional(),
@@ -79,10 +79,8 @@ export const ItemModuleTypedActionSchema = z.object({
 export type ItemModuleTypedAction = Satisfies<z.infer<typeof ItemModuleTypedActionSchema>, IModuleActionCommon<'typed'>>;
 
 export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
-
-	public parseData(_config: IModuleConfigTyped<unknown>, data: unknown): IModuleItemDataTyped {
-		const parsed = ModuleItemDataTypedSchema.safeParse(data);
-		return parsed.success ? parsed.data : {
+	public makeDefaultData(_config: IModuleConfigTyped<unknown>): IModuleItemDataTyped {
+		return {
 			type: 'typed',
 		};
 	}

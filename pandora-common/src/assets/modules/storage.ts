@@ -15,10 +15,10 @@ export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
 	maxAcceptedSize: AssetSize;
 }
 
-const ModuleItemDataStorageSchema = z.lazy(() => z.object({
+export const ModuleItemDataStorageSchema = z.object({
 	type: z.literal('storage'),
-	contents: z.array(ItemBundleSchema),
-}));
+	contents: z.array(z.lazy(() => ItemBundleSchema)),
+});
 export type IModuleItemDataStorage = Satisfies<z.infer<typeof ModuleItemDataStorageSchema>, IModuleItemDataCommon<'storage'>>;
 
 // Never used
@@ -28,10 +28,8 @@ export const ItemModuleStorageActionSchema = z.object({
 export type ItemModuleStorageAction = Satisfies<z.infer<typeof ItemModuleStorageActionSchema>, IModuleActionCommon<'storage'>>;
 
 export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'> {
-
-	public parseData(_config: IModuleConfigStorage, data: unknown): IModuleItemDataStorage {
-		const parsed = ModuleItemDataStorageSchema.safeParse(data);
-		return parsed.success ? parsed.data : {
+	public makeDefaultData(_config: IModuleConfigStorage): IModuleItemDataStorage {
+		return {
 			type: 'storage',
 			contents: [],
 		};

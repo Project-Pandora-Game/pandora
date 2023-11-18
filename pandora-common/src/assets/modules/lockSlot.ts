@@ -18,10 +18,10 @@ export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<
 	lockedProperties?: TProperties;
 }
 
-const ModuleItemDataLockSlotSchema = z.lazy(() => z.object({
+export const ModuleItemDataLockSlotSchema = z.object({
 	type: z.literal('lockSlot'),
-	lock: ItemBundleSchema.nullable(),
-}));
+	lock: z.lazy(() => ItemBundleSchema).nullable(),
+});
 export type IModuleItemDataLockSlot = Satisfies<z.infer<typeof ModuleItemDataLockSlotSchema>, IModuleItemDataCommon<'lockSlot'>>;
 
 export const ItemModuleLockSlotActionSchema = z.object({
@@ -31,10 +31,8 @@ export const ItemModuleLockSlotActionSchema = z.object({
 export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSlotActionSchema>, IModuleActionCommon<'lockSlot'>>;
 
 export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlot'> {
-
-	public parseData(_config: IModuleConfigLockSlot<unknown>, data: unknown): IModuleItemDataLockSlot {
-		const parsed = ModuleItemDataLockSlotSchema.safeParse(data);
-		return parsed.success ? parsed.data : {
+	public makeDefaultData(_config: IModuleConfigLockSlot<unknown>): IModuleItemDataLockSlot {
+		return {
 			type: 'lockSlot',
 			lock: null,
 		};

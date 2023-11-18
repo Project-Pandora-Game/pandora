@@ -2,10 +2,10 @@ import type { Asset } from '../asset';
 import type { ConditionOperator } from '../graphics';
 import type { ItemInteractionType } from '../../character';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import type { AssetManager } from '../assetManager';
 import type { IItemLoadContext, IItemValidationContext } from '../item';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { IAssetModuleTypes, ModuleType } from '../modules';
+import type { Immutable } from 'immer';
 
 export interface IModuleConfigCommon<Type extends ModuleType> {
 	type: Type;
@@ -24,7 +24,7 @@ export interface IModuleActionCommon<Type extends ModuleType> {
 }
 
 export interface IAssetModuleDefinition<Type extends ModuleType> {
-	parseData(config: IModuleConfigCommon<Type>, data: unknown, assetManager: AssetManager): IAssetModuleTypes<unknown>[Type]['data'];
+	makeDefaultData(config: Immutable<IAssetModuleTypes<unknown>[Type]['config']>): IAssetModuleTypes<unknown>[Type]['data'];
 	loadModule<TProperties>(config: IModuleConfigCommon<Type>, data: IAssetModuleTypes<unknown>[Type]['data'], context: IItemLoadContext): IItemModule<TProperties, Type>;
 	getStaticAttributes<TProperties>(config: IModuleConfigCommon<Type>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string>;
 }

@@ -164,7 +164,7 @@ export class AccountManager implements Service {
 			await GetDatabase().updateAccountData(parsedData.data.id, pick(parsedData.data, ...DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES));
 		}
 
-		const account = new Account(rawData);
+		const account = new Account(parsedData.data);
 		this._onlineAccounts.add(account);
 		loadedAccountsMetric.set(this._onlineAccounts.size);
 		logger.debug(`Loaded account ${account.data.username}`);

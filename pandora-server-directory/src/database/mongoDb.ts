@@ -232,6 +232,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async updateAccountData(id: AccountId, data: Partial<Pick<DatabaseAccount, DatabaseAccountUpdateableProperties>>): Promise<void> {
 		data = DatabaseAccountSchema
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
+			.partial()
 			.strict()
 			.parse(_.cloneDeep(data));
 

@@ -1,5 +1,6 @@
 import { GetLogger, Service, ZodMatcher } from 'pandora-common';
 import { accountManager } from '../../account/accountManager';
+import { GitHubInfo } from '../../database/databaseStructure';
 
 import { Octokit } from '@octokit/rest';
 import { createOAuthUserAuth, createOAuthAppAuth } from '@octokit/auth-oauth-app';

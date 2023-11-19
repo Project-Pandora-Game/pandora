@@ -1,4 +1,4 @@
-interface DatabaseAccountToken {
+export interface DatabaseAccountToken {
 	/** The token secret */
 	value: string;
 	/** Time when will this token expire (timestamp from `Date.now()`) */
@@ -7,7 +7,7 @@ interface DatabaseAccountToken {
 	reason: import('../account/accountSecure').AccountTokenReason;
 }
 
-interface GitHubInfo {
+export interface GitHubInfo {
 	id: number;
 	login: string;
 	role: 'admin' | 'member' | 'collaborator' | 'none';
@@ -15,7 +15,7 @@ interface GitHubInfo {
 	teams?: import('../services/github/githubVerify').GitHubTeam[];
 }
 
-interface DatabaseAccountSecure {
+export interface DatabaseAccountSecure {
 	activated: boolean;
 	password: string;
 	emailHash: string;
@@ -25,15 +25,15 @@ interface DatabaseAccountSecure {
 }
 
 /** Direct message key create from the 2 accounts' id where the first is always the lowest */
-type DirectMessageAccounts = `${number}-${number}`;
+export type DirectMessageAccounts = `${number}-${number}`;
 
-type DatabaseDirectMessageInfo = import('pandora-common').IDirectoryDirectMessageInfo & {
+export type DatabaseDirectMessageInfo = import('pandora-common').IDirectoryDirectMessageInfo & {
 	/** Flag to indicate the conversation was closed and the info should not be sent to the account */
 	closed?: true;
 };
 
 /** Representation of account stored in database */
-interface DatabaseAccount {
+export interface DatabaseAccount {
 	username: string;
 	id: number;
 	created: number;
@@ -45,30 +45,30 @@ interface DatabaseAccount {
 	directMessages?: DatabaseDirectMessageInfo[];
 }
 
-type DatabaseAccountRelationship = {
+export type DatabaseAccountRelationship = {
 	type: 'friend' | 'mutualBlock';
 } | {
 	type: 'request' | 'oneSidedBlock';
 	from: import('pandora-common').AccountId;
 };
 
-interface DatabaseRelationship {
+export interface DatabaseRelationship {
 	accounts: [import('pandora-common').AccountId, import('pandora-common').AccountId];
 	updated: number;
 	relationship: DatabaseAccountRelationship;
 }
 
 /** Representation of account stored in database */
-interface DatabaseAccountWithSecure extends DatabaseAccount {
+export interface DatabaseAccountWithSecure extends DatabaseAccount {
 	/** Secure account data - should never leave this server; all related to account security */
 	secure: DatabaseAccountSecure;
 	roles?: import('pandora-common').IAccountRoleManageInfo;
 }
 
-type DatabaseConfig = {
+export type DatabaseConfig = {
 	shardTokens: (import('pandora-common').IShardTokenInfo & { token: string; })[];
 	betaKeys: (import('pandora-common').IBetaKeyInfo & { token: string; })[];
 };
 
-type DatabaseConfigType = keyof DatabaseConfig;
-type DatabaseConfigData<T extends DatabaseConfigType> = DatabaseConfig[T];
+export type DatabaseConfigType = keyof DatabaseConfig;
+export type DatabaseConfigData<T extends DatabaseConfigType> = DatabaseConfig[T];

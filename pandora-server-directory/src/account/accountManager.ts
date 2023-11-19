@@ -5,6 +5,7 @@ import promClient from 'prom-client';
 import { DiscordBot } from '../services/discord/discordBot';
 import { cloneDeep, isEqual } from 'lodash';
 import { diffString } from 'json-diff';
+import { DatabaseAccountWithSecure } from '../database/databaseStructure';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;

@@ -8,6 +8,7 @@ import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
 import type { ClientConnection } from '../networking/connection_client';
 import { AccountRelationship } from './accountRelationship';
+import { DatabaseAccount, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
 
 import _, { cloneDeep, omit, uniq } from 'lodash';
 

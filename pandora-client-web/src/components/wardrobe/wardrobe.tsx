@@ -16,7 +16,7 @@ import { WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
 import { WardrobeCharacterPreview } from './wardrobeGraphics';
 import { WardrobeBodyManipulation } from './wardrobeBody';
 import { WardrobePoseGui } from './views/wardrobePoseView';
-import { WardrobeOutfitGui } from './views/wardrobeOutfitsView';
+import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
 import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
 import { WardrobeItemManipulation } from './wardrobeItems';
 import './wardrobe.scss';
@@ -131,9 +131,9 @@ function WardrobeCharacter({ character }: {
 							</div>
 						</div>
 					</Tab>
-					<Tab name='Outfits'>
+					<Tab name='Randomization'>
 						<div className='wardrobe-pane'>
-							<WardrobeOutfitGui character={ character } />
+							<WardrobeRandomizationGui character={ character } />
 						</div>
 					</Tab>
 					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/pandora_lobby') } />

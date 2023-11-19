@@ -5,7 +5,7 @@ import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column, Row } from '../../common/container/container';
 import { WardrobeActionButton } from '../wardrobeComponents';
 
-export function WardrobeOutfitGui({ character }: {
+export function WardrobeRandomizationGui({ character }: {
 	character: ICharacter;
 }): ReactElement {
 	const playerId = usePlayerId();

@@ -5,7 +5,8 @@ import type { ShardFeature } from '../chatroom';
 import { Satisfies } from '../utility';
 import { HexColorStringSchema, ZodCast } from '../validation';
 import type { IAccountRelationship, IAccountFriendStatus } from './client_directory';
-import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import { Immutable } from 'immer';
 
 export type IDirectoryStatus = {
 	time: number;
@@ -212,7 +213,7 @@ export const DirectoryClientSchema = {
 		}>(),
 		response: null,
 	},
-} as const;
+} as const satisfies Immutable<SocketInterfaceDefinition>;
 
 export type IDirectoryClient = Satisfies<typeof DirectoryClientSchema, SocketInterfaceDefinitionVerified<typeof DirectoryClientSchema>>;
 export type IDirectoryClientArgument = SocketInterfaceRequest<IDirectoryClient>;

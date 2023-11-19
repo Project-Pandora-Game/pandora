@@ -1,10 +1,12 @@
-import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
+import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
 import { CharacterIdSchema } from '../character/characterTypes';
 import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataSchema, CharacterDataUpdateSchema, ICharacterData } from '../character/characterData';
 import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
 import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
+import { ZodCast } from '../validation';
+import { Immutable } from 'immer';
 
 export const ChatRoomDataAccessSchema = ChatRoomDataSchema.pick({ id: true, accessId: true });
 export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
@@ -14,7 +16,6 @@ import type { } from '../assets/appearance';
 import type { } from '../assets/item';
 import type { } from '../character/pronouns';
 import type { } from '../chatroom/chat';
-import { ZodCast } from '../validation';
 
 export const ShardDirectorySchema = {
 	shardRegister: {
@@ -91,7 +92,7 @@ export const ShardDirectorySchema = {
 		}),
 	},
 	//#endregion
-} as const;
+} as const satisfies Immutable<SocketInterfaceDefinition>;
 
 export type IShardDirectory = Satisfies<typeof ShardDirectorySchema, SocketInterfaceDefinitionVerified<typeof ShardDirectorySchema>>;
 export type IShardDirectoryArgument = SocketInterfaceRequest<IShardDirectory>;

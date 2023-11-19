@@ -12,6 +12,7 @@ import { AssetFrameworkOutfitWithIdSchema } from '../assets';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../account/accountRoles';
+import type { } from '../assets/item';
 
 type ShardError = 'noShardFound' | 'failed';
 

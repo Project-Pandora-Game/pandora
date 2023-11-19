@@ -25,7 +25,7 @@ const logger = GetLogger('GitHubVerifier');
 
 const states = new Map<string, { accountId: number; login: string; }>();
 
-const GitHubTeamSchema = z.enum(['beta-access', 'developers', 'host', 'lead-developers']);
+export const GitHubTeamSchema = z.enum(['beta-access', 'developers', 'host', 'lead-developers']);
 const IsGitHubTeam = ZodMatcher(GitHubTeamSchema);
 export type GitHubTeam = z.infer<typeof GitHubTeamSchema>;
 

@@ -1,73 +1,98 @@
-export interface DatabaseAccountToken {
+import { AccountTokenReason } from '../account/accountSecure';
+import {
+	ACCOUNT_SETTINGS_DEFAULT,
+	AccountCryptoKeySchema,
+	AccountId,
+	AccountIdSchema,
+	DirectoryAccountSettingsSchema,
+	IAccountRoleManageInfo,
+	IBetaKeyInfo,
+	IDirectoryDirectMessageInfo,
+	IShardTokenInfo,
+	ZodCast,
+} from 'pandora-common';
+import { z } from 'zod';
+import { ICharacterSelfInfoDb } from './databaseProvider';
+import { GitHubTeamSchema } from '../services/github/githubVerify';
+import { cloneDeep } from 'lodash';
+
+export const DatabaseAccountTokenSchema = z.object({
 	/** The token secret */
-	value: string;
+	value: z.string(),
 	/** Time when will this token expire (timestamp from `Date.now()`) */
-	expires: number;
+	expires: z.number(),
 	/** The reason for this token */
-	reason: import('../account/accountSecure').AccountTokenReason;
-}
+	reason: z.nativeEnum(AccountTokenReason),
+});
+export type DatabaseAccountToken = z.infer<typeof DatabaseAccountTokenSchema>;
 
-export interface GitHubInfo {
-	id: number;
-	login: string;
-	role: 'admin' | 'member' | 'collaborator' | 'none';
-	date: number;
-	teams?: import('../services/github/githubVerify').GitHubTeam[];
-}
+export const GitHubInfoSchema = z.object({
+	id: z.number(),
+	login: z.string(),
+	role: z.enum(['admin', 'member', 'collaborator', 'none']),
+	date: z.number(),
+	teams: GitHubTeamSchema.array().optional(),
+});
+export type GitHubInfo = z.infer<typeof GitHubInfoSchema>;
 
-export interface DatabaseAccountSecure {
-	activated: boolean;
-	password: string;
-	emailHash: string;
-	tokens: DatabaseAccountToken[];
-	github?: GitHubInfo;
-	cryptoKey?: import('pandora-common').IAccountCryptoKey;
-}
+export const DatabaseAccountSecureSchema = z.object({
+	activated: z.boolean(),
+	password: z.string(),
+	emailHash: z.string(),
+	tokens: DatabaseAccountTokenSchema.array(),
+	github: GitHubInfoSchema.optional(),
+	cryptoKey: AccountCryptoKeySchema.optional(),
+});
+export type DatabaseAccountSecure = z.infer<typeof DatabaseAccountSecureSchema>;
 
 /** Direct message key create from the 2 accounts' id where the first is always the lowest */
 export type DirectMessageAccounts = `${number}-${number}`;
 
-export type DatabaseDirectMessageInfo = import('pandora-common').IDirectoryDirectMessageInfo & {
+export type DatabaseDirectMessageInfo = IDirectoryDirectMessageInfo & {
 	/** Flag to indicate the conversation was closed and the info should not be sent to the account */
 	closed?: true;
 };
 
 /** Representation of account stored in database */
-export interface DatabaseAccount {
-	username: string;
-	id: number;
-	created: number;
-	/** Secure account data - should never leave this server; all related to account security */
-	secure?: DatabaseAccountSecure;
-	roles?: import('pandora-common').IAccountRoleManageInfo;
-	characters: import('./databaseProvider').ICharacterSelfInfoDb[];
-	settings: import('pandora-common').IDirectoryAccountSettings;
-	directMessages?: DatabaseDirectMessageInfo[];
-}
+export const DatabaseAccountSchema = z.object({
+	username: z.string(),
+	id: AccountIdSchema,
+	created: z.number(),
+	roles: ZodCast<IAccountRoleManageInfo>().optional(),
+	characters: ZodCast<ICharacterSelfInfoDb>().array(),
+	settings: DirectoryAccountSettingsSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_DEFAULT)),
+	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
+});
+/** Representation of account stored in database */
+export type DatabaseAccount = z.infer<typeof DatabaseAccountSchema>;
+
+export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = ['roles', 'characters', 'settings', 'directMessages'] satisfies readonly (keyof DatabaseAccount)[];
+export type DatabaseAccountUpdateableProperties = (typeof DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES)[number];
 
 export type DatabaseAccountRelationship = {
 	type: 'friend' | 'mutualBlock';
 } | {
 	type: 'request' | 'oneSidedBlock';
-	from: import('pandora-common').AccountId;
+	from: AccountId;
 };
 
 export interface DatabaseRelationship {
-	accounts: [import('pandora-common').AccountId, import('pandora-common').AccountId];
+	accounts: [AccountId, AccountId];
 	updated: number;
 	relationship: DatabaseAccountRelationship;
 }
 
 /** Representation of account stored in database */
-export interface DatabaseAccountWithSecure extends DatabaseAccount {
+export const DatabaseAccountWithSecureSchema = DatabaseAccountSchema.extend({
 	/** Secure account data - should never leave this server; all related to account security */
-	secure: DatabaseAccountSecure;
-	roles?: import('pandora-common').IAccountRoleManageInfo;
-}
+	secure: DatabaseAccountSecureSchema,
+});
+/** Representation of account stored in database */
+export type DatabaseAccountWithSecure = z.infer<typeof DatabaseAccountWithSecureSchema>;
 
 export type DatabaseConfig = {
-	shardTokens: (import('pandora-common').IShardTokenInfo & { token: string; })[];
-	betaKeys: (import('pandora-common').IBetaKeyInfo & { token: string; })[];
+	shardTokens: (IShardTokenInfo & { token: string; })[];
+	betaKeys: (IBetaKeyInfo & { token: string; })[];
 };
 
 export type DatabaseConfigType = keyof DatabaseConfig;

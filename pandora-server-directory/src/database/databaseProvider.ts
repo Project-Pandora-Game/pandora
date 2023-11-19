@@ -2,10 +2,10 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 import { ServiceInit } from 'pandora-common';
-import { DatabaseAccountRelationship, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
+import { DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -46,25 +46,19 @@ export interface PandoraDatabase extends Service {
 	 * @param id - Account id
 	 * @param data - Settings data
 	 */
-	updateAccountSettings(id: number, data: IDirectoryAccountSettings): Promise<void>;
+	updateAccountData(id: AccountId, data: Partial<Pick<DatabaseAccount, DatabaseAccountUpdateableProperties>>): Promise<void>;
 
 	/**
 	 * Sets account's secure data use should only be used in AccountSecure class
 	 * @param id - Id of account to update
 	 */
-	setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void>;
+	setAccountSecure(id: AccountId, data: DatabaseAccountSecure): Promise<void>;
 
 	/**
 	 * Sets account's secure data use should only be used in AccountSecure class
 	 * @param id - Id of account to update
 	 */
-	setAccountSecureGitHub(id: number, data: DatabaseAccountSecure['github']): Promise<boolean>;
-
-	/**
-	 * Sets account's secure data use should only be used in AccountSecure class
-	 * @param id - Id of account to update
-	 */
-	setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void>;
+	setAccountSecureGitHub(id: AccountId, data: DatabaseAccountSecure['github']): Promise<boolean>;
 
 	queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>>;
 
@@ -75,27 +69,27 @@ export interface PandoraDatabase extends Service {
 	 * @param accountId - Id of account to create character for
 	 * @param data - Character data
 	 */
-	createCharacter(accountId: number): Promise<ICharacterSelfInfoDb>;
+	createCharacter(accountId: AccountId): Promise<ICharacterSelfInfoDb>;
 
 	/**
 	 * Finish the character creation process
 	 * @param accountId - Id of account to create character for
 	 */
-	finalizeCharacter(accountId: number, characterId: CharacterId): Promise<ICharacterData | null>;
+	finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null>;
 
 	/**
 	 * Update character's self info
 	 * @param accountId - Id of account to update character for
 	 * @param data - Character info data
 	 */
-	updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null>;
+	updateCharacter(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null>;
 
 	/**
 	 * Delete character
 	 * @param accountId - Id of account to delete character for
 	 * @param characterId - Id of character to delete
 	 */
-	deleteCharacter(accountId: number, characterId: CharacterId): Promise<void>;
+	deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void>;
 
 	/**
 	 * Sets a new access id for the account

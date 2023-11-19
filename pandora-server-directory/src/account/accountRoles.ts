@@ -152,6 +152,8 @@ export class AccountRoles {
 	}
 
 	private async _updateDatabase(): Promise<void> {
-		return await GetDatabase().setAccountRoles(this._account.id, Object.keys(this._roles).length > 0 ? this._roles : undefined);
+		await GetDatabase().updateAccountData(this._account.id, {
+			roles: this._roles,
+		});
 	}
 }

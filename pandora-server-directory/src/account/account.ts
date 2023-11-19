@@ -99,7 +99,9 @@ export class Account {
 
 		this.data.settings = { ...this.data.settings, ...settings };
 
-		await GetDatabase().updateAccountSettings(this.data.id, this.data.settings);
+		await GetDatabase().updateAccountData(this.data.id, {
+			settings: this.data.settings,
+		});
 		this.onAccountInfoChange();
 	}
 

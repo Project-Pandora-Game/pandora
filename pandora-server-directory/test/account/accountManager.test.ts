@@ -3,6 +3,7 @@ import AccountSecure, { GenerateEmailHash } from '../../src/account/accountSecur
 import { MockDatabase, PrehashPassword } from '../../src/database/mockDb';
 import { Account, CreateAccountData } from '../../src/account/account';
 import { TestMockDb } from '../utils';
+import { DatabaseAccountWithSecure } from '../../src/database/databaseStructure';
 
 const TEST_USERNAME = 'testuser';
 const TEST_USERNAME_DIFFERENT_CASE = TEST_USERNAME.toUpperCase();

@@ -1,8 +1,8 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { AccountId, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryAccountSettings, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
+import { AccountId, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DatabaseAccountRelationship, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
@@ -101,16 +101,21 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(acc));
 	}
 
-	public updateAccountSettings(id: number, data: IDirectoryAccountSettings): Promise<void> {
+	public updateAccountData(id: AccountId, data: Partial<Pick<DatabaseAccount, DatabaseAccountUpdateableProperties>>): Promise<void> {
+		data = DatabaseAccountSchema
+			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
+			.strict()
+			.parse(_.cloneDeep(data));
+
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
 		if (!acc)
 			return Promise.resolve();
 
-		acc.settings = _.cloneDeep(data);
+		Object.assign(acc, data);
 		return Promise.resolve();
 	}
 
-	public setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void> {
+	public setAccountSecure(id: AccountId, data: DatabaseAccountSecure): Promise<void> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
 		if (!acc)
 			return Promise.resolve();
@@ -119,7 +124,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve();
 	}
 
-	public setAccountSecureGitHub(id: number, data: DatabaseAccountSecure['github']): Promise<boolean> {
+	public setAccountSecureGitHub(id: AccountId, data: DatabaseAccountSecure['github']): Promise<boolean> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
 		if (!acc)
 			return Promise.resolve(false);
@@ -131,15 +136,6 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(true);
 	}
 
-	public setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void> {
-		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
-		if (!acc)
-			return Promise.resolve();
-
-		acc.roles = _.cloneDeep(data);
-		return Promise.resolve();
-	}
-
 	public queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
 		const result: Record<AccountId, string> = {};
 		for (const acc of this.accountDbView) {
@@ -149,7 +145,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(result);
 	}
 
-	public createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
+	public createCharacter(accountId: AccountId): Promise<ICharacterSelfInfoDb> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.reject(new Error('Account not found'));
@@ -161,7 +157,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(info));
 	}
 
-	public finalizeCharacter(accountId: number, characterId: CharacterId): Promise<ICharacterData | null> {
+	public finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.resolve(null);
@@ -184,7 +180,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(char));
 	}
 
-	public updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
+	public updateCharacter(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.resolve(null);
@@ -199,7 +195,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(info));
 	}
 
-	public deleteCharacter(accountId: number, characterId: CharacterId): Promise<void> {
+	public deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.resolve();

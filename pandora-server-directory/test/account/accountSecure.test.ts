@@ -1,5 +1,6 @@
 import { Account, CreateAccountData } from '../../src/account/account';
 import AccountSecure, { AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
+import { DatabaseAccountToken } from '../../src/database/databaseStructure';
 import { MockDatabase } from '../../src/database/mockDb';
 import GetEmailSender from '../../src/services/email';
 import { TestMockDb } from '../utils';

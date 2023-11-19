@@ -4,7 +4,7 @@ import {
 	AccountCryptoKeySchema,
 	AccountId,
 	AccountIdSchema,
-	AssetFrameworkOutfitSchema,
+	AssetFrameworkOutfitWithIdSchema,
 	DirectoryAccountSettingsSchema,
 	IAccountRoleManageInfo,
 	IBetaKeyInfo,
@@ -63,7 +63,7 @@ export const DatabaseAccountSchema = z.object({
 	characters: ZodCast<ICharacterSelfInfoDb>().array(),
 	settings: DirectoryAccountSettingsSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_DEFAULT)),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
-	storedOutfits: AssetFrameworkOutfitSchema.array().catch(() => []),
+	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
 });
 /** Representation of account stored in database */
 export type DatabaseAccount = z.infer<typeof DatabaseAccountSchema>;

@@ -130,6 +130,12 @@ export const AssetFrameworkOutfitSchema = z.object({
 });
 export type AssetFrameworkOutfit = z.infer<typeof AssetFrameworkOutfitSchema>;
 
+export const AssetFrameworkOutfitWithIdSchema = AssetFrameworkOutfitSchema.extend({
+	/** Random ID used to keep track of the outfits to avoid having to address them by index */
+	id: z.string(),
+});
+export type AssetFrameworkOutfitWithId = z.infer<typeof AssetFrameworkOutfitWithIdSchema>;
+
 export type IItemLoadContext = {
 	assetManager: AssetManager;
 	doLoadTimeCleanup: boolean;

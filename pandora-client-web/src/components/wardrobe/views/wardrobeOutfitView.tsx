@@ -1,12 +1,14 @@
 import React, { ReactElement, useCallback, useState } from 'react';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AssetFrameworkOutfit, GetLogger, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
+import { AssetFrameworkOutfit, AssetFrameworkOutfitWithId, GetLogger, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { noop } from 'lodash';
-import { Column, DivContainer } from '../../common/container/container';
+import { clamp, noop } from 'lodash';
+import { Column, DivContainer, Row } from '../../common/container/container';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { useConfirmDialog } from '../../dialog/dialog';
+import { nanoid } from 'nanoid';
 
 export function InventoryOutfitView(): ReactElement | null {
 	const storedOutfits = useStoredOutfits();
@@ -16,7 +18,8 @@ export function InventoryOutfitView(): ReactElement | null {
 		if (storedOutfits == null)
 			return;
 
-		const newOutfit: AssetFrameworkOutfit = {
+		const newOutfit: AssetFrameworkOutfitWithId = {
+			id: nanoid(),
 			name: `Outfit #${storedOutfits.length + 1}`,
 			items: [],
 		};
@@ -25,6 +28,48 @@ export function InventoryOutfitView(): ReactElement | null {
 			...storedOutfits,
 			newOutfit,
 		]);
+	}, [storedOutfits, saveOutfits]);
+
+	const updateOutfit = useCallback((id: string, newData: AssetFrameworkOutfit | null) => {
+		if (storedOutfits == null)
+			return;
+
+		const index = storedOutfits.findIndex((outfit) => outfit.id === id);
+		if (index < 0) {
+			toast(`Failed to save outfit changes: \nOutfit not found`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
+		const newStorage = [...storedOutfits];
+		if (newData != null) {
+			newStorage[index] = {
+				...newData,
+				id,
+			};
+		} else {
+			newStorage.splice(index, 1);
+		}
+
+		saveOutfits(newStorage);
+	}, [storedOutfits, saveOutfits]);
+
+	const reorderOutfit = useCallback((id: string, shift: number) => {
+		if (storedOutfits == null)
+			return;
+
+		const index = storedOutfits.findIndex((outfit) => outfit.id === id);
+		if (index < 0) {
+			toast(`Failed to move outfit: \nOutfit not found`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
+		const newStorage = [...storedOutfits];
+
+		const movedOutfit = newStorage.splice(index, 1)[0];
+		const newIndex = clamp(index + shift, 0, storedOutfits.length);
+		newStorage.splice(newIndex, 0, movedOutfit);
+
+		saveOutfits(newStorage);
 	}, [storedOutfits, saveOutfits]);
 
 	if (storedOutfits == null) {
@@ -54,10 +99,12 @@ export function InventoryOutfitView(): ReactElement | null {
 				<Scrollbar color='dark'>
 					<Column overflowY='hidden' padding='small'>
 						{
-							storedOutfits.map((outfit, i) => (
+							storedOutfits.map((outfit) => (
 								<OutfitEntry
-									key={ i }
+									key={ outfit.id }
 									outfit={ outfit }
+									updateOutfit={ (newData) => updateOutfit(outfit.id, newData) }
+									reorderOutfit={ (shift) => reorderOutfit(outfit.id, shift) }
 								/>
 							))
 						}
@@ -71,13 +118,17 @@ export function InventoryOutfitView(): ReactElement | null {
 	);
 }
 
-function OutfitEntry({ outfit }: {
+function OutfitEntry({ outfit, updateOutfit, reorderOutfit }: {
 	outfit: AssetFrameworkOutfit;
+	updateOutfit: (newData: AssetFrameworkOutfit | null) => void;
+	reorderOutfit: (shift: number) => void;
 }): ReactElement {
+	const [expanded, setExpanded] = useState(false);
+	const confirm = useConfirmDialog();
 
 	return (
 		<div className='outfit'>
-			<button className='outfitMainButton'>
+			<button className='outfitMainButton' onClick={ () => setExpanded(!expanded) }>
 				<div className='outfitPreview'>
 					<div className='img' />
 				</div>
@@ -86,6 +137,52 @@ function OutfitEntry({ outfit }: {
 					<span>Storage usage: { OutfitMeasureCost(outfit) }</span>
 				</Column>
 			</button>
+			{
+				!expanded ? null : (
+					<Row className='toolbar'>
+						<button
+							className='wardrobeActionButton allowed flex-1'
+							onClick={ () => {
+								reorderOutfit(-1);
+							} }
+						>
+							▲ Move up
+						</button>
+						<button
+							className='wardrobeActionButton allowed flex-1'
+							onClick={ () => {
+								reorderOutfit(1);
+							} }
+						>
+							▼ Move down
+						</button>
+						<button
+							className='wardrobeActionButton allowed flex-1'
+							onClick={ () => {
+								// TODO
+								toast(`Not Yet Implemented`, TOAST_OPTIONS_WARNING);
+							} }
+						>
+							Edit
+						</button>
+						<button
+							className='wardrobeActionButton allowed flex-1'
+							onClick={ () => {
+								confirm(`Are you sure you want to delete outfit "${outfit.name}"?`)
+									.then((result) => {
+										if (!result)
+											return;
+
+										updateOutfit(null);
+									})
+									.catch(noop);
+							} }
+						>
+							➖ Delete
+						</button>
+					</Row>
+				)
+			}
 		</div>
 	);
 }
@@ -110,10 +207,10 @@ function OutfitEntryCreate({ onClick }: {
 	);
 }
 
-function useSaveStoredOutfits(): (newStorage: AssetFrameworkOutfit[]) => void {
+function useSaveStoredOutfits(): (newStorage: AssetFrameworkOutfitWithId[]) => void {
 	const directoryConnector = useDirectoryConnector();
 
-	return useCallback((newStorage: AssetFrameworkOutfit[]) => {
+	return useCallback((newStorage: AssetFrameworkOutfitWithId[]) => {
 		directoryConnector.awaitResponse('storedOutfitsSave', {
 			storedOutfits: newStorage,
 		})
@@ -129,8 +226,8 @@ function useSaveStoredOutfits(): (newStorage: AssetFrameworkOutfit[]) => void {
 	}, [directoryConnector]);
 }
 
-function useStoredOutfits(): AssetFrameworkOutfit[] | undefined {
-	const [storedOutfits, setStoredOutfits] = useState<AssetFrameworkOutfit[] | undefined>();
+function useStoredOutfits(): AssetFrameworkOutfitWithId[] | undefined {
+	const [storedOutfits, setStoredOutfits] = useState<AssetFrameworkOutfitWithId[] | undefined>();
 	const directoryConnector = useDirectoryConnector();
 
 	const fetchStoredOutfits = useCallback(async () => {

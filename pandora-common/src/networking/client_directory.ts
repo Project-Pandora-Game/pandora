@@ -8,7 +8,7 @@ import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSc
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
-import { AssetFrameworkOutfitSchema } from '../assets';
+import { AssetFrameworkOutfitWithIdSchema } from '../assets';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../account/accountRoles';
@@ -269,12 +269,12 @@ export const ClientDirectorySchema = {
 	storedOutfitsGetAll: {
 		request: z.object({}),
 		response: z.object({
-			storedOutfits: AssetFrameworkOutfitSchema.array(),
+			storedOutfits: AssetFrameworkOutfitWithIdSchema.array(),
 		}),
 	},
 	storedOutfitsSave: {
 		request: z.object({
-			storedOutfits: AssetFrameworkOutfitSchema.array(),
+			storedOutfits: AssetFrameworkOutfitWithIdSchema.array(),
 		}),
 		response: z.discriminatedUnion('result', [
 			z.object({

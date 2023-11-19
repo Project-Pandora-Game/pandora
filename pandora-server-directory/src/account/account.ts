@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, AssetFrameworkOutfit, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized } from 'pandora-common';
+import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { CharacterInfo } from './character';
 import { ENV } from '../config';
@@ -106,7 +106,7 @@ export class Account {
 	}
 
 	@AsyncSynchronized()
-	public async updateStoredOutfits(outfits: AssetFrameworkOutfit[]): Promise<'ok' | 'storageFull'> {
+	public async updateStoredOutfits(outfits: AssetFrameworkOutfitWithId[]): Promise<'ok' | 'storageFull'> {
 		const totalCost = outfits.reduce((p, outfit) => p + OutfitMeasureCost(outfit), 0);
 		if (!Number.isInteger(totalCost) || totalCost > LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS) {
 			return 'storageFull';

@@ -160,6 +160,37 @@ $drop-overlay-gap: 0.3em;
 		margin: 0;
 	}
 
+	.outfitList {
+		.outfit {
+			width: 100%;
+			border: solid black 2px;
+
+			.outfitMainButton {
+				width: 100%;
+				min-height: 5em;
+				overflow: hidden;
+				display: flex;
+
+				border: solid black 1px;
+				background-color: $grey-lighter;
+
+				&:hover {
+					background-color: $grey-light;
+				}
+
+				.outfitPreview {
+					@include center-flex;
+					max-height: 100%;
+					width: 2em;
+					margin: 0.5em;
+					padding: 0.5em;
+					border: solid black 1px;
+					aspect-ratio: 2 / 3;
+				}
+			}
+		}
+	}
+
 	.overlay {
 		position: absolute;
 		inset: 0;

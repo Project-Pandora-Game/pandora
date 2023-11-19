@@ -18,6 +18,7 @@ import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
 import { InventoryItemView } from './views/wardrobeItemView';
 import { RoomInventoryView } from './views/wardrobeRoomInventoryView';
 import { WardrobeTemplateEditMenu } from './templateDetail/_wardrobeTemplateDetail';
+import { InventoryOutfitView } from './views/wardrobeOutfitView';
 
 /** This hook doesn't generate or use a global state and shouldn't be used recursively */
 export function useWardrobeItems(): {
@@ -141,12 +142,8 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 						</div>
 					</div>
 				</Tab>
-				<Tab name='Saved items'>
-					<div className='inventoryView'>
-						<div className='center-flex flex-1'>
-							TODO
-						</div>
-					</div>
+				<Tab name='Outfits'>
+					<InventoryOutfitView />
 				</Tab>
 			</TabContainer>
 			{

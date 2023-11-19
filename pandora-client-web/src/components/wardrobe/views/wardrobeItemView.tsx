@@ -3,6 +3,7 @@ import {
 	AppearanceAction,
 	AppearanceItems,
 	AssertNever,
+	CloneDeepMutable,
 	EMPTY_ARRAY,
 	Item,
 	ItemContainerPath,
@@ -10,7 +11,7 @@ import {
 	ItemPath,
 	RoomTargetSelector,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo, useReducer } from 'react';
+import React, { ReactElement, useEffect, useMemo } from 'react';
 import { useObservable } from '../../../observable';
 import { isEqual } from 'lodash';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
@@ -21,7 +22,7 @@ import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
-import { GenerateRandomItemId, useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
+import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
 import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 
 export function InventoryItemView({
@@ -151,8 +152,6 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 }): ReactElement | null {
 	const { heldItem, setHeldItem, globalState } = useWardrobeContext();
 
-	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
-
 	// Check if we are not trying to do NOOP
 	const identicalContainer = heldItem.type === 'item' &&
 		isEqual(target, heldItem.target) &&
@@ -191,15 +190,14 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 			return {
 				type: 'create',
 				target,
-				itemId: newItemId,
-				itemTemplate: heldItem.template,
+				itemTemplate: CloneDeepMutable(heldItem.template),
 				container,
 				insertBefore,
 			};
 		}
 
 		AssertNever(heldItem);
-	}, [heldItem, target, container, targetIsSource, identicalContainer, globalState, newItemId, insertBefore]);
+	}, [heldItem, target, container, targetIsSource, identicalContainer, globalState, insertBefore]);
 
 	const text = useMemo<string | null>(() => {
 		if (heldItem.type === 'nothing')
@@ -227,7 +225,6 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 			action={ action }
 			onExecute={ () => {
 				setHeldItem({ type: 'nothing' });
-				refreshNewItemId();
 			} }
 		>
 			{ text }

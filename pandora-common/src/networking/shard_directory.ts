@@ -11,6 +11,7 @@ export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/appearance';
+import type { } from '../assets/item';
 import type { } from '../character/pronouns';
 import type { } from '../chatroom/chat';
 import { ZodCast } from '../validation';

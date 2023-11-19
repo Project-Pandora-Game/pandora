@@ -4,10 +4,11 @@ import { z } from 'zod';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemLoadContext, IItemValidationContext, ItemBundleSchema, ItemLock, ItemLockActionSchema, LoadItemFromBundle } from '../item';
+import { CreateItemBundleFromTemplate, IItemCreationContext, IItemLoadContext, IItemValidationContext, ItemBundleSchema, ItemLock, ItemLockActionSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { Satisfies } from '../../utility';
+import { Immutable } from 'immer';
 
 export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<'lockSlot'> {
 	/** Properties applied when this slot isn't occupied by a lock */
@@ -24,6 +25,12 @@ export const ModuleItemDataLockSlotSchema = z.object({
 });
 export type IModuleItemDataLockSlot = Satisfies<z.infer<typeof ModuleItemDataLockSlotSchema>, IModuleItemDataCommon<'lockSlot'>>;
 
+export const ModuleItemTemplateLockSlotSchema = z.object({
+	type: z.literal('lockSlot'),
+	lock: z.lazy(() => ItemTemplateSchema).nullable(),
+});
+export type IModuleItemTemplateLockSlot = z.infer<typeof ModuleItemTemplateLockSlotSchema>;
+
 export const ItemModuleLockSlotActionSchema = z.object({
 	moduleType: z.literal('lockSlot'),
 	lockAction: z.lazy(() => ItemLockActionSchema),
@@ -38,7 +45,14 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		};
 	}
 
-	public loadModule<TProperties>(config: IModuleConfigLockSlot<TProperties>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
+	public makeDataFromTemplate<TProperties>(_config: IModuleConfigLockSlot<TProperties>, template: IModuleItemTemplateLockSlot, context: IItemCreationContext): IModuleItemDataLockSlot {
+		return {
+			type: 'lockSlot',
+			lock: template.lock != null ? (CreateItemBundleFromTemplate(template.lock, context) ?? null) : null,
+		};
+	}
+
+	public loadModule<TProperties>(config: Immutable<IModuleConfigLockSlot<TProperties>>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
 		return ItemModuleLockSlot.loadFromData(config, data, context);
 	}
 
@@ -59,7 +73,7 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 
 interface ItemModuleLockSlotProps<TProperties = unknown> {
 	readonly assetManager: AssetManager;
-	readonly config: IModuleConfigLockSlot<TProperties>;
+	readonly config: Immutable<IModuleConfigLockSlot<TProperties>>;
 	readonly lock: ItemLock | null;
 }
 
@@ -67,7 +81,7 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 	public readonly type = 'lockSlot';
 
 	public readonly assetManager: AssetManager;
-	public readonly config: IModuleConfigLockSlot<TProperties>;
+	public readonly config: Immutable<IModuleConfigLockSlot<TProperties>>;
 	public readonly lock: ItemLock | null;
 
 	public get interactionType(): ItemInteractionType {
@@ -84,7 +98,7 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		return new ItemModuleLockSlot(this, overrideProps);
 	}
 
-	public static loadFromData<TProperties>(config: IModuleConfigLockSlot<TProperties>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
+	public static loadFromData<TProperties>(config: Immutable<IModuleConfigLockSlot<TProperties>>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
 		let lock: ItemModuleLockSlotProps<TProperties>['lock'];
 
 		if (data.lock) {
@@ -138,7 +152,7 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		return { success: true };
 	}
 
-	public getProperties(): readonly TProperties[] {
+	public getProperties(): readonly Immutable<TProperties>[] {
 		if (this.lock != null) {
 			if (this.config.lockedProperties != null && this.lock.isLocked()) {
 				return [this.config.lockedProperties];

@@ -8,6 +8,9 @@ import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { ArrayToRecordKeys } from '../utility';
 import { LIMIT_ROOM_DESCRIPTION_LENGTH, LIMIT_ROOM_NAME_LENGTH } from '../inputLimits';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../assets/item';
+
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
 

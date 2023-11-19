@@ -3,11 +3,13 @@ import {
 	AppearanceActionContext,
 	Asset,
 	AssetFrameworkGlobalState,
+	IAssetModuleTypes,
 	IClientShardResult,
 	ItemContainerPath,
 	ItemId,
 	ItemPath,
 	ItemTemplate,
+	ModuleType,
 	RoomTargetSelector,
 } from 'pandora-common';
 import { ReactElement } from 'react';
@@ -61,4 +63,11 @@ export interface WardrobeModuleProps<Module extends IItemModule> {
 	moduleName: string;
 	m: Module;
 	setFocus: (newFocus: WardrobeFocus) => void;
+}
+
+export interface WardrobeModuleTemplateProps<TType extends ModuleType = ModuleType> {
+	definition: Immutable<IAssetModuleTypes<unknown>[TType]['config']>;
+	template: Immutable<IAssetModuleTypes<unknown>[TType]['template']> | undefined;
+	onTemplateChange: (newTemplate: Immutable<IAssetModuleTypes<unknown>[TType]['template']>) => void;
+	moduleName: string;
 }

@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid';
 import {
 	ActionRoomContext,
 	AppearanceActionProcessingResultValid,
@@ -7,17 +6,12 @@ import {
 	AssertNotNullable,
 	EMPTY_ARRAY,
 	Item,
-	ItemId,
 	ItemPath,
 } from 'pandora-common';
 import { useMemo } from 'react';
 import { WardrobeFocus, WardrobeTarget } from './wardrobeTypes';
 import { useWardrobeContext } from './wardrobeContext';
 import { ICharacter } from '../../character/character';
-
-export function GenerateRandomItemId(): ItemId {
-	return `i/${nanoid()}` as const;
-}
 
 export function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
 	return focus.itemId != null;

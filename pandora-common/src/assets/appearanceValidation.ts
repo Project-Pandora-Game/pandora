@@ -303,7 +303,7 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 				ShuffleArray(possibleAssets);
 
 				for (const asset of possibleAssets) {
-					const tryFix = [...resultItems, assetManager.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, undefined, logger)];
+					const tryFix = [...resultItems, assetManager.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, logger)];
 					if (ValidateAppearanceItemsPrefix(assetManager, tryFix, roomState).success) {
 						resultItems = tryFix;
 						break;

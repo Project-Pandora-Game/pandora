@@ -26,8 +26,6 @@ import type { } from '../validation';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
-	/** ID to give the new item */
-	itemId: ItemIdSchema,
 	/** Template describing an item configuration for creating the new item */
 	itemTemplate: ItemTemplateSchema,
 	/** Target the item should be added to after creation */
@@ -218,13 +216,12 @@ export function DoAppearanceAction(
 	switch (action.type) {
 		// Create and equip an item
 		case 'create': {
-			const asset = assetManager.getAssetById(action.itemTemplate.asset);
 			const target = processingContext.getTarget(action.target);
-			if (!asset || !target)
+			if (!target)
 				return processingContext.invalid();
-			if (!asset.canBeSpawned())
+			const item = assetManager.createItemFromTemplate(action.itemTemplate, processingContext.player);
+			if (item == null)
 				return processingContext.invalid();
-			const item = assetManager.createItem(action.itemId, asset, action.itemTemplate);
 			// Player adding the item must be able to use it
 			const r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
 			if (!r.allowed) {

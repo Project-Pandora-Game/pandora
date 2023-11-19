@@ -10,12 +10,14 @@ import { AppearanceItems, AppearanceValidationResult } from './appearanceValidat
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
 import { AssetColorization, AssetId, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
-import { ItemModuleAction, ItemModuleData, ItemModuleDataSchema, LoadItemModule } from './modules';
+import { CreateModuleDataFromTemplate, ItemModuleAction, ItemModuleData, ItemModuleDataSchema, ItemModuleTemplate, ItemModuleTemplateSchema, LoadItemModule } from './modules';
 import { IExportOptions, IItemModule } from './modules/common';
 import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 import { CreateRoomDevicePropertiesResult, GetPropertiesForSlot, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from './roomDeviceProperties';
 import { AssetFrameworkRoomState } from './state/roomState';
+import { GameLogicCharacter } from '../gameLogic';
+import { nanoid } from 'nanoid';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
@@ -90,7 +92,7 @@ export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.ob
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
-	moduleData: z.record(ItemModuleDataSchema).optional(),
+	moduleData: z.record(z.lazy(() => ItemModuleDataSchema)).optional(),
 	/** Room device specific data */
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
@@ -103,17 +105,34 @@ export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.ob
  * Data describing an item configuration as a template.
  * Used for creating a new item from the template with matching configuration.
  */
-export const ItemTemplateSchema = z.object({
+export type ItemTemplate = {
+	asset: AssetId;
+	templateName?: string;
+	color?: ItemColorBundle;
+	modules?: Record<string, ItemModuleTemplate>;
+};
+
+/**
+ * Data describing an item configuration as a template.
+ * Used for creating a new item from the template with matching configuration.
+ * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
+ */
+export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = z.object({
 	asset: AssetIdSchema,
 	templateName: z.string().optional(),
 	color: ItemColorBundleSchema.optional(),
+	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
 });
-export type ItemTemplate = z.infer<typeof ItemTemplateSchema>;
 
 export type IItemLoadContext = {
 	assetManager: AssetManager;
 	doLoadTimeCleanup: boolean;
 	logger?: Logger;
+};
+
+export type IItemCreationContext = {
+	assetManager: AssetManager;
+	creator: GameLogicCharacter;
 };
 
 export type IItemValidationContext = {
@@ -1196,7 +1215,46 @@ export type ItemTypeMap =
 
 export type Item<Type extends AssetType = AssetType> = ItemTypeMap[Type];
 
+export function GenerateRandomItemId(): ItemId {
+	return `i/${nanoid()}`;
+}
+
+export function CreateItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined {
+	const asset = context.assetManager.getAssetById(template.asset);
+	// Fail if the template referrs to asset that is unknown or cannot be spawned by users
+	if (asset == null || !asset.canBeSpawned())
+		return undefined;
+
+	// Build a bundle from the template
+	const bundle: ItemBundle = {
+		id: GenerateRandomItemId(),
+		asset: asset.id,
+		color: template.color,
+	};
+
+	// Load modules
+	if (template.modules != null && (asset.isType('personal') || asset.isType('roomDevice'))) {
+		bundle.moduleData = {};
+		for (const [moduleName, moduleTemplate] of Object.entries(template.modules)) {
+			const moduleConfig = asset.definition.modules?.[moduleName];
+			// Skip unknown modules
+			if (moduleConfig == null)
+				continue;
+
+			// Actually create the module from template
+			const loadedData = CreateModuleDataFromTemplate(moduleConfig, moduleTemplate, context);
+			if (loadedData == null)
+				continue;
+
+			bundle.moduleData[moduleName] = loadedData;
+		}
+	}
+
+	return bundle;
+}
+
 export function LoadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, context: IItemLoadContext): Item<T> {
+	Assert(asset.id === bundle.asset);
 	const type = asset.type;
 	switch (type) {
 		case 'personal':

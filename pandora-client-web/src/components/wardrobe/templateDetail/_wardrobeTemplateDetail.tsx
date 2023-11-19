@@ -6,6 +6,8 @@ import { Column, Row } from '../../common/container/container';
 import { useAssetManager } from '../../../assets/assetManager';
 import { WardrobeTemplateColorization } from './wardrobeTemplateColor';
 import { Immutable } from 'immer';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { WardrobeModuleTemplateConfig } from '../modules/_wardrobeModules';
 
 export function WardrobeTemplateEditMenu({
 	template,
@@ -57,6 +59,30 @@ export function WardrobeTemplateEditMenu({
 								updateTemplate(newTemplate);
 							} }
 						/>
+					) : null
+				}
+				{
+					(asset.isType('personal') || asset.isType('roomDevice')) ? (
+						Array.from(Object.entries(asset.definition.modules ?? {}))
+							.map(([moduleName, m]) => (
+								<FieldsetToggle legend={ `Module: ${m.name}` } key={ moduleName }>
+									<WardrobeModuleTemplateConfig
+										moduleName={ moduleName }
+										definition={ m }
+										template={ template.modules?.[moduleName] }
+										onTemplateChange={ (newModuleTemplate) => {
+											const newTemplate: Immutable<ItemTemplate> = {
+												...template,
+												modules: {
+													...template.modules,
+													[moduleName]: newModuleTemplate,
+												},
+											};
+											updateTemplate(newTemplate);
+										} }
+									/>
+								</FieldsetToggle>
+							))
 					) : null
 				}
 			</Column>

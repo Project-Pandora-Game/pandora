@@ -3,11 +3,12 @@ import { z } from 'zod';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemLoadContext, IItemValidationContext } from '../item';
+import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item';
 import { AssetManager } from '../assetManager';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { CharacterIdSchema } from '../../character/characterTypes';
 import { Satisfies } from '../../utility';
+import { Immutable } from 'immer';
 
 export interface IModuleTypedOption<TProperties> {
 	/** ID if this variant, must be unique */
@@ -72,6 +73,12 @@ export const ModuleItemDataTypedSchema = z.object({
 });
 export type IModuleItemDataTyped = Satisfies<z.infer<typeof ModuleItemDataTypedSchema>, IModuleItemDataCommon<'typed'>>;
 
+export const ModuleItemTemplateTypedSchema = z.object({
+	type: z.literal('typed'),
+	variant: z.string().optional(),
+});
+export type IModuleItemTemplateTyped = z.infer<typeof ModuleItemTemplateTypedSchema>;
+
 export const ItemModuleTypedActionSchema = z.object({
 	moduleType: z.literal('typed'),
 	setVariant: z.string(),
@@ -85,7 +92,33 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 		};
 	}
 
-	public loadModule<TProperties>(config: IModuleConfigTyped<TProperties>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties> {
+	public makeDataFromTemplate<TProperties>(config: IModuleConfigTyped<TProperties>, template: IModuleItemTemplateTyped, context: IItemCreationContext): IModuleItemDataTyped | undefined {
+		// Find which variant would be selected
+		const variant = config.variants.find((v) => v.id === template.variant);
+		if (variant == null)
+			return undefined;
+
+		// Create result data
+		const result: IModuleItemDataTyped = {
+			type: 'typed',
+			variant: variant.id,
+		};
+
+		if (variant.storeTime) {
+			result.selectedAt = Date.now();
+		}
+
+		if (variant.storeCharacter) {
+			result.selectedBy = {
+				id: context.creator.id,
+				name: context.creator.name,
+			};
+		}
+
+		return result;
+	}
+
+	public loadModule<TProperties>(config: Immutable<IModuleConfigTyped<TProperties>>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties> {
 		return ItemModuleTyped.loadFromData(config, data, context);
 	}
 
@@ -103,17 +136,17 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 
 interface ItemModuleTypedProps<TProperties = unknown> {
 	readonly assetManager: AssetManager;
-	readonly config: IModuleConfigTyped<TProperties>;
-	readonly activeVariant: Readonly<IModuleTypedOption<TProperties>>;
+	readonly config: Immutable<IModuleConfigTyped<TProperties>>;
+	readonly activeVariant: Immutable<IModuleTypedOption<TProperties>>;
 	readonly data: Readonly<Pick<IModuleItemDataTyped, 'selectedAt' | 'selectedBy'>>;
 }
 
-export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProperties, 'typed'>, ItemModuleTypedProps<TProperties> {
+export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<TProperties, 'typed'>, ItemModuleTypedProps<TProperties> {
 	public readonly type = 'typed';
 
 	public readonly assetManager: AssetManager;
-	public readonly config: IModuleConfigTyped<TProperties>;
-	public readonly activeVariant: Readonly<IModuleTypedOption<TProperties>>;
+	public readonly config: Immutable<IModuleConfigTyped<TProperties>>;
+	public readonly activeVariant: Immutable<IModuleTypedOption<TProperties>>;
 	public readonly data: Readonly<Pick<IModuleItemDataTyped, 'selectedAt' | 'selectedBy'>>;
 
 	public get interactionType(): ItemInteractionType {
@@ -133,9 +166,9 @@ export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProp
 		return new ItemModuleTyped(this, overrideProps);
 	}
 
-	public static loadFromData<TProperties>(config: IModuleConfigTyped<TProperties>, data: IModuleItemDataTyped, context: IItemLoadContext) {
+	public static loadFromData<TProperties>(config: Immutable<IModuleConfigTyped<TProperties>>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties> {
 		// Get currently selected module
-		const activeVariant: IModuleTypedOption<TProperties> | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
+		const activeVariant: Immutable<IModuleTypedOption<TProperties>> | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
 		// Warn if we were trying to find variant
 		if (!activeVariant && data.variant != null) {
 			context.logger?.warning(`Unknown typed module variant '${data.variant}'`);
@@ -145,7 +178,7 @@ export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProp
 			assetManager: context.assetManager,
 			config,
 			// Use the default variant if not found
-			activeVariant: activeVariant ?? ItemModuleTyped._getDefaultVariant(config),
+			activeVariant: activeVariant ?? ItemModuleTyped._getDefaultVariant<TProperties>(config),
 			data: {
 				selectedAt: activeVariant?.storeTime ? data.selectedAt : undefined,
 				selectedBy: activeVariant?.storeCharacter ? data.selectedBy : undefined,
@@ -167,7 +200,7 @@ export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProp
 		return { success: true };
 	}
 
-	public getProperties(): readonly TProperties[] {
+	public getProperties(): readonly Immutable<TProperties>[] {
 		if (this.activeVariant.properties != null)
 			return [this.activeVariant.properties];
 
@@ -223,7 +256,7 @@ export class ItemModuleTyped<TProperties = unknown> implements IItemModule<TProp
 		return null;
 	}
 
-	private static _getDefaultVariant<TProperties>(config: IModuleConfigTyped<TProperties>): Readonly<IModuleTypedOption<TProperties>> {
+	private static _getDefaultVariant<TProperties>(config: Immutable<IModuleConfigTyped<TProperties>>): Immutable<IModuleTypedOption<TProperties>> {
 		return config.variants.find((v) => v.default) ?? config.variants[0];
 	}
 }

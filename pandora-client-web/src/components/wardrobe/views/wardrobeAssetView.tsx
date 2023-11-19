@@ -15,7 +15,6 @@ import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useWardrobeContext, useWardrobeExecuteChecked } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
-import { GenerateRandomItemId } from '../wardrobeUtils';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { usePermissionCheck } from '../../gameContext/permissionCheckProvider';
 
@@ -211,24 +210,20 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	listMode: boolean;
 }): ReactElement {
 	const { targetSelector, actionPreviewState, showHoverPreview } = useWardrobeContext();
-	const [newItemId, refreshNewItemId] = useReducer(GenerateRandomItemId, undefined, GenerateRandomItemId);
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const [isHovering, setIsHovering] = useState(false);
 
 	const action = useMemo((): AppearanceAction => ({
 		type: 'create',
 		target: targetSelector,
-		itemId: newItemId,
 		itemTemplate: {
 			asset: asset.id,
 		},
 		container,
-	}), [targetSelector, newItemId, asset, container]);
+	}), [targetSelector, asset, container]);
 
 	const check = useStaggeredAppearanceActionResult(action, { lowPriority: true });
-	const [execute] = useWardrobeExecuteChecked(action, check, {
-		onSuccess: () => refreshNewItemId(),
-	});
+	const [execute] = useWardrobeExecuteChecked(action, check);
 
 	const permissionProblems = usePermissionCheck(check?.requiredPermissions);
 

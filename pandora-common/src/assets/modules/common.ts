@@ -2,7 +2,7 @@ import type { Asset } from '../asset';
 import type { ConditionOperator } from '../graphics';
 import type { ItemInteractionType } from '../../character';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import type { IItemLoadContext, IItemValidationContext } from '../item';
+import type { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { IAssetModuleTypes, ModuleType } from '../modules';
 import type { Immutable } from 'immer';
@@ -25,8 +25,9 @@ export interface IModuleActionCommon<Type extends ModuleType> {
 
 export interface IAssetModuleDefinition<Type extends ModuleType> {
 	makeDefaultData(config: Immutable<IAssetModuleTypes<unknown>[Type]['config']>): IAssetModuleTypes<unknown>[Type]['data'];
-	loadModule<TProperties>(config: IModuleConfigCommon<Type>, data: IAssetModuleTypes<unknown>[Type]['data'], context: IItemLoadContext): IItemModule<TProperties, Type>;
-	getStaticAttributes<TProperties>(config: IModuleConfigCommon<Type>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string>;
+	makeDataFromTemplate<TProperties>(config: Immutable<IAssetModuleTypes<TProperties>[Type]['config']>, template: IAssetModuleTypes<TProperties>[Type]['template'], context: IItemCreationContext): IAssetModuleTypes<TProperties>[Type]['data'] | undefined;
+	loadModule<TProperties>(config: Immutable<IAssetModuleTypes<TProperties>[Type]['config']>, data: IAssetModuleTypes<TProperties>[Type]['data'], context: IItemLoadContext): IItemModule<TProperties, Type>;
+	getStaticAttributes<TProperties>(config: Immutable<IAssetModuleTypes<unknown>[Type]['config']>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string>;
 }
 
 export interface IExportOptions {
@@ -35,7 +36,7 @@ export interface IExportOptions {
 
 export interface IItemModule<out TProperties = unknown, Type extends ModuleType = ModuleType> {
 	readonly type: Type;
-	readonly config: IAssetModuleTypes<TProperties>[Type]['config'];
+	readonly config: Immutable<IAssetModuleTypes<TProperties>[Type]['config']>;
 
 	/** The module specifies what kind of interaction type interacting with it is */
 	readonly interactionType: ItemInteractionType;
@@ -44,7 +45,7 @@ export interface IItemModule<out TProperties = unknown, Type extends ModuleType 
 
 	validate(context: IItemValidationContext): AppearanceValidationResult;
 
-	getProperties(): readonly TProperties[];
+	getProperties(): readonly Immutable<TProperties>[];
 
 	evalCondition(operator: ConditionOperator, value: string): boolean;
 	doAction(context: AppearanceModuleActionContext, action: IAssetModuleTypes<TProperties>[Type]['actions']): IItemModule<TProperties, Type> | null;

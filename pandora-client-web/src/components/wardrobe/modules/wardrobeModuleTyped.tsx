@@ -7,8 +7,9 @@ import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { Column, Row } from '../../common/container/container';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeModuleProps } from '../wardrobeTypes';
+import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 import { WardrobeActionButton } from '../wardrobeComponents';
+import classNames from 'classnames';
 
 export function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<ItemModuleTyped>): ReactElement {
 	const { targetSelector } = useWardrobeContext();
@@ -60,6 +61,40 @@ export function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModul
 				{ rows }
 			</Row>
 			{ customText }
+		</Column>
+	);
+}
+
+export function WardrobeModuleTemplateConfigTyped({ definition, template, onTemplateChange }: WardrobeModuleTemplateProps<'typed'>): ReactElement {
+	const rows = useMemo(() => definition.variants.map((v) => {
+		const isSelected = template?.variant === v.id;
+
+		return (
+			<button
+				key={ v.id }
+				className={ classNames(
+					'wardrobeActionButton',
+					'allowed',
+					isSelected ? 'selected' : null,
+				) }
+				onClick={ (ev) => {
+					ev.stopPropagation();
+					onTemplateChange({
+						type: 'typed',
+						variant: v.id,
+					});
+				} }
+			>
+				{ v.name }
+			</button>
+		);
+	}), [definition, template, onTemplateChange]);
+
+	return (
+		<Column padding='medium'>
+			<Row padding='medium' wrap>
+				{ rows }
+			</Row>
 		</Column>
 	);
 }

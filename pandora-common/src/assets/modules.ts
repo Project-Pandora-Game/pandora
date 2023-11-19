@@ -1,12 +1,12 @@
 import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility';
 import { IAssetModuleDefinition, IModuleConfigCommon, IItemModule } from './modules/common';
-import { IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema } from './modules/typed';
-import { IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema } from './modules/storage';
-import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema } from './modules/lockSlot';
+import { IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema } from './modules/typed';
+import { IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema } from './modules/storage';
+import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema, ModuleItemTemplateLockSlotSchema } from './modules/lockSlot';
 import { ZodDiscriminatedUnionOption, z } from 'zod';
 import { RecordUnpackSubobjectProperties } from '../validation';
 import { AssetId } from './definitions';
-import { IItemLoadContext } from './item';
+import { IItemCreationContext, IItemLoadContext } from './item';
 import { Immutable } from 'immer';
 
 //#region Module definitions
@@ -14,14 +14,17 @@ import { Immutable } from 'immer';
 export const IAssetModuleTypesSchemas = {
 	typed: {
 		data: ModuleItemDataTypedSchema,
+		template: ModuleItemTemplateTypedSchema,
 		actions: ItemModuleTypedActionSchema,
 	},
 	storage: {
 		data: ModuleItemDataStorageSchema,
+		template: ModuleItemTemplateStorageSchema,
 		actions: ItemModuleStorageActionSchema,
 	},
 	lockSlot: {
 		data: ModuleItemDataLockSlotSchema,
+		template: ModuleItemTemplateLockSlotSchema,
 		actions: ItemModuleLockSlotActionSchema,
 	},
 } as const satisfies Readonly<Record<string, IModuleTypeBaseSchema>>;
@@ -73,12 +76,14 @@ export type IAssetModuleTypes<TProperties> = {
 	[Type in ModuleType]: {
 		config: IAssetModuleConfigs<TProperties>[Type];
 		data: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['data']>;
+		template: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['template']>;
 		actions: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['actions']>;
 	};
 };
 
 type IModuleTypeBaseSchema = {
 	readonly data: ZodDiscriminatedUnionOption<'type'>;
+	readonly template: ZodDiscriminatedUnionOption<'type'>;
 	readonly actions: ZodDiscriminatedUnionOption<'moduleType'>;
 };
 
@@ -88,6 +93,13 @@ export const ItemModuleDataSchema = z.discriminatedUnion('type', ParseArrayNotEm
 	),
 ));
 export type ItemModuleData = z.infer<typeof ItemModuleDataSchema>;
+
+export const ItemModuleTemplateSchema = z.discriminatedUnion('type', ParseArrayNotEmpty(
+	Object.values(
+		RecordUnpackSubobjectProperties('template', IAssetModuleTypesSchemas),
+	),
+));
+export type ItemModuleTemplate = z.infer<typeof ItemModuleTemplateSchema>;
 
 export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', ParseArrayNotEmpty(
 	Object.values(
@@ -106,6 +118,39 @@ export function GetModuleStaticAttributes<TProperties>(moduleDefinition: Immutab
 			return MODULE_TYPES.storage.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
 		case 'lockSlot':
 			return MODULE_TYPES.lockSlot.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
+		default:
+			AssertNever(moduleDefinition);
+	}
+}
+
+export function CreateModuleDataFromTemplate(moduleDefinition: Immutable<AssetModuleDefinition<unknown>>, template: ItemModuleTemplate, context: IItemCreationContext): ItemModuleData | undefined {
+	if (moduleDefinition.type !== template.type) {
+		// Fail if the types don't match
+		return undefined;
+	}
+
+	switch (moduleDefinition.type) {
+		case 'typed':
+			Assert(template.type === 'typed');
+			return MODULE_TYPES.typed.makeDataFromTemplate(
+				moduleDefinition,
+				template,
+				context,
+			);
+		case 'storage':
+			Assert(template.type === 'storage');
+			return MODULE_TYPES.storage.makeDataFromTemplate(
+				moduleDefinition,
+				template,
+				context,
+			);
+		case 'lockSlot':
+			Assert(template.type === 'lockSlot');
+			return MODULE_TYPES.lockSlot.makeDataFromTemplate(
+				moduleDefinition,
+				template,
+				context,
+			);
 		default:
 			AssertNever(moduleDefinition);
 	}

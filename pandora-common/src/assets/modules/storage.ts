@@ -4,11 +4,12 @@ import { AssetSize, AssetSizeMapping } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemLoadContext, IItemValidationContext, Item, ItemBundleSchema, LoadItemFromBundle } from '../item';
+import { CreateItemBundleFromTemplate, IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemBundleSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item';
 import { AssetManager } from '../assetManager';
 import { ItemId } from '../appearanceTypes';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
-import { Satisfies } from '../../utility';
+import { IsNotNullable, Satisfies } from '../../utility';
+import { Immutable } from 'immer';
 
 export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
 	maxCount: number;
@@ -21,6 +22,12 @@ export const ModuleItemDataStorageSchema = z.object({
 });
 export type IModuleItemDataStorage = Satisfies<z.infer<typeof ModuleItemDataStorageSchema>, IModuleItemDataCommon<'storage'>>;
 
+export const ModuleItemTemplateStorageSchema = z.object({
+	type: z.literal('storage'),
+	contents: z.array(z.lazy(() => ItemTemplateSchema)),
+});
+export type IModuleItemTemplateStorage = z.infer<typeof ModuleItemTemplateStorageSchema>;
+
 // Never used
 export const ItemModuleStorageActionSchema = z.object({
 	moduleType: z.literal('storage'),
@@ -32,6 +39,13 @@ export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'
 		return {
 			type: 'storage',
 			contents: [],
+		};
+	}
+
+	public makeDataFromTemplate(_config: IModuleConfigStorage, template: IModuleItemTemplateStorage, context: IItemCreationContext): IModuleItemDataStorage {
+		return {
+			type: 'storage',
+			contents: template.contents.map((contentTemplate) => CreateItemBundleFromTemplate(contentTemplate, context)).filter(IsNotNullable),
 		};
 	}
 
@@ -170,7 +184,7 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 			.reduce(AppearanceValidationCombineResults, { success: true });
 	}
 
-	public getProperties(): readonly TProperties[] {
+	public getProperties(): readonly Immutable<TProperties>[] {
 		return [];
 	}
 

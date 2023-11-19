@@ -405,7 +405,11 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	const x = devicePivot.x + effectiveCharacterPosition.offsetX;
 	const y = devicePivot.y + effectiveCharacterPosition.offsetY;
 
-	const { baseScale, pivot } = useChatRoomCharacterOffsets(characterState);
+	const {
+		baseScale,
+		pivot,
+		rotationAngle,
+	} = useChatRoomCharacterOffsets(characterState);
 
 	const scale = baseScale * (effectiveCharacterPosition.relativeScale ?? 1);
 
@@ -413,7 +417,14 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 
 	const scaleX = backView ? -1 : 1;
 
-	const actualPivot = useMemo((): PointLike => effectiveCharacterPosition.disablePoseOffset ? CloneDeepMutable(CHARACTER_PIVOT_POSITION) : pivot, [effectiveCharacterPosition, pivot]);
+	const actualPivot = useMemo((): PointLike => {
+		const result: PointLike = CloneDeepMutable(effectiveCharacterPosition.disablePoseOffset ? CHARACTER_PIVOT_POSITION : pivot);
+		if (effectiveCharacterPosition.pivotOffset != null) {
+			result.x += effectiveCharacterPosition.pivotOffset.x;
+			result.y += effectiveCharacterPosition.pivotOffset.y;
+		}
+		return result;
+	}, [effectiveCharacterPosition, pivot]);
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
@@ -425,8 +436,9 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 		<GraphicsCharacter
 			characterState={ characterState }
 			position={ { x, y } }
-			scale={ { x: scaleX * scale, y: scale } }
 			pivot={ actualPivot }
+			scale={ { x: scale * scaleX, y: scale } }
+			angle={ rotationAngle }
 			filters={ filters }
 		>
 			{

@@ -119,7 +119,7 @@ export type IDirectoryCharacterConnectionInfo = {
 	secret: string;
 } & IDirectoryShardInfo;
 
-export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'roomList';
+export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'roomList' | 'storedOutfits';
 
 export type IDirectoryDirectMessage = {
 	/** Encrypted content, or empty string if the message was deleted. */

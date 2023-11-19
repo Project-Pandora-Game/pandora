@@ -8,6 +8,7 @@ import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSc
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
+import { AssetFrameworkOutfitSchema } from '../assets';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../account/accountRoles';
@@ -261,6 +262,29 @@ export const ClientDirectorySchema = {
 			id: RoomIdSchema,
 		}),
 		response: ZodCast<{ result: 'ok' | 'notAnOwner'; }>(),
+	},
+	//#endregion
+
+	//#region Outfits
+	storedOutfitsGetAll: {
+		request: z.object({}),
+		response: z.object({
+			storedOutfits: AssetFrameworkOutfitSchema.array(),
+		}),
+	},
+	storedOutfitsSave: {
+		request: z.object({
+			storedOutfits: AssetFrameworkOutfitSchema.array(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('failed'),
+				reason: z.enum(['storageFull']),
+			}),
+		]),
 	},
 	//#endregion
 

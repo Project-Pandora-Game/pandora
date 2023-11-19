@@ -3,7 +3,7 @@ import { first } from 'lodash';
 import { ZodTypeDef, z } from 'zod';
 import { Logger } from '../logging';
 import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
-import { HexRGBAColorString, HexRGBAColorStringSchema } from '../validation';
+import { HexRGBAColorString, HexRGBAColorStringSchema, ZodArrayWithInvalidDrop } from '../validation';
 import type { AppearanceModuleActionContext } from './appearanceActions';
 import { ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
@@ -123,6 +123,12 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = 
 	color: ItemColorBundleSchema.optional(),
 	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
 });
+
+export const AssetFrameworkOutfitSchema = z.object({
+	name: z.string(),
+	items: ZodArrayWithInvalidDrop(ItemTemplateSchema, z.record(z.unknown())),
+});
+export type AssetFrameworkOutfit = z.infer<typeof AssetFrameworkOutfitSchema>;
 
 export type IItemLoadContext = {
 	assetManager: AssetManager;
@@ -1251,6 +1257,34 @@ export function CreateItemBundleFromTemplate(template: ItemTemplate, context: II
 	}
 
 	return bundle;
+}
+
+/** Calculates "cost" for storing the outfit (right now it is count of items, including nested ones; + 1 for outfit itself) */
+export function OutfitMeasureCost(outfit: AssetFrameworkOutfit): number {
+	return 1 + outfit.items.reduce((p, item) => p + ItemTemplateMeasureCost(item), 0);
+}
+
+/** Calculates "cost" for storing a specific item (right now it is count of items, including nested ones) */
+export function ItemTemplateMeasureCost(template: ItemTemplate): number {
+	let result = 1;
+
+	for (const moduleTemplate of Object.values(template.modules ?? {})) {
+		if (moduleTemplate.type === 'typed') {
+			// No cost for typed modules
+		} else if (moduleTemplate.type === 'storage') {
+			// Measure nested cost for storage
+			result += moduleTemplate.contents.reduce((p, item) => p + ItemTemplateMeasureCost(item), 0);
+		} else if (moduleTemplate.type === 'lockSlot') {
+			// Measure cost for lock if present
+			if (moduleTemplate.lock != null) {
+				result += ItemTemplateMeasureCost(moduleTemplate.lock);
+			}
+		} else {
+			AssertNever(moduleTemplate);
+		}
+	}
+
+	return result;
 }
 
 export function LoadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, context: IItemLoadContext): Item<T> {

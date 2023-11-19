@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert } from 'pandora-common';
+import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, AssetFrameworkOutfit, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { CharacterInfo } from './character';
 import { ENV } from '../config';
@@ -105,6 +105,27 @@ export class Account {
 		this.onAccountInfoChange();
 	}
 
+	@AsyncSynchronized()
+	public async updateStoredOutfits(outfits: AssetFrameworkOutfit[]): Promise<'ok' | 'storageFull'> {
+		const totalCost = outfits.reduce((p, outfit) => p + OutfitMeasureCost(outfit), 0);
+		if (!Number.isInteger(totalCost) || totalCost > LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS) {
+			return 'storageFull';
+		}
+
+		this.data.storedOutfits = outfits;
+
+		// Save the changed data
+		await GetDatabase().updateAccountData(this.data.id, {
+			storedOutfits: this.data.storedOutfits,
+		});
+		// Notify connected clients that the outfit storage changed
+		this.associatedConnections.sendMessage('somethingChanged', {
+			changes: ['storedOutfits'],
+		});
+
+		return 'ok';
+	}
+
 	public async onManagerDestroy(): Promise<void> {
 		// Disconnect all characters
 		for (const character of this.characters.values()) {
@@ -199,6 +220,7 @@ export async function CreateAccountData(username: string, password: string, emai
 		secure: await GenerateAccountSecureData(password, email, activated),
 		characters: [],
 		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
+		storedOutfits: [],
 	};
 }
 

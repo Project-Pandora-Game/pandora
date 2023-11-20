@@ -28,7 +28,8 @@ export function Eula({ accept }: EulaProps): ReactElement {
 				</div>
 				<div className='eula-text'>
 					<p>
-						Welcome to { GAME_NAME }! This game is intended for use by adults only.
+						Welcome to { GAME_NAME }! This game is intended for use by adults only.<br />
+						All characters portrayed in this game are fictitious and of legal age. No identification with actual persons is intended or should be inferred.
 					</p>
 					<p>
 						By playing this game, you agree to the following:

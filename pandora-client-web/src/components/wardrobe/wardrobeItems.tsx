@@ -143,7 +143,9 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 					</div>
 				</Tab>
 				<Tab name='Outfits'>
-					<InventoryOutfitView />
+					<InventoryOutfitView
+						targetContainer={ currentFocus.container }
+					/>
 				</Tab>
 			</TabContainer>
 			{

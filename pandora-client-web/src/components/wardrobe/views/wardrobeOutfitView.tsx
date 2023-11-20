@@ -1,18 +1,26 @@
 import React, { ReactElement, useCallback, useState } from 'react';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AssetFrameworkOutfit, AssetFrameworkOutfitWithId, GetLogger, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
+import { AssetFrameworkOutfit, AssetFrameworkOutfitWithId, CloneDeepMutable, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { clamp, noop } from 'lodash';
+import { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { nanoid } from 'nanoid';
+import { OutfitEditView } from './wardrobeOutfitEditView';
+import { useAssetManager } from '../../../assets/assetManager';
+import { useWardrobeContext } from '../wardrobeContext';
+import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 
-export function InventoryOutfitView(): ReactElement | null {
+export function InventoryOutfitView({ targetContainer }: {
+	targetContainer: ItemContainerPath;
+}): ReactElement | null {
 	const storedOutfits = useStoredOutfits();
 	const saveOutfits = useSaveStoredOutfits();
+
+	const [editedOutfitId, setEditedOutfitId] = useState<string | null>(null);
 
 	const createNewOutfit = useCallback(() => {
 		if (storedOutfits == null)
@@ -89,6 +97,33 @@ export function InventoryOutfitView(): ReactElement | null {
 	const storageUsed = storedOutfits.reduce((p, outfit) => p + OutfitMeasureCost(outfit), 0);
 	const storageAvailableTotal = LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS;
 
+	if (editedOutfitId != null) {
+		const editedOutfit = storedOutfits.find((outfit) => outfit.id === editedOutfitId);
+
+		return (
+			<div className='inventoryView'>
+				<div className='toolbar'>
+					<span>Editing outfit: { editedOutfit?.name ?? editedOutfitId }</span>
+					<span>Storage used: { storageUsed } / { storageAvailableTotal } ({ Math.ceil(100 * storageUsed / storageAvailableTotal) }%)</span>
+					<button className='modeButton' onClick={ () => setEditedOutfitId(null) }>✖️</button>
+				</div>
+				{
+					editedOutfit != null ? (
+						<OutfitEditView
+							key={ editedOutfitId }
+							outfit={ editedOutfit }
+							updateOutfit={ (newData) => updateOutfit(editedOutfitId, newData) }
+						/>
+					) : (
+						<DivContainer align='center' justify='center' className='flex-1'>
+							[ ERROR: OUTFIT NOT FOUND ]
+						</DivContainer>
+					)
+				}
+			</div>
+		);
+	}
+
 	return (
 		<div className='inventoryView'>
 			<div className='toolbar'>
@@ -105,6 +140,8 @@ export function InventoryOutfitView(): ReactElement | null {
 									outfit={ outfit }
 									updateOutfit={ (newData) => updateOutfit(outfit.id, newData) }
 									reorderOutfit={ (shift) => reorderOutfit(outfit.id, shift) }
+									beginEditOutfit={ () => setEditedOutfitId(outfit.id) }
+									targetContainer={ targetContainer }
 								/>
 							))
 						}
@@ -118,10 +155,12 @@ export function InventoryOutfitView(): ReactElement | null {
 	);
 }
 
-function OutfitEntry({ outfit, updateOutfit, reorderOutfit }: {
+function OutfitEntry({ outfit, updateOutfit, reorderOutfit, beginEditOutfit, targetContainer }: {
 	outfit: AssetFrameworkOutfit;
 	updateOutfit: (newData: AssetFrameworkOutfit | null) => void;
 	reorderOutfit: (shift: number) => void;
+	beginEditOutfit: () => void;
+	targetContainer: ItemContainerPath;
 }): ReactElement {
 	const [expanded, setExpanded] = useState(false);
 	const confirm = useConfirmDialog();
@@ -159,8 +198,7 @@ function OutfitEntry({ outfit, updateOutfit, reorderOutfit }: {
 						<button
 							className='wardrobeActionButton allowed flex-1'
 							onClick={ () => {
-								// TODO
-								toast(`Not Yet Implemented`, TOAST_OPTIONS_WARNING);
+								beginEditOutfit();
 							} }
 						>
 							Edit
@@ -183,6 +221,89 @@ function OutfitEntry({ outfit, updateOutfit, reorderOutfit }: {
 					</Row>
 				)
 			}
+			{
+				!expanded ? null : (
+					<div className='list reverse'>
+						{
+							outfit.items.map((item, index) => (
+								<OutfitEntryItem
+									key={ index }
+									itemTemplate={ item }
+									targetContainer={ targetContainer }
+								/>
+							))
+						}
+					</div>
+				)
+			}
+		</div>
+	);
+}
+
+function OutfitEntryItem({ itemTemplate, targetContainer }: {
+	itemTemplate: ItemTemplate;
+	targetContainer: ItemContainerPath;
+}): ReactElement {
+	const assetManager = useAssetManager();
+	const { setHeldItem, targetSelector } = useWardrobeContext();
+
+	const asset = assetManager.getAssetById(itemTemplate.asset);
+
+	if (asset == null) {
+		return (
+			<div
+				className='inventoryViewItem listMode blocked'
+			>
+				<span className='itemName'>[ ERROR: Unknown asset { itemTemplate.asset } ]</span>
+			</div>
+		);
+	}
+
+	const ribbonColor = (asset.isType('personal') || asset.isType('roomDevice')) ? (
+		itemTemplate.color?.[
+			asset.definition.colorRibbonGroup ??
+			first(Object.keys(asset.definition.colorization ?? {})) ??
+			''
+		]
+	) : undefined;
+
+	const visibleName = asset.definition.name;
+
+	return (
+		<div
+			tabIndex={ 0 }
+			className='inventoryViewItem listMode allowed'
+			onClick={ () => {
+				setHeldItem({
+					type: 'template',
+					template: CloneDeepMutable(itemTemplate),
+				});
+			} }
+		>
+			{
+				ribbonColor ?
+					<span
+						className='colorRibbon'
+						style={ {
+							backgroundColor: ribbonColor,
+						} }
+					/> : null
+			}
+			<InventoryAssetPreview asset={ asset } />
+			<span className='itemName'>{ visibleName }</span>
+			<div className='quickActions'>
+				<WardrobeActionButton
+					Element='div'
+					action={ {
+						type: 'create',
+						target: targetSelector,
+						itemTemplate: CloneDeepMutable(itemTemplate),
+						container: targetContainer,
+					} }
+				>
+					➕
+				</WardrobeActionButton>
+			</div>
 		</div>
 	);
 }
@@ -207,6 +328,10 @@ function OutfitEntryCreate({ onClick }: {
 	);
 }
 
+/**
+ * Provides a way to update outfit storage
+ * @returns A callback usable to overwrite outfit storage, saving data to the server
+ */
 function useSaveStoredOutfits(): (newStorage: AssetFrameworkOutfitWithId[]) => void {
 	const directoryConnector = useDirectoryConnector();
 
@@ -226,6 +351,10 @@ function useSaveStoredOutfits(): (newStorage: AssetFrameworkOutfitWithId[]) => v
 	}, [directoryConnector]);
 }
 
+/**
+ * Loads the saved outfits from server
+ * @returns The saved outfits or `undefined` if data is not yet ready
+ */
 function useStoredOutfits(): AssetFrameworkOutfitWithId[] | undefined {
 	const [storedOutfits, setStoredOutfits] = useState<AssetFrameworkOutfitWithId[] | undefined>();
 	const directoryConnector = useDirectoryConnector();

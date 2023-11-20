@@ -859,6 +859,15 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 		return false;
 	}
 
+	public override exportToTemplate(): ItemTemplate {
+		// Wearable part should create template of the device itself, not the wearable part
+		if (this.roomDevice != null)
+			return this.roomDevice.exportToTemplate();
+
+		// Fallback to creating the template of the wearable part (no one will be able to use it anyway and we avoid errors)
+		return super.exportToTemplate();
+	}
+
 	public override exportToBundle(options: IExportOptions): ItemBundle {
 		return {
 			...super.exportToBundle(options),

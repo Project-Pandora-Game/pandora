@@ -12,13 +12,16 @@ import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { clamp, first, noop } from 'lodash';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { useConfirmDialog } from '../../dialog/dialog';
+import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail';
 
 export function OutfitEditView({ outfit, updateOutfit }: {
 	outfit: AssetFrameworkOutfit;
 	updateOutfit: (newData: AssetFrameworkOutfit | null) => void;
-}): ReactElement {
+}): ReactElement | null {
 	const { heldItem, extraItemActions, globalState, targetSelector } = useWardrobeContext();
 	const [editName, setEditName] = useState(outfit.name);
+
+	const [editedItemIndex, setEditedItemIndex] = useState<number | null>(null);
 
 	const insertItemTemplate = useCallback((index: number | null, itemTemplate: ItemTemplate) => {
 		const newItems = [...outfit.items];
@@ -67,6 +70,9 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 	}, [outfit, updateOutfit]);
 
 	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
+		if (editedItemIndex != null)
+			return null;
+
 		return (
 			<button
 				className='wardrobeActionButton allowed flex-1'
@@ -85,13 +91,38 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 				💾
 			</button>
 		);
-	}, [globalState, insertItemTemplate, targetSelector]);
+	}, [globalState, insertItemTemplate, targetSelector, editedItemIndex]);
 	useEffect(() => {
 		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
 		return () => {
 			extraItemActions.value = extraItemActions.value.filter((a) => a !== extraItemAction);
 		};
 	}, [extraItemAction, extraItemActions]);
+
+	useEffect(() => {
+		if (editedItemIndex != null && outfit.items[editedItemIndex] == null) {
+			setEditedItemIndex(null);
+		}
+	}, [editedItemIndex, outfit.items]);
+
+	if (editedItemIndex != null) {
+		const editedItem = outfit.items[editedItemIndex];
+
+		if (editedItem == null)
+			return null;
+
+		return (
+			<Column className='flex-1'>
+				<WardrobeTemplateEditMenu
+					title='Editing outfit item'
+					template={ editedItem }
+					updateTemplate={ (newTemplate) => updateItemTemplate(editedItemIndex, CloneDeepMutable(newTemplate)) }
+					cancelText='Finish editing item'
+					cancel={ () => setEditedItemIndex(null) }
+				/>
+			</Column>
+		);
+	}
 
 	return (
 		<Column className='flex-1' padding='small'>
@@ -141,6 +172,9 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 										} }
 										reorderItemTemplate={ (shift) => {
 											reorderItemTemplate(index, shift);
+										} }
+										startEdit={ () => {
+											setEditedItemIndex(index);
 										} }
 									/>
 								</React.Fragment>
@@ -227,14 +261,14 @@ function OutfitEditItemDropArea({ insertTemplate }: {
 	);
 }
 
-function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTemplate }: {
+function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTemplate, startEdit }: {
 	itemTemplate: ItemTemplate;
 	updateItemTemplate: (newTemplate: ItemTemplate | null) => void;
 	reorderItemTemplate: (shift: number) => void;
+	startEdit: () => void;
 }): ReactElement {
 	const confirm = useConfirmDialog();
 	const assetManager = useAssetManager();
-	const { setHeldItem } = useWardrobeContext();
 
 	const asset = assetManager.getAssetById(itemTemplate.asset);
 
@@ -268,15 +302,32 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 
 	const visibleName = asset.definition.name;
 
+	if (!asset.canBeSpawned()) {
+		return (
+			<div
+				className='inventoryViewItem listMode blocked'
+			>
+				<span className='itemName'>[ ERROR: Asset { itemTemplate.asset } cannot be spawned manually ]</span>
+				<div className='quickActions'>
+					<button
+						className='wardrobeActionButton allowed'
+						onClick={ () => {
+							updateItemTemplate(null);
+						} }
+					>
+						➖
+					</button>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div
 			tabIndex={ 0 }
 			className='inventoryViewItem listMode allowed'
 			onClick={ () => {
-				setHeldItem({
-					type: 'template',
-					template: CloneDeepMutable(itemTemplate),
-				});
+				startEdit();
 			} }
 		>
 			{

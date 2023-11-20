@@ -10,11 +10,15 @@ import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { WardrobeModuleTemplateConfig } from '../modules/_wardrobeModules';
 
 export function WardrobeTemplateEditMenu({
+	title,
 	template,
+	cancelText,
 	cancel,
 	updateTemplate,
 }: {
+	title: string;
 	template: Immutable<ItemTemplate>;
+	cancelText: string;
 	cancel: () => void;
 	updateTemplate: (newTemplate: Immutable<ItemTemplate>) => void;
 }): ReactElement {
@@ -25,7 +29,7 @@ export function WardrobeTemplateEditMenu({
 		return (
 			<div className='inventoryView'>
 				<div className='toolbar'>
-					<span>Editing item: [ ERROR: ASSET NOT FOUND ]</span>
+					<span>{ title }: [ ERROR: ASSET NOT FOUND ]</span>
 					<button className='modeButton' onClick={ cancel }>✖️</button>
 				</div>
 			</div>
@@ -35,7 +39,7 @@ export function WardrobeTemplateEditMenu({
 	return (
 		<div className='inventoryView'>
 			<div className='toolbar'>
-				<span>Creating item: { asset.definition.name }</span>
+				<span>{ title }: { asset.definition.name }</span>
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
 				<Row padding='medium' wrap>
@@ -43,7 +47,7 @@ export function WardrobeTemplateEditMenu({
 						className='wardrobeActionButton allowed'
 						onClick={ cancel }
 					>
-						✖️ Cancel
+						{ cancelText }
 					</button>
 				</Row>
 				{

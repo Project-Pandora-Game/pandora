@@ -157,7 +157,9 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 				focus === 'template' && heldItem.type === 'template' ? (
 					<div className='flex-col flex-1'>
 						<WardrobeTemplateEditMenu
+							title='Creating item'
 							template={ heldItem.template }
+							cancelText='✖️ Cancel'
 							cancel={ () => setHeldItem({ type: 'nothing' }) }
 							updateTemplate={ (newTemplate) => setHeldItem({ type: 'template', template: newTemplate }) }
 						/>

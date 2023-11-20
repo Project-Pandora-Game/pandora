@@ -6,7 +6,7 @@ import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameCon
 import { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { nanoid } from 'nanoid';
 import { OutfitEditView } from './wardrobeOutfitEditView';
@@ -85,7 +85,13 @@ export function InventoryOutfitView({ targetContainer }: {
 			<div className='inventoryView'>
 				<div className='toolbar'>
 					<span>Storage used: Loading...</span>
-					<Button>Import outfit</Button>
+					<Button
+						onClick={ () => {
+							toast(`Not Yet Implemented`, TOAST_OPTIONS_WARNING);
+						} }
+					>
+						Import outfit
+					</Button>
 				</div>
 				<DivContainer className='flex-1' align='center' justify='center'>
 					Loading...
@@ -128,7 +134,13 @@ export function InventoryOutfitView({ targetContainer }: {
 		<div className='inventoryView'>
 			<div className='toolbar'>
 				<span>Storage used: { storageUsed } / { storageAvailableTotal } ({ Math.ceil(100 * storageUsed / storageAvailableTotal) }%)</span>
-				<Button>Import outfit</Button>
+				<Button
+					onClick={ () => {
+						toast(`Not Yet Implemented`, TOAST_OPTIONS_WARNING);
+					} }
+				>
+					Import outfit
+				</Button>
 			</div>
 			<div className='listContainer outfitList'>
 				<Scrollbar color='dark'>
@@ -268,6 +280,16 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 	) : undefined;
 
 	const visibleName = asset.definition.name;
+
+	if (!asset.canBeSpawned()) {
+		return (
+			<div
+				className='inventoryViewItem listMode blocked'
+			>
+				<span className='itemName'>[ ERROR: Asset { itemTemplate.asset } cannot be spawned manually ]</span>
+			</div>
+		);
+	}
 
 	return (
 		<div

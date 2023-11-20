@@ -41,6 +41,7 @@ export interface IItemModule<out TProperties = unknown, Type extends ModuleType 
 	/** The module specifies what kind of interaction type interacting with it is */
 	readonly interactionType: ItemInteractionType;
 
+	exportToTemplate(): IAssetModuleTypes<TProperties>[Type]['template'];
 	exportData(options: IExportOptions): IAssetModuleTypes<TProperties>[Type]['data'];
 
 	validate(context: IItemValidationContext): AppearanceValidationResult;

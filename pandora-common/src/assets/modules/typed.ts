@@ -186,6 +186,13 @@ export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<T
 		});
 	}
 
+	public exportToTemplate(): IModuleItemTemplateTyped {
+		return {
+			type: 'typed',
+			variant: this.activeVariant.id,
+		};
+	}
+
 	public exportData(): IModuleItemDataTyped {
 		const variant = this.activeVariant;
 		return {

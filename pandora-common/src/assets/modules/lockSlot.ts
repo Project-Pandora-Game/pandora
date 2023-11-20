@@ -132,6 +132,13 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		});
 	}
 
+	public exportToTemplate(): IModuleItemTemplateLockSlot {
+		return {
+			type: 'lockSlot',
+			lock: this.lock ? this.lock.exportToTemplate() : null,
+		};
+	}
+
 	public exportData(options: IExportOptions): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',

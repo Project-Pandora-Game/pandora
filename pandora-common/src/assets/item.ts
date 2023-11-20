@@ -207,6 +207,22 @@ abstract class ItemBase<Type extends AssetType = AssetType> implements ItemBaseP
 
 	protected abstract withProps(overrideProps: Partial<ItemBaseProps<Type>>): Item<Type>;
 
+	public exportToTemplate(): ItemTemplate {
+		let modules: ItemTemplate['modules'];
+		if (this.getModules().size > 0) {
+			modules = {};
+			for (const [name, module] of this.getModules().entries()) {
+				modules[name] = module.exportToTemplate();
+			}
+		}
+
+		return {
+			asset: this.asset.id,
+			color: this.exportColorToBundle(),
+			modules,
+		};
+	}
+
 	public exportToBundle(options: IExportOptions): ItemBundle {
 		let moduleData: ItemBundle['moduleData'];
 		if (this.getModules().size > 0) {

@@ -132,6 +132,13 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 		});
 	}
 
+	public exportToTemplate(): IModuleItemTemplateStorage {
+		return {
+			type: 'storage',
+			contents: this.contents.map((item) => item.exportToTemplate()),
+		};
+	}
+
 	public exportData(options: IExportOptions): IModuleItemDataStorage {
 		return {
 			type: 'storage',

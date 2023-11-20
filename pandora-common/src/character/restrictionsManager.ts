@@ -318,10 +318,10 @@ export class CharacterRestrictionsManager {
 		if (!r.allowed)
 			return r;
 
-		let isPhysicallyEquipped = true;
 		const isCharacter = target.type === 'character';
 		const isSelfAction = isCharacter && target.character.id === this.character.id;
 		const isInSafemode = this.isInSafemode();
+		let isPhysicallyEquipped = isCharacter;
 
 		// Must be able to access all upper items
 		const upperPath = SplitContainerPath(container);

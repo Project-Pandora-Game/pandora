@@ -6,6 +6,8 @@ import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useWardrobeContext } from '../wardrobeContext';
 import { useAssetManager } from '../../../assets/assetManager';
 import { InventoryAssetPreview } from '../wardrobeComponents';
+import diskIcon from '../../../assets/icons/disk.svg';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
@@ -88,7 +90,7 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 					insertItemTemplate(null, actualItem.exportToTemplate());
 				} }
 			>
-				💾
+				<img src={ diskIcon } alt='Quick-storage action' />
 			</button>
 		);
 	}, [globalState, insertItemTemplate, targetSelector, editedItemIndex]);
@@ -285,7 +287,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 							updateItemTemplate(null);
 						} }
 					>
-						➖
+						<img src={ deleteIcon } alt='Delete action' />
 					</button>
 				</div>
 			</div>
@@ -315,7 +317,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 							updateItemTemplate(null);
 						} }
 					>
-						➖
+						<img src={ deleteIcon } alt='Delete action' />
 					</button>
 				</div>
 			</div>
@@ -374,7 +376,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 							.catch(noop);
 					} }
 				>
-					➖
+					<img src={ deleteIcon } alt='Delete action' />
 				</button>
 			</div>
 		</div>

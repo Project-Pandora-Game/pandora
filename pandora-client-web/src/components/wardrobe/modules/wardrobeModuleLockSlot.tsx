@@ -13,6 +13,7 @@ import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot'
 import emptyLock from '../../../assets/icons/lock_empty.svg';
 import closedLock from '../../../assets/icons/lock_closed.svg';
 import openLock from '../../../assets/icons/lock_open.svg';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
@@ -77,7 +78,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: 
 							},
 						} }
 					>
-						➖ Remove and delete
+						<img src={ deleteIcon } alt='Delete action' /> Remove and delete
 					</WardrobeActionButton>
 					<WardrobeActionButton
 						action={ {
@@ -158,7 +159,7 @@ export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChang
 						});
 					} }
 				>
-					➖ Remove lock
+					<img src={ deleteIcon } alt='Delete action' /> Remove lock
 				</button>
 			</Row>
 		</Column>

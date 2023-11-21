@@ -11,6 +11,7 @@ import { useAssetManager } from '../../../assets/assetManager';
 import { IconButton } from '../../common/button/button';
 import listIcon from '../../../assets/icons/list.svg';
 import gridIcon from '../../../assets/icons/grid.svg';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useWardrobeContext, useWardrobeExecuteChecked } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
@@ -67,7 +68,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 				target: targetSelector,
 				item,
 			} }>
-				➖
+				<img src={ deleteIcon } alt='Delete action' />
 			</WardrobeActionButton>
 		) : null;
 	}, [targetSelector, spawnStyle, showExtraActionButtons]);

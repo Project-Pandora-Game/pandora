@@ -1,4 +1,5 @@
 import React, { ReactElement, useCallback, useState } from 'react';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { AssetFrameworkOutfit, AssetFrameworkOutfitWithId, CloneDeepMutable, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
@@ -228,7 +229,7 @@ function OutfitEntry({ outfit, updateOutfit, reorderOutfit, beginEditOutfit, tar
 									.catch(noop);
 							} }
 						>
-							➖ Delete
+							<img src={ deleteIcon } alt='Delete action' /> Delete
 						</button>
 					</Row>
 				)

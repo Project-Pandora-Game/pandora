@@ -1291,9 +1291,9 @@ export function CreateItemBundleFromTemplate(template: ItemTemplate, context: II
 	return bundle;
 }
 
-/** Calculates "cost" for storing the outfit (right now it is count of items, including nested ones; + 1 for outfit itself) */
+/** Calculates "cost" for storing the outfit (right now it is count of items, including nested ones; or at least 1 for outfit itself) */
 export function OutfitMeasureCost(outfit: AssetFrameworkOutfit): number {
-	return 1 + outfit.items.reduce((p, item) => p + ItemTemplateMeasureCost(item), 0);
+	return Math.max(1, outfit.items.reduce((p, item) => p + ItemTemplateMeasureCost(item), 0));
 }
 
 /** Calculates "cost" for storing a specific item (right now it is count of items, including nested ones) */

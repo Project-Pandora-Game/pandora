@@ -18,6 +18,7 @@ import { CreateRoomDevicePropertiesResult, GetPropertiesForSlot, MergeRoomDevice
 import { AssetFrameworkRoomState } from './state/roomState';
 import { GameLogicCharacter } from '../gameLogic';
 import { nanoid } from 'nanoid';
+import { LIMIT_OUTFIT_NAME_LENGTH } from '../inputLimits';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
@@ -125,7 +126,7 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = 
 });
 
 export const AssetFrameworkOutfitSchema = z.object({
-	name: z.string(),
+	name: z.string().max(LIMIT_OUTFIT_NAME_LENGTH),
 	items: ZodArrayWithInvalidDrop(ItemTemplateSchema, z.record(z.unknown())),
 });
 export type AssetFrameworkOutfit = z.infer<typeof AssetFrameworkOutfitSchema>;

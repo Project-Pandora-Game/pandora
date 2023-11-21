@@ -34,6 +34,9 @@ export const LIMIT_CHAT_MESSAGE_LENGTH = 25_000;
  */
 export const LIMIT_DIRECT_MESSAGE_LENGTH = LIMIT_CHAT_MESSAGE_LENGTH;
 
+/** The maximum length of an outfit name */
+export const LIMIT_OUTFIT_NAME_LENGTH = 40;
+
 /** The maximum length of a custom item name (not yet implemented)*/
 export const LIMIT_ITEM_NAME_LENGTH = 40;
 

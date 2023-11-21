@@ -33,8 +33,8 @@
 	},
 	"dependencies": {
 		"@types/async-lock": "1.4.2",
-		"@types/lodash": "4.14.201",
-		"@types/node": "18.18.10",
+		"@types/lodash": "4.14.202",
+		"@types/node": "18.18.11",
 		"async-lock": "1.4.0",
 		"immer": "10.0.3",
 		"lodash": "4.17.21",
@@ -45,7 +45,7 @@
 		"zod": "3.22.4"
 	},
 	"devDependencies": {
-		"@types/jest": "29.5.8",
+		"@types/jest": "29.5.9",
 		"@typescript-eslint/eslint-plugin": "6.12.0",
 		"@typescript-eslint/parser": "6.12.0",
 		"eslint": "8.54.0",

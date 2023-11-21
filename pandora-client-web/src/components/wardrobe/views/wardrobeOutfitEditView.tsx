@@ -1,5 +1,5 @@
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { AssertNever, AssetFrameworkOutfit, CloneDeepMutable, EMPTY_ARRAY, ItemTemplate } from 'pandora-common';
+import { AssertNever, AssetFrameworkOutfit, CloneDeepMutable, EMPTY_ARRAY, ItemTemplate, LIMIT_OUTFIT_NAME_LENGTH } from 'pandora-common';
 import { Column, Row } from '../../common/container/container';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
@@ -129,7 +129,7 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 	return (
 		<Column className='flex-1' padding='small'>
 			<fieldset>
-				<legend>Outfit name</legend>
+				<legend>Outfit name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
 				<Row>
 					<input className='flex-1' value={ editName } onChange={ (e) => setEditName(e.target.value) } />
 					<Button

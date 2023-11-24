@@ -1,5 +1,5 @@
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { AssertNever, AssetFrameworkOutfit, CloneDeepMutable, EMPTY_ARRAY, ItemTemplate, LIMIT_OUTFIT_NAME_LENGTH } from 'pandora-common';
+import { AssertNever, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, CloneDeepMutable, EMPTY_ARRAY, ItemTemplate, LIMIT_OUTFIT_NAME_LENGTH } from 'pandora-common';
 import { Column, Row } from '../../common/container/container';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
@@ -15,6 +15,7 @@ import { clamp, first, noop } from 'lodash';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail';
+import { ExportDialog } from '../../exportImport/exportDialog';
 
 export function OutfitEditView({ outfit, updateOutfit }: {
 	outfit: AssetFrameworkOutfit;
@@ -24,6 +25,7 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 	const [editName, setEditName] = useState(outfit.name);
 
 	const [editedItemIndex, setEditedItemIndex] = useState<number | null>(null);
+	const [showExportDialog, setShowExportDialog] = useState(false);
 
 	const insertItemTemplate = useCallback((index: number | null, itemTemplate: ItemTemplate) => {
 		const newItems = [...outfit.items];
@@ -128,6 +130,27 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 
 	return (
 		<Column className='flex-1' padding='small'>
+			{
+				showExportDialog ? (
+					<ExportDialog
+						exportType='Outfit'
+						exportVersion={ 1 }
+						dataSchema={ AssetFrameworkOutfitSchema }
+						data={ outfit }
+						closeDialog={ () => setShowExportDialog(false) }
+					/>
+				) : null
+			}
+			<Row padding='medium'>
+				<button
+					className='wardrobeActionButton allowed'
+					onClick={ () => {
+						setShowExportDialog(true);
+					} }
+				>
+					Export
+				</button>
+			</Row>
 			<fieldset>
 				<legend>Outfit name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
 				<Row>

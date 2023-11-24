@@ -2,18 +2,19 @@ import React, { ReactElement, useCallback, useState } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AssetFrameworkOutfit, AssetFrameworkOutfitWithId, CloneDeepMutable, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
+import { AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CloneDeepMutable, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { nanoid } from 'nanoid';
 import { OutfitEditView } from './wardrobeOutfitEditView';
 import { useAssetManager } from '../../../assets/assetManager';
 import { useWardrobeContext } from '../wardrobeContext';
 import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { ImportDialog } from '../../exportImport/importDialog';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;
@@ -21,6 +22,7 @@ export function InventoryOutfitView({ targetContainer }: {
 	const storedOutfits = useStoredOutfits();
 	const saveOutfits = useSaveStoredOutfits();
 
+	const [isImporting, setIsImporting] = useState(false);
 	const [editedOutfitId, setEditedOutfitId] = useState<string | null>(null);
 
 	const createNewOutfit = useCallback(() => {
@@ -88,7 +90,7 @@ export function InventoryOutfitView({ targetContainer }: {
 					<span>Storage used: Loading...</span>
 					<Button
 						onClick={ () => {
-							toast(`Not Yet Implemented`, TOAST_OPTIONS_WARNING);
+							setIsImporting(true);
 						} }
 					>
 						Import outfit
@@ -133,11 +135,35 @@ export function InventoryOutfitView({ targetContainer }: {
 
 	return (
 		<div className='inventoryView'>
+			{
+				isImporting ? (
+					<ImportDialog
+						expectedType='Outfit'
+						expectedVersion={ 1 }
+						dataSchema={ AssetFrameworkOutfitSchema }
+						closeDialog={ () => {
+							setIsImporting(false);
+						} }
+						onImport={ (data) => {
+							const newOutfit: AssetFrameworkOutfitWithId = {
+								id: nanoid(),
+								...data,
+							};
+
+							saveOutfits([
+								...storedOutfits,
+								newOutfit,
+							]);
+							setIsImporting(false);
+						} }
+					/>
+				) : null
+			}
 			<div className='toolbar'>
 				<span>Storage used: { storageUsed } / { storageAvailableTotal } ({ Math.ceil(100 * storageUsed / storageAvailableTotal) }%)</span>
 				<Button
 					onClick={ () => {
-						toast(`Not Yet Implemented`, TOAST_OPTIONS_WARNING);
+						setIsImporting(true);
 					} }
 				>
 					Import outfit

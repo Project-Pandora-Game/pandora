@@ -8,6 +8,7 @@ import { useAssetManager } from '../../../assets/assetManager';
 import { InventoryAssetPreview } from '../wardrobeComponents';
 import diskIcon from '../../../assets/icons/disk.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import exportIcon from '../../../assets/icons/export.svg';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
@@ -148,7 +149,7 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 						setShowExportDialog(true);
 					} }
 				>
-					Export
+					<img src={ exportIcon } alt='Delete action' />&nbsp;Export
 				</button>
 			</Row>
 			<fieldset>

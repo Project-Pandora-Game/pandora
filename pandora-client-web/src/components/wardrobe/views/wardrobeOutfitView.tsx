@@ -1,5 +1,6 @@
 import React, { ReactElement, useCallback, useState } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import editIcon from '../../../assets/icons/edit.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CloneDeepMutable, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
@@ -240,7 +241,7 @@ function OutfitEntry({ outfit, updateOutfit, reorderOutfit, beginEditOutfit, tar
 								beginEditOutfit();
 							} }
 						>
-							Edit
+							<img src={ editIcon } alt='Edit action' />&nbsp;Edit
 						</button>
 						<button
 							className='wardrobeActionButton allowed flex-1'

@@ -18,6 +18,7 @@ import { InventoryAssetView } from './views/wardrobeAssetView';
 import { WardrobeFocusesItem } from './wardrobeUtils';
 import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
 import { WardrobeBodySizeEditor } from './views/wardrobeBodySizeView';
+import { InventoryOutfitView } from './views/wardrobeOutfitView';
 
 export function WardrobeBodyManipulation({ className, character, characterState }: {
 	className?: string;
@@ -68,6 +69,11 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 				</Tab>
 				<Tab name='Change body size'>
 					<WardrobeBodySizeEditor character={ character } characterState={ characterState } />
+				</Tab>
+				<Tab name='Outfits'>
+					<InventoryOutfitView
+						targetContainer={ EMPTY_ARRAY }
+					/>
 				</Tab>
 			</TabContainer>
 			{

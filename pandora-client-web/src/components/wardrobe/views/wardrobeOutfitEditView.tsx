@@ -22,6 +22,7 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 	outfit: AssetFrameworkOutfit;
 	updateOutfit: (newData: AssetFrameworkOutfit | null) => void;
 }): ReactElement | null {
+	const confirm = useConfirmDialog();
 	const { heldItem, extraItemActions, globalState, targetSelector } = useWardrobeContext();
 	const [editName, setEditName] = useState(outfit.name);
 
@@ -143,6 +144,21 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 				) : null
 			}
 			<Row padding='medium'>
+				<button
+					className='wardrobeActionButton allowed'
+					onClick={ () => {
+						confirm('Confirm deletion', `Are you sure you want to delete the outfit "${outfit.name}"?`)
+							.then((result) => {
+								if (!result)
+									return;
+
+								updateOutfit(null);
+							})
+							.catch(noop);
+					} }
+				>
+					<img src={ deleteIcon } alt='Delete action' /> Delete outfit
+				</button>
 				<button
 					className='wardrobeActionButton allowed'
 					onClick={ () => {

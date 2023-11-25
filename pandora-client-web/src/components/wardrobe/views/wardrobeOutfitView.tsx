@@ -60,10 +60,13 @@ export function InventoryOutfitView({ targetContainer }: {
 			};
 		} else {
 			newStorage.splice(index, 1);
+			if (editedOutfitId === id) {
+				setEditedOutfitId(null);
+			}
 		}
 
 		saveOutfits(newStorage);
-	}, [storedOutfits, saveOutfits]);
+	}, [storedOutfits, saveOutfits, editedOutfitId]);
 
 	const reorderOutfit = useCallback((id: string, shift: number) => {
 		if (storedOutfits == null)

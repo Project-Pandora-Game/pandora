@@ -1,9 +1,9 @@
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CloneDeepMutable, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
+import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CharacterSize, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
@@ -16,6 +16,11 @@ import { useAssetManager } from '../../../assets/assetManager';
 import { useWardrobeContext } from '../wardrobeContext';
 import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { ImportDialog } from '../../exportImport/importDialog';
+import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter';
+import { usePlayerState } from '../../gameContext/playerContextProvider';
+import { useChatRoomCharacterOffsets } from '../../chatroom/chatRoomCharacter';
+import { usePlayerVisionFilters } from '../../chatroom/chatRoomScene';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;
@@ -198,6 +203,56 @@ export function InventoryOutfitView({ targetContainer }: {
 	);
 }
 
+function OutfitPreview({ outfit }: {
+	outfit: AssetFrameworkOutfit;
+}): ReactElement {
+	const assetManager = useAssetManager();
+	const { target, globalState } = useWardrobeContext();
+	const { player, playerState } = usePlayerState();
+
+	const baseCharacterState = (target.type === 'character' ? globalState.getCharacterState(target.id) : null) ?? playerState;
+
+	const characterState = useMemo((): AssetFrameworkCharacterState => {
+		const templateBundle = baseCharacterState.items
+			.filter((item) => item.isType('personal') && item.asset.definition.bodypart != null)
+			.map((item) => item.exportToBundle({}));
+
+		for (const itemTemplate of outfit.items) {
+			const itemBundle = CreateItemBundleFromTemplate(itemTemplate, {
+				assetManager,
+				creator: player.gameLogicCharacter,
+			});
+			if (itemBundle != null) {
+				templateBundle.push(itemBundle);
+			}
+		}
+
+		const characterBundle: AppearanceBundle = {
+			items: templateBundle,
+			requestedPose: CloneDeepMutable(baseCharacterState.requestedPose),
+		};
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, null, undefined);
+	}, [assetManager, baseCharacterState, outfit, player]);
+
+	const { pivot } = useChatRoomCharacterOffsets(characterState);
+	const filters = usePlayerVisionFilters(true);
+
+	return (
+		<GraphicsSceneBackgroundRenderer
+			renderArea={ { x: 0, y: 0, width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT } }
+			resolution={ 1 }
+			backgroundColor={ 0xcccccc }
+		>
+			<GraphicsCharacter
+				position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }
+				pivot={ pivot }
+				characterState={ characterState }
+				filters={ filters }
+			/>
+		</GraphicsSceneBackgroundRenderer>
+	);
+}
+
 function OutfitEntry({ outfit, updateOutfit, reorderOutfit, beginEditOutfit, targetContainer }: {
 	outfit: AssetFrameworkOutfit;
 	updateOutfit: (newData: AssetFrameworkOutfit | null) => void;
@@ -212,7 +267,7 @@ function OutfitEntry({ outfit, updateOutfit, reorderOutfit, beginEditOutfit, tar
 		<div className='outfit'>
 			<button className='outfitMainButton' onClick={ () => setExpanded(!expanded) }>
 				<div className='outfitPreview'>
-					<div className='img' />
+					<OutfitPreview outfit={ outfit } />
 				</div>
 				<Column padding='medium' alignX='start' alignY='space-evenly'>
 					<span>{ outfit.name }</span>

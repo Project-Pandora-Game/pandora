@@ -142,31 +142,31 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 				) : null
 			}
 			<Row padding='medium'>
-				<button
-					className='wardrobeActionButton allowed'
+				<Button
+					className='wardrobeActionButton allowed slim'
 					onClick={ () => {
 						setShowExportDialog(true);
 					} }
 				>
 					Export
-				</button>
+				</Button>
+				<fieldset className='flex-1'>
+					<legend>Outfit name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
+					<Row>
+						<input className='flex-1' value={ editName } onChange={ (e) => setEditName(e.target.value) } />
+						<Button
+							className='slim fadeDisabled'
+							onClick={ () => updateOutfit({
+								...outfit,
+								name: editName,
+							}) }
+							disabled={ outfit.name === editName }
+						>
+							Save
+						</Button>
+					</Row>
+				</fieldset>
 			</Row>
-			<fieldset>
-				<legend>Outfit name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
-				<Row>
-					<input className='flex-1' value={ editName } onChange={ (e) => setEditName(e.target.value) } />
-					<Button
-						className='slim fadeDisabled'
-						onClick={ () => updateOutfit({
-							...outfit,
-							name: editName,
-						}) }
-						disabled={ outfit.name === editName }
-					>
-						Save
-					</Button>
-				</Row>
-			</fieldset>
 			<fieldset className='flex-1'>
 				<legend>Items</legend>
 				<Scrollbar color='dark' className='fill'>
@@ -389,7 +389,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 					className='wardrobeActionButton allowed'
 					onClick={ (ev) => {
 						ev.stopPropagation();
-						confirm(`Are you sure you want to delete item "${visibleName}" from the outfit?`)
+						confirm('Confirm Removal', `Are you sure you want to delete the item "${visibleName}" from this outfit?`)
 							.then((result) => {
 								if (!result)
 									return;

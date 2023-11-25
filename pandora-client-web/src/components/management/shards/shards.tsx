@@ -68,7 +68,7 @@ function ShardRow({ shard }: { shard: IShardTokenConnectInfo; }): ReactElement {
 	const confirm = useConfirmDialog();
 
 	const [onInvalidate] = useAsyncEvent(async () => {
-		if (!await confirm('Are you sure you want to delete this token?'))
+		if (!await confirm('Confirm Deletion', 'Are you sure you want to delete this token?'))
 			return { result: 'cancelled' };
 
 		return await connector.awaitResponse('manageInvalidateShardToken', { id: shard.id });

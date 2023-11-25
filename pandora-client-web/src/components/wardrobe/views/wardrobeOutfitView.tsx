@@ -166,7 +166,7 @@ export function InventoryOutfitView({ targetContainer }: {
 						setIsImporting(true);
 					} }
 				>
-					Import outfit
+					Import
 				</Button>
 			</div>
 			<div className='listContainer outfitList'>
@@ -245,7 +245,7 @@ function OutfitEntry({ outfit, updateOutfit, reorderOutfit, beginEditOutfit, tar
 						<button
 							className='wardrobeActionButton allowed flex-1'
 							onClick={ () => {
-								confirm(`Are you sure you want to delete outfit "${outfit.name}"?`)
+								confirm('Confirm Deletion', `Are you sure you want to delete the outfit "${outfit.name}"?`)
 									.then((result) => {
 										if (!result)
 											return;

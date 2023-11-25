@@ -32,7 +32,7 @@ function StoreDeviceMenu({ device, close }: {
 	const confirm = useConfirmDialog();
 
 	const onClick = useCallback(() => {
-		confirm('Are you sure you want to store the device?')
+		confirm('Confirm Device Storage', 'Are you sure you want to store the device in the room inventory?')
 			.then((result) => {
 				if (result) {
 					execute();

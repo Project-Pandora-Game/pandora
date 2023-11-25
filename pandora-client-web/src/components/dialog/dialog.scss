@@ -15,6 +15,10 @@
 	isolation: isolate;
 	overflow: hidden;
 
+	.dialog-element {
+		padding: 1em;
+	}
+
 	.dialog-content {
 		max-width: calc(100% - 1em);
 		max-height: calc(100% - 1em);

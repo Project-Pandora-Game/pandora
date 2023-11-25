@@ -188,6 +188,10 @@ $drop-overlay-gap: 0.3em;
 					overflow: hidden;
 					aspect-ratio: 2 / 3;
 
+					&.big {
+						width: min(50%, 30vh);
+					}
+
 					canvas {
 						max-width: 100%;
 						max-height: 100%;

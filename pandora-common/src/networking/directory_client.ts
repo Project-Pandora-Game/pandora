@@ -45,6 +45,10 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 */
 	wardrobeHoverPreview: z.boolean().catch(true),
 	/**
+	 * If outfits tab should generate previews for outfits and if the previews should be small or big.
+	 */
+	wardrobeOutfitsPreview: z.enum(['disabled', 'small', 'big']).default('small'),
+	/**
 	 * Color to use as wardrobe character preview background, unless room background is used (see `wardrobeUseRoomBackground` setting).
 	 */
 	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
@@ -81,6 +85,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	wardrobeBackground: '#aaaaaa',
 	wardrobeUseRoomBackground: true,
 	wardrobeHoverPreview: true,
+	wardrobeOutfitsPreview: 'small',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',

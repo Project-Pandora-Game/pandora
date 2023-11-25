@@ -1,10 +1,10 @@
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CharacterSize, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CharacterSize, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
+import { useCurrentAccountSettings, useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
 import { toast } from 'react-toastify';
@@ -21,6 +21,7 @@ import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/g
 import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { useChatRoomCharacterOffsets } from '../../chatroom/chatRoomCharacter';
 import { usePlayerVisionFilters } from '../../chatroom/chatRoomScene';
+import classNames from 'classnames';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;
@@ -207,8 +208,10 @@ function OutfitPreview({ outfit }: {
 	outfit: AssetFrameworkOutfit;
 }): ReactElement {
 	const assetManager = useAssetManager();
-	const { target, globalState } = useWardrobeContext();
+	const { target, globalState, showHoverPreview, actionPreviewState } = useWardrobeContext();
 	const { player, playerState } = usePlayerState();
+
+	const [isHovering, setIsHovering] = useState(false);
 
 	const baseCharacterState = (target.type === 'character' ? globalState.getCharacterState(target.id) : null) ?? playerState;
 
@@ -234,22 +237,48 @@ function OutfitPreview({ outfit }: {
 		return AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, null, undefined);
 	}, [assetManager, baseCharacterState, outfit, player]);
 
+	useEffect(() => {
+		if (!isHovering || !showHoverPreview)
+			return;
+
+		let previewState = AssetFrameworkGlobalState.createDefault(assetManager);
+		previewState = previewState.withCharacter(characterState.id, characterState);
+
+		actionPreviewState.value = previewState;
+
+		return () => {
+			if (actionPreviewState.value === previewState) {
+				actionPreviewState.value = null;
+			}
+		};
+	}, [isHovering, showHoverPreview, actionPreviewState, assetManager, characterState]);
+
 	const { pivot } = useChatRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(true);
 
 	return (
-		<GraphicsSceneBackgroundRenderer
-			renderArea={ { x: 0, y: 0, width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT } }
-			resolution={ 1 }
-			backgroundColor={ 0xcccccc }
+		<div
+			className='fill'
+			onMouseEnter={ () => {
+				setIsHovering(true);
+			} }
+			onMouseLeave={ () => {
+				setIsHovering(false);
+			} }
 		>
-			<GraphicsCharacter
-				position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }
-				pivot={ pivot }
-				characterState={ characterState }
-				filters={ filters }
-			/>
-		</GraphicsSceneBackgroundRenderer>
+			<GraphicsSceneBackgroundRenderer
+				renderArea={ { x: 0, y: 0, width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT } }
+				resolution={ 1 }
+				backgroundColor={ 0xcccccc }
+			>
+				<GraphicsCharacter
+					position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }
+					pivot={ pivot }
+					characterState={ characterState }
+					filters={ filters }
+				/>
+			</GraphicsSceneBackgroundRenderer>
+		</div>
 	);
 }
 
@@ -260,14 +289,21 @@ function OutfitEntry({ outfit, updateOutfit, reorderOutfit, beginEditOutfit, tar
 	beginEditOutfit: () => void;
 	targetContainer: ItemContainerPath;
 }): ReactElement {
+	const { wardrobeOutfitsPreview } = useCurrentAccountSettings();
 	const [expanded, setExpanded] = useState(false);
 	const confirm = useConfirmDialog();
 
 	return (
 		<div className='outfit'>
 			<button className='outfitMainButton' onClick={ () => setExpanded(!expanded) }>
-				<div className='outfitPreview'>
-					<OutfitPreview outfit={ outfit } />
+				<div className={ classNames('outfitPreview', wardrobeOutfitsPreview === 'big' ? 'big' : null) }>
+					{
+						wardrobeOutfitsPreview !== 'disabled' ? (
+							<OutfitPreview outfit={ outfit } />
+						) : (
+							null
+						)
+					}
 				</div>
 				<Column padding='medium' alignX='start' alignY='space-evenly'>
 					<span>{ outfit.name }</span>

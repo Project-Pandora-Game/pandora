@@ -101,7 +101,7 @@ function RelationshipsRow({
 			case 'blocked':
 				return (
 					<Button className='slim' onClick={
-						() => void confirm('Confirm Change', `Are you sure you want to unblock ${name}?`).then((result) => {
+						() => void confirm('Confirm unblock', `Are you sure you want to unblock ${name}?`).then((result) => {
 							if (result)
 								directory.sendMessage('blockList', { id, action: 'remove' });
 						}).catch(() => { /** ignore */ })
@@ -141,13 +141,13 @@ function IncomingRequestActions({ id }: { id: AccountId; }) {
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();
 	const [accept, acceptInProgress] = useAsyncEvent(async () => {
-		if (await confirm('Confirm Acceptance', `Accept the request to add ${id} to your contacts?`)) {
+		if (await confirm('Confirm addition', `Accept the request to add ${id} to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'accept' });
 		}
 		return undefined;
 	}, RelationshipChangeHandleResult);
 	const [decline, declineInProgress] = useAsyncEvent(async () => {
-		if (await confirm('Confirm Rejection', `Decline the request to add ${id} to your contacts?`)) {
+		if (await confirm('Confirm rejection', `Decline the request to add ${id} to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'decline' });
 		}
 		return undefined;
@@ -231,7 +231,7 @@ function FriendRow({
 	const confirm = useConfirmDialog();
 
 	const [unfriend, processing] = useAsyncEvent(async () => {
-		if (await confirm('Confirm Removal', `Are you sure you want to remove ${name} from your contacts list?`)) {
+		if (await confirm('Confirm removal', `Are you sure you want to remove ${name} from your contacts list?`)) {
 			return await directory.awaitResponse('unfriend', { id });
 		}
 		return undefined;

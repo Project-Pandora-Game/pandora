@@ -66,7 +66,7 @@ function GitHubIntegration({ account }: { account: IDirectoryAccountInfo; }): Re
 		if (processing)
 			return;
 
-		confirm('Confirm Removal', 'Are you sure you want to unlink GitHub account?')
+		confirm('Confirm unlinking', 'Are you sure you want to unlink GitHub account?')
 			.then((result) => {
 				if (result) {
 					connection.sendMessage('gitHubUnbind', EMPTY);

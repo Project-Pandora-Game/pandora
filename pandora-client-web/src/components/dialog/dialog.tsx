@@ -204,12 +204,12 @@ export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDial
 
 	return (
 		<ModalDialog>
-			<Column>
+			<Column className='dialog-confirm'>
 				<strong>{ title }<hr /></strong>
-				<div className='dialog-element'>
+				<Column padding='large'>
 					{ content }
-				</div>
-				<Row gap='small' alignX='space-evenly'>
+				</Column>
+				<Row gap='small' alignX='space-between'>
 					<Button onClick={ onCancel }>
 						{ no }
 					</Button>

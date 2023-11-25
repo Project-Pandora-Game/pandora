@@ -7,17 +7,13 @@
 	position: fixed;
 	top: 0;
 	left: 0;
-	z-index: 1000;
+	z-index: 10000;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
 	isolation: isolate;
 	overflow: hidden;
-
-	.dialog-element {
-		padding: 1em;
-	}
 
 	.dialog-content {
 		max-width: calc(100% - 1em);
@@ -90,4 +86,8 @@
 		flex: 1;
 		overflow: auto;
 	}
+}
+
+.dialog-confirm {
+	max-width: min(95vw, 50em);
 }

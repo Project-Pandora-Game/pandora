@@ -69,7 +69,7 @@ function BetaKeyRow({ betaKey }: { betaKey: IBetaKeyInfo; }): ReactElement {
 	const confirm = useConfirmDialog();
 
 	const [onInvalidate] = useAsyncEvent(async () => {
-		if (!await confirm('Confirm Deletion', 'Are you sure you want to delete this token?'))
+		if (!await confirm('Confirm deletion', 'Are you sure you want to delete this token?'))
 			return { result: 'cancelled' };
 
 		return await connector.awaitResponse('manageInvalidateBetaKey', { id: betaKey.id });

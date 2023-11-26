@@ -25,6 +25,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Ability to use the browser's back/forward buttons to navigate in Pandora</li>
 				<li>No safeword feature, but a safemode that makes it harder to be misused to constantly free characters</li>
 				<li>A permission feature that allows the user to set who is allowed to do what</li>
+				<li>Storing complete outfits in the wardrobe and supporting import/export</li>
 			</ul>
 
 			<p>
@@ -114,17 +115,20 @@ export function WikiIntroduction(): ReactElement {
 				You can find it in the Pandora settings. Currently, you can set if other character are allowed to interact with you and if you allow your body to be changed, too. This will be much more configurable in the future.
 			</p>
 
+			<h4>Storing complete outfits in the wardrobe and supporting import/export</h4>
+			<p>
+				The "Items" and "Body"-tabs in the wardrobe, as well as the room inventory screen, have an "Outfits"-tab that lets you access and manage all your custom outfits stored on the Pandora server.<br />
+				It also allows you to export and import outfits to save even more externally or to share them with others. An outfit can contain normal items, room devices, body modifications, and even storage items.<br />
+				Outfit entries show a small live preview. You can increase the size of the previews in the interface settings or even switch them off alltogether, if your computer/phone and connection cannot handle loading many previews at once.
+			</p>
+
 			<hr />
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>
-					Item templates for storing your favorite asset configurations per asset, including things like color, custom name,
-					description/lore about the item, etc.
-				</li>
-				<li>Storing complete outfits in the wardrobe and supporting their import/export</li>
 				<li>Character profile and biography</li>
 				<li>Showing and managing relationships between characters</li>
+				<li>Allowing every item to have a custom name and description and enabling item templates to store those, too</li>
 				<li>Hearing impairment effect by assets</li>
 				<li>Advanced permission feature</li>
 				<li>Character rules</li>

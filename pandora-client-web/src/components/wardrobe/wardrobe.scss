@@ -181,20 +181,22 @@ $drop-overlay-gap: 0.3em;
 				.outfitPreview {
 					@include center-flex;
 					max-height: 100%;
-					width: 3em;
-					margin: 0.5em;
+					width: 3.4em;
+					margin: 0.2em 0;
 					padding: 0;
 					border: solid black 1px;
 					overflow: hidden;
 					aspect-ratio: 2 / 3;
 
 					&.big {
-						width: min(50%, 30vh);
+						width: min(35%, 30vh);
 					}
 
 					canvas {
-						max-width: 100%;
-						max-height: 100%;
+						max-width: 124%;
+						max-height: 124%;
+						margin-left: -12%;
+						margin-top: -18%;
 					}
 				}
 			}

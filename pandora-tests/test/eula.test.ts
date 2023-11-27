@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { TestOpenPandora } from './utils/helpers';
+import { TEST_EULA_TEXT, TestOpenPandora } from './utils/helpers';
 
 test.describe('EULA', () => {
 	test('Shows privacy policy', async ({ page }) => {
 		await TestOpenPandora(page, { agreeEula: false });
+		await expect(page.getByText(TEST_EULA_TEXT)).toBeVisible();
 
 		// Click privacy policy link
 		await page.getByRole('button', { name: 'privacy policy' }).click();
@@ -19,6 +20,7 @@ test.describe('EULA', () => {
 
 	test('Disagree navigates away', async ({ page }) => {
 		await TestOpenPandora(page, { agreeEula: false });
+		await expect(page.getByText(TEST_EULA_TEXT)).toBeVisible();
 
 		// Disagree button should navigate away from pandora
 		await page.getByRole('button', { name: 'Disagree' }).click();
@@ -32,13 +34,14 @@ test.describe('EULA', () => {
 			agreeEula: false,
 		});
 
-		// Disagree button should navigate away from pandora
+		await expect(page.getByText(TEST_EULA_TEXT)).toBeVisible();
 		await expect(page.getByRole('button', { name: 'Disagree' })).toBeVisible();
 		await expect(page.getByRole('button', { name: /^Agree/ })).toBeVisible();
 	});
 
 	test('Agree opens login', async ({ page }) => {
 		await TestOpenPandora(page, { agreeEula: false });
+		await expect(page.getByText(TEST_EULA_TEXT)).toBeVisible();
 
 		// Agree button opens login
 		await page.getByRole('button', { name: /^Agree/ }).click();
@@ -49,6 +52,7 @@ test.describe('EULA', () => {
 
 	test('Agreement is remembered', async ({ page }) => {
 		await TestOpenPandora(page, { agreeEula: false });
+		await expect(page.getByText(TEST_EULA_TEXT)).toBeVisible();
 
 		await page.getByRole('button', { name: /^Agree/ }).click();
 		await page.waitForURL('/login');
@@ -57,6 +61,7 @@ test.describe('EULA', () => {
 		await page.reload();
 
 		// No agreement needed
+		await expect(page.getByText(TEST_EULA_TEXT)).not.toBeVisible();
 		await page.waitForURL('/login');
 		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 	});
@@ -65,6 +70,7 @@ test.describe('EULA', () => {
 		await TestOpenPandora(page, { agreeEula: true });
 
 		// No agreement needed
+		await expect(page.getByText(TEST_EULA_TEXT)).not.toBeVisible();
 		await page.waitForURL('/login');
 		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 	});

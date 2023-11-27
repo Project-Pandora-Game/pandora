@@ -1,4 +1,4 @@
-import { ConsoleMessage, Page } from '@playwright/test';
+import { ConsoleMessage, Page, expect } from '@playwright/test';
 
 const handleLog = (message: ConsoleMessage) => {
 	if (message.type() === 'error') {
@@ -35,7 +35,14 @@ export async function TestOpenPandora(page: Page, options: TestOpenPandoraOption
 	await page.goto(options.path ?? '/');
 
 	if (options.agreeEula !== false) {
-		await page.getByRole('button', { name: /^Agree/ }).click();
-		await page.waitForURL('/login');
+		await TestPandoraAgreeEula(page);
 	}
+}
+
+// EULA helper
+export const TEST_EULA_TEXT = 'By playing this game, you agree to the following:';
+async function TestPandoraAgreeEula(page: Page): Promise<void> {
+	await expect(page.getByText(TEST_EULA_TEXT)).toBeVisible();
+	await page.getByRole('button', { name: /^Agree/ }).click();
+	await expect(page.getByText(TEST_EULA_TEXT)).not.toBeVisible();
 }

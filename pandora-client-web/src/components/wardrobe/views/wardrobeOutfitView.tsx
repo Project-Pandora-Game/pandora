@@ -3,7 +3,7 @@ import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CharacterSize, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
+import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
 import { useCurrentAccountSettings, useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import _, { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
@@ -282,7 +282,7 @@ function OutfitPreview({ outfit }: {
 			} }
 		>
 			<GraphicsSceneBackgroundRenderer
-				renderArea={ { x: 0, y: 0, width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT } }
+				renderArea={ { x: 97, y: 145, width: 806, height: 1210 } }
 				resolution={ 1 }
 				backgroundColor={ 0xcccccc }
 			>

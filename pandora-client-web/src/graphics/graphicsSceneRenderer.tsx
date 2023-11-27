@@ -280,12 +280,18 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		Assert(this._stage == null);
 		Assert(this._updateTimer == null);
 
+		const { renderArea } = this.props;
+
 		// We are trying to simulate how `Stage` component works, only differently handing the Application instance
 		// For that we need to add this private shim `react-pixi` normally adds inside `Stage`,
 		// Which is used to propagate change events all the way up to the stage quickly, so application knows to render another frame
 		// @see - https://github.com/wisebits-tech/react-pixi/blob/react-18/src/stage/index.jsx#L127
 
 		this._stage = new Container();
+		this._stage.position = {
+			x: -renderArea.x,
+			y: -renderArea.y,
+		};
 
 		// @ts-expect-error: Private shim
 		this._stage.__reactpixi = { root: this._stage };
@@ -306,6 +312,14 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		AssertNotNullable(this._stage);
 		AssertNotNullable(this._root);
 		AssertNotNullable(this._updateTimer);
+
+		const { renderArea } = this.props;
+
+		// Update stage offset
+		this._stage.position = {
+			x: -renderArea.x,
+			y: -renderArea.y,
+		};
 
 		// flush fiber
 		this._root.render(this.getChildren());

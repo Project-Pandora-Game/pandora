@@ -160,42 +160,40 @@ $drop-overlay-gap: 0.3em;
 		margin: 0;
 	}
 
-	.outfitList {
-		.outfit {
+	.outfit {
+		width: 100%;
+		border: solid black 2px;
+
+		.outfitMainButton {
 			width: 100%;
-			border: solid black 2px;
+			min-height: 5em;
+			overflow: hidden;
+			display: flex;
 
-			.outfitMainButton {
-				width: 100%;
-				min-height: 5em;
-				overflow: hidden;
-				display: flex;
+			border: solid black 1px;
+			background-color: $grey-lighter;
 
+			&:hover {
+				background-color: $grey-light;
+			}
+
+			.outfitPreview {
+				@include center-flex;
+				max-height: 100%;
+				width: 3.4em;
+				margin: 0.2em 0;
+				padding: 0;
 				border: solid black 1px;
-				background-color: $grey-lighter;
+				overflow: hidden;
+				aspect-ratio: 2 / 3;
 
-				&:hover {
-					background-color: $grey-light;
+				&.big {
+					width: min(35%, 30vh);
 				}
 
-				.outfitPreview {
-					@include center-flex;
+				canvas {
+					max-width: 100%;
 					max-height: 100%;
-					width: 3.4em;
-					margin: 0.2em 0;
-					padding: 0;
-					border: solid black 1px;
-					overflow: hidden;
-					aspect-ratio: 2 / 3;
-
-					&.big {
-						width: min(35%, 30vh);
-					}
-
-					canvas {
-						max-width: 100%;
-						max-height: 100%;
-					}
 				}
 			}
 		}

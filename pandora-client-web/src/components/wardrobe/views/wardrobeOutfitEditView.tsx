@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssertNever, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, CloneDeepMutable, EMPTY_ARRAY, ItemTemplate, LIMIT_OUTFIT_NAME_LENGTH } from 'pandora-common';
 import { Column, Row } from '../../common/container/container';
 import { Button } from '../../common/button/button';
@@ -18,9 +18,11 @@ import { useConfirmDialog } from '../../dialog/dialog';
 import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail';
 import { ExportDialog } from '../../exportImport/exportDialog';
 
-export function OutfitEditView({ outfit, updateOutfit }: {
+export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary = false }: {
+	extraActions?: ReactNode;
 	outfit: AssetFrameworkOutfit;
 	updateOutfit: (newData: AssetFrameworkOutfit | null) => void;
+	isTemporary?: boolean;
 }): ReactElement | null {
 	const confirm = useConfirmDialog();
 	const { heldItem, extraItemActions, globalState, targetSelector } = useWardrobeContext();
@@ -143,10 +145,22 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 					/>
 				) : null
 			}
+			{
+				isTemporary ? (
+					<Row alignX='center' padding='medium'>
+						<strong>This outfit is temporary and will be lost when the game is closed</strong>
+					</Row>
+				) : null
+			}
 			<Row padding='medium'>
 				<button
 					className='wardrobeActionButton allowed'
 					onClick={ () => {
+						// Not confirm for discarding temporary outfit
+						if (isTemporary) {
+							updateOutfit(null);
+							return;
+						}
 						confirm('Confirm deletion', `Are you sure you want to delete the outfit "${outfit.name}"?`)
 							.then((result) => {
 								if (!result)
@@ -157,7 +171,7 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 							.catch(noop);
 					} }
 				>
-					<img src={ deleteIcon } alt='Delete action' /> Delete outfit
+					<img src={ deleteIcon } alt='Delete action' />&nbsp;{ isTemporary ? 'Discard outfit' : 'Delete outfit' }
 				</button>
 				<button
 					className='wardrobeActionButton allowed'
@@ -165,23 +179,37 @@ export function OutfitEditView({ outfit, updateOutfit }: {
 						setShowExportDialog(true);
 					} }
 				>
-					<img src={ exportIcon } alt='Delete action' />&nbsp;Export
+					<img src={ exportIcon } alt='Export action' />&nbsp;Export
 				</button>
+				{ extraActions }
 			</Row>
 			<fieldset>
 				<legend>Outfit name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
 				<Row>
-					<input className='flex-1' value={ editName } onChange={ (e) => setEditName(e.target.value) } />
-					<Button
-						className='slim fadeDisabled'
-						onClick={ () => updateOutfit({
-							...outfit,
-							name: editName,
-						}) }
-						disabled={ outfit.name === editName }
-					>
-						Save
-					</Button>
+					<input className='flex-1' value={ editName } maxLength={ LIMIT_OUTFIT_NAME_LENGTH } onChange={ (e) => {
+						const newName = e.target.value.substring(0, LIMIT_OUTFIT_NAME_LENGTH);
+						setEditName(newName);
+						if (isTemporary) {
+							updateOutfit({
+								...outfit,
+								name: newName,
+							});
+						}
+					} } />
+					{
+						isTemporary ? null : (
+							<Button
+								className='slim fadeDisabled'
+								onClick={ () => updateOutfit({
+									...outfit,
+									name: editName,
+								}) }
+								disabled={ outfit.name === editName }
+							>
+								Save
+							</Button>
+						)
+					}
 				</Row>
 			</fieldset>
 			<fieldset className='flex-1'>

@@ -1,9 +1,10 @@
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import diskIcon from '../../../assets/icons/disk.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, OutfitMeasureCost } from 'pandora-common';
+import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, LIMIT_OUTFIT_NAME_LENGTH, OutfitMeasureCost } from 'pandora-common';
 import { useCurrentAccountSettings, useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import _, { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
@@ -22,6 +23,7 @@ import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { useChatRoomCharacterOffsets } from '../../chatroom/chatRoomCharacter';
 import { usePlayerVisionFilters } from '../../chatroom/chatRoomScene';
 import classNames from 'classnames';
+import { useBrowserSessionStorage } from '../../../browserStorage';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;
@@ -31,22 +33,11 @@ export function InventoryOutfitView({ targetContainer }: {
 
 	const [isImporting, setIsImporting] = useState(false);
 	const [editedOutfitId, setEditedOutfitId] = useState<string | null>(null);
-
-	const createNewOutfit = useCallback(() => {
-		if (storedOutfits == null)
-			return;
-
-		const newOutfit: AssetFrameworkOutfitWithId = {
-			id: nanoid(),
-			name: `Outfit #${storedOutfits.length + 1}`,
-			items: [],
-		};
-
-		saveOutfits([
-			...storedOutfits,
-			newOutfit,
-		]);
-	}, [storedOutfits, saveOutfits]);
+	const [temporaryOutfit, setTemporaryOutfit] = useBrowserSessionStorage<AssetFrameworkOutfit | null>(
+		'wardrobe.temporary_outfit',
+		null,
+		AssetFrameworkOutfitSchema.nullable(),
+	);
 
 	const updateOutfit = useCallback((id: string, newData: AssetFrameworkOutfit | null) => {
 		if (storedOutfits == null)
@@ -116,6 +107,69 @@ export function InventoryOutfitView({ targetContainer }: {
 	const storageUsed = storedOutfits.reduce((p, outfit) => p + OutfitMeasureCost(outfit), 0);
 	const storageAvailableTotal = LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS;
 
+	if (temporaryOutfit != null) {
+		const saveTemporaryOutfit = () => {
+			const newOutfit: AssetFrameworkOutfitWithId = {
+				...(CloneDeepMutable(temporaryOutfit)),
+				id: nanoid(),
+			};
+
+			saveOutfits([
+				...storedOutfits,
+				newOutfit,
+			], () => {
+				setTemporaryOutfit(null);
+				setEditedOutfitId(newOutfit.id);
+			});
+		};
+
+		if (editedOutfitId === 'temporaryOutfit') {
+			return (
+				<div className='inventoryView'>
+					<div className='toolbar'>
+						<button
+							className='wardrobeActionButton allowed'
+							onClick={ saveTemporaryOutfit }
+						>
+							<img src={ diskIcon } alt='Save outfit' />&nbsp;Save outfit
+						</button>
+						<span className='center-flex'><strong>Temporary outfit</strong></span>
+						<button className='modeButton' onClick={ () => setEditedOutfitId(null) }>✖️</button>
+					</div>
+					<OutfitEditView
+						outfit={ temporaryOutfit }
+						updateOutfit={ (newOutfit) => {
+							setTemporaryOutfit(newOutfit);
+							if (newOutfit == null) {
+								setEditedOutfitId(null);
+							}
+						} }
+						isTemporary
+					/>
+				</div>
+			);
+		}
+		return (
+			<div className='inventoryView'>
+				<div className='toolbar'>
+					<span className='center-flex'><strong>Temporary outfit</strong></span>
+				</div>
+				<Column className='flex-1' padding='small'>
+					<Row alignX='center' padding='medium'>
+						<strong>This outfit is temporary and will be lost when the game is closed</strong>
+					</Row>
+					<TemporaryOutfitEntry
+						outfit={ temporaryOutfit }
+						saveOutfit={ saveTemporaryOutfit }
+						updateOutfit={ (newData) => setTemporaryOutfit(newData) }
+						beginEditOutfit={ () => setEditedOutfitId('temporaryOutfit') }
+						targetContainer={ targetContainer }
+					/>
+				</Column>
+			</div>
+		);
+	}
+
 	if (editedOutfitId != null) {
 		const editedOutfit = storedOutfits.find((outfit) => outfit.id === editedOutfitId);
 
@@ -132,6 +186,21 @@ export function InventoryOutfitView({ targetContainer }: {
 							key={ editedOutfitId }
 							outfit={ editedOutfit }
 							updateOutfit={ (newData) => updateOutfit(editedOutfitId, newData) }
+							extraActions={ (
+								<button
+									className='wardrobeActionButton allowed'
+									onClick={ () => {
+										const suffix = ' Copy';
+										setTemporaryOutfit({
+											...(CloneDeepMutable(editedOutfit)),
+											name: editedOutfit.name.substring(0, LIMIT_OUTFIT_NAME_LENGTH - suffix.length) + suffix,
+										});
+										setEditedOutfitId('temporaryOutfit');
+									} }
+								>
+									<img src={ editIcon } alt='Delete action' />&nbsp;Duplicate
+								</button>
+							) }
 						/>
 					) : (
 						<DivContainer align='center' justify='center' className='flex-1'>
@@ -155,15 +224,7 @@ export function InventoryOutfitView({ targetContainer }: {
 							setIsImporting(false);
 						} }
 						onImport={ (data) => {
-							const newOutfit: AssetFrameworkOutfitWithId = {
-								id: nanoid(),
-								...data,
-							};
-
-							saveOutfits([
-								...storedOutfits,
-								newOutfit,
-							]);
+							setTemporaryOutfit(data);
 							setIsImporting(false);
 						} }
 					/>
@@ -195,7 +256,13 @@ export function InventoryOutfitView({ targetContainer }: {
 							))
 						}
 						<OutfitEntryCreate
-							onClick={ createNewOutfit }
+							onClick={ () => {
+								setTemporaryOutfit({
+									name: `Outfit #${storedOutfits.length + 1}`,
+									items: [],
+								});
+								setEditedOutfitId('temporaryOutfit');
+							} }
 						/>
 					</Column>
 				</Scrollbar>
@@ -293,6 +360,69 @@ function OutfitPreview({ outfit }: {
 					filters={ filters }
 				/>
 			</GraphicsSceneBackgroundRenderer>
+		</div>
+	);
+}
+
+function TemporaryOutfitEntry({ outfit, saveOutfit, updateOutfit, beginEditOutfit, targetContainer }: {
+	outfit: AssetFrameworkOutfit;
+	saveOutfit: () => void;
+	updateOutfit: (newData: AssetFrameworkOutfit | null) => void;
+	beginEditOutfit: () => void;
+	targetContainer: ItemContainerPath;
+}): ReactElement {
+	const { wardrobeOutfitsPreview } = useCurrentAccountSettings();
+
+	return (
+		<div className='outfit'>
+			<button className='outfitMainButton'>
+				<div className={ classNames('outfitPreview', wardrobeOutfitsPreview === 'big' ? 'big' : null) }>
+					{
+						wardrobeOutfitsPreview !== 'disabled' ? (
+							<OutfitPreview outfit={ outfit } />
+						) : (
+							null
+						)
+					}
+				</div>
+				<Column padding='medium' alignX='start' alignY='space-evenly'>
+					<span>{ outfit.name }</span>
+					<span>Storage usage: { OutfitMeasureCost(outfit) }</span>
+				</Column>
+			</button>
+			<Row className='toolbar'>
+				<button
+					className='wardrobeActionButton allowed flex-1'
+					onClick={ saveOutfit }
+				>
+					<img src={ diskIcon } alt='Save outfit' />&nbsp;Save outfit
+				</button>
+				<button
+					className='wardrobeActionButton allowed flex-1'
+					onClick={ beginEditOutfit }
+				>
+					<img src={ editIcon } alt='Edit action' />&nbsp;Edit
+				</button>
+				<button
+					className='wardrobeActionButton allowed flex-1'
+					onClick={ () => {
+						updateOutfit(null);
+					} }
+				>
+					<img src={ deleteIcon } alt='Discard action' />&nbsp;Discard
+				</button>
+			</Row>
+			<div className='list reverse'>
+				{
+					outfit.items.map((item, index) => (
+						<OutfitEntryItem
+							key={ index }
+							itemTemplate={ item }
+							targetContainer={ targetContainer }
+						/>
+					))
+				}
+			</div>
 		</div>
 	);
 }
@@ -491,15 +621,17 @@ function OutfitEntryCreate({ onClick }: {
  * Provides a way to update outfit storage
  * @returns A callback usable to overwrite outfit storage, saving data to the server
  */
-function useSaveStoredOutfits(): (newStorage: AssetFrameworkOutfitWithId[]) => void {
+function useSaveStoredOutfits(): (newStorage: AssetFrameworkOutfitWithId[], onSuccess?: () => void) => void {
 	const directoryConnector = useDirectoryConnector();
 
-	return useCallback((newStorage: AssetFrameworkOutfitWithId[]) => {
+	return useCallback((newStorage: AssetFrameworkOutfitWithId[], onSuccess?: () => void) => {
 		directoryConnector.awaitResponse('storedOutfitsSave', {
 			storedOutfits: newStorage,
 		})
 			.then((result) => {
-				if (result.result !== 'ok') {
+				if (result.result === 'ok') {
+					onSuccess?.();
+				} else {
 					toast(`Failed to save outfit changes: \n${result.reason}`, TOAST_OPTIONS_ERROR);
 				}
 			})

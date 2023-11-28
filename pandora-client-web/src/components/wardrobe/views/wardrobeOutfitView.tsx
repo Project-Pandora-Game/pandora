@@ -119,7 +119,6 @@ export function InventoryOutfitView({ targetContainer }: {
 				newOutfit,
 			], () => {
 				setTemporaryOutfit(null);
-				setEditedOutfitId(newOutfit.id);
 			});
 		};
 
@@ -127,14 +126,7 @@ export function InventoryOutfitView({ targetContainer }: {
 			return (
 				<div className='inventoryView'>
 					<div className='toolbar'>
-						<button
-							className='wardrobeActionButton allowed'
-							onClick={ saveTemporaryOutfit }
-						>
-							<img src={ diskIcon } alt='Save outfit' />&nbsp;Save outfit
-						</button>
-						<span className='center-flex'><strong>Temporary outfit</strong></span>
-						<button className='modeButton' onClick={ () => setEditedOutfitId(null) }>✖️</button>
+						<span>Editing:&nbsp;<strong>Temporary outfit</strong></span>
 					</div>
 					<OutfitEditView
 						outfit={ temporaryOutfit }
@@ -145,6 +137,19 @@ export function InventoryOutfitView({ targetContainer }: {
 							}
 						} }
 						isTemporary
+						extraActions={ (
+							<>
+								<div className='flex-1' />
+								<button
+									className='wardrobeActionButton allowed'
+									onClick={ () => {
+										setEditedOutfitId(null);
+									} }
+								>
+									◄ Back
+								</button>
+							</>
+						) }
 					/>
 				</div>
 			);
@@ -154,18 +159,20 @@ export function InventoryOutfitView({ targetContainer }: {
 				<div className='toolbar'>
 					<span className='center-flex'><strong>Temporary outfit</strong></span>
 				</div>
-				<Column className='flex-1' padding='small'>
-					<Row alignX='center' padding='medium'>
-						<strong>This outfit is temporary and will be lost when the game is closed</strong>
-					</Row>
-					<TemporaryOutfitEntry
-						outfit={ temporaryOutfit }
-						saveOutfit={ saveTemporaryOutfit }
-						updateOutfit={ (newData) => setTemporaryOutfit(newData) }
-						beginEditOutfit={ () => setEditedOutfitId('temporaryOutfit') }
-						targetContainer={ targetContainer }
-					/>
-				</Column>
+				<Scrollbar color='dark'>
+					<Column className='flex-1' padding='small'>
+						<Row alignX='center' padding='medium'>
+							<strong>This outfit is temporary and will be lost when the game is closed</strong>
+						</Row>
+						<TemporaryOutfitEntry
+							outfit={ temporaryOutfit }
+							saveOutfit={ saveTemporaryOutfit }
+							updateOutfit={ (newData) => setTemporaryOutfit(newData) }
+							beginEditOutfit={ () => setEditedOutfitId('temporaryOutfit') }
+							targetContainer={ targetContainer }
+						/>
+					</Column>
+				</Scrollbar>
 			</div>
 		);
 	}
@@ -409,7 +416,7 @@ function TemporaryOutfitEntry({ outfit, saveOutfit, updateOutfit, beginEditOutfi
 						updateOutfit(null);
 					} }
 				>
-					<img src={ deleteIcon } alt='Discard action' />&nbsp;Discard
+					<img src={ deleteIcon } alt='Discard action' /> Discard outfit
 				</button>
 			</Row>
 			<div className='list reverse'>

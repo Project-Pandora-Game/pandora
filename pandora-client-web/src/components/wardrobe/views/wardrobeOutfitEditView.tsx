@@ -133,138 +133,139 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 	}
 
 	return (
-		<Column className='flex-1' padding='small'>
-			{
-				showExportDialog ? (
-					<ExportDialog
-						exportType='Outfit'
-						exportVersion={ 1 }
-						dataSchema={ AssetFrameworkOutfitSchema }
-						data={ outfit }
-						closeDialog={ () => setShowExportDialog(false) }
-					/>
-				) : null
-			}
-			{
-				isTemporary ? (
-					<Row alignX='center' padding='medium'>
-						<strong>This outfit is temporary and will be lost when the game is closed</strong>
-					</Row>
-				) : null
-			}
-			<Row padding='medium'>
-				<button
-					className='wardrobeActionButton allowed'
-					onClick={ () => {
-						// Not confirm for discarding temporary outfit
-						if (isTemporary) {
-							updateOutfit(null);
-							return;
-						}
-						confirm('Confirm deletion', `Are you sure you want to delete the outfit "${outfit.name}"?`)
-							.then((result) => {
-								if (!result)
-									return;
-
-								updateOutfit(null);
-							})
-							.catch(noop);
-					} }
-				>
-					<img src={ deleteIcon } alt='Delete action' />&nbsp;{ isTemporary ? 'Discard outfit' : 'Delete outfit' }
-				</button>
-				<button
-					className='wardrobeActionButton allowed'
-					onClick={ () => {
-						setShowExportDialog(true);
-					} }
-				>
-					<img src={ exportIcon } alt='Export action' />&nbsp;Export
-				</button>
-				{ extraActions }
-			</Row>
-			<fieldset>
-				<legend>Outfit name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
-				<Row>
-					<input className='flex-1' value={ editName } maxLength={ LIMIT_OUTFIT_NAME_LENGTH } onChange={ (e) => {
-						const newName = e.target.value.substring(0, LIMIT_OUTFIT_NAME_LENGTH);
-						setEditName(newName);
-						if (isTemporary) {
-							updateOutfit({
-								...outfit,
-								name: newName,
-							});
-						}
-					} } />
+		<Scrollbar color='dark'>
+			<Column className='flex-1' padding='small'>
+				{
+					showExportDialog ? (
+						<ExportDialog
+							exportType='Outfit'
+							exportVersion={ 1 }
+							dataSchema={ AssetFrameworkOutfitSchema }
+							data={ outfit }
+							closeDialog={ () => setShowExportDialog(false) }
+						/>
+					) : null
+				}
+				{
+					isTemporary ? (
+						<Row alignX='center' padding='medium'>
+							<strong>This outfit is temporary and will be lost when the game is closed</strong>
+						</Row>
+					) : null
+				}
+				<Row padding='medium'>
 					{
-						isTemporary ? null : (
-							<Button
-								className='slim fadeDisabled'
-								onClick={ () => updateOutfit({
-									...outfit,
-									name: editName,
-								}) }
-								disabled={ outfit.name === editName }
+						!isTemporary ? (
+							<button
+								className='wardrobeActionButton allowed'
+								onClick={ () => {
+									confirm('Confirm deletion', `Are you sure you want to delete the outfit "${outfit.name}"?`)
+										.then((result) => {
+											if (!result)
+												return;
+
+											updateOutfit(null);
+										})
+										.catch(noop);
+								} }
 							>
-								Save
-							</Button>
-						)
+								<img src={ deleteIcon } alt='Delete action' />&nbsp;Delete outfit
+							</button>
+						) : null
 					}
+					<button
+						className='wardrobeActionButton allowed'
+						onClick={ () => {
+							setShowExportDialog(true);
+						} }
+					>
+						<img src={ exportIcon } alt='Export action' />&nbsp;Export
+					</button>
+					{ extraActions }
 				</Row>
-			</fieldset>
-			<fieldset className='flex-1'>
-				<legend>Items</legend>
-				<Scrollbar color='dark' className='fill'>
-					<div className='list reverse withDropButtons'>
+				<fieldset>
+					<legend>Outfit name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
+					<Row>
+						<input className='flex-1' value={ editName } maxLength={ LIMIT_OUTFIT_NAME_LENGTH } onChange={ (e) => {
+							const newName = e.target.value.substring(0, LIMIT_OUTFIT_NAME_LENGTH);
+							setEditName(newName);
+							if (isTemporary) {
+								updateOutfit({
+									...outfit,
+									name: newName,
+								});
+							}
+						} } />
 						{
-							heldItem.type !== 'nothing' ? (
-								<div className='overlay' />
-							) : null
+							isTemporary ? null : (
+								<Button
+									className='slim fadeDisabled'
+									onClick={ () => updateOutfit({
+										...outfit,
+										name: editName,
+									}) }
+									disabled={ outfit.name === editName }
+								>
+									Save
+								</Button>
+							)
 						}
-						{
-							outfit.items.map((item, index) => (
-								<React.Fragment key={ index }>
-									<div className='overlayDropContainer'>
-										{
-											heldItem.type !== 'nothing' ? (
-												<OutfitEditItemDropArea
-													insertTemplate={ (newTemplate) => {
-														insertItemTemplate(index, newTemplate);
-													} }
-												/>
-											) : null
-										}
-									</div>
-									<OutfitEditViewItem
-										itemTemplate={ item }
-										updateItemTemplate={ (newTemplate) => {
-											updateItemTemplate(index, newTemplate);
-										} }
-										reorderItemTemplate={ (shift) => {
-											reorderItemTemplate(index, shift);
-										} }
-										startEdit={ () => {
-											setEditedItemIndex(index);
-										} }
-									/>
-								</React.Fragment>
-							))
-						}
-						<div className='overlayDropContainer'>
+					</Row>
+				</fieldset>
+				<fieldset className='flex-1'>
+					<legend>Items</legend>
+					<Scrollbar color='dark' className='fill'>
+						<div className='list reverse withDropButtons'>
 							{
 								heldItem.type !== 'nothing' ? (
-									<OutfitEditItemDropArea
-										insertTemplate={ (newTemplate) => {
-											insertItemTemplate(null, newTemplate);
-										} }
-									/>
+									<div className='overlay' />
 								) : null
 							}
+							{
+								outfit.items.map((item, index) => (
+									<React.Fragment key={ index }>
+										<div className='overlayDropContainer'>
+											{
+												heldItem.type !== 'nothing' ? (
+													<OutfitEditItemDropArea
+														insertTemplate={ (newTemplate) => {
+															insertItemTemplate(index, newTemplate);
+														} }
+													/>
+												) : null
+											}
+										</div>
+										<OutfitEditViewItem
+											itemTemplate={ item }
+											updateItemTemplate={ (newTemplate) => {
+												updateItemTemplate(index, newTemplate);
+											} }
+											reorderItemTemplate={ (shift) => {
+												reorderItemTemplate(index, shift);
+											} }
+											startEdit={ () => {
+												setEditedItemIndex(index);
+											} }
+										/>
+									</React.Fragment>
+								))
+							}
+							<div className='overlayDropContainer'>
+								{
+									heldItem.type !== 'nothing' ? (
+										<OutfitEditItemDropArea
+											insertTemplate={ (newTemplate) => {
+												insertItemTemplate(null, newTemplate);
+											} }
+										/>
+									) : null
+								}
+							</div>
 						</div>
-					</div>
-				</Scrollbar>
-			</fieldset>
-		</Column>
+					</Scrollbar>
+				</fieldset>
+			</Column>
+		</Scrollbar>
 	);
 }
 

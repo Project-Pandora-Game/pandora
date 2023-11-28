@@ -8,6 +8,7 @@ import { ExportData } from './exportImportUtils';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import './exportDialog.scss';
+import { useCurrentTime } from '../../common/useCurrentTime';
 
 interface ExportDialogProps<T extends ZodType<unknown>> {
 	exportType: string;
@@ -19,6 +20,8 @@ interface ExportDialogProps<T extends ZodType<unknown>> {
 
 const logger = GetLogger('ExportImport');
 
+const COPY_SUCCESS_COOLDOWN = 3_000;
+
 export function ExportDialog<T extends ZodType<unknown>>({
 	exportType,
 	exportVersion,
@@ -27,6 +30,8 @@ export function ExportDialog<T extends ZodType<unknown>>({
 	closeDialog,
 }: ExportDialogProps<T>): ReactElement {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
+	const [lastCopySuccess, setLastCopySuccess] = useState(0);
+	const now = useCurrentTime(200);
 
 	const validatedExportData = useMemo(() => {
 		const parseResult = dataSchema.safeParse(CloneDeepMutable(data));
@@ -72,7 +77,9 @@ export function ExportDialog<T extends ZodType<unknown>>({
 
 			try {
 				const successful = document.execCommand('copy');
-				if (!successful) {
+				if (successful) {
+					setLastCopySuccess(Date.now());
+				} else {
 					logger.warning(`Failed to copy text with returned error by execCommand`);
 					toast(`Failed to copy the text, please copy it manually.`, TOAST_OPTIONS_ERROR);
 				}
@@ -86,11 +93,15 @@ export function ExportDialog<T extends ZodType<unknown>>({
 			copyFallback();
 			return;
 		}
-		navigator.clipboard.writeText(exportString).catch((err) => {
-			logger.warning(`Failed to write text with error:`, err);
-			// Try fallback
-			copyFallback();
-		});
+		navigator.clipboard.writeText(exportString)
+			.then(() => {
+				setLastCopySuccess(Date.now());
+			})
+			.catch((err) => {
+				logger.warning(`Failed to write text with error:`, err);
+				// Try fallback
+				copyFallback();
+			});
 	}, [exportString]);
 
 	return (
@@ -109,7 +120,7 @@ export function ExportDialog<T extends ZodType<unknown>>({
 					</Row>
 				</fieldset>
 				<Button onClick={ copyToClipboard }>
-					Copy to clipboard
+					{ now < (lastCopySuccess + COPY_SUCCESS_COOLDOWN) ? 'Copied!' : 'Copy to clipboard' }
 				</Button>
 				<textarea
 					ref={ textAreaRef }

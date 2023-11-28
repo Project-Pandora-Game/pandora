@@ -119,7 +119,7 @@ export function WikiIntroduction(): ReactElement {
 			<p>
 				The "Items" and "Body"-tabs in the wardrobe, as well as the room inventory screen, have an "Outfits"-tab that lets you access and manage all your custom outfits stored on the Pandora server.<br />
 				It also allows you to export and import outfits to save even more externally or to share them with others. An outfit can contain normal items, room devices, body modifications, and even storage items.<br />
-				Outfit entries show a small live preview. You can increase the size of the previews in the interface settings or even switch them off alltogether, if your computer/phone and connection cannot handle loading many previews at once.
+				Outfit entries show a small live preview. You can increase the size of the previews in the interface settings or even switch them off altogether, if your computer/phone and connection cannot handle loading many previews at once.
 			</p>
 
 			<hr />

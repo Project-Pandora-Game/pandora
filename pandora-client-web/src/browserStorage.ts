@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import type { ZodType, ZodTypeDef } from 'zod';
 import { Observable, useObservable } from './observable';
-import { ZodMatcher } from 'pandora-common';
 
 const BROWSER_STORAGES_LOCAL = new Map<string, BrowserStorage<unknown>>();
 const BROWSER_STORAGES_SESSION = new Map<string, BrowserStorage<unknown>>();
@@ -10,7 +9,7 @@ const BROWSER_STORAGES_SESSION = new Map<string, BrowserStorage<unknown>>();
 export class BrowserStorage<T> extends Observable<T> {
 	/** Key used to store the value */
 	public readonly _key;
-	public readonly validate: (value: unknown) => boolean;
+	public readonly validate: ZodType<T, ZodTypeDef, unknown> | ((value: unknown) => boolean);
 	/** Inhibitor of saving to prevent infinite loop */
 	private _saveInhibit: boolean = false;
 
@@ -23,7 +22,7 @@ export class BrowserStorage<T> extends Observable<T> {
 	private constructor(storage: Storage, name: string, defaultValue: T, validate: ZodType<T, ZodTypeDef, unknown> | ((value: unknown) => boolean)) {
 		super(defaultValue);
 		this._key = name;
-		this.validate = typeof validate === 'function' ? validate : ZodMatcher(validate);
+		this.validate = validate;
 		this.setParse(storage.getItem(this._key));
 		this.subscribe((value) => {
 			if (this._saveInhibit)
@@ -39,11 +38,18 @@ export class BrowserStorage<T> extends Observable<T> {
 	public setParse(value: string | null): void {
 		if (value !== null) {
 			const parsedValue = JSON.parse(value) as unknown;
-			if (this.validate(parsedValue)) {
-				const c = this._saveInhibit;
-				this._saveInhibit = true;
-				this.value = parsedValue as T;
-				this._saveInhibit = c;
+			if (typeof this.validate === 'function') {
+				if (this.validate(parsedValue)) {
+					const c = this._saveInhibit;
+					this._saveInhibit = true;
+					this.value = parsedValue as T;
+					this._saveInhibit = c;
+				}
+			} else {
+				const validated = this.validate.safeParse(parsedValue);
+				if (validated.success) {
+					this.value = validated.data;
+				}
 			}
 		}
 	}

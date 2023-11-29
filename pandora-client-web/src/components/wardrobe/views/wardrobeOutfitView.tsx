@@ -139,7 +139,6 @@ export function InventoryOutfitView({ targetContainer }: {
 						isTemporary
 						extraActions={ (
 							<>
-								<div className='flex-1' />
 								<button
 									className='wardrobeActionButton allowed'
 									onClick={ () => {
@@ -149,6 +148,7 @@ export function InventoryOutfitView({ targetContainer }: {
 								>
 									<img src={ diskIcon } alt='Save outfit' />&nbsp;Save outfit
 								</button>
+								<div className='flex-1' />
 								<button
 									className='wardrobeActionButton allowed'
 									onClick={ () => {

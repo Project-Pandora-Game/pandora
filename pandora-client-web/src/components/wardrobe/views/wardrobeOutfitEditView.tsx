@@ -125,7 +125,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 					title='Editing outfit item'
 					template={ editedItem }
 					updateTemplate={ (newTemplate) => updateItemTemplate(editedItemIndex, CloneDeepMutable(newTemplate)) }
-					cancelText='Finish editing item'
+					cancelText='◄ Finish editing item'
 					cancel={ () => setEditedItemIndex(null) }
 				/>
 			</Column>

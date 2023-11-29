@@ -44,6 +44,7 @@ export function WardrobeTemplateEditMenu({
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
 				<Row padding='medium' wrap>
+					<div className='flex-1' />
 					<button
 						className='wardrobeActionButton allowed'
 						onClick={ cancel }

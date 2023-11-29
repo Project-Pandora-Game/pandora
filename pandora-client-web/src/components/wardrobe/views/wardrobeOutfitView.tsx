@@ -143,6 +143,15 @@ export function InventoryOutfitView({ targetContainer }: {
 								<button
 									className='wardrobeActionButton allowed'
 									onClick={ () => {
+										saveTemporaryOutfit();
+										setEditedOutfitId(null);
+									} }
+								>
+									<img src={ diskIcon } alt='Save outfit' />&nbsp;Save outfit
+								</button>
+								<button
+									className='wardrobeActionButton allowed'
+									onClick={ () => {
 										setEditedOutfitId(null);
 									} }
 								>

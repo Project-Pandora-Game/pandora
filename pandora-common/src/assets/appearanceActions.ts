@@ -223,7 +223,14 @@ export function DoAppearanceAction(
 			if (item == null)
 				return processingContext.invalid();
 			// Player adding the item must be able to use it
-			const r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			const r = playerRestrictionManager.canUseItemDirect(
+				processingContext,
+				target,
+				action.container,
+				item,
+				ItemInteractionType.ADD_REMOVE,
+				action.container.length === 0 ? action.insertBefore : undefined,
+			);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -291,7 +298,14 @@ export function DoAppearanceAction(
 			}
 
 			// Player adding the item must be able to use it on target
-			r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			r = playerRestrictionManager.canUseItemDirect(
+				processingContext,
+				target,
+				action.container,
+				item,
+				ItemInteractionType.ADD_REMOVE,
+				action.container.length === 0 ? action.insertBefore : undefined,
+			);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',

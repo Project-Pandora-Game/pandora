@@ -43,8 +43,7 @@ export function WardrobeTemplateEditMenu({
 				<span>{ title }: { asset.definition.name }</span>
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
-				<Row padding='medium' wrap>
-					<div className='flex-1' />
+				<Row padding='medium' alignX='end' wrap>
 					<button
 						className='wardrobeActionButton allowed'
 						onClick={ cancel }

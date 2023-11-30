@@ -322,8 +322,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-ses':
-        specifier: 3.461.0
-        version: 3.461.0
+        specifier: 3.462.0
+        version: 3.462.0
       '@aws-sdk/credential-provider-node':
         specifier: 3.460.0
         version: 3.460.0
@@ -650,13 +650,13 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@aws-sdk/client-ses@3.461.0:
-    resolution: {integrity: sha512-hDYnZ1fjk5tyVxXTe62urSxq4S3PG3dIIO6AUlWHA9BrGd7C2zAZFx728q2vRo74OJQhT2ycn0w4MGneUtQxgA==}
+  /@aws-sdk/client-ses@3.462.0:
+    resolution: {integrity: sha512-6hK0DpXtvmgqwQpolPG9HOC5aDvgESoBLvd2z/5tOfrmkKcav7NQOniKY11i/6gfNCFbjYpSnR4xW9Q7w0gchQ==}
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-crypto/sha256-browser': 3.0.0
       '@aws-crypto/sha256-js': 3.0.0
-      '@aws-sdk/client-sts': 3.461.0
+      '@aws-sdk/client-sts': 3.462.0
       '@aws-sdk/core': 3.451.0
       '@aws-sdk/credential-provider-node': 3.460.0
       '@aws-sdk/middleware-host-header': 3.460.0
@@ -743,8 +743,8 @@ packages:
       - aws-crt
     dev: false
 
-  /@aws-sdk/client-sts@3.461.0:
-    resolution: {integrity: sha512-1u+t31m23vuc9zkiUk51L4QbwuRQEuBeMArHK/thmq4V+A0VmjoAr/x2D0eQ0deOuBqG5YC62oaqUfIhj03SIw==}
+  /@aws-sdk/client-sts@3.462.0:
+    resolution: {integrity: sha512-oO6SVGB9kR0dwc4T/M3++TcioBVv26cEpxZGS4BcKMDxSjkCLqJ/jE37aCNNPGTlCAhnuOAwqGjFqYrsehsI1Q==}
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-crypto/sha256-browser': 3.0.0

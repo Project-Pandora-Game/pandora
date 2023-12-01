@@ -246,7 +246,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				continue;
 			}
 
-			let item = assetManager.createItem(itemBundle.id, asset, itemBundle, logger);
+			let item = assetManager.loadItemFromBundle(asset, itemBundle, logger);
 
 			// Properly link room device wearable parts
 			if (item.isType('roomDeviceWearablePart')) {

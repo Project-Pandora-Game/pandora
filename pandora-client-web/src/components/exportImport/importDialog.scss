@@ -1,0 +1,13 @@
+.importDialogContent {
+	min-width: min(95vw, 30em);
+
+	.hiddenUpload {
+		display: flex;
+		flex-direction: column;
+		text-align: center;
+
+		input {
+			display: none;
+		}
+	}
+}

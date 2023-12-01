@@ -7,6 +7,7 @@ import { Column, Row } from '../../common/container/container';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { WardrobeFocus } from '../wardrobeTypes';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { useWardrobeContext } from '../wardrobeContext';
 import { useWardrobeTargetItem } from '../wardrobeUtils';
 import { WardrobeActionButton } from '../wardrobeComponents';
@@ -92,7 +93,7 @@ export function WardrobeItemConfigMenu({
 						} }
 						onExecute={ close }
 					>
-						➖ Remove and delete
+						<img src={ deleteIcon } alt='Delete action' /> Remove and delete
 					</WardrobeActionButton>
 					{
 						!isRoomInventory ? (

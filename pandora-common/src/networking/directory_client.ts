@@ -5,7 +5,8 @@ import type { ShardFeature } from '../chatroom';
 import { Satisfies } from '../utility';
 import { HexColorStringSchema, ZodCast } from '../validation';
 import type { IAccountRelationship, IAccountFriendStatus } from './client_directory';
-import { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import { Immutable } from 'immer';
 
 export type IDirectoryStatus = {
 	time: number;
@@ -38,6 +39,15 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 * (actions that are doable with multiple clicks even without this button, but the button allows doing them as single click)
 	 */
 	wardrobeExtraActionButtons: z.boolean().catch(true),
+	/**
+	 * Controls whether to show character preview when hovering over an action button.
+	 * (when action is possible the character preview shows the result state while hovering)
+	 */
+	wardrobeHoverPreview: z.boolean().catch(true),
+	/**
+	 * If outfits tab should generate previews for outfits and if the previews should be small or big.
+	 */
+	wardrobeOutfitsPreview: z.enum(['disabled', 'small', 'big']).default('small'),
 	/**
 	 * Color to use as wardrobe character preview background, unless room background is used (see `wardrobeUseRoomBackground` setting).
 	 */
@@ -74,6 +84,8 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	wardrobeExtraActionButtons: true,
 	wardrobeBackground: '#aaaaaa',
 	wardrobeUseRoomBackground: true,
+	wardrobeHoverPreview: true,
+	wardrobeOutfitsPreview: 'small',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
@@ -112,7 +124,7 @@ export type IDirectoryCharacterConnectionInfo = {
 	secret: string;
 } & IDirectoryShardInfo;
 
-export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'roomList';
+export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'roomList' | 'storedOutfits';
 
 export type IDirectoryDirectMessage = {
 	/** Encrypted content, or empty string if the message was deleted. */
@@ -206,7 +218,7 @@ export const DirectoryClientSchema = {
 		}>(),
 		response: null,
 	},
-} as const;
+} as const satisfies Immutable<SocketInterfaceDefinition>;
 
 export type IDirectoryClient = Satisfies<typeof DirectoryClientSchema, SocketInterfaceDefinitionVerified<typeof DirectoryClientSchema>>;
 export type IDirectoryClientArgument = SocketInterfaceRequest<IDirectoryClient>;

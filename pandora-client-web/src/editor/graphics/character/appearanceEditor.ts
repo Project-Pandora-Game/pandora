@@ -10,7 +10,6 @@ import { cloneDeep } from 'lodash';
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
 import { ICharacter, CharacterEvents } from '../../../character/character';
 import { Immutable } from 'immer';
-import { nanoid } from 'nanoid';
 import { useEditorState } from '../../editorContextProvider';
 import { EDITOR_ROOM_CONTEXT } from '../../components/wardrobe/wardrobe';
 
@@ -77,9 +76,10 @@ export class AppearanceEditor extends CharacterAppearance {
 				type: 'character',
 				characterId: this.id,
 			},
-			asset: asset.id,
+			itemTemplate: {
+				asset: asset.id,
+			},
 			container: [],
-			itemId: `i/editor/${nanoid()}`,
 		}, context);
 	}
 

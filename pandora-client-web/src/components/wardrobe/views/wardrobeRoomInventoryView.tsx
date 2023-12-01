@@ -6,6 +6,7 @@ import {
 	RoomTargetSelector,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect } from 'react';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
@@ -181,7 +182,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 							target: inventoryTarget,
 							item,
 						} }>
-							➖
+							<img src={ deleteIcon } alt='Delete action' />
 						</WardrobeActionButton>
 						<WardrobeActionButton action={ {
 							type: 'transfer',

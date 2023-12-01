@@ -3,11 +3,13 @@ import {
 	AppearanceActionContext,
 	Asset,
 	AssetFrameworkGlobalState,
-	AssetId,
+	IAssetModuleTypes,
 	IClientShardResult,
 	ItemContainerPath,
 	ItemId,
 	ItemPath,
+	ItemTemplate,
+	ModuleType,
 	RoomTargetSelector,
 } from 'pandora-common';
 import { ReactElement } from 'react';
@@ -15,6 +17,7 @@ import { ICharacter, IChatroomCharacter } from '../../character/character';
 import { Observable } from '../../observable';
 import { IChatRoomContext } from '../gameContext/chatRoomContextProvider';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
+import { Immutable } from 'immer';
 
 export type WardrobeContextExtraItemActionComponent = (props: { item: ItemPath; }) => ReactElement | null;
 export type WardrobeTarget = IChatroomCharacter | IChatRoomContext;
@@ -26,8 +29,8 @@ export type WardrobeHeldItem = {
 	target: RoomTargetSelector;
 	path: ItemPath;
 } | {
-	type: 'asset';
-	asset: AssetId;
+	type: 'template';
+	template: Immutable<ItemTemplate>;
 };
 
 export interface WardrobeContext {
@@ -42,8 +45,12 @@ export interface WardrobeContext {
 	actions: AppearanceActionContext;
 	execute: (action: AppearanceAction) => IClientShardResult['appearanceAction'] | undefined;
 
+	/** Override for previewing the actions */
+	actionPreviewState: Observable<AssetFrameworkGlobalState | null>;
+
 	// Settings
 	showExtraActionButtons: boolean;
+	showHoverPreview: boolean;
 }
 
 export interface WardrobeFocus {
@@ -56,4 +63,11 @@ export interface WardrobeModuleProps<Module extends IItemModule> {
 	moduleName: string;
 	m: Module;
 	setFocus: (newFocus: WardrobeFocus) => void;
+}
+
+export interface WardrobeModuleTemplateProps<TType extends ModuleType = ModuleType> {
+	definition: Immutable<IAssetModuleTypes<unknown>[TType]['config']>;
+	template: Immutable<IAssetModuleTypes<unknown>[TType]['template']> | undefined;
+	onTemplateChange: (newTemplate: Immutable<IAssetModuleTypes<unknown>[TType]['template']>) => void;
+	moduleName: string;
 }

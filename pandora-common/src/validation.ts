@@ -60,6 +60,43 @@ export function ArrayIncludesGuard<T extends string | number | boolean | null | 
 	return array.includes(element as T);
 }
 
+/**
+ * Takes a const record with arbitrary keys, where each value is object with same keys.
+ * Keeps the outer keys and replaces the objects by the value of specific key.
+ * @param key - Name of the inner key
+ * @param value - The outer object
+ * @example
+ * RecordUnpackSubobjectProperties('innerKey1', {
+ *    aaa: {
+ *        innerKey1: 'a1',
+ *        innerKey2: 'a2',
+ *    },
+ *    bbb: {
+ *        innerKey1: 'b1',
+ *        innerKey2: 'b2',
+ *    },
+ * })
+ * // ->
+ * {
+ *    aaa: 'a1',
+ *    bbb: 'b1',
+ * }
+ */
+export function RecordUnpackSubobjectProperties<const T extends string, const V extends Readonly<Record<string, Readonly<Record<T, unknown>>>>>(key: T, value: V): {
+	[key in keyof V]: V[key][T];
+} {
+	// @ts-expect-error: Created to match in loop
+	const result: {
+		[key in keyof V]: V[key][T];
+	} = {};
+
+	for (const k of (Object.keys(value) as (keyof V)[])) {
+		result[k] = value[k][key];
+	}
+
+	return result;
+}
+
 /** A dirty thing that shouldn't really be used, but sometimes you are lazy */
 export function ZodCast<T>(): ZodType<T> {
 	return z.any();

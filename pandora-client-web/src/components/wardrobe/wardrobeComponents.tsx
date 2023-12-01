@@ -5,14 +5,14 @@ import {
 	Asset,
 	IsNotNullable,
 } from 'pandora-common';
-import React, { ReactElement, useMemo, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { CommonProps } from '../../common/reactTypes';
 import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
 import { HoverElement } from '../hoverElement/hoverElement';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
-import { useWardrobeExecuteChecked } from './wardrobeContext';
+import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
 import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
@@ -84,9 +84,12 @@ export function WardrobeActionButton({
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 	disabled?: boolean;
 }): ReactElement {
+	const { actionPreviewState, showHoverPreview } = useWardrobeContext();
+	const [ref, setRef] = useState<HTMLElement | null>(null);
+	const [isHovering, setIsHovering] = useState(false);
+
 	const check = useStaggeredAppearanceActionResult(action);
 	const hide = check != null && autohide && check.problems.some(AppearanceActionProblemShouldHide);
-	const [ref, setRef] = useState<HTMLElement | null>(null);
 	const [execute, processing] = useWardrobeExecuteChecked(action, check, {
 		onSuccess: onExecute,
 		onFailure,
@@ -99,15 +102,41 @@ export function WardrobeActionButton({
 		...permissionProblems,
 	] : [], [check, permissionProblems]);
 
+	useEffect(() => {
+		if (!isHovering || !showHoverPreview || check == null || !check.valid || finalProblems.length > 0)
+			return;
+
+		const previewState = check.resultState;
+
+		actionPreviewState.value = previewState;
+
+		return () => {
+			if (actionPreviewState.value === previewState) {
+				actionPreviewState.value = null;
+			}
+		};
+	}, [isHovering, showHoverPreview, actionPreviewState, check, finalProblems]);
+
 	return (
 		<Element
 			id={ id }
 			ref={ setRef }
 			tabIndex={ 0 }
-			className={ classNames('wardrobeActionButton', className, check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked', hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null) }
+			className={ classNames(
+				'wardrobeActionButton',
+				className,
+				check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked',
+				hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null,
+			) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
 				execute();
+			} }
+			onMouseEnter={ () => {
+				setIsHovering(true);
+			} }
+			onMouseLeave={ () => {
+				setIsHovering(false);
 			} }
 			disabled={ processing || disabled }
 		>

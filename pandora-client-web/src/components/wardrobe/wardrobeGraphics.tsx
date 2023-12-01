@@ -17,10 +17,12 @@ import { useAssetManager } from '../../assets/assetManager';
 import { useCharacterIsInChatroom, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
 import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
+import { Row } from '../common/container/container';
 
-export function WardrobeCharacterPreview({ character, characterState }: {
+export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
+	isPreview?: boolean;
 }): ReactElement {
 	const roomInfo = useChatRoomInfo();
 	const assetManager = useAssetManager();
@@ -47,16 +49,25 @@ export function WardrobeCharacterPreview({ character, characterState }: {
 	}), [roomBackground, wardrobeBackground]);
 
 	const overlay = (
-		<div className='overlay'>
-			<Button className='slim iconButton'
-				title='Toggle character view'
-				onClick={ onClick }
-				disabled={ processing }
-			>
-				↷
-			</Button>
-			<WardrobeBackgroundColorPicker />
-		</div>
+		<Row gap='medium' padding='medium' className='overlay pointer-events-disable'>
+			<Row className='pointer-events-enable flex' gap='medium'>
+				<Button className='slim iconButton'
+					title='Toggle character view'
+					onClick={ onClick }
+					disabled={ processing }
+				>
+					↷
+				</Button>
+				<WardrobeBackgroundColorPicker />
+			</Row>
+			<Row className='pointer-events-enable'>
+				{
+					isPreview ? (
+						<div className='warning'>Preview</div>
+					) : null
+				}
+			</Row>
+		</Row>
 	);
 
 	const { pivot } = useChatRoomCharacterOffsets(characterState);

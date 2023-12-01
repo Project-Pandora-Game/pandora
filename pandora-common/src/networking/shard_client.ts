@@ -1,4 +1,4 @@
-import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified } from './helpers';
+import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
 import type { CharacterId } from '../character/characterTypes';
 import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
 import type { IChatRoomFullInfo } from '../chatroom';
@@ -84,7 +84,7 @@ export const ShardClientSchema = {
 		}>(),
 		response: null,
 	},
-} as const;
+} as const satisfies Immutable<SocketInterfaceDefinition>;
 
 export type IShardClient = Satisfies<typeof ShardClientSchema, SocketInterfaceDefinitionVerified<typeof ShardClientSchema>>;
 export type IShardClientArgument = SocketInterfaceRequest<IShardClient>;

@@ -3,6 +3,7 @@ import {
 	Assert,
 	Asset,
 	AssetFrameworkCharacterState,
+	EMPTY_ARRAY,
 	Item,
 	ItemId,
 } from 'pandora-common';
@@ -17,6 +18,7 @@ import { InventoryAssetView } from './views/wardrobeAssetView';
 import { WardrobeFocusesItem } from './wardrobeUtils';
 import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
 import { WardrobeBodySizeEditor } from './views/wardrobeBodySizeView';
+import { InventoryOutfitView } from './views/wardrobeOutfitView';
 
 export function WardrobeBodyManipulation({ className, character, characterState }: {
 	className?: string;
@@ -61,12 +63,17 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 						title='Add a new bodypart'
 						assets={ assetList.filter(filter) }
 						attributesFilterOptions={ bodyFilterAttributes }
-						container={ [] }
+						container={ EMPTY_ARRAY }
 						spawnStyle='spawn'
 					/>
 				</Tab>
 				<Tab name='Change body size'>
 					<WardrobeBodySizeEditor character={ character } characterState={ characterState } />
+				</Tab>
+				<Tab name='Outfits'>
+					<InventoryOutfitView
+						targetContainer={ EMPTY_ARRAY }
+					/>
 				</Tab>
 			</TabContainer>
 			{

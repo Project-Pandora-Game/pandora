@@ -108,6 +108,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatRoomAdminAction: this.handleChatRoomAdminAction.bind(this),
 			chatRoomOwnershipRemove: this.handleChatRoomOwnershipRemove.bind(this),
 
+			// Outfits
+			storedOutfitsGetAll: this.handleStoredOutfitsGetAll.bind(this),
+			storedOutfitsSave: this.handleStoredOutfitsSave.bind(this),
+
 			getDirectMessages: this.handleGetDirectMessages.bind(this),
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
 			directMessage: this.handleDirectMessage.bind(this),
@@ -476,6 +480,31 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = await room.removeOwner(connection.account.id);
 
 		return { result };
+	}
+
+	private handleStoredOutfitsGetAll(_data: IClientDirectoryArgument['storedOutfitsGetAll'], connection: ClientConnection): IClientDirectoryResult['storedOutfitsGetAll'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		return {
+			storedOutfits: connection.account.data.storedOutfits,
+		};
+	}
+
+	private async handleStoredOutfitsSave({ storedOutfits }: IClientDirectoryArgument['storedOutfitsSave'], connection: ClientConnection): IClientDirectoryPromiseResult['storedOutfitsSave'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const result = await connection.account.updateStoredOutfits(storedOutfits);
+
+		if (result === 'ok') {
+			return { result: 'ok' };
+		}
+
+		return {
+			result: 'failed',
+			reason: result,
+		};
 	}
 
 	/**

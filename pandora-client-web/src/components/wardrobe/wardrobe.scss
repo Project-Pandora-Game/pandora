@@ -42,9 +42,6 @@ $header-height: 2em;
 			.overlay {
 				position: absolute;
 				inset: 0;
-				display: flex;
-				padding: 0.5em;
-				gap: 0.5em;
 				align-items: flex-start;
 				pointer-events: none;
 
@@ -55,6 +52,14 @@ $header-height: 2em;
 				.iconButton {
 					min-width: 2em;
 					min-height: 2em;
+				}
+
+				.warning {
+					@include center-flex;
+					background: $theme-warning;
+					border: solid black 1px;
+					border-radius: 1em;
+					padding: 0.25em 0.5em;
 				}
 			}
 
@@ -153,6 +158,45 @@ $drop-overlay-gap: 0.3em;
 		flex: 1;
 		padding: 0;
 		margin: 0;
+	}
+
+	.outfit {
+		width: 100%;
+		border: solid black 2px;
+
+		.outfitMainButton {
+			width: 100%;
+			min-height: 5em;
+			overflow: hidden;
+			display: flex;
+
+			border: solid black 1px;
+			background-color: $grey-lighter;
+
+			&:hover {
+				background-color: $grey-light;
+			}
+
+			.outfitPreview {
+				@include center-flex;
+				max-height: 100%;
+				width: 3.4em;
+				margin: 0.2em 0;
+				padding: 0;
+				border: solid black 1px;
+				overflow: hidden;
+				aspect-ratio: 2 / 3;
+
+				&.big {
+					width: min(35%, 30vh);
+				}
+
+				canvas {
+					max-width: 100%;
+					max-height: 100%;
+				}
+			}
+		}
 	}
 
 	.overlay {
@@ -365,7 +409,16 @@ $drop-overlay-gap: 0.3em;
 		background-color: $grey-darker;
 	}
 
-	&.allowed:hover {
+	&:disabled {
+		background-color: $grey-dark;
+
+		&.selected {
+			color: $white;
+			background-color: $grey-darker;
+		}
+	}
+
+	&.allowed:hover:not(:disabled) {
 		cursor: pointer;
 		background-color: $grey-mid;
 

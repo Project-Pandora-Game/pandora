@@ -3,6 +3,7 @@ import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirector
 import { GetDatabase } from '../database/databaseProvider';
 import { Account, GetDirectMessageId } from './account';
 import { accountManager } from './accountManager';
+import { DatabaseDirectMessageInfo } from '../database/databaseStructure';
 
 const MESSAGE_LOAD_COUNT = 50;
 

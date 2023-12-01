@@ -4,6 +4,7 @@ import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountRelati
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
+import { DatabaseAccountRelationship, DatabaseRelationship } from '../database/databaseStructure';
 
 const GLOBAL_LOCK = new AsyncLock();
 

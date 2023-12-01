@@ -140,7 +140,9 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 				.map(async (account, index) => {
 					account.username = `test-${index}`;
 					account.secure.emailHash = `test-${index}`;
-					return await db.createAccount(account) as DatabaseAccountWithSecure;
+					const result = await db.createAccount(account);
+					Assert(typeof result !== 'string');
+					return result;
 				}));
 
 			expect(account1).toBeInstanceOf(Object);
@@ -158,22 +160,25 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 		it('creates account with gettable id', async () => {
 			const acc = await CreateAccountData('test', PrehashPassword('test'), 'test@example.com');
-			const createdAcc = await db.createAccount(acc) as DatabaseAccountWithSecure;
+			const createdAcc = await db.createAccount(acc);
 			expect(createdAcc).toBeInstanceOf(Object);
+			Assert(typeof createdAcc !== 'string');
 			expect(await db.getAccountById(createdAcc.id)).toEqual(createdAcc);
 		});
 
 		it('creates account with gettable username', async () => {
 			const acc = await CreateAccountData('test', PrehashPassword('test'), 'test@example.com');
-			const createdAcc = await db.createAccount(acc) as DatabaseAccountWithSecure;
+			const createdAcc = await db.createAccount(acc);
 			expect(createdAcc).toBeInstanceOf(Object);
+			Assert(typeof createdAcc !== 'string');
 			expect(await db.getAccountByUsername(acc.username)).toEqual(createdAcc);
 		});
 
 		it('creates account with gettable email hash', async () => {
 			const acc = await CreateAccountData('test', PrehashPassword('test'), 'test@example.com');
-			const createdAcc = await db.createAccount(acc) as DatabaseAccountWithSecure;
+			const createdAcc = await db.createAccount(acc);
 			expect(createdAcc).toBeInstanceOf(Object);
+			Assert(typeof createdAcc !== 'string');
 			expect(await db.getAccountByEmailHash(acc.secure.emailHash)).toEqual(createdAcc);
 		});
 

@@ -11,6 +11,7 @@ import { Immutable } from 'immer';
 import { PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema } from '../gameLogic';
 
 // Fix for pnpm resolution weirdness
+import type { } from '../assets/item';
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 

@@ -224,7 +224,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 			</Button>
 			<Button className='slim hideDisabled' aria-label='delete' disabled={ layer.isMirror } onClick={ () => {
 				// eslint-disable-next-line no-alert
-				if (!confirm(`Delete layer '${name}'?`))
+				if (!confirm(`Are you sure you want to delete layer '${name}'?`))
 					return;
 				asset.deleteLayer(layer);
 			} } title='DELETE this layer'>
@@ -262,7 +262,7 @@ function AssetImageLi({ image, asset }: { image: string; asset: EditorAssetGraph
 	const onDelete = useEvent((event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
 		// eslint-disable-next-line no-alert
-		if (!confirm(`Delete image '${image}'?`))
+		if (!confirm(`Are you sure you want to delete image '${image}'?`))
 			return;
 
 		asset.deleteTexture(image);

@@ -1,8 +1,9 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryAccountSettings, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
@@ -228,15 +229,21 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async updateAccountSettings(id: number, data: IDirectoryAccountSettings): Promise<void> {
-		await this._accounts.updateOne({ id }, { $set: { settings: data } });
+	public async updateAccountData(id: AccountId, data: Partial<Pick<DatabaseAccount, DatabaseAccountUpdateableProperties>>): Promise<void> {
+		data = DatabaseAccountSchema
+			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
+			.partial()
+			.strict()
+			.parse(_.cloneDeep(data));
+
+		await this._accounts.updateOne({ id }, { $set: data });
 	}
 
-	public async setAccountSecure(id: number, data: DatabaseAccountSecure): Promise<void> {
+	public async setAccountSecure(id: AccountId, data: DatabaseAccountSecure): Promise<void> {
 		await this._accounts.updateOne({ id }, { $set: { secure: data } });
 	}
 
-	public async setAccountSecureGitHub(id: number, data: DatabaseAccountSecure['github']): Promise<boolean> {
+	public async setAccountSecureGitHub(id: AccountId, data: DatabaseAccountSecure['github']): Promise<boolean> {
 		const result = await this._accounts.findOneAndUpdate({ id }, { $set: { 'secure.github': data } }, { returnDocument: 'after' });
 		if (!result)
 			return false;
@@ -245,14 +252,6 @@ export default class MongoDatabase implements PandoraDatabase {
 			return result.secure.github === undefined;
 
 		return data.date === result.secure.github?.date;
-	}
-
-	public async setAccountRoles(id: number, data?: DatabaseAccountWithSecure['roles']): Promise<void> {
-		if (data) {
-			await this._accounts.updateOne({ id }, { $set: { roles: data } });
-		} else {
-			await this._accounts.updateOne({ id }, { $unset: { roles: '' } });
-		}
 	}
 
 	public async queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
@@ -268,7 +267,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result;
 	}
 
-	public async createCharacter(accountId: number): Promise<ICharacterSelfInfoDb> {
+	public async createCharacter(accountId: AccountId): Promise<ICharacterSelfInfoDb> {
 		return await this._lock.acquire('createCharacter', async () => {
 			if (!await this.getAccountById(accountId))
 				throw new Error('Account not found');
@@ -282,7 +281,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async finalizeCharacter(accountId: number, characterId: CharacterId): Promise<ICharacterData | null> {
+	public async finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
 		const result = await this._characters.findOneAndUpdate({ id: PlainId(characterId), inCreation: true }, { $set: { created: Date.now() }, $unset: { inCreation: '' } }, { returnDocument: 'after' });
 		if (!result || result.inCreation !== undefined)
 			return null;
@@ -302,7 +301,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result?.characters.find((c) => c.id === id) ?? null;
 	}
 
-	public async deleteCharacter(accountId: number, characterId: CharacterId): Promise<void> {
+	public async deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void> {
 		await this._characters.deleteOne({ id: PlainId(characterId), accountId });
 		await this._accounts.updateOne({ id: accountId }, { $pull: { characters: { id: characterId } } });
 	}

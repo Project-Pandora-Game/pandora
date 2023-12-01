@@ -14,7 +14,7 @@ import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { PixiMesh } from './pixiMesh';
 import { useTexture } from './useTexture';
-import { EvaluateCondition } from './utility';
+import { EvaluateCondition, useAppOptional } from './utility';
 import { RoomDeviceRenderContext } from '../components/chatroom/chatRoomDeviceContext';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
@@ -323,11 +323,13 @@ function MaskContainer({
 	...props
 }: MaskContainerProps): ReactElement {
 	const { alphamaskEngine } = useGraphicsSettings();
+	// Rendering in background needs to create tree even without presence of pixi.js application, but masks require it
+	const hasApp = useAppOptional() != null;
 
-	if (alphamaskEngine === 'pixi')
+	if (alphamaskEngine === 'pixi' && hasApp)
 		return <MaskContainerPixi { ...props } zIndex={ zIndex }>{ children }</MaskContainerPixi>;
 
-	if (alphamaskEngine === 'customShader')
+	if (alphamaskEngine === 'customShader' && hasApp)
 		return <MaskContainerCustom { ...props } zIndex={ zIndex }>{ children }</MaskContainerCustom>;
 
 	// Default - ignore masks

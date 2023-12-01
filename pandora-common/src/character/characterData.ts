@@ -7,6 +7,9 @@ import { RoomId } from '../chatroom';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { AccountIdSchema } from '../account';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../assets/item';
+
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),
 	pronoun: PronounKeySchema.catch('she'),

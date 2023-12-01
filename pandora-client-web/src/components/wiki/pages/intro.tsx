@@ -12,7 +12,7 @@ export function WikiIntroduction(): ReactElement {
 
 			The following will list some of the existing core features of Pandora.
 			Some of these features are explained in greater detail further below.
-			<ul>
+			<ol type='1'>
 				<li>Dynamically generated body model with many poses and free arm movement</li>
 				<li>Front and back character view</li>
 				<li>Persistent rooms with long descriptions</li>
@@ -21,28 +21,30 @@ export function WikiIntroduction(): ReactElement {
 				<li>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</li>
 				<li>An already very stable code base (goal: no void memes here)</li>
 				<li>Reliable gag talk & locks - development aims to make it impossible to cheat</li>
+				<li>Flexible item layering possibilities</li>
 				<li>A direct messaging system that supports offline messages and a persistent message history</li>
 				<li>Ability to use the browser's back/forward buttons to navigate in Pandora</li>
 				<li>No safeword feature, but a safemode that makes it harder to be misused to constantly free characters</li>
 				<li>A permission feature that allows the user to set who is allowed to do what</li>
-			</ul>
+				<li>Storing complete outfits in the wardrobe and supporting import/export</li>
+			</ol>
 
 			<p>
 				Some further details on these features and how to use them:
 			</p>
 
-			<h4>Dynamically generated body model with many poses and free arm movement</h4>
+			<h4>1. Dynamically generated body model with many poses and free arm movement</h4>
 			<p>
 				In the "Pose"-tab, you will find the ability to freely move arms and legs under the "manual pose" section at the bottom of the screen.
 				Expand this section to view the respective sliders.
 			</p>
 
-			<h4>Front and back character view</h4>
+			<h4>2. Front and back character view</h4>
 			<p>
 				Your character's view can be toggled in the pose menu. The chosen position is seen by everyone in the room.
 			</p>
 
-			<h4>Persistent rooms</h4>
+			<h4>3. Persistent rooms</h4>
 			<p>
 				In Pandora, each room is persistent (settings, inventory, and room devices stay even after everyone has left) and has one or more owners.
 				It only gets deleted when it no longer has any owners.<br />
@@ -59,7 +61,7 @@ export function WikiIntroduction(): ReactElement {
 				give up ownership of that room (resulting in the room being deleted if it has no other owners).
 			</p>
 
-			<h4>A feature-rich room chat</h4>
+			<h4>4. A feature-rich room chat</h4>
 			<ul>
 				<li>Click a name in the chat to start whispering to that person</li>
 				<li>Right-clicking your own message enables you to edit or delete it for { MESSAGE_EDIT_TIMEOUT / 1000 / 60 } mins after posting it</li>
@@ -68,26 +70,26 @@ export function WikiIntroduction(): ReactElement {
 				<li>You can enclose text with underscores to style it, such as _<i>italic</i>_ and __<b>bold</b>__</li>
 			</ul>
 
-			<h4>Free character placement and movement inside rooms</h4>
+			<h4>5. Free character placement and movement inside rooms</h4>
 			<p>
 				You can freely move your character inside a room by dragging them by the character name below.
 				Room admins can also move other characters this way.
 			</p>
 
-			<h4>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>
+			<h4>6. Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>
 			<p>
 				Room devices must first be deployed from the room inventory to the room in the item menu.
 				Then, you can freely move/position the item in the room by dragging it by the icon below it.
 				The icons below room devices can be toggled to be hidden under the "Room"-tab.
 			</p>
 
-			<h4>Stable code base</h4>
+			<h4>7. Stable code base</h4>
 			<p>
 				Pandora aims for a stable experience without random disconnects. But even if a short disconnect happens, the character will not be shown as disconnected for some time, and you will still receive all the missed chat messages on reconnect, not losing anything.
 				Additionally, Pandora's server architecture is scalable to support future growth of its user base without compromising stability.
 			</p>
 
-			<h4>Reliable gag talk & locks</h4>
+			<h4>8. Reliable gag talk & locks</h4>
 			<p>
 				Pandora validates and performs all character interactions on the server,
 				preventing the creation of scripts/mods that do undesired actions, such as anti-garble or unauthorized removal of (locked) restraints.<br />
@@ -95,7 +97,32 @@ export function WikiIntroduction(): ReactElement {
 				resulting in everyone having the same experience.
 			</p>
 
-			<h4>A direct messaging system</h4>
+			<h4>9. Flexible item layering possibilities</h4>
+			<p>
+				There are no slots in Pandora, so you can relatively freely add items on top of each other, in the order you want.
+				Right now, you can only add one copy of an asset, but in the future we will allow to add countless copies of rope, if that is what you want.
+			</p>
+			<p>
+				Note on <strong>correct item layering order</strong>:<br />
+				The layering order of items is that the higher an item is in the wardrobe character list, the further outwards on the body it is worn.
+				So the first item is usually something like a jacket or dress, whereas underwear is further down in the list.<br />
+				You add and remove outfits worn on the body from top to bottom, so from the outermost worn body item (e.g. a jacket or dress)
+				towards the inner body pieces, like how you would undress in reality, too.<br />
+				In case you dropped items in that manner to the room inventory, you can again add them to the body from the top to bottom,
+				so from the item worn the closest to the body, like you would start dressing in reality, too.<br />
+				Now, when you make an outfit template from something you wear you need to start from the bottom, not from the top,
+				because you are not undressing your character, but you are "dressing" a mannequin template doll by means of copying your outfit.
+				So you need to start from the item worn closest to the body, therefore bottom-up.
+				When you want to use an outfit template to dress your character, you again need to start from the bottom, as you need to start with the item
+				worn closest to the body, like you would start dressing in reality, too. So, outfit template related direction is bottom-up and otherwise, top-down.<br />
+				👸🏽 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
+				🏠 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
+				👸🏽 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />
+				💾 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />
+				<i>Side note</i>: It also works if you always do it top-down, if that is easier to remember, but then the mannequin template doll shows a preview image with reversed item order, which looks weirdly funny.
+			</p>
+
+			<h4>10. A direct messaging system</h4>
 			<p>
 				To write someone a DM, you have to click the contacts icon at the top and then under the "DMs"-tab,
 				you have to either look for the account name of the user you want to exchange messages with on the left, or
@@ -104,27 +131,35 @@ export function WikiIntroduction(): ReactElement {
 				the rightmost number behind the character name. Direct messages are end-to-end encrypted.
 			</p>
 
-			<h4>No safeword feature, but a safemode that makes it harder to be misused</h4>
+			<h4>11. Using back/forward buttons/keys</h4>
+			<p>
+				Pandora has the ability to use the browser's back/forward buttons to navigate in Pandora.
+			</p>
+
+			<h4>12. No safeword feature, but a safemode that makes it harder to be misused</h4>
 			<p>
 				You can access the safemode feature by clicking on your character name in the top left of the screen and then entering safemode in the menu.
 			</p>
 
-			<h4>A permission feature that allows the user to set who is allowed to do what</h4>
+			<h4>13. A permission feature that allows the user to set who is allowed to do what</h4>
 			<p>
 				You can find it in the Pandora settings. Currently, you can set if other character are allowed to interact with you and if you allow your body to be changed, too. This will be much more configurable in the future.
+			</p>
+
+			<h4>14. Storing complete outfits in the wardrobe and supporting import/export</h4>
+			<p>
+				The "Items" and "Body"-tabs in the wardrobe, as well as the room inventory screen, have an "Outfits"-tab that lets you access and manage all your custom outfits stored on the Pandora server.<br />
+				It also allows you to export and import outfits to save even more externally or to share them with others. An outfit can contain normal items, room devices, body modifications, and even storage items.<br />
+				Outfit entries show a small live preview. You can increase the size of the previews in the interface settings or even switch them off altogether, if your computer/phone and connection cannot handle loading many previews at once.
 			</p>
 
 			<hr />
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>
-					Item templates for storing your favorite asset configurations per asset, including things like color, custom name,
-					description/lore about the item, etc.
-				</li>
-				<li>Storing complete outfits in the wardrobe and supporting their import/export</li>
 				<li>Character profile and biography</li>
 				<li>Showing and managing relationships between characters</li>
+				<li>Allowing every item to have a custom name and description and enabling item templates to store those, too</li>
 				<li>Hearing impairment effect by assets</li>
 				<li>Advanced permission feature</li>
 				<li>Character rules</li>

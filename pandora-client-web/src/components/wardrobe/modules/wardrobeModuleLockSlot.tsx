@@ -13,11 +13,13 @@ import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot'
 import emptyLock from '../../../assets/icons/lock_empty.svg';
 import closedLock from '../../../assets/icons/lock_closed.svg';
 import openLock from '../../../assets/icons/lock_open.svg';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { useCurrentTime } from '../../../common/useCurrentTime';
-import { WardrobeModuleProps } from '../wardrobeTypes';
+import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeActionButton } from '../wardrobeComponents';
 import type { Immutable } from 'immer';
+import { useAssetManager } from '../../../assets/assetManager';
 
 export function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
 	const { targetSelector } = useWardrobeContext();
@@ -76,7 +78,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: 
 							},
 						} }
 					>
-						➖ Remove and delete
+						<img src={ deleteIcon } alt='Delete action' /> Remove and delete
 					</WardrobeActionButton>
 					<WardrobeActionButton
 						action={ {
@@ -115,6 +117,51 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: 
 				</Row>
 			</Row>
 			<WardrobeLockSlotLocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+		</Column>
+	);
+}
+
+export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChange }: WardrobeModuleTemplateProps<'lockSlot'>): ReactElement {
+	const assetManager = useAssetManager();
+	const lock = template?.lock != null ? assetManager.getAssetById(template.lock.asset) : null;
+
+	if (lock == null) {
+		return (
+			<Column padding='medium'>
+				<Row padding='medium' wrap>
+					<button className='wardrobeActionButton' disabled>
+						<img width='21' height='33' src={ emptyLock } />
+					</button>
+					<Row padding='medium' alignY='center'>
+						No lock
+					</Row>
+				</Row>
+			</Column>
+		);
+	}
+
+	return (
+		<Column padding='medium'>
+			<Row padding='medium' wrap>
+				<img width='21' height='33' src={ openLock } />
+				<Row padding='medium' alignY='center'>
+					Lock: { lock.definition.name } (unlocked)
+				</Row>
+			</Row>
+			<Row wrap>
+				<button
+					className='wardrobeActionButton allowed'
+					onClick={ (ev) => {
+						ev.stopPropagation();
+						onTemplateChange({
+							type: 'lockSlot',
+							lock: null,
+						});
+					} }
+				>
+					<img src={ deleteIcon } alt='Delete action' /> Remove lock
+				</button>
+			</Row>
 		</Column>
 	);
 }

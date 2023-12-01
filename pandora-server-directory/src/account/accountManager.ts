@@ -1,10 +1,11 @@
 import { GetDatabase } from '../database/databaseProvider';
-import { ACCOUNT_SETTINGS_DEFAULT, Assert, AsyncSynchronized, DirectoryAccountSettingsSchema, GetLogger, Service } from 'pandora-common';
+import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, Service } from 'pandora-common';
 import { Account, CreateAccountData } from './account';
 import promClient from 'prom-client';
 import { DiscordBot } from '../services/discord/discordBot';
-import { cloneDeep, isEqual } from 'lodash';
+import { isEqual, omit, pick } from 'lodash';
 import { diffString } from 'json-diff';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema } from '../database/databaseStructure';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
@@ -143,28 +144,27 @@ export class AccountManager implements Service {
 
 	/** Create account from received data, adding it to loaded accounts */
 	@AsyncSynchronized()
-	private async _loadAccount(data: DatabaseAccountWithSecure): Promise<Account> {
+	private async _loadAccount(rawData: DatabaseAccountWithSecure): Promise<Account | null> {
 		// If there already is account matching this id loaded, simply return it
-		const loadedAccount = this.getAccountById(data.id);
+		const loadedAccount = this.getAccountById(rawData.id);
 		if (loadedAccount)
 			return loadedAccount;
 
 		// Verify and migrate account data
-
-		// Settings migration
-		{
-			const parsedSettings = DirectoryAccountSettingsSchema.safeParse(data.settings);
-			const newSettings = parsedSettings.success ? parsedSettings.data : cloneDeep(ACCOUNT_SETTINGS_DEFAULT);
-			if (!isEqual(newSettings, data.settings)) {
-				// Save modified data
-				const diff = diffString(data.settings, newSettings, { color: false });
-				logger.warning(`Account ${data.id} has invalid settings, fixing...\n`, diff);
-				await GetDatabase().updateAccountSettings(data.id, newSettings);
-				data.settings = newSettings;
-			}
+		rawData = omit(rawData, '_id');
+		const parsedData = DatabaseAccountWithSecureSchema.safeParse(rawData);
+		if (!parsedData.success) {
+			logger.error(`Failed to load account ${rawData.id}: `, parsedData.error);
+			return null;
+		}
+		// Save data modified by migration and catches
+		if (!isEqual(parsedData.data, rawData)) {
+			const diff = diffString(rawData, parsedData.data, { color: false });
+			logger.warning(`Account ${parsedData.data.id} has invalid data, fixing...\n`, diff);
+			await GetDatabase().updateAccountData(parsedData.data.id, pick(parsedData.data, ...DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES));
 		}
 
-		const account = new Account(data);
+		const account = new Account(parsedData.data);
 		this._onlineAccounts.add(account);
 		loadedAccountsMetric.set(this._onlineAccounts.size);
 		logger.debug(`Loaded account ${account.data.username}`);
@@ -279,6 +279,7 @@ export class AccountManager implements Service {
 
 		logger.info(`Registered new account ${username}`);
 		const account = await this._loadAccount(data);
+		AssertNotNullable(account);
 
 		await account.secure.sendActivation(email);
 

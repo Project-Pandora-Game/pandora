@@ -3,11 +3,11 @@ import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character'
 import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
-import { AssetIdSchema, WearableAssetType } from './definitions';
+import { WearableAssetType } from './definitions';
 import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelectorSchema } from './appearanceTypes';
 import { ItemInteractionType } from '../character/restrictionsManager';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
-import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
+import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { isEqual, sample } from 'lodash';
@@ -26,10 +26,8 @@ import type { } from '../validation';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),
-	/** ID to give the new item */
-	itemId: ItemIdSchema,
-	/** Asset to create the new item from */
-	asset: AssetIdSchema,
+	/** Template describing an item configuration for creating the new item */
+	itemTemplate: ItemTemplateSchema,
 	/** Target the item should be added to after creation */
 	target: RoomTargetSelectorSchema,
 	/** Container path on target where to add the item to */
@@ -218,15 +216,21 @@ export function DoAppearanceAction(
 	switch (action.type) {
 		// Create and equip an item
 		case 'create': {
-			const asset = assetManager.getAssetById(action.asset);
 			const target = processingContext.getTarget(action.target);
-			if (!asset || !target)
+			if (!target)
 				return processingContext.invalid();
-			if (!asset.canBeSpawned())
+			const item = assetManager.createItemFromTemplate(action.itemTemplate, processingContext.player);
+			if (item == null)
 				return processingContext.invalid();
-			const item = assetManager.createItem(action.itemId, asset, null);
 			// Player adding the item must be able to use it
-			const r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			const r = playerRestrictionManager.canUseItemDirect(
+				processingContext,
+				target,
+				action.container,
+				item,
+				ItemInteractionType.ADD_REMOVE,
+				action.container.length === 0 ? action.insertBefore : undefined,
+			);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -294,7 +298,14 @@ export function DoAppearanceAction(
 			}
 
 			// Player adding the item must be able to use it on target
-			r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.container, item, ItemInteractionType.ADD_REMOVE);
+			r = playerRestrictionManager.canUseItemDirect(
+				processingContext,
+				target,
+				action.container,
+				item,
+				ItemInteractionType.ADD_REMOVE,
+				action.container.length === 0 ? action.insertBefore : undefined,
+			);
 			if (!r.allowed) {
 				processingContext.addProblem({
 					result: 'restrictionError',
@@ -845,7 +856,7 @@ export function ActionAppearanceRandomize({
 			// Pick one and add it to the appearance
 			const asset = sample(possibleAssets);
 			if (asset && asset.isType('personal') && asset.definition.bodypart != null) {
-				const item = assetManager.createItem(`i/${nanoid()}`, asset, null);
+				const item = assetManager.createItem(`i/${nanoid()}`, asset);
 				newAppearance.push(item);
 				usedAssets.add(asset);
 				properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
@@ -893,7 +904,7 @@ export function ActionAppearanceRandomize({
 
 		// Try them one by one, stopping at first successful (if we skip all, nothing bad happens)
 		for (const asset of possibleAssets) {
-			const item = assetManager.createItem(`i/${nanoid()}`, asset, null);
+			const item = assetManager.createItem(`i/${nanoid()}`, asset);
 			const newItems: Item<WearableAssetType>[] = [...newAppearance, item];
 
 			r = ValidateAppearanceItemsPrefix(assetManager, newItems, room);
@@ -982,7 +993,7 @@ export function ActionRoomDeviceEnter({
 		return processingContext.invalid();
 
 	const wearableItem = assetManager
-		.createItem(action.itemId, asset, null)
+		.createItem(action.itemId, asset)
 		.withLink(item, action.slot);
 	// Player adding the item must be able to use it
 	r = playerRestrictionManager.canUseItemDirect(processingContext, targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);

@@ -50,7 +50,7 @@ export class Room {
 		this.config.admin = uniq(this.config.admin);
 		this.config.banned = uniq(this.config.banned);
 
-		this.logger.verbose('Created');
+		this.logger.debug('Loaded');
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -304,7 +304,7 @@ export class Room {
 		await this.disconnect();
 		Assert(this._assignedShard == null);
 		Assert(this.characters.size === 0);
-		this.logger.verbose('Destroyed');
+		this.logger.debug('Destroyed');
 	}
 
 	public checkAllowEnter(character: Character, password: string | null, ignoreCharacterLimit: boolean = false): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {

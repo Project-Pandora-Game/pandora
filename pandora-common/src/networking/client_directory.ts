@@ -1,4 +1,4 @@
-import type { SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
@@ -7,9 +7,12 @@ import { AccountId, AccountIdSchema, ConfiguredAccountRoleSchema, IAccountRoleMa
 import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
+import { Immutable } from 'immer';
+import { AssetFrameworkOutfitWithIdSchema } from '../assets';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../account/accountRoles';
+import type { } from '../assets/item';
 
 type ShardError = 'noShardFound' | 'failed';
 
@@ -263,6 +266,29 @@ export const ClientDirectorySchema = {
 	},
 	//#endregion
 
+	//#region Outfits
+	storedOutfitsGetAll: {
+		request: z.object({}),
+		response: z.object({
+			storedOutfits: AssetFrameworkOutfitWithIdSchema.array(),
+		}),
+	},
+	storedOutfitsSave: {
+		request: z.object({
+			storedOutfits: AssetFrameworkOutfitWithIdSchema.array(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('failed'),
+				reason: z.enum(['storageFull']),
+			}),
+		]),
+	},
+	//#endregion
+
 	getDirectMessages: {
 		request: z.object({
 			id: AccountIdSchema,
@@ -398,7 +424,7 @@ export const ClientDirectorySchema = {
 		response: ZodCast<{ result: 'ok' | 'notFound' | 'adminRequired'; }>(),
 	},
 	//#endregion
-} as const;
+} as const satisfies Immutable<SocketInterfaceDefinition>;
 
 export type IClientDirectory = Satisfies<typeof ClientDirectorySchema, SocketInterfaceDefinitionVerified<typeof ClientDirectorySchema>>;
 export type IClientDirectoryArgument = SocketInterfaceRequest<IClientDirectory>;

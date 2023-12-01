@@ -4,6 +4,7 @@ const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWOR
 import { GetDatabase } from '../database/databaseProvider';
 import GetEmailSender from '../services/email';
 import type { Account } from './account';
+import { DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure';
 
 import { createHash, randomInt } from 'crypto';
 import { webcrypto } from 'node:crypto';

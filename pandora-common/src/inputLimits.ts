@@ -45,3 +45,9 @@ export const LIMIT_ACCOUNT_PROFILE_LENGTH = 5_000;
 
 /** The maximum length of a character profile description (not yet implemented) */
 export const LIMIT_CHARACTER_PROFILE_LENGTH = 10_000;
+
+/** The maximum length of an outfit name */
+export const LIMIT_OUTFIT_NAME_LENGTH = 40;
+
+/** The maximum total number of items across all saved outfits */
+export const LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS = 100;

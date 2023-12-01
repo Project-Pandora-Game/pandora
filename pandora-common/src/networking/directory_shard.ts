@@ -8,6 +8,9 @@ import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../assets/item';
+
 export const ShardAccountDefinitionSchema = z.object({
 	id: z.number(),
 	roles: AccountRoleInfoSchema.optional(),

@@ -14,7 +14,7 @@ export const ItemContainerPathSchema = z.array(
 		item: ItemIdSchema,
 		module: z.string(),
 	}),
-);
+).readonly();
 export type ItemContainerPath = z.infer<typeof ItemContainerPathSchema>;
 
 export const ItemPathSchema = z.object({

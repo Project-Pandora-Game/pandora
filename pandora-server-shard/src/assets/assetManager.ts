@@ -55,7 +55,7 @@ function WatchAssetDefinitionsTick(): void {
 			return;
 		const currentHash = readFileSync(currentFilePath, { encoding: 'utf8' }).trim();
 		if (currentHash !== assetManager.definitionsHash) {
-			logger.alert('Detected asset definitions change, reloading...');
+			logger.alert(`Detected asset definitions change: ${assetManager.definitionsHash} -> ${currentHash}`);
 			LoadAssetDefinitions();
 			logger.info('Done sending new definitions');
 		}

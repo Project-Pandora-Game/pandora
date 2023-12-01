@@ -1,12 +1,13 @@
 import React, { Context, ReactElement, ReactNode, useMemo } from 'react';
-import { Application, IApplicationOptions, Ticker } from 'pixi.js';
-import { Assert, AssertNotNullable, GetLogger } from 'pandora-common';
+import { Application, Container, IApplicationOptions, Ticker } from 'pixi.js';
+import { Assert, AssertNotNullable, GetLogger, Rectangle } from 'pandora-common';
 import { AppProvider, createRoot, ReactPixiRoot, Stage } from '@pixi/react';
 import { cloneDeep } from 'lodash';
 import { ChildrenProps } from '../common/reactTypes';
 import { USER_DEBUG } from '../config/Environment';
+import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene';
 
-const SHARED_APP_MAX_COUNT = 1;
+const SHARED_APP_MAX_COUNT = 2;
 
 export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<IApplicationOptions>> = {
 	backgroundColor: 0x1099bb,
@@ -237,7 +238,227 @@ export function GraphicsSceneRendererShared({
 	);
 }
 
-function ContextBridge({ children, contexts, render }: {
+interface GraphicsSceneBackgroundRendererProps extends Omit<GraphicsSceneRendererProps, 'container'> {
+	renderArea: Rectangle;
+	backgroundColor?: number;
+	backgroundAlpha?: number;
+}
+
+class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'>> {
+	private readonly logger = GetLogger('BackgroundRenderer');
+
+	private _needsUpdate: boolean = true;
+
+	private _canvasRef: HTMLCanvasElement | null = null;
+	private _root: ReactPixiRoot | null = null;
+	private _stage: Container | null = null;
+	private _updateTimer: number | null = null;
+
+	private _app: Application<HTMLCanvasElement> | null = null;
+
+	public override render(): React.ReactNode {
+		const { renderArea } = this.props;
+
+		return (
+			<canvas
+				ref={ this._canvasRefHandle }
+				width={ renderArea.width }
+				height={ renderArea.height }
+			/>
+		);
+	}
+
+	private readonly _canvasRefHandle = (ref: HTMLCanvasElement | null) => {
+		this._canvasRef = ref;
+		if (ref != null) {
+			this.needsRenderUpdate();
+		}
+	};
+
+	public override componentDidMount() {
+		Assert(this._root == null);
+		Assert(this._stage == null);
+		Assert(this._updateTimer == null);
+
+		const { renderArea } = this.props;
+
+		// We are trying to simulate how `Stage` component works, only differently handing the Application instance
+		// For that we need to add this private shim `react-pixi` normally adds inside `Stage`,
+		// Which is used to propagate change events all the way up to the stage quickly, so application knows to render another frame
+		// @see - https://github.com/wisebits-tech/react-pixi/blob/react-18/src/stage/index.jsx#L127
+
+		this._stage = new Container();
+		this._stage.position = {
+			x: -renderArea.x,
+			y: -renderArea.y,
+		};
+
+		// @ts-expect-error: Private shim
+		this._stage.__reactpixi = { root: this._stage };
+		this._root = createRoot(this._stage);
+		this._root.render(this.getChildren());
+
+		this._stage.on('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
+		this._needsUpdate = true;
+
+		this._updateTimer = setInterval(() => {
+			this.renderStage();
+		}, 1000);
+	}
+
+	public override componentDidUpdate(_oldProps: Readonly<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'>>) {
+		if (!this._stage && !this._root)
+			return;
+		AssertNotNullable(this._stage);
+		AssertNotNullable(this._root);
+		AssertNotNullable(this._updateTimer);
+
+		const { renderArea } = this.props;
+
+		// Update stage offset
+		this._stage.position = {
+			x: -renderArea.x,
+			y: -renderArea.y,
+		};
+
+		// flush fiber
+		this._root.render(this.getChildren());
+		this.needsRenderUpdate();
+	}
+
+	public override componentWillUnmount() {
+		AssertNotNullable(this._root);
+		AssertNotNullable(this._stage);
+		AssertNotNullable(this._updateTimer);
+
+		clearInterval(this._updateTimer);
+		this._updateTimer = null;
+
+		this._stage.off('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
+
+		// We need to render empty stage, otherwise we have a leak as we don't destroy app, as react-pixi expects
+		// eslint-disable-next-line react/jsx-no-useless-fragment
+		this._root.render(<></>);
+		this._root.unmount();
+		this._root = null;
+
+		// Now we manually destroy the stage
+		this._stage.destroy({
+			children: true,
+		});
+		this._stage = null;
+	}
+
+	public readonly needsRenderUpdate = () => {
+		this._needsUpdate = true;
+	};
+
+	public readonly renderStage = () => {
+		if (this._needsUpdate && this._stage != null && this._canvasRef != null) {
+			if (!this._mountApp())
+				return;
+
+			AssertNotNullable(this._app);
+			this._needsUpdate = false;
+
+			this._app.render();
+
+			const outContext = this._canvasRef.getContext('2d');
+			if (outContext) {
+				outContext.clearRect(0, 0, this._canvasRef.width, this._canvasRef.height);
+				outContext.drawImage(this._app.view, 0, 0, this._canvasRef.width, this._canvasRef.height);
+			} else {
+				this.logger.warning('Failed to get output 2d context');
+			}
+			this._unmountApp();
+		}
+	};
+
+	private _mountApp(): boolean {
+		Assert(this._app == null);
+		Assert(this._stage != null);
+		const {
+			onMount,
+			resolution,
+			renderArea,
+			backgroundColor = DEFAULT_BACKGROUND_COLOR,
+			backgroundAlpha = 1,
+		} = this.props;
+
+		let app = AvailableApps.pop();
+		if (!app && SharedApps.length < SHARED_APP_MAX_COUNT) {
+			app = CreateApplication();
+			SharedApps.push(app);
+		}
+		if (!app)
+			return false;
+
+		this._app = app;
+		Assert(app.view instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
+
+		app.renderer.resolution = resolution;
+		app.renderer.resize(renderArea.width, renderArea.height);
+		app.renderer.background.color = backgroundColor;
+		app.renderer.background.alpha = backgroundAlpha;
+		app.stage.addChild(this._stage);
+
+		onMount?.(this._app);
+		return true;
+	}
+
+	private _unmountApp() {
+		const { onUnmount } = this.props;
+		if (this._app == null)
+			return;
+
+		onUnmount?.(this._app);
+		this._app.stage.removeChildren();
+
+		AvailableApps.push(this._app);
+		this._app = null;
+	}
+
+	public getChildren() {
+		const { children } = this.props;
+		return <>{ children }</>;
+	}
+
+	public override componentDidCatch(error: unknown, errorInfo: unknown) {
+		this.logger.error(`Error occurred in \`Stage\`.\n`, error, '\n', errorInfo);
+	}
+}
+
+export function GraphicsSceneBackgroundRenderer({
+	children,
+	renderArea,
+	resolution,
+	backgroundColor,
+	backgroundAlpha,
+	onMount,
+	onUnmount,
+	forwardContexts = [],
+}: GraphicsSceneBackgroundRendererProps): ReactElement {
+	return (
+		<ContextBridge contexts={ forwardContexts } render={ (c) => (
+			<GraphicsSceneBackgroundRendererImpl
+				renderArea={ renderArea }
+				resolution={ resolution }
+				backgroundColor={ backgroundColor }
+				backgroundAlpha={ backgroundAlpha }
+				onMount={ onMount }
+				onUnmount={ onUnmount }
+			>
+				{ c }
+			</GraphicsSceneBackgroundRendererImpl>
+		) }>
+			<React.StrictMode>
+				{ children }
+			</React.StrictMode>
+		</ContextBridge>
+	);
+}
+
+export function ContextBridge({ children, contexts, render }: {
 	children: ReactNode;
 	contexts: readonly Context<unknown>[];
 	render: (children: ReactNode) => ReactNode;

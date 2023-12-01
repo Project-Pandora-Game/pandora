@@ -1,46 +1,45 @@
-import { AssertNever, Satisfies } from '../utility';
-import { IAssetModuleDefinition, IModuleItemDataCommon, IModuleConfigCommon, IItemModule, IModuleActionCommon } from './modules/common';
-import { IModuleItemDataTyped, IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ItemModuleTypedAction } from './modules/typed';
-import { IModuleItemDataStorage, IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ItemModuleStorageAction } from './modules/storage';
-import { IModuleConfigLockSlot, IModuleItemDataLockSlot, ItemModuleLockSlotAction, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition } from './modules/lockSlot';
-import { z } from 'zod';
-import { IsObject, ZodMatcher } from '../validation';
+import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility';
+import { IAssetModuleDefinition, IModuleConfigCommon, IItemModule } from './modules/common';
+import { IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema } from './modules/typed';
+import { IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema } from './modules/storage';
+import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema, ModuleItemTemplateLockSlotSchema } from './modules/lockSlot';
+import { ZodDiscriminatedUnionOption, z } from 'zod';
+import { RecordUnpackSubobjectProperties } from '../validation';
 import { AssetId } from './definitions';
-import { IItemLoadContext } from './item';
+import { IItemCreationContext, IItemLoadContext } from './item';
 import { Immutable } from 'immer';
 
 //#region Module definitions
 
-export type IAssetModuleTypes<TProperties> = {
+export const IAssetModuleTypesSchemas = {
 	typed: {
-		config: IModuleConfigTyped<TProperties>;
-		data: IModuleItemDataTyped;
-		actions: ItemModuleTypedAction;
-	};
+		data: ModuleItemDataTypedSchema,
+		template: ModuleItemTemplateTypedSchema,
+		actions: ItemModuleTypedActionSchema,
+	},
 	storage: {
-		config: IModuleConfigStorage;
-		data: IModuleItemDataStorage;
-		actions: ItemModuleStorageAction;
-	};
+		data: ModuleItemDataStorageSchema,
+		template: ModuleItemTemplateStorageSchema,
+		actions: ItemModuleStorageActionSchema,
+	},
 	lockSlot: {
-		config: IModuleConfigLockSlot<TProperties>;
-		data: IModuleItemDataLockSlot;
-		actions: ItemModuleLockSlotAction;
-	};
-};
+		data: ModuleItemDataLockSlotSchema,
+		template: ModuleItemTemplateLockSlotSchema,
+		actions: ItemModuleLockSlotActionSchema,
+	},
+} as const satisfies Readonly<Record<string, IModuleTypeBaseSchema>>;
+
+export type IAssetModuleConfigs<TProperties> = Satisfies<{
+	typed: IModuleConfigTyped<TProperties>;
+	storage: IModuleConfigStorage;
+	lockSlot: IModuleConfigLockSlot<TProperties>;
+}, { [Type in ModuleType]: IModuleConfigCommon<Type> }>;
 
 export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>; } = {
 	typed: new TypedModuleDefinition(),
 	storage: new StorageModuleDefinition(),
 	lockSlot: new LockSlotModuleDefinition(),
 };
-
-export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', [
-	ItemModuleTypedActionSchema,
-	ItemModuleStorageActionSchema,
-	ItemModuleLockSlotActionSchema,
-]);
-export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
 export type ModuleActionError =
 	| {
@@ -70,17 +69,44 @@ export type ModuleActionFailure =
 
 //#endregion
 
-export type ModuleType = keyof IAssetModuleTypes<unknown>;
+export type ModuleType = keyof typeof IAssetModuleTypesSchemas;
 export const ModuleTypeSchema = z.enum(Object.keys(MODULE_TYPES) as [ModuleType, ...ModuleType[]]);
-export const IsModuleType = ZodMatcher(ModuleTypeSchema);
 
-type __satisfies__IAssetModuleTypes = Satisfies<IAssetModuleTypes<unknown>, {
+export type IAssetModuleTypes<TProperties> = {
 	[Type in ModuleType]: {
-		config: IModuleConfigCommon<Type>;
-		data: IModuleItemDataCommon<Type>;
-		actions: IModuleActionCommon<Type>;
-	}
-}>;
+		config: IAssetModuleConfigs<TProperties>[Type];
+		data: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['data']>;
+		template: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['template']>;
+		actions: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['actions']>;
+	};
+};
+
+type IModuleTypeBaseSchema = {
+	readonly data: ZodDiscriminatedUnionOption<'type'>;
+	readonly template: ZodDiscriminatedUnionOption<'type'>;
+	readonly actions: ZodDiscriminatedUnionOption<'moduleType'>;
+};
+
+export const ItemModuleDataSchema = z.discriminatedUnion('type', ParseArrayNotEmpty(
+	Object.values(
+		RecordUnpackSubobjectProperties('data', IAssetModuleTypesSchemas),
+	),
+));
+export type ItemModuleData = z.infer<typeof ItemModuleDataSchema>;
+
+export const ItemModuleTemplateSchema = z.discriminatedUnion('type', ParseArrayNotEmpty(
+	Object.values(
+		RecordUnpackSubobjectProperties('template', IAssetModuleTypesSchemas),
+	),
+));
+export type ItemModuleTemplate = z.infer<typeof ItemModuleTemplateSchema>;
+
+export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', ParseArrayNotEmpty(
+	Object.values(
+		RecordUnpackSubobjectProperties('actions', IAssetModuleTypesSchemas),
+	),
+));
+export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
 export type AssetModuleDefinition<TProperties> = IAssetModuleTypes<TProperties>[ModuleType]['config'];
 
@@ -97,40 +123,67 @@ export function GetModuleStaticAttributes<TProperties>(moduleDefinition: Immutab
 	}
 }
 
-export function LoadItemModule<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, data: unknown, context: IItemLoadContext): IItemModule<TProperties> {
-	if (!IsObject(data) || data?.type !== moduleDefinition.type) {
+export function CreateModuleDataFromTemplate(moduleDefinition: Immutable<AssetModuleDefinition<unknown>>, template: ItemModuleTemplate, context: IItemCreationContext): ItemModuleData | undefined {
+	if (moduleDefinition.type !== template.type) {
+		// Fail if the types don't match
+		return undefined;
+	}
+
+	switch (moduleDefinition.type) {
+		case 'typed':
+			Assert(template.type === 'typed');
+			return MODULE_TYPES.typed.makeDataFromTemplate(
+				moduleDefinition,
+				template,
+				context,
+			);
+		case 'storage':
+			Assert(template.type === 'storage');
+			return MODULE_TYPES.storage.makeDataFromTemplate(
+				moduleDefinition,
+				template,
+				context,
+			);
+		case 'lockSlot':
+			Assert(template.type === 'lockSlot');
+			return MODULE_TYPES.lockSlot.makeDataFromTemplate(
+				moduleDefinition,
+				template,
+				context,
+			);
+		default:
+			AssertNever(moduleDefinition);
+	}
+}
+
+export function LoadItemModule<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, data: ItemModuleData | undefined, context: IItemLoadContext): IItemModule<TProperties> {
+	if (data !== undefined && data.type !== moduleDefinition.type) {
 		data = undefined;
 	}
 
 	switch (moduleDefinition.type) {
 		case 'typed':
+			data ??= MODULE_TYPES.typed.makeDefaultData(moduleDefinition);
+			Assert(data.type === 'typed');
 			return MODULE_TYPES.typed.loadModule(
 				moduleDefinition,
-				MODULE_TYPES.typed.parseData(
-					moduleDefinition,
-					data,
-					context.assetManager,
-				),
+				data,
 				context,
 			);
 		case 'storage':
+			data ??= MODULE_TYPES.storage.makeDefaultData(moduleDefinition);
+			Assert(data.type === 'storage');
 			return MODULE_TYPES.storage.loadModule(
 				moduleDefinition,
-				MODULE_TYPES.storage.parseData(
-					moduleDefinition,
-					data,
-					context.assetManager,
-				),
+				data,
 				context,
 			);
 		case 'lockSlot':
+			data ??= MODULE_TYPES.lockSlot.makeDefaultData(moduleDefinition);
+			Assert(data.type === 'lockSlot');
 			return MODULE_TYPES.lockSlot.loadModule(
 				moduleDefinition,
-				MODULE_TYPES.lockSlot.parseData(
-					moduleDefinition,
-					data,
-					context.assetManager,
-				),
+				data,
 				context,
 			);
 		default:

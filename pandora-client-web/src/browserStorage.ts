@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import type { ZodType } from 'zod';
+import { useCallback, useMemo } from 'react';
+import type { ZodType, ZodTypeDef } from 'zod';
 import { Observable, useObservable } from './observable';
 
 const BROWSER_STORAGES_LOCAL = new Map<string, BrowserStorage<unknown>>();
@@ -9,7 +9,7 @@ const BROWSER_STORAGES_SESSION = new Map<string, BrowserStorage<unknown>>();
 export class BrowserStorage<T> extends Observable<T> {
 	/** Key used to store the value */
 	public readonly _key;
-	public readonly validate: (value: unknown) => boolean;
+	public readonly validate: ZodType<T, ZodTypeDef, unknown> | ((value: unknown) => boolean);
 	/** Inhibitor of saving to prevent infinite loop */
 	private _saveInhibit: boolean = false;
 
@@ -19,10 +19,10 @@ export class BrowserStorage<T> extends Observable<T> {
 	 * @param validate - Optional callback to validate currently saved value -
 	 * if it returns `false`, then `defaultValue` is used instead of the saved one
 	 */
-	private constructor(storage: Storage, name: string, defaultValue: T, validate: ZodType<T> | ((value: unknown) => boolean)) {
+	private constructor(storage: Storage, name: string, defaultValue: T, validate: ZodType<T, ZodTypeDef, unknown> | ((value: unknown) => boolean)) {
 		super(defaultValue);
 		this._key = name;
-		this.validate = typeof validate === 'function' ? validate : (value) => validate.safeParse(value).success;
+		this.validate = validate;
 		this.setParse(storage.getItem(this._key));
 		this.subscribe((value) => {
 			if (this._saveInhibit)
@@ -38,16 +38,23 @@ export class BrowserStorage<T> extends Observable<T> {
 	public setParse(value: string | null): void {
 		if (value !== null) {
 			const parsedValue = JSON.parse(value) as unknown;
-			if (this.validate(parsedValue)) {
-				const c = this._saveInhibit;
-				this._saveInhibit = true;
-				this.value = parsedValue as T;
-				this._saveInhibit = c;
+			if (typeof this.validate === 'function') {
+				if (this.validate(parsedValue)) {
+					const c = this._saveInhibit;
+					this._saveInhibit = true;
+					this.value = parsedValue as T;
+					this._saveInhibit = c;
+				}
+			} else {
+				const validated = this.validate.safeParse(parsedValue);
+				if (validated.success) {
+					this.value = validated.data;
+				}
 			}
 		}
 	}
 
-	public static create<T>(name: string, defaultValue: T, validate?: ZodType<T> | ((value: unknown) => boolean)): BrowserStorage<T> {
+	public static create<T>(name: string, defaultValue: T, validate?: ZodType<T, ZodTypeDef, unknown> | ((value: unknown) => boolean)): BrowserStorage<T> {
 		name = `pandora.${name}`;
 		let storage = BROWSER_STORAGES_LOCAL.get(name) as BrowserStorage<T> | undefined;
 		if (storage !== undefined) {
@@ -58,7 +65,7 @@ export class BrowserStorage<T> extends Observable<T> {
 		return storage;
 	}
 
-	public static createSession<T>(name: string, defaultValue: T, validate?: ZodType<T> | ((value: unknown) => boolean)): BrowserStorage<T> {
+	public static createSession<T>(name: string, defaultValue: T, validate?: ZodType<T, ZodTypeDef, unknown> | ((value: unknown) => boolean)): BrowserStorage<T> {
 		name = `pandora.${name}`;
 		let storage = BROWSER_STORAGES_SESSION.get(name) as BrowserStorage<T> | undefined;
 		if (storage !== undefined) {
@@ -79,10 +86,19 @@ window.addEventListener('storage', (ev) => {
 	}
 });
 
-export function useBrowserStorage<T>(name: string, defaultValue: T, validate?: ZodType<T> | ((value: unknown) => boolean)): [T, (value: T) => void] {
-	const storage = useMemo(() => BrowserStorage.create(name, defaultValue, validate), [name, defaultValue, validate]);
+export function useBrowserStorage<T>(name: string, defaultValue: T, validate?: ZodType<T, ZodTypeDef, unknown> | ((value: unknown) => boolean)): [T, (value: T) => void] {
+	const storage = useMemo(() => BrowserStorage.create<T>(name, defaultValue, validate), [name, defaultValue, validate]);
 	const value = useObservable(storage);
-	const setValue = useMemo(() => (newValue: T): void => {
+	const setValue = useCallback((newValue: T): void => {
+		storage.value = newValue;
+	}, [storage]);
+	return [value, setValue];
+}
+
+export function useBrowserSessionStorage<T>(name: string, defaultValue: T, validate?: ZodType<T, ZodTypeDef, unknown> | ((value: unknown) => boolean)): [T, (value: T) => void] {
+	const storage = useMemo(() => BrowserStorage.createSession<T>(name, defaultValue, validate), [name, defaultValue, validate]);
+	const value = useObservable(storage);
+	const setValue = useCallback((newValue: T): void => {
 		storage.value = newValue;
 	}, [storage]);
 	return [value, setValue];

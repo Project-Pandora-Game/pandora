@@ -4,22 +4,29 @@ import { AssetSize, AssetSizeMapping } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { ItemInteractionType } from '../../character/restrictionsManager';
 import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemLoadContext, IItemValidationContext, Item, ItemBundleSchema, LoadItemFromBundle } from '../item';
+import { CreateItemBundleFromTemplate, IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemBundleSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item';
 import { AssetManager } from '../assetManager';
 import { ItemId } from '../appearanceTypes';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
-import { Satisfies } from '../../utility';
+import { IsNotNullable, Satisfies } from '../../utility';
+import { Immutable } from 'immer';
 
 export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
 	maxCount: number;
 	maxAcceptedSize: AssetSize;
 }
 
-const ModuleItemDataStorageSchema = z.lazy(() => z.object({
+export const ModuleItemDataStorageSchema = z.object({
 	type: z.literal('storage'),
-	contents: z.array(ItemBundleSchema),
-}));
+	contents: z.array(z.lazy(() => ItemBundleSchema)),
+});
 export type IModuleItemDataStorage = Satisfies<z.infer<typeof ModuleItemDataStorageSchema>, IModuleItemDataCommon<'storage'>>;
+
+export const ModuleItemTemplateStorageSchema = z.object({
+	type: z.literal('storage'),
+	contents: z.array(z.lazy(() => ItemTemplateSchema)),
+});
+export type IModuleItemTemplateStorage = z.infer<typeof ModuleItemTemplateStorageSchema>;
 
 // Never used
 export const ItemModuleStorageActionSchema = z.object({
@@ -28,12 +35,17 @@ export const ItemModuleStorageActionSchema = z.object({
 export type ItemModuleStorageAction = Satisfies<z.infer<typeof ItemModuleStorageActionSchema>, IModuleActionCommon<'storage'>>;
 
 export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'> {
-
-	public parseData(_config: IModuleConfigStorage, data: unknown): IModuleItemDataStorage {
-		const parsed = ModuleItemDataStorageSchema.safeParse(data);
-		return parsed.success ? parsed.data : {
+	public makeDefaultData(_config: IModuleConfigStorage): IModuleItemDataStorage {
+		return {
 			type: 'storage',
 			contents: [],
+		};
+	}
+
+	public makeDataFromTemplate(_config: IModuleConfigStorage, template: IModuleItemTemplateStorage, context: IItemCreationContext): IModuleItemDataStorage {
+		return {
+			type: 'storage',
+			contents: template.contents.map((contentTemplate) => CreateItemBundleFromTemplate(contentTemplate, context)).filter(IsNotNullable),
 		};
 	}
 
@@ -120,6 +132,13 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 		});
 	}
 
+	public exportToTemplate(): IModuleItemTemplateStorage {
+		return {
+			type: 'storage',
+			contents: this.contents.map((item) => item.exportToTemplate()),
+		};
+	}
+
 	public exportData(options: IExportOptions): IModuleItemDataStorage {
 		return {
 			type: 'storage',
@@ -172,7 +191,7 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 			.reduce(AppearanceValidationCombineResults, { success: true });
 	}
 
-	public getProperties(): readonly TProperties[] {
+	public getProperties(): readonly Immutable<TProperties>[] {
 		return [];
 	}
 

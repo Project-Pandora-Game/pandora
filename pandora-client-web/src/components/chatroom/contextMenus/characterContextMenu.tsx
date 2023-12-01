@@ -108,7 +108,7 @@ function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode
 	const confirm = useConfirmDialog();
 
 	const block = useCallback(() => {
-		confirm(`Are you sure you want to ${action} the account behind ${character.data.name} ${ action === 'add' ? 'to' : 'from' } your block list?`)
+		confirm(`Confirm ${ action === 'add' ? 'block' : 'unblock' }`, `Are you sure you want to ${action} the account behind ${character.data.name} ${ action === 'add' ? 'to' : 'from' } your block list?`)
 			.then((result) => {
 				if (result) {
 					directory.sendMessage('blockList', { action, id: character.data.accountId });
@@ -132,7 +132,7 @@ function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | '
 	const confirm = useConfirmDialog();
 
 	const [request] = useAsyncEvent(async () => {
-		if (await confirm(`Are you sure you want to ${action} adding the account behind ${character.data.name} to your contacts list?`)) {
+		if (await confirm('Confirm change', `Are you sure you want to ${action} adding the account behind ${character.data.name} to your contacts list?`)) {
 			return directory.awaitResponse('friendRequest', { action, id: character.data.accountId });
 		}
 		return undefined;
@@ -151,7 +151,7 @@ function UnfriendRequestMenu(): ReactElement {
 	const confirm = useConfirmDialog();
 
 	const [request] = useAsyncEvent(async () => {
-		if (await confirm(`Are you sure you want to remove the account behind ${character.data.name} from your contacts list?`)) {
+		if (await confirm(`Confirm removal`, `Are you sure you want to remove the account behind ${character.data.name} from your contacts list?`)) {
 			return directory.awaitResponse('unfriend', { id: character.data.accountId });
 		}
 		return undefined;

@@ -1,21 +1,24 @@
 import { Immutable } from 'immer';
 import { first } from 'lodash';
-import { z } from 'zod';
+import { ZodTypeDef, z } from 'zod';
 import { Logger } from '../logging';
 import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../utility';
-import { HexRGBAColorString, HexRGBAColorStringSchema } from '../validation';
+import { HexRGBAColorString, HexRGBAColorStringSchema, ZodArrayWithInvalidDrop } from '../validation';
 import type { AppearanceModuleActionContext } from './appearanceActions';
 import { ItemId, ItemIdSchema } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import { Asset } from './asset';
 import { AssetManager } from './assetManager';
-import { AssetColorization, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
-import { ItemModuleAction, LoadItemModule } from './modules';
+import { AssetColorization, AssetId, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
+import { CreateModuleDataFromTemplate, ItemModuleAction, ItemModuleData, ItemModuleDataSchema, ItemModuleTemplate, ItemModuleTemplateSchema, LoadItemModule } from './modules';
 import { IExportOptions, IItemModule } from './modules/common';
 import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 import { CreateRoomDevicePropertiesResult, GetPropertiesForSlot, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from './roomDeviceProperties';
 import { AssetFrameworkRoomState } from './state/roomState';
+import { GameLogicCharacter } from '../gameLogic';
+import { nanoid } from 'nanoid';
+import { LIMIT_OUTFIT_NAME_LENGTH } from '../inputLimits';
 
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
@@ -64,11 +67,33 @@ export const LockBundleSchema = z.object({
 });
 export type LockBundle = z.infer<typeof LockBundleSchema>;
 
-export const ItemBundleSchema = z.object({
+/**
+ * Serializable data bundle containing information about an item.
+ * Used for storing appearance or room data in database and for transferring it to the clients.
+ */
+export type ItemBundle = {
+	id: ItemId;
+	asset: AssetId;
+	color?: ItemColorBundle | HexRGBAColorString[];
+	moduleData?: Record<string, ItemModuleData>;
+	/** Room device specific data */
+	roomDeviceData?: RoomDeviceBundle;
+	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
+	roomDeviceLink?: RoomDeviceLink;
+	/** Lock specific data */
+	lockData?: LockBundle;
+};
+
+/**
+ * Serializable data bundle containing information about an item.
+ * Used for storing appearance or room data in database and for transferring it to the clients.
+ * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
+ */
+export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
-	moduleData: z.record(z.unknown()).optional(),
+	moduleData: z.record(z.lazy(() => ItemModuleDataSchema)).optional(),
 	/** Room device specific data */
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
@@ -76,12 +101,51 @@ export const ItemBundleSchema = z.object({
 	/** Lock specific data */
 	lockData: LockBundleSchema.optional(),
 });
-export type ItemBundle = z.infer<typeof ItemBundleSchema>;
+
+/**
+ * Data describing an item configuration as a template.
+ * Used for creating a new item from the template with matching configuration.
+ */
+export type ItemTemplate = {
+	asset: AssetId;
+	templateName?: string;
+	color?: ItemColorBundle;
+	modules?: Record<string, ItemModuleTemplate>;
+};
+
+/**
+ * Data describing an item configuration as a template.
+ * Used for creating a new item from the template with matching configuration.
+ * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
+ */
+export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = z.object({
+	asset: AssetIdSchema,
+	templateName: z.string().optional(),
+	color: ItemColorBundleSchema.optional(),
+	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
+});
+
+export const AssetFrameworkOutfitSchema = z.object({
+	name: z.string().max(LIMIT_OUTFIT_NAME_LENGTH),
+	items: ZodArrayWithInvalidDrop(ItemTemplateSchema, z.record(z.unknown())),
+});
+export type AssetFrameworkOutfit = z.infer<typeof AssetFrameworkOutfitSchema>;
+
+export const AssetFrameworkOutfitWithIdSchema = AssetFrameworkOutfitSchema.extend({
+	/** Random ID used to keep track of the outfits to avoid having to address them by index */
+	id: z.string(),
+});
+export type AssetFrameworkOutfitWithId = z.infer<typeof AssetFrameworkOutfitWithIdSchema>;
 
 export type IItemLoadContext = {
 	assetManager: AssetManager;
 	doLoadTimeCleanup: boolean;
 	logger?: Logger;
+};
+
+export type IItemCreationContext = {
+	assetManager: AssetManager;
+	creator: GameLogicCharacter;
 };
 
 export type IItemValidationContext = {
@@ -143,6 +207,22 @@ abstract class ItemBase<Type extends AssetType = AssetType> implements ItemBaseP
 	}
 
 	protected abstract withProps(overrideProps: Partial<ItemBaseProps<Type>>): Item<Type>;
+
+	public exportToTemplate(): ItemTemplate {
+		let modules: ItemTemplate['modules'];
+		if (this.getModules().size > 0) {
+			modules = {};
+			for (const [name, module] of this.getModules().entries()) {
+				modules[name] = module.exportToTemplate();
+			}
+		}
+
+		return {
+			asset: this.asset.id,
+			color: this.exportColorToBundle(),
+			modules,
+		};
+	}
 
 	public exportToBundle(options: IExportOptions): ItemBundle {
 		let moduleData: ItemBundle['moduleData'];
@@ -780,6 +860,15 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 		return false;
 	}
 
+	public override exportToTemplate(): ItemTemplate {
+		// Wearable part should create template of the device itself, not the wearable part
+		if (this.roomDevice != null)
+			return this.roomDevice.exportToTemplate();
+
+		// Fallback to creating the template of the wearable part (no one will be able to use it anyway and we avoid errors)
+		return super.exportToTemplate();
+	}
+
 	public override exportToBundle(options: IExportOptions): ItemBundle {
 		return {
 			...super.exportToBundle(options),
@@ -1164,7 +1253,74 @@ export type ItemTypeMap =
 
 export type Item<Type extends AssetType = AssetType> = ItemTypeMap[Type];
 
+export function GenerateRandomItemId(): ItemId {
+	return `i/${nanoid()}`;
+}
+
+export function CreateItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined {
+	const asset = context.assetManager.getAssetById(template.asset);
+	// Fail if the template referrs to asset that is unknown or cannot be spawned by users
+	if (asset == null || !asset.canBeSpawned())
+		return undefined;
+
+	// Build a bundle from the template
+	const bundle: ItemBundle = {
+		id: GenerateRandomItemId(),
+		asset: asset.id,
+		color: template.color,
+	};
+
+	// Load modules
+	if (template.modules != null && (asset.isType('personal') || asset.isType('roomDevice'))) {
+		bundle.moduleData = {};
+		for (const [moduleName, moduleTemplate] of Object.entries(template.modules)) {
+			const moduleConfig = asset.definition.modules?.[moduleName];
+			// Skip unknown modules
+			if (moduleConfig == null)
+				continue;
+
+			// Actually create the module from template
+			const loadedData = CreateModuleDataFromTemplate(moduleConfig, moduleTemplate, context);
+			if (loadedData == null)
+				continue;
+
+			bundle.moduleData[moduleName] = loadedData;
+		}
+	}
+
+	return bundle;
+}
+
+/** Calculates "cost" for storing the outfit (right now it is count of items, including nested ones; or at least 1 for outfit itself) */
+export function OutfitMeasureCost(outfit: AssetFrameworkOutfit): number {
+	return Math.max(1, outfit.items.reduce((p, item) => p + ItemTemplateMeasureCost(item), 0));
+}
+
+/** Calculates "cost" for storing a specific item (right now it is count of items, including nested ones) */
+export function ItemTemplateMeasureCost(template: ItemTemplate): number {
+	let result = 1;
+
+	for (const moduleTemplate of Object.values(template.modules ?? {})) {
+		if (moduleTemplate.type === 'typed') {
+			// No cost for typed modules
+		} else if (moduleTemplate.type === 'storage') {
+			// Measure nested cost for storage
+			result += moduleTemplate.contents.reduce((p, item) => p + ItemTemplateMeasureCost(item), 0);
+		} else if (moduleTemplate.type === 'lockSlot') {
+			// Measure cost for lock if present
+			if (moduleTemplate.lock != null) {
+				result += ItemTemplateMeasureCost(moduleTemplate.lock);
+			}
+		} else {
+			AssertNever(moduleTemplate);
+		}
+	}
+
+	return result;
+}
+
 export function LoadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, context: IItemLoadContext): Item<T> {
+	Assert(asset.id === bundle.asset);
 	const type = asset.type;
 	switch (type) {
 		case 'personal':

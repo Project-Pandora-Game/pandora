@@ -114,7 +114,7 @@ function GraphicsCharacterWithManagerImpl({
 
 			// If this item has any attribute that is hidden, hide it
 			visible &&= !Array.from(item.getProperties().attributes)
-				.some((a) => properties.hides.has(a));
+				.some((a) => properties.attributesHides.has(a));
 
 			// Update known properties
 			properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);

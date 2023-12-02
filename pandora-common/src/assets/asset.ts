@@ -28,14 +28,14 @@ export class Asset<Type extends AssetType = AssetType> {
 
 		const staticAttributes = this.staticAttributes = new Set<string>();
 		if (definition.type === 'personal') {
-			definition.attributes?.forEach((a) => staticAttributes.add(a));
+			definition.attributes?.provides?.forEach((a) => staticAttributes.add(a));
 			for (const module of Object.values(definition.modules ?? {})) {
-				GetModuleStaticAttributes(module, (p) => new Set(p.attributes)).forEach((a) => staticAttributes.add(a));
+				GetModuleStaticAttributes(module, (p) => new Set(p.attributes?.provides)).forEach((a) => staticAttributes.add(a));
 			}
 		} else if (definition.type === 'roomDevice') {
 			definition.staticAttributes?.forEach((a) => staticAttributes.add(a));
 		} else if (definition.type === 'roomDeviceWearablePart') {
-			definition.attributes?.forEach((a) => staticAttributes.add(a));
+			definition.attributes?.provides?.forEach((a) => staticAttributes.add(a));
 		} else if (definition.type === 'lock') {
 			staticAttributes.add('Lock');
 		} else {

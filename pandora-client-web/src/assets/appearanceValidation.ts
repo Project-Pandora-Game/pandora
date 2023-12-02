@@ -1,5 +1,5 @@
 import { AppearanceActionProblem, AssertNever } from 'pandora-common';
-import { DescribeAsset, DescribeAssetSlot } from '../components/chatroom/chatroomMessages';
+import { DescribeAsset, DescribeAttribute } from '../components/chatroom/chatroomMessages';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
@@ -68,8 +68,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 					`[UNKNOWN MODULE '${e.module}']`;
 				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
 			}
-			case 'blockedSlot':
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because ${DescribeAssetSlot(assetManager, e.slot)} is covered by another item.`;
+			case 'covered':
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because any "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'safemodeInteractOther':
@@ -96,12 +96,11 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 			case 'unsatisfiedRequirement': {
 				const negative = e.requirement.startsWith('!');
 				const attributeName = negative ? e.requirement.substring(1) : e.requirement;
-				const attribute = assetManager.getAttributeDefinition(attributeName);
-				const description = attribute ? `"${attribute.description}"` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
+				const description = DescribeAttribute(assetManager, attributeName);
 				if (e.asset) {
-					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} ${description} (${negative ? 'must not' : 'must'} be worn under the ${DescribeAsset(assetManager, e.asset)}).`;
+					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} "${description}" (${negative ? 'must not' : 'must'} be worn under the ${DescribeAsset(assetManager, e.asset)}).`;
 				} else {
-					return `The item ${negative ? 'must not' : 'must'} be ${description}.`;
+					return `The item ${negative ? 'must not' : 'must'} be "${description}".`;
 				}
 			}
 			case 'poseConflict':
@@ -112,10 +111,6 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 					`At most ${e.limit} items can be present.`;
 			case 'contentNotAllowed':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
-			case 'slotFull':
-				return `${DescribeAssetSlot(assetManager, e.slot)} doesn't have enough space to fit ${DescribeAsset(assetManager, e.asset)}.`;
-			case 'slotBlockedOrder':
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot be worn on top of an item that is blocking ${DescribeAssetSlot(assetManager, e.slot)}.`;
 			case 'canOnlyBeInOneDevice':
 				return `Character can only be in a single device at a time.`;
 			case 'invalid':

@@ -846,7 +846,7 @@ export function ActionAppearanceRandomize({
 				.getAllAssets()
 				.filter((a) => a.isType('personal') && a.definition.bodypart != null &&
 					a.definition.allowRandomizerUsage === true &&
-					a.definition.attributes?.includes(requestedBodyAttribute) &&
+					a.definition.attributes?.provides?.includes(requestedBodyAttribute) &&
 					// Skip already present assets
 					!usedAssets.has(a) &&
 					// Skip already present bodyparts that don't allow multiple
@@ -893,7 +893,7 @@ export function ActionAppearanceRandomize({
 			.getAllAssets()
 			.filter(FilterAssetType('personal'))
 			.filter((asset) => asset.definition.bodypart == null &&
-				asset.definition.attributes?.includes(requestedAttribute) &&
+				asset.definition.attributes?.provides?.includes(requestedAttribute) &&
 				asset.definition.allowRandomizerUsage === true &&
 				// Skip already present assets
 				!usedAssets.has(asset),

@@ -6,6 +6,7 @@ import { cloneDeep } from 'lodash';
 import { ChildrenProps } from '../common/reactTypes';
 import { USER_DEBUG } from '../config/Environment';
 import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene';
+import { CalculationQueue } from '../common/calculationQueue';
 
 const SHARED_APP_MAX_COUNT = 2;
 
@@ -244,15 +245,18 @@ interface GraphicsSceneBackgroundRendererProps extends Omit<GraphicsSceneRendere
 	backgroundAlpha?: number;
 }
 
+const backgroundRenderingQueue = new CalculationQueue({
+	normal: 75,
+});
+
 class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'>> {
 	private readonly logger = GetLogger('BackgroundRenderer');
 
-	private _needsUpdate: boolean = true;
+	private _needsUpdate: boolean = false;
 
 	private _canvasRef: HTMLCanvasElement | null = null;
 	private _root: ReactPixiRoot | null = null;
 	private _stage: Container | null = null;
-	private _updateTimer: number | null = null;
 
 	private _app: Application<HTMLCanvasElement> | null = null;
 
@@ -278,7 +282,6 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	public override componentDidMount() {
 		Assert(this._root == null);
 		Assert(this._stage == null);
-		Assert(this._updateTimer == null);
 
 		const { renderArea } = this.props;
 
@@ -299,11 +302,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		this._root.render(this.getChildren());
 
 		this._stage.on('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
-		this._needsUpdate = true;
-
-		this._updateTimer = setInterval(() => {
-			this.renderStage();
-		}, 1000);
+		this.needsRenderUpdate();
 	}
 
 	public override componentDidUpdate(_oldProps: Readonly<Omit<GraphicsSceneBackgroundRendererProps, 'forwardContexts'>>) {
@@ -311,7 +310,6 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 			return;
 		AssertNotNullable(this._stage);
 		AssertNotNullable(this._root);
-		AssertNotNullable(this._updateTimer);
 
 		const { renderArea } = this.props;
 
@@ -329,10 +327,6 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	public override componentWillUnmount() {
 		AssertNotNullable(this._root);
 		AssertNotNullable(this._stage);
-		AssertNotNullable(this._updateTimer);
-
-		clearInterval(this._updateTimer);
-		this._updateTimer = null;
 
 		this._stage.off('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
 
@@ -350,28 +344,35 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	}
 
 	public readonly needsRenderUpdate = () => {
-		this._needsUpdate = true;
+		if (!this._needsUpdate) {
+			this._needsUpdate = true;
+			backgroundRenderingQueue.calculate('normal', this.renderStage);
+		}
 	};
 
 	public readonly renderStage = () => {
-		if (this._needsUpdate && this._stage != null && this._canvasRef != null) {
-			if (!this._mountApp())
-				return;
+		if (!this._needsUpdate)
+			return;
+		this._needsUpdate = false;
 
-			AssertNotNullable(this._app);
-			this._needsUpdate = false;
-
-			this._app.render();
-
-			const outContext = this._canvasRef.getContext('2d');
-			if (outContext) {
-				outContext.clearRect(0, 0, this._canvasRef.width, this._canvasRef.height);
-				outContext.drawImage(this._app.view, 0, 0, this._canvasRef.width, this._canvasRef.height);
-			} else {
-				this.logger.warning('Failed to get output 2d context');
-			}
-			this._unmountApp();
+		// Check if we can render now, otherwise re-queue
+		if (this._stage == null || this._canvasRef == null || !this._mountApp()) {
+			this.needsRenderUpdate();
+			return;
 		}
+
+		AssertNotNullable(this._app);
+
+		this._app.render();
+
+		const outContext = this._canvasRef.getContext('2d');
+		if (outContext) {
+			outContext.clearRect(0, 0, this._canvasRef.width, this._canvasRef.height);
+			outContext.drawImage(this._app.view, 0, 0, this._canvasRef.width, this._canvasRef.height);
+		} else {
+			this.logger.warning('Failed to get output 2d context');
+		}
+		this._unmountApp();
 	};
 
 	private _mountApp(): boolean {

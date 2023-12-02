@@ -99,8 +99,8 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>9. Flexible item layering possibilities</h4>
 			<p>
-				There are no slots in Pandora, so you can relatively freely add items on top of each other, in the order you want.
-				Right now, you can only add one copy of an asset, but in the future we will allow to add countless copies of rope, if that is what you want.
+				Items in Pandora can be ordered (almost) freely - as long as the item's requirements are satisfied, you can combine items in whatever order you want.
+				Right now, you can only add each asset once, but in the future you will be able to add countless layers of rope, if that is what you want.
 			</p>
 			<p>
 				Note on <strong>correct item layering order</strong>:<br />

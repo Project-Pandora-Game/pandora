@@ -69,7 +69,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
 			}
 			case 'covered':
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because any "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;
+				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'safemodeInteractOther':

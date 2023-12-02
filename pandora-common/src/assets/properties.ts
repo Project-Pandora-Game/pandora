@@ -54,6 +54,32 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	};
 
 	/**
+	 * Flags allowing to limit which item's state combinations are valid.
+	 * Flags only operate within a single item, they do not affect other items.
+	 */
+	stateFlags?: {
+		/**
+		 * State flags this state gives.
+		 * @default []
+		 * @example
+		 * ['strap']
+		 */
+		provides?: string[];
+
+		/**
+		 * Flags that this state requires.
+		 *
+		 * Format is a record of <`flag`, `description if not met`>.
+		 * @default {}
+		 * @example
+		 * {
+		 *     strap: 'This option requires a strap to be present.',
+		 * }
+		 */
+		requires?: { [flag: string]: string; };
+	};
+
+	/**
 	 * Prevents this item from being added or removed on anyone, including on oneself
 	 * @default false
 	 */
@@ -135,6 +161,8 @@ export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, p
 
 export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 	attributeRequirements: Set<string | `!${string}`>;
+	stateFlags: Set<string>;
+	stateFlagsRequirements: Map<string, string>;
 	blockAddRemove: boolean;
 	blockSelfAddRemove: boolean;
 	blockModules: Set<string>;
@@ -147,6 +175,8 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 	return {
 		...CreateAssetPropertiesResult(),
 		attributeRequirements: new Set(),
+		stateFlags: new Set(),
+		stateFlagsRequirements: new Map(),
 		blockAddRemove: false,
 		blockSelfAddRemove: false,
 		blockModules: new Set(),
@@ -159,6 +189,14 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualResult, properties: Immutable<AssetProperties>): AssetPropertiesIndividualResult {
 	base = MergeAssetProperties(base, properties);
 	properties.attributes?.requires?.forEach((a) => base.attributeRequirements.add(a));
+
+	properties.stateFlags?.provides?.forEach((a) => base.stateFlags.add(a));
+	// Merge required flags. The requirement reasons are simply concatenated (with a space between)
+	for (const [flag, reason] of Object.entries(properties.stateFlags?.requires ?? {})) {
+		const currentReason = base.stateFlagsRequirements.get(flag);
+		base.stateFlagsRequirements.set(flag, (currentReason ? `${currentReason} ` : '') + reason);
+	}
+
 	base.blockAddRemove ||= properties.blockAddRemove ?? false;
 	base.blockSelfAddRemove ||= properties.blockSelfAddRemove ?? false;
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));

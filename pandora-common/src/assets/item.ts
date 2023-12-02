@@ -301,6 +301,21 @@ abstract class ItemBase<Type extends AssetType = AssetType> implements ItemBaseP
 	}
 
 	public validate(context: IItemValidationContext): AppearanceValidationResult {
+		// Check that the item's internal state is valid
+		const properties = this.getProperties();
+		for (const [flag, reason] of properties.stateFlagsRequirements.entries()) {
+			if (!properties.stateFlags.has(flag)) {
+				return {
+					success: false,
+					error: {
+						problem: 'invalidState',
+						asset: this.asset.id,
+						reason,
+					},
+				};
+			}
+		}
+
 		// Check the asset can actually be worn
 		if (context.location === 'worn' && (!this.isWearable() || (this.isType('personal') && this.asset.definition.wearable === false)))
 			return {

@@ -103,6 +103,13 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 					return `The item ${negative ? 'must not' : 'must'} be "${description}".`;
 				}
 			}
+			case 'invalidState': {
+				if (e.asset) {
+					return `The ${DescribeAsset(assetManager, e.asset)} is in an invalid state:\n${e.reason}`;
+				} else {
+					return e.reason;
+				}
+			}
 			case 'poseConflict':
 				return `This item requires a pose conflicting with the added items.`;
 			case 'tooManyItems':

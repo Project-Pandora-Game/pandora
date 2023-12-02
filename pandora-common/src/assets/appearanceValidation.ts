@@ -22,6 +22,12 @@ export type AppearanceValidationError =
 		requirement: string;
 	}
 	| {
+		// The item's internal state is invalid (e.g. from unsatisfied stateFlags requirements)
+		problem: 'invalidState';
+		asset: AssetId | null;
+		reason: string;
+	}
+	| {
 		// The combination of items doesn't allow for a valid pose
 		problem: 'poseConflict';
 	}

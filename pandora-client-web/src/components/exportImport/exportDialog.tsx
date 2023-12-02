@@ -8,7 +8,6 @@ import { ExportData } from './exportImportUtils';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import './exportDialog.scss';
-import { useCurrentTime } from '../../common/useCurrentTime';
 
 interface ExportDialogProps<T extends ZodType<unknown>> {
 	exportType: string;
@@ -30,8 +29,8 @@ export function ExportDialog<T extends ZodType<unknown>>({
 	closeDialog,
 }: ExportDialogProps<T>): ReactElement {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
-	const [lastCopySuccess, setLastCopySuccess] = useState(0);
-	const now = useCurrentTime(200);
+	const [showCopySuccess, setShowCopySuccess] = useState(false);
+	const showCopyClearTimeout = useRef<number>();
 
 	const validatedExportData = useMemo(() => {
 		const parseResult = dataSchema.safeParse(CloneDeepMutable(data));
@@ -78,7 +77,13 @@ export function ExportDialog<T extends ZodType<unknown>>({
 			try {
 				const successful = document.execCommand('copy');
 				if (successful) {
-					setLastCopySuccess(Date.now());
+					if (showCopyClearTimeout.current != null) {
+						clearTimeout(showCopyClearTimeout.current);
+					}
+					setShowCopySuccess(true);
+					showCopyClearTimeout.current = setTimeout(() => {
+						setShowCopySuccess(false);
+					}, COPY_SUCCESS_COOLDOWN);
 				} else {
 					logger.warning(`Failed to copy text with returned error by execCommand`);
 					toast(`Failed to copy the text, please copy it manually.`, TOAST_OPTIONS_ERROR);
@@ -95,7 +100,13 @@ export function ExportDialog<T extends ZodType<unknown>>({
 		}
 		navigator.clipboard.writeText(exportString)
 			.then(() => {
-				setLastCopySuccess(Date.now());
+				if (showCopyClearTimeout.current != null) {
+					clearTimeout(showCopyClearTimeout.current);
+				}
+				setShowCopySuccess(true);
+				showCopyClearTimeout.current = setTimeout(() => {
+					setShowCopySuccess(false);
+				}, COPY_SUCCESS_COOLDOWN);
 			})
 			.catch((err) => {
 				logger.warning(`Failed to write text with error:`, err);
@@ -120,7 +131,7 @@ export function ExportDialog<T extends ZodType<unknown>>({
 					</Row>
 				</fieldset>
 				<Button onClick={ copyToClipboard }>
-					{ now < (lastCopySuccess + COPY_SUCCESS_COOLDOWN) ? 'Copied!' : 'Copy to clipboard' }
+					{ showCopySuccess ? 'Copied!' : 'Copy to clipboard' }
 				</Button>
 				<textarea
 					ref={ textAreaRef }

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
@@ -229,6 +229,7 @@ function FriendRow({
 }) {
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();
+	const navigate = useNavigate();
 
 	const [unfriend, processing] = useAsyncEvent(async () => {
 		if (await confirm('Confirm removal', `Are you sure you want to remove ${name} from your contacts list?`)) {
@@ -238,6 +239,10 @@ function FriendRow({
 	}, RelationshipChangeHandleResult);
 
 	const message = useGoToDM(id);
+
+	const viewProfile = useCallback(() => {
+		navigate(`/profiles/account/${id}`);
+	}, [navigate, id]);
 
 	return (
 		<tr className={ online ? 'friend online' : 'friend offline' }>
@@ -255,8 +260,11 @@ function FriendRow({
 			<td>{ new Date(time).toLocaleDateString() }</td>
 			<td>
 				<DivContainer direction='row' gap='small'>
-					<Button className='slim' onClick={ message } disabled={ processing }>
+					<Button className='slim' onClick={ message }>
 						Message
+					</Button>
+					<Button className='slim' onClick={ viewProfile }>
+						Profile
 					</Button>
 					<Button className='slim' onClick={ unfriend } disabled={ processing }>
 						Remove

@@ -4,13 +4,13 @@ import * as PIXI from 'pixi.js';
 import { CharacterSize, GetLogger } from 'pandora-common';
 import { Observable, useObservable } from '../../../observable';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { Row } from '../../../components/common/container/container';
 import { clamp } from 'lodash';
 import { Button } from '../../../components/common/button/button';
 import { useEvent } from '../../../common/useEvent';
 import { ImageExporter } from '../../graphics/export/imageExporter';
 import { DownloadAsFile } from '../../../common/downloadHelper';
 import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editorScene';
+import './previewCutter.scss';
 
 type PreviewCutterState = Readonly<{
 	enabled: boolean;
@@ -194,28 +194,28 @@ export function PreviewCutter() {
 			.catch((error) => GetLogger('Editor').error('Error exporting image:', error));
 	});
 	return (
-		<FieldsetToggle legend='Preview Cutter' forceOpen={ state.enabled } onChange={ onChange }>
-			<Row>
+		<FieldsetToggle legend='Preview Cutter' forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
+			<div>
 				<label htmlFor='preview-cutter-x'>X</label>
 				<input id='preview-cutter-x' type='number' value={ state.position.x } onChange={ setX } />
-			</Row>
-			<Row>
+			</div>
+			<div>
 				<label htmlFor='preview-cutter-y'>Y</label>
 				<input id='preview-cutter-y' type='number' value={ state.position.y } onChange={ setY } />
-			</Row>
-			<Row>
+			</div>
+			<div>
 				<label htmlFor='preview-cutter-size'>Size</label>
 				<input id='preview-cutter-size' type='number' value={ state.size } onChange={ setSize } />
-			</Row>
-			<Row>
+			</div>
+			<div>
 				<label htmlFor='preview-cutter-centered'>Centered</label>
 				<input id='preview-cutter-centered' type='checkbox' checked={ state.centered } onChange={ setCentered } />
-			</Row>
-			<Row>
+			</div>
+			<div>
 				<Button onClick={ createPreviewImage }>
 					Create Preview Image
 				</Button>
-			</Row>
+			</div>
 		</FieldsetToggle>
 	);
 }

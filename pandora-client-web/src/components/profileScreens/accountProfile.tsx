@@ -30,6 +30,13 @@ export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactE
 function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo; }): ReactElement {
 	return (
 		<Column className='profileView flex-1' padding='medium' overflowY='auto'>
+			<span className='profileHeader'>
+				Profile of { accountData.displayName }
+				<hr style={ {
+					background: '#000',
+					color: '#000',
+				} } />
+			</span>
 			<Row>
 				<span>Account: { accountData.displayName }</span>
 				{

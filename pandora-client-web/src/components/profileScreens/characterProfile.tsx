@@ -3,6 +3,7 @@ import { CharacterId, ICharacterPublicData, PRONOUNS } from 'pandora-common';
 import { Column } from '../common/container/container';
 import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import { useCharacterDataOptional } from '../../character/character';
+import { GAME_NAME } from '../../config/Environment';
 
 export function CharacterProfile({ characterId }: { characterId: CharacterId; }): ReactElement {
 	const characterData = useCharacterProfileData(characterId);
@@ -31,9 +32,17 @@ function CharacterProfileContent({ characterData }: { characterData: ICharacterP
 
 	return (
 		<Column className='profileView flex-1' padding='medium' overflowY='auto'>
-			<span>Character: { characterData.name }</span>
+			<span className='profileHeader'>
+				Profile of { characterData.name }
+				<hr style={ {
+					background: characterData.settings.labelColor,
+					color: characterData.settings.labelColor,
+				} } />
+			</span>
+			<span>Character name: { characterData.name }</span>
 			<span>Character id: { characterData.id }</span>
 			<span>Pronouns: { pronouns.subjective }/{ pronouns.objective }</span>
+			<span>In { GAME_NAME } since { 'how many?' } days.</span>
 		</Column>
 	);
 }

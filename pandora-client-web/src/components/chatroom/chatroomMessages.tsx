@@ -119,9 +119,9 @@ export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId
 	return asset.definition.name.toLocaleLowerCase();
 }
 
-export function DescribeAssetSlot(assetManager: AssetManagerClient, slot: string): string {
-	const slotDefinition = assetManager.getSlotDefinition(slot);
-	return slotDefinition?.description ?? `[UNKNOWN SLOT '${slot}']`;
+export function DescribeAttribute(assetManager: AssetManagerClient, attributeName: string): string {
+	const attribute = assetManager.getAttributeDefinition(attributeName);
+	return attribute != null ? `${attribute.description}` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
 }
 
 export function RenderChatPart([type, contents]: IChatSegment, index: number, allowLinkInNormal: boolean): ReactElement {

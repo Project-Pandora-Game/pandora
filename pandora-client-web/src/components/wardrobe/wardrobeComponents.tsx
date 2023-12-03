@@ -53,7 +53,7 @@ export function ActionWarning({ problems, parent }: { problems: readonly Appeara
 	}
 
 	return (
-		<HoverElement parent={ parent } className='action-warning'>
+		<HoverElement parent={ parent } className='action-warning display-linebreak'>
 			<ActionWarningContent problems={ problems } />
 		</HoverElement>
 	);

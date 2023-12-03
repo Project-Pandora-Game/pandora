@@ -11,22 +11,73 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	/** The effects this item applies when worn */
 	effects?: Partial<EffectsDefinition>;
 
-	/** Attributes this asset gives */
-	attributes?: (A['attributes'])[];
+	/** Collection of interactions based on attributes */
+	attributes?: {
+		/**
+		 * Attributes this asset gives.
+		 * @default []
+		 * @example
+		 * ['Clothing', 'Clothing_upper']
+		 */
+		provides?: (A['attributes'])[];
+
+		/**
+		 * Requirements needed to wear this item.
+		 * Requirements starting with a `!` signify a conflict (must _not_ have the specified attribute).
+		 *
+		 * Only attributes provided by items __below__ this one in the wear-order count.
+		 * This item's own attributes do _not_ count into requirements.
+		 * @default []
+		 * @example
+		 * ['Mouth_open_wide', '!Mouth_tongue_out']
+		 */
+		requires?: (A['attributes'] | `!${A['attributes']}`)[];
+
+		/**
+		 * Prevents items that have any of the specified attributes from being modified and blocks adding and removing them.
+		 *
+		 * Applies only to items __below__ this one in the wear-order.
+		 * @default []
+		 * @example
+		 * ['Mouth_insert']
+		 */
+		covers?: (A['attributes'])[];
+
+		/**
+		 * Items that have any of these attributes are hidden by this item.
+		 * Applies only to items __below__ this one in the wear-order.
+		 * @default []
+		 * @example
+		 * ['Hair', 'Ears']
+		 */
+		hides?: (A['attributes'])[];
+	};
 
 	/**
-	 * Requirements needed to wear this item.
-	 *
-	 * Attributes provided by items __above__ this one in wear-order don't count.
-	 * This item's own attributes _do_ count into requirements.
+	 * Flags allowing to limit which item's state combinations are valid.
+	 * Flags only operate within a single item, they do not affect other items.
 	 */
-	requirements?: (A['attributes'] | `!${A['attributes']}`)[];
+	stateFlags?: {
+		/**
+		 * State flags this state gives.
+		 * @default []
+		 * @example
+		 * ['strap']
+		 */
+		provides?: string[];
 
-	/**
-	 * Items that have any of these attributes are hidden by this item.
-	 * Applies only to items __bellow__ this one in wear-order.
-	 */
-	hides?: (A['attributes'])[];
+		/**
+		 * Flags that this state requires.
+		 *
+		 * Format is a record of <`flag`, `description if not met`>.
+		 * @default {}
+		 * @example
+		 * {
+		 *     strap: 'This option requires a strap to be present.',
+		 * }
+		 */
+		requires?: { [flag: string]: string; };
+	};
 
 	/**
 	 * Prevents this item from being added or removed on anyone, including on oneself
@@ -51,27 +102,6 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	 * @default []
 	 */
 	blockSelfModules?: string[];
-
-	/**
-	 * Prevents items that use these slots from being present on top of this item
-	 * @default []
-	 */
-	blockSlots?: (A['slots'])[];
-
-	/**
-	 * Prevents items that use these slots and are below this item from being modified
-	 * @default []
-	 */
-	coverSlots?: (A['slots'])[];
-
-	/**
-	 * Unique list of slots this item occupies and or requires to be occupied
-	 * @default {}
-	 *
-	 * { <slot>: <n> } occupies this slot partially, with n being how much of the slot is occupied
-	 *                 n == 0, slot is not occupied but block is still applied
-	 */
-	occupySlots?: Partial<Record<A['slots'], number>>;
 
 	/**
 	 * A unique list of color keys that disable user colorization.
@@ -101,18 +131,12 @@ export interface AssetLockProperties<__satisfies__Placeholder extends AssetDefin
 	blockSelf?: boolean;
 }
 
-export interface AssetSlotResult {
-	occupied: Map<string, number>;
-	covered: Set<string>;
-	blocked: Set<string>;
-}
-
 export interface AssetPropertiesResult {
 	limits: AppearanceLimitTree;
 	effects: EffectsDefinition;
 	attributes: Set<string>;
-	hides: Set<string>;
-	slots: AssetSlotResult;
+	attributesHides: Set<string>;
+	attributesCovers: Set<string>;
 }
 
 export function CreateAssetPropertiesResult(): AssetPropertiesResult {
@@ -120,31 +144,25 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 		limits: new AppearanceLimitTree(),
 		effects: EFFECTS_DEFAULT,
 		attributes: new Set(),
-		hides: new Set(),
-		slots: {
-			occupied: new Map(),
-			covered: new Set(),
-			blocked: new Set(),
-		},
+		attributesHides: new Set(),
+		attributesCovers: new Set(),
 	};
 }
 
 export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: Immutable<AssetProperties>): T {
 	base.limits.merge(properties.poseLimits);
 	base.effects = MergeEffects(base.effects, properties.effects);
-	properties.attributes?.forEach((a) => base.attributes.add(a));
-	properties.hides?.forEach((a) => base.hides.add(a));
-	for (const [slot, amount] of Object.entries(properties.occupySlots ?? {})) {
-		base.slots.occupied.set(slot, (base.slots.occupied.get(slot) ?? 0) + (amount ?? 0));
-	}
-	properties.coverSlots?.forEach((s) => base.slots.covered.add(s));
-	properties.blockSlots?.forEach((s) => base.slots.blocked.add(s));
+	properties.attributes?.provides?.forEach((a) => base.attributes.add(a));
+	properties.attributes?.hides?.forEach((a) => base.attributesHides.add(a));
+	properties.attributes?.covers?.forEach((a) => base.attributesCovers.add(a));
 
 	return base;
 }
 
 export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
-	requirements: Set<string | `!${string}`>;
+	attributeRequirements: Set<string | `!${string}`>;
+	stateFlags: Set<string>;
+	stateFlagsRequirements: Map<string, string>;
 	blockAddRemove: boolean;
 	blockSelfAddRemove: boolean;
 	blockModules: Set<string>;
@@ -156,7 +174,9 @@ export interface AssetPropertiesIndividualResult extends AssetPropertiesResult {
 export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividualResult {
 	return {
 		...CreateAssetPropertiesResult(),
-		requirements: new Set(),
+		attributeRequirements: new Set(),
+		stateFlags: new Set(),
+		stateFlagsRequirements: new Map(),
 		blockAddRemove: false,
 		blockSelfAddRemove: false,
 		blockModules: new Set(),
@@ -168,7 +188,15 @@ export function CreateAssetPropertiesIndividualResult(): AssetPropertiesIndividu
 
 export function MergeAssetPropertiesIndividual(base: AssetPropertiesIndividualResult, properties: Immutable<AssetProperties>): AssetPropertiesIndividualResult {
 	base = MergeAssetProperties(base, properties);
-	properties.requirements?.forEach((a) => base.requirements.add(a));
+	properties.attributes?.requires?.forEach((a) => base.attributeRequirements.add(a));
+
+	properties.stateFlags?.provides?.forEach((a) => base.stateFlags.add(a));
+	// Merge required flags. The requirement reasons are simply concatenated (with a space between)
+	for (const [flag, reason] of Object.entries(properties.stateFlags?.requires ?? {})) {
+		const currentReason = base.stateFlagsRequirements.get(flag);
+		base.stateFlagsRequirements.set(flag, (currentReason ? `${currentReason} ` : '') + reason);
+	}
+
 	base.blockAddRemove ||= properties.blockAddRemove ?? false;
 	base.blockSelfAddRemove ||= properties.blockSelfAddRemove ?? false;
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));

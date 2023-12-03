@@ -3,7 +3,7 @@ import type { Logger } from '../logging';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetSlotDefinition, AssetsPosePresets, AssetType, BackgroundTagDefinition, IChatroomBackgroundInfo } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetsPosePresets, AssetType, BackgroundTagDefinition, IChatroomBackgroundInfo } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { LoadItemFromBundle, Item, ItemBundle, ItemTemplate, CreateItemBundleFromTemplate } from './item';
 import { GameLogicCharacter } from '../gameLogic';
@@ -22,7 +22,6 @@ export class AssetManager {
 	public readonly attributes: ReadonlyMap<string, Readonly<AssetAttributeDefinition>>;
 	public readonly bodyparts: readonly AssetBodyPart[];
 	public readonly randomization: AppearanceRandomizationData;
-	public readonly assetSlots: ReadonlyMap<string, Readonly<AssetSlotDefinition>>;
 
 	public getAllAssets(): Asset[] {
 		return [...this._assets.values()];
@@ -52,10 +51,6 @@ export class AssetManager {
 		return this.attributes.get(attribute);
 	}
 
-	public getSlotDefinition(slot: string): Readonly<AssetSlotDefinition> | undefined {
-		return this.assetSlots.get(slot);
-	}
-
 	/**
 	 * Finds the bone with the given name.
 	 * @param name - name of the bone
@@ -77,7 +72,6 @@ export class AssetManager {
 		// to perform easy "migration" of asset data that might be missing fields
 		const fullData: Immutable<AssetsDefinitionFile> = {
 			assets: {},
-			assetSlots: {},
 			bones: {},
 			posePresets: [],
 			bodyparts: [],
@@ -145,16 +139,6 @@ export class AssetManager {
 		}
 
 		this.attributes = attributes;
-		//#endregion
-
-		//#region Load slots
-		const assetSlots = new Map<string, Readonly<AssetSlotDefinition>>();
-
-		for (const [id, definition] of Object.entries(fullData.assetSlots)) {
-			assetSlots.set(id, definition);
-		}
-
-		this.assetSlots = assetSlots;
 		//#endregion
 
 		//#region Load assets

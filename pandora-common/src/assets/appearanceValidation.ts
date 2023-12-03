@@ -5,7 +5,7 @@ import { FilterAssetType } from './asset';
 import type { AssetManager } from './assetManager';
 import type { AssetId, AssetType, WearableAssetType } from './definitions';
 import type { Item } from './item';
-import { AssetPropertiesResult, AssetSlotResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
+import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 import { AssetFrameworkRoomState } from './state/roomState';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
@@ -22,6 +22,12 @@ export type AppearanceValidationError =
 		requirement: string;
 	}
 	| {
+		// The item's internal state is invalid (e.g. from unsatisfied stateFlags requirements)
+		problem: 'invalidState';
+		asset: AssetId | null;
+		reason: string;
+	}
+	| {
 		// The combination of items doesn't allow for a valid pose
 		problem: 'poseConflict';
 	}
@@ -33,16 +39,6 @@ export type AppearanceValidationError =
 	| {
 		problem: 'contentNotAllowed';
 		asset: AssetId;
-	}
-	| {
-		problem: 'slotBlockedOrder';
-		asset: AssetId;
-		slot: string;
-	}
-	| {
-		problem: 'slotFull';
-		asset: AssetId;
-		slot: string;
 	}
 	| {
 		problem: 'canOnlyBeInOneDevice';
@@ -82,33 +78,6 @@ export function AppearanceItemProperties(items: AppearanceItems): AssetPropertie
 		.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
 }
 
-export function AppearanceValidateSlots(assetManager: AssetManager, item: Item, slots: AssetSlotResult): undefined | AppearanceValidationError {
-	for (const [slot, occupied] of slots.occupied) {
-		if (occupied === 0)
-			continue;
-
-		const capacity = assetManager.assetSlots.get(slot)?.capacity ?? 0;
-		if (capacity < occupied) {
-			return {
-				problem: 'slotFull',
-				slot,
-				asset: item.asset.id,
-			};
-		}
-	}
-	return undefined;
-}
-
-export function AppearanceValidateSlotBlocks(previousSlots: AssetSlotResult, currentSlot: AssetSlotResult, asset: AssetId): undefined | AppearanceValidationError {
-	for (const slot of currentSlot.occupied.keys()) {
-		if (!previousSlots.blocked.has(slot))
-			continue;
-
-		return { problem: 'slotBlockedOrder', slot, asset };
-	}
-	return undefined;
-}
-
 export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, asset: AssetId | null): AppearanceValidationResult {
 	return Array.from(requirements)
 		.map((r): AppearanceValidationResult => {
@@ -125,14 +94,6 @@ export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, 
 			};
 		})
 		.reduce(AppearanceValidationCombineResults, { success: true });
-}
-
-export function AppearanceGetBlockedSlot(slots: AssetSlotResult, blocked: ReadonlySet<string>): string | undefined {
-	for (const slot of slots.occupied.keys()) {
-		if (blocked.has(slot))
-			return slot;
-	}
-	return undefined;
 }
 
 /** Validates items prefix, ignoring required items */
@@ -217,20 +178,13 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 		}
 
 		const properties = item.getProperties();
-		let error = AppearanceValidateSlotBlocks(globalProperties.slots, properties.slots, item.asset.id);
-		if (error)
-			return { success: false, error };
 
-		// Item's attributes count into its own requirements
-		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
-
-		const r = AppearanceValidateRequirements(globalProperties.attributes, properties.requirements, item.asset.id);
+		// Item's attributes don't count into its own requirements
+		const r = AppearanceValidateRequirements(globalProperties.attributes, properties.attributeRequirements, item.asset.id);
 		if (!r.success)
 			return r;
 
-		error = AppearanceValidateSlots(assetManager, item, globalProperties.slots);
-		if (error)
-			return { success: false, error };
+		globalProperties = item.getPropertiesParts().reduce(MergeAssetProperties, globalProperties);
 
 		assetCounts.set(item.asset.id, currentCount + 1);
 	}

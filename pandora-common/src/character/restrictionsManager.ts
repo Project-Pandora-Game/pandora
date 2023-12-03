@@ -7,7 +7,7 @@ import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item, RoomDeviceLink } from '../assets/item';
 import type { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
-import { AppearanceGetBlockedSlot, AppearanceItemProperties } from '../assets/appearanceValidation';
+import { AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
@@ -94,9 +94,9 @@ export type Restriction =
 		self: boolean;
 	}
 	| {
-		type: 'blockedSlot';
+		type: 'covered';
 		asset: AssetId;
-		slot: string;
+		attribute: string;
 	}
 	| {
 		type: 'blockedHands';
@@ -432,14 +432,14 @@ export class CharacterRestrictionsManager {
 				from: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
 				exclude: container.length > 0 ? container[0].item : item.id,
 			});
-			const slot = AppearanceGetBlockedSlot(properties.slots, targetProperties.slots.covered);
-			if (slot) {
+			const coveredAttribute = Array.from(properties.attributes).find((a) => targetProperties.attributesCovers.has(a));
+			if (coveredAttribute != null) {
 				return {
 					allowed: false,
 					restriction: {
-						type: 'blockedSlot',
+						type: 'covered',
 						asset: item.asset.id,
-						slot,
+						attribute: coveredAttribute,
 					},
 				};
 			}

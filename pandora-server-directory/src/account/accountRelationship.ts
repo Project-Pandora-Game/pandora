@@ -99,6 +99,48 @@ export class AccountRelationship {
 		return false;
 	}
 
+	/**
+	 * Checks if this account's profile is visible to the passed account
+	 * @param queryingAccount - The account attempting to access this account's profile
+	 * @returns - If the access should be allowed
+	 */
+	public async profileVisibleTo(queryingAccount: Account): Promise<boolean> {
+		// Player can always see their own profile
+		if (this.account.id === queryingAccount.id)
+			return true;
+
+		// Moderators can see anyone's profile
+		if (queryingAccount.roles.isAuthorized('moderator'))
+			return true;
+
+		await this.load();
+
+		const rel = this.get(queryingAccount.id);
+		// No access if blocked
+		if (rel?.relationship && (rel.relationship.type === 'mutualBlock' || rel.relationship.type === 'oneSidedBlock')) {
+			return false;
+		}
+		// Allow access if friend
+		if (rel?.relationship.type === 'friend') {
+			return true;
+		}
+		// Allow access if both are in the same room with any character
+		for (const char of this.account.characters.values()) {
+			const room = char.loadedCharacter?.room;
+			if (!room)
+				continue;
+			for (const char2 of queryingAccount.characters.values()) {
+				const room2 = char2?.loadedCharacter?.room;
+				if (room.id === room2?.id) {
+					return true;
+				}
+			}
+		}
+
+		// Default: No access
+		return false;
+	}
+
 	@Synchronized
 	public async initiateFriendRequest(id: AccountId): Promise<'ok' | 'accountNotFound' | 'blocked' | 'requestAlreadyExists'> {
 		const existing = this.get(id);

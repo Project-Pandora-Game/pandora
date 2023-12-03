@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId } from 'pandora-common';
+import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId, AccountPublicInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { CharacterInfo } from './character';
 import { ENV } from '../config';
@@ -82,6 +82,17 @@ export class Account {
 			roomOwnershipLimit: this.roomOwnershipLimit,
 			settings: _.cloneDeep(this.data.settings),
 			cryptoKey: this.secure.getCryptoKey(),
+		};
+	}
+
+	/** The info that is visible to public (with some limitations) */
+	public getAccountPublicInfo(): AccountPublicInfo {
+		return {
+			id: this.data.id,
+			// TODO: Allow choosing custom display name instead of always showing a username
+			displayName: this.data.username,
+			created: this.data.created,
+			visibleRoles: uniq(this.data.settings.visibleRoles.filter((role) => this.roles.isAuthorized(role))),
 		};
 	}
 

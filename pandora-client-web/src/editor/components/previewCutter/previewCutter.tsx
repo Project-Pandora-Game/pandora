@@ -23,12 +23,13 @@ type PreviewCutterState = Readonly<{
 const PREVIEW_CUTTER = new Observable<PreviewCutterState>({
 	enabled: false,
 	lineWidth: 2,
-	size: 100,
+	size: 200,
 	centered: true,
 	position: { x: 0, y: 100 },
 });
 
 const PREVIEW_CUTTER_MIN_SIZE = 50;
+const PREVIEW_CUTTER_MAX_SIZE = CharacterSize.HEIGHT / 3 * 4;
 
 export function PreviewCutterRectangle() {
 	const state = useObservable(PREVIEW_CUTTER);
@@ -56,7 +57,7 @@ function PreviewCutterRectangleInner({
 		g
 			.clear()
 			.lineStyle(lineWidth, color, 1)
-			.drawRect(x, y - lineWidth / 2, size, size);
+			.drawRect(x - lineWidth / 2, y - lineWidth / 2, size + lineWidth, size + lineWidth);
 	}, [lineWidth, dragging, x, y, size]);
 	const onPointerDown = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
 		ev.stopPropagation();
@@ -137,10 +138,7 @@ export function PreviewCutter() {
 		};
 	}, []);
 	const setX = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const x = parseInt(ev.target.value, 10);
-		if (x < 0 || x > CharacterSize.WIDTH) {
-			return;
-		}
+		const x = clamp(parseInt(ev.target.value, 10), -state.size, CharacterSize.WIDTH + state.size);
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			position: {
@@ -148,12 +146,9 @@ export function PreviewCutter() {
 				x,
 			},
 		};
-	}, []);
+	}, [state.size]);
 	const setY = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const y = parseInt(ev.target.value, 10);
-		if (y < 0 || y > CharacterSize.HEIGHT) {
-			return;
-		}
+		const y = clamp(parseInt(ev.target.value, 10), -state.size, CharacterSize.HEIGHT + state.size);
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			position: {
@@ -161,12 +156,9 @@ export function PreviewCutter() {
 				y,
 			},
 		};
-	}, []);
+	}, [state.size]);
 	const setSize = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const size = parseInt(ev.target.value, 10);
-		if (size < PREVIEW_CUTTER_MIN_SIZE || size > CharacterSize.HEIGHT) {
-			return;
-		}
+		const size = clamp(parseInt(ev.target.value, 10), PREVIEW_CUTTER_MIN_SIZE, PREVIEW_CUTTER_MAX_SIZE);
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			size,
@@ -197,15 +189,15 @@ export function PreviewCutter() {
 		<FieldsetToggle legend='Preview Cutter' forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
 			<div>
 				<label htmlFor='preview-cutter-x'>X</label>
-				<input id='preview-cutter-x' type='number' value={ state.position.x } onChange={ setX } />
+				<input id='preview-cutter-x' type='number' defaultValue={ state.position.x } onChange={ setX } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-y'>Y</label>
-				<input id='preview-cutter-y' type='number' value={ state.position.y } onChange={ setY } />
+				<input id='preview-cutter-y' type='number' defaultValue={ state.position.y } onChange={ setY } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-size'>Size</label>
-				<input id='preview-cutter-size' type='number' value={ state.size } onChange={ setSize } />
+				<input id='preview-cutter-size' type='number' defaultValue={ state.size } onChange={ setSize } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-centered'>Centered</label>

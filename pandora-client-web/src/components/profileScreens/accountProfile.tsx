@@ -1,7 +1,7 @@
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { AccountId, AccountPublicInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import { Column, Row } from '../common/container/container';
-import { noop } from 'lodash';
+import _, { noop } from 'lodash';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 
 export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactElement {
@@ -34,7 +34,7 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 				<span>Account: { accountData.displayName }</span>
 				{
 					accountData.visibleRoles.length > 0 ? (
-						<span>( { accountData.visibleRoles.join(', ') } )</span>
+						<span>({ accountData.visibleRoles.map((role) => _.startCase(role)).join(', ') })</span>
 					) : null
 				}
 			</Row>

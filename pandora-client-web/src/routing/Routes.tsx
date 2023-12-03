@@ -17,6 +17,7 @@ import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 import { Relationships } from '../components/releationships/relationships';
 import { Wiki } from '../components/wiki/wiki';
+import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
 
 export function PandoraRoutes(): ReactElement {
 	return (
@@ -29,15 +30,24 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/character_select' element={ <RequiresLogin element={ CharacterSelect } /> } />
 			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
+
 			<Route path='/settings' element={ <RequiresLogin element={ Settings } /> } />
+
 			<Route path='/relationships/*' element={ <RequiresLogin element={ Relationships } /> } />
+			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />
+			<Route path='/profiles/character/:characterId' element={ <RequiresLogin element={ CharacterProfileScreenRouter } /> } />
+
 			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
+
+			<Route path='/chatroom' element={ <RequiresCharacter element={ Chatroom } /> } />
 			<Route path='/chatroom_select' element={ <RequiresCharacter element={ ChatroomSelect } /> } />
 			<Route path='/chatroom_create' element={ <RequiresCharacter element={ ChatroomCreate } /> } />
-			<Route path='/chatroom' element={ <RequiresCharacter element={ Chatroom } /> } />
 			<Route path='/chatroom_admin' element={ <RequiresCharacter element={ ChatroomAdmin } /> } />
+
 			<Route path='/wardrobe' element={ <RequiresCharacter element={ WardrobeScreen } /> } />
+
 			<Route path='/management/*' element={ <RequiresLogin element={ DeveloperRoutes } /> } />
+
 			<Route path='/wiki/*' element={ <Wiki /> } />
 		</Routes>
 	);

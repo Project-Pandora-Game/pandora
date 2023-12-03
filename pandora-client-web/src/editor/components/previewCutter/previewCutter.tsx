@@ -1,12 +1,16 @@
 import React from 'react';
 import { Graphics } from '@pixi/react';
 import * as PIXI from 'pixi.js';
-import { CharacterSize } from 'pandora-common';
+import { CharacterSize, GetLogger } from 'pandora-common';
 import { Observable, useObservable } from '../../../observable';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Row } from '../../../components/common/container/container';
 import { clamp } from 'lodash';
 import { Button } from '../../../components/common/button/button';
+import { useEvent } from '../../../common/useEvent';
+import { ImageExporter } from '../../graphics/export/imageExporter';
+import { DownloadAsFile } from '../../../common/downloadHelper';
+import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editorScene';
 
 type PreviewCutterState = Readonly<{
 	enabled: boolean;
@@ -33,6 +37,8 @@ export function PreviewCutterRectangle() {
 	}
 	return <PreviewCutterRectangleInner { ...state } />;
 }
+
+let editorSceneContext: EditorSceneContext | null = null;
 
 function PreviewCutterRectangleInner({
 	lineWidth,
@@ -99,6 +105,14 @@ function PreviewCutterRectangleInner({
 		};
 	}, [size]);
 
+	const context = useEditorSceneContext();
+	React.useEffect(() => {
+		editorSceneContext = context;
+		return () => {
+			editorSceneContext = null;
+		};
+	}, [context]);
+
 	return (
 		<Graphics
 			zIndex={ 0 }
@@ -164,6 +178,21 @@ export function PreviewCutter() {
 			centered: ev.target.checked,
 		};
 	}, []);
+	const createPreviewImage = useEvent(() => {
+		const container = editorSceneContext?.contentRef.current;
+		if (!container) {
+			return;
+		}
+		const exporter = new ImageExporter();
+		exporter.imageCut(container, {
+			x: (state.centered ? ((CharacterSize.WIDTH - state.size) / 2) : state.position.x),
+			y: state.position.y,
+			width: state.size,
+			height: state.size,
+		}, 'png')
+			.then((image) => DownloadAsFile(image, 'preview.png'))
+			.catch((error) => GetLogger('Editor').error('Error exporting image:', error));
+	});
 	return (
 		<FieldsetToggle legend='Preview Cutter' forceOpen={ state.enabled } onChange={ onChange }>
 			<Row>
@@ -183,7 +212,7 @@ export function PreviewCutter() {
 				<input id='preview-cutter-centered' type='checkbox' checked={ state.centered } onChange={ setCentered } />
 			</Row>
 			<Row>
-				<Button>
+				<Button onClick={ createPreviewImage }>
 					Create Preview Image
 				</Button>
 			</Row>

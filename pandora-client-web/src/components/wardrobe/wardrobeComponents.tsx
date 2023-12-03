@@ -185,7 +185,10 @@ export function InventoryAssetPreview({ asset }: {
 }): ReactElement {
 	const assetManager = useAssetManager();
 
-	const iconAttribute = useMemo(() => {
+	const preview = useMemo(() => {
+		if (asset.definition.preview != null)
+			return asset.definition.preview;
+
 		const validAttributes = Array.from(asset.staticAttributes)
 			.map((attributeName) => assetManager.getAttributeDefinition(attributeName))
 			.filter(IsNotNullable)
@@ -197,12 +200,12 @@ export function InventoryAssetPreview({ asset }: {
 		);
 
 		if (filterAttribute)
-			return filterAttribute;
+			return filterAttribute.icon;
 
-		return validAttributes.length > 0 ? validAttributes[0] : undefined;
+		return validAttributes.length > 0 ? validAttributes[0].icon : undefined;
 	}, [asset, assetManager]);
 
-	const icon = useGraphicsUrl(iconAttribute?.icon);
+	const icon = useGraphicsUrl(preview);
 
 	if (icon) {
 		return (

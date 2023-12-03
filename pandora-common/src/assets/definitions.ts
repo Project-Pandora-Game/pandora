@@ -104,6 +104,14 @@ export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefi
 	 * If this item is a bodypart, then and **only** then the size **must** be `'bodypart'`
 	 */
 	size: AssetSize;
+
+	/**
+	 * Preview image inside the wardrobe
+	 *  - `<image path>` if this item has a preview
+	 *  - `null` if this item does not have a preview
+	 *  - `undefined` temporarily until all previews are added
+	 */
+	preview?: string | null;
 }
 
 export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {

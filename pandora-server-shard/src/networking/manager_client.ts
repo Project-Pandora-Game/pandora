@@ -47,6 +47,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatRoomCharacterMove: this.handleChatRoomCharacterMove.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
+			updateCharacterDescription: this.handleUpdateCharacterDescription.bind(this),
 			gamblingAction: this.handleGamblingAction.bind(this),
 			permissionCheck: this.handlePermissionCheck.bind(this),
 			permissionGet: this.handlePermissionGet.bind(this),
@@ -169,6 +170,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		client.character.setPublicSettings(settings);
+	}
+
+	private handleUpdateCharacterDescription({ profileDescription }: IClientShardArgument['updateCharacterDescription'], client: ClientConnection): IClientShardNormalResult['updateCharacterDescription'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		client.character.updateCharacterDescription(profileDescription);
+
+		return { result: 'ok' };
 	}
 
 	private handleGamblingAction(game: IClientShardArgument['gamblingAction'], client: ClientConnection): void {

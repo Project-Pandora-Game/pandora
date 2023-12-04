@@ -88,6 +88,10 @@ export class Character {
 		return this.data.name;
 	}
 
+	public get profileDescription(): string {
+		return this.data.profileDescription;
+	}
+
 	public get accountId(): number {
 		return this.data.accountId;
 	}
@@ -390,10 +394,11 @@ export class Character {
 
 	public getPublicData(): ICharacterPublicData {
 		return {
-			id: this.data.id,
-			accountId: this.data.accountId,
-			name: this.data.name,
-			settings: this.data.settings,
+			id: this.id,
+			accountId: this.accountId,
+			name: this.name,
+			profileDescription: this.profileDescription,
+			settings: this.settings,
 		};
 	}
 
@@ -550,6 +555,10 @@ export class Character {
 			...this.settings,
 			...settings,
 		}, true);
+	}
+
+	public updateCharacterDescription(newDescription: string): void {
+		this.setValue('profileDescription', newDescription, true);
 	}
 
 	private tick(): void {

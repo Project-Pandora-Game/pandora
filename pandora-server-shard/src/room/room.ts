@@ -242,9 +242,10 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public getCharacterData(c: Character): ICharacterRoomData {
 		return {
-			name: c.name,
 			id: c.id,
 			accountId: c.accountId,
+			name: c.name,
+			profileDescription: c.profileDescription,
 			settings: c.settings,
 			position: c.position,
 			isOnline: c.isOnline,

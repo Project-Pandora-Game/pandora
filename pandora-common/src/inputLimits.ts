@@ -43,7 +43,7 @@ export const LIMIT_ITEM_DESCRIPTION_LENGTH = 1_000;
 /** The maximum length of an account profile description */
 export const LIMIT_ACCOUNT_PROFILE_LENGTH = 5_000;
 
-/** The maximum length of a character profile description (not yet implemented) */
+/** The maximum length of a character profile description */
 export const LIMIT_CHARACTER_PROFILE_LENGTH = 10_000;
 
 /** The maximum length of an outfit name */

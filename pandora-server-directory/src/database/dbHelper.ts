@@ -19,6 +19,7 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 		id,
 		accountId,
 		name: info.name,
+		profileDescription: '',
 		created: -1,
 		accessId: nanoid(8),
 		settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),

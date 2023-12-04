@@ -1,10 +1,16 @@
-import React, { ReactElement } from 'react';
-import { CharacterId, ICharacterRoomData, PRONOUNS } from 'pandora-common';
+import React, { ReactElement, useState } from 'react';
+import { AssertNever, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTER_PROFILE_LENGTH, PRONOUNS } from 'pandora-common';
 import { Column, Row } from '../common/container/container';
 import { ChatRoom, useCharacterState, useChatRoomCharacters, useChatroom } from '../gameContext/chatRoomContextProvider';
 import { Character, useCharacterData } from '../../character/character';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
 import { CharacterPreview } from '../wardrobe/wardrobeGraphics';
+import { Scrollable } from '../common/scrollbar/scrollbar';
+import { usePlayer } from '../gameContext/playerContextProvider';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { Button } from '../common/button/button';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
 
 export function CharacterProfile({ characterId }: { characterId: CharacterId; }): ReactElement {
 	const chatroomCharacters = useChatRoomCharacters();
@@ -23,6 +29,7 @@ export function CharacterProfile({ characterId }: { characterId: CharacterId; })
 }
 
 function CharacterProfileContent({ character, chatroom }: { character: Character<ICharacterRoomData>; chatroom: ChatRoom; }): ReactElement {
+	const isPlayer = usePlayer()?.id === character.id;
 	const characterData = useCharacterData(character);
 	const characterState = useCharacterState(chatroom, character.id);
 	const isNarrowScreen = useIsNarrowScreen();
@@ -49,14 +56,90 @@ function CharacterProfileContent({ character, chatroom }: { character: Character
 					</strong>
 					<hr />
 				</span>
-				<span>Character id: <span className='selectable-all'>{ characterData.id }</span></span>
-				<span>Pronouns: { pronouns.subjective }/{ pronouns.objective }</span>
-				<Row alignY='center'>
-					<span>Label color:</span>
-					<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
-					<span className='selectable'>{ characterData.settings.labelColor.toUpperCase() }</span>
-				</Row>
+				<Scrollable className='flex-1' color='dark'>
+					<Column className='profileContent' padding='medium'>
+						<span>Character id: <span className='selectable-all'>{ characterData.id }</span></span>
+						<span>Pronouns: { pronouns.subjective }/{ pronouns.objective }</span>
+						<Row alignY='center'>
+							<span>Label color:</span>
+							<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+							<span className='selectable'>{ characterData.settings.labelColor.toUpperCase() }</span>
+						</Row>
+						<CharacterProfileDescription profileDescription={ characterData.profileDescription } allowEdit={ isPlayer } />
+					</Column>
+				</Scrollable>
 			</Column>
 		</Row>
 	);
 }
+
+function CharacterProfileDescription({ profileDescription, allowEdit }: { profileDescription: string; allowEdit: boolean; }): ReactElement {
+	const [editedDescription, setEditedDescription] = useState<string | null>(null);
+	const shardConnector = useShardConnector();
+
+	if (editedDescription != null && allowEdit) {
+		return (
+			<Column className='flex-1'>
+				<Row alignX='space-between' alignY='end'>
+					<span>Editing the character description ({ editedDescription.trim().length } / { LIMIT_CHARACTER_PROFILE_LENGTH }):</span>
+					<Button
+						slim
+						onClick={ () => {
+							if (editedDescription.trim().length > LIMIT_CHARACTER_PROFILE_LENGTH) {
+								toast(`The description is too long`, TOAST_OPTIONS_WARNING);
+								return;
+							}
+
+							if (shardConnector == null) {
+								toast(`Error saving description:\nNot connected`, TOAST_OPTIONS_ERROR);
+								return;
+							}
+
+							shardConnector.awaitResponse('updateCharacterDescription', { profileDescription: editedDescription.trim() })
+								.then((result) => {
+									if (result.result === 'ok') {
+										setEditedDescription(null);
+										return;
+									}
+									AssertNever(result.result);
+								})
+								.catch((err) => {
+									GetLogger('CharacterProfileDescription').error('Error saving description:', err);
+									toast(`Error saving description`, TOAST_OPTIONS_ERROR);
+								});
+						} }
+					>
+						Save
+					</Button>
+				</Row>
+				<textarea
+					className='flex-1'
+					style={ { resize: 'none' } }
+					value={ editedDescription }
+					onChange={ (ev) => {
+						setEditedDescription(ev.target.value);
+					} }
+				/>
+			</Column>
+		);
+	}
+
+	return (
+		<Column className='flex-1'>
+			<Row alignX='space-between' alignY='end'>
+				<span>Character description:</span>
+				{
+					allowEdit ? (
+						<Button slim onClick={ () => setEditedDescription(profileDescription) }>
+							Edit
+						</Button>
+					) : <span />
+				}
+			</Row>
+			<div className='flex-1 profileDescriptionContent display-linebreak'>
+				{ profileDescription }
+			</div>
+		</Column>
+	);
+}
+

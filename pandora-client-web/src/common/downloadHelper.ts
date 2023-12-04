@@ -1,9 +1,13 @@
+export type DataString = `data:${string}`;
+
 export function DownloadAsFile(content: Blob, filename: string): void;
-export function DownloadAsFile(content: string, filename: string, type?: string): void;
+export function DownloadAsFile(content: DataString, filename: string): void;
+export function DownloadAsFile(content: string, filename: string, type: string): void;
 export function DownloadAsFile(content: string | Blob, filename: string, type?: string): void {
 	let url = '';
 	if (typeof content === 'string') {
-		if (content.startsWith('data:')) {
+		if (!type) {
+			AssertDataString(content);
 			url = content;
 		} else {
 			const blob = new Blob([content], { type });
@@ -19,5 +23,12 @@ export function DownloadAsFile(content: string | Blob, filename: string, type?: 
 	document.body.appendChild(a);
 	a.click();
 	a.remove();
-	URL.revokeObjectURL(url);
+	if (typeof content !== 'string' || type)
+		URL.revokeObjectURL(url);
+}
+
+export function AssertDataString(str: string): asserts str is DataString {
+	if (!str.startsWith('data:')) {
+		throw new Error('Not a data string');
+	}
 }

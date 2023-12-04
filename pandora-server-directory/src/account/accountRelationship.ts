@@ -35,20 +35,21 @@ export class AccountRelationship {
 		if (!this.loaded) {
 			return null;
 		}
-		if (this.account.data.settings.hideOnlineStatus) {
-			return null;
-		}
-		const online = this.account.isOnline();
+		const showStatus = !this.account.data.settings.hideOnlineStatus;
+		const online = showStatus && this.account.isOnline();
 		return {
 			id: this.account.id,
+			labelColor: this.account.data.settings.labelColor,
 			online,
-			characters: !online ? [] : [...this.account.characters.values()]
-				.filter((char) => char.isOnline())
-				.map((char) => ({
-					id: char.id,
-					name: char.data.name,
-					inRoom: char.loadedCharacter?.room?.isPublic ? char.loadedCharacter.room.id : undefined,
-				})),
+			characters: !online ? [] : (
+				[...this.account.characters.values()]
+					.filter((char) => char.isOnline())
+					.map((char) => ({
+						id: char.id,
+						name: char.data.name,
+						inRoom: char.loadedCharacter?.room?.isPublic ? char.loadedCharacter.room.id : undefined,
+					}))
+			),
 		};
 	}
 

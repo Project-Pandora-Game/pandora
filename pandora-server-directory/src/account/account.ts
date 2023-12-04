@@ -205,6 +205,8 @@ export class Account {
 		for (const character of this.characters.values()) {
 			character.onAccountInfoChange();
 		}
+		// Update friends
+		this.relationship.updateStatus();
 	}
 
 	public hasCharacter(id: CharacterId, checkNotConnected?: true): boolean {

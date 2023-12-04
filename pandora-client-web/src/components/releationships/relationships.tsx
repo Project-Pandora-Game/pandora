@@ -169,6 +169,7 @@ function ShowFriends() {
 			return {
 				id: friend.id,
 				name: friend.name,
+				labelColor: (stat?.online ? stat?.labelColor : null) ?? 'transparent', // We hide the label coloring if account is offline, as we can't get it without loading the account from DB
 				time: friend.time,
 				online: stat?.online === true,
 				characters: stat?.characters,
@@ -217,12 +218,14 @@ export function useGoToDM(id: AccountId) {
 function FriendRow({
 	id,
 	name,
+	labelColor,
 	time,
 	online,
 	characters,
 }: {
 	id: AccountId;
 	name: string;
+	labelColor: string;
 	time: number;
 	online: boolean;
 	characters?: IAccountFriendStatus['characters'];
@@ -252,7 +255,14 @@ function FriendRow({
 	return (
 		<tr className={ online ? 'friend online' : 'friend offline' }>
 			<td className='selectable'>{ id }</td>
-			<td className='selectable'>{ name }</td>
+			<td
+				className='selectable'
+				style={ {
+					textShadow: `${labelColor} 1px 1px`,
+				} }
+			>
+				{ name }
+			</td>
 			<td className='status'>
 				<Row className='fill' alignX='center' alignY='center'>
 					<span className='indicator'>

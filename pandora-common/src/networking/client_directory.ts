@@ -4,7 +4,7 @@ import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomId, RoomIdSchema } from '../chatroom/room';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
-import { EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
+import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
@@ -74,6 +74,8 @@ export type IAccountRelationship = {
 export type IAccountFriendStatus = {
 	/** Account id of the friend */
 	id: AccountId;
+	/** The current label color of the account */
+	labelColor: HexColorString;
 	/** If the friend is online */
 	online: boolean;
 	/** List of online characters the friend has */

@@ -4,7 +4,7 @@ import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomId, RoomIdSchema } from '../chatroom/room';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
-import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
+import { EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
@@ -87,6 +87,7 @@ export type IAccountFriendStatus = {
 export const AccountPublicInfoSchema = z.object({
 	id: AccountIdSchema,
 	displayName: z.string(),
+	labelColor: HexColorStringSchema,
 	created: z.number(),
 	visibleRoles: z.array(AccountRoleSchema),
 });

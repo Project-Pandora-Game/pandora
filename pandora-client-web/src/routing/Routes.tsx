@@ -35,7 +35,7 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/relationships/*' element={ <RequiresLogin element={ Relationships } /> } />
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />
-			<Route path='/profiles/character/:characterId' element={ <RequiresLogin element={ CharacterProfileScreenRouter } /> } />
+			<Route path='/profiles/character/:characterId' element={ <RequiresCharacter element={ CharacterProfileScreenRouter } /> } />
 
 			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
 

@@ -1,5 +1,5 @@
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { AccountId, AccountPublicInfo, IClientDirectoryNormalResult } from 'pandora-common';
+import { AccountId, AccountPublicInfo, AccountRoleSchema, IClientDirectoryNormalResult } from 'pandora-common';
 import { Column, Row } from '../common/container/container';
 import _, { noop } from 'lodash';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
@@ -18,8 +18,8 @@ export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactE
 	if (accountData == null) {
 		return (
 			<Column className='profileView flex-1' alignX='center' alignY='center'>
-				<span>Failed to load account data.</span>
-				<span>Either the account doesn't exist or you don't have permission to view their profile.</span>
+				<strong>Failed to load account data</strong>
+				<span>The account doesn't exist or you don't have permission to view its profile.</span>
 			</Column>
 		);
 	}
@@ -31,22 +31,37 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 	return (
 		<Column className='profileView flex-1' padding='medium' overflowY='auto'>
 			<span className='profileHeader'>
-				Profile of { accountData.displayName }
-				<hr style={ {
-					background: '#000',
-					color: '#000',
-				} } />
+				Profile of user&nbsp;
+				<strong
+					className='selectable'
+					style={ {
+						textShadow: `${accountData.labelColor} 1px 2px`,
+					} }
+				>
+					{ accountData.displayName }
+				</strong>
+				<hr />
 			</span>
-			<Row>
-				<span>Account: { accountData.displayName }</span>
+			<span>
+				Titles:&nbsp;
 				{
 					accountData.visibleRoles.length > 0 ? (
-						<span>({ accountData.visibleRoles.map((role) => _.startCase(role)).join(', ') })</span>
-					) : null
+						AccountRoleSchema.options
+							.filter((role) => accountData.visibleRoles.includes(role))
+							.map((role) => _.startCase(role))
+							.join(', ')
+					) : (
+						<i>None</i>
+					)
 				}
-			</Row>
-			<span>Account id: { accountData.id }</span>
+			</span>
+			<span>Account id: <span className='selectable-all'>{ accountData.id }</span></span>
 			<span>Member since: { new Date(accountData.created).toLocaleDateString() }</span>
+			<Row alignY='center'>
+				<span>Label color:</span>
+				<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
+				<span className='selectable'>{ accountData.labelColor.toUpperCase() }</span>
+			</Row>
 		</Column>
 	);
 }

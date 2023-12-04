@@ -91,6 +91,7 @@ export class Account {
 			id: this.data.id,
 			// TODO: Allow choosing custom display name instead of always showing a username
 			displayName: this.data.username,
+			labelColor: this.data.settings.labelColor,
 			created: this.data.created,
 			visibleRoles: uniq(this.data.settings.visibleRoles.filter((role) => this.roles.isAuthorized(role))),
 		};

@@ -1,22 +1,17 @@
 import React, { ReactElement } from 'react';
-import { CharacterId, ICharacterPublicData, PRONOUNS } from 'pandora-common';
-import { Column } from '../common/container/container';
-import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
-import { useCharacterDataOptional } from '../../character/character';
-import { GAME_NAME } from '../../config/Environment';
+import { CharacterId, ICharacterRoomData, PRONOUNS } from 'pandora-common';
+import { Column, Row } from '../common/container/container';
+import { ChatRoom, useCharacterState, useChatRoomCharacters, useChatroom } from '../gameContext/chatRoomContextProvider';
+import { Character, useCharacterData } from '../../character/character';
+import { useIsNarrowScreen } from '../../styles/mediaQueries';
+import { CharacterPreview } from '../wardrobe/wardrobeGraphics';
 
 export function CharacterProfile({ characterId }: { characterId: CharacterId; }): ReactElement {
-	const characterData = useCharacterProfileData(characterId);
+	const chatroomCharacters = useChatRoomCharacters();
+	const character = chatroomCharacters?.find((c) => c.id === characterId);
+	const chatroom = useChatroom();
 
-	if (characterData === undefined) {
-		return (
-			<Column className='profileView flex-1' alignX='center' alignY='center'>
-				Loading...
-			</Column>
-		);
-	}
-
-	if (characterData == null) {
+	if (character == null || chatroom == null) {
 		return (
 			<Column className='profileView flex-1' alignX='center' alignY='center'>
 				Failed to load character data.
@@ -24,37 +19,44 @@ export function CharacterProfile({ characterId }: { characterId: CharacterId; })
 		);
 	}
 
-	return <CharacterProfileContent characterData={ characterData } />;
+	return <CharacterProfileContent character={ character } chatroom={ chatroom } />;
 }
 
-function CharacterProfileContent({ characterData }: { characterData: ICharacterPublicData; }): ReactElement {
+function CharacterProfileContent({ character, chatroom }: { character: Character<ICharacterRoomData>; chatroom: ChatRoom; }): ReactElement {
+	const characterData = useCharacterData(character);
+	const characterState = useCharacterState(chatroom, character.id);
+	const isNarrowScreen = useIsNarrowScreen();
+
 	const pronouns = PRONOUNS[characterData.settings.pronoun];
 
 	return (
-		<Column className='profileView flex-1' padding='medium' overflowY='auto'>
-			<span className='profileHeader'>
-				Profile of { characterData.name }
-				<hr style={ {
-					background: characterData.settings.labelColor,
-					color: characterData.settings.labelColor,
-				} } />
-			</span>
-			<span>Character name: { characterData.name }</span>
-			<span>Character id: { characterData.id }</span>
-			<span>Pronouns: { pronouns.subjective }/{ pronouns.objective }</span>
-			<span>In { GAME_NAME } since { 'how many?' } days.</span>
-		</Column>
+		<Row className='profileView flex-1' padding='medium' gap='large' overflowY='hidden'>
+			{
+				characterState != null && !isNarrowScreen ? (
+					<CharacterPreview character={ character } characterState={ characterState } />
+				) : null
+			}
+			<Column className='flex-1' overflowY='auto'>
+				<span className='profileHeader'>
+					Profile of character&nbsp;
+					<strong
+						className='selectable'
+						style={ {
+							textShadow: `${characterData.settings.labelColor} 1px 2px`,
+						} }
+					>
+						{ characterData.name }
+					</strong>
+					<hr />
+				</span>
+				<span>Character id: <span className='selectable-all'>{ characterData.id }</span></span>
+				<span>Pronouns: { pronouns.subjective }/{ pronouns.objective }</span>
+				<Row alignY='center'>
+					<span>Label color:</span>
+					<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+					<span className='selectable'>{ characterData.settings.labelColor.toUpperCase() }</span>
+				</Row>
+			</Column>
+		</Row>
 	);
-}
-
-/**
- * Queries data about a character.
- * @param characterId - The character to query for
- * @returns The character data, `null` if unable to get, `undefined` if in progress
- */
-function useCharacterProfileData(characterId: CharacterId): ICharacterPublicData | null | undefined {
-	const chatroomCharacters = useChatRoomCharacters();
-	const character = chatroomCharacters?.find((c) => c.id === characterId);
-
-	return useCharacterDataOptional(character ?? null);
 }

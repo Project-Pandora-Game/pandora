@@ -7,13 +7,38 @@
 
 .profileView {
 	border: 2px solid black;
-}
 
-.profileHeader {
-	font-size: 1.8em;
+	.profileHeader {
+		font-size: 1.8em;
 
-	hr {
-		border: none;
-		height: 8px;
+		hr {
+			height: 2px;
+			width: 100%;
+			background-color: black;
+		}
+	}
+
+	.labelColorMark {
+		display: inline-block;
+		width: 1em;
+		height: 1em;
+		border: solid black 2px;
+		border-radius: 50%;
+	}
+
+	.characterPreview {
+		height: 100%;
+		width: max(min(20em, 90vw), 33vw);
+		flex-shrink: 0;
+		overflow: hidden;
+
+		&.disabled {
+			display: none;
+		}
+
+		canvas {
+			height: 100%;
+			width: 100%;
+		}
 	}
 }

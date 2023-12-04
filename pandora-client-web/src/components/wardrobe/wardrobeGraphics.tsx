@@ -4,7 +4,7 @@ import {
 	IChatroomBackgroundData,
 	ResolveBackground,
 } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import React, { ReactElement, ReactNode, useMemo } from 'react';
 import { IChatroomCharacter } from '../../character/character';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { Button } from '../common/button/button';
@@ -24,29 +24,11 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 	characterState: AssetFrameworkCharacterState;
 	isPreview?: boolean;
 }): ReactElement {
-	const roomInfo = useChatRoomInfo();
-	const assetManager = useAssetManager();
-	const accountSettings = useCurrentAccountSettings();
-
-	const roomBackground = useMemo((): Readonly<IChatroomBackgroundData> | null => {
-		if (roomInfo && accountSettings.wardrobeUseRoomBackground) {
-			return ResolveBackground(assetManager, roomInfo.background);
-		}
-		return null;
-	}, [assetManager, roomInfo, accountSettings]);
-
-	const wardrobeBackground: number = Number.parseInt(accountSettings.wardrobeBackground.substring(1, 7), 16);
-
 	const [onClick, processing] = useAppearanceActionEvent({
 		type: 'setView',
 		target: character.id,
 		view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
 	});
-
-	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
-		forwardContexts: [directoryConnectorContext, shardConnectorContext],
-		backgroundColor: roomBackground ? 0x000000 : wardrobeBackground,
-	}), [roomBackground, wardrobeBackground]);
 
 	const overlay = (
 		<Row gap='medium' padding='medium' className='overlay pointer-events-disable'>
@@ -69,6 +51,38 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 			</Row>
 		</Row>
 	);
+
+	return (
+		<CharacterPreview
+			character={ character }
+			characterState={ characterState }
+			overlay={ overlay }
+		/>
+	);
+}
+
+export function CharacterPreview({ character, characterState, overlay }: {
+	character: IChatroomCharacter;
+	characterState: AssetFrameworkCharacterState;
+	overlay?: ReactNode;
+}): ReactElement {
+	const roomInfo = useChatRoomInfo();
+	const assetManager = useAssetManager();
+	const accountSettings = useCurrentAccountSettings();
+
+	const roomBackground = useMemo((): Readonly<IChatroomBackgroundData> | null => {
+		if (roomInfo && accountSettings.wardrobeUseRoomBackground) {
+			return ResolveBackground(assetManager, roomInfo.background);
+		}
+		return null;
+	}, [assetManager, roomInfo, accountSettings]);
+
+	const wardrobeBackground: number = Number.parseInt(accountSettings.wardrobeBackground.substring(1, 7), 16);
+
+	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
+		forwardContexts: [directoryConnectorContext, shardConnectorContext],
+		backgroundColor: roomBackground ? 0x000000 : wardrobeBackground,
+	}), [roomBackground, wardrobeBackground]);
 
 	const { pivot } = useChatRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(character.isPlayer());

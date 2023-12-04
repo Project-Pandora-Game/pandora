@@ -30,6 +30,7 @@ const PREVIEW_CUTTER = new Observable<PreviewCutterState>({
 
 const PREVIEW_CUTTER_MIN_SIZE = 50;
 const PREVIEW_CUTTER_MAX_SIZE = CharacterSize.HEIGHT / 3 * 4;
+const PREVIEW_CUTTER_OUTPUT_SIZE = 256;
 
 export function PreviewCutterRectangle() {
 	const state = useObservable(PREVIEW_CUTTER);
@@ -176,12 +177,19 @@ export function PreviewCutter() {
 			return;
 		}
 		const exporter = new ImageExporter();
-		exporter.imageCut(container, {
-			x: (state.centered ? ((CharacterSize.WIDTH - state.size) / 2) : state.position.x),
-			y: state.position.y,
-			width: state.size,
-			height: state.size,
-		}, 'png')
+		exporter.imageCut(
+			container,
+			{
+				x: (state.centered ? ((CharacterSize.WIDTH - state.size) / 2) : state.position.x),
+				y: state.position.y,
+				width: state.size,
+				height: state.size,
+			},
+			'png',
+			{
+				width: PREVIEW_CUTTER_OUTPUT_SIZE,
+				height: PREVIEW_CUTTER_OUTPUT_SIZE,
+			})
 			.then((image) => DownloadAsFile(image, 'preview.png'))
 			.catch((error) => GetLogger('Editor').error('Error exporting image:', error));
 	});
@@ -189,15 +197,15 @@ export function PreviewCutter() {
 		<FieldsetToggle legend='Preview Cutter' forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
 			<div>
 				<label htmlFor='preview-cutter-x'>X</label>
-				<input id='preview-cutter-x' type='number' defaultValue={ state.position.x } onChange={ setX } />
+				<input id='preview-cutter-x' type='number' value={ state.position.x } onChange={ setX } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-y'>Y</label>
-				<input id='preview-cutter-y' type='number' defaultValue={ state.position.y } onChange={ setY } />
+				<input id='preview-cutter-y' type='number' value={ state.position.y } onChange={ setY } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-size'>Size</label>
-				<input id='preview-cutter-size' type='number' defaultValue={ state.size } onChange={ setSize } />
+				<input id='preview-cutter-size' type='number' value={ state.size } onChange={ setSize } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-centered'>Centered</label>

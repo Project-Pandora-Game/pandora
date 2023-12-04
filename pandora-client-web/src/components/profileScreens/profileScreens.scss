@@ -1,3 +1,5 @@
+@import '../../styles/common';
+
 .profileScreen {
 	display: flex;
 	padding: 0.5em !important;
@@ -16,6 +18,10 @@
 			width: 100%;
 			background-color: black;
 		}
+	}
+
+	.profileContent {
+		min-height: 100%;
 	}
 
 	.labelColorMark {
@@ -40,5 +46,11 @@
 			height: 100%;
 			width: 100%;
 		}
+	}
+
+	.profileDescriptionContent {
+		background-color: $grey-lightest;
+		padding: 0.5em;
+		border: 1px solid black;
 	}
 }

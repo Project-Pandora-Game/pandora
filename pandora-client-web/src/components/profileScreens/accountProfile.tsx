@@ -1,8 +1,12 @@
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { AccountId, AccountPublicInfo, AccountRoleSchema, IClientDirectoryNormalResult } from 'pandora-common';
+import { AccountId, AccountPublicInfo, AccountRoleSchema, AssertNever, GetLogger, IClientDirectoryNormalResult, LIMIT_ACCOUNT_PROFILE_LENGTH } from 'pandora-common';
 import { Column, Row } from '../common/container/container';
 import _, { noop } from 'lodash';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { Button } from '../common/button/button';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
+import { Scrollable } from '../common/scrollbar/scrollbar';
 
 export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactElement {
 	const accountData = useAccountProfileData(accountId);
@@ -28,6 +32,8 @@ export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactE
 }
 
 function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo; }): ReactElement {
+	const isPlayer = useCurrentAccount()?.id === accountData.id;
+
 	return (
 		<Column className='profileView flex-1' padding='medium' overflowY='auto'>
 			<span className='profileHeader'>
@@ -42,26 +48,97 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 				</strong>
 				<hr />
 			</span>
-			<span>
-				Titles:&nbsp;
+			<Scrollable className='flex-1' color='dark'>
+				<Column className='profileContent' padding='medium'>
+					<span>
+						Titles:&nbsp;
+						{
+							accountData.visibleRoles.length > 0 ? (
+								AccountRoleSchema.options
+									.filter((role) => accountData.visibleRoles.includes(role))
+									.map((role) => _.startCase(role))
+									.join(', ')
+							) : (
+								<i>None</i>
+							)
+						}
+					</span>
+					<span>Account id: <span className='selectable-all'>{ accountData.id }</span></span>
+					<span>Member since: { new Date(accountData.created).toLocaleDateString() }</span>
+					<Row alignY='center'>
+						<span>Label color:</span>
+						<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
+						<span className='selectable'>{ accountData.labelColor.toUpperCase() }</span>
+					</Row>
+					<AccountProfileDescription profileDescription={ accountData.profileDescription } allowEdit={ isPlayer } />
+				</Column>
+			</Scrollable>
+		</Column>
+	);
+}
+
+function AccountProfileDescription({ profileDescription, allowEdit }: { profileDescription: string; allowEdit: boolean; }): ReactElement {
+	const [editMode, setEditMode] = useState(false);
+	const [editedDescription, setEditedDescription] = useState(profileDescription);
+	const directoryConnector = useDirectoryConnector();
+
+	if (editMode && allowEdit) {
+		return (
+			<Column className='flex-1'>
+				<Row alignX='space-between' alignY='end'>
+					<span>Editing the profile description ({ editedDescription.trim().length } / { LIMIT_ACCOUNT_PROFILE_LENGTH }):</span>
+					<Button
+						slim
+						onClick={ () => {
+							if (editedDescription.trim().length > LIMIT_ACCOUNT_PROFILE_LENGTH) {
+								toast(`The description is too long`, TOAST_OPTIONS_WARNING);
+								return;
+							}
+
+							directoryConnector.awaitResponse('updateProfileDescription', { profileDescription: editedDescription.trim() })
+								.then((result) => {
+									if (result.result === 'ok') {
+										setEditMode(false);
+										return;
+									}
+									AssertNever(result.result);
+								})
+								.catch((err) => {
+									GetLogger('AccountProfileDescription').error('Error saving description:', err);
+									toast(`Error saving description`, TOAST_OPTIONS_ERROR);
+								});
+						} }
+					>
+						Save
+					</Button>
+				</Row>
+				<textarea
+					className='flex-1'
+					style={ { resize: 'none' } }
+					value={ editedDescription }
+					onChange={ (ev) => {
+						setEditedDescription(ev.target.value);
+					} }
+				/>
+			</Column>
+		);
+	}
+
+	return (
+		<Column className='flex-1'>
+			<Row alignX='space-between' alignY='end'>
+				<span>Profile description:</span>
 				{
-					accountData.visibleRoles.length > 0 ? (
-						AccountRoleSchema.options
-							.filter((role) => accountData.visibleRoles.includes(role))
-							.map((role) => _.startCase(role))
-							.join(', ')
-					) : (
-						<i>None</i>
-					)
+					allowEdit ? (
+						<Button slim onClick={ () => setEditMode(true) }>
+							Edit
+						</Button>
+					) : <span />
 				}
-			</span>
-			<span>Account id: <span className='selectable-all'>{ accountData.id }</span></span>
-			<span>Member since: { new Date(accountData.created).toLocaleDateString() }</span>
-			<Row alignY='center'>
-				<span>Label color:</span>
-				<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
-				<span className='selectable'>{ accountData.labelColor.toUpperCase() }</span>
 			</Row>
+			<div className='flex-1 profileDescriptionContent display-linebreak'>
+				{ editedDescription.trim() }
+			</div>
 		</Column>
 	);
 }

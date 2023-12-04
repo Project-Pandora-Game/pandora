@@ -60,6 +60,7 @@ export const DatabaseAccountSchema = z.object({
 	id: AccountIdSchema,
 	created: z.number(),
 	roles: ZodCast<IAccountRoleManageInfo>().optional(),
+	profileDescription: z.string().default(''),
 	characters: ZodCast<ICharacterSelfInfoDb>().array(),
 	settings: DirectoryAccountSettingsSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_DEFAULT)),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
@@ -70,6 +71,7 @@ export type DatabaseAccount = z.infer<typeof DatabaseAccountSchema>;
 
 export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 	'roles',
+	'profileDescription',
 	'characters',
 	'settings',
 	'directMessages',

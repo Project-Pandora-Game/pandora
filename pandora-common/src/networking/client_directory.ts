@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
 import { AssetFrameworkOutfitWithIdSchema } from '../assets';
+import { LIMIT_ACCOUNT_PROFILE_LENGTH } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../account/accountRoles';
@@ -92,6 +93,7 @@ export const AccountPublicInfoSchema = z.object({
 	labelColor: HexColorStringSchema,
 	created: z.number(),
 	visibleRoles: z.array(AccountRoleSchema),
+	profileDescription: z.string(),
 });
 export type AccountPublicInfo = z.infer<typeof AccountPublicInfoSchema>;
 
@@ -201,6 +203,14 @@ export const ClientDirectorySchema = {
 				result: z.literal('notFoundOrNoAccess'),
 			}),
 		]),
+	},
+	updateProfileDescription: {
+		request: z.object({
+			profileDescription: z.string().max(LIMIT_ACCOUNT_PROFILE_LENGTH),
+		}),
+		response: z.object({
+			result: z.literal('ok'),
+		}),
 	},
 
 	//#region Character management

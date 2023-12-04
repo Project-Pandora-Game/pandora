@@ -90,6 +90,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 			getRelationships: this.handleGetRelationships.bind(this),
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
+			updateProfileDescription: this.handleUpdateProfileDescription.bind(this),
 
 			// Character management
 			listCharacters: this.handleListCharacters.bind(this),
@@ -690,6 +691,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 			info: target.getAccountPublicInfo(),
 		};
+	}
+
+	private async handleUpdateProfileDescription({ profileDescription }: IClientDirectoryArgument['updateProfileDescription'], connection: ClientConnection): IClientDirectoryPromiseResult['updateProfileDescription'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		await connection.account.updateProfileDescription(profileDescription);
+
+		return { result: 'ok' };
 	}
 
 	private async handleFriendRequest({ id, action }: IClientDirectoryArgument['friendRequest'], connection: ClientConnection): IClientDirectoryPromiseResult['friendRequest'] {

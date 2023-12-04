@@ -1,16 +1,16 @@
 import React, { ReactElement } from 'react';
 import { AccountId, CharacterId, CharacterIdSchema } from 'pandora-common';
-import { useNavigate, useParams } from 'react-router';
+import { useParams } from 'react-router';
 import { Column } from '../common/container/container';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { CharacterProfile } from './characterProfile';
 import { AccountProfile } from './accountProfile';
 import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
-import { Link } from 'react-router-dom';
 import './profileScreens.scss';
+import { BackLink, useNavigateBack } from '../common/link/back';
 
 function CharacterProfileScreen({ characterId }: { characterId: CharacterId; }): ReactElement {
-	const navigate = useNavigate();
+	const navigateBack = useNavigateBack();
 
 	const chatroomCharacters = useChatRoomCharacters();
 	const character = chatroomCharacters?.find((c) => c.id === characterId);
@@ -19,7 +19,7 @@ function CharacterProfileScreen({ characterId }: { characterId: CharacterId; }):
 		return (
 			<Column alignX='center' alignY='center'>
 				<Column>
-					<Link to='/'>◄ Back</Link>
+					<BackLink>◄ Back</BackLink>
 					<span>
 						Character not found (character must be in the same room to view the profile).
 					</span>
@@ -37,14 +37,14 @@ function CharacterProfileScreen({ characterId }: { characterId: CharacterId; }):
 				<Tab name='Account'>
 					<AccountProfile accountId={ character.data.accountId } />
 				</Tab>
-				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
+				<Tab name='◄ Back' tabClassName='slim' onClick={ navigateBack } />
 			</TabContainer>
 		</div>
 	);
 }
 
 function AccountProfileScreen({ accountId }: { accountId: AccountId; }): ReactElement {
-	const navigate = useNavigate();
+	const navigateBack = useNavigateBack();
 
 	return (
 		<div className='profileScreen'>
@@ -52,7 +52,7 @@ function AccountProfileScreen({ accountId }: { accountId: AccountId; }): ReactEl
 				<Tab name='Account'>
 					<AccountProfile accountId={ accountId } />
 				</Tab>
-				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
+				<Tab name='◄ Back' tabClassName='slim' onClick={ navigateBack } />
 			</TabContainer>
 		</div>
 	);
@@ -67,7 +67,7 @@ export function CharacterProfileScreenRouter(): ReactElement {
 		return (
 			<Column alignX='center' alignY='center'>
 				<Column>
-					<Link to='/'>◄ Back</Link>
+					<BackLink>◄ Back</BackLink>
 					<span>
 						Invalid character id.
 					</span>
@@ -92,7 +92,7 @@ export function AccountProfileScreenRouter(): ReactElement {
 		return (
 			<Column alignX='center' alignY='center'>
 				<Column>
-					<Link to='/'>◄ Back</Link>
+					<BackLink>◄ Back</BackLink>
 					<span>
 						Invalid account id.
 					</span>

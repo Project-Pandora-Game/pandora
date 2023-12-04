@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
@@ -230,6 +230,7 @@ function FriendRow({
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	const [unfriend, processing] = useAsyncEvent(async () => {
 		if (await confirm('Confirm removal', `Are you sure you want to remove ${name} from your contacts list?`)) {
@@ -241,8 +242,12 @@ function FriendRow({
 	const message = useGoToDM(id);
 
 	const viewProfile = useCallback(() => {
-		navigate(`/profiles/account/${id}`);
-	}, [navigate, id]);
+		navigate(`/profiles/account/${id}`, {
+			state: {
+				back: location.pathname,
+			},
+		});
+	}, [navigate, id, location.pathname]);
 
 	return (
 		<tr className={ online ? 'friend online' : 'friend offline' }>

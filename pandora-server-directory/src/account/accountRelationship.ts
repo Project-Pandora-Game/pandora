@@ -5,6 +5,7 @@ import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
 import { DatabaseAccountRelationship, DatabaseRelationship } from '../database/databaseStructure';
+import { Room } from '../room/room';
 
 const GLOBAL_LOCK = new AsyncLock();
 
@@ -76,27 +77,24 @@ export class AccountRelationship {
 	public async canReceiveDM(from: Account): Promise<boolean> {
 		await this.load();
 		const rel = this.get(from.id);
-		if (rel?.relationship && (rel.relationship.type === 'mutualBlock' || rel.relationship.type === 'oneSidedBlock')) {
+
+		// No access if blocked
+		if (rel?.relationship && (rel.relationship.type === 'mutualBlock' || rel.relationship.type === 'oneSidedBlock'))
 			return false;
-		}
-		if (this.account.data.settings.allowDirectMessagesFrom === 'all') {
+
+		// If allowing all, allow
+		if (this.account.data.settings.allowDirectMessagesFrom === 'all')
 			return true;
-		}
-		if (rel?.relationship.type === 'friend') {
+
+		// If friend, allow
+		if (rel?.relationship.type === 'friend')
 			return true;
-		}
-		if (this.account.data.settings.allowDirectMessagesFrom === 'room') {
-			for (const char of this.account.characters.values()) {
-				const room = char.loadedCharacter?.room;
-				if (!room) continue;
-				for (const char2 of from.characters.values()) {
-					const room2 = char2?.loadedCharacter?.room;
-					if (room.id === room2?.id) {
-						return true;
-					}
-				}
-			}
-		}
+
+		// If allowing from the same room and accounts share a room, allow
+		if (this.account.data.settings.allowDirectMessagesFrom === 'room' && AccountsHaveCharacterInSameRoom(this.account, from))
+			return true;
+
+		// Default: No access
 		return false;
 	}
 
@@ -106,6 +104,8 @@ export class AccountRelationship {
 	 * @returns - If the access should be allowed
 	 */
 	public async profileVisibleTo(queryingAccount: Account): Promise<boolean> {
+		await this.load();
+
 		// Player can always see their own profile
 		if (this.account.id === queryingAccount.id)
 			return true;
@@ -114,29 +114,18 @@ export class AccountRelationship {
 		if (queryingAccount.roles.isAuthorized('moderator'))
 			return true;
 
-		await this.load();
-
 		const rel = this.get(queryingAccount.id);
 		// No access if blocked
-		if (rel?.relationship && (rel.relationship.type === 'mutualBlock' || rel.relationship.type === 'oneSidedBlock')) {
+		if (rel?.relationship && (rel.relationship.type === 'mutualBlock' || rel.relationship.type === 'oneSidedBlock'))
 			return false;
-		}
+
 		// Allow access if friend
-		if (rel?.relationship.type === 'friend') {
+		if (rel?.relationship.type === 'friend')
 			return true;
-		}
+
 		// Allow access if both are in the same room with any character
-		for (const char of this.account.characters.values()) {
-			const room = char.loadedCharacter?.room;
-			if (!room)
-				continue;
-			for (const char2 of queryingAccount.characters.values()) {
-				const room2 = char2?.loadedCharacter?.room;
-				if (room.id === room2?.id) {
-					return true;
-				}
-			}
-		}
+		if (AccountsHaveCharacterInSameRoom(this.account, queryingAccount))
+			return true;
 
 		// Default: No access
 		return false;
@@ -393,4 +382,29 @@ function Synchronized<ReturnT>(
 		const [a, b] = [this.account.id, id].sort();
 		return await GLOBAL_LOCK.acquire(`${a}-${b}`, () => method.call(this, id));
 	};
+}
+
+/**
+ * Checks whether there is a room in which both accounts have a character.
+ * Note, that at least one of the characters in said room needs to be loaded for it to count.
+ * @param account1 - The account to check
+ * @param account2 - The account to check
+ * @returns `true`, if there is a common room, `false` otherwise
+ */
+function AccountsHaveCharacterInSameRoom(account1: Account, account2: Account): boolean {
+	const account1Rooms = new Set<Room>();
+
+	for (const char of account1.characters.values()) {
+		const room = char.loadedCharacter?.room;
+		if (room != null) {
+			account1Rooms.add(room);
+		}
+	}
+	for (const char of account2.characters.values()) {
+		const room = char?.loadedCharacter?.room;
+		if (room != null && account1Rooms.has(room)) {
+			return true;
+		}
+	}
+	return false;
 }

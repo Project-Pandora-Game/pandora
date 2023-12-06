@@ -22,6 +22,7 @@ import {
 import { useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import { noop } from 'lodash';
 
 export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicData> extends ITypedEventEmitter<CharacterEvents<T>> {
 	readonly type: 'character';
@@ -92,6 +93,12 @@ export type CharacterEvents<T extends ICharacterPublicData> = {
 
 export function useCharacterData<T extends ICharacterPublicData>(character: ICharacter<T>): Readonly<T> {
 	return useSyncExternalStore(character.getSubscriber('update'), () => character.data);
+}
+
+export function useCharacterDataOptional<T extends ICharacterPublicData>(character: ICharacter<T> | null): Readonly<T> | null {
+	const subscriber = useMemo(() => (character?.getSubscriber('update') ?? (() => noop)), [character]);
+
+	return useSyncExternalStore(subscriber, () => (character?.data ?? null));
 }
 
 export function useCharacterAppearance(characterState: AssetFrameworkCharacterState, character: Character): CharacterAppearance {

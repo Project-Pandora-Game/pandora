@@ -3,12 +3,13 @@ import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccou
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomId, RoomIdSchema } from '../chatroom/room';
-import { AccountId, AccountIdSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
-import { EmailAddressSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
+import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
+import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
 import { AssetFrameworkOutfitWithIdSchema } from '../assets';
+import { LIMIT_ACCOUNT_PROFILE_LENGTH } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../account/accountRoles';
@@ -74,6 +75,8 @@ export type IAccountRelationship = {
 export type IAccountFriendStatus = {
 	/** Account id of the friend */
 	id: AccountId;
+	/** The current label color of the account */
+	labelColor: HexColorString;
 	/** If the friend is online */
 	online: boolean;
 	/** List of online characters the friend has */
@@ -83,6 +86,16 @@ export type IAccountFriendStatus = {
 		inRoom?: RoomId;
 	}[];
 };
+
+export const AccountPublicInfoSchema = z.object({
+	id: AccountIdSchema,
+	displayName: z.string(),
+	labelColor: HexColorStringSchema,
+	created: z.number(),
+	visibleRoles: z.array(AccountRoleSchema),
+	profileDescription: z.string(),
+});
+export type AccountPublicInfo = z.infer<typeof AccountPublicInfoSchema>;
 
 /** Client->Directory messages */
 export const ClientDirectorySchema = {
@@ -176,6 +189,28 @@ export const ClientDirectorySchema = {
 			relationships: IAccountRelationship[];
 			friends: IAccountFriendStatus[];
 		}>(),
+	},
+	getAccountInfo: {
+		request: z.object({
+			accountId: AccountIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				info: AccountPublicInfoSchema,
+			}),
+			z.object({
+				result: z.literal('notFoundOrNoAccess'),
+			}),
+		]),
+	},
+	updateProfileDescription: {
+		request: z.object({
+			profileDescription: z.string().max(LIMIT_ACCOUNT_PROFILE_LENGTH),
+		}),
+		response: z.object({
+			result: z.literal('ok'),
+		}),
 	},
 
 	//#region Character management

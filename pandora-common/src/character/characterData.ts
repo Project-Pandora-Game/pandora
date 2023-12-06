@@ -26,6 +26,7 @@ export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
 	accountId: AccountIdSchema,
 	name: CharacterNameSchema,
+	profileDescription: z.string().default(''),
 	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 });
 /** Data about character, that is visible to everyone in same room */

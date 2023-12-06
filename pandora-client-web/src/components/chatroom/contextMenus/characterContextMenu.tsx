@@ -294,6 +294,12 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 						} }>
 							Wardrobe
 						</button>
+						<button onClick={ () => {
+							onCloseActual();
+							navigate(`/profiles/character/${characterData.id}`);
+						} }>
+							Profile
+						</button>
 						{ characterData.id !== playerId && (
 							<button onClick={ () => {
 								onClose();

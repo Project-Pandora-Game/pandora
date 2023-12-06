@@ -1,7 +1,7 @@
 import React, {
 	ReactElement,
 } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../common/button/button';
 import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { usePlayerId, usePlayer } from '../gameContext/playerContextProvider';
@@ -65,6 +65,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
+	const location = useLocation();
 	const chatroom = useChatroomRequired();
 	const safemodeContext = useSafemodeDialogContext();
 
@@ -80,7 +81,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 			<legend className={ char.isPlayer() ? 'player' : '' }>
 				<span>
 					<span>
-						<span style={ { color: data.settings.labelColor } }><b>{ '/// ' }</b></span>
+						<span className='colorStrip' style={ { color: data.settings.labelColor } }><b>{ '/// ' }</b></span>
 						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
 						<span> / { data.id } / { data.accountId }</span>
 					</span>
@@ -102,6 +103,15 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 						navigate('/wardrobe', { state: { character: data.id } });
 					} }>
 						Wardrobe
+					</Button>
+					<Button className='slim' onClick={ () => {
+						navigate(`/profiles/character/${data.id}`, {
+							state: {
+								back: location.pathname,
+							},
+						});
+					} }>
+						Profile
 					</Button>
 					{ !isPlayer && (
 						<Button className='slim' onClick={ () => {

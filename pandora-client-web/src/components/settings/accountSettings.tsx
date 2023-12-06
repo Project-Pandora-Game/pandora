@@ -6,7 +6,7 @@ import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
 import { Button } from '../common/button/button';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { uniq } from 'lodash';
+import _, { uniq } from 'lodash';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { useColorInput } from '../../common/useColorInput';
 import { useConfirmDialog } from '../dialog/dialog';
@@ -158,7 +158,7 @@ function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: num
 
 	return (
 		<tr>
-			<td>{ role }</td>
+			<td>{ _.startCase(role) }</td>
 			<td>
 				<input type='checkbox' checked={ visible } onChange={ onSetVisible } />
 			</td>

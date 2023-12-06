@@ -141,6 +141,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 			id: this.id,
 			accountId: 0,
 			name: 'EditorCharacter',
+			profileDescription: 'An editor character',
 			settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 			position: [0, 0, 0],
 			isOnline: true,

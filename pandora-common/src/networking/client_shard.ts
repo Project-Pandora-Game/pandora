@@ -9,6 +9,7 @@ import { Satisfies } from '../utility';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { Immutable } from 'immer';
 import { PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema } from '../gameLogic';
+import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
@@ -66,6 +67,14 @@ export const ClientShardSchema = {
 	updateSettings: {
 		request: CharacterPublicSettingsSchema.partial(),
 		response: null,
+	},
+	updateCharacterDescription: {
+		request: z.object({
+			profileDescription: z.string().max(LIMIT_CHARACTER_PROFILE_LENGTH),
+		}),
+		response: z.object({
+			result: z.literal('ok'),
+		}),
 	},
 	gamblingAction: {
 		request: z.discriminatedUnion('type', [

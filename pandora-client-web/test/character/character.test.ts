@@ -13,6 +13,7 @@ const mockData: ICharacterData = {
 	id: 'c123',
 	accountId: 0,
 	name: 'mock',
+	profileDescription: 'A mock character',
 	created: 0,
 	accessId: 'mockID',
 	settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),

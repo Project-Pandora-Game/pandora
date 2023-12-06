@@ -87,7 +87,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
 			setCryptoKey: this.handleSetCryptoKey.bind(this),
+
 			getRelationships: this.handleGetRelationships.bind(this),
+			getAccountInfo: this.handleGetAccountInfo.bind(this),
+			updateProfileDescription: this.handleUpdateProfileDescription.bind(this),
 
 			// Character management
 			listCharacters: this.handleListCharacters.bind(this),
@@ -667,6 +670,36 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const friends = await connection.account.relationship.getFriendsStatus();
 
 		return { friends, relationships };
+	}
+
+	private async handleGetAccountInfo({ accountId }: IClientDirectoryArgument['getAccountInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['getAccountInfo'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		const queryingAccount = connection.account;
+		const target = await accountManager.loadAccountById(accountId);
+
+		if (target == null) {
+			return { result: 'notFoundOrNoAccess' };
+		}
+
+		if (!await target.relationship.profileVisibleTo(queryingAccount)) {
+			return { result: 'notFoundOrNoAccess' };
+		}
+
+		return {
+			result: 'ok',
+			info: target.getAccountPublicInfo(),
+		};
+	}
+
+	private async handleUpdateProfileDescription({ profileDescription }: IClientDirectoryArgument['updateProfileDescription'], connection: ClientConnection): IClientDirectoryPromiseResult['updateProfileDescription'] {
+		if (!connection.account)
+			throw new BadMessageError();
+
+		await connection.account.updateProfileDescription(profileDescription);
+
+		return { result: 'ok' };
 	}
 
 	private async handleFriendRequest({ id, action }: IClientDirectoryArgument['friendRequest'], connection: ClientConnection): IClientDirectoryPromiseResult['friendRequest'] {

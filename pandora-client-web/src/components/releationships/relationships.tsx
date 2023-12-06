@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useCallback, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
@@ -169,6 +169,7 @@ function ShowFriends() {
 			return {
 				id: friend.id,
 				name: friend.name,
+				labelColor: (stat?.online ? stat?.labelColor : null) ?? 'transparent', // We hide the label coloring if account is offline, as we can't get it without loading the account from DB
 				time: friend.time,
 				online: stat?.online === true,
 				characters: stat?.characters,
@@ -217,18 +218,22 @@ export function useGoToDM(id: AccountId) {
 function FriendRow({
 	id,
 	name,
+	labelColor,
 	time,
 	online,
 	characters,
 }: {
 	id: AccountId;
 	name: string;
+	labelColor: string;
 	time: number;
 	online: boolean;
 	characters?: IAccountFriendStatus['characters'];
 }) {
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();
+	const navigate = useNavigate();
+	const location = useLocation();
 
 	const [unfriend, processing] = useAsyncEvent(async () => {
 		if (await confirm('Confirm removal', `Are you sure you want to remove ${name} from your contacts list?`)) {
@@ -239,10 +244,25 @@ function FriendRow({
 
 	const message = useGoToDM(id);
 
+	const viewProfile = useCallback(() => {
+		navigate(`/profiles/account/${id}`, {
+			state: {
+				back: location.pathname,
+			},
+		});
+	}, [navigate, id, location.pathname]);
+
 	return (
 		<tr className={ online ? 'friend online' : 'friend offline' }>
 			<td className='selectable'>{ id }</td>
-			<td className='selectable'>{ name }</td>
+			<td
+				className='selectable'
+				style={ {
+					textShadow: `${labelColor} 1px 1px`,
+				} }
+			>
+				{ name }
+			</td>
 			<td className='status'>
 				<Row className='fill' alignX='center' alignY='center'>
 					<span className='indicator'>
@@ -255,8 +275,11 @@ function FriendRow({
 			<td>{ new Date(time).toLocaleDateString() }</td>
 			<td>
 				<DivContainer direction='row' gap='small'>
-					<Button className='slim' onClick={ message } disabled={ processing }>
+					<Button className='slim' onClick={ message }>
 						Message
+					</Button>
+					<Button className='slim' onClick={ viewProfile }>
+						Profile
 					</Button>
 					<Button className='slim' onClick={ unfriend } disabled={ processing }>
 						Remove

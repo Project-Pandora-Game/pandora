@@ -76,6 +76,14 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `You cannot touch others while either you or they are in safemode.`;
 			case 'modifyBodyRoom':
 				return `You cannot modify body in this room.`;
+			case 'modifyRoomRestriction':
+				switch (e.reason) {
+					case 'notAdmin':
+						return `You must be a room admin or a room owner to do this.`;
+					case 'missingConstructionTools':
+						return `You must be holding 'Room Construction Tools' to do this.`;
+				}
+				break;
 			case 'invalid':
 				return '';
 		}

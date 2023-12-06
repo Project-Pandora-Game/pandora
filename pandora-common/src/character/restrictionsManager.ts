@@ -107,6 +107,10 @@ export type Restriction =
 	| {
 		type: 'modifyBodyRoom';
 	}
+	| {
+		type: 'modifyRoomRestriction';
+		reason: 'notAdmin' | 'missingConstructionTools';
+	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
 		type: 'invalid';
@@ -216,6 +220,17 @@ export class CharacterRestrictionsManager {
 
 	public isInSafemode(): boolean {
 		return this.appearance.getSafemode() != null;
+	}
+
+	public isCurrentRoomAdmin(): boolean {
+		// If not in a room, shortcircuit to yes
+		if (this.room == null)
+			return true;
+
+		if (this.room.isAdmin(this.character.accountId))
+			return true;
+
+		return false;
 	}
 
 	public canInteractWithTarget(context: AppearanceActionProcessingContext, target: RoomActionTarget): RestrictionResult {

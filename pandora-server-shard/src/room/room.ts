@@ -193,6 +193,7 @@ export class Room extends ServerRoom<IShardClient> {
 	public getActionRoomContext(): ActionRoomContext {
 		return {
 			features: this.data.config.features,
+			isAdmin: (account) => Array.from(this.characters).some((character) => character.accountId === account && this.isAdmin(character)),
 		};
 	}
 

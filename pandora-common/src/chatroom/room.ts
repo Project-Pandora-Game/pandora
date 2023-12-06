@@ -29,6 +29,7 @@ export type ChatRoomFeature = z.infer<typeof ChatRoomFeatureSchema>;
 
 export type ActionRoomContext = {
 	features: readonly ChatRoomFeature[];
+	isAdmin(account: AccountId): boolean;
 };
 
 export const ChatRoomBaseInfoSchema = z.object({

@@ -11,7 +11,6 @@ import { useStaggeredAppearanceActionResult } from '../../wardrobe/wardrobeCheck
 import { useWardrobeContext, useWardrobeExecuteChecked, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { CharacterContextMenu } from './characterContextMenu';
-import { useConfirmDialog } from '../../dialog/dialog';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -29,19 +28,9 @@ function StoreDeviceMenu({ device, close }: {
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
 	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
-	const confirm = useConfirmDialog();
-
-	const onClick = useCallback(() => {
-		confirm('Confirm storing device', 'Are you sure you want to store the device in the room inventory?')
-			.then((result) => {
-				if (result) {
-					execute();
-				}
-			}).catch(() => { /* NOOP */});
-	}, [confirm, execute]);
 
 	return (
-		<button onClick={ onClick } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
+		<button onClick={ execute } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
 			Store the device
 		</button>
 	);

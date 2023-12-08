@@ -18,11 +18,12 @@ import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacte
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
+import { IChatRoomMode, useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
 import { useChatRoomCharacterOffsets } from './chatRoomCharacter';
 import { RoomDeviceRenderContext } from './chatRoomDeviceContext';
 import { EvaluateCondition } from '../../graphics/utility';
 import { useStandaloneConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
+import { MovementHelperGraphics } from '../../graphics/movementHelper';
 
 const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -31,24 +32,25 @@ type ChatRoomDeviceProps = {
 	item: ItemRoomDevice;
 	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
 	background: IChatroomBackgroundData;
+	chatRoomMode: Immutable<IChatRoomMode>;
+	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
 	shard: ShardConnector | null;
 	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
 };
 
 export const DeviceOverlayToggle = BrowserStorage.create<boolean>('temp-device-overlay-toggle', true, ZodMatcher(z.boolean().catch(true)));
 
-export function ChatRoomDevice({
+export function ChatRoomDeviceMovementTool({
 	item,
 	deployment,
 	background,
+	setChatRoomMode,
 	shard,
-	menuOpen,
 }: ChatRoomDeviceProps): ReactElement | null {
 	const asset = item.asset;
 	const app = useApp();
-	const debugConfig = useDebugConfig();
 
-	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number) => {
+	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
 		if (!shard) {
 			return;
 		}
@@ -57,6 +59,7 @@ export function ChatRoomDevice({
 
 		newX = _.clamp(Math.round(newX), 0, background.size[0]);
 		newY = _.clamp(Math.round(newY), 0, maxY);
+		newYOffset = Math.round(newYOffset);
 		await shard.awaitResponse('appearanceAction', {
 			type: 'roomDeviceDeploy',
 			target: {
@@ -70,6 +73,7 @@ export function ChatRoomDevice({
 				...deployment,
 				x: newX,
 				y: newY,
+				yOffset: newYOffset,
 			},
 		});
 	}, () => {
@@ -96,12 +100,14 @@ export function ChatRoomDevice({
 	const labelX = errorCorrectedPivot.x;
 	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
 
-	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - 50, labelY - 50, 100, 100), [labelX, labelY]);
+	const hitAreaRadius = 50;
+	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
 
 	const roomDeviceContainer = useRef<PIXI.Container>(null);
 	const dragging = useRef<PIXI.Point | null>(null);
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
+	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
 		if (dragging.current || !roomDeviceContainer.current) return;
@@ -110,12 +116,146 @@ export function ChatRoomDevice({
 
 	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
 		if (!dragging.current || !roomDeviceContainer.current) return;
-		const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current.parent);
 
-		const newY = height - (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale);
+		if (pointerDownTarget.current === 'pos') {
+			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current.parent);
 
-		setPositionThrottled(dragPointerEnd.x, newY);
+			const newY = height - (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale);
+
+			setPositionThrottled(dragPointerEnd.x, newY, deployment.yOffset);
+		} else if (pointerDownTarget.current === 'offset') {
+			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current);
+
+			const newYOffset = (dragPointerEnd.y - labelY) * -scale;
+
+			setPositionThrottled(deployment.x, deployment.y, newYOffset);
+		}
 	});
+
+	const onPointerDownPos = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		pointerDown.current = Date.now();
+		pointerDownTarget.current = 'pos';
+	}, []);
+	const onPointerDownOffset = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		pointerDown.current = Date.now();
+		pointerDownTarget.current = 'offset';
+	}, []);
+
+	const onPointerUp = useEvent((_event: PIXI.FederatedPointerEvent) => {
+		dragging.current = null;
+		if (
+			pointerDown.current !== null &&
+			pointerDownTarget.current != null &&
+			Date.now() < pointerDown.current + DEVICE_WAIT_DRAG_THRESHOLD
+		) {
+			if (pointerDownTarget.current === 'pos') {
+				setChatRoomMode({ mode: 'normal' });
+			} else if (pointerDownTarget.current === 'offset') {
+				setPositionThrottled(deployment.x, deployment.y, 0);
+			}
+		}
+		pointerDown.current = null;
+		pointerDownTarget.current = null;
+	});
+
+	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (pointerDown.current !== null) {
+			event.stopPropagation();
+		}
+		if (dragging.current) {
+			onDragMove(event);
+		} else if (
+			pointerDown.current !== null &&
+			pointerDownTarget.current != null &&
+			Date.now() >= pointerDown.current + DEVICE_WAIT_DRAG_THRESHOLD
+		) {
+			onDragStart(event);
+		}
+	}, [onDragMove, onDragStart]);
+
+	useEffect(() => {
+		// TODO: Move to globalpointermove once @pixi/react supports them
+		app.stage.eventMode = 'static';
+		app.stage.on('pointermove', onPointerMove);
+		return () => {
+			app.stage?.off('pointermove', onPointerMove);
+		};
+	}, [app, onPointerMove]);
+
+	return (
+		<Container
+			ref={ roomDeviceContainer }
+			position={ { x, y: height - y } }
+			scale={ { x: scale, y: scale } }
+			pivot={ errorCorrectedPivot }
+		>
+			<MovementHelperGraphics
+				radius={ hitAreaRadius }
+				colorLeftRight={ 0xff0000 }
+				colorUpDown={ 0x00ff00 }
+				position={ { x: labelX, y: labelY } }
+				scale={ { x: 1, y: 0.6 } }
+				hitArea={ hitArea }
+				eventMode='static'
+				cursor='move'
+				pointerdown={ onPointerDownPos }
+				pointerup={ onPointerUp }
+				pointerupoutside={ onPointerUp }
+			/>
+			<MovementHelperGraphics
+				radius={ hitAreaRadius }
+				colorUpDown={ 0x0000ff }
+				position={ { x: labelX + 110, y: labelY - (yOffsetExtra / scale) } }
+				hitArea={ hitArea }
+				eventMode='static'
+				cursor='ns-resize'
+				pointerdown={ onPointerDownOffset }
+				pointerup={ onPointerUp }
+				pointerupoutside={ onPointerUp }
+			/>
+		</Container>
+	);
+}
+
+export function ChatRoomDevice({
+	item,
+	deployment,
+	background,
+	chatRoomMode,
+	menuOpen,
+}: ChatRoomDeviceProps): ReactElement | null {
+	const asset = item.asset;
+	const app = useApp();
+	const debugConfig = useDebugConfig();
+
+	const isBeingMoved = chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === item.id;
+
+	const [width, height] = background.size;
+	const scaling = background.scaling;
+	const x = Math.min(width, deployment.x);
+	const y = Math.min(height, deployment.y);
+	const yOffsetExtra = Math.round(deployment.yOffset);
+
+	const scale = 1 - (y * scaling) / height;
+
+	const pivot = useMemo<PointLike>(() => ({
+		x: asset.definition.pivot.x,
+		y: asset.definition.pivot.y,
+	}), [asset]);
+
+	const errorCorrectedPivot = useMemo((): PointLike => ({ x: pivot.x, y: pivot.y + CHARACTER_BASE_Y_OFFSET }), [pivot]);
+
+	const labelX = errorCorrectedPivot.x;
+	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
+
+	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - 50, labelY - 50, 100, 100), [labelX, labelY]);
+
+	const roomDeviceContainer = useRef<PIXI.Container>(null);
+	const dragging = useRef<PIXI.Point | null>(null);
+	/** Time at which user pressed button/touched */
+	const pointerDown = useRef<number | null>(null);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
 		event.stopPropagation();
@@ -124,7 +264,7 @@ export function ChatRoomDevice({
 
 	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
 		dragging.current = null;
-		if (pointerDown.current !== null && Date.now() < pointerDown.current + DEVICE_WAIT_DRAG_THRESHOLD) {
+		if (pointerDown.current !== null) {
 			menuOpen(item, event);
 		}
 		pointerDown.current = null;
@@ -134,12 +274,7 @@ export function ChatRoomDevice({
 		if (pointerDown.current !== null) {
 			event.stopPropagation();
 		}
-		if (dragging.current) {
-			onDragMove(event);
-		} else if (pointerDown.current !== null && Date.now() >= pointerDown.current + DEVICE_WAIT_DRAG_THRESHOLD) {
-			onDragStart(event);
-		}
-	}, [onDragMove, onDragStart]);
+	}, []);
 
 	useEffect(() => {
 		// TODO: Move to globalpointermove once @pixi/react supports them
@@ -186,14 +321,14 @@ export function ChatRoomDevice({
 				scale={ { x: scale, y: scale } }
 				pivot={ errorCorrectedPivot }
 				hitArea={ hitArea }
-				eventMode='static'
+				eventMode={ isBeingMoved ? 'none' : 'static' }
 				onPointerDown={ onPointerDown }
 				onPointerUp={ onPointerUp }
 				onPointerUpOutside={ onPointerUp }
 				zIndex={ -y }
 			>
 				{
-					!showOverlay ? null : (
+					(!showOverlay || isBeingMoved) ? null : (
 						<Container
 							zIndex={ 99998 }
 						>

@@ -684,6 +684,22 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 				return r;
 		}
 
+		const deviceProperties = this.getRoomDeviceProperties();
+
+		// Check that the item's internal state is valid
+		for (const [flag, reason] of deviceProperties.stateFlagsRequirements.entries()) {
+			if (!deviceProperties.stateFlags.has(flag)) {
+				return {
+					success: false,
+					error: {
+						problem: 'invalidState',
+						asset: this.asset.id,
+						reason,
+					},
+				};
+			}
+		}
+
 		// Deployed room devices must be in a room
 		if (this.deployment != null && context.location !== 'roomInventory')
 			return {

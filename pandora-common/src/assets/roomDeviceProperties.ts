@@ -10,6 +10,32 @@ export interface RoomDeviceProperties<A extends AssetDefinitionExtraArgs = Asset
 	slotProperties?: Partial<Record<string, AssetProperties<A>>>;
 
 	/**
+	 * Flags allowing to limit which item's state combinations are valid.
+	 * Flags only operate within a single item, they do not affect other items.
+	 */
+	stateFlags?: {
+		/**
+		 * State flags this state gives.
+		 * @default []
+		 * @example
+		 * ['strap']
+		 */
+		provides?: string[];
+
+		/**
+		 * Flags that this state requires.
+		 *
+		 * Format is a record of <`flag`, `description if not met`>.
+		 * @default {}
+		 * @example
+		 * {
+		 *     strap: 'This option requires a strap to be present.',
+		 * }
+		 */
+		requires?: { [flag: string]: string; };
+	};
+
+	/**
 	 * Prevents listed modules from being modified by anyone, including on oneself
 	 * @default []
 	 */
@@ -36,6 +62,8 @@ export interface RoomDeviceProperties<A extends AssetDefinitionExtraArgs = Asset
 
 export interface RoomDevicePropertiesResult {
 	slotProperties: Partial<Record<string, Immutable<AssetProperties>[]>>;
+	stateFlags: Set<string>;
+	stateFlagsRequirements: Map<string, string>;
 	blockModules: Set<string>;
 	blockSelfModules: Set<string>;
 	blockSlotsEnterLeave: Set<string>;
@@ -45,6 +73,8 @@ export interface RoomDevicePropertiesResult {
 export function CreateRoomDevicePropertiesResult(): RoomDevicePropertiesResult {
 	return {
 		slotProperties: {},
+		stateFlags: new Set(),
+		stateFlagsRequirements: new Map(),
 		blockModules: new Set(),
 		blockSelfModules: new Set(),
 		blockSlotsEnterLeave: new Set(),
@@ -58,6 +88,13 @@ export function MergeRoomDeviceProperties<T extends RoomDevicePropertiesResult>(
 			continue;
 
 		(base.slotProperties[slot] ??= []).push(slotProperties);
+	}
+
+	properties.stateFlags?.provides?.forEach((a) => base.stateFlags.add(a));
+	// Merge required flags. The requirement reasons are simply concatenated (with a space between)
+	for (const [flag, reason] of Object.entries(properties.stateFlags?.requires ?? {})) {
+		const currentReason = base.stateFlagsRequirements.get(flag);
+		base.stateFlagsRequirements.set(flag, (currentReason ? `${currentReason} ` : '') + reason);
 	}
 
 	properties.blockModules?.forEach((a) => base.blockModules.add(a));

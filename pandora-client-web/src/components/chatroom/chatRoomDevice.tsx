@@ -1,4 +1,4 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment, ZodMatcher } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -24,6 +24,7 @@ import { RoomDeviceRenderContext } from './chatRoomDeviceContext';
 import { EvaluateCondition } from '../../graphics/utility';
 import { useStandaloneConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { MovementHelperGraphics } from '../../graphics/movementHelper';
+import { usePlayerState } from '../gameContext/playerContextProvider';
 
 const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -38,7 +39,8 @@ type ChatRoomDeviceProps = {
 	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
 };
 
-export const DeviceOverlayToggle = BrowserStorage.create<boolean>('temp-device-overlay-toggle', true, ZodMatcher(z.boolean().catch(true)));
+export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
+export const DeviceOverlaySetting = BrowserStorage.create('temp-device-overlay-toggle', 'interactable', DeviceOverlaySettingSchema);
 
 export function ChatRoomDeviceMovementTool({
 	item,
@@ -227,8 +229,8 @@ export function ChatRoomDevice({
 	menuOpen,
 }: ChatRoomDeviceProps): ReactElement | null {
 	const asset = item.asset;
-	const app = useApp();
 	const debugConfig = useDebugConfig();
+	const { player, playerState } = usePlayerState();
 
 	const isBeingMoved = chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === item.id;
 
@@ -250,10 +252,9 @@ export function ChatRoomDevice({
 	const labelX = errorCorrectedPivot.x;
 	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
 
-	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - 50, labelY - 50, 100, 100), [labelX, labelY]);
+	const hitAreaRadius = 50;
+	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - hitAreaRadius, labelY - hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius, labelX, labelY]);
 
-	const roomDeviceContainer = useRef<PIXI.Container>(null);
-	const dragging = useRef<PIXI.Point | null>(null);
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
 
@@ -263,78 +264,66 @@ export function ChatRoomDevice({
 	}, []);
 
 	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
-		dragging.current = null;
 		if (pointerDown.current !== null) {
 			menuOpen(item, event);
 		}
 		pointerDown.current = null;
 	});
 
-	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (pointerDown.current !== null) {
-			event.stopPropagation();
-		}
-	}, []);
-
-	useEffect(() => {
-		// TODO: Move to globalpointermove once @pixi/react supports them
-		app.stage.eventMode = 'static';
-		app.stage.on('pointermove', onPointerMove);
-		return () => {
-			app.stage?.off('pointermove', onPointerMove);
-		};
-	}, [app, onPointerMove]);
-
 	// Overlay graphics
-	const showOverlay = useObservable(DeviceOverlayToggle);
-	const deviceMovementHelperDraw = useCallback((g: PIXI.Graphics) => {
+	const showOverlaySetting = useObservable(DeviceOverlaySetting);
+
+	const canInteractNormally = Object.keys(asset.definition.slots).length > 0;
+	const hasConstructionTool = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getEffects().toolRoomConstruction);
+	const enableMenu = !isBeingMoved && (canInteractNormally || hasConstructionTool || showOverlaySetting === 'always');
+	const showMenuHelper = enableMenu && (
+		showOverlaySetting === 'always' ||
+		hasConstructionTool ||
+		(showOverlaySetting === 'interactable' && canInteractNormally)
+	);
+
+	const deviceMenuHelperDraw = useCallback((g: PIXI.Graphics) => {
+		if (!showMenuHelper) {
+			g.clear();
+			return;
+		}
+
 		g.clear()
-			.beginFill(0xff0000, 0.30)
-			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
-			.beginFill(0x000000, 0.40)
+			.beginFill(hasConstructionTool ? 0xff0000 : 0x000075, hasConstructionTool ? 0.7 : 0.2)
+			.drawCircle(0, 0, hitAreaRadius)
+			.beginFill(hasConstructionTool ? 0x000000 : 0x0000ff, hasConstructionTool ? 0.8 : 0.4)
 			.drawPolygon([
-				hitArea.x + 45, hitArea.y + 30,
-				hitArea.x + 45 - 15, hitArea.y + 30,
-				hitArea.x + 45 - 15, hitArea.y + 30 - 25,
-				hitArea.x + 45 - 50, hitArea.y + 0.5 * hitArea.height,
-				hitArea.x + 45 - 15, hitArea.y - 30 + hitArea.height + 25,
-				hitArea.x + 45 - 15, hitArea.y - 30 + hitArea.height,
-				hitArea.x + 45, hitArea.y - 30 + hitArea.height,
-			])
-			.drawPolygon([
-				hitArea.x + hitArea.width - 45, hitArea.y + 30,
-				hitArea.x + hitArea.width - 45 + 15, hitArea.y + 30,
-				hitArea.x + hitArea.width - 45 + 15, hitArea.y + 30 - 25,
-				hitArea.x + hitArea.width - 45 + 50, hitArea.y + 0.5 * hitArea.height,
-				hitArea.x + hitArea.width - 45 + 15, hitArea.y - 30 + hitArea.height + 25,
-				hitArea.x + hitArea.width - 45 + 15, hitArea.y - 30 + hitArea.height,
-				hitArea.x + hitArea.width - 45, hitArea.y - 30 + hitArea.height,
+				-30, 10,
+				5, -40,
+				5, -5,
+				30, -5,
+				-5, 40,
+				-5, 10,
 			]);
-	}, [hitArea]);
+	}, [showMenuHelper, hasConstructionTool, hitAreaRadius]);
 
 	return (
 		<RoomDeviceRenderContext.Provider value={ item }>
 			<RoomDeviceGraphics
-				ref={ roomDeviceContainer }
 				item={ item }
 				position={ { x, y: height - y - yOffsetExtra } }
 				scale={ { x: scale, y: scale } }
 				pivot={ errorCorrectedPivot }
 				hitArea={ hitArea }
-				eventMode={ isBeingMoved ? 'none' : 'static' }
+				eventMode={ enableMenu ? 'static' : 'none' }
 				onPointerDown={ onPointerDown }
 				onPointerUp={ onPointerUp }
 				onPointerUpOutside={ onPointerUp }
 				zIndex={ -y }
 			>
 				{
-					(!showOverlay || isBeingMoved) ? null : (
-						<Container
+					enableMenu ? (
+						<Graphics
 							zIndex={ 99998 }
-						>
-							<Graphics draw={ deviceMovementHelperDraw } />
-						</Container>
-					)
+							draw={ deviceMenuHelperDraw }
+							position={ { x: labelX, y: labelY } }
+						/>
+					) : null
 				}
 				{
 					!debugConfig?.deviceDebugOverlay ? null : (

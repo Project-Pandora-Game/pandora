@@ -11,9 +11,10 @@ import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Column, Row } from '../common/container/container';
 import { Character, useCharacterData } from '../../character/character';
 import { CharacterSafemodeWarningContent, useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
-import { DeviceOverlayToggle } from './chatRoomDevice';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema } from './chatRoomDevice';
 import { useObservable } from '../../observable';
 import { ICharacterRoomData } from 'pandora-common';
+import { Select } from '../common/select/select';
 
 export function ChatroomControls(): ReactElement | null {
 	const roomInfo = useChatRoomInfo();
@@ -21,7 +22,7 @@ export function ChatroomControls(): ReactElement | null {
 	const navigate = useNavigate();
 	const player = usePlayer();
 
-	const deviceOverlayToggle = useObservable(DeviceOverlayToggle);
+	const deviceOverlaySetting = useObservable(DeviceOverlaySetting);
 
 	if (!roomInfo || !roomCharacters || !player) {
 		return null;
@@ -48,12 +49,22 @@ export function ChatroomControls(): ReactElement | null {
 			<br />
 			<div>
 				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
-				<input
-					id='chatroom-device-overlay'
-					type='checkbox'
-					checked={ deviceOverlayToggle }
-					onChange={ (e) => DeviceOverlayToggle.value = e.target.checked }
-				/>
+				<Select
+					value={ deviceOverlaySetting }
+					onChange={ (e) => {
+						DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
+					} }
+				>
+					<option value='never'>
+						Never (enterable devices can still be interacted with)
+					</option>
+					<option value='interactable'>
+						For enterable devices only
+					</option>
+					<option value='always'>
+						For all devices
+					</option>
+				</Select>
 			</div>
 			<br />
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }

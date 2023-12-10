@@ -16,7 +16,7 @@ import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
 import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 
 export function ActionWarningContent({ problems }: { problems: readonly AppearanceActionProblem[]; }): ReactElement {
 	const assetManager = useAssetManager();
@@ -228,12 +228,10 @@ export function InventoryAssetPreview({ asset, small }: {
 }
 
 function useAssetPreviewType(small: boolean): 'icon' | 'image' {
-	const account = useCurrentAccount();
-	if (!account)
-		return 'icon';
+	const settings = useCurrentAccountSettings();
 
 	if (small)
-		return account.settings.wardrobeSmallPreview;
+		return settings.wardrobeSmallPreview;
 
-	return account.settings.wardrobeBigPreview;
+	return settings.wardrobeBigPreview;
 }

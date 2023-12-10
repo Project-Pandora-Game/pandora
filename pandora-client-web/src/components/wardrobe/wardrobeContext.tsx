@@ -185,11 +185,11 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 			}
 
 			// Detect need for confirmation
-			const warnings = WardrobeCheckResultForConfirmationWarnings(player, roomContext, result);
+			const warnings = WardrobeCheckResultForConfirmationWarnings(player, roomContext, action, result);
 
 			if (warnings.length > 0) {
 				confirm(
-					`You might not be able to undo this action without help. Continue?`,
+					`You might not be able to undo this action easily. Continue?`,
 					(
 						<ul>
 							{

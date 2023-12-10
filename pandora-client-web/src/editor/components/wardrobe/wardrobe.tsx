@@ -20,6 +20,7 @@ import { WardrobeActionButton } from '../../../components/wardrobe/wardrobeCompo
 
 export const EDITOR_ROOM_CONTEXT = {
 	features: ChatRoomFeatureSchema.options,
+	isAdmin: () => true,
 } as const satisfies ActionRoomContext;
 
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {

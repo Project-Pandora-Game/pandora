@@ -1,5 +1,6 @@
 import {
 	ActionRoomContext,
+	AppearanceAction,
 	AppearanceActionProcessingResultValid,
 	AppearanceItems,
 	AssertNever,
@@ -59,7 +60,7 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 	}, [items, itemPath]);
 }
 
-export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, roomContext: ActionRoomContext | null, result: AppearanceActionProcessingResultValid): string[] {
+export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, roomContext: ActionRoomContext | null, action: AppearanceAction, result: AppearanceActionProcessingResultValid): string[] {
 	const originalCharacterState = result.originalState.characters.get(player.id);
 	AssertNotNullable(originalCharacterState);
 	const resultCharacterState = result.resultState.characters.get(player.id);
@@ -68,14 +69,24 @@ export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, r
 	const originalRestrictionManager = player.getRestrictionManager(originalCharacterState, roomContext);
 	const resultRestrictionManager = player.getRestrictionManager(resultCharacterState, roomContext);
 
-	// Do not warn about anything in safemode
-	if (resultRestrictionManager.isInSafemode())
-		return [];
-
 	const warnings: string[] = [];
 
-	if (originalRestrictionManager.canUseHands() && !resultRestrictionManager.canUseHands()) {
+	// Warn if player won't be able to use hands after this action
+	if (
+		originalRestrictionManager.canUseHands() &&
+		!resultRestrictionManager.isInSafemode() &&
+		!resultRestrictionManager.canUseHands()
+	) {
 		warnings.push(`This action will prevent you from using your hands`);
+	}
+
+	// Warn about storing a room device
+	if (
+		action.type === 'roomDeviceDeploy' &&
+		action.deployment == null
+	) {
+		warnings.push(`Storing a room device removes all characters from it`);
+		warnings.push(`Storing a room device resets its position inside the room`);
 	}
 
 	return warnings;

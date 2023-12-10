@@ -12,6 +12,7 @@ import { useShardConnector } from './shardConnectorContextProvider';
 import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';
 import { IChatroomMessageProcessed } from '../chatroom/chatroomMessages';
+import { useCurrentAccount } from './directoryConnectorContextProvider';
 
 const logger = GetLogger('ChatRoom');
 
@@ -485,9 +486,16 @@ export function useChatRoomFeatures(): ChatRoomFeature[] | null {
 
 export function useActionRoomContext(): ActionRoomContext | null {
 	const info = useChatRoomInfo();
-	return useMemo(() => info ? ({
+	const playerAccount = useCurrentAccount();
+	return useMemo((): ActionRoomContext | null => info ? ({
 		features: info.features,
-	}) : null, [info]);
+		isAdmin: (accountId) => {
+			if (accountId === playerAccount?.id) {
+				return IsChatroomAdmin(info, playerAccount);
+			}
+			return IsChatroomAdmin(info, { id: accountId });
+		},
+	}) : null, [info, playerAccount]);
 }
 
 export function useCharacterRestrictionsManager<T>(characterState: AssetFrameworkCharacterState, character: Character, use: (manager: CharacterRestrictionsManager) => T): T {

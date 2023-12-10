@@ -17,13 +17,14 @@ import { PixiViewportSetupCallback } from '../../graphics/pixiViewport';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { ChatRoomCharacter } from './chatRoomCharacter';
 import { PointLike } from '../../graphics/graphicsCharacter';
-import { ChatRoomDevice } from './chatRoomDevice';
+import { ChatRoomDevice, ChatRoomDeviceMovementTool } from './chatRoomDevice';
 import { useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
 import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { directoryConnectorContext, useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { Immutable } from 'immer';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -41,6 +42,8 @@ interface ChatRoomGraphicsSceneProps extends CommonProps {
 	room: ChatRoom;
 	info: IChatRoomFullInfo;
 	debugConfig: ChatroomDebugConfig;
+	chatRoomMode: Immutable<IChatRoomMode>;
+	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
 	menuOpen: (target: Character<ICharacterRoomData> | ItemRoomDevice, event: FederatedPointerEvent) => void;
 }
@@ -55,6 +58,8 @@ export function ChatRoomGraphicsScene({
 	room,
 	info,
 	debugConfig,
+	chatRoomMode,
+	setChatRoomMode,
 	onPointerDown,
 	menuOpen,
 }: ChatRoomGraphicsSceneProps): ReactElement {
@@ -141,6 +146,24 @@ export function ChatRoomGraphicsScene({
 							item={ device }
 							deployment={ device.deployment }
 							background={ roomBackground }
+							chatRoomMode={ chatRoomMode }
+							setChatRoomMode={ setChatRoomMode }
+							shard={ shard }
+							menuOpen={ menuOpen }
+						/>
+					) : null))
+				}
+			</Container>
+			<Container zIndex={ 20 } sortableChildren>
+				{
+					roomDevices.map((device) => ((chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === device.id && device.deployment != null) ? (
+						<ChatRoomDeviceMovementTool
+							key={ device.id }
+							item={ device }
+							deployment={ device.deployment }
+							background={ roomBackground }
+							chatRoomMode={ chatRoomMode }
+							setChatRoomMode={ setChatRoomMode }
 							shard={ shard }
 							menuOpen={ menuOpen }
 						/>
@@ -210,6 +233,13 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 	return isOnline ? onlineFilters : offlineFilters;
 }
 
+export type IChatRoomMode = {
+	mode: 'normal';
+} | {
+	mode: 'moveDevice';
+	deviceItemId: ItemId;
+};
+
 export function ChatRoomScene({ className }: {
 	className?: string;
 }): ReactElement | null {
@@ -224,6 +254,8 @@ export function ChatRoomScene({ className }: {
 	} | null>(null);
 	const player = usePlayer();
 	const debugConfig = useDebugConfig();
+
+	const [chatRoomMode, setChatRoomMode] = useState<Immutable<IChatRoomMode>>({ mode: 'normal' });
 
 	const roomInventoryItems = useRoomInventoryItems(chatRoom);
 	const roomDevices = useMemo(() => roomInventoryItems.filter(FilterItemType('roomDevice')), [roomInventoryItems]);
@@ -273,6 +305,8 @@ export function ChatRoomScene({ className }: {
 			room={ chatRoom }
 			info={ info }
 			debugConfig={ debugConfig }
+			chatRoomMode={ chatRoomMode }
+			setChatRoomMode={ setChatRoomMode }
 			onPointerDown={ onPointerDown }
 			menuOpen={ menuOpen }
 		>
@@ -280,7 +314,15 @@ export function ChatRoomScene({ className }: {
 				menuActive?.character ? <CharacterContextMenu character={ menuActive.character } position={ menuActive.position } onClose={ closeContextMenu } /> : null
 			}
 			{
-				menuActive?.deviceItemId ? <DeviceContextMenu deviceItemId={ menuActive.deviceItemId } position={ menuActive.position } onClose={ closeContextMenu } /> : null
+				menuActive?.deviceItemId ? (
+					<DeviceContextMenu
+						deviceItemId={ menuActive.deviceItemId }
+						position={ menuActive.position }
+						chatRoomMode={ chatRoomMode }
+						setChatRoomMode={ setChatRoomMode }
+						onClose={ closeContextMenu }
+					/>
+				) : null
 			}
 		</ChatRoomGraphicsScene>
 	);

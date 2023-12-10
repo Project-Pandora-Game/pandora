@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData } from 'pandora-common';
+import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData, CloneDeepMutable } from 'pandora-common';
 import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
 import { Character, ICharacter, useCharacterData } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
@@ -11,7 +11,11 @@ import { useStaggeredAppearanceActionResult } from '../../wardrobe/wardrobeCheck
 import { useWardrobeContext, useWardrobeExecuteChecked, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { CharacterContextMenu } from './characterContextMenu';
-import { useConfirmDialog } from '../../dialog/dialog';
+import { Immutable } from 'immer';
+import { IChatRoomMode } from '../chatRoomScene';
+import { toast } from 'react-toastify';
+import { ActionWarningContent } from '../../wardrobe/wardrobeComponents';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -29,20 +33,45 @@ function StoreDeviceMenu({ device, close }: {
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
 	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
-	const confirm = useConfirmDialog();
-
-	const onClick = useCallback(() => {
-		confirm('Confirm storing device', 'Are you sure you want to store the device in the room inventory?')
-			.then((result) => {
-				if (result) {
-					execute();
-				}
-			}).catch(() => { /* NOOP */});
-	}, [confirm, execute]);
 
 	return (
-		<button onClick={ onClick } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
+		<button onClick={ execute } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
 			Store the device
+		</button>
+	);
+}
+
+function MoveDeviceMenu({ device, setChatRoomMode, close }: {
+	device: ItemRoomDevice;
+	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
+	close: () => void;
+}) {
+	const action = useMemo<AppearanceAction>(() => ({
+		type: 'roomDeviceDeploy',
+		item: {
+			container: [],
+			itemId: device.id,
+		},
+		target: { type: 'roomInventory' },
+		deployment: CloneDeepMutable(device.deployment),
+	}), [device]);
+	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
+	const available = checkResult != null && checkResult.problems.length === 0;
+
+	return (
+		<button
+			onClick={ () => {
+				if (checkResult != null && (!checkResult.valid || checkResult.problems.length > 0)) {
+					toast(<ActionWarningContent problems={ checkResult.problems } />, TOAST_OPTIONS_WARNING);
+					return;
+				}
+
+				setChatRoomMode({ mode: 'moveDevice', deviceItemId: device.id });
+				close();
+			} }
+			className={ available ? '' : 'text-strikethrough' }
+		>
+			Move
 		</button>
 	);
 }
@@ -210,9 +239,11 @@ function DeviceSlotsMenu({ device, position, close }: {
 	);
 }
 
-function DeviceContextMenuCurrent({ device, position, onClose }: {
+function DeviceContextMenuCurrent({ device, position, setChatRoomMode, onClose }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
+	chatRoomMode: Immutable<IChatRoomMode>;
+	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
 	onClose: () => void;
 }): ReactElement | null {
 	const ref = useContextMenuPosition(position);
@@ -236,6 +267,7 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 						<button onClick={ () => setMenu('slots') }>
 							Slots
 						</button>
+						<MoveDeviceMenu device={ device } setChatRoomMode={ setChatRoomMode } close={ onClose } />
 						<StoreDeviceMenu device={ device } close={ onClose } />
 					</>
 				) }
@@ -255,9 +287,11 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 	);
 }
 
-export function DeviceContextMenu({ deviceItemId, position, onClose }: {
+export function DeviceContextMenu({ deviceItemId, position, chatRoomMode, setChatRoomMode, onClose }: {
 	deviceItemId: ItemId;
 	position: Readonly<PointLike>;
+	chatRoomMode: Immutable<IChatRoomMode>;
+	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
 	onClose: () => void;
 }): ReactElement | null {
 	const globalState = useRoomState(useChatroomRequired());
@@ -281,6 +315,12 @@ export function DeviceContextMenu({ deviceItemId, position, onClose }: {
 		return null;
 
 	return (
-		<DeviceContextMenuCurrent device={ item } position={ position } onClose={ onClose } />
+		<DeviceContextMenuCurrent
+			device={ item }
+			position={ position }
+			chatRoomMode={ chatRoomMode }
+			setChatRoomMode={ setChatRoomMode }
+			onClose={ onClose }
+		/>
 	);
 }

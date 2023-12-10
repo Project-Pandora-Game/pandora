@@ -10,6 +10,7 @@ import { useEvent } from '../../../common/useEvent';
 import { ImageExporter } from '../../graphics/export/imageExporter';
 import { DownloadAsFile } from '../../../common/downloadHelper';
 import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editorScene';
+import { InputNumber } from '../../../components/input/numberInput';
 import './previewCutter.scss';
 
 type PreviewCutterState = Readonly<{
@@ -136,8 +137,7 @@ export function PreviewCutter() {
 			enabled,
 		};
 	}, []);
-	const setX = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const x = clamp(parseInt(ev.target.value, 10), -state.size, CharacterSize.WIDTH + state.size);
+	const setX = React.useCallback((x: number) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			position: {
@@ -145,9 +145,8 @@ export function PreviewCutter() {
 				x,
 			},
 		};
-	}, [state.size]);
-	const setY = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const y = clamp(parseInt(ev.target.value, 10), -state.size, CharacterSize.HEIGHT + state.size);
+	}, []);
+	const setY = React.useCallback((y: number) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			position: {
@@ -155,9 +154,8 @@ export function PreviewCutter() {
 				y,
 			},
 		};
-	}, [state.size]);
-	const setSize = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const size = clamp(parseInt(ev.target.value, 10), PREVIEW_CUTTER_MIN_SIZE, PREVIEW_CUTTER_MAX_SIZE);
+	}, []);
+	const setSize = React.useCallback((size: number) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			size,
@@ -195,15 +193,15 @@ export function PreviewCutter() {
 		<FieldsetToggle legend='Preview Cutter' forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
 			<div>
 				<label htmlFor='preview-cutter-x'>X</label>
-				<input id='preview-cutter-x' type='number' value={ state.position.x } onChange={ setX } />
+				<InputNumber id='preview-cutter-x' min={ -state.size } max={ CharacterSize.WIDTH + state.size } value={ state.position.x } onChange={ setX } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-y'>Y</label>
-				<input id='preview-cutter-y' type='number' value={ state.position.y } onChange={ setY } />
+				<InputNumber id='preview-cutter-y' min={ -state.size } max={ CharacterSize.HEIGHT + state.size } value={ state.position.y } onChange={ setY } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-size'>Size</label>
-				<input id='preview-cutter-size' type='number' value={ state.size } onChange={ setSize } />
+				<InputNumber id='preview-cutter-size' min={ PREVIEW_CUTTER_MIN_SIZE } max={ PREVIEW_CUTTER_MAX_SIZE } value={ state.size } onChange={ setSize } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-centered'>Centered</label>

@@ -172,7 +172,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 						} }
 					/> : null
 			}
-			<InventoryAssetPreview asset={ asset } />
+			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'>{ asset.definition.name }</span>
 			<div className='quickActions'>
 				{ showExtraActionButtons ? (

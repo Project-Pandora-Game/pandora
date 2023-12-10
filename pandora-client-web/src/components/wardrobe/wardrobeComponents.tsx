@@ -16,6 +16,7 @@ import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
 import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
+import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 
 export function ActionWarningContent({ problems }: { problems: readonly AppearanceActionProblem[]; }): ReactElement {
 	const assetManager = useAssetManager();
@@ -180,13 +181,15 @@ export function AttributeButton({ attribute, ...buttonProps }: {
 	);
 }
 
-export function InventoryAssetPreview({ asset }: {
+export function InventoryAssetPreview({ asset, small }: {
 	asset: Asset;
+	small: boolean;
 }): ReactElement {
 	const assetManager = useAssetManager();
+	const previewType = useAssetPreviewType(small);
 
 	const preview = useMemo(() => {
-		if (asset.definition.preview != null)
+		if (previewType === 'image' && asset.definition.preview != null)
 			return asset.definition.preview;
 
 		const validAttributes = Array.from(asset.staticAttributes)
@@ -203,7 +206,7 @@ export function InventoryAssetPreview({ asset }: {
 			return filterAttribute.icon;
 
 		return validAttributes.length > 0 ? validAttributes[0].icon : undefined;
-	}, [asset, assetManager]);
+	}, [asset, previewType, assetManager]);
 
 	const icon = useGraphicsUrl(preview);
 
@@ -222,4 +225,15 @@ export function InventoryAssetPreview({ asset }: {
 	return (
 		<div className='itemPreview missing'>?</div>
 	);
+}
+
+function useAssetPreviewType(small: boolean): 'icon' | 'image' {
+	const account = useCurrentAccount();
+	if (!account)
+		return 'icon';
+
+	if (small)
+		return account.settings.wardrobeSmallPreview;
+
+	return account.settings.wardrobeBigPreview;
 }

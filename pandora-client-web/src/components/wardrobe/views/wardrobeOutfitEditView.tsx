@@ -410,7 +410,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 						} }
 					/> : null
 			}
-			<InventoryAssetPreview asset={ asset } />
+			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'>{ visibleName }</span>
 			<div className='quickActions'>
 				<button

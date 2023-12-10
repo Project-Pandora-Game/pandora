@@ -58,6 +58,14 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 */
 	wardrobeUseRoomBackground: z.boolean().catch(true),
 	/**
+	 * Controls whether to show the attribute icons or preview images in small preview.
+	 */
+	wardrobeSmallPreview: z.enum(['icon', 'image']).default('icon'),
+	/**
+	 * Controls whether to show the attribute icons or preview images in big preview.
+	 */
+	wardrobeBigPreview: z.enum(['icon', 'image']).default('icon'),
+	/**
 	 * Controls how many parts (of 10 total) the chatroom graphics takes inside chatroom, while in horizontal mode
 	 */
 	interfaceChatroomGraphicsRatioHorizontal: z.number().int().min(1).max(9).catch(7),
@@ -86,6 +94,8 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	wardrobeUseRoomBackground: true,
 	wardrobeHoverPreview: true,
 	wardrobeOutfitsPreview: 'small',
+	wardrobeSmallPreview: 'icon',
+	wardrobeBigPreview: 'icon',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',

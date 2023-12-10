@@ -25,7 +25,7 @@ export function Relationships() {
 	return (
 		<div className='relationships'>
 			<UrlTabContainer>
-				<UrlTab name={ <RelationshipHeader type='friend' /> } urlChunk='list'>
+				<UrlTab name={ <RelationshipHeader type='friend' /> } urlChunk=''>
 					<ShowFriends />
 				</UrlTab>
 				<UrlTab name='Direct messages' urlChunk='dm'>

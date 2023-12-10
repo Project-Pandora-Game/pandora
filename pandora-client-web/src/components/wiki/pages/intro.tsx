@@ -78,9 +78,12 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>6. Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>
 			<p>
-				Room devices must first be deployed from the room inventory to the room in the item menu.
-				Then, you can freely move/position the item in the room by dragging it by the icon below it.
-				The icons below room devices can be toggled to be hidden under the "Room"-tab.
+				Room-level items can only be set up, moved, and removed by admins that have the handheld item "room construction tools" equipped.
+				A room device must first be deployed from the room inventory to the room by selecting the according option in the item details.
+				Then, you can move/position the item by clicking the according menu point in the item's context menu by clicking the icon below it.
+				The red/green button lets you drag the device along the room floor and the blue button lets you drag the item higher or lower at the current spot (along the z-axis).
+				Leave the move mode by pressing the red/green button shortly.
+				The icons below room devices can be toggled to be shown or hidden under the "Room"-tab.
 			</p>
 
 			<h4>7. Stable code base</h4>

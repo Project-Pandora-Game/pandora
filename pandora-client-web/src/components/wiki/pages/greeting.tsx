@@ -46,13 +46,16 @@ export function WikiGreeting(): ReactElement {
 					generally, before anything can happen to you.
 					Moreover, as restraints in Pandora are very secure, the stricter ones such as password locks have to be permitted by you
 					individually. The reason is that such restraints can really get you stuck with no one else being able to help.
-					To balance this strictness there is a safemode feature you can find top left by clicking on your name for emergency purposes.
+					To balance this strictness, there is a safemode feature you can find top left by clicking on your name for emergency purposes.
 					It comes with a cooldown period that simulates stopping the play after a safeword usage to recover and be safe. We hope you
 					will never get into a situation where you will have to use this mode.<br /> */ }
 					<br />
 					You can find more guidance by pressing the (?) button on the top bar.<br />
 					<br />
-					The club is still being renovated so you can expect many new things over time or even help us. Please have a joyful stay~ ”
+					The club is still being renovated so you can expect many new things over time or even help us with building it up!<br />
+					You can consider the current limited selection of items a demonstration of what can be created in Pandora with the community's help.<br />
+					<br />
+					Please have a joyful stay~ ”
 				</p>
 
 				{

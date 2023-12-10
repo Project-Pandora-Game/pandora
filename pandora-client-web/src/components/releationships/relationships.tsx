@@ -25,10 +25,10 @@ export function Relationships() {
 	return (
 		<div className='relationships'>
 			<UrlTabContainer>
-				<UrlTab name={ <RelationshipHeader type='friend' /> } urlChunk='friends'>
+				<UrlTab name={ <RelationshipHeader type='friend' /> } urlChunk=''>
 					<ShowFriends />
 				</UrlTab>
-				<UrlTab name='DMs' urlChunk='dm'>
+				<UrlTab name='Direct messages' urlChunk='dm'>
 					<DirectMessages />
 				</UrlTab>
 				<UrlTab name='Blocked' urlChunk='blocked'>
@@ -52,7 +52,7 @@ function RelationshipHeader({ type }: { type: IAccountRelationship['type']; }) {
 
 	return (
 		<>
-			{ _.capitalize(type) } ({ count })
+			{ type === 'friend' ? 'Contacts' : _.capitalize(type) } ({ count })
 		</>
 	);
 }
@@ -211,7 +211,7 @@ export function useGoToDM(id: AccountId) {
 	const navigate = useNavigate();
 	return React.useCallback(() => {
 		directory.directMessageHandler.setSelected(id);
-		navigate('/relationships/dm');
+		navigate('/contacts/dm');
 	}, [directory.directMessageHandler, id, navigate]);
 }
 

@@ -131,13 +131,13 @@ export function UrlTabContainer({
 
 	const defaultTabPath = useMemo(() => {
 		const defaultTab = children.find((c) => c && c.props.default);
-		return (defaultTab ?? children.find((c) => !!c))?.props.urlChunk || '';
+		return (defaultTab ?? children.find((c) => !!c))?.props.urlChunk ?? '';
 	}, [children]);
 
 	const tabs = useMemo<(TabConfig | undefined)[]>(() => children.map((c): TabConfig | undefined => (c == null ? undefined : {
 		name: c.props.name,
-		active: c.props.urlChunk ? matchPath({ path: resolvePath(c.props.urlChunk, routerPath).pathname + '/*' }, pathname) != null : false,
-		onClick: c.props.onClick ?? (() => c.props.urlChunk ? navigate(c.props.urlChunk) : undefined),
+		active: (c.props.urlChunk != null) ? matchPath({ path: resolvePath(c.props.urlChunk, routerPath).pathname + (c.props.urlChunk ? '/*' : '') }, pathname) != null : false,
+		onClick: c.props.onClick ?? (() => (c.props.urlChunk != null) ? navigate(c.props.urlChunk) : undefined),
 		tabClassName: c.props.tabClassName,
 	})), [children, navigate, routerPath, pathname]);
 
@@ -145,8 +145,12 @@ export function UrlTabContainer({
 		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition }>
 			<Routes>
 				{
-					children.map((tab, index) => (tab && (
-						<Route key={ index } element={ tab } path={ tab.props.urlChunk + '/*' } />
+					children.map((tab, index) => (tab && tab.props.urlChunk != null && (
+						tab.props.urlChunk ? (
+							<Route key={ index } element={ tab } path={ tab.props.urlChunk + '/*' } />
+						) : (
+							<Route key={ index } element={ tab } index />
+						)
 					)))
 				}
 				{

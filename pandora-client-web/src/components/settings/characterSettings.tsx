@@ -8,8 +8,10 @@ import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
 import { useChatRoomFeatures } from '../gameContext/chatRoomContextProvider';
 import { Select } from '../common/select/select';
 import { useColorInput } from '../../common/useColorInput';
+import { useNavigate } from 'react-router-dom';
 
 export function CharacterSettings(): ReactElement | null {
+	const navigate = useNavigate();
 	const playerData = usePlayerData();
 
 	if (!playerData)
@@ -17,6 +19,15 @@ export function CharacterSettings(): ReactElement | null {
 
 	return (
 		<>
+			<Button className='slim' onClick={ () => { // TODO: Integrate better
+				navigate(`/profiles/character/${playerData.id}`, {
+					state: {
+						back: location.pathname,
+					},
+				});
+			} }>
+				Edit your character profile
+			</Button>
 			<LabelColor playerData={ playerData } />
 			<Pronouns playerData={ playerData } />
 		</>

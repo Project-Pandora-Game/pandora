@@ -84,7 +84,7 @@ export function AccountProfileScreenRouter(): ReactElement {
 
 	let parsedAccountId: AccountId | undefined;
 
-	if (accountId != null && /^[0-9]$/.test(accountId)) {
+	if (accountId != null && /^[0-9]+$/.test(accountId)) {
 		parsedAccountId = Number.parseInt(accountId);
 	}
 

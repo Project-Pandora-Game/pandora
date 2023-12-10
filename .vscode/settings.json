@@ -27,9 +27,8 @@
 	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
 	"typescript.preferences.quoteStyle": "single",
 	"editor.codeActionsOnSave": {
-		"source.fixAll.eslint": true
+		"source.fixAll.eslint": "explicit"
 	},
-	"eslint.packageManager": "pnpm",
 	"eslint.workingDirectories": [
 		"pandora-client-web",
 		"pandora-common",

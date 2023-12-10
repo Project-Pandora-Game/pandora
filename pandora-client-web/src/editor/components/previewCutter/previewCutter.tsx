@@ -14,7 +14,6 @@ import './previewCutter.scss';
 
 type PreviewCutterState = Readonly<{
 	enabled: boolean;
-	lineWidth: number;
 	size: number;
 	centered: boolean;
 	position: Readonly<{ x: number; y: number; }>;
@@ -22,12 +21,12 @@ type PreviewCutterState = Readonly<{
 
 const PREVIEW_CUTTER = new Observable<PreviewCutterState>({
 	enabled: false,
-	lineWidth: 2,
 	size: 200,
 	centered: true,
 	position: { x: 0, y: 100 },
 });
 
+const PREVIRE_CUTTER_LINE_WIDTH = 2;
 const PREVIEW_CUTTER_MIN_SIZE = 50;
 const PREVIEW_CUTTER_MAX_SIZE = CharacterSize.HEIGHT / 3 * 4;
 const PREVIEW_CUTTER_OUTPUT_SIZE = 256;
@@ -43,7 +42,6 @@ export function PreviewCutterRectangle() {
 let editorSceneContext: EditorSceneContext | null = null;
 
 function PreviewCutterRectangleInner({
-	lineWidth,
 	size,
 	centered,
 	position,
@@ -57,9 +55,9 @@ function PreviewCutterRectangleInner({
 		const color = dragging ? 0x00ff00 : 0x333333;
 		g
 			.clear()
-			.lineStyle(lineWidth, color, 1)
-			.drawRect(x - lineWidth / 2, y - lineWidth / 2, size + lineWidth, size + lineWidth);
-	}, [lineWidth, dragging, x, y, size]);
+			.lineStyle(PREVIRE_CUTTER_LINE_WIDTH, color, 1)
+			.drawRect(x - PREVIRE_CUTTER_LINE_WIDTH / 2, y - PREVIRE_CUTTER_LINE_WIDTH / 2, size + PREVIRE_CUTTER_LINE_WIDTH, size + PREVIRE_CUTTER_LINE_WIDTH);
+	}, [dragging, x, y, size]);
 	const onPointerDown = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
 		ev.stopPropagation();
 		setDragging(true);
@@ -90,13 +88,13 @@ function PreviewCutterRectangleInner({
 				case '+':
 					PREVIEW_CUTTER.value = {
 						...PREVIEW_CUTTER.value,
-						size: clamp(size + delta, 10, CharacterSize.HEIGHT),
+						size: clamp(size + delta, PREVIEW_CUTTER_MIN_SIZE, PREVIEW_CUTTER_MAX_SIZE),
 					};
 					break;
 				case '-':
 					PREVIEW_CUTTER.value = {
 						...PREVIEW_CUTTER.value,
-						size: clamp(size - delta, 10, CharacterSize.HEIGHT),
+						size: clamp(size - delta, PREVIEW_CUTTER_MIN_SIZE, PREVIEW_CUTTER_MAX_SIZE),
 					};
 					break;
 			}
@@ -119,7 +117,7 @@ function PreviewCutterRectangleInner({
 		<Graphics
 			zIndex={ 0 }
 			interactive={ true }
-			hitArea={ new PIXI.Rectangle(x, y - lineWidth / 2, size, size) }
+			hitArea={ new PIXI.Rectangle(x, y, size, size) }
 			draw={ draw }
 			ref={ graphic }
 			onpointerdown={ onPointerDown }

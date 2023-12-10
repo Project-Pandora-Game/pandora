@@ -1,7 +1,7 @@
 import { ICharacterPrivateData } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { Button } from '../common/button/button';
-import { usePlayerData, usePlayer } from '../gameContext/playerContextProvider';
+import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
@@ -12,7 +12,6 @@ import { useNavigate } from 'react-router-dom';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigate();
-	const player = usePlayer();
 	const playerData = usePlayerData();
 
 	if (!playerData)
@@ -21,7 +20,7 @@ export function CharacterSettings(): ReactElement | null {
 	return (
 		<>
 			<Button className='slim' onClick={ () => { // TODO: Integrate better
-				navigate(`/profiles/character/${player?.id}`, {
+				navigate(`/profiles/character/${playerData.id}`, {
 					state: {
 						back: location.pathname,
 					},

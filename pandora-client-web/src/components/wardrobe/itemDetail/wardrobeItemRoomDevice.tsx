@@ -26,6 +26,9 @@ export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 }): ReactElement | null {
 	const { targetSelector } = useWardrobeContext();
 
+	// Generate random X position for the device that is not directly on the edge of the room
+	const randomDeploymentPositionX = useMemo(() => Math.floor(200 + Math.random() * 800), []);
+
 	let contents: ReactElement | undefined;
 
 	if (roomDevice.deployment != null) {
@@ -49,7 +52,7 @@ export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 				target: targetSelector,
 				item,
 				deployment: {
-					x: 0,
+					x: randomDeploymentPositionX,
 					y: 0,
 					yOffset: 0,
 				},

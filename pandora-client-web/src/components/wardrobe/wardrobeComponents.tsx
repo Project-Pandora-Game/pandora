@@ -16,6 +16,7 @@ import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
 import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
+import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 
 export function ActionWarningContent({ problems }: { problems: readonly AppearanceActionProblem[]; }): ReactElement {
 	const assetManager = useAssetManager();
@@ -180,12 +181,17 @@ export function AttributeButton({ attribute, ...buttonProps }: {
 	);
 }
 
-export function InventoryAssetPreview({ asset }: {
+export function InventoryAssetPreview({ asset, small }: {
 	asset: Asset;
+	small: boolean;
 }): ReactElement {
 	const assetManager = useAssetManager();
+	const previewType = useAssetPreviewType(small);
 
-	const iconAttribute = useMemo(() => {
+	const preview = useMemo(() => {
+		if (previewType === 'image' && asset.definition.preview != null)
+			return asset.definition.preview;
+
 		const validAttributes = Array.from(asset.staticAttributes)
 			.map((attributeName) => assetManager.getAttributeDefinition(attributeName))
 			.filter(IsNotNullable)
@@ -197,12 +203,12 @@ export function InventoryAssetPreview({ asset }: {
 		);
 
 		if (filterAttribute)
-			return filterAttribute;
+			return filterAttribute.icon;
 
-		return validAttributes.length > 0 ? validAttributes[0] : undefined;
-	}, [asset, assetManager]);
+		return validAttributes.length > 0 ? validAttributes[0].icon : undefined;
+	}, [asset, previewType, assetManager]);
 
-	const icon = useGraphicsUrl(iconAttribute?.icon);
+	const icon = useGraphicsUrl(preview);
 
 	if (icon) {
 		return (
@@ -219,4 +225,13 @@ export function InventoryAssetPreview({ asset }: {
 	return (
 		<div className='itemPreview missing'>?</div>
 	);
+}
+
+function useAssetPreviewType(small: boolean): 'icon' | 'image' {
+	const settings = useCurrentAccountSettings();
+
+	if (small)
+		return settings.wardrobeSmallPreview;
+
+	return settings.wardrobeBigPreview;
 }

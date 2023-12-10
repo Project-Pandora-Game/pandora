@@ -12,6 +12,7 @@ import { ICharacter, CharacterEvents } from '../../../character/character';
 import { Immutable } from 'immer';
 import { useEditorState } from '../../editorContextProvider';
 import { EDITOR_ROOM_CONTEXT } from '../../components/wardrobe/wardrobe';
+import { DownloadAsFile } from '../../../common/downloadHelper';
 
 export interface EditorActionContext {
 	dryRun?: boolean;
@@ -502,14 +503,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 			metadata: files,
 		}).blob();
 
-		// make and click a temporary link to download the Blob
-		const link = document.createElement('a');
-		link.href = URL.createObjectURL(blob);
-		link.download = `${this.id.replace(/^a\//, '').replaceAll('/', '_')}.zip`;
-		link.style.display = 'none';
-		document.body.appendChild(link);
-		link.click();
-		link.remove();
+		DownloadAsFile(blob, `${this.id.replace(/^a\//, '').replaceAll('/', '_')}.zip`);
 	}
 
 	public async exportDefinitionToClipboard(): Promise<void> {

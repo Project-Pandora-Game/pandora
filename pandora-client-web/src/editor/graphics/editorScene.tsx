@@ -1,7 +1,7 @@
 import { Container, Graphics } from '@pixi/react';
 import classNames from 'classnames';
 import _ from 'lodash';
-import { CharacterSize, GetLogger, HexColorStringSchema } from 'pandora-common';
+import { AssertNotNullable, CharacterSize, GetLogger, HexColorStringSchema } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { CommonProps } from '../../common/reactTypes';
@@ -13,6 +13,7 @@ import { useObservable } from '../../observable';
 import { EditorContext, useEditor } from '../editorContextProvider';
 import { ResultCharacter, SetupCharacter } from './character';
 import { ImageExporter } from './export/imageExporter';
+import { DownloadAsFile } from '../../common/downloadHelper';
 
 function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
@@ -29,12 +30,22 @@ function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 	);
 }
 
+export type EditorSceneContext = {
+	contentRef: React.RefObject<PIXI.Container>;
+};
+
+const editorSceneContext = React.createContext<EditorSceneContext | null>(null);
+
 export function EditorScene({
 	id,
 	className,
 	children,
 }: CommonProps): ReactElement {
 	const contentRef = useRef<PIXI.Container>(null);
+
+	const context = useMemo(() => ({
+		contentRef,
+	}), []);
 
 	const editor = useEditor();
 	const backgroundColor = Number.parseInt(useObservable(editor.backgroundColor).substring(1, 7), 16);
@@ -93,17 +104,8 @@ export function EditorScene({
 			height: CharacterSize.HEIGHT,
 			width: CharacterSize.WIDTH,
 		}, 'png')
-			.then((result) => {
-				const link = document.createElement('a');
-				link.href = result;
-				link.download = `export.png`;
-				link.style.display = 'none';
-				document.body.appendChild(link);
-				link.click();
-				link.remove();
-			}, (error) => {
-				GetLogger('Editor').error('Error exporting image:', error);
-			});
+			.then((result) => DownloadAsFile(result, 'export.png'))
+			.catch((error) => GetLogger('Editor').error('Error exporting image:', error));
 	}, []);
 
 	const overlay = (
@@ -147,9 +149,11 @@ export function EditorScene({
 				zIndex={ 2 }
 				draw={ borderDraw }
 			/>
-			<Container zIndex={ 10 } ref={ contentRef }>
-				{ children }
-			</Container>
+			<editorSceneContext.Provider value={ context }>
+				<Container zIndex={ 10 } ref={ contentRef }>
+					{ children }
+				</Container>
+			</editorSceneContext.Provider>
 		</GraphicsScene>
 	);
 }
@@ -168,4 +172,10 @@ export function EditorResultScene(): ReactElement {
 			<ResultCharacter />
 		</EditorScene>
 	);
+}
+
+export function useEditorSceneContext(): EditorSceneContext {
+	const context = React.useContext(editorSceneContext);
+	AssertNotNullable(context);
+	return context;
 }

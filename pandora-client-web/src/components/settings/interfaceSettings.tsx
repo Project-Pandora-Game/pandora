@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryAccountSettings } from 'pandora-common';
 import { Button } from '../common/button/button';
@@ -117,7 +117,9 @@ function WardrobeSettings({ account }: { account: IDirectoryAccountInfo; }): Rea
 			<WardrobeUseRoomBackground account={ account } />
 			<WardrobeShowExtraButtons account={ account } />
 			<WardrobeHoverPreview account={ account } />
-			<WardrobeOutfitsPreview account={ account } />
+			<WardrobeSelectSettings account={ account } setting='wardrobeOutfitsPreview' label='Wardrobe previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
+			<WardrobeSelectSettings account={ account } setting='wardrobeSmallPreview' label='Wardrobe small preview type (list mode)' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+			<WardrobeSelectSettings account={ account } setting='wardrobeBigPreview' label='Wardrobe big preview type (grid mode)' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 		</fieldset>
 	);
 }
@@ -198,30 +200,47 @@ function WardrobeHoverPreview({ account }: { account: IDirectoryAccountInfo; }):
 	);
 }
 
-function WardrobeOutfitsPreview({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+const WARDROBE_PREVIEWS_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeOutfitsPreview'], string> = {
+	disabled: 'Disabled',
+	small: 'Enabled (small previews)',
+	big: 'Enabled (big previews)',
+};
+
+const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeSmallPreview'], string> = {
+	icon: 'Show attribute icon',
+	image: 'Show preview image',
+};
+
+type StringKeyOf<T> = {
+	[K in keyof T]: T[K] extends string ? K : never
+}[keyof T];
+
+function WardrobeSelectSettings<K extends StringKeyOf<IDirectoryAccountSettings>>({ account, setting, label, stringify }: {
+	account: IDirectoryAccountInfo;
+	setting: K;
+	label: string;
+	stringify: Readonly<Record<IDirectoryAccountSettings[K], string>>;
+}): ReactElement {
 	const directory = useDirectoryConnector();
-	const [wardrobeOutfitsPreview, setWardrobeOutfitsPreview] = useRemotelyUpdatedUserInput(account.settings.wardrobeOutfitsPreview, [account], {
+	const [value, setValue] = useRemotelyUpdatedUserInput(account.settings[setting], [account], {
 		updateCallback: (newValue) => {
-			directory.sendMessage('changeSettings', { wardrobeOutfitsPreview: newValue });
+			directory.sendMessage('changeSettings', { [setting]: newValue });
 		},
 	});
-
-	const WARDROBE_PREVIEWS_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeOutfitsPreview'], string> = {
-		disabled: 'Disabled',
-		small: 'Enabled (small previews)',
-		big: 'Enabled (big previews)',
-	};
-
+	const onChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+		const newValue = DirectoryAccountSettingsSchema.shape[setting].parse(e.target.value);
+		setValue(newValue as IDirectoryAccountSettings[K]);
+	}, [setting, setValue]);
+	const options = useMemo(() => (Object.entries(stringify) as [IDirectoryAccountSettings[K], string][]).map(([k, v]) => (
+		<option key={ k } value={ k }>
+			{ v }
+		</option>
+	)), [stringify]);
 	return (
 		<div className='input-section'>
-			<label>Wardrobe previews</label>
-			<Select value={ wardrobeOutfitsPreview } onChange={ (e) => {
-				setWardrobeOutfitsPreview(DirectoryAccountSettingsSchema.shape.wardrobeOutfitsPreview.parse(e.target.value));
-			} }>
-				{
-					(Object.keys(WARDROBE_PREVIEWS_DESCRIPTION) as IDirectoryAccountSettings['wardrobeOutfitsPreview'][])
-						.map((v) => <option key={ v } value={ v }>{ WARDROBE_PREVIEWS_DESCRIPTION[v] }</option>)
-				}
+			<label>{ label }</label>
+			<Select value={ value } onChange={ onChange }>
+				{ options }
 			</Select>
 		</div>
 	);

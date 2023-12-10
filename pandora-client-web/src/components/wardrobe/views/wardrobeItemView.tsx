@@ -277,7 +277,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 						} }
 					/> : null
 			}
-			<InventoryAssetPreview asset={ asset } />
+			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'>{ asset.definition.name }</span>
 			<div className='quickActions'>
 				{

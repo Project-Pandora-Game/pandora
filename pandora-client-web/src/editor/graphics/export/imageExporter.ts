@@ -1,6 +1,7 @@
 import { Size, Rectangle, CharacterSize } from 'pandora-common/dist/assets';
-import { Application, Container, IExtract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture, IRenderableObject, DisplayObject, Shader } from 'pixi.js';
+import { Application, Container, IExtract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture, IRenderableObject, DisplayObject, Shader, Matrix } from 'pixi.js';
 import Delaunator from 'delaunator';
+import { DataString, AssertDataString } from '../../../common/downloadHelper';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
 
@@ -19,31 +20,34 @@ export class ImageExporter {
 		});
 	}
 
-	public async export(target: Container, format: ImageFormat): Promise<string> {
+	public async export(target: Container, format: ImageFormat): Promise<DataString> {
 		this._app.renderer.resize(target.width, target.height);
 		const child = this._app.stage.addChild(target);
 		const result = await this._extract.base64(target, `image/${format}`);
 		this._app.stage.removeChild(child);
+		AssertDataString(result);
 		return result;
 	}
 
-	public async textureCut(texture: Texture, size: Size, points: [number, number][], format: ImageFormat): Promise<string> {
+	public async textureCut(texture: Texture, size: Size, points: [number, number][], format: ImageFormat): Promise<DataString> {
 		const cutter = new TextureCutter(texture, size, points);
 		return await this.export(cutter, format);
 	}
 
-	public async imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat): Promise<string> {
-		const fullSize = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT };
-		const renderTexture = RenderTexture.create(fullSize);
+	public async imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat, resultSize: Readonly<Size> = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT }): Promise<DataString> {
+		const renderTexture = RenderTexture.create(resultSize);
 		WithCullingDisabled(object, () => {
-			this._app.renderer.render(object, { renderTexture });
+			this._app.renderer.render(object, {
+				renderTexture,
+				transform: Matrix.IDENTITY
+					.translate(-rect.x, -rect.y)
+					.scale(resultSize.width / rect.width, resultSize.height / rect.height),
+			});
 		});
-		return await this.textureCut(renderTexture, fullSize, [
-			[rect.x, rect.y],
-			[rect.x + rect.width, rect.y],
-			[rect.x + rect.width, rect.y + rect.height],
-			[rect.x, rect.y + rect.height],
-		], format);
+		const result = await this._extract.base64(renderTexture, `image/${format}`);
+		renderTexture.destroy(true);
+		AssertDataString(result);
+		return result;
 	}
 }
 

@@ -3,6 +3,7 @@ import { Immutable } from 'immer';
 import { TypedEventEmitter, Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, AssetsDefinitionFile } from 'pandora-common';
 import { AssetManagerClient, GetCurrentAssetManager, UpdateAssetManager, useAssetManager } from '../../assets/assetManager';
 import { ObservableProperty, ObservableClass } from '../../observable';
+import { DownloadAsFile } from '../../common/downloadHelper';
 
 export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*([-_][a-z0-9]+)*$/;
 
@@ -123,14 +124,7 @@ DefineAsset({
 		// get the ZIP stream in a Blob
 		const blob = await downloadZip(files).blob();
 
-		// make and click a temporary link to download the Blob
-		const link = document.createElement('a');
-		link.href = URL.createObjectURL(blob);
-		link.download = `${id.replace(/^a\//, '').replaceAll('/', '_')}_template.zip`;
-		link.style.display = 'none';
-		document.body.appendChild(link);
-		link.click();
-		link.remove();
+		DownloadAsFile(blob, `${id.replace(/^a\//, '').replaceAll('/', '_')}_template.zip`);
 	}
 }
 

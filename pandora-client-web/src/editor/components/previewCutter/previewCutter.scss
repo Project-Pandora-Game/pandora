@@ -1,0 +1,35 @@
+.previewCutter {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+
+	> div {
+		display: grid;
+		grid-template-columns: 0.3fr 0.7fr;
+	}
+
+	> div:first-of-type {
+		margin-top: 0.5em;
+	}
+
+	label {
+		text-align: right;
+		margin: auto;
+		width: 6em;
+	}
+
+	label::after {
+		content: ':';
+	}
+
+	input[type='checkbox'] {
+		scale: 1.5;
+		width: fit-content;
+	}
+
+	button {
+		margin: auto;
+		grid-column: 1 / span 2;
+		width: 100%;
+	}
+}

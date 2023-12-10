@@ -8,6 +8,7 @@ import { ExportData } from './exportImportUtils';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import './exportDialog.scss';
+import { DownloadAsFile } from '../../common/downloadHelper';
 
 interface ExportDialogProps<T extends ZodType<unknown>> {
 	exportType: string;
@@ -56,13 +57,8 @@ export function ExportDialog<T extends ZodType<unknown>>({
 	const downloadAsFile = useCallback(() => {
 		if (!downloadFileName.trim())
 			return;
-		const element = document.createElement('a');
-		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(exportString));
-		element.setAttribute('download', downloadFileName.trim());
-		element.style.display = 'none';
-		document.body.appendChild(element);
-		element.click();
-		document.body.removeChild(element);
+
+		DownloadAsFile(exportString, downloadFileName.trim(), 'text/plain;charset=utf-8');
 	}, [downloadFileName, exportString]);
 
 	const copyToClipboard = useCallback(() => {

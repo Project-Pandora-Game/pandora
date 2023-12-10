@@ -1,15 +1,18 @@
 import { ICharacterPrivateData } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { Button } from '../common/button/button';
-import { usePlayerData } from '../gameContext/playerContextProvider';
+import { usePlayerData, usePlayer } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
 import { useChatRoomFeatures } from '../gameContext/chatRoomContextProvider';
 import { Select } from '../common/select/select';
 import { useColorInput } from '../../common/useColorInput';
+import { useNavigate } from 'react-router-dom';
 
 export function CharacterSettings(): ReactElement | null {
+	const navigate = useNavigate();
+	const player = usePlayer();
 	const playerData = usePlayerData();
 
 	if (!playerData)
@@ -17,6 +20,15 @@ export function CharacterSettings(): ReactElement | null {
 
 	return (
 		<>
+			<Button className='slim' onClick={ () => { // temporary button
+				navigate(`/profiles/character/${player?.id}`, {
+					state: {
+						back: location.pathname,
+					},
+				});
+			} }>
+				Edit your character profile
+			</Button>
 			<LabelColor playerData={ playerData } />
 			<Pronouns playerData={ playerData } />
 		</>

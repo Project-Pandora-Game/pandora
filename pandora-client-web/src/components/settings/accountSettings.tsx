@@ -10,8 +10,10 @@ import _, { uniq } from 'lodash';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { useColorInput } from '../../common/useColorInput';
 import { useConfirmDialog } from '../dialog/dialog';
+import { useNavigate } from 'react-router-dom';
 
 export function AccountSettings(): ReactElement | null {
+	const navigate = useNavigate();
 	const account = useCurrentAccount();
 
 	if (!account)
@@ -19,6 +21,15 @@ export function AccountSettings(): ReactElement | null {
 
 	return (
 		<>
+			<Button className='slim' onClick={ () => { // temporary button
+				navigate(`/profiles/account/${account.id}`, {
+					state: {
+						back: location.pathname,
+					},
+				});
+			} }>
+				Edit your account profile
+			</Button>
 			<GitHubIntegration account={ account } />
 			<AccountRoleList account={ account } />
 			<LabelColor account={ account } />

@@ -33,7 +33,7 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/settings' element={ <RequiresLogin element={ Settings } /> } />
 
-			<Route path='/relationships/*' element={ <RequiresLogin element={ Relationships } /> } />
+			<Route path='/contacts/*' element={ <RequiresLogin element={ Relationships } /> } />
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />
 			<Route path='/profiles/character/:characterId' element={ <RequiresCharacter element={ CharacterProfileScreenRouter } /> } />
 

@@ -197,7 +197,7 @@ function FriendsHeaderButton({ onClickExtra }: {
 			title='Contacts'
 			badge={ notificationCount }
 			onClick={ () => {
-				navigate('/relationships');
+				navigate('/contacts');
 				onClickExtra?.();
 			} }
 		/>

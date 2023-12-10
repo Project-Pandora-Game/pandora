@@ -28,7 +28,7 @@ const TIPS: readonly string[] = [
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
-	`You need to equip the handheld item "room construction tools" to decorate your rooms`,
+	`Keep the handheld item "room construction tools" in your room's inventory for quick access.`,
 	`Public rooms without an admin online inside are not publicly listed in the room search.`,
 ];
 

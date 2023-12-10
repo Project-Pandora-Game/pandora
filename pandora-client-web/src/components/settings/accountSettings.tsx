@@ -21,7 +21,7 @@ export function AccountSettings(): ReactElement | null {
 
 	return (
 		<>
-			<Button className='slim' onClick={ () => { // temporary button
+			<Button className='slim' onClick={ () => { // TODO: Integrate better
 				navigate(`/profiles/account/${account.id}`, {
 					state: {
 						back: location.pathname,

@@ -13,7 +13,8 @@ import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../chatroomAdmin/ch
 import { Row } from '../common/container/container';
 import './chatroomSelect.scss';
 import closedDoor from '../../icons/closed-door.svg';
-import openDoor from '../../icons/opened-door.svg';
+import privateDoor from '../../icons/private-door.svg';
+import publicDoor from '../../icons/public-door.svg';
 import { ContextHelpButton } from '../help/contextHelpButton';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useObservable } from '../../observable';
@@ -25,9 +26,10 @@ const TIPS: readonly string[] = [
 	`Your character can turn around for everyone in a chat room in the "Pose" tab or with "/turn".`,
 	`Chat commands start with a "/" and typing just this one character shows a help menu.`,
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
-	`The dragging points to move room devices are invisible, but generally under the item.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
+	`You need to equip the handheld item "room construction tools" to decorate your rooms`,
+	`Public rooms without an admin online inside are not publicly listed in the room search.`,
 ];
 
 export function ChatroomSelect(): ReactElement {
@@ -166,9 +168,9 @@ function RoomEntry({ roomInfo }: {
 			<a className='roomListGrid' onClick={ () => setShow(true) } >
 				<div className='icon'>
 					<img
-						src={ hasPassword ? closedDoor : openDoor }
-						title={ hasPassword ? 'Protected room' : 'Open room' }
-						alt={ hasPassword ? 'Protected room' : 'Open room' } />
+						src={ hasPassword ? closedDoor : roomInfo.public ? publicDoor : privateDoor }
+						title={ hasPassword ? 'Protected room' : roomInfo.public ? 'Public room' : 'Private room' }
+						alt={ hasPassword ? 'Protected room' : roomInfo.public ? 'Public room' : 'Private room' } />
 				</div>
 				<div className='entry'>
 					{ `${name} ( ${onlineCharacters} ` }
@@ -224,7 +226,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 		<ModalDialog>
 			<div className='chatroomDetails'>
 				<div>
-					Details for room <b>{ name }</b><br />
+					Details for { roomDetails?.public ? 'public' : 'private' } room <b>{ name }</b><br />
 				</div>
 				<Row className='ownership' alignY='center'>
 					Owned by: { owners.join(', ') }

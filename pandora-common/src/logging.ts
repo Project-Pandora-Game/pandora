@@ -45,6 +45,7 @@ export interface LogOutputDefinition {
 	logLevelOverrides: Record<string, LogLevel>;
 	supportsColor: boolean;
 	onMessage: (prefix: string, message: unknown[], level: LogLevel) => void;
+	flush?: () => Promise<void>;
 }
 
 /** Global log configuration */

@@ -1,7 +1,7 @@
 import fs, { readFileSync } from 'fs';
 import { nanoid } from 'nanoid';
 import { tmpdir } from 'os';
-import { GetLogger, LogLevel } from 'pandora-common';
+import { GetLogger, LogLevel, logConfig } from 'pandora-common';
 import { AddFileOutput, AnyToString } from '../src/logging';
 
 describe('AnyToString()', () => {
@@ -84,6 +84,12 @@ describe('AddFileOutput()', () => {
 	const testPath1 = `${tmpdir()}/pandora-test-${nanoid()}.log`;
 	const testPath2 = `${tmpdir()}/pandora-test-${nanoid()}.log`;
 
+	async function flushAllOutputs(): Promise<void> {
+		for (const output of logConfig.logOutputs) {
+			await output.flush?.();
+		}
+	}
+
 	afterAll(() => {
 		//Cleans up test.log after each test
 		fs.stat(testPath1, (err) => {
@@ -96,24 +102,26 @@ describe('AddFileOutput()', () => {
 		});
 	});
 
-	it('should create a valid text file based on fileName-path, overwriting existing', () => {
+	it('should create a valid text file based on fileName-path, overwriting existing', async () => {
 		fs.writeFileSync(testPath1, 'Original content\n', { encoding: 'utf-8' });
-		AddFileOutput(testPath1, false, LogLevel.DEBUG);
+		await AddFileOutput(testPath1, false, LogLevel.DEBUG);
+		await flushAllOutputs();
 		// The file has been emptied
 		expect(readFileSync(testPath1, { encoding: 'utf-8' })).toHaveLength(0);
 	});
 
-	it('should create a valid text file based on fileName-path, appending to existing', () => {
+	it('should create a valid text file based on fileName-path, appending to existing', async () => {
 		fs.writeFileSync(testPath2, 'Original content\n');
-		AddFileOutput(testPath2, true, LogLevel.DEBUG);
+		await AddFileOutput(testPath2, true, LogLevel.DEBUG);
+		await flushAllOutputs();
 		// The file has NOT been emptied
 		expect(readFileSync(testPath2, { encoding: 'utf-8' })).toContain('Original content');
 	});
 
-	it('file should contain logs created with Logger', () => {
-		AddFileOutput(testPath1, false, LogLevel.DEBUG);
+	it('file should contain logs created with Logger', async () => {
 		mockLogger.debug('testing');
 		mockLogger.info('Hello there!');
+		await flushAllOutputs();
 		// Overwrite variant
 		const file1 = readFileSync(testPath1, { encoding: 'utf-8' });
 		expect(file1).not.toContain('Original content');

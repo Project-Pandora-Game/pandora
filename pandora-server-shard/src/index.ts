@@ -22,7 +22,7 @@ Start().catch((error) => {
  */
 async function Start(): Promise<void> {
 	SetupSignalHandling();
-	SetupLogging();
+	await SetupLogging();
 	logger.info(`${APP_NAME} v${APP_VERSION} starting...`);
 	logger.verbose('Loading asset definitions...');
 	LoadAssetDefinitions();
@@ -38,7 +38,7 @@ async function Start(): Promise<void> {
 /**
  * Configures logging for the application.
  */
-function SetupLogging(): void {
+async function SetupLogging(): Promise<void> {
 	SetConsoleOutput(LOG_PRODUCTION ? LogLevel.VERBOSE : LogLevel.DEBUG);
 	// Setup logging into file
 	if (LOG_DIR) {
@@ -51,8 +51,8 @@ function SetupLogging(): void {
 				`${time.getHours().toString().padStart(2, '0')}${time.getMinutes().toString().padStart(2, '0')}`;
 			logPrefix += `_${timestring}_${process.pid}`;
 		}
-		AddFileOutput(`${LOG_DIR}/${logPrefix}_debug.log`, false, LogLevel.DEBUG);
-		AddFileOutput(`${LOG_DIR}/${logPrefix}_error.log`, true, LogLevel.ALERT);
+		await AddFileOutput(`${LOG_DIR}/${logPrefix}_debug.log`, false, LogLevel.DEBUG);
+		await AddFileOutput(`${LOG_DIR}/${logPrefix}_error.log`, true, LogLevel.ALERT);
 	}
 	// Setup logging to Discord
 	if (LOG_DISCORD_WEBHOOK_URL) {

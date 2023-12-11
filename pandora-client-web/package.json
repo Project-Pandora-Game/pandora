@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"private": true,
 	"repository": "git@github.com:Project-Pandora-Game/pandora-client-web.git",
-	"license": "GPL-3.0-or-later",
+	"license": "LGPL-3.0-or-later",
 	"scripts": {
 		"clean": "rimraf dist",
 		"build": "pnpm run --silent clean && cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --env prod --fail-on-warnings",

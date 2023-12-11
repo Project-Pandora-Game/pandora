@@ -17,8 +17,8 @@
 	"devDependencies": {
 		"@playwright/test": "1.40.1",
 		"@types/node": "18.19.3",
-		"@typescript-eslint/eslint-plugin": "6.13.2",
-		"@typescript-eslint/parser": "6.13.2",
+		"@typescript-eslint/eslint-plugin": "6.14.0",
+		"@typescript-eslint/parser": "6.14.0",
 		"eslint": "8.55.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",

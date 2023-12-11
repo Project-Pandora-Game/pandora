@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"description": "Collection of End to End tests for Pandora",
 	"private": true,
-	"license": "GPL-3.0-or-later",
+	"license": "LGPL-3.0-or-later",
 	"scripts": {
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",

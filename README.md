@@ -101,11 +101,3 @@ Individual components and their repository:
     * No direct pushes to master.
     * 2 Approving reviews required (can be blocked by anyone, requires resolving).
     * Preferred reviews by peers (code things by coders, assets by asset makers).
-## Licenses
-
-| Sub Project                             | License file                                |
-| --------------------------------------- | ------------------------------------------- |
-| [Commons](pandora-common/)              | [MIT](pandora-common/LICENSE)               |
-| [Web Client](pandora-client-web/)       | [GPL-3.0](pandora-client-web/LICENSE)       |
-| [Server Directory](pandora-client-web/) | [GPL-3.0](pandora-server-directory/LICENSE) |
-| [Server Shard](pandora-client-web/)     | [GPL-3.0](pandora-client-web/LICENSE)       |

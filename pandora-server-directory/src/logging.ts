@@ -1,5 +1,5 @@
 import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
-import fs from 'fs';
+import fsPromises from 'fs/promises';
 import { GetLogger, logConfig, LogLevel } from 'pandora-common';
 
 /** Custom function for stringifying data when logging into file */
@@ -37,15 +37,28 @@ export function AnyToString(data: unknown): string {
 	);
 }
 
-export function AddFileOutput(fileName: string, append: boolean, logLevel: LogLevel, logLevelOverrides: Record<string, LogLevel> = {}): void {
-	const fd = fs.openSync(fileName, append ? 'a' : 'w');
+export async function AddFileOutput(fileName: string, append: boolean, logLevel: LogLevel, logLevelOverrides: Record<string, LogLevel> = {}): Promise<void> {
+	const writeStream = (await fsPromises.open(fileName, append ? 'a' : 'w'))
+		.createWriteStream({
+			encoding: 'utf8',
+		});
 	logConfig.logOutputs.push({
 		logLevel,
 		logLevelOverrides,
 		supportsColor: false,
 		onMessage: (prefix, message) => {
 			const line = [prefix, ...message.map((v) => AnyToString(v))].join(' ') + '\n';
-			fs.writeSync(fd, line, undefined, 'utf8');
+			writeStream.write(line, 'utf8');
+		},
+		flush: () => {
+			return new Promise((resolve, reject) => {
+				writeStream.write('', (error) => {
+					if (error != null) {
+						reject(error);
+					}
+					resolve();
+				});
+			});
 		},
 	});
 }

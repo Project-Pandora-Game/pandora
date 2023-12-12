@@ -361,8 +361,8 @@ importers:
         specifier: 6.3.0
         version: 6.3.0
       mongodb-memory-server-core:
-        specifier: 9.1.1
-        version: 9.1.1
+        specifier: 9.1.3
+        version: 9.1.3
       nanoid:
         specifier: 3.3.7
         version: 3.3.7
@@ -9523,8 +9523,8 @@ packages:
       whatwg-url: 13.0.0
     dev: false
 
-  /mongodb-memory-server-core@9.1.1:
-    resolution: {integrity: sha512-5toYR4A7DfV5k+Qf6L9FG86baID2rPP/JYwp8TPrdm8ZzfTfyHTwQwa2BzVpSwmLoVW5gXN0znYmXiE68mImMg==}
+  /mongodb-memory-server-core@9.1.3:
+    resolution: {integrity: sha512-94pUuTgjb6NglCbKLEZm457aACxeaT8+Jw8weEy0DyWiCBd1mk8dIuq7GE1CjmHFU2hMOCnOutdR96LhkWpgig==}
     engines: {node: '>=14.20.1'}
     dependencies:
       async-mutex: 0.4.0

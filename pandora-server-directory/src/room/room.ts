@@ -6,7 +6,6 @@ import { ConnectionManagerClient } from '../networking/manager_client';
 import { pick, uniq } from 'lodash';
 import { ShardManager } from '../shard/shardManager';
 import { GetDatabase } from '../database/databaseProvider';
-import { RoomManager } from '../room/roomManager';
 import { Account } from '../account/account';
 
 export class Room {
@@ -16,6 +15,11 @@ export class Room {
 	public readonly id: RoomId;
 	private readonly config: IChatRoomDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
+	private _deletionPending = false;
+
+	public get isValid(): boolean {
+		return !this._deletionPending;
+	}
 
 	private _assignedShard: Shard | null = null;
 	public get assignedShard(): Shard | null {
@@ -128,7 +132,16 @@ export class Room {
 		});
 	}
 
-	public async removeOwner(accountId: AccountId): Promise<'ok'> {
+	// TODO: This might be better synchronized, but we need to avoid deadlock if room gets deleted during this
+	public async removeOwner(accountId: AccountId): Promise<'ok' | 'notAnOwner'> {
+		// Ignore if room is invalidated
+		if (!this.isValid) {
+			return 'ok';
+		}
+		// No action if target is already not an owner
+		if (!this._owners.has(accountId)) {
+			return 'notAnOwner';
+		}
 		// Owners get demoted to admins
 		this._owners.delete(accountId);
 		if (!this.config.admin.includes(accountId)) {
@@ -137,7 +150,7 @@ export class Room {
 
 		if (this._owners.size === 0) {
 			// Room without owners gets destroyed
-			await RoomManager.destroyRoom(this);
+			await this.delete();
 		} else {
 			// Room with remaining owners only propagates the change to shard and clients
 			await this._assignedShard?.update('rooms');
@@ -150,7 +163,12 @@ export class Room {
 		return 'ok';
 	}
 
+	@AsyncSynchronized('object')
 	public async update(changes: Partial<IChatRoomDirectoryConfig>, source: CharacterInfo | null): Promise<'ok'> {
+		// Ignore if room is invalidated
+		if (!this.isValid) {
+			return 'ok';
+		}
 		if (changes.name) {
 			this.config.name = changes.name;
 		}
@@ -165,7 +183,7 @@ export class Room {
 		}
 		if (changes.banned) {
 			this.config.banned = uniq(changes.banned);
-			await this.removeBannedCharacters(source);
+			await this._removeBannedCharacters(source);
 		}
 		if (changes.public !== undefined) {
 			this.config.public = changes.public;
@@ -199,7 +217,7 @@ export class Room {
 			if (changes.background)
 				changeList.push('background');
 
-			this.sendUpdatedMessage(source, ...changeList);
+			this._sendUpdatedMessage(source, ...changeList);
 		}
 
 		await Promise.all([
@@ -211,7 +229,7 @@ export class Room {
 		return 'ok';
 	}
 
-	private sendUpdatedMessage(source: CharacterInfo, ...changeList: string[]) {
+	private _sendUpdatedMessage(source: CharacterInfo, ...changeList: string[]) {
 		if (changeList.length >= 2) {
 			this.sendMessage({
 				type: 'serverMessage',
@@ -238,7 +256,12 @@ export class Room {
 		}
 	}
 
+	@AsyncSynchronized('object')
 	public async adminAction(source: CharacterInfo, action: IClientDirectoryArgument['chatRoomAdminAction']['action'], targets: number[]): Promise<void> {
+		// Ignore if room is invalidated
+		if (!this.isValid) {
+			return;
+		}
 		targets = uniq(targets);
 		let updated = false;
 		switch (action) {
@@ -248,7 +271,7 @@ export class Room {
 						continue;
 
 					updated = true;
-					await this.removeCharacter(character, 'kick', source);
+					await this._removeCharacter(character, 'kick', source);
 				}
 				break;
 			case 'ban': {
@@ -256,8 +279,8 @@ export class Room {
 				this.config.banned = uniq([...this.config.banned, ...targets]);
 				updated = oldSize !== this.config.banned.length;
 				if (updated) {
-					await this.removeBannedCharacters(source);
-					this.sendUpdatedMessage(source, 'ban list');
+					await this._removeBannedCharacters(source);
+					this._sendUpdatedMessage(source, 'ban list');
 				}
 				break;
 			}
@@ -266,7 +289,7 @@ export class Room {
 				this.config.banned = this.config.banned.filter((id) => !targets.includes(id));
 				updated = oldSize !== this.config.banned.length;
 				if (updated)
-					this.sendUpdatedMessage(source, 'ban list');
+					this._sendUpdatedMessage(source, 'ban list');
 
 				break;
 			}
@@ -275,7 +298,7 @@ export class Room {
 				this.config.admin = uniq([...this.config.admin, ...targets]);
 				updated = oldSize !== this.config.admin.length;
 				if (updated)
-					this.sendUpdatedMessage(source, 'admins');
+					this._sendUpdatedMessage(source, 'admins');
 
 				break;
 			}
@@ -284,7 +307,7 @@ export class Room {
 				this.config.admin = this.config.admin.filter((id) => !targets.includes(id));
 				updated = oldSize !== this.config.admin.length;
 				if (updated)
-					this.sendUpdatedMessage(source, 'admins');
+					this._sendUpdatedMessage(source, 'admins');
 
 				break;
 			}
@@ -297,17 +320,37 @@ export class Room {
 		}
 	}
 
-	public async onDestroy(): Promise<void> {
+	/**
+	 * Mark this room as pending for deletion and delete it from the database.
+	 * This removes all characters currently inside, unloads the room from shards and marks it as pending for deletion so it gets unloaded as soon as possible.
+	 */
+	@AsyncSynchronized('object')
+	public async delete(): Promise<void> {
+		this._deletionPending = true;
+		this.logger.debug('Marked for deletion');
+		// Be nice and notify people that this room is no longer joinable
+		ConnectionManagerClient.onRoomListChange();
+		// Kick all characters
 		for (const character of Array.from(this.characters.values())) {
-			await this.removeCharacter(character, 'destroy', null);
+			await this._removeCharacter(character, 'destroy', null);
 		}
-		await this.disconnect();
+		// Manually disconnect
+		const result = await this._setShard(null);
+		Assert(result);
 		Assert(this._assignedShard == null);
 		Assert(this.characters.size === 0);
-		this.logger.debug('Destroyed');
+		// Finally delete the room from the database
+		await GetDatabase().deleteChatRoom(this.id);
+		// Note, that at this point there could still be pending connections or characters tracking it
+		// Ignore those - the requests will fail and once the room is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
 	public checkAllowEnter(character: Character, password: string | null, ignoreCharacterLimit: boolean = false): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
+		// No-one can enter if the room is in an invalid state
+		if (!this.isValid) {
+			return 'errFull';
+		}
+
 		// If you are already in room, then you have rights to enter it
 		if (character.room === this)
 			return 'ok';
@@ -338,7 +381,7 @@ export class Room {
 
 	/** Returns if this room is visible to the specific account when searching in room search */
 	public checkVisibleTo(account: Account): boolean {
-		return this.isAdmin(account) || this.isPublic;
+		return this.isValid && (this.isAdmin(account) || this.isPublic);
 	}
 
 	public isOwner(account: Account): boolean {
@@ -380,8 +423,13 @@ export class Room {
 		return false;
 	}
 
-	@AsyncSynchronized()
+	@AsyncSynchronized('object')
 	public async addCharacter(character: Character): Promise<void> {
+		// Ignore if room is invalidated
+		if (!this.isValid) {
+			return;
+		}
+
 		Assert(character.assignment?.type === 'room-tracking' && character.assignment.room === this);
 		Assert(this.trackingCharacters.has(character));
 		Assert(!this.characters.has(character));
@@ -414,11 +462,18 @@ export class Room {
 		]);
 	}
 
-	@AsyncSynchronized()
+	@AsyncSynchronized('object')
 	public async removeCharacter(character: Character, reason: IChatRoomLeaveReason, source: CharacterInfo | null): Promise<void> {
+		return await this._removeCharacter(character, reason, source);
+	}
+
+	private async _removeCharacter(character: Character, reason: IChatRoomLeaveReason, source: CharacterInfo | null): Promise<void> {
+		// Ignore if the character has already been removed
+		if (!this.characters.has(character))
+			return;
+
 		Assert(character.assignment?.type === 'room-joined' && character.assignment.room === this);
 		Assert(this.trackingCharacters.has(character));
-		Assert(this.characters.has(character));
 
 		await character.baseInfo.updateSelfData({ currentRoom: null });
 
@@ -427,6 +482,13 @@ export class Room {
 		character.assignment = {
 			type: 'room-tracking',
 			room: this,
+		};
+		// Make sure to un-track the character too, sending them on the same shard the room was before
+		// (even if that was no shard; could happen if room is deleted without being loaded)
+		this.trackingCharacters.delete(character);
+		character.assignment = this._assignedShard == null ? null : {
+			type: 'shard',
+			shard: this._assignedShard,
 		};
 
 		// Report the leave
@@ -489,10 +551,10 @@ export class Room {
 		});
 	}
 
-	private async removeBannedCharacters(source: CharacterInfo | null): Promise<void> {
+	private async _removeBannedCharacters(source: CharacterInfo | null): Promise<void> {
 		for (const character of this.characters.values()) {
 			if (this.isBanned(character.baseInfo.account)) {
-				await this.removeCharacter(character, 'ban', source);
+				await this._removeCharacter(character, 'ban', source);
 			}
 		}
 	}
@@ -507,6 +569,10 @@ export class Room {
 
 	@AsyncSynchronized('object')
 	public async connect(): Promise<'noShardFound' | 'failed' | Shard> {
+		// Ignore if room is invalidated
+		if (!this.isValid) {
+			return 'failed';
+		}
 		let shard: Shard | null = this._assignedShard;
 		if (shard == null) {
 			if (this.config.features.includes('development') && this.config.development?.shardId) {
@@ -532,7 +598,7 @@ export class Room {
 	@AsyncSynchronized('object')
 	public shardReconnect(shard: Shard, accessId: string, characterAccessIds: ReadonlyMap<CharacterId, string>): Promise<void> {
 		this.touch();
-		if (this.isInUse() || this.accessId !== accessId)
+		if (!this.isValid || this.isInUse() || this.accessId !== accessId)
 			return Promise.resolve();
 
 		Assert(this._assignedShard == null);

@@ -476,7 +476,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const room = await RoomManager.loadRoom(id);
 
-		if (room == null || !room.owners.has(connection.account.id)) {
+		if (room == null) {
 			return { result: 'notAnOwner' };
 		}
 

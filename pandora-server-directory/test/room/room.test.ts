@@ -5,6 +5,8 @@ import { Shard } from '../../src/shard/shard';
 import { TestMockDb, TestMockShard, TestShardData } from '../utils';
 import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV, TEST_ROOM_PANDORA_OWNED } from './testData';
 import { Sleep } from '../../src/utility';
+import { GetDatabase } from '../../src/database/databaseProvider';
+import { ShardManager } from '../../src/shard/shardManager';
 
 describe('Room', () => {
 	let mockShard: TestShardData;
@@ -29,8 +31,8 @@ describe('Room', () => {
 		});
 	});
 
-	afterAll(() => {
-		mockShard.connection.disconnect();
+	afterAll(async () => {
+		await ShardManager.onDestroy();
 	});
 
 	describe('constructor', () => {
@@ -68,7 +70,7 @@ describe('Room', () => {
 			await expect(room.connect()).resolves.toBe('noShardFound');
 			expect(room.assignedShard).toBe(null);
 
-			await RoomManager.destroyRoom(room);
+			await room.delete();
 			allowConnectSpy.mockRestore();
 		});
 
@@ -89,7 +91,7 @@ describe('Room', () => {
 			expect(room.assignedShard).toBe(mockShard.shard);
 			expect(mockShard.messageHandlerSpy).toHaveBeenCalledWith('update', expect.anything(), expect.anything());
 
-			await RoomManager.destroyRoom(room);
+			await room.delete();
 		});
 
 		it('Fails with unknown shard id from development data', async () => {
@@ -107,7 +109,7 @@ describe('Room', () => {
 			await expect(room.connect()).resolves.toBe('noShardFound');
 			expect(room.assignedShard).toBe(null);
 
-			await RoomManager.destroyRoom(room);
+			await room.delete();
 		});
 
 		it('Uses shard id from development data', async () => {
@@ -135,7 +137,40 @@ describe('Room', () => {
 			expect(room.assignedShard).toBe(mockShard.shard);
 			expect(mockShard.messageHandlerSpy).toHaveBeenCalledWith('update', expect.anything(), expect.anything());
 
-			await RoomManager.destroyRoom(room);
+			await room.delete();
+		});
+	});
+
+	describe('delete()', () => {
+		it('Deletes and invalidates unloaded room', async () => {
+			const room = await RoomManager.createRoom(TEST_ROOM, TEST_ROOM_PANDORA_OWNED.slice());
+
+			expect(room).toBeInstanceOf(Room);
+			Assert(room instanceof Room);
+
+			await room.delete();
+
+			expect(room.isValid).toBeFalsy();
+			await expect(GetDatabase().getChatRoomById(room.id, null)).resolves.toBeNull();
+		});
+
+		it('Deletes and invalidates loaded room', async () => {
+			const room = await RoomManager.createRoom(TEST_ROOM, TEST_ROOM_PANDORA_OWNED.slice());
+
+			expect(room).toBeInstanceOf(Room);
+			Assert(room instanceof Room);
+
+			const connectedShard = await room.connect();
+			expect(connectedShard).toBe(mockShard.shard);
+			expect(room.assignedShard).toBe(mockShard.shard);
+			Assert(typeof connectedShard !== 'string');
+
+			await room.delete();
+
+			expect(room.isValid).toBeFalsy();
+			expect(room.assignedShard).toBeNull();
+			expect(connectedShard.rooms.get(room.id)).toBeUndefined();
+			await expect(GetDatabase().getChatRoomById(room.id, null)).resolves.toBeNull();
 		});
 	});
 });

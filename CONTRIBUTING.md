@@ -7,6 +7,7 @@
 We are generally more responsive on Discord and it can be used to easier coordinate or to direct you to the right place for help.
 It is especially advisable to align with us before you make a (larger) contribution in the form of code or assets.
 Please do not expect that every pull request will be merged if there was no previously accepted issue on it or an alignment on Discord!
+
 [![Discord invite](https://discord.com/api/guilds/872284471611760720/widget.png?style=banner2)](https://discord.gg/EnaPvuQf8d)
 
 ## Did you find a bug?

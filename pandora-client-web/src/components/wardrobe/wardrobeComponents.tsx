@@ -186,11 +186,11 @@ export function InventoryAssetPreview({ asset, small }: {
 	small: boolean;
 }): ReactElement {
 	const assetManager = useAssetManager();
-	const previewType = useAssetPreviewType(small);
+	const preferredPreviewType = useAssetPreviewType(small);
 
-	const preview = useMemo(() => {
-		if (previewType === 'image' && asset.definition.preview != null)
-			return asset.definition.preview;
+	const [previewType, preview] = useMemo((): ['none' | 'image' | 'icon', string | undefined] => {
+		if (preferredPreviewType === 'image' && asset.definition.preview != null)
+			return ['image', asset.definition.preview];
 
 		const validAttributes = Array.from(asset.staticAttributes)
 			.map((attributeName) => assetManager.getAttributeDefinition(attributeName))
@@ -203,10 +203,10 @@ export function InventoryAssetPreview({ asset, small }: {
 		);
 
 		if (filterAttribute)
-			return filterAttribute.icon;
+			return ['icon', filterAttribute.icon];
 
-		return validAttributes.length > 0 ? validAttributes[0].icon : undefined;
-	}, [asset, previewType, assetManager]);
+		return validAttributes.length > 0 ? ['icon', validAttributes[0].icon] : ['none', undefined];
+	}, [asset, preferredPreviewType, assetManager]);
 
 	const icon = useGraphicsUrl(preview);
 

@@ -8,15 +8,16 @@ import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeA
 import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
 import { useWardrobeContext, wardrobeContext } from '../../../components/wardrobe/wardrobeContext';
 import { useWardrobeItems } from '../../../components/wardrobe/wardrobeItems';
-import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes';
+import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocus, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes';
 import { WardrobeFocusesItem } from '../../../components/wardrobe/wardrobeUtils';
 import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
-import { Observable } from '../../../observable';
+import { Observable, useObservable } from '../../../observable';
 import { useEditor, useEditorState } from '../../editorContextProvider';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import '../../../components/wardrobe/wardrobe.scss';
 import { WardrobeActionButton } from '../../../components/wardrobe/wardrobeComponents';
+import { Immutable } from 'immer';
 
 export const EDITOR_ROOM_CONTEXT = {
 	features: ChatRoomFeatureSchema.options,
@@ -30,6 +31,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const character = editor.character;
 	const assetList = assetManager.assetList;
 
+	const focus = useMemo(() => new Observable<Immutable<WardrobeFocus>>({ container: [], itemId: null }), []);
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
@@ -67,6 +69,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		assetList,
 		heldItem,
 		setHeldItem,
+		focus,
 		extraItemActions,
 		actions,
 		actionPreviewState,
@@ -90,7 +93,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 		showExtraActionButtons: true,
 		showHoverPreview: true,
-	}), [character, globalState, assetList, heldItem, extraItemActions, actions, actionPreviewState, assetManager, editor]);
+	}), [character, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, assetManager, editor]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -100,14 +103,15 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 }
 
 export function EditorWardrobeUI(): ReactElement {
-	const { assetList } = useWardrobeContext();
+	const { assetList, focus } = useWardrobeContext();
+	const currentFocus = useObservable(focus);
 
 	const character = useEditor().character;
 	const characterState = useEditorCharacterState();
 
 	const safemode = characterState.safemode != null;
 
-	const { currentFocus, setFocus, containerContentsFilter } = useWardrobeItems();
+	const { containerContentsFilter } = useWardrobeItems(currentFocus);
 
 	const assetManager = useAssetManager();
 	const assetFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
@@ -136,14 +140,18 @@ export function EditorWardrobeUI(): ReactElement {
 				<InventoryItemView
 					title='Currently worn items'
 					focus={ currentFocus }
-					setFocus={ setFocus }
+					setFocus={ (newFocus) => focus.value = newFocus }
 				/>
 				{
 					WardrobeFocusesItem(currentFocus) && (
 						<>
 							<hr />
 							<div className='flex-col flex-1'>
-								<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } setFocus={ setFocus } />
+								<WardrobeItemConfigMenu
+									key={ currentFocus.itemId }
+									item={ currentFocus }
+									setFocus={ (newFocus) => focus.value = newFocus }
+								/>
 							</div>
 						</>
 					)

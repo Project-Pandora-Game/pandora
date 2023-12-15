@@ -142,6 +142,7 @@ export function ChatRoomGraphicsScene({
 					roomDevices.map((device) => (device.deployment != null ? (
 						<ChatRoomDeviceInteractive
 							key={ device.id }
+							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
 							background={ roomBackground }
@@ -158,6 +159,7 @@ export function ChatRoomGraphicsScene({
 					roomDevices.map((device) => ((chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === device.id && device.deployment != null) ? (
 						<ChatRoomDeviceMovementTool
 							key={ device.id }
+							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
 							background={ roomBackground }

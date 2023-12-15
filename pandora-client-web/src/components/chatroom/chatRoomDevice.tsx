@@ -1,4 +1,4 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -14,7 +14,7 @@ import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
 import { Character } from '../../character/character';
-import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacters, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
+import { useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
@@ -30,6 +30,7 @@ const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
 type ChatRoomDeviceInteractiveProps = {
+	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
 	background: IChatroomBackgroundData;
@@ -41,6 +42,7 @@ type ChatRoomDeviceInteractiveProps = {
 };
 
 type ChatRoomDeviceProps = {
+	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
 	background: IChatroomBackgroundData;
@@ -236,6 +238,7 @@ export function ChatRoomDeviceMovementTool({
 }
 
 export function ChatRoomDeviceInteractive({
+	globalState,
 	item,
 	deployment,
 	background,
@@ -309,6 +312,7 @@ export function ChatRoomDeviceInteractive({
 
 	return (
 		<ChatRoomDevice
+			globalState={ globalState }
 			item={ item }
 			deployment={ deployment }
 			background={ background }
@@ -332,6 +336,7 @@ export function ChatRoomDeviceInteractive({
 }
 
 export function ChatRoomDevice({
+	globalState,
 	item,
 	deployment,
 	background,
@@ -364,6 +369,7 @@ export function ChatRoomDevice({
 	return (
 		<RoomDeviceRenderContext.Provider value={ item }>
 			<RoomDeviceGraphics
+				globalState={ globalState }
 				item={ item }
 				position={ { x, y: height - y - yOffsetExtra } }
 				scale={ { x: scale, y: scale } }
@@ -413,6 +419,7 @@ export function ChatRoomDevice({
 
 export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	item: ItemRoomDevice;
+	globalState: AssetFrameworkGlobalState;
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
@@ -429,6 +436,7 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 
 function RoomDeviceGraphicsWithManagerImpl({
 	item,
+	globalState,
 	position: positionOffset,
 	scale: scaleExtra,
 	pivot: pivotExtra,
@@ -468,7 +476,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 						if (layer.type === 'sprite') {
 							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } />;
 						} else if (layer.type === 'slot') {
-							graphics = <RoomDeviceGraphicsLayerSlot item={ item } layer={ layer } />;
+							graphics = <RoomDeviceGraphicsLayerSlot globalState={ globalState } item={ item } layer={ layer } />;
 						} else {
 							AssertNever(layer);
 						}
@@ -530,14 +538,14 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 	);
 }
 
-function RoomDeviceGraphicsLayerSlot({ item, layer }: {
+function RoomDeviceGraphicsLayerSlot({ item, layer, globalState }: {
 	item: ItemRoomDevice;
 	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
+	globalState: AssetFrameworkGlobalState;
 }): ReactElement | null {
 	const characterId = item.slotOccupancy.get(layer.slot);
-	const chatRoom = useChatroomRequired();
 	const chatroomCharacters = useChatRoomCharacters();
-	const characterState = useCharacterState(chatRoom, characterId ?? null);
+	const characterState = useMemo(() => (characterId != null ? globalState.characters.get(characterId) : undefined), [globalState, characterId]);
 
 	if (!characterId)
 		return null;

@@ -162,6 +162,32 @@ function WardrobeBackgroundColorPicker(): ReactElement | null {
 	);
 }
 
+export function WardrobeRoomPreview({ isPreview, ...graphicsProps }: {
+	characters: readonly Character<ICharacterRoomData>[];
+	globalState: AssetFrameworkGlobalState;
+	info: IChatRoomFullInfo;
+	isPreview?: boolean;
+}): ReactElement {
+	const overlay = (
+		<Row gap='medium' padding='medium' alignX='end' className='overlay pointer-events-disable'>
+			<Row className='pointer-events-enable'>
+				{
+					isPreview ? (
+						<div className='warning'>Preview</div>
+					) : null
+				}
+			</Row>
+		</Row>
+	);
+
+	return (
+		<RoomPreview
+			{ ...graphicsProps }
+			overlay={ overlay }
+		/>
+	);
+}
+
 interface RoomPreviewProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
@@ -219,6 +245,7 @@ export function RoomPreview({
 					roomDevices.map((device) => (device.deployment != null ? (
 						<ChatRoomDevice
 							key={ device.id }
+							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
 							background={ roomBackground }

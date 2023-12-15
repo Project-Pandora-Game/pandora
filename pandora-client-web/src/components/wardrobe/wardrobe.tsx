@@ -13,7 +13,7 @@ import { Tab, TabContainer } from '../common/tabs/tabs';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 import { WardrobeTarget } from './wardrobeTypes';
 import { WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
-import { RoomPreview, WardrobeCharacterPreview } from './wardrobeGraphics';
+import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeBodyManipulation } from './wardrobeBody';
 import { WardrobePoseGui } from './views/wardrobePoseView';
 import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
@@ -73,17 +73,19 @@ function WardrobeRoom({ room }: {
 	const navigate = useNavigate();
 	const characters = useChatRoomCharacters();
 	const roomInfo = useObservable(room.info);
-	const { globalState } = useWardrobeContext();
+	const { globalState, actionPreviewState } = useWardrobeContext();
+	const globalPreviewState = useObservable(actionPreviewState);
 
 	return (
 		<div className='wardrobe'>
 			<div className='wardrobeMain'>
 				{
 					(roomInfo != null && characters != null) ? (
-						<RoomPreview
+						<WardrobeRoomPreview
 							characters={ characters }
-							globalState={ globalState }
+							globalState={ globalPreviewState ?? globalState }
 							info={ roomInfo }
+							isPreview={ globalPreviewState != null }
 						/>
 					) : null
 				}

@@ -158,19 +158,6 @@ export const RoomManager = new class RoomManagerClass implements Service {
 		return room;
 	}
 
-	/**
-	 * Destroy a room
-	 * @param room - The room to destroy
-	 */
-	public async destroyRoom(room: Room): Promise<void> {
-		await GetDatabase().deleteChatRoom(room.id);
-		await room.onDestroy();
-		this._unloadRoom(room);
-		logger.verbose(`Destroyed room ${room.id}`);
-
-		ConnectionManagerClient.onRoomListChange();
-	}
-
 	/** Create room from received data, adding it to loaded rooms */
 
 	@AsyncSynchronized()

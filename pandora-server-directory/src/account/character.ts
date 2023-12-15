@@ -723,13 +723,8 @@ export class Character {
 		// Actually remove the character from the room
 		await oldRoom.removeCharacter(this, 'leave', this.baseInfo);
 
-		// Cleanup the assignment
-		Assert(this.assignment?.type === 'room-tracking' && this.assignment.room === oldRoom);
-		oldRoom.trackingCharacters.delete(this);
-		this.assignment = {
-			type: 'shard',
-			shard,
-		};
+		Assert(this.room == null);
+		Assert(this.assignment == null || this.assignment.type === 'shard');
 
 		// Check if room can be cleaned up
 		await oldRoom.cleanupIfEmpty();

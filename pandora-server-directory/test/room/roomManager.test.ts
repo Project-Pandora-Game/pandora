@@ -5,6 +5,7 @@ import { RoomManager } from '../../src/room/roomManager';
 import { ShardManager } from '../../src/shard/shardManager';
 import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV, TEST_ROOM_PANDORA_OWNED } from './testData';
 import { TestMockAccount, TestMockDb } from '../utils';
+import { GetDatabase } from '../../src/database/databaseProvider';
 
 describe('RoomManager', () => {
 	let shard: Shard;
@@ -27,6 +28,8 @@ describe('RoomManager', () => {
 			Assert(room instanceof Room);
 			expect(room.getConfig()).toEqual(data);
 			expect(room.assignedShard).toBeNull();
+
+			await expect(GetDatabase().getChatRoomById(room.id, null)).resolves.not.toBeNull();
 
 			if (!testRoomId) {
 				testRoomId = room.id;
@@ -93,25 +96,6 @@ describe('RoomManager', () => {
 			const rooms = RoomManager.listLoadedRooms();
 
 			expect(rooms.map((r) => r.id)).toContain(testRoomId);
-		});
-	});
-
-	describe('destroyRoom()', () => {
-		it('Deletes room by instance', async () => {
-			const room = await RoomManager.loadRoom(testRoomId);
-			expect(room).toBeInstanceOf(Room);
-			Assert(room instanceof Room);
-
-			const roomonDestroySpy = jest.spyOn(room, 'onDestroy');
-
-			await RoomManager.destroyRoom(room);
-
-			// Not gettable
-			expect(RoomManager.getLoadedRoom(testRoomId)).toBe(null);
-			expect(RoomManager.listLoadedRooms()).not.toContain(room);
-			await expect(RoomManager.loadRoom(testRoomId)).resolves.toBe(null);
-			// Destructor called
-			expect(roomonDestroySpy).toHaveBeenCalledTimes(1);
 		});
 	});
 });

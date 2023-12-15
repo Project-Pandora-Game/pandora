@@ -154,7 +154,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 					) : null
 				}
 				<Scrollbar color='dark'>
-					<div className={ listMode ? 'list' : 'grid' }>
+					<div className={ listMode ? 'list' : window.innerWidth > 2000 ? 'grid large' : 'grid small' }>
 						{
 							filteredAssets.map((a) => spawnStyle === 'spawn' ? (
 								<InventoryAssetViewListSpawn key={ a.id }

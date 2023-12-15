@@ -265,7 +265,7 @@ $drop-overlay-gap: 0.3em;
 
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(4, minmax(0, 384px));
+		grid-template-columns: repeat(3, minmax(0, 384px));
 		grid-template-rows: min-content auto;
 	}
 

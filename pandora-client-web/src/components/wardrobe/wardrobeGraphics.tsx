@@ -1,11 +1,16 @@
 import {
 	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalState,
+	FilterItemType,
 	HexColorString,
+	ICharacterRoomData,
+	IChatRoomFullInfo,
 	IChatroomBackgroundData,
+	ItemRoomDevice,
 	ResolveBackground,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useMemo } from 'react';
-import { IChatroomCharacter } from '../../character/character';
+import React, { ReactElement, ReactNode, useCallback, useMemo } from 'react';
+import { Character, IChatroomCharacter } from '../../character/character';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { Button } from '../common/button/button';
 import { useEvent } from '../../common/useEvent';
@@ -15,9 +20,12 @@ import { ColorInput } from '../common/colorInput/colorInput';
 import { directoryConnectorContext, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
 import { useCharacterIsInChatroom, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
-import { useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
+import { ChatRoomCharacter, useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
 import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
 import { Row } from '../common/container/container';
+import * as PIXI from 'pixi.js';
+import { Container, Graphics } from '@pixi/react';
+import { ChatRoomDevice } from '../chatroom/chatRoomDevice';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;
@@ -151,5 +159,79 @@ function WardrobeBackgroundColorPicker(): ReactElement | null {
 			hideTextInput={ true }
 			inputColorTitle='Change background color'
 		/>
+	);
+}
+
+interface RoomPreviewProps {
+	characters: readonly Character<ICharacterRoomData>[];
+	globalState: AssetFrameworkGlobalState;
+	info: IChatRoomFullInfo;
+	overlay?: ReactNode;
+}
+
+export function RoomPreview({
+	characters,
+	globalState,
+	info,
+	overlay,
+}: RoomPreviewProps): ReactElement {
+	const assetManager = useAssetManager();
+
+	const roomState = globalState.room;
+	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
+	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
+
+	const borderDraw = useCallback((g: PIXI.Graphics) => {
+		g.clear()
+			.lineStyle(2, 0x404040, 0.4)
+			.drawRect(0, 0, roomBackground.size[0], roomBackground.size[1]);
+	}, [roomBackground]);
+
+	const sceneOptions = useMemo((): GraphicsSceneProps => ({
+		forwardContexts: [directoryConnectorContext, shardConnectorContext],
+		worldWidth: roomBackground.size[0],
+		worldHeight: roomBackground.size[1],
+		backgroundColor: 0x000000,
+	}), [roomBackground]);
+
+	return (
+		<GraphicsScene
+			className='roomPreview'
+			sceneOptions={ sceneOptions }
+			divChildren={ overlay }
+		>
+			<Graphics
+				zIndex={ 2 }
+				draw={ borderDraw }
+			/>
+			<Container zIndex={ 10 } sortableChildren>
+				{
+					characters.map((character) => (
+						<ChatRoomCharacter
+							key={ character.data.id }
+							globalState={ globalState }
+							character={ character }
+							background={ roomBackground }
+						/>
+					))
+				}
+				{
+					roomDevices.map((device) => (device.deployment != null ? (
+						<ChatRoomDevice
+							key={ device.id }
+							item={ device }
+							deployment={ device.deployment }
+							background={ roomBackground }
+						/>
+					) : null))
+				}
+			</Container>
+			<GraphicsBackground
+				zIndex={ -1000 }
+				background={ roomBackground.image }
+				backgroundSize={ roomBackground.size }
+				backgroundFilters={ usePlayerVisionFilters(false) }
+			/>
+		</GraphicsScene>
 	);
 }

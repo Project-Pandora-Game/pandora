@@ -3,7 +3,7 @@ import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
-import { Observable, useNullableObservable, useObservable } from '../../observable';
+import { Observable, ReadonlyObservable, useNullableObservable, useObservable } from '../../observable';
 import { ChatParser } from '../chatroom/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
@@ -50,6 +50,7 @@ export type RoomInventoryEvents = {
 export type IChatRoomContext = ITypedEventEmitter<RoomInventoryEvents> & {
 	readonly type: 'room';
 	readonly globalState: AssetFrameworkGlobalStateContainer;
+	readonly info: ReadonlyObservable<IChatRoomFullInfo | null>;
 };
 
 export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {

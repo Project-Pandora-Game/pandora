@@ -15,6 +15,8 @@ import { useWardrobeContext } from '../wardrobeContext';
 import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { InventoryItemViewDropArea } from './wardrobeItemView';
 import { isEqual } from 'lodash';
+import { Button } from '../../common/button/button';
+import { useNavigate } from 'react-router';
 
 export function RoomInventoryView({ title, container }: {
 	title: string;
@@ -75,11 +77,16 @@ export function RoomInventoryViewList({
 }): ReactElement | null {
 	const { heldItem } = useWardrobeContext();
 	const items = room.items;
+	const navigate = useNavigate();
 
 	return (
 		<>
 			<div className='toolbar'>
 				<span>{ title }</span>
+				<Button className='slim' onClick={ () =>
+					navigate('/wardrobe', { state: { target: 'room' } }) } >
+					Switch to room inventory
+				</Button>
 			</div>
 			<Scrollbar color='dark'>
 				<div className='list reverse withDropButtons'>

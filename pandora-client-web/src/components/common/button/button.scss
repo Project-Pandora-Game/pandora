@@ -4,18 +4,18 @@ $button-themes: (
 	default: (
 		background: $grey-darkest,
 		border: $grey-darkest,
-		color: $white-primary,
-		background-hover: $grey-lighter,
-		color-hover: $black-primary,
+		color: white,
+		background-hover: $grey-dark,
+		color-hover: white,
 		focus-outline: $white,
 		icon-filter: none
 	),
 	defaultActive: (
 		background: $grey-lighter,
 		border: $grey-darkest,
-		color: $grey-darkest,
+		color: black,
 		background-hover: $grey-lightest,
-		color-hover: $black-primary,
+		color-hover: black,
 		focus-outline: $white,
 		icon-filter: invert(100%)
 	),

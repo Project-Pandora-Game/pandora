@@ -445,6 +445,9 @@ function RoomDeviceGraphicsWithManagerImpl({
 	onPointerUpOutside,
 	onPointerMove,
 	children,
+	cursor,
+	eventMode,
+	hitArea,
 	...graphicsProps
 }: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
 	const asset = item.asset;
@@ -464,6 +467,9 @@ function RoomDeviceGraphicsWithManagerImpl({
 			position={ position }
 			scale={ scale }
 			sortableChildren
+			cursor={ cursor ?? 'default' }
+			eventMode={ eventMode ?? 'auto' }
+			hitArea={ hitArea ?? null }
 			pointerdown={ onPointerDown }
 			pointerup={ onPointerUp }
 			pointerupoutside={ onPointerUpOutside }

@@ -349,9 +349,9 @@ function ChatRoomCharacterDisplay({
 			zIndex={ zIndex }
 			filters={ filters }
 			sortableChildren
-			eventMode={ eventMode }
-			cursor={ cursor }
-			hitArea={ hitArea }
+			eventMode={ eventMode ?? 'auto' }
+			cursor={ cursor ?? 'default' }
+			hitArea={ hitArea ?? null }
 			pointerdown={ onPointerDown }
 			pointerup={ onPointerUp }
 			pointerupoutside={ onPointerUp }

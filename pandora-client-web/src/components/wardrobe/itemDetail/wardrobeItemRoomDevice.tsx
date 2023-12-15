@@ -114,35 +114,39 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 	}, [deployment, setPositionX, setPositionY, setPositionYOffset, onChangeCallerThrottled]);
 
 	return (
-		<Row padding='medium' alignY='center'>
-			<label>X:</label>
-			<input type='number'
-				className='positioning-input'
-				value={ positionX }
-				onChange={ (ev) => {
-					changeCallback({ x: ev.target.valueAsNumber });
-				} }
-				disabled={ disabled }
-			/>
-			<label>Y:</label>
-			<input type='number'
-				className='positioning-input'
-				value={ positionY }
-				onChange={ (ev) => {
-					changeCallback({ y: ev.target.valueAsNumber });
-				} }
-				disabled={ disabled }
-			/>
-			<label>Y offset:</label>
-			<input type='number'
-				className='positioning-input'
-				value={ positionYOffset }
-				onChange={ (ev) => {
-					changeCallback({ yOffset: ev.target.valueAsNumber });
-				} }
-				disabled={ disabled }
-			/>
-		</Row>
+		<Column padding='medium' alignY='center'>
+			<Row alignY='center'>
+				<label>X:</label>
+				<input type='number'
+					className='positioning-input flex-1'
+					value={ positionX }
+					onChange={ (ev) => {
+						changeCallback({ x: ev.target.valueAsNumber });
+					} }
+					disabled={ disabled }
+				/>
+				<label>Y:</label>
+				<input type='number'
+					className='positioning-input flex-1'
+					value={ positionY }
+					onChange={ (ev) => {
+						changeCallback({ y: ev.target.valueAsNumber });
+					} }
+					disabled={ disabled }
+				/>
+			</Row>
+			<Row alignY='center'>
+				<label>Y offset:</label>
+				<input type='number'
+					className='positioning-input flex-1'
+					value={ positionYOffset }
+					onChange={ (ev) => {
+						changeCallback({ yOffset: ev.target.valueAsNumber });
+					} }
+					disabled={ disabled }
+				/>
+			</Row>
+		</Column>
 	);
 }
 

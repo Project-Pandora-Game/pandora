@@ -24,6 +24,8 @@ import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
 import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
 import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { useNavigate } from 'react-router';
+import { Button } from '../../common/button/button';
 
 export function InventoryItemView({
 	className,
@@ -40,6 +42,7 @@ export function InventoryItemView({
 }): ReactElement | null {
 	const { target, targetSelector, heldItem } = useWardrobeContext();
 	const appearance = useWardrobeTargetItems(target);
+	const navigate = useNavigate();
 
 	const [displayedItems, containerModule, containerSteps] = useMemo<[AppearanceItems, IItemModule | undefined, readonly string[]]>(() => {
 		let items: AppearanceItems = filter ? appearance.filter(filter) : appearance;
@@ -98,6 +101,12 @@ export function InventoryItemView({
 					) :
 						<span>{ title }</span>
 				}
+				{ target.type === 'room' ?
+					<Button className='slim' onClick={ () =>
+						navigate('/wardrobe', { state: { target: 'character' } }) } >
+						Switch to your wardrobe
+					</Button>
+				: '' }
 			</div>
 			<Scrollbar color='dark'>
 				<div className='list reverse withDropButtons'>

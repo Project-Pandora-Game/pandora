@@ -103,7 +103,7 @@ export function InventoryItemView({
 				}
 				{ target.type === 'room' ?
 					<Button className='slim' onClick={ () =>
-						navigate('/wardrobe', { state: { target: 'character' } }) } >
+						navigate('/wardrobe') } >
 						Switch to your wardrobe
 					</Button>
 				: '' }

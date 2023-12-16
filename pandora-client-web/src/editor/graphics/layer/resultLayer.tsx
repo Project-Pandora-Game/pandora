@@ -9,6 +9,7 @@ import { Container, Graphics, Sprite } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { useTexture } from '../../../graphics/useTexture';
 import { PreviewCutterRectangle } from '../../components/previewCutter/previewCutter';
+import { DynamicRope } from '../../../graphics/dynamicRope';
 
 export function ResultLayer({
 	layer,
@@ -78,6 +79,14 @@ export function ResultLayer({
 				)
 			}
 			<PreviewCutterRectangle />
+			<DynamicRope
+				start={ [120, 420] }
+				end={ [880, 420] }
+				pointsPerLength={ 1 }
+				length={ 1200 }
+				width={ 5 }
+				texture={ PIXI.Texture.WHITE }
+			/>
 		</>
 	);
 }

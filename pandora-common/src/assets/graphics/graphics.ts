@@ -205,6 +205,16 @@ export enum LayerSide {
 	RIGHT,
 }
 
+export const AttachmentPointSchema = z.object({
+	point: PointDefinitionSchema,
+	distance: PointDefinitionSchema.optional(),
+	priority: z.array(z.object({
+		layer: LayerPrioritySchema,
+		condition: ConditionSchema.optional(),
+	})).min(1),
+});
+export type AttachmentPoint = z.infer<typeof AttachmentPointSchema>;
+
 export const LayerImageSettingSchema = z.object({
 	image: z.string(),
 	overrides: z.array(LayerImageOverrideSchema),
@@ -231,6 +241,7 @@ export type LayerDefinition = z.infer<typeof LayerDefinitionSchema>;
 
 export const AssetGraphicsDefinitionSchema = z.object({
 	layers: z.array(LayerDefinitionSchema),
+	attachmentPoints: z.array(AttachmentPointSchema).optional(),
 }).strict();
 export type AssetGraphicsDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
 

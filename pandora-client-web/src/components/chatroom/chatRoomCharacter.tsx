@@ -245,6 +245,7 @@ function ChatRoomCharacterInteractiveImpl({
 
 	return (
 		<ChatRoomCharacterDisplay
+			ref={ characterContainer }
 			globalState={ globalState }
 			character={ character }
 			characterState={ characterState }
@@ -260,7 +261,7 @@ function ChatRoomCharacterInteractiveImpl({
 	);
 }
 
-function ChatRoomCharacterDisplay({
+const ChatRoomCharacterDisplay = React.forwardRef(function ChatRoomCharacterDisplay({
 	character,
 	characterState,
 	background,
@@ -272,7 +273,7 @@ function ChatRoomCharacterDisplay({
 	onPointerDown,
 	onPointerMove,
 	onPointerUp,
-}: ChatRoomCharacterDisplayProps & CharacterStateProps): ReactElement | null {
+}: ChatRoomCharacterDisplayProps & CharacterStateProps, ref?: React.ForwardedRef<PIXI.Container>): ReactElement | null {
 	const app = useAppOptional();
 
 	const {
@@ -309,8 +310,6 @@ function ChatRoomCharacterDisplay({
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
 	const disconnectedIconY = labelY + 50;
 
-	const characterContainer = useRef<PIXI.Container>(null);
-
 	useEffect(() => {
 		if (app == null || onPointerMove == null)
 			return;
@@ -342,7 +341,7 @@ function ChatRoomCharacterDisplay({
 
 	return (
 		<Container
-			ref={ characterContainer }
+			ref={ ref }
 			position={ position }
 			scale={ { x: scale, y: scale } }
 			pivot={ errorCorrectedPivot }
@@ -439,7 +438,7 @@ function ChatRoomCharacterDisplay({
 			</SwapCullingDirection>
 		</Container>
 	);
-}
+});
 
 export function ChatRoomCharacterInteractive({
 	globalState,

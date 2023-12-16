@@ -10,6 +10,7 @@ import { ChildrenProps } from '../common/reactTypes';
 import { useObservable } from '../observable';
 import { ComputedLayerPriority, COMPUTED_LAYER_ORDERING, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { GraphicsLayerProps, GraphicsLayer, SwapCullingDirection } from './graphicsLayer';
+import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
 
 export type PointLike = {
 	x: number;
@@ -201,17 +202,19 @@ function GraphicsCharacterWithManagerImpl({
 			pointermove={ onPointerMove }
 			cursor='pointer'
 		>
-			<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
-				<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
-					{
-						sortOrder.map((priority, i) => {
-							const layer = priorityLayers.get(priority);
-							return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
-						})
-					}
-					{ children }
+			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } }>
+				<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
+					<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
+						{
+							sortOrder.map((priority, i) => {
+								const layer = priorityLayers.get(priority);
+								return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
+							})
+						}
+						{ children }
+					</SwapCullingDirection>
 				</SwapCullingDirection>
-			</SwapCullingDirection>
+			</GraphicsSuspense>
 		</Container>
 	);
 }

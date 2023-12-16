@@ -1,4 +1,4 @@
-import { AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterRoomPosition, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo, LegsPose } from 'pandora-common';
+import { AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterRoomPosition, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo, LegsPose } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterData } from '../../character/character';
@@ -6,19 +6,21 @@ import { ShardConnector } from '../../networking/shardConnector';
 import _ from 'lodash';
 import { ChatroomDebugConfig } from './chatroomDebug';
 import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
-import { Container, Graphics, Sprite, Text, useApp } from '@pixi/react';
+import { Container, Graphics, Sprite, Text } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE, SwapCullingDirection } from '../../graphics/graphicsLayer';
-import { ChatRoom, useCharacterRestrictionsManager, useCharacterState } from '../gameContext/chatRoomContextProvider';
+import { useCharacterRestrictionsManager } from '../gameContext/chatRoomContextProvider';
 import { useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
 import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { useTexture } from '../../graphics/useTexture';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
+import { useAppOptional } from '../../graphics/utility';
+import { Immutable } from 'immer';
 
-type ChatRoomCharacterProps = {
+type ChatRoomCharacterInteractiveProps = {
+	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
-	room: ChatRoom;
 	roomInfo: IChatRoomFullInfo | null;
 	debugConfig: ChatroomDebugConfig;
 	background: IChatroomBackgroundData;
@@ -26,7 +28,22 @@ type ChatRoomCharacterProps = {
 	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 };
 
-type ChatRoomCharacterPropsWithState = ChatRoomCharacterProps & {
+type ChatRoomCharacterDisplayProps = {
+	globalState: AssetFrameworkGlobalState;
+	character: Character<ICharacterRoomData>;
+	background: IChatroomBackgroundData;
+
+	debugConfig?: Immutable<ChatroomDebugConfig>;
+
+	hitArea?: PIXI.Rectangle;
+	cursor?: PIXI.Cursor;
+	eventMode?: PIXI.EventMode;
+	onPointerDown?: (event: FederatedPointerEvent) => void;
+	onPointerUp?: (event: FederatedPointerEvent) => void;
+	onPointerMove?: (event: FederatedPointerEvent) => void;
+};
+
+type CharacterStateProps = {
 	characterState: AssetFrameworkCharacterState;
 };
 
@@ -143,7 +160,8 @@ export function useChatRoomCharacterPosition(position: CharacterRoomPosition, ch
 	};
 }
 
-function ChatRoomCharacterDisplay({
+function ChatRoomCharacterInteractiveImpl({
+	globalState,
 	character,
 	characterState,
 	roomInfo,
@@ -151,31 +169,16 @@ function ChatRoomCharacterDisplay({
 	background,
 	shard,
 	menuOpen,
-}: ChatRoomCharacterPropsWithState): ReactElement | null {
-	const app = useApp();
-
+}: ChatRoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
+	const id = characterState.id;
 	const {
-		id,
-		name,
 		position: dataPosition,
-		settings,
-		isOnline,
 	} = useCharacterData(character);
-
-	const { interfaceChatroomOfflineCharacterFilter } = useCurrentAccountSettings();
-
-	const playerFilters = usePlayerVisionFilters(character.isPlayer());
-	const characterFilters = useCharacterDisplayFilters(character);
-	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
 
 	const height = background.size[1];
 	const {
-		position,
-		zIndex,
 		yOffsetExtra,
 		scale,
-		pivot,
-		rotationAngle,
 		errorCorrectedPivot,
 	} = useChatRoomCharacterPosition(dataPosition, characterState, background);
 
@@ -192,16 +195,8 @@ function ChatRoomCharacterDisplay({
 
 	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
 
-	const backView = characterState.actualPose.view === 'back';
-
-	const scaleX = backView ? -1 : 1;
-
 	const labelX = errorCorrectedPivot.x;
 	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
-
-	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
-	const disconnectedIconTexture = useTexture(disconnectedIcon);
-	const disconnectedIconY = labelY + 50;
 
 	const hitArea = useMemo(() => new Rectangle(labelX - 100, labelY - 50, 200, 100), [labelX, labelY]);
 
@@ -248,7 +243,77 @@ function ChatRoomCharacterDisplay({
 		}
 	}, [onDragMove, onDragStart]);
 
+	return (
+		<ChatRoomCharacterDisplay
+			globalState={ globalState }
+			character={ character }
+			characterState={ characterState }
+			background={ background }
+			debugConfig={ debugConfig }
+			eventMode='static'
+			cursor='pointer'
+			hitArea={ hitArea }
+			onPointerDown={ onPointerDown }
+			onPointerUp={ onPointerUp }
+			onPointerMove={ onPointerMove }
+		/>
+	);
+}
+
+function ChatRoomCharacterDisplay({
+	character,
+	characterState,
+	background,
+	debugConfig,
+
+	eventMode,
+	cursor,
+	hitArea,
+	onPointerDown,
+	onPointerMove,
+	onPointerUp,
+}: ChatRoomCharacterDisplayProps & CharacterStateProps): ReactElement | null {
+	const app = useAppOptional();
+
+	const {
+		name,
+		position: dataPosition,
+		settings,
+		isOnline,
+	} = useCharacterData(character);
+
+	const { interfaceChatroomOfflineCharacterFilter } = useCurrentAccountSettings();
+
+	const playerFilters = usePlayerVisionFilters(character.isPlayer());
+	const characterFilters = useCharacterDisplayFilters(character);
+	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
+
+	const {
+		position,
+		zIndex,
+		yOffsetExtra,
+		scale,
+		pivot,
+		rotationAngle,
+		errorCorrectedPivot,
+	} = useChatRoomCharacterPosition(dataPosition, characterState, background);
+
+	const backView = characterState.actualPose.view === 'back';
+
+	const scaleX = backView ? -1 : 1;
+
+	const labelX = errorCorrectedPivot.x;
+	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
+
+	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
+	const disconnectedIconTexture = useTexture(disconnectedIcon);
+	const disconnectedIconY = labelY + 50;
+
+	const characterContainer = useRef<PIXI.Container>(null);
+
 	useEffect(() => {
+		if (app == null || onPointerMove == null)
+			return;
 		// TODO: Move to globalpointermove once @pixi/react supports them
 		app.stage.eventMode = 'static';
 		app.stage.on('pointermove', onPointerMove);
@@ -259,6 +324,11 @@ function ChatRoomCharacterDisplay({
 
 	// Debug graphics
 	const hotboxDebugDraw = useCallback((g: PIXI.Graphics) => {
+		if (hitArea == null) {
+			g.clear();
+			return;
+		}
+
 		g.clear()
 			.beginFill(0xff0000, 0.25)
 			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
@@ -279,9 +349,9 @@ function ChatRoomCharacterDisplay({
 			zIndex={ zIndex }
 			filters={ filters }
 			sortableChildren
-			eventMode='static'
-			cursor='pointer'
-			hitArea={ hitArea }
+			eventMode={ eventMode ?? 'auto' }
+			cursor={ cursor ?? 'default' }
+			hitArea={ hitArea ?? null }
 			pointerdown={ onPointerDown }
 			pointerup={ onPointerUp }
 			pointerupoutside={ onPointerUp }
@@ -371,12 +441,32 @@ function ChatRoomCharacterDisplay({
 	);
 }
 
-export function ChatRoomCharacter({
-	room,
+export function ChatRoomCharacterInteractive({
+	globalState,
 	character,
 	...props
-}: ChatRoomCharacterProps): ReactElement | null {
-	const characterState = useCharacterState(room, character.id);
+}: ChatRoomCharacterInteractiveProps): ReactElement | null {
+	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
+
+	if (!characterState)
+		return null;
+
+	return (
+		<ChatRoomCharacterInteractiveImpl
+			{ ...props }
+			globalState={ globalState }
+			character={ character }
+			characterState={ characterState }
+		/>
+	);
+}
+
+export function ChatRoomCharacter({
+	globalState,
+	character,
+	...props
+}: ChatRoomCharacterDisplayProps): ReactElement | null {
+	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
 
 	if (!characterState)
 		return null;
@@ -384,7 +474,7 @@ export function ChatRoomCharacter({
 	return (
 		<ChatRoomCharacterDisplay
 			{ ...props }
-			room={ room }
+			globalState={ globalState }
 			character={ character }
 			characterState={ characterState }
 		/>

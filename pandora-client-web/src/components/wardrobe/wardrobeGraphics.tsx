@@ -1,23 +1,37 @@
 import {
+	AssertNever,
 	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalState,
+	CharacterSize,
+	FilterItemType,
 	HexColorString,
+	ICharacterRoomData,
+	IChatRoomFullInfo,
 	IChatroomBackgroundData,
+	ItemRoomDevice,
+	Rectangle,
 	ResolveBackground,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useMemo } from 'react';
-import { IChatroomCharacter } from '../../character/character';
+import React, { ReactElement, ReactNode, useCallback, useMemo } from 'react';
+import { Character, IChatroomCharacter } from '../../character/character';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { Button } from '../common/button/button';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { directoryConnectorContext, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
 import { useCharacterIsInChatroom, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
-import { useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
+import { ChatRoomCharacter, useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
 import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
 import { Row } from '../common/container/container';
+import * as PIXI from 'pixi.js';
+import { Container, Graphics } from '@pixi/react';
+import { ChatRoomDevice } from '../chatroom/chatRoomDevice';
+import { useWardrobeContext } from './wardrobeContext';
+import { useObservable } from '../../observable';
+import { min } from 'lodash';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;
@@ -151,5 +165,188 @@ function WardrobeBackgroundColorPicker(): ReactElement | null {
 			hideTextInput={ true }
 			inputColorTitle='Change background color'
 		/>
+	);
+}
+
+export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }: {
+	characters: readonly Character<ICharacterRoomData>[];
+	globalState: AssetFrameworkGlobalState;
+	info: IChatRoomFullInfo;
+	isPreview?: boolean;
+}): ReactElement {
+	const { focus } = useWardrobeContext();
+	const currentFocus = useObservable(focus);
+
+	const overlay = (
+		<Row gap='medium' padding='medium' alignX='end' className='overlay pointer-events-disable'>
+			<Row className='pointer-events-enable'>
+				{
+					isPreview ? (
+						<div className='warning'>Preview</div>
+					) : null
+				}
+			</Row>
+		</Row>
+	);
+
+	const focusDevice = useMemo((): ItemRoomDevice | undefined => {
+		const itemId = currentFocus.container.length > 0 ? currentFocus.container[0].item : currentFocus.itemId;
+
+		if (itemId == null)
+			return undefined;
+
+		const item = globalState.room?.items.find((i) => i.id === itemId);
+
+		if (item == null || !item.isType('roomDevice') || item.deployment == null)
+			return undefined;
+
+		return item;
+	}, [currentFocus, globalState]);
+
+	return (
+		<RoomPreview
+			{ ...graphicsProps }
+			globalState={ globalState }
+			overlay={ overlay }
+			focusDevice={ focusDevice }
+		/>
+	);
+}
+
+interface RoomPreviewProps {
+	characters: readonly Character<ICharacterRoomData>[];
+	globalState: AssetFrameworkGlobalState;
+	info: IChatRoomFullInfo;
+	overlay?: ReactNode;
+	focusDevice?: ItemRoomDevice;
+}
+
+export function RoomPreview({
+	characters,
+	globalState,
+	info,
+	overlay,
+	focusDevice,
+}: RoomPreviewProps): ReactElement {
+	const assetManager = useAssetManager();
+
+	const roomState = globalState.room;
+	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
+	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
+
+	const borderDraw = useCallback((g: PIXI.Graphics) => {
+		g.clear()
+			.lineStyle(2, 0x404040, 0.4)
+			.drawRect(0, 0, roomBackground.size[0], roomBackground.size[1]);
+	}, [roomBackground]);
+
+	const focusArea = useMemo((): Rectangle | undefined => {
+		if (focusDevice == null || focusDevice.deployment == null)
+			return undefined;
+
+		const asset = focusDevice.asset.definition;
+
+		let itemLeft = asset.pivot.x - 20;
+		let itemRight = asset.pivot.x + 20;
+		let itemTop = asset.pivot.y - 20;
+		let itemBottom = asset.pivot.y + CHARACTER_BASE_Y_OFFSET + 20;
+
+		for (const layer of asset.graphicsLayers) {
+			if (layer.type === 'sprite') {
+				const offsetX = Math.min(layer.offset?.x ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.x)) ?? layer.offset?.x ?? 0);
+				const offsetY = Math.min(layer.offset?.y ?? 0, min(layer.offsetOverrides?.map((o) => o.offset.y)) ?? layer.offset?.y ?? 0);
+
+				itemLeft = Math.min(itemLeft, offsetX);
+				itemTop = Math.min(itemTop, offsetY);
+				if (offsetX < asset.pivot.x) {
+					const width = 2 * (asset.pivot.x - offsetX);
+					itemRight = Math.max(itemRight, offsetX + width);
+				}
+			} else if (layer.type === 'slot') {
+				for (const position of [layer.characterPosition, ...(layer.characterPositionOverrides ?? []).map((o) => o.position)]) {
+					const characterScale = position.relativeScale ?? 1;
+					const x = asset.pivot.x + position.offsetX - characterScale * (CHARACTER_PIVOT_POSITION.x + (position.pivotOffset?.x ?? 0));
+					const y = asset.pivot.y + position.offsetY - characterScale * (CHARACTER_PIVOT_POSITION.y + (position.pivotOffset?.y ?? 0));
+
+					itemLeft = Math.min(itemLeft, x);
+					itemTop = Math.min(itemTop, y);
+					const width = Math.ceil(characterScale * CharacterSize.WIDTH);
+					itemRight = Math.max(itemRight, x + width);
+					const height = Math.ceil(characterScale * CharacterSize.HEIGHT);
+					itemBottom = Math.max(itemBottom, y + height);
+				}
+			} else {
+				AssertNever(layer);
+			}
+		}
+
+		const [backgroundWidth, backgroundHeight] = roomBackground.size;
+		const scaling = roomBackground.scaling;
+		const deploymentX = Math.min(backgroundWidth, focusDevice.deployment.x);
+		const deploymentY = Math.min(backgroundHeight, focusDevice.deployment.y);
+		const yOffsetExtra = Math.round(focusDevice.deployment.yOffset);
+		const scale = 1 - (deploymentY * scaling) / backgroundHeight;
+
+		return {
+			x: deploymentX + Math.floor((itemLeft - asset.pivot.x) * scale),
+			y: backgroundHeight - deploymentY - yOffsetExtra + Math.floor((itemTop - (asset.pivot.y + CHARACTER_BASE_Y_OFFSET)) * scale),
+			width: Math.ceil((itemRight - itemLeft) * scale),
+			height: Math.ceil((itemBottom - itemTop) * scale),
+		};
+	}, [focusDevice, roomBackground]);
+
+	const sceneOptions = useMemo((): GraphicsSceneProps => ({
+		forwardContexts: [directoryConnectorContext, shardConnectorContext],
+		worldWidth: focusArea?.width ?? roomBackground.size[0],
+		worldHeight: focusArea?.height ?? roomBackground.size[1],
+		backgroundColor: 0x000000,
+	}), [focusArea, roomBackground]);
+
+	return (
+		<GraphicsScene
+			className='roomPreview'
+			sceneOptions={ sceneOptions }
+			divChildren={ overlay }
+		>
+			<Container
+				x={ -(focusArea?.x ?? 0) }
+				y={ -(focusArea?.y ?? 0) }
+				sortableChildren
+			>
+				<Graphics
+					zIndex={ 2 }
+					draw={ borderDraw }
+				/>
+				<Container zIndex={ 10 } sortableChildren>
+					{
+						characters.map((character) => (
+							<ChatRoomCharacter
+								key={ character.data.id }
+								globalState={ globalState }
+								character={ character }
+								background={ roomBackground }
+							/>
+						))
+					}
+					{
+						roomDevices.map((device) => (device.deployment != null ? (
+							<ChatRoomDevice
+								key={ device.id }
+								globalState={ globalState }
+								item={ device }
+								deployment={ device.deployment }
+								background={ roomBackground }
+							/>
+						) : null))
+					}
+				</Container>
+				<GraphicsBackground
+					zIndex={ -1000 }
+					background={ roomBackground.image }
+					backgroundSize={ roomBackground.size }
+					backgroundFilters={ usePlayerVisionFilters(false) }
+				/>
+			</Container>
+		</GraphicsScene>
 	);
 }

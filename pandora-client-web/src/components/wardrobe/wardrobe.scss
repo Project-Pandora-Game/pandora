@@ -24,7 +24,7 @@ $header-height: 2em;
 		flex-flow: row;
 		gap: 1em;
 
-		.characterPreview {
+		.characterPreview,.roomPreview {
 			position: relative;
 			height: 100%;
 			width: max(min(20em, 90vw), 33vw);

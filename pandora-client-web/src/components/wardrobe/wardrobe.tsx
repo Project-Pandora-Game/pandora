@@ -13,7 +13,7 @@ import { Tab, TabContainer } from '../common/tabs/tabs';
 import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
 import { WardrobeTarget } from './wardrobeTypes';
 import { WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
-import { WardrobeCharacterPreview } from './wardrobeGraphics';
+import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeBodyManipulation } from './wardrobeBody';
 import { WardrobePoseGui } from './views/wardrobePoseView';
 import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
@@ -67,14 +67,28 @@ function Wardrobe(): ReactElement | null {
 	AssertNever(target);
 }
 
-function WardrobeRoom({ room: _room }: {
+function WardrobeRoom({ room }: {
 	room: IChatRoomContext;
 }): ReactElement {
 	const navigate = useNavigate();
+	const characters = useChatRoomCharacters();
+	const roomInfo = useObservable(room.info);
+	const { globalState, actionPreviewState } = useWardrobeContext();
+	const globalPreviewState = useObservable(actionPreviewState);
 
 	return (
 		<div className='wardrobe'>
 			<div className='wardrobeMain'>
+				{
+					(roomInfo != null && characters != null) ? (
+						<WardrobeRoomPreview
+							characters={ characters }
+							globalState={ globalPreviewState ?? globalState }
+							info={ roomInfo }
+							isPreview={ globalPreviewState != null }
+						/>
+					) : null
+				}
 				<TabContainer className='flex-1'>
 					<Tab name='Room inventory'>
 						<div className='wardrobe-pane'>
@@ -111,7 +125,11 @@ function WardrobeCharacter({ character }: {
 				)
 			}
 			<div className='wardrobeMain'>
-				<WardrobeCharacterPreview character={ character } characterState={ characterPreviewState ?? characterState } isPreview={ characterPreviewState != null } />
+				<WardrobeCharacterPreview
+					character={ character }
+					characterState={ characterPreviewState ?? characterState }
+					isPreview={ characterPreviewState != null }
+				/>
 				<TabContainer className='flex-1'>
 					<Tab name='Items'>
 						<div className='wardrobe-pane'>

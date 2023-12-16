@@ -4,7 +4,7 @@ import {
 	Asset,
 	Item,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
@@ -19,17 +19,14 @@ import { InventoryItemView } from './views/wardrobeItemView';
 import { RoomInventoryView } from './views/wardrobeRoomInventoryView';
 import { WardrobeTemplateEditMenu } from './templateDetail/_wardrobeTemplateDetail';
 import { InventoryOutfitView } from './views/wardrobeOutfitView';
+import { useObservable } from '../../observable';
 
 /** This hook doesn't generate or use a global state and shouldn't be used recursively */
-export function useWardrobeItems(): {
-	currentFocus: WardrobeFocus;
-	setFocus: React.Dispatch<React.SetStateAction<WardrobeFocus>>;
+export function useWardrobeItems(currentFocus: WardrobeFocus): {
 	preFilter: (item: Item | Asset) => boolean;
 	containerContentsFilter: (asset: Asset) => boolean;
 } {
 	const { target } = useWardrobeContext();
-
-	const [currentFocus, setFocus] = useState<WardrobeFocus>({ container: [], itemId: null });
 
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
@@ -64,16 +61,15 @@ export function useWardrobeItems(): {
 	}, [containerPath, containerItem]);
 
 	return {
-		currentFocus,
-		setFocus,
 		preFilter,
 		containerContentsFilter,
 	};
 }
 
 export function WardrobeItemManipulation({ className }: { className?: string; }): ReactElement {
-	const { globalState, target, assetList, heldItem, setHeldItem } = useWardrobeContext();
-	const { currentFocus, setFocus, preFilter, containerContentsFilter } = useWardrobeItems();
+	const { globalState, target, assetList, heldItem, setHeldItem, focus } = useWardrobeContext();
+	const currentFocus = useObservable(focus);
+	const { preFilter, containerContentsFilter } = useWardrobeItems(currentFocus);
 
 	const assetManager = useAssetManager();
 	const assetFilterCharacterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
@@ -104,7 +100,7 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 		return container != null && container instanceof ItemModuleLockSlot;
 	}, [appearance, currentFocus]);
 
-	const focus = WardrobeFocusesItem(currentFocus) ? 'item' :
+	const focusType = WardrobeFocusesItem(currentFocus) ? 'item' :
 		heldItem.type === 'template' ? 'template' :
 		'nothing';
 
@@ -114,9 +110,9 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 				title={ title }
 				filter={ preFilter }
 				focus={ currentFocus }
-				setFocus={ setFocus }
+				setFocus={ (newFocus) => focus.value = newFocus }
 			/>
-			<TabContainer className={ classNames('flex-1', focus !== 'nothing' ? 'hidden' : null) }>
+			<TabContainer className={ classNames('flex-1', focusType !== 'nothing' ? 'hidden' : null) }>
 				{
 					globalState.room != null && !isRoomInventory ? (
 						<Tab name='Room inventory'>
@@ -149,12 +145,16 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 				</Tab>
 			</TabContainer>
 			{
-				focus === 'item' && WardrobeFocusesItem(currentFocus) ? (
+				focusType === 'item' && WardrobeFocusesItem(currentFocus) ? (
 					<div className='flex-col flex-1'>
-						<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } setFocus={ setFocus } />
+						<WardrobeItemConfigMenu
+							key={ currentFocus.itemId }
+							item={ currentFocus }
+							setFocus={ (newFocus) => focus.value = newFocus }
+						/>
 					</div>
 				) :
-				focus === 'template' && heldItem.type === 'template' ? (
+				focusType === 'template' && heldItem.type === 'template' ? (
 					<div className='flex-col flex-1'>
 						<WardrobeTemplateEditMenu
 							title='Creating item'

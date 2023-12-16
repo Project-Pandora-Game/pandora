@@ -1,5 +1,5 @@
-import { AssertNever, AssetFrameworkCharacterState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
+import { AssertNever, AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
 import { ChildrenProps } from '../../common/reactTypes';
@@ -14,7 +14,7 @@ import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
 import { Character } from '../../character/character';
-import { useCharacterRestrictionsManager, useCharacterState, useChatRoomCharacters, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
+import { useCharacterRestrictionsManager, useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
@@ -29,7 +29,8 @@ import { usePlayerState } from '../gameContext/playerContextProvider';
 const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
-type ChatRoomDeviceProps = {
+type ChatRoomDeviceInteractiveProps = {
+	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
 	background: IChatroomBackgroundData;
@@ -37,6 +38,21 @@ type ChatRoomDeviceProps = {
 	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
 	shard: ShardConnector | null;
 	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
+
+};
+
+type ChatRoomDeviceProps = {
+	globalState: AssetFrameworkGlobalState;
+	item: ItemRoomDevice;
+	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
+	background: IChatroomBackgroundData;
+
+	children?: ReactNode;
+	hitArea?: PIXI.Rectangle;
+	cursor?: PIXI.Cursor;
+	eventMode?: PIXI.EventMode;
+	onPointerDown?: (event: FederatedPointerEvent) => void;
+	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
 
 export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
@@ -48,7 +64,7 @@ export function ChatRoomDeviceMovementTool({
 	background,
 	setChatRoomMode,
 	shard,
-}: ChatRoomDeviceProps): ReactElement | null {
+}: ChatRoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
 	const app = useApp();
 
@@ -221,26 +237,18 @@ export function ChatRoomDeviceMovementTool({
 	);
 }
 
-export function ChatRoomDevice({
+export function ChatRoomDeviceInteractive({
+	globalState,
 	item,
 	deployment,
 	background,
 	chatRoomMode,
 	menuOpen,
-}: ChatRoomDeviceProps): ReactElement | null {
+}: ChatRoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
-	const debugConfig = useDebugConfig();
 	const { player, playerState } = usePlayerState();
 
 	const isBeingMoved = chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === item.id;
-
-	const [width, height] = background.size;
-	const scaling = background.scaling;
-	const x = Math.min(width, deployment.x);
-	const y = Math.min(height, deployment.y);
-	const yOffsetExtra = Math.round(deployment.yOffset);
-
-	const scale = 1 - (y * scaling) / height;
 
 	const pivot = useMemo<PointLike>(() => ({
 		x: asset.definition.pivot.x,
@@ -303,20 +311,18 @@ export function ChatRoomDevice({
 	}, [showMenuHelper, hasConstructionTool, hitAreaRadius]);
 
 	return (
-		<RoomDeviceRenderContext.Provider value={ item }>
-			<RoomDeviceGraphics
-				item={ item }
-				position={ { x, y: height - y - yOffsetExtra } }
-				scale={ { x: scale, y: scale } }
-				pivot={ errorCorrectedPivot }
-				hitArea={ hitArea }
-				eventMode={ enableMenu ? 'static' : 'none' }
-				onPointerDown={ onPointerDown }
-				onPointerUp={ onPointerUp }
-				onPointerUpOutside={ onPointerUp }
-				zIndex={ -y }
-			>
-				{
+		<ChatRoomDevice
+			globalState={ globalState }
+			item={ item }
+			deployment={ deployment }
+			background={ background }
+			hitArea={ hitArea }
+			cursor={ enableMenu ? 'pointer' : 'none' }
+			eventMode={ enableMenu ? 'static' : 'none' }
+			onPointerDown={ onPointerDown }
+			onPointerUp={ onPointerUp }
+		>
+			{
 					enableMenu ? (
 						<Graphics
 							zIndex={ 99998 }
@@ -324,7 +330,59 @@ export function ChatRoomDevice({
 							position={ { x: labelX, y: labelY } }
 						/>
 					) : null
-				}
+			}
+		</ChatRoomDevice>
+	);
+}
+
+export function ChatRoomDevice({
+	globalState,
+	item,
+	deployment,
+	background,
+
+	children,
+	hitArea,
+	cursor,
+	eventMode,
+	onPointerDown,
+	onPointerUp,
+}: ChatRoomDeviceProps): ReactElement | null {
+	const asset = item.asset;
+	const debugConfig = useDebugConfig();
+
+	const [width, height] = background.size;
+	const scaling = background.scaling;
+	const x = Math.min(width, deployment.x);
+	const y = Math.min(height, deployment.y);
+	const yOffsetExtra = Math.round(deployment.yOffset);
+
+	const scale = 1 - (y * scaling) / height;
+
+	const pivot = useMemo<PointLike>(() => ({
+		x: asset.definition.pivot.x,
+		y: asset.definition.pivot.y,
+	}), [asset]);
+
+	const errorCorrectedPivot = useMemo((): PointLike => ({ x: pivot.x, y: pivot.y + CHARACTER_BASE_Y_OFFSET }), [pivot]);
+
+	return (
+		<RoomDeviceRenderContext.Provider value={ item }>
+			<RoomDeviceGraphics
+				globalState={ globalState }
+				item={ item }
+				position={ { x, y: height - y - yOffsetExtra } }
+				scale={ { x: scale, y: scale } }
+				pivot={ errorCorrectedPivot }
+				hitArea={ hitArea }
+				eventMode={ eventMode }
+				cursor={ cursor }
+				onPointerDown={ onPointerDown }
+				onPointerUp={ onPointerUp }
+				onPointerUpOutside={ onPointerUp }
+				zIndex={ -y }
+			>
+				{ children }
 				{
 					!debugConfig?.deviceDebugOverlay ? null : (
 						<Container
@@ -361,11 +419,13 @@ export function ChatRoomDevice({
 
 export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	item: ItemRoomDevice;
+	globalState: AssetFrameworkGlobalState;
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
 	hitArea?: PIXI.Rectangle;
 	eventMode?: PIXI.EventMode;
+	cursor?: PIXI.Cursor;
 	zIndex?: number;
 
 	onPointerDown?: (event: PIXI.FederatedPointerEvent) => void;
@@ -376,6 +436,7 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 
 function RoomDeviceGraphicsWithManagerImpl({
 	item,
+	globalState,
 	position: positionOffset,
 	scale: scaleExtra,
 	pivot: pivotExtra,
@@ -384,6 +445,9 @@ function RoomDeviceGraphicsWithManagerImpl({
 	onPointerUpOutside,
 	onPointerMove,
 	children,
+	cursor,
+	eventMode,
+	hitArea,
 	...graphicsProps
 }: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
 	const asset = item.asset;
@@ -403,11 +467,13 @@ function RoomDeviceGraphicsWithManagerImpl({
 			position={ position }
 			scale={ scale }
 			sortableChildren
+			cursor={ cursor ?? 'default' }
+			eventMode={ eventMode ?? 'auto' }
+			hitArea={ hitArea ?? null }
 			pointerdown={ onPointerDown }
 			pointerup={ onPointerUp }
 			pointerupoutside={ onPointerUpOutside }
 			pointermove={ onPointerMove }
-			cursor='pointer'
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
 				{
@@ -416,7 +482,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 						if (layer.type === 'sprite') {
 							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } />;
 						} else if (layer.type === 'slot') {
-							graphics = <RoomDeviceGraphicsLayerSlot item={ item } layer={ layer } />;
+							graphics = <RoomDeviceGraphicsLayerSlot globalState={ globalState } item={ item } layer={ layer } />;
 						} else {
 							AssertNever(layer);
 						}
@@ -478,14 +544,14 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 	);
 }
 
-function RoomDeviceGraphicsLayerSlot({ item, layer }: {
+function RoomDeviceGraphicsLayerSlot({ item, layer, globalState }: {
 	item: ItemRoomDevice;
 	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
+	globalState: AssetFrameworkGlobalState;
 }): ReactElement | null {
 	const characterId = item.slotOccupancy.get(layer.slot);
-	const chatRoom = useChatroomRequired();
 	const chatroomCharacters = useChatRoomCharacters();
-	const characterState = useCharacterState(chatRoom, characterId ?? null);
+	const characterState = useMemo(() => (characterId != null ? globalState.characters.get(characterId) : undefined), [globalState, characterId]);
 
 	if (!characterId)
 		return null;

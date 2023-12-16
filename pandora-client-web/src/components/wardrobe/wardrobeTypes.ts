@@ -41,6 +41,7 @@ export interface WardrobeContext {
 	assetList: readonly Asset[];
 	heldItem: WardrobeHeldItem;
 	setHeldItem: (newHeldItem: WardrobeHeldItem) => void;
+	focus: Observable<Immutable<WardrobeFocus>>;
 	extraItemActions: Observable<readonly WardrobeContextExtraItemActionComponent[]>;
 	actions: AppearanceActionContext;
 	execute: (action: AppearanceAction) => IClientShardResult['appearanceAction'] | undefined;

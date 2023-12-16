@@ -1,4 +1,4 @@
-import { AssertNever, AssertNotNullable, CalculateCharacterMaxYForBackground, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import { AssertNever, AssertNotNullable, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -6,7 +6,7 @@ import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { useEvent } from '../../common/useEvent';
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, ChatRoom, useCharacterState } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, useCharacterState, useRoomState } from '../gameContext/chatRoomContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { usePlayer, usePlayerState } from '../gameContext/playerContextProvider';
 import { IBounceOptions } from 'pixi-viewport';
@@ -15,11 +15,10 @@ import { useAssetManager } from '../../assets/assetManager';
 import { ChatroomDebugConfig, useDebugConfig } from './chatroomDebug';
 import { PixiViewportSetupCallback } from '../../graphics/pixiViewport';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { ChatRoomCharacter } from './chatRoomCharacter';
+import { ChatRoomCharacterInteractive } from './chatRoomCharacter';
 import { PointLike } from '../../graphics/graphicsCharacter';
-import { ChatRoomDevice, ChatRoomDeviceMovementTool } from './chatRoomDevice';
+import { ChatRoomDeviceInteractive, ChatRoomDeviceMovementTool } from './chatRoomDevice';
 import { useChatroomRequired } from '../gameContext/chatRoomContextProvider';
-import { useRoomInventoryItems } from '../gameContext/chatRoomContextProvider';
 import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
@@ -37,9 +36,8 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 
 interface ChatRoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
-	roomDevices: readonly ItemRoomDevice[];
 	shard: ShardConnector | null;
-	room: ChatRoom;
+	globalState: AssetFrameworkGlobalState;
 	info: IChatRoomFullInfo;
 	debugConfig: ChatroomDebugConfig;
 	chatRoomMode: Immutable<IChatRoomMode>;
@@ -53,9 +51,8 @@ export function ChatRoomGraphicsScene({
 	className,
 	children,
 	characters,
-	roomDevices,
 	shard,
-	room,
+	globalState,
 	info,
 	debugConfig,
 	chatRoomMode,
@@ -65,6 +62,8 @@ export function ChatRoomGraphicsScene({
 }: ChatRoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
 
+	const roomState = globalState.room;
+	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
@@ -127,9 +126,9 @@ export function ChatRoomGraphicsScene({
 			<Container zIndex={ 10 } sortableChildren>
 				{
 					characters.map((character) => (
-						<ChatRoomCharacter
+						<ChatRoomCharacterInteractive
 							key={ character.data.id }
-							room={ room }
+							globalState={ globalState }
 							character={ character }
 							roomInfo={ info }
 							debugConfig={ debugConfig }
@@ -141,8 +140,9 @@ export function ChatRoomGraphicsScene({
 				}
 				{
 					roomDevices.map((device) => (device.deployment != null ? (
-						<ChatRoomDevice
+						<ChatRoomDeviceInteractive
 							key={ device.id }
+							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
 							background={ roomBackground }
@@ -159,6 +159,7 @@ export function ChatRoomGraphicsScene({
 					roomDevices.map((device) => ((chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === device.id && device.deployment != null) ? (
 						<ChatRoomDeviceMovementTool
 							key={ device.id }
+							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
 							background={ roomBackground }
@@ -255,10 +256,9 @@ export function ChatRoomScene({ className }: {
 	const player = usePlayer();
 	const debugConfig = useDebugConfig();
 
-	const [chatRoomMode, setChatRoomMode] = useState<Immutable<IChatRoomMode>>({ mode: 'normal' });
+	const globalState = useRoomState(chatRoom);
 
-	const roomInventoryItems = useRoomInventoryItems(chatRoom);
-	const roomDevices = useMemo(() => roomInventoryItems.filter(FilterItemType('roomDevice')), [roomInventoryItems]);
+	const [chatRoomMode, setChatRoomMode] = useState<Immutable<IChatRoomMode>>({ mode: 'normal' });
 
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
@@ -300,9 +300,8 @@ export function ChatRoomScene({ className }: {
 		<ChatRoomGraphicsScene
 			className={ className }
 			characters={ characters }
-			roomDevices={ roomDevices }
 			shard={ shard }
-			room={ chatRoom }
+			globalState={ globalState }
 			info={ info }
 			debugConfig={ debugConfig }
 			chatRoomMode={ chatRoomMode }

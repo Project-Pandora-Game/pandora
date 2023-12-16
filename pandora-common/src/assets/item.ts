@@ -874,7 +874,15 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 			};
 
 		const device = context.roomState?.items.find((item) => item.isType('roomDevice') && item.id === this.roomDeviceLink?.device);
-		if (device == null || device !== this.roomDevice) {
+		if (
+			// Target device must exist
+			(device == null || device !== this.roomDevice) ||
+			// The device must have a matching slot
+			(device.asset.definition.slots[this.roomDeviceLink.slot]?.wearableAsset !== this.asset.id) ||
+			// The device must be deployed with this character in target slot
+			// TODO: We have no way to check that the character in the slot is us, because we don't have the character ID at this point
+			(!device.deployment || !device.slotOccupancy.has(this.roomDeviceLink.slot))
+		) {
 			return {
 				success: false,
 				error: {
@@ -917,8 +925,8 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 		});
 	}
 
-	public updateRoomStateLink(roomDevice: ItemRoomDevice): ItemRoomDeviceWearablePart {
-		Assert(this.roomDeviceLink?.device === roomDevice.id);
+	public updateRoomStateLink(roomDevice: ItemRoomDevice | null): ItemRoomDeviceWearablePart {
+		Assert(roomDevice == null || this.roomDeviceLink?.device === roomDevice.id);
 		return this.withProps({
 			roomDevice,
 		});

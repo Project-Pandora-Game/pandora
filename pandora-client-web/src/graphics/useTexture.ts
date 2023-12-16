@@ -2,6 +2,7 @@ import { Texture } from 'pixi.js';
 import { useEffect, useRef, useState } from 'react';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { useObservable } from '../observable';
+import { useRegisterSuspenseAsset } from './graphicsSuspense/graphicsSuspense';
 
 const RESULT_NO_TEXTURE = {
 	image: '',
@@ -73,25 +74,36 @@ export function useTexture(
 		};
 	}, [manager, image, customGetTexture]);
 
+	const suspenseAsset = useRegisterSuspenseAsset();
+
 	// Special cases of textures
 
 	// Some constants reffer to specific constant textures
 	const specialTexture = SPECIAL_TEXTURES.get(image);
-	if (specialTexture != null)
+	if (specialTexture != null) {
+		suspenseAsset.setReady(true);
 		return specialTexture;
+	}
 
 	// Custom getter has priority over loaded textures
-	if (customGetTexture != null)
+	if (customGetTexture != null) {
+		suspenseAsset.setReady(true);
 		return customGetTexture(image);
+	}
 
 	// If the loaded texture is the one we requested, return it
-	if (texture.image === image)
+	if (texture.image === image) {
+		suspenseAsset.setReady(true);
 		return texture.texture;
+	}
 
 	// Fallback texture logic:
 	// - Try cached texture (avoids flickering during change before async event has chance to finish processing)
 	// - If a blank texture is preferred over stale one, return blank texture
 	// - Return stale texture
-	return (manager?.loader.getCachedTexture(image)) ??
+	const resultTexture = (manager?.loader.getCachedTexture(image)) ??
 		(preferBlank ? Texture.EMPTY : texture.texture);
+
+	suspenseAsset.setReady(preferBlank || resultTexture !== Texture.EMPTY);
+	return resultTexture;
 }

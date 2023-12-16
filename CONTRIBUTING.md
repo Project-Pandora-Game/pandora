@@ -59,7 +59,7 @@ Please do not expect that every pull request will be merged if there was no prev
 
 ## Do you intend to add a new feature or change an existing one?
 
-- If there is an existing issue about the feature you are intending to implement, write a comment on the issue or __risk someone beating you to it__.
+- If there is an existing issue about the feature you are intending to implement, write a comment on the issue or __risk someone else starting work on it after you, too, and beating you to it__.
 
 - **If the feature doesn't have an open issue** get in contact with us using Discord or open an issue first.
 

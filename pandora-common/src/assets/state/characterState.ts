@@ -191,20 +191,12 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			if (item.isType('roomDeviceWearablePart')) {
 				const link = item.roomDeviceLink;
 				if (!roomInventory || !link)
-					return null;
+					return item.updateRoomStateLink(null);
 
 				// Target device must exist
 				const device = roomInventory.items.find((roomItem) => roomItem.id === link.device);
-				if (!device || !device.isType('roomDevice'))
-					return null;
-
-				// The device must have a matching slot
-				if (device.asset.definition.slots[item.roomDeviceLink.slot]?.wearableAsset !== item.asset.id)
-					return null;
-
-				// The device must be deployed with this character in target slot
-				if (!device.deployment || device.slotOccupancy.get(item.roomDeviceLink.slot) !== this.id)
-					return null;
+				if (!device || !device.isType('roomDevice') || device.slotOccupancy.get(item.roomDeviceLink.slot) !== this.id)
+					return item.updateRoomStateLink(null);
 
 				return item.updateRoomStateLink(device);
 			}

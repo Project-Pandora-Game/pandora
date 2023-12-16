@@ -56,7 +56,7 @@ function LeftHeader(): ReactElement {
 					[no character selected]
 				</span>
 			) }
-			{ connectionInfo && showCharacterMenu && <CharacterMenu close={ () => setShowCharacterMenu(false) } /> }
+			{ connectionInfo && characterData && showCharacterMenu && <CharacterMenu close={ () => setShowCharacterMenu(false) } /> }
 		</div>
 	);
 }

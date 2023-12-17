@@ -104,7 +104,7 @@ export function useCurrentAccount(): IDirectoryAccountInfo | null {
 }
 
 export function useCurrentAccountSettings(): Immutable<IDirectoryAccountSettings> {
-	// Get account manually to avoid assets in the editor
+	// Get account manually to avoid error in the editor
 	const account = useNullableObservable(useDirectoryConnectorOptional()?.currentAccount);
 	// It is safe to return it simply like this, as when settings change, the whole account object is updated (it is immutable)
 	return account?.settings ?? ACCOUNT_SETTINGS_DEFAULT;

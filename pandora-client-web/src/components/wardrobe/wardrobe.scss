@@ -347,6 +347,12 @@ $drop-overlay-gap: 0.3em;
 		.itemPreview {
 			height: 1.5em;
 			width: 1.5em;
+
+			&.image {
+				margin-left: -0.5em;
+				height: 3em;
+				width: 3em;
+			}
 		}
 
 		.quickActions {

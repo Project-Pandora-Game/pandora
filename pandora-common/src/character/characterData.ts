@@ -8,6 +8,7 @@ import { InteractionSystemDataSchema } from '../gameLogic/interactions/interacti
 import { AccountIdSchema } from '../account';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesSchema } from './assetPreferences';
 import { ArrayToRecordKeys } from '../utility';
+import { RoomInventoryBundleSchema } from '../assets';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
@@ -55,6 +56,7 @@ export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: num
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
+	personalRoomInventory: z.lazy(() => RoomInventoryBundleSchema).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
@@ -72,6 +74,7 @@ export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
 	'name',
 	'profileDescription',
 	'appearance',
+	'personalRoomInventory',
 	'position',
 	'roomId',
 	'settings',

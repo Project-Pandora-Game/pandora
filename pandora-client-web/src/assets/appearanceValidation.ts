@@ -58,6 +58,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 		switch (e.type) {
 			case 'missingPermission':
 				return `You are missing permission to:\n${e.permissionDescription}`;
+			case 'blockedByPreference':
+				return `This asset is blocked by ${e.source} preference.`;
 			case 'blockedAddRemove':
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
 			case 'blockedModule': {

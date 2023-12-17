@@ -83,6 +83,11 @@ export type PermissionRestriction = {
 export type Restriction =
 	| PermissionRestriction
 	| {
+		type: 'blockedByPreference';
+		target: CharacterId;
+		source: 'character' | 'room';
+	}
+	| {
 		type: 'blockedAddRemove';
 		asset: AssetId;
 		self: boolean;

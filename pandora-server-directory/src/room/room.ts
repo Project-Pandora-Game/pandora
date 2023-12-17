@@ -1,4 +1,4 @@
-import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomListInfo, IChatRoomFullInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId } from 'pandora-common';
+import { GetLogger, Logger, IChatRoomBaseInfo, IChatRoomDirectoryConfig, IChatRoomListInfo, RoomId, IChatRoomLeaveReason, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId } from 'pandora-common';
 import { ChatActionId } from 'pandora-common/dist/chatroom/chatActions';
 import { Character, CharacterInfo } from '../account/character';
 import { Shard } from '../shard/shard';
@@ -122,14 +122,6 @@ export class Room {
 
 	public getConfig(): IChatRoomDirectoryConfig {
 		return this.config;
-	}
-
-	public getFullInfo(): IChatRoomFullInfo {
-		return ({
-			...this.config,
-			id: this.id,
-			owners: Array.from(this._owners),
-		});
 	}
 
 	// TODO: This might be better synchronized, but we need to avoid deadlock if room gets deleted during this

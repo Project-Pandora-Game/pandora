@@ -1,16 +1,16 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
 import type { CharacterId } from '../character/characterTypes';
 import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
-import type { IChatRoomFullInfo } from '../chatroom';
 import type { AssetsDefinitionFile } from '../assets/definitions';
 import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
+import { IChatRoomClientInfo, RoomId } from '../chatroom';
 import { Immutable } from 'immer';
+import { z } from 'zod';
 
 // Fix for pnpm resolution weirdness
-import type { } from 'zod';
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 
@@ -19,20 +19,18 @@ export type ICharacterRoomData = ICharacterPublicData & {
 	isOnline: boolean;
 };
 
-export type IChatRoomLoad = {
-	globalState: AssetFrameworkGlobalStateClientBundle;
-	room: null | {
-		info: IChatRoomFullInfo;
-		characters: ICharacterRoomData[];
-	};
-};
-
 export type IChatRoomUpdate = {
 	globalState?: AssetFrameworkGlobalStateClientBundle;
-	info?: Partial<IChatRoomFullInfo>;
+	info?: Partial<IChatRoomClientInfo>;
 	leave?: CharacterId;
 	join?: ICharacterRoomData;
 	characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
+};
+
+export type IChatRoomLoadData = {
+	id: RoomId | null;
+	info: IChatRoomClientInfo;
+	characters: ICharacterRoomData[];
 };
 
 export type IShardClientChangeEvents = 'permissions';
@@ -43,10 +41,7 @@ export const ShardClientSchema = {
 		request: ZodCast<{
 			character: ICharacterPrivateData;
 			globalState: AssetFrameworkGlobalStateClientBundle;
-			room: null | {
-				info: IChatRoomFullInfo;
-				characters: ICharacterRoomData[];
-			};
+			room: IChatRoomLoadData;
 			assetsDefinition: Immutable<AssetsDefinitionFile>;
 			assetsDefinitionHash: string;
 			assetsSource: string;
@@ -58,7 +53,10 @@ export const ShardClientSchema = {
 		response: null,
 	},
 	chatRoomLoad: {
-		request: ZodCast<IChatRoomLoad>(),
+		request: z.object({
+			globalState: ZodCast<AssetFrameworkGlobalStateClientBundle>(),
+			room: ZodCast<IChatRoomLoadData>(),
+		}),
 		response: null,
 	},
 	chatRoomUpdate: {

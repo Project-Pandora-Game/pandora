@@ -1,6 +1,7 @@
 import React, { Context, ReactElement, ReactNode, useMemo } from 'react';
+import * as PIXI from 'pixi.js';
 import { Application, Container, IApplicationOptions, Ticker } from 'pixi.js';
-import { Assert, AssertNotNullable, GetLogger, Rectangle } from 'pandora-common';
+import { Assert, AssertNotNullable, GetLogger, IsObject, Rectangle } from 'pandora-common';
 import { AppProvider, createRoot, ReactPixiRoot, Stage } from '@pixi/react';
 import { cloneDeep } from 'lodash';
 import { ChildrenProps } from '../common/reactTypes';
@@ -481,4 +482,19 @@ export function ContextBridge({ children, contexts, render }: {
 			) }
 		</Consumer>
 	);
+}
+
+export function PixiElementRequestUpdate(element: PIXI.Container): void {
+	const unknownCastElement: unknown = element;
+
+	if (
+		!IsObject(unknownCastElement) ||
+		!IsObject(unknownCastElement.__reactpixi) ||
+		!IsObject(unknownCastElement.__reactpixi.root) ||
+		!(unknownCastElement.__reactpixi.root instanceof PIXI.Container)
+	) {
+		throw new Error('Attempt to request update on a PIXI container outside of @pixi/react tree');
+	}
+
+	unknownCastElement.__reactpixi.root.emit(`__REACT_PIXI_REQUEST_RENDER__`);
 }

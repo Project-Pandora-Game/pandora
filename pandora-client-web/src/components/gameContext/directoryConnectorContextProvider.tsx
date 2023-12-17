@@ -7,7 +7,7 @@ import { useErrorHandler } from '../../common/useErrorHandler';
 import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
 import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
-import { useObservable } from '../../observable';
+import { useNullableObservable, useObservable } from '../../observable';
 import { Immutable } from 'immer';
 
 let directoryConnectorInstance: DirectoryConnector | undefined;
@@ -62,9 +62,17 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 	);
 }
 
+/**
+ * Uses directory connector in an optional way.
+ * This should only be used for things that can be accessed from editor - in other cases the connector should exist.
+ */
+function useDirectoryConnectorOptional(): DirectoryConnector | undefined {
+	return useContext(directoryConnectorContext);
+}
+
 export function useDirectoryConnector(): DirectoryConnector {
-	const connector = useContext(directoryConnectorContext);
-	if (!connector) {
+	const connector = useDirectoryConnectorOptional();
+	if (connector == null) {
 		throw new Error('Attempt to access DirectoryConnector outside of context');
 	}
 	return connector;
@@ -96,8 +104,10 @@ export function useCurrentAccount(): IDirectoryAccountInfo | null {
 }
 
 export function useCurrentAccountSettings(): Immutable<IDirectoryAccountSettings> {
+	// Get account manually to avoid assets in the editor
+	const account = useNullableObservable(useDirectoryConnectorOptional()?.currentAccount);
 	// It is safe to return it simply like this, as when settings change, the whole account object is updated (it is immutable)
-	return useCurrentAccount()?.settings ?? ACCOUNT_SETTINGS_DEFAULT;
+	return account?.settings ?? ACCOUNT_SETTINGS_DEFAULT;
 }
 
 export function useAuthToken(): AuthToken | undefined {

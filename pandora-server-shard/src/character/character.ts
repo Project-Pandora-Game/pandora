@@ -116,6 +116,10 @@ export class Character {
 		return this.data.settings;
 	}
 
+	public get preferences(): Readonly<AssetPreferences> {
+		return this.data.preferences;
+	}
+
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
 
 	private logger: Logger;
@@ -399,6 +403,7 @@ export class Character {
 			name: this.name,
 			profileDescription: this.profileDescription,
 			settings: this.settings,
+			preferences: this.preferences,
 		};
 	}
 

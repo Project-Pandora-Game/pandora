@@ -146,6 +146,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 			settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 			position: [0, 0, 0],
 			isOnline: true,
+			preferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		};
 		this.gameLogicCharacter = new GameLogicCharacterClient(this.data, this.logger.prefixMessages('[GameLogic]'));
 	}

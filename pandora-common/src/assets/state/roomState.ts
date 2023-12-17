@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { Item, ItemBundleSchema } from '../item';
 import { AssetManager } from '../assetManager';
 import { Logger } from '../../logging';
-import { ROOM_INVENTORY_BUNDLE_DEFAULT } from '../roomInventory';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
 import type { IExportOptions } from '../modules/common';
 import { ZodArrayWithInvalidDrop } from '../../validation';
@@ -17,6 +16,10 @@ export const RoomInventoryBundleSchema = z.object({
 
 export type RoomInventoryBundle = z.infer<typeof RoomInventoryBundleSchema>;
 export type RoomInventoryClientBundle = RoomInventoryBundle & { clientOnly: true; };
+
+export const ROOM_INVENTORY_BUNDLE_DEFAULT: RoomInventoryBundle = {
+	items: [],
+};
 
 /**
  * State of an room. Immutable.

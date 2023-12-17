@@ -3,11 +3,7 @@ import type { ItemPath, RoomActionTargetRoomInventory } from './appearanceTypes'
 import { AppearanceItems } from './appearanceValidation';
 import { AssetManager } from './assetManager';
 import { Item } from './item';
-import { AssetFrameworkRoomState, RoomInventoryBundle } from './state/roomState';
-
-export const ROOM_INVENTORY_BUNDLE_DEFAULT: RoomInventoryBundle = {
-	items: [],
-};
+import { AssetFrameworkRoomState } from './state/roomState';
 
 export class RoomInventory implements RoomActionTargetRoomInventory {
 	public readonly roomState: AssetFrameworkRoomState;

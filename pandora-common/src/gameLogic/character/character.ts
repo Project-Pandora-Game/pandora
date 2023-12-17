@@ -32,7 +32,7 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 		return new CharacterAppearance(state, this);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
+	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext): CharacterRestrictionsManager {
 		return this.getAppearance(state).getRestrictionManager(roomContext);
 	}
 

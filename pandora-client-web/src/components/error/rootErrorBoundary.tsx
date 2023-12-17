@@ -5,6 +5,7 @@ import { Button } from '../common/button/button';
 import { DebugContext, debugContext } from './debugContextProvider';
 import { BuildErrorReport } from './errorReport';
 import './rootErrorBoundary.scss';
+import { Row } from '../common/container/container';
 
 export enum ReportCopyState {
 	NONE = 'Copy to clipboard',
@@ -95,6 +96,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 
 	private renderErrorContent(): ReactElement {
 		const { copyState, report } = this.state;
+
 		return (
 			<div className='RootErrorBoundary'>
 				<h1>Something went wrong</h1>
@@ -112,7 +114,15 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 					</span>
 				</pre>
 
-				<p>In the event that this is an intermittent error, you can try <a href='/'>reloading the game.</a></p>
+				<Row alignX='center' padding='medium'>
+					<Button
+						onClick={ () => {
+							window.location.assign('/');
+						} }
+					>
+						Reload the game
+					</Button>
+				</Row>
 			</div>
 		);
 	}

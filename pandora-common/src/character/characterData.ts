@@ -6,6 +6,7 @@ import { PronounKeySchema } from './pronouns';
 import { RoomId } from '../chatroom';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { AccountIdSchema } from '../account';
+import { AssetIdSchema } from '../assets';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
@@ -40,7 +41,7 @@ export type AssetPreference = z.infer<typeof AssetPreferenceSchema>;
 
 export const AssetPreferencesSchema = z.object({
 	attributes: z.record(z.string(), AttributePreferenceSchema).default({}),
-	assets: z.record(z.string(), AssetPreferenceSchema).default({}),
+	assets: z.record(AssetIdSchema, AssetPreferenceSchema).default({}),
 });
 export type AssetPreferences = z.infer<typeof AssetPreferencesSchema>;
 

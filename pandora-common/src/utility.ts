@@ -407,3 +407,17 @@ export function PromiseOnce<T>(promise: () => Promise<T>): () => Promise<T> {
 		return result[0];
 	};
 }
+
+export type ObjectEntry<T, K extends keyof T> = [K, T[K]];
+
+export class Obj {
+	public static keys<T extends object>(obj: T): (keyof T)[] {
+		return Object.keys(obj) as (keyof T)[];
+	}
+	public static values<T extends object>(obj: T): T[keyof T][] {
+		return Object.values(obj) as T[keyof T][];
+	}
+	public static entries<T extends object>(obj: T): ObjectEntry<T, keyof T>[] {
+		return Object.entries(obj) as ObjectEntry<T, keyof T>[];
+	}
+}

@@ -1,5 +1,5 @@
 import { CharacterIdSchema } from '../character/characterTypes';
-import { CharacterPublicSettingsSchema } from '../character/characterData';
+import { AssetPreferencesSchema, CharacterPublicSettingsSchema } from '../character/characterData';
 import { AppearanceActionSchema } from '../assets/appearanceActions';
 import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
 import { ClientChatMessagesSchema, ChatRoomStatusSchema } from '../chatroom/chat';
@@ -67,6 +67,12 @@ export const ClientShardSchema = {
 	updateSettings: {
 		request: CharacterPublicSettingsSchema.partial(),
 		response: null,
+	},
+	updateAssetPreferences: {
+		request: AssetPreferencesSchema.partial(),
+		response: z.object({
+			result: z.enum(['ok', 'invalid']),
+		}),
 	},
 	updateCharacterDescription: {
 		request: z.object({

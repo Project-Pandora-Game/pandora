@@ -47,6 +47,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatRoomCharacterMove: this.handleChatRoomCharacterMove.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
+			updateAssetPreferences: this.handleUpdateAssetPreferences.bind(this),
 			updateCharacterDescription: this.handleUpdateCharacterDescription.bind(this),
 			gamblingAction: this.handleGamblingAction.bind(this),
 			permissionCheck: this.handlePermissionCheck.bind(this),
@@ -172,6 +173,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		client.character.setPublicSettings(settings);
 	}
 
+	private handleUpdateAssetPreferences(preferences: IClientShardArgument['updateAssetPreferences'], client: ClientConnection): IClientShardNormalResult['updateAssetPreferences'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		const result = client.character.setAssetPreferences(preferences);
+
+		return { result };
+	}
+
 	private handleUpdateCharacterDescription({ profileDescription }: IClientShardArgument['updateCharacterDescription'], client: ClientConnection): IClientShardNormalResult['updateCharacterDescription'] {
 		if (!client.character)
 			throw new BadMessageError();
@@ -252,11 +262,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 						if (status != null && Date.now() < status.time + 10 * 60 * 1000) {
 							if (status.choice === 'rock') {
-								rock.push(c.name + ` (${ c.id })`);
+								rock.push(c.name + ` (${c.id})`);
 							} else if (status.choice === 'paper') {
-								paper.push(c.name + ` (${ c.id })`);
+								paper.push(c.name + ` (${c.id})`);
 							} else if (status.choice === 'scissors') {
-								scissors.push(c.name + ` (${ c.id })`);
+								scissors.push(c.name + ` (${c.id})`);
 							} else {
 								AssertNever(status.choice);
 							}

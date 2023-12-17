@@ -12,7 +12,7 @@ import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
-import { AssetPreferenceType, AssetPreferenceTypeSchema, ICharacterPublicData } from './characterData';
+import { AssetPreferenceType, AssetPreferenceTypeSchema, AssetPreferences, ICharacterPublicData } from './characterData';
 
 export enum ItemInteractionType {
 	/**
@@ -570,9 +570,10 @@ export class CharacterRestrictionsManager {
 	}
 }
 
-function ResolveAssetPreference({ preferences }: Immutable<ICharacterPublicData>, asset: Asset, _source: CharacterId): AssetPreferenceType {
-	if (preferences.assets[asset.id] != null)
-		return preferences.assets[asset.id].base;
+export function ResolveAssetPreference({ preferences }: Immutable<{ preferences: AssetPreferences; }>, asset: Asset, _source?: CharacterId): AssetPreferenceType {
+	const assetPreference = preferences.assets[asset.id];
+	if (assetPreference != null)
+		return assetPreference.base;
 
 	let result: AssetPreferenceType = 'normal';
 	for (const attribute of asset.staticAttributes) {

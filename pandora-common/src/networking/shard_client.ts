@@ -8,9 +8,9 @@ import { Satisfies } from '../utility';
 import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
 import { IChatRoomClientInfo, RoomId } from '../chatroom';
 import { Immutable } from 'immer';
-import { z } from 'zod';
 
 // Fix for pnpm resolution weirdness
+import type { } from 'zod';
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 
@@ -53,10 +53,10 @@ export const ShardClientSchema = {
 		response: null,
 	},
 	chatRoomLoad: {
-		request: z.object({
-			globalState: ZodCast<AssetFrameworkGlobalStateClientBundle>(),
-			room: ZodCast<IChatRoomLoadData>(),
-		}),
+		request: ZodCast<{
+			globalState: AssetFrameworkGlobalStateClientBundle;
+			room: IChatRoomLoadData;
+		}>(),
 		response: null,
 	},
 	chatRoomUpdate: {

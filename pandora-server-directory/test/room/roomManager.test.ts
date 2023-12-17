@@ -78,11 +78,9 @@ describe('RoomManager', () => {
 		it('Gets loaded room by id', () => {
 			const room = RoomManager.getLoadedRoom(testRoomId);
 			expect(room).toBeInstanceOf(Room);
-			expect((room as Room).getFullInfo()).toEqual({
-				...TEST_ROOM,
-				id: testRoomId,
-				owners: TEST_ROOM_PANDORA_OWNED,
-			});
+			Assert(room instanceof Room);
+			expect(room.getConfig()).toEqual(TEST_ROOM);
+			expect(Array.from(room.owners)).toEqual(TEST_ROOM_PANDORA_OWNED);
 		});
 
 		it('Returns undefined with unknown room', () => {

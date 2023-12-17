@@ -97,40 +97,40 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private handleChatRoomMessage({ messages, id, editId }: IClientShardArgument['chatRoomMessage'], client: ClientConnection): void {
-		if (!client.character?.room)
+		if (!client.character)
 			throw new BadMessageError();
 
 		if (messages.length === 0 && editId === undefined)
 			return;
 
-		const room = client.character.room;
+		const room = client.character.getOrLoadRoom();
 		const character = client.character;
 
 		room.handleMessages(character, messages, id, editId);
 	}
 
 	private handleChatRoomMessageAck({ lastTime }: IClientShardArgument['chatRoomMessageAck'], client: ClientConnection): void {
-		if (!client.character?.room)
+		if (!client.character)
 			throw new BadMessageError();
 
 		client.character.onMessageAck(lastTime);
 	}
 
 	private handleChatRoomStatus({ status, target }: IClientShardArgument['chatRoomStatus'], client: ClientConnection): void {
-		if (!client.character?.room)
+		if (!client.character)
 			throw new BadMessageError();
 
-		const room = client.character.room;
+		const room = client.character.getOrLoadRoom();
 		const character = client.character;
 
 		room.updateStatus(character, status, target);
 	}
 
 	private handleChatRoomCharacterMove({ id, position }: IClientShardArgument['chatRoomCharacterMove'], client: ClientConnection): void {
-		if (!client.character?.room)
+		if (!client.character)
 			throw new BadMessageError();
 
-		const room = client.character.room;
+		const room = client.character.getOrLoadRoom();
 		const character = client.character;
 
 		room.updateCharacterPosition(character, id ?? character.id, position);
@@ -155,10 +155,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		// Apply the action
 		character.getGlobalState().setState(result.resultState);
+		const room = character.getOrLoadRoom();
 
 		// Send chat messages as needed
 		for (const message of result.pendingMessages) {
-			character.room?.handleActionMessage(message);
+			room.handleActionMessage(message);
 		}
 
 		return {
@@ -192,7 +193,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private handleGamblingAction(game: IClientShardArgument['gamblingAction'], client: ClientConnection): void {
-		if (!client.character?.room)
+		if (!client.character)
 			throw new BadMessageError();
 
 		const character: ActionHandlerMessageTargetCharacter = {
@@ -200,7 +201,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			id: client.character.id,
 		};
 
-		const room = client.character.room;
+		const room = client.character.getOrLoadRoom();
 		switch (game.type) {
 			case 'coinFlip':
 				room.handleActionMessage({
@@ -256,7 +257,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					const paper: string[] = [];
 					const scissors: string[] = [];
 
-					for (const c of client.character.room.getAllCharacters()) {
+					for (const c of room.getAllCharacters()) {
 						const status = this.rockPaperScissorsStatus.get(c);
 						this.rockPaperScissorsStatus.delete(c);
 
@@ -304,7 +305,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (client.character.id === target) {
 			targetCharacter = client.character;
 		} else {
-			targetCharacter = client.character.room?.getCharacterById(target) ?? null;
+			targetCharacter = client.character.getOrLoadRoom().getCharacterById(target) ?? null;
 		}
 
 		if (targetCharacter == null) {

@@ -1,5 +1,5 @@
 import { RoomId, GetLogger, IShardChatRoomDefinition, Assert } from 'pandora-common';
-import { Room } from './room';
+import { PublicRoom } from './publicRoom';
 import promClient from 'prom-client';
 import { assetManager } from '../assets/assetManager';
 
@@ -11,9 +11,9 @@ const roomsMetric = new promClient.Gauge({
 });
 
 export const RoomManager = new class RoomManager {
-	private readonly _rooms: Map<RoomId, Room> = new Map();
+	private readonly _rooms: Map<RoomId, PublicRoom> = new Map();
 
-	public getRoom(id: RoomId): Room | undefined {
+	public getRoom(id: RoomId): PublicRoom | undefined {
 		return this._rooms.get(id);
 	}
 
@@ -29,7 +29,7 @@ export const RoomManager = new class RoomManager {
 		return Array.from(this._rooms.keys());
 	}
 
-	public async loadRoom(definition: IShardChatRoomDefinition): Promise<Room | null> {
+	public async loadRoom(definition: IShardChatRoomDefinition): Promise<PublicRoom | null> {
 		const id = definition.id;
 
 		let room = this._rooms.get(id);
@@ -38,7 +38,7 @@ export const RoomManager = new class RoomManager {
 			return room;
 		}
 
-		const data = await Room.load(id, definition.accessId);
+		const data = await PublicRoom.load(id, definition.accessId);
 		if (!data)
 			return null;
 		Assert(data.id === definition.id);
@@ -50,7 +50,7 @@ export const RoomManager = new class RoomManager {
 		}
 
 		logger.debug(`Adding room ${data.id}`);
-		room = new Room({
+		room = new PublicRoom({
 			...data,
 			id: definition.id,
 			config: definition.config,

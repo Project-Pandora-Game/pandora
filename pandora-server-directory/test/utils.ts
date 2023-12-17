@@ -69,18 +69,10 @@ export async function TestMockCharacter(account: Account, finalize: {
 		throw new Error(`Failed to create character`);
 	}
 
-	const accessId = await db.setCharacterAccess(character.id);
-
-	if (accessId == null) {
-		throw new Error(`Failed to generate access id for character`);
-	}
-
 	if (finalize) {
-		if (!await db.setCharacter({
-			id: character.id,
-			accessId,
+		if (!await db.updateCharacter(character.id, {
 			name: finalize.name,
-		})) {
+		}, null)) {
 			throw new Error(`Failed to set name for character`);
 		}
 

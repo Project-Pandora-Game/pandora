@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, KnownObject, CleanupAssetPreferences } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataShardUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, KnownObject, CleanupAssetPreferences, CHARACTER_SHARD_UPDATEABLE_PROPERTIES } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -6,7 +6,7 @@ import { GetDatabase } from '../database/databaseProvider';
 import { ClientConnection } from '../networking/connection_client';
 import { assetManager } from '../assets/assetManager';
 
-import _, { cloneDeep, isEqual, omit } from 'lodash';
+import _, { cloneDeep, isEqual } from 'lodash';
 import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes character without any active connection */
@@ -20,16 +20,20 @@ const UPDATE_DEBOUNCE = 50;
 
 const logger = GetLogger('Character');
 
-type ICharacterDataChange = Omit<ICharacterDataUpdate, 'id' | 'appearance'>;
-type ICharacterPublicDataChange = Omit<ICharacterPublicData, 'id' | 'appearance'>;
-type ICharacterPrivateDataChange = Omit<ICharacterDataUpdate, keyof ICharacterPublicData | 'appearance'>;
+type ICharacterPublicDataChange = Omit<
+	Pick<ICharacterDataShardUpdate, (keyof ICharacterDataShardUpdate) & (keyof ICharacterPublicData)>,
+	'id' | ManuallyGeneratedKeys
+>;
+type ICharacterPrivateDataChange = Omit<ICharacterDataShardUpdate, keyof ICharacterPublicData | ManuallyGeneratedKeys>;
+/** Keys that are not stored in raw for while loaded, but instead need to be generated while saving */
+type ManuallyGeneratedKeys = 'appearance';
 
 export class Character {
-	private readonly data: Omit<ICharacterData, 'appearance'>;
+	private readonly data: Omit<ICharacterData, ManuallyGeneratedKeys>;
 	public accountData: IShardAccountDefinition;
 	public connectSecret: string | null;
 
-	private modified: Set<keyof ICharacterDataChange | 'appearance'> = new Set();
+	private modified: Set<keyof ICharacterDataShardUpdate> = new Set();
 
 	private tickInterval: NodeJS.Timeout | null = null;
 
@@ -391,11 +395,15 @@ export class Character {
 			logger.error(`Failed to load character ${id}: `, result.error);
 			return null;
 		}
-		const characterWithoutDbData = omit(character, '_id');
-		if (!_.isEqual(result.data, characterWithoutDbData)) {
-			const diff = diffString(characterWithoutDbData, result.data, { color: false });
-			logger.warning(`Character ${id} has invalid data, fixing...\n`, diff);
-			await GetDatabase().setCharacter(_.omit(result.data, 'inCreation', 'accountId', 'created'));
+		// Save migrated data into database
+		{
+			const shardUpdatableResult = _.pick(result.data, ...CHARACTER_SHARD_UPDATEABLE_PROPERTIES);
+			const originalUpdatableData = _.pick(character, ...CHARACTER_SHARD_UPDATEABLE_PROPERTIES);
+			if (!_.isEqual(shardUpdatableResult, originalUpdatableData)) {
+				const diff = diffString(originalUpdatableData, shardUpdatableResult, { color: false });
+				logger.warning(`Character ${id} has invalid data, fixing...\n`, diff);
+				await GetDatabase().setCharacter(id, shardUpdatableResult, accessId);
+			}
 		}
 		return result.data;
 	}
@@ -466,17 +474,14 @@ export class Character {
 
 	@AsyncSynchronized()
 	public async save(): Promise<void> {
-		const keys: (keyof Omit<ICharacterDataUpdate, 'id'>)[] = [...this.modified];
+		const keys: (keyof ICharacterDataShardUpdate)[] = [...this.modified];
 		this.modified.clear();
 
 		// Nothing to save
 		if (keys.length === 0)
 			return;
 
-		const data: ICharacterDataUpdate = {
-			id: this.data.id,
-			accessId: this.data.accessId,
-		};
+		const data: ICharacterDataShardUpdate = {};
 
 		for (const key of keys) {
 			if (key === 'appearance') {
@@ -487,7 +492,7 @@ export class Character {
 		}
 
 		try {
-			if (!await GetDatabase().setCharacter(data)) {
+			if (!await GetDatabase().setCharacter(this.data.id, data, this.data.accessId)) {
 				throw new Error('Database returned failure');
 			}
 		} catch (error) {
@@ -500,7 +505,7 @@ export class Character {
 
 	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterData[Key], room: true): void;
 	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterData[Key], room: false): void;
-	private setValue<Key extends keyof ICharacterDataChange>(key: Key, value: ICharacterData[Key], room: boolean): void {
+	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterData[Key], room: boolean): void {
 		if (this.data[key] === value)
 			return;
 

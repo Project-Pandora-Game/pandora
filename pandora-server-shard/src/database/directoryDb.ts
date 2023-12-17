@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterDataUpdate, GetLogger, RoomId, IChatRoomData, IChatRoomDataShardUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, GetLogger, RoomId, IChatRoomData, IChatRoomDataShardUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { ShardDatabase } from './databaseProvider';
 import { DirectoryConnectionState, DirectoryConnector } from '../networking/socketio_directory_connector';
 import _ from 'lodash';
@@ -21,11 +21,11 @@ export default class DirectoryDatabase implements ShardDatabase {
 		return result;
 	}
 
-	public async setCharacter(data: ICharacterDataUpdate): Promise<boolean> {
+	public async setCharacter(id: CharacterId, data: ICharacterDataShardUpdate, accessId: string): Promise<boolean> {
 		if (DirectoryConnector.state !== DirectoryConnectionState.CONNECTED)
 			return false;
 
-		const { result } = await DirectoryConnector.awaitResponse('setCharacter', data);
+		const { result } = await DirectoryConnector.awaitResponse('setCharacter', { id, data, accessId });
 
 		return result === 'success';
 	}

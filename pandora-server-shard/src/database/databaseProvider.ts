@@ -1,4 +1,4 @@
-import type { CharacterId, ICharacterData, ICharacterDataUpdate, IChatRoomData, IChatRoomDataShardUpdate, RoomId, Service } from 'pandora-common';
+import type { CharacterId, ICharacterData, ICharacterDataShardUpdate, IChatRoomData, IChatRoomDataShardUpdate, RoomId, Service } from 'pandora-common';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
 import DirectoryDatabase from './directoryDb';
@@ -15,7 +15,7 @@ export interface ShardDatabase extends Service {
 	 * Update a character's data
 	 * @param data - Character data with id
 	 */
-	setCharacter(data: ICharacterDataUpdate): Promise<boolean>;
+	setCharacter(id: CharacterId, data: ICharacterDataShardUpdate, accessId: string): Promise<boolean>;
 
 	/**
 	 * Get a room's data

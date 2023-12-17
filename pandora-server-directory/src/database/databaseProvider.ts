@@ -2,7 +2,7 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import type { CharacterId, IChatRoomData, ICharacterData, ICharacterDataAccess, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 import { ServiceInit } from 'pandora-common';
 import { DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
@@ -82,7 +82,16 @@ export interface PandoraDatabase extends Service {
 	 * @param accountId - Id of account to update character for
 	 * @param data - Character info data
 	 */
-	updateCharacter(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null>;
+	updateCharacterSelfInfo(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null>;
+
+	/**
+	 * Update character's info
+	 * @param id - Id of the character to update
+	 * @param data - Chatroom data to update, `id` is required
+	 * @param accessId - Id of access to check or null to ignore the accessId check
+	 * @returns false if a provided accessId is not the same as in the database
+	 */
+	updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean>;
 
 	/**
 	 * Delete character
@@ -193,12 +202,6 @@ export interface PandoraDatabase extends Service {
 	 */
 	getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null>;
 
-	/**
-	 * Update a character's data
-	 * @param data - Character data with id
-	 */
-	setCharacter(data: Partial<ICharacterData> & ICharacterDataAccess): Promise<boolean>;
-
 	//#endregion
 
 	getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]>;
@@ -218,6 +221,8 @@ export interface PandoraDatabase extends Service {
 	 * @param data
 	 */
 	setConfig<T extends DatabaseConfigType>(type: T, data: DatabaseConfigData<T>): Promise<void>;
+
+	//#endregion
 }
 
 /** Current database connection */

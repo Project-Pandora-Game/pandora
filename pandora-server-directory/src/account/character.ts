@@ -82,7 +82,7 @@ export class CharacterInfo {
 
 	@AsyncSynchronized('object')
 	public async updateSelfData(update: Omit<ICharacterSelfInfoUpdate, 'id'>): Promise<ICharacterSelfInfo | null> {
-		const info = await GetDatabase().updateCharacter(this.account.id, {
+		const info = await GetDatabase().updateCharacterSelfInfo(this.account.id, {
 			...update,
 			id: this.id,
 		});

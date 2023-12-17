@@ -1,6 +1,6 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { AccountId, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
+import { AccountId, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
 import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
 
@@ -181,7 +181,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(char));
 	}
 
-	public updateCharacter(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
+	public updateCharacterSelfInfo(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.resolve(null);
@@ -194,6 +194,15 @@ export class MockDatabase implements PandoraDatabase {
 			info.preview = data.preview;
 
 		return Promise.resolve(_.cloneDeep(info));
+	}
+
+	public updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean> {
+		const char = this.characterDb.get(id);
+		if (char == null || accessId !== null && char.accessId !== accessId)
+			return Promise.resolve(false);
+
+		_.assign(char, _.cloneDeep(data));
+		return Promise.resolve(true);
 	}
 
 	public deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void> {
@@ -372,15 +381,6 @@ export class MockDatabase implements PandoraDatabase {
 			return Promise.resolve(null);
 
 		return Promise.resolve(_.cloneDeep(char));
-	}
-
-	public setCharacter({ id, accessId, ...data }: Partial<ICharacterData> & Pick<ICharacterData, 'id'>): Promise<boolean> {
-		const char = this.characterDb.get(id);
-		if (char?.accessId !== accessId)
-			return Promise.resolve(false);
-
-		_.assign(char, _.cloneDeep(data));
-		return Promise.resolve(true);
 	}
 
 	public getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {

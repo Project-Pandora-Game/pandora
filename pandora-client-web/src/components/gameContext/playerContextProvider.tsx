@@ -6,7 +6,7 @@ import { useShardConnector } from './shardConnectorContextProvider';
 import { useCharacterState, useChatroomRequired } from './chatRoomContextProvider';
 
 export function usePlayer(): PlayerCharacter | null {
-	return useNullableObservable(useShardConnector()?.player);
+	return useNullableObservable(useShardConnector()?.gameState)?.player ?? null;
 }
 
 export function usePlayerState(): {

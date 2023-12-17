@@ -2,7 +2,7 @@ import { AssertNotNullable, CharacterId, EMPTY_ARRAY, IChatRoomStatus, IChatType
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from 'lodash';
 import { Character } from '../../character/character';
-import { IMessageParseOptions, useChatroom, useChatRoomCharacters, useChatRoomInfo, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
+import { IMessageParseOptions, useChatroom, useChatRoomCharacters, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
 import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext } from './commandsProcessor';
 import { toast } from 'react-toastify';
@@ -20,6 +20,7 @@ import { Select } from '../common/select/select';
 import settingsIcon from '../../assets/icons/setting.svg';
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
+import { useNullableObservable } from '../../observable';
 
 type Editing = {
 	target: number;
@@ -70,7 +71,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const chatroom = useChatroom();
 	const characters = useChatRoomCharacters();
 	const playerId = usePlayerId();
-	const roomId = useChatRoomInfo()?.id;
+	const roomId = useNullableObservable(useChatroom()?.currentRoom)?.id ?? null;
 
 	useEffect(() => {
 		if (!roomId)
@@ -227,6 +228,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		shardConnector,
 		directoryConnector,
 		chatRoom,
+		player: chatRoom.player,
 		messageSender: sender,
 		inputHandlerContext: chatInput,
 		navigate,
@@ -647,6 +649,7 @@ function AutoCompleteHint(): ReactElement | null {
 												shardConnector,
 												directoryConnector,
 												chatRoom,
+												player: chatRoom.player,
 												messageSender: sender,
 												inputHandlerContext: chatInput,
 												navigate,

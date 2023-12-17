@@ -1,4 +1,4 @@
-import { ITypedEventEmitter, TypedEventEmitter, ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomFullInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState, IChatRoomLoad, AssetFrameworkGlobalStateClientBundle, LIMIT_CHAT_MESSAGE_LENGTH } from 'pandora-common';
+import { ITypedEventEmitter, TypedEventEmitter, ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomClientInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState, AssetFrameworkGlobalStateClientBundle, LIMIT_CHAT_MESSAGE_LENGTH, CloneDeepMutable, ICharacterPrivateData } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -13,6 +13,7 @@ import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';
 import { IChatroomMessageProcessed } from '../chatroom/chatroomMessages';
 import { useCurrentAccount } from './directoryConnectorContextProvider';
+import { Immutable } from 'immer';
 
 const logger = GetLogger('ChatRoom');
 
@@ -47,10 +48,15 @@ export type RoomInventoryEvents = {
 	globalStateChange: true;
 };
 
+export type ICurrentRoomInfo = {
+	id: RoomId | null;
+	config: IChatRoomClientInfo;
+};
+
 export type IChatRoomContext = ITypedEventEmitter<RoomInventoryEvents> & {
 	readonly type: 'room';
 	readonly globalState: AssetFrameworkGlobalStateContainer;
-	readonly info: ReadonlyObservable<IChatRoomFullInfo | null>;
+	readonly currentRoom: ReadonlyObservable<ICurrentRoomInfo>;
 };
 
 export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
@@ -61,12 +67,10 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
 	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
-	public readonly info = new Observable<IChatRoomFullInfo | null>(null);
-	public readonly characters = new Observable<readonly Character<ICharacterRoomData>[]>([]);
+	public readonly currentRoom: Observable<ICurrentRoomInfo>;
+	public readonly characters: Observable<readonly Character<ICharacterRoomData>[]>;
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
-	public get player(): PlayerCharacter | null {
-		return this._shard.player.value;
-	}
+	public readonly player: PlayerCharacter;
 
 	public get playerId() {
 		return this.player?.data.id;
@@ -74,25 +78,19 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 
 	protected readonly logger: Logger;
 
-	private readonly _restore = BrowserStorage.createSession<undefined | {
-		roomId: RoomId;
-		messages: readonly IChatroomMessageProcessed[];
-		sent: [number, ISavedMessage][];
-	}>('chatRoomRestore', undefined, z.object({
-		roomId: RoomIdSchema,
+	private readonly _restore = BrowserStorage.createSession('chatRoomRestore', undefined, z.object({
+		roomId: RoomIdSchema.nullable(),
 		messages: z.array(ZodCast<IChatroomMessageProcessed>()),
 		sent: z.array(z.tuple([z.number(), SavedMessageSchema])),
-	}));
+	}).optional());
 
-	private _setRestore(roomId?: RoomId): void {
-		if (!roomId) {
-			if (this.info.value) {
-				roomId = this.info.value.id;
-			} else {
-				return;
-			}
-		}
-		this._restore.value = { roomId, messages: this.messages.value, sent: [...this._sent.entries()] };
+	private _setRestore(): void {
+		const roomId = this.currentRoom.value.id;
+		this._restore.value = {
+			roomId,
+			messages: CloneDeepMutable(this.messages.value),
+			sent: [...this._sent.entries()],
+		};
 	}
 
 	private _lastMessageTime: number = 0;
@@ -108,46 +106,66 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		return id;
 	}
 
-	constructor(shard: ShardConnector) {
+	constructor(shard: ShardConnector, characterData: ICharacterPrivateData, { globalState, room }: IShardClientArgument['chatRoomLoad']) {
 		super();
 		this.logger = GetLogger('ChatRoom');
 		this._shard = shard;
+		this.player = new PlayerCharacter(characterData);
+		this.characters = new Observable<readonly Character<ICharacterRoomData>[]>([this.player]);
 
-		this.globalState = new AssetFrameworkGlobalStateContainer(GetCurrentAssetManager(), this.logger, () => this.emit('globalStateChange', true));
+		const { id, info, characters } = room;
+		this.currentRoom = new Observable<ICurrentRoomInfo>({
+			id,
+			config: info,
+		});
+		if (this._restore.value?.roomId === id) {
+			this.messages.value = this._restore.value.messages;
+			const now = Date.now();
+			for (const [messageId, message] of this._restore.value.sent) {
+				if (message.time + MESSAGE_EDIT_TIMEOUT < now) {
+					this._sent.set(messageId, message);
+				}
+			}
+		}
+
+		const loadedGlobalState = AssetFrameworkGlobalState
+			.loadFromBundle(GetCurrentAssetManager(), globalState, this.logger.prefixMessages('State bundle load:'));
+
+		this.globalState = new AssetFrameworkGlobalStateContainer(
+			this.logger,
+			() => this.emit('globalStateChange', true),
+			loadedGlobalState,
+		);
+
+		this._updateCharacters(characters);
 
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
 	}
 
 	//#region Handler
 
-	public onLoad(data: IChatRoomLoad): void {
-		if (!this.player) {
-			throw new Error('Cannot update room when player is not loaded');
+	public onLoad(data: IShardClientArgument['chatRoomLoad']): void {
+		const oldRoom = this.currentRoom.value;
+		const { id, info, characters } = data.room;
+		this.currentRoom.value = {
+			id,
+			config: info,
+		};
+		if (oldRoom.id !== id) {
+			logger.debug('Changed room');
+			this._onRoomChange();
 		}
-		const oldInfo = this.info.value;
-		if (data.room) {
-			const { info, characters } = data.room;
-			this.info.value = info;
-			if (oldInfo && oldInfo.id !== info.id) {
-				logger.debug('Changed room');
-				this._onLeave();
-			}
-			if (oldInfo?.id !== info.id && this._restore.value?.roomId === info.id) {
-				this.messages.value = this._restore.value.messages;
-				const now = Date.now();
-				for (const [id, message] of this._restore.value.sent) {
-					if (message.time + MESSAGE_EDIT_TIMEOUT < now) {
-						this._sent.set(id, message);
-					}
+		if (oldRoom.id !== id && this._restore.value?.roomId === id) {
+			this.messages.value = this._restore.value.messages;
+			const now = Date.now();
+			for (const [messageId, message] of this._restore.value.sent) {
+				if (message.time + MESSAGE_EDIT_TIMEOUT < now) {
+					this._sent.set(messageId, message);
 				}
 			}
-			this._updateCharacters(characters);
-			logger.debug('Loaded room data', data);
-		} else {
-			this.info.value = null;
-			logger.debug('Left room');
-			this._onLeave();
 		}
+		this._updateCharacters(characters);
+		logger.debug('Loaded room data', data);
 		this._updateGlobalState(data.globalState);
 	}
 
@@ -159,16 +177,17 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		if (join?.id === this.playerId) {
 			return; // Ignore self-join
 		}
-		if (!this.info.value) {
-			logger.error('Cannot update room when it is not loaded');
-			return;
-		}
 
 		if (info) {
-			this.info.value = {
-				...this.info.value,
-				...info,
-			};
+			this.currentRoom.produce((oldValue) => {
+				return {
+					...oldValue,
+					config: {
+						...oldValue.config,
+						...info,
+					},
+				};
+			});
 		}
 		if (join) {
 			let char = this.characters.value.find((oc) => oc.data.id === join.id);
@@ -200,10 +219,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		logger.debug('Updated room data', data);
 	}
 
-	private _onLeave() {
-		if (!this.player)
-			throw new Error('Cannot update room when player is not loaded');
-
+	private _onRoomChange() {
 		this.messages.value = [];
 		this.characters.value = [this.player];
 		this._sent.clear();
@@ -211,9 +227,6 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 	}
 
 	private _updateCharacters(characters: readonly ICharacterRoomData[]): void {
-		if (!this.player)
-			throw new Error('Cannot update room when player is not loaded');
-
 		const oldCharacters = this.characters.value;
 		const playerId = this.playerId;
 		this.characters.value = characters.map((c) => {
@@ -238,12 +251,11 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 	}
 
 	public onMessage(incoming: IChatRoomMessage[]): number {
-		const roomId = this.info.value?.id;
-		if (!roomId) return 0;
+		const roomId = this.currentRoom.value.id;
 
 		const messages = incoming
 			.filter((m) => m.time > this._lastMessageTime)
-			.map<IChatRoomMessage & { roomId: RoomId; }>((m) => ({ ...m, roomId }));
+			.map<IChatRoomMessage & { roomId: RoomId | null; }>((m) => ({ ...m, roomId }));
 
 		this._lastMessageTime = messages
 			.map((m) => m.time)
@@ -442,7 +454,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 }
 
 export function useChatroom(): ChatRoom | null {
-	return useShardConnector()?.room ?? null;
+	return useNullableObservable(useShardConnector()?.gameState);
 }
 
 export function useChatroomRequired(): ChatRoom {
@@ -467,36 +479,33 @@ export function useChatRoomCharacters(): (readonly Character<ICharacterRoomData>
 	return useNullableObservable(context?.characters);
 }
 
-export function useChatRoomInfo(): IChatRoomFullInfo | null {
+export function useChatRoomInfo(): Immutable<ICurrentRoomInfo> {
+	const context = useChatroomRequired();
+	return useObservable(context.currentRoom);
+}
+
+export function useChatRoomInfoOptional(): Immutable<ICurrentRoomInfo> | null {
 	const context = useChatroom();
-	return useNullableObservable(context?.info);
+	return useNullableObservable(context?.currentRoom);
 }
 
-/**
- * Returns whether character is in a chatroom or not
- * @returns `true` if character is in a room, `false` otherwise
- */
-export function useCharacterIsInChatroom(): boolean {
-	return useChatRoomInfo() != null;
-}
-
-export function useChatRoomFeatures(): ChatRoomFeature[] | null {
+export function useChatRoomFeatures(): readonly ChatRoomFeature[] {
 	const info = useChatRoomInfo();
-	return useMemo(() => info?.features ?? null, [info]);
+	return info.config.features;
 }
 
-export function useActionRoomContext(): ActionRoomContext | null {
+export function useActionRoomContext(): ActionRoomContext {
 	const info = useChatRoomInfo();
 	const playerAccount = useCurrentAccount();
-	return useMemo((): ActionRoomContext | null => info ? ({
-		features: info.features,
+	return useMemo((): ActionRoomContext => ({
+		features: info.config.features,
 		isAdmin: (accountId) => {
 			if (accountId === playerAccount?.id) {
-				return IsChatroomAdmin(info, playerAccount);
+				return IsChatroomAdmin(info.config, playerAccount);
 			}
-			return IsChatroomAdmin(info, { id: accountId });
+			return IsChatroomAdmin(info.config, { id: accountId });
 		},
-	}) : null, [info, playerAccount]);
+	}), [info, playerAccount]);
 }
 
 export function useCharacterRestrictionsManager<T>(characterState: AssetFrameworkCharacterState, character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
@@ -557,8 +566,8 @@ export function useRoomInventoryItems(context: IChatRoomContext): readonly Item[
 	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
 }
 
-export function IsChatroomAdmin(data: Nullable<IChatRoomFullInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
-	if (!data || !account?.id)
+export function IsChatroomAdmin(data: Immutable<IChatRoomClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
+	if (!account?.id)
 		return false;
 
 	if (data.owners.includes(account.id))

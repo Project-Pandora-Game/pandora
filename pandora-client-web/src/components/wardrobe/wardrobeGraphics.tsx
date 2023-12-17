@@ -6,7 +6,7 @@ import {
 	FilterItemType,
 	HexColorString,
 	ICharacterRoomData,
-	IChatRoomFullInfo,
+	IChatRoomClientInfo,
 	IChatroomBackgroundData,
 	ItemRoomDevice,
 	Rectangle,
@@ -22,7 +22,7 @@ import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter } 
 import { ColorInput } from '../common/colorInput/colorInput';
 import { directoryConnectorContext, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
-import { useCharacterIsInChatroom, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { ChatRoomCharacter, useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
 import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
 import { Row } from '../common/container/container';
@@ -32,6 +32,7 @@ import { ChatRoomDevice } from '../chatroom/chatRoomDevice';
 import { useWardrobeContext } from './wardrobeContext';
 import { useObservable } from '../../observable';
 import { min } from 'lodash';
+import { Immutable } from 'immer';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;
@@ -84,9 +85,9 @@ export function CharacterPreview({ character, characterState, overlay }: {
 	const assetManager = useAssetManager();
 	const accountSettings = useCurrentAccountSettings();
 
-	const roomBackground = useMemo((): Readonly<IChatroomBackgroundData> | null => {
+	const roomBackground = useMemo((): Immutable<IChatroomBackgroundData> | null => {
 		if (roomInfo && accountSettings.wardrobeUseRoomBackground) {
-			return ResolveBackground(assetManager, roomInfo.background);
+			return ResolveBackground(assetManager, roomInfo.config.background);
 		}
 		return null;
 	}, [assetManager, roomInfo, accountSettings]);
@@ -123,7 +124,7 @@ function WardrobeRoomBackground({
 	character,
 	characterState,
 }: {
-	roomBackground: Readonly<IChatroomBackgroundData>;
+	roomBackground: Immutable<IChatroomBackgroundData>;
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
@@ -147,14 +148,13 @@ function WardrobeRoomBackground({
 function WardrobeBackgroundColorPicker(): ReactElement | null {
 	const accountSettings = useCurrentAccountSettings();
 	const directory = useDirectoryConnector();
-	const isInRoom = useCharacterIsInChatroom();
 
 	const onChange = useEvent((newColor: HexColorString) => {
 		directory.sendMessage('changeSettings', { wardrobeBackground: newColor });
 	});
 
 	// Don't show the picker, if it would have no effect
-	if (accountSettings.wardrobeUseRoomBackground && isInRoom)
+	if (accountSettings.wardrobeUseRoomBackground)
 		return null;
 
 	return (
@@ -171,7 +171,7 @@ function WardrobeBackgroundColorPicker(): ReactElement | null {
 export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }: {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
-	info: IChatRoomFullInfo;
+	info: IChatRoomClientInfo;
 	isPreview?: boolean;
 }): ReactElement {
 	const { focus } = useWardrobeContext();
@@ -216,7 +216,7 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 interface RoomPreviewProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
-	info: IChatRoomFullInfo;
+	info: IChatRoomClientInfo;
 	overlay?: ReactNode;
 	focusDevice?: ItemRoomDevice;
 }

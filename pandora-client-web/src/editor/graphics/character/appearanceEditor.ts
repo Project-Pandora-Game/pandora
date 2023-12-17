@@ -161,7 +161,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 		return new AppearanceEditor(state, this.gameLogicCharacter, this.editor.globalState);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState | undefined, roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
+	public getRestrictionManager(state: AssetFrameworkCharacterState | undefined, roomContext: ActionRoomContext): CharacterRestrictionsManager {
 		return this.getAppearance(state).getRestrictionManager(roomContext);
 	}
 }

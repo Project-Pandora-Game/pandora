@@ -5,6 +5,7 @@ import type { ChatRoom, IChatRoomMessageSender } from '../gameContext/chatRoomCo
 import type { IChatInputHandler } from './chatInput';
 import { COMMANDS } from './commands';
 import type { useNavigate } from 'react-router';
+import type { PlayerCharacter } from '../../character/player';
 
 export const COMMAND_KEY = '/';
 
@@ -12,6 +13,7 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 	shardConnector: ShardConnector;
 	directoryConnector: DirectoryConnector;
 	chatRoom: ChatRoom;
+	player: PlayerCharacter;
 	messageSender: IChatRoomMessageSender;
 	inputHandlerContext: IChatInputHandler;
 	navigate: ReturnType<typeof useNavigate>;

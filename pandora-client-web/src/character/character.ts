@@ -82,7 +82,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		return new CharacterAppearance(state, this.gameLogicCharacter);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager {
+	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext): CharacterRestrictionsManager {
 		return this.getAppearance(state).getRestrictionManager(roomContext);
 	}
 }

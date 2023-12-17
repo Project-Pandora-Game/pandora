@@ -17,6 +17,7 @@ import {
 	IChatroomBackgroundInfo,
 	LIMIT_ROOM_DESCRIPTION_LENGTH,
 	LIMIT_ROOM_NAME_LENGTH,
+	CloneDeepMutable,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -28,7 +29,7 @@ import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../gameContext/directoryConnectorContextProvider';
-import { IsChatroomAdmin, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
+import { ICurrentRoomInfo, IsChatroomAdmin, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
 import { Select } from '../common/select/select';
 import { ModalDialog } from '../dialog/dialog';
@@ -41,11 +42,12 @@ import './chatroomAdmin.scss';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
+import { Immutable } from 'immer';
 
 const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
 const IsChatroomDescription = ZodMatcher(ChatRoomBaseInfoSchema.shape.description);
 
-function DefaultRoomData(): IChatRoomDirectoryConfig {
+function DefaultRoomConfig(): IChatRoomDirectoryConfig {
 	return {
 		name: '',
 		description: '',
@@ -90,7 +92,10 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const currentAccount = useCurrentAccount();
 	AssertNotNullable(currentAccount);
 	const createRoom = useCreateRoom();
-	const roomInfo = useChatRoomInfo();
+	let currentRoomInfo: Immutable<ICurrentRoomInfo> | null = useChatRoomInfo();
+	if (creation) {
+		currentRoomInfo = null;
+	}
 	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<IChatRoomDirectoryConfig>, action: Partial<IChatRoomDirectoryConfig>) => {
 		const result: Partial<IChatRoomDirectoryConfig> = {
 			...oldState,
@@ -113,15 +118,17 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const accountId = currentAccount.id;
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
-	const isPlayerOwner = !!(creation || accountId && roomInfo?.owners.includes(accountId));
-	const isPlayerAdmin = creation || IsChatroomAdmin(roomInfo, currentAccount);
-
 	const currentConfig: IChatRoomDirectoryConfig = {
-		...(roomInfo ?? DefaultRoomData()),
+		...(CloneDeepMutable(currentRoomInfo?.config ?? DefaultRoomConfig())),
 		...roomModifiedData,
 	};
+	const roomId: RoomId | null = currentRoomInfo?.id ?? null;
 
-	const owners: readonly AccountId[] = creation ? [accountId] : (roomInfo?.owners ?? []);
+	const isPlayerOwner = !!(creation || accountId && currentRoomInfo?.config.owners.includes(accountId));
+	const isPlayerAdmin = creation || currentRoomInfo == null || IsChatroomAdmin(currentRoomInfo.config, currentAccount);
+	const canEdit = isPlayerAdmin && (creation || roomId != null);
+
+	const owners: readonly AccountId[] = creation ? [accountId] : (currentRoomInfo?.config.owners ?? []);
 
 	const currentConfigBackground = currentConfig.background;
 
@@ -143,10 +150,8 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 		},
 	}), [setRoomModifiedData, currentConfigBackground]);
 
-	if (!creation && !roomInfo) {
+	if (!creation && !currentRoomInfo) {
 		return <Navigate to='/chatroom_select' />;
-	} else if (creation && roomInfo) {
-		return <Navigate to='/chatroom' />;
 	}
 
 	if (shards && currentConfig.development?.shardId && !shards.some((s) => s.id === currentConfig.development?.shardId)) {
@@ -162,13 +167,13 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					type='text'
 					value={ currentConfig.name }
 					onChange={ (event) => setRoomModifiedData({ name: event.target.value }) }
-					readOnly={ !isPlayerAdmin }
+					readOnly={ !canEdit }
 				/>
 				{ !IsChatroomName(currentConfig.name) && <div className='error'>Invalid room name</div> }
 			</div>
 			<div className='input-container'>
 				<label>Room size</label>
-				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !isPlayerAdmin }
+				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !canEdit }
 					onChange={ (event) => setRoomModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
 			</div>
 			<FieldsetToggle legend='Presentation and access'>
@@ -177,18 +182,18 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					<textarea
 						value={ currentConfig.description }
 						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) }
-						readOnly={ !isPlayerAdmin }
+						readOnly={ !canEdit }
 						rows={ 16 }
 					/>
 					{ !IsChatroomDescription(currentConfig.description) && <div className='error'>Invalid description</div> }
 				</div>
 				<div className='input-container'>
 					<label>Public</label>
-					<Button onClick={ () => setRoomModifiedData({ public: !currentConfig.public }) } disabled={ !isPlayerAdmin }>{ currentConfig.public ? 'Yes' : 'No' }</Button>
+					<Button onClick={ () => setRoomModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit }>{ currentConfig.public ? 'Yes' : 'No' }</Button>
 				</div>
 				<div className='input-container'>
 					<label>Entry password (optional)</label>
-					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !isPlayerAdmin }
+					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !canEdit }
 						onChange={ (event) => setRoomModifiedData({ password: event.target.value || null }) } />
 				</div>
 			</FieldsetToggle>
@@ -197,16 +202,16 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					<label>Owners</label>
 					<Row>
 						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
-						{ !creation && roomInfo && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomInfo.id } name={ roomInfo.name } /> : null }
+						{ !creation && currentRoomInfo != null && roomId != null && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomId } name={ currentRoomInfo.config.name } /> : null }
 					</Row>
 				</div>
 				<div className='input-container'>
 					<label>Admins</label>
-					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setRoomModifiedData({ admin }) } readOnly={ !isPlayerAdmin } />
+					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setRoomModifiedData({ admin }) } readOnly={ !canEdit } />
 				</div>
 				<div className='input-container'>
 					<label>Ban list</label>
-					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !isPlayerAdmin } />
+					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !canEdit } />
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Background'>
@@ -221,7 +226,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 							<BackgroundInfo background={ currentConfigBackground } />
 							<Button
 								onClick={ () => setShowBackgrounds(true) }
-								disabled={ !isPlayerAdmin }
+								disabled={ !canEdit }
 							>
 								Select a background
 							</Button>
@@ -234,7 +239,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 									<ColorInput
 										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
 										onChange={ (color) => setRoomModifiedData({ background: { ...currentConfigBackground, image: color } }) }
-										disabled={ !isPlayerAdmin }
+										disabled={ !canEdit }
 									/>
 								</div>
 							</div>
@@ -244,7 +249,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 									<input type='number'
 										autoComplete='none'
 										value={ currentConfigBackground.size[0] }
-										readOnly={ !isPlayerAdmin }
+										readOnly={ !canEdit }
 										onChange={ (event) => setRoomModifiedData({
 											background: {
 												...currentConfigBackground,
@@ -255,7 +260,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 									<input type='number'
 										autoComplete='none'
 										value={ currentConfigBackground.size[1] }
-										readOnly={ !isPlayerAdmin }
+										readOnly={ !canEdit }
 										onChange={ (event) => setRoomModifiedData({
 											background: {
 												...currentConfigBackground,
@@ -271,7 +276,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 									autoComplete='none'
 									min={ -1 }
 									value={ currentConfigBackground.maxY ?? -1 }
-									readOnly={ !isPlayerAdmin }
+									readOnly={ !canEdit }
 									onChange={ (event) => {
 										const value = Number.parseInt(event.target.value, 10);
 										setRoomModifiedData({
@@ -288,12 +293,12 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 								<div className='row-first'>
 									<input type='range'
 										value={ currentConfigBackground.scaling }
-										readOnly={ !isPlayerAdmin }
+										readOnly={ !canEdit }
 										{ ...scalingProps }
 									/>
 									<input type='number'
 										value={ currentConfigBackground.scaling }
-										readOnly={ !isPlayerAdmin }
+										readOnly={ !canEdit }
 										{ ...scalingProps }
 									/>
 								</div>
@@ -301,7 +306,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 							<br />
 							<Button
 								onClick={ () => setShowBackgrounds(true) }
-								disabled={ !isPlayerAdmin }
+								disabled={ !canEdit }
 							>
 								Select a background
 							</Button>
@@ -312,7 +317,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 		</>
 	);
 
-	if (!roomInfo) {
+	if (creation) {
 		return (
 			<div className='roomAdminScreen creation'>
 				<Link to='/chatroom_select'>◄ Back</Link>
@@ -394,7 +399,13 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	return (
 		<div className='roomAdminScreen configuration'>
 			<Link to='/chatroom'>◄ Back</Link>
-			<p>Current room ID: <span className='selectable-all'>{ roomInfo.id }</span></p>
+			{
+				roomId != null ? (
+					<p>Current room ID: <span className='selectable-all'>{ roomId }</span></p>
+				) : (
+					<p>Currently in a personal room</p>
+				)
+			}
 			{ configurableElements }
 			<div className='input-container'>
 				<label>Features (cannot be changed after creation)</label>
@@ -408,8 +419,8 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					}
 				</ul>
 			</div>
-			{ isPlayerAdmin && <Button className='fill-x' onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button> }
-			{ !isPlayerAdmin && <Button className='fill-x' onClick={ () => navigate('/chatroom') }>Back</Button> }
+			{ canEdit && <Button className='fill-x' onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button> }
+			{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/chatroom') }>Back</Button> }
 		</div>
 	);
 }

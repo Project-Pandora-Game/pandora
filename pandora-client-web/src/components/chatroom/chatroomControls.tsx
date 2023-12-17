@@ -17,14 +17,14 @@ import { ICharacterRoomData } from 'pandora-common';
 import { Select } from '../common/select/select';
 
 export function ChatroomControls(): ReactElement | null {
-	const roomInfo = useChatRoomInfo();
+	const roomInfo = useChatRoomInfo().config;
 	const roomCharacters = useChatRoomCharacters();
 	const navigate = useNavigate();
 	const player = usePlayer();
 
 	const deviceOverlaySetting = useObservable(DeviceOverlaySetting);
 
-	if (!roomInfo || !roomCharacters || !player) {
+	if (!roomCharacters || !player) {
 		return null;
 	}
 

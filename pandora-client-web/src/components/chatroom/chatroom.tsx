@@ -1,6 +1,4 @@
 import React, { ReactElement } from 'react';
-import { Navigate } from 'react-router';
-import { useCharacterIsInChatroom } from '../gameContext/chatRoomContextProvider';
 import { DivContainer } from '../common/container/container';
 import { ChatRoomScene } from './chatRoomScene';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -16,13 +14,8 @@ import { useCurrentAccountSettings } from '../gameContext/directoryConnectorCont
 import { useIsPortrait } from '../../styles/mediaQueries';
 
 export function Chatroom(): ReactElement | null {
-	const isInChatRoom = useCharacterIsInChatroom();
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useCurrentAccountSettings();
 	const isPortrait = useIsPortrait();
-
-	if (!isInChatRoom) {
-		return <Navigate to='/chatroom_select' />;
-	}
 
 	const chatroomGraphicsRatio = isPortrait ? interfaceChatroomGraphicsRatioVertical : interfaceChatroomGraphicsRatioHorizontal;
 	const chatroomChatRatio = 10 - chatroomGraphicsRatio;

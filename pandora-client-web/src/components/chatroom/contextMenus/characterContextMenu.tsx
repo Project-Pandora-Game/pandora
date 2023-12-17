@@ -1,4 +1,4 @@
-import { AssertNotNullable, ICharacterRoomData, IChatRoomFullInfo, IDirectoryAccountInfo } from 'pandora-common';
+import { AssertNotNullable, ICharacterRoomData, IChatRoomClientInfo, IDirectoryAccountInfo } from 'pandora-common';
 import React, { ReactElement, useCallback, useState, useEffect, createContext, useContext, useMemo, ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Character, useCharacterData } from '../../../character/character';
@@ -14,6 +14,7 @@ import { RelationshipChangeHandleResult, useRelationship } from '../../releation
 import { useConfirmDialog } from '../../dialog/dialog';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { useGoToDM } from '../../releationships/relationships';
+import { Immutable } from 'immer';
 
 type MenuType = 'main' | 'admin' | 'relationship';
 
@@ -21,7 +22,7 @@ const characterMenuContext = createContext<{
 	isPlayerAdmin: boolean;
 	currentAccount: IDirectoryAccountInfo;
 	character: Character<ICharacterRoomData>;
-	chatRoomInfo: IChatRoomFullInfo;
+	chatRoomInfo: Immutable<IChatRoomClientInfo>;
 	menu: MenuType;
 	setMenu: (menu: MenuType) => void;
 	close: () => void;
@@ -249,7 +250,7 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 	const ref = useContextMenuPosition(position);
 
 	const characterData = useCharacterData(character);
-	const chatRoomInfo = useChatRoomInfo();
+	const chatRoomInfo = useChatRoomInfo().config;
 	const isPlayerAdmin = IsChatroomAdmin(chatRoomInfo, currentAccount);
 
 	useEffect(() => {

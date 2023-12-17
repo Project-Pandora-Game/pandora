@@ -73,7 +73,7 @@ function WardrobeRoom({ room }: {
 }): ReactElement {
 	const navigate = useNavigate();
 	const characters = useChatRoomCharacters();
-	const roomInfo = useObservable(room.info);
+	const roomInfo = useObservable(room.currentRoom).config;
 	const { globalState, actionPreviewState } = useWardrobeContext();
 	const globalPreviewState = useObservable(actionPreviewState);
 

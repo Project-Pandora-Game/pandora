@@ -202,7 +202,7 @@ function GraphicsCharacterWithManagerImpl({
 			pointermove={ onPointerMove }
 			cursor='pointer'
 		>
-			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } }>
+			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>
 				<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
 					<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
 						{

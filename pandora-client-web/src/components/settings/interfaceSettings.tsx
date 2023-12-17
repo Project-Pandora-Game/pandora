@@ -117,9 +117,9 @@ function WardrobeSettings({ account }: { account: IDirectoryAccountInfo; }): Rea
 			<WardrobeUseRoomBackground account={ account } />
 			<WardrobeShowExtraButtons account={ account } />
 			<WardrobeHoverPreview account={ account } />
-			<WardrobeSelectSettings account={ account } setting='wardrobeOutfitsPreview' label='Wardrobe previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
-			<WardrobeSelectSettings account={ account } setting='wardrobeSmallPreview' label='Wardrobe small preview type (list mode)' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
-			<WardrobeSelectSettings account={ account } setting='wardrobeBigPreview' label='Wardrobe big preview type (grid mode)' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+			<WardrobeSelectSettings account={ account } setting='wardrobeOutfitsPreview' label='Outfit previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
+			<WardrobeSelectSettings account={ account } setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+			<WardrobeSelectSettings account={ account } setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 		</fieldset>
 	);
 }
@@ -202,8 +202,8 @@ function WardrobeHoverPreview({ account }: { account: IDirectoryAccountInfo; }):
 
 const WARDROBE_PREVIEWS_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeOutfitsPreview'], string> = {
 	disabled: 'Disabled',
-	small: 'Enabled (small previews)',
-	big: 'Enabled (big previews)',
+	small: 'Enabled (small live previews)',
+	big: 'Enabled (big live previews)',
 };
 
 const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeSmallPreview'], string> = {

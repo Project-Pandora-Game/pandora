@@ -55,7 +55,8 @@ export function ChatroomSelect(): ReactElement {
 		};
 	}, []);
 
-	if (roomInfo) {
+	// Chatroom selection is only accessible from the personal room
+	if (roomInfo.id != null) {
 		return <Navigate to='/chatroom' />;
 	}
 

@@ -1,19 +1,17 @@
 import { z } from 'zod';
 import type { IChatroomBackgroundData } from '../chatroom';
-import { HexRGBAColorString, ZodTemplateString } from '../validation';
+import { HexRGBAColorString } from '../validation';
 import type { AppearanceArmPose, AppearancePose } from './state/characterState';
 import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
-import { AssetModuleDefinition } from './modules';
-import { AssetLockProperties, AssetProperties } from './properties';
-import { Satisfies } from '../utility';
+import type { AssetModuleDefinition } from './modules';
+import type { AssetLockProperties, AssetProperties } from './properties';
+import type { Satisfies } from '../utility';
 import { Immutable, freeze, produce } from 'immer';
-import { AssetManager } from './assetManager';
+import type { AssetManager } from './assetManager';
 import _ from 'lodash';
 import { BONE_MAX, BONE_MIN } from './appearance';
-import { RoomDeviceProperties } from './roomDeviceProperties';
-
-export const AssetIdSchema = ZodTemplateString<`a/${string}`>(z.string(), /^a\//);
-export type AssetId = z.infer<typeof AssetIdSchema>;
+import type { RoomDeviceProperties } from './roomDeviceProperties';
+import type { AssetId } from './base';
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
 // The size is used to make sure you cannot infinitely recurse storing items into one another

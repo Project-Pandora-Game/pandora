@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { AssetId } from '../definitions';
+import type { AssetId } from 'assets/base';
 import { ZodOverridable } from '../../validation';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });

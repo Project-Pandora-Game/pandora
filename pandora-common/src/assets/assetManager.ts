@@ -3,10 +3,11 @@ import type { Logger } from '../logging';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetId, AssetsDefinitionFile, AssetsPosePresets, AssetType, BackgroundTagDefinition, IChatroomBackgroundInfo } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetsPosePresets, AssetType, BackgroundTagDefinition, IChatroomBackgroundInfo } from './definitions';
+import type { AssetId } from './base';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { LoadItemFromBundle, Item, ItemBundle, ItemTemplate, CreateItemBundleFromTemplate } from './item';
-import { GameLogicCharacter } from '../gameLogic';
+import type { GameLogicCharacter } from '../gameLogic';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;

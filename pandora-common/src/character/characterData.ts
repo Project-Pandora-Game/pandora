@@ -6,7 +6,7 @@ import { PronounKeySchema } from './pronouns';
 import { RoomId } from '../chatroom';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { AccountIdSchema } from '../account';
-import { AssetIdSchema } from '../assets';
+import { AssetIdSchema } from '../assets/base';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';

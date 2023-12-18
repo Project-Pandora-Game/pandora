@@ -1,13 +1,13 @@
 import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility';
-import { IAssetModuleDefinition, IModuleConfigCommon, IItemModule } from './modules/common';
+import type { IAssetModuleDefinition, IModuleConfigCommon, IItemModule } from './modules/common';
 import { IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema } from './modules/typed';
 import { IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema } from './modules/storage';
 import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema, ModuleItemTemplateLockSlotSchema } from './modules/lockSlot';
 import { ZodDiscriminatedUnionOption, z } from 'zod';
 import { RecordUnpackSubobjectProperties } from '../validation';
-import { AssetId } from './definitions';
-import { IItemCreationContext, IItemLoadContext } from './item';
-import { Immutable } from 'immer';
+import type { AssetId } from './base';
+import type { IItemCreationContext, IItemLoadContext } from './item';
+import type { Immutable } from 'immer';
 
 //#region Module definitions
 

@@ -1,5 +1,6 @@
-import { Immutable } from 'immer';
-import { AssetDefinition, AssetId, AssetType, IsWearableAssetDefinition, WearableAssetType } from './definitions';
+import type { Immutable } from 'immer';
+import { AssetDefinition, AssetType, IsWearableAssetDefinition, WearableAssetType } from './definitions';
+import type { AssetId } from './base';
 import { GetModuleStaticAttributes } from './modules';
 import { Assert, AssertNever } from '../utility';
 

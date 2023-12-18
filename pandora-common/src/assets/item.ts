@@ -1,4 +1,4 @@
-import { Immutable } from 'immer';
+import type { Immutable } from 'immer';
 import { first } from 'lodash';
 import { ZodTypeDef, z } from 'zod';
 import { Logger } from '../logging';
@@ -6,17 +6,18 @@ import { Assert, AssertNever, MemoizeNoArg, Satisfies, Writeable } from '../util
 import { HexRGBAColorString, HexRGBAColorStringSchema, ZodArrayWithInvalidDrop } from '../validation';
 import type { AppearanceModuleActionContext } from './appearanceActions';
 import { ItemId, ItemIdSchema } from './appearanceTypes';
-import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
-import { Asset } from './asset';
-import { AssetManager } from './assetManager';
-import { AssetColorization, AssetId, AssetIdSchema, AssetType, WearableAssetType } from './definitions';
+import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
+import type { Asset } from './asset';
+import type { AssetManager } from './assetManager';
+import type { AssetColorization, AssetType, WearableAssetType } from './definitions';
+import { AssetId, AssetIdSchema } from './base';
 import { CreateModuleDataFromTemplate, ItemModuleAction, ItemModuleData, ItemModuleDataSchema, ItemModuleTemplate, ItemModuleTemplateSchema, LoadItemModule } from './modules';
-import { IExportOptions, IItemModule } from './modules/common';
+import type { IExportOptions, IItemModule } from './modules/common';
 import { AssetLockProperties, AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from './properties';
 import { CharacterIdSchema, CharacterId } from '../character/characterTypes';
 import { CreateRoomDevicePropertiesResult, GetPropertiesForSlot, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from './roomDeviceProperties';
-import { AssetFrameworkRoomState } from './state/roomState';
-import { GameLogicCharacter } from '../gameLogic';
+import type { AssetFrameworkRoomState } from './state/roomState';
+import type { GameLogicCharacter } from '../gameLogic';
 import { nanoid } from 'nanoid';
 import { LIMIT_OUTFIT_NAME_LENGTH } from '../inputLimits';
 

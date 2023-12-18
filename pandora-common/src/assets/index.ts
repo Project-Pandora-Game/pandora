@@ -7,6 +7,7 @@ export * from './appearanceTypes';
 export * from './appearanceValidation';
 export * from './asset';
 export * from './assetManager';
+export * from './base';
 export * from './definitions';
 export * from './item';
 export * from './modules';

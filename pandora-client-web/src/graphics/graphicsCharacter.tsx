@@ -147,7 +147,7 @@ function GraphicsCharacterWithManagerImpl({
 			);
 		}
 		return result;
-	}, [items, graphicsGetter, layerStateOverrideGetter]);
+	}, [items, isVisible, graphicsGetter, layerStateOverrideGetter]);
 
 	const { view } = characterState.actualPose;
 

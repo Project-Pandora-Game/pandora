@@ -4,7 +4,6 @@ import {
 	AppearanceAction,
 	AppearanceActionProblem,
 	AssertNever,
-	AssertNotNullable,
 	Asset,
 	AssetPreferenceType,
 	AssetPreferenceTypeSchema,

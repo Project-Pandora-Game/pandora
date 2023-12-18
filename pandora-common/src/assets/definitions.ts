@@ -471,6 +471,8 @@ export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetD
 		tab: 'item' | 'body' | 'room';
 		excludeAttributes?: readonly A['attributes'][];
 	};
+	/** Do not allow this attribute to be used as a preference */
+	noPreference?: true;
 };
 
 /** Data for randomly generating sensible appearance */

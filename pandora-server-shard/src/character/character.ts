@@ -666,7 +666,11 @@ export class Character {
 		let hasInvalid = false;
 
 		for (const key of Obj.keys(attributes)) {
-			if (!assetManager.attributes.has(key)) {
+			const attribute = assetManager.attributes.get(key);
+			if (attribute == null
+				|| attribute.noPreference
+				|| attribute.useAsWardrobeFilter?.tab === 'room'
+			) {
 				delete attributes[key];
 				hasInvalid = true;
 			}

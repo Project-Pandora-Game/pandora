@@ -82,7 +82,7 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
-	roomId: z.string().optional(),
+	roomId: z.string().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
 });
 /** Data about character, as seen by server */

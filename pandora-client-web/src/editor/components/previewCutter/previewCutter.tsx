@@ -221,6 +221,10 @@ export function PreviewCutter() {
 								<li>body/ears - Layer #1</li>
 							</ul>
 						</p>
+						<p>
+							Hint: Most existing assets have a comment in their `*.asset.ts` file about the size and position of the cut-out rectangle used<br />
+							to make their preview. That way, you can easily reuse this information for a new similar asset.
+						</p>
 					</ContextHelpButton>
 				</span>
 			</div>

@@ -105,6 +105,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		actionPreviewState,
 		showExtraActionButtons: account.settings.wardrobeExtraActionButtons,
 		showHoverPreview: account.settings.wardrobeHoverPreview,
+		isEditor: false,
 	}), [target, targetSelector, player, globalState, assetList, heldItem, focus, extraItemActions, actions, shardConnector, actionPreviewState, account.settings]);
 
 	return (

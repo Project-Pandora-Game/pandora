@@ -21,6 +21,7 @@ import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
 import { WardrobeItemManipulation } from './wardrobeItems';
 import './wardrobe.scss';
 import { useObservable } from '../../observable';
+import { WardrobePreferencesGui } from './wardrobePreferencesGui';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -106,7 +107,7 @@ function WardrobeCharacter({ character }: {
 	character: IChatroomCharacter;
 }): ReactElement {
 	const navigate = useNavigate();
-	const { globalState, actionPreviewState } = useWardrobeContext();
+	const { globalState, actionPreviewState, isEditor } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);
 	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
 
@@ -154,6 +155,15 @@ function WardrobeCharacter({ character }: {
 							<WardrobeRandomizationGui character={ character } />
 						</div>
 					</Tab>
+					{
+						(isEditor || !character.isPlayer()) ? null : (
+							<Tab name='Preferences'>
+								<div className='wardrobe-pane'>
+									<WardrobePreferencesGui />
+								</div>
+							</Tab>
+						)
+					}
 					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/pandora_lobby') } />
 				</TabContainer>
 			</div>

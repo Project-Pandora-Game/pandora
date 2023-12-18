@@ -3,8 +3,13 @@ import {
 	AppearanceAction,
 	AppearanceActionProblem,
 	AssertNever,
+	AssertNotNullable,
 	Asset,
+	AssetPreferenceType,
+	AssetPreferenceTypeSchema,
 	ItemContainerPath,
+	Obj,
+	ResolveAssetPreference,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
@@ -18,6 +23,13 @@ import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { usePermissionCheck } from '../../gameContext/permissionCheckProvider';
+import { useCharacterDataOptional } from '../../../character/character';
+import { Select } from '../../common/select/select';
+import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+
+type AssetViewSpawnStyle = 'spawn' | 'pickup' | 'preference';
 
 export function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions, spawnStyle }: {
 	className?: string;
@@ -26,7 +38,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 	assets: readonly Asset[];
 	container: ItemContainerPath;
 	attributesFilterOptions?: string[];
-	spawnStyle: 'spawn' | 'pickup';
+	spawnStyle: AssetViewSpawnStyle;
 }): ReactElement | null {
 	const { targetSelector, extraItemActions, heldItem, showExtraActionButtons } = useWardrobeContext();
 
@@ -54,6 +66,8 @@ export function InventoryAssetView({ className, title, children, assets, contain
 					);
 			}))
 	), [assetManager, assets, flt, attributesFilterOptions, attribute]);
+
+	const sortedAssets = useOrderedAssets(filteredAssets);
 
 	useEffect(() => {
 		if (attribute !== '' && !attributesFilterOptions?.includes(attribute)) {
@@ -156,16 +170,13 @@ export function InventoryAssetView({ className, title, children, assets, contain
 				<Scrollbar color='dark'>
 					<div className={ listMode ? 'list' : 'grid' }>
 						{
-							filteredAssets.map((a) => spawnStyle === 'spawn' ? (
-								<InventoryAssetViewListSpawn key={ a.id }
+							sortedAssets.map((a) => (
+								<InventoryAssetViewListTemplate
+									key={ a.id }
 									asset={ a }
 									container={ container }
 									listMode={ listMode }
-								/>
-							) : (
-								<InventoryAssetViewListPickup key={ a.id }
-									asset={ a }
-									listMode={ listMode }
+									spawnStyle={ spawnStyle }
 								/>
 							))
 						}
@@ -174,6 +185,39 @@ export function InventoryAssetView({ className, title, children, assets, contain
 			</div>
 		</div>
 	);
+}
+
+function InventoryAssetViewListTemplate({ asset, container, listMode, spawnStyle }: {
+	asset: Asset;
+	container: ItemContainerPath;
+	listMode: boolean;
+	spawnStyle: AssetViewSpawnStyle;
+}): ReactElement {
+	switch (spawnStyle) {
+		case 'spawn':
+			return (
+				<InventoryAssetViewListSpawn
+					asset={ asset }
+					container={ container }
+					listMode={ listMode }
+				/>
+			);
+		case 'pickup':
+			return (
+				<InventoryAssetViewListPickup
+					asset={ asset }
+					listMode={ listMode }
+				/>
+			);
+		case 'preference':
+			return (
+				<InventoryAssetViewListPreference
+					asset={ asset }
+					listMode={ listMode }
+				/>
+			);
+	}
+	AssertNever(spawnStyle);
 }
 
 function InventoryAssetViewListPickup({ asset, listMode }: {
@@ -277,6 +321,79 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	);
 }
 
+const ASSET_PREFERENCE_DESCRIPTIONS = {
+	favorite: {
+		name: 'Favorite',
+		description: 'Show this item at the top of the list.',
+	},
+	normal: {
+		name: 'Normal',
+		description: 'Normal priority.',
+	},
+	maybe: {
+		name: 'Maybe',
+		description: 'Show this item at the bottom of the list.',
+	},
+	prevent: {
+		name: 'Prevent',
+		description: 'Prevent this item from being used.',
+	},
+	doNotRender: {
+		name: 'Do not render',
+		description: 'Do not render this item.',
+	},
+} as const satisfies Readonly<Record<AssetPreferenceType, Readonly<{ name: string; description: string; }>>>;
+
+function InventoryAssetViewListPreference({ asset, listMode }: {
+	asset: Asset;
+	listMode: boolean;
+}): ReactElement {
+	const shardConnector = useShardConnector();
+	const current = useAssetPreferenceResolver()(asset);
+
+	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+		const value = ev.target.value as AssetPreferenceType;
+		if (value === current)
+			return;
+
+		shardConnector?.awaitResponse('updateAssetPreferences', {
+			assets: {
+				[asset.id]: { base: value },
+			},
+		}).then(({ result }) => {
+			if (result !== 'ok')
+				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
+		}).catch((err) => {
+			if (err instanceof Error)
+				toast(`Failed to update asset preference: ${err.message}`, TOAST_OPTIONS_ERROR);
+		});
+	}, [asset, current, shardConnector]);
+
+	return (
+		<div
+			className={ classNames(
+				'inventoryViewItem',
+				listMode ? 'listMode' : 'gridMode',
+				'small',
+				'allowed',
+			) }
+			tabIndex={ 0 }
+		>
+			<InventoryAssetPreview asset={ asset } small={ listMode } />
+			<span className='itemName'>{ asset.definition.name }</span>
+			<Select onChange={ onChange } value={ current }>
+				{
+					Obj.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { description }]) => (
+						<option key={ key } value={ key } selected={ key === current }>
+							{ description }
+						</option>
+					))
+				}
+			</Select>
+		</div>
+	);
+}
+
 function InventoryAssetDropArea(): ReactElement | null {
 	const { heldItem, setHeldItem } = useWardrobeContext();
 
@@ -334,4 +451,27 @@ function InventoryAssetDropArea(): ReactElement | null {
 			{ text }
 		</WardrobeActionButton>
 	);
+}
+
+export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
+	const { target, player } = useWardrobeContext();
+	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.preferences;
+
+	const preferences = characterPreferences;
+	// TODO: Add room preferences
+	AssertNotNullable(preferences);
+
+	return React.useCallback((asset) => ResolveAssetPreference({ preferences }, asset, player.id), [preferences, player.id]);
+}
+
+export function useOrderedAssets(assets: readonly Asset[]): readonly Asset[] {
+	const resolvePreference = useAssetPreferenceResolver();
+
+	return useMemo(() => (
+		assets.slice().sort((a, b) => {
+			const aP = AssetPreferenceTypeSchema.options.indexOf(resolvePreference(a));
+			const bP = AssetPreferenceTypeSchema.options.indexOf(resolvePreference(b));
+			return aP - bP;
+		})
+	), [assets, resolvePreference]);
 }

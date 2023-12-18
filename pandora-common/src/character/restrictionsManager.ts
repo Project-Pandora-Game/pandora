@@ -12,6 +12,7 @@ import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
+import type { ICharacterPublicData } from './characterData';
 
 export enum ItemInteractionType {
 	/**
@@ -140,6 +141,10 @@ export class CharacterRestrictionsManager {
 
 	public get character(): GameLogicCharacter {
 		return this.appearance.character;
+	}
+
+	public get publicData(): Immutable<ICharacterPublicData> {
+		return this.character.publicData;
 	}
 
 	constructor(appearance: CharacterAppearance, room: ActionRoomContext | null) {

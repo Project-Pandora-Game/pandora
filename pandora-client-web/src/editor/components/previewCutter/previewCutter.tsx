@@ -12,6 +12,7 @@ import { DownloadAsFile } from '../../../common/downloadHelper';
 import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editorScene';
 import { InputNumber } from '../../../components/input/numberInput';
 import './previewCutter.scss';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 
 type PreviewCutterState = Readonly<{
 	enabled: boolean;
@@ -189,8 +190,47 @@ export function PreviewCutter() {
 			.then((image) => DownloadAsFile(image, 'preview.png'))
 			.catch((error) => GetLogger('Editor').error('Error exporting image:', error));
 	});
+
+	const legend = (
+		<>
+			Preview Cutter
+			<ContextHelpButton>
+				<p>
+					The preview cutter can be used to quickly create item preview images in the same size and style as the existing ones.<br />
+					Here you can define the coordinates of the cut-out rectangle visible in the editor's "Preview"-tab and the size of it.<br />
+					The rectangle can be dragged around manually, too.
+				</p>
+				<p>
+					The "center"-toggle overrides the x-value and centers the cut-out rectangle.<br />
+					With the button you export the cut-out area in the correct image size of { PREVIEW_CUTTER_OUTPUT_SIZE } x { PREVIEW_CUTTER_OUTPUT_SIZE } pixels.<br />
+					The exported image can then manually be copied into your asset's folder and referenced in the `*.asset.ts` file.
+				</p>
+				<p>
+					To be consistent with the existing preview images, you should show the location of the item on a stylized character outline.<br />
+					To get such a transparent character body area into the background of your item preview image, do the following:
+				</p>
+				<p>
+					Set all equipped body parts of the default editor character to fully transparent (square button), except "head" and ears".<br />
+					Then, expand the body/base item and set the layers "Body", "Arms" and "Arms (mirror)" to half transparent.<br />
+					Finally, set the colors of the following layers to the color "Silver" (#C0C0C0):<br />
+					<ul>
+						<li>body/base - Body</li>
+						<li>body/base - Arms</li>
+						<li>body/base - Arms (mirror)</li>
+						<li>body/head - Layer #1</li>
+						<li>body/ears - Layer #1</li>
+					</ul>
+				</p>
+				<p>
+					Hint: Most existing assets have a comment in their `*.asset.ts` file about the size and position of the cut-out rectangle used<br />
+					to make their preview. That way, you can easily reuse this information for a new similar asset.
+				</p>
+			</ContextHelpButton>
+		</>
+	);
+
 	return (
-		<FieldsetToggle legend='Preview Cutter' forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
+		<FieldsetToggle legend={ legend } forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
 			<div>
 				<label htmlFor='preview-cutter-x'>X</label>
 				<InputNumber id='preview-cutter-x' min={ -state.size } max={ CharacterSize.WIDTH + state.size } value={ state.position.x } onChange={ setX } />

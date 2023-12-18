@@ -212,7 +212,7 @@ export function InventoryAssetPreview({ asset, small }: {
 
 	if (icon) {
 		return (
-			<div className='itemPreview'>
+			<div className={ previewType === 'image' ? 'itemPreview image' : 'itemPreview' }>
 				<img
 					className={ previewType === 'image' ? '' : 'black' }
 					src={ icon }

@@ -167,8 +167,10 @@ export function WikiIntroduction(): ReactElement {
 				<li>Advanced permission feature</li>
 				<li>Character rules</li>
 				<li>Connecting rooms with each other into a small housing area with a customized layout and ways to move from room to room</li>
+				<li>Spectator mode for rooms that will help to not disrupt the chat during plays and that can be managed by room admins</li>
 				<li>Creating character contracts to temporarily or permanently agree on sets of rules and permissions between specific characters</li>
 				<li>Improvements to the new player experience & safety</li>
+				<li>New room role "storyteller" that can orchestrate a prepared roleplay without a physical presence in the room</li>
 				... and many more, which can be found by looking at Pandora's issue list on <a href='https://github.com/Project-Pandora-Game/pandora/issues' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a>
 			</ul>
 		</>

@@ -60,6 +60,7 @@
 	background-color: $grey-lightest;
 	display: flex !important;
 	flex-flow: column;
+	isolation: isolate;
 
 	>header {
 		@include center-flex;

@@ -269,7 +269,7 @@ $drop-overlay-gap: 0.3em;
 		grid-template-rows: min-content auto;
 	}
 
-	@media (min-width: 2000px) {
+	@media (min-width: 1536px) {
 		.grid {
 			grid-template-columns: repeat(4, minmax(0, 384px));
 		}
@@ -335,7 +335,6 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.listMode {
-		padding: 3px 0.5em;
 		height: 3em;
 		align-items: center;
 		gap: 0.5em;
@@ -344,13 +343,24 @@ $drop-overlay-gap: 0.3em;
 			height: 2em;
 		}
 
+		.itemName {
+			margin: 3px;
+		}
+
 		.itemPreview {
 			height: 1.5em;
 			width: 1.5em;
+			margin-left: 0.5em;
+
+			&.image {
+				height: 100%;
+				width: unset;
+				margin-left: 0;
+			}
 		}
 
 		.quickActions {
-			margin-left: auto;
+			margin: 3px 3px 3px auto;
 		}
 	}
 

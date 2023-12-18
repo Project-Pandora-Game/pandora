@@ -269,7 +269,7 @@ $drop-overlay-gap: 0.3em;
 		grid-template-rows: min-content auto;
 	}
 
-	@media (min-width: 2000px) {
+	@media (min-width: 1536px) {
 		.grid {
 			grid-template-columns: repeat(4, minmax(0, 384px));
 		}

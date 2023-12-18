@@ -24,7 +24,7 @@ type ICharacterPublicDataChange = Omit<
 >;
 type ICharacterPrivateDataChange = Omit<ICharacterDataShardUpdate, keyof ICharacterPublicData | ManuallyGeneratedKeys>;
 /** Keys that are not stored in raw for while loaded, but instead need to be generated while saving */
-type ManuallyGeneratedKeys = 'appearance' | 'personalRoomInventory';
+type ManuallyGeneratedKeys = 'appearance' | 'personalRoom';
 
 export class Character {
 	private readonly data: Omit<ICharacterData, ManuallyGeneratedKeys>;
@@ -154,7 +154,7 @@ export class Character {
 		this.accountData = account;
 		this.connectSecret = connectSecret;
 
-		this._personalRoom = new PersonalRoom(this, data.personalRoomInventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT));
+		this._personalRoom = new PersonalRoom(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT));
 
 		const originalInteractionConfig = data.interactionConfig;
 		this.gameLogicCharacter = new GameLogicCharacterServer(data, this.logger.prefixMessages('[GameLogic]'));
@@ -484,9 +484,11 @@ export class Character {
 		for (const key of keys) {
 			if (key === 'appearance') {
 				data.appearance = this.getCharacterAppearanceBundle();
-			} else if (key === 'personalRoomInventory') {
+			} else if (key === 'personalRoom') {
 				const roomState = this._personalRoom.roomState.currentState.room;
-				data.personalRoomInventory = roomState.exportToBundle();
+				data.personalRoom = {
+					inventory: roomState.exportToBundle(),
+				};
 			} else {
 				(data as Record<string, unknown>)[key] = this.data[key];
 			}
@@ -543,7 +545,7 @@ export class Character {
 	}
 
 	public onPersonalRoomChanged(): void {
-		this.modified.add('personalRoomInventory');
+		this.modified.add('personalRoom');
 	}
 
 	public setPublicSettings(settings: Partial<ICharacterPublicSettings>): void {

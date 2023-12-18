@@ -56,7 +56,9 @@ export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: num
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
-	personalRoomInventory: z.lazy(() => RoomInventoryBundleSchema).optional(),
+	personalRoom: z.object({
+		inventory: z.lazy(() => RoomInventoryBundleSchema),
+	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
@@ -74,7 +76,7 @@ export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
 	'name',
 	'profileDescription',
 	'appearance',
-	'personalRoomInventory',
+	'personalRoom',
 	'position',
 	'roomId',
 	'settings',

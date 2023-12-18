@@ -76,7 +76,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 
 	public onRemove(): void {
 		clearInterval(this.tickInterval);
-		this.logger.verbose('Destroyed');
+		this.logger.verbose('Unloaded');
 	}
 
 	protected _tick(): void {

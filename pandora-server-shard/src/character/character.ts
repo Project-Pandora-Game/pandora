@@ -171,10 +171,8 @@ export class Character {
 			appearanceBundle: data.appearance ?? GetDefaultAppearanceBundle(),
 		};
 
-		// Load into room directly (to avoid cleanup of appearance outside of the room)
-		if (roomId != null) {
-			this.linkRoom(roomId);
-		}
+		// Load into the room
+		this.linkRoom(roomId);
 
 		// Link events from game logic parts
 		this.gameLogicCharacter.on('dataChanged', (type) => {
@@ -270,6 +268,9 @@ export class Character {
 				this.getCharacterAppearanceBundle(),
 			);
 			Assert(NOT_NARROWING_FALSE || this._context.state === 'room');
+		} else {
+			// Trigger load into personal room
+			this.getOrLoadRoom();
 		}
 	}
 
@@ -359,6 +360,9 @@ export class Character {
 
 		// Leave room after disconnecting client (so change propagates to other people in the room)
 		this._loadedRoom?.characterRemove(this);
+
+		// Finally unload personal room
+		this._personalRoom.onRemove();
 
 		if (reason === 'error') {
 			DirectoryConnector.sendMessage('characterError', { id: this.id });

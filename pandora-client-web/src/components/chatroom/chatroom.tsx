@@ -17,12 +17,13 @@ import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 export function Chatroom(): ReactElement | null {
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useCurrentAccountSettings();
 	const isPortrait = useIsPortrait();
+	const roomInfo = useChatRoomInfo();
 
 	const chatroomGraphicsRatio = isPortrait ? interfaceChatroomGraphicsRatioVertical : interfaceChatroomGraphicsRatioHorizontal;
 	const chatroomChatRatio = 10 - chatroomGraphicsRatio;
 
 	return (
-		<DivContainer className='chatroom' direction={ isPortrait ? 'column' : 'row' }>
+		<DivContainer className='chatroom' direction={ isPortrait ? 'column' : 'row' } key={ roomInfo.id ?? '_personal' }>
 			<ChatRoomScene className={ `chatroom-scene flex-${chatroomGraphicsRatio}` } />
 			<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
 		</DivContainer>

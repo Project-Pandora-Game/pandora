@@ -7,6 +7,7 @@ import {
 	Asset,
 	AssetPreferenceType,
 	AssetPreferenceTypeSchema,
+	AssetPreferences,
 	ItemContainerPath,
 	Obj,
 	ResolveAssetPreference,
@@ -28,6 +29,7 @@ import { Select } from '../../common/select/select';
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { Immutable } from 'immer';
 
 type AssetViewSpawnStyle = 'spawn' | 'pickup' | 'preference';
 
@@ -453,13 +455,20 @@ function InventoryAssetDropArea(): ReactElement | null {
 	);
 }
 
-export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
-	const { target, player } = useWardrobeContext();
+export function useAssetPreference(): Immutable<AssetPreferences> {
+	const { target } = useWardrobeContext();
 	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.preferences;
 
 	const preferences = characterPreferences;
 	// TODO: Add room preferences
 	AssertNotNullable(preferences);
+
+	return preferences;
+}
+
+export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
+	const { player } = useWardrobeContext();
+	const preferences = useAssetPreference();
 
 	return React.useCallback((asset) => ResolveAssetPreference({ preferences }, asset, player.id), [preferences, player.id]);
 }

@@ -3,8 +3,10 @@ fieldset.fieldset-toggle {
 	border-radius: 0.2em;
 
 	&>legend.fieldset-toggle-legend {
+		display: flex;
 		margin-left: 1rem;
 		cursor: pointer;
+		align-items: center;
 
 		&::before {
 			content: '▶';

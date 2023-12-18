@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { MouseEvent, useCallback, useState } from 'react';
 import { ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
@@ -12,11 +12,15 @@ import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 export function ContextHelpButton({ children }: ChildrenProps): ReactElement {
 	const [open, setOpen] = useState(false);
 
-	const toggleOpen = useEvent(() => {
+	const toggleOpen = useEvent((ev: MouseEvent) => {
+		ev.preventDefault();
+		ev.stopPropagation();
 		setOpen(!open);
 	});
 
-	const close = useCallback(() => {
+	const close = useCallback((ev: MouseEvent | KeyboardEvent) => {
+		ev.preventDefault();
+		ev.stopPropagation();
 		setOpen(false);
 	}, []);
 

@@ -5,7 +5,7 @@
 
 	> div {
 		display: grid;
-		grid-template-columns: 0.1fr 0.9fr;
+		grid-template-columns: 3fr 7fr;
 	}
 
 	> div:first-of-type {
@@ -27,7 +27,7 @@
 		width: fit-content;
 	}
 
-	button {
+	button:not(.help-button) {
 		margin: auto;
 		grid-column: 1 / span 2;
 		width: 100%;

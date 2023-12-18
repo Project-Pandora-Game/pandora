@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import {
+	ASSET_PREFERENCES_DEFAULT,
 	AppearanceAction,
 	AppearanceActionProblem,
 	AssertNever,
@@ -459,9 +460,7 @@ export function useAssetPreference(): Immutable<AssetPreferences> {
 	const { target } = useWardrobeContext();
 	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.preferences;
 
-	const preferences = characterPreferences;
-	// TODO: Add room preferences
-	AssertNotNullable(preferences);
+	const preferences = characterPreferences ?? ASSET_PREFERENCES_DEFAULT;
 
 	return preferences;
 }

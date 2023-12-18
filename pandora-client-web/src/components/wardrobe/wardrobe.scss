@@ -366,7 +366,7 @@ $drop-overlay-gap: 0.3em;
 		select {
 			margin-left: auto;
 			height: 2em;
-			width: calc(fit-content + 1em);
+			width: fit-content;
 			line-height: 2em;
 			padding: 0;
 		}

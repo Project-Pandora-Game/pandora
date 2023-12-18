@@ -199,7 +199,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 					},
 				});
 			} }>
-			<InventoryAssetPreview asset={ asset } small={ listMode } slim={ true } />
+			<InventoryAssetPreview asset={ asset } small={ listMode } />
 			<span className='itemName'>{ asset.definition.name }</span>
 		</div>
 	);
@@ -271,7 +271,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 					<ActionWarning problems={ finalProblems } parent={ ref } />
 				) : null
 			}
-			<InventoryAssetPreview asset={ asset } small={ listMode } slim={ true } />
+			<InventoryAssetPreview asset={ asset } small={ listMode } />
 			<span className='itemName'>{ asset.definition.name }</span>
 		</div>
 	);

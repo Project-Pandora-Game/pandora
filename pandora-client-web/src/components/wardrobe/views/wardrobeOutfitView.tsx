@@ -594,7 +594,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 						} }
 					/> : null
 			}
-			<InventoryAssetPreview asset={ asset } small={ true } slim={ false } />
+			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'>{ visibleName }</span>
 			<div className='quickActions'>
 				<WardrobeActionButton

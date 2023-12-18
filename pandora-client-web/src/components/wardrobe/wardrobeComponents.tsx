@@ -181,10 +181,9 @@ export function AttributeButton({ attribute, ...buttonProps }: {
 	);
 }
 
-export function InventoryAssetPreview({ asset, small, slim }: {
+export function InventoryAssetPreview({ asset, small }: {
 	asset: Asset;
 	small: boolean;
-	slim: boolean;
 }): ReactElement {
 	const assetManager = useAssetManager();
 	const preferredPreviewType = useAssetPreviewType(small);
@@ -213,7 +212,7 @@ export function InventoryAssetPreview({ asset, small, slim }: {
 
 	if (icon) {
 		return (
-			<div className={ previewType === 'image' ? slim ? 'itemPreview' : 'itemPreview image' : 'itemPreview' }>
+			<div className={ previewType === 'image' ? 'itemPreview image' : 'itemPreview' }>
 				<img
 					className={ previewType === 'image' ? '' : 'black' }
 					src={ icon }

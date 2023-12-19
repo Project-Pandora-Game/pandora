@@ -61,9 +61,30 @@ export function PersonalRoomControls(): ReactElement {
 	return (
 		<Column padding='medium' className='controls'>
 			<span>
-				This is { player.name }'s personal room.
+				This is { player.name }'s <b>personal room</b>.
 				<ContextHelpButton>
-					TODO
+					<h3>Personal room</h3>
+					<p>
+						Every character has their own personal room, which functions as a singleplayer lobby.<br />
+						It cannot be deleted or given up. You will automatically end up in this room when your<br />
+						selected character is not in any multiplayer room, since characters will always be in some room.<br />
+						Thus, this is the room you will end up in when leaving any other room or are removed from one.
+					</p>
+					<p>
+						The personal room can be decorated with room items like every other room, although it is<br />
+						currently not yet possible to set a custom room background. This will come in the future.
+					</p>
+					<p>
+						You can leave the room by joining another room with the "List of chatrooms" button in the left tab.
+					</p>
+					<p>
+						<b>Important notes:</b>
+						<ul>
+							<li>No other characters can join your personal room (also not your account's other characters)</li>
+							<li>Restraints cannot block you from leaving the personal room</li>
+							<li>Room devices can confine you to this room with no one being able to help you so be careful!</li>
+						</ul>
+					</p>
 				</ContextHelpButton>
 			</span>
 			<Row padding='small'>

@@ -160,7 +160,6 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>Character profile and biography</li>
 				<li>Showing and managing relationships between characters</li>
 				<li>Allowing every item to have a custom name and description and enabling item templates to store those, too</li>
 				<li>Hearing impairment effect by assets</li>

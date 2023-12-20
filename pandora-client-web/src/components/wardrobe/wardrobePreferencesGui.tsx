@@ -1,6 +1,6 @@
 import React from 'react';
 import { AssetAttributeDefinition, AttributePreferenceType, EMPTY_ARRAY, Obj } from 'pandora-common';
-import { InventoryAssetView, useAssetPreference } from './views/wardrobeAssetView';
+import { InventoryAssetView, useAssetPreferences } from './views/wardrobeAssetView';
 import { useAssetManager } from '../../assets/assetManager';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { toast } from 'react-toastify';
@@ -93,7 +93,7 @@ const ATTRIBUTE_PREFERENCE_DESCRIPTIONS = {
 
 function AttributePreference({ id, icon, description }: AssetAttributeDefinition & { id: string; }) {
 	const shardConnector = useShardConnector();
-	const current = useAssetPreference().attributes[id]?.base ?? 'normal';
+	const current = useAssetPreferences().attributes[id]?.base ?? 'normal';
 
 	const onChange = React.useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
 		const value = ev.target.value as AttributePreferenceType;

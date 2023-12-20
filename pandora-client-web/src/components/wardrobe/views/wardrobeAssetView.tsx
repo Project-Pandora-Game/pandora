@@ -226,6 +226,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 	listMode: boolean;
 }): ReactElement {
 	const { setHeldItem } = useWardrobeContext();
+	const preference = useAssetPreference(asset);
 
 	return (
 		<div
@@ -234,6 +235,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 				listMode ? 'listMode' : 'gridMode',
 				'small',
 				'allowed',
+				`pref-${preference}`,
 			) }
 			tabIndex={ 0 }
 			onClick={ () => {
@@ -258,6 +260,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	const { targetSelector, actionPreviewState, showHoverPreview } = useWardrobeContext();
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const [isHovering, setIsHovering] = useState(false);
+	const preference = useAssetPreference(asset);
 
 	const action = useMemo((): AppearanceAction => ({
 		type: 'create',
@@ -299,6 +302,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				'inventoryViewItem',
 				listMode ? 'listMode' : 'gridMode',
 				'small',
+				`pref-${preference}`,
 				check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked',
 			) }
 			tabIndex={ 0 }
@@ -350,7 +354,7 @@ function InventoryAssetViewListPreference({ asset, listMode }: {
 	listMode: boolean;
 }): ReactElement {
 	const shardConnector = useShardConnector();
-	const current = useAssetPreferenceResolver()(asset);
+	const current = useAssetPreference(asset);
 
 	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
 		const value = ev.target.value as AssetPreferenceType;
@@ -454,7 +458,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 	);
 }
 
-export function useAssetPreference(): Immutable<AssetPreferences> {
+export function useAssetPreferences(): Immutable<AssetPreferences> {
 	const { target } = useWardrobeContext();
 	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.preferences;
 
@@ -465,9 +469,14 @@ export function useAssetPreference(): Immutable<AssetPreferences> {
 
 export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
 	const { player } = useWardrobeContext();
-	const preferences = useAssetPreference();
+	const preferences = useAssetPreferences();
 
 	return React.useCallback((asset) => ResolveAssetPreference({ preferences }, asset, player.id), [preferences, player.id]);
+}
+
+export function useAssetPreference(asset: Asset): AssetPreferenceType {
+	const resolvePreference = useAssetPreferenceResolver();
+	return useMemo(() => resolvePreference(asset), [asset, resolvePreference]);
 }
 
 export function useOrderedAssets(assets: readonly Asset[]): readonly Asset[] {

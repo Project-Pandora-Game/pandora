@@ -93,9 +93,15 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	AssertNotNullable(currentAccount);
 	const createRoom = useCreateRoom();
 	let currentRoomInfo: Immutable<ICurrentRoomInfo> | null = useChatRoomInfo();
+	const lastRoomId = useRef<RoomId | null>();
 	const isInPublicRoom = currentRoomInfo.id != null;
 	if (creation) {
 		currentRoomInfo = null;
+	} else {
+		// Remember which room we were opened into - that way we can exit the screen if room changes abruptly
+		if (lastRoomId.current === undefined) {
+			lastRoomId.current = currentRoomInfo.id;
+		}
 	}
 	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<IChatRoomDirectoryConfig>, action: Partial<IChatRoomDirectoryConfig>) => {
 		const result: Partial<IChatRoomDirectoryConfig> = {
@@ -151,8 +157,9 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 		},
 	}), [setRoomModifiedData, currentConfigBackground]);
 
-	if (!creation && !currentRoomInfo) {
-		return <Navigate to='/chatroom_select' />;
+	if (!creation && currentRoomInfo != null && currentRoomInfo.id !== lastRoomId.current) {
+		// If room id changes abruptly, navigate to default view (this is likely some form of kick or the room stopping to exist)
+		return <Navigate to='/' />;
 	} else if (creation && isInPublicRoom) {
 		// If in a public room, you cannot make a new room directly (as you need to leave first)
 		return <Navigate to='/chatroom' />;

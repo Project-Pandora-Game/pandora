@@ -93,6 +93,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	AssertNotNullable(currentAccount);
 	const createRoom = useCreateRoom();
 	let currentRoomInfo: Immutable<ICurrentRoomInfo> | null = useChatRoomInfo();
+	const isInPublicRoom = currentRoomInfo.id != null;
 	if (creation) {
 		currentRoomInfo = null;
 	}
@@ -152,6 +153,9 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 
 	if (!creation && !currentRoomInfo) {
 		return <Navigate to='/chatroom_select' />;
+	} else if (creation && isInPublicRoom) {
+		// If in a public room, you cannot make a new room directly (as you need to leave first)
+		return <Navigate to='/chatroom' />;
 	}
 
 	if (shards && currentConfig.development?.shardId && !shards.some((s) => s.id === currentConfig.development?.shardId)) {
@@ -189,7 +193,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				</div>
 				<div className='input-container'>
 					<label>Public</label>
-					<Button onClick={ () => setRoomModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit }>{ currentConfig.public ? 'Yes' : 'No' }</Button>
+					<Button onClick={ () => setRoomModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit } className='fadeDisabled'>{ currentConfig.public ? 'Yes' : 'No' }</Button>
 				</div>
 				<div className='input-container'>
 					<label>Entry password (optional)</label>
@@ -227,6 +231,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 							<Button
 								onClick={ () => setShowBackgrounds(true) }
 								disabled={ !canEdit }
+								className='fadeDisabled'
 							>
 								Select a background
 							</Button>
@@ -307,6 +312,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 							<Button
 								onClick={ () => setShowBackgrounds(true) }
 								disabled={ !canEdit }
+								className='fadeDisabled'
 							>
 								Select a background
 							</Button>
@@ -729,12 +735,14 @@ const RoomAdminProgress = new PersistentToast();
 
 function useCreateRoom(): (config: IChatRoomDirectoryConfig) => Promise<void> {
 	const directoryConnector = useDirectoryConnector();
+	const navigate = useNavigate();
 	return useCallback(async (config) => {
 		try {
 			RoomAdminProgress.show('progress', 'Creating room...');
 			const result = await directoryConnector.awaitResponse('chatRoomCreate', config);
 			if (result.result === 'ok') {
 				RoomAdminProgress.show('success', 'Room created!');
+				navigate('/chatroom');
 			} else {
 				RoomAdminProgress.show('error', `Failed to create room:\n${result.result}`);
 			}
@@ -742,7 +750,7 @@ function useCreateRoom(): (config: IChatRoomDirectoryConfig) => Promise<void> {
 			GetLogger('CreateRoom').warning('Error during room creation', err);
 			RoomAdminProgress.show('error', `Error during room creation:\n${err instanceof Error ? err.message : String(err)}`);
 		}
-	}, [directoryConnector]);
+	}, [directoryConnector, navigate]);
 }
 
 function UpdateRoom(directoryConnector: DirectoryConnector, config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () => void): void {

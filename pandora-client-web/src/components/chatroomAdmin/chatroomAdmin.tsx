@@ -561,11 +561,17 @@ function BackgroundSelectDialog({ hide, current, select }: {
 	const [nameFilter, setNameFilter] = useState('');
 	const [selection, setSelection] = useState(() => BackgroundSelectionStateClass.create(assetManager));
 
-	const filteredBackgrounds = useMemo(() => {
+	/** Comparator for sorting backgrounds */
+	const backgroundSortOrder = useCallback((a: Readonly<IChatroomBackgroundInfo>, b: Readonly<IChatroomBackgroundInfo>): number => {
+		return a.name.localeCompare(b.name);
+	}, []);
+
+	const backgroundsToShow = useMemo(() => {
 		const filterParts = nameFilter.toLowerCase().trim().split(/\s+/);
 		return selection.backgrounds
-			.filter((b) => filterParts.every((f) => b.name.toLowerCase().includes(f)));
-	}, [selection, nameFilter]);
+			.filter((b) => filterParts.every((f) => b.name.toLowerCase().includes(f)))
+			.sort(backgroundSortOrder);
+	}, [selection, nameFilter, backgroundSortOrder]);
 	const nameFilterInput = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
@@ -617,7 +623,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 					</div>
 				</div>
 				<Scrollbar className='backgrounds' color='lighter'>
-					{ filteredBackgrounds
+					{ backgroundsToShow
 						.map((b) => (
 							<a key={ b.id }
 								onClick={ () => {

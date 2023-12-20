@@ -67,22 +67,29 @@ export function PersonalRoomControls(): ReactElement {
 					<p>
 						Every character has their own personal room, which functions as a singleplayer lobby.<br />
 						It cannot be deleted or given up. You will automatically end up in this room when your<br />
-						selected character is not in any multiplayer room, since characters will always be in some room.<br />
-						Thus, this is the room you will end up in when leaving any other room or are removed from one.
+						selected character is not in any multiplayer room.
 					</p>
 					<p>
-						The personal room can be decorated with room items like every other room, although it is<br />
-						currently not yet possible to set a custom room background. This will come in the future.
+						The personal room functions the same as any other room.<br />
+						As no one except you will see whatever you do in this room, it is a great place to experiment!<br />
+						For example you can:
+						<ul className='margin-none'>
+							<li>Use the chat or chat commands</li>
+							<li>Change your character's clothes or even body in the wardrobe</li>
+							<li>Try various character poses and expressions</li>
+							<li>Decorate the room freely with room items</li>
+							<li><s>Change the room's background</s> - <i>This is not yet possible and will be added in the future</i></li>
+						</ul>
 					</p>
 					<p>
-						You can leave the room by joining another room with the "List of chatrooms" button in the left tab.
+						You can leave the room by joining another room with the "List of chatrooms" button in the "Personal room" tab.
 					</p>
 					<p>
 						<b>Important notes:</b>
 						<ul>
-							<li>No other characters can join your personal room (also not your account's other characters)</li>
-							<li>Restraints cannot block you from leaving the personal room</li>
-							<li>Room devices can confine you to this room with no one being able to help you so be careful!</li>
+							<li>No other characters can join your personal room (not even your account's other characters)</li>
+							<li>Restraints will not prevent you from leaving the personal room</li>
+							<li>Being in a room device will also not prevent you from leaving the personal room</li>
 						</ul>
 					</p>
 				</ContextHelpButton>

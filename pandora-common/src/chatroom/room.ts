@@ -6,7 +6,7 @@ import { CharacterId } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { ArrayToRecordKeys } from '../utility';
-import { LIMIT_ROOM_DESCRIPTION_LENGTH, LIMIT_ROOM_NAME_LENGTH } from '../inputLimits';
+import { LIMIT_ROOM_DESCRIPTION_LENGTH, LIMIT_ROOM_NAME_LENGTH, LIMIT_ROOM_NAME_PATTERN } from '../inputLimits';
 import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness
@@ -35,7 +35,7 @@ export type ActionRoomContext = {
 
 export const ChatRoomBaseInfoSchema = z.object({
 	/** The name of the chat room */
-	name: z.string().min(3).max(LIMIT_ROOM_NAME_LENGTH).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex),
+	name: z.string().min(3).max(LIMIT_ROOM_NAME_LENGTH).regex(LIMIT_ROOM_NAME_PATTERN).regex(ZodTrimedRegex),
 	/** The description of the chat room */
 	description: z.string().max(LIMIT_ROOM_DESCRIPTION_LENGTH),
 	/** Rooms are private by default and can be published to be seen in room search. */

@@ -20,6 +20,8 @@ export const LIMIT_MAIL_LENGTH = 256;
 
 /** The maximum length of a room's name */
 export const LIMIT_ROOM_NAME_LENGTH = 40;
+/** The pattern used for validating room name */
+export const LIMIT_ROOM_NAME_PATTERN = /^[a-zA-Z0-9_\- ]+$/;
 
 /** The maximum length of a room's description */
 export const LIMIT_ROOM_DESCRIPTION_LENGTH = 10_000;

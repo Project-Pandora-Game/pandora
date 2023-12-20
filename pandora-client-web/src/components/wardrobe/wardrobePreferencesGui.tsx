@@ -130,7 +130,7 @@ function AttributePreference({ id, icon, description }: AssetAttributeDefinition
 			<select onChange={ onChange } value={ current }>
 				{
 					Obj.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description: desc }]) => (
-						<option key={ key } value={ key } selected={ key === current } title={ desc }>
+						<option key={ key } value={ key } title={ desc }>
 							{ name }
 						</option>
 					))

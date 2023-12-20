@@ -180,7 +180,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					onChange={ (event) => setRoomModifiedData({ name: event.target.value }) }
 					readOnly={ !canEdit }
 				/>
-				{ !IsChatroomName(currentConfig.name) && <div className='error'>Invalid room name</div> }
+				{ canEdit && !IsChatroomName(currentConfig.name) ? (<div className='error'>Invalid room name</div>) : null }
 			</div>
 			<div className='input-container'>
 				<label>Room size</label>
@@ -196,7 +196,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 						readOnly={ !canEdit }
 						rows={ 16 }
 					/>
-					{ !IsChatroomDescription(currentConfig.description) && <div className='error'>Invalid description</div> }
+					{ canEdit && !IsChatroomDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
 				</div>
 				<div className='input-container'>
 					<label>Public</label>

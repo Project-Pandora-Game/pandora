@@ -384,9 +384,9 @@ function InventoryAssetViewListPreference({ asset, listMode }: {
 			<span className='itemName'>{ asset.definition.name }</span>
 			<select onChange={ onChange } value={ current }>
 				{
-					Obj.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { description }]) => (
-						<option key={ key } value={ key } selected={ key === current }>
-							{ description }
+					Obj.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
+						<option key={ key } value={ key } selected={ key === current } title={ description }>
+							{ name }
 						</option>
 					))
 				}

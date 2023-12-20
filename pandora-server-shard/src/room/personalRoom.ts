@@ -2,6 +2,7 @@ import { Room } from './room';
 import { Character } from '../character/character';
 import { AccountId, DEFAULT_BACKGROUND, GetLogger, IChatRoomDirectoryConfig, RoomInventoryBundle } from 'pandora-common';
 import { cloneDeep } from 'lodash';
+import { assetManager } from '../assets/assetManager';
 
 export class PersonalRoom extends Room {
 	private readonly _character: Character;
@@ -25,7 +26,9 @@ export class PersonalRoom extends Room {
 			banned: [],
 			admin: [],
 			password: null,
-			background: cloneDeep(DEFAULT_BACKGROUND),
+			// Try to use the first background (if there is some)
+			// otherwise default to the default, solid-color background (important for tests that don't have any assets).
+			background: assetManager.getBackgrounds()[0].id ?? cloneDeep(DEFAULT_BACKGROUND),
 		};
 	}
 

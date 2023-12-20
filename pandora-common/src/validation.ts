@@ -2,6 +2,7 @@ import { enableMapSet } from 'immer';
 import { isEqual } from 'lodash';
 import { z, ZodObject, ZodString, ZodType, ZodTypeAny, ZodTypeDef, RefinementCtx, ZodEffects } from 'zod';
 import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_CHARACTER_NAME_MIN_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits';
+import { Assert } from './utility';
 
 enableMapSet();
 
@@ -36,6 +37,30 @@ export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck
 		}
 		return res;
 	});
+}
+
+/**
+ * Creates a transformer for Zod schemas that truncates a string or array to a specified maximum length.
+ *
+ * The function is intended to be used as a `.transform()` method in Zod schemas. It can be applied to
+ * both string and array types. When used on a string, it truncates the string to the specified length
+ * if it exceeds that length. When used on an array, it limits the array to the specified number of elements.
+ *
+ * @param {number} maxLength - The maximum length to which the string or array should be truncated.
+ *                             Must be a positive number.
+ * @returns A transformer function that takes a value (string or array) and context, and returns
+ *          the value truncated to the specified maxLength.
+ *
+ * @example
+ * // For a string schema
+ * z.string().transform(ZodTruncate(42));
+ *
+ * // For an array schema
+ * z.array(z.unknown()).transform(ZodTruncate(69));
+ */
+export function ZodTruncate<Output extends string | unknown[]>(maxLength: number): (value: Output, _ctx: RefinementCtx) => Output {
+	Assert(maxLength > 0, 'maxLength must be a positive number');
+	return (value) => value.slice(0, maxLength) as Output;
 }
 
 export const SCHEME_OVERRIDE = Symbol('SCHEME_OVERRIDE');

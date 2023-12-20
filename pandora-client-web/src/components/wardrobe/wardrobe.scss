@@ -335,12 +335,13 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.listMode {
-		height: 3em;
+		height: fit-content;
+		min-height: 2em;
 		align-items: center;
 		gap: 0.5em;
 
 		&.small {
-			height: 2em;
+			min-height: 2em;
 		}
 
 		.itemName {

@@ -400,6 +400,15 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
+	&.pref-maybe {
+		.itemPreview.image>img {
+			filter: grayscale(30%);
+		}
+		.itemName {
+			font-style: italic;
+		}
+	}
+
 	&.pref-prevent, &.pref-doNotRender {
 		.itemName {
 			text-decoration: line-through;

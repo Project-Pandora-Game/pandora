@@ -33,6 +33,7 @@ export const LIMIT_CHAT_MESSAGE_LENGTH = 25_000;
  * should be increased by roughly 35-40% at least when checked by directory.
  */
 export const LIMIT_DIRECT_MESSAGE_LENGTH = LIMIT_CHAT_MESSAGE_LENGTH;
+export const LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 = LIMIT_DIRECT_MESSAGE_LENGTH * 1.4;
 
 /** The maximum length of a custom item name (not yet implemented)*/
 export const LIMIT_ITEM_NAME_LENGTH = 40;

@@ -1,4 +1,4 @@
-import { IDirectoryAccountInfo, IDirectoryDirectMessageAccount } from 'pandora-common';
+import { IDirectoryAccountInfo, IDirectoryDirectMessageAccount, LIMIT_DIRECT_MESSAGE_LENGTH } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAutoScroll } from '../../common/useAutoScroll';
@@ -108,6 +108,7 @@ function DirectChannelInput(): ReactElement | null {
 		<textarea
 			ref={ ref }
 			onKeyDown={ onKeyDown }
+			maxLength={ LIMIT_DIRECT_MESSAGE_LENGTH }
 			placeholder={ `Send message to ${channel.account.name} (${channel.account.id})` }
 		/>
 	);

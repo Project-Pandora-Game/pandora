@@ -8,7 +8,7 @@ import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits';
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
 export type IChatModifier = z.infer<typeof ChatModifierSchema>;
 
-export const ChatSegmentSchema = z.tuple([ChatModifierSchema, z.string().max(LIMIT_CHAT_MESSAGE_LENGTH)]);
+export const ChatSegmentSchema = z.tuple([ChatModifierSchema, z.string()]);
 export type IChatSegment = z.infer<typeof ChatSegmentSchema>;
 
 export const ChatTypeSchema = z.enum(['chat', 'me', 'emote', 'ooc']);
@@ -23,6 +23,28 @@ export const ClientMessageSchema = z.object({
 	to: CharacterIdSchema.optional(),
 }));
 export type IClientMessage = z.infer<typeof ClientMessageSchema>;
+
+export function CalculateChatMessagesLength(message: IClientMessage[], maxLength: number) {
+	let length = 0;
+	outer: for (const messagePart of message) {
+		for (const part of messagePart.parts) {
+			length += part[1].length;
+			if (length > maxLength) {
+				break outer;
+			}
+		}
+	}
+	return length;
+}
+
+export const ClientChatMessagesSchema = z.array(ClientMessageSchema).superRefine((val, ctx) => {
+	if (CalculateChatMessagesLength(val, LIMIT_CHAT_MESSAGE_LENGTH) > LIMIT_CHAT_MESSAGE_LENGTH) {
+		ctx.addIssue({
+			code: z.ZodIssueCode.custom,
+			message: `Message is too long, maximum length is ${LIMIT_CHAT_MESSAGE_LENGTH}`,
+		});
+	}
+});
 
 export type IChatRoomMessageChatCharacter = { id: CharacterId; name: string; labelColor: string; };
 export type IChatRoomMessageChat = Omit<IClientMessage, 'from' | 'to'> & {

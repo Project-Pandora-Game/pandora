@@ -65,7 +65,7 @@ function InventoryAttributePreferenceView() {
 
 	return (
 		<div className='inventoryView'>
-			<div className='listContainer'>
+			<div className='listContainer spawn-style-preference'>
 				<Scrollbar color='dark'>
 					{
 						attributes.map((a) => <AttributePreference key={ a.id } { ...a } />)
@@ -87,7 +87,7 @@ const ATTRIBUTE_PREFERENCE_DESCRIPTIONS = {
 	},
 	doNotRender: {
 		name: 'Do not render',
-		description: 'Do not render this items with this attribute.',
+		description: 'Do not render items with this attribute.',
 	},
 } as const satisfies Readonly<Record<AttributePreferenceType, Readonly<{ name: string; description: string; }>>>;
 

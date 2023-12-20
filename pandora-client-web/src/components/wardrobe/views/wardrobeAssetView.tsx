@@ -68,7 +68,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 			}))
 	), [assetManager, assets, flt, attributesFilterOptions, attribute]);
 
-	const sortedAssets = useOrderedAssets(filteredAssets);
+	const sortedAssets = useOrderedAssets(filteredAssets, spawnStyle === 'preference');
 
 	useEffect(() => {
 		if (attribute !== '' && !attributesFilterOptions?.includes(attribute)) {
@@ -169,7 +169,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 					) : null
 				}
 				<Scrollbar color='dark'>
-					<div className={ listMode ? 'list' : 'grid' }>
+					<div className={ classNames(listMode ? 'list' : 'grid', `spawn-style-${spawnStyle}`) }>
 						{
 							sortedAssets.map((a) => (
 								<InventoryAssetViewListTemplate
@@ -381,6 +381,7 @@ function InventoryAssetViewListPreference({ asset, listMode }: {
 				listMode ? 'listMode' : 'gridMode',
 				'small',
 				'allowed',
+				`pref-${current}`,
 			) }
 			tabIndex={ 0 }
 		>
@@ -489,14 +490,16 @@ export function useAssetPreference(asset: Asset): AssetPreferenceType {
 	return useMemo(() => resolvePreference(asset), [asset, resolvePreference]);
 }
 
-export function useOrderedAssets(assets: readonly Asset[]): readonly Asset[] {
+export function useOrderedAssets(assets: readonly Asset[], ignorePreference: boolean): readonly Asset[] {
 	const resolvePreference = useAssetPreferenceResolver();
 
 	return useMemo(() => (
-		assets.slice().sort((a, b) => {
-			const aP = AssetPreferenceTypeSchema.options.indexOf(resolvePreference(a));
-			const bP = AssetPreferenceTypeSchema.options.indexOf(resolvePreference(b));
-			return aP - bP;
-		})
-	), [assets, resolvePreference]);
+		ignorePreference
+			? assets
+			: assets.slice().sort((a, b) => {
+				const aP = AssetPreferenceTypeSchema.options.indexOf(resolvePreference(a));
+				const bP = AssetPreferenceTypeSchema.options.indexOf(resolvePreference(b));
+				return aP - bP;
+			})
+	), [ignorePreference, assets, resolvePreference]);
 }

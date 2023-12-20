@@ -3,7 +3,6 @@ import { AssetAttributeDefinition, AttributePreferenceType, EMPTY_ARRAY, Obj } f
 import { InventoryAssetView, useAssetPreference } from './views/wardrobeAssetView';
 import { useAssetManager } from '../../assets/assetManager';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
-import { Select } from '../common/select/select';
 import { toast } from 'react-toastify';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
@@ -128,7 +127,7 @@ function AttributePreference({ id, icon, description }: AssetAttributeDefinition
 				}
 			</div>
 			<span className='itemName'>{ description }</span>
-			<Select onChange={ onChange } value={ current }>
+			<select onChange={ onChange } value={ current }>
 				{
 					Obj.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { description: desc }]) => (
 						<option key={ key } value={ key } selected={ key === current }>
@@ -136,7 +135,7 @@ function AttributePreference({ id, icon, description }: AssetAttributeDefinition
 						</option>
 					))
 				}
-			</Select>
+			</select>
 		</div>
 	);
 }

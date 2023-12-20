@@ -25,7 +25,6 @@ import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionBu
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { usePermissionCheck } from '../../gameContext/permissionCheckProvider';
 import { useCharacterDataOptional } from '../../../character/character';
-import { Select } from '../../common/select/select';
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
@@ -383,7 +382,7 @@ function InventoryAssetViewListPreference({ asset, listMode }: {
 		>
 			<InventoryAssetPreview asset={ asset } small={ listMode } />
 			<span className='itemName'>{ asset.definition.name }</span>
-			<Select onChange={ onChange } value={ current }>
+			<select onChange={ onChange } value={ current }>
 				{
 					Obj.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { description }]) => (
 						<option key={ key } value={ key } selected={ key === current }>
@@ -391,7 +390,7 @@ function InventoryAssetViewListPreference({ asset, listMode }: {
 						</option>
 					))
 				}
-			</Select>
+			</select>
 		</div>
 	);
 }

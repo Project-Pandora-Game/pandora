@@ -46,7 +46,7 @@ function MockPlayerData(overrides?: Partial<ICharacterData & ICharacterRoomData>
 		created: 0,
 		accessId: 'mockID',
 		settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-		preferences: _.cloneDeep(ASSET_PREFERENCES_DEFAULT),
+		assetPreferences: _.cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		position: [CharacterSize.WIDTH / 2, 0, 0],
 		isOnline: true,
 		...overrides,

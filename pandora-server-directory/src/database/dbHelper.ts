@@ -23,7 +23,7 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 		created: -1,
 		accessId: nanoid(8),
 		settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-		preferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
+		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		position: [-1, -1, 0],
 	};
 

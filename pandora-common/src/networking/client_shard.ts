@@ -1,5 +1,5 @@
 import { CharacterIdSchema } from '../character/characterTypes';
-import { AssetPreferencesSchema, CharacterPublicSettingsSchema } from '../character/characterData';
+import { CharacterPublicSettingsSchema } from '../character/characterData';
 import { AppearanceActionSchema } from '../assets/appearanceActions';
 import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
 import { ClientChatMessagesSchema, ChatRoomStatusSchema } from '../chatroom/chat';
@@ -15,6 +15,7 @@ import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 import type { } from '../assets/item';
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
+import { AssetPreferencesSchema } from '../character/assetPreferences';
 
 /** Client->Shard messages */
 export const ClientShardSchema = {

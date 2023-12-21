@@ -1,5 +1,5 @@
 import React from 'react';
-import { AssetAttributeDefinition, AttributePreferenceType, EMPTY_ARRAY, Obj } from 'pandora-common';
+import { AssetAttributeDefinition, AttributePreferenceType, EMPTY_ARRAY, KnownObject } from 'pandora-common';
 import { InventoryAssetView, useAssetPreferences } from './views/wardrobeAssetView';
 import { useAssetManager } from '../../assets/assetManager';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
@@ -129,7 +129,7 @@ function AttributePreference({ id, icon, description }: AssetAttributeDefinition
 			<span className='itemName'>{ description }</span>
 			<select onChange={ onChange } value={ current }>
 				{
-					Obj.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description: desc }]) => (
+					KnownObject.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description: desc }]) => (
 						<option key={ key } value={ key } title={ desc }>
 							{ name }
 						</option>

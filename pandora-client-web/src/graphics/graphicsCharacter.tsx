@@ -237,6 +237,6 @@ function GraphicsCharacterImpl(props: GraphicsCharacterProps, ref: React.Forward
 export const GraphicsCharacter = React.forwardRef(GraphicsCharacterImpl);
 
 function useAssetPreferenceVisibility() {
-	const preferences = usePlayerData()?.preferences ?? ASSET_PREFERENCES_DEFAULT;
-	return React.useCallback((asset: Asset) => ResolveAssetPreference({ preferences }, asset) !== 'doNotRender', [preferences]);
+	const preferences = usePlayerData()?.assetPreferences ?? ASSET_PREFERENCES_DEFAULT;
+	return React.useCallback((asset: Asset) => ResolveAssetPreference(preferences, asset) !== 'doNotRender', [preferences]);
 }

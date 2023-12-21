@@ -6,7 +6,7 @@ import { PronounKeySchema } from './pronouns';
 import { RoomId } from '../chatroom';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { AccountIdSchema } from '../account';
-import { AssetIdSchema } from '../assets/base';
+import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesSchema } from './assetPreferences';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
@@ -23,33 +23,6 @@ export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSetting
 	pronoun: 'she',
 };
 
-export const AttributePreferenceTypeSchema = z.enum(['normal', 'prevent', 'doNotRender']);
-export type AttributePreferenceType = z.infer<typeof AttributePreferenceTypeSchema>;
-
-export const AttributePreferenceSchema = z.object({
-	base: AttributePreferenceTypeSchema.default('normal'),
-});
-export type AttributePreference = z.infer<typeof AttributePreferenceSchema>;
-
-export const AssetPreferenceTypeSchema = z.enum(['favorite', 'normal', 'maybe', 'prevent', 'doNotRender']);
-export type AssetPreferenceType = z.infer<typeof AssetPreferenceTypeSchema>;
-
-export const AssetPreferenceSchema = z.object({
-	base: AssetPreferenceTypeSchema.default('normal'),
-});
-export type AssetPreference = z.infer<typeof AssetPreferenceSchema>;
-
-export const AssetPreferencesSchema = z.object({
-	attributes: z.record(z.string(), AttributePreferenceSchema).default({}),
-	assets: z.record(AssetIdSchema, AssetPreferenceSchema).default({}),
-});
-export type AssetPreferences = z.infer<typeof AssetPreferencesSchema>;
-
-export const ASSET_PREFERENCES_DEFAULT: Readonly<AssetPreferences> = Object.freeze<AssetPreferences>({
-	attributes: {},
-	assets: {},
-});
-
 /** Data about character, that is visible to everyone in same room */
 export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
@@ -57,7 +30,7 @@ export const CharacterPublicDataSchema = z.object({
 	name: CharacterNameSchema,
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_CHARACTER_PROFILE_LENGTH)),
 	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-	preferences: AssetPreferencesSchema.default(ASSET_PREFERENCES_DEFAULT),
+	assetPreferences: AssetPreferencesSchema.default(ASSET_PREFERENCES_DEFAULT),
 });
 /** Data about character, that is visible to everyone in same room */
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;

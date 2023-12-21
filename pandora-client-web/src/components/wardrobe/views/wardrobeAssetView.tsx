@@ -9,7 +9,7 @@ import {
 	AssetPreferenceTypeSchema,
 	AssetPreferences,
 	ItemContainerPath,
-	Obj,
+	KnownObject,
 	ResolveAssetPreference,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
@@ -389,7 +389,7 @@ function InventoryAssetViewListPreference({ asset, listMode }: {
 			<span className='itemName'>{ asset.definition.name }</span>
 			<select onChange={ onChange } value={ current }>
 				{
-					Obj.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
+					KnownObject.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
 						<option key={ key } value={ key } title={ description }>
 							{ name }
 						</option>
@@ -461,7 +461,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 
 export function useAssetPreferences(): Immutable<AssetPreferences> {
 	const { target } = useWardrobeContext();
-	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.preferences;
+	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.assetPreferences;
 
 	const preferences = characterPreferences ?? ASSET_PREFERENCES_DEFAULT;
 
@@ -471,14 +471,14 @@ export function useAssetPreferences(): Immutable<AssetPreferences> {
 export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
 	const { player, target } = useWardrobeContext();
 	const preferences = useAssetPreferences();
-	const selfPreference = useCharacterDataOptional((target.type === 'room' || target.id !== player.id) ? player : null)?.preferences;
+	const selfPreference = useCharacterDataOptional((target.type === 'room' || target.id !== player.id) ? player : null)?.assetPreferences;
 
 	return React.useCallback((asset) => {
-		const pref = ResolveAssetPreference({ preferences }, asset, player.id);
+		const pref = ResolveAssetPreference(preferences, asset, player.id);
 		if (selfPreference == null || pref === 'doNotRender')
 			return pref;
 
-		if (ResolveAssetPreference({ preferences: selfPreference }, asset, player.id) === 'doNotRender')
+		if (ResolveAssetPreference(selfPreference, asset, player.id) === 'doNotRender')
 			return 'doNotRender';
 
 		return pref;

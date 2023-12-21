@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, Obj } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, KnownObject } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -116,8 +116,8 @@ export class Character {
 		return this.data.settings;
 	}
 
-	public get preferences(): Readonly<AssetPreferences> {
-		return this.data.preferences;
+	public get assetPreferences(): Readonly<AssetPreferences> {
+		return this.data.assetPreferences;
 	}
 
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
@@ -187,9 +187,9 @@ export class Character {
 		if (!isEqual(originalInteractionConfig, currentInteractionConfig)) {
 			this.setValue('interactionConfig', currentInteractionConfig, false);
 		}
-		const preferences = cloneDeep(this.data.preferences);
-		if (this._cleanupAssetPreferences(preferences)) {
-			this.setValue('preferences', preferences, true);
+		const assetPreferences = cloneDeep(this.data.assetPreferences);
+		if (this._cleanupAssetPreferences(assetPreferences)) {
+			this.setValue('assetPreferences', assetPreferences, true);
 		}
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
@@ -407,7 +407,7 @@ export class Character {
 			name: this.name,
 			profileDescription: this.profileDescription,
 			settings: this.settings,
-			preferences: this.preferences,
+			assetPreferences: this.assetPreferences,
 		};
 	}
 
@@ -571,10 +571,10 @@ export class Character {
 			return 'invalid';
 
 		let changed = false;
-		const updated = cloneDeep(this.preferences);
+		const updated = cloneDeep(this.assetPreferences);
 
 		if (preferences.attributes != null) {
-			for (const [key, value] of Obj.entries(preferences.attributes)) {
+			for (const [key, value] of KnownObject.entries(preferences.attributes)) {
 				if (isEqual(updated.attributes[key], value))
 					continue;
 
@@ -588,7 +588,7 @@ export class Character {
 		}
 
 		if (preferences.assets != null) {
-			for (const [key, value] of Obj.entries(preferences.assets)) {
+			for (const [key, value] of KnownObject.entries(preferences.assets)) {
 				const asset = assetManager.getAssetById(key);
 				if (!asset)
 					return 'invalid';
@@ -606,13 +606,13 @@ export class Character {
 
 		const state = this.getCharacterState();
 		for (const item of state.items) {
-			const preference = ResolveAssetPreference({ preferences: updated }, item.asset);
+			const preference = ResolveAssetPreference(updated, item.asset);
 			if (preference === 'doNotRender') {
 				return 'invalid';
 			}
 		}
 
-		this.setValue('preferences', updated, true);
+		this.setValue('assetPreferences', updated, true);
 		return 'ok';
 	}
 
@@ -665,10 +665,10 @@ export class Character {
 	}: Partial<AssetPreferences>): boolean {
 		let hasInvalid = false;
 
-		for (const key of Obj.keys(attributes)) {
+		for (const key of KnownObject.keys(attributes)) {
 			const attribute = assetManager.attributes.get(key);
 			if (attribute == null
-				|| attribute.noPreference
+				|| attribute.useAsAssetPreference === false
 				|| attribute.useAsWardrobeFilter?.tab === 'room'
 			) {
 				delete attributes[key];
@@ -676,7 +676,7 @@ export class Character {
 			}
 		}
 
-		for (const key of Obj.keys(assets)) {
+		for (const key of KnownObject.keys(assets)) {
 			const asset = assetManager.getAssetById(key);
 			if (asset == null) {
 				delete assets[key];

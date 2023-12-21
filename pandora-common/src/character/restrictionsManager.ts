@@ -12,7 +12,8 @@ import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
-import { AssetPreferenceType, AssetPreferenceTypeSchema, AssetPreferences, ICharacterPublicData } from './characterData';
+import { ICharacterPublicData } from './characterData';
+import { ResolveAssetPreference } from './assetPreferences';
 
 export enum ItemInteractionType {
 	/**
@@ -282,7 +283,7 @@ export class CharacterRestrictionsManager {
 			if (target.character.id === this.character.id)
 				return { allowed: true };
 
-			switch (ResolveAssetPreference(target.getRestrictionManager(this.room).publicData, asset, this.character.id)) {
+			switch (ResolveAssetPreference(target.getRestrictionManager(this.room).publicData.assetPreferences, asset, this.character.id)) {
 				case 'doNotRender':
 				case 'prevent':
 					return {
@@ -568,22 +569,4 @@ export class CharacterRestrictionsManager {
 
 		return { allowed: true };
 	}
-}
-
-export function ResolveAssetPreference({ preferences }: Immutable<{ preferences: AssetPreferences; }>, asset: Asset, _source?: CharacterId): AssetPreferenceType {
-	const assetPreference = preferences.assets[asset.id];
-	if (assetPreference != null)
-		return assetPreference.base;
-
-	let result: AssetPreferenceType = 'normal';
-	for (const attribute of asset.staticAttributes) {
-		if (preferences.attributes[attribute] != null) {
-			const previous = AssetPreferenceTypeSchema.options.indexOf(result);
-			const base = AssetPreferenceTypeSchema.options.indexOf(preferences.attributes[attribute].base);
-			if (base > previous)
-				result = preferences.attributes[attribute].base;
-		}
-	}
-
-	return result;
 }

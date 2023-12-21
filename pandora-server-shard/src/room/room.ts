@@ -250,7 +250,7 @@ export class Room extends ServerRoom<IShardClient> {
 			settings: c.settings,
 			position: c.position,
 			isOnline: c.isOnline,
-			preferences: c.preferences,
+			assetPreferences: c.assetPreferences,
 		};
 	}
 

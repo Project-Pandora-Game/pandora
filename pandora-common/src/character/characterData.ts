@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { AppearanceBundleSchema } from '../assets/state/characterState';
-import { CharacterNameSchema, HexColorStringSchema } from '../validation';
+import { CharacterNameSchema, HexColorStringSchema, ZodTruncate } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
 import { RoomId } from '../chatroom';
@@ -9,6 +9,7 @@ import { AccountIdSchema } from '../account';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
+import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),
@@ -26,7 +27,7 @@ export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
 	accountId: AccountIdSchema,
 	name: CharacterNameSchema,
-	profileDescription: z.string().default(''),
+	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_CHARACTER_PROFILE_LENGTH)),
 	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 });
 /** Data about character, that is visible to everyone in same room */

@@ -1,4 +1,4 @@
-import { AccountId, AssertNotNullable, EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, PromiseOnce, TypedEventEmitter } from 'pandora-common';
+import { AccountId, AssertNotNullable, EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, PromiseOnce, TypedEventEmitter } from 'pandora-common';
 import type { SymmetricEncryption } from '../crypto/symmetric';
 import type { DirectoryConnector } from './directoryConnector';
 import { KeyExchange } from '../crypto/keyExchange';
@@ -217,10 +217,13 @@ export class DirectMessageChannel {
 			throw new Error('Channel not loaded');
 		}
 		const encrypted = message.length === 0 ? '' : await this.#encryption.encrypt(message);
+		if (encrypted.length > LIMIT_DIRECT_MESSAGE_LENGTH_BASE64) {
+			toast(`Encrypted message too long: ${encrypted.length} > ${LIMIT_DIRECT_MESSAGE_LENGTH_BASE64}`, TOAST_OPTIONS_ERROR);
+			return;
+		}
 		const response = await this.connector.awaitResponse('sendDirectMessage', { id: this._id, content: encrypted, editing });
 		if (response.result !== 'ok') {
 			toast(`Failed to send message: ${response.result}`, TOAST_OPTIONS_ERROR);
-			return;
 		}
 	}
 

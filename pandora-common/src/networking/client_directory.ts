@@ -4,12 +4,12 @@ import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomId, RoomIdSchema } from '../chatroom/room';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
-import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast } from '../validation';
+import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast, ZodTruncate } from '../validation';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
 import { AssetFrameworkOutfitWithIdSchema } from '../assets';
-import { LIMIT_ACCOUNT_PROFILE_LENGTH } from '../inputLimits';
+import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../account/accountRoles';
@@ -93,7 +93,7 @@ export const AccountPublicInfoSchema = z.object({
 	labelColor: HexColorStringSchema,
 	created: z.number(),
 	visibleRoles: z.array(AccountRoleSchema),
-	profileDescription: z.string(),
+	profileDescription: z.string().transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
 });
 export type AccountPublicInfo = z.infer<typeof AccountPublicInfoSchema>;
 
@@ -338,7 +338,7 @@ export const ClientDirectorySchema = {
 	sendDirectMessage: {
 		request: z.object({
 			id: AccountIdSchema,
-			content: z.string(),
+			content: z.string().max(LIMIT_DIRECT_MESSAGE_LENGTH_BASE64),
 			editing: z.number().min(0).optional(),
 		}),
 		response: ZodCast<{ result: 'ok' | 'notFound' | 'denied' | 'messageNotFound'; }>(),

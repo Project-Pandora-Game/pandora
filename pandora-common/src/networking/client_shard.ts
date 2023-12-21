@@ -2,7 +2,7 @@ import { CharacterIdSchema } from '../character/characterTypes';
 import { CharacterPublicSettingsSchema } from '../character/characterData';
 import { AppearanceActionSchema } from '../assets/appearanceActions';
 import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
-import { ClientMessageSchema, ChatRoomStatusSchema } from '../chatroom/chat';
+import { ClientChatMessagesSchema, ChatRoomStatusSchema } from '../chatroom/chat';
 import { z } from 'zod';
 import { CharacterInputNameSchema, ZodCast } from '../validation';
 import { Satisfies } from '../utility';
@@ -26,7 +26,7 @@ export const ClientShardSchema = {
 	},
 	chatRoomMessage: {
 		request: z.object({
-			messages: z.array(ClientMessageSchema),
+			messages: ClientChatMessagesSchema,
 			id: z.number().min(0),
 			editId: z.number().min(0).optional(),
 		}),

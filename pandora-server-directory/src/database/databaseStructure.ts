@@ -10,7 +10,9 @@ import {
 	IBetaKeyInfo,
 	IDirectoryDirectMessageInfo,
 	IShardTokenInfo,
+	LIMIT_ACCOUNT_PROFILE_LENGTH,
 	ZodCast,
+	ZodTruncate,
 } from 'pandora-common';
 import { z } from 'zod';
 import { ICharacterSelfInfoDb } from './databaseProvider';
@@ -60,7 +62,7 @@ export const DatabaseAccountSchema = z.object({
 	id: AccountIdSchema,
 	created: z.number(),
 	roles: ZodCast<IAccountRoleManageInfo>().optional(),
-	profileDescription: z.string().default(''),
+	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
 	characters: ZodCast<ICharacterSelfInfoDb>().array(),
 	settings: DirectoryAccountSettingsSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_DEFAULT)),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),

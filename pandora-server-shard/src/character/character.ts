@@ -188,7 +188,7 @@ export class Character {
 			this.setValue('interactionConfig', currentInteractionConfig, false);
 		}
 		const assetPreferences = cloneDeep(this.data.assetPreferences);
-		if (this._cleanupAssetPreferences(assetPreferences)) {
+		if (this._cleanupAssetPreferences(assetPreferences, false)) {
 			this.setValue('assetPreferences', assetPreferences, true);
 		}
 
@@ -567,7 +567,7 @@ export class Character {
 	}
 
 	public setAssetPreferences(preferences: Partial<AssetPreferences>): 'ok' | 'invalid' {
-		if (this._cleanupAssetPreferences(preferences))
+		if (this._cleanupAssetPreferences(preferences, true))
 			return 'invalid';
 
 		let changed = false;
@@ -662,7 +662,7 @@ export class Character {
 	private _cleanupAssetPreferences({
 		attributes = {},
 		assets = {},
-	}: Partial<AssetPreferences>): boolean {
+	}: Partial<AssetPreferences>, allowBaseState: boolean): boolean {
 		let hasInvalid = false;
 
 		for (const key of KnownObject.keys(attributes)) {
@@ -673,10 +673,21 @@ export class Character {
 			) {
 				delete attributes[key];
 				hasInvalid = true;
+				continue;
+			}
+			if (!allowBaseState && Object.keys(attributes[key]).length === 1 && attributes[key].base === 'normal') {
+				delete attributes[key];
+				hasInvalid = true;
+				continue;
 			}
 		}
 
-		for (const key of KnownObject.keys(assets)) {
+		for (const [key, value] of KnownObject.entries(assets)) {
+			if (value === undefined) {
+				delete assets[key];
+				hasInvalid = true;
+				continue;
+			}
 			const asset = assetManager.getAssetById(key);
 			if (asset == null) {
 				delete assets[key];
@@ -694,6 +705,20 @@ export class Character {
 				case 'personal':
 				case 'lock':
 					break;
+			}
+			if (!allowBaseState && KnownObject.keys(value).length === 1 && value.base === 'normal') {
+				let hasAttribute = false;
+				for (const attribute of asset.staticAttributes) {
+					if (attributes[attribute] != null) {
+						hasAttribute = true;
+						break;
+					}
+				}
+				if (!hasAttribute) {
+					delete assets[key];
+					hasInvalid = true;
+					continue;
+				}
 			}
 		}
 

@@ -1,4 +1,4 @@
-import { CharacterId, CharacterRestrictionsManager, ICharacterPublicData } from '../../character';
+import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData, ICharacterPublicData } from '../../character';
 import { AccountId } from '../../account';
 import { TypedEventEmitter } from '../../event';
 import { InteractionSubsystem } from '../interactions/interactionSubsystem';
@@ -16,16 +16,16 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 	public readonly id: CharacterId;
 	public readonly accountId: AccountId;
 	public readonly name: string;
-	public readonly publicData: Immutable<ICharacterPublicData>;
+
+	public readonly abstract publicData: Immutable<ICharacterPublicData>;
 
 	public readonly abstract interactions: InteractionSubsystem;
 
-	constructor(data: ICharacterPublicData) {
+	constructor(data: ICharacterMinimalData) {
 		super();
 		this.id = data.id;
 		this.accountId = data.accountId;
 		this.name = data.name;
-		this.publicData = data;
 	}
 
 	public getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance {

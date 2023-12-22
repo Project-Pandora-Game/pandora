@@ -1,4 +1,5 @@
-import { ICharacterData } from '../../character';
+import type { Immutable } from 'immer';
+import type { ICharacterData, ICharacterPublicData } from '../../character';
 import { Logger } from '../../logging';
 import { AssertNever } from '../../utility';
 import { MakeDefaultInteractionSystemData } from '../interactions/interactionData';
@@ -8,6 +9,8 @@ import { GameLogicCharacter } from './character';
 
 export class GameLogicCharacterServer extends GameLogicCharacter {
 	public override readonly interactions: InteractionSubsystemServer;
+
+	public override readonly publicData: Immutable<ICharacterPublicData>;
 
 	constructor(data: ICharacterData, logger: Logger) {
 		super(data);
@@ -20,6 +23,8 @@ export class GameLogicCharacterServer extends GameLogicCharacter {
 		this.interactions.on('dataChanged', () => {
 			this.emit('dataChanged', 'interactions');
 		});
+
+		this.publicData = data;
 	}
 
 	protected override _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider<GameLogicPermissionServer> {

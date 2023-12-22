@@ -20,11 +20,11 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 	public readonly abstract interactions: InteractionSubsystem;
 	public readonly abstract assetPreferences: Immutable<AssetPreferences>;
 
-	constructor(data: ICharacterMinimalData) {
+	constructor(minimalData: ICharacterMinimalData) {
 		super();
-		this.id = data.id;
-		this.accountId = data.accountId;
-		this.name = data.name;
+		this.id = minimalData.id;
+		this.accountId = minimalData.accountId;
+		this.name = minimalData.name;
 	}
 
 	public getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance {

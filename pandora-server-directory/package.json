@@ -42,7 +42,7 @@
 		"@octokit/auth-oauth-app": "7.0.1",
 		"@octokit/rest": "20.0.2",
 		"argon2": "0.31.2",
-		"async-lock": "1.4.0",
+		"async-lock": "1.4.1",
 		"discord.js": "14.14.1",
 		"dotenv": "16.3.1",
 		"express": "4.18.2",

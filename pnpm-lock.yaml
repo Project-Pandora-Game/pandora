@@ -276,8 +276,8 @@ importers:
         specifier: 18.19.3
         version: 18.19.3
       async-lock:
-        specifier: 1.4.0
-        version: 1.4.0
+        specifier: 1.4.1
+        version: 1.4.1
       immer:
         specifier: 10.0.3
         version: 10.0.3
@@ -340,8 +340,8 @@ importers:
         specifier: 0.31.2
         version: 0.31.2
       async-lock:
-        specifier: 1.4.0
-        version: 1.4.0
+        specifier: 1.4.1
+        version: 1.4.1
       discord.js:
         specifier: 14.14.1
         version: 14.14.1
@@ -449,8 +449,8 @@ importers:
   pandora-server-shard:
     dependencies:
       async-lock:
-        specifier: 1.4.0
-        version: 1.4.0
+        specifier: 1.4.1
+        version: 1.4.1
       dotenv:
         specifier: 16.3.1
         version: 16.3.1
@@ -5403,8 +5403,8 @@ packages:
     resolution: {integrity: sha512-1Sd1LrodN0XYxYeZcN1J4xYZvmvTwD5tDWaPUGPIzH1mFsmzsPnVtd2exWhecMjtZk/wYWjNZJiD3b1SLCeJqg==}
     dev: true
 
-  /async-lock@1.4.0:
-    resolution: {integrity: sha512-coglx5yIWuetakm3/1dsX9hxCNox22h7+V80RQOu2XUUMidtArxKoZoOtHUPuR84SycKTXzgGzAUR5hJxujyJQ==}
+  /async-lock@1.4.1:
+    resolution: {integrity: sha512-Az2ZTpuytrtqENulXwO3GGv1Bztugx6TT37NIo7imr/Qo0gsYiGtSdBa2B6fsXhTpVZDNfu1Qn3pk531e3q+nQ==}
     dev: false
 
   /async-mutex@0.4.0:

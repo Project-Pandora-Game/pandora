@@ -1,4 +1,4 @@
-import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData, ICharacterPublicData } from '../../character';
+import { AssetPreferences, CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
 import { AccountId } from '../../account';
 import { TypedEventEmitter } from '../../event';
 import { InteractionSubsystem } from '../interactions/interactionSubsystem';
@@ -17,9 +17,8 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 	public readonly accountId: AccountId;
 	public readonly name: string;
 
-	public readonly abstract publicData: Immutable<ICharacterPublicData>;
-
 	public readonly abstract interactions: InteractionSubsystem;
+	public readonly abstract assetPreferences: Immutable<AssetPreferences>;
 
 	constructor(data: ICharacterMinimalData) {
 		super();

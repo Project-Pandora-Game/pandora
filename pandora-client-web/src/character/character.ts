@@ -62,7 +62,7 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
 
-		this.gameLogicCharacter = new GameLogicCharacterClient(data, this.logger.prefixMessages('[GameLogic]'));
+		this.gameLogicCharacter = new GameLogicCharacterClient(() => this._data, this.logger.prefixMessages('[GameLogic]'));
 
 		this.logger.verbose('Loaded');
 	}

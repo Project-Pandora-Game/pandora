@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import type { ICharacterPublicData } from '../../character';
+import type { AssetPreferences, ICharacterPublicData } from '../../character';
 import { Logger } from '../../logging';
 import { AssertNever } from '../../utility';
 import { InteractionSubsystemClient } from '../interactions/interactionSubsystemClient';
@@ -7,16 +7,20 @@ import { GameLogicPermissionClient, IPermissionProvider, PermissionGroup } from 
 import { GameLogicCharacter } from './character';
 
 export class GameLogicCharacterClient extends GameLogicCharacter {
+	private readonly _dataGetter: () => Immutable<ICharacterPublicData>;
+
 	public override readonly interactions: InteractionSubsystemClient;
 
-	public override readonly publicData: Immutable<ICharacterPublicData>;
+	public override get assetPreferences(): Immutable<AssetPreferences> {
+		return this._dataGetter().assetPreferences;
+	}
 
-	constructor(data: ICharacterPublicData, _logger: Logger) {
-		super(data);
+	constructor(dataGetter: (() => Immutable<ICharacterPublicData>), _logger: Logger) {
+		super(dataGetter());
+		this._dataGetter = dataGetter;
 		this.interactions = new InteractionSubsystemClient(
 			this,
 		);
-		this.publicData = data;
 	}
 
 	protected override _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider<GameLogicPermissionClient> {

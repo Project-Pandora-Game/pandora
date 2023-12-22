@@ -12,7 +12,6 @@ import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
-import { ICharacterPublicData } from './characterData';
 import { ResolveAssetPreference } from './assetPreferences';
 
 export enum ItemInteractionType {
@@ -142,10 +141,6 @@ export class CharacterRestrictionsManager {
 
 	public get character(): GameLogicCharacter {
 		return this.appearance.character;
-	}
-
-	public get publicData(): Immutable<ICharacterPublicData> {
-		return this.character.publicData;
 	}
 
 	constructor(appearance: CharacterAppearance, room: ActionRoomContext | null) {
@@ -283,7 +278,7 @@ export class CharacterRestrictionsManager {
 			if (target.character.id === this.character.id)
 				return { allowed: true };
 
-			switch (ResolveAssetPreference(target.getRestrictionManager(this.room).publicData.assetPreferences, asset, this.character.id)) {
+			switch (ResolveAssetPreference(target.character.assetPreferences, asset, this.character.id)) {
 				case 'doNotRender':
 				case 'prevent':
 					return {

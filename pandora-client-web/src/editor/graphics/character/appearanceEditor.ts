@@ -148,7 +148,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 			isOnline: true,
 			assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		};
-		this.gameLogicCharacter = new GameLogicCharacterClient(this.data, this.logger.prefixMessages('[GameLogic]'));
+		this.gameLogicCharacter = new GameLogicCharacterClient(() => this.data, this.logger.prefixMessages('[GameLogic]'));
 	}
 
 	public isPlayer(): boolean {

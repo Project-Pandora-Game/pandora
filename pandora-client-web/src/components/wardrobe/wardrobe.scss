@@ -354,6 +354,11 @@ $drop-overlay-gap: 0.3em;
 			height: 2em;
 		}
 
+		&.textWrap {
+			height: fit-content;
+			min-height: 2em;
+		}
+
 		.itemName {
 			margin: 3px;
 		}
@@ -361,6 +366,7 @@ $drop-overlay-gap: 0.3em;
 		.itemPreview {
 			height: 1.5em;
 			width: 1.5em;
+			aspect-ratio: 0.99;
 			margin-left: 0.5em;
 
 			&.image {

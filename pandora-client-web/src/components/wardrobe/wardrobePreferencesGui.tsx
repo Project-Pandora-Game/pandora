@@ -116,7 +116,7 @@ function AttributePreference({ id, icon, description }: AssetAttributeDefinition
 	const iconSrc = useGraphicsUrl(icon);
 
 	return (
-		<div className='inventoryViewItem listMode small allowed' tabIndex={ 0 }>
+		<div className='inventoryViewItem listMode textWrap allowed' tabIndex={ 0 }>
 			<div className={ 'itemPreview' + (iconSrc ? '' : ' missing') }>
 				{
 					iconSrc ? (

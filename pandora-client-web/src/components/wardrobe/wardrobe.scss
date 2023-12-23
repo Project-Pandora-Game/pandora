@@ -330,6 +330,8 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	.itemPreview {
+		overflow: hidden;
+
 		&.missing {
 			border: solid $black 1px;
 			@include center-flex;
@@ -465,7 +467,12 @@ $drop-overlay-gap: 0.3em;
 
 	&.pref-doNotRender {
 		.itemPreview.image>img {
-			filter: grayscale(100%) blur(3px);
+			filter: brightness(0%) blur(9px);
+		}
+
+		&::after {
+			content: '✕';
+			color: rgb(0, 0, 0);
 		}
 	}
 

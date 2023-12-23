@@ -3,6 +3,8 @@ import type { Immutable } from 'immer';
 import { AssetIdSchema } from '../assets/base';
 import type { Asset } from '../assets/asset';
 import type { CharacterId } from './characterTypes';
+import { KnownObject } from '../utility';
+import { AssetManager } from '../assets';
 
 export const AttributePreferenceTypeSchema = z.enum(['normal', 'prevent', 'doNotRender']);
 export type AttributePreferenceType = z.infer<typeof AttributePreferenceTypeSchema>;
@@ -47,4 +49,77 @@ export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>,
 	}
 
 	return result;
+}
+
+/**
+ * Cleans up the asset preferences in-place by removing invalid entries
+ * @param assetManager - Asset manager to use for queries
+ * @param preferences - The preferences object to cleanup
+ * @param allowBaseState - If the object is allowed to contain the default values, or if default values need to be missing (and be implicit)
+ * @returns If the original object was invalid - some entries were removed
+ */
+export function CleanupAssetPreferences(assetManager: AssetManager, {
+	attributes = {},
+	assets = {},
+}: Partial<AssetPreferences>, allowBaseState: boolean): boolean {
+	let hasInvalid = false;
+
+	for (const key of KnownObject.keys(attributes)) {
+		const attribute = assetManager.attributes.get(key);
+		if (attribute == null
+			|| attribute.useAsAssetPreference === false
+			|| attribute.useAsWardrobeFilter?.tab === 'room'
+		) {
+			delete attributes[key];
+			hasInvalid = true;
+			continue;
+		}
+		if (!allowBaseState && Object.keys(attributes[key]).length === 1 && attributes[key].base === 'normal') {
+			delete attributes[key];
+			hasInvalid = true;
+			continue;
+		}
+	}
+
+	for (const [key, value] of KnownObject.entries(assets)) {
+		if (value === undefined) {
+			delete assets[key];
+			hasInvalid = true;
+			continue;
+		}
+		const asset = assetManager.getAssetById(key);
+		if (asset == null) {
+			delete assets[key];
+			hasInvalid = true;
+			continue;
+		}
+
+		switch (asset.type) {
+			case 'roomDevice':
+			case 'roomDeviceWearablePart':
+				// TODO: allow wearable parts?
+				delete assets[key];
+				hasInvalid = true;
+				continue;
+			case 'personal':
+			case 'lock':
+				break;
+		}
+		if (!allowBaseState && KnownObject.keys(value).length === 1 && value.base === 'normal') {
+			let hasAttribute = false;
+			for (const attribute of asset.staticAttributes) {
+				if (attributes[attribute] != null) {
+					hasAttribute = true;
+					break;
+				}
+			}
+			if (!hasAttribute) {
+				delete assets[key];
+				hasInvalid = true;
+				continue;
+			}
+		}
+	}
+
+	return hasInvalid;
 }

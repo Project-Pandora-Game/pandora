@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, KnownObject } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, KnownObject, CleanupAssetPreferences } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -188,7 +188,7 @@ export class Character {
 			this.setValue('interactionConfig', currentInteractionConfig, false);
 		}
 		const assetPreferences = cloneDeep(this.data.assetPreferences);
-		if (this._cleanupAssetPreferences(assetPreferences, false)) {
+		if (CleanupAssetPreferences(assetManager, assetPreferences, false)) {
 			this.setValue('assetPreferences', assetPreferences, true);
 		}
 
@@ -567,7 +567,7 @@ export class Character {
 	}
 
 	public setAssetPreferences(preferences: Partial<AssetPreferences>): 'ok' | 'invalid' {
-		if (this._cleanupAssetPreferences(preferences, true))
+		if (CleanupAssetPreferences(assetManager, preferences, true))
 			return 'invalid';
 
 		let changed = false;
@@ -658,70 +658,4 @@ export class Character {
 	}
 
 	//#endregion
-
-	private _cleanupAssetPreferences({
-		attributes = {},
-		assets = {},
-	}: Partial<AssetPreferences>, allowBaseState: boolean): boolean {
-		let hasInvalid = false;
-
-		for (const key of KnownObject.keys(attributes)) {
-			const attribute = assetManager.attributes.get(key);
-			if (attribute == null
-				|| attribute.useAsAssetPreference === false
-				|| attribute.useAsWardrobeFilter?.tab === 'room'
-			) {
-				delete attributes[key];
-				hasInvalid = true;
-				continue;
-			}
-			if (!allowBaseState && Object.keys(attributes[key]).length === 1 && attributes[key].base === 'normal') {
-				delete attributes[key];
-				hasInvalid = true;
-				continue;
-			}
-		}
-
-		for (const [key, value] of KnownObject.entries(assets)) {
-			if (value === undefined) {
-				delete assets[key];
-				hasInvalid = true;
-				continue;
-			}
-			const asset = assetManager.getAssetById(key);
-			if (asset == null) {
-				delete assets[key];
-				hasInvalid = true;
-				continue;
-			}
-
-			switch (asset.type) {
-				case 'roomDevice':
-				case 'roomDeviceWearablePart':
-					// TODO: allow wearable parts?
-					delete assets[key];
-					hasInvalid = true;
-					continue;
-				case 'personal':
-				case 'lock':
-					break;
-			}
-			if (!allowBaseState && KnownObject.keys(value).length === 1 && value.base === 'normal') {
-				let hasAttribute = false;
-				for (const attribute of asset.staticAttributes) {
-					if (attributes[attribute] != null) {
-						hasAttribute = true;
-						break;
-					}
-				}
-				if (!hasAttribute) {
-					delete assets[key];
-					hasInvalid = true;
-					continue;
-				}
-			}
-		}
-
-		return hasInvalid;
-	}
 }

@@ -93,7 +93,6 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 		showExtraActionButtons: true,
 		showHoverPreview: true,
-		isEditor: true,
 	}), [character, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, assetManager, editor]);
 
 	return (

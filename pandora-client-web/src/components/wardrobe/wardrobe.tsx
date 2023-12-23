@@ -107,7 +107,7 @@ function WardrobeCharacter({ character }: {
 	character: IChatroomCharacter;
 }): ReactElement {
 	const navigate = useNavigate();
-	const { globalState, actionPreviewState, isEditor } = useWardrobeContext();
+	const { globalState, actionPreviewState } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);
 	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
 
@@ -156,7 +156,7 @@ function WardrobeCharacter({ character }: {
 						</div>
 					</Tab>
 					{
-						(isEditor || !character.isPlayer()) ? null : (
+						(!character.isPlayer()) ? null : (
 							<Tab name='Preferences'>
 								<div className='wardrobe-pane'>
 									<WardrobePreferencesGui />

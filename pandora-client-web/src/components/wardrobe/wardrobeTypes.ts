@@ -52,9 +52,6 @@ export interface WardrobeContext {
 	// Settings
 	showExtraActionButtons: boolean;
 	showHoverPreview: boolean;
-
-	// Editor
-	isEditor: boolean;
 }
 
 export interface WardrobeFocus {

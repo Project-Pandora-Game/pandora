@@ -12,6 +12,7 @@ import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
+import { ResolveAssetPreference } from './assetPreferences';
 
 export enum ItemInteractionType {
 	/**
@@ -82,6 +83,11 @@ export type PermissionRestriction = {
 
 export type Restriction =
 	| PermissionRestriction
+	| {
+		type: 'blockedByPreference';
+		target: CharacterId;
+		source: 'character' | 'room';
+	}
 	| {
 		type: 'blockedAddRemove';
 		asset: AssetId;
@@ -261,15 +267,34 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public canUseAsset(context: AppearanceActionProcessingContext, target: RoomActionTarget, _asset: Asset): RestrictionResult {
+	public canUseAsset(context: AppearanceActionProcessingContext, target: RoomActionTarget, asset: Asset): RestrictionResult {
 		// Must be able to interact with character
 		const r = this.canInteractWithTarget(context, target);
 		if (!r.allowed)
 			return r;
 
-		// Can do all on self
-		if (target.type === 'character' && target.character.id === this.character.id)
-			return { allowed: true };
+		if (target.type === 'character') {
+			// Can do all on self
+			if (target.character.id === this.character.id)
+				return { allowed: true };
+
+			switch (ResolveAssetPreference(target.character.assetPreferences, asset, this.character.id)) {
+				case 'doNotRender':
+				case 'prevent':
+					return {
+						allowed: false,
+						restriction: {
+							type: 'blockedByPreference',
+							target: target.character.id,
+							source: 'character',
+						},
+					};
+				case 'favorite':
+				case 'normal':
+				case 'maybe':
+					break;
+			}
+		}
 
 		return { allowed: true };
 	}

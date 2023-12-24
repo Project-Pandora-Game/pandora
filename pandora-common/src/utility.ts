@@ -407,3 +407,25 @@ export function PromiseOnce<T>(promise: () => Promise<T>): () => Promise<T> {
 		return result[0];
 	};
 }
+
+export type ObjectEntry<T, K extends keyof T> = [K, T[K]];
+
+/**
+ * This class provides alternative implementations of `Object.keys`, `Object.values` and `Object.entries`,
+ * which have typing as if all possible keys of the object passed to them are known.
+ * This results in a more friendly way to iterate through objects where that is the case,
+ * but it can still result in an **incorrect behaviour** if you don't know what exactly this does.
+ *
+ * Use with care.
+ */
+export class KnownObject {
+	public static keys<T extends object>(obj: T): (keyof T)[] {
+		return Object.keys(obj) as (keyof T)[];
+	}
+	public static values<T extends object>(obj: T): T[keyof T][] {
+		return Object.values(obj) as T[keyof T][];
+	}
+	public static entries<T extends object>(obj: T): ObjectEntry<T, keyof T>[] {
+		return Object.entries(obj) as ObjectEntry<T, keyof T>[];
+	}
+}

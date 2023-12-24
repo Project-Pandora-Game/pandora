@@ -1,4 +1,4 @@
-import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
+import { AssetPreferences, CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
 import { AccountId } from '../../account';
 import { TypedEventEmitter } from '../../event';
 import { InteractionSubsystem } from '../interactions/interactionSubsystem';
@@ -6,6 +6,7 @@ import { AssetFrameworkCharacterState, CharacterAppearance } from '../../assets'
 import { Assert } from '../../utility';
 import { ActionRoomContext } from '../../chatroom';
 import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
+import type { Immutable } from 'immer';
 
 export type GameLogicCharacterEvents = {
 	dataChanged: 'interactions';
@@ -17,6 +18,7 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 	public readonly name: string;
 
 	public readonly abstract interactions: InteractionSubsystem;
+	public readonly abstract assetPreferences: Immutable<AssetPreferences>;
 
 	constructor(minimalData: ICharacterMinimalData) {
 		super();

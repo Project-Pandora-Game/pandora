@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { cloneDeep } from 'lodash';
 import {
+	ASSET_PREFERENCES_DEFAULT,
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	ICharacterData,
 } from 'pandora-common';
@@ -17,6 +18,7 @@ const mockData: ICharacterData = {
 	created: 0,
 	accessId: 'mockID',
 	settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+	assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 	position: [0, 0, 0],
 };
 describe('Character', () => {
@@ -63,4 +65,3 @@ describe('useCharacterData()', () => {
 		expect(result.current).toStrictEqual(mock.data);
 	});
 });
-

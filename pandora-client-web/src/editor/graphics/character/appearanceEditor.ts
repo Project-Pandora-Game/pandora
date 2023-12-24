@@ -1,4 +1,4 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ItemId, ActionRoomContext, CharacterRestrictionsManager, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter, GameLogicCharacter, GameLogicCharacterClient, DoAppearanceAction, AppearanceAction, AppearanceActionContext } from 'pandora-common';
+import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ItemId, ActionRoomContext, CharacterRestrictionsManager, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter, GameLogicCharacter, GameLogicCharacterClient, DoAppearanceAction, AppearanceAction, AppearanceActionContext, ASSET_PREFERENCES_DEFAULT } from 'pandora-common';
 import { BaseTexture, Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -146,8 +146,9 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 			settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 			position: [0, 0, 0],
 			isOnline: true,
+			assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		};
-		this.gameLogicCharacter = new GameLogicCharacterClient(this.data, this.logger.prefixMessages('[GameLogic]'));
+		this.gameLogicCharacter = new GameLogicCharacterClient(() => this.data, this.logger.prefixMessages('[GameLogic]'));
 	}
 
 	public isPlayer(): boolean {

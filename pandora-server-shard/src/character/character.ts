@@ -1,4 +1,4 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE } from 'pandora-common';
+import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, KnownObject, CleanupAssetPreferences } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Room } from '../room/room';
 import { RoomManager } from '../room/roomManager';
@@ -6,7 +6,7 @@ import { GetDatabase } from '../database/databaseProvider';
 import { ClientConnection } from '../networking/connection_client';
 import { assetManager } from '../assets/assetManager';
 
-import _, { isEqual, omit } from 'lodash';
+import _, { cloneDeep, isEqual, omit } from 'lodash';
 import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes character without any active connection */
@@ -116,6 +116,10 @@ export class Character {
 		return this.data.settings;
 	}
 
+	public get assetPreferences(): Readonly<AssetPreferences> {
+		return this.data.assetPreferences;
+	}
+
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
 
 	private logger: Logger;
@@ -182,6 +186,10 @@ export class Character {
 		const currentInteractionConfig = this.gameLogicCharacter.interactions.getData();
 		if (!isEqual(originalInteractionConfig, currentInteractionConfig)) {
 			this.setValue('interactionConfig', currentInteractionConfig, false);
+		}
+		const assetPreferences = cloneDeep(this.data.assetPreferences);
+		if (CleanupAssetPreferences(assetManager, assetPreferences, false)) {
+			this.setValue('assetPreferences', assetPreferences, true);
 		}
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
@@ -399,6 +407,7 @@ export class Character {
 			name: this.name,
 			profileDescription: this.profileDescription,
 			settings: this.settings,
+			assetPreferences: this.assetPreferences,
 		};
 	}
 
@@ -555,6 +564,56 @@ export class Character {
 			...this.settings,
 			...settings,
 		}, true);
+	}
+
+	public setAssetPreferences(preferences: Partial<AssetPreferences>): 'ok' | 'invalid' {
+		if (CleanupAssetPreferences(assetManager, preferences, true))
+			return 'invalid';
+
+		let changed = false;
+		const updated = cloneDeep(this.assetPreferences);
+
+		if (preferences.attributes != null) {
+			for (const [key, value] of KnownObject.entries(preferences.attributes)) {
+				if (isEqual(updated.attributes[key], value))
+					continue;
+
+				if (Object.keys(value).length === 1 && value.base === 'normal')
+					delete updated.attributes[key];
+				else
+					updated.attributes[key] = value;
+
+				changed = true;
+			}
+		}
+
+		if (preferences.assets != null) {
+			for (const [key, value] of KnownObject.entries(preferences.assets)) {
+				const asset = assetManager.getAssetById(key);
+				if (!asset)
+					return 'invalid';
+
+				if (isEqual(updated.assets[key], value))
+					continue;
+
+				updated.assets[key] = value;
+				changed = true;
+			}
+		}
+
+		if (!changed)
+			return 'ok';
+
+		const state = this.getCharacterState();
+		for (const item of state.items) {
+			const preference = ResolveAssetPreference(updated, item.asset);
+			if (preference === 'doNotRender') {
+				return 'invalid';
+			}
+		}
+
+		this.setValue('assetPreferences', updated, true);
+		return 'ok';
 	}
 
 	public updateCharacterDescription(newDescription: string): void {

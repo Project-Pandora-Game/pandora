@@ -1,5 +1,5 @@
 import { Container } from '@pixi/react';
-import { AssertNotNullable, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties } from 'pandora-common';
+import { ASSET_PREFERENCES_DEFAULT, AssertNotNullable, Asset, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties, ResolveAssetPreference } from 'pandora-common';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
@@ -11,6 +11,7 @@ import { useObservable } from '../observable';
 import { ComputedLayerPriority, COMPUTED_LAYER_ORDERING, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
 import { GraphicsLayerProps, GraphicsLayer, SwapCullingDirection } from './graphicsLayer';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
+import { usePlayerData } from '../components/gameContext/playerContextProvider';
 
 export type PointLike = {
 	x: number;
@@ -104,6 +105,8 @@ function GraphicsCharacterWithManagerImpl({
 }, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
 	const items = useCharacterAppearanceItems(characterState);
 
+	const isVisible = useAssetPreferenceVisibility();
+
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();
 		let properties = CreateAssetPropertiesResult();
@@ -111,7 +114,7 @@ function GraphicsCharacterWithManagerImpl({
 		for (let i = visibleItems.length - 1; i >= 0; i--) {
 			const item = visibleItems[i];
 
-			let visible = true;
+			let visible = isVisible(item.asset);
 
 			// If this item has any attribute that is hidden, hide it
 			visible &&= !Array.from(item.getProperties().attributes)
@@ -144,7 +147,7 @@ function GraphicsCharacterWithManagerImpl({
 			);
 		}
 		return result;
-	}, [items, graphicsGetter, layerStateOverrideGetter]);
+	}, [items, isVisible, graphicsGetter, layerStateOverrideGetter]);
 
 	const { view } = characterState.actualPose;
 
@@ -232,3 +235,8 @@ function GraphicsCharacterImpl(props: GraphicsCharacterProps, ref: React.Forward
 }
 
 export const GraphicsCharacter = React.forwardRef(GraphicsCharacterImpl);
+
+function useAssetPreferenceVisibility() {
+	const preferences = usePlayerData()?.assetPreferences ?? ASSET_PREFERENCES_DEFAULT;
+	return React.useCallback((asset: Asset) => ResolveAssetPreference(preferences, asset) !== 'doNotRender', [preferences]);
+}

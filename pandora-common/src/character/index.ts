@@ -1,3 +1,4 @@
+export * from './assetPreferences';
 export * from './characterData';
 export * from './characterTypes';
 export * from './pronouns';

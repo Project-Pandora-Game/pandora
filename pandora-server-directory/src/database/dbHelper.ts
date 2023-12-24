@@ -1,4 +1,4 @@
-import { AccountId, CharacterId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData, IChatRoomData, IChatRoomDirectoryConfig, IsNumber, RoomId, ROOM_INVENTORY_BUNDLE_DEFAULT } from 'pandora-common';
+import { AccountId, CharacterId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData, IChatRoomData, IChatRoomDirectoryConfig, IsNumber, RoomId, ROOM_INVENTORY_BUNDLE_DEFAULT, ASSET_PREFERENCES_DEFAULT } from 'pandora-common';
 import type { ICharacterSelfInfoDb } from './databaseProvider';
 
 import { cloneDeep } from 'lodash';
@@ -23,6 +23,7 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 		created: -1,
 		accessId: nanoid(8),
 		settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		position: [-1, -1, 0],
 	};
 

@@ -4,6 +4,7 @@ import { ZodTemplateString } from '../validation';
 import type { ActionRoomContext, ChatActionId, IChatRoomMessageAction, IChatRoomMessageActionTargetCharacter, IChatRoomMessageActionTargetRoomInventory } from '../chatroom';
 import type { Item } from './item';
 import type { CharacterRestrictionsManager } from '../character/restrictionsManager';
+import type { AssetFrameworkCharacterState } from './state/characterState';
 import { GameLogicCharacter } from '../gameLogic';
 
 export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
@@ -68,6 +69,8 @@ interface RoomActionTargetBase {
 export interface RoomActionTargetCharacter extends RoomActionTargetBase {
 	readonly type: 'character';
 	readonly character: GameLogicCharacter;
+	readonly characterState: AssetFrameworkCharacterState;
+
 	getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager;
 }
 

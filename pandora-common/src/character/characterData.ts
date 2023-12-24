@@ -6,6 +6,7 @@ import { PronounKeySchema } from './pronouns';
 import { RoomId } from '../chatroom';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { AccountIdSchema } from '../account';
+import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesSchema } from './assetPreferences';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
@@ -29,6 +30,7 @@ export const CharacterPublicDataSchema = z.object({
 	name: CharacterNameSchema,
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_CHARACTER_PROFILE_LENGTH)),
 	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+	assetPreferences: AssetPreferencesSchema.default(ASSET_PREFERENCES_DEFAULT),
 });
 /** Data about character, that is visible to everyone in same room */
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;
@@ -53,7 +55,7 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
-	roomId: z.string().optional(),
+	roomId: z.string().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
 });
 /** Data about character, as seen by server */

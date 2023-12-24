@@ -1,12 +1,13 @@
 import { Logger } from '../logging';
 import { Assert, ShuffleArray } from '../utility';
-import { ItemId } from './appearanceTypes';
+import type { ItemId } from './appearanceTypes';
 import { FilterAssetType } from './asset';
 import type { AssetManager } from './assetManager';
-import type { AssetId, AssetType, WearableAssetType } from './definitions';
+import type { AssetType, WearableAssetType } from './definitions';
+import type { AssetId } from './base';
 import type { Item } from './item';
 import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AssetFrameworkRoomState } from './state/roomState';
+import type { AssetFrameworkRoomState } from './state/roomState';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems<Type extends AssetType = AssetType> = readonly Item<Type>[];

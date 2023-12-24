@@ -15,6 +15,7 @@ import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 import type { } from '../assets/item';
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
+import { AssetPreferencesSchema } from '../character/assetPreferences';
 
 /** Client->Shard messages */
 export const ClientShardSchema = {
@@ -67,6 +68,12 @@ export const ClientShardSchema = {
 	updateSettings: {
 		request: CharacterPublicSettingsSchema.partial(),
 		response: null,
+	},
+	updateAssetPreferences: {
+		request: AssetPreferencesSchema.partial(),
+		response: z.object({
+			result: z.enum(['ok', 'invalid']),
+		}),
 	},
 	updateCharacterDescription: {
 		request: z.object({

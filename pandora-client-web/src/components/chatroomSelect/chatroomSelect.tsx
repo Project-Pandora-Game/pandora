@@ -63,7 +63,7 @@ export function ChatroomSelect(): ReactElement {
 	return (
 		<div>
 			<Row padding='medium' wrap alignX='space-between'>
-				<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
+				<Link to='/'>◄ Back</Link><br />
 				<span className='infoBox' onClick={ () => setShowTips(true) } >
 					🛈 Tip: { TIPS[index] }
 				</span>

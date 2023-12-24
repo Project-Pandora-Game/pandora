@@ -48,7 +48,7 @@ export function WardrobeScreen(): ReactElement | null {
 		);
 
 	if (!player || !target)
-		return <Link to='/pandora_lobby'>◄ Back</Link>;
+		return <Link to='/'>◄ Back</Link>;
 
 	return (
 		<WardrobeContextProvider target={ target } player={ player }>
@@ -96,7 +96,7 @@ function WardrobeRoom({ room }: {
 							<WardrobeItemManipulation />
 						</div>
 					</Tab>
-					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/pandora_lobby') } />
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 				</TabContainer>
 			</div>
 		</div>
@@ -112,7 +112,7 @@ function WardrobeCharacter({ character }: {
 	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
 
 	if (characterState == null)
-		return <Link to='/pandora_lobby'>◄ Back</Link>;
+		return <Link to='/'>◄ Back</Link>;
 
 	const inSafemode = characterState.safemode != null;
 
@@ -164,7 +164,7 @@ function WardrobeCharacter({ character }: {
 							</Tab>
 						)
 					}
-					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/pandora_lobby') } />
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 				</TabContainer>
 			</div>
 		</div>

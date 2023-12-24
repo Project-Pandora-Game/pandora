@@ -12,7 +12,6 @@ import { ChatroomSelect } from '../components/chatroomSelect/chatroomSelect';
 import { useCurrentAccount } from '../components/gameContext/directoryConnectorContextProvider';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { AuthPage } from '../components/login/authPage';
-import { PandoraLobby } from '../components/pandoraLobby/pandoraLobby';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 import { Relationships } from '../components/releationships/relationships';
@@ -36,8 +35,6 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/contacts/*' element={ <RequiresLogin element={ Relationships } /> } />
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />
 			<Route path='/profiles/character/:characterId' element={ <RequiresCharacter element={ CharacterProfileScreenRouter } /> } />
-
-			<Route path='/pandora_lobby' element={ <RequiresCharacter element={ PandoraLobby } /> } />
 
 			<Route path='/chatroom' element={ <RequiresCharacter element={ Chatroom } /> } />
 			<Route path='/chatroom_select' element={ <RequiresCharacter element={ ChatroomSelect } /> } />
@@ -77,7 +74,13 @@ function RequiresCharacter({ element: Element, allowUnfinished }: { element: Com
 
 function DefaultFallback(): ReactElement {
 	useLoggedInCheck(false);
-	return <Navigate to='/character_select' />;
+	const playerData = usePlayerData();
+
+	if (playerData == null) {
+		return <Navigate to='/character_select' />;
+	}
+
+	return <Navigate to='/chatroom' />;
 }
 
 function useLoggedInCheck(preserveLocation = true): void {

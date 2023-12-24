@@ -46,21 +46,17 @@ export function CharacterSafemodeDialogContext({ children }: ChildrenProps): Rea
 export function CharacterSafemodeDialog({ player }: {
 	player: PlayerCharacter;
 }): ReactElement {
-	const safemodeContext = useSafemodeDialogContext();
+	const { hide } = useSafemodeDialogContext();
 	const roomContext = useChatroomRequired();
 	const state = useCharacterState(roomContext, player.id);
 	const restrictionOverride = state?.restrictionOverride;
-	const currentTime = useCurrentTime();
 
-	const canLeaveSafemode = restrictionOverride != null && currentTime >= restrictionOverride.allowLeaveAt;
-
-	const hide = useCallback(() => safemodeContext.hide(), [safemodeContext]);
 	useKeyDownEvent(useCallback(() => {
 		hide();
 		return true;
 	}, [hide]), 'Escape');
 
-	const [doSafeModeExit, exiting] = useAppearanceActionEvent({
+	const [doModeExit, exiting] = useAppearanceActionEvent({
 		type: 'restrictionOverrideChange',
 		mode: 'normal',
 	});
@@ -84,25 +80,12 @@ export function CharacterSafemodeDialog({ player }: {
 				double round brackets '(('.
 			</p>
 			{
-				restrictionOverride?.type === 'safemode' ? (
-					<>
-						<p>
-							<strong>You are currently in a safemode!</strong><br />
-							{
-								canLeaveSafemode ? null : <>You need to wait { FormatTimeInterval(restrictionOverride.allowLeaveAt - currentTime) } before you can leave the safemode.</>
-							}
-						</p>
-						<Row padding='medium' alignX='space-between'>
-							<Button onClick={ hide }>Cancel</Button>
-							<Button
-								disabled={ !canLeaveSafemode || processing }
-								className='fadeDisabled'
-								onClick={ doSafeModeExit }
-							>
-								Leave safemode
-							</Button>
-						</Row>
-					</>
+				restrictionOverride != null ? (
+					<CharacterRestrictionOverrideLeave
+						{ ...restrictionOverride }
+						doModeExit={ doModeExit }
+						processing={ processing }
+					/>
 				) : (
 					<>
 						<p>
@@ -124,27 +107,64 @@ export function CharacterSafemodeDialog({ player }: {
 	);
 }
 
+function GetRestrictionOverrideText(type: RestrictionOverride['type']): string {
+	switch (type) {
+		case 'safemode':
+			return 'safemode';
+		case 'timeout':
+			return 'timeout mode';
+	}
+}
+
+function CharacterRestrictionOverrideLeave({ type, allowLeaveAt, doModeExit, processing }: RestrictionOverride & {
+	doModeExit: () => void;
+	processing: boolean;
+}): ReactElement {
+	const currentTime = useCurrentTime();
+	const canLeave = currentTime >= allowLeaveAt;
+	const mode = GetRestrictionOverrideText(type);
+	const { hide } = useSafemodeDialogContext();
+
+	return (
+		<>
+			<p>
+				<strong>You are currently in a { mode }!</strong><br />
+				{
+					canLeave ? null : <>You need to wait { FormatTimeInterval(allowLeaveAt - currentTime) } before you can leave the { mode }.</>
+				}
+			</p>
+			<Row padding='medium' alignX='space-between'>
+				<Button onClick={ hide }>Cancel</Button>
+				<Button
+					disabled={ !canLeave || processing }
+					className='fadeDisabled'
+					onClick={ doModeExit }
+				>
+					Leave { mode }
+				</Button>
+			</Row>
+		</>
+	);
+}
+
 export function CharacterSafemodeWarningContent({ mode }: { mode?: RestrictionOverride; }): ReactElement | null {
 	if (!mode)
 		return null;
 
-	let text: string;
 	let HelpText: () => ReactElement;
 
 	switch (mode.type) {
 		case 'safemode':
-			text = 'This character is in safemode!';
 			HelpText = CharacterSafemodeHelpText;
 			break;
 		case 'timeout':
-			text = 'This character is in a timeout mode!';
 			HelpText = CharacterTimeoutModeHelpText;
 			break;
 	}
 
 	return (
 		<div className='safemode'>
-			{ text }
+			This character is in { GetRestrictionOverrideText(mode.type) }
 			<ContextHelpButton>
 				<HelpText />
 				<p>

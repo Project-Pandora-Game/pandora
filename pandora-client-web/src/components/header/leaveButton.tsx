@@ -95,7 +95,7 @@ function CharRoomLeaveInner({ player, roomConfig, roomId }: {
 	const directoryConnector = useDirectoryConnector();
 	const { playerState } = usePlayerState();
 	const roomDeviceLink = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getRoomDeviceLink());
-	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.isInSafemode() || !manager.getEffects().blockRoomLeave));
+	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockRoomLeave));
 	const closeDialog = useContext(leaveButtonContext);
 
 	const onRoomLeave = useCallback(() => {

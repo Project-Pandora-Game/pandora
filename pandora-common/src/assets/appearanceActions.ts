@@ -831,7 +831,7 @@ export function ActionAppearanceRandomize({
 	}
 
 	// Must have free hands to randomize
-	if (!character.canUseHands() && !character.isInSafemode()) {
+	if (!character.canUseHands() && !character.forceAllowItemActions()) {
 		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: {

@@ -224,8 +224,16 @@ export class CharacterRestrictionsManager {
 		return _.clamp(this.getEffects().blind, 0, 10);
 	}
 
-	public isInSafemode(): boolean {
-		return this.appearance.getSafemode() != null;
+	public isInteractionBlocked(): boolean {
+		return this.appearance.isInSafemode();
+	}
+
+	public forceAllowItemActions(): boolean {
+		return this.appearance.isInSafemode();
+	}
+
+	public forceAllowRoomLeave(): boolean {
+		return this.appearance.isInSafemode();
 	}
 
 	public isCurrentRoomAdmin(): boolean {
@@ -251,7 +259,7 @@ export class CharacterRestrictionsManager {
 			context.addInteraction(target.character, 'interact');
 
 			// Safemode checks
-			if (this.isInSafemode() || targetCharacter.isInSafemode())
+			if (this.isInteractionBlocked() || targetCharacter.isInteractionBlocked())
 				return {
 					allowed: false,
 					restriction: {
@@ -356,7 +364,7 @@ export class CharacterRestrictionsManager {
 
 		const isCharacter = target.type === 'character';
 		const isSelfAction = isCharacter && target.character.id === this.character.id;
-		const isInSafemode = this.isInSafemode();
+		const forceAllowItemActions = this.forceAllowItemActions();
 		let isPhysicallyEquipped = isCharacter;
 
 		// Must be able to access all upper items
@@ -440,7 +448,7 @@ export class CharacterRestrictionsManager {
 		// If equipping there are further checks
 		if (interaction === ItemInteractionType.ADD_REMOVE && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
-			if (properties.blockAddRemove && !isInSafemode)
+			if (properties.blockAddRemove && !forceAllowItemActions)
 				return {
 					allowed: false,
 					restriction: {
@@ -451,7 +459,7 @@ export class CharacterRestrictionsManager {
 				};
 
 			// If equipping on self, the asset must allow self-equip
-			if (isSelfAction && properties.blockSelfAddRemove && !isInSafemode)
+			if (isSelfAction && properties.blockSelfAddRemove && !forceAllowItemActions)
 				return {
 					allowed: false,
 					restriction: {
@@ -462,7 +470,7 @@ export class CharacterRestrictionsManager {
 				};
 		}
 
-		if (isCharacter && isPhysicallyEquipped && !isInSafemode) {
+		if (isCharacter && isPhysicallyEquipped && !forceAllowItemActions) {
 			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({
 				from: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
 				exclude: container.length > 0 ? container[0].item : item.id,
@@ -481,7 +489,7 @@ export class CharacterRestrictionsManager {
 		}
 
 		// Must be able to use hands
-		if (!this.canUseHands() && !isInSafemode)
+		if (!this.canUseHands() && !forceAllowItemActions)
 			return {
 				allowed: false,
 				restriction: {
@@ -534,7 +542,7 @@ export class CharacterRestrictionsManager {
 		const properties = item.isType('roomDevice') ? item.getRoomDeviceProperties() : item.getProperties();
 
 		// If item blocks this module, fail
-		if (properties.blockModules.has(moduleName) && !this.isInSafemode())
+		if (properties.blockModules.has(moduleName) && !this.forceAllowItemActions())
 			return {
 				allowed: false,
 				restriction: {
@@ -546,7 +554,7 @@ export class CharacterRestrictionsManager {
 			};
 
 		// If accessing on self, the item must not block it
-		if (isSelfAction && properties.blockSelfModules.has(moduleName) && !this.isInSafemode())
+		if (isSelfAction && properties.blockSelfModules.has(moduleName) && !this.forceAllowItemActions())
 			return {
 				allowed: false,
 				restriction: {

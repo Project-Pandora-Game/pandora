@@ -74,7 +74,7 @@ export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, r
 	// Warn if player won't be able to use hands after this action
 	if (
 		originalRestrictionManager.canUseHands() &&
-		!resultRestrictionManager.isInSafemode() &&
+		!resultRestrictionManager.forceAllowItemActions() &&
 		!resultRestrictionManager.canUseHands()
 	) {
 		warnings.push(`This action will prevent you from using your hands`);

@@ -128,21 +128,32 @@ export function CharacterSafemodeWarningContent({ mode }: { mode?: RestrictionOv
 	if (!mode)
 		return null;
 
+	let text: string;
+	let HelpText: () => ReactElement;
+
 	switch (mode.type) {
 		case 'safemode':
-			return (
-				<div className='safemode'>
-					This character is in safemode!
-					<ContextHelpButton>
-						<CharacterSafemodeHelpText />
-						<p>
-							As general hint: You can find safemode for your character in the top left menu, by clicking on<br />
-							your character's name.
-						</p>
-					</ContextHelpButton>
-				</div>
-			);
+			text = 'This character is in safemode!';
+			HelpText = CharacterSafemodeHelpText;
+			break;
+		case 'timeout':
+			text = 'This character is in a timeout mode!';
+			HelpText = CharacterTimeoutModeHelpText;
+			break;
 	}
+
+	return (
+		<div className='safemode'>
+			{ text }
+			<ContextHelpButton>
+				<HelpText />
+				<p>
+					As general hint: You can find safemode and timeout mode for your character in the top left menu, by clicking on<br />
+					your character's name.
+				</p>
+			</ContextHelpButton>
+		</div>
+	);
 }
 
 function CharacterSafemodeHelpText(): ReactElement {
@@ -159,5 +170,15 @@ function CharacterSafemodeHelpText(): ReactElement {
 				a character in safemode cannot modify items on other characters.
 			</p>
 		</>
+	);
+}
+
+function CharacterTimeoutModeHelpText(): ReactElement {
+	return (
+		<p>
+			<b>Timeout mode is a mode in which no one else can modify the character's items.</b> Additionally,<br />
+			a character in timeout mode cannot modify items on other characters.
+			(Unlike safemode, all restrictions still apply to the character in timeout mode.)
+		</p>
 	);
 }

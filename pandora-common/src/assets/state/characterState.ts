@@ -15,7 +15,7 @@ import { CharacterId } from '../../character';
 import type { IExportOptions } from '../modules/common';
 
 export const RestrictionOverrideSchema = z.object({
-	type: z.enum(['safemode']),
+	type: z.enum(['safemode', 'timeout']),
 	allowLeaveAt: z.number(),
 });
 export type RestrictionOverride = Readonly<z.infer<typeof RestrictionOverrideSchema>>;
@@ -39,6 +39,12 @@ const INTERACTION_OVERRIDE_CONFIG = {
 		blockInteractions: true,
 		forceAllowItemActions: true,
 		forceAllowRoomLeave: true,
+	},
+	timeout: {
+		allowLeaveAt: 0,
+		blockInteractions: true,
+		forceAllowItemActions: false,
+		forceAllowRoomLeave: false,
 	},
 } as const satisfies Readonly<Record<RestrictionOverride['type'] | 'normal', RestrictionOverrideConfig>>;
 

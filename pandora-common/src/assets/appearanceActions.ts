@@ -13,7 +13,7 @@ import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterState';
+import { AppearanceArmPoseSchema, AppearancePoseSchema, RestrictionOverride } from './state/characterState';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
@@ -112,10 +112,10 @@ export const AppearanceActionModuleAction = z.object({
 	action: ItemModuleActionSchema,
 });
 
-export const AppearanceActionSafemode = z.object({
-	type: z.literal('safemode'),
+export const AppearanceActionRestrictionOverrideChange = z.object({
+	type: z.literal('restrictionOverrideChange'),
 	/** What to do with the safemode */
-	action: z.enum(['enter', 'exit']),
+	mode: z.enum(['normal', 'safemode']),
 });
 
 export const AppearanceActionRandomize = z.object({
@@ -168,7 +168,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionMove,
 	AppearanceActionColor,
 	AppearanceActionModuleAction,
-	AppearanceActionSafemode,
+	AppearanceActionRestrictionOverrideChange,
 	AppearanceActionRandomize,
 	AppearanceActionRoomDeviceDeploy,
 	AppearanceActionRoomDeviceEnter,
@@ -438,43 +438,38 @@ export function DoAppearanceAction(
 
 			return processingContext.finalize();
 		}
-		case 'safemode': {
+		case 'restrictionOverrideChange': {
 			const current = playerRestrictionManager.appearance.getRestrictionOverride();
-			if (action.action === 'enter') {
-				// If we are already in it we cannot enter it again
-				if (current?.type === 'safemode')
-					return processingContext.invalid();
+			const oldMode = current?.type ?? 'normal';
 
-				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
-					return character.produceWithRestrictionOverride('safemode', !!playerRestrictionManager.room.features.includes('development'));
-				})) {
-					return processingContext.invalid();
-				}
+			// If we are already in a mode it we cannot enter it again
+			if (oldMode === action.mode)
+				return processingContext.invalid();
+			// If we are not in normal mode we cannot enter any other mode
+			if (oldMode !== 'normal' && action.mode !== 'normal')
+				return processingContext.invalid();
+			// Check the timer to leave it passed
+			if (current?.allowLeaveAt != null && Date.now() < current.allowLeaveAt)
+				return processingContext.invalid();
 
-				processingContext.queueMessage({
-					id: 'safemodeEnter',
-				});
-			} else if (action.action === 'exit') {
-				// If we are already not in it we cannot exit it
-				if (current?.type !== 'safemode')
-					return processingContext.invalid();
+			const removeAllowLeaveAt = !!playerRestrictionManager.room.features.includes('development');
 
-				// Check the timer to leave it passed
-				if (current.allowLeaveAt != null && Date.now() < current.allowLeaveAt)
-					return processingContext.invalid();
-
-				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
-					return character.produceWithRestrictionOverride();
-				})) {
-					return processingContext.invalid();
-				}
-
-				processingContext.queueMessage({
-					id: 'safemodeLeave',
-				});
-			} else {
-				AssertNever(action.action);
+			if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) =>
+				character.produceWithRestrictionOverride(action.mode, removeAllowLeaveAt),
+			)) {
+				return processingContext.invalid();
 			}
+
+			let id: `${RestrictionOverride['type']}${'Enter' | 'Leave'}`;
+			if (action.mode === 'normal') {
+				Assert(oldMode !== 'normal');
+				id = `${oldMode}Leave`;
+			} else {
+				id = `${action.mode}Enter`;
+			}
+
+			processingContext.queueMessage({ id });
+
 			return processingContext.finalize();
 		}
 		case 'randomize': {

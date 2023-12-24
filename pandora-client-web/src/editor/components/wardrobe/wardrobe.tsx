@@ -131,8 +131,8 @@ export function EditorWardrobeUI(): ReactElement {
 						onChange={ (e) => {
 							character.getAppearance()
 								.editorDoAction({
-									type: 'safemode',
-									action: e.target.checked ? 'enter' : 'exit',
+									type: 'restrictionOverrideChange',
+									mode: e.target.checked ? 'normal' : 'safemode',
 								});
 						} }
 					/>

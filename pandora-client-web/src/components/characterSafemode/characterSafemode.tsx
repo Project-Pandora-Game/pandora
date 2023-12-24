@@ -61,12 +61,12 @@ export function CharacterSafemodeDialog({ player }: {
 	}, [hide]), 'Escape');
 
 	const [doSafeModeExit, exiting] = useAppearanceActionEvent({
-		type: 'safemode',
-		action: 'exit',
+		type: 'restrictionOverrideChange',
+		mode: 'normal',
 	});
 	const [doSafeModeEnter, entering] = useAppearanceActionEvent({
-		type: 'safemode',
-		action: 'enter',
+		type: 'restrictionOverrideChange',
+		mode: 'safemode',
 	});
 	const processing = exiting || entering;
 

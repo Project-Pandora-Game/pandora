@@ -211,11 +211,12 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		}, true);
 	}
 
-	public produceWithRestrictionOverride(): AssetFrameworkCharacterState;
-	public produceWithRestrictionOverride(type: RestrictionOverride['type'], removeAllowLeaveAt?: boolean): AssetFrameworkCharacterState;
+	public produceWithRestrictionOverride(type: RestrictionOverride['type'] | 'normal', removeAllowLeaveAt?: boolean): AssetFrameworkCharacterState;
 	public produceWithRestrictionOverride(value: RestrictionOverride): AssetFrameworkCharacterState;
-	public produceWithRestrictionOverride(value?: RestrictionOverride['type'] | RestrictionOverride, removeAllowLeaveAt: boolean = false): AssetFrameworkCharacterState {
-		if (typeof value === 'string') {
+	public produceWithRestrictionOverride(value?: RestrictionOverride['type'] | RestrictionOverride | 'normal', removeAllowLeaveAt: boolean = false): AssetFrameworkCharacterState {
+		if (value === 'normal') {
+			value = undefined;
+		} else if (typeof value === 'string') {
 			const type = value;
 
 			let { allowLeaveAt } = GetRestrictionOverrideConfig(type);

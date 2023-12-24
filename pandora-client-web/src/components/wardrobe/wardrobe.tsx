@@ -114,17 +114,9 @@ function WardrobeCharacter({ character }: {
 	if (characterState == null)
 		return <Link to='/'>◄ Back</Link>;
 
-	const inSafemode = characterState.safemode != null;
-
 	return (
 		<div className='wardrobe'>
-			{
-				!inSafemode ? null : (
-					<div className='safemode'>
-						<CharacterSafemodeWarningContent />
-					</div>
-				)
-			}
+			<CharacterSafemodeWarningContent mode={ characterState.restrictionOverride } />
 			<div className='wardrobeMain'>
 				<WardrobeCharacterPreview
 					character={ character }

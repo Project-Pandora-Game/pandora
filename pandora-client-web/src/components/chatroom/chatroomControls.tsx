@@ -148,7 +148,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 
 	const data = useCharacterData(char);
 	const state = useCharacterState(chatroom, char.id);
-	const inSafemode = state?.safemode != null;
+	const inSafemode = state?.restrictionOverride?.type === 'safemode';
 	const isOnline = data.isOnline;
 
 	const isPlayer = char.id === playerId;
@@ -168,11 +168,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 						Offline
 					</span>
 				) }
-				{ !inSafemode ? null : (
-					<span className='safemode'>
-						<CharacterSafemodeWarningContent />
-					</span>
-				) }
+				<CharacterSafemodeWarningContent mode={ state?.restrictionOverride } />
 			</legend>
 			<Column>
 				<Row wrap>

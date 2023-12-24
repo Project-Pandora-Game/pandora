@@ -6,7 +6,7 @@ import { ActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item, RoomDeviceLink } from '../assets/item';
-import type { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
+import { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget, RestrictionOverrideConfig, GetRestrictionOverrideConfig } from '../assets';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
@@ -135,6 +135,7 @@ export type RestrictionResult = {
 export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;
 	public readonly room: ActionRoomContext;
+	public readonly restrictionOverrideConfig: RestrictionOverrideConfig;
 	private _items: readonly Item[] = [];
 	private _properties: Immutable<AssetPropertiesResult> = CreateAssetPropertiesResult();
 	private _roomDeviceLink: Immutable<RoomDeviceLink> | null = null;
@@ -146,6 +147,7 @@ export class CharacterRestrictionsManager {
 	constructor(appearance: CharacterAppearance, room: ActionRoomContext) {
 		this.appearance = appearance;
 		this.room = room;
+		this.restrictionOverrideConfig = GetRestrictionOverrideConfig(this.appearance.getRestrictionOverride());
 	}
 
 	private updateCachedData(): void {
@@ -225,15 +227,15 @@ export class CharacterRestrictionsManager {
 	}
 
 	public isInteractionBlocked(): boolean {
-		return this.appearance.isInSafemode();
+		return this.restrictionOverrideConfig.blockInteractions;
 	}
 
 	public forceAllowItemActions(): boolean {
-		return this.appearance.isInSafemode();
+		return this.restrictionOverrideConfig.forceAllowItemActions;
 	}
 
 	public forceAllowRoomLeave(): boolean {
-		return this.appearance.isInSafemode();
+		return this.restrictionOverrideConfig.forceAllowRoomLeave;
 	}
 
 	public isCurrentRoomAdmin(): boolean {

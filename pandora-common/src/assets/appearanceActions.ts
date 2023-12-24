@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
-import { SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { WearableAssetType } from './definitions';
 import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelectorSchema } from './appearanceTypes';
@@ -440,16 +439,14 @@ export function DoAppearanceAction(
 			return processingContext.finalize();
 		}
 		case 'safemode': {
-			const current = playerRestrictionManager.appearance.getSafemode();
+			const current = playerRestrictionManager.appearance.getRestrictionOverride();
 			if (action.action === 'enter') {
 				// If we are already in it we cannot enter it again
-				if (current)
+				if (current?.type === 'safemode')
 					return processingContext.invalid();
 
 				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
-					return character.produceWithSafemode({
-						allowLeaveAt: Date.now() + (playerRestrictionManager.room.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
-					});
+					return character.produceWithRestrictionOverride('safemode', !!playerRestrictionManager.room.features.includes('development'));
 				})) {
 					return processingContext.invalid();
 				}
@@ -459,15 +456,15 @@ export function DoAppearanceAction(
 				});
 			} else if (action.action === 'exit') {
 				// If we are already not in it we cannot exit it
-				if (!current)
+				if (current?.type !== 'safemode')
 					return processingContext.invalid();
 
 				// Check the timer to leave it passed
-				if (Date.now() < current.allowLeaveAt)
+				if (current.allowLeaveAt != null && Date.now() < current.allowLeaveAt)
 					return processingContext.invalid();
 
 				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
-					return character.produceWithSafemode(null);
+					return character.produceWithRestrictionOverride();
 				})) {
 					return processingContext.invalid();
 				}

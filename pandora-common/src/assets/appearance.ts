@@ -10,14 +10,11 @@ import type { WearableAssetType } from './definitions';
 import type { AssetId } from './base';
 import type { BoneState, CharacterView } from './graphics';
 import type { Item } from './item';
-import type { AppearanceArmPose, AppearanceBundle, AppearancePose, AssetFrameworkCharacterState, SafemodeData } from './state/characterState';
+import type { AppearanceArmPose, AppearanceBundle, AppearancePose, AssetFrameworkCharacterState, RestrictionOverride } from './state/characterState';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
 
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
-
-/** Time after entering safemode for which you cannot leave it (entering while in dev mode ignores this) */
-export const SAFEMODE_EXIT_COOLDOWN = 60 * 60_000;
 
 function GetDefaultAppearanceArmPose(): AppearanceArmPose {
 	return {
@@ -114,7 +111,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		return this.characterState.actualPose.view;
 	}
 
-	public getSafemode(): Readonly<SafemodeData> | null {
-		return this.characterState.safemode ?? null;
+	public getRestrictionOverride(): RestrictionOverride | undefined {
+		return this.characterState.restrictionOverride;
 	}
 }

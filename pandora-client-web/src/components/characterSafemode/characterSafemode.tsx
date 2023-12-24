@@ -1,4 +1,4 @@
-import { AssertNotNullable, FormatTimeInterval, SAFEMODE_EXIT_COOLDOWN } from 'pandora-common';
+import { AssertNotNullable, FormatTimeInterval, GetRestrictionOverrideConfig, RestrictionOverride } from 'pandora-common';
 import React, { ReactElement, useCallback, useContext, useMemo, useState } from 'react';
 import { PlayerCharacter } from '../../character/player';
 import { ChildrenProps } from '../../common/reactTypes';
@@ -49,10 +49,10 @@ export function CharacterSafemodeDialog({ player }: {
 	const safemodeContext = useSafemodeDialogContext();
 	const roomContext = useChatroomRequired();
 	const state = useCharacterState(roomContext, player.id);
-	const safemodeState = state?.safemode ?? null;
+	const restrictionOverride = state?.restrictionOverride;
 	const currentTime = useCurrentTime();
 
-	const canLeaveSafemode = safemodeState != null && currentTime >= safemodeState.allowLeaveAt;
+	const canLeaveSafemode = restrictionOverride != null && currentTime >= restrictionOverride.allowLeaveAt;
 
 	const hide = useCallback(() => safemodeContext.hide(), [safemodeContext]);
 	useKeyDownEvent(useCallback(() => {
@@ -84,12 +84,12 @@ export function CharacterSafemodeDialog({ player }: {
 				double round brackets '(('.
 			</p>
 			{
-				safemodeState ? (
+				restrictionOverride?.type === 'safemode' ? (
 					<>
 						<p>
 							<strong>You are currently in a safemode!</strong><br />
 							{
-								canLeaveSafemode ? null : <>You need to wait { FormatTimeInterval(safemodeState.allowLeaveAt - currentTime) } before you can leave the safemode.</>
+								canLeaveSafemode ? null : <>You need to wait { FormatTimeInterval(restrictionOverride.allowLeaveAt - currentTime) } before you can leave the safemode.</>
 							}
 						</p>
 						<Row padding='medium' alignX='space-between'>
@@ -109,7 +109,7 @@ export function CharacterSafemodeDialog({ player }: {
 							<i>You are currently not in safemode.</i>
 						</p>
 						<p>
-							<strong>Warning:</strong> After entering safemode, you will not be able to leave it for { FormatTimeInterval(SAFEMODE_EXIT_COOLDOWN) }!
+							<strong>Warning:</strong> After entering safemode, you will not be able to leave it for { FormatTimeInterval(GetRestrictionOverrideConfig('safemode').allowLeaveAt) }!
 						</p>
 						<Row padding='medium' alignX='space-between'>
 							<Button onClick={ hide }>Cancel</Button>
@@ -124,19 +124,25 @@ export function CharacterSafemodeDialog({ player }: {
 	);
 }
 
-export function CharacterSafemodeWarningContent(): ReactElement {
-	return (
-		<>
-			This character is in safemode!
-			<ContextHelpButton>
-				<CharacterSafemodeHelpText />
-				<p>
-					As general hint: You can find safemode for your character in the top left menu, by clicking on<br />
-					your character's name.
-				</p>
-			</ContextHelpButton>
-		</>
-	);
+export function CharacterSafemodeWarningContent({ mode }: { mode?: RestrictionOverride; }): ReactElement | null {
+	if (!mode)
+		return null;
+
+	switch (mode.type) {
+		case 'safemode':
+			return (
+				<div className='safemode'>
+					This character is in safemode!
+					<ContextHelpButton>
+						<CharacterSafemodeHelpText />
+						<p>
+							As general hint: You can find safemode for your character in the top left menu, by clicking on<br />
+							your character's name.
+						</p>
+					</ContextHelpButton>
+				</div>
+			);
+	}
 }
 
 function CharacterSafemodeHelpText(): ReactElement {

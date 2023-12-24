@@ -60,11 +60,15 @@ export function CharacterSafemodeDialog({ player }: {
 		type: 'restrictionOverrideChange',
 		mode: 'normal',
 	});
-	const [doSafeModeEnter, entering] = useAppearanceActionEvent({
+	const [doSafeModeEnter, enteringSafeMode] = useAppearanceActionEvent({
 		type: 'restrictionOverrideChange',
 		mode: 'safemode',
 	});
-	const processing = exiting || entering;
+	const [doTimeoutModeEnter, enteringTimeoutMode] = useAppearanceActionEvent({
+		type: 'restrictionOverrideChange',
+		mode: 'timeout',
+	});
+	const processing = exiting || enteringSafeMode || enteringTimeoutMode;
 
 	return (
 		<ModalDialog>
@@ -79,6 +83,7 @@ export function CharacterSafemodeDialog({ player }: {
 				Out of Character (OOC) by using the '/ooc' command or by prefixing a message with<br />
 				double round brackets '(('.
 			</p>
+			<CharacterTimeoutModeHelpText />
 			{
 				restrictionOverride != null ? (
 					<CharacterRestrictionOverrideLeave
@@ -89,13 +94,17 @@ export function CharacterSafemodeDialog({ player }: {
 				) : (
 					<>
 						<p>
-							<i>You are currently not in safemode.</i>
+							<i>You are currently not in safemode or timeout mode.</i>
 						</p>
 						<p>
-							<strong>Warning:</strong> After entering safemode, you will not be able to leave it for { FormatTimeInterval(GetRestrictionOverrideConfig('safemode').allowLeaveAt) }!
+							<strong>Warning:</strong> After entering safemode, you will not be able to leave it for { FormatTimeInterval(GetRestrictionOverrideConfig('safemode').allowLeaveAt) }!<br />
+							(Timeout mode can toggled on off without any time restrictions.)
 						</p>
 						<Row padding='medium' alignX='space-between'>
 							<Button onClick={ hide }>Cancel</Button>
+							<Button onClick={ doTimeoutModeEnter } disabled={ processing }>
+								Enter timeout mode!
+							</Button>
 							<Button onClick={ doSafeModeEnter } disabled={ processing }>
 								Enter safemode!
 							</Button>

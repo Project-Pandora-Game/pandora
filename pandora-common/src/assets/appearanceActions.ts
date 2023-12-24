@@ -115,7 +115,7 @@ export const AppearanceActionModuleAction = z.object({
 export const AppearanceActionRestrictionOverrideChange = z.object({
 	type: z.literal('restrictionOverrideChange'),
 	/** What to do with the safemode */
-	mode: z.enum(['normal', 'safemode']),
+	mode: z.enum(['normal', 'safemode', 'timeout']),
 });
 
 export const AppearanceActionRandomize = z.object({

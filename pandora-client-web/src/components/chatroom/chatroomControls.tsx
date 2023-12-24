@@ -69,7 +69,7 @@ export function PersonalRoomControls(): ReactElement {
 						It cannot be deleted or given up. You will automatically end up in this room when your<br />
 						selected character is not in any multiplayer room.
 					</p>
-					<p>
+					<span>
 						The personal room functions the same as any other room.<br />
 						As no one except you will see whatever you do in this room, it is a great place to experiment!<br />
 						For example you can:
@@ -80,18 +80,18 @@ export function PersonalRoomControls(): ReactElement {
 							<li>Decorate the room freely with room items</li>
 							<li><s>Change the room's background</s> - <i>This is not yet possible and will be added in the future</i></li>
 						</ul>
-					</p>
+					</span>
 					<p>
 						You can leave the room by joining another room with the "List of chatrooms" button in the "Personal room" tab.
 					</p>
-					<p>
+					<span>
 						<b>Important notes:</b>
 						<ul>
 							<li>No other characters can join your personal room (not even your account's other characters)</li>
 							<li>Restraints will not prevent you from leaving the personal room</li>
 							<li>Being in a room device will also not prevent you from leaving the personal room</li>
 						</ul>
-					</p>
+					</span>
 				</ContextHelpButton>
 			</span>
 			<Row padding='small'>

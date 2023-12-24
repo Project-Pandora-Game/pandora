@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Immutable } from 'immer';
-import { AssetIdSchema } from '../assets/base';
+import { AssetId, AssetIdSchema } from '../assets/base';
 import type { Asset } from '../assets/asset';
 import type { CharacterId } from './characterTypes';
 import { KnownObject } from '../utility';
@@ -33,18 +33,42 @@ export const ASSET_PREFERENCES_DEFAULT: Readonly<AssetPreferences> = Object.free
 	assets: {},
 });
 
-export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>, asset: Asset, _source?: CharacterId): AssetPreferenceType {
-	const assetPreference = preferences.assets[asset.id];
-	if (assetPreference != null)
-		return assetPreference.base;
+export type AssetPreferenceResolution = {
+	type: 'attribute';
+	attribute: string;
+	preference: AssetPreferenceType;
+} | {
+	type: 'asset';
+	asset: AssetId;
+	preference: AssetPreferenceType;
+};
 
-	let result: AssetPreferenceType = 'normal';
+export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>, asset: Asset, _source?: CharacterId): AssetPreferenceResolution {
+	const assetPreference = preferences.assets[asset.id];
+	if (assetPreference != null) {
+		return {
+			type: 'asset',
+			asset: asset.id,
+			preference: assetPreference.base,
+		};
+	}
+
+	let result: AssetPreferenceResolution = {
+		type: 'asset',
+		asset: asset.id,
+		preference: 'normal',
+	};
 	for (const attribute of asset.staticAttributes) {
 		if (preferences.attributes[attribute] != null) {
-			const previous = AssetPreferenceTypeSchema.options.indexOf(result);
+			const previous = AssetPreferenceTypeSchema.options.indexOf(result.preference);
 			const base = AssetPreferenceTypeSchema.options.indexOf(preferences.attributes[attribute].base);
-			if (base > previous)
-				result = preferences.attributes[attribute].base;
+			if (base > previous) {
+				result = {
+					type: 'attribute',
+					attribute,
+					preference: preferences.attributes[attribute].base,
+				};
+			}
 		}
 	}
 

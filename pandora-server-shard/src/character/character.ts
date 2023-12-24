@@ -603,7 +603,7 @@ export class Character {
 		const state = this.getCharacterState();
 		for (const item of state.items) {
 			const preference = ResolveAssetPreference(updated, item.asset);
-			if (preference === 'doNotRender') {
+			if (preference.preference === 'doNotRender') {
 				return 'invalid';
 			}
 		}

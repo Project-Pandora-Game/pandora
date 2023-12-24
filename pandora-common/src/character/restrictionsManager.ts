@@ -12,7 +12,7 @@ import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
-import { ResolveAssetPreference } from './assetPreferences';
+import { AssetPreferenceResolution, ResolveAssetPreference } from './assetPreferences';
 
 export enum ItemInteractionType {
 	/**
@@ -84,9 +84,9 @@ export type PermissionRestriction = {
 export type Restriction =
 	| PermissionRestriction
 	| {
-		type: 'blockedByPreference';
+		type: 'missingAssetPermission';
 		target: CharacterId;
-		source: 'character' | 'room';
+		resolution: AssetPreferenceResolution;
 	}
 	| {
 		type: 'blockedAddRemove';
@@ -284,15 +284,16 @@ export class CharacterRestrictionsManager {
 			if (target.character.id === this.character.id)
 				return { allowed: true };
 
-			switch (ResolveAssetPreference(target.character.assetPreferences, asset, this.character.id)) {
+			const resolution = ResolveAssetPreference(target.character.assetPreferences, asset, this.character.id);
+			switch (resolution.preference) {
 				case 'doNotRender':
 				case 'prevent':
 					return {
 						allowed: false,
 						restriction: {
-							type: 'blockedByPreference',
+							type: 'missingAssetPermission',
 							target: target.character.id,
-							source: 'character',
+							resolution,
 						},
 					};
 				case 'favorite':

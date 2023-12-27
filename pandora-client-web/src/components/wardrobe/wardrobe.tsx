@@ -21,7 +21,6 @@ import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
 import { WardrobeItemManipulation } from './wardrobeItems';
 import './wardrobe.scss';
 import { useObservable } from '../../observable';
-import { WardrobePreferencesGui } from './wardrobePreferencesGui';
 
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
@@ -147,15 +146,6 @@ function WardrobeCharacter({ character }: {
 							<WardrobeRandomizationGui character={ character } />
 						</div>
 					</Tab>
-					{
-						(!character.isPlayer()) ? null : (
-							<Tab name='Preferences'>
-								<div className='wardrobe-pane'>
-									<WardrobePreferencesGui />
-								</div>
-							</Tab>
-						)
-					}
 					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 				</TabContainer>
 			</div>

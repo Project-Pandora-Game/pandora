@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterDataUpdate, GetLogger, RoomId, IChatRoomData, IChatRoomDataShardUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, GetLogger, RoomId, IChatRoomData, IChatRoomDataShardUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { ShardDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
@@ -52,9 +52,9 @@ export default class MongoDatabase implements ShardDatabase {
 		return Id(character);
 	}
 
-	public async setCharacter({ id, accessId, ...data }: ICharacterDataUpdate): Promise<boolean> {
-		const { acknowledged, modifiedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
-		return acknowledged && modifiedCount === 1;
+	public async setCharacter(id: CharacterId, data: ICharacterDataShardUpdate, accessId: string): Promise<boolean> {
+		const { matchedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
+		return matchedCount === 1;
 	}
 
 	public async getChatRoom(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null | false> {
@@ -67,8 +67,8 @@ export default class MongoDatabase implements ShardDatabase {
 	}
 
 	public async setChatRoom(id: RoomId, data: IChatRoomDataShardUpdate, accessId: string): Promise<boolean> {
-		const { acknowledged, modifiedCount } = await this._chatrooms.updateOne({ id, accessId }, { $set: data });
-		return acknowledged && modifiedCount === 1;
+		const { matchedCount } = await this._chatrooms.updateOne({ id, accessId }, { $set: data });
+		return matchedCount === 1;
 	}
 }
 

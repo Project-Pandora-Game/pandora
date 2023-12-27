@@ -37,7 +37,7 @@ export function CharacterCreate(): ReactElement | null {
 		return null;
 
 	if (playerData && !playerData.inCreation) {
-		return <Navigate to='/pandora_lobby' />;
+		return <Navigate to='/' />;
 	}
 
 	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -55,7 +55,7 @@ export function CharacterCreate(): ReactElement | null {
 
 			if (result === 'ok') {
 				setErrorMessage('');
-				navigate('/pandora_lobby', {
+				navigate('/', {
 					state: {
 						message: 'Your character was successfully created.',
 					},

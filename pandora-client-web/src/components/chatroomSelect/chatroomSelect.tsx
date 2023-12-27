@@ -55,14 +55,15 @@ export function ChatroomSelect(): ReactElement {
 		};
 	}, []);
 
-	if (roomInfo) {
+	// Chatroom selection is only accessible from the personal room
+	if (roomInfo.id != null) {
 		return <Navigate to='/chatroom' />;
 	}
 
 	return (
 		<div>
 			<Row padding='medium' wrap alignX='space-between'>
-				<Link to='/pandora_lobby'>◄ Back to lobby</Link><br />
+				<Link to='/'>◄ Back</Link><br />
 				<span className='infoBox' onClick={ () => setShowTips(true) } >
 					🛈 Tip: { TIPS[index] }
 				</span>

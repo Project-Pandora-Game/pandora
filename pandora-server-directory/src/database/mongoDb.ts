@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
@@ -291,7 +291,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return Id(result);
 	}
 
-	public async updateCharacter(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
+	public async updateCharacterSelfInfo(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
 		// Transform the request
 		const update: Record<string, unknown> = {};
 		for (const [k, v] of Object.entries(data)) {
@@ -299,6 +299,25 @@ export default class MongoDatabase implements PandoraDatabase {
 		}
 		const result = await this._accounts.findOneAndUpdate({ 'id': accountId, 'characters.id': id }, { $set: update as MatchKeysAndValues<DatabaseAccountWithSecure> }, { returnDocument: 'after' });
 		return result?.characters.find((c) => c.id === id) ?? null;
+	}
+
+	public async updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean> {
+		if (accessId !== null) {
+			const { matchedCount } = await this._characters
+				.updateOne({
+					id: PlainId(id),
+					accessId,
+				}, { $set: data });
+			Assert(matchedCount <= 1);
+			return matchedCount === 1;
+		} else {
+			const { matchedCount } = await this._characters
+				.updateOne({
+					id: PlainId(id),
+				}, { $set: data });
+			Assert(matchedCount <= 1);
+			return matchedCount === 1;
+		}
 	}
 
 	public async deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void> {
@@ -390,11 +409,10 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async updateChatRoom(id: RoomId, data: IChatRoomDataDirectoryUpdate & IChatRoomDataShardUpdate, accessId: string | null): Promise<boolean> {
 		if (accessId !== null) {
 			const result = await this._chatrooms.findOneAndUpdate({ id, accessId }, { $set: data });
-			return result === null ? false : true;
+			return result != null;
 		} else {
 			const result = await this._chatrooms.findOneAndUpdate({ id }, { $set: data });
-			Assert(result != null);
-			return true;
+			return result != null;
 		}
 	}
 
@@ -423,10 +441,12 @@ export default class MongoDatabase implements PandoraDatabase {
 			return true;
 		}
 		if (message.content) {
-			const { modifiedCount } = await this._directMessages.updateOne({ accounts, time: message.time }, { $set: { content: message.content, edited: message.edited } });
-			return modifiedCount === 1;
+			const { matchedCount } = await this._directMessages.updateOne({ accounts, time: message.time }, { $set: { content: message.content, edited: message.edited } });
+			Assert(matchedCount <= 1);
+			return matchedCount === 1;
 		}
 		const { deletedCount } = await this._directMessages.deleteOne({ accounts, time: message.time });
+		Assert(deletedCount <= 1);
 		return deletedCount === 1;
 	}
 
@@ -446,11 +466,6 @@ export default class MongoDatabase implements PandoraDatabase {
 			return null;
 
 		return Id(character);
-	}
-
-	public async setCharacter({ id, accessId, ...data }: Partial<ICharacterData> & Pick<ICharacterData, 'id'>): Promise<boolean> {
-		const { acknowledged, matchedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
-		return acknowledged && matchedCount === 1;
 	}
 
 	public async getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {

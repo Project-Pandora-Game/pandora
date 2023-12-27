@@ -66,7 +66,7 @@ const Message = memo(function Message({ message, playerId }: { message: IChatroo
 	return ChatroomMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
-function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number; roomId: RoomId; }; playerId: CharacterId | null; }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number; roomId: RoomId | null; }; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':

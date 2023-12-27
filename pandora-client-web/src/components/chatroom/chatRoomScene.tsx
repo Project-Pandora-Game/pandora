@@ -1,4 +1,4 @@
-import { AssertNever, AssertNotNullable, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, FilterItemType, ICharacterRoomData, IChatRoomFullInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import { AssertNever, AssertNotNullable, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, FilterItemType, ICharacterRoomData, IChatRoomClientInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -38,7 +38,7 @@ interface ChatRoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	shard: ShardConnector | null;
 	globalState: AssetFrameworkGlobalState;
-	info: IChatRoomFullInfo;
+	info: Immutable<IChatRoomClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	chatRoomMode: Immutable<IChatRoomMode>;
 	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
@@ -243,7 +243,7 @@ export type IChatRoomMode = {
 
 export function ChatRoomScene({ className }: {
 	className?: string;
-}): ReactElement | null {
+}): ReactElement {
 	const chatRoom = useChatroomRequired();
 	const info = useChatRoomInfo();
 	const characters = useChatRoomCharacters();
@@ -293,16 +293,13 @@ export function ChatRoomScene({ className }: {
 		setMenuActive(null);
 	}, []);
 
-	if (!info)
-		return null;
-
 	return (
 		<ChatRoomGraphicsScene
 			className={ className }
 			characters={ characters }
 			shard={ shard }
 			globalState={ globalState }
-			info={ info }
+			info={ info.config }
 			debugConfig={ debugConfig }
 			chatRoomMode={ chatRoomMode }
 			setChatRoomMode={ setChatRoomMode }

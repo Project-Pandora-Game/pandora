@@ -285,8 +285,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		const character = CharacterManager.getCharacter(characterId);
 		const room = RoomManager.getRoom(roomId);
 
-		// We must know both the character and room and character must not be in a room to check entering another
-		if (character == null || character.room != null || room == null)
+		// We must know both the character and room
+		if (character == null || room == null)
 			return { result: 'targetNotFound' };
 
 		return { result: 'ok' };
@@ -296,17 +296,19 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		const character = CharacterManager.getCharacter(characterId);
 
 		// We must know the character and character must be in a room
-		if (character == null || character.room == null)
+		if (character == null)
 			return { result: 'targetNotFound' };
 
 		const restrictionManager = character.getRestrictionManager();
+		const inPublicRoom = character.getCurrentPublicRoomid() != null;
+
 		if (restrictionManager.getRoomDeviceLink() != null)
 			return { result: 'inRoomDevice' };
 
 		// Safemode skips any checks
 		if (!restrictionManager.isInSafemode()) {
-			// The character must not have leave-restricting effect
-			if (restrictionManager.getEffects().blockRoomLeave)
+			// The character must not have leave-restricting effect (this doesn't affect personal rooms)
+			if (restrictionManager.getEffects().blockRoomLeave && inPublicRoom)
 				return { result: 'restricted' };
 		}
 

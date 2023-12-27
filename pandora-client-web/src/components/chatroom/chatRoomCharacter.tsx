@@ -1,4 +1,4 @@
-import { AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterRoomPosition, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomFullInfo, LegsPose } from 'pandora-common';
+import { AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterRoomPosition, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientInfo, LegsPose } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterData } from '../../character/character';
@@ -21,9 +21,9 @@ import { Immutable } from 'immer';
 type ChatRoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
-	roomInfo: IChatRoomFullInfo | null;
+	roomInfo: Immutable<IChatRoomClientInfo>;
 	debugConfig: ChatroomDebugConfig;
-	background: IChatroomBackgroundData;
+	background: Immutable<IChatroomBackgroundData>;
 	shard: ShardConnector | null;
 	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 };
@@ -31,7 +31,7 @@ type ChatRoomCharacterInteractiveProps = {
 type ChatRoomCharacterDisplayProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
-	background: IChatroomBackgroundData;
+	background: Immutable<IChatroomBackgroundData>;
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
@@ -103,7 +103,7 @@ export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharac
 	};
 }
 
-export function useChatRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, background: IChatroomBackgroundData): {
+export function useChatRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, background: Immutable<IChatroomBackgroundData>): {
 	/** Position on the room canvas */
 	position: Readonly<PointLike>;
 	/** Z index to use for the character within the room's container */

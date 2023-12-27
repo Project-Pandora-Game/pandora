@@ -22,7 +22,6 @@ import { Button } from '../../common/button/button';
 import _ from 'lodash';
 import { useEvent } from '../../../common/useEvent';
 import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
-import { useCharacterIsInChatroom } from '../../gameContext/chatRoomContextProvider';
 import { Column, Row } from '../../common/container/container';
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
@@ -501,7 +500,6 @@ function ChatroomManualYOffsetControl({ character }: {
 	const [yOffset, setYOffsetLocal] = useUpdatedUserInput(position[2], [character]);
 
 	const shard = useShardConnector();
-	const inRoom = useCharacterIsInChatroom();
 
 	const setYOffset = useCallback((newYOffset: number) => {
 		setYOffsetLocal(newYOffset);
@@ -517,14 +515,6 @@ function ChatroomManualYOffsetControl({ character }: {
 			setYOffset(value);
 		}
 	});
-
-	if (shard == null || !inRoom) {
-		return (
-			<Row alignY='center' padding='small'>
-				Y Offset is only available while inside a room.
-			</Row>
-		);
-	}
 
 	return (
 		<Row padding='small'>

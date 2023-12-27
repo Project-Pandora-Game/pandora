@@ -51,7 +51,7 @@ export function Settings(): ReactElement | null {
 							</div>
 						</div>
 					</Tab>
-					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/pandora_lobby') } />
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 				</TabContainer>
 			</div>
 			<footer>Version: { GIT_DESCRIBE }</footer>

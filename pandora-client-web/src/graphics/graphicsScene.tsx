@@ -136,7 +136,7 @@ export function GraphicsBackground({
 	y,
 }: {
 	background?: string | number;
-	backgroundSize?: [number, number];
+	backgroundSize?: readonly [number, number];
 	backgroundFilters?: Filter[] | null;
 	zIndex?: number;
 	x?: number;

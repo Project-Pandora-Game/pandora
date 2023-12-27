@@ -7,6 +7,8 @@ import { RoomId } from '../chatroom';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { AccountIdSchema } from '../account';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesSchema } from './assetPreferences';
+import { ArrayToRecordKeys } from '../utility';
+import { RoomInventoryBundleSchema } from '../assets';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
@@ -54,19 +56,35 @@ export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: num
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
+	personalRoom: z.object({
+		inventory: z.lazy(() => RoomInventoryBundleSchema),
+	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
-	roomId: z.string().optional().catch(undefined),
+	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
 });
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;
 
-export const CharacterDataAccessSchema = CharacterDataSchema.pick({ id: true, accessId: true });
-export type ICharacterDataAccess = z.infer<typeof CharacterDataAccessSchema>;
-export const CharacterDataUpdateSchema = CharacterDataSchema.omit({ inCreation: true, accountId: true, created: true }).partial().merge(CharacterDataAccessSchema);
-export type ICharacterDataUpdate = z.infer<typeof CharacterDataUpdateSchema>;
-export const CharacterDataIdSchema = CharacterDataSchema.pick({ id: true });
-export type ICharacterDataId = z.infer<typeof CharacterDataIdSchema>;
+export const CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES = [
+	'accessId',
+] as const satisfies readonly (keyof ICharacterData)[];
+export const CharacterDataDirectoryUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
+export type ICharacterDataDirectoryUpdate = z.infer<typeof CharacterDataDirectoryUpdateSchema>;
+
+export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
+	'name',
+	'profileDescription',
+	'appearance',
+	'personalRoom',
+	'position',
+	'roomId',
+	'settings',
+	'interactionConfig',
+	'assetPreferences',
+] as const satisfies readonly Exclude<keyof ICharacterData, ((typeof CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES)[number])>[];
+export const CharacterDataShardUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
+export type ICharacterDataShardUpdate = z.infer<typeof CharacterDataShardUpdateSchema>;
 
 export type ICharacterSelfInfo = {
 	id: CharacterId;

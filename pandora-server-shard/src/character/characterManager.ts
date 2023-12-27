@@ -28,7 +28,7 @@ export const CharacterManager = new class CharacterManager {
 				account: char.accountData,
 				accessId: char.accessId,
 				connectSecret: char.connectSecret,
-				room: char.room ? char.room.id : null,
+				room: char.getCurrentPublicRoomid(),
 			}));
 	}
 

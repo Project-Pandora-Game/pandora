@@ -4,16 +4,17 @@ import { HeaderButton } from './HeaderButton';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import { usePlayer, usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { EMPTY, GetLogger, IChatRoomFullInfo } from 'pandora-common';
+import { EMPTY, GetLogger, IChatRoomClientInfo, RoomId } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { useLogout } from '../../networking/account_manager';
-import { useCharacterIsInChatroom, useCharacterRestrictionsManager, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
+import { useCharacterRestrictionsManager, useChatRoomInfoOptional } from '../gameContext/chatRoomContextProvider';
 import { PlayerCharacter } from '../../character/player';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
 import './leaveButton.scss';
+import { Immutable } from 'immer';
 
 const leaveButtonContext = createContext(() => { /** noop */ });
 
@@ -43,14 +44,14 @@ export function LeaveButton({ onClickExtra }: {
 
 function DialogLeave(): ReactElement {
 	const closeDialog = useContext(leaveButtonContext);
-	const inRoom = useCharacterIsInChatroom();
+	const inPublicRoom = useChatRoomInfoOptional()?.id != null;
 
 	return (
 		<ModalDialog>
 			<Column className='LeaveDialog' alignX='center'>
 				<ChatRoomLeave />
 				{
-					inRoom ? (
+					inPublicRoom ? (
 						<span>
 							<strong>
 								Warning:
@@ -70,14 +71,14 @@ function DialogLeave(): ReactElement {
 
 function ChatRoomLeave(): ReactElement {
 	const player = usePlayer();
-	const room = useChatRoomInfo();
+	const room = useChatRoomInfoOptional();
 
 	return (
 		<fieldset>
 			<legend>Chat Room</legend>
 			{
-				(player && room) ? (
-					<CharRoomLeaveInner player={ player } room={ room } />
+				(player && room?.id) ? (
+					<CharRoomLeaveInner player={ player } roomConfig={ room.config } roomId={ room.id } />
 				) : (
 					<span>Not in a chat room</span>
 				)
@@ -86,7 +87,11 @@ function ChatRoomLeave(): ReactElement {
 	);
 }
 
-function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: IChatRoomFullInfo; }): ReactElement {
+function CharRoomLeaveInner({ player, roomConfig, roomId }: {
+	player: PlayerCharacter;
+	roomConfig: Immutable<IChatRoomClientInfo>;
+	roomId: RoomId;
+}): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const { playerState } = usePlayerState();
 	const roomDeviceLink = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getRoomDeviceLink());
@@ -110,8 +115,8 @@ function CharRoomLeaveInner({ player, room }: { player: PlayerCharacter; room: I
 
 	return (
 		<>
-			<span>Name: { room.name }</span>
-			<span>Id: { room.id }</span>
+			<span>Name: { roomConfig.name }</span>
+			<span>Id: { roomId }</span>
 			{
 				roomDeviceLink ? (
 					<Row alignX='center' padding='large'>

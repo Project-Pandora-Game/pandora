@@ -7,7 +7,7 @@ import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import managementIcon from '../../assets/icons/management.svg';
-import { usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
+import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import './header.scss';
@@ -16,8 +16,6 @@ import { NotificationHeaderKeys, NotificationSource, useNotification, useNotific
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
-import { useCharacterSafemode } from '../../character/character';
-import { useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
 import { RelationshipContext, useRelationships } from '../releationships/relationshipsContext';
 import { useObservable } from '../../observable';
 import { LeaveButton } from './leaveButton';
@@ -32,8 +30,6 @@ function LeftHeader(): ReactElement {
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
 
-	const [showCharacterMenu, setShowCharacterMenu] = useState<boolean>(false);
-
 	return (
 		<div className='leftHeader flex'>
 			{ /*
@@ -42,13 +38,10 @@ function LeftHeader(): ReactElement {
 			<div className="headerButton">Room</div>
 			*/ }
 			{ connectionInfo && (
-				<button className={ classNames('HeaderButton', 'withText', showCharacterMenu && 'active') } onClick={ (ev) => {
-					ev.currentTarget.focus();
-					setShowCharacterMenu(!showCharacterMenu);
-				} }>
+				<span>
 					<span className='label'>Current character:</span>
 					{ characterName ?? `[Character ${connectionInfo.characterId}]` }
-				</button>
+				</span>
 			) }
 			{ !connectionInfo && (
 				<span>
@@ -56,26 +49,6 @@ function LeftHeader(): ReactElement {
 					[no character selected]
 				</span>
 			) }
-			{ connectionInfo && characterData && showCharacterMenu && <CharacterMenu close={ () => setShowCharacterMenu(false) } /> }
-		</div>
-	);
-}
-
-function CharacterMenu({ close }: { close: () => void; }): ReactElement {
-	const { playerState } = usePlayerState();
-
-	const safemode = useCharacterSafemode(playerState);
-	const safemodeContext = useSafemodeDialogContext();
-
-	return (
-		<div className='characterMenu' onClick={ () => close() }>
-			<header onClick={ (ev) => ev.stopPropagation() }>Character menu</header>
-			<a onClick={ (ev) => {
-				ev.preventDefault();
-				safemodeContext.show();
-			} }>
-				{ safemode ? 'Exit' : 'Enter' } safemode
-			</a>
 		</div>
 	);
 }

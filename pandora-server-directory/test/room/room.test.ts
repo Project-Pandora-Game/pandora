@@ -60,11 +60,8 @@ describe('Room', () => {
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
-			expect(room.getFullInfo()).toEqual({
-				...TEST_ROOM2,
-				id: room.id,
-				owners: TEST_ROOM_PANDORA_OWNED,
-			});
+			expect(room.getConfig()).toEqual(TEST_ROOM2);
+			expect(Array.from(room.owners)).toEqual(TEST_ROOM_PANDORA_OWNED);
 			expect(room.assignedShard).toBe(null);
 
 			await expect(room.connect()).resolves.toBe('noShardFound');
@@ -79,11 +76,8 @@ describe('Room', () => {
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
-			expect(room.getFullInfo()).toEqual({
-				...TEST_ROOM2,
-				id: room.id,
-				owners: TEST_ROOM_PANDORA_OWNED,
-			});
+			expect(room.getConfig()).toEqual(TEST_ROOM2);
+			expect(Array.from(room.owners)).toEqual(TEST_ROOM_PANDORA_OWNED);
 			expect(room.assignedShard).toBe(null);
 
 			const connectedShard = await room.connect();
@@ -122,14 +116,13 @@ describe('Room', () => {
 
 			expect(room).toBeInstanceOf(Room);
 			Assert(room instanceof Room);
-			expect(room.getFullInfo()).toEqual({
+			expect(room.getConfig()).toEqual({
 				...TEST_ROOM_DEV,
 				development: {
 					shardId: mockShard.shard.id,
 				},
-				id: room.id,
-				owners: TEST_ROOM_PANDORA_OWNED,
 			});
+			expect(Array.from(room.owners)).toEqual(TEST_ROOM_PANDORA_OWNED);
 			expect(room.assignedShard).toBe(null);
 
 			const connectedShard = await room.connect();

@@ -73,7 +73,7 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this.character = character;
 	}
 
-	public getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager {
+	public getRestrictionManager(room: ActionRoomContext): CharacterRestrictionsManager {
 		return new CharacterRestrictionsManager(this, room);
 	}
 

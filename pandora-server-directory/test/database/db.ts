@@ -321,11 +321,11 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		});
 	});
 
-	describe('updateCharacter()', () => {
+	describe('updateCharacterSelfInfo()', () => {
 		it('updates character info', async () => {
 			const char = await db.createCharacter(accountId2);
 
-			const result = await db.updateCharacter(accountId2, {
+			const result = await db.updateCharacterSelfInfo(accountId2, {
 				id: char.id,
 				preview: 'test preview',
 			});
@@ -342,7 +342,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			const char = await db.createCharacter(accountId2);
 
 			await expect(
-				db.updateCharacter(999, {
+				db.updateCharacterSelfInfo(999, {
 					id: char.id,
 					preview: 'test preview',
 				}),
@@ -356,7 +356,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			const char = await db.createCharacter(accountId2);
 
 			await expect(
-				db.updateCharacter(accountId2, {
+				db.updateCharacterSelfInfo(accountId2, {
 					id: 'c999',
 					preview: 'test preview',
 				}),
@@ -364,6 +364,74 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 			const accountData = await db.getAccountById(accountId2);
 			expect(accountData?.characters[0]).toStrictEqual(char);
+		});
+	});
+
+	describe('updateCharacter()', () => {
+		it('sets character data', async () => {
+			const char1 = await db.createCharacter(accountId2);
+			const data = (await db.getCharacter(char1.id, false))!;
+
+			await expect(
+				db.updateCharacter(char1.id, {
+					name: 'test name',
+				}, data.accessId),
+			).resolves.toBe(true);
+
+			const data2 = await db.getCharacter(char1.id, data.accessId);
+			expect(data2).not.toBeNull();
+			expect(data2).toStrictEqual({
+				...data,
+				name: 'test name',
+			});
+		});
+
+		it('fails with unknown character', async () => {
+			const char1 = await db.createCharacter(accountId2);
+			const data = (await db.getCharacter(char1.id, false))!;
+
+			await expect(
+				db.updateCharacter('c999', {
+					name: 'test name',
+				}, null),
+			).resolves.toBe(false);
+
+			const data2 = await db.getCharacter(char1.id, data.accessId);
+			expect(data2).not.toBeNull();
+			expect(data2).toStrictEqual(data);
+		});
+
+		it('fails with invaid accessId', async () => {
+			const char1 = await db.createCharacter(accountId2);
+			const data = (await db.getCharacter(char1.id, false))!;
+
+			await expect(
+				db.updateCharacter(char1.id, {
+					name: 'test name',
+				}, 'not-valid-access'),
+			).resolves.toBe(false);
+
+			const data2 = await db.getCharacter(char1.id, data.accessId);
+			expect(data2).not.toBeNull();
+			expect(data2).toStrictEqual(data);
+		});
+
+		it('ignores accessId if not specified', async () => {
+			const char1 = await db.createCharacter(accountId2);
+			const data = (await db.getCharacter(char1.id, false))!;
+
+			await expect(
+				db.updateCharacter(char1.id, {
+					name: 'test name',
+				}, null),
+			).resolves.toBe(true);
+
+			const data2 = await db.getCharacter(char1.id, data.accessId);
+			expect(data2).not.toBeNull();
+			expect(data2).toStrictEqual({
+				...data,
+				name: 'test name',
+			});
 		});
 	});
 
@@ -628,62 +696,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			expect(result?.accessId).not.toBe(accessId);
 
 			await expect(db.getCharacter(char1.id, result!.accessId)).resolves.not.toBeNull();
-		});
-	});
-
-	describe('setCharacter()', () => {
-		it('sets character data', async () => {
-			const char1 = await db.createCharacter(accountId2);
-			const data = (await db.getCharacter(char1.id, false))!;
-
-			await expect(
-				db.setCharacter({
-					id: char1.id,
-					accessId: data.accessId,
-					name: 'test name',
-				}),
-			).resolves.toBe(true);
-
-			const data2 = await db.getCharacter(char1.id, data.accessId);
-			expect(data2).not.toBeNull();
-			expect(data2).toStrictEqual({
-				...data,
-				name: 'test name',
-			});
-		});
-
-		it('fails with unknown character', async () => {
-			const char1 = await db.createCharacter(accountId2);
-			const data = (await db.getCharacter(char1.id, false))!;
-
-			await expect(
-				db.setCharacter({
-					id: 'c999',
-					accessId: data.accessId,
-					name: 'test name',
-				}),
-			).resolves.toBe(false);
-
-			const data2 = await db.getCharacter(char1.id, data.accessId);
-			expect(data2).not.toBeNull();
-			expect(data2).toStrictEqual(data);
-		});
-
-		it('fails with invaid accessId', async () => {
-			const char1 = await db.createCharacter(accountId2);
-			const data = (await db.getCharacter(char1.id, false))!;
-
-			await expect(
-				db.setCharacter({
-					id: char1.id,
-					accessId: 'not-valid-access',
-					name: 'test name',
-				}),
-			).resolves.toBe(false);
-
-			const data2 = await db.getCharacter(char1.id, data.accessId);
-			expect(data2).not.toBeNull();
-			expect(data2).toStrictEqual(data);
 		});
 	});
 }

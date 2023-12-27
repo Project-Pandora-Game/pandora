@@ -13,18 +13,17 @@ import { Character, useCharacterData } from '../../character/character';
 import { CharacterSafemodeWarningContent, useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema } from './chatRoomDevice';
 import { useObservable } from '../../observable';
-import { ICharacterRoomData } from 'pandora-common';
+import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import { Select } from '../common/select/select';
+import { ContextHelpButton } from '../help/contextHelpButton';
 
 export function ChatroomControls(): ReactElement | null {
-	const roomInfo = useChatRoomInfo();
+	const roomInfo = useChatRoomInfo().config;
 	const roomCharacters = useChatRoomCharacters();
 	const navigate = useNavigate();
 	const player = usePlayer();
 
-	const deviceOverlaySetting = useObservable(DeviceOverlaySetting);
-
-	if (!roomInfo || !roomCharacters || !player) {
+	if (!roomCharacters || !player) {
 		return null;
 	}
 
@@ -47,28 +46,95 @@ export function ChatroomControls(): ReactElement | null {
 				}
 			</div>
 			<br />
-			<div>
-				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
-				<Select
-					value={ deviceOverlaySetting }
-					onChange={ (e) => {
-						DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
-					} }
-				>
-					<option value='never'>
-						Never (enterable devices can still be interacted with)
-					</option>
-					<option value='interactable'>
-						For enterable devices only
-					</option>
-					<option value='always'>
-						For all devices
-					</option>
-				</Select>
-			</div>
+			<DeviceOverlaySelector />
 			<br />
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
 		</Column>
+	);
+}
+
+export function PersonalRoomControls(): ReactElement {
+	const navigate = useNavigate();
+	const player = usePlayer();
+	AssertNotNullable(player);
+
+	return (
+		<Column padding='medium' className='controls'>
+			<span>
+				This is { player.name }'s <b>personal room</b>.
+				<ContextHelpButton>
+					<h3>Personal room</h3>
+					<p>
+						Every character has their own personal room, which functions as a singleplayer lobby.<br />
+						It cannot be deleted or given up. You will automatically end up in this room when your<br />
+						selected character is not in any multiplayer room.
+					</p>
+					<span>
+						The personal room functions the same as any other room.<br />
+						As no one except you will see whatever you do in this room, it is a great place to experiment!<br />
+						For example you can:
+						<ul className='margin-none'>
+							<li>Use the chat or chat commands</li>
+							<li>Change your character's clothes or even body in the wardrobe</li>
+							<li>Try various character poses and expressions</li>
+							<li>Decorate the room freely with room items</li>
+							<li><s>Change the room's background</s> - <i>This is not yet possible and will be added in the future</i></li>
+						</ul>
+					</span>
+					<p>
+						You can leave the room by joining another room with the "List of chatrooms" button in the "Personal room" tab.
+					</p>
+					<span>
+						<b>Important notes:</b>
+						<ul>
+							<li>No other characters can join your personal room (not even your account's other characters)</li>
+							<li>Restraints will not prevent you from leaving the personal room</li>
+							<li>Being in a room device will also not prevent you from leaving the personal room</li>
+						</ul>
+					</span>
+				</ContextHelpButton>
+			</span>
+			<Row padding='small'>
+				<Button slim onClick={ () => navigate('/wardrobe', { state: { target: 'room' } }) } >Room inventory</Button>
+			</Row>
+			<div className='character-info'>
+				<DisplayCharacter char={ player } />
+			</div>
+			<Row padding='small'>
+				<Button onClick={ () => navigate('/chatroom_select') } >List of chatrooms</Button>
+			</Row>
+			<br />
+			<DeviceOverlaySelector />
+			<br />
+			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
+		</Column>
+	);
+}
+
+function DeviceOverlaySelector(): ReactElement {
+	const deviceOverlaySetting = useObservable(DeviceOverlaySetting);
+
+	return (
+		<div>
+			<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
+			{ ' ' }
+			<Select
+				value={ deviceOverlaySetting }
+				onChange={ (e) => {
+					DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
+				} }
+			>
+				<option value='never'>
+					Never (enterable devices can still be interacted with)
+				</option>
+				<option value='interactable'>
+					For enterable devices only
+				</option>
+				<option value='always'>
+					For all devices
+				</option>
+			</Select>
+		</div>
 	);
 }
 

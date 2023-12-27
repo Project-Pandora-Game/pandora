@@ -87,7 +87,7 @@ function CreateChatroomAdminAction(action: IClientDirectoryArgument['chatRoomAdm
 			// TODO make this accept multiple targets and accountIds
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
 			.handler(({ chatRoom, directoryConnector }, { target }) => {
-				if (!IsChatroomAdmin(chatRoom.info.value, directoryConnector.currentAccount.value))
+				if (!IsChatroomAdmin(chatRoom.currentRoom.value.config, directoryConnector.currentAccount.value))
 					return;
 
 				directoryConnector.sendMessage('chatRoomAdminAction', {
@@ -210,11 +210,7 @@ export const COMMANDS: readonly IClientCommand[] = [
 		longDescription: `(alternative command: '/t')`,
 		usage: '',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector, chatRoom }) => {
-				const player = shardConnector.player.value;
-				if (!player)
-					return false;
-
+			.handler(({ shardConnector, chatRoom, player }) => {
 				const playerState = chatRoom.globalState.currentState.characters.get(player.id);
 				if (!playerState)
 					return false;

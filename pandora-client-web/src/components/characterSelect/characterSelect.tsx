@@ -68,7 +68,7 @@ export function CharacterSelect(): ReactElement {
 		if (playerData.inCreation) {
 			return <Navigate to='/character_create' />;
 		} else {
-			return <Navigate to='/pandora_lobby' />;
+			return <Navigate to='/' />;
 		}
 	}
 

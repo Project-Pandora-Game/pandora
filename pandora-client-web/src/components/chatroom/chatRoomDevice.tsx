@@ -33,7 +33,7 @@ type ChatRoomDeviceInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
-	background: IChatroomBackgroundData;
+	background: Immutable<IChatroomBackgroundData>;
 	chatRoomMode: Immutable<IChatRoomMode>;
 	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
 	shard: ShardConnector | null;
@@ -45,7 +45,7 @@ type ChatRoomDeviceProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
-	background: IChatroomBackgroundData;
+	background: Immutable<IChatroomBackgroundData>;
 
 	children?: ReactNode;
 	hitArea?: PIXI.Rectangle;

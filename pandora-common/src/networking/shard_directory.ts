@@ -1,15 +1,12 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
 import { CharacterIdSchema } from '../character/characterTypes';
-import { CharacterDataAccessSchema, CharacterDataIdSchema, CharacterDataSchema, CharacterDataUpdateSchema, ICharacterData } from '../character/characterData';
+import { CharacterDataSchema, CharacterDataShardUpdateSchema, ICharacterData } from '../character/characterData';
 import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
-import { ChatRoomDataSchema, ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
+import { ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { ZodCast } from '../validation';
 import { Immutable } from 'immer';
-
-export const ChatRoomDataAccessSchema = ChatRoomDataSchema.pick({ id: true, accessId: true });
-export type IChatRoomDataAccess = z.infer<typeof ChatRoomDataAccessSchema>;
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/appearance';
@@ -56,26 +53,38 @@ export const ShardDirectorySchema = {
 	},
 
 	createCharacter: {
-		request: CharacterDataIdSchema,
+		request: z.object({
+			id: CharacterIdSchema,
+		}),
 		response: CharacterDataSchema,
 	},
 
 	//#region Database
 	getCharacter: {
-		request: CharacterDataAccessSchema,
+		request: z.object({
+			id: CharacterIdSchema,
+			accessId: z.string(),
+		}),
 		response: z.object({
 			// Response is intentionally not checked, as DB might contain outdated data and migration happens on the shard
 			result: ZodCast<ICharacterData>().nullable(),
 		}),
 	},
 	setCharacter: {
-		request: CharacterDataUpdateSchema,
+		request: z.object({
+			id: CharacterIdSchema,
+			accessId: z.string(),
+			data: CharacterDataShardUpdateSchema,
+		}),
 		response: z.object({
 			result: z.enum(['success', 'invalidAccessId']),
 		}),
 	},
 	getChatRoom: {
-		request: ChatRoomDataAccessSchema,
+		request: z.object({
+			id: RoomIdSchema,
+			accessId: z.string(),
+		}),
 		response: z.object({
 			// Response is intentionally not checked, as DB might contain outdated data and migration happens on the shard
 			result: ZodCast<IChatRoomData>().nullable(),

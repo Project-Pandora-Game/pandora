@@ -1,9 +1,7 @@
-import { CharacterId, GetLogger, IChatRoomMessage, Logger, IChatRoomFullInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, IShardChatRoomDefinition, IChatRoomDataShardUpdate, IChatRoomData, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory, AsyncSynchronized, ChatRoomDataSchema, CHATROOM_SHARD_UPDATEABLE_PROPERTIES, CharacterRoomPosition } from 'pandora-common';
+import { CharacterId, IChatRoomMessage, Logger, IChatRoomClientInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory, CharacterRoomPosition, RoomInventoryBundle, IChatRoomDirectoryConfig, IChatRoomLoadData } from 'pandora-common';
 import type { Character } from '../character/character';
-import _, { isEqual, omit, pick } from 'lodash';
+import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
-import { GetDatabase } from '../database/databaseProvider';
-import { diffString } from 'json-diff';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -11,51 +9,38 @@ const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
 /** Time (in ms) as interval when rooms's periodic actions (like saving of modified data or message cleanup) happen */
 export const ROOM_TICK_INTERVAL = 120_000;
 
-export class Room extends ServerRoom<IShardClient> {
+export abstract class Room extends ServerRoom<IShardClient> {
 
-	private readonly data: IShardChatRoomDefinition;
-	private readonly characters: Set<Character> = new Set();
-	private readonly history = new Map<CharacterId, Map<number, number>>();
-	private readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId; }>();
-	private readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionTargetCharacter; leave?: number; }>();
-	private readonly tickInterval: NodeJS.Timeout;
+	protected readonly characters: Set<Character> = new Set();
+	protected readonly history = new Map<CharacterId, Map<number, number>>();
+	protected readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId; }>();
+	protected readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionTargetCharacter; leave?: number; }>();
+	protected readonly tickInterval: NodeJS.Timeout;
 
 	public readonly roomState: AssetFrameworkGlobalStateContainer;
 
-	private modified: Set<keyof IChatRoomDataShardUpdate> = new Set();
+	public abstract get id(): RoomId | null;
+	public abstract get owners(): readonly AccountId[];
+	public abstract get config(): IChatRoomDirectoryConfig;
 
-	public get id(): RoomId {
-		return this.data.id;
-	}
+	protected readonly logger: Logger;
 
-	public get accessId(): string {
-		return this.data.accessId;
-	}
-
-	public get owners(): readonly AccountId[] {
-		return this.data.owners;
-	}
-
-	private logger: Logger;
-
-	constructor(data: IChatRoomData) {
+	constructor(inventory: RoomInventoryBundle, logger: Logger) {
 		super();
-		this.data = data;
-		this.logger = GetLogger('Room', `[Room ${data.id}]`);
-		this.logger.verbose('Created');
+		this.logger = logger;
+		this.logger.verbose('Loaded');
 
-		if (data.inventory.clientOnly) {
+		if (inventory.clientOnly) {
 			this.logger.error('Room inventory is client-only');
 		}
 
-		const initialState = AssetFrameworkGlobalState.createDefault(assetManager)
-			.withRoomState(
-				AssetFrameworkRoomState
-					.loadFromBundle(assetManager, data.inventory, this.logger.prefixMessages('Room inventory load:')),
-			);
+		const initialState = AssetFrameworkGlobalState.createDefault(
+			assetManager,
+			AssetFrameworkRoomState
+				.loadFromBundle(assetManager, inventory, this.logger.prefixMessages('Room inventory load:')),
+		);
 
 		this.roomState = new AssetFrameworkGlobalStateContainer(
-			assetManager,
 			this.logger,
 			this.onStateChanged.bind(this),
 			initialState,
@@ -71,7 +56,7 @@ export class Room extends ServerRoom<IShardClient> {
 		const update: IChatRoomUpdate = {};
 
 		// Put characters into correct place if needed
-		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
+		const roomBackground = ResolveBackground(assetManager, this.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		for (const character of this.characters) {
 			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
@@ -91,10 +76,10 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public onRemove(): void {
 		clearInterval(this.tickInterval);
-		this.logger.verbose('Destroyed');
+		this.logger.verbose('Unloaded');
 	}
 
-	private _tick(): void {
+	protected _tick(): void {
 		// Cleanup of old messages
 		const now = Date.now();
 		for (const [characterId, history] of this.history) {
@@ -107,11 +92,6 @@ export class Room extends ServerRoom<IShardClient> {
 				this.history.delete(characterId);
 			}
 		}
-
-		// Save any modified data
-		this.save().catch((err) => {
-			this.logger.error('Periodic save failed:', err);
-		});
 	}
 
 	private _suppressUpdates: boolean = false;
@@ -129,7 +109,7 @@ export class Room extends ServerRoom<IShardClient> {
 		const changes = newState.listChanges(oldState);
 
 		if (changes.room) {
-			this.modified.add('inventory');
+			this._onDataModified('inventory');
 		}
 
 		for (const character of changes.characters) {
@@ -144,47 +124,18 @@ export class Room extends ServerRoom<IShardClient> {
 		});
 	}
 
-	public update(data: IShardChatRoomDefinition): void {
-		if (data.id !== this.data.id) {
-			throw new Error('Chatroom id cannot change');
-		}
-		if (data.accessId !== this.data.accessId) {
-			this.logger.warning('Access id changed! This could be a bug');
-			this.data.accessId = data.accessId;
-		}
-		this.data.config = data.config;
+	protected abstract _onDataModified(data: 'inventory'): void;
 
-		const update: IChatRoomUpdate = {
-			info: this.getInfo(),
-		};
-
-		// Put characters into correct place if needed
-		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
-		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
-		for (const character of this.characters) {
-			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
-				character.position = GenerateInitialRoomPosition();
-
-				update.characters ??= {};
-				update.characters[character.id] = {
-					position: character.position,
-				};
-			}
-		}
-
-		this.sendUpdateToAllInRoom(update);
-	}
-
-	public getInfo(): IChatRoomFullInfo {
+	public getInfo(): IChatRoomClientInfo {
 		return {
-			...this.data.config,
-			id: this.id,
+			...this.config,
 			owners: this.owners.slice(),
 		};
 	}
 
-	public getLoadData() {
+	public getLoadData(): IChatRoomLoadData {
 		return {
+			id: this.id,
 			info: this.getInfo(),
 			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
 		};
@@ -192,26 +143,26 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public getActionRoomContext(): ActionRoomContext {
 		return {
-			features: this.data.config.features,
+			features: this.config.features,
 			isAdmin: (account) => Array.from(this.characters).some((character) => character.accountId === account && this.isAdmin(character)),
 		};
 	}
 
 	public isAdmin(character: Character): boolean {
-		if (this.data.owners.includes(character.accountId))
+		if (this.owners.includes(character.accountId))
 			return true;
 
-		if (this.data.config.admin.includes(character.accountId))
+		if (this.config.admin.includes(character.accountId))
 			return true;
 
-		if (this.data.config.development?.autoAdmin && character.isAuthorized('developer'))
+		if (this.config.development?.autoAdmin && character.isAuthorized('developer'))
 			return true;
 
 		return false;
 	}
 
 	public updateCharacterPosition(source: Character, id: CharacterId, [x, y, yOffset]: CharacterRoomPosition): void {
-		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
+		const roomBackground = ResolveBackground(assetManager, this.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 
 		if (x > roomBackground.size[0] || y > maxY) {
@@ -270,7 +221,7 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
-		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
+		const roomBackground = ResolveBackground(assetManager, this.config.background);
 		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		character.initRoomPosition(
 			this.id,
@@ -319,7 +270,7 @@ export class Room extends ServerRoom<IShardClient> {
 	 * @param character - The character being removed
 	 * @param updateCharacterOutsideRoom - If the character should be updated to be valid outside of a room (should be false only if character is removed as part of being unloaded)
 	 */
-	public characterRemove(character: Character, updateCharacterOutsideRoom: boolean): void {
+	public characterRemove(character: Character): void {
 		this.runWithSuppressedUpdates(() => {
 			// Remove character
 			let roomState = this.roomState.currentState;
@@ -331,9 +282,6 @@ export class Room extends ServerRoom<IShardClient> {
 
 			// Update the target character
 			character.setRoom(null, characterAppearance);
-			if (updateCharacterOutsideRoom) {
-				character.onAppearanceChanged();
-			}
 
 			// Update anyone remaining in the room
 			this.roomState.setState(roomState);
@@ -352,56 +300,6 @@ export class Room extends ServerRoom<IShardClient> {
 
 	public sendUpdateToAllInRoom(data: IChatRoomUpdate): void {
 		this.sendMessage('chatRoomUpdate', data);
-	}
-
-	@AsyncSynchronized()
-	public async save(): Promise<void> {
-		const keys = [...this.modified];
-		this.modified.clear();
-
-		// Nothing to save
-		if (keys.length === 0)
-			return;
-
-		const data: IChatRoomDataShardUpdate = {};
-
-		if (keys.includes('inventory')) {
-			const roomState = this.roomState.currentState.room;
-			AssertNotNullable(roomState);
-			data.inventory = roomState.exportToBundle();
-		}
-
-		try {
-			if (!await GetDatabase().setChatRoom(this.id, data, this.accessId)) {
-				throw new Error('Database returned failure');
-			}
-		} catch (error) {
-			for (const key of keys) {
-				this.modified.add(key);
-			}
-			this.logger.warning(`Failed to save data:`, error);
-		}
-	}
-
-	public static async load(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null> {
-		const room = await GetDatabase().getChatRoom(id, accessId);
-		if (room === false) {
-			return null;
-		}
-		const result = await ChatRoomDataSchema
-			.omit({ config: true, accessId: true, owners: true })
-			.safeParseAsync(room);
-		if (!result.success) {
-			GetLogger('Room').error(`Failed to load room ${id}: `, result.error);
-			return null;
-		}
-		const roomWithoutDbData = omit(room, '_id');
-		if (!_.isEqual(result.data, roomWithoutDbData)) {
-			const diff = diffString(roomWithoutDbData, result.data, { color: false });
-			GetLogger('Room').warning(`Room ${id} has invalid data, fixing...\n`, diff);
-			await GetDatabase().setChatRoom(id, pick(result.data, CHATROOM_SHARD_UPDATEABLE_PROPERTIES), accessId);
-		}
-		return result.data;
 	}
 
 	private lastMessageTime: number = 0;
@@ -619,6 +517,6 @@ function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc';
 	return (message.type === 'chat' || message.type === 'ooc') && message.to !== undefined;
 }
 
-function GenerateInitialRoomPosition(): CharacterRoomPosition {
+export function GenerateInitialRoomPosition(): CharacterRoomPosition {
 	return [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0, 0];
 }

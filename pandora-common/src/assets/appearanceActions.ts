@@ -180,7 +180,7 @@ export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 export interface AppearanceActionContext {
 	player: GameLogicCharacter;
 	globalState: AssetFrameworkGlobalStateContainer;
-	roomContext: ActionRoomContext | null;
+	roomContext: ActionRoomContext;
 	getCharacter(id: CharacterId): GameLogicCharacter | null;
 }
 
@@ -448,7 +448,7 @@ export function DoAppearanceAction(
 
 				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
 					return character.produceWithSafemode({
-						allowLeaveAt: Date.now() + (playerRestrictionManager.room?.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
+						allowLeaveAt: Date.now() + (playerRestrictionManager.room.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
 					});
 				})) {
 					return processingContext.invalid();
@@ -821,7 +821,7 @@ export function ActionAppearanceRandomize({
 	}
 
 	// Room must allow body changes if running full randomization
-	if (kind === 'full' && character.room && !character.room.features.includes('allowBodyChanges')) {
+	if (kind === 'full' && !character.room.features.includes('allowBodyChanges')) {
 		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: {

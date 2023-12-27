@@ -6,7 +6,8 @@ import { CharacterId } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { ArrayToRecordKeys } from '../utility';
-import { LIMIT_ROOM_DESCRIPTION_LENGTH, LIMIT_ROOM_NAME_LENGTH } from '../inputLimits';
+import { LIMIT_ROOM_DESCRIPTION_LENGTH, LIMIT_ROOM_NAME_LENGTH, LIMIT_ROOM_NAME_PATTERN } from '../inputLimits';
+import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
@@ -34,13 +35,13 @@ export type ActionRoomContext = {
 
 export const ChatRoomBaseInfoSchema = z.object({
 	/** The name of the chat room */
-	name: z.string().min(3).max(LIMIT_ROOM_NAME_LENGTH).regex(/^[a-zA-Z0-9_\- ]+$/).regex(ZodTrimedRegex),
+	name: z.string().min(3).max(LIMIT_ROOM_NAME_LENGTH).regex(LIMIT_ROOM_NAME_PATTERN).regex(ZodTrimedRegex),
 	/** The description of the chat room */
 	description: z.string().max(LIMIT_ROOM_DESCRIPTION_LENGTH),
 	/** Rooms are private by default and can be published to be seen in room search. */
 	public: z.boolean(),
 	/** The maximum amount of users in the chat room */
-	maxUsers: z.number().min(2),
+	maxUsers: z.number().min(1),
 });
 export type IChatRoomBaseInfo = z.infer<typeof ChatRoomBaseInfoSchema>;
 
@@ -69,8 +70,8 @@ export const DEFAULT_BACKGROUND = {
  * @param background - The background to resolve
  * @param baseUrl - Base URL to use for resolving image path, otherwise no change
  */
-export function ResolveBackground(assetManager: AssetManager, background: string | IChatroomBackgroundData, baseUrl?: string): Readonly<IChatroomBackgroundData> {
-	let roomBackground: Readonly<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
+export function ResolveBackground(assetManager: AssetManager, background: string | Immutable<IChatroomBackgroundData>, baseUrl?: string): Immutable<IChatroomBackgroundData> {
+	let roomBackground: Immutable<IChatroomBackgroundData> = DEFAULT_BACKGROUND;
 
 	if (typeof background === 'string') {
 		const definition = assetManager.getBackgroundById(background);
@@ -91,7 +92,7 @@ export function ResolveBackground(assetManager: AssetManager, background: string
 export const CHARACTER_MIN_SIZE = 0.05;
 
 /** Calculates maximum Y coordinate for character in room based on background config */
-export function CalculateCharacterMaxYForBackground(roomBackground: IChatroomBackgroundData): number {
+export function CalculateCharacterMaxYForBackground(roomBackground: Immutable<IChatroomBackgroundData>): number {
 	// Y is limited by room size, but also by background and by lowest achievable character size
 	return Math.floor(Math.min(
 		roomBackground.maxY != null ? Math.min(roomBackground.maxY, roomBackground.size[1]) : roomBackground.size[1],
@@ -99,7 +100,7 @@ export function CalculateCharacterMaxYForBackground(roomBackground: IChatroomBac
 	));
 }
 
-export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.object({
+export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.extend({
 	/** The requested features */
 	features: z.array(ChatRoomFeatureSchema).max(ChatRoomFeatureSchema.options.length),
 	/**
@@ -119,7 +120,7 @@ export const ChatRoomDirectoryConfigSchema = ChatRoomBaseInfoSchema.merge(z.obje
 	password: z.string().nullable(),
 	/** The ID of the background or custom data */
 	background: z.union([z.string(), ChatRoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]),
-}));
+});
 export type IChatRoomDirectoryConfig = z.infer<typeof ChatRoomDirectoryConfigSchema>;
 
 export const ChatRoomDirectoryUpdateSchema = ChatRoomDirectoryConfigSchema.omit({ features: true, development: true }).partial();
@@ -153,13 +154,11 @@ export type IChatRoomListExtendedInfo = IChatRoomListInfo & Pick<IChatRoomDirect
 	}[];
 };
 
-export const ChatRoomFullInfoSchema = ChatRoomDirectoryConfigSchema.merge(z.object({
-	/** The id of the room, never changes */
-	id: RoomIdSchema,
+export const ChatRoomClientInfoSchema = ChatRoomDirectoryConfigSchema.extend({
 	/** Account IDs of accounts owning this room */
 	owners: AccountIdSchema.array(),
-}));
-export type IChatRoomFullInfo = z.infer<typeof ChatRoomFullInfoSchema>;
+});
+export type IChatRoomClientInfo = z.infer<typeof ChatRoomClientInfoSchema>;
 
 /** Room data stored in database */
 export const ChatRoomDataSchema = z.object({

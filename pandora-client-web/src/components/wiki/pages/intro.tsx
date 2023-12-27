@@ -15,7 +15,7 @@ export function WikiIntroduction(): ReactElement {
 			<ol type='1'>
 				<li>Dynamically generated body model with many poses and free arm movement</li>
 				<li>Front and back character view</li>
-				<li>Persistent rooms with long descriptions</li>
+				<li>Persistent multiplayer rooms and a character-specific personal room</li>
 				<li>A feature-rich room chat (e.g. message editing, advanced text styling)</li>
 				<li>Free character placement and movement inside rooms</li>
 				<li>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</li>
@@ -44,7 +44,7 @@ export function WikiIntroduction(): ReactElement {
 				Your character's view can be toggled in the pose menu. The chosen position is seen by everyone in the room.
 			</p>
 
-			<h4>3. Persistent rooms</h4>
+			<h4>3. Persistent rooms & personal room</h4>
 			<p>
 				In Pandora, each room is persistent (settings, inventory, and room devices stay even after everyone has left) and has one or more owners.
 				It only gets deleted when it no longer has any owners.<br />
@@ -59,6 +59,12 @@ export function WikiIntroduction(): ReactElement {
 				as well as your ownership limit on the room search screen.
 				If you want to create another room beyond your room ownership limit, you must select any of your owned rooms and either repurpose it or
 				give up ownership of that room (resulting in the room being deleted if it has no other owners).
+			</p>
+			<p>
+				Every character has their own <strong>personal room</strong> that does not count towards this limit and that cannot be entered by any
+				other character. It functions as a singleplayer lobby and cannot be deleted or given up.<br />
+				You will automatically end up in the personal room when your selected character is not in any multiplayer room. Restraining effects will not
+				prevent you from leaving the personal room.
 			</p>
 
 			<h4>4. A feature-rich room chat</h4>
@@ -160,7 +166,6 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>Character profile and biography</li>
 				<li>Showing and managing relationships between characters</li>
 				<li>Allowing every item to have a custom name and description and enabling item templates to store those, too</li>
 				<li>Hearing impairment effect by assets</li>

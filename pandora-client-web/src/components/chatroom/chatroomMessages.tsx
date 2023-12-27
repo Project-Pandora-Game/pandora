@@ -10,7 +10,7 @@ import './chatroom.scss';
 export type IChatroomMessageProcessed<T extends IChatRoomMessageBase = IChatRoomMessageBase> = T & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
-	roomId: RoomId;
+	roomId: RoomId | null;
 	edited?: boolean;
 };
 

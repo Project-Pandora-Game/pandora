@@ -71,7 +71,7 @@ export interface RoomActionTargetCharacter extends RoomActionTargetBase {
 	readonly character: GameLogicCharacter;
 	readonly characterState: AssetFrameworkCharacterState;
 
-	getRestrictionManager(room: ActionRoomContext | null): CharacterRestrictionsManager;
+	getRestrictionManager(room: ActionRoomContext): CharacterRestrictionsManager;
 }
 
 export interface RoomActionTargetRoomInventory extends RoomActionTargetBase {

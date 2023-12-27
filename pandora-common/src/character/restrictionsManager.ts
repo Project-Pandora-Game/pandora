@@ -134,7 +134,7 @@ export type RestrictionResult = {
  */
 export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;
-	public readonly room: ActionRoomContext | null;
+	public readonly room: ActionRoomContext;
 	private _items: readonly Item[] = [];
 	private _properties: Immutable<AssetPropertiesResult> = CreateAssetPropertiesResult();
 	private _roomDeviceLink: Immutable<RoomDeviceLink> | null = null;
@@ -143,7 +143,7 @@ export class CharacterRestrictionsManager {
 		return this.appearance.character;
 	}
 
-	constructor(appearance: CharacterAppearance, room: ActionRoomContext | null) {
+	constructor(appearance: CharacterAppearance, room: ActionRoomContext) {
 		this.appearance = appearance;
 		this.room = room;
 	}
@@ -229,10 +229,6 @@ export class CharacterRestrictionsManager {
 	}
 
 	public isCurrentRoomAdmin(): boolean {
-		// If not in a room, shortcircuit to yes
-		if (this.room == null)
-			return true;
-
 		if (this.room.isAdmin(this.character.accountId))
 			return true;
 
@@ -406,7 +402,6 @@ export class CharacterRestrictionsManager {
 
 			// Not all rooms allow bodypart changes (changing expression is allowed)
 			if (
-				this.room &&
 				!this.room.features.includes('allowBodyChanges') &&
 				interaction !== ItemInteractionType.EXPRESSION_CHANGE
 			) {

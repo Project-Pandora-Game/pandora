@@ -124,11 +124,11 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		};
 	}
 
-	private async handleSetCharacter(args: IShardDirectoryArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
+	private async handleSetCharacter({ id, data, accessId }: IShardDirectoryArgument['setCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['setCharacter'] {
 		if (!connection.shard)
 			throw new BadMessageError();
 
-		if (Object.keys(args).length > 2 && !await GetDatabase().setCharacter(args))
+		if (!await GetDatabase().updateCharacter(id, data, accessId))
 			return { result: 'invalidAccessId' };
 
 		return { result: 'success' };

@@ -10,7 +10,7 @@ import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Column, Row } from '../common/container/container';
 import { Character, useCharacterData } from '../../character/character';
-import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
+import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext, GetRestrictionOverrideText } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema } from './chatRoomDevice';
 import { useObservable } from '../../observable';
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
@@ -144,11 +144,10 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const navigate = useNavigate();
 	const location = useLocation();
 	const chatroom = useChatroomRequired();
-	const safemodeContext = useRestrictionOverrideDialogContext();
+	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
 
 	const data = useCharacterData(char);
 	const state = useCharacterState(chatroom, char.id);
-	const inSafemode = state?.restrictionOverride?.type === 'safemode';
 	const isOnline = data.isOnline;
 
 	const isPlayer = char.id === playerId;
@@ -194,10 +193,8 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 						</Button>
 					) }
 					{ isPlayer && (
-						<Button className='slim' onClick={ () => {
-							safemodeContext.show();
-						} }>
-							{ inSafemode ? 'Exit' : 'Enter' } safemode
+						<Button className='slim' onClick={ showRestrictionOverrideContext }>
+							{ state?.restrictionOverride ? `Exit ${GetRestrictionOverrideText(state?.restrictionOverride.type)}` : 'Enter safemode' }
 						</Button>
 					) }
 				</Row>

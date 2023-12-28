@@ -116,7 +116,7 @@ export function CharacterRestrictionOverrideDialog({ player }: {
 	);
 }
 
-function GetRestrictionOverrideText(type: RestrictionOverride['type']): string {
+export function GetRestrictionOverrideText(type: RestrictionOverride['type']): string {
 	switch (type) {
 		case 'safemode':
 			return 'safemode';

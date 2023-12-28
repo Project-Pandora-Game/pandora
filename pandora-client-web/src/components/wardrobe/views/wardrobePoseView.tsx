@@ -107,18 +107,19 @@ function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
 		<>
 			{ poses.map((poseCategory, poseCategoryIndex) => (
 				<React.Fragment key={ poseCategoryIndex }>
-					<h4>{ poseCategory.category }</h4>
-					<Row
-						className='pose-row'
-						gap='tiny'
-						wrap
-					>
-						{
-							poseCategory.poses.map((preset, presetIndex) => (
-								<PoseButton key={ presetIndex } preset={ preset } characterState={ characterState } setPose={ setPose } />
-							))
-						}
-					</Row>
+					<FieldsetToggle legend={ poseCategory.category } persistent={ 'bone-ui-pose-' + poseCategory.category }>
+						<Row
+							className='pose-row'
+							gap='tiny'
+							wrap
+						>
+							{
+								poseCategory.poses.map((preset, presetIndex) => (
+									<PoseButton key={ presetIndex } preset={ preset } characterState={ characterState } setPose={ setPose } />
+								))
+							}
+						</Row>
+					</FieldsetToggle>
 				</React.Fragment>
 			)) }
 		</>

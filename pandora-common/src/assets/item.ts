@@ -1093,7 +1093,7 @@ export class ItemLock extends ItemBase<'lock'> {
 			return null;
 		}
 
-		// Locks can prevent interaction from player (unless in safemode)
+		// Locks can prevent interaction from player (unless in force-allow is enabled)
 		if (properties.blockSelf && isSelfAction && !playerRestrictionManager.forceAllowItemActions()) {
 			context.reject({
 				type: 'lockInteractionPrevented',

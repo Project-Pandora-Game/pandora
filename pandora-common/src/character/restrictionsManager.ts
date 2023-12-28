@@ -260,7 +260,7 @@ export class CharacterRestrictionsManager {
 			// Mark as interaction
 			context.addInteraction(target.character, 'interact');
 
-			// Safemode checks
+			// Check interaction block (safe mode, timeout)
 			if (this.isInteractionBlocked() || targetCharacter.isInteractionBlocked())
 				return {
 					allowed: false,

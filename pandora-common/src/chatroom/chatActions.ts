@@ -16,7 +16,7 @@ const CHAT_ACTIONS_DEF = {
 
 	//#region Action messages
 
-	// Safemode
+	// Restriction override changes
 	safemodeEnter: `SOURCE_CHARACTER entered safemode!`,
 	safemodeLeave: `SOURCE_CHARACTER left safemode.`,
 	timeoutEnter: `SOURCE_CHARACTER entered timeout mode!`,

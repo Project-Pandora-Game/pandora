@@ -115,8 +115,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		this.id = override.id ?? props.id;
 		this.items = override.items ?? props.items;
 		this.requestedPose = override.requestedPose ?? props.requestedPose;
-		// allow override safemode with undefined (override: { restrictionOverride: undefined })
-		this.restrictionOverride = 'safemode' in override ? override.restrictionOverride : props.restrictionOverride;
+		// allow override restrictionOverride with undefined (override: { restrictionOverride: undefined })
+		this.restrictionOverride = 'restrictionOverride' in override ? override.restrictionOverride : props.restrictionOverride;
 	}
 
 	public isValid(roomState: AssetFrameworkRoomState | null): boolean {

@@ -9,6 +9,10 @@ import { WikiIntroduction } from './pages/intro';
 import { WikiGreeting } from './pages/greeting';
 import { WikiContact } from './pages/contact';
 import { WikiHistory } from './pages/history';
+import { WikiRooms } from './pages/rooms';
+import { WikiItems } from './pages/items';
+import { WikiCharacters } from './pages/characters';
+import { WikiSafety } from './pages/safety';
 
 export function Wiki(): ReactElement {
 	const navigate = useNavigate();
@@ -19,6 +23,26 @@ export function Wiki(): ReactElement {
 			<UrlTab name='Introduction' default urlChunk='introduction'>
 				<WikiContent>
 					<WikiIntroduction />
+				</WikiContent>
+			</UrlTab>
+			<UrlTab name='Rooms' default urlChunk='rooms'>
+				<WikiContent>
+					<WikiRooms />
+				</WikiContent>
+			</UrlTab>
+			<UrlTab name='Items' default urlChunk='items'>
+				<WikiContent>
+					<WikiItems />
+				</WikiContent>
+			</UrlTab>
+			<UrlTab name='Characters' default urlChunk='characters'>
+				<WikiContent>
+					<WikiCharacters />
+				</WikiContent>
+			</UrlTab>
+			<UrlTab name='Safety' default urlChunk='safety'>
+				<WikiContent>
+					<WikiSafety />
 				</WikiContent>
 			</UrlTab>
 			<UrlTab name='Pandora History' urlChunk='history'>

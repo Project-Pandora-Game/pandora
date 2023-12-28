@@ -10,7 +10,7 @@ import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Column, Row } from '../common/container/container';
 import { Character, useCharacterData } from '../../character/character';
-import { CharacterSafemodeWarningContent, useSafemodeDialogContext } from '../characterSafemode/characterSafemode';
+import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema } from './chatRoomDevice';
 import { useObservable } from '../../observable';
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
@@ -144,7 +144,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const navigate = useNavigate();
 	const location = useLocation();
 	const chatroom = useChatroomRequired();
-	const safemodeContext = useSafemodeDialogContext();
+	const safemodeContext = useRestrictionOverrideDialogContext();
 
 	const data = useCharacterData(char);
 	const state = useCharacterState(chatroom, char.id);
@@ -168,7 +168,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 						Offline
 					</span>
 				) }
-				<CharacterSafemodeWarningContent mode={ state?.restrictionOverride } />
+				<CharacterRestrictionOverrideWarningContent mode={ state?.restrictionOverride } />
 			</legend>
 			<Column>
 				<Row wrap>

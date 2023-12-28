@@ -12,41 +12,41 @@ import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextPr
 import { ContextHelpButton } from '../help/contextHelpButton';
 import { useCharacterState, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 
-export type SafemodeDialogContext = {
+export type RestrictionOverrideDialogContext = {
 	show: () => void;
 	hide: () => void;
 };
 
-const SafemodeDialogContext = React.createContext<SafemodeDialogContext | null>(null);
+const RestrictionOverrideDialogContext = React.createContext<RestrictionOverrideDialogContext | null>(null);
 
-export function useSafemodeDialogContext(): SafemodeDialogContext {
-	const context = useContext(SafemodeDialogContext);
+export function useRestrictionOverrideDialogContext(): RestrictionOverrideDialogContext {
+	const context = useContext(RestrictionOverrideDialogContext);
 	AssertNotNullable(context);
 	return context;
 }
 
-export function CharacterSafemodeDialogContext({ children }: ChildrenProps): ReactElement {
+export function CharacterRestrictionOverrideDialogContext({ children }: ChildrenProps): ReactElement {
 
 	const [state, setState] = useState<boolean>(false);
 	const player = usePlayer();
 
-	const context = useMemo<SafemodeDialogContext>(() => ({
+	const context = useMemo<RestrictionOverrideDialogContext>(() => ({
 		show: () => setState(true),
 		hide: () => setState(false),
 	}), []);
 
 	return (
-		<SafemodeDialogContext.Provider value={ context }>
+		<RestrictionOverrideDialogContext.Provider value={ context }>
 			{ children }
-			{ state && player ? <CharacterSafemodeDialog player={ player } /> : null }
-		</SafemodeDialogContext.Provider>
+			{ state && player ? <CharacterRestrictionOverrideDialog player={ player } /> : null }
+		</RestrictionOverrideDialogContext.Provider>
 	);
 }
 
-export function CharacterSafemodeDialog({ player }: {
+export function CharacterRestrictionOverrideDialog({ player }: {
 	player: PlayerCharacter;
 }): ReactElement {
-	const { hide } = useSafemodeDialogContext();
+	const { hide } = useRestrictionOverrideDialogContext();
 	const roomContext = useChatroomRequired();
 	const state = useCharacterState(roomContext, player.id);
 	const restrictionOverride = state?.restrictionOverride;
@@ -132,7 +132,7 @@ function CharacterRestrictionOverrideLeave({ type, allowLeaveAt, doModeExit, pro
 	const currentTime = useCurrentTime();
 	const canLeave = currentTime >= allowLeaveAt;
 	const mode = GetRestrictionOverrideText(type);
-	const { hide } = useSafemodeDialogContext();
+	const { hide } = useRestrictionOverrideDialogContext();
 
 	return (
 		<>
@@ -156,7 +156,7 @@ function CharacterRestrictionOverrideLeave({ type, allowLeaveAt, doModeExit, pro
 	);
 }
 
-export function CharacterSafemodeWarningContent({ mode }: { mode?: RestrictionOverride; }): ReactElement | null {
+export function CharacterRestrictionOverrideWarningContent({ mode }: { mode?: RestrictionOverride; }): ReactElement | null {
 	if (!mode)
 		return null;
 

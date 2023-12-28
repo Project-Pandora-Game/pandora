@@ -41,8 +41,6 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 	};
 }
 
-export type AppearanceChangeType = 'items' | 'pose' | 'safemode';
-
 export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'rightArm'>>;
 
 /**

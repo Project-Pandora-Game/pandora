@@ -21,6 +21,7 @@ import settingsIcon from '../../assets/icons/setting.svg';
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
 import { useNullableObservable } from '../../observable';
+import { useTextFormatting } from '../../common/useTextFormatting';
 
 type Editing = {
 	target: number;
@@ -467,7 +468,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
+	return <textarea ref={ useTextFormatting(ref) } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);

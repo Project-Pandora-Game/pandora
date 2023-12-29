@@ -117,7 +117,7 @@ export function CommandAutocomplete(msg: string, ctx: ICommandInvokeContext): Co
 	return null;
 }
 
-export interface AutocompleteDisplyData {
+export interface AutocompleteDisplayData {
 	result: CommandAutocompleteResult;
 	replace: string;
 	index: number | null;
@@ -127,7 +127,7 @@ let autocompleteLastQuery: string | null = null;
 let autocompleteLastResult: CommandAutocompleteResult = null;
 let autocompleteNextIndex = 0;
 
-export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext): AutocompleteDisplyData {
+export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext): AutocompleteDisplayData {
 	if (autocompleteLastQuery === msg && autocompleteLastResult && autocompleteNextIndex < autocompleteLastResult.options.length) {
 		const index = autocompleteNextIndex;
 		const replace = autocompleteLastResult.options[index].replaceValue.trim();

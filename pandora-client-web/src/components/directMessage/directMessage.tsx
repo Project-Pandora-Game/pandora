@@ -11,7 +11,7 @@ import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import './directMessage.scss';
-import { useTextFormatting } from '../../common/useTextFormatting';
+import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent';
 
 export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
 	return (
@@ -101,7 +101,7 @@ function DirectChannelInput(): ReactElement | null {
 		ref.current?.focus();
 	}, [channel.account]);
 
-	const actualRef = useTextFormatting(ref);
+	const actualRef = useTextFormattingOnKeyboardEvent(ref);
 
 	if (!channel.account) {
 		return null;

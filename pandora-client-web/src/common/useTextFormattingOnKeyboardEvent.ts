@@ -1,25 +1,8 @@
 import React from 'react';
+import { useWrappedRef } from './useWrappedRef';
 
-export function useTextFormatting(originalRef: React.MutableRefObject<HTMLTextAreaElement> | React.ForwardedRef<HTMLTextAreaElement>): React.RefObject<HTMLTextAreaElement> {
-	const ref = React.useMemo(() => {
-		let current = null as HTMLTextAreaElement | null;
-		return {
-			get current() {
-				return current;
-			},
-			set current(value: HTMLTextAreaElement | null) {
-				if (current === value)
-					return;
-
-				current = value;
-
-				if (typeof originalRef === 'function')
-					originalRef(value);
-				else if (originalRef != null)
-					originalRef.current = value;
-			},
-		};
-	}, [originalRef]);
+export function useTextFormattingOnKeyboardEvent(originalRef: React.ForwardedRef<HTMLTextAreaElement>): React.RefObject<HTMLTextAreaElement> {
+	const ref = useWrappedRef(originalRef);
 
 	React.useEffect(() => {
 		if (ref.current == null)

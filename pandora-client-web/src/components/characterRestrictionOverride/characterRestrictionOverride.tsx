@@ -172,7 +172,7 @@ export function CharacterRestrictionOverrideWarningContent({ mode }: { mode?: Re
 	}
 
 	return (
-		<div className='safemode'>
+		<span className='safemode'>
 			This character is in { GetRestrictionOverrideText(mode.type) }
 			<ContextHelpButton>
 				<HelpText />
@@ -181,7 +181,7 @@ export function CharacterRestrictionOverrideWarningContent({ mode }: { mode?: Re
 					your character's name.
 				</p>
 			</ContextHelpButton>
-		</div>
+		</span>
 	);
 }
 

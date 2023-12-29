@@ -4,7 +4,7 @@ import { clamp } from 'lodash';
 import { Character } from '../../character/character';
 import { IMessageParseOptions, useChatroom, useChatRoomCharacters, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../gameContext/chatRoomContextProvider';
 import { useEvent } from '../../common/useEvent';
-import { AutocompleteDisplyData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext } from './commandsProcessor';
+import { AutocompleteDisplayData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext } from './commandsProcessor';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Button } from '../common/button/button';
@@ -21,6 +21,7 @@ import settingsIcon from '../../assets/icons/setting.svg';
 import { z } from 'zod';
 import { useNavigate } from 'react-router';
 import { useNullableObservable } from '../../observable';
+import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent';
 
 type Editing = {
 	target: number;
@@ -34,8 +35,8 @@ export type IChatInputHandler = {
 	setTarget: (target: CharacterId | null) => void;
 	editing: Editing | null;
 	setEditing: (editing: number | null) => boolean;
-	autocompleteHint: AutocompleteDisplyData | null;
-	setAutocompleteHint: (hint: AutocompleteDisplyData | null) => void;
+	autocompleteHint: AutocompleteDisplayData | null;
+	setAutocompleteHint: (hint: AutocompleteDisplayData | null) => void;
 	mode: ChatMode | null;
 	setMode: (mode: ChatMode | null) => void;
 	showSelector: boolean;
@@ -65,7 +66,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [target, setTarget] = useState<Character | null>(null);
 	const [editing, setEditingState] = useState<Editing | null>(null);
-	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplyData | null>(null);
+	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplayData | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
 	const [showSelector, setShowSelector] = useState(false);
 	const chatroom = useChatroom();
@@ -466,8 +467,9 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	});
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
+	const actualRef = useTextFormattingOnKeyboardEvent(ref);
 
-	return <textarea ref={ ref } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
+	return <textarea ref={ actualRef } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);

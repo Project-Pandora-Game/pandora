@@ -11,6 +11,7 @@ import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import './directMessage.scss';
+import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent';
 
 export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
 	return (
@@ -100,13 +101,15 @@ function DirectChannelInput(): ReactElement | null {
 		ref.current?.focus();
 	}, [channel.account]);
 
+	const actualRef = useTextFormattingOnKeyboardEvent(ref);
+
 	if (!channel.account) {
 		return null;
 	}
 
 	return (
 		<textarea
-			ref={ ref }
+			ref={ actualRef }
 			onKeyDown={ onKeyDown }
 			maxLength={ LIMIT_DIRECT_MESSAGE_LENGTH }
 			placeholder={ `Send message to ${channel.account.name} (${channel.account.id})` }

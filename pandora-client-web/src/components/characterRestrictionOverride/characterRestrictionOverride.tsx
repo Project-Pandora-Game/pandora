@@ -73,7 +73,7 @@ export function CharacterRestrictionOverrideDialog({ player }: {
 	return (
 		<ModalDialog>
 			<h3>
-				Safemode
+				Safemode & timeout mode
 			</h3>
 			<CharacterSafemodeHelpText />
 			<p>
@@ -98,7 +98,7 @@ export function CharacterRestrictionOverrideDialog({ player }: {
 						</p>
 						<p>
 							<strong>Warning:</strong> After entering safemode, you will not be able to leave it for { FormatTimeInterval(GetRestrictionOverrideConfig('safemode').allowLeaveAt) }!<br />
-							(Timeout mode can toggled on off without any time restrictions.)
+							(Timeout mode can be toggled on/off at any time and as often as needed.)
 						</p>
 						<Row padding='medium' alignX='space-between'>
 							<Button onClick={ hide }>Cancel</Button>
@@ -137,7 +137,7 @@ function CharacterRestrictionOverrideLeave({ type, allowLeaveAt, doModeExit, pro
 	return (
 		<>
 			<p>
-				<strong>You are currently in a { mode }!</strong><br />
+				<strong>You are currently in { mode }!</strong><br />
 				{
 					canLeave ? null : <>You need to wait { FormatTimeInterval(allowLeaveAt - currentTime) } before you can leave the { mode }.</>
 				}
@@ -189,14 +189,14 @@ function CharacterSafemodeHelpText(): ReactElement {
 	return (
 		<>
 			<p>
-				Safemode is a mode in which items do not apply any restrictions to the character in it.<br />
+				<b>Safemode is a mode in which items do not apply any restrictions to the character in it.</b><br />
 				This means that the character can modify their appearance and items without any limits<br />
 				(except if the room limits usage or spawning of certain items).<br />
 				For instance, characters in safe mode can generally open/remove any lock on themselves.
 			</p>
 			<p>
-				<b>While a character is in safemode, no one else can modify the character's items.</b> Additionally,<br />
-				a character in safemode cannot modify items on other characters.
+				<b>While a character is in safemode, no one else can modify the character's items.</b><br />
+				Additionally, a character in safemode cannot modify items on other characters.
 			</p>
 		</>
 	);
@@ -205,8 +205,8 @@ function CharacterSafemodeHelpText(): ReactElement {
 function CharacterTimeoutModeHelpText(): ReactElement {
 	return (
 		<p>
-			<b>Timeout mode is a mode in which no one else can modify the character's items.</b> Additionally,<br />
-			a character in timeout mode cannot modify items on other characters.
+			<b>Timeout mode is a mode in which no one else can modify the character's items.</b><br />
+			Additionally, a character in timeout mode cannot modify items on other characters.<br />
 			(Unlike safemode, all restrictions still apply to the character in timeout mode.)
 		</p>
 	);

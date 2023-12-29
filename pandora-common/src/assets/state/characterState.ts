@@ -14,10 +14,48 @@ import { AssetFrameworkRoomState } from './roomState';
 import { CharacterId } from '../../character';
 import type { IExportOptions } from '../modules/common';
 
-export const SafemodeDataSchema = z.object({
+export const RestrictionOverrideSchema = z.object({
+	type: z.enum(['safemode', 'timeout']),
 	allowLeaveAt: z.number(),
 });
-export type SafemodeData = z.infer<typeof SafemodeDataSchema>;
+export type RestrictionOverride = Readonly<z.infer<typeof RestrictionOverrideSchema>>;
+
+export type RestrictionOverrideConfig = Readonly<{
+	allowLeaveAt: number;
+	blockInteractions: boolean;
+	forceAllowItemActions: boolean;
+	forceAllowRoomLeave: boolean;
+}>;
+
+const INTERACTION_OVERRIDE_CONFIG = {
+	normal: {
+		allowLeaveAt: 0,
+		blockInteractions: false,
+		forceAllowItemActions: false,
+		forceAllowRoomLeave: false,
+	},
+	safemode: {
+		allowLeaveAt: 60 * 60_000,
+		blockInteractions: true,
+		forceAllowItemActions: true,
+		forceAllowRoomLeave: true,
+	},
+	timeout: {
+		allowLeaveAt: 0,
+		blockInteractions: true,
+		forceAllowItemActions: false,
+		forceAllowRoomLeave: false,
+	},
+} as const satisfies Readonly<Record<RestrictionOverride['type'] | 'normal', RestrictionOverrideConfig>>;
+
+export function GetRestrictionOverrideConfig(type?: RestrictionOverride['type'] | RestrictionOverride): RestrictionOverrideConfig {
+	if (type == null)
+		return INTERACTION_OVERRIDE_CONFIG.normal;
+	if (typeof type === 'string')
+		return INTERACTION_OVERRIDE_CONFIG[type];
+
+	return INTERACTION_OVERRIDE_CONFIG[type.type];
+}
 
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),
@@ -38,7 +76,7 @@ export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
 export const AppearanceBundleSchema = z.object({
 	requestedPose: AppearancePoseSchema.catch(() => GetDefaultAppearancePose()),
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
-	safemode: SafemodeDataSchema.optional(),
+	restrictionOverride: RestrictionOverrideSchema.optional().catch(() => undefined),
 	clientOnly: z.boolean().optional(),
 });
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
@@ -51,7 +89,7 @@ type AssetFrameworkCharacterStateProps = {
 	readonly id: CharacterId;
 	readonly items: AppearanceItems<WearableAssetType>;
 	readonly requestedPose: AppearancePose;
-	readonly safemode: SafemodeData | undefined;
+	readonly restrictionOverride?: RestrictionOverride;
 };
 
 /**
@@ -64,7 +102,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	public readonly id: CharacterId;
 	public readonly items: AppearanceItems<WearableAssetType>;
 	public readonly requestedPose: Immutable<AppearancePose>;
-	public readonly safemode: SafemodeData | undefined;
+	public readonly restrictionOverride?: RestrictionOverride;
 
 	public get actualPose(): Immutable<AppearancePose> {
 		return this._generateActualPose();
@@ -77,8 +115,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		this.id = override.id ?? props.id;
 		this.items = override.items ?? props.items;
 		this.requestedPose = override.requestedPose ?? props.requestedPose;
-		// allow override safemode with undefined (override: { safemode: undefined })
-		this.safemode = 'safemode' in override ? override.safemode : props.safemode;
+		// allow override restrictionOverride with undefined (override: { restrictionOverride: undefined })
+		this.restrictionOverride = 'restrictionOverride' in override ? override.restrictionOverride : props.restrictionOverride;
 	}
 
 	public isValid(roomState: AssetFrameworkRoomState | null): boolean {
@@ -101,7 +139,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return {
 			items: this.items.map((item) => item.exportToBundle(options)),
 			requestedPose: _.cloneDeep(this.requestedPose),
-			safemode: this.safemode,
+			restrictionOverride: this.restrictionOverride,
 		};
 	}
 
@@ -110,7 +148,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return {
 			items: this.items.map((item) => item.exportToBundle(options)),
 			requestedPose: _.cloneDeep(this.requestedPose),
-			safemode: this.safemode,
+			restrictionOverride: this.restrictionOverride,
 			clientOnly: true,
 		};
 	}
@@ -179,11 +217,31 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		}, true);
 	}
 
-	public produceWithSafemode(value: Readonly<SafemodeData> | null): AssetFrameworkCharacterState {
-		if (isEqual(this.safemode ?? null, value))
+	public produceWithRestrictionOverride(type: RestrictionOverride['type'] | 'normal', removeAllowLeaveAt?: boolean): AssetFrameworkCharacterState;
+	public produceWithRestrictionOverride(value: RestrictionOverride): AssetFrameworkCharacterState;
+	public produceWithRestrictionOverride(value?: RestrictionOverride['type'] | RestrictionOverride | 'normal', removeAllowLeaveAt: boolean = false): AssetFrameworkCharacterState {
+		if (value === 'normal') {
+			value = undefined;
+		} else if (typeof value === 'string') {
+			const type = value;
+
+			let { allowLeaveAt } = GetRestrictionOverrideConfig(type);
+
+			if (removeAllowLeaveAt)
+				allowLeaveAt = 0;
+			else if (allowLeaveAt > 0)
+				allowLeaveAt += Date.now();
+
+			value = {
+				type,
+				allowLeaveAt,
+			};
+		}
+
+		if (isEqual(this.restrictionOverride, value))
 			return this;
 
-		return new AssetFrameworkCharacterState(this, { safemode: freeze(value ?? undefined, true) });
+		return new AssetFrameworkCharacterState(this, { restrictionOverride: freeze(value, true) });
 	}
 
 	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState | null, revalidate: boolean): AssetFrameworkCharacterState {
@@ -278,7 +336,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				id: characterId,
 				items: newItems,
 				requestedPose,
-				safemode: bundle.safemode,
+				restrictionOverride: bundle.restrictionOverride,
 			}).updateRoomStateLink(roomState, true),
 			true,
 		);

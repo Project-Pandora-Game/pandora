@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
-import { SAFEMODE_EXIT_COOLDOWN } from './appearance';
 import { AssetManager } from './assetManager';
 import { WearableAssetType } from './definitions';
 import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelectorSchema } from './appearanceTypes';
@@ -14,7 +13,7 @@ import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { Asset, FilterAssetType } from './asset';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterState';
+import { AppearanceArmPoseSchema, AppearancePoseSchema, RestrictionOverride } from './state/characterState';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
@@ -113,10 +112,10 @@ export const AppearanceActionModuleAction = z.object({
 	action: ItemModuleActionSchema,
 });
 
-export const AppearanceActionSafemode = z.object({
-	type: z.literal('safemode'),
-	/** What to do with the safemode */
-	action: z.enum(['enter', 'exit']),
+export const AppearanceActionRestrictionOverrideChange = z.object({
+	type: z.literal('restrictionOverrideChange'),
+	/** Which mode we are changing to */
+	mode: z.enum(['normal', 'safemode', 'timeout']),
 });
 
 export const AppearanceActionRandomize = z.object({
@@ -169,7 +168,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionMove,
 	AppearanceActionColor,
 	AppearanceActionModuleAction,
-	AppearanceActionSafemode,
+	AppearanceActionRestrictionOverrideChange,
 	AppearanceActionRandomize,
 	AppearanceActionRoomDeviceDeploy,
 	AppearanceActionRoomDeviceEnter,
@@ -439,45 +438,38 @@ export function DoAppearanceAction(
 
 			return processingContext.finalize();
 		}
-		case 'safemode': {
-			const current = playerRestrictionManager.appearance.getSafemode();
-			if (action.action === 'enter') {
-				// If we are already in it we cannot enter it again
-				if (current)
-					return processingContext.invalid();
+		case 'restrictionOverrideChange': {
+			const current = playerRestrictionManager.appearance.getRestrictionOverride();
+			const oldMode = current?.type ?? 'normal';
 
-				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
-					return character.produceWithSafemode({
-						allowLeaveAt: Date.now() + (playerRestrictionManager.room.features.includes('development') ? 0 : SAFEMODE_EXIT_COOLDOWN),
-					});
-				})) {
-					return processingContext.invalid();
-				}
+			// If we are already in a mode it we cannot enter it again
+			if (oldMode === action.mode)
+				return processingContext.invalid();
+			// If we are not in normal mode we cannot enter any other mode
+			if (oldMode !== 'normal' && action.mode !== 'normal')
+				return processingContext.invalid();
+			// Check the timer to leave it passed
+			if (current?.allowLeaveAt != null && Date.now() < current.allowLeaveAt)
+				return processingContext.invalid();
 
-				processingContext.queueMessage({
-					id: 'safemodeEnter',
-				});
-			} else if (action.action === 'exit') {
-				// If we are already not in it we cannot exit it
-				if (!current)
-					return processingContext.invalid();
+			const removeAllowLeaveAt = !!playerRestrictionManager.room.features.includes('development');
 
-				// Check the timer to leave it passed
-				if (Date.now() < current.allowLeaveAt)
-					return processingContext.invalid();
-
-				if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
-					return character.produceWithSafemode(null);
-				})) {
-					return processingContext.invalid();
-				}
-
-				processingContext.queueMessage({
-					id: 'safemodeLeave',
-				});
-			} else {
-				AssertNever(action.action);
+			if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) =>
+				character.produceWithRestrictionOverride(action.mode, removeAllowLeaveAt),
+			)) {
+				return processingContext.invalid();
 			}
+
+			let id: `${RestrictionOverride['type']}${'Enter' | 'Leave'}`;
+			if (action.mode === 'normal') {
+				Assert(oldMode !== 'normal');
+				id = `${oldMode}Leave`;
+			} else {
+				id = `${action.mode}Enter`;
+			}
+
+			processingContext.queueMessage({ id });
+
 			return processingContext.finalize();
 		}
 		case 'randomize': {
@@ -831,7 +823,7 @@ export function ActionAppearanceRandomize({
 	}
 
 	// Must have free hands to randomize
-	if (!character.canUseHands() && !character.isInSafemode()) {
+	if (!character.canUseHands() && !character.forceAllowItemActions()) {
 		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: {

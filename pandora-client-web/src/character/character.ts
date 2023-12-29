@@ -8,7 +8,6 @@ import {
 	CharacterRestrictionsManager,
 	ActionRoomContext,
 	ItemPath,
-	SafemodeData,
 	CharacterId,
 	AppearanceItems,
 	WearableAssetType,
@@ -113,8 +112,4 @@ export function useCharacterAppearanceItem(characterState: AssetFrameworkCharact
 	const items = useCharacterAppearanceItems(characterState);
 
 	return useMemo(() => (items && path) ? EvalItemPath(items, path) : undefined, [items, path]);
-}
-
-export function useCharacterSafemode(characterState: AssetFrameworkCharacterState): Readonly<SafemodeData> | null {
-	return characterState.safemode ?? null;
 }

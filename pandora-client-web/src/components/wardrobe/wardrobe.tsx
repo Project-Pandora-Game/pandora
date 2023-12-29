@@ -10,7 +10,7 @@ import { Character, IChatroomCharacter } from '../../character/character';
 import { IChatRoomContext, useChatroom, useChatRoomCharacters, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { Tab, TabContainer } from '../common/tabs/tabs';
-import { CharacterSafemodeWarningContent } from '../characterSafemode/characterSafemode';
+import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { WardrobeTarget } from './wardrobeTypes';
 import { WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
@@ -114,17 +114,9 @@ function WardrobeCharacter({ character }: {
 	if (characterState == null)
 		return <Link to='/'>◄ Back</Link>;
 
-	const inSafemode = characterState.safemode != null;
-
 	return (
 		<div className='wardrobe'>
-			{
-				!inSafemode ? null : (
-					<div className='safemode'>
-						<CharacterSafemodeWarningContent />
-					</div>
-				)
-			}
+			<CharacterRestrictionOverrideWarningContent mode={ characterState.restrictionOverride } />
 			<div className='wardrobeMain'>
 				<WardrobeCharacterPreview
 					character={ character }

@@ -1093,8 +1093,8 @@ export class ItemLock extends ItemBase<'lock'> {
 			return null;
 		}
 
-		// Locks can prevent interaction from player (unless in safemode)
-		if (properties.blockSelf && isSelfAction && !playerRestrictionManager.isInSafemode()) {
+		// Locks can prevent interaction from player (unless in force-allow is enabled)
+		if (properties.blockSelf && isSelfAction && !playerRestrictionManager.forceAllowItemActions()) {
 			context.reject({
 				type: 'lockInteractionPrevented',
 				moduleAction: action.action,
@@ -1174,7 +1174,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		if (!this.isLocked() || this.lockData == null)
 			return null;
 
-		if (this.asset.definition.password != null && !playerRestrictionManager.isInSafemode()) {
+		if (this.asset.definition.password != null && !playerRestrictionManager.forceAllowItemActions()) {
 			if (password == null) {
 				return null;
 			} else if (this.lockData.hidden?.side === 'server' && password !== this.lockData.hidden.password) {

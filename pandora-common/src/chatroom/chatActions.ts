@@ -16,9 +16,11 @@ const CHAT_ACTIONS_DEF = {
 
 	//#region Action messages
 
-	// Safemode
+	// Restriction override changes
 	safemodeEnter: `SOURCE_CHARACTER entered safemode!`,
 	safemodeLeave: `SOURCE_CHARACTER left safemode.`,
+	timeoutEnter: `SOURCE_CHARACTER entered timeout mode!`,
+	timeoutLeave: `SOURCE_CHARACTER left timeout mode.`,
 
 	// Item changes directly on character
 	itemAdd: `SOURCE_CHARACTER used ITEM_ASSET_NAME on TARGET_CHARACTER_DYNAMIC_REFLEXIVE.`,

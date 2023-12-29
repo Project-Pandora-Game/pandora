@@ -6,7 +6,7 @@ import { ActionRoomContext } from '../chatroom';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item, RoomDeviceLink } from '../assets/item';
-import type { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget } from '../assets';
+import { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget, RestrictionOverrideConfig, GetRestrictionOverrideConfig } from '../assets';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
@@ -135,6 +135,7 @@ export type RestrictionResult = {
 export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;
 	public readonly room: ActionRoomContext;
+	public readonly restrictionOverrideConfig: RestrictionOverrideConfig;
 	private _items: readonly Item[] = [];
 	private _properties: Immutable<AssetPropertiesResult> = CreateAssetPropertiesResult();
 	private _roomDeviceLink: Immutable<RoomDeviceLink> | null = null;
@@ -146,6 +147,7 @@ export class CharacterRestrictionsManager {
 	constructor(appearance: CharacterAppearance, room: ActionRoomContext) {
 		this.appearance = appearance;
 		this.room = room;
+		this.restrictionOverrideConfig = GetRestrictionOverrideConfig(this.appearance.getRestrictionOverride());
 	}
 
 	private updateCachedData(): void {
@@ -224,8 +226,16 @@ export class CharacterRestrictionsManager {
 		return _.clamp(this.getEffects().blind, 0, 10);
 	}
 
-	public isInSafemode(): boolean {
-		return this.appearance.getSafemode() != null;
+	public isInteractionBlocked(): boolean {
+		return this.restrictionOverrideConfig.blockInteractions;
+	}
+
+	public forceAllowItemActions(): boolean {
+		return this.restrictionOverrideConfig.forceAllowItemActions;
+	}
+
+	public forceAllowRoomLeave(): boolean {
+		return this.restrictionOverrideConfig.forceAllowRoomLeave;
 	}
 
 	public isCurrentRoomAdmin(): boolean {
@@ -250,8 +260,8 @@ export class CharacterRestrictionsManager {
 			// Mark as interaction
 			context.addInteraction(target.character, 'interact');
 
-			// Safemode checks
-			if (this.isInSafemode() || targetCharacter.isInSafemode())
+			// Check interaction block (safe mode, timeout)
+			if (this.isInteractionBlocked() || targetCharacter.isInteractionBlocked())
 				return {
 					allowed: false,
 					restriction: {
@@ -356,7 +366,7 @@ export class CharacterRestrictionsManager {
 
 		const isCharacter = target.type === 'character';
 		const isSelfAction = isCharacter && target.character.id === this.character.id;
-		const isInSafemode = this.isInSafemode();
+		const forceAllowItemActions = this.forceAllowItemActions();
 		let isPhysicallyEquipped = isCharacter;
 
 		// Must be able to access all upper items
@@ -440,7 +450,7 @@ export class CharacterRestrictionsManager {
 		// If equipping there are further checks
 		if (interaction === ItemInteractionType.ADD_REMOVE && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
-			if (properties.blockAddRemove && !isInSafemode)
+			if (properties.blockAddRemove && !forceAllowItemActions)
 				return {
 					allowed: false,
 					restriction: {
@@ -451,7 +461,7 @@ export class CharacterRestrictionsManager {
 				};
 
 			// If equipping on self, the asset must allow self-equip
-			if (isSelfAction && properties.blockSelfAddRemove && !isInSafemode)
+			if (isSelfAction && properties.blockSelfAddRemove && !forceAllowItemActions)
 				return {
 					allowed: false,
 					restriction: {
@@ -462,7 +472,7 @@ export class CharacterRestrictionsManager {
 				};
 		}
 
-		if (isCharacter && isPhysicallyEquipped && !isInSafemode) {
+		if (isCharacter && isPhysicallyEquipped && !forceAllowItemActions) {
 			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({
 				from: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
 				exclude: container.length > 0 ? container[0].item : item.id,
@@ -481,7 +491,7 @@ export class CharacterRestrictionsManager {
 		}
 
 		// Must be able to use hands
-		if (!this.canUseHands() && !isInSafemode)
+		if (!this.canUseHands() && !forceAllowItemActions)
 			return {
 				allowed: false,
 				restriction: {
@@ -534,7 +544,7 @@ export class CharacterRestrictionsManager {
 		const properties = item.isType('roomDevice') ? item.getRoomDeviceProperties() : item.getProperties();
 
 		// If item blocks this module, fail
-		if (properties.blockModules.has(moduleName) && !this.isInSafemode())
+		if (properties.blockModules.has(moduleName) && !this.forceAllowItemActions())
 			return {
 				allowed: false,
 				restriction: {
@@ -546,7 +556,7 @@ export class CharacterRestrictionsManager {
 			};
 
 		// If accessing on self, the item must not block it
-		if (isSelfAction && properties.blockSelfModules.has(moduleName) && !this.isInSafemode())
+		if (isSelfAction && properties.blockSelfModules.has(moduleName) && !this.forceAllowItemActions())
 			return {
 				allowed: false,
 				restriction: {

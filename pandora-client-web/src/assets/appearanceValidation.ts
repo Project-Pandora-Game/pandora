@@ -75,7 +75,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'safemodeInteractOther':
-				return `You cannot touch others while either you or they are in safemode.`;
+				return `You cannot touch others while either you or they are in safemode or timeout mode.`;
 			case 'modifyBodyRoom':
 				return `You cannot modify body in this room.`;
 			case 'modifyRoomRestriction':

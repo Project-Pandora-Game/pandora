@@ -109,7 +109,7 @@ export function EditorWardrobeUI(): ReactElement {
 	const character = useEditor().character;
 	const characterState = useEditorCharacterState();
 
-	const safemode = characterState.safemode != null;
+	const safemode = characterState.restrictionOverride?.type === 'safemode';
 
 	const { containerContentsFilter } = useWardrobeItems(currentFocus);
 
@@ -131,8 +131,8 @@ export function EditorWardrobeUI(): ReactElement {
 						onChange={ (e) => {
 							character.getAppearance()
 								.editorDoAction({
-									type: 'safemode',
-									action: e.target.checked ? 'enter' : 'exit',
+									type: 'restrictionOverrideChange',
+									mode: e.target.checked ? 'normal' : 'safemode',
 								});
 						} }
 					/>

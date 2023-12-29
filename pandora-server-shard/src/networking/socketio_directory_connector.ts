@@ -305,8 +305,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		if (restrictionManager.getRoomDeviceLink() != null)
 			return { result: 'inRoomDevice' };
 
-		// Safemode skips any checks
-		if (!restrictionManager.isInSafemode()) {
+		// Skips any checks if force-allow is enabled
+		if (!restrictionManager.forceAllowRoomLeave()) {
 			// The character must not have leave-restricting effect (this doesn't affect personal rooms)
 			if (restrictionManager.getEffects().blockRoomLeave && inPublicRoom)
 				return { result: 'restricted' };

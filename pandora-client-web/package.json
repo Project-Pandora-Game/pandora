@@ -89,7 +89,7 @@
 		"react-refresh-typescript": "2.0.9",
 		"react-reverse-portal": "2.1.1",
 		"rimraf": "5.0.5",
-		"sass": "1.69.5",
+		"sass": "1.69.6",
 		"source-map-loader": "4.0.2",
 		"style-loader": "3.3.3",
 		"ts-jest": "29.1.1",

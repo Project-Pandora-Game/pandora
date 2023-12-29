@@ -43,6 +43,7 @@ function FormatSelection(textarea: HTMLTextAreaElement, format: string) {
 	const selected = text.substring(selectionStart, selectionEnd);
 
 	if (before.endsWith(format) && after.startsWith(format)) {
+		// Do a removal instead of adding the format string to the selection, if already present (act as a toggle)
 		before = before.substring(0, before.length - format.length);
 		after = after.substring(format.length);
 	} else {

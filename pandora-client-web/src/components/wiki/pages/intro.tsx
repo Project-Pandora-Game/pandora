@@ -24,7 +24,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Flexible item layering possibilities</li>
 				<li>A direct messaging system that supports offline messages and a persistent message history</li>
 				<li>Ability to use the browser's back/forward buttons to navigate in Pandora</li>
-				<li>No safeword feature, but a safemode that makes it harder to be misused to constantly free characters</li>
+				<li>User safety features for emergencies only</li>
 				<li>A permission feature that allows the user to set who is allowed to do what</li>
 				<li>Storing complete outfits in the wardrobe and supporting import/export</li>
 			</ol>
@@ -145,9 +145,10 @@ export function WikiIntroduction(): ReactElement {
 				Pandora has the ability to use the browser's back/forward buttons to navigate in Pandora.
 			</p>
 
-			<h4>12. No safeword feature, but a safemode that makes it harder to be misused</h4>
+			<h4>12. User safety features for emergencies only</h4>
 			<p>
-				You can access the safemode feature by clicking on your character name in the top left of the screen and then entering safemode in the menu.
+				There are two user safety features for emergencies: Safemode and timeout mode. You can find those features via a button next to your own name in the "Room"-tab.
+				Both modes are designed to make it harder to misuse safety features outside of their intended usage.
 			</p>
 
 			<h4>13. A permission feature that allows the user to set who is allowed to do what</h4>
@@ -174,7 +175,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Connecting rooms with each other into a small housing area with a customized layout and ways to move from room to room</li>
 				<li>Spectator mode for rooms that will help to not disrupt the chat during plays and that can be managed by room admins</li>
 				<li>Creating character contracts to temporarily or permanently agree on sets of rules and permissions between specific characters</li>
-				<li>Improvements to the new player experience & safety</li>
+				<li>Improvements to the new user experience & safety</li>
 				<li>New room role "storyteller" that can orchestrate a prepared roleplay without a physical presence in the room</li>
 				... and many more, which can be found by looking at Pandora's issue list on <a href='https://github.com/Project-Pandora-Game/pandora/issues' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a>
 			</ul>

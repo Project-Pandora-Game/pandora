@@ -38,12 +38,21 @@ function FormatSelection(textarea: HTMLTextAreaElement, format: string) {
 	const selectionEnd = textarea.selectionEnd;
 
 	const text = textarea.value;
-	const before = text.substring(0, selectionStart);
+	let before = text.substring(0, selectionStart);
+	let after = text.substring(selectionEnd);
 	const selected = text.substring(selectionStart, selectionEnd);
-	const after = text.substring(selectionEnd);
 
-	textarea.value = before + format + selected + format + after;
+	if (before.endsWith(format) && after.startsWith(format)) {
+		// Do a removal instead of adding the format string to the selection, if already present (act as a toggle)
+		before = before.substring(0, before.length - format.length);
+		after = after.substring(format.length);
+	} else {
+		before += format;
+		after = format + after;
+	}
 
-	const cursorPosition = selectionEnd + format.length;
-	textarea.setSelectionRange(cursorPosition, cursorPosition);
+	textarea.value = before + selected + after;
+	const cursorStart = before.length;
+	const cursorEnd = cursorStart + selected.length;
+	textarea.setSelectionRange(cursorStart, cursorEnd);
 }

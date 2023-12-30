@@ -244,3 +244,28 @@ function useAssetPreviewType(small: boolean): 'icon' | 'image' {
 
 	return settings.wardrobeBigPreview;
 }
+
+export function InventoryAttributePreview({ attribute }: {
+	attribute: string;
+}): ReactElement {
+	const assetManager = useAssetManager();
+	const definition = assetManager.getAttributeDefinition(attribute);
+
+	const icon = useGraphicsUrl(definition?.icon);
+
+	if (icon) {
+		return (
+			<div className='itemPreview'>
+				<img
+					className='black'
+					src={ icon }
+					alt='Attribute icon'
+				/>
+			</div>
+		);
+	}
+
+	return (
+		<div className='itemPreview missing'>?</div>
+	);
+}

@@ -5,14 +5,13 @@ import { useAssetManager } from '../../assets/assetManager';
 import { WardrobeAssetList, useAssetPreference, useAssetPreferences } from './views/wardrobeAssetView';
 import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
 import { useWardrobeContext } from './wardrobeContext';
-import { InventoryAssetPreview } from './wardrobeComponents';
+import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { noop } from 'lodash';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
-import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { Column } from '../common/container/container';
 import { Select } from '../common/select/select';
 
@@ -200,8 +199,6 @@ function WardrobePreferencesAttributePickerItem({ attribute, definition }: {
 	const isFocused = focus.type === 'attribute' && focus.attribute === attribute;
 	const preference: AssetPreferenceType = useAssetPreferences().attributes[attribute]?.base ?? 'normal';
 
-	const icon = useGraphicsUrl(definition.icon);
-
 	return (
 		<div
 			className={ classNames(
@@ -225,19 +222,7 @@ function WardrobePreferencesAttributePickerItem({ attribute, definition }: {
 					});
 				}
 			} }>
-			{
-				icon ? (
-					<div className='itemPreview'>
-						<img
-							className='black'
-							src={ icon }
-							alt='Attribute icon'
-						/>
-					</div>
-				) : (
-					<div className='itemPreview missing'>?</div>
-				)
-			}
+			<InventoryAttributePreview attribute={ attribute } />
 			<span className='itemName'>{ definition.name }</span>
 		</div>
 	);
@@ -413,8 +398,6 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 	const currentPreferences = useAssetPreferences();
 	const currentAttributePreference: AssetPreference | null = currentPreferences.attributes[attribute] ?? null;
 
-	const icon = useGraphicsUrl(definition.icon);
-
 	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
 		const value: AssetPreferenceType = AttributePreferenceTypeSchema.parse(ev.target.value);
 		if (value === (currentAttributePreference?.base ?? 'normal'))
@@ -437,19 +420,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 	return (
 		<div className='inventoryView assetPreference'>
 			<div className='toolbar'>
-				{
-					icon ? (
-						<div className='itemPreview'>
-							<img
-								className='black'
-								src={ icon }
-								alt='Attribute icon'
-							/>
-						</div>
-					) : (
-						<div className='itemPreview missing'>?</div>
-					)
-				}
+				<InventoryAttributePreview attribute={ attribute } />
 				<span className='flex-1'>{ definition.name }</span>
 			</div>
 			<Column padding='large'>

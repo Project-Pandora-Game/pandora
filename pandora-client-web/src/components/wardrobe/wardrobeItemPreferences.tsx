@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import React, { ReactElement, createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { useAssetManager } from '../../assets/assetManager';
-import { WardrobeAssetList, useAssetPreference, useAssetPreferences } from './views/wardrobeAssetView';
+import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
 import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
 import { useWardrobeContext } from './wardrobeContext';
 import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
@@ -317,6 +317,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 
 	const [showNonFilterableAttributes, setShowNonFilterableAttributes] = useBrowserStorage<boolean>('wardrobe.itemPreferences.showNonFilterableAttributes', false, z.boolean());
 
+	const { setFocus } = useContext(WardrobeItemPreferencesFocusContext);
 	const assetManager = useAssetManager();
 	const shardConnector = useShardConnector();
 	const currentPreferences = useAssetPreferences();
@@ -402,10 +403,14 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 											className={ classNames(
 												'inventoryViewItem',
 												'listMode',
+												'allowed',
 												'small',
 												`pref-${attributePreference}`,
 											) }
 											title={ definition.description }
+											onClick={ () => {
+												setFocus({ type: 'attribute', attribute });
+											} }
 										>
 											<InventoryAttributePreview attribute={ attribute } />
 											<span className='itemName'>{ definition.name }</span>
@@ -445,14 +450,18 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 }): ReactElement {
 	const idBase = useId();
 
+	const { setFocus } = useContext(WardrobeItemPreferencesFocusContext);
 	const { assetList } = useWardrobeContext();
 	const shardConnector = useShardConnector();
+	const resolvePreference = useAssetPreferenceResolver();
 	const currentPreferences = useAssetPreferences();
 	const currentAttributePreference: AssetPreference | null = currentPreferences.attributes[attribute] ?? null;
 
+	const isConfigurable = definition.useAsAssetPreference ?? true;
+
 	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
 		const value: AssetPreferenceType = AttributePreferenceTypeSchema.parse(ev.target.value);
-		if (value === (currentAttributePreference?.base ?? 'normal'))
+		if (value === (currentAttributePreference?.base ?? 'normal') || !isConfigurable)
 			return;
 
 		const updated = CloneDeepMutable(currentPreferences.attributes);
@@ -474,7 +483,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 			if (err instanceof Error)
 				toast(`Failed to update asset preference: ${err.message}`, TOAST_OPTIONS_ERROR);
 		});
-	}, [shardConnector, attribute, currentPreferences, currentAttributePreference]);
+	}, [shardConnector, isConfigurable, attribute, currentPreferences, currentAttributePreference]);
 
 	return (
 		<div className='inventoryView assetPreference'>
@@ -485,7 +494,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 			<Scrollable color='dark'>
 				<Column padding='large'>
 					<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
-					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange>
+					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange disabled={ !isConfigurable }>
 						{
 							KnownObject.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
 								<option key={ key } value={ key } title={ description }>
@@ -506,12 +515,27 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 							assetList
 								.filter((a) => !a.isType('roomDevice') && !a.isType('roomDeviceWearablePart'))
 								.filter((a) => a.staticAttributes.has(attribute))
-								.map((a) => (
-									<div key={ a.id } className='inventoryViewItem listMode small'>
-										<InventoryAssetPreview asset={ a } small />
-										<span className='itemName'>{ a.definition.name }</span>
-									</div>
-								))
+								.map((a) => {
+									const assetPreference: AssetPreferenceType = resolvePreference(a);
+
+									return (
+										<div key={ a.id }
+											className={ classNames(
+												'inventoryViewItem',
+												'listMode',
+												'allowed',
+												'small',
+												`pref-${assetPreference}`,
+											) }
+											onClick={ () => {
+												setFocus({ type: 'asset', asset: a.id });
+											} }
+										>
+											<InventoryAssetPreview asset={ a } small />
+											<span className='itemName'>{ a.definition.name }</span>
+										</div>
+									);
+								})
 						}
 					</div>
 				</fieldset>

@@ -23,8 +23,8 @@ export const AssetPreferenceSchema = z.object({
 export type AssetPreference = z.infer<typeof AssetPreferenceSchema>;
 
 export const AssetPreferencesSchema = z.object({
-	attributes: z.record(z.string(), AttributePreferenceSchema.optional()).default({}),
-	assets: z.record(AssetIdSchema, AssetPreferenceSchema.optional()).default({}),
+	attributes: z.record(z.string(), AttributePreferenceSchema).default({}),
+	assets: z.record(AssetIdSchema, AssetPreferenceSchema).default({}),
 });
 export type AssetPreferences = z.infer<typeof AssetPreferencesSchema>;
 

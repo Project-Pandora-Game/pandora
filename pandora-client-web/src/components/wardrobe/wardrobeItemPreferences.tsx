@@ -3,7 +3,7 @@ import React, { ReactElement, createContext, useCallback, useContext, useEffect,
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { useAssetManager } from '../../assets/assetManager';
 import { WardrobeAssetList, useAssetPreference, useAssetPreferences } from './views/wardrobeAssetView';
-import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
+import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
 import { useWardrobeContext } from './wardrobeContext';
 import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -334,11 +334,18 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 		if (value === (currentAssetPreference?.base ?? null))
 			return;
 
+		const updated = CloneDeepMutable(currentPreferences.assets);
+
+		if (value != null) {
+			updated[asset.id] = {
+				base: value,
+			};
+		} else {
+			delete updated[asset.id];
+		}
+
 		shardConnector?.awaitResponse('updateAssetPreferences', {
-			assets: {
-				...currentPreferences.assets,
-				[asset.id]: value != null ? { base: value } : undefined,
-			},
+			assets: updated,
 		}).then(({ result }) => {
 			if (result !== 'ok')
 				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
@@ -448,11 +455,18 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 		if (value === (currentAttributePreference?.base ?? 'normal'))
 			return;
 
+		const updated = CloneDeepMutable(currentPreferences.attributes);
+
+		if (value !== 'normal') {
+			updated[attribute] = {
+				base: value,
+			};
+		} else {
+			delete updated[attribute];
+		}
+
 		shardConnector?.awaitResponse('updateAssetPreferences', {
-			attributes: {
-				...currentPreferences.attributes,
-				[attribute]: value !== 'normal' ? { base: value } : undefined,
-			},
+			attributes: updated,
 		}).then(({ result }) => {
 			if (result !== 'ok')
 				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);

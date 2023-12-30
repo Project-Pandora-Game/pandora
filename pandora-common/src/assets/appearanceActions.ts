@@ -265,7 +265,7 @@ export function DoAppearanceAction(
 				return processingContext.invalid('noDeleteRoomDeviceWearable');
 			}
 			// Deployed room devices cannot be deleted, you must store them first
-			if (item?.isType('roomDevice') && item.deployment != null) {
+			if (item?.isType('roomDevice') && item.isDeployed()) {
 				return processingContext.invalid('noDeleteDeployedRoomDevice');
 			}
 
@@ -974,7 +974,7 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 		return false;
 
 	// Change message to chat
-	if (previousDeviceState != null && (deployment == null) !== (previousDeviceState.deployment == null)) {
+	if (previousDeviceState != null && (deployment == null) !== (!previousDeviceState.isDeployed())) {
 		processingContext.queueMessage(
 			manipulator.makeMessage({
 				id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',

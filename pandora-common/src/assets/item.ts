@@ -641,6 +641,13 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		this.modules = overrideProps?.modules ?? props.modules;
 	}
 
+	public isDeployed(): this is ItemRoomDevice & { deployment: RoomDeviceDeployment & {}; } {
+		if (this.deployment == null)
+			return false;
+
+		return true;
+	}
+
 	protected override withProps(overrideProps: Partial<ItemRoomDeviceProps>): ItemRoomDevice {
 		return new ItemRoomDevice(this, overrideProps);
 	}
@@ -702,7 +709,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		}
 
 		// Deployed room devices must be in a room
-		if (this.deployment != null && context.location !== 'roomInventory')
+		if (this.isDeployed() && context.location !== 'roomInventory')
 			return {
 				success: false,
 				error: {
@@ -737,7 +744,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 
 	public changeSlotOccupancy(slot: string, character: CharacterId | null): ItemRoomDevice | null {
 		// The slot must exist and the device must be deployed
-		if (this.asset.definition.slots[slot] == null || this.deployment == null)
+		if (this.asset.definition.slots[slot] == null || !this.isDeployed())
 			return null;
 
 		const slotOccupancy = new Map(this.slotOccupancy);
@@ -882,7 +889,7 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 			(device.asset.definition.slots[this.roomDeviceLink.slot]?.wearableAsset !== this.asset.id) ||
 			// The device must be deployed with this character in target slot
 			// TODO: We have no way to check that the character in the slot is us, because we don't have the character ID at this point
-			(!device.deployment || !device.slotOccupancy.has(this.roomDeviceLink.slot))
+			(!device.isDeployed() || !device.slotOccupancy.has(this.roomDeviceLink.slot))
 		) {
 			return {
 				success: false,

@@ -31,7 +31,7 @@ export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 
 	let contents: ReactElement | undefined;
 
-	if (roomDevice.deployment != null) {
+	if (roomDevice.isDeployed()) {
 		contents = (
 			<>
 				<WardrobeActionButton action={ {
@@ -156,7 +156,7 @@ export function WardrobeRoomDeviceSlots({ roomDevice, item }: {
 }): ReactElement | null {
 	let contents: ReactNode;
 
-	if (roomDevice.deployment != null) {
+	if (roomDevice.isDeployed()) {
 		contents = Object.entries(roomDevice.asset.definition.slots).map(([slotName, slotDefinition]) => (
 			<WardrobeRoomDeviceSlot key={ slotName }
 				item={ item }

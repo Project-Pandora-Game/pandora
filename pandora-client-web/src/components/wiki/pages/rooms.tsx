@@ -5,7 +5,7 @@ export function WikiRooms(): ReactElement {
 		<>
 			<h2>Rooms</h2>
 
-			<h3>How do rooms in Pandora work?</h3>
+			<h3>Introduction</h3>
 
 			<p>
 				REVISE THIS TEXT!
@@ -30,9 +30,24 @@ export function WikiRooms(): ReactElement {
 				prevent you from leaving the personal room.
 			</p>
 
-			<h3>What are all room-specific features?</h3>
+			<h3>Room-specific features</h3>
+			<ul>
+				{
+					// <li><a href='#RO_'></a></li>
+				}
+				<li><a href='#RO_Room_ownership'>Room ownership</a></li>
+				<li><a href='#RO_Room_deletion'>Room deletion</a></li>
+				<li><a href='#RO_Room_persistence'>Room persistence</a></li>
+				<li><a href='#RO_Room_visibility'>Room visibility</a></li>
+				<li><a href='#RO_Room_access'>Room access</a></li>
+				<li><a href='#RO_Room_administration'>Room administration</a></li>
+				<li><a href='#RO_Leaving_a_room'>Leaving a room</a></li>
+				<li><a href='#RO_Personal_room'>Personal room</a></li>
+				<li><a href='#RO_Room_inventory'>Room inventory</a></li>
+				<li><a href='#RO_Room_chat_Text_formatting'>Room Chat: Text formatting</a></li>
+			</ul>
 
-			<h4>Room ownership</h4>
+			<h4 id='RO_Room_ownership'>Room ownership</h4>
 			<p>
 				Rooms in Pandora are owned by one or more persons.
 			</p>
@@ -44,23 +59,23 @@ export function WikiRooms(): ReactElement {
 				<li>You currently cannot add other owners to your room. This is planned.</li>
 			</ul>
 
-			<h4>Room deletion</h4>
+			<h4 id='RO_Room_deletion'>Room deletion</h4>
 			<p>
 				To permanently delete a room, you have to give up ownership over it. The room is automatically deleted if it has no other owners.
 				Removal of ownership can be done in the chat room list when clicking on the room or in the room administration screen when inside the room.
 			</p>
 
-			<h4>Room persistence</h4>
+			<h4 id='RO_Room_persistence'>Room persistence</h4>
 			<p>
 				Rooms in Pandora are not lost when they are empty. Every room will stay as it was when it was left, including characters that are offline inside it.
 			</p>
 			<ul>
 				<li>All room settings such as name, description, admin and ban lists will be persistent.</li>
 				<li>All items in the room will stay as and where they are.</li>
-				<li>If charcters will disconnect or log off inside a room, they will stay in it, until they are removed from the room manually or automatically.</li>
+				<li>If characters will disconnect or log off inside a room, they will stay in it, until they are removed from the room manually or automatically.</li>
 			</ul>
 
-			<h4>Room visibility</h4>
+			<h4 id='RO_Room_visibility'>Room visibility</h4>
 			<p>
 				Rooms in Pandora can be public or private, which affects who can see them.
 			</p>
@@ -72,7 +87,7 @@ export function WikiRooms(): ReactElement {
 				<li>Certain information about a room normally visible from the outside, such as who is inside, is not shown when the room is password protected or the viewing account is on the room#s ban list.</li>
 			</ul>
 
-			<h4>Room access</h4>
+			<h4 id='RO_Room_access'>Room access</h4>
 			<p>
 				Rooms in Pandora that are visible can be joined unless they are password protected.
 			</p>
@@ -83,36 +98,57 @@ export function WikiRooms(): ReactElement {
 				<li>No one can join a room if it is full, not even owners or admins of it.</li>
 			</ul>
 
-			<h4>Room administration</h4>
+			<h4 id='RO_Room_administration'>Room administration</h4>
 			<p>
 				You can find the button to administrate the current room in the Room-tab.
 			</p>
 			<ul>
 				<li>You can set the room name and a long room description that both are visible from the outside, to accounts that can see the room.</li>
-				<li>The default number of charcters that can join a room is 10, but the possible upper limit is 100.</li>
+				<li>The default number of characters that can join a room is 10, but the possible upper limit is 100.</li>
 				<li>You can set if the room should be public and visible to everyone, as long as there is an admin online inside. The default is "no", which means the room is private.</li>
 				<li>You can give up room ownership, which deletes the room permanently, if you are the only owner.</li>
-				<li>The admin and ban lists are comma seperated and require the player account id.<br />
+				<li>The admin and ban lists are comma separated and require the player account id.<br />
 					The player account id number can be looked up in the account profile of the player.<br />
 					<strong>Careful:</strong> Do not mix it up with the character id which starts with "c" followed by a number.<br />
-					Alternatively, you can look up the player account id of a charcter inside the room up in the "Room"-Tab. It is the last number behind the name.<br />
-					The easiest way is to simply click on the name below a charcter and select "Admin" in the context menu.
+					Alternatively, you can look up the player account id of a character inside the room up in the "Room"-Tab. It is the last number behind the name.<br />
+					The easiest way is to simply click on the name below a character and select "Admin" in the context menu.
 				</li>
 				<li>When creating a room for the first time, you can select if characters can change their body items or gender pronouns when inside this room. This currently cannot be changed later on.</li>
 			</ul>
 
-			<h4>Leaving a room</h4>
-			=
-			TODO
-			=
+			<h4 id='RO_Leaving_a_room'>Leaving a room</h4>
+			<p>
+				You leave a chat room with the top-right-most button that. Restraints or other effects may prevent you from being able to do that.
+			</p>
+			<ul>
+				<li>Closing the browser, disconnecting, changing your character, or logging off, will all leave your character in the current chat room by default.</li>
+				<li>Being inside a <a href='/wiki/items/#IT_Room-level_items'>room device</a> slot will make you unable to leave a chat room</li>
+				<li>Most regular restraints will not be able to prevent you from leaving a room.</li>
+			</ul>
 
-			<h4>Personal room</h4>
+			<h4 id='RO_Personal_room'>Personal room</h4>
 			<p>
 				Every character has their own personal room that does not count towards this limit and that cannot be entered by any
 				other character. It functions as a singleplayer lobby and cannot be deleted or given up.<br />
-				You will automatically end up in the personal room when your selected character is not in any multiplayer room. Restraining effects will not
-				prevent you from leaving the personal room.
+				You will automatically end up in the personal room when your selected character is not in any chat room. Restraining effects (also from <a href='/wiki/items/#IT_Room-level_items'>room devices</a>)
+				will not prevent you from leaving the personal room.
 			</p>
+
+			<h4 id='RO_Room_inventory'>Room inventory</h4>
+			<p>
+				TODO
+			</p>
+
+			<h4 id='RO_Room_chat_Text_formatting'>Room chat: Text formatting</h4>
+			<p>
+				Pandora supports markdown syntax to write text italic or bold: "__bold text__" | "_italicized  text_"<br />
+				While the chat room input field is focused, you can also use keyboard shortcuts to get the supported markdown syntax:
+			</p>
+			<ul>
+				<li>Use "ctrl+b" to style the next new characters in bold or mark text and then use this shortcut.</li>
+				<li>Use "ctrl+i" to style the next new characters in italic or mark text and then use this shortcut.</li>
+				<li>No other markdown syntax is currently supported</li>
+			</ul>
 
 		</>
 	);

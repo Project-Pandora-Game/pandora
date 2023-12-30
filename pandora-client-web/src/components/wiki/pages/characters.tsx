@@ -5,16 +5,21 @@ export function WikiCharacters(): ReactElement {
 		<>
 			<h2>Characters</h2>
 
-			<h3>How do characters in Pandora work?</h3>
+			<h3>Introduction</h3>
 
 			<p>
 				Text block 1<br />
 				Text block 2
 			</p>
 
-			<h3>What are all character-specific features?</h3>
+			<h3>Character-specific features</h3>
+			<ul>
+				{
+					// <li><a href='#CH_'></a></li>
+				}
+			</ul>
 
-			<h4>Feature name</h4>
+			<h4 id='CH_'>Feature name</h4>
 			<p>
 				Text block 1<br />
 				Text block 2

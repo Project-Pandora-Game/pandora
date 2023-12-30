@@ -105,7 +105,7 @@ function GraphicsCharacterWithManagerImpl({
 }, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
 	const items = useCharacterAppearanceItems(characterState);
 
-	const isVisible = useAssetPreferenceVisibility();
+	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();
@@ -114,7 +114,10 @@ function GraphicsCharacterWithManagerImpl({
 		for (let i = visibleItems.length - 1; i >= 0; i--) {
 			const item = visibleItems[i];
 
-			let visible = isVisible(item.asset);
+			let visible = true;
+
+			// If player marked item as "do not render", then hide it
+			visible &&= assetPreferenceIsVisible(item.asset);
 
 			// If this item has any attribute that is hidden, hide it
 			visible &&= !Array.from(item.getProperties().attributes)
@@ -147,7 +150,7 @@ function GraphicsCharacterWithManagerImpl({
 			);
 		}
 		return result;
-	}, [items, isVisible, graphicsGetter, layerStateOverrideGetter]);
+	}, [items, assetPreferenceIsVisible, graphicsGetter, layerStateOverrideGetter]);
 
 	const { view } = characterState.actualPose;
 
@@ -236,7 +239,12 @@ function GraphicsCharacterImpl(props: GraphicsCharacterProps, ref: React.Forward
 
 export const GraphicsCharacter = React.forwardRef(GraphicsCharacterImpl);
 
-function useAssetPreferenceVisibility() {
+export function useAssetPreferenceVisibilityCheck(): (asset: Asset) => boolean {
 	const preferences = usePlayerData()?.assetPreferences ?? ASSET_PREFERENCES_DEFAULT;
-	return React.useCallback((asset: Asset) => ResolveAssetPreference(preferences, asset) !== 'doNotRender', [preferences]);
+	return useCallback((asset: Asset): boolean => {
+		const resolution = ResolveAssetPreference(preferences, asset);
+		if (resolution.preference === 'doNotRender')
+			return false;
+		return true;
+	}, [preferences]);
 }

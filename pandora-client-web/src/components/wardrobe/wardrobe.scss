@@ -24,8 +24,7 @@ $header-height: 2em;
 		flex-flow: row;
 		gap: 1em;
 
-		.characterPreview,
-		.roomPreview {
+		.characterPreview, .roomPreview {
 			position: relative;
 			height: 100%;
 			width: max(min(20em, 90vw), 33vw);
@@ -98,6 +97,28 @@ $header-height: 2em;
 
 $drop-overlay-height: 1.8em;
 $drop-overlay-gap: 0.3em;
+
+.itemPreview {
+	overflow: hidden;
+
+	&.missing {
+		border: solid $black 1px;
+		@include center-flex;
+	}
+
+	img {
+		width: 100%;
+		height: 100%;
+
+		&.black {
+			filter: brightness(0) saturate(100%);
+		}
+	}
+
+	&.doNotRender img {
+		filter: brightness(0%) blur(9px) !important;
+	}
+}
 
 .inventoryView {
 	@include flex(column);
@@ -200,6 +221,17 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
+	&.assetPreference {
+		.toolbar {
+			height: 3.5em;
+
+			.itemPreview {
+				height: 100%;
+				aspect-ratio: 1;
+			}
+		}
+	}
+
 	.overlay {
 		position: absolute;
 		inset: 0;
@@ -225,10 +257,8 @@ $drop-overlay-gap: 0.3em;
 	.list,
 	.grid {
 		position: relative;
-		min-height: 100%;
 		padding: 3px;
 		gap: 3px;
-		flex: 1;
 
 		&.withDropButtons {
 			padding: calc($drop-overlay-height * 0.5 + 3px) 3px;
@@ -262,14 +292,6 @@ $drop-overlay-gap: 0.3em;
 			flex-flow: column-reverse;
 			justify-content: flex-end;
 		}
-
-		&.spawn-style-preference .inventoryViewItem::after {
-			right: 5.2em;
-		}
-	}
-
-	.spawn-style-preference .inventoryViewItem:hover {
-		cursor: default !important
 	}
 
 	.grid {
@@ -309,8 +331,7 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
-	&:focus,
-	&:active {
+	&:focus, &:active {
 		border-color: white;
 	}
 
@@ -329,65 +350,46 @@ $drop-overlay-gap: 0.3em;
 		clip-path: polygon(0 0, 0.75em 0, 0 0.75em);
 	}
 
-	.itemPreview {
-		overflow: hidden;
-
-		&.missing {
-			border: solid $black 1px;
-			@include center-flex;
-		}
-
-		img {
-			width: 100%;
-			height: 100%;
-
-			&.black {
-				filter: brightness(0) saturate(100%);
-			}
-		}
-	}
-
 	&.listMode {
-		height: 3em;
+		min-height: 3em;
 		align-items: center;
 		gap: 0.5em;
 
 		&.small {
-			height: 2em;
-		}
-
-		&.textWrap {
-			height: fit-content;
 			min-height: 2em;
+
+			.itemPreview {
+				height: 1.5em;
+				width: 1.5em;
+				margin: 0.25em;
+
+				&.image {
+					height: 2em;
+					width: 2em;
+					margin: 0;
+				}
+			}
 		}
 
 		.itemName {
 			margin: 3px;
+			flex: 1;
 		}
 
 		.itemPreview {
 			height: 1.5em;
 			width: 1.5em;
-			aspect-ratio: 0.99;
-			margin-left: 0.5em;
+			margin: 0.75em;
 
 			&.image {
-				height: 100%;
-				width: unset;
-				margin-left: 0;
+				height: 3em;
+				width: 3em;
+				margin: 0;
 			}
 		}
 
 		.quickActions {
 			margin: 3px 3px 3px auto;
-		}
-
-		select {
-			margin-left: auto;
-			height: 2em;
-			width: fit-content;
-			line-height: 2em;
-			padding: 0;
 		}
 	}
 
@@ -431,6 +433,17 @@ $drop-overlay-gap: 0.3em;
 		text-shadow: 0 0 0.05em black, 0 0 0.05em black, 0 0 0.05em black, 0 0 0.05em black;
 	}
 
+	&.pref-favorite {
+		.itemName {
+			font-weight: bold;
+		}
+
+		&::after {
+			content: '★';
+			color: #fafa00;
+		}
+	}
+
 	&.pref-maybe {
 		.itemName {
 			font-style: italic;
@@ -438,15 +451,7 @@ $drop-overlay-gap: 0.3em;
 
 		&::after {
 			content: '?';
-			color: rgb(250, 125, 0);
-		}
-	}
-
-	&.pref-prevent,
-	&.pref-doNotRender {
-		.itemName {
-			text-decoration: line-through;
-			font-style: italic;
+			color: #fa7d00;
 		}
 	}
 
@@ -455,9 +460,14 @@ $drop-overlay-gap: 0.3em;
 			filter: grayscale(100%);
 		}
 
+		.itemName {
+			text-decoration: line-through;
+			font-style: italic;
+		}
+
 		&::after {
 			content: '✕';
-			color: rgb(250, 0, 0);
+			color: #fa0000;
 		}
 	}
 
@@ -466,20 +476,14 @@ $drop-overlay-gap: 0.3em;
 			filter: brightness(0%) blur(9px);
 		}
 
+		.itemName {
+			text-decoration: line-through;
+			font-style: italic;
+		}
+
 		&::after {
 			content: '✕';
-			color: rgb(0, 0, 0);
-		}
-	}
-
-	&.pref-favorite {
-		.itemName {
-			font-weight: bold;
-		}
-
-		&::after {
-			content: '★';
-			color: rgb(250, 250, 0);
+			color: black;
 		}
 	}
 
@@ -540,8 +544,7 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
-	&:focus,
-	&:active {
+	&:focus, &:active {
 		border-color: white;
 	}
 
@@ -553,8 +556,6 @@ $drop-overlay-gap: 0.3em;
 	&.pending:not(.selected) {
 		background-color: #999;
 	}
-
-
 }
 
 .wardrobeColorRow {
@@ -596,8 +597,7 @@ $drop-overlay-gap: 0.3em;
 	.armPositioningTable {
 		margin: 0.5em;
 
-		&,
-		td {
+		&, td {
 			border: solid 1px black;
 			border-collapse: collapse;
 			padding: 0.25em;
@@ -626,8 +626,7 @@ $drop-overlay-gap: 0.3em;
 	}
 }
 
-.action-warning,
-.attribute-description {
+.action-warning, .attribute-description {
 	background: white;
 	padding: 1em;
 	border: 2px solid black;

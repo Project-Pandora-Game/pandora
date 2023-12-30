@@ -10,12 +10,12 @@ import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInt
 import { Immutable } from 'immer';
 import { PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema } from '../gameLogic';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
+import { AssetPreferencesSchema } from '../character/assetPreferences';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item';
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
-import { AssetPreferencesSchema } from '../character/assetPreferences';
 
 /** Client->Shard messages */
 export const ClientShardSchema = {

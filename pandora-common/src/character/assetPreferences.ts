@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import type { Immutable } from 'immer';
-import { AssetIdSchema } from '../assets/base';
+import { AssetId, AssetIdSchema } from '../assets/base';
 import type { Asset } from '../assets/asset';
 import type { CharacterId } from './characterTypes';
 import { KnownObject } from '../utility';
 import { AssetManager } from '../assets';
 
-export const AttributePreferenceTypeSchema = z.enum(['normal', 'prevent', 'doNotRender']);
+export const AttributePreferenceTypeSchema = z.enum(['normal', 'maybe', 'prevent', 'doNotRender']);
 export type AttributePreferenceType = z.infer<typeof AttributePreferenceTypeSchema>;
 
 export const AttributePreferenceSchema = z.object({
@@ -33,18 +33,43 @@ export const ASSET_PREFERENCES_DEFAULT: Readonly<AssetPreferences> = Object.free
 	assets: {},
 });
 
-export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>, asset: Asset, _source?: CharacterId): AssetPreferenceType {
-	const assetPreference = preferences.assets[asset.id];
-	if (assetPreference != null)
-		return assetPreference.base;
+export type AssetPreferenceResolution = {
+	type: 'attribute';
+	attribute: string;
+	preference: AssetPreferenceType;
+} | {
+	type: 'asset';
+	asset: AssetId;
+	preference: AssetPreferenceType;
+};
 
-	let result: AssetPreferenceType = 'normal';
+export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>, asset: Asset, _source?: CharacterId): AssetPreferenceResolution {
+	const assetPreference = preferences.assets[asset.id];
+	if (assetPreference != null) {
+		return {
+			type: 'asset',
+			asset: asset.id,
+			preference: assetPreference.base,
+		};
+	}
+
+	let result: AssetPreferenceResolution = {
+		type: 'asset',
+		asset: asset.id,
+		preference: 'normal',
+	};
 	for (const attribute of asset.staticAttributes) {
-		if (preferences.attributes[attribute] != null) {
-			const previous = AssetPreferenceTypeSchema.options.indexOf(result);
-			const base = AssetPreferenceTypeSchema.options.indexOf(preferences.attributes[attribute].base);
-			if (base > previous)
-				result = preferences.attributes[attribute].base;
+		const attributePreference = preferences.attributes[attribute];
+		if (attributePreference != null) {
+			const previous = AssetPreferenceTypeSchema.options.indexOf(result.preference);
+			const base = AssetPreferenceTypeSchema.options.indexOf(attributePreference.base);
+			if (base > previous) {
+				result = {
+					type: 'attribute',
+					attribute,
+					preference: attributePreference.base,
+				};
+			}
 		}
 	}
 
@@ -61,20 +86,18 @@ export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>,
 export function CleanupAssetPreferences(assetManager: AssetManager, {
 	attributes = {},
 	assets = {},
-}: Partial<AssetPreferences>, allowBaseState: boolean): boolean {
+}: Partial<AssetPreferences>): boolean {
 	let hasInvalid = false;
 
 	for (const key of KnownObject.keys(attributes)) {
 		const attribute = assetManager.attributes.get(key);
-		if (attribute == null
-			|| attribute.useAsAssetPreference === false
-			|| attribute.useAsWardrobeFilter?.tab === 'room'
-		) {
+		if (attribute == null || attribute.useAsAssetPreference === false) {
 			delete attributes[key];
 			hasInvalid = true;
 			continue;
 		}
-		if (!allowBaseState && Object.keys(attributes[key]).length === 1 && attributes[key].base === 'normal') {
+		// Never allow "default" value for attributes (act sparsely)
+		if (Object.keys(attributes[key] ?? {}).length === 1 && attributes[key]?.base === 'normal') {
 			delete attributes[key];
 			hasInvalid = true;
 			continue;
@@ -104,20 +127,6 @@ export function CleanupAssetPreferences(assetManager: AssetManager, {
 			case 'personal':
 			case 'lock':
 				break;
-		}
-		if (!allowBaseState && KnownObject.keys(value).length === 1 && value.base === 'normal') {
-			let hasAttribute = false;
-			for (const attribute of asset.staticAttributes) {
-				if (attributes[attribute] != null) {
-					hasAttribute = true;
-					break;
-				}
-			}
-			if (!hasAttribute) {
-				delete assets[key];
-				hasInvalid = true;
-				continue;
-			}
 		}
 	}
 

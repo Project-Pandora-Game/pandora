@@ -25,8 +25,10 @@ import { useObservable } from '../../observable';
 export function useWardrobeItems(currentFocus: WardrobeFocus): {
 	preFilter: (item: Item | Asset) => boolean;
 	containerContentsFilter: (asset: Asset) => boolean;
+	assetFilterAttributes: readonly string[];
 } {
 	const { target } = useWardrobeContext();
+	const assetManager = useAssetManager();
 
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
@@ -55,33 +57,50 @@ export function useWardrobeItems(currentFocus: WardrobeFocus): {
 
 	const containerPath = useMemo(() => SplitContainerPath(currentFocus.container), [currentFocus.container]);
 	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
+	const containerModule = containerPath ? containerItem?.getModules().get(containerPath.module) : undefined;
 	const containerContentsFilter = useMemo<(asset: Asset) => boolean>(() => {
-		const module = containerPath ? containerItem?.getModules().get(containerPath.module) : undefined;
-		return module?.acceptedContentFilter?.bind(module) ?? (() => true);
-	}, [containerPath, containerItem]);
+		return containerModule?.acceptedContentFilter?.bind(containerModule) ?? (() => true);
+	}, [containerModule]);
+
+	const assetFilterAttributes = useMemo((): readonly string[] => {
+		// If target is lock slot, only show locks
+		if (containerModule?.type === 'lockSlot') {
+			return [...assetManager.attributes.entries()]
+				.filter((a) => a[1].useAsWardrobeFilter?.tabs.includes('lockSlot'))
+				.map((a) => a[0]);
+		}
+
+		// If target is lock slot, only show storable items
+		if (containerModule?.type === 'storage') {
+			return [...assetManager.attributes.entries()]
+				.filter((a) => a[1].useAsWardrobeFilter?.tabs.includes('storage'))
+				.map((a) => a[0]);
+		}
+
+		// If target is character, show only wearable filters
+		if (target.type === 'character') {
+			return [...assetManager.attributes.entries()]
+				.filter((a) => a[1].useAsWardrobeFilter?.tabs.includes('worn'))
+				.map((a) => a[0]);
+		}
+
+		return [...assetManager.attributes.entries()]
+			.filter((a) => a[1].useAsWardrobeFilter?.tabs.includes('room'))
+			.map((a) => a[0]);
+	}, [assetManager, containerModule, target]);
 
 	return {
 		preFilter,
 		containerContentsFilter,
+		assetFilterAttributes,
 	};
 }
 
 export function WardrobeItemManipulation({ className }: { className?: string; }): ReactElement {
 	const { globalState, target, assetList, heldItem, setHeldItem, focus } = useWardrobeContext();
 	const currentFocus = useObservable(focus);
-	const { preFilter, containerContentsFilter } = useWardrobeItems(currentFocus);
+	const { preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems(currentFocus);
 
-	const assetManager = useAssetManager();
-	const assetFilterCharacterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
-		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'item')
-		.map((a) => a[0])
-	), [assetManager]);
-	const assetFilterRoomAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
-		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'room')
-		.map((a) => a[0])
-	), [assetManager]);
-
-	const assetFilterAttributes: string[] = target.type === 'character' ? assetFilterCharacterAttributes : assetFilterRoomAttributes;
 	const title: string = target.type === 'character' ? 'Currently worn items' : 'Room inventory';
 	const isRoomInventory = target.type === 'room' && currentFocus.container.length === 0;
 

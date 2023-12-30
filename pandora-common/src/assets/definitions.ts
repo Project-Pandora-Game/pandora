@@ -468,7 +468,7 @@ export type AssetAttributeDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	description: string;
 	icon?: string;
 	useAsWardrobeFilter?: {
-		tab: 'item' | 'body' | 'room';
+		tabs: ('worn' | 'body' | 'room' | 'storage' | 'lockSlot')[];
 		excludeAttributes?: readonly A['attributes'][];
 	};
 	/** Set to false to prevent this attribute from being used to specify asset preferences/permissions/blocks */

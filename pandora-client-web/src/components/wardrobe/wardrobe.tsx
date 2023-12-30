@@ -149,7 +149,7 @@ function WardrobeCharacter({ character }: {
 					</Tab>
 					{
 						character.isPlayer() ? (
-							<Tab name='Item limits'>
+							<Tab name='Item Limits'>
 								<div className='wardrobe-pane'>
 									<WardrobeItemPreferences />
 								</div>

@@ -956,6 +956,18 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 	if (!manipulator.modifyItem(itemId, (it) => {
 		if (!it.isType('roomDevice'))
 			return null;
+
+		if (deployment === null && it.slotOccupancy.size > 0) {
+			processingContext.addProblem({
+				result: 'validationError',
+				validationError: {
+					problem: 'deviceOccupied',
+					asset: it.asset.id,
+				},
+			});
+			return null;
+		}
+
 		previousDeviceState = it;
 		return it.changeDeployment(deployment);
 	}))

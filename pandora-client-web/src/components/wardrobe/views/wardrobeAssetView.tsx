@@ -359,20 +359,14 @@ export function useAssetPreferences(): Immutable<AssetPreferences> {
 }
 
 export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
-	const { player, target } = useWardrobeContext();
+	const { player } = useWardrobeContext();
 	const preferences = useAssetPreferences();
-	const selfPreference = useCharacterDataOptional((target.type === 'room' || target.id !== player.id) ? player : null)?.assetPreferences;
 
 	return React.useCallback((asset) => {
 		const pref = ResolveAssetPreference(preferences, asset, player.id).preference;
-		if (selfPreference == null || pref === 'doNotRender')
-			return pref;
-
-		if (ResolveAssetPreference(selfPreference, asset, player.id).preference === 'doNotRender')
-			return 'doNotRender';
 
 		return pref;
-	}, [preferences, selfPreference, player.id]);
+	}, [preferences, player.id]);
 }
 
 export function useAssetPreference(asset: Asset): AssetPreferenceType {

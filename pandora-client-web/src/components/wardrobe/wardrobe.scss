@@ -359,12 +359,14 @@ $drop-overlay-gap: 0.3em;
 			min-height: 2em;
 
 			.itemPreview {
-				height: 2em;
-				width: 2em;
-				padding: 0.25em;
+				height: 1.5em;
+				width: 1.5em;
+				margin: 0.25em;
 
 				&.image {
-					padding: 0;
+					height: 2em;
+					width: 2em;
+					margin: 0;
 				}
 			}
 		}
@@ -375,13 +377,14 @@ $drop-overlay-gap: 0.3em;
 		}
 
 		.itemPreview {
-			height: 3em;
-			width: 3em;
-			margin-left: 0;
-			padding: 0.75em;
+			height: 1.5em;
+			width: 1.5em;
+			margin: 0.75em;
 
 			&.image {
-				padding: 0;
+				height: 3em;
+				width: 3em;
+				margin: 0;
 			}
 		}
 

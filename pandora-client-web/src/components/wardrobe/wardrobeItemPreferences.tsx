@@ -12,8 +12,10 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { noop } from 'lodash';
 import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
-import { Column } from '../common/container/container';
+import { Column, Row } from '../common/container/container';
 import { Select } from '../common/select/select';
+import { useBrowserStorage } from '../../browserStorage';
+import { z } from 'zod';
 
 type ItemPreferencesFocus = {
 	type: 'none';
@@ -313,6 +315,8 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 }): ReactElement {
 	const idBase = useId();
 
+	const [showNonFilterableAttributes, setShowNonFilterableAttributes] = useBrowserStorage<boolean>('wardrobe.itemPreferences.showNonFilterableAttributes', false, z.boolean());
+
 	const assetManager = useAssetManager();
 	const shardConnector = useShardConnector();
 	const currentPreferences = useAssetPreferences();
@@ -369,17 +373,38 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 
 				<fieldset>
 					<legend>Attributes this item has (in at least one configuration)</legend>
+					<Row>
+						<input
+							id={ `${idBase}-allAttributesToggle` }
+							type='checkbox'
+							checked={ showNonFilterableAttributes }
+							onChange={ (e) => setShowNonFilterableAttributes(e.target.checked) }
+						/>
+						<label htmlFor={ `${idBase}-allAttributesToggle` }>Show attributes that cannot be used for limits</label>
+					</Row>
 					<div className='list'>
 						{
 							[...assetManager.attributes.entries()]
-								.filter(([_attribute, definition]) => (definition.useAsAssetPreference ?? true))
+								.filter(([_attribute, definition]) => (showNonFilterableAttributes || (definition.useAsAssetPreference ?? true)))
 								.filter(([attribute, _definition]) => asset.staticAttributes.has(attribute))
-								.map(([attribute, definition]) => (
-									<div key={ attribute } className='inventoryViewItem listMode small' title={ definition.description }>
-										<InventoryAttributePreview attribute={ attribute } />
-										<span className='itemName'>{ definition.name }</span>
-									</div>
-								))
+								.map(([attribute, definition]) => {
+									const attributePreference: AssetPreferenceType = currentPreferences.attributes[attribute]?.base ?? 'normal';
+
+									return (
+										<div key={ attribute }
+											className={ classNames(
+												'inventoryViewItem',
+												'listMode',
+												'small',
+												`pref-${attributePreference}`,
+											) }
+											title={ definition.description }
+										>
+											<InventoryAttributePreview attribute={ attribute } />
+											<span className='itemName'>{ definition.name }</span>
+										</div>
+									);
+								})
 						}
 					</div>
 				</fieldset>

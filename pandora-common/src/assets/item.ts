@@ -33,7 +33,12 @@ export type RoomDeviceDeploymentPosition = z.infer<typeof RoomDeviceDeploymentPo
 
 export const RoomDeviceDeploymentSchema = RoomDeviceDeploymentPositionSchema.extend({
 	deployed: z.boolean().default(true),
-}).nullable();
+}).catch({
+	deployed: false,
+	x: 0,
+	y: 0,
+	yOffset: 0,
+});
 export type RoomDeviceDeployment = z.infer<typeof RoomDeviceDeploymentSchema>;
 
 export const RoomDeviceDeploymentChangeSchema = z.discriminatedUnion('deployed', [
@@ -658,9 +663,6 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 	}
 
 	public isDeployed(): this is ItemRoomDevice & { deployment: RoomDeviceDeployment & { deployed: true; }; } {
-		if (this.deployment == null)
-			return false;
-
 		return this.deployment.deployed;
 	}
 
@@ -677,7 +679,12 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 
 		// Load device-specific data
 		const roomDeviceData: RoomDeviceBundle = bundle.roomDeviceData ?? {
-			deployment: null,
+			deployment: {
+				x: Math.floor(200 + Math.random() * 800),
+				y: 0,
+				yOffset: 0,
+				deployed: false,
+			},
 			slotOccupancy: {},
 		};
 
@@ -685,7 +692,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 
 		const slotOccupancy = new Map<string, CharacterId>();
 		// Skip occupied slots if we are not deployed
-		if (deployment != null) {
+		if (deployment.deployed) {
 			for (const slot of Object.keys(asset.definition.slots)) {
 				if (roomDeviceData.slotOccupancy[slot] != null) {
 					slotOccupancy.set(slot, roomDeviceData.slotOccupancy[slot]);
@@ -774,9 +781,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		}
 		return this.withProps({
 			deployment: {
-				x: Math.floor(200 + Math.random() * 800),
-				y: 0,
-				yOffset: 0,
+				...this.deployment,
 				deployed: true,
 			},
 		});

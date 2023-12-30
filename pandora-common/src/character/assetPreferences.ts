@@ -23,8 +23,8 @@ export const AssetPreferenceSchema = z.object({
 export type AssetPreference = z.infer<typeof AssetPreferenceSchema>;
 
 export const AssetPreferencesSchema = z.object({
-	attributes: z.record(z.string(), AttributePreferenceSchema).default({}),
-	assets: z.record(AssetIdSchema, AssetPreferenceSchema).default({}),
+	attributes: z.record(z.string(), AttributePreferenceSchema.optional()).default({}),
+	assets: z.record(AssetIdSchema, AssetPreferenceSchema.optional()).default({}),
 });
 export type AssetPreferences = z.infer<typeof AssetPreferencesSchema>;
 
@@ -59,14 +59,15 @@ export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>,
 		preference: 'normal',
 	};
 	for (const attribute of asset.staticAttributes) {
-		if (preferences.attributes[attribute] != null) {
+		const attributePreference = preferences.attributes[attribute];
+		if (attributePreference != null) {
 			const previous = AssetPreferenceTypeSchema.options.indexOf(result.preference);
-			const base = AssetPreferenceTypeSchema.options.indexOf(preferences.attributes[attribute].base);
+			const base = AssetPreferenceTypeSchema.options.indexOf(attributePreference.base);
 			if (base > previous) {
 				result = {
 					type: 'attribute',
 					attribute,
-					preference: preferences.attributes[attribute].base,
+					preference: attributePreference.base,
 				};
 			}
 		}
@@ -85,7 +86,7 @@ export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>,
 export function CleanupAssetPreferences(assetManager: AssetManager, {
 	attributes = {},
 	assets = {},
-}: Partial<AssetPreferences>, allowBaseState: boolean): boolean {
+}: Partial<AssetPreferences>): boolean {
 	let hasInvalid = false;
 
 	for (const key of KnownObject.keys(attributes)) {
@@ -98,7 +99,8 @@ export function CleanupAssetPreferences(assetManager: AssetManager, {
 			hasInvalid = true;
 			continue;
 		}
-		if (!allowBaseState && Object.keys(attributes[key]).length === 1 && attributes[key].base === 'normal') {
+		// Never allow "default" value for attributes (act sparsely)
+		if (Object.keys(attributes[key] ?? {}).length === 1 && attributes[key]?.base === 'normal') {
 			delete attributes[key];
 			hasInvalid = true;
 			continue;
@@ -128,20 +130,6 @@ export function CleanupAssetPreferences(assetManager: AssetManager, {
 			case 'personal':
 			case 'lock':
 				break;
-		}
-		if (!allowBaseState && KnownObject.keys(value).length === 1 && value.base === 'normal') {
-			let hasAttribute = false;
-			for (const attribute of asset.staticAttributes) {
-				if (attributes[attribute] != null) {
-					hasAttribute = true;
-					break;
-				}
-			}
-			if (!hasAttribute) {
-				delete assets[key];
-				hasInvalid = true;
-				continue;
-			}
 		}
 	}
 

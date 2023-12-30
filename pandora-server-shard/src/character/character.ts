@@ -189,7 +189,7 @@ export class Character {
 			this.setValue('interactionConfig', currentInteractionConfig, false);
 		}
 		const assetPreferences = cloneDeep(this.data.assetPreferences);
-		if (CleanupAssetPreferences(assetManager, assetPreferences, false)) {
+		if (CleanupAssetPreferences(assetManager, assetPreferences)) {
 			this.setValue('assetPreferences', assetPreferences, true);
 		}
 
@@ -562,37 +562,41 @@ export class Character {
 		}, true);
 	}
 
-	public setAssetPreferences(preferences: Partial<AssetPreferences>): 'ok' | 'invalid' {
-		if (CleanupAssetPreferences(assetManager, preferences, true))
+	public setAssetPreferences(newPreferences: Partial<AssetPreferences>): 'ok' | 'invalid' {
+		if (CleanupAssetPreferences(assetManager, newPreferences))
 			return 'invalid';
 
 		let changed = false;
 		const updated = cloneDeep(this.assetPreferences);
 
-		if (preferences.attributes != null) {
-			for (const [key, value] of KnownObject.entries(preferences.attributes)) {
-				if (isEqual(updated.attributes[key], value))
+		if (newPreferences.attributes != null) {
+			for (const key of new Set([...KnownObject.keys(newPreferences.attributes), ...KnownObject.keys(updated.attributes)])) {
+				const newValue = newPreferences.attributes[key];
+
+				if (isEqual(updated.attributes[key], newValue))
 					continue;
 
-				if (Object.keys(value).length === 1 && value.base === 'normal')
+				if (newValue == null) {
 					delete updated.attributes[key];
-				else
-					updated.attributes[key] = value;
-
+				} else {
+					updated.attributes[key] = newValue;
+				}
 				changed = true;
 			}
 		}
 
-		if (preferences.assets != null) {
-			for (const [key, value] of KnownObject.entries(preferences.assets)) {
-				const asset = assetManager.getAssetById(key);
-				if (!asset)
-					return 'invalid';
+		if (newPreferences.assets != null) {
+			for (const key of new Set([...KnownObject.keys(newPreferences.assets), ...KnownObject.keys(updated.assets)])) {
+				const newValue = newPreferences.assets[key];
 
-				if (isEqual(updated.assets[key], value))
+				if (isEqual(updated.assets[key], newValue))
 					continue;
 
-				updated.assets[key] = value;
+				if (newValue == null) {
+					delete updated.assets[key];
+				} else {
+					updated.assets[key] = newValue;
+				}
 				changed = true;
 			}
 		}

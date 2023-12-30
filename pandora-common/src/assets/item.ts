@@ -1177,7 +1177,8 @@ export class ItemLock extends ItemBase<'lock'> {
 		if (this.asset.definition.password != null && !playerRestrictionManager.forceAllowItemActions()) {
 			if (password == null) {
 				return null;
-			} else if (this.lockData.hidden?.side === 'server' && password !== this.lockData.hidden.password) {
+			}
+			if (this.lockData.hidden?.side === 'server' && !ItemLock._isEqualPassword(this.asset, this.lockData.hidden.password, password)) {
 				failure({
 					type: 'lockInteractionPrevented',
 					moduleAction: 'unlock',
@@ -1275,6 +1276,14 @@ export class ItemLock extends ItemBase<'lock'> {
 				AssertNever(def.format);
 		}
 		return true;
+	}
+
+	private static _isEqualPassword(_asset: Asset<'lock'>, lhs?: string, rhs?: string): boolean {
+		if (lhs == null || rhs == null)
+			return lhs === rhs;
+
+		// all passwords are case insensitive for now
+		return lhs.localeCompare(rhs, undefined, { sensitivity: 'base' }) === 0;
 	}
 }
 

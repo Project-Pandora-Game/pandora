@@ -50,7 +50,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 	}, []);
 
 	const bodyFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
-		.filter((a) => a[1].useAsWardrobeFilter?.tab === 'body')
+		.filter((a) => a[1].useAsWardrobeFilter?.tabs.includes('body'))
 		.map((a) => a[0])
 	), [assetManager]);
 

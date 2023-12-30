@@ -32,7 +32,7 @@ export function InventoryAssetView({ className, title, children, assets, contain
 	children?: ReactNode;
 	assets: readonly Asset[];
 	container: ItemContainerPath;
-	attributesFilterOptions?: string[];
+	attributesFilterOptions?: readonly string[];
 	spawnStyle: 'spawn' | 'pickup';
 }): ReactElement | null {
 	const { targetSelector, extraItemActions, heldItem, showExtraActionButtons } = useWardrobeContext();
@@ -87,7 +87,7 @@ export function WardrobeAssetList({ className, title, children, overlay, assets,
 	overlay?: ReactNode;
 	assets: readonly Asset[];
 	container: ItemContainerPath;
-	attributesFilterOptions?: string[];
+	attributesFilterOptions?: readonly string[];
 	itemSortIgnorePreferenceOrdering?: boolean;
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	ListItemComponent: React.ComponentType<WardrobeAssetListItemProps>;

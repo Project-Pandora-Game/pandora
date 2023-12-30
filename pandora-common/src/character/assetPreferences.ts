@@ -91,10 +91,7 @@ export function CleanupAssetPreferences(assetManager: AssetManager, {
 
 	for (const key of KnownObject.keys(attributes)) {
 		const attribute = assetManager.attributes.get(key);
-		if (attribute == null
-			|| attribute.useAsAssetPreference === false
-			|| attribute.useAsWardrobeFilter?.tab === 'room'
-		) {
+		if (attribute == null || attribute.useAsAssetPreference === false) {
 			delete attributes[key];
 			hasInvalid = true;
 			continue;

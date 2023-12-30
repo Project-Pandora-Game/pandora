@@ -20,7 +20,7 @@ export class AssetManager {
 	public readonly rawData: Immutable<AssetsDefinitionFile>;
 
 	public readonly backgroundTags: ReadonlyMap<string, BackgroundTagDefinition>;
-	public readonly attributes: ReadonlyMap<string, Readonly<AssetAttributeDefinition>>;
+	public readonly attributes: ReadonlyMap<string, Immutable<AssetAttributeDefinition>>;
 	public readonly bodyparts: readonly AssetBodyPart[];
 	public readonly randomization: AppearanceRandomizationData;
 
@@ -48,7 +48,7 @@ export class AssetManager {
 		return CloneDeepMutable(this._backgrounds.find((b) => b.id === id) ?? null);
 	}
 
-	public getAttributeDefinition(attribute: string): Readonly<AssetAttributeDefinition> | undefined {
+	public getAttributeDefinition(attribute: string): Immutable<AssetAttributeDefinition> | undefined {
 		return this.attributes.get(attribute);
 	}
 
@@ -133,7 +133,7 @@ export class AssetManager {
 		//#endregion
 
 		//#region Load attributes
-		const attributes = new Map<string, Readonly<AssetAttributeDefinition>>();
+		const attributes = new Map<string, Immutable<AssetAttributeDefinition>>();
 
 		for (const [id, definition] of Object.entries(fullData.attributes)) {
 			attributes.set(id, definition);

@@ -6,7 +6,7 @@ import type { CharacterId } from './characterTypes';
 import { KnownObject } from '../utility';
 import { AssetManager } from '../assets';
 
-export const AttributePreferenceTypeSchema = z.enum(['normal', 'prevent', 'doNotRender']);
+export const AttributePreferenceTypeSchema = z.enum(['normal', 'maybe', 'prevent', 'doNotRender']);
 export type AttributePreferenceType = z.infer<typeof AttributePreferenceTypeSchema>;
 
 export const AttributePreferenceSchema = z.object({

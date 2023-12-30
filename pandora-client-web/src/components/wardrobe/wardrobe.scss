@@ -221,6 +221,17 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
+	&.assetPreference {
+		.toolbar {
+			height: 3.5em;
+
+			.itemPreview {
+				height: 100%;
+				aspect-ratio: 1;
+			}
+		}
+	}
+
 	.overlay {
 		position: absolute;
 		inset: 0;

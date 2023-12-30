@@ -1,0 +1,473 @@
+import classNames from 'classnames';
+import React, { ReactElement, createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { Tab, TabContainer } from '../common/tabs/tabs';
+import { useAssetManager } from '../../assets/assetManager';
+import { WardrobeAssetList, useAssetPreference, useAssetPreferences } from './views/wardrobeAssetView';
+import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
+import { useWardrobeContext } from './wardrobeContext';
+import { InventoryAssetPreview } from './wardrobeComponents';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { noop } from 'lodash';
+import { Scrollbar } from '../common/scrollbar/scrollbar';
+import { Immutable } from 'immer';
+import { useGraphicsUrl } from '../../assets/graphicsManager';
+import { Column } from '../common/container/container';
+import { Select } from '../common/select/select';
+
+type ItemPreferencesFocus = {
+	type: 'none';
+} | {
+	type: 'attribute';
+	attribute: string;
+} | {
+	type: 'asset';
+	asset: AssetId;
+};
+
+const WardrobeItemPreferencesFocusContext = createContext<{
+	focus: ItemPreferencesFocus;
+	setFocus: (newFocus: ItemPreferencesFocus) => void;
+}>({ focus: { type: 'none' }, setFocus: noop });
+
+export function WardrobeItemPreferences(): ReactElement {
+	const [focus, setFocus] = useState<ItemPreferencesFocus>({ type: 'none' });
+
+	return (
+		<WardrobeItemPreferencesFocusContext.Provider value={
+			useMemo(() => ({
+				focus,
+				setFocus,
+			}), [focus])
+		}>
+			<div className='wardrobe-ui'>
+				<TabContainer className='flex-1'>
+					<Tab name='Attributes'>
+						<WardrobePreferencesAttributePicker
+							title='Choose attribute'
+						/>
+					</Tab>
+					<Tab name='Items'>
+						<WardrobePreferencesItemPicker
+							title='Choose item'
+						/>
+					</Tab>
+				</TabContainer>
+				<WardrobePreferencesConfiguration focus={ focus } />
+			</div>
+		</WardrobeItemPreferencesFocusContext.Provider>
+	);
+}
+
+export function WardrobePreferencesItemPicker({ title }: {
+	title: string;
+}): ReactElement | null {
+	const { assetList } = useWardrobeContext();
+	const assetManager = useAssetManager();
+
+	const attributesFilterOptions = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
+		.filter((a) => a[1].useAsWardrobeFilter != null)
+		.map((a) => a[0])
+	), [assetManager]);
+
+	return (
+		<WardrobeAssetList
+			title={ title }
+			assets={ assetList.filter((asset) => {
+				return !asset.isType('roomDevice') && !asset.isType('roomDeviceWearablePart');
+			}) }
+			container={ EMPTY_ARRAY }
+			attributesFilterOptions={ attributesFilterOptions }
+			itemSortIgnorePreferenceOrdering
+			ListItemComponent={ WardrobePreferencesItemPickerItem }
+		/>
+	);
+}
+
+function WardrobePreferencesItemPickerItem({ asset, listMode }: {
+	asset: Asset;
+	listMode: boolean;
+}): ReactElement {
+	const { focus, setFocus } = useContext(WardrobeItemPreferencesFocusContext);
+	const isFocused = focus.type === 'asset' && focus.asset === asset.id;
+	const preference = useAssetPreference(asset);
+
+	return (
+		<div
+			className={ classNames(
+				'inventoryViewItem',
+				listMode ? 'listMode' : 'gridMode',
+				'small',
+				isFocused ? 'selected' : null,
+				'allowed',
+				`pref-${preference}`,
+			) }
+			tabIndex={ 0 }
+			onClick={ () => {
+				if (isFocused) {
+					setFocus({
+						type: 'none',
+					});
+				} else {
+					setFocus({
+						type: 'asset',
+						asset: asset.id,
+					});
+				}
+			} }>
+			<InventoryAssetPreview asset={ asset } small={ listMode } />
+			<span className='itemName'>{ asset.definition.name }</span>
+		</div>
+	);
+}
+
+export function WardrobePreferencesAttributePicker({ title }: {
+	title: string;
+}): ReactElement | null {
+	const assetManager = useAssetManager();
+
+	const [filter, setFilter] = useState('');
+
+	const flt = filter.toLowerCase().trim().split(/\s+/);
+	const finalAttributes = useMemo(() => (
+		[...assetManager.attributes.entries()]
+			.filter(([_attribute, definition]) => (definition.useAsAssetPreference ?? true))
+			.filter(([_attribute, definition]) => flt.every((f) => {
+				return definition.name.toLowerCase().includes(f);
+			}))
+	), [assetManager, flt]);
+
+	const filterInput = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		// Handler to autofocus search
+		const keyPressHandler = (ev: KeyboardEvent) => {
+			if (
+				filterInput.current &&
+				// Only if no other input is selected
+				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement)) &&
+				// Only if this isn't a special key or key combo
+				!ev.ctrlKey &&
+				!ev.metaKey &&
+				!ev.altKey &&
+				ev.key.length === 1
+			) {
+				filterInput.current.focus();
+			}
+		};
+		window.addEventListener('keypress', keyPressHandler);
+		return () => {
+			window.removeEventListener('keypress', keyPressHandler);
+		};
+	}, []);
+
+	return (
+		<div className='inventoryView'>
+			<div className='toolbar'>
+				<span>{ title }</span>
+				<input ref={ filterInput }
+					type='text'
+					placeholder='Filter by name'
+					value={ filter }
+					onChange={ (e) => setFilter(e.target.value) }
+				/>
+			</div>
+			<div className='listContainer'>
+				<Scrollbar color='dark'>
+					<div className='list'>
+						{
+							finalAttributes.map(([attribute, definition]) => (
+								<WardrobePreferencesAttributePickerItem
+									key={ attribute }
+									attribute={ attribute }
+									definition={ definition }
+								/>
+							))
+						}
+					</div>
+				</Scrollbar>
+			</div>
+		</div>
+	);
+}
+
+function WardrobePreferencesAttributePickerItem({ attribute, definition }: {
+	attribute: string;
+	definition: Immutable<AssetAttributeDefinition>;
+}): ReactElement {
+	const { focus, setFocus } = useContext(WardrobeItemPreferencesFocusContext);
+	const isFocused = focus.type === 'attribute' && focus.attribute === attribute;
+	const preference: AssetPreferenceType = useAssetPreferences().attributes[attribute]?.base ?? 'normal';
+
+	const icon = useGraphicsUrl(definition.icon);
+
+	return (
+		<div
+			className={ classNames(
+				'inventoryViewItem',
+				'listMode',
+				'small',
+				isFocused ? 'selected' : null,
+				'allowed',
+				`pref-${preference}`,
+			) }
+			tabIndex={ 0 }
+			onClick={ () => {
+				if (isFocused) {
+					setFocus({
+						type: 'none',
+					});
+				} else {
+					setFocus({
+						type: 'attribute',
+						attribute,
+					});
+				}
+			} }>
+			{
+				icon ? (
+					<div className='itemPreview'>
+						<img
+							className='black'
+							src={ icon }
+							alt='Attribute icon'
+						/>
+					</div>
+				) : (
+					<div className='itemPreview missing'>?</div>
+				)
+			}
+			<span className='itemName'>{ definition.name }</span>
+		</div>
+	);
+}
+
+function WardrobePreferencesConfiguration({ focus }: {
+	focus: ItemPreferencesFocus;
+}): ReactElement {
+	const assetManager = useAssetManager();
+
+	if (focus.type === 'none') {
+		return (
+			<div className='inventoryView'>
+				<div className='center-flex flex-1'>
+					Select an attribute or an item to change its settings
+				</div>
+			</div>
+		);
+	}
+
+	if (focus.type === 'asset') {
+		const asset = assetManager.getAssetById(focus.asset);
+		if (asset == null) {
+			return (
+				<div className='inventoryView'>
+					<div className='center-flex flex-1'>
+						[ ERROR: ASSET NOT FOUND ]
+					</div>
+				</div>
+			);
+		}
+
+		return (
+			<WardrobePreferenceAssetConfiguration
+				asset={ asset }
+			/>
+		);
+	}
+
+	if (focus.type === 'attribute') {
+		const attributeDefinition = assetManager.getAttributeDefinition(focus.attribute);
+		if (attributeDefinition == null) {
+			return (
+				<div className='inventoryView'>
+					<div className='center-flex flex-1'>
+						[ ERROR: ATTRIBUTE NOT FOUND ]
+					</div>
+				</div>
+			);
+		}
+
+		return (
+			<WardrobePreferenceAttributeConfiguration
+				attribute={ focus.attribute }
+				definition={ attributeDefinition }
+			/>
+		);
+	}
+
+	AssertNever(focus);
+}
+
+const ASSET_PREFERENCE_DESCRIPTIONS: Immutable<Record<AssetPreferenceType, { name: string; description: string; }>> = {
+	favorite: {
+		name: 'Favorite',
+		description: 'Show this item at the top of the list.',
+	},
+	normal: {
+		name: 'Normal',
+		description: 'Normal priority.',
+	},
+	maybe: {
+		name: 'Maybe',
+		description: 'Show this item at the bottom of the list.',
+	},
+	prevent: {
+		name: 'Prevent',
+		description: 'Prevent this item from being used.',
+	},
+	doNotRender: {
+		name: 'Do not render',
+		description: 'Do not render this item.',
+	},
+} as const;
+
+function WardrobePreferenceAssetConfiguration({ asset }: {
+	asset: Asset;
+}): ReactElement {
+	const idBase = useId();
+
+	const shardConnector = useShardConnector();
+	const currentPreferences = useAssetPreferences();
+	const currentAssetPreference: AssetPreference | null = currentPreferences.assets[asset.id] ?? null;
+	// Get the attribute preference resolution - ignoring asset-specific value
+	const attributeBasedPreference = useMemo(() => {
+		return ResolveAssetPreference({
+			attributes: currentPreferences.attributes,
+			assets: {},
+		}, asset);
+	}, [asset, currentPreferences]);
+
+	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+		const value: AssetPreferenceType | null = ev.target.value ? AssetPreferenceTypeSchema.parse(ev.target.value) : null;
+		if (value === (currentAssetPreference?.base ?? null))
+			return;
+
+		shardConnector?.awaitResponse('updateAssetPreferences', {
+			assets: {
+				...currentPreferences.assets,
+				[asset.id]: value != null ? { base: value } : undefined,
+			},
+		}).then(({ result }) => {
+			if (result !== 'ok')
+				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
+		}).catch((err) => {
+			if (err instanceof Error)
+				toast(`Failed to update asset preference: ${err.message}`, TOAST_OPTIONS_ERROR);
+		});
+	}, [shardConnector, asset, currentPreferences, currentAssetPreference]);
+
+	return (
+		<div className='inventoryView assetPreference'>
+			<div className='toolbar'>
+				<InventoryAssetPreview asset={ asset } small={ false } />
+				<span className='flex-1'>{ asset.definition.name }</span>
+			</div>
+
+			<Column padding='large'>
+				<label htmlFor={ `${idBase}-select` }>Item preference:</label>
+				<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' } noScrollChange>
+					<option value='' title='Select the preference for the item based on the most limited attribute'>
+						Based on attributes ({ ASSET_PREFERENCE_DESCRIPTIONS[attributeBasedPreference.preference].name })
+					</option>
+					{
+						KnownObject.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
+							<option key={ key } value={ key } title={ description }>
+								{ name }
+							</option>
+						))
+					}
+				</Select>
+			</Column>
+		</div>
+	);
+}
+
+const ATTRIBUTE_PREFERENCE_DESCRIPTIONS: Immutable<Record<AttributePreferenceType, { name: string; description: string; }>> = {
+	normal: {
+		name: 'Normal',
+		description: 'Normal priority.',
+	},
+	maybe: {
+		name: 'Maybe',
+		description: 'Show items with this attribute at the bottom of the list.',
+	},
+	prevent: {
+		name: 'Prevent',
+		description: 'Prevent items with this attribute from being used.',
+	},
+	doNotRender: {
+		name: 'Do not render',
+		description: 'Do not render items with this attribute.',
+	},
+} as const;
+
+function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
+	attribute: string;
+	definition: Immutable<AssetAttributeDefinition>;
+}): ReactElement {
+	const idBase = useId();
+
+	const shardConnector = useShardConnector();
+	const currentPreferences = useAssetPreferences();
+	const currentAttributePreference: AssetPreference | null = currentPreferences.attributes[attribute] ?? null;
+
+	const icon = useGraphicsUrl(definition.icon);
+
+	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+		const value: AssetPreferenceType = AttributePreferenceTypeSchema.parse(ev.target.value);
+		if (value === (currentAttributePreference?.base ?? 'normal'))
+			return;
+
+		shardConnector?.awaitResponse('updateAssetPreferences', {
+			attributes: {
+				...currentPreferences.attributes,
+				[attribute]: value !== 'normal' ? { base: value } : undefined,
+			},
+		}).then(({ result }) => {
+			if (result !== 'ok')
+				toast('Asset not be worn before setting "do not render"', TOAST_OPTIONS_ERROR);
+		}).catch((err) => {
+			if (err instanceof Error)
+				toast(`Failed to update asset preference: ${err.message}`, TOAST_OPTIONS_ERROR);
+		});
+	}, [shardConnector, attribute, currentPreferences, currentAttributePreference]);
+
+	return (
+		<div className='inventoryView assetPreference'>
+			<div className='toolbar'>
+				{
+					icon ? (
+						<div className='itemPreview'>
+							<img
+								className='black'
+								src={ icon }
+								alt='Attribute icon'
+							/>
+						</div>
+					) : (
+						<div className='itemPreview missing'>?</div>
+					)
+				}
+				<span className='flex-1'>{ definition.name }</span>
+			</div>
+			<Column padding='large'>
+				<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
+				<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange>
+					{
+						KnownObject.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
+							<option key={ key } value={ key } title={ description }>
+								{ name }
+							</option>
+						))
+					}
+				</Select>
+			</Column>
+			<Column padding='large'>
+				<span>Description:</span>
+				<span>{ definition.description }</span>
+			</Column>
+		</div>
+	);
+}

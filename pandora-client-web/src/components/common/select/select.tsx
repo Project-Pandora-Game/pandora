@@ -6,9 +6,15 @@ export interface SelectProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes
 		currentTarget: HTMLSelectElement;
 		target: HTMLSelectElement;
 	}): void;
+	noScrollChange?: boolean;
 }
 
-export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function Select({ children, onChange, ...props }, ref): ReactElement {
+export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function Select({
+	children,
+	onChange,
+	noScrollChange = false,
+	...props
+}, ref): ReactElement {
 	const innerRef = useRef<HTMLSelectElement>(null);
 
 	useImperativeHandle(ref, () => innerRef.current as HTMLSelectElement);
@@ -19,7 +25,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function 
 		// Handle wheel changing element
 		const el = ev.currentTarget;
 		Assert(el instanceof HTMLSelectElement);
-		if (el === document.activeElement || readonly)
+		if (el === document.activeElement || readonly || noScrollChange)
 			return;
 		if (ev.deltaY < 0) {
 			ev.stopPropagation();
@@ -44,7 +50,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(function 
 				});
 			}
 		}
-	}, [onChange, readonly]);
+	}, [onChange, readonly, noScrollChange]);
 
 	useEffect(() => {
 		const el = innerRef.current;

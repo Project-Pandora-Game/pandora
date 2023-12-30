@@ -37,6 +37,61 @@ export function InventoryAssetView({ className, title, children, assets, contain
 }): ReactElement | null {
 	const { targetSelector, extraItemActions, heldItem, showExtraActionButtons } = useWardrobeContext();
 
+	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
+		return (showExtraActionButtons || spawnStyle === 'spawn') ? (
+			<WardrobeActionButton action={ {
+				type: 'delete',
+				target: targetSelector,
+				item,
+			} }>
+				<img src={ deleteIcon } alt='Delete action' />
+			</WardrobeActionButton>
+		) : null;
+	}, [targetSelector, spawnStyle, showExtraActionButtons]);
+	useEffect(() => {
+		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
+		return () => {
+			extraItemActions.value = extraItemActions.value.filter((a) => a !== extraItemAction);
+		};
+	}, [extraItemAction, extraItemActions]);
+
+	return (
+		<WardrobeAssetList
+			className={ className }
+			title={ title }
+			overlay={
+				heldItem.type !== 'nothing' ? (
+					<InventoryAssetDropArea />
+				) : null
+			}
+			assets={ assets }
+			container={ container }
+			attributesFilterOptions={ attributesFilterOptions }
+			ListItemComponent={ spawnStyle === 'spawn' ? InventoryAssetViewListSpawn : InventoryAssetViewListPickup }
+		>
+			{ children }
+		</WardrobeAssetList>
+	);
+}
+
+export interface WardrobeAssetListItemProps {
+	asset: Asset;
+	container: ItemContainerPath;
+	listMode: boolean;
+}
+
+export function WardrobeAssetList({ className, title, children, overlay, assets, container, attributesFilterOptions, ListItemComponent, itemSortIgnorePreferenceOrdering = false }: {
+	className?: string;
+	title: string;
+	children?: ReactNode;
+	overlay?: ReactNode;
+	assets: readonly Asset[];
+	container: ItemContainerPath;
+	attributesFilterOptions?: string[];
+	itemSortIgnorePreferenceOrdering?: boolean;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	ListItemComponent: React.ComponentType<WardrobeAssetListItemProps>;
+}): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [listMode, setListMode] = useState(true);
 	const [filter, setFilter] = useState('');
@@ -69,24 +124,6 @@ export function InventoryAssetView({ className, title, children, assets, contain
 			setAttribute('');
 		}
 	}, [attribute, attributesFilterOptions]);
-
-	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
-		return (showExtraActionButtons || spawnStyle === 'spawn') ? (
-			<WardrobeActionButton action={ {
-				type: 'delete',
-				target: targetSelector,
-				item,
-			} }>
-				<img src={ deleteIcon } alt='Delete action' />
-			</WardrobeActionButton>
-		) : null;
-	}, [targetSelector, spawnStyle, showExtraActionButtons]);
-	useEffect(() => {
-		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
-		return () => {
-			extraItemActions.value = extraItemActions.value.filter((a) => a !== extraItemAction);
-		};
-	}, [extraItemAction, extraItemActions]);
 
 	const filterInput = useRef<HTMLInputElement>(null);
 
@@ -156,24 +193,20 @@ export function InventoryAssetView({ className, title, children, assets, contain
 			{ children }
 			<div className='listContainer'>
 				{
-					heldItem.type !== 'nothing' ? (
+					overlay != null ? (
 						<div className='overlay center-flex'>
-							<InventoryAssetDropArea />
+							{ overlay }
 						</div>
 					) : null
 				}
 				<Scrollbar color='dark'>
 					<div className={ listMode ? 'list' : 'grid' }>
 						{
-							filteredAssets.map((a) => spawnStyle === 'spawn' ? (
-								<InventoryAssetViewListSpawn key={ a.id }
+							sortedAssets.map((a) => (
+								<ListItemComponent
+									key={ a.id }
 									asset={ a }
 									container={ container }
-									listMode={ listMode }
-								/>
-							) : (
-								<InventoryAssetViewListPickup key={ a.id }
-									asset={ a }
 									listMode={ listMode }
 								/>
 							))

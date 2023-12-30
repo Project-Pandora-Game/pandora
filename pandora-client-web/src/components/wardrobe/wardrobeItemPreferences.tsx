@@ -10,7 +10,7 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider'
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { noop } from 'lodash';
-import { Scrollbar } from '../common/scrollbar/scrollbar';
+import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
 import { Column } from '../common/container/container';
 import { Select } from '../common/select/select';
@@ -313,6 +313,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 }): ReactElement {
 	const idBase = useId();
 
+	const assetManager = useAssetManager();
 	const shardConnector = useShardConnector();
 	const currentPreferences = useAssetPreferences();
 	const currentAssetPreference: AssetPreference | null = currentPreferences.assets[asset.id] ?? null;
@@ -349,22 +350,40 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 				<InventoryAssetPreview asset={ asset } small={ false } />
 				<span className='flex-1'>{ asset.definition.name }</span>
 			</div>
+			<Scrollable color='dark'>
+				<Column padding='large'>
+					<label htmlFor={ `${idBase}-select` }>Item preference:</label>
+					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' } noScrollChange>
+						<option value='' title='Select the preference for the item based on the most limited attribute'>
+							Based on attributes ({ ASSET_PREFERENCE_DESCRIPTIONS[attributeBasedPreference.preference].name })
+						</option>
+						{
+							KnownObject.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
+								<option key={ key } value={ key } title={ description }>
+									{ name }
+								</option>
+							))
+						}
+					</Select>
+				</Column>
 
-			<Column padding='large'>
-				<label htmlFor={ `${idBase}-select` }>Item preference:</label>
-				<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' } noScrollChange>
-					<option value='' title='Select the preference for the item based on the most limited attribute'>
-						Based on attributes ({ ASSET_PREFERENCE_DESCRIPTIONS[attributeBasedPreference.preference].name })
-					</option>
-					{
-						KnownObject.entries(ASSET_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
-							<option key={ key } value={ key } title={ description }>
-								{ name }
-							</option>
-						))
-					}
-				</Select>
-			</Column>
+				<fieldset>
+					<legend>Attributes this item has (in at least one configuration)</legend>
+					<div className='list'>
+						{
+							[...assetManager.attributes.entries()]
+								.filter(([_attribute, definition]) => (definition.useAsAssetPreference ?? true))
+								.filter(([attribute, _definition]) => asset.staticAttributes.has(attribute))
+								.map(([attribute, definition]) => (
+									<div key={ attribute } className='inventoryViewItem listMode small' title={ definition.description }>
+										<InventoryAttributePreview attribute={ attribute } />
+										<span className='itemName'>{ definition.name }</span>
+									</div>
+								))
+						}
+					</div>
+				</fieldset>
+			</Scrollable>
 		</div>
 	);
 }
@@ -394,6 +413,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 }): ReactElement {
 	const idBase = useId();
 
+	const { assetList } = useWardrobeContext();
 	const shardConnector = useShardConnector();
 	const currentPreferences = useAssetPreferences();
 	const currentAttributePreference: AssetPreference | null = currentPreferences.attributes[attribute] ?? null;
@@ -423,22 +443,40 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 				<InventoryAttributePreview attribute={ attribute } />
 				<span className='flex-1'>{ definition.name }</span>
 			</div>
-			<Column padding='large'>
-				<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
-				<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange>
-					{
-						KnownObject.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
-							<option key={ key } value={ key } title={ description }>
-								{ name }
-							</option>
-						))
-					}
-				</Select>
-			</Column>
-			<Column padding='large'>
-				<span>Description:</span>
-				<span>{ definition.description }</span>
-			</Column>
+			<Scrollable color='dark'>
+				<Column padding='large'>
+					<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
+					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange>
+						{
+							KnownObject.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
+								<option key={ key } value={ key } title={ description }>
+									{ name }
+								</option>
+							))
+						}
+					</Select>
+				</Column>
+				<Column padding='large'>
+					<span>Description:</span>
+					<span>{ definition.description }</span>
+				</Column>
+				<fieldset>
+					<legend>Items that have this attribute (in at least one configuration)</legend>
+					<div className='list'>
+						{
+							assetList
+								.filter((a) => !a.isType('roomDevice') && !a.isType('roomDeviceWearablePart'))
+								.filter((a) => a.staticAttributes.has(attribute))
+								.map((a) => (
+									<div key={ a.id } className='inventoryViewItem listMode small'>
+										<InventoryAssetPreview asset={ a } small />
+										<span className='itemName'>{ a.definition.name }</span>
+									</div>
+								))
+						}
+					</div>
+				</fieldset>
+			</Scrollable>
 		</div>
 	);
 }

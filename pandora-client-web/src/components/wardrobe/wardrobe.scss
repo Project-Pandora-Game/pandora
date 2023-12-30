@@ -224,10 +224,8 @@ $drop-overlay-gap: 0.3em;
 	.list,
 	.grid {
 		position: relative;
-		min-height: 100%;
 		padding: 3px;
 		gap: 3px;
-		flex: 1;
 
 		&.withDropButtons {
 			padding: calc($drop-overlay-height * 0.5 + 3px) 3px;
@@ -320,6 +318,8 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	.itemPreview {
+		overflow: hidden;
+
 		&.missing {
 			border: solid $black 1px;
 			@include center-flex;
@@ -336,27 +336,37 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.listMode {
-		height: 3em;
+		min-height: 3em;
 		align-items: center;
 		gap: 0.5em;
 
 		&.small {
-			height: 2em;
+			min-height: 2em;
+
+			.itemPreview {
+				height: 2em;
+				width: 2em;
+				padding: 0.25em;
+
+				&.image {
+					padding: 0;
+				}
+			}
 		}
 
 		.itemName {
 			margin: 3px;
+			flex: 1;
 		}
 
 		.itemPreview {
-			height: 1.5em;
-			width: 1.5em;
-			margin-left: 0.5em;
+			height: 3em;
+			width: 3em;
+			margin-left: 0;
+			padding: 0.75em;
 
 			&.image {
-				height: 100%;
-				width: unset;
-				margin-left: 0;
+				padding: 0;
 			}
 		}
 

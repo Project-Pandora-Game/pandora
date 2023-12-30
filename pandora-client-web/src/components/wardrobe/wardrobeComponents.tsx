@@ -17,6 +17,7 @@ import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
 import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
 import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter';
 
 export function ActionWarningContent({ problems }: { problems: readonly AppearanceActionProblem[]; }): ReactElement {
 	const assetManager = useAssetManager();
@@ -188,6 +189,8 @@ export function InventoryAssetPreview({ asset, small }: {
 	const assetManager = useAssetManager();
 	const preferredPreviewType = useAssetPreviewType(small);
 
+	const isVisible = useAssetPreferenceVisibilityCheck()(asset);
+
 	const [previewType, preview] = useMemo((): ['none' | 'image' | 'icon', string | undefined] => {
 		if (preferredPreviewType === 'image' && asset.definition.preview != null)
 			return ['image', asset.definition.preview];
@@ -212,7 +215,13 @@ export function InventoryAssetPreview({ asset, small }: {
 
 	if (icon) {
 		return (
-			<div className={ previewType === 'image' ? 'itemPreview image' : 'itemPreview' }>
+			<div
+				className={ classNames(
+					'itemPreview',
+					previewType === 'image' ? 'image' : null,
+					previewType === 'image' && !isVisible ? 'doNotRender' : null,
+				) }
+			>
 				<img
 					className={ previewType === 'image' ? '' : 'black' }
 					src={ icon }

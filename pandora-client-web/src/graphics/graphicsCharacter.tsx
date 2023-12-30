@@ -105,7 +105,7 @@ function GraphicsCharacterWithManagerImpl({
 }, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
 	const items = useCharacterAppearanceItems(characterState);
 
-	const assetPreferenceIsVisible = useAssetPreferenceVisibility();
+	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();
@@ -239,7 +239,7 @@ function GraphicsCharacterImpl(props: GraphicsCharacterProps, ref: React.Forward
 
 export const GraphicsCharacter = React.forwardRef(GraphicsCharacterImpl);
 
-function useAssetPreferenceVisibility() {
+export function useAssetPreferenceVisibilityCheck(): (asset: Asset) => boolean {
 	const preferences = usePlayerData()?.assetPreferences ?? ASSET_PREFERENCES_DEFAULT;
 	return useCallback((asset: Asset): boolean => {
 		const resolution = ResolveAssetPreference(preferences, asset);

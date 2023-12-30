@@ -1,10 +1,15 @@
 import classNames from 'classnames';
 import {
+	ASSET_PREFERENCES_DEFAULT,
 	AppearanceAction,
 	AppearanceActionProblem,
 	AssertNever,
 	Asset,
+	AssetPreferenceType,
+	AssetPreferenceTypeSchema,
+	AssetPreferences,
 	ItemContainerPath,
+	ResolveAssetPreference,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
@@ -18,6 +23,8 @@ import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { usePermissionCheck } from '../../gameContext/permissionCheckProvider';
+import { useCharacterDataOptional } from '../../../character/character';
+import { Immutable } from 'immer';
 
 export function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions, spawnStyle }: {
 	className?: string;
@@ -54,6 +61,8 @@ export function InventoryAssetView({ className, title, children, assets, contain
 					);
 			}))
 	), [assetManager, assets, flt, attributesFilterOptions, attribute]);
+
+	const sortedAssets = useOrderedAssets(filteredAssets, itemSortIgnorePreferenceOrdering);
 
 	useEffect(() => {
 		if (attribute !== '' && !attributesFilterOptions?.includes(attribute)) {
@@ -181,6 +190,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 	listMode: boolean;
 }): ReactElement {
 	const { setHeldItem } = useWardrobeContext();
+	const preference = useAssetPreference(asset);
 
 	return (
 		<div
@@ -189,6 +199,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 				listMode ? 'listMode' : 'gridMode',
 				'small',
 				'allowed',
+				`pref-${preference}`,
 			) }
 			tabIndex={ 0 }
 			onClick={ () => {
@@ -213,6 +224,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	const { targetSelector, actionPreviewState, showHoverPreview } = useWardrobeContext();
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const [isHovering, setIsHovering] = useState(false);
+	const preference = useAssetPreference(asset);
 
 	const action = useMemo((): AppearanceAction => ({
 		type: 'create',
@@ -254,6 +266,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				'inventoryViewItem',
 				listMode ? 'listMode' : 'gridMode',
 				'small',
+				`pref-${preference}`,
 				check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked',
 			) }
 			tabIndex={ 0 }
@@ -334,4 +347,49 @@ function InventoryAssetDropArea(): ReactElement | null {
 			{ text }
 		</WardrobeActionButton>
 	);
+}
+
+export function useAssetPreferences(): Immutable<AssetPreferences> {
+	const { target } = useWardrobeContext();
+	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.assetPreferences;
+
+	const preferences = characterPreferences ?? ASSET_PREFERENCES_DEFAULT;
+
+	return preferences;
+}
+
+export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
+	const { player, target } = useWardrobeContext();
+	const preferences = useAssetPreferences();
+	const selfPreference = useCharacterDataOptional((target.type === 'room' || target.id !== player.id) ? player : null)?.assetPreferences;
+
+	return React.useCallback((asset) => {
+		const pref = ResolveAssetPreference(preferences, asset, player.id).preference;
+		if (selfPreference == null || pref === 'doNotRender')
+			return pref;
+
+		if (ResolveAssetPreference(selfPreference, asset, player.id).preference === 'doNotRender')
+			return 'doNotRender';
+
+		return pref;
+	}, [preferences, selfPreference, player.id]);
+}
+
+export function useAssetPreference(asset: Asset): AssetPreferenceType {
+	const resolvePreference = useAssetPreferenceResolver();
+	return useMemo(() => resolvePreference(asset), [asset, resolvePreference]);
+}
+
+export function useOrderedAssets(assets: readonly Asset[], ignorePreference: boolean): readonly Asset[] {
+	const resolvePreference = useAssetPreferenceResolver();
+
+	return useMemo(() => (
+		ignorePreference
+			? assets
+			: assets.slice().sort((a, b) => {
+				const aP = AssetPreferenceTypeSchema.options.indexOf(resolvePreference(a));
+				const bP = AssetPreferenceTypeSchema.options.indexOf(resolvePreference(b));
+				return aP - bP;
+			})
+	), [ignorePreference, assets, resolvePreference]);
 }

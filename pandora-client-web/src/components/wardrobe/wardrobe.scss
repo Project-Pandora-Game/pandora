@@ -98,6 +98,28 @@ $header-height: 2em;
 $drop-overlay-height: 1.8em;
 $drop-overlay-gap: 0.3em;
 
+.itemPreview {
+	overflow: hidden;
+
+	&.missing {
+		border: solid $black 1px;
+		@include center-flex;
+	}
+
+	img {
+		width: 100%;
+		height: 100%;
+
+		&.black {
+			filter: brightness(0) saturate(100%);
+		}
+	}
+
+	&.doNotRender img {
+		filter: brightness(0%) blur(9px) !important;
+	}
+}
+
 .inventoryView {
 	@include flex(column);
 	flex: 1;
@@ -317,24 +339,6 @@ $drop-overlay-gap: 0.3em;
 		clip-path: polygon(0 0, 0.75em 0, 0 0.75em);
 	}
 
-	.itemPreview {
-		overflow: hidden;
-
-		&.missing {
-			border: solid $black 1px;
-			@include center-flex;
-		}
-
-		img {
-			width: 100%;
-			height: 100%;
-
-			&.black {
-				filter: brightness(0) saturate(100%);
-			}
-		}
-	}
-
 	&.listMode {
 		min-height: 3em;
 		align-items: center;
@@ -395,6 +399,77 @@ $drop-overlay-gap: 0.3em;
 		.quickActions {
 			flex-flow: wrap;
 			margin: auto;
+		}
+
+		&::after {
+			top: 0.3em;
+		}
+	}
+
+	&::after {
+		position: absolute;
+		right: 0.3em;
+		font-size: 1.5em;
+		line-height: 1em;
+		width: 1em;
+		height: 1em;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		text-shadow: 0 0 0.05em black, 0 0 0.05em black, 0 0 0.05em black, 0 0 0.05em black;
+	}
+
+	&.pref-favorite {
+		.itemName {
+			font-weight: bold;
+		}
+
+		&::after {
+			content: '★';
+			color: #fafa00;
+		}
+	}
+
+	&.pref-maybe {
+		.itemName {
+			font-style: italic;
+		}
+
+		&::after {
+			content: '?';
+			color: #fa7d00;
+		}
+	}
+
+	&.pref-prevent {
+		.itemPreview.image>img {
+			filter: grayscale(100%);
+		}
+
+		.itemName {
+			text-decoration: line-through;
+			font-style: italic;
+		}
+
+		&::after {
+			content: '✕';
+			color: #fa0000;
+		}
+	}
+
+	&.pref-doNotRender {
+		.itemPreview.image>img {
+			filter: brightness(0%) blur(9px);
+		}
+
+		.itemName {
+			text-decoration: line-through;
+			font-style: italic;
+		}
+
+		&::after {
+			content: '✕';
+			color: black;
 		}
 	}
 

@@ -1,4 +1,4 @@
-import { AssertNever, AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeployment } from 'pandora-common';
+import { AssertNever, AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeploymentPosition } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -32,7 +32,7 @@ const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 type ChatRoomDeviceInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
-	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
+	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	background: Immutable<IChatroomBackgroundData>;
 	chatRoomMode: Immutable<IChatRoomMode>;
 	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
@@ -44,7 +44,7 @@ type ChatRoomDeviceInteractiveProps = {
 type ChatRoomDeviceProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
-	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
+	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	background: Immutable<IChatroomBackgroundData>;
 
 	children?: ReactNode;
@@ -88,10 +88,12 @@ export function ChatRoomDeviceMovementTool({
 				itemId: item.id,
 			},
 			deployment: {
-				...deployment,
-				x: newX,
-				y: newY,
-				yOffset: newYOffset,
+				deployed: true,
+				position: {
+					x: newX,
+					y: newY,
+					yOffset: newYOffset,
+				},
 			},
 		});
 	}, () => {
@@ -323,13 +325,13 @@ export function ChatRoomDeviceInteractive({
 			onPointerUp={ onPointerUp }
 		>
 			{
-					enableMenu ? (
-						<Graphics
-							zIndex={ 99998 }
-							draw={ deviceMenuHelperDraw }
-							position={ { x: labelX, y: labelY } }
-						/>
-					) : null
+				enableMenu ? (
+					<Graphics
+						zIndex={ 99998 }
+						draw={ deviceMenuHelperDraw }
+						position={ { x: labelX, y: labelY } }
+					/>
+				) : null
 			}
 		</ChatRoomDevice>
 	);

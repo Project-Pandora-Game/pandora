@@ -24,12 +24,28 @@ import { LIMIT_OUTFIT_NAME_LENGTH } from '../inputLimits';
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 
-export const RoomDeviceDeploymentSchema = z.object({
+export const RoomDeviceDeploymentPositionSchema = z.object({
 	x: z.number(),
 	y: z.number(),
 	yOffset: z.number().int().catch(0),
+});
+export type RoomDeviceDeploymentPosition = z.infer<typeof RoomDeviceDeploymentPositionSchema>;
+
+export const RoomDeviceDeploymentSchema = RoomDeviceDeploymentPositionSchema.extend({
+	deployed: z.boolean().default(true),
 }).nullable();
 export type RoomDeviceDeployment = z.infer<typeof RoomDeviceDeploymentSchema>;
+
+export const RoomDeviceDeploymentChangeSchema = z.discriminatedUnion('deployed', [
+	z.object({
+		deployed: z.literal(false),
+	}),
+	z.object({
+		deployed: z.literal(true),
+		position: RoomDeviceDeploymentPositionSchema.optional(),
+	}),
+]);
+export type RoomDeviceDeploymentChange = z.infer<typeof RoomDeviceDeploymentChangeSchema>;
 
 export const RoomDeviceBundleSchema = z.object({
 	deployment: RoomDeviceDeploymentSchema,
@@ -641,11 +657,11 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		this.modules = overrideProps?.modules ?? props.modules;
 	}
 
-	public isDeployed(): this is ItemRoomDevice & { deployment: RoomDeviceDeployment & {}; } {
+	public isDeployed(): this is ItemRoomDevice & { deployment: RoomDeviceDeployment & { deployed: true; }; } {
 		if (this.deployment == null)
 			return false;
 
-		return true;
+		return this.deployment.deployed;
 	}
 
 	protected override withProps(overrideProps: Partial<ItemRoomDeviceProps>): ItemRoomDevice {
@@ -736,9 +752,33 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 	}
 
 	/** Colors this item with passed color, returning new item with modified color */
-	public changeDeployment(newDeployment: RoomDeviceDeployment): ItemRoomDevice {
+	public changeDeployment(newDeployment: RoomDeviceDeploymentChange): ItemRoomDevice {
+		if (!newDeployment.deployed) {
+			if (!this.isDeployed())
+				return this;
+
+			return this.withProps({
+				deployment: {
+					...this.deployment,
+					deployed: false,
+				},
+			});
+		}
+		if (newDeployment.position != null) {
+			return this.withProps({
+				deployment: {
+					...newDeployment.position,
+					deployed: true,
+				},
+			});
+		}
 		return this.withProps({
-			deployment: newDeployment,
+			deployment: {
+				x: Math.floor(200 + Math.random() * 800),
+				y: 0,
+				yOffset: 0,
+				deployed: true,
+			},
 		});
 	}
 

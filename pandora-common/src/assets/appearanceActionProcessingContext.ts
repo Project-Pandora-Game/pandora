@@ -168,6 +168,7 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 	constructor(processingContext: AppearanceActionProcessingContext) {
 		super(processingContext);
 		this.problems = [...processingContext.actionProblems];
+		Assert(this.problems.length > 0);
 	}
 }
 

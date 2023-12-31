@@ -957,7 +957,7 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 		if (!it.isType('roomDevice'))
 			return null;
 
-		if (deployment === null && it.slotOccupancy.size > 0) {
+		if (!deployment.deployed && it.slotOccupancy.size > 0) {
 			processingContext.addProblem({
 				result: 'validationError',
 				validationError: {
@@ -974,7 +974,7 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 		return false;
 
 	// Change message to chat
-	if (previousDeviceState != null && (deployment == null) !== (!previousDeviceState.isDeployed())) {
+	if (previousDeviceState != null && deployment.deployed !== previousDeviceState.isDeployed()) {
 		processingContext.queueMessage(
 			manipulator.makeMessage({
 				id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',

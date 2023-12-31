@@ -16,6 +16,7 @@ import { IChatRoomMode } from '../chatRoomScene';
 import { toast } from 'react-toastify';
 import { ActionWarningContent } from '../../wardrobe/wardrobeComponents';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { omit } from 'lodash';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -53,7 +54,7 @@ function MoveDeviceMenu({ device, setChatRoomMode, close }: {
 			itemId: device.id,
 		},
 		target: { type: 'roomInventory' },
-		deployment: { deployed: true, position: { x: 0, y: 0, yOffset: 0 } },
+		deployment: { deployed: true, position: omit(device.deployment, 'deployed') },
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;

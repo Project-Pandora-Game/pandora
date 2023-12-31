@@ -185,7 +185,26 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 }
 
 export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement>; scroll: (forceScroll: boolean) => void; newMessageCount: number; }) {
-	const { ref } = useChatInput();
+	const { ref, mode, editing } = useChatInput();
+	const modeRef = useRef<typeof mode | null>(null);
+	const editingRef = useRef<number | undefined>(undefined);
+
+	useEffect(() => {
+		if (editing?.target !== editingRef.current) {
+			editingRef.current = editing?.target;
+			if (editing) {
+				const node = document.querySelector('.chatArea .message.editing');
+				node?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				return;
+			}
+		}
+		if (modeRef.current !== mode) {
+			modeRef.current = mode;
+			if (!editing)
+				scroll(true);
+		}
+	}, [mode, editing, scroll]);
+
 	return (
 		<>
 			<AutoCompleteHint />
@@ -625,57 +644,57 @@ function AutoCompleteHint(): ReactElement | null {
 				{ autocompleteHint.result.header }
 				{
 					autocompleteHint.result.options.length > 0 &&
-						<>
-							<hr />
-							{
-								autocompleteHint.result.options.map((option, index) => (
-									(onlyShowOption === -1 || onlyShowOption === index) &&
-									<span key={ index }
-										className={ classNames({ selected: index === autocompleteHint.index }) }
-										onClick={ (ev) => {
-											const textarea = ref.current;
-											if (!textarea)
-												return;
+					<>
+						<hr />
+						{
+							autocompleteHint.result.options.map((option, index) => (
+								(onlyShowOption === -1 || onlyShowOption === index) &&
+								<span key={ index }
+									className={ classNames({ selected: index === autocompleteHint.index }) }
+									onClick={ (ev) => {
+										const textarea = ref.current;
+										if (!textarea)
+											return;
 
-											ev.preventDefault();
-											ev.stopPropagation();
+										ev.preventDefault();
+										ev.stopPropagation();
 
-											const inputPosition = textarea.selectionStart || textarea.value.length;
-											const input = option.replaceValue + ' ';
+										const inputPosition = textarea.selectionStart || textarea.value.length;
+										const input = option.replaceValue + ' ';
 
-											textarea.value = COMMAND_KEY + input + textarea.value.slice(inputPosition).trimStart();
-											textarea.focus();
-											textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
+										textarea.value = COMMAND_KEY + input + textarea.value.slice(inputPosition).trimStart();
+										textarea.focus();
+										textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
 
-											const autocompleteResult = CommandAutocomplete(input, {
-												shardConnector,
-												directoryConnector,
-												chatRoom,
-												player: chatRoom.player,
-												messageSender: sender,
-												inputHandlerContext: chatInput,
-												navigate,
-											});
+										const autocompleteResult = CommandAutocomplete(input, {
+											shardConnector,
+											directoryConnector,
+											chatRoom,
+											player: chatRoom.player,
+											messageSender: sender,
+											inputHandlerContext: chatInput,
+											navigate,
+										});
 
-											setAutocompleteHint({
-												replace: textarea.value,
-												result: autocompleteResult,
-												index: null,
-											});
-										} }
-									>
-										{ option.displayValue }
-									</span>
-								))
-							}
-						</>
+										setAutocompleteHint({
+											replace: textarea.value,
+											result: autocompleteResult,
+											index: null,
+										});
+									} }
+								>
+									{ option.displayValue }
+								</span>
+							))
+						}
+					</>
 				}
 				{
 					onlyShowOption >= 0 &&
-						<>
-							<hr />
-							{ autocompleteHint.result.options[onlyShowOption]?.longDescription }
-						</>
+					<>
+						<hr />
+						{ autocompleteHint.result.options[onlyShowOption]?.longDescription }
+					</>
 				}
 			</div>
 		</div>

@@ -101,7 +101,7 @@ export function RegistrationForm(): ReactElement {
 		<Form className='RegistrationForm' dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 			<h1>Sign up</h1>
 			<FormField>
-				<label htmlFor='registration-username'>Username</label>
+				<label htmlFor='registration-username'>Username (will be visible to other users)</label>
 				<input
 					type='text'
 					id='registration-username'

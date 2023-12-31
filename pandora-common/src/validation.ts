@@ -178,4 +178,5 @@ export const SIMPLE_TOKEN_LENGTH = 6;
 export const SimpleTokenSchema = z.string().length(SIMPLE_TOKEN_LENGTH).regex(/^[0-9]+$/);
 export const IsSimpleToken = ZodMatcher(SimpleTokenSchema);
 
+// TODO: set minimum password length to maybe 8 characters?
 export const PasswordSha512Schema = z.string().regex(/^[a-zA-Z0-9+/]{86}==$/);

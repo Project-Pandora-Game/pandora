@@ -52,9 +52,13 @@ export class Room {
 		// Make sure things that should are unique
 		this.config.features = uniq(this.config.features);
 		this.config.admin = uniq(this.config.admin);
-		this.config.banned = uniq(this.config.banned);
+		this.config.banned = this._cleanupBanList(uniq(this.config.banned));
 
 		this.logger.debug('Loaded');
+	}
+
+	private _cleanupBanList(list: AccountId[]): AccountId[] {
+		return list.filter((id) => !this.config.admin.includes(id) && !this._owners.has(id));
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -174,7 +178,7 @@ export class Room {
 			this.config.admin = uniq(changes.admin);
 		}
 		if (changes.banned) {
-			this.config.banned = uniq(changes.banned);
+			this.config.banned = this._cleanupBanList(uniq(changes.banned));
 			await this._removeBannedCharacters(source);
 		}
 		if (changes.public !== undefined) {
@@ -258,6 +262,7 @@ export class Room {
 		let updated = false;
 		switch (action) {
 			case 'kick':
+				targets = this._cleanupBanList(targets);
 				for (const character of this.characters) {
 					if (!targets.includes(character.baseInfo.account.id))
 						continue;
@@ -267,6 +272,7 @@ export class Room {
 				}
 				break;
 			case 'ban': {
+				targets = this._cleanupBanList(targets);
 				const oldSize = this.config.banned.length;
 				this.config.banned = uniq([...this.config.banned, ...targets]);
 				updated = oldSize !== this.config.banned.length;

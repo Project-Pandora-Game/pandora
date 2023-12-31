@@ -4,6 +4,8 @@ import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers
 import { ChatMode } from './chatInput';
 import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
 import { capitalize } from 'lodash';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_WARNING } from '../../persistentToast';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
@@ -89,6 +91,11 @@ function CreateChatroomAdminAction(action: IClientDirectoryArgument['chatRoomAdm
 			.handler(({ chatRoom, directoryConnector }, { target }) => {
 				if (!IsChatroomAdmin(chatRoom.currentRoom.value.config, directoryConnector.currentAccount.value))
 					return;
+
+				if (['kick', 'ban'].includes(action) && IsChatroomAdmin(chatRoom.currentRoom.value.config, { id: target.data.accountId })) {
+					toast('You cannot kick or ban a chatroom admin.', TOAST_OPTIONS_WARNING);
+					return;
+				}
 
 				directoryConnector.sendMessage('chatRoomAdminAction', {
 					action,

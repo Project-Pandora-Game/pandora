@@ -64,7 +64,10 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		} else {
 			this.#crypto = await KeyExchange.generate();
 			this._lastCryptoKey = await this.#crypto.export(cryptoPassword);
-			this.connector.sendMessage('setCryptoKey', { cryptoKey: this._lastCryptoKey });
+			const { result } = await this.connector.awaitResponse('setInitialCryptoKey', { cryptoKey: this._lastCryptoKey });
+			if (result !== 'ok') {
+				throw new Error(`Failed to set crypto key: ${result}`);
+			}
 		}
 		await this._loadInfo();
 	}

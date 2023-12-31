@@ -175,11 +175,11 @@ export const ClientDirectorySchema = {
 		request: DirectoryAccountSettingsSchema.partial(),
 		response: null,
 	},
-	setCryptoKey: {
+	setInitialCryptoKey: {
 		request: z.object({
 			cryptoKey: AccountCryptoKeySchema,
 		}),
-		response: null,
+		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet'; }>(),
 	},
 	//#endregion
 

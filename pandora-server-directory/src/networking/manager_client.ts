@@ -86,7 +86,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			gitHubBind: this.handleGitHubBind.bind(this),
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
-			setCryptoKey: this.handleSetCryptoKey.bind(this),
+			setInitialCryptoKey: this.handleSetInitialCryptoKey.bind(this),
 
 			getRelationships: this.handleGetRelationships.bind(this),
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
@@ -625,11 +625,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	//#region Direct Messages
 
-	private async handleSetCryptoKey({ cryptoKey }: IClientDirectoryArgument['setCryptoKey'], connection: ClientConnection): IClientDirectoryPromiseResult['setCryptoKey'] {
+	private async handleSetInitialCryptoKey({ cryptoKey }: IClientDirectoryArgument['setInitialCryptoKey'], connection: ClientConnection): IClientDirectoryPromiseResult['setInitialCryptoKey'] {
 		if (!connection.account)
 			throw new BadMessageError();
 
-		await connection.account.secure.setCryptoKey(cryptoKey);
+		const result = await connection.account.secure.setInitialCryptoKey(cryptoKey);
+
+		return { result };
 	}
 
 	private async handleGetDirectMessages({ id, until }: IClientDirectoryArgument['getDirectMessages'], connection: ClientConnection): IClientDirectoryPromiseResult['getDirectMessages'] {

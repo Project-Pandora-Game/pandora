@@ -9,7 +9,7 @@ import { useDirectoryConnector, useCurrentAccount } from '../../gameContext/dire
 import { usePlayerId } from '../../gameContext/playerContextProvider';
 import { useChatInput } from '../chatInput';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { RelationshipChangeHandleResult, useRelationship } from '../../releationships/relationshipsContext';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { useAsyncEvent } from '../../../common/useEvent';
@@ -40,14 +40,20 @@ function AdminActionContextMenuInner(): ReactElement {
 	const connector = useDirectoryConnector();
 
 	const kick = useCallback(() => {
+		if (!isCharacterAdmin)
+			toast('Admins cannot be kicked', TOAST_OPTIONS_WARNING);
+
 		connector.sendMessage('chatRoomAdminAction', { action: 'kick', targets: [character.data.accountId] });
 		close();
-	}, [character, connector, close]);
+	}, [isCharacterAdmin, character, connector, close]);
 
 	const ban = useCallback(() => {
+		if (!isCharacterAdmin)
+			toast('Admins cannot be banned', TOAST_OPTIONS_WARNING);
+
 		connector.sendMessage('chatRoomAdminAction', { action: 'ban', targets: [character.data.accountId] });
 		close();
-	}, [character, connector, close]);
+	}, [isCharacterAdmin, character, connector, close]);
 
 	const promote = useCallback(() => {
 		connector.sendMessage('chatRoomAdminAction', { action: 'promote', targets: [character.data.accountId] });
@@ -61,10 +67,10 @@ function AdminActionContextMenuInner(): ReactElement {
 
 	return (
 		<>
-			<button onClick={ kick } >
+			<button onClick={ kick } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
 				Kick
 			</button>
-			<button onClick={ ban } >
+			<button onClick={ ban } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
 				Ban
 			</button>
 			{ isCharacterAdmin ? (

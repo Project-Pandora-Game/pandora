@@ -1283,7 +1283,7 @@ export class ItemLock extends ItemBase<'lock'> {
 			return lhs === rhs;
 
 		// all passwords are case insensitive for now
-		return lhs.localeCompare(rhs, undefined, { sensitivity: 'base' }) === 0;
+		return lhs.toLowerCase() === rhs.toLowerCase();
 	}
 }
 

@@ -40,16 +40,20 @@ function AdminActionContextMenuInner(): ReactElement {
 	const connector = useDirectoryConnector();
 
 	const kick = useCallback(() => {
-		if (!isCharacterAdmin)
+		if (isCharacterAdmin) {
 			toast('Admins cannot be kicked', TOAST_OPTIONS_WARNING);
+			return;
+		}
 
 		connector.sendMessage('chatRoomAdminAction', { action: 'kick', targets: [character.data.accountId] });
 		close();
 	}, [isCharacterAdmin, character, connector, close]);
 
 	const ban = useCallback(() => {
-		if (!isCharacterAdmin)
+		if (isCharacterAdmin) {
 			toast('Admins cannot be banned', TOAST_OPTIONS_WARNING);
+			return;
+		}
 
 		connector.sendMessage('chatRoomAdminAction', { action: 'ban', targets: [character.data.accountId] });
 		close();

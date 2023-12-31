@@ -79,17 +79,19 @@ function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageCh
 		}
 	}, [message.type]);
 	const [ref, onContextMenu, close] = useContextMenu();
+	const { editing } = useChatInput();
+	const editingClass = editing?.target === message.id ? 'editing' : undefined;
 
 	const style = message.type === 'me' || message.type === 'emote' ? ({ backgroundColor: message.from.labelColor + '44' }) : undefined;
 	const isPrivate = 'to' in message && message.to;
 	const self = message.from.id === playerId;
 	return (
 		<>
-			<div className={ classNames('message', message.type, isPrivate && 'private') } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
+			<div className={ classNames('message', message.type, isPrivate && 'private', editingClass) } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
 				<DisplayInfo message={ message } />
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
-				{...message.parts.map((c, i) => RenderChatPart(c, i, message.type === 'ooc'))}
+				{ ...message.parts.map((c, i) => RenderChatPart(c, i, message.type === 'ooc')) }
 				{ after }
 			</div>
 			{ self ? (

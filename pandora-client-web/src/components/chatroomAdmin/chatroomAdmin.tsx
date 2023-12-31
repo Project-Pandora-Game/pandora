@@ -19,7 +19,7 @@ import {
 	LIMIT_ROOM_NAME_LENGTH,
 	CloneDeepMutable,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../networking/directoryConnector';
 import { PersistentToast } from '../../persistentToast';
@@ -125,17 +125,19 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const accountId = currentAccount.id;
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
-	const currentConfig: IChatRoomDirectoryConfig = {
+	const currentConfig: IChatRoomDirectoryConfig = useMemo(() => ({
 		...(CloneDeepMutable(currentRoomInfo?.config ?? DefaultRoomConfig())),
 		...roomModifiedData,
-	};
+	}), [currentRoomInfo, roomModifiedData]);
 	const roomId: RoomId | null = currentRoomInfo?.id ?? null;
 
 	const isPlayerOwner = !!(creation || accountId && currentRoomInfo?.config.owners.includes(accountId));
 	const isPlayerAdmin = creation || currentRoomInfo == null || IsChatroomAdmin(currentRoomInfo.config, currentAccount);
 	const canEdit = isPlayerAdmin && (creation || roomId != null);
 
-	const owners: readonly AccountId[] = creation ? [accountId] : (currentRoomInfo?.config.owners ?? []);
+	const owners: readonly AccountId[] = useMemo(() => (
+		creation ? [accountId] : (currentRoomInfo?.config.owners ?? [])
+	), [creation, accountId, currentRoomInfo]);
 
 	const currentConfigBackground = currentConfig.background;
 
@@ -156,6 +158,14 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			});
 		},
 	}), [setRoomModifiedData, currentConfigBackground]);
+
+	const invalidBans = useMemo(() => ({
+		note: 'Owners and admins will be removed from the ban list automatically.',
+		when: [
+			{ reason: 'Already an owner', list: owners },
+			{ reason: 'Already an admin', list: currentConfig.admin },
+		],
+	}), [owners, currentConfig.admin]);
 
 	if (!creation && currentRoomInfo != null && currentRoomInfo.id !== lastRoomId.current) {
 		// If room id changes abruptly, navigate to default view (this is likely some form of kick or the room stopping to exist)
@@ -222,7 +232,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				</div>
 				<div className='input-container'>
 					<label>Ban list</label>
-					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !canEdit } />
+					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Background'>
@@ -498,13 +508,35 @@ function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: RoomId;
 	);
 }
 
-function NumberListArea({ values, setValues, readOnly, ...props }: {
+function NumberListArea({ values, setValues, readOnly, invalid, ...props }: {
 	values: readonly number[];
 	setValues: (newValue: number[]) => void;
 	readOnly: boolean;
 	className?: string;
+	invalid?: { note: string; when: { reason: string; list: readonly number[]; }[]; };
 }): ReactElement {
 	const [text, setText] = useState(values.join(', '));
+
+	const invalidWarning = useMemo(() => {
+		if (!invalid)
+			return null;
+
+		const result: ReactNode[] = [];
+
+		for (const { reason, list } of invalid.when) {
+			const filtered = values.filter((v) => list.includes(v));
+			if (filtered.length > 0) {
+				result.push(<span className='error' key={ reason }>{ reason }: { filtered.join(', ') }.</span>);
+			}
+		}
+
+		if (result.length === 0)
+			return null;
+
+		result.push(<span key='note' className='note'>{ invalid.note }</span>);
+
+		return result;
+	}, [invalid, values]);
 
 	const onChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
 		const value = event.target.value;
@@ -540,7 +572,10 @@ function NumberListArea({ values, setValues, readOnly, ...props }: {
 	}, [setValues]);
 
 	return (
-		<textarea value={ text } onChange={ onChange } readOnly={ readOnly } { ...props } />
+		<>
+			<textarea value={ text } onChange={ onChange } readOnly={ readOnly } { ...props } />
+			{ invalidWarning && <Column gap='none'>{ invalidWarning }</Column> }
+		</>
 	);
 }
 

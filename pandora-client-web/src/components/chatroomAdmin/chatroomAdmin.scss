@@ -52,6 +52,11 @@
 		color: $theme-error;
 		font-weight: 600;
 	}
+
+	.note {
+		@extend .message;
+		font-weight: 600;
+	}
 }
 
 .backgroundSelect {

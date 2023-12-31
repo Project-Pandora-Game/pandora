@@ -248,7 +248,7 @@ export class DirectMessageChannel {
 		const id = this._account.id;
 		let info = infos.value.find((i) => i.id === id);
 		if (!info) {
-			info = { id, time, account: this._account.name };
+			info = { id, time, displayName: this._account.displayName };
 			infos.value = [...infos.value, info];
 		}
 		if (data.edited === undefined) {

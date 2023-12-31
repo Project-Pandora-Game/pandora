@@ -36,6 +36,11 @@ export class Account {
 		return this.data.username;
 	}
 
+	/** TODO: Allow choosing custom display name instead of always showing a username */
+	public get displayName(): string {
+		return this.data.username;
+	}
+
 	constructor(data: DatabaseAccountWithSecure) {
 		this.lastActivity = Date.now();
 		// Shallow copy to preserve received data when cleaning up secure
@@ -76,6 +81,7 @@ export class Account {
 		return {
 			id: this.data.id,
 			username: this.data.username,
+			displayName: this.displayName,
 			created: this.data.created,
 			github: this.secure.getGitHubStatus(),
 			roles: this.roles.getSelfInfo(),
@@ -89,8 +95,7 @@ export class Account {
 	public getAccountPublicInfo(): AccountPublicInfo {
 		return {
 			id: this.data.id,
-			// TODO: Allow choosing custom display name instead of always showing a username
-			displayName: this.data.username,
+			displayName: this.displayName,
 			labelColor: this.data.settings.labelColor,
 			created: this.data.created,
 			visibleRoles: uniq(this.data.settings.visibleRoles.filter((role) => this.roles.isAuthorized(role))),

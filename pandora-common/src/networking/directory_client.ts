@@ -113,6 +113,7 @@ export type IAccountCryptoKey = z.infer<typeof AccountCryptoKeySchema>;
 export type IDirectoryAccountInfo = {
 	id: number;
 	username: string;
+	displayName: string;
 	created: number;
 	github?: { id: number; login: string; };
 	roles?: IAccountRoleInfo;
@@ -153,8 +154,8 @@ export type IDirectoryDirectMessage = {
 export type IDirectoryDirectMessageAccount = {
 	/** Id of the account */
 	id: AccountId;
-	/** Name of the account */
-	name: string;
+	/** Display name of the account */
+	displayName: string;
 	/** Label color of the account */
 	labelColor: string;
 	/** Public key of the account */
@@ -165,8 +166,8 @@ export type IDirectoryDirectMessageAccount = {
 export type IDirectoryDirectMessageInfo = {
 	/** Id of the other account */
 	id: AccountId;
-	/** Name of the other account */
-	account: string;
+	/** Display ame of the other account */
+	displayName: string;
 	/** Flag to indicate that there are unread messages */
 	hasUnread?: true;
 	/** Last message time */

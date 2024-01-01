@@ -17,8 +17,8 @@ export function DirectMessages(): React.ReactElement {
 	const filtered = React.useMemo(() => {
 		const arr = flt.split(/\s+/).filter((s) => s.length > 0);
 		return info
-			.filter(({ account, id }) => {
-				const name = `${account} (${id})`.toLowerCase();
+			.filter(({ displayName, id }) => {
+				const name = `${displayName} (${id})`.toLowerCase();
 				return arr.every((s) => name.includes(s));
 			})
 			.sort((a, b) => b.time - a.time);
@@ -58,19 +58,19 @@ function DirectMessageTempInfo({ selected, filtered }: { selected: AccountId; fi
 
 	return (
 		<li className='temp'>
-			{ chat.account.name } ({ selected })
+			{ chat.account.displayName } ({ selected })
 		</li>
 	);
 }
 
 function DirectMessageInfo({ info, selected }: { info: Readonly<IDirectoryDirectMessageInfo>; selected: boolean; }): React.ReactElement {
 	const directory = useDirectoryConnector();
-	const { id, account, hasUnread } = info;
+	const { id, displayName, hasUnread } = info;
 	const show = React.useCallback(() => directory.directMessageHandler.setSelected(id), [directory.directMessageHandler, id]);
 
 	return (
 		<li onClick={ show } className={ selected ? 'selected' : '' }>
-			{ account } ({ id })
+			{ displayName } ({ id })
 			{ hasUnread && <span>!</span> }
 		</li>
 	);

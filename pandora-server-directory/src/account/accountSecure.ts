@@ -170,19 +170,19 @@ export default class AccountSecure {
 		return this.#secure.cryptoKey?.publicKey;
 	}
 
-	public async setCryptoKey(key: IAccountCryptoKey): Promise<boolean> {
+	public async setInitialCryptoKey(key: IAccountCryptoKey): Promise<'ok' | 'invalid' | 'keyAlreadySet'> {
+		if (this.#secure.cryptoKey != null)
+			return 'keyAlreadySet';
+
 		if (!await this.#validateCryptoKey(key))
-			return false;
+			return 'invalid';
 
 		this.#secure.cryptoKey = _.cloneDeep(key);
 		await this.#updateDatabase();
-		return true;
+		return 'ok';
 	}
 
-	async #validateCryptoKey({ publicKey }: IAccountCryptoKey, previous?: IAccountCryptoKey): Promise<boolean> {
-		if (previous?.publicKey === publicKey)
-			return true;
-
+	async #validateCryptoKey({ publicKey }: IAccountCryptoKey): Promise<boolean> {
 		return await IsPublicKey(publicKey);
 	}
 

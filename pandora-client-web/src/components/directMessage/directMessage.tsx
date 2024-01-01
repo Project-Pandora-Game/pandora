@@ -45,18 +45,17 @@ function DirectMessageList(): ReactElement | null {
 }
 
 function DirectMessageElement({ message, channel, account }: { message: DirectMessage; channel: Readonly<IDirectoryDirectMessageAccount>; account: IDirectoryAccountInfo; }): ReactElement {
-	const { color, name } = useMemo(() => {
-		if (message.sent) {
-			return {
-				color: account.settings.labelColor,
-				name: account.username,
-			};
-		} else {
-			return {
-				color: channel.labelColor,
-				name: channel.name,
-			};
-		}
+	const displayNameElement = useMemo(() => {
+		const { labelColor, displayName } = !message.sent ? channel : {
+			labelColor: account.settings.labelColor,
+			displayName: account.displayName,
+		};
+
+		return (
+			<span style={ { color: labelColor } } className='direct-message-entry__name'>
+				{ displayName }
+			</span>
+		);
 	}, [message, account, channel]);
 	const time = useMemo(() => new Date(message.time), [message.time]);
 
@@ -69,9 +68,7 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 				{ message.edited ? <span> [edited]</span> : null }
 				{ /* Space so copied text looks nicer */ ' ' }
 			</span>
-			<span style={ { color } } className='direct-message-entry__name'>
-				{ name }
-			</span>
+			{ displayNameElement }
 			{ ': ' }
 			<span className='direct-message-entry__content'>
 				{ ...message.message.map((c, i) => RenderChatPart(c, i, true)) }
@@ -112,7 +109,7 @@ function DirectChannelInput(): ReactElement | null {
 			ref={ actualRef }
 			onKeyDown={ onKeyDown }
 			maxLength={ LIMIT_DIRECT_MESSAGE_LENGTH }
-			placeholder={ `Send message to ${channel.account.name} (${channel.account.id})` }
+			placeholder={ `Send message to ${channel.account.displayName} (${channel.account.id})` }
 		/>
 	);
 }

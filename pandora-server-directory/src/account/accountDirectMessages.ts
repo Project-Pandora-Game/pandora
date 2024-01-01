@@ -45,7 +45,7 @@ export class AccountDirectMessages {
 			}
 			dm = {
 				id,
-				account: account.username,
+				displayName: account.displayName,
 				time,
 			};
 			this._dms.push(dm);
@@ -135,7 +135,7 @@ export class AccountDirectMessages {
 		const account = this._account;
 		return {
 			id: account.id,
-			name: account.username,
+			displayName: account.displayName,
 			labelColor: account.data.settings.labelColor,
 			publicKeyData: account.directMessages._publicKey,
 		};

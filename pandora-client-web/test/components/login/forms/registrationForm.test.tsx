@@ -24,7 +24,7 @@ describe('Registration Form', () => {
 		});
 	});
 
-	TestFieldIsRendered('username', 'Username (will be visible to other users)', 'text', 'username');
+	TestFieldIsRendered('username', 'Username', 'text', 'username');
 	TestFieldIsRendered('email', 'Email', 'email', 'email');
 	TestFieldIsRendered('password', 'Password', 'password', 'new-password');
 	TestFieldIsRendered('password confirmation', 'Confirm password', 'password', 'new-password');
@@ -39,7 +39,7 @@ describe('Registration Form', () => {
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
 
-		await ExpectFieldToBeInvalid('Username (will be visible to other users)');
+		await ExpectFieldToBeInvalid('Username');
 		// Error is caught by native validation, so the message is not displayed
 		// await ExpectFieldToBeInvalid('Username', 'Username is required');
 	});
@@ -48,7 +48,7 @@ describe('Registration Form', () => {
 		// TODO: Expand this to actually check that a WS message hasn't been sent
 		expect(screen.queryByText('Email is required')).not.toBeInTheDocument();
 
-		await user.type(screen.getByLabelText('Username (will be visible to other users)'), defaultUsername);
+		await user.type(screen.getByLabelText('Username'), defaultUsername);
 		await user.type(screen.getByLabelText('Password'), defaultPassword);
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
@@ -62,7 +62,7 @@ describe('Registration Form', () => {
 		// TODO: Expand this to actually check that a WS message hasn't been sent
 		expect(screen.queryByText('Password is required')).not.toBeInTheDocument();
 
-		await user.type(screen.getByLabelText('Username (will be visible to other users)'), defaultUsername);
+		await user.type(screen.getByLabelText('Username'), defaultUsername);
 		await user.type(screen.getByLabelText('Email'), defaultEmail);
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
@@ -76,7 +76,7 @@ describe('Registration Form', () => {
 		// TODO: Expand this to actually check that a WS message hasn't been sent
 		expect(screen.queryByText('Please confirm your password')).not.toBeInTheDocument();
 
-		await user.type(screen.getByLabelText('Username (will be visible to other users)'), defaultUsername);
+		await user.type(screen.getByLabelText('Username'), defaultUsername);
 		await user.type(screen.getByLabelText('Email'), defaultEmail);
 		await user.type(screen.getByLabelText('Password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
@@ -92,7 +92,7 @@ describe('Registration Form', () => {
 
 		await fillInAndSubmitForm(invalidUsername, defaultEmail, defaultPassword, defaultPassword);
 
-		await ExpectFieldToBeInvalid('Username (will be visible to other users)');
+		await ExpectFieldToBeInvalid('Username');
 	});
 
 	it.each(INVALID_EMAILS)('should not permit the invalid email %p to be submitted', async (invalidEmail) => {
@@ -141,7 +141,7 @@ describe('Registration Form', () => {
 		password: string,
 		passwordConfirm: string,
 	): Promise<void> {
-		await user.type(screen.getByLabelText('Username (will be visible to other users)'), username);
+		await user.type(screen.getByLabelText('Username'), username);
 		await user.type(screen.getByLabelText('Email'), email);
 		await user.type(screen.getByLabelText('Password'), password);
 		await user.type(screen.getByLabelText('Confirm password'), passwordConfirm);

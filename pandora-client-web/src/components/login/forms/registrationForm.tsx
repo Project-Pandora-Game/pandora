@@ -1,4 +1,4 @@
-import { AssertNever, EmailAddressSchema, PasswordSha512Schema, UserNameSchema } from 'pandora-common';
+import { AssertNever, EmailAddressSchema, PasswordSchema, UserNameSchema } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
@@ -134,7 +134,7 @@ export function RegistrationForm(): ReactElement {
 					autoComplete='new-password'
 					{ ...register('password', {
 						required: 'Password is required',
-						validate: FormCreateStringValidator(PasswordSha512Schema, 'password'),
+						validate: FormCreateStringValidator(PasswordSchema, 'password'),
 					}) }
 				/>
 				<FormFieldError error={ errors.password } />

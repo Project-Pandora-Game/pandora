@@ -1,4 +1,4 @@
-import { AssertNever, IsSimpleToken, PasswordSha512Schema, SIMPLE_TOKEN_LENGTH, UserNameSchema } from 'pandora-common';
+import { AssertNever, IsSimpleToken, PasswordSchema, SIMPLE_TOKEN_LENGTH, UserNameSchema } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
@@ -92,7 +92,7 @@ export function ResetPasswordForm(): ReactElement {
 					autoComplete='new-password'
 					{ ...register('password', {
 						required: 'Password is required',
-						validate: FormCreateStringValidator(PasswordSha512Schema, 'password'),
+						validate: FormCreateStringValidator(PasswordSchema, 'password'),
 					}) }
 				/>
 				<FormFieldError error={ errors.password } />

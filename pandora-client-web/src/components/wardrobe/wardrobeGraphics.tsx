@@ -197,7 +197,7 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 
 		const item = globalState.room?.items.find((i) => i.id === itemId);
 
-		if (item == null || !item.isType('roomDevice') || item.deployment == null)
+		if (item == null || !item.isType('roomDevice') || !item.isDeployed())
 			return undefined;
 
 		return item;
@@ -241,7 +241,7 @@ export function RoomPreview({
 	}, [roomBackground]);
 
 	const focusArea = useMemo((): Rectangle | undefined => {
-		if (focusDevice == null || focusDevice.deployment == null)
+		if (focusDevice == null || !focusDevice.isDeployed())
 			return undefined;
 
 		const asset = focusDevice.asset.definition;
@@ -329,7 +329,7 @@ export function RoomPreview({
 						))
 					}
 					{
-						roomDevices.map((device) => (device.deployment != null ? (
+						roomDevices.map((device) => (device.isDeployed() ? (
 							<ChatRoomDevice
 								key={ device.id }
 								globalState={ globalState }

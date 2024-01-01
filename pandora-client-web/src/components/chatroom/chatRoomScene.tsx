@@ -139,7 +139,7 @@ export function ChatRoomGraphicsScene({
 					))
 				}
 				{
-					roomDevices.map((device) => (device.deployment != null ? (
+					roomDevices.map((device) => (device.isDeployed() ? (
 						<ChatRoomDeviceInteractive
 							key={ device.id }
 							globalState={ globalState }
@@ -156,7 +156,7 @@ export function ChatRoomGraphicsScene({
 			</Container>
 			<Container zIndex={ 20 } sortableChildren>
 				{
-					roomDevices.map((device) => ((chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === device.id && device.deployment != null) ? (
+					roomDevices.map((device) => ((chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === device.id && device.isDeployed()) ? (
 						<ChatRoomDeviceMovementTool
 							key={ device.id }
 							globalState={ globalState }

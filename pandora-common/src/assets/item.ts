@@ -24,12 +24,33 @@ import { LIMIT_OUTFIT_NAME_LENGTH } from '../inputLimits';
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 
-export const RoomDeviceDeploymentSchema = z.object({
+export const RoomDeviceDeploymentPositionSchema = z.object({
 	x: z.number(),
 	y: z.number(),
 	yOffset: z.number().int().catch(0),
-}).nullable();
+});
+export type RoomDeviceDeploymentPosition = z.infer<typeof RoomDeviceDeploymentPositionSchema>;
+
+export const RoomDeviceDeploymentSchema = RoomDeviceDeploymentPositionSchema.extend({
+	deployed: z.boolean().default(true),
+}).catch({
+	deployed: false,
+	x: 0,
+	y: 0,
+	yOffset: 0,
+});
 export type RoomDeviceDeployment = z.infer<typeof RoomDeviceDeploymentSchema>;
+
+export const RoomDeviceDeploymentChangeSchema = z.discriminatedUnion('deployed', [
+	z.object({
+		deployed: z.literal(false),
+	}),
+	z.object({
+		deployed: z.literal(true),
+		position: RoomDeviceDeploymentPositionSchema.optional(),
+	}),
+]);
+export type RoomDeviceDeploymentChange = z.infer<typeof RoomDeviceDeploymentChangeSchema>;
 
 export const RoomDeviceBundleSchema = z.object({
 	deployment: RoomDeviceDeploymentSchema,
@@ -641,6 +662,10 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		this.modules = overrideProps?.modules ?? props.modules;
 	}
 
+	public isDeployed(): this is ItemRoomDevice & { deployment: RoomDeviceDeployment & { deployed: true; }; } {
+		return this.deployment.deployed;
+	}
+
 	protected override withProps(overrideProps: Partial<ItemRoomDeviceProps>): ItemRoomDevice {
 		return new ItemRoomDevice(this, overrideProps);
 	}
@@ -654,7 +679,12 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 
 		// Load device-specific data
 		const roomDeviceData: RoomDeviceBundle = bundle.roomDeviceData ?? {
-			deployment: null,
+			deployment: {
+				x: Math.floor(200 + Math.random() * 800),
+				y: 0,
+				yOffset: 0,
+				deployed: false,
+			},
 			slotOccupancy: {},
 		};
 
@@ -662,7 +692,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 
 		const slotOccupancy = new Map<string, CharacterId>();
 		// Skip occupied slots if we are not deployed
-		if (deployment != null) {
+		if (deployment.deployed) {
 			for (const slot of Object.keys(asset.definition.slots)) {
 				if (roomDeviceData.slotOccupancy[slot] != null) {
 					slotOccupancy.set(slot, roomDeviceData.slotOccupancy[slot]);
@@ -702,7 +732,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		}
 
 		// Deployed room devices must be in a room
-		if (this.deployment != null && context.location !== 'roomInventory')
+		if (this.isDeployed() && context.location !== 'roomInventory')
 			return {
 				success: false,
 				error: {
@@ -729,15 +759,37 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 	}
 
 	/** Colors this item with passed color, returning new item with modified color */
-	public changeDeployment(newDeployment: RoomDeviceDeployment): ItemRoomDevice {
+	public changeDeployment(newDeployment: RoomDeviceDeploymentChange): ItemRoomDevice {
+		if (!newDeployment.deployed) {
+			if (!this.isDeployed())
+				return this;
+
+			return this.withProps({
+				deployment: {
+					...this.deployment,
+					deployed: false,
+				},
+			});
+		}
+		if (newDeployment.position != null) {
+			return this.withProps({
+				deployment: {
+					...newDeployment.position,
+					deployed: true,
+				},
+			});
+		}
 		return this.withProps({
-			deployment: newDeployment,
+			deployment: {
+				...this.deployment,
+				deployed: true,
+			},
 		});
 	}
 
 	public changeSlotOccupancy(slot: string, character: CharacterId | null): ItemRoomDevice | null {
 		// The slot must exist and the device must be deployed
-		if (this.asset.definition.slots[slot] == null || this.deployment == null)
+		if (this.asset.definition.slots[slot] == null || !this.isDeployed())
 			return null;
 
 		const slotOccupancy = new Map(this.slotOccupancy);
@@ -882,7 +934,7 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 			(device.asset.definition.slots[this.roomDeviceLink.slot]?.wearableAsset !== this.asset.id) ||
 			// The device must be deployed with this character in target slot
 			// TODO: We have no way to check that the character in the slot is us, because we don't have the character ID at this point
-			(!device.deployment || !device.slotOccupancy.has(this.roomDeviceLink.slot))
+			(!device.isDeployed() || !device.slotOccupancy.has(this.roomDeviceLink.slot))
 		) {
 			return {
 				success: false,

@@ -60,7 +60,7 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 	}, [items, itemPath]);
 }
 
-export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, roomContext: ActionRoomContext | null, action: AppearanceAction, result: AppearanceActionProcessingResultValid): string[] {
+export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, roomContext: ActionRoomContext | null, _action: AppearanceAction, result: AppearanceActionProcessingResultValid): string[] {
 	const originalCharacterState = result.originalState.characters.get(player.id);
 	AssertNotNullable(originalCharacterState);
 	const resultCharacterState = result.resultState.characters.get(player.id);
@@ -78,15 +78,6 @@ export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, r
 		!resultRestrictionManager.canUseHands()
 	) {
 		warnings.push(`This action will prevent you from using your hands`);
-	}
-
-	// Warn about storing a room device
-	if (
-		action.type === 'roomDeviceDeploy' &&
-		action.deployment == null
-	) {
-		warnings.push(`Storing a room device removes all characters from it`);
-		warnings.push(`Storing a room device resets its position inside the room`);
 	}
 
 	return warnings;

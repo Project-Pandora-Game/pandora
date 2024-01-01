@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid';
-import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData, CloneDeepMutable } from 'pandora-common';
+import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData } from 'pandora-common';
 import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
 import { Character, ICharacter, useCharacterData } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
@@ -16,6 +16,7 @@ import { IChatRoomMode } from '../chatRoomScene';
 import { toast } from 'react-toastify';
 import { ActionWarningContent } from '../../wardrobe/wardrobeComponents';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { omit } from 'lodash';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -28,7 +29,7 @@ function StoreDeviceMenu({ device, close }: {
 			itemId: device.id,
 		},
 		target: { type: 'roomInventory' },
-		deployment: null,
+		deployment: { deployed: false },
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
@@ -53,7 +54,7 @@ function MoveDeviceMenu({ device, setChatRoomMode, close }: {
 			itemId: device.id,
 		},
 		target: { type: 'roomInventory' },
-		deployment: CloneDeepMutable(device.deployment),
+		deployment: { deployed: true, position: omit(device.deployment, 'deployed') },
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;

@@ -6,7 +6,7 @@ import { WearableAssetType } from './definitions';
 import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelectorSchema } from './appearanceTypes';
 import { ItemInteractionType } from '../character/restrictionsManager';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
-import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeployment, RoomDeviceDeploymentSchema } from './item';
+import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { isEqual, sample } from 'lodash';
@@ -131,7 +131,7 @@ export const AppearanceActionRoomDeviceDeploy = z.object({
 	/** Path to the room device */
 	item: ItemPathSchema,
 	/** The resulting deployment we want */
-	deployment: RoomDeviceDeploymentSchema,
+	deployment: RoomDeviceDeploymentChangeSchema,
 });
 
 export const AppearanceActionRoomDeviceEnter = z.object({
@@ -265,7 +265,7 @@ export function DoAppearanceAction(
 				return processingContext.invalid('noDeleteRoomDeviceWearable');
 			}
 			// Deployed room devices cannot be deleted, you must store them first
-			if (item?.isType('roomDevice') && item.deployment != null) {
+			if (item?.isType('roomDevice') && item.isDeployed()) {
 				return processingContext.invalid('noDeleteDeployedRoomDevice');
 			}
 
@@ -946,7 +946,7 @@ export function ActionAppearanceRandomize({
 	return processingContext.finalize();
 }
 
-export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProcessingContext, rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, deployment: RoomDeviceDeployment): boolean {
+export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProcessingContext, rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, deployment: RoomDeviceDeploymentChange): boolean {
 	const { container, itemId } = itemPath;
 	const manipulator = rootManipulator.getContainer(container);
 
@@ -956,13 +956,25 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 	if (!manipulator.modifyItem(itemId, (it) => {
 		if (!it.isType('roomDevice'))
 			return null;
+
+		if (!deployment.deployed && it.slotOccupancy.size > 0) {
+			processingContext.addProblem({
+				result: 'validationError',
+				validationError: {
+					problem: 'deviceOccupied',
+					asset: it.asset.id,
+				},
+			});
+			return null;
+		}
+
 		previousDeviceState = it;
 		return it.changeDeployment(deployment);
 	}))
 		return false;
 
 	// Change message to chat
-	if (previousDeviceState != null && (deployment == null) !== (previousDeviceState.deployment == null)) {
+	if (previousDeviceState != null && deployment.deployed !== previousDeviceState.isDeployed()) {
 		processingContext.queueMessage(
 			manipulator.makeMessage({
 				id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',

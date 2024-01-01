@@ -125,10 +125,24 @@ export class AppearanceActionProcessingContext {
 	}
 
 	public invalid(invalidReason?: InvalidActionReason): AppearanceActionProcessingResultInvalid {
-		return new AppearanceActionProcessingResultInvalid(this, invalidReason);
+		this.addProblem({
+			result: 'invalidAction',
+			reason: invalidReason,
+		});
+		return new AppearanceActionProcessingResultInvalid(this);
 	}
 
-	public finalize(): AppearanceActionProcessingResultValid {
+	public finalize(): AppearanceActionProcessingResultValid | AppearanceActionProcessingResultInvalid {
+		const validationResult = this.manipulator.currentState.validate();
+		if (!validationResult.success) {
+			this.addProblem({
+				result: 'validationError',
+				validationError: validationResult.error,
+			});
+		}
+		if (this._actionProblems.length > 0)
+			return new AppearanceActionProcessingResultInvalid(this);
+
 		return new AppearanceActionProcessingResultValid(this, this.manipulator.currentState);
 	}
 }
@@ -151,22 +165,17 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 
 	public readonly problems: readonly AppearanceActionProblem[];
 
-	constructor(processingContext: AppearanceActionProcessingContext, invalidReason?: InvalidActionReason) {
+	constructor(processingContext: AppearanceActionProcessingContext) {
 		super(processingContext);
-		this.problems = [
-			...processingContext.actionProblems,
-			{
-				result: 'invalidAction',
-				reason: invalidReason,
-			},
-		];
+		this.problems = [...processingContext.actionProblems];
+		Assert(this.problems.length > 0);
 	}
 }
 
 export class AppearanceActionProcessingResultValid extends AppearanceActionProcessingResultBase {
 	public readonly valid = true;
 
-	public readonly problems: readonly AppearanceActionProblem[];
+	public readonly problems: readonly AppearanceActionProblem[] = [];
 	public readonly resultState: AssetFrameworkGlobalState;
 	public readonly pendingMessages: readonly ActionHandlerMessage[];
 
@@ -174,24 +183,8 @@ export class AppearanceActionProcessingResultValid extends AppearanceActionProce
 		super(processingContext);
 		this.resultState = resultState;
 		this.pendingMessages = processingContext.pendingMessages;
-
-		{
-			// Final validations of result
-			const problems: AppearanceActionProblem[] = [
-				...processingContext.actionProblems,
-			];
-
-			// Validate result state
-			const validationResult = resultState.validate();
-			if (!validationResult.success) {
-				problems.push({
-					result: 'validationError',
-					validationError: validationResult.error,
-				});
-			}
-
-			this.problems = problems;
-		}
+		Assert(processingContext.actionProblems.length === 0);
+		Assert(this.resultState.isValid());
 	}
 }
 

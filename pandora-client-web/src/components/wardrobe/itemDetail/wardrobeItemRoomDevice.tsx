@@ -4,7 +4,7 @@ import {
 	CharacterIdSchema,
 	Item,
 	ItemPath,
-	RoomDeviceDeployment,
+	RoomDeviceDeploymentPosition,
 	RoomDeviceSlot,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
@@ -26,19 +26,16 @@ export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 }): ReactElement | null {
 	const { targetSelector } = useWardrobeContext();
 
-	// Generate random X position for the device that is not directly on the edge of the room
-	const randomDeploymentPositionX = useMemo(() => Math.floor(200 + Math.random() * 800), []);
-
 	let contents: ReactElement | undefined;
 
-	if (roomDevice.deployment != null) {
+	if (roomDevice.isDeployed()) {
 		contents = (
 			<>
 				<WardrobeActionButton action={ {
 					type: 'roomDeviceDeploy',
 					target: targetSelector,
 					item,
-					deployment: null,
+					deployment: { deployed: false },
 				} }>
 					Store the device
 				</WardrobeActionButton>
@@ -51,11 +48,7 @@ export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 				type: 'roomDeviceDeploy',
 				target: targetSelector,
 				item,
-				deployment: {
-					x: randomDeploymentPositionX,
-					y: 0,
-					yOffset: 0,
-				},
+				deployment: { deployed: true },
 			} }>
 				Deploy the device
 			</WardrobeActionButton>
@@ -72,7 +65,7 @@ export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 }
 
 function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
-	deployment: NonNullable<Immutable<RoomDeviceDeployment>>;
+	deployment: NonNullable<Immutable<RoomDeviceDeploymentPosition>>;
 	item: ItemPath;
 }): ReactElement | null {
 	const throttle = 100;
@@ -88,22 +81,22 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 		type: 'roomDeviceDeploy',
 		target: targetSelector,
 		item,
-		deployment,
+		deployment: { deployed: true, position: deployment },
 	});
 	const disabled = checkResult == null || checkResult.problems.length > 0;
 
-	const onChangeCaller = useCallback((newPosition: Immutable<RoomDeviceDeployment>) => {
+	const onChangeCaller = useCallback((newPosition: Immutable<RoomDeviceDeploymentPosition>) => {
 		execute({
 			type: 'roomDeviceDeploy',
 			target: targetSelector,
 			item,
-			deployment: newPosition,
+			deployment: { deployed: true, position: newPosition },
 		});
 	}, [execute, targetSelector, item]);
 	const onChangeCallerThrottled = useMemo(() => throttle <= 0 ? onChangeCaller : _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
 
-	const changeCallback = useCallback((positionChange: Partial<RoomDeviceDeployment>) => {
-		const newPosition: Immutable<RoomDeviceDeployment> = {
+	const changeCallback = useCallback((positionChange: Partial<RoomDeviceDeploymentPosition>) => {
+		const newPosition: Immutable<RoomDeviceDeploymentPosition> = {
 			...deployment,
 			...positionChange,
 		};
@@ -156,7 +149,7 @@ export function WardrobeRoomDeviceSlots({ roomDevice, item }: {
 }): ReactElement | null {
 	let contents: ReactNode;
 
-	if (roomDevice.deployment != null) {
+	if (roomDevice.isDeployed()) {
 		contents = Object.entries(roomDevice.asset.definition.slots).map(([slotName, slotDefinition]) => (
 			<WardrobeRoomDeviceSlot key={ slotName }
 				item={ item }

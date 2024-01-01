@@ -178,4 +178,5 @@ export const SIMPLE_TOKEN_LENGTH = 6;
 export const SimpleTokenSchema = z.string().length(SIMPLE_TOKEN_LENGTH).regex(/^[0-9]+$/);
 export const IsSimpleToken = ZodMatcher(SimpleTokenSchema);
 
+export const PasswordSchema = z.string().min(8);
 export const PasswordSha512Schema = z.string().regex(/^[a-zA-Z0-9+/]{86}==$/);

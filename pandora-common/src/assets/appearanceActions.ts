@@ -364,6 +364,17 @@ export function DoAppearanceAction(
 			const target = processingContext.getTarget(action.target);
 			if (!target)
 				return processingContext.invalid();
+			const item = target.getItem(action.item);
+			// To manipulate the color of room devices, player must be an admin
+			if (item?.isType('roomDevice') && !playerRestrictionManager.isCurrentRoomAdmin()) {
+				processingContext.addProblem({
+					result: 'restrictionError',
+					restriction: {
+						type: 'modifyRoomRestriction',
+						reason: 'notAdmin',
+					},
+				});
+			}
 			// Player coloring the item must be able to interact with the item
 			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.STYLING);
 			if (!r.allowed) {

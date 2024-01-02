@@ -60,7 +60,7 @@ export const DirectoryAccountSettingsSchema = z.object({
 	/**
 	 * Controls whether to show the attribute icons or preview images in small preview.
 	 */
-	wardrobeSmallPreview: z.enum(['icon', 'image']).default('icon'),
+	wardrobeSmallPreview: z.enum(['icon', 'image']).default('image'),
 	/**
 	 * Controls whether to show the attribute icons or preview images in big preview.
 	 */
@@ -94,7 +94,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	wardrobeUseRoomBackground: true,
 	wardrobeHoverPreview: true,
 	wardrobeOutfitsPreview: 'small',
-	wardrobeSmallPreview: 'icon',
+	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,

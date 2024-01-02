@@ -201,7 +201,7 @@ function WardrobeHoverPreview({ account }: { account: IDirectoryAccountInfo; }):
 }
 
 const WARDROBE_PREVIEWS_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeOutfitsPreview'], string> = {
-	disabled: 'Disabled',
+	disabled: 'Disabled (better performance)',
 	small: 'Enabled (small live previews)',
 	big: 'Enabled (big live previews)',
 };

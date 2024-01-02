@@ -207,7 +207,7 @@ const WARDROBE_PREVIEWS_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeO
 };
 
 const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeSmallPreview'], string> = {
-	icon: 'Show attribute icon (better performance)',
+	icon: 'Show attribute icon (less to download)',
 	image: 'Show preview image',
 };
 

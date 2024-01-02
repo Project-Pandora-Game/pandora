@@ -94,7 +94,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	wardrobeUseRoomBackground: true,
 	wardrobeHoverPreview: true,
 	wardrobeOutfitsPreview: 'small',
-	wardrobeSmallPreview: 'icon',
+	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,

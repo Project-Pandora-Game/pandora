@@ -201,13 +201,13 @@ function WardrobeHoverPreview({ account }: { account: IDirectoryAccountInfo; }):
 }
 
 const WARDROBE_PREVIEWS_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeOutfitsPreview'], string> = {
-	disabled: 'Disabled',
+	disabled: 'Disabled (better performance)',
 	small: 'Enabled (small live previews)',
 	big: 'Enabled (big live previews)',
 };
 
 const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeSmallPreview'], string> = {
-	icon: 'Show attribute icon',
+	icon: 'Show attribute icon (better performance)',
 	image: 'Show preview image',
 };
 

@@ -60,7 +60,7 @@ export const DirectoryAccountSettingsSchema = z.object({
 	/**
 	 * Controls whether to show the attribute icons or preview images in small preview.
 	 */
-	wardrobeSmallPreview: z.enum(['icon', 'image']).default('icon'),
+	wardrobeSmallPreview: z.enum(['icon', 'image']).default('image'),
 	/**
 	 * Controls whether to show the attribute icons or preview images in big preview.
 	 */

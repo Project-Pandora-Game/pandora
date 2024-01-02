@@ -585,7 +585,7 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 			) }
 			{ editing && (
 				<span>
-					<span style={ { color: '#78c9fc' } }>{ 'Editing message ' }</span>
+					<span style={ { color: '#8cf' } }>{ 'Editing message ' }</span>
 					<Button className='slim' onClick={ (ev) => {
 						ev.stopPropagation();
 						setEditing(null);

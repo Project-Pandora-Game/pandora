@@ -49,7 +49,7 @@
 		"@babel/preset-env": "7.23.7",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.11",
 		"@project-pandora-game/sass-loader": "13.2.0",
-		"@testing-library/jest-dom": "6.1.6",
+		"@testing-library/jest-dom": "6.2.0",
 		"@testing-library/react": "14.1.2",
 		"@testing-library/user-event": "14.5.2",
 		"@types/browser-resolve": "2.0.4",

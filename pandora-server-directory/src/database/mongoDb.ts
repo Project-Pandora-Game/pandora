@@ -1,9 +1,9 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
@@ -450,7 +450,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return deletedCount === 1;
 	}
 
-	public async setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void> {
+	public async setDirectMessageInfo(accountId: number, directMessageInfo: DatabaseDirectMessageInfo[]): Promise<void> {
 		await this._accounts.updateOne({ id: accountId }, { $set: { directMessages: directMessageInfo } });
 	}
 
@@ -524,12 +524,11 @@ export default class MongoDatabase implements PandoraDatabase {
 
 			const directMessages: typeof account.directMessages = [];
 			for (const dm of account.directMessages) {
-				const migrated = {
-					...dm,
-					displayName: account.username,
-				};
+				const migrated = { ...dm };
 				if ('account' in migrated)
 					delete migrated.account;
+				if ('displayName' in migrated)
+					delete migrated.displayName;
 
 				directMessages.push(migrated);
 			}

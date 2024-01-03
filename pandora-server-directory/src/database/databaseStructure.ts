@@ -52,7 +52,7 @@ export type DatabaseAccountSecure = z.infer<typeof DatabaseAccountSecureSchema>;
 export type DirectMessageAccounts = `${number}-${number}`;
 
 // changes to this type may require database migration
-export type DatabaseDirectMessageInfo = IDirectoryDirectMessageInfo & {
+export type DatabaseDirectMessageInfo = Omit<IDirectoryDirectMessageInfo, 'displayName'> & {
 	/** Flag to indicate the conversation was closed and the info should not be sent to the account */
 	closed?: true;
 };

@@ -162,6 +162,7 @@ export type IDirectoryDirectMessageAccount = {
 	publicKeyData: string;
 };
 
+// changes to this type may require database migration
 /** Direct message conversation info */
 export type IDirectoryDirectMessageInfo = {
 	/** Id of the other account */

@@ -51,6 +51,7 @@ export type DatabaseAccountSecure = z.infer<typeof DatabaseAccountSecureSchema>;
 /** Direct message key create from the 2 accounts' id where the first is always the lowest */
 export type DirectMessageAccounts = `${number}-${number}`;
 
+// changes to this type may require database migration
 export type DatabaseDirectMessageInfo = IDirectoryDirectMessageInfo & {
 	/** Flag to indicate the conversation was closed and the info should not be sent to the account */
 	closed?: true;

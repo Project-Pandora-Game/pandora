@@ -51,6 +51,7 @@ export const RoleSelfInfoSchema = z.object({
 });
 export type IRoleSelfInfo = z.infer<typeof RoleSelfInfoSchema>;
 
+// changes to this type may require database migration
 export type IRoleManageInfo = IRoleSelfInfo & {
 	grantedBy: 'GitHub' | { id: number; username: string; };
 	grantedAt: number;

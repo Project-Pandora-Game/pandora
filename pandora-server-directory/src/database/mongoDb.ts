@@ -518,6 +518,25 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	private async _doMigrations(): Promise<void> {
 		// insert migration code here
+		for await (const account of this._accounts.find().stream()) {
+			if (account.directMessages == null)
+				continue;
+
+			const directMessages: typeof account.directMessages = [];
+			for (const dm of account.directMessages) {
+				const migrated = {
+					...dm,
+					displayName: account.username,
+				};
+				if ('account' in migrated)
+					delete migrated.account;
+
+				directMessages.push(migrated);
+			}
+
+			Assert(directMessages.length === account.directMessages.length);
+			await this._accounts.updateOne({ id: account.id }, { $set: { directMessages } });
+		}
 	}
 }
 

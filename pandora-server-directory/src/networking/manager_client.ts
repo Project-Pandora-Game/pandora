@@ -670,10 +670,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.account)
 			throw new BadMessageError();
 
-		const relationships = await connection.account.contacts.getAll();
+		const contacts = await connection.account.contacts.getAll();
 		const friends = await connection.account.contacts.getFriendsStatus();
 
-		return { friends, relationships };
+		return { friends, contacts };
 	}
 
 	private async handleGetAccountInfo({ accountId }: IClientDirectoryArgument['getAccountInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['getAccountInfo'] {

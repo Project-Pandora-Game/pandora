@@ -33,8 +33,8 @@ export const AccountContactContext = new class AccountContactContext extends Typ
 		if (!this._useQueue) {
 			return;
 		}
-		const { friends, relationships } = await connection.awaitResponse('getAccountContacts', {});
-		ACCOUNT_CONTACTS.value = relationships;
+		const { friends, contacts } = await connection.awaitResponse('getAccountContacts', {});
+		ACCOUNT_CONTACTS.value = contacts;
 		FRIEND_STATUS.value = friends;
 		this._dequeue();
 	}
@@ -51,18 +51,18 @@ export const AccountContactContext = new class AccountContactContext extends Typ
 		FRIEND_STATUS.value = filtered;
 	}
 
-	public handleAccountContactUpdate({ relationship, friendStatus }: IDirectoryClientArgument['accountContactUpdate']) {
+	public handleAccountContactUpdate({ contact, friendStatus }: IDirectoryClientArgument['accountContactUpdate']) {
 		if (this._useQueue) {
-			this._queue.push(() => this.handleAccountContactUpdate({ relationship, friendStatus }));
+			this._queue.push(() => this.handleAccountContactUpdate({ contact, friendStatus }));
 			return;
 		}
 		// Update relationship side
 		{
-			const filtered = ACCOUNT_CONTACTS.value.filter((current) => current.id !== relationship.id);
-			if (relationship.type !== 'none') {
-				filtered.push(relationship);
-				if (filtered.length > ACCOUNT_CONTACTS.value.length && relationship.type === 'incoming') {
-					this.emit('incoming', { ...relationship, type: 'incoming' });
+			const filtered = ACCOUNT_CONTACTS.value.filter((current) => current.id !== contact.id);
+			if (contact.type !== 'none') {
+				filtered.push(contact);
+				if (filtered.length > ACCOUNT_CONTACTS.value.length && contact.type === 'incoming') {
+					this.emit('incoming', { ...contact, type: 'incoming' });
 				}
 			}
 			ACCOUNT_CONTACTS.value = filtered;

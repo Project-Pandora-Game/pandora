@@ -225,7 +225,7 @@ export const DirectoryClientSchema = {
 	},
 	accountContactUpdate: {
 		request: ZodCast<{
-			relationship: IAccountContact | { id: AccountId; type: 'none'; };
+			contact: IAccountContact | { id: AccountId; type: 'none'; };
 			friendStatus: IAccountFriendStatus | { id: AccountId; online: 'delete'; };
 		}>(),
 		response: null,

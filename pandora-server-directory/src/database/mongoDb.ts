@@ -3,7 +3,7 @@ import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContacts, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
@@ -18,7 +18,7 @@ const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
 const CHATROOMS_COLLECTION_NAME = 'chatrooms';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
-const RELATIONSHIPS_COLLECTION_NAME = 'relationships';
+const ACCOUNT_CONTACTS_COLLECTION_NAME = 'accountContacts';
 
 const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
 	locale: 'en',
@@ -45,7 +45,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _chatrooms!: Collection<IChatRoomData>;
 	private _config!: Collection<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>;
 	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
-	private _relationships!: Collection<DatabaseAccountContact>;
+	private _accountContacts!: Collection<DatabaseAccountContact>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -126,8 +126,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._nextCharacterId = maxCharId ? maxCharId.id + 1 : 1;
 		//#endregion
 
-		this._relationships = this._db.collection(RELATIONSHIPS_COLLECTION_NAME);
-		await MongoUpdateIndexes(this._relationships, [
+		this._accountContacts = this._db.collection(ACCOUNT_CONTACTS_COLLECTION_NAME);
+		await MongoUpdateIndexes(this._accountContacts, [
 			{
 				name: 'accounts',
 				key: { accounts: 1 },
@@ -469,11 +469,11 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {
-		return this._relationships.find({ accounts: accountId }).toArray();
+		return this._accountContacts.find({ accounts: accountId }).toArray();
 	}
 
 	public async setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContactType): Promise<DatabaseAccountContact> {
-		const result = await this._relationships.findOneAndUpdate({
+		const result = await this._accountContacts.findOneAndUpdate({
 			// TODO simplify this when MongoDB fixes this: https://jira.mongodb.org/browse/SERVER-13843
 			accounts: {
 				$all: [
@@ -484,7 +484,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		}, {
 			$set: {
 				updated: Date.now(),
-				relationship: data,
+				contact: data,
 			},
 			$setOnInsert: {
 				accounts: [accountIdA, accountIdB],
@@ -498,7 +498,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async removeAccountContact(accountIdA: number, accountIdB: number): Promise<void> {
-		await this._relationships.deleteOne({
+		await this._accountContacts.deleteOne({
 			accounts: { $all: [accountIdA, accountIdB] },
 		});
 	}
@@ -534,9 +534,39 @@ export default class MongoDatabase implements PandoraDatabase {
 			}
 
 			Assert(directMessages.length === account.directMessages.length);
-			await this._accounts.updateOne({ id: account.id }, { $set: { directMessages } });
+			const { matchedCount, modifiedCount } = await this._accounts.updateOne({ id: account.id }, { $set: { directMessages } });
+			Assert(matchedCount === 1 && modifiedCount === 1);
 		}
+
+		const relationships = this._db.collection<DatabaseAccountRelationshipOld>('relationships');
+		await MongoUpdateIndexes(relationships, [
+			{
+				name: 'accounts',
+				key: { accounts: 1 },
+			},
+		]);
+
+		for await (const rel of relationships.find().stream()) {
+			const contact = {
+				accounts: rel.accounts,
+				updated: rel.updated,
+				contact: rel.relationship,
+			};
+
+			const { acknowledged } = await this._accountContacts.insertOne(contact);
+			Assert(acknowledged);
+		}
+		const relationshipsCount = await relationships.countDocuments();
+		const accountContactsCount = await this._accountContacts.countDocuments();
+		Assert(relationshipsCount === accountContactsCount);
+		await relationships.drop();
 	}
+}
+
+export interface DatabaseAccountRelationshipOld {
+	accounts: [AccountId, AccountId];
+	updated: number;
+	relationship: DatabaseAccountContactType;
 }
 
 async function CreateInMemoryMongo({

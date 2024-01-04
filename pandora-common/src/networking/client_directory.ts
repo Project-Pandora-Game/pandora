@@ -186,7 +186,7 @@ export const ClientDirectorySchema = {
 	getAccountContacts: {
 		request: z.object({}),
 		response: ZodCast<{
-			relationships: IAccountContact[];
+			contacts: IAccountContact[];
 			friends: IAccountFriendStatus[];
 		}>(),
 	},

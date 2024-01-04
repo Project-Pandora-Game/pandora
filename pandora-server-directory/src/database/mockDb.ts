@@ -390,7 +390,7 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContactType): Promise<DatabaseAccountContact> {
-		const newData: DatabaseAccountContact = { accounts: [accountIdA, accountIdB], updated: Date.now(), relationship: _.cloneDeep(data) };
+		const newData: DatabaseAccountContact = { accounts: [accountIdA, accountIdB], updated: Date.now(), contact: _.cloneDeep(data) };
 		const index = this.accountContactDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		if (index < 0) {
 			this.accountContactDb.push(newData);

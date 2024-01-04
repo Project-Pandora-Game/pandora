@@ -21,6 +21,7 @@ function GetNextMessageTime(): number {
 export class AccountDirectMessages {
 	private readonly _account: Account;
 	private _dms: DatabaseDirectMessageInfo[];
+	private _infos?: IDirectoryDirectMessageInfo[];
 
 	private get _publicKey(): string {
 		return this._account.secure.getPublicKey() as string;
@@ -32,6 +33,9 @@ export class AccountDirectMessages {
 	}
 
 	public async getDirectMessageInfo(): Promise<IDirectoryDirectMessageInfo[]> {
+		if (this._infos) {
+			return this._infos;
+		}
 		const filtered = this._dms.filter((info) => !info.closed);
 		const ids = await GetDatabase().queryAccountNames(filtered.map((info) => info.id));
 		const dms: IDirectoryDirectMessageInfo[] = [];
@@ -45,6 +49,7 @@ export class AccountDirectMessages {
 				displayName,
 			});
 		}
+		this._infos = dms;
 		return dms;
 	}
 
@@ -79,6 +84,27 @@ export class AccountDirectMessages {
 				dm.hasUnread = true;
 				delete dm.closed;
 				break;
+		}
+		if (this._infos) {
+			const index = this._infos.findIndex((info) => info.id === id);
+			if (index !== -1) {
+				if (dm.closed) {
+					this._infos.splice(index, 1);
+				} else {
+					this._infos[index] = {
+						...this._infos[index],
+						...dm,
+					};
+				}
+			} else if (!dm.closed) {
+				const { [id]: displayName } = await GetDatabase().queryAccountNames([id]);
+				if (displayName) {
+					this._infos.push({
+						...dm,
+						displayName,
+					});
+				}
+			}
 		}
 		if (notifyClients && action !== 'new' && action !== 'open') {
 			this._account.associatedConnections.sendMessage('directMessageAction', { id, action });

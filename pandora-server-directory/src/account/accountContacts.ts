@@ -68,18 +68,18 @@ export class AccountContacts {
 	public async getFriendsStatus(): Promise<IAccountFriendStatus[]> {
 		await this.load();
 		return [...this.contacts.values()]
-			.filter((rel) => rel.contact.type === 'friend')
-			.map((rel) => accountManager.getAccountById(rel.id))
+			.filter((contact) => contact.contact.type === 'friend')
+			.map((contact) => accountManager.getAccountById(contact.id))
 			.map((acc) => acc?.contacts.getStatus())
 			.filter(IsNotNullable);
 	}
 
 	public async canReceiveDM(from: Account): Promise<boolean> {
 		await this.load();
-		const rel = this.get(from.id);
+		const { contact } = this.get(from.id) ?? {};
 
 		// No access if blocked
-		if (rel?.contact && (rel.contact.type === 'mutualBlock' || rel.contact.type === 'oneSidedBlock'))
+		if (contact && (contact.type === 'mutualBlock' || contact.type === 'oneSidedBlock'))
 			return false;
 
 		// If allowing all, allow
@@ -87,7 +87,7 @@ export class AccountContacts {
 			return true;
 
 		// If friend, allow
-		if (rel?.contact.type === 'friend')
+		if (contact?.type === 'friend')
 			return true;
 
 		// If allowing from the same room and accounts share a room, allow
@@ -114,13 +114,13 @@ export class AccountContacts {
 		if (queryingAccount.roles.isAuthorized('moderator'))
 			return true;
 
-		const rel = this.get(queryingAccount.id);
+		const { contact } = this.get(queryingAccount.id) ?? {};
 		// No access if blocked
-		if (rel?.contact && (rel.contact.type === 'mutualBlock' || rel.contact.type === 'oneSidedBlock'))
+		if (contact && (contact.type === 'mutualBlock' || contact.type === 'oneSidedBlock'))
 			return false;
 
 		// Allow access if friend
-		if (rel?.contact.type === 'friend')
+		if (contact?.type === 'friend')
 			return true;
 
 		// Allow access if both are in the same room with any character
@@ -233,26 +233,26 @@ export class AccountContacts {
 		return true;
 	}
 
-	private async update(rel: DatabaseAccountContact, name?: string): Promise<void> {
-		const id = rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0];
+	private async update(contact: DatabaseAccountContact, name?: string): Promise<void> {
+		const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
 		const existing = this.get(id);
 		name ??= existing ? existing.name : (await GetDatabase().queryAccountNames([id]))[id];
 		if (!name) {
 			this.logger.warning(`Could not find name for account ${id}`);
 			return;
 		}
-		this.setAccountContact(id, name, rel.updated, rel.contact);
-		const newRel = this.get(id);
-		if (!newRel)
+		this.setAccountContact(id, name, contact.updated, contact.contact);
+		const newContact = this.get(id);
+		if (!newContact)
 			return;
-		if (existing?.contact.type === 'oneSidedBlock' && existing.contact.from === this.account.id && newRel.contact.type === 'mutualBlock')
+		if (existing?.contact.type === 'oneSidedBlock' && existing.contact.from === this.account.id && newContact.contact.type === 'mutualBlock')
 			return;
-		if (newRel.contact.type === 'oneSidedBlock' && newRel.contact.from === this.account.id && existing?.contact.type === 'mutualBlock')
+		if (newContact.contact.type === 'oneSidedBlock' && newContact.contact.from === this.account.id && existing?.contact.type === 'mutualBlock')
 			return;
-		if (!existing && newRel.contact.type === 'oneSidedBlock' && newRel.contact.from !== this.account.id)
+		if (!existing && newContact.contact.type === 'oneSidedBlock' && newContact.contact.from !== this.account.id)
 			return;
 
-		if (existing?.contact.type === 'mutualBlock' && newRel.contact.type === 'oneSidedBlock') {
+		if (existing?.contact.type === 'mutualBlock' && newContact.contact.type === 'oneSidedBlock') {
 			this.account.associatedConnections.sendMessage('accountContactUpdate', {
 				contact: { id, type: 'none' },
 				friendStatus: { id, online: 'delete' },
@@ -260,7 +260,7 @@ export class AccountContacts {
 			return;
 		}
 		let friendStatus: IDirectoryClientArgument['accountContactUpdate']['friendStatus'] = { id, online: 'delete' };
-		if (newRel.contact.type === 'friend') {
+		if (newContact.contact.type === 'friend') {
 			const friendAccount = accountManager.getAccountById(id);
 			const actualStatus = friendAccount?.contacts.getStatus();
 			if (actualStatus != null) {
@@ -268,7 +268,7 @@ export class AccountContacts {
 			}
 		}
 		this.account.associatedConnections.sendMessage('accountContactUpdate', {
-			contact: this.cacheToClientData(newRel),
+			contact: this.cacheToClientData(newContact),
 			friendStatus,
 		});
 	}
@@ -293,31 +293,31 @@ export class AccountContacts {
 			return;
 		}
 		const contacts = await GetDatabase().getAccountContacts(this.account.id);
-		const ids = contacts.map((rel) => rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0]);
+		const ids = contacts.map((contact) => contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0]);
 		const names = await GetDatabase().queryAccountNames(_.uniq(ids));
-		for (const rel of contacts) {
-			const id = rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0];
+		for (const contact of contacts) {
+			const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
 			const name = names[id];
 			if (!name) {
 				this.logger.warning(`Could not find name for account ${id}`);
 				continue;
 			}
-			this.setAccountContact(id, name, rel.updated, rel.contact);
+			this.setAccountContact(id, name, contact.updated, contact.contact);
 		}
 		this.loaded = true;
 		this.updateStatus();
 	}
 
-	private async updateAccountContact(other: AccountId, relationship: DatabaseAccountContactType | null, otherName?: string) {
-		if (relationship == null) {
+	private async updateAccountContact(other: AccountId, type: DatabaseAccountContactType | null, otherName?: string) {
+		if (type == null) {
 			await GetDatabase().removeAccountContact(this.account.id, other);
 			this.remove(other);
 			accountManager.getAccountById(other)?.contacts.remove(this.account.id);
 			return;
 		}
-		const rel = await GetDatabase().setAccountContact(this.account.id, other, relationship);
-		await this.update(rel, otherName);
-		await accountManager.getAccountById(other)?.contacts.update(rel, this.account.username);
+		const contact = await GetDatabase().setAccountContact(this.account.id, other, type);
+		await this.update(contact, otherName);
+		await accountManager.getAccountById(other)?.contacts.update(contact, this.account.username);
 	}
 
 	private setAccountContact(id: AccountId, name: string, updated: number, contact: DatabaseAccountContactType): void {
@@ -340,8 +340,8 @@ export class AccountContacts {
 			if (account.id === this.account.id) {
 				continue;
 			}
-			const rel = this.get(account.id);
-			if (!rel || rel.contact.type !== 'friend') {
+			const contact = this.get(account.id);
+			if (!contact || contact.contact.type !== 'friend') {
 				continue;
 			}
 			account.associatedConnections.sendMessage('friendStatus', data);

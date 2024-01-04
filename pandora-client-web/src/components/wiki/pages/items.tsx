@@ -49,14 +49,14 @@ export function WikiItems(): ReactElement {
 			<h4 id='IT_Room-level_items'>Room-level items</h4>
 			<p>
 				Room-level items, also called room devices, are items that can be freely placed onto the room background and can be customized similar to regular items.<br />
-				They first need to be created in the room inventory and then deployed into the room with the according button.
-				Room devices persist with the room and some of them can also hold one or more characters and regular items inside.
+				They first need to be created in the room inventory and then deployed into the room with the according button, after clicking on them in the inventory list.
+				Room devices persist with the room and some of them can also hold one or more player characters or regular items inside.
 			</p>
 			<ul>
-				<li>Only room admins can place, move, and undeploy room device per default.</li>
-				<li>Currently, most other properties of a room device can be changed by anybody. This will be changed in the future.</li>
-				<li>Room items with a blue icon below them have character slots. These icons can be hidden under the "Room"-tab.</li>
-				<li>Everyone can interact with the character slots of room devices and use them if not occupied.</li>
+				<li>Only room admins can color, place, move, and undeploy room device per default.</li>
+				<li>Currently, modules of room devices can be changed by anybody. This will be changed in the future.</li>
+				<li>Room items with a blue icon below them have character slots. These icons can optionally be hidden under the "Room"-tab.</li>
+				<li>All users can interact with the character slots of room devices and use them if not occupied.</li>
 				<li>Currently, everyone can put someone else into a room device if they are permitted to.</li>
 				<li>Some room devices have lock modules that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room while your character occupies a character slot of a room device.</li>

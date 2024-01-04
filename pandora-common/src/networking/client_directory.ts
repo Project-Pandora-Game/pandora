@@ -65,7 +65,7 @@ export type IAccountContact = {
 	/** Account id of the other account */
 	id: AccountId;
 	/** Account name of the other account */
-	name: string;
+	displayName: string;
 	/** Time the contact was updated */
 	time: number;
 	/** Type of contact */

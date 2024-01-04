@@ -11,7 +11,7 @@ const GLOBAL_LOCK = new AsyncLock();
 
 type AccountContactCache = {
 	id: AccountId;
-	name: string;
+	displayName: string;
 	updated: number;
 	contact: DatabaseAccountContactType;
 };
@@ -161,7 +161,7 @@ export class AccountContacts {
 		if (existing?.contact.type !== 'request' || existing.contact.from !== id) {
 			return 'requestNotFound';
 		}
-		await this.updateAccountContact(id, { type: 'friend' }, existing.name);
+		await this.updateAccountContact(id, { type: 'friend' }, existing.displayName);
 		return 'ok';
 	}
 
@@ -233,15 +233,15 @@ export class AccountContacts {
 		return true;
 	}
 
-	private async update(contact: DatabaseAccountContact, name?: string): Promise<void> {
+	private async update(contact: DatabaseAccountContact, displayName?: string): Promise<void> {
 		const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
 		const existing = this.get(id);
-		name ??= existing ? existing.name : (await GetDatabase().queryAccountNames([id]))[id];
-		if (!name) {
+		displayName ??= existing ? existing.displayName : (await GetDatabase().queryAccountNames([id]))[id];
+		if (!displayName) {
 			this.logger.warning(`Could not find name for account ${id}`);
 			return;
 		}
-		this.setAccountContact(id, name, contact.updated, contact.contact);
+		this.setAccountContact(id, displayName, contact.updated, contact.contact);
 		const newContact = this.get(id);
 		if (!newContact)
 			return;
@@ -320,10 +320,10 @@ export class AccountContacts {
 		await accountManager.getAccountById(other)?.contacts.update(contact, this.account.username);
 	}
 
-	private setAccountContact(id: AccountId, name: string, updated: number, contact: DatabaseAccountContactType): void {
+	private setAccountContact(id: AccountId, displayName: string, updated: number, contact: DatabaseAccountContactType): void {
 		this.contacts.set(id, {
 			id,
-			name,
+			displayName,
 			updated,
 			contact,
 		});
@@ -348,7 +348,7 @@ export class AccountContacts {
 		}
 	}
 
-	private cacheToClientData({ id, name, updated, contact }: AccountContactCache): IAccountContact {
+	private cacheToClientData({ id, displayName, updated, contact }: AccountContactCache): IAccountContact {
 		let type: IAccountContact['type'];
 		switch (contact.type) {
 			case 'friend':
@@ -366,7 +366,7 @@ export class AccountContacts {
 		}
 		return {
 			id,
-			name,
+			displayName,
 			time: updated,
 			type,
 		};

@@ -85,12 +85,12 @@ function ShowAccountContacts({ type }: { type: IAccountContact['type']; }) {
 
 function AccountContactsRow({
 	id,
-	name,
+	displayName,
 	time,
 	type,
 }: {
 	id: AccountId;
-	name: string;
+	displayName: string;
 	time: number;
 	type: IAccountContact['type'];
 }) {
@@ -101,7 +101,7 @@ function AccountContactsRow({
 			case 'blocked':
 				return (
 					<Button className='slim' onClick={
-						() => void confirm('Confirm unblock', `Are you sure you want to unblock ${name}?`).then((result) => {
+						() => void confirm('Confirm unblock', `Are you sure you want to unblock ${displayName}?`).then((result) => {
 							if (result)
 								directory.sendMessage('blockList', { id, action: 'remove' });
 						}).catch(() => { /** ignore */ })
@@ -116,11 +116,11 @@ function AccountContactsRow({
 			default:
 				return null;
 		}
-	}, [type, name, id, directory, confirm]);
+	}, [type, displayName, id, directory, confirm]);
 	return (
 		<tr>
 			<td>{ id }</td>
-			<td>{ name }</td>
+			<td>{ displayName }</td>
 			<td>{ new Date(time).toLocaleString() }</td>
 			<td>{ actions }</td>
 		</tr>
@@ -168,7 +168,7 @@ function ShowFriends() {
 			const stat = status.find((s) => s.id === friend.id);
 			return {
 				id: friend.id,
-				name: friend.name,
+				displayName: friend.displayName,
 				labelColor: (stat?.online ? stat?.labelColor : null) ?? 'transparent', // We hide the label coloring if account is offline, as we can't get it without loading the account from DB
 				time: friend.time,
 				online: stat?.online === true,
@@ -217,14 +217,14 @@ export function useGoToDM(id: AccountId) {
 
 function FriendRow({
 	id,
-	name,
+	displayName,
 	labelColor,
 	time,
 	online,
 	characters,
 }: {
 	id: AccountId;
-	name: string;
+	displayName: string;
 	labelColor: string;
 	time: number;
 	online: boolean;
@@ -236,7 +236,7 @@ function FriendRow({
 	const location = useLocation();
 
 	const [unfriend, processing] = useAsyncEvent(async () => {
-		if (await confirm('Confirm removal', `Are you sure you want to remove ${name} from your contacts list?`)) {
+		if (await confirm('Confirm removal', `Are you sure you want to remove ${displayName} from your contacts list?`)) {
 			return await directory.awaitResponse('unfriend', { id });
 		}
 		return undefined;
@@ -261,7 +261,7 @@ function FriendRow({
 					textShadow: `${labelColor} 1px 1px`,
 				} }
 			>
-				{ name }
+				{ displayName }
 			</td>
 			<td className='status'>
 				<Row className='fill' alignX='center' alignY='center'>

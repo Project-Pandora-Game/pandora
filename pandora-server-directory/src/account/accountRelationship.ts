@@ -1,34 +1,34 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountRelationship, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
+import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountContacts, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
-import { DatabaseAccountRelationship, DatabaseRelationship } from '../database/databaseStructure';
+import { DatabaseAccountContacts, DatabaseAccountContact } from '../database/databaseStructure';
 import { Room } from '../room/room';
 
 const GLOBAL_LOCK = new AsyncLock();
 
-type RelationshipCache = {
+type AccountContactCache = {
 	id: AccountId;
 	name: string;
 	updated: number;
-	relationship: DatabaseAccountRelationship;
+	relationship: DatabaseAccountContacts;
 };
 
-export class AccountRelationship {
+export class AccountContacts {
 	public readonly account: Account;
-	private readonly relationships: Map<AccountId, RelationshipCache> = new Map();
+	private readonly relationships: Map<AccountId, AccountContactCache> = new Map();
 	private readonly logger: Logger;
 	private lastStatus: IAccountFriendStatus | null = null;
 
 	constructor(account: Account) {
 		this.account = account;
-		this.logger = GetLogger('AccountRelationship').prefixMessages(`[${account.id}]`);
+		this.logger = GetLogger('AccountContacts').prefixMessages(`[${account.id}]`);
 		this.account.associatedConnections.onAny(() => this.updateStatus());
 	}
 
-	private get(id: AccountId): RelationshipCache | undefined {
+	private get(id: AccountId): AccountContactCache | undefined {
 		return this.relationships.get(id);
 	}
 
@@ -54,9 +54,9 @@ export class AccountRelationship {
 		};
 	}
 
-	public async getAll(): Promise<IAccountRelationship[]> {
+	public async getAll(): Promise<IAccountContacts[]> {
 		await this.load();
-		const isNotBlockedBy = ({ relationship }: RelationshipCache) => {
+		const isNotBlockedBy = ({ relationship }: AccountContactCache) => {
 			return relationship.type !== 'oneSidedBlock' || relationship.from === this.account.id;
 		};
 
@@ -70,7 +70,7 @@ export class AccountRelationship {
 		return [...this.relationships.values()]
 			.filter((rel) => rel.relationship.type === 'friend')
 			.map((rel) => accountManager.getAccountById(rel.id))
-			.map((acc) => acc?.relationship.getStatus())
+			.map((acc) => acc?.contacts.getStatus())
 			.filter(IsNotNullable);
 	}
 
@@ -151,7 +151,7 @@ export class AccountRelationship {
 		if (!names[id]) {
 			return 'accountNotFound';
 		}
-		await this.updateRelationship(id, { type: 'request', from: this.account.id }, names[id]);
+		await this.updateAccountContact(id, { type: 'request', from: this.account.id }, names[id]);
 		return 'ok';
 	}
 
@@ -161,7 +161,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
 			return 'requestNotFound';
 		}
-		await this.updateRelationship(id, { type: 'friend' }, existing.name);
+		await this.updateAccountContact(id, { type: 'friend' }, existing.name);
 		return 'ok';
 	}
 
@@ -171,7 +171,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== id) {
 			return 'requestNotFound';
 		}
-		await this.updateRelationship(id, null);
+		await this.updateAccountContact(id, null);
 		return 'ok';
 	}
 
@@ -181,7 +181,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type !== 'request' || existing.relationship.from !== this.account.id) {
 			return 'requestNotFound';
 		}
-		await this.updateRelationship(id, null);
+		await this.updateAccountContact(id, null);
 		return 'ok';
 	}
 
@@ -191,7 +191,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type !== 'friend') {
 			return false;
 		}
-		await this.updateRelationship(id, null);
+		await this.updateAccountContact(id, null);
 		return true;
 	}
 
@@ -209,7 +209,7 @@ export class AccountRelationship {
 			return false;
 		}
 		const hasSource = existing?.relationship.type !== 'oneSidedBlock';
-		await this.updateRelationship(id, hasSource
+		await this.updateAccountContact(id, hasSource
 			? { type: 'oneSidedBlock', from: this.account.id }
 			: { type: 'mutualBlock' });
 		return true;
@@ -226,14 +226,14 @@ export class AccountRelationship {
 			return false;
 
 		if (existing.relationship.type === 'oneSidedBlock') {
-			await this.updateRelationship(id, null);
+			await this.updateAccountContact(id, null);
 		} else {
-			await this.updateRelationship(id, { type: 'oneSidedBlock', from: id });
+			await this.updateAccountContact(id, { type: 'oneSidedBlock', from: id });
 		}
 		return true;
 	}
 
-	private async update(rel: DatabaseRelationship, name?: string): Promise<void> {
+	private async update(rel: DatabaseAccountContact, name?: string): Promise<void> {
 		const id = rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0];
 		const existing = this.get(id);
 		name ??= existing ? existing.name : (await GetDatabase().queryAccountNames([id]))[id];
@@ -241,7 +241,7 @@ export class AccountRelationship {
 			this.logger.warning(`Could not find name for account ${id}`);
 			return;
 		}
-		this.setRelationship(id, name, rel.updated, rel.relationship);
+		this.setAccountContact(id, name, rel.updated, rel.relationship);
 		const newRel = this.get(id);
 		if (!newRel)
 			return;
@@ -253,21 +253,21 @@ export class AccountRelationship {
 			return;
 
 		if (existing?.relationship.type === 'mutualBlock' && newRel.relationship.type === 'oneSidedBlock') {
-			this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+			this.account.associatedConnections.sendMessage('accountContactUpdate', {
 				relationship: { id, type: 'none' },
 				friendStatus: { id, online: 'delete' },
 			});
 			return;
 		}
-		let friendStatus: IDirectoryClientArgument['relationshipsUpdate']['friendStatus'] = { id, online: 'delete' };
+		let friendStatus: IDirectoryClientArgument['accountContactUpdate']['friendStatus'] = { id, online: 'delete' };
 		if (newRel.relationship.type === 'friend') {
 			const friendAccount = accountManager.getAccountById(id);
-			const actualStatus = friendAccount?.relationship.getStatus();
+			const actualStatus = friendAccount?.contacts.getStatus();
 			if (actualStatus != null) {
 				friendStatus = actualStatus;
 			}
 		}
-		this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+		this.account.associatedConnections.sendMessage('accountContactUpdate', {
 			relationship: this.cacheToClientData(newRel),
 			friendStatus,
 		});
@@ -279,7 +279,7 @@ export class AccountRelationship {
 		if (existing?.relationship.type === 'oneSidedBlock' && existing.relationship.from === id) {
 			return;
 		}
-		this.account.associatedConnections.sendMessage('relationshipsUpdate', {
+		this.account.associatedConnections.sendMessage('accountContactUpdate', {
 			relationship: { id, type: 'none' },
 			friendStatus: { id, online: 'delete' },
 		});
@@ -292,7 +292,7 @@ export class AccountRelationship {
 		if (this.loaded) {
 			return;
 		}
-		const relationships = await GetDatabase().getRelationships(this.account.id);
+		const relationships = await GetDatabase().getAccountContacts(this.account.id);
 		const ids = relationships.map((rel) => rel.accounts[0] === this.account.id ? rel.accounts[1] : rel.accounts[0]);
 		const names = await GetDatabase().queryAccountNames(_.uniq(ids));
 		for (const rel of relationships) {
@@ -302,25 +302,25 @@ export class AccountRelationship {
 				this.logger.warning(`Could not find name for account ${id}`);
 				continue;
 			}
-			this.setRelationship(id, name, rel.updated, rel.relationship);
+			this.setAccountContact(id, name, rel.updated, rel.relationship);
 		}
 		this.loaded = true;
 		this.updateStatus();
 	}
 
-	private async updateRelationship(other: AccountId, relationship: DatabaseAccountRelationship | null, otherName?: string) {
+	private async updateAccountContact(other: AccountId, relationship: DatabaseAccountContacts | null, otherName?: string) {
 		if (relationship == null) {
-			await GetDatabase().removeRelationship(this.account.id, other);
+			await GetDatabase().removeAccountContact(this.account.id, other);
 			this.remove(other);
-			accountManager.getAccountById(other)?.relationship.remove(this.account.id);
+			accountManager.getAccountById(other)?.contacts.remove(this.account.id);
 			return;
 		}
-		const rel = await GetDatabase().setRelationship(this.account.id, other, relationship);
+		const rel = await GetDatabase().setAccountContact(this.account.id, other, relationship);
 		await this.update(rel, otherName);
-		await accountManager.getAccountById(other)?.relationship.update(rel, this.account.username);
+		await accountManager.getAccountById(other)?.contacts.update(rel, this.account.username);
 	}
 
-	private setRelationship(id: AccountId, name: string, updated: number, relationship: DatabaseAccountRelationship): void {
+	private setAccountContact(id: AccountId, name: string, updated: number, relationship: DatabaseAccountContacts): void {
 		this.relationships.set(id, {
 			id,
 			name,
@@ -348,8 +348,8 @@ export class AccountRelationship {
 		}
 	}
 
-	private cacheToClientData({ id, name, updated, relationship }: RelationshipCache): IAccountRelationship {
-		let type: IAccountRelationship['type'];
+	private cacheToClientData({ id, name, updated, relationship }: AccountContactCache): IAccountContacts {
+		let type: IAccountContacts['type'];
 		switch (relationship.type) {
 			case 'friend':
 				type = 'friend';
@@ -374,10 +374,10 @@ export class AccountRelationship {
 }
 
 function Synchronized<ReturnT>(
-	method: (this: AccountRelationship, id: AccountId) => Promise<ReturnT>,
-	_context: ClassMethodDecoratorContext<AccountRelationship>,
+	method: (this: AccountContacts, id: AccountId) => Promise<ReturnT>,
+	_context: ClassMethodDecoratorContext<AccountContacts>,
 ) {
-	return async function (this: AccountRelationship, id: AccountId) {
+	return async function (this: AccountContacts, id: AccountId) {
 		await this.load();
 		const [a, b] = [this.account.id, id].sort();
 		return await GLOBAL_LOCK.acquire(`${a}-${b}`, () => method.call(this, id));

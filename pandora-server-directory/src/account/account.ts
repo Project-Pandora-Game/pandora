@@ -7,7 +7,7 @@ import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
 import type { ClientConnection } from '../networking/connection_client';
-import { AccountRelationship } from './accountRelationship';
+import { AccountContacts } from './accountRelationship';
 import { DatabaseAccount, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
 
 import _, { cloneDeep, omit, uniq } from 'lodash';
@@ -26,7 +26,7 @@ export class Account {
 	public readonly secure: AccountSecure;
 	public readonly roles: AccountRoles;
 	public readonly directMessages: AccountDirectMessages;
-	public readonly relationship: AccountRelationship;
+	public readonly contacts: AccountContacts;
 
 	public get id(): AccountId {
 		return this.data.id;
@@ -50,7 +50,7 @@ export class Account {
 		this.secure = new AccountSecure(this, data.secure);
 		this.roles = new AccountRoles(this, data.roles);
 		this.directMessages = new AccountDirectMessages(this, data.directMessages);
-		this.relationship = new AccountRelationship(this);
+		this.contacts = new AccountContacts(this);
 
 		// Init characters
 		for (const characterData of data.characters) {
@@ -209,7 +209,7 @@ export class Account {
 				connection.sendMessage('somethingChanged', { changes: ['characterList'] });
 			}
 		}
-		this.relationship.updateStatus();
+		this.contacts.updateStatus();
 	}
 
 	public onAccountInfoChange(): void {
@@ -222,7 +222,7 @@ export class Account {
 			character.onAccountInfoChange();
 		}
 		// Update friends
-		this.relationship.updateStatus();
+		this.contacts.updateStatus();
 	}
 
 	public hasCharacter(id: CharacterId, checkNotConnected?: true): boolean {

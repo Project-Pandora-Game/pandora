@@ -299,7 +299,7 @@ export class Character {
 		}
 		if (isChange) {
 			this.baseInfo.account.onCharacterListChange();
-			this.baseInfo.account.relationship.updateStatus();
+			this.baseInfo.account.contacts.updateStatus();
 			if (this.room != null) {
 				ConnectionManagerClient.onRoomListChange();
 			}
@@ -354,7 +354,7 @@ export class Character {
 		if (isChange) {
 			this._connectSecret = null;
 			this.baseInfo.account.onCharacterListChange();
-			this.baseInfo.account.relationship.updateStatus();
+			this.baseInfo.account.contacts.updateStatus();
 			if (this.room != null) {
 				ConnectionManagerClient.onRoomListChange();
 			}
@@ -421,7 +421,7 @@ export class Character {
 			// Do the rest
 			this._connectSecret = connectionSecret;
 			this.baseInfo.account.onCharacterListChange();
-			this.baseInfo.account.relationship.updateStatus();
+			this.baseInfo.account.contacts.updateStatus();
 
 			return;
 		}
@@ -432,7 +432,7 @@ export class Character {
 		this.accessId = accessId;
 		this._connectSecret = connectionSecret;
 		this.baseInfo.account.onCharacterListChange();
-		this.baseInfo.account.relationship.updateStatus();
+		this.baseInfo.account.contacts.updateStatus();
 
 		// We are ready to connect to shard, but check again if we can to avoid race conditions
 		if (!shard.allowConnect()) {
@@ -608,7 +608,7 @@ export class Character {
 		if (isChange) {
 			this._connectSecret = null;
 			this.baseInfo.account.onCharacterListChange();
-			this.baseInfo.account.relationship.updateStatus();
+			this.baseInfo.account.contacts.updateStatus();
 			if (this.room != null) {
 				ConnectionManagerClient.onRoomListChange();
 			}

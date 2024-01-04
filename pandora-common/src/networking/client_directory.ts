@@ -61,14 +61,14 @@ export type IChatRoomExtendedInfoResponse = {
 	data: IChatRoomListExtendedInfo;
 };
 
-export type IAccountRelationship = {
+export type IAccountContacts = {
 	/** Account id of the other account */
 	id: AccountId;
 	/** Account name of the other account */
 	name: string;
-	/** Time the relationship was updated */
+	/** Time the contact was updated */
 	time: number;
-	/** Type of relationship */
+	/** Type of contact */
 	type: 'friend' | 'pending' | 'incoming' | 'blocked';
 };
 
@@ -183,10 +183,10 @@ export const ClientDirectorySchema = {
 	},
 	//#endregion
 
-	getRelationships: {
+	getAccountContacts: {
 		request: z.object({}),
 		response: ZodCast<{
-			relationships: IAccountRelationship[];
+			relationships: IAccountContacts[];
 			friends: IAccountFriendStatus[];
 		}>(),
 	},

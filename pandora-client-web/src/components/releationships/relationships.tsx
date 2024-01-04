@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AccountId, IAccountFriendStatus, IAccountRelationship } from 'pandora-common';
+import { AccountId, IAccountFriendStatus, IAccountContacts } from 'pandora-common';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
 import './relationships.scss';
@@ -10,11 +10,11 @@ import { NotificationSource, useNotificationSuppressed } from '../gameContext/no
 import { useAsyncEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { DivContainer, Row } from '../common/container/container';
-import { RelationshipChangeHandleResult, useFriendStatus, useRelationships } from './relationshipsContext';
+import { AccountContactChangeHandleResult, useFriendStatus, useAccountContacts } from './relationshipsContext';
 import { useConfirmDialog } from '../dialog/dialog';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 
-export function Relationships() {
+export function AccountContacts() {
 	const navigate = useNavigate();
 
 	useKeyDownEvent(React.useCallback(() => {
@@ -25,20 +25,20 @@ export function Relationships() {
 	return (
 		<div className='relationships'>
 			<UrlTabContainer>
-				<UrlTab name={ <RelationshipHeader type='friend' /> } urlChunk=''>
+				<UrlTab name={ <AccountContactHeader type='friend' /> } urlChunk=''>
 					<ShowFriends />
 				</UrlTab>
 				<UrlTab name='Direct messages' urlChunk='dm'>
 					<DirectMessages />
 				</UrlTab>
 				<UrlTab name='Blocked' urlChunk='blocked'>
-					<ShowRelationships type='blocked' />
+					<ShowAccountContacts type='blocked' />
 				</UrlTab>
-				<UrlTab name={ <RelationshipHeader type='pending' /> } urlChunk='pending'>
-					<ShowRelationships type='pending' />
+				<UrlTab name={ <AccountContactHeader type='pending' /> } urlChunk='pending'>
+					<ShowAccountContacts type='pending' />
 				</UrlTab>
-				<UrlTab name={ <RelationshipHeader type='incoming' /> } urlChunk='incoming'>
-					<ShowRelationships type='incoming' />
+				<UrlTab name={ <AccountContactHeader type='incoming' /> } urlChunk='incoming'>
+					<ShowAccountContacts type='incoming' />
 					<ClearIncoming />
 				</UrlTab>
 				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
@@ -47,8 +47,8 @@ export function Relationships() {
 	);
 }
 
-function RelationshipHeader({ type }: { type: IAccountRelationship['type']; }) {
-	const count = useRelationships(type).length;
+function AccountContactHeader({ type }: { type: IAccountContacts['type']; }) {
+	const count = useAccountContacts(type).length;
 
 	return (
 		<>
@@ -62,8 +62,8 @@ function ClearIncoming() {
 	return null;
 }
 
-function ShowRelationships({ type }: { type: IAccountRelationship['type']; }) {
-	const rel = useRelationships(type);
+function ShowAccountContacts({ type }: { type: IAccountContacts['type']; }) {
+	const rel = useAccountContacts(type);
 	return (
 		<table>
 			<thead>
@@ -76,14 +76,14 @@ function ShowRelationships({ type }: { type: IAccountRelationship['type']; }) {
 			</thead>
 			<tbody>
 				{ rel.map((r) => (
-					<RelationshipsRow key={ r.id } { ...r } />
+					<AccountContactsRow key={ r.id } { ...r } />
 				)) }
 			</tbody>
 		</table>
 	);
 }
 
-function RelationshipsRow({
+function AccountContactsRow({
 	id,
 	name,
 	time,
@@ -92,7 +92,7 @@ function RelationshipsRow({
 	id: AccountId;
 	name: string;
 	time: number;
-	type: IAccountRelationship['type'];
+	type: IAccountContacts['type'];
 }) {
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();
@@ -131,7 +131,7 @@ function PendingRequestActions({ id }: { id: AccountId; }) {
 	const directory = useDirectoryConnector();
 	const [cancel, cancelInProgress] = useAsyncEvent(async () => {
 		return await directory.awaitResponse('friendRequest', { id, action: 'cancel' });
-	}, RelationshipChangeHandleResult);
+	}, AccountContactChangeHandleResult);
 	return (
 		<Button className='slim' onClick={ cancel } disabled={ cancelInProgress }>Cancel</Button>
 	);
@@ -145,13 +145,13 @@ function IncomingRequestActions({ id }: { id: AccountId; }) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'accept' });
 		}
 		return undefined;
-	}, RelationshipChangeHandleResult);
+	}, AccountContactChangeHandleResult);
 	const [decline, declineInProgress] = useAsyncEvent(async () => {
 		if (await confirm('Confirm rejection', `Decline the request to add ${id} to your contacts?`)) {
 			return await directory.awaitResponse('friendRequest', { id, action: 'decline' });
 		}
 		return undefined;
-	}, RelationshipChangeHandleResult);
+	}, AccountContactChangeHandleResult);
 	return (
 		<>
 			<Button className='slim' onClick={ accept } disabled={ acceptInProgress }>Accept</Button>
@@ -161,7 +161,7 @@ function IncomingRequestActions({ id }: { id: AccountId; }) {
 }
 
 function ShowFriends() {
-	const friends = useRelationships('friend');
+	const friends = useAccountContacts('friend');
 	const status = useFriendStatus();
 	const friendsWithStatus = useMemo(() => {
 		return friends.map((friend) => {
@@ -240,7 +240,7 @@ function FriendRow({
 			return await directory.awaitResponse('unfriend', { id });
 		}
 		return undefined;
-	}, RelationshipChangeHandleResult);
+	}, AccountContactChangeHandleResult);
 
 	const message = useGoToDM(id);
 

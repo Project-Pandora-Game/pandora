@@ -5,7 +5,7 @@ const { DATABASE_TYPE } = ENV;
 import type { CharacterId, IChatRoomData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 import { ServiceInit } from 'pandora-common';
-import { DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
+import { DatabaseAccount, DatabaseAccountContacts, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts } from './databaseStructure';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -204,9 +204,9 @@ export interface PandoraDatabase extends Service {
 
 	//#endregion
 
-	getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]>;
-	setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship>;
-	removeRelationship(accountIdA: AccountId, accountIdB: AccountId): Promise<void>;
+	getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]>;
+	setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContacts): Promise<DatabaseAccountContact>;
+	removeAccountContact(accountIdA: AccountId, accountIdB: AccountId): Promise<void>;
 
 	//#region Config
 

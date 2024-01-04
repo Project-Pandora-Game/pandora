@@ -14,7 +14,7 @@ import { useShardConnector } from '../components/gameContext/shardConnectorConte
 import { AuthPage } from '../components/login/authPage';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
-import { Relationships } from '../components/releationships/relationships';
+import { AccountContacts } from '../components/releationships/relationships';
 import { Wiki } from '../components/wiki/wiki';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
 
@@ -32,7 +32,7 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/settings' element={ <RequiresLogin element={ Settings } /> } />
 
-			<Route path='/contacts/*' element={ <RequiresLogin element={ Relationships } /> } />
+			<Route path='/contacts/*' element={ <RequiresLogin element={ AccountContacts } /> } />
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />
 			<Route path='/profiles/character/:characterId' element={ <RequiresCharacter element={ CharacterProfileScreenRouter } /> } />
 

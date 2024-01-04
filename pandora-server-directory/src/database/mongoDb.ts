@@ -3,7 +3,7 @@ import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContacts, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
@@ -45,7 +45,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _chatrooms!: Collection<IChatRoomData>;
 	private _config!: Collection<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>;
 	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
-	private _relationships!: Collection<DatabaseRelationship>;
+	private _relationships!: Collection<DatabaseAccountContact>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -468,11 +468,11 @@ export default class MongoDatabase implements PandoraDatabase {
 		return Id(character);
 	}
 
-	public async getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {
+	public async getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {
 		return this._relationships.find({ accounts: accountId }).toArray();
 	}
 
-	public async setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
+	public async setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContacts): Promise<DatabaseAccountContact> {
 		const result = await this._relationships.findOneAndUpdate({
 			// TODO simplify this when MongoDB fixes this: https://jira.mongodb.org/browse/SERVER-13843
 			accounts: {
@@ -497,7 +497,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result;
 	}
 
-	public async removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
+	public async removeAccountContact(accountIdA: number, accountIdB: number): Promise<void> {
 		await this._relationships.deleteOne({
 			accounts: { $all: [accountIdA, accountIdB] },
 		});

@@ -16,7 +16,7 @@ import { NotificationHeaderKeys, NotificationSource, useNotification, useNotific
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
-import { RelationshipContext, useRelationships } from '../releationships/relationshipsContext';
+import { AccountContactContext, useAccountContacts } from '../releationships/relationshipsContext';
 import { useObservable } from '../../observable';
 import { LeaveButton } from './leaveButton';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
@@ -146,7 +146,7 @@ function FriendsHeaderButton({ onClickExtra }: {
 	const handler = useDirectoryConnector().directMessageHandler;
 	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
 	const unreadDirectMessageCount = useObservable(handler.info).filter((info) => info.hasUnread).length;
-	const incomingFriendRequestCount = useRelationships('incoming').length;
+	const incomingFriendRequestCount = useAccountContacts('incoming').length;
 	const notificationCount = unreadDirectMessageCount + incomingFriendRequestCount;
 
 	useEffect(() => handler.on('newMessage', (channel: DirectMessageChannel) => {
@@ -159,7 +159,7 @@ function FriendsHeaderButton({ onClickExtra }: {
 	}), [handler, notifyDirectMessage]);
 
 	const notifyFriendRequest = useNotification(NotificationSource.INCOMING_FRIEND_REQUEST);
-	useEffect(() => RelationshipContext.on('incoming', () => notifyFriendRequest({
+	useEffect(() => AccountContactContext.on('incoming', () => notifyFriendRequest({
 		// TODO: ...
 	})), [notifyFriendRequest]);
 

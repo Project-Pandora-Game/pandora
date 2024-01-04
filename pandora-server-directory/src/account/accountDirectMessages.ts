@@ -120,7 +120,7 @@ export class AccountDirectMessages {
 		if (!target || !target.directMessages._publicKey) {
 			return { result: 'notFound' };
 		}
-		if (!await target.relationship.canReceiveDM(this._account)) {
+		if (!await target.contacts.canReceiveDM(this._account)) {
 			return { result: 'denied' };
 		}
 		const time = GetNextMessageTime();

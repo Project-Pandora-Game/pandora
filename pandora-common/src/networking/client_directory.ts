@@ -61,7 +61,7 @@ export type IChatRoomExtendedInfoResponse = {
 	data: IChatRoomListExtendedInfo;
 };
 
-export type IAccountContacts = {
+export type IAccountContact = {
 	/** Account id of the other account */
 	id: AccountId;
 	/** Account name of the other account */
@@ -186,7 +186,7 @@ export const ClientDirectorySchema = {
 	getAccountContacts: {
 		request: z.object({}),
 		response: ZodCast<{
-			relationships: IAccountContacts[];
+			relationships: IAccountContact[];
 			friends: IAccountFriendStatus[];
 		}>(),
 	},

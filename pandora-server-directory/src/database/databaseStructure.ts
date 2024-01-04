@@ -82,7 +82,7 @@ export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 ] satisfies readonly (keyof DatabaseAccount)[];
 export type DatabaseAccountUpdateableProperties = (typeof DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES)[number];
 
-export type DatabaseAccountContacts = {
+export type DatabaseAccountContactType = {
 	type: 'friend' | 'mutualBlock';
 } | {
 	type: 'request' | 'oneSidedBlock';
@@ -92,7 +92,7 @@ export type DatabaseAccountContacts = {
 export interface DatabaseAccountContact {
 	accounts: [AccountId, AccountId];
 	updated: number;
-	relationship: DatabaseAccountContacts;
+	contact: DatabaseAccountContactType;
 }
 
 /** Representation of account stored in database */

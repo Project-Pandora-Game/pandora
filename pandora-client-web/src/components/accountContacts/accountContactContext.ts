@@ -1,19 +1,19 @@
 import { useMemo } from 'react';
-import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountContacts, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
+import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountContact, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import './accountContacts.scss';
 
-const ACCOUNT_CONTACTS = new Observable<readonly IAccountContacts[]>([]);
+const ACCOUNT_CONTACTS = new Observable<readonly IAccountContact[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
 
-export function useAccountContacts(type: IAccountContacts['type']) {
+export function useAccountContacts(type: IAccountContact['type']) {
 	const rel = useObservable(ACCOUNT_CONTACTS);
 	return useMemo(() => rel.filter((r) => r.type === type), [rel, type]);
 }
 
-export function useAccountContact(id: AccountId): IAccountContacts | undefined {
+export function useAccountContact(id: AccountId): IAccountContact | undefined {
 	const rel = useObservable(ACCOUNT_CONTACTS);
 	return useMemo(() => rel.find((r) => r.id === id), [rel, id]);
 }
@@ -23,7 +23,7 @@ export function useFriendStatus() {
 }
 
 export const AccountContactContext = new class AccountContactContext extends TypedEventEmitter<{
-	incoming: IAccountContacts & { type: 'incoming'; };
+	incoming: IAccountContact & { type: 'incoming'; };
 }> {
 	private _queue: (() => void)[] = [];
 	private _useQueue = true;

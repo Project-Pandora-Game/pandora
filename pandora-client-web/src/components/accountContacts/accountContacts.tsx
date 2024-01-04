@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AccountId, IAccountFriendStatus, IAccountContacts } from 'pandora-common';
+import { AccountId, IAccountFriendStatus, IAccountContact } from 'pandora-common';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
 import { Button } from '../common/button/button';
@@ -47,7 +47,7 @@ export function AccountContacts() {
 	);
 }
 
-function AccountContactHeader({ type }: { type: IAccountContacts['type']; }) {
+function AccountContactHeader({ type }: { type: IAccountContact['type']; }) {
 	const count = useAccountContacts(type).length;
 
 	return (
@@ -62,7 +62,7 @@ function ClearIncoming() {
 	return null;
 }
 
-function ShowAccountContacts({ type }: { type: IAccountContacts['type']; }) {
+function ShowAccountContacts({ type }: { type: IAccountContact['type']; }) {
 	const rel = useAccountContacts(type);
 	return (
 		<table>
@@ -92,7 +92,7 @@ function AccountContactsRow({
 	id: AccountId;
 	name: string;
 	time: number;
-	type: IAccountContacts['type'];
+	type: IAccountContact['type'];
 }) {
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();

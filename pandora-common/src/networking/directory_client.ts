@@ -4,7 +4,7 @@ import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
 import { Satisfies } from '../utility';
 import { HexColorStringSchema, ZodCast } from '../validation';
-import type { IAccountContacts, IAccountFriendStatus } from './client_directory';
+import type { IAccountContact, IAccountFriendStatus } from './client_directory';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { Immutable } from 'immer';
 
@@ -225,7 +225,7 @@ export const DirectoryClientSchema = {
 	},
 	accountContactUpdate: {
 		request: ZodCast<{
-			relationship: IAccountContacts | { id: AccountId; type: 'none'; };
+			relationship: IAccountContact | { id: AccountId; type: 'none'; };
 			friendStatus: IAccountFriendStatus | { id: AccountId; online: 'delete'; };
 		}>(),
 		response: null,

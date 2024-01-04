@@ -4,7 +4,7 @@ import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountContac
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
-import { DatabaseAccountContacts, DatabaseAccountContact } from '../database/databaseStructure';
+import { DatabaseAccountContact, DatabaseAccountContactType } from '../database/databaseStructure';
 import { Room } from '../room/room';
 
 const GLOBAL_LOCK = new AsyncLock();
@@ -13,7 +13,7 @@ type AccountContactCache = {
 	id: AccountId;
 	name: string;
 	updated: number;
-	relationship: DatabaseAccountContacts;
+	relationship: DatabaseAccountContactType;
 };
 
 export class AccountContacts {
@@ -54,7 +54,7 @@ export class AccountContacts {
 		};
 	}
 
-	public async getAll(): Promise<IAccountContacts[]> {
+	public async getAll(): Promise<IAccountContact[]> {
 		await this.load();
 		const isNotBlockedBy = ({ relationship }: AccountContactCache) => {
 			return relationship.type !== 'oneSidedBlock' || relationship.from === this.account.id;
@@ -320,7 +320,7 @@ export class AccountContacts {
 		await accountManager.getAccountById(other)?.contacts.update(rel, this.account.username);
 	}
 
-	private setAccountContact(id: AccountId, name: string, updated: number, relationship: DatabaseAccountContacts): void {
+	private setAccountContact(id: AccountId, name: string, updated: number, relationship: DatabaseAccountContactType): void {
 		this.relationships.set(id, {
 			id,
 			name,

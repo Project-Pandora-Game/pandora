@@ -2,7 +2,7 @@ import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
 import { AccountId, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryDirectMessage, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContacts, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType } from './databaseStructure';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
@@ -389,7 +389,7 @@ export class MockDatabase implements PandoraDatabase {
 			.map((rel) => _.cloneDeep(rel)));
 	}
 
-	public setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContacts): Promise<DatabaseAccountContact> {
+	public setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContactType): Promise<DatabaseAccountContact> {
 		const newData: DatabaseAccountContact = { accounts: [accountIdA, accountIdB], updated: Date.now(), relationship: _.cloneDeep(data) };
 		const index = this.accountContactDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		if (index < 0) {

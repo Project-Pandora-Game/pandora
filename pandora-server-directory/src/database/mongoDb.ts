@@ -472,7 +472,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return this._relationships.find({ accounts: accountId }).toArray();
 	}
 
-	public async setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContacts): Promise<DatabaseAccountContact> {
+	public async setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContactType): Promise<DatabaseAccountContact> {
 		const result = await this._relationships.findOneAndUpdate({
 			// TODO simplify this when MongoDB fixes this: https://jira.mongodb.org/browse/SERVER-13843
 			accounts: {

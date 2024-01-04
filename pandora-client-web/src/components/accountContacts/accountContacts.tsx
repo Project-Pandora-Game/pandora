@@ -23,7 +23,7 @@ export function AccountContacts() {
 	}, [navigate]), 'Escape');
 
 	return (
-		<div className='relationships'>
+		<div className='accountContacts'>
 			<UrlTabContainer>
 				<UrlTab name={ <AccountContactHeader type='friend' /> } urlChunk=''>
 					<ShowFriends />

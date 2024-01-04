@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountContacts, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
-import './relationships.scss';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import './accountContacts.scss';
 
 const ACCOUNT_CONTACTS = new Observable<readonly IAccountContacts[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);

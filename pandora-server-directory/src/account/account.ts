@@ -7,7 +7,7 @@ import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
 import type { ClientConnection } from '../networking/connection_client';
-import { AccountContacts } from './accountRelationship';
+import { AccountContacts } from './accountContacts';
 import { DatabaseAccount, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
 
 import _, { cloneDeep, omit, uniq } from 'lodash';

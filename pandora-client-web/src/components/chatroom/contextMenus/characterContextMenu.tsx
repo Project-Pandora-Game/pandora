@@ -10,10 +10,10 @@ import { usePlayerId } from '../../gameContext/playerContextProvider';
 import { useChatInput } from '../chatInput';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { AccountContactChangeHandleResult, useAccountContact } from '../../releationships/relationshipsContext';
+import { AccountContactChangeHandleResult, useAccountContact } from '../../accountContacts/accountContactContext';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { useAsyncEvent } from '../../../common/useEvent';
-import { useGoToDM } from '../../releationships/relationships';
+import { useGoToDM } from '../../accountContacts/accountContacts';
 import { Immutable } from 'immer';
 
 type MenuType = 'main' | 'admin' | 'contacts';

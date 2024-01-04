@@ -3,16 +3,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AccountId, IAccountFriendStatus, IAccountContacts } from 'pandora-common';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { DirectMessages } from '../directMessages/directMessages';
-import './relationships.scss';
 import { Button } from '../common/button/button';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import { useAsyncEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { DivContainer, Row } from '../common/container/container';
-import { AccountContactChangeHandleResult, useFriendStatus, useAccountContacts } from './relationshipsContext';
+import { AccountContactChangeHandleResult, useFriendStatus, useAccountContacts } from './accountContactContext';
 import { useConfirmDialog } from '../dialog/dialog';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import './accountContacts.scss';
 
 export function AccountContacts() {
 	const navigate = useNavigate();

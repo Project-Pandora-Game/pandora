@@ -16,7 +16,7 @@ import { NotificationHeaderKeys, NotificationSource, useNotification, useNotific
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
-import { AccountContactContext, useAccountContacts } from '../releationships/relationshipsContext';
+import { AccountContactContext, useAccountContacts } from '../accountContacts/accountContactContext';
 import { useObservable } from '../../observable';
 import { LeaveButton } from './leaveButton';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';

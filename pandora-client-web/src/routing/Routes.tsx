@@ -14,7 +14,7 @@ import { useShardConnector } from '../components/gameContext/shardConnectorConte
 import { AuthPage } from '../components/login/authPage';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
-import { AccountContacts } from '../components/releationships/relationships';
+import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { Wiki } from '../components/wiki/wiki';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
 

@@ -37,7 +37,7 @@ export class AccountDirectMessages {
 			return this._infos;
 		}
 		const filtered = this._dms.filter((info) => !info.closed);
-		const ids = await GetDatabase().queryAccountNames(filtered.map((info) => info.id));
+		const ids = await GetDatabase().queryAccountDisplayNames(filtered.map((info) => info.id));
 		const dms: IDirectoryDirectMessageInfo[] = [];
 		for (const info of filtered) {
 			const displayName = ids[info.id];
@@ -97,7 +97,7 @@ export class AccountDirectMessages {
 					};
 				}
 			} else if (!dm.closed) {
-				const { [id]: displayName } = await GetDatabase().queryAccountNames([id]);
+				const { [id]: displayName } = await GetDatabase().queryAccountDisplayNames([id]);
 				if (displayName) {
 					this._infos.push({
 						...dm,

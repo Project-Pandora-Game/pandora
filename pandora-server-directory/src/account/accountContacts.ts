@@ -147,7 +147,7 @@ export class AccountContacts {
 					AssertNever(existing.contact);
 			}
 		}
-		const names = await GetDatabase().queryAccountNames([id]);
+		const names = await GetDatabase().queryAccountDisplayNames([id]);
 		if (!names[id]) {
 			return 'accountNotFound';
 		}
@@ -236,7 +236,7 @@ export class AccountContacts {
 	private async update(contact: DatabaseAccountContact, displayName?: string): Promise<void> {
 		const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
 		const existing = this.get(id);
-		displayName ??= existing ? existing.displayName : (await GetDatabase().queryAccountNames([id]))[id];
+		displayName ??= existing ? existing.displayName : (await GetDatabase().queryAccountDisplayNames([id]))[id];
 		if (!displayName) {
 			this.logger.warning(`Could not find name for account ${id}`);
 			return;
@@ -294,7 +294,7 @@ export class AccountContacts {
 		}
 		const contacts = await GetDatabase().getAccountContacts(this.account.id);
 		const ids = contacts.map((contact) => contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0]);
-		const names = await GetDatabase().queryAccountNames(_.uniq(ids));
+		const names = await GetDatabase().queryAccountDisplayNames(_.uniq(ids));
 		for (const contact of contacts) {
 			const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
 			const name = names[id];

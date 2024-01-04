@@ -254,7 +254,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		return data.date === result.secure.github?.date;
 	}
 
-	public async queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+	public async queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+		// TODO get the actual display name when it's implemented
 		const result: Record<AccountId, string> = {};
 		const accounts = await this._accounts
 			.find({ id: { $in: query } })

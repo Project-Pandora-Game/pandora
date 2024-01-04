@@ -60,7 +60,7 @@ export interface PandoraDatabase extends Service {
 	 */
 	setAccountSecureGitHub(id: AccountId, data: DatabaseAccountSecure['github']): Promise<boolean>;
 
-	queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>>;
+	queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>>;
 
 	//#region Character
 

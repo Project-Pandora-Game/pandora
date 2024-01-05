@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, ReactNode } from 'react';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { ChildrenProps } from '../../common/reactTypes';
 import { Scrollable } from '../common/scrollbar/scrollbar';
@@ -25,45 +25,41 @@ export function Wiki(): ReactElement {
 					<WikiIntroduction />
 				</WikiContent>
 			</UrlTab>
-			<UrlTab name='Rooms' default urlChunk='rooms'>
-				<WikiContent>
-					<WikiRooms />
-				</WikiContent>
-			</UrlTab>
-			<UrlTab name='Items' default urlChunk='items'>
-				<WikiContent>
-					<WikiItems />
-				</WikiContent>
-			</UrlTab>
-			<UrlTab name='Characters' default urlChunk='characters'>
-				<WikiContent>
-					<WikiCharacters />
-				</WikiContent>
-			</UrlTab>
-			<UrlTab name='Safety' default urlChunk='safety'>
-				<WikiContent>
-					<WikiSafety />
-				</WikiContent>
-			</UrlTab>
-			<UrlTab name='Pandora History' urlChunk='history'>
-				<WikiContent>
-					<WikiHistory />
-				</WikiContent>
-			</UrlTab>
-			<UrlTab name='Greeting' urlChunk='greeting'>
+			<WikiContentTab name='Rooms' urlChunk='rooms'>
+				<WikiRooms />
+			</WikiContentTab>
+			<WikiContentTab name='Items' urlChunk='items'>
+				<WikiItems />
+			</WikiContentTab>
+			<WikiContentTab name='Characters' urlChunk='characters'>
+				<WikiCharacters />
+			</WikiContentTab>
+			<WikiContentTab name='Safety' urlChunk='safety'>
+				<WikiSafety />
+			</WikiContentTab>
+			<WikiContentTab name='Pandora History' urlChunk='history'>
+				<WikiHistory />
+			</WikiContentTab>
+			<WikiContentTab name='Greeting' urlChunk='greeting'>
 				<WikiGreeting />
-			</UrlTab>
-			<UrlTab name='Contact' urlChunk='contact'>
-				<WikiContent>
-					<WikiContact />
-				</WikiContent>
-			</UrlTab>
-			<UrlTab name='Privacy Policy' urlChunk='privacy_policy'>
-				<WikiContent>
-					<PrivacyPolicyContent />
-				</WikiContent>
-			</UrlTab>
+			</WikiContentTab>
+			<WikiContentTab name='Contact' urlChunk='contact'>
+				<WikiContact />
+			</WikiContentTab>
+			<WikiContentTab name='Privacy Policy' urlChunk='privacy_policy'>
+				<PrivacyPolicyContent />
+			</WikiContentTab>
 		</UrlTabContainer>
+	);
+}
+
+function WikiContentTab({ name, urlChunk = name.toLowerCase(), children }: { name: string; urlChunk?: string; children: ReactNode; }): ReactNode {
+	return (
+		<UrlTab name={ name } urlChunk={ urlChunk }>
+			<WikiContent>
+				{ children }
+			</WikiContent>
+		</UrlTab>
 	);
 }
 

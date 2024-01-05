@@ -40,7 +40,7 @@ export function WikiRooms(): ReactElement {
 			<h4 id='RO_Room_layout'>Room layout</h4>
 			<p>
 				The room view in Pandora consists of the room canvas and the four tabs that show the chat per default.<br />
-				In a landscape-ratio window the tab is on the right side and it is on the bottom in a portrait-ratio window.
+				In a landscape view the tab is on the right side and it is on the bottom in a portrait view.
 				In the Pandora settings (cog-button on the top bar) under the "Interface"-tab and inside the "Chatroom UI" box,
 				you can customize the ratio between the space that the room and the tabs area use for both landscape or portrait views.
 			</p>
@@ -87,7 +87,7 @@ export function WikiRooms(): ReactElement {
 				<li>Public room are only visible for other players when there is an admin online inside the room.</li>
 				<li>Private rooms are currently only visible in the room search for admins and owners of that room and cannot be found otherwise.</li>
 				<li>Accounts can still see rooms they are banned from</li>
-				<li>Certain information about a room normally visible from the outside, such as who is inside, is not shown when the room is password protected or the viewing account is on the room#s ban list.</li>
+				<li>Certain information about a room normally visible from the outside, such as who is inside, is not shown when the room is password protected or the viewing account is on the room's ban list.</li>
 			</ul>
 
 			<h4 id='RO_Room_access'>Room access</h4>

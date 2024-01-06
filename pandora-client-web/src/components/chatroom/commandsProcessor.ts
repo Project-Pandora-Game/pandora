@@ -155,10 +155,12 @@ export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext
 		};
 	}
 	const best = LongestCommonPrefix(autocompleteLastResult.options.map((i) => i.replaceValue));
-	autocompleteLastQuery = best;
+	// Only use the prefix if it matches with the already entered value
+	const bestReplacement = best.toLocaleLowerCase().startsWith(msg.toLocaleLowerCase()) ? best : msg;
+	autocompleteLastQuery = bestReplacement;
 	autocompleteNextIndex = 0;
 	return {
-		replace: best,
+		replace: bestReplacement,
 		result: autocompleteLastResult,
 		index: null,
 	};

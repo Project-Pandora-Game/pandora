@@ -21,11 +21,11 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 			};
 		}
 
-		let targets = characters.filter((c) => c.data.name === selector);
-		if (targets.length === 0)
-			targets = characters.filter((c) => c.data.name.toLowerCase() === selector.toLowerCase());
-		if (targets.length === 0 && (/^[0-9]+$/.test(selector) || /^c[0-9]+$/.test(selector))) {
-			if (selector[0] === 'c') {
+		// Prefer using id, if the input looks anything like an id
+		// This allows writing a character ID to be completely unambiguous,
+		// even preventing TOC-TOU-like problems during characters leaving and entering
+		if (/^c?[0-9]+$/.test(selector)) {
+			if (selector.startsWith('c')) {
 				selector = selector.substring(1);
 			}
 			const id = Number.parseInt(selector, 10);
@@ -53,6 +53,13 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 				value: target,
 			};
 		}
+
+		// If the input is not id-like treat it as a name
+		let targets = characters.filter((c) => c.data.name === selector);
+		// If no name matches exactly, try name case-insensitively
+		if (targets.length === 0)
+			targets = characters.filter((c) => c.data.name.toLowerCase() === selector.toLowerCase());
+
 		if (targets.length === 1) {
 			if (allowSelf !== 'any' && targets[0].isPlayer()) {
 				return {
@@ -86,19 +93,24 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 		const characters = chatRoom.characters.value
 			.filter((c) => allowSelf === 'any' || !c.isPlayer())
 			.filter((c) => allowSelf !== 'none' || c.data.accountId !== chatRoom.player?.data.accountId);
-		if (/^[0-9]+$/.test(selector)) {
+		// Prefer using id, if the input looks anything like an id
+		if (/^c?[0-9]+$/.test(selector)) {
+			if (selector.startsWith('c')) {
+				selector = selector.substring(1);
+			}
 			return characters
 				.filter((c) => c.data.id.startsWith(`c${selector}`))
 				.map((c) => ({
-					replaceValue: c.data.id.slice(1),
-					displayValue: `${c.data.id.slice(1)} - ${c.data.name}`,
+					replaceValue: c.data.id,
+					displayValue: `${c.data.id} - ${c.data.name}`,
 				}));
 		}
+		// Autocomplete names, always treating selector as case insensitive
 		return characters
 			.filter((c) => c.data.name.toLowerCase().startsWith(selector.toLowerCase()))
 			.map((c) => ({
 				// Use ID for autocomplete if there are multiple characters with matching name
-				replaceValue: characters.filter((otherChar) => otherChar.data.name.toLowerCase() === c.data.name.toLowerCase()).length > 1 ? c.data.id.slice(1) : c.data.name,
+				replaceValue: characters.filter((otherChar) => otherChar.data.name.toLowerCase() === c.data.name.toLowerCase()).length > 1 ? c.data.id : c.data.name,
 				displayValue: `${c.data.name} (${c.data.id})`,
 			}));
 	},

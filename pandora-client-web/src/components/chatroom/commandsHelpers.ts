@@ -21,7 +21,13 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 			};
 		}
 
-		if (/^[0-9]+$/.test(selector)) {
+		let targets = characters.filter((c) => c.data.name === selector);
+		if (targets.length === 0)
+			targets = characters.filter((c) => c.data.name.toLowerCase() === selector.toLowerCase());
+		if (targets.length === 0 && (/^[0-9]+$/.test(selector) || /^c[0-9]+$/.test(selector))) {
+			if (selector[0] === 'c') {
+				selector = selector.substring(1);
+			}
 			const id = Number.parseInt(selector, 10);
 			const target = characters.find((c) => c.data.id === `c${id}`);
 			if (!target) {
@@ -47,10 +53,6 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 				value: target,
 			};
 		}
-		let targets = characters.filter((c) => c.data.name === selector);
-		if (targets.length === 0)
-			targets = characters.filter((c) => c.data.name.toLowerCase() === selector.toLowerCase());
-
 		if (targets.length === 1) {
 			if (allowSelf !== 'any' && targets[0].isPlayer()) {
 				return {

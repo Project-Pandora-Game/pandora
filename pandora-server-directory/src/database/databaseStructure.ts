@@ -51,7 +51,8 @@ export type DatabaseAccountSecure = z.infer<typeof DatabaseAccountSecureSchema>;
 /** Direct message key create from the 2 accounts' id where the first is always the lowest */
 export type DirectMessageAccounts = `${number}-${number}`;
 
-export type DatabaseDirectMessageInfo = IDirectoryDirectMessageInfo & {
+// changes to this type may require database migration
+export type DatabaseDirectMessageInfo = Omit<IDirectoryDirectMessageInfo, 'displayName'> & {
 	/** Flag to indicate the conversation was closed and the info should not be sent to the account */
 	closed?: true;
 };
@@ -81,17 +82,17 @@ export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 ] satisfies readonly (keyof DatabaseAccount)[];
 export type DatabaseAccountUpdateableProperties = (typeof DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES)[number];
 
-export type DatabaseAccountRelationship = {
+export type DatabaseAccountContactType = {
 	type: 'friend' | 'mutualBlock';
 } | {
 	type: 'request' | 'oneSidedBlock';
 	from: AccountId;
 };
 
-export interface DatabaseRelationship {
+export interface DatabaseAccountContact {
 	accounts: [AccountId, AccountId];
 	updated: number;
-	relationship: DatabaseAccountRelationship;
+	contact: DatabaseAccountContactType;
 }
 
 /** Representation of account stored in database */

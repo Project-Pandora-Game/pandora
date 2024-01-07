@@ -22,11 +22,6 @@ export class AccountDirectMessages {
 	private readonly _account: Account;
 	private _dms: DatabaseDirectMessageInfo[];
 
-	public get dms(): IDirectoryDirectMessageInfo[] {
-		return this._dms
-			.filter((dm) => !dm.closed);
-	}
-
 	private get _publicKey(): string {
 		return this._account.secure.getPublicKey() as string;
 	}
@@ -34,6 +29,23 @@ export class AccountDirectMessages {
 	constructor(account: Account, data: DatabaseDirectMessageInfo[] | undefined) {
 		this._account = account;
 		this._dms = data ?? [];
+	}
+
+	public async getDirectMessageInfo(): Promise<IDirectoryDirectMessageInfo[]> {
+		const filtered = this._dms.filter((info) => !info.closed);
+		const ids = await GetDatabase().queryAccountDisplayNames(filtered.map((info) => info.id));
+		const dms: IDirectoryDirectMessageInfo[] = [];
+		for (const info of filtered) {
+			const displayName = ids[info.id];
+			if (!displayName) {
+				continue;
+			}
+			dms.push({
+				...info,
+				displayName,
+			});
+		}
+		return dms;
 	}
 
 	public async action(account: Account | number, action: 'read' | 'close' | 'open' | 'new', { notifyClients = true, time }: { notifyClients?: boolean; time?: number; } = {}): Promise<void> {
@@ -45,7 +57,6 @@ export class AccountDirectMessages {
 			}
 			dm = {
 				id,
-				displayName: account.displayName,
 				time,
 			};
 			this._dms.push(dm);
@@ -83,7 +94,7 @@ export class AccountDirectMessages {
 		if (!target || !target.directMessages._publicKey) {
 			return { result: 'notFound' };
 		}
-		if (!await target.relationship.canReceiveDM(this._account)) {
+		if (!await target.contacts.canReceiveDM(this._account)) {
 			return { result: 'denied' };
 		}
 		const time = GetNextMessageTime();

@@ -88,7 +88,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			changeSettings: this.handleChangeSettings.bind(this),
 			setInitialCryptoKey: this.handleSetInitialCryptoKey.bind(this),
 
-			getRelationships: this.handleGetRelationships.bind(this),
+			getAccountContacts: this.handleGetAccountContacts.bind(this),
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
 			updateProfileDescription: this.handleUpdateProfileDescription.bind(this),
 
@@ -648,11 +648,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return await connection.account.directMessages.sendMessage(data);
 	}
 
-	private handleGetDirectMessageInfo(_: IClientDirectoryArgument['getDirectMessageInfo'], connection: ClientConnection): IClientDirectoryResult['getDirectMessageInfo'] {
+	private async handleGetDirectMessageInfo(_: IClientDirectoryArgument['getDirectMessageInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['getDirectMessageInfo'] {
 		if (!connection.account)
 			throw new BadMessageError();
 
-		return { info: connection.account.directMessages.dms };
+		const info = await connection.account.directMessages.getDirectMessageInfo();
+
+		return { info };
 	}
 
 	private async handleDirectMessage({ id, action }: IClientDirectoryArgument['directMessage'], connection: ClientConnection): IClientDirectoryPromiseResult['directMessage'] {
@@ -664,14 +666,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	//#endregion Direct Messages
 
-	private async handleGetRelationships(_: IClientDirectoryArgument['getRelationships'], connection: ClientConnection): IClientDirectoryPromiseResult['getRelationships'] {
+	private async handleGetAccountContacts(_: IClientDirectoryArgument['getAccountContacts'], connection: ClientConnection): IClientDirectoryPromiseResult['getAccountContacts'] {
 		if (!connection.account)
 			throw new BadMessageError();
 
-		const relationships = await connection.account.relationship.getAll();
-		const friends = await connection.account.relationship.getFriendsStatus();
+		const contacts = await connection.account.contacts.getAll();
+		const friends = await connection.account.contacts.getFriendsStatus();
 
-		return { friends, relationships };
+		return { friends, contacts };
 	}
 
 	private async handleGetAccountInfo({ accountId }: IClientDirectoryArgument['getAccountInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['getAccountInfo'] {
@@ -685,7 +687,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFoundOrNoAccess' };
 		}
 
-		if (!await target.relationship.profileVisibleTo(queryingAccount)) {
+		if (!await target.contacts.profileVisibleTo(queryingAccount)) {
 			return { result: 'notFoundOrNoAccess' };
 		}
 
@@ -710,13 +712,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		switch (action) {
 			case 'accept':
-				return { result: await connection.account.relationship.acceptFriendRequest(id) };
+				return { result: await connection.account.contacts.acceptFriendRequest(id) };
 			case 'cancel':
-				return { result: await connection.account.relationship.cancelFriendRequest(id) };
+				return { result: await connection.account.contacts.cancelFriendRequest(id) };
 			case 'decline':
-				return { result: await connection.account.relationship.declineFriendRequest(id) };
+				return { result: await connection.account.contacts.declineFriendRequest(id) };
 			case 'initiate':
-				return { result: await connection.account.relationship.initiateFriendRequest(id) };
+				return { result: await connection.account.contacts.initiateFriendRequest(id) };
 			default:
 				AssertNever(action);
 		}
@@ -726,7 +728,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.account || id === connection.account.id)
 			throw new BadMessageError();
 
-		const success = await connection.account.relationship.removeFriend(id);
+		const success = await connection.account.contacts.removeFriend(id);
 		return { result: success ? 'ok' : 'accountNotFound' };
 	}
 
@@ -736,10 +738,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		switch (action) {
 			case 'add':
-				await connection.account.relationship.block(id);
+				await connection.account.contacts.block(id);
 				break;
 			case 'remove':
-				await connection.account.relationship.unblock(id);
+				await connection.account.contacts.unblock(id);
 				break;
 			default:
 				AssertNever(action);

@@ -1,8 +1,8 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { AccountId, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
+import { AccountId, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryDirectMessage, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType } from './databaseStructure';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
@@ -24,7 +24,7 @@ export class MockDatabase implements PandoraDatabase {
 	private chatroomDb: Map<RoomId, IChatRoomData> = new Map();
 	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
 	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
-	private relationshipDb: DatabaseRelationship[] = [];
+	private accountContactDb: DatabaseAccountContact[] = [];
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 	private get accountDbView(): DatabaseAccountWithSecure[] {
@@ -137,7 +137,8 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(true);
 	}
 
-	public queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+	public queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+		// TODO get the actual display name when it's implemented
 		const result: Record<AccountId, string> = {};
 		for (const acc of this.accountDbView) {
 			if (query.includes(acc.id))
@@ -361,7 +362,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(true);
 	}
 
-	public setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void> {
+	public setDirectMessageInfo(accountId: number, directMessageInfo: DatabaseDirectMessageInfo[]): Promise<void> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.resolve();
@@ -383,25 +384,25 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(char));
 	}
 
-	public getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {
-		return Promise.resolve(this.relationshipDb
+	public getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {
+		return Promise.resolve(this.accountContactDb
 			.filter((rel) => rel.accounts.includes(accountId))
 			.map((rel) => _.cloneDeep(rel)));
 	}
 
-	public setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
-		const newData: DatabaseRelationship = { accounts: [accountIdA, accountIdB], updated: Date.now(), relationship: _.cloneDeep(data) };
-		const index = this.relationshipDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
+	public setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContactType): Promise<DatabaseAccountContact> {
+		const newData: DatabaseAccountContact = { accounts: [accountIdA, accountIdB], updated: Date.now(), contact: _.cloneDeep(data) };
+		const index = this.accountContactDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		if (index < 0) {
-			this.relationshipDb.push(newData);
+			this.accountContactDb.push(newData);
 		} else {
-			this.relationshipDb[index] = newData;
+			this.accountContactDb[index] = newData;
 		}
 		return Promise.resolve(_.cloneDeep(newData));
 	}
 
-	public removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
-		_.remove(this.relationshipDb, (rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
+	public removeAccountContact(accountIdA: number, accountIdB: number): Promise<void> {
+		_.remove(this.accountContactDb, (rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		return Promise.resolve();
 	}
 

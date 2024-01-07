@@ -2,10 +2,10 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import type { CharacterId, IChatRoomData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IDirectoryDirectMessageInfo, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import type { CharacterId, IChatRoomData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 import { ServiceInit } from 'pandora-common';
-import { DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
+import { DatabaseAccount, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType } from './databaseStructure';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -60,7 +60,7 @@ export interface PandoraDatabase extends Service {
 	 */
 	setAccountSecureGitHub(id: AccountId, data: DatabaseAccountSecure['github']): Promise<boolean>;
 
-	queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>>;
+	queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>>;
 
 	//#region Character
 
@@ -191,7 +191,7 @@ export interface PandoraDatabase extends Service {
 	 * @param accountId - Id of account to set unread direct messages for
 	 * @param directMessageInfo - Direct message info to set
 	 */
-	setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void>;
+	setDirectMessageInfo(accountId: number, directMessageInfo: DatabaseDirectMessageInfo[]): Promise<void>;
 
 	//#region Shard
 
@@ -204,9 +204,9 @@ export interface PandoraDatabase extends Service {
 
 	//#endregion
 
-	getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]>;
-	setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship>;
-	removeRelationship(accountIdA: AccountId, accountIdB: AccountId): Promise<void>;
+	getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]>;
+	setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContactType): Promise<DatabaseAccountContact>;
+	removeAccountContact(accountIdA: AccountId, accountIdB: AccountId): Promise<void>;
 
 	//#region Config
 

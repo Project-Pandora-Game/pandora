@@ -21,7 +21,7 @@ import {
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { BrowserStorage } from '../browserStorage';
-import { RelationshipContext } from '../components/releationships/relationshipsContext';
+import { AccountContactContext } from '../components/accountContacts/accountContactContext';
 import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
@@ -124,8 +124,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			directMessageAction: (data) => {
 				this.directMessageHandler.handleDirectMessageAction(data);
 			},
-			friendStatus: (data) => RelationshipContext.handleFriendStatus(data),
-			relationshipsUpdate: (data) => RelationshipContext.handleRelationshipsUpdate(data),
+			friendStatus: (data) => AccountContactContext.handleFriendStatus(data),
+			accountContactUpdate: (data) => AccountContactContext.handleAccountContactUpdate(data),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -204,7 +204,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this.sendMessage('logout', { invalidateToken: this._authToken.value?.value });
 		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
 		this.directMessageHandler.clear();
-		RelationshipContext.handleLogout();
+		AccountContactContext.handleLogout();
 	}
 
 	/**
@@ -281,7 +281,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		if (!account) {
 			this._authToken.value = undefined;
 		} else {
-			await RelationshipContext.initStatus(this);
+			await AccountContactContext.initStatus(this);
 		}
 	}
 

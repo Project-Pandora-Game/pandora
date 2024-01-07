@@ -1,9 +1,9 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessageInfo, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountRelationship, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseRelationship, DirectMessageAccounts } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
@@ -18,7 +18,7 @@ const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
 const CHATROOMS_COLLECTION_NAME = 'chatrooms';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
-const RELATIONSHIPS_COLLECTION_NAME = 'relationships';
+const ACCOUNT_CONTACTS_COLLECTION_NAME = 'accountContacts';
 
 const COLLATION_CASE_INSENSITIVE: CollationOptions = Object.freeze({
 	locale: 'en',
@@ -45,7 +45,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _chatrooms!: Collection<IChatRoomData>;
 	private _config!: Collection<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>;
 	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
-	private _relationships!: Collection<DatabaseRelationship>;
+	private _accountContacts!: Collection<DatabaseAccountContact>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -126,8 +126,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		this._nextCharacterId = maxCharId ? maxCharId.id + 1 : 1;
 		//#endregion
 
-		this._relationships = this._db.collection(RELATIONSHIPS_COLLECTION_NAME);
-		await MongoUpdateIndexes(this._relationships, [
+		this._accountContacts = this._db.collection(ACCOUNT_CONTACTS_COLLECTION_NAME);
+		await MongoUpdateIndexes(this._accountContacts, [
 			{
 				name: 'accounts',
 				key: { accounts: 1 },
@@ -254,7 +254,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		return data.date === result.secure.github?.date;
 	}
 
-	public async queryAccountNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+	public async queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>> {
+		// TODO get the actual display name when it's implemented
 		const result: Record<AccountId, string> = {};
 		const accounts = await this._accounts
 			.find({ id: { $in: query } })
@@ -450,7 +451,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return deletedCount === 1;
 	}
 
-	public async setDirectMessageInfo(accountId: number, directMessageInfo: IDirectoryDirectMessageInfo[]): Promise<void> {
+	public async setDirectMessageInfo(accountId: number, directMessageInfo: DatabaseDirectMessageInfo[]): Promise<void> {
 		await this._accounts.updateOne({ id: accountId }, { $set: { directMessages: directMessageInfo } });
 	}
 
@@ -468,12 +469,12 @@ export default class MongoDatabase implements PandoraDatabase {
 		return Id(character);
 	}
 
-	public async getRelationships(accountId: AccountId): Promise<DatabaseRelationship[]> {
-		return this._relationships.find({ accounts: accountId }).toArray();
+	public async getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {
+		return this._accountContacts.find({ accounts: accountId }).toArray();
 	}
 
-	public async setRelationship(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountRelationship): Promise<DatabaseRelationship> {
-		const result = await this._relationships.findOneAndUpdate({
+	public async setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContactType): Promise<DatabaseAccountContact> {
+		const result = await this._accountContacts.findOneAndUpdate({
 			// TODO simplify this when MongoDB fixes this: https://jira.mongodb.org/browse/SERVER-13843
 			accounts: {
 				$all: [
@@ -484,7 +485,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		}, {
 			$set: {
 				updated: Date.now(),
-				relationship: data,
+				contact: data,
 			},
 			$setOnInsert: {
 				accounts: [accountIdA, accountIdB],
@@ -497,8 +498,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result;
 	}
 
-	public async removeRelationship(accountIdA: number, accountIdB: number): Promise<void> {
-		await this._relationships.deleteOne({
+	public async removeAccountContact(accountIdA: number, accountIdB: number): Promise<void> {
+		await this._accountContacts.deleteOne({
 			accounts: { $all: [accountIdA, accountIdB] },
 		});
 	}

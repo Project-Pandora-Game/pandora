@@ -1,20 +1,20 @@
 import { useMemo } from 'react';
-import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountRelationship, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
+import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountContact, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
 import { Observable, useObservable } from '../../observable';
-import './relationships.scss';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import './accountContacts.scss';
 
-const RELATIONSHIPS = new Observable<readonly IAccountRelationship[]>([]);
+const ACCOUNT_CONTACTS = new Observable<readonly IAccountContact[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
 
-export function useRelationships(type: IAccountRelationship['type']) {
-	const rel = useObservable(RELATIONSHIPS);
+export function useAccountContacts(type: IAccountContact['type']) {
+	const rel = useObservable(ACCOUNT_CONTACTS);
 	return useMemo(() => rel.filter((r) => r.type === type), [rel, type]);
 }
 
-export function useRelationship(id: AccountId): IAccountRelationship | undefined {
-	const rel = useObservable(RELATIONSHIPS);
+export function useAccountContact(id: AccountId): IAccountContact | undefined {
+	const rel = useObservable(ACCOUNT_CONTACTS);
 	return useMemo(() => rel.find((r) => r.id === id), [rel, id]);
 }
 
@@ -22,8 +22,8 @@ export function useFriendStatus() {
 	return useObservable(FRIEND_STATUS);
 }
 
-export const RelationshipContext = new class RelationshipContext extends TypedEventEmitter<{
-	incoming: IAccountRelationship & { type: 'incoming'; };
+export const AccountContactContext = new class AccountContactContext extends TypedEventEmitter<{
+	incoming: IAccountContact & { type: 'incoming'; };
 }> {
 	private _queue: (() => void)[] = [];
 	private _useQueue = true;
@@ -33,8 +33,8 @@ export const RelationshipContext = new class RelationshipContext extends TypedEv
 		if (!this._useQueue) {
 			return;
 		}
-		const { friends, relationships } = await connection.awaitResponse('getRelationships', {});
-		RELATIONSHIPS.value = relationships;
+		const { friends, contacts } = await connection.awaitResponse('getAccountContacts', {});
+		ACCOUNT_CONTACTS.value = contacts;
 		FRIEND_STATUS.value = friends;
 		this._dequeue();
 	}
@@ -51,21 +51,21 @@ export const RelationshipContext = new class RelationshipContext extends TypedEv
 		FRIEND_STATUS.value = filtered;
 	}
 
-	public handleRelationshipsUpdate({ relationship, friendStatus }: IDirectoryClientArgument['relationshipsUpdate']) {
+	public handleAccountContactUpdate({ contact, friendStatus }: IDirectoryClientArgument['accountContactUpdate']) {
 		if (this._useQueue) {
-			this._queue.push(() => this.handleRelationshipsUpdate({ relationship, friendStatus }));
+			this._queue.push(() => this.handleAccountContactUpdate({ contact, friendStatus }));
 			return;
 		}
 		// Update relationship side
 		{
-			const filtered = RELATIONSHIPS.value.filter((currentRelationship) => currentRelationship.id !== relationship.id);
-			if (relationship.type !== 'none') {
-				filtered.push(relationship);
-				if (filtered.length > RELATIONSHIPS.value.length && relationship.type === 'incoming') {
-					this.emit('incoming', { ...relationship, type: 'incoming' });
+			const filtered = ACCOUNT_CONTACTS.value.filter((current) => current.id !== contact.id);
+			if (contact.type !== 'none') {
+				filtered.push(contact);
+				if (filtered.length > ACCOUNT_CONTACTS.value.length && contact.type === 'incoming') {
+					this.emit('incoming', { ...contact, type: 'incoming' });
 				}
 			}
-			RELATIONSHIPS.value = filtered;
+			ACCOUNT_CONTACTS.value = filtered;
 		}
 		// Update friend side
 		{
@@ -80,7 +80,7 @@ export const RelationshipContext = new class RelationshipContext extends TypedEv
 	public handleLogout() {
 		this._useQueue = true;
 		FRIEND_STATUS.value = [];
-		RELATIONSHIPS.value = [];
+		ACCOUNT_CONTACTS.value = [];
 	}
 
 	private _dequeue() {
@@ -90,8 +90,8 @@ export const RelationshipContext = new class RelationshipContext extends TypedEv
 	}
 };
 
-type RelationshipChangeHandleResult = 'ok' | 'accountNotFound' | 'requestNotFound' | 'blocked' | 'requestAlreadyExists';
-export function RelationshipChangeHandleResult(result?: null | RelationshipChangeHandleResult | { result: RelationshipChangeHandleResult; }) {
+type AccountContactChangeHandleResult = 'ok' | 'accountNotFound' | 'requestNotFound' | 'blocked' | 'requestAlreadyExists';
+export function AccountContactChangeHandleResult(result?: null | AccountContactChangeHandleResult | { result: AccountContactChangeHandleResult; }) {
 	if (result == null) {
 		return;
 	}

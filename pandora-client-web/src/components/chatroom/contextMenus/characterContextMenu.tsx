@@ -10,13 +10,13 @@ import { usePlayerId } from '../../gameContext/playerContextProvider';
 import { useChatInput } from '../chatInput';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { RelationshipChangeHandleResult, useRelationship } from '../../releationships/relationshipsContext';
+import { AccountContactChangeHandleResult, useAccountContact } from '../../accountContacts/accountContactContext';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { useAsyncEvent } from '../../../common/useEvent';
-import { useGoToDM } from '../../releationships/relationships';
+import { useGoToDM } from '../../accountContacts/accountContacts';
 import { Immutable } from 'immer';
 
-type MenuType = 'main' | 'admin' | 'relationship';
+type MenuType = 'main' | 'admin' | 'contacts';
 
 const characterMenuContext = createContext<{
 	isPlayerAdmin: boolean;
@@ -147,7 +147,7 @@ function FriendRequestMenu({ action, text }: { action: 'initiate' | 'accept' | '
 			return directory.awaitResponse('friendRequest', { action, id: character.data.accountId });
 		}
 		return undefined;
-	}, RelationshipChangeHandleResult, { errorHandler });
+	}, AccountContactChangeHandleResult, { errorHandler });
 
 	return (
 		<button onClick={ request } >
@@ -166,7 +166,7 @@ function UnfriendRequestMenu(): ReactElement {
 			return directory.awaitResponse('unfriend', { id: character.data.accountId });
 		}
 		return undefined;
-	}, RelationshipChangeHandleResult, { errorHandler });
+	}, AccountContactChangeHandleResult, { errorHandler });
 
 	return (
 		<button onClick={ request } >
@@ -188,9 +188,9 @@ function NavigateToDMMenu(): ReactElement | null {
 	);
 }
 
-function RelationshipActionContextMenuInner(): ReactElement | null {
+function AccountContactActionContextMenuInner(): ReactElement | null {
 	const { character } = useCharacterMenuContext();
-	const rel = useRelationship(character.data.accountId);
+	const rel = useAccountContact(character.data.accountId);
 
 	switch (rel?.type) {
 		case undefined:
@@ -219,7 +219,7 @@ function RelationshipActionContextMenuInner(): ReactElement | null {
 	}
 }
 
-function RelationshipActionContextMenu(): ReactElement | null {
+function AccountContactActionContextMenu(): ReactElement | null {
 	const { currentAccount, character, menu, setMenu } = useCharacterMenuContext();
 	if (character.data.accountId === currentAccount?.id)
 		return null;
@@ -227,14 +227,14 @@ function RelationshipActionContextMenu(): ReactElement | null {
 	switch (menu) {
 		case 'main':
 			return (
-				<button onClick={ () => setMenu('relationship') }>
-					Relationship
+				<button onClick={ () => setMenu('contacts') }>
+					Contacts
 				</button>
 			);
-		case 'relationship':
+		case 'contacts':
 			return (
 				<>
-					<RelationshipActionContextMenuInner />
+					<AccountContactActionContextMenuInner />
 					<button onClick={ () => setMenu('main') } >
 						Back
 					</button>
@@ -323,7 +323,7 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 					</>
 				) }
 				<AdminActionContextMenu />
-				<RelationshipActionContextMenu />
+				<AccountContactActionContextMenu />
 				<button onClick={ onCloseActual } >
 					{ closeText }
 				</button>

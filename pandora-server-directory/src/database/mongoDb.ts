@@ -539,13 +539,13 @@ export default class MongoDatabase implements PandoraDatabase {
 			Assert(matchedCount === 1 && modifiedCount === 1);
 		}
 
+		if (await this._accountContacts.countDocuments() > 0) {
+			logger.warning('Account contacts already migrated');
+			return;
+		}
+
 		const relationships = this._db.collection<DatabaseAccountRelationshipOld>('relationships');
-		await MongoUpdateIndexes(relationships, [
-			{
-				name: 'accounts',
-				key: { accounts: 1 },
-			},
-		]);
+		const relationshipsCount = await relationships.countDocuments();
 
 		for await (const rel of relationships.find().stream()) {
 			const contact = {
@@ -557,9 +557,10 @@ export default class MongoDatabase implements PandoraDatabase {
 			const { acknowledged } = await this._accountContacts.insertOne(contact);
 			Assert(acknowledged);
 		}
-		const relationshipsCount = await relationships.countDocuments();
+
 		const accountContactsCount = await this._accountContacts.countDocuments();
 		Assert(relationshipsCount === accountContactsCount);
+
 		await relationships.drop();
 	}
 }

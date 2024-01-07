@@ -156,7 +156,7 @@ export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<T
 			(this.config.expression != null ? ItemInteractionType.EXPRESSION_CHANGE : ItemInteractionType.MODIFY);
 	}
 
-	public interactionId: InteractionId = 'useTypedModule';
+	public readonly interactionId: InteractionId = 'useTypedModule';
 
 	protected constructor(props: ItemModuleTypedProps<TProperties>, overrideProps?: Partial<ItemModuleTypedProps<TProperties>>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;

@@ -19,19 +19,19 @@ export const INTERACTION_CONFIG = {
 		},
 	},
 	useStorageModule: {
-		visibleName: 'Modify contents of storage items',
+		visibleName: 'Interact with items stored inside worn items',
 		defaultPermissions: {
 			allowOthers: true,
 		},
 	},
 	useLockSlotModule: {
-		visibleName: 'Interact with lock on items',
+		visibleName: 'Change and interact with locks on worn items',
 		defaultPermissions: {
 			allowOthers: false,
 		},
 	},
 	useTypedModule: {
-		visibleName: 'Change the type of a module on an item',
+		visibleName: 'Change the state of worn items',
 		defaultPermissions: {
 			allowOthers: true,
 		},

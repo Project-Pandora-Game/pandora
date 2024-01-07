@@ -76,7 +76,7 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 		return ItemInteractionType.MODIFY;
 	}
 
-	public interactionId: InteractionId = 'useStorageModule';
+	public readonly interactionId: InteractionId = 'useStorageModule';
 
 	protected constructor(props: ItemModuleStorageProps, overrideProps?: Partial<ItemModuleStorageProps>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;

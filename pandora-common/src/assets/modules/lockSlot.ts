@@ -89,7 +89,7 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		return ItemInteractionType.MODIFY;
 	}
 
-	public interactionId: InteractionId = 'useLockSlotModule';
+	public readonly interactionId: InteractionId = 'useLockSlotModule';
 
 	protected constructor(props: ItemModuleLockSlotProps<TProperties>, overrideProps?: Partial<ItemModuleLockSlotProps<TProperties>>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;

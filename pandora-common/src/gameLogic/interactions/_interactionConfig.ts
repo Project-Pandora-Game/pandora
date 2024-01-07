@@ -18,6 +18,24 @@ export const INTERACTION_CONFIG = {
 			allowOthers: false,
 		},
 	},
+	useStorageModule: {
+		visibleName: 'Modify contents of storage items',
+		defaultPermissions: {
+			allowOthers: true,
+		},
+	},
+	useLockSlotModule: {
+		visibleName: 'Interact with lock on items',
+		defaultPermissions: {
+			allowOthers: false,
+		},
+	},
+	useTypedModule: {
+		visibleName: 'Change the type of a module on an item',
+		defaultPermissions: {
+			allowOthers: true,
+		},
+	},
 } as const satisfies Immutable<Record<InteractionGenericId, IInteractionConfig>>;
 
 //#endregion

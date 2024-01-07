@@ -6,6 +6,7 @@ import type { IItemCreationContext, IItemLoadContext, IItemValidationContext } f
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { IAssetModuleTypes, ModuleType } from '../modules';
 import type { Immutable } from 'immer';
+import type { InteractionId } from '../../gameLogic/interactions';
 
 export interface IModuleConfigCommon<Type extends ModuleType> {
 	type: Type;
@@ -40,6 +41,8 @@ export interface IItemModule<out TProperties = unknown, Type extends ModuleType 
 
 	/** The module specifies what kind of interaction type interacting with it is */
 	readonly interactionType: ItemInteractionType;
+	/** The interaction id for the required permission, ignored when type is ACCESS_ONLY  */
+	readonly interactionId: InteractionId;
 
 	exportToTemplate(): IAssetModuleTypes<TProperties>[Type]['template'];
 	exportData(options: IExportOptions): IAssetModuleTypes<TProperties>[Type]['data'];

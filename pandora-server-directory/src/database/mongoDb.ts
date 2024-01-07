@@ -548,7 +548,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		const relationshipsCount = await relationships.countDocuments();
 
 		for await (const rel of relationships.find().stream()) {
-			const contact = {
+			const contact: DatabaseAccountContact = {
 				accounts: rel.accounts,
 				updated: rel.updated,
 				contact: rel.relationship,

@@ -21,13 +21,13 @@ export const INTERACTION_CONFIG = {
 	useStorageModule: {
 		visibleName: 'Interact with items stored inside worn items',
 		defaultPermissions: {
-			allowOthers: true,
+			allowOthers: false,
 		},
 	},
 	useLockSlotModule: {
 		visibleName: 'Change and interact with locks on worn items',
 		defaultPermissions: {
-			allowOthers: false,
+			allowOthers: true,
 		},
 	},
 	useTypedModule: {

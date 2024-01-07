@@ -543,6 +543,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			logger.warning('Account contacts already migrated');
 			return;
 		}
+		// const collections = await this._db.listCollections().toArray();
 
 		const relationships = this._db.collection<DatabaseAccountRelationshipOld>('relationships');
 		const relationshipsCount = await relationships.countDocuments();
@@ -560,8 +561,11 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		const accountContactsCount = await this._accountContacts.countDocuments();
 		Assert(relationshipsCount === accountContactsCount);
-
-		await relationships.drop();
+		try {
+			await relationships.drop();
+		} catch (e) {
+			logger.warning('Failed to drop relationships collection', e);
+		}
 	}
 }
 

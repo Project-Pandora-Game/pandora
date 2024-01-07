@@ -519,60 +519,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	private async _doMigrations(): Promise<void> {
 		// insert migration code here
-		for await (const account of this._accounts.find().stream()) {
-			if (account.directMessages == null)
-				continue;
-
-			const directMessages: typeof account.directMessages = [];
-			for (const dm of account.directMessages) {
-				const migrated = { ...dm };
-				if ('account' in migrated)
-					delete migrated.account;
-				if ('displayName' in migrated)
-					delete migrated.displayName;
-
-				directMessages.push(migrated);
-			}
-
-			Assert(directMessages.length === account.directMessages.length);
-			const { matchedCount, modifiedCount } = await this._accounts.updateOne({ id: account.id }, { $set: { directMessages } });
-			Assert(matchedCount === 1 && modifiedCount === 1);
-		}
-
-		if (await this._accountContacts.countDocuments() > 0) {
-			logger.warning('Account contacts already migrated');
-			return;
-		}
-		// const collections = await this._db.listCollections().toArray();
-
-		const relationships = this._db.collection<DatabaseAccountRelationshipOld>('relationships');
-		const relationshipsCount = await relationships.countDocuments();
-
-		for await (const rel of relationships.find().stream()) {
-			const contact: DatabaseAccountContact = {
-				accounts: rel.accounts,
-				updated: rel.updated,
-				contact: rel.relationship,
-			};
-
-			const { acknowledged } = await this._accountContacts.insertOne(contact);
-			Assert(acknowledged);
-		}
-
-		const accountContactsCount = await this._accountContacts.countDocuments();
-		Assert(relationshipsCount === accountContactsCount);
-		try {
-			await relationships.drop();
-		} catch (e) {
-			logger.warning('Failed to drop relationships collection', e);
-		}
 	}
-}
-
-export interface DatabaseAccountRelationshipOld {
-	accounts: [AccountId, AccountId];
-	updated: number;
-	relationship: DatabaseAccountContactType;
 }
 
 async function CreateInMemoryMongo({

@@ -1,10 +1,10 @@
 import { IConnectionShard } from '../networking/common';
-import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, RoomId, IChatRoomMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardChatRoomDefinition, AsyncSynchronized, ManuallyResolvedPromise, CreateManuallyResolvedPromise, IShardTokenType } from 'pandora-common';
+import { IDirectoryShardInfo, IShardDirectoryArgument, CharacterId, GetLogger, Logger, IShardCharacterDefinition, IDirectoryShardUpdate, SpaceId, IChatMessageDirectoryAction, IShardDirectoryPromiseResult, Assert, IShardSpaceDefinition, AsyncSynchronized, ManuallyResolvedPromise, CreateManuallyResolvedPromise, IShardTokenType } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { ShardManager, SHARD_TIMEOUT } from './shardManager';
 import { Character } from '../account/character';
-import type { Room } from '../room/room';
-import { RoomManager } from '../room/roomManager';
+import type { Space } from '../spaces/space';
+import { SpaceManager } from '../spaces/spaceManager';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Sleep } from '../utility';
 import type { Account } from '../account/account';
@@ -43,15 +43,15 @@ export class Shard {
 	/** Map of character ids to characters */
 	public readonly characters: Map<CharacterId, Character> = new Map();
 
-	/** Map of room ids to rooms */
-	public readonly rooms: Map<RoomId, Room> = new Map();
+	/** Map of space ids to spaces */
+	public readonly spaces: Map<SpaceId, Space> = new Map();
 
 	public getConnectedCharacter(id: CharacterId): Character | undefined {
 		return this.characters.get(id);
 	}
 
-	public getConnectedRoom(id: RoomId): Room | undefined {
-		return this.rooms.get(id);
+	public getConnectedSpace(id: SpaceId): Space | undefined {
+		return this.spaces.get(id);
 	}
 
 	public async handleReconnect(data: IShardDirectoryArgument['shardRegister'], connection: IConnectionShard): IShardDirectoryPromiseResult['shardRegister'] {
@@ -66,7 +66,7 @@ export class Shard {
 		Assert(isEqual(this.features, data.features), `Shard's features cannot change`);
 		Assert(this.version === data.version, `Shard's version cannot change`);
 
-		// Characters and rooms from shard are ignored, Directory is source of truth on reconnect
+		// Characters and spaces from shard are ignored, Directory is source of truth on reconnect
 
 		// Remove characters that should be connected but are not anymore
 		await Promise.all(
@@ -90,7 +90,7 @@ export class Shard {
 		return {
 			shardId: this.id,
 			characters: this.makeCharacterSetupList(),
-			rooms: this.makeRoomSetupList(),
+			spaces: this.makeSpacesSetupList(),
 			messages: this.makeDirectoryActionMessages(),
 		};
 	}
@@ -124,24 +124,24 @@ export class Shard {
 
 		this._registered = true;
 
-		// Room ids should be unique in received data
-		Assert(uniq(data.rooms.map((r) => r.id)).length === data.rooms.length);
+		// Space ids should be unique in received data
+		Assert(uniq(data.spaces.map((s) => s.id)).length === data.spaces.length);
 
 		await Promise.all(
-			data.rooms.map((roomData) => RoomManager
-				.loadRoom(roomData.id)
-				.then((room) => {
-					if (!room)
+			data.spaces.map((spaceData) => SpaceManager
+				.loadSpace(spaceData.id)
+				.then((space) => {
+					if (!space)
 						return;
 
 					const characterAccessIds = new Map<CharacterId, string>();
 					for (const character of data.characters) {
-						if (character.room === room.id) {
+						if (character.space === space.id) {
 							characterAccessIds.set(character.id, character.accessId);
 						}
 					}
 
-					return room.shardReconnect(this, roomData.accessId, characterAccessIds);
+					return space.shardReconnect(this, spaceData.accessId, characterAccessIds);
 				}),
 			),
 		);
@@ -158,20 +158,20 @@ export class Shard {
 				continue;
 			}
 
-			const room = characterData.room ? this.rooms.get(characterData.room) : undefined;
+			const space = characterData.space ? this.spaces.get(characterData.space) : undefined;
 
 			await character.shardReconnect({
 				shard: this,
 				accessId: characterData.accessId,
 				connectionSecret: characterData.connectSecret,
-				room: room ?? null,
+				space: space ?? null,
 			});
 
 			this.logger.debug('Added character during registration', character.id);
 		}
 
-		for (const room of this.rooms.values()) {
-			await room.cleanupIfEmpty();
+		for (const space of this.spaces.values()) {
+			await space.cleanupIfEmpty();
 		}
 
 		this.setConnection(connection);
@@ -181,7 +181,7 @@ export class Shard {
 		return {
 			shardId: this.id,
 			characters: this.makeCharacterSetupList(),
-			rooms: this.makeRoomSetupList(),
+			spaces: this.makeSpacesSetupList(),
 			messages: this.makeDirectoryActionMessages(),
 		};
 	}
@@ -260,13 +260,13 @@ export class Shard {
 			}
 		}
 
-		// Reassign rooms
+		// Reassign spaces
 		await Promise.all(
-			[...this.rooms.values()]
-				.map(async (room) => {
-					await room.disconnect();
+			[...this.spaces.values()]
+				.map(async (space) => {
+					await space.disconnect();
 					if (attemptReassign) {
-						await room.connect();
+						await space.connect();
 					}
 				}),
 		);
@@ -330,8 +330,8 @@ export class Shard {
 		if (updateReasons.includes('characters')) {
 			update.characters = this.makeCharacterSetupList();
 		}
-		if (updateReasons.includes('rooms')) {
-			update.rooms = this.makeRoomSetupList();
+		if (updateReasons.includes('spaces')) {
+			update.spaces = this.makeSpacesSetupList();
 		}
 		if (updateReasons.includes('messages')) {
 			update.messages = this.makeDirectoryActionMessages();
@@ -341,14 +341,14 @@ export class Shard {
 			await this.shardConnection.awaitResponse('update', update, 10_000);
 			// Cleanup pending messages
 			if (update.messages) {
-				for (const room of this.rooms.values()) {
-					if (!update.messages[room.id])
+				for (const space of this.spaces.values()) {
+					if (!update.messages[space.id])
 						continue;
-					const lastMessage = last(update.messages[room.id]);
+					const lastMessage = last(update.messages[space.id]);
 					if (lastMessage !== undefined) {
-						const index = room.pendingMessages.indexOf(lastMessage);
+						const index = space.pendingMessages.indexOf(lastMessage);
 						if (index >= 0) {
-							room.pendingMessages.splice(0, index + 1);
+							space.pendingMessages.splice(0, index + 1);
 						}
 					}
 				}
@@ -369,26 +369,26 @@ export class Shard {
 				account: character.baseInfo.account.getShardAccountDefinition(),
 				accessId: character.accessId,
 				connectSecret: character.connectSecret,
-				room: character.room ? character.room.id : null,
+				space: character.space ? character.space.id : null,
 			});
 		}
 		return result;
 	}
 
-	private makeRoomSetupList(): IShardChatRoomDefinition[] {
-		return Array.from(this.rooms.values()).map((r) => ({
-			id: r.id,
-			accessId: r.accessId,
-			config: r.getConfig(),
-			owners: Array.from(r.owners),
+	private makeSpacesSetupList(): IShardSpaceDefinition[] {
+		return Array.from(this.spaces.values()).map((s) => ({
+			id: s.id,
+			accessId: s.accessId,
+			config: s.getConfig(),
+			owners: Array.from(s.owners),
 		}));
 	}
 
-	private makeDirectoryActionMessages(): Record<RoomId, IChatRoomMessageDirectoryAction[]> {
-		const result: Record<RoomId, IChatRoomMessageDirectoryAction[]> = {};
-		for (const room of this.rooms.values()) {
-			if (room.pendingMessages.length > 0) {
-				result[room.id] = room.pendingMessages.slice();
+	private makeDirectoryActionMessages(): Record<SpaceId, IChatMessageDirectoryAction[]> {
+		const result: Record<SpaceId, IChatMessageDirectoryAction[]> = {};
+		for (const space of this.spaces.values()) {
+			if (space.pendingMessages.length > 0) {
+				result[space.id] = space.pendingMessages.slice();
 			}
 		}
 		return result;

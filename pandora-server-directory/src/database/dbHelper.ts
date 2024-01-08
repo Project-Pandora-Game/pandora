@@ -1,4 +1,4 @@
-import { AccountId, CharacterId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData, IChatRoomData, IChatRoomDirectoryConfig, IsNumber, RoomId, ROOM_INVENTORY_BUNDLE_DEFAULT, ASSET_PREFERENCES_DEFAULT } from 'pandora-common';
+import { AccountId, CharacterId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData, SpaceData, SpaceDirectoryConfig, IsNumber, SpaceId, ROOM_INVENTORY_BUNDLE_DEFAULT, ASSET_PREFERENCES_DEFAULT } from 'pandora-common';
 import type { ICharacterSelfInfoDb } from './databaseProvider';
 
 import { cloneDeep } from 'lodash';
@@ -30,12 +30,12 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 	return [info, char];
 }
 
-export interface IChatRoomCreationData {
-	config: IChatRoomDirectoryConfig;
+export interface SpaceCreationData {
+	config: SpaceDirectoryConfig;
 	owners: AccountId[];
 }
 
-export function CreateChatRoom(data: IChatRoomCreationData, id?: RoomId): IChatRoomData {
+export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 	return {
 		id: id ?? `r/${nanoid()}`,
 		accessId: '',

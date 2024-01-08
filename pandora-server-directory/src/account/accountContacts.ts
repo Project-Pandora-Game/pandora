@@ -5,7 +5,7 @@ import { GetDatabase } from '../database/databaseProvider';
 import { Account } from './account';
 import { accountManager } from './accountManager';
 import { DatabaseAccountContact, DatabaseAccountContactType } from '../database/databaseStructure';
-import { Room } from '../room/room';
+import { Space } from '../spaces/space';
 
 const GLOBAL_LOCK = new AsyncLock();
 
@@ -44,10 +44,10 @@ export class AccountContacts {
 			characters: !online ? [] : (
 				[...this.account.characters.values()]
 					.filter((char) => char.isOnline())
-					.map((char) => ({
+					.map((char): NonNullable<IAccountFriendStatus['characters']>[number] => ({
 						id: char.id,
 						name: char.data.name,
-						inRoom: char.loadedCharacter?.room?.isPublic ? char.loadedCharacter.room.id : undefined,
+						space: char.loadedCharacter?.space?.isPublic ? char.loadedCharacter.space.id : null,
 					}))
 			),
 		};
@@ -93,8 +93,8 @@ export class AccountContacts {
 		if (contact?.type === 'friend')
 			return true;
 
-		// If allowing from the same room and accounts share a room, allow
-		if (this.account.data.settings.allowDirectMessagesFrom === 'room' && AccountsHaveCharacterInSameRoom(this.account, from))
+		// If allowing from the same space and accounts share a space, allow
+		if (this.account.data.settings.allowDirectMessagesFrom === 'room' && AccountsHaveCharacterInSameSpace(this.account, from))
 			return true;
 
 		// Default: No access
@@ -126,8 +126,8 @@ export class AccountContacts {
 		if (contact?.type === 'friend')
 			return true;
 
-		// Allow access if both are in the same room with any character
-		if (AccountsHaveCharacterInSameRoom(this.account, queryingAccount))
+		// Allow access if both are in the same space with any character
+		if (AccountsHaveCharacterInSameSpace(this.account, queryingAccount))
 			return true;
 
 		// Default: No access
@@ -405,24 +405,24 @@ function Synchronized<ReturnT>(
 }
 
 /**
- * Checks whether there is a room in which both accounts have a character.
- * Note, that at least one of the characters in said room needs to be loaded for it to count.
+ * Checks whether there is a space in which both accounts have a character.
+ * Note, that at least one of the characters in said space needs to be loaded for it to count.
  * @param account1 - The account to check
  * @param account2 - The account to check
- * @returns `true`, if there is a common room, `false` otherwise
+ * @returns `true`, if there is a common space, `false` otherwise
  */
-function AccountsHaveCharacterInSameRoom(account1: Account, account2: Account): boolean {
-	const account1Rooms = new Set<Room>();
+function AccountsHaveCharacterInSameSpace(account1: Account, account2: Account): boolean {
+	const account1Spaces = new Set<Space>();
 
 	for (const char of account1.characters.values()) {
-		const room = char.loadedCharacter?.room;
-		if (room != null) {
-			account1Rooms.add(room);
+		const space = char.loadedCharacter?.space;
+		if (space != null) {
+			account1Spaces.add(space);
 		}
 	}
 	for (const char of account2.characters.values()) {
-		const room = char?.loadedCharacter?.room;
-		if (room != null && account1Rooms.has(room)) {
+		const space = char?.loadedCharacter?.space;
+		if (space != null && account1Spaces.has(space)) {
 			return true;
 		}
 	}

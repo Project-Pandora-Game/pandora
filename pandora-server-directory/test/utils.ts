@@ -126,12 +126,12 @@ export async function TestMockShard({
 			version,
 			characters: [],
 			disconnectCharacters: [],
-			rooms: [],
+			spaces: [],
 		});
 		const expectedRegisterResult: IShardDirectoryNormalResult['shardRegister'] = {
 			shardId: shard.id,
 			characters: [],
-			rooms: [],
+			spaces: [],
 			messages: {},
 		};
 		expect(registerResult).toStrictEqual(expectedRegisterResult);

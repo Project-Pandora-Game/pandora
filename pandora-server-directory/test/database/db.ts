@@ -4,7 +4,7 @@ import { CreateAccountData } from '../../src/account/account';
 import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import { PandoraDatabase } from '../../src/database/databaseProvider';
 import { PrehashPassword } from '../../src/database/mockDb';
-import { TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV, TEST_ROOM_PANDORA_OWNED } from '../room/testData';
+import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV, TEST_SPACE_PANDORA_OWNED } from '../spaces/testData';
 
 const TEST_USERNAME1 = 'testuser1';
 const TEST_EMAIL1 = 'test1@project-pandora.com';
@@ -528,123 +528,130 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		});
 	});
 
-	describe('createChatRoom()', () => {
-		it.each([TEST_ROOM, TEST_ROOM2, TEST_ROOM_DEV])('creates new room', async (config) => {
-			const result = await db.createChatRoom({
+	describe('createSpace()', () => {
+		it.each([TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV])('creates new space', async (config) => {
+			const result = await db.createSpace({
 				config,
-				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+				owners: TEST_SPACE_PANDORA_OWNED.slice(),
 			});
 
 			// Correct result
 			expect(result.config).toEqual(config);
-			expect(result.owners).toEqual(TEST_ROOM_PANDORA_OWNED);
+			expect(result.owners).toEqual(TEST_SPACE_PANDORA_OWNED);
 
 			// Exists in character database
-			const roomData = await db.getChatRoomById(result.id, null);
+			const spaceData = await db.getSpaceById(result.id, null);
 			// With correct data
-			expect(roomData).not.toBeNull();
-			Assert(roomData != null);
-			expect(roomData.config).toEqual(config);
+			expect(spaceData).not.toBeNull();
+			Assert(spaceData != null);
+			expect(spaceData.config).toEqual(config);
 		});
 
 		it('fails if ids would have a collision', async () => {
-			const result1 = await db.createChatRoom({
-				config: TEST_ROOM,
-				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+			const result1 = await db.createSpace({
+				config: TEST_SPACE,
+				owners: TEST_SPACE_PANDORA_OWNED.slice(),
 			}, 'r/id1');
 
 			// Correct result
-			expect(result1.config).toEqual(TEST_ROOM);
-			expect(result1.owners).toEqual(TEST_ROOM_PANDORA_OWNED);
+			expect(result1.config).toEqual(TEST_SPACE);
+			expect(result1.owners).toEqual(TEST_SPACE_PANDORA_OWNED);
 			expect(result1.id).toEqual('r/id1');
 
-			// Fails to make room with same id
-			await expect(db.createChatRoom({
-				config: TEST_ROOM2,
+			// Fails to make space with same id
+			await expect(db.createSpace({
+				config: TEST_SPACE2,
 				owners: [0],
 			}, 'r/id1')).rejects.toEqual(expect.anything());
 		});
 	});
 
-	describe('updateChatRoom()', () => {
-		it('updates chat room info', async () => {
+	describe('updateSpace()', () => {
+		it('updates chat space info', async () => {
 			// Test data assertion
-			expect(TEST_ROOM).not.toEqual(TEST_ROOM2);
+			expect(TEST_SPACE).not.toEqual(TEST_SPACE2);
 
-			const room = await db.createChatRoom({
-				config: TEST_ROOM,
-				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+			const space = await db.createSpace({
+				config: TEST_SPACE,
+				owners: TEST_SPACE_PANDORA_OWNED.slice(),
 			});
 
-			await db.updateChatRoom(room.id, {
-				config: TEST_ROOM2,
+			await db.updateSpace(space.id, {
+				config: TEST_SPACE2,
 			}, null);
 
 			// Database has new data
-			const newData = await db.getChatRoomById(room.id, null);
+			const newData = await db.getSpaceById(space.id, null);
 			expect(newData).not.toBeNull();
 			Assert(newData != null);
-			expect(newData).not.toBe(room);
+			expect(newData).not.toBe(space);
 			expect(newData).toEqual({
-				...room,
-				config: TEST_ROOM2,
+				...space,
+				config: TEST_SPACE2,
 			});
 		});
 	});
 
-	describe('deleteChatRoom()', () => {
-		it('deletes correct chat room', async () => {
-			const room = await db.createChatRoom({
-				config: TEST_ROOM,
-				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+	describe('deleteSpace()', () => {
+		it('deletes correct space', async () => {
+			const room = await db.createSpace({
+				config: TEST_SPACE,
+				owners: TEST_SPACE_PANDORA_OWNED.slice(),
 			});
 
-			await expect(db.getChatRoomById(room.id, null)).resolves.not.toBeNull();
+			await expect(db.getSpaceById(room.id, null)).resolves.not.toBeNull();
 
-			await db.deleteChatRoom(room.id);
+			await db.deleteSpace(room.id);
 
-			await expect(db.getChatRoomById(room.id, null)).resolves.toBeNull();
+			await expect(db.getSpaceById(room.id, null)).resolves.toBeNull();
 		});
 	});
 
-	describe('setChatRoomAccess()', () => {
-		it('generates new access id for character', async () => {
-			const room = await db.createChatRoom({
-				config: TEST_ROOM,
-				owners: TEST_ROOM_PANDORA_OWNED.slice(),
+	describe('setSpaceAccessId()', () => {
+		it('generates new access id for a space', async () => {
+			const space = await db.createSpace({
+				config: TEST_SPACE,
+				owners: TEST_SPACE_PANDORA_OWNED.slice(),
 			});
 
-			const result = await db.setChatRoomAccess(room.id);
+			const result = await db.setSpaceAccessId(space.id);
 			expect(result).not.toBeNull();
 			AssertNotNullable(result);
 
-			await expect(db.getChatRoomById(room.id, result)).resolves.not.toBeNull();
+			await expect(db.getSpaceById(space.id, result)).resolves.not.toBeNull();
 		});
 
-		it('invalidates old access id for character', async () => {
-			const char1 = await db.createCharacter(accountId2);
+		it('invalidates old access id for a space', async () => {
+			const space = await db.createSpace({
+				config: TEST_SPACE,
+				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+			});
 
-			const result = await db.setCharacterAccess(char1.id);
+			const result = await db.setSpaceAccessId(space.id);
 			expect(result).not.toBeNull();
 
-			const result2 = await db.setCharacterAccess(char1.id);
+			const result2 = await db.setSpaceAccessId(space.id);
 			expect(result2).not.toBeNull();
+			AssertNotNullable(result2);
 
-			await expect(db.getCharacter(char1.id, result!)).resolves.toBeNull();
-			await expect(db.getCharacter(char1.id, result2!)).resolves.not.toBeNull();
+			await expect(db.getSpaceById(space.id, result)).resolves.toBeNull();
+			await expect(db.getSpaceById(space.id, result2)).resolves.not.toBeNull();
 		});
 
-		it('fails with unknown character', async () => {
-			const char1 = await db.createCharacter(accountId2);
+		it('fails with unknown space', async () => {
+			const space = await db.createSpace({
+				config: TEST_SPACE,
+				owners: TEST_SPACE_PANDORA_OWNED.slice(),
+			});
 
-			const result = await db.setCharacterAccess(char1.id);
+			const result = await db.setSpaceAccessId(space.id);
 			expect(result).not.toBeNull();
 
 			// Wrong id fails
-			await expect(db.setCharacterAccess('c999')).resolves.toBeNull();
+			await expect(db.setSpaceAccessId('r/invalid')).resolves.toBeNull();
 
-			// Old character not affected
-			await expect(db.getCharacter(char1.id, result!)).resolves.not.toBeNull();
+			// Old space not affected
+			await expect(db.getSpaceById(space.id, result)).resolves.not.toBeNull();
 		});
 	});
 

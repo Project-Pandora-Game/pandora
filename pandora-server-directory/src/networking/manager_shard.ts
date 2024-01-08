@@ -29,14 +29,14 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 			shardRequestStop: this.handleShardRequestStop.bind(this),
 			characterClientDisconnect: this.handleCharacterClientDisconnect.bind(this),
 			characterError: this.handleCharacterError.bind(this),
-			roomError: this.handleRoomError.bind(this),
+			spaceError: this.handleSpaceError.bind(this),
 			createCharacter: this.createCharacter.bind(this),
 
 			// Database
 			getCharacter: this.handleGetCharacter.bind(this),
 			setCharacter: this.handleSetCharacter.bind(this),
-			getChatRoom: this.handleGetChatRoom.bind(this),
-			setChatRoom: this.handleSetChatRoom.bind(this),
+			getSpaceData: this.handleGetSpaceData.bind(this),
+			setSpaceData: this.handleSetSpaceData.bind(this),
 		});
 	}
 
@@ -88,15 +88,15 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		await character.forceDisconnectShard();
 	}
 
-	private async handleRoomError({ id }: IShardDirectoryArgument['roomError'], connection: IConnectionShard): Promise<void> {
+	private async handleSpaceError({ id }: IShardDirectoryArgument['spaceError'], connection: IConnectionShard): Promise<void> {
 		const shard = connection.shard;
 		if (!shard)
 			throw new BadMessageError();
-		const room = shard.getConnectedRoom(id);
-		if (!room)
+		const space = shard.getConnectedSpace(id);
+		if (!space)
 			throw new BadMessageError();
 
-		await room.disconnect();
+		await space.disconnect();
 	}
 
 	private async createCharacter({ id }: IShardDirectoryArgument['createCharacter'], connection: IConnectionShard): IShardDirectoryPromiseResult['createCharacter'] {
@@ -134,20 +134,20 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 		return { result: 'success' };
 	}
 
-	private async handleGetChatRoom({ id, accessId }: IShardDirectoryArgument['getChatRoom'], connection: IConnectionShard): IShardDirectoryPromiseResult['getChatRoom'] {
-		if (!connection.shard?.getConnectedRoom(id))
+	private async handleGetSpaceData({ id, accessId }: IShardDirectoryArgument['getSpaceData'], connection: IConnectionShard): IShardDirectoryPromiseResult['getSpaceData'] {
+		if (!connection.shard?.getConnectedSpace(id))
 			throw new BadMessageError();
 
 		return {
-			result: await GetDatabase().getChatRoomById(id, accessId),
+			result: await GetDatabase().getSpaceById(id, accessId),
 		};
 	}
 
-	private async handleSetChatRoom({ id, data, accessId }: IShardDirectoryArgument['setChatRoom'], connection: IConnectionShard): IShardDirectoryPromiseResult['setChatRoom'] {
+	private async handleSetSpaceData({ id, data, accessId }: IShardDirectoryArgument['setSpaceData'], connection: IConnectionShard): IShardDirectoryPromiseResult['setSpaceData'] {
 		if (!connection.shard)
 			throw new BadMessageError();
 
-		if (!await GetDatabase().updateChatRoom(id, data, accessId))
+		if (!await GetDatabase().updateSpace(id, data, accessId))
 			return { result: 'invalidAccessId' };
 
 		return { result: 'success' };
